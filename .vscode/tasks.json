@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "API: Run",
+      "type": "shell",
+      "command": "cargo run",
+      "options": {
+        "cwd": "${workspaceFolder}/api"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": "$rustc"
+    },
+    {
+      "label": "DB: Init",
+      "type": "shell",
+      "command": "cargo sqlx database create && cargo sqlx migrate run",
+      "options": {
+        "cwd": "${workspaceFolder}/api"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DB: Update SQLx Cache",
+      "type": "shell",
+      "command": "cargo sqlx prepare",
+      "options": {
+        "cwd": "${workspaceFolder}/api"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
