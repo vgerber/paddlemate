@@ -2,7 +2,7 @@
 #[macro_export]
 macro_rules! doc_fn {
     ($name:ident, $op:ident => $body:expr) => {
-        fn $name($op: aide::transform::TransformOperation) -> aide::transform::TransformOperation {
+        pub fn $name($op: aide::transform::TransformOperation) -> aide::transform::TransformOperation {
             let operation_id = stringify!($name)
                 .strip_suffix("_docs")
                 .unwrap_or(stringify!($name));

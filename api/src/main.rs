@@ -15,8 +15,12 @@ use axum_keycloak_auth::{
 use indexmap::IndexMap;
 use moka::future::Cache;
 use paddlemate_api::{
-    layers::auth::api_token_auth,
-    routes::{docs::docs_routes, tokens::tokens_routes},
+    layers::auth::{api_token_auth, api_token_auth_optional},
+    routes::{
+        docs::docs_routes,
+        waterways::{rivers_read_routes, rivers_write_routes},
+        tokens::tokens_routes,
+    },
     state::{AppState, KeycloakState},
 };
 use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HeaderName};
@@ -143,12 +147,24 @@ async fn main() {
             .build(),
     ));
 
-    let app = ApiRouter::new()
+    let protected = ApiRouter::new()
         .nest_api_service("/tokens", tokens_routes(state.clone()))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth,
-        ))
+        ));
+
+    let river_app = ApiRouter::new()
+        .nest_api_service("/rivers", rivers_read_routes(state.clone()))
+        .nest_api_service("/rivers", rivers_write_routes(state.clone()))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            api_token_auth_optional,
+        ));
+
+    let app = ApiRouter::new()
+        .merge(protected)
+        .merge(river_app)
         .layer(
             KeycloakAuthLayer::<String, ProfileAndEmail>::builder()
                 .instance(keycloak_auth_instance.clone())

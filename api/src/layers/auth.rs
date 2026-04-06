@@ -182,3 +182,117 @@ pub async fn api_token_auth(
         }
     }
 }
+
+/// Like api_token_auth but never blocks unauthenticated requests.
+/// Sets AuthToken in extensions when credentials are present and valid, then passes through.
+/// Use this for routes that are public but can optionally act on behalf of an authenticated user.
+pub async fn api_token_auth_optional(
+    State(state): State<AppState>,
+    mut request: Request<Body>,
+    next: Next,
+) -> Response {
+    // Keycloak bearer token (PassthroughMode::Pass sets KeycloakAuthStatus)
+    if let Some(auth_status) = request
+        .extensions()
+        .get::<KeycloakAuthStatus<String, ProfileAndEmail>>()
+        .cloned()
+    {
+        if let KeycloakAuthStatus::Success(keycloak_token) = auth_status {
+            request.extensions_mut().insert(AuthToken(keycloak_token));
+            request.extensions_mut().insert(AuthMethod {
+                kind: AuthMethodKind::Keycloak,
+            });
+            return next.run(request).await;
+        }
+    }
+
+    // Direct KeycloakToken (Block mode)
+    if let Some(keycloak_token) = request
+        .extensions()
+        .get::<KeycloakToken<String, ProfileAndEmail>>()
+        .cloned()
+    {
+        request.extensions_mut().insert(AuthToken(keycloak_token));
+        request.extensions_mut().insert(AuthMethod {
+            kind: AuthMethodKind::Keycloak,
+        });
+        return next.run(request).await;
+    }
+
+    // Try X-Api-Key header; skip silently if missing or invalid format
+    let token = match request
+        .headers()
+        .get("X-Api-Key")
+        .and_then(|v| v.to_str().ok())
+        .filter(|t| t.starts_with(API_TOKEN_PREFIX))
+    {
+        Some(t) => t.to_owned(),
+        None => return next.run(request).await,
+    };
+
+    let token_hash = hash_token(&token);
+
+    let result = sqlx::query!(
+        r#"
+        SELECT id, user_id, expires_at, revoked_at
+        FROM api_tokens
+        WHERE token_hash = $1
+        "#,
+        token_hash
+    )
+    .fetch_optional(&state.pg_pool)
+    .await;
+
+    match result {
+        Ok(Some(record))
+            if record.revoked_at.is_none()
+                && record.expires_at.map(|e| e >= Utc::now()).unwrap_or(true) =>
+        {
+            let pool = state.pg_pool.clone();
+            let token_id = record.id;
+            tokio::spawn(async move {
+                let _ = sqlx::query!(
+                    "UPDATE api_tokens SET last_used_at = NOW() WHERE id = $1",
+                    token_id
+                )
+                .execute(&pool)
+                .await;
+            });
+
+            let now = time::OffsetDateTime::now_utc();
+            let keycloak_token = KeycloakToken {
+                expires_at: now + time::Duration::hours(24),
+                issued_at: now,
+                jwt_id: format!("api-token-{}", record.id),
+                issuer: "api-token".to_string(),
+                audience: vec![env::var("KEYCLOAK_CLIENT_ID").unwrap_or_default()],
+                subject: record.user_id.clone(),
+                authorized_party: "api-token".to_string(),
+                roles: vec![],
+                extra: ProfileAndEmail {
+                    profile: Profile {
+                        full_name: None,
+                        given_name: None,
+                        family_name: None,
+                        preferred_username: format!("api-token-user-{}", record.id),
+                    },
+                    email: Email {
+                        email: String::new(),
+                        email_verified: true,
+                    },
+                },
+            };
+
+            request.extensions_mut().insert(AuthToken(keycloak_token));
+            request.extensions_mut().insert(AuthMethod {
+                kind: AuthMethodKind::ApiToken {
+                    token_id: record.id,
+                },
+            });
+
+            next.run(request).await
+        }
+        // Invalid, expired, or revoked token - pass through without setting AuthToken
+        _ => next.run(request).await,
+    }
+}

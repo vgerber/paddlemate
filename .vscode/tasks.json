@@ -32,6 +32,19 @@
       "problemMatcher": []
     },
     {
+      "label": "DB: Migrate",
+      "type": "shell",
+      "command": "cargo sqlx migrate run",
+      "options": {
+        "cwd": "${workspaceFolder}/api"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "DB: Update SQLx Cache",
       "type": "shell",
       "command": "cargo sqlx prepare",
