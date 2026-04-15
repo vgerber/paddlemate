@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM feature_names\n        WHERE feature_id = $1 AND lang_code = $2\n          AND $1 IN (\n              SELECT id FROM features WHERE section_id = $3\n              AND $3 IN (SELECT id FROM water_sections WHERE waterway_id = $4)\n          )\n        RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ac4efe9df270859ee75e1a03ba8ca57315f0a8b78bff961c2555352c6ef2ae81"
+}

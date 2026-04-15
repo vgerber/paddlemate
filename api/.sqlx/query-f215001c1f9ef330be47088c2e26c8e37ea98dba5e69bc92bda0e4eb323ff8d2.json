@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "DELETE FROM features WHERE id = $1 AND section_id = $2 RETURNING id",
+  "query": "\n        SELECT id FROM features\n        WHERE id = $1 AND section_id = $2\n          AND $2 IN (SELECT id FROM water_sections WHERE waterway_id = $3)\n        ",
   "describe": {
     "columns": [
       {
@@ -12,6 +12,7 @@
     "parameters": {
       "Left": [
         "Int8",
+        "Int8",
         "Int8"
       ]
     },
@@ -19,5 +20,5 @@
       false
     ]
   },
-  "hash": "3df429c7e520f6d018562bd9237defee8eece534cbaeeb4a26ae05014938c6b4"
+  "hash": "f215001c1f9ef330be47088c2e26c8e37ea98dba5e69bc92bda0e4eb323ff8d2"
 }

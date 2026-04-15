@@ -13,11 +13,12 @@ use crate::{
     doc_fn,
     layers::auth::AuthToken,
     models::{
-        feature::{Feature, FeatureType},
+        feature::{Feature, FeatureDescription, FeatureName, FeatureType},
         geometry::Geometry,
         water_section::SectionId,
         waterway::WaterwayId,
     },
+    query::features,
     state::AppState,
 };
 
@@ -44,53 +45,28 @@ pub async fn create_feature(
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    // Verify the section belongs to the given waterway
-    let section_exists = sqlx::query!(
-        "SELECT id FROM water_sections WHERE id = $1 AND waterway_id = $2",
-        section_id,
-        waterway_id
-    )
-    .fetch_optional(&app.pg_pool)
-    .await;
-
-    if !matches!(section_exists, Ok(Some(_))) {
-        return StatusCode::NOT_FOUND.into_response();
+    match features::section_belongs_to_waterway(&app.pg_pool, section_id, waterway_id).await {
+        Ok(true) => {}
+        Ok(false) => return StatusCode::NOT_FOUND.into_response(),
+        Err(err) => {
+            tracing::error!("Error verifying section {}: {}", section_id, err);
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        }
     }
 
     let location_json = serde_json::to_string(&body.location).expect("valid geometry");
 
-    let result = sqlx::query!(
-        r#"
-        INSERT INTO features (section_id, feature_type, metadata, location, created_by)
-        VALUES ($1, $2, $3, ST_GeomFromGeoJSON($4), $5)
-        RETURNING id, section_id, feature_type AS "feature_type: FeatureType",
-                  metadata, created_by, ST_AsGeoJSON(location) AS location, created_at, updated_at
-        "#,
+    match features::insert_feature(
+        &app.pg_pool,
         section_id,
-        body.feature_type as FeatureType,
+        body.feature_type,
         body.metadata,
-        location_json,
-        token.user_id()
+        &location_json,
+        token.user_id(),
     )
-    .fetch_one(&app.pg_pool)
-    .await;
-
-    match result {
-        Ok(r) => (
-            StatusCode::CREATED,
-            Json(Feature {
-                id: r.id,
-                section_id: r.section_id,
-                feature_type: r.feature_type,
-                metadata: r.metadata,
-                created_by: r.created_by,
-                location: serde_json::from_str::<Geometry>(&r.location.expect("location NOT NULL"))
-                    .expect("valid GeoJSON"),
-                created_at: r.created_at,
-                updated_at: r.updated_at,
-            }),
-        )
-            .into_response(),
+    .await
+    {
+        Ok(feature) => (StatusCode::CREATED, Json(feature)).into_response(),
         Err(err) => {
             tracing::error!("Error creating feature: {}", err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
@@ -130,42 +106,18 @@ pub async fn update_feature(
         .as_ref()
         .map(|g| serde_json::to_string(g).expect("valid geometry"));
 
-    let result = sqlx::query!(
-        r#"
-        UPDATE features
-        SET
-            feature_type = COALESCE($1, feature_type),
-            metadata = COALESCE($2, metadata),
-            location = COALESCE(ST_GeomFromGeoJSON($3), location),
-            updated_at = NOW()
-        WHERE id = $4 AND section_id = $5
-          AND $5 IN (SELECT id FROM water_sections WHERE waterway_id = $6)
-        RETURNING id, section_id, feature_type AS "feature_type: FeatureType",
-                  metadata, created_by, ST_AsGeoJSON(location) AS location, created_at, updated_at
-        "#,
-        body.feature_type as Option<FeatureType>,
+    match features::update_feature(
+        &app.pg_pool,
+        waterway_id,
+        section_id,
+        feature_id,
+        body.feature_type,
         body.metadata,
         location_json,
-        feature_id,
-        section_id,
-        waterway_id
     )
-    .fetch_optional(&app.pg_pool)
-    .await;
-
-    match result {
-        Ok(Some(r)) => Json(Feature {
-            id: r.id,
-            section_id: r.section_id,
-            feature_type: r.feature_type,
-            metadata: r.metadata,
-            created_by: r.created_by,
-            location: serde_json::from_str::<Geometry>(&r.location.expect("location NOT NULL"))
-                .expect("valid GeoJSON"),
-            created_at: r.created_at,
-            updated_at: r.updated_at,
-        })
-        .into_response(),
+    .await
+    {
+        Ok(Some(feature)) => Json(feature).into_response(),
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(err) => {
             tracing::error!("Error updating feature {}: {}", feature_id, err);
@@ -193,23 +145,9 @@ pub async fn delete_feature(
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    let result = sqlx::query!(
-        r#"
-        DELETE FROM features
-        WHERE id = $1 AND section_id = $2
-          AND $2 IN (SELECT id FROM water_sections WHERE waterway_id = $3)
-        RETURNING id
-        "#,
-        feature_id,
-        section_id,
-        waterway_id
-    )
-    .fetch_optional(&app.pg_pool)
-    .await;
-
-    match result {
-        Ok(Some(_)) => StatusCode::NO_CONTENT.into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+    match features::delete_feature(&app.pg_pool, waterway_id, section_id, feature_id).await {
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => StatusCode::NOT_FOUND.into_response(),
         Err(err) => {
             tracing::error!("Error deleting feature {}: {}", feature_id, err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
@@ -222,6 +160,200 @@ doc_fn!(delete_feature_docs, op =>
         .response_with::<204, (), _>(|res| res.description("Deleted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Feature not found"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Features")
+);
+
+#[derive(Deserialize, JsonSchema)]
+pub struct UpsertNameBody {
+    pub name: String,
+}
+
+pub async fn upsert_feature_name(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path((waterway_id, section_id, feature_id, lang_code)): Path<(
+        WaterwayId,
+        SectionId,
+        i64,
+        String,
+    )>,
+    Json(body): Json<UpsertNameBody>,
+) -> impl IntoApiResponse {
+    let Extension(_token) = match auth {
+        Some(a) => a,
+        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+    };
+
+    match features::feature_belongs_to_section(&app.pg_pool, waterway_id, section_id, feature_id)
+        .await
+    {
+        Ok(true) => {}
+        Ok(false) => return StatusCode::NOT_FOUND.into_response(),
+        Err(err) => {
+            tracing::error!("Error checking feature {}: {}", feature_id, err);
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        }
+    }
+
+    match features::upsert_name(&app.pg_pool, feature_id, &lang_code, &body.name).await {
+        Ok(name) => Json(name).into_response(),
+        Err(err) => {
+            tracing::error!("Error upserting name for feature {}: {}", feature_id, err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+doc_fn!(upsert_feature_name_docs, op =>
+    op.description("Add or update a localized name for a feature")
+        .response::<200, Json<FeatureName>>()
+        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
+        .response_with::<404, (), _>(|res| res.description("Feature not found"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Features")
+);
+
+pub async fn delete_feature_name(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path((waterway_id, section_id, feature_id, lang_code)): Path<(
+        WaterwayId,
+        SectionId,
+        i64,
+        String,
+    )>,
+) -> impl IntoApiResponse {
+    let Extension(_token) = match auth {
+        Some(a) => a,
+        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+    };
+
+    match features::delete_name(
+        &app.pg_pool,
+        waterway_id,
+        section_id,
+        feature_id,
+        &lang_code,
+    )
+    .await
+    {
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Err(err) => {
+            tracing::error!("Error deleting name for feature {}: {}", feature_id, err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+doc_fn!(delete_feature_name_docs, op =>
+    op.description("Delete a localized name for a feature")
+        .response_with::<204, (), _>(|res| res.description("Deleted"))
+        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
+        .response_with::<404, (), _>(|res| res.description("Name not found"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Features")
+);
+
+#[derive(Deserialize, JsonSchema)]
+pub struct UpsertDescriptionBody {
+    pub description: String,
+}
+
+pub async fn upsert_feature_description(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path((waterway_id, section_id, feature_id, lang_code)): Path<(
+        WaterwayId,
+        SectionId,
+        i64,
+        String,
+    )>,
+    Json(body): Json<UpsertDescriptionBody>,
+) -> impl IntoApiResponse {
+    let Extension(_token) = match auth {
+        Some(a) => a,
+        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+    };
+
+    match features::feature_belongs_to_section(&app.pg_pool, waterway_id, section_id, feature_id)
+        .await
+    {
+        Ok(true) => {}
+        Ok(false) => return StatusCode::NOT_FOUND.into_response(),
+        Err(err) => {
+            tracing::error!("Error checking feature {}: {}", feature_id, err);
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        }
+    }
+
+    match features::upsert_description(&app.pg_pool, feature_id, &lang_code, &body.description)
+        .await
+    {
+        Ok(desc) => Json(desc).into_response(),
+        Err(err) => {
+            tracing::error!(
+                "Error upserting description for feature {}: {}",
+                feature_id,
+                err
+            );
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+doc_fn!(upsert_feature_description_docs, op =>
+    op.description("Add or update a localized description for a feature")
+        .response::<200, Json<FeatureDescription>>()
+        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
+        .response_with::<404, (), _>(|res| res.description("Feature not found"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Features")
+);
+
+pub async fn delete_feature_description(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path((waterway_id, section_id, feature_id, lang_code)): Path<(
+        WaterwayId,
+        SectionId,
+        i64,
+        String,
+    )>,
+) -> impl IntoApiResponse {
+    let Extension(_token) = match auth {
+        Some(a) => a,
+        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+    };
+
+    match features::delete_description(
+        &app.pg_pool,
+        waterway_id,
+        section_id,
+        feature_id,
+        &lang_code,
+    )
+    .await
+    {
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Err(err) => {
+            tracing::error!(
+                "Error deleting description for feature {}: {}",
+                feature_id,
+                err
+            );
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+doc_fn!(delete_feature_description_docs, op =>
+    op.description("Delete a localized description for a feature")
+        .response_with::<204, (), _>(|res| res.description("Deleted"))
+        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
+        .response_with::<404, (), _>(|res| res.description("Description not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Features")
 );
@@ -242,4 +374,16 @@ struct UpdateFeatureBodyDoc {
     feature_type: Option<FeatureType>,
     metadata: Option<Value>,
     location: Option<Geometry>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[allow(dead_code)]
+struct UpsertNameBodyDoc {
+    name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[allow(dead_code)]
+struct UpsertDescriptionBodyDoc {
+    description: String,
 }

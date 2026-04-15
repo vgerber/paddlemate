@@ -54,5 +54,27 @@ pub fn rivers_write_routes(state: AppState) -> ApiRouter {
             put_with(features::update_feature, features::update_feature_docs)
                 .delete_with(features::delete_feature, features::delete_feature_docs),
         )
+        .api_route(
+            "/{waterway_id}/sections/{section_id}/features/{feature_id}/names/{lang_code}",
+            post_with(
+                features::upsert_feature_name,
+                features::upsert_feature_name_docs,
+            )
+            .delete_with(
+                features::delete_feature_name,
+                features::delete_feature_name_docs,
+            ),
+        )
+        .api_route(
+            "/{waterway_id}/sections/{section_id}/features/{feature_id}/descriptions/{lang_code}",
+            post_with(
+                features::upsert_feature_description,
+                features::upsert_feature_description_docs,
+            )
+            .delete_with(
+                features::delete_feature_description,
+                features::delete_feature_description_docs,
+            ),
+        )
         .with_state(state)
 }

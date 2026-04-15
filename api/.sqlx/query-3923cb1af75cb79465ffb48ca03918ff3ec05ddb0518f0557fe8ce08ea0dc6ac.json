@@ -1,0 +1,96 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            f.id, f.section_id,\n            f.feature_type AS \"feature_type: FeatureType\",\n            f.metadata, f.created_by,\n            ST_AsGeoJSON(f.location) AS location,\n            f.created_at, f.updated_at,\n            COALESCE(\n                JSON_AGG(DISTINCT JSONB_BUILD_OBJECT(\n                    'id', fn.id, 'feature_id', fn.feature_id,\n                    'lang_code', fn.lang_code, 'name', fn.name\n                )) FILTER (WHERE fn.id IS NOT NULL),\n                '[]'\n            ) AS \"names!: serde_json::Value\",\n            COALESCE(\n                JSON_AGG(DISTINCT JSONB_BUILD_OBJECT(\n                    'id', fd.id, 'feature_id', fd.feature_id,\n                    'lang_code', fd.lang_code, 'description', fd.description\n                )) FILTER (WHERE fd.id IS NOT NULL),\n                '[]'\n            ) AS \"descriptions!: serde_json::Value\"\n        FROM features f\n        LEFT JOIN feature_names fn ON fn.feature_id = f.id\n        LEFT JOIN feature_descriptions fd ON fd.feature_id = f.id\n        WHERE f.section_id = $1\n        GROUP BY f.id\n        ORDER BY f.created_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "section_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "feature_type: FeatureType",
+        "type_info": {
+          "Custom": {
+            "name": "feature_type",
+            "kind": {
+              "Enum": [
+                "whitewater",
+                "freestyle_spot",
+                "hole",
+                "siphon",
+                "weir",
+                "dam",
+                "obstacle",
+                "bridge",
+                "portage",
+                "put_in",
+                "take_out",
+                "waterfall"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_by",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "location",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "names!: serde_json::Value",
+        "type_info": "Json"
+      },
+      {
+        "ordinal": 9,
+        "name": "descriptions!: serde_json::Value",
+        "type_info": "Json"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "3923cb1af75cb79465ffb48ca03918ff3ec05ddb0518f0557fe8ce08ea0dc6ac"
+}

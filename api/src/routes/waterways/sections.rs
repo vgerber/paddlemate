@@ -12,11 +12,12 @@ use crate::{
     doc_fn,
     layers::auth::AuthToken,
     models::{
-        feature::{Feature, FeatureType},
+        feature::Feature,
         geometry::Geometry,
         water_section::{Section, SectionId, SectionWithFeatures},
         waterway::WaterwayId,
     },
+    query::features,
     state::AppState,
 };
 
@@ -44,35 +45,11 @@ pub async fn get_section(
         }
     };
 
-    let features = sqlx::query!(
-        r#"
-        SELECT id, section_id, feature_type AS "feature_type: FeatureType", metadata, created_by,
-               ST_AsGeoJSON(location) AS location, created_at, updated_at
-        FROM features WHERE section_id = $1 ORDER BY created_at
-        "#,
-        section_id
-    )
-    .fetch_all(&app.pg_pool)
-    .await;
+    let features = features::fetch_features_for_section(&app.pg_pool, section_id).await;
 
     match features {
-        Ok(records) => {
-            let features: Vec<Feature> = records
-                .into_iter()
-                .map(|f| Feature {
-                    id: f.id,
-                    section_id: f.section_id,
-                    feature_type: f.feature_type,
-                    metadata: f.metadata,
-                    created_by: f.created_by,
-                    location: f
-                        .location
-                        .and_then(|g| serde_json::from_str::<Geometry>(&g).ok())
-                        .expect("valid GeoJSON"),
-                    created_at: f.created_at,
-                    updated_at: f.updated_at,
-                })
-                .collect();
+        Ok(features) => {
+            let features: Vec<Feature> = features;
             Json(SectionWithFeatures {
                 id: section.id,
                 waterway_id: section.waterway_id,

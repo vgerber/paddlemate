@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        INSERT INTO features (section_id, feature_type, metadata, location, created_by)\n        VALUES ($1, $2, $3, ST_GeomFromGeoJSON($4), $5)\n        RETURNING id, section_id, feature_type AS \"feature_type: FeatureType\", metadata, created_by, ST_AsGeoJSON(location) AS location, created_at, updated_at\n        ",
+  "query": "\n        UPDATE features\n        SET\n            feature_type = COALESCE($1, feature_type),\n            metadata = COALESCE($2, metadata),\n            location = COALESCE(ST_GeomFromGeoJSON($3), location),\n            updated_at = NOW()\n        WHERE id = $4 AND section_id = $5\n          AND $5 IN (SELECT id FROM water_sections WHERE waterway_id = $6)\n        RETURNING id, section_id, feature_type AS \"feature_type: FeatureType\",\n                  metadata, created_by, ST_AsGeoJSON(location) AS location, created_at, updated_at\n        ",
   "describe": {
     "columns": [
       {
@@ -24,7 +24,15 @@
                 "whitewater",
                 "freestyle_spot",
                 "hole",
-                "siphon"
+                "siphon",
+                "weir",
+                "dam",
+                "obstacle",
+                "bridge",
+                "portage",
+                "put_in",
+                "take_out",
+                "waterfall"
               ]
             }
           }
@@ -58,7 +66,6 @@
     ],
     "parameters": {
       "Left": [
-        "Int8",
         {
           "Custom": {
             "name": "feature_type",
@@ -67,14 +74,24 @@
                 "whitewater",
                 "freestyle_spot",
                 "hole",
-                "siphon"
+                "siphon",
+                "weir",
+                "dam",
+                "obstacle",
+                "bridge",
+                "portage",
+                "put_in",
+                "take_out",
+                "waterfall"
               ]
             }
           }
         },
         "Jsonb",
         "Text",
-        "Varchar"
+        "Int8",
+        "Int8",
+        "Int8"
       ]
     },
     "nullable": [
@@ -88,5 +105,5 @@
       false
     ]
   },
-  "hash": "bafce96cc85abdfe263bfd5662fc15154984eebd64b516dc7c4dee184986700d"
+  "hash": "4d41b62a8326bbf2df55cdcb86e0f7052cb8707562feaf6d7f47b586ebed8638"
 }
