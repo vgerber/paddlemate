@@ -1,0 +1,132 @@
+name: Deploy API Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "api/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build docs & deploy to Pages
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    services:
+      postgres:
+        image: postgis/postgis:18-3.6-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: paddlemate
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.88.0"
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            api/target
+          key: ${{ runner.os }}-cargo-docs-${{ hashFiles('api/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-docs-
+
+      - name: Build API
+        working-directory: api
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/paddlemate
+        run: cargo build --release
+
+      - name: Run migrations & start API
+        working-directory: api
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/paddlemate
+          KEYCLOAK_URL: http://localhost:8080
+          KEYCLOAK_REALM: paddlemate
+          KEYCLOAK_AUDIENCE: account
+          KEYCLOAK_CLIENT_ID: paddlemate-api
+          KEYCLOAK_CLIENT_SECRET: unused
+          KEYCLOAK_TOKEN_URL: http://localhost:8080/realms/paddlemate/protocol/openid-connect/token
+          PORT: "3000"
+          BASE_URL: ""
+        run: |
+          cargo sqlx migrate run
+          ./target/release/paddlemate_api &
+          echo "API_PID=$!" >> "$GITHUB_ENV"
+
+      - name: Fetch openapi.json
+        run: |
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:3000/docs/openapi.json -o openapi.json; then
+              echo "Fetched openapi.json"
+              break
+            fi
+            echo "Waiting for API... ($i)"
+            sleep 2
+          done
+          test -f openapi.json
+
+      - name: Stop API
+        if: always()
+        run: kill "$API_PID" 2>/dev/null || true
+
+      - name: Build Stoplight Elements page
+        run: |
+          mkdir -p _site
+          cp openapi.json _site/openapi.json
+          cat > _site/index.html << 'EOF'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+              <title>Paddlemate API</title>
+              <script src="https://unpkg.com/@stoplight/elements/web-components.min.js"></script>
+              <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements/styles.min.css" />
+            </head>
+            <body>
+              <elements-api
+                apiDescriptionUrl="./openapi.json"
+                router="hash"
+                layout="sidebar"
+                hideInternal="true"
+                tryItCredentialsPolicy="same-origin"
+              />
+            </body>
+          </html>
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
