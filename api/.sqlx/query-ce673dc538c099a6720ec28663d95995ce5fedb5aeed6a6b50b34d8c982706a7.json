@@ -1,0 +1,63 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT gm.group_id, gm.user_id, u.username, gm.role AS \"role: GroupMemberRole\",\n               gm.added_by, gm.created_at\n        FROM group_members gm\n        INNER JOIN users u ON u.id = gm.user_id\n        WHERE gm.group_id = $1\n        ORDER BY gm.created_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "group_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "role: GroupMemberRole",
+        "type_info": {
+          "Custom": {
+            "name": "group_member_role",
+            "kind": {
+              "Enum": [
+                "owner",
+                "admin",
+                "member"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "added_by",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ce673dc538c099a6720ec28663d95995ce5fedb5aeed6a6b50b34d8c982706a7"
+}

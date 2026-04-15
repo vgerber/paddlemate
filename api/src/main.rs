@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use aide::{
-    axum::{ApiRouter, IntoApiResponse, routing::get},
+    axum::{ApiRouter, IntoApiResponse, routing::{get, get_with}},
     openapi::OpenApi,
     transform::TransformOpenApi,
 };
@@ -18,6 +18,9 @@ use paddlemate_api::{
     layers::auth::{api_token_auth, api_token_auth_optional},
     routes::{
         docs::docs_routes,
+        groups::group_routes,
+        users::list_users,
+        users::list_users_docs,
         waterways::{rivers_read_routes, rivers_write_routes},
         tokens::tokens_routes,
     },
@@ -149,6 +152,8 @@ async fn main() {
 
     let protected = ApiRouter::new()
         .nest_api_service("/tokens", tokens_routes(state.clone()))
+        .nest_api_service("/groups", group_routes(state.clone()))
+        .api_route("/users", get_with(list_users, list_users_docs))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth,

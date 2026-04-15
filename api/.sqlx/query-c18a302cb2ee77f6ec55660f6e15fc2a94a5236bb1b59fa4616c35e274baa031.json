@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO users (id, username)\n        VALUES ($1, $2)\n        ON CONFLICT (id) DO UPDATE SET username = EXCLUDED.username, updated_at = NOW()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c18a302cb2ee77f6ec55660f6e15fc2a94a5236bb1b59fa4616c35e274baa031"
+}

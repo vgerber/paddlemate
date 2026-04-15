@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE groups\n        SET\n            name = COALESCE($1, name),\n            description = CASE WHEN $2 THEN $3 ELSE description END,\n            updated_at = NOW()\n        WHERE id = $4\n          AND id IN (\n              SELECT group_id FROM group_members\n              WHERE user_id = $5 AND role IN ('owner', 'admin')\n          )\n        RETURNING id, name, description, created_by, created_at, updated_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_by",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Bool",
+        "Text",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c597f2fd34839576fdc54ae8f8d5759a08e6461dfa6826d12d8caabda595f34b"
+}

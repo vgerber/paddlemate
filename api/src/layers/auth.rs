@@ -10,11 +10,15 @@ use axum::{
 use axum_keycloak_auth::{
     KeycloakAuthStatus,
     decode::{Email, KeycloakToken, Profile, ProfileAndEmail},
+    role::KeycloakRole,
 };
 use chrono::Utc;
 
 use crate::{
-    query::tokens::{API_TOKEN_PREFIX, hash_token},
+    query::{
+        tokens::{API_TOKEN_PREFIX, hash_token},
+        users,
+    },
     state::AppState,
 };
 
@@ -28,6 +32,14 @@ impl AuthToken {
     pub fn user_id(&self) -> &str {
         &self.0.subject
     }
+
+    /// Returns true if the token carries the `server_admin` Keycloak realm role
+    pub fn is_server_admin(&self) -> bool {
+        self.0
+            .roles
+            .iter()
+            .any(|r| matches!(r, KeycloakRole::Realm { role } if role == "server_admin"))
+    }
 }
 
 /// Additional authentication metadata
@@ -40,6 +52,22 @@ pub struct AuthMethod {
 pub enum AuthMethodKind {
     Keycloak,
     ApiToken { token_id: i64 },
+}
+
+/// Upsert the authenticated user into the local users table.
+/// Fetches the username from cache or Keycloak. Errors are logged but not propagated.
+async fn upsert_user_from_token(state: &AppState, token: &AuthToken) {
+    let user_id = token.user_id();
+    match users::get_username(state, user_id).await {
+        Ok(username) => {
+            if let Err(err) = users::upsert_user(&state.pg_pool, user_id, &username).await {
+                tracing::error!("Failed to upsert user {}: {}", user_id, err);
+            }
+        }
+        Err(err) => {
+            tracing::error!("Failed to fetch username for {}: {}", user_id, err);
+        }
+    }
 }
 
 /// Middleware that handles both API token and Keycloak authentication.
@@ -58,7 +86,9 @@ pub async fn api_token_auth(
     {
         match auth_status {
             KeycloakAuthStatus::Success(keycloak_token) => {
-                request.extensions_mut().insert(AuthToken(keycloak_token));
+                let auth_token = AuthToken(keycloak_token);
+                upsert_user_from_token(&state, &auth_token).await;
+                request.extensions_mut().insert(auth_token);
                 request.extensions_mut().insert(AuthMethod {
                     kind: AuthMethodKind::Keycloak,
                 });
@@ -76,7 +106,9 @@ pub async fn api_token_auth(
         .get::<KeycloakToken<String, ProfileAndEmail>>()
         .cloned()
     {
-        request.extensions_mut().insert(AuthToken(keycloak_token));
+        let auth_token = AuthToken(keycloak_token);
+        upsert_user_from_token(&state, &auth_token).await;
+        request.extensions_mut().insert(auth_token);
         request.extensions_mut().insert(AuthMethod {
             kind: AuthMethodKind::Keycloak,
         });
@@ -198,7 +230,9 @@ pub async fn api_token_auth_optional(
         .cloned()
     {
         if let KeycloakAuthStatus::Success(keycloak_token) = auth_status {
-            request.extensions_mut().insert(AuthToken(keycloak_token));
+            let auth_token = AuthToken(keycloak_token);
+            upsert_user_from_token(&state, &auth_token).await;
+            request.extensions_mut().insert(auth_token);
             request.extensions_mut().insert(AuthMethod {
                 kind: AuthMethodKind::Keycloak,
             });
@@ -212,7 +246,9 @@ pub async fn api_token_auth_optional(
         .get::<KeycloakToken<String, ProfileAndEmail>>()
         .cloned()
     {
-        request.extensions_mut().insert(AuthToken(keycloak_token));
+        let auth_token = AuthToken(keycloak_token);
+        upsert_user_from_token(&state, &auth_token).await;
+        request.extensions_mut().insert(auth_token);
         request.extensions_mut().insert(AuthMethod {
             kind: AuthMethodKind::Keycloak,
         });
