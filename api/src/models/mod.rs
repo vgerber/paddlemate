@@ -1,7 +1,9 @@
 pub mod api_token;
+pub mod comment;
 pub mod feature;
 pub mod geometry;
 pub mod group;
+pub mod proposal;
 pub mod user;
 pub mod water_section;
 pub mod waterway;

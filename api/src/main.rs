@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 use aide::{
-    axum::{ApiRouter, IntoApiResponse, routing::{get, get_with}},
+    axum::{
+        ApiRouter, IntoApiResponse,
+        routing::{get, get_with},
+    },
     openapi::OpenApi,
     transform::TransformOpenApi,
 };
@@ -19,10 +22,9 @@ use paddlemate_api::{
     routes::{
         docs::docs_routes,
         groups::group_routes,
-        users::list_users,
-        users::list_users_docs,
-        waterways::{rivers_read_routes, rivers_write_routes},
         tokens::tokens_routes,
+        users::{list_my_proposals, list_my_proposals_docs, list_users, list_users_docs},
+        waterways::waterways_routes,
     },
     state::{AppState, KeycloakState},
 };
@@ -154,22 +156,25 @@ async fn main() {
         .nest_api_service("/tokens", tokens_routes(state.clone()))
         .nest_api_service("/groups", group_routes(state.clone()))
         .api_route("/users", get_with(list_users, list_users_docs))
+        .api_route(
+            "/users/me/proposals",
+            get_with(list_my_proposals, list_my_proposals_docs),
+        )
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth,
         ));
 
-    let river_app = ApiRouter::new()
-        .nest_api_service("/rivers", rivers_read_routes(state.clone()))
-        .nest_api_service("/rivers", rivers_write_routes(state.clone()))
+    let waterway_app = ApiRouter::new()
+        .nest_api_service("/waterways", waterways_routes(state.clone()))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth_optional,
         ));
 
-    let app = ApiRouter::new()
+    let api_v1 = ApiRouter::new()
         .merge(protected)
-        .merge(river_app)
+        .merge(waterway_app)
         .layer(
             KeycloakAuthLayer::<String, ProfileAndEmail>::builder()
                 .instance(keycloak_auth_instance.clone())
@@ -182,6 +187,10 @@ async fn main() {
         .layer(Extension(keycloak_auth_instance.clone()))
         .api_route("/", get(index))
         .nest_api_service("/docs", docs_routes(state.clone()))
+        .with_state(state.clone());
+
+    let app = ApiRouter::new()
+        .nest_api_service("/api/v1", api_v1)
         .finish_api_with(&mut api, api_docs)
         .layer(Extension(Arc::new(api)))
         .layer(

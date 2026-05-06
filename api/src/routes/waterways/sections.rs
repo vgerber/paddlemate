@@ -14,10 +14,11 @@ use crate::{
     models::{
         feature::Feature,
         geometry::Geometry,
+        proposal::Proposal,
         water_section::{Section, SectionId, SectionWithFeatures},
         waterway::WaterwayId,
     },
-    query::features,
+    query::{features, proposals},
     state::AppState,
 };
 
@@ -94,52 +95,69 @@ pub async fn create_section(
     Path(waterway_id): Path<WaterwayId>,
     Json(body): Json<CreateSectionBody>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
+    let Extension(token) = match auth {
         Some(a) => a,
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    let location_json = serde_json::to_string(&body.location).expect("valid geometry");
+    if token.is_server_admin() {
+        let location_json = serde_json::to_string(&body.location).expect("valid geometry");
 
-    let result = sqlx::query!(
-        r#"
+        let result = sqlx::query!(
+            r#"
         INSERT INTO water_sections (waterway_id, name, description, location)
         VALUES ($1, $2, $3, ST_GeomFromGeoJSON($4))
         RETURNING id, waterway_id, name, description, ST_AsGeoJSON(location) AS location, created_at, updated_at
         "#,
-        waterway_id,
-        body.name,
-        body.description,
-        location_json
-    )
-    .fetch_one(&app.pg_pool)
-    .await;
-
-    match result {
-        Ok(r) => (
-            StatusCode::CREATED,
-            Json(Section {
-                id: r.id,
-                waterway_id: r.waterway_id,
-                name: r.name,
-                description: r.description,
-                location: serde_json::from_str(&r.location.expect("location NOT NULL"))
-                    .expect("valid GeoJSON"),
-                created_at: r.created_at,
-                updated_at: r.updated_at,
-            }),
+            waterway_id,
+            body.name,
+            body.description,
+            location_json
         )
-            .into_response(),
+        .fetch_one(&app.pg_pool)
+        .await;
+
+        return match result {
+            Ok(r) => (
+                StatusCode::CREATED,
+                Json(Section {
+                    id: r.id,
+                    waterway_id: r.waterway_id,
+                    name: r.name,
+                    description: r.description,
+                    location: serde_json::from_str(&r.location.expect("location NOT NULL"))
+                        .expect("valid GeoJSON"),
+                    created_at: r.created_at,
+                    updated_at: r.updated_at,
+                }),
+            )
+                .into_response(),
+            Err(err) => {
+                tracing::error!("Error creating section: {}", err);
+                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
+        };
+    }
+
+    let data = serde_json::json!({
+        "waterway_id": waterway_id,
+        "name": body.name,
+        "description": body.description,
+        "location": body.location,
+    });
+    match proposals::insert_proposal(&app.pg_pool, "water_section", None, "create", data, token.user_id()).await {
+        Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error creating section: {}", err);
+            tracing::error!("Error submitting section proposal: {}", err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
 }
 
 doc_fn!(create_section_docs, op =>
-    op.description("Create a new section for a river")
+    op.description("Create a section (admin: immediate 201, others: proposal 202)")
         .response_with::<201, Json<Section>, _>(|res| res.description("Section created"))
+        .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Sections")
@@ -158,18 +176,19 @@ pub async fn update_section(
     Path((waterway_id, section_id)): Path<(WaterwayId, SectionId)>,
     Json(body): Json<UpdateSectionBody>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
+    let Extension(token) = match auth {
         Some(a) => a,
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    let location_json = body
-        .location
-        .as_ref()
-        .map(|g| serde_json::to_string(g).expect("valid geometry"));
+    if token.is_server_admin() {
+        let location_json = body
+            .location
+            .as_ref()
+            .map(|g| serde_json::to_string(g).expect("valid geometry"));
 
-    let result = sqlx::query!(
-        r#"
+        let result = sqlx::query!(
+            r#"
         UPDATE water_sections
         SET
             name = COALESCE($1, name),
@@ -179,38 +198,54 @@ pub async fn update_section(
         WHERE id = $4 AND waterway_id = $5
         RETURNING id, waterway_id, name, description, ST_AsGeoJSON(location) AS location, created_at, updated_at
         "#,
-        body.name,
-        body.description,
-        location_json,
-        section_id,
-        waterway_id
-    )
-    .fetch_optional(&app.pg_pool)
-    .await;
+            body.name,
+            body.description,
+            location_json,
+            section_id,
+            waterway_id
+        )
+        .fetch_optional(&app.pg_pool)
+        .await;
 
-    match result {
-        Ok(Some(r)) => Json(Section {
-            id: r.id,
-            waterway_id: r.waterway_id,
-            name: r.name,
-            description: r.description,
-            location: serde_json::from_str(&r.location.expect("location NOT NULL"))
-                .expect("valid GeoJSON"),
-            created_at: r.created_at,
-            updated_at: r.updated_at,
-        })
-        .into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        return match result {
+            Ok(Some(r)) => Json(Section {
+                id: r.id,
+                waterway_id: r.waterway_id,
+                name: r.name,
+                description: r.description,
+                location: serde_json::from_str(&r.location.expect("location NOT NULL"))
+                    .expect("valid GeoJSON"),
+                created_at: r.created_at,
+                updated_at: r.updated_at,
+            })
+            .into_response(),
+            Ok(None) => StatusCode::NOT_FOUND.into_response(),
+            Err(err) => {
+                tracing::error!("Error updating section {}: {}", section_id, err);
+                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
+        };
+    }
+
+    let data = serde_json::json!({
+        "waterway_id": waterway_id,
+        "name": body.name,
+        "description": body.description,
+        "location": body.location,
+    });
+    match proposals::insert_proposal(&app.pg_pool, "water_section", Some(section_id), "update", data, token.user_id()).await {
+        Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error updating section {}: {}", section_id, err);
+            tracing::error!("Error submitting section update proposal: {}", err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
 }
 
 doc_fn!(update_section_docs, op =>
-    op.description("Update a section")
+    op.description("Update a section (admin: immediate 200, others: proposal 202)")
         .response::<200, Json<Section>>()
+        .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Section not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
@@ -222,32 +257,44 @@ pub async fn delete_section(
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id)): Path<(WaterwayId, SectionId)>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
+    let Extension(token) = match auth {
         Some(a) => a,
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    let result = sqlx::query!(
-        "DELETE FROM water_sections WHERE id = $1 AND waterway_id = $2 RETURNING id",
-        section_id,
-        waterway_id
-    )
-    .fetch_optional(&app.pg_pool)
-    .await;
+    if token.is_server_admin() {
+        let result = sqlx::query!(
+            "DELETE FROM water_sections WHERE id = $1 AND waterway_id = $2 RETURNING id",
+            section_id,
+            waterway_id
+        )
+        .fetch_optional(&app.pg_pool)
+        .await;
 
-    match result {
-        Ok(Some(_)) => StatusCode::NO_CONTENT.into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        return match result {
+            Ok(Some(_)) => StatusCode::NO_CONTENT.into_response(),
+            Ok(None) => StatusCode::NOT_FOUND.into_response(),
+            Err(err) => {
+                tracing::error!("Error deleting section {}: {}", section_id, err);
+                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
+        };
+    }
+
+    let data = serde_json::json!({ "waterway_id": waterway_id });
+    match proposals::insert_proposal(&app.pg_pool, "water_section", Some(section_id), "delete", data, token.user_id()).await {
+        Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error deleting section {}: {}", section_id, err);
+            tracing::error!("Error submitting section delete proposal: {}", err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
 }
 
 doc_fn!(delete_section_docs, op =>
-    op.description("Delete a section and all its features")
+    op.description("Delete a section (admin: immediate 204, others: proposal 202)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
+        .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Section not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])

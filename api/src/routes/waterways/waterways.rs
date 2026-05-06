@@ -12,13 +12,15 @@ use crate::{
     doc_fn,
     layers::auth::AuthToken,
     models::{
+        proposal::Proposal,
         water_section::Section,
         waterway::{Waterway, WaterwayId, WaterwayType, WaterwayWithSections},
     },
+    query::proposals,
     state::AppState,
 };
 
-pub async fn list_rivers(State(app): State<AppState>) -> impl IntoApiResponse {
+pub async fn list_waterways(State(app): State<AppState>) -> impl IntoApiResponse {
     let result = sqlx::query!(
         r#"SELECT id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at FROM waterways ORDER BY name"#
     )
@@ -47,13 +49,13 @@ pub async fn list_rivers(State(app): State<AppState>) -> impl IntoApiResponse {
     }
 }
 
-doc_fn!(list_rivers_docs, op =>
-    op.description("List all rivers")
+doc_fn!(list_waterways_docs, op =>
+    op.description("List all waterways")
         .response::<200, Json<Vec<Waterway>>>()
-        .tag("Rivers")
+        .tag("Waterways")
 );
 
-pub async fn get_river(
+pub async fn get_waterway(
     State(app): State<AppState>,
     Path(waterway_id): Path<WaterwayId>,
 ) -> impl IntoApiResponse {
@@ -110,94 +112,120 @@ pub async fn get_river(
             .into_response()
         }
         Err(err) => {
-            tracing::error!("Error fetching sections for waterway {}: {}", waterway_id, err);
+            tracing::error!(
+                "Error fetching sections for waterway {}: {}",
+                waterway_id,
+                err
+            );
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
 }
 
-doc_fn!(get_river_docs, op =>
-    op.description("Get a river with its sections")
+doc_fn!(get_waterway_docs, op =>
+    op.description("Get a waterway with its sections")
         .response::<200, Json<WaterwayWithSections>>()
-        .response_with::<404, (), _>(|res| res.description("River not found"))
-        .tag("Rivers")
+        .response_with::<404, (), _>(|res| res.description("Waterway not found"))
+        .tag("Waterways")
 );
 
 #[derive(Deserialize, JsonSchema)]
-pub struct CreateRiverBody {
+pub struct CreateWaterwayBody {
     pub name: String,
     pub description: Option<String>,
 }
 
-pub async fn create_river(
+pub async fn create_waterway(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Json(body): Json<CreateRiverBody>,
+    Json(body): Json<CreateWaterwayBody>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
+    let Extension(token) = match auth {
         Some(a) => a,
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    let result = sqlx::query!(
-        r#"
+    if token.is_server_admin() {
+        let result = sqlx::query!(
+            r#"
         INSERT INTO waterways (waterway_type, name, description)
         VALUES ('river', $1, $2)
         RETURNING id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at
         "#,
-        body.name,
-        body.description
-    )
-    .fetch_one(&app.pg_pool)
-    .await;
-
-    match result {
-        Ok(r) => (
-            StatusCode::CREATED,
-            Json(Waterway {
-                id: r.id,
-                waterway_type: r.waterway_type,
-                name: r.name,
-                description: r.description,
-                created_at: r.created_at,
-                updated_at: r.updated_at,
-            }),
+            body.name,
+            body.description
         )
-            .into_response(),
+        .fetch_one(&app.pg_pool)
+        .await;
+
+        return match result {
+            Ok(r) => (
+                StatusCode::CREATED,
+                Json(Waterway {
+                    id: r.id,
+                    waterway_type: r.waterway_type,
+                    name: r.name,
+                    description: r.description,
+                    created_at: r.created_at,
+                    updated_at: r.updated_at,
+                }),
+            )
+                .into_response(),
+            Err(err) => {
+                tracing::error!("Error creating waterway: {}", err);
+                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
+        };
+    }
+
+    let data = serde_json::json!({ "name": body.name, "description": body.description });
+    match proposals::insert_proposal(
+        &app.pg_pool,
+        "waterway",
+        None,
+        "create",
+        data,
+        token.user_id(),
+    )
+    .await
+    {
+        Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error creating waterway: {}", err);
+            tracing::error!("Error submitting waterway proposal: {}", err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
 }
 
-doc_fn!(create_river_docs, op =>
-    op.description("Create a new river")
-        .response_with::<201, Json<Waterway>, _>(|res| res.description("River created"))
+doc_fn!(create_waterway_docs, op =>
+    op.description("Create a waterway (admin: immediate 201, others: proposal 202)")
+        .response_with::<201, Json<Waterway>, _>(|res| res.description("Waterway created"))
+        .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .security_requirement_multi(["Bearer", "ApiKey"])
-        .tag("Rivers")
+        .tag("Waterways")
 );
 
 #[derive(Deserialize, JsonSchema)]
-pub struct UpdateRiverBody {
+pub struct UpdateWaterwayBody {
     pub name: Option<String>,
     pub description: Option<String>,
 }
 
-pub async fn update_river(
+pub async fn update_waterway(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path(waterway_id): Path<WaterwayId>,
-    Json(body): Json<UpdateRiverBody>,
+    Json(body): Json<UpdateWaterwayBody>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
+    let Extension(token) = match auth {
         Some(a) => a,
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    let result = sqlx::query!(
-        r#"
+    if token.is_server_admin() {
+        let result = sqlx::query!(
+            r#"
         UPDATE waterways
         SET
             name = COALESCE($1, name),
@@ -206,88 +234,128 @@ pub async fn update_river(
         WHERE id = $3
         RETURNING id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at
         "#,
-        body.name,
-        body.description,
-        waterway_id
-    )
-    .fetch_optional(&app.pg_pool)
-    .await;
+            body.name,
+            body.description,
+            waterway_id
+        )
+        .fetch_optional(&app.pg_pool)
+        .await;
 
-    match result {
-        Ok(Some(r)) => Json(Waterway {
-            id: r.id,
-            waterway_type: r.waterway_type,
-            name: r.name,
-            description: r.description,
-            created_at: r.created_at,
-            updated_at: r.updated_at,
-        })
-        .into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        return match result {
+            Ok(Some(r)) => Json(Waterway {
+                id: r.id,
+                waterway_type: r.waterway_type,
+                name: r.name,
+                description: r.description,
+                created_at: r.created_at,
+                updated_at: r.updated_at,
+            })
+            .into_response(),
+            Ok(None) => StatusCode::NOT_FOUND.into_response(),
+            Err(err) => {
+                tracing::error!("Error updating waterway {}: {}", waterway_id, err);
+                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
+        };
+    }
+
+    let data = serde_json::json!({ "name": body.name, "description": body.description });
+    match proposals::insert_proposal(
+        &app.pg_pool,
+        "waterway",
+        Some(waterway_id),
+        "update",
+        data,
+        token.user_id(),
+    )
+    .await
+    {
+        Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error updating waterway {}: {}", waterway_id, err);
+            tracing::error!("Error submitting waterway update proposal: {}", err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
 }
 
-doc_fn!(update_river_docs, op =>
-    op.description("Update a river")
+doc_fn!(update_waterway_docs, op =>
+    op.description("Update a waterway (admin: immediate 200, others: proposal 202)")
         .response::<200, Json<Waterway>>()
+        .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("River not found"))
+        .response_with::<404, (), _>(|res| res.description("Waterway not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
-        .tag("Rivers")
+        .tag("Waterways")
 );
 
-pub async fn delete_river(
+pub async fn delete_waterway(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path(waterway_id): Path<WaterwayId>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
+    let Extension(token) = match auth {
         Some(a) => a,
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    let result = sqlx::query!(
-        "DELETE FROM waterways WHERE id = $1 RETURNING id",
-        waterway_id
-    )
-    .fetch_optional(&app.pg_pool)
-    .await;
+    if token.is_server_admin() {
+        let result = sqlx::query!(
+            "DELETE FROM waterways WHERE id = $1 RETURNING id",
+            waterway_id
+        )
+        .fetch_optional(&app.pg_pool)
+        .await;
 
-    match result {
-        Ok(Some(_)) => StatusCode::NO_CONTENT.into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        return match result {
+            Ok(Some(_)) => StatusCode::NO_CONTENT.into_response(),
+            Ok(None) => StatusCode::NOT_FOUND.into_response(),
+            Err(err) => {
+                tracing::error!("Error deleting waterway {}: {}", waterway_id, err);
+                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
+        };
+    }
+
+    match proposals::insert_proposal(
+        &app.pg_pool,
+        "waterway",
+        Some(waterway_id),
+        "delete",
+        serde_json::json!({}),
+        token.user_id(),
+    )
+    .await
+    {
+        Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error deleting waterway {}: {}", waterway_id, err);
+            tracing::error!("Error submitting waterway delete proposal: {}", err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
 }
 
-doc_fn!(delete_river_docs, op =>
-    op.description("Delete a river and all its sections and features")
+doc_fn!(delete_waterway_docs, op =>
+    op.description("Delete a waterway (admin: immediate 204, others: proposal 202)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
+        .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("River not found"))
+        .response_with::<404, (), _>(|res| res.description("Waterway not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
-        .tag("Rivers")
+        .tag("Waterways")
 );
 
 // Aide requires serializable types to generate request body schemas.
 // These mirror the request body structs above.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[allow(dead_code)]
-struct UpdateRiverBodyDoc {
+struct UpdateWaterwayBodyDoc {
     name: Option<String>,
     description: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[allow(dead_code)]
-struct CreateRiverBodyDoc {
+struct CreateWaterwayBodyDoc {
     name: String,
     description: Option<String>,
 }

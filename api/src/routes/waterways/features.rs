@@ -15,10 +15,11 @@ use crate::{
     models::{
         feature::{Feature, FeatureDescription, FeatureName, FeatureType},
         geometry::Geometry,
+        proposal::Proposal,
         water_section::SectionId,
         waterway::WaterwayId,
     },
-    query::features,
+    query::{features, proposals},
     state::AppState,
 };
 
@@ -54,29 +55,46 @@ pub async fn create_feature(
         }
     }
 
-    let location_json = serde_json::to_string(&body.location).expect("valid geometry");
+    if token.is_server_admin() {
+        let location_json = serde_json::to_string(&body.location).expect("valid geometry");
+        return match features::insert_feature(
+            &app.pg_pool,
+            section_id,
+            body.feature_type,
+            body.metadata,
+            &location_json,
+            token.user_id(),
+        )
+        .await
+        {
+            Ok(feature) => (StatusCode::CREATED, Json(feature)).into_response(),
+            Err(err) => {
+                tracing::error!("Error creating feature: {}", err);
+                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
+        };
+    }
 
-    match features::insert_feature(
-        &app.pg_pool,
-        section_id,
-        body.feature_type,
-        body.metadata,
-        &location_json,
-        token.user_id(),
-    )
-    .await
-    {
-        Ok(feature) => (StatusCode::CREATED, Json(feature)).into_response(),
+    let data = serde_json::json!({
+        "waterway_id": waterway_id,
+        "section_id": section_id,
+        "feature_type": body.feature_type,
+        "metadata": body.metadata,
+        "location": body.location,
+    });
+    match proposals::insert_proposal(&app.pg_pool, "feature", None, "create", data, token.user_id()).await {
+        Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error creating feature: {}", err);
+            tracing::error!("Error submitting feature proposal: {}", err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
 }
 
 doc_fn!(create_feature_docs, op =>
-    op.description("Add a feature to a section")
+    op.description("Add a feature (admin: immediate 201, others: proposal 202)")
         .response_with::<201, Json<Feature>, _>(|res| res.description("Feature created"))
+        .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Section not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
@@ -96,39 +114,57 @@ pub async fn update_feature(
     Path((waterway_id, section_id, feature_id)): Path<(WaterwayId, SectionId, i64)>,
     Json(body): Json<UpdateFeatureBody>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
+    let Extension(token) = match auth {
         Some(a) => a,
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    let location_json = body
-        .location
-        .as_ref()
-        .map(|g| serde_json::to_string(g).expect("valid geometry"));
+    if token.is_server_admin() {
+        let location_json = body
+            .location
+            .as_ref()
+            .map(|g| serde_json::to_string(g).expect("valid geometry"));
 
-    match features::update_feature(
-        &app.pg_pool,
-        waterway_id,
-        section_id,
-        feature_id,
-        body.feature_type,
-        body.metadata,
-        location_json,
-    )
-    .await
-    {
-        Ok(Some(feature)) => Json(feature).into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        return match features::update_feature(
+            &app.pg_pool,
+            waterway_id,
+            section_id,
+            feature_id,
+            body.feature_type,
+            body.metadata,
+            location_json,
+        )
+        .await
+        {
+            Ok(Some(feature)) => Json(feature).into_response(),
+            Ok(None) => StatusCode::NOT_FOUND.into_response(),
+            Err(err) => {
+                tracing::error!("Error updating feature {}: {}", feature_id, err);
+                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
+        };
+    }
+
+    let data = serde_json::json!({
+        "waterway_id": waterway_id,
+        "section_id": section_id,
+        "feature_type": body.feature_type,
+        "metadata": body.metadata,
+        "location": body.location,
+    });
+    match proposals::insert_proposal(&app.pg_pool, "feature", Some(feature_id), "update", data, token.user_id()).await {
+        Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error updating feature {}: {}", feature_id, err);
+            tracing::error!("Error submitting feature update proposal: {}", err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
 }
 
 doc_fn!(update_feature_docs, op =>
-    op.description("Update a feature")
+    op.description("Update a feature (admin: immediate 200, others: proposal 202)")
         .response::<200, Json<Feature>>()
+        .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Feature not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
@@ -140,24 +176,36 @@ pub async fn delete_feature(
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id, feature_id)): Path<(WaterwayId, SectionId, i64)>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
+    let Extension(token) = match auth {
         Some(a) => a,
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    match features::delete_feature(&app.pg_pool, waterway_id, section_id, feature_id).await {
-        Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+    if token.is_server_admin() {
+        return match features::delete_feature(&app.pg_pool, waterway_id, section_id, feature_id).await {
+            Ok(true) => StatusCode::NO_CONTENT.into_response(),
+            Ok(false) => StatusCode::NOT_FOUND.into_response(),
+            Err(err) => {
+                tracing::error!("Error deleting feature {}: {}", feature_id, err);
+                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
+        };
+    }
+
+    let data = serde_json::json!({ "waterway_id": waterway_id, "section_id": section_id });
+    match proposals::insert_proposal(&app.pg_pool, "feature", Some(feature_id), "delete", data, token.user_id()).await {
+        Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error deleting feature {}: {}", feature_id, err);
+            tracing::error!("Error submitting feature delete proposal: {}", err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
 }
 
 doc_fn!(delete_feature_docs, op =>
-    op.description("Delete a feature")
+    op.description("Delete a feature (admin: immediate 204, others: proposal 202)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
+        .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Feature not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
