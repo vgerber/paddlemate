@@ -14,6 +14,7 @@ use crate::{
     models::{
         feature::Feature,
         geometry::Geometry,
+        path_params::{SectionPath, WaterwayPath},
         proposal::Proposal,
         water_section::{Section, SectionId, SectionWithFeatures},
         waterway::WaterwayId,
@@ -76,7 +77,8 @@ pub async fn get_section(
 }
 
 doc_fn!(get_section_docs, op =>
-    op.description("Get a section with its features")
+    op.input::<Path<SectionPath>>()
+        .description("Get a section with its features")
         .response::<200, Json<SectionWithFeatures>>()
         .response_with::<404, (), _>(|res| res.description("Section not found"))
         .tag("Sections")
@@ -145,7 +147,16 @@ pub async fn create_section(
         "description": body.description,
         "location": body.location,
     });
-    match proposals::insert_proposal(&app.pg_pool, "water_section", None, "create", data, token.user_id()).await {
+    match proposals::insert_proposal(
+        &app.pg_pool,
+        "water_section",
+        None,
+        "create",
+        data,
+        token.user_id(),
+    )
+    .await
+    {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
             tracing::error!("Error submitting section proposal: {}", err);
@@ -155,7 +166,8 @@ pub async fn create_section(
 }
 
 doc_fn!(create_section_docs, op =>
-    op.description("Create a section (admin: immediate 201, others: proposal 202)")
+    op.input::<Path<WaterwayPath>>()
+        .description("Create a section (admin: immediate 201, others: proposal 202)")
         .response_with::<201, Json<Section>, _>(|res| res.description("Section created"))
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
@@ -233,7 +245,16 @@ pub async fn update_section(
         "description": body.description,
         "location": body.location,
     });
-    match proposals::insert_proposal(&app.pg_pool, "water_section", Some(section_id), "update", data, token.user_id()).await {
+    match proposals::insert_proposal(
+        &app.pg_pool,
+        "water_section",
+        Some(section_id),
+        "update",
+        data,
+        token.user_id(),
+    )
+    .await
+    {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
             tracing::error!("Error submitting section update proposal: {}", err);
@@ -243,7 +264,8 @@ pub async fn update_section(
 }
 
 doc_fn!(update_section_docs, op =>
-    op.description("Update a section (admin: immediate 200, others: proposal 202)")
+    op.input::<Path<SectionPath>>()
+        .description("Update a section (admin: immediate 200, others: proposal 202)")
         .response::<200, Json<Section>>()
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
@@ -282,7 +304,16 @@ pub async fn delete_section(
     }
 
     let data = serde_json::json!({ "waterway_id": waterway_id });
-    match proposals::insert_proposal(&app.pg_pool, "water_section", Some(section_id), "delete", data, token.user_id()).await {
+    match proposals::insert_proposal(
+        &app.pg_pool,
+        "water_section",
+        Some(section_id),
+        "delete",
+        data,
+        token.user_id(),
+    )
+    .await
+    {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
             tracing::error!("Error submitting section delete proposal: {}", err);
@@ -292,7 +323,8 @@ pub async fn delete_section(
 }
 
 doc_fn!(delete_section_docs, op =>
-    op.description("Delete a section (admin: immediate 204, others: proposal 202)")
+    op.input::<Path<SectionPath>>()
+        .description("Delete a section (admin: immediate 204, others: proposal 202)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))

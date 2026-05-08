@@ -1,15 +1,22 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   waterwaysApi,
   sectionsApi,
   commentsApi,
   featuresApi,
   type CreateFeatureInput,
+  type WaterwayFilters,
 } from "@/lib/api";
 
 export const waterwayKeys = {
   all: ["waterways"] as const,
-  lists: () => [...waterwayKeys.all, "list"] as const,
+  lists: (filters: WaterwayFilters) =>
+    [...waterwayKeys.all, "list", filters] as const,
   detail: (id: number) => [...waterwayKeys.all, id] as const,
   section: (waterwayId: number, sectionId: number) =>
     [...waterwayKeys.detail(waterwayId), "sections", sectionId] as const,
@@ -17,10 +24,16 @@ export const waterwayKeys = {
     [...waterwayKeys.section(waterwayId, sectionId), "comments"] as const,
 };
 
-export function useWaterways() {
-  return useQuery({
-    queryKey: waterwayKeys.lists(),
-    queryFn: () => waterwaysApi.list(),
+const PER_PAGE = 20;
+
+export function useWaterways(filters: Omit<WaterwayFilters, "page"> = {}) {
+  return useInfiniteQuery({
+    queryKey: waterwayKeys.lists(filters),
+    queryFn: ({ pageParam }) =>
+      waterwaysApi.list({ ...filters, page: pageParam, per_page: PER_PAGE }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
   });
 }
 
@@ -37,7 +50,7 @@ export function useSectionWithFeatures(
 ) {
   return useQuery({
     queryKey: waterwayKeys.section(waterwayId, sectionId ?? 0),
-    queryFn: () => sectionsApi.get(waterwayId, sectionId!),
+    queryFn: () => sectionsApi.get(waterwayId, sectionId as number),
     enabled: sectionId !== null,
   });
 }
@@ -48,7 +61,7 @@ export function useSectionComments(
 ) {
   return useQuery({
     queryKey: waterwayKeys.sectionComments(waterwayId, sectionId ?? 0),
-    queryFn: () => commentsApi.listForSection(waterwayId, sectionId!),
+    queryFn: () => commentsApi.listForSection(waterwayId, sectionId as number),
     enabled: sectionId !== null,
   });
 }

@@ -11,7 +11,10 @@ use serde::Deserialize;
 use crate::{
     doc_fn,
     layers::auth::AuthToken,
-    models::proposal::{Proposal, ProposalStatus, ReviewRequest},
+    models::{
+        path_params::{FeatureProposalPath, WaterwayPath},
+        proposal::{Proposal, ProposalStatus, ReviewRequest},
+    },
     query::proposals,
     state::AppState,
 };
@@ -46,7 +49,8 @@ pub async fn list_feature_proposals(
 }
 
 doc_fn!(list_feature_proposals_docs, op =>
-    op.description("List feature proposals for a waterway (admin only)")
+    op.input::<Path<WaterwayPath>>()
+        .description("List feature proposals for a waterway (admin only)")
         .response::<200, Json<Vec<Proposal>>>()
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<403, (), _>(|res| res.description("Forbidden"))
@@ -80,7 +84,8 @@ pub async fn get_feature_proposal(
 }
 
 doc_fn!(get_feature_proposal_docs, op =>
-    op.description("Get a feature proposal scoped to a waterway (admin or submitter)")
+    op.input::<Path<FeatureProposalPath>>()
+        .description("Get a feature proposal scoped to a waterway (admin or submitter)")
         .response::<200, Json<Proposal>>()
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<403, (), _>(|res| res.description("Forbidden"))
@@ -128,7 +133,8 @@ pub async fn review_feature_proposal(
 }
 
 doc_fn!(review_feature_proposal_docs, op =>
-    op.description("Approve or reject a feature proposal (admin only)")
+    op.input::<Path<FeatureProposalPath>>()
+        .description("Approve or reject a feature proposal (admin only)")
         .response::<200, Json<Proposal>>()
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<403, (), _>(|res| res.description("Forbidden"))

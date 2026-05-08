@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, waterway_type AS \"waterway_type: WaterwayType\", name, description, created_at, updated_at FROM waterways WHERE id = $1",
+  "query": "\n        INSERT INTO waterways (waterway_type, name, description)\n        VALUES ('river', $1, $2)\n        RETURNING id, waterway_type AS \"waterway_type: WaterwayType\", name, description, country, region, created_at, updated_at\n        ",
   "describe": {
     "columns": [
       {
@@ -34,18 +34,29 @@
       },
       {
         "ordinal": 4,
+        "name": "country",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "region",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 5,
+        "ordinal": 7,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Int8"
+        "Varchar",
+        "Text"
       ]
     },
     "nullable": [
@@ -53,9 +64,11 @@
       false,
       false,
       true,
+      true,
+      true,
       false,
       false
     ]
   },
-  "hash": "e7fa1be392960a7073ac9e62d98e9ca8290f93de245dab07468e2b0933209040"
+  "hash": "c861f7098f6b115d1051aaac93c7665d37bb6826f1ed1c45cc47d14043c99ced"
 }

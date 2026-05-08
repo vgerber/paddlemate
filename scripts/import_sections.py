@@ -53,19 +53,31 @@ def import_data(conn, rivers: list[dict], dry_run: bool) -> None:
             # --- waterway ---
             cur.execute(
                 """
-                INSERT INTO waterways (waterway_type, name, description)
-                VALUES ('river', %s, %s)
+                INSERT INTO waterways (waterway_type, name, description, country, region)
+                VALUES ('river', %s, %s, %s, %s)
                 ON CONFLICT DO NOTHING
                 RETURNING id
                 """,
-                (river_name, f"Imported from rivermap.org — {region}, {country}"),
+                (
+                    river_name,
+                    f"Imported from rivermap.org — {region}, {country}",
+                    country,
+                    region,
+                ),
             )
             row = cur.fetchone()
             if row:
                 waterway_id = row[0]
                 stats["waterways"] += 1
             else:
-                # Already exists — look it up by name (best-effort; names not globally unique)
+                # Already exists — look it up and backfill country/region if missing
+                cur.execute(
+                    """
+                    UPDATE waterways SET country = %s, region = %s
+                    WHERE name = %s AND (country IS NULL OR region IS NULL)
+                    """,
+                    (country, region, river_name),
+                )
                 cur.execute(
                     "SELECT id FROM waterways WHERE name = %s ORDER BY id LIMIT 1",
                     (river_name,),

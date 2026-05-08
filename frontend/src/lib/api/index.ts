@@ -1,146 +1,89 @@
-import { apiFetch } from "./client";
+import { ApiError, client } from "./client";
+import type { components, operations } from "./schema.d.ts";
 
-// ---------------------------------------------------------------------------
-// Types (mirroring the Rust API models)
-// ---------------------------------------------------------------------------
+export type Waterway = components["schemas"]["Waterway"];
+export type WaterwayWithSections =
+  components["schemas"]["WaterwayWithSections"];
+export type Section = components["schemas"]["Section"];
+export type SectionWithFeatures = components["schemas"]["SectionWithFeatures"];
+export type Feature = components["schemas"]["Feature"];
+export type Comment = components["schemas"]["Comment"];
+export type Proposal = components["schemas"]["Proposal"];
+export type PaginatedResponse =
+  components["schemas"]["PaginatedResponse_for_Waterway"];
+export type CreateFeatureInput = components["schemas"]["CreateFeatureBody"];
 
-export interface Waterway {
-  id: number;
-  waterway_type: "river";
-  name: string;
-  description?: string;
-  created_at: string;
-  updated_at: string;
+export type WaterwayFilters = NonNullable<
+  operations["list_waterways"]["parameters"]["query"]
+>;
+
+function assertData<T>(data: T | undefined): T {
+  if (data === undefined) throw new ApiError(0, "No data returned");
+  return data;
 }
-
-export interface WaterwayWithSections extends Waterway {
-  sections: Section[];
-}
-
-export interface Section {
-  id: number;
-  waterway_id: number;
-  name: string;
-  description?: string;
-  location: GeoJSON.LineString;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface SectionWithFeatures extends Section {
-  features: Feature[];
-}
-
-export type FeatureType =
-  | "whitewater"
-  | "freestyle_spot"
-  | "hole"
-  | "siphon"
-  | "weir"
-  | "dam"
-  | "obstacle"
-  | "bridge"
-  | "portage"
-  | "put_in"
-  | "take_out"
-  | "waterfall";
-
-export interface FeatureName {
-  id: number;
-  feature_id: number;
-  lang_code: string;
-  name: string;
-}
-
-export interface FeatureDescription {
-  id: number;
-  feature_id: number;
-  lang_code: string;
-  description: string;
-}
-
-export interface Feature {
-  id: number;
-  section_id: number;
-  feature_type: FeatureType;
-  metadata: Record<string, unknown>;
-  location: GeoJSON.Point | GeoJSON.LineString | GeoJSON.Polygon;
-  names: FeatureName[];
-  descriptions: FeatureDescription[];
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Comment {
-  id: number;
-  entity_type: "water_section" | "feature";
-  entity_id: number;
-  body: string;
-  author_id: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreateFeatureInput {
-  feature_type: FeatureType;
-  metadata?: Record<string, unknown>;
-  location: GeoJSON.Point;
-}
-
-// ---------------------------------------------------------------------------
-// Waterways
-// ---------------------------------------------------------------------------
 
 export const waterwaysApi = {
-  list: () => apiFetch<Waterway[]>("GET", "/waterways"),
-  get: (id: number) => apiFetch<WaterwayWithSections>("GET", `/waterways/${id}`),
+  list: async (filters: WaterwayFilters = {}) => {
+    const { data } = await client.GET("/api/v1/waterways", {
+      params: { query: filters },
+    });
+    return assertData(data);
+  },
+  get: async (id: number) => {
+    const { data } = await client.GET("/api/v1/waterways/{waterway_id}", {
+      params: { path: { waterway_id: id } },
+    });
+    return assertData(data);
+  },
 };
-
-// ---------------------------------------------------------------------------
-// Sections
-// ---------------------------------------------------------------------------
 
 export const sectionsApi = {
-  get: (waterwayId: number, sectionId: number) =>
-    apiFetch<SectionWithFeatures>(
-      "GET",
-      `/waterways/${waterwayId}/sections/${sectionId}`,
-    ),
+  get: async (waterwayId: number, sectionId: number) => {
+    const { data } = await client.GET(
+      "/api/v1/waterways/{waterway_id}/sections/{section_id}",
+      { params: { path: { waterway_id: waterwayId, section_id: sectionId } } },
+    );
+    return assertData(data);
+  },
 };
-
-// ---------------------------------------------------------------------------
-// Comments
-// ---------------------------------------------------------------------------
 
 export const commentsApi = {
-  listForSection: (waterwayId: number, sectionId: number) =>
-    apiFetch<Comment[]>(
-      "GET",
-      `/waterways/${waterwayId}/sections/${sectionId}/comments`,
-    ),
-  createForSection: (waterwayId: number, sectionId: number, body: string) =>
-    apiFetch<Comment>(
-      "POST",
-      `/waterways/${waterwayId}/sections/${sectionId}/comments`,
-      { body },
-    ),
+  listForSection: async (waterwayId: number, sectionId: number) => {
+    const { data } = await client.GET(
+      "/api/v1/waterways/{waterway_id}/sections/{section_id}/comments",
+      { params: { path: { waterway_id: waterwayId, section_id: sectionId } } },
+    );
+    return assertData(data);
+  },
+  createForSection: async (
+    waterwayId: number,
+    sectionId: number,
+    body: string,
+  ) => {
+    const { data } = await client.POST(
+      "/api/v1/waterways/{waterway_id}/sections/{section_id}/comments",
+      {
+        params: { path: { waterway_id: waterwayId, section_id: sectionId } },
+        body: { body },
+      },
+    );
+    return assertData(data);
+  },
 };
 
-// ---------------------------------------------------------------------------
-// Features
-// ---------------------------------------------------------------------------
-
 export const featuresApi = {
-  get: (waterwayId: number, sectionId: number, featureId: number) =>
-    apiFetch<Feature>(
-      "GET",
-      `/waterways/${waterwayId}/sections/${sectionId}/features/${featureId}`,
-    ),
-  create: (waterwayId: number, sectionId: number, data: CreateFeatureInput) =>
-    apiFetch<Feature>(
-      "POST",
-      `/waterways/${waterwayId}/sections/${sectionId}/features`,
-      data,
-    ),
+  create: async (
+    waterwayId: number,
+    sectionId: number,
+    input: CreateFeatureInput,
+  ) => {
+    const { data } = await client.POST(
+      "/api/v1/waterways/{waterway_id}/sections/{section_id}/features",
+      {
+        params: { path: { waterway_id: waterwayId, section_id: sectionId } },
+        body: input,
+      },
+    );
+    return assertData(data);
+  },
 };

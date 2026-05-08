@@ -3,6 +3,7 @@ pub mod comment;
 pub mod feature;
 pub mod geometry;
 pub mod group;
+pub mod path_params;
 pub mod proposal;
 pub mod user;
 pub mod water_section;

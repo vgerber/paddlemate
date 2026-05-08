@@ -15,6 +15,7 @@ use crate::{
     models::{
         feature::{Feature, FeatureDescription, FeatureName, FeatureType},
         geometry::Geometry,
+        path_params::{FeatureLocalePath, FeaturePath, SectionPath},
         proposal::Proposal,
         water_section::SectionId,
         waterway::WaterwayId,
@@ -82,7 +83,16 @@ pub async fn create_feature(
         "metadata": body.metadata,
         "location": body.location,
     });
-    match proposals::insert_proposal(&app.pg_pool, "feature", None, "create", data, token.user_id()).await {
+    match proposals::insert_proposal(
+        &app.pg_pool,
+        "feature",
+        None,
+        "create",
+        data,
+        token.user_id(),
+    )
+    .await
+    {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
             tracing::error!("Error submitting feature proposal: {}", err);
@@ -92,7 +102,8 @@ pub async fn create_feature(
 }
 
 doc_fn!(create_feature_docs, op =>
-    op.description("Add a feature (admin: immediate 201, others: proposal 202)")
+    op.input::<Path<SectionPath>>()
+        .description("Add a feature (admin: immediate 201, others: proposal 202)")
         .response_with::<201, Json<Feature>, _>(|res| res.description("Feature created"))
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
@@ -152,7 +163,16 @@ pub async fn update_feature(
         "metadata": body.metadata,
         "location": body.location,
     });
-    match proposals::insert_proposal(&app.pg_pool, "feature", Some(feature_id), "update", data, token.user_id()).await {
+    match proposals::insert_proposal(
+        &app.pg_pool,
+        "feature",
+        Some(feature_id),
+        "update",
+        data,
+        token.user_id(),
+    )
+    .await
+    {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
             tracing::error!("Error submitting feature update proposal: {}", err);
@@ -162,7 +182,8 @@ pub async fn update_feature(
 }
 
 doc_fn!(update_feature_docs, op =>
-    op.description("Update a feature (admin: immediate 200, others: proposal 202)")
+    op.input::<Path<FeaturePath>>()
+        .description("Update a feature (admin: immediate 200, others: proposal 202)")
         .response::<200, Json<Feature>>()
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
@@ -182,7 +203,9 @@ pub async fn delete_feature(
     };
 
     if token.is_server_admin() {
-        return match features::delete_feature(&app.pg_pool, waterway_id, section_id, feature_id).await {
+        return match features::delete_feature(&app.pg_pool, waterway_id, section_id, feature_id)
+            .await
+        {
             Ok(true) => StatusCode::NO_CONTENT.into_response(),
             Ok(false) => StatusCode::NOT_FOUND.into_response(),
             Err(err) => {
@@ -193,7 +216,16 @@ pub async fn delete_feature(
     }
 
     let data = serde_json::json!({ "waterway_id": waterway_id, "section_id": section_id });
-    match proposals::insert_proposal(&app.pg_pool, "feature", Some(feature_id), "delete", data, token.user_id()).await {
+    match proposals::insert_proposal(
+        &app.pg_pool,
+        "feature",
+        Some(feature_id),
+        "delete",
+        data,
+        token.user_id(),
+    )
+    .await
+    {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
             tracing::error!("Error submitting feature delete proposal: {}", err);
@@ -203,7 +235,8 @@ pub async fn delete_feature(
 }
 
 doc_fn!(delete_feature_docs, op =>
-    op.description("Delete a feature (admin: immediate 204, others: proposal 202)")
+    op.input::<Path<FeaturePath>>()
+        .description("Delete a feature (admin: immediate 204, others: proposal 202)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
@@ -254,7 +287,8 @@ pub async fn upsert_feature_name(
 }
 
 doc_fn!(upsert_feature_name_docs, op =>
-    op.description("Add or update a localized name for a feature")
+    op.input::<Path<FeatureLocalePath>>()
+        .description("Add or update a localized name for a feature")
         .response::<200, Json<FeatureName>>()
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Feature not found"))
@@ -296,7 +330,8 @@ pub async fn delete_feature_name(
 }
 
 doc_fn!(delete_feature_name_docs, op =>
-    op.description("Delete a localized name for a feature")
+    op.input::<Path<FeatureLocalePath>>()
+        .description("Delete a localized name for a feature")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Name not found"))
@@ -352,7 +387,8 @@ pub async fn upsert_feature_description(
 }
 
 doc_fn!(upsert_feature_description_docs, op =>
-    op.description("Add or update a localized description for a feature")
+    op.input::<Path<FeatureLocalePath>>()
+        .description("Add or update a localized description for a feature")
         .response::<200, Json<FeatureDescription>>()
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Feature not found"))
@@ -398,7 +434,8 @@ pub async fn delete_feature_description(
 }
 
 doc_fn!(delete_feature_description_docs, op =>
-    op.description("Delete a localized description for a feature")
+    op.input::<Path<FeatureLocalePath>>()
+        .description("Delete a localized description for a feature")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Description not found"))

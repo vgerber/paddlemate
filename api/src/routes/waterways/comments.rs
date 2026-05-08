@@ -11,7 +11,10 @@ use serde::{Deserialize, Serialize};
 use crate::{
     doc_fn,
     layers::auth::AuthToken,
-    models::comment::{Comment, CommentId, CreateCommentRequest, UpdateCommentRequest},
+    models::{
+        comment::{Comment, CommentId, CreateCommentRequest, UpdateCommentRequest},
+        path_params::{FeatureCommentPath, FeaturePath, SectionCommentPath, SectionPath},
+    },
     query::comments,
     state::AppState,
 };
@@ -30,7 +33,8 @@ pub async fn list_section_comments(
 }
 
 doc_fn!(list_section_comments_docs, op =>
-    op.description("List comments on a section")
+    op.input::<Path<SectionPath>>()
+        .description("List comments on a section")
         .response::<200, Json<Vec<Comment>>>()
         .tag("Comments")
 );
@@ -46,7 +50,15 @@ pub async fn create_section_comment(
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    match comments::insert_comment(&app.pg_pool, "water_section", section_id, &body.body, token.user_id()).await {
+    match comments::insert_comment(
+        &app.pg_pool,
+        "water_section",
+        section_id,
+        &body.body,
+        token.user_id(),
+    )
+    .await
+    {
         Ok(comment) => (StatusCode::CREATED, Json(comment)).into_response(),
         Err(err) => {
             tracing::error!("Error creating comment on section {}: {}", section_id, err);
@@ -56,7 +68,8 @@ pub async fn create_section_comment(
 }
 
 doc_fn!(create_section_comment_docs, op =>
-    op.description("Add a comment to a section")
+    op.input::<Path<SectionPath>>()
+        .description("Add a comment to a section")
         .response_with::<201, Json<Comment>, _>(|res| res.description("Comment created"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .security_requirement_multi(["Bearer", "ApiKey"])
@@ -85,7 +98,8 @@ pub async fn update_section_comment(
 }
 
 doc_fn!(update_section_comment_docs, op =>
-    op.description("Update a section comment (author only)")
+    op.input::<Path<SectionCommentPath>>()
+        .description("Update a section comment (author only)")
         .response::<200, Json<Comment>>()
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Comment not found or not your comment"))
@@ -103,7 +117,14 @@ pub async fn delete_section_comment(
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    match comments::delete_comment(&app.pg_pool, comment_id, token.user_id(), token.is_server_admin()).await {
+    match comments::delete_comment(
+        &app.pg_pool,
+        comment_id,
+        token.user_id(),
+        token.is_server_admin(),
+    )
+    .await
+    {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => StatusCode::NOT_FOUND.into_response(),
         Err(err) => {
@@ -114,7 +135,8 @@ pub async fn delete_section_comment(
 }
 
 doc_fn!(delete_section_comment_docs, op =>
-    op.description("Delete a section comment (author or admin)")
+    op.input::<Path<SectionCommentPath>>()
+        .description("Delete a section comment (author or admin)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Comment not found"))
@@ -136,7 +158,8 @@ pub async fn list_feature_comments(
 }
 
 doc_fn!(list_feature_comments_docs, op =>
-    op.description("List comments on a feature")
+    op.input::<Path<FeaturePath>>()
+        .description("List comments on a feature")
         .response::<200, Json<Vec<Comment>>>()
         .tag("Comments")
 );
@@ -152,7 +175,15 @@ pub async fn create_feature_comment(
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    match comments::insert_comment(&app.pg_pool, "feature", feature_id, &body.body, token.user_id()).await {
+    match comments::insert_comment(
+        &app.pg_pool,
+        "feature",
+        feature_id,
+        &body.body,
+        token.user_id(),
+    )
+    .await
+    {
         Ok(comment) => (StatusCode::CREATED, Json(comment)).into_response(),
         Err(err) => {
             tracing::error!("Error creating comment on feature {}: {}", feature_id, err);
@@ -162,7 +193,8 @@ pub async fn create_feature_comment(
 }
 
 doc_fn!(create_feature_comment_docs, op =>
-    op.description("Add a comment to a feature")
+    op.input::<Path<FeaturePath>>()
+        .description("Add a comment to a feature")
         .response_with::<201, Json<Comment>, _>(|res| res.description("Comment created"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .security_requirement_multi(["Bearer", "ApiKey"])
@@ -191,7 +223,8 @@ pub async fn update_feature_comment(
 }
 
 doc_fn!(update_feature_comment_docs, op =>
-    op.description("Update a feature comment (author only)")
+    op.input::<Path<FeatureCommentPath>>()
+        .description("Update a feature comment (author only)")
         .response::<200, Json<Comment>>()
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Comment not found or not your comment"))
@@ -209,7 +242,14 @@ pub async fn delete_feature_comment(
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
-    match comments::delete_comment(&app.pg_pool, comment_id, token.user_id(), token.is_server_admin()).await {
+    match comments::delete_comment(
+        &app.pg_pool,
+        comment_id,
+        token.user_id(),
+        token.is_server_admin(),
+    )
+    .await
+    {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => StatusCode::NOT_FOUND.into_response(),
         Err(err) => {
@@ -220,7 +260,8 @@ pub async fn delete_feature_comment(
 }
 
 doc_fn!(delete_feature_comment_docs, op =>
-    op.description("Delete a feature comment (author or admin)")
+    op.input::<Path<FeatureCommentPath>>()
+        .description("Delete a feature comment (author or admin)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Comment not found"))

@@ -11,7 +11,10 @@ use serde::Deserialize;
 use crate::{
     doc_fn,
     layers::auth::AuthToken,
-    models::proposal::{Proposal, ProposalStatus, ReviewRequest},
+    models::{
+        path_params::ProposalPath,
+        proposal::{Proposal, ProposalStatus, ReviewRequest},
+    },
     query::proposals,
     state::AppState,
 };
@@ -87,7 +90,8 @@ pub async fn get_waterway_proposal(
 }
 
 doc_fn!(get_waterway_proposal_docs, op =>
-    op.description("Get a waterway or section proposal (admin or submitter)")
+    op.input::<Path<ProposalPath>>()
+        .description("Get a waterway or section proposal (admin or submitter)")
         .response::<200, Json<Proposal>>()
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<403, (), _>(|res| res.description("Forbidden"))
@@ -135,7 +139,8 @@ pub async fn review_waterway_proposal(
 }
 
 doc_fn!(review_waterway_proposal_docs, op =>
-    op.description("Approve or reject a waterway/section proposal (admin only)")
+    op.input::<Path<ProposalPath>>()
+        .description("Approve or reject a waterway/section proposal (admin only)")
         .response::<200, Json<Proposal>>()
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<403, (), _>(|res| res.description("Forbidden"))
