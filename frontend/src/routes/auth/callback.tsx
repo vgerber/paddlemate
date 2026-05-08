@@ -1,0 +1,40 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { getUserManager } from "@/lib/auth";
+
+export const Route = createFileRoute("/auth/callback")({
+  component: AuthCallback,
+});
+
+function AuthCallback() {
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const hasProcessed = useRef(false);
+
+  useEffect(() => {
+    if (hasProcessed.current) return;
+    hasProcessed.current = true;
+
+    getUserManager()
+      .signinRedirectCallback()
+      .then(() => navigate({ to: "/" }))
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : "Authentication failed");
+      });
+  }, [navigate]);
+
+  if (error) {
+    return (
+      <div style={{ padding: "2rem", textAlign: "center" }}>
+        <p>Authentication error: {error}</p>
+        <button onClick={() => navigate({ to: "/" })}>Go home</button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "2rem", textAlign: "center" }}>
+      Completing sign-in…
+    </div>
+  );
+}
