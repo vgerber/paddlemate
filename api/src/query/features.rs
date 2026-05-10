@@ -44,7 +44,10 @@ pub async fn feature_belongs_to_section(
     .map(|r| r.is_some())
 }
 
-pub async fn fetch_names(pool: &PgPool, feature_id: FeatureId) -> Result<Vec<FeatureName>, sqlx::Error> {
+pub async fn fetch_names(
+    pool: &PgPool,
+    feature_id: FeatureId,
+) -> Result<Vec<FeatureName>, sqlx::Error> {
     sqlx::query!(
         "SELECT id, feature_id, lang_code, name FROM feature_names WHERE feature_id = $1 ORDER BY lang_code",
         feature_id
@@ -63,7 +66,10 @@ pub async fn fetch_names(pool: &PgPool, feature_id: FeatureId) -> Result<Vec<Fea
     })
 }
 
-pub async fn fetch_descriptions(pool: &PgPool, feature_id: FeatureId) -> Result<Vec<FeatureDescription>, sqlx::Error> {
+pub async fn fetch_descriptions(
+    pool: &PgPool,
+    feature_id: FeatureId,
+) -> Result<Vec<FeatureDescription>, sqlx::Error> {
     sqlx::query!(
         "SELECT id, feature_id, lang_code, description FROM feature_descriptions WHERE feature_id = $1 ORDER BY lang_code",
         feature_id
@@ -157,7 +163,8 @@ pub async fn update_feature(
         return Ok(None);
     };
 
-    let (names, descriptions) = tokio::join!(fetch_names(pool, r.id), fetch_descriptions(pool, r.id));
+    let (names, descriptions) =
+        tokio::join!(fetch_names(pool, r.id), fetch_descriptions(pool, r.id));
 
     Ok(Some(Feature {
         id: r.id,
@@ -362,4 +369,65 @@ pub async fn fetch_features_for_section(
             updated_at: f.updated_at,
         })
         .collect())
+}
+
+pub async fn fetch_features_for_waterway(
+    pool: &PgPool,
+    waterway_id: WaterwayId,
+) -> Result<std::collections::HashMap<SectionId, Vec<Feature>>, sqlx::Error> {
+    let records = sqlx::query!(
+        r#"
+        SELECT
+            f.id, f.section_id,
+            f.feature_type AS "feature_type: FeatureType",
+            f.metadata, f.created_by,
+            ST_AsGeoJSON(f.location) AS location,
+            f.created_at, f.updated_at,
+            COALESCE(
+                JSON_AGG(DISTINCT JSONB_BUILD_OBJECT(
+                    'id', fn.id, 'feature_id', fn.feature_id,
+                    'lang_code', fn.lang_code, 'name', fn.name
+                )) FILTER (WHERE fn.id IS NOT NULL),
+                '[]'
+            ) AS "names!: serde_json::Value",
+            COALESCE(
+                JSON_AGG(DISTINCT JSONB_BUILD_OBJECT(
+                    'id', fd.id, 'feature_id', fd.feature_id,
+                    'lang_code', fd.lang_code, 'description', fd.description
+                )) FILTER (WHERE fd.id IS NOT NULL),
+                '[]'
+            ) AS "descriptions!: serde_json::Value"
+        FROM features f
+        JOIN water_sections s ON s.id = f.section_id AND s.waterway_id = $1
+        LEFT JOIN feature_names fn ON fn.feature_id = f.id
+        LEFT JOIN feature_descriptions fd ON fd.feature_id = f.id
+        GROUP BY f.id
+        ORDER BY f.section_id, f.created_at
+        "#,
+        waterway_id
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let mut map: std::collections::HashMap<SectionId, Vec<Feature>> =
+        std::collections::HashMap::new();
+    for f in records {
+        let feature = Feature {
+            id: f.id,
+            section_id: f.section_id,
+            feature_type: f.feature_type,
+            metadata: f.metadata,
+            created_by: f.created_by,
+            location: f
+                .location
+                .and_then(|g| serde_json::from_str::<Geometry>(&g).ok())
+                .expect("valid GeoJSON"),
+            names: serde_json::from_value(f.names).unwrap_or_default(),
+            descriptions: serde_json::from_value(f.descriptions).unwrap_or_default(),
+            created_at: f.created_at,
+            updated_at: f.updated_at,
+        };
+        map.entry(f.section_id).or_default().push(feature);
+    }
+    Ok(map)
 }

@@ -7,7 +7,7 @@ import MapGL, {
   type MapRef,
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { Feature, Section } from "@/lib/api";
+import type { Feature, SectionWithFeatures } from "@/lib/api";
 
 const FEATURE_COLORS: Record<string, string> = {
   whitewater: "#ffb4ab",
@@ -25,7 +25,7 @@ const FEATURE_COLORS: Record<string, string> = {
 };
 
 interface WaterwayMapProps {
-  sections?: Section[];
+  sections?: SectionWithFeatures[];
   features?: Feature[];
   selectedSectionId?: number | null;
   onSectionClick?: (id: number) => void;
@@ -88,6 +88,27 @@ export default function WaterwayMap({
       properties: { id: s.id, name: s.name },
       geometry: s.location,
     })),
+  };
+
+  const sectionLabelsGeoJSON: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: (sections ?? []).flatMap((s) => {
+      const geom = s.location as unknown as GeoJSON.LineString;
+      if (geom?.type !== "LineString" || !geom.coordinates.length) return [];
+      const mid = geom.coordinates[Math.floor(geom.coordinates.length / 2)];
+      const ww = s.features?.find((f) => f.feature_type === "whitewater");
+      const diff = (ww?.metadata as Record<string, unknown> | undefined)
+        ?.difficulty as string | undefined;
+      const label = diff ? `${s.name} \u2022 ${diff}` : s.name;
+      return [
+        {
+          type: "Feature" as const,
+          id: s.id,
+          properties: { label },
+          geometry: { type: "Point" as const, coordinates: mid },
+        },
+      ];
+    }),
   };
 
   const sectionEndpointsGeoJSON: GeoJSON.FeatureCollection = {
@@ -209,6 +230,25 @@ export default function WaterwayMap({
               "line-color": "#ff9800",
               "line-width": 6,
               "line-opacity": 1,
+            }}
+          />
+        </Source>
+
+        <Source id="section-labels" type="geojson" data={sectionLabelsGeoJSON}>
+          <Layer
+            id="sections-label"
+            type="symbol"
+            layout={{
+              "text-field": ["get", "label"],
+              "text-size": 12,
+              "text-font": ["Noto Sans Regular"],
+              "text-allow-overlap": true,
+              "text-ignore-placement": true,
+            }}
+            paint={{
+              "text-color": "#000",
+              "text-halo-color": "#fff",
+              "text-halo-width": 3,
             }}
           />
         </Source>

@@ -311,6 +311,17 @@ function Home() {
                               secondary: { variant: "caption" },
                             }}
                           />
+                          {(() => {
+                            const ww = section.features?.find(
+                              (f) => f.feature_type === "whitewater",
+                            );
+                            const diff = ww?.metadata?.difficulty as
+                              | string
+                              | undefined;
+                            return diff ? (
+                              <Chip label={diff} size="small" sx={{ ml: 1 }} />
+                            ) : null;
+                          })()}
                         </ListItemButton>
                       ))}
                     </List>

@@ -90,8 +90,8 @@ def stitch_ways(ways: list[list[tuple]]) -> LineString | None:
 
 def extract_subsection(
     river: LineString, put_in: Point, take_out: Point
-) -> LineString | None:
-    """Project put-in and take-out onto river line and return the sub-linestring."""
+) -> tuple[LineString, float, float] | None:
+    """Project put-in and take-out onto river line and return (sub-linestring, upstream_pos, downstream_pos)."""
     t0 = river.project(put_in, normalized=True)
     t1 = river.project(take_out, normalized=True)
 
@@ -105,7 +105,7 @@ def extract_subsection(
 
     if sub.geom_type != "LineString" or len(sub.coords) < 2:
         return None
-    return sub
+    return sub, start, end
 
 
 def main():
@@ -128,7 +128,8 @@ def main():
             ST_Y(ST_StartPoint(s.location)) AS put_in_lat,
             ST_X(ST_EndPoint(s.location))   AS take_out_lon,
             ST_Y(ST_EndPoint(s.location))   AS take_out_lat,
-            ST_NPoints(s.location)          AS npoints
+            ST_NPoints(s.location)          AS npoints,
+            s.river_km_start
         FROM waterways w
         JOIN water_sections s ON s.waterway_id = w.id
         ORDER BY w.id, s.id
@@ -136,8 +137,10 @@ def main():
     rows = cur.fetchall()
 
     by_waterway: dict[tuple, list] = defaultdict(list)
-    for wid, wname, sid, pi_lon, pi_lat, to_lon, to_lat, npoints in rows:
-        by_waterway[(wid, wname)].append((sid, pi_lon, pi_lat, to_lon, to_lat, npoints))
+    for wid, wname, sid, pi_lon, pi_lat, to_lon, to_lat, npoints, river_km in rows:
+        by_waterway[(wid, wname)].append(
+            (sid, pi_lon, pi_lat, to_lon, to_lat, npoints, river_km)
+        )
 
     if args.waterway:
         by_waterway = {
@@ -152,7 +155,7 @@ def main():
         waterways = waterways[: args.limit]
 
     for i, ((wid, wname), sections) in enumerate(waterways):
-        already_rich = sum(1 for s in sections if (s[5] or 0) > 2)
+        already_rich = sum(1 for s in sections if (s[5] or 0) > 2 and s[6] is not None)
         if already_rich == len(sections):
             print(
                 f"[{i + 1}/{len(waterways)}] {wname}: all sections already enriched, skipping"
@@ -188,9 +191,11 @@ def main():
 
         print(f"  River line: {len(river.coords)} nodes from {len(ways)} ways")
 
-        for sid, pi_lon, pi_lat, to_lon, to_lat, npoints in sections:
-            if (npoints or 0) > 2:
-                print(f"  Section {sid}: already has {npoints} nodes, skipping")
+        for sid, pi_lon, pi_lat, to_lon, to_lat, npoints, river_km in sections:
+            if (npoints or 0) > 2 and river_km is not None:
+                print(
+                    f"  Section {sid}: already has {npoints} nodes and river_km, skipping"
+                )
                 continue
 
             put_in = Point(pi_lon, pi_lat)
@@ -206,19 +211,20 @@ def main():
                 skipped += 1
                 continue
 
-            sub = extract_subsection(river, put_in, take_out)
-            if not sub:
+            result = extract_subsection(river, put_in, take_out)
+            if not result:
                 print(f"  Section {sid}: could not extract sub-section, skipping")
                 skipped += 1
                 continue
 
+            sub, upstream_pos, downstream_pos = result
             geojson = json.dumps(sub.__geo_interface__)
             print(f"  Section {sid}: {npoints} → {len(sub.coords)} nodes")
 
             if not args.dry_run:
                 cur.execute(
-                    "UPDATE water_sections SET location = ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326) WHERE id = %s",
-                    (geojson, sid),
+                    "UPDATE water_sections SET location = ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), river_km_start = %s, river_km_end = %s WHERE id = %s",
+                    (geojson, upstream_pos, downstream_pos, sid),
                 )
                 updated += 1
 

@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use super::water_section::Section;
+use super::water_section::SectionWithFeatures;
 
 pub type WaterwayId = i64;
 
@@ -31,7 +31,7 @@ pub struct WaterwayWithSections {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    pub sections: Vec<Section>,
+    pub sections: Vec<SectionWithFeatures>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }

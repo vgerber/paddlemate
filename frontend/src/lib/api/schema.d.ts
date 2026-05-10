@@ -884,7 +884,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             name: string;
-            sections: components["schemas"]["Section"][];
+            sections: components["schemas"]["SectionWithFeatures"][];
             /** Format: date-time */
             updated_at: string;
             waterway_type: components["schemas"]["WaterwayType"];
@@ -915,11 +915,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-05-10T09:39:07.759927310Z",
-                     *         "expires_at": "2026-08-08T09:39:07.759929330Z",
+                     *         "created_at": "2026-05-10T15:02:19.500317321Z",
+                     *         "expires_at": "2026-08-08T15:02:19.500319521Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-05-10T09:39:07.759934040Z",
+                     *         "last_used_at": "2026-05-10T15:02:19.500324231Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -950,8 +950,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-05-10T09:39:07.760080330Z",
-                     *       "expires_at": "2026-08-08T09:39:07.760080660Z",
+                     *       "created_at": "2026-05-10T15:02:19.500452281Z",
+                     *       "expires_at": "2026-08-08T15:02:19.500452681Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
