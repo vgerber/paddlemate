@@ -90,8 +90,9 @@ pub async fn list_waterways(
 
     if let Some(name) = &filters.name {
         if !name.is_empty() {
-            qb.push(" AND w.name ILIKE ");
+            qb.push(" AND unaccent(w.name) ILIKE unaccent(");
             qb.push_bind(format!("%{}%", name));
+            qb.push(")");
         }
     }
 
