@@ -1,8 +1,10 @@
-import Map, {
+import { useEffect, useRef } from "react";
+import MapGL, {
   Layer,
   NavigationControl,
   Source,
-  type MapMouseEvent,
+  type MapLayerMouseEvent,
+  type MapRef,
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Feature, Section } from "@/lib/api";
@@ -25,6 +27,8 @@ const FEATURE_COLORS: Record<string, string> = {
 interface WaterwayMapProps {
   sections?: Section[];
   features?: Feature[];
+  selectedSectionId?: number | null;
+  onSectionClick?: (id: number) => void;
   placingFeature?: boolean;
   onMapClick?: (lng: number, lat: number) => void;
 }
@@ -32,9 +36,50 @@ interface WaterwayMapProps {
 export default function WaterwayMap({
   sections,
   features,
+  selectedSectionId,
+  onSectionClick,
   placingFeature,
   onMapClick,
 }: WaterwayMapProps) {
+  const mapRef = useRef<MapRef>(null);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !sections?.length) return;
+    const coords: number[][] = [];
+    for (const s of sections) {
+      const geom = s.location as unknown as GeoJSON.LineString;
+      if (geom?.type === "LineString") coords.push(...geom.coordinates);
+    }
+    if (!coords.length) return;
+    const lngs = coords.map((c) => c[0]);
+    const lats = coords.map((c) => c[1]);
+    map.fitBounds(
+      [
+        [Math.min(...lngs), Math.min(...lats)],
+        [Math.max(...lngs), Math.max(...lats)],
+      ],
+      { padding: 60, duration: 800 },
+    );
+  }, [sections]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !selectedSectionId || !sections?.length) return;
+    const section = sections.find((s) => s.id === selectedSectionId);
+    const geom = section?.location as unknown as GeoJSON.LineString | undefined;
+    if (geom?.type !== "LineString" || !geom.coordinates.length) return;
+    const lngs = geom.coordinates.map((c) => c[0]);
+    const lats = geom.coordinates.map((c) => c[1]);
+    map.fitBounds(
+      [
+        [Math.min(...lngs), Math.min(...lats)],
+        [Math.max(...lngs), Math.max(...lats)],
+      ],
+      { padding: 80, duration: 600 },
+    );
+  }, [selectedSectionId, sections]);
+
   const sectionsGeoJSON: GeoJSON.FeatureCollection = {
     type: "FeatureCollection",
     features: (sections ?? []).map((s) => ({
@@ -43,6 +88,30 @@ export default function WaterwayMap({
       properties: { id: s.id, name: s.name },
       geometry: s.location,
     })),
+  };
+
+  const sectionEndpointsGeoJSON: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: (sections ?? []).flatMap((s) => {
+      const geom = s.location as unknown as GeoJSON.LineString;
+      if (geom?.type !== "LineString" || !geom.coordinates.length) return [];
+      const first = geom.coordinates[0];
+      const last = geom.coordinates[geom.coordinates.length - 1];
+      return [
+        {
+          type: "Feature" as const,
+          id: s.id * 2,
+          properties: { kind: "put_in", section_id: s.id, name: s.name },
+          geometry: { type: "Point" as const, coordinates: first },
+        },
+        {
+          type: "Feature" as const,
+          id: s.id * 2 + 1,
+          properties: { kind: "take_out", section_id: s.id, name: s.name },
+          geometry: { type: "Point" as const, coordinates: last },
+        },
+      ];
+    }),
   };
 
   const pointFeatures = (features ?? []).filter(
@@ -81,7 +150,15 @@ export default function WaterwayMap({
     })),
   };
 
-  const handleClick = (e: MapMouseEvent) => {
+  const handleClick = (e: MapLayerMouseEvent) => {
+    const sectionFeature = e.features?.find(
+      (f) =>
+        f.layer.id === "sections-line" || f.layer.id === "sections-line-casing",
+    );
+    if (sectionFeature?.id !== undefined && onSectionClick) {
+      onSectionClick(Number(sectionFeature.id));
+      return;
+    }
     if (placingFeature && onMapClick) {
       onMapClick(e.lngLat.lng, e.lngLat.lat);
     }
@@ -95,11 +172,13 @@ export default function WaterwayMap({
         cursor: placingFeature ? "crosshair" : undefined,
       }}
     >
-      <Map
-        initialViewState={{ longitude: 2.3522, latitude: 46.8566, zoom: 5 }}
+      <MapGL
+        ref={mapRef}
+        initialViewState={{ longitude: 13, latitude: 47, zoom: 5 }}
         style={{ width: "100%", height: "100%" }}
         mapStyle="https://tiles.openfreemap.org/styles/liberty"
         onClick={handleClick}
+        interactiveLayerIds={["sections-line", "sections-line-casing"]}
       >
         <NavigationControl position="top-right" />
 
@@ -120,6 +199,45 @@ export default function WaterwayMap({
               "line-color": "#8bd1e8",
               "line-width": 3,
               "line-opacity": 0.9,
+            }}
+          />
+          <Layer
+            id="sections-line-selected"
+            type="line"
+            filter={["==", ["id"], selectedSectionId ?? -1]}
+            paint={{
+              "line-color": "#ff9800",
+              "line-width": 6,
+              "line-opacity": 1,
+            }}
+          />
+        </Source>
+
+        <Source
+          id="section-endpoints"
+          type="geojson"
+          data={sectionEndpointsGeoJSON}
+        >
+          <Layer
+            id="section-put-in"
+            type="circle"
+            filter={["==", ["get", "kind"], "put_in"]}
+            paint={{
+              "circle-radius": 5,
+              "circle-color": "#4caf50",
+              "circle-stroke-width": 1.5,
+              "circle-stroke-color": "#121416",
+            }}
+          />
+          <Layer
+            id="section-take-out"
+            type="circle"
+            filter={["==", ["get", "kind"], "take_out"]}
+            paint={{
+              "circle-radius": 5,
+              "circle-color": "#f44336",
+              "circle-stroke-width": 1.5,
+              "circle-stroke-color": "#121416",
             }}
           />
         </Source>
@@ -148,7 +266,7 @@ export default function WaterwayMap({
             }}
           />
         </Source>
-      </Map>
+      </MapGL>
     </div>
   );
 }

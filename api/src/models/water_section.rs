@@ -13,6 +13,10 @@ pub struct Section {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub region: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub country: Option<String>,
     /// GeoJSON LineString geometry
     pub location: Geometry,
     pub created_at: DateTime<Utc>,
@@ -26,6 +30,10 @@ pub struct SectionWithFeatures {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub region: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub country: Option<String>,
     /// GeoJSON LineString geometry
     pub location: Geometry,
     pub features: Vec<Feature>,

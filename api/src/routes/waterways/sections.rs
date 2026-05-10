@@ -29,7 +29,7 @@ pub async fn get_section(
 ) -> impl IntoApiResponse {
     let section = sqlx::query!(
         r#"
-        SELECT id, waterway_id, name, description, ST_AsGeoJSON(location) AS location, created_at, updated_at
+        SELECT id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_at, updated_at
         FROM water_sections WHERE id = $1 AND waterway_id = $2
         "#,
         section_id,
@@ -57,6 +57,8 @@ pub async fn get_section(
                 waterway_id: section.waterway_id,
                 name: section.name,
                 description: section.description,
+                region: section.region,
+                country: section.country,
                 location: serde_json::from_str(&section.location.expect("location NOT NULL"))
                     .expect("valid GeoJSON"),
                 features,
@@ -88,6 +90,8 @@ doc_fn!(get_section_docs, op =>
 pub struct CreateSectionBody {
     pub name: String,
     pub description: Option<String>,
+    pub region: Option<String>,
+    pub country: Option<String>,
     pub location: Geometry,
 }
 
@@ -107,13 +111,15 @@ pub async fn create_section(
 
         let result = sqlx::query!(
             r#"
-        INSERT INTO water_sections (waterway_id, name, description, location)
-        VALUES ($1, $2, $3, ST_GeomFromGeoJSON($4))
-        RETURNING id, waterway_id, name, description, ST_AsGeoJSON(location) AS location, created_at, updated_at
+        INSERT INTO water_sections (waterway_id, name, description, region, country, location)
+        VALUES ($1, $2, $3, $4, $5, ST_GeomFromGeoJSON($6))
+        RETURNING id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_at, updated_at
         "#,
             waterway_id,
             body.name,
             body.description,
+            body.region,
+            body.country,
             location_json
         )
         .fetch_one(&app.pg_pool)
@@ -127,6 +133,8 @@ pub async fn create_section(
                     waterway_id: r.waterway_id,
                     name: r.name,
                     description: r.description,
+                    region: r.region,
+                    country: r.country,
                     location: serde_json::from_str(&r.location.expect("location NOT NULL"))
                         .expect("valid GeoJSON"),
                     created_at: r.created_at,
@@ -179,6 +187,8 @@ doc_fn!(create_section_docs, op =>
 pub struct UpdateSectionBody {
     pub name: Option<String>,
     pub description: Option<String>,
+    pub region: Option<String>,
+    pub country: Option<String>,
     pub location: Option<Geometry>,
 }
 
@@ -205,13 +215,17 @@ pub async fn update_section(
         SET
             name = COALESCE($1, name),
             description = COALESCE($2, description),
-            location = COALESCE(ST_GeomFromGeoJSON($3), location),
+            region = COALESCE($3, region),
+            country = COALESCE($4, country),
+            location = COALESCE(ST_GeomFromGeoJSON($5), location),
             updated_at = NOW()
-        WHERE id = $4 AND waterway_id = $5
-        RETURNING id, waterway_id, name, description, ST_AsGeoJSON(location) AS location, created_at, updated_at
+        WHERE id = $6 AND waterway_id = $7
+        RETURNING id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_at, updated_at
         "#,
             body.name,
             body.description,
+            body.region,
+            body.country,
             location_json,
             section_id,
             waterway_id
@@ -225,6 +239,8 @@ pub async fn update_section(
                 waterway_id: r.waterway_id,
                 name: r.name,
                 description: r.description,
+                region: r.region,
+                country: r.country,
                 location: serde_json::from_str(&r.location.expect("location NOT NULL"))
                     .expect("valid GeoJSON"),
                 created_at: r.created_at,
@@ -340,6 +356,8 @@ doc_fn!(delete_section_docs, op =>
 struct CreateSectionBodyDoc {
     name: String,
     description: Option<String>,
+    region: Option<String>,
+    country: Option<String>,
     location: Geometry,
 }
 
@@ -348,5 +366,7 @@ struct CreateSectionBodyDoc {
 struct UpdateSectionBodyDoc {
     name: Option<String>,
     description: Option<String>,
+    region: Option<String>,
+    country: Option<String>,
     location: Option<Geometry>,
 }

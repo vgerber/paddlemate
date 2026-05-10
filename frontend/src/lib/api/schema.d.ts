@@ -530,8 +530,10 @@ export interface components {
         };
         CreateSectionBody: {
             description?: string | null;
+            country?: string | null;
             location: components["schemas"]["Geometry"];
             name: string;
+            region?: string | null;
         };
         CreateTokenBody: {
             /** Format: int64 */
@@ -731,6 +733,7 @@ export interface components {
         };
         Section: {
             description?: string | null;
+            country?: string | null;
             /** Format: date-time */
             created_at: string;
             /** Format: int64 */
@@ -738,6 +741,7 @@ export interface components {
             /** @description GeoJSON LineString geometry */
             location: components["schemas"]["Geometry"];
             name: string;
+            region?: string | null;
             /** Format: date-time */
             updated_at: string;
             /** Format: int64 */
@@ -759,6 +763,7 @@ export interface components {
         };
         SectionWithFeatures: {
             description?: string | null;
+            country?: string | null;
             /** Format: date-time */
             created_at: string;
             features: components["schemas"]["Feature"][];
@@ -767,6 +772,7 @@ export interface components {
             /** @description GeoJSON LineString geometry */
             location: components["schemas"]["Geometry"];
             name: string;
+            region?: string | null;
             /** Format: date-time */
             updated_at: string;
             /** Format: int64 */
@@ -790,8 +796,10 @@ export interface components {
         };
         UpdateSectionBody: {
             description?: string | null;
+            country?: string | null;
             location?: components["schemas"]["Geometry"] | null;
             name?: string | null;
+            region?: string | null;
         };
         UpdateWaterwayBody: {
             description?: string | null;
@@ -813,13 +821,11 @@ export interface components {
         };
         Waterway: {
             description?: string | null;
-            country?: string | null;
             /** Format: date-time */
             created_at: string;
             /** Format: int64 */
             id: number;
             name: string;
-            region?: string | null;
             /** Format: date-time */
             updated_at: string;
             waterway_type: components["schemas"]["WaterwayType"];
@@ -873,13 +879,11 @@ export interface components {
         WaterwayType: "river";
         WaterwayWithSections: {
             description?: string | null;
-            country?: string | null;
             /** Format: date-time */
             created_at: string;
             /** Format: int64 */
             id: number;
             name: string;
-            region?: string | null;
             sections: components["schemas"]["Section"][];
             /** Format: date-time */
             updated_at: string;
@@ -911,11 +915,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-05-08T19:29:38.595782131Z",
-                     *         "expires_at": "2026-08-06T19:29:38.595783881Z",
+                     *         "created_at": "2026-05-10T09:39:07.759927310Z",
+                     *         "expires_at": "2026-08-08T09:39:07.759929330Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-05-08T19:29:38.595788461Z",
+                     *         "last_used_at": "2026-05-10T09:39:07.759934040Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -946,8 +950,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-05-08T19:29:38.595914340Z",
-                     *       "expires_at": "2026-08-06T19:29:38.595914690Z",
+                     *       "created_at": "2026-05-10T09:39:07.760080330Z",
+                     *       "expires_at": "2026-08-08T09:39:07.760080660Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."

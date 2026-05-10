@@ -37,10 +37,11 @@ export function useWaterways(filters: Omit<WaterwayFilters, "page"> = {}) {
   });
 }
 
-export function useWaterway(id: number) {
+export function useWaterway(id: number | null) {
   return useQuery({
-    queryKey: waterwayKeys.detail(id),
-    queryFn: () => waterwaysApi.get(id),
+    queryKey: waterwayKeys.detail(id ?? 0),
+    queryFn: () => waterwaysApi.get(id as number),
+    enabled: id !== null,
   });
 }
 

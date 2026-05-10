@@ -29,8 +29,6 @@ struct WaterwayRow {
     waterway_type: WaterwayType,
     name: String,
     description: Option<String>,
-    country: Option<String>,
-    region: Option<String>,
     created_at: chrono::DateTime<chrono::Utc>,
     updated_at: chrono::DateTime<chrono::Utc>,
     total_count: Option<i64>,
@@ -43,8 +41,6 @@ impl From<WaterwayRow> for Waterway {
             waterway_type: r.waterway_type,
             name: r.name,
             description: r.description,
-            country: r.country,
-            region: r.region,
             created_at: r.created_at,
             updated_at: r.updated_at,
         }
@@ -85,7 +81,7 @@ pub async fn list_waterways(
         r#"
         SELECT
             w.id, w.waterway_type, w.name, w.description,
-            w.country, w.region, w.created_at, w.updated_at,
+            w.created_at, w.updated_at,
             COUNT(*) OVER () AS total_count
         FROM waterways w
         WHERE 1=1
@@ -101,8 +97,9 @@ pub async fn list_waterways(
 
     if let Some(country) = &filters.country {
         if !country.is_empty() {
-            qb.push(" AND w.country = ");
+            qb.push(" AND EXISTS (SELECT 1 FROM water_sections ws WHERE ws.waterway_id = w.id AND ws.country = ");
             qb.push_bind(country.to_uppercase());
+            qb.push(")");
         }
     }
 
@@ -190,7 +187,7 @@ pub async fn get_waterway(
     Path(waterway_id): Path<WaterwayId>,
 ) -> impl IntoApiResponse {
     let waterway = sqlx::query!(
-        r#"SELECT id, waterway_type AS "waterway_type: WaterwayType", name, description, country, region, created_at, updated_at FROM waterways WHERE id = $1"#,
+        r#"SELECT id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at FROM waterways WHERE id = $1"#,
         waterway_id
     )
     .fetch_optional(&app.pg_pool)
@@ -207,7 +204,7 @@ pub async fn get_waterway(
 
     let sections = sqlx::query!(
         r#"
-        SELECT id, waterway_id, name, description, ST_AsGeoJSON(location) AS location, created_at, updated_at
+        SELECT id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_at, updated_at
         FROM water_sections WHERE waterway_id = $1 ORDER BY name
         "#,
         waterway_id
@@ -224,6 +221,8 @@ pub async fn get_waterway(
                     waterway_id: s.waterway_id,
                     name: s.name,
                     description: s.description,
+                    region: s.region,
+                    country: s.country,
                     location: serde_json::from_str(&s.location.expect("location NOT NULL"))
                         .expect("valid GeoJSON"),
                     created_at: s.created_at,
@@ -235,8 +234,6 @@ pub async fn get_waterway(
                 waterway_type: waterway.waterway_type,
                 name: waterway.name,
                 description: waterway.description,
-                country: waterway.country,
-                region: waterway.region,
                 sections,
                 created_at: waterway.created_at,
                 updated_at: waterway.updated_at,
@@ -283,7 +280,7 @@ pub async fn create_waterway(
             r#"
         INSERT INTO waterways (waterway_type, name, description)
         VALUES ('river', $1, $2)
-        RETURNING id, waterway_type AS "waterway_type: WaterwayType", name, description, country, region, created_at, updated_at
+        RETURNING id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at
         "#,
             body.name,
             body.description
@@ -299,8 +296,6 @@ pub async fn create_waterway(
                     waterway_type: r.waterway_type,
                     name: r.name,
                     description: r.description,
-                    country: r.country,
-                    region: r.region,
                     created_at: r.created_at,
                     updated_at: r.updated_at,
                 }),
@@ -367,7 +362,7 @@ pub async fn update_waterway(
             description = COALESCE($2, description),
             updated_at = NOW()
         WHERE id = $3
-        RETURNING id, waterway_type AS "waterway_type: WaterwayType", name, description, country, region, created_at, updated_at
+        RETURNING id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at
         "#,
             body.name,
             body.description,
@@ -382,8 +377,6 @@ pub async fn update_waterway(
                 waterway_type: r.waterway_type,
                 name: r.name,
                 description: r.description,
-                country: r.country,
-                region: r.region,
                 created_at: r.created_at,
                 updated_at: r.updated_at,
             })

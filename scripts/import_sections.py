@@ -53,16 +53,14 @@ def import_data(conn, rivers: list[dict], dry_run: bool) -> None:
             # --- waterway ---
             cur.execute(
                 """
-                INSERT INTO waterways (waterway_type, name, description, country, region)
-                VALUES ('river', %s, %s, %s, %s)
-                ON CONFLICT DO NOTHING
+                INSERT INTO waterways (waterway_type, name, description)
+                VALUES ('river', %s, %s)
+                ON CONFLICT (name) DO NOTHING
                 RETURNING id
                 """,
                 (
                     river_name,
-                    f"Imported from rivermap.org — {region}, {country}",
-                    country,
-                    region,
+                    f"Imported from rivermap.org",
                 ),
             )
             row = cur.fetchone()
@@ -70,14 +68,7 @@ def import_data(conn, rivers: list[dict], dry_run: bool) -> None:
                 waterway_id = row[0]
                 stats["waterways"] += 1
             else:
-                # Already exists — look it up and backfill country/region if missing
-                cur.execute(
-                    """
-                    UPDATE waterways SET country = %s, region = %s
-                    WHERE name = %s AND (country IS NULL OR region IS NULL)
-                    """,
-                    (country, region, river_name),
-                )
+                # Already exists — look it up
                 cur.execute(
                     "SELECT id FROM waterways WHERE name = %s ORDER BY id LIMIT 1",
                     (river_name,),
@@ -118,32 +109,17 @@ def import_data(conn, rivers: list[dict], dry_run: bool) -> None:
                 # --- water_section ---
                 cur.execute(
                     """
-                    INSERT INTO water_sections (waterway_id, name, location)
-                    VALUES (%s, %s, ST_GeomFromText(%s, 4326))
-                    ON CONFLICT DO NOTHING
+                    INSERT INTO water_sections (waterway_id, name, region, country, location)
+                    VALUES (%s, %s, %s, %s, ST_GeomFromText(%s, 4326))
+                    ON CONFLICT (waterway_id, name) DO UPDATE
+                        SET region = EXCLUDED.region, country = EXCLUDED.country
                     RETURNING id
                     """,
-                    (waterway_id, sec_name, geom_wkt),
+                    (waterway_id, sec_name, region, country, geom_wkt),
                 )
                 row = cur.fetchone()
-                if row:
-                    section_id = row[0]
-                    stats["sections"] += 1
-                else:
-                    # Already exists — look it up
-                    cur.execute(
-                        "SELECT id FROM water_sections WHERE waterway_id = %s AND name = %s ORDER BY id LIMIT 1",
-                        (waterway_id, sec_name),
-                    )
-                    existing = cur.fetchone()
-                    if not existing:
-                        print(
-                            f"  [WARN] Could not find or insert section '{sec_name}', skipping",
-                            file=sys.stderr,
-                        )
-                        stats["skipped"] += 1
-                        continue
-                    section_id = existing[0]
+                section_id = row[0]
+                stats["sections"] += 1
 
                 # --- whitewater feature (difficulty) ---
                 if difficulty:
