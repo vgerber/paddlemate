@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import MapGL, {
   Layer,
   NavigationControl,
@@ -9,19 +9,20 @@ import MapGL, {
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Feature, SectionWithFeatures } from "@/lib/api";
 
+// Okabe-Ito color-blind safe palette
 const FEATURE_COLORS: Record<string, string> = {
-  whitewater: "#ffb4ab",
-  hole: "#ff6b6b",
-  siphon: "#ff4444",
-  waterfall: "#8bd1e8",
-  freestyle_spot: "#c2cf47",
-  put_in: "#b0ceb8",
-  take_out: "#b0ceb8",
-  portage: "#ffd54f",
-  weir: "#ffd54f",
-  dam: "#ffaa00",
-  obstacle: "#ff8c00",
-  bridge: "#bfc8ca",
+  whitewater: "#CC79A7", // reddish purple
+  hole: "#D55E00", // vermillion
+  siphon: "#D55E00", // vermillion
+  waterfall: "#56B4E9", // sky blue
+  freestyle_spot: "#F0E442", // yellow
+  put_in: "#0072B2", // blue
+  take_out: "#D55E00", // vermillion
+  portage: "#E69F00", // orange
+  weir: "#E69F00", // orange
+  dam: "#E69F00", // orange
+  obstacle: "#CC79A7", // reddish purple
+  bridge: "#bfc8ca", // neutral gray
 };
 
 interface WaterwayMapProps {
@@ -42,6 +43,26 @@ export default function WaterwayMap({
   onMapClick,
 }: WaterwayMapProps) {
   const mapRef = useRef<MapRef>(null);
+
+  const handleMapLoad = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    const icons: [string, string][] = [
+      ["put-in-icon", "/icons/put-in.svg"],
+      ["take-out-icon", "/icons/take-out.svg"],
+    ];
+    for (const [id, url] of icons) {
+      fetch(url)
+        .then((r) => r.text())
+        .then((svg) => {
+          const img = new Image(28, 28);
+          img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+          img.onload = () => {
+            if (!map.hasImage(id)) map.addImage(id, img);
+          };
+        });
+    }
+  }, []);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -95,7 +116,12 @@ export default function WaterwayMap({
     features: (sections ?? []).flatMap((s) => {
       const geom = s.location as unknown as GeoJSON.LineString;
       if (geom?.type !== "LineString" || !geom.coordinates.length) return [];
-      const mid = geom.coordinates[Math.floor(geom.coordinates.length / 2)];
+      const coords = geom.coordinates;
+      const sum = coords.reduce(
+        (acc, c) => [acc[0] + c[0], acc[1] + c[1]],
+        [0, 0],
+      );
+      const mid = [sum[0] / coords.length, sum[1] / coords.length];
       const ww = s.features?.find((f) => f.feature_type === "whitewater");
       const diff = (ww?.metadata as Record<string, unknown> | undefined)
         ?.difficulty as string | undefined;
@@ -199,6 +225,7 @@ export default function WaterwayMap({
         style={{ width: "100%", height: "100%" }}
         mapStyle="https://tiles.openfreemap.org/styles/liberty"
         onClick={handleClick}
+        onLoad={handleMapLoad}
         interactiveLayerIds={["sections-line", "sections-line-casing"]}
       >
         <NavigationControl position="top-right" />
@@ -234,50 +261,44 @@ export default function WaterwayMap({
           />
         </Source>
 
-        <Source id="section-labels" type="geojson" data={sectionLabelsGeoJSON}>
-          <Layer
-            id="sections-label"
-            type="symbol"
-            layout={{
-              "text-field": ["get", "label"],
-              "text-size": 12,
-              "text-font": ["Noto Sans Regular"],
-              "text-allow-overlap": true,
-              "text-ignore-placement": true,
-            }}
-            paint={{
-              "text-color": "#000",
-              "text-halo-color": "#fff",
-              "text-halo-width": 3,
-            }}
-          />
-        </Source>
-
         <Source
           id="section-endpoints"
           type="geojson"
           data={sectionEndpointsGeoJSON}
         >
           <Layer
-            id="section-put-in"
-            type="circle"
-            filter={["==", ["get", "kind"], "put_in"]}
-            paint={{
-              "circle-radius": 5,
-              "circle-color": "#4caf50",
-              "circle-stroke-width": 1.5,
-              "circle-stroke-color": "#121416",
+            id="section-endpoints-icon"
+            type="symbol"
+            layout={{
+              "icon-image": [
+                "match",
+                ["get", "kind"],
+                "put_in",
+                "put-in-icon",
+                "take-out-icon",
+              ],
+              "icon-size": 1,
+              "icon-allow-overlap": true,
+              "icon-ignore-placement": true,
             }}
           />
+        </Source>
+
+        <Source id="section-labels" type="geojson" data={sectionLabelsGeoJSON}>
           <Layer
-            id="section-take-out"
-            type="circle"
-            filter={["==", ["get", "kind"], "take_out"]}
+            id="sections-label"
+            type="symbol"
+            layout={{
+              "text-field": ["get", "label"],
+              "text-size": 15,
+              "text-font": ["Noto Sans Regular"],
+              "text-allow-overlap": true,
+              "text-ignore-placement": true,
+            }}
             paint={{
-              "circle-radius": 5,
-              "circle-color": "#f44336",
-              "circle-stroke-width": 1.5,
-              "circle-stroke-color": "#121416",
+              "text-color": "#ffffff",
+              "text-halo-color": "rgb(21, 37, 52)",
+              "text-halo-width": 2,
             }}
           />
         </Source>
