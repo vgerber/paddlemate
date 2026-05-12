@@ -119,7 +119,10 @@ fn derive_base_id(props: &Properties) -> Option<String> {
 /// Parse an Austrian local datetime string ("2026-05-12T19:00:00") into UTC.
 fn parse_zp(zp: &str) -> Option<DateTime<Utc>> {
     let naive = NaiveDateTime::parse_from_str(zp, "%Y-%m-%dT%H:%M:%S").ok()?;
-    Vienna.from_local_datetime(&naive).single().map(|dt| dt.with_timezone(&Utc))
+    Vienna
+        .from_local_datetime(&naive)
+        .single()
+        .map(|dt| dt.with_timezone(&Utc))
 }
 
 impl AustriaEhydReader {
@@ -132,7 +135,10 @@ impl AustriaEhydReader {
             }
         }
 
-        let resp = reqwest::get(API_URL).await?.json::<FeatureCollection>().await?;
+        let resp = reqwest::get(API_URL)
+            .await?
+            .json::<FeatureCollection>()
+            .await?;
 
         let mut map: HashMap<String, Vec<(DateTime<Utc>, f64)>> = HashMap::new();
 

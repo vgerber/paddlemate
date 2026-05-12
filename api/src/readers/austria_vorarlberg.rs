@@ -36,8 +36,7 @@ impl Default for AustriaVorarlbergReader {
     }
 }
 
-const WFS_URL: &str =
-    "https://vowis.vorarlberg.at/geoserver/owf/ows\
+const WFS_URL: &str = "https://vowis.vorarlberg.at/geoserver/owf/ows\
     ?service=WFS&request=GetFeature&typename=owf:Pegel\
     &srsname=EPSG:4326&outputFormat=application/json";
 
@@ -89,7 +88,10 @@ impl AustriaVorarlbergReader {
             }
         }
 
-        let resp = reqwest::get(WFS_URL).await?.json::<FeatureCollection>().await?;
+        let resp = reqwest::get(WFS_URL)
+            .await?
+            .json::<FeatureCollection>()
+            .await?;
 
         let mut map: HashMap<String, Vec<(DateTime<Utc>, f64)>> = HashMap::new();
 
@@ -99,17 +101,13 @@ impl AustriaVorarlbergReader {
 
             if let (Some(val), Some(ts_str)) = (p.w.as_ref(), p.zp_w.as_deref()) {
                 if let (Some(v), Some(ts)) = (parse_value(val), parse_iso(ts_str)) {
-                    map.entry(format!("{wisid}:W"))
-                        .or_default()
-                        .push((ts, v));
+                    map.entry(format!("{wisid}:W")).or_default().push((ts, v));
                 }
             }
 
             if let (Some(val), Some(ts_str)) = (p.q.as_ref(), p.zp_q.as_deref()) {
                 if let (Some(v), Some(ts)) = (parse_value(val), parse_iso(ts_str)) {
-                    map.entry(format!("{wisid}:Q"))
-                        .or_default()
-                        .push((ts, v));
+                    map.entry(format!("{wisid}:Q")).or_default().push((ts, v));
                 }
             }
         }

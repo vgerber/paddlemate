@@ -46,6 +46,7 @@ DEFAULT_INPUT = os.path.join(os.path.dirname(__file__), "gauges.csv")
 # Provider + source_id derivation
 # ---------------------------------------------------------------------------
 
+
 def _nve_api_id(raw: str) -> str:
     """Convert "0002.00032.000" → "2.32.0" (strip leading zeros per segment)."""
     return ".".join(str(int(seg)) for seg in raw.split("."))
@@ -125,8 +126,15 @@ def derive_provider_and_source_ids(station_id: str, units: str):
 # Main import
 # ---------------------------------------------------------------------------
 
+
 def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
-    stats = {"gauges": 0, "series": 0, "ranges": 0, "skipped_range": 0, "skipped_section": 0}
+    stats = {
+        "gauges": 0,
+        "series": 0,
+        "ranges": 0,
+        "skipped_range": 0,
+        "skipped_section": 0,
+    }
 
     with conn.cursor() as cur:
         # Build a lookup: "River / Section name" -> feature_id
@@ -157,7 +165,8 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
 
             if not dry_run:
                 # Upsert the gauge
-                cur.execute("""
+                cur.execute(
+                    """
                     INSERT INTO gauges (name, provider, source_id, lat, lon)
                     VALUES (%s, %s, %s, %s, %s)
                     ON CONFLICT (provider, source_id) DO UPDATE
@@ -165,27 +174,35 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
                           lat  = EXCLUDED.lat,
                           lon  = EXCLUDED.lon
                     RETURNING id
-                """, (name, provider, series_defs[0][0].rsplit(":", 1)[0], lat, lon))
+                """,
+                    (name, provider, series_defs[0][0].rsplit(":", 1)[0], lat, lon),
+                )
                 gauge_id = cur.fetchone()[0]
             else:
                 gauge_id = -1
             stats["gauges"] += 1
 
-            for (source_id, mtype, unit) in series_defs:
+            for source_id, mtype, unit in series_defs:
                 if not dry_run:
-                    cur.execute("""
+                    cur.execute(
+                        """
                         INSERT INTO gauge_series (gauge_id, measurement_type, unit)
                         VALUES (%s, %s::measurement_type, %s)
                         ON CONFLICT DO NOTHING
                         RETURNING id
-                    """, (gauge_id, mtype, unit))
+                    """,
+                        (gauge_id, mtype, unit),
+                    )
                     row_result = cur.fetchone()
                     if row_result is None:
                         # Already existed — look it up
-                        cur.execute("""
+                        cur.execute(
+                            """
                             SELECT id FROM gauge_series
                             WHERE gauge_id = %s AND measurement_type = %s::measurement_type
-                        """, (gauge_id, mtype))
+                        """,
+                            (gauge_id, mtype),
+                        )
                         series_id = cur.fetchone()[0]
                     else:
                         series_id = row_result[0]
@@ -208,7 +225,8 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
                         continue
 
                     if not dry_run:
-                        cur.execute("""
+                        cur.execute(
+                            """
                             INSERT INTO feature_water_ranges
                               (feature_id, series_id, range_low, range_medium, range_high)
                             VALUES (%s, %s, %s, %s, %s)
@@ -216,7 +234,9 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
                               SET range_low    = EXCLUDED.range_low,
                                   range_medium = EXCLUDED.range_medium,
                                   range_high   = EXCLUDED.range_high
-                        """, (feature_id, series_id, lw, mw, hw))
+                        """,
+                            (feature_id, series_id, lw, mw, hw),
+                        )
                     stats["ranges"] += 1
 
     if not dry_run:
@@ -231,9 +251,15 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Import gauges.csv into the paddlemate DB")
-    parser.add_argument("input", nargs="?", default=DEFAULT_INPUT, help="Path to gauges.csv")
-    parser.add_argument("--dry-run", action="store_true", help="Parse but don't write to DB")
+    parser = argparse.ArgumentParser(
+        description="Import gauges.csv into the paddlemate DB"
+    )
+    parser.add_argument(
+        "input", nargs="?", default=DEFAULT_INPUT, help="Path to gauges.csv"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Parse but don't write to DB"
+    )
     args = parser.parse_args()
 
     with open(args.input, newline="", encoding="utf-8") as f:
