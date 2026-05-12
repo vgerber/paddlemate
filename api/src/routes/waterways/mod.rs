@@ -3,6 +3,7 @@ mod feature_proposals;
 mod features;
 mod proposals;
 mod sections;
+mod water_ranges;
 mod waterways;
 
 use aide::axum::{
@@ -153,6 +154,29 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
             .patch_with(
                 feature_proposals::review_feature_proposal,
                 feature_proposals::review_feature_proposal_docs,
+            ),
+        )
+        // Feature water ranges
+        .api_route(
+            "/{waterway_id}/sections/{section_id}/features/{feature_id}/water-ranges",
+            get_with(
+                water_ranges::list_water_ranges,
+                water_ranges::list_water_ranges_docs,
+            )
+            .post_with(
+                water_ranges::create_water_range,
+                water_ranges::create_water_range_docs,
+            ),
+        )
+        .api_route(
+            "/{waterway_id}/sections/{section_id}/features/{feature_id}/water-ranges/{range_id}",
+            put_with(
+                water_ranges::update_water_range,
+                water_ranges::update_water_range_docs,
+            )
+            .delete_with(
+                water_ranges::delete_water_range,
+                water_ranges::delete_water_range_docs,
             ),
         )
         .with_state(state)

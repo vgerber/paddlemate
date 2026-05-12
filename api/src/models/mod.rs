@@ -1,6 +1,7 @@
 pub mod api_token;
 pub mod comment;
 pub mod feature;
+pub mod gauge;
 pub mod geometry;
 pub mod group;
 pub mod path_params;

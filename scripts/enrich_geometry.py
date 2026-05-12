@@ -5,8 +5,12 @@ onto the OSM river centerline fetched from Overpass, then storing the sub-line
 in the database.
 
 Usage:
-    python enrich_geometry.py [--waterway NAME] [--dry-run] [--limit N]
+    python enrich_geometry.py [--waterway NAME] [--dry-run] [--limit N] [--log-file PATH]
     DATABASE_URL=postgresql://... python enrich_geometry.py
+
+Progress is written to a JSONL log file (one entry per enriched section).
+Re-runs skip sections already recorded in the log file.
+The database is committed after each waterway so progress is never lost on abort.
 
 Requires: shapely, requests, psycopg2-binary (already in venv)
 """
@@ -18,6 +22,7 @@ import sys
 import time
 import urllib.parse
 from collections import defaultdict
+from datetime import datetime, timezone
 
 import psycopg2
 import requests
@@ -31,6 +36,7 @@ DATABASE_URL = os.environ.get(
 )
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 REQUEST_DELAY = 1.5
+DEFAULT_LOG_FILE = "enrich_geometry_progress.jsonl"
 
 
 def fetch_osm_ways(
@@ -108,6 +114,32 @@ def extract_subsection(
     return sub, start, end
 
 
+def load_log(log_file: str) -> set[int]:
+    """Return set of section IDs already recorded in the progress log."""
+    done: set[int] = set()
+    if not os.path.exists(log_file):
+        return done
+    with open(log_file, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+                done.add(entry["section_id"])
+            except (json.JSONDecodeError, KeyError):
+                pass
+    return done
+
+
+def append_log(log_file: str, entry: dict) -> None:
+    """Append a single JSON entry to the progress log (newline-delimited)."""
+    entry.setdefault("timestamp", datetime.now(timezone.utc).isoformat())
+    with open(log_file, "a") as f:
+        f.write(json.dumps(entry) + "\n")
+        f.flush()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -115,7 +147,18 @@ def main():
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--limit", type=int, help="Max number of waterways to process")
+    parser.add_argument(
+        "--log-file",
+        default=DEFAULT_LOG_FILE,
+        help=f"JSONL progress file (default: {DEFAULT_LOG_FILE})",
+    )
     args = parser.parse_args()
+
+    done_sections = load_log(args.log_file)
+    if done_sections:
+        print(
+            f"Resuming — {len(done_sections)} section(s) already in log, will skip them."
+        )
 
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
@@ -156,7 +199,8 @@ def main():
 
     for i, ((wid, wname), sections) in enumerate(waterways):
         already_rich = sum(1 for s in sections if (s[5] or 0) > 2 and s[6] is not None)
-        if already_rich == len(sections):
+        log_done = sum(1 for s in sections if s[0] in done_sections)
+        if already_rich == len(sections) or log_done == len(sections):
             print(
                 f"[{i + 1}/{len(waterways)}] {wname}: all sections already enriched, skipping"
             )
@@ -191,7 +235,11 @@ def main():
 
         print(f"  River line: {len(river.coords)} nodes from {len(ways)} ways")
 
+        waterway_updated = 0
         for sid, pi_lon, pi_lat, to_lon, to_lat, npoints, river_km in sections:
+            if sid in done_sections:
+                print(f"  Section {sid}: already in log, skipping")
+                continue
             if (npoints or 0) > 2 and river_km is not None:
                 print(
                     f"  Section {sid}: already has {npoints} nodes and river_km, skipping"
@@ -219,17 +267,33 @@ def main():
 
             sub, upstream_pos, downstream_pos = result
             geojson = json.dumps(sub.__geo_interface__)
-            print(f"  Section {sid}: {npoints} → {len(sub.coords)} nodes")
+            print(
+                f"  Section {sid}: {npoints} → {len(sub.coords)} nodes  ✓",
+                flush=True,
+            )
 
             if not args.dry_run:
                 cur.execute(
                     "UPDATE water_sections SET location = ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), river_km_start = %s, river_km_end = %s WHERE id = %s",
                     (geojson, upstream_pos, downstream_pos, sid),
                 )
+                append_log(
+                    args.log_file,
+                    {
+                        "section_id": sid,
+                        "waterway_id": wid,
+                        "waterway_name": wname,
+                        "nodes": len(sub.coords),
+                    },
+                )
+                done_sections.add(sid)
+                waterway_updated += 1
                 updated += 1
 
-    if not args.dry_run:
-        conn.commit()
+        # Commit after each waterway so progress survives an abort
+        if not args.dry_run and waterway_updated:
+            conn.commit()
+            print(f"  Committed {waterway_updated} section(s) for {wname}")
 
     cur.close()
     conn.close()

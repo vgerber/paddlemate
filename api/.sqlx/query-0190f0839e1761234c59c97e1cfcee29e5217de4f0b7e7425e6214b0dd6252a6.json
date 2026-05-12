@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT id, waterway_id, name, description, ST_AsGeoJSON(location) AS location, created_at, updated_at\n        FROM water_sections WHERE waterway_id = $1 ORDER BY name\n        ",
+  "query": "\n        INSERT INTO waterways (waterway_type, name, description)\n        VALUES ('river', $1, $2)\n        RETURNING id, waterway_type AS \"waterway_type: WaterwayType\", name, description, created_at, updated_at\n        ",
   "describe": {
     "columns": [
       {
@@ -10,8 +10,17 @@
       },
       {
         "ordinal": 1,
-        "name": "waterway_id",
-        "type_info": "Int8"
+        "name": "waterway_type: WaterwayType",
+        "type_info": {
+          "Custom": {
+            "name": "waterway_type",
+            "kind": {
+              "Enum": [
+                "river"
+              ]
+            }
+          }
+        }
       },
       {
         "ordinal": 2,
@@ -25,23 +34,19 @@
       },
       {
         "ordinal": 4,
-        "name": "location",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 5,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 6,
+        "ordinal": 5,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Int8"
+        "Varchar",
+        "Text"
       ]
     },
     "nullable": [
@@ -49,10 +54,9 @@
       false,
       false,
       true,
-      null,
       false,
       false
     ]
   },
-  "hash": "87cd0ad627ea005c246259bb0e7d3050981c50b34f4a0fe823b31cb8ea961ac1"
+  "hash": "0190f0839e1761234c59c97e1cfcee29e5217de4f0b7e7425e6214b0dd6252a6"
 }

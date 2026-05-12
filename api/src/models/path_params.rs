@@ -54,3 +54,22 @@ pub struct FeatureProposalPath {
     pub waterway_id: WaterwayId,
     pub proposal_id: i64,
 }
+
+#[derive(Deserialize, JsonSchema)]
+pub struct GaugePath {
+    pub gauge_id: i64,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct GaugeSeriesPath {
+    pub gauge_id: i64,
+    pub series_id: i64,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct FeatureWaterRangePath {
+    pub waterway_id: WaterwayId,
+    pub section_id: SectionId,
+    pub feature_id: i64,
+    pub range_id: i64,
+}

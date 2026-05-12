@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        INSERT INTO water_sections (waterway_id, name, description, location)\n        VALUES ($1, $2, $3, ST_GeomFromGeoJSON($4))\n        RETURNING id, waterway_id, name, description, ST_AsGeoJSON(location) AS location, created_at, updated_at\n        ",
+  "query": "\n            SELECT id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_at, updated_at\n            FROM water_sections WHERE waterway_id = $1 ORDER BY river_km_start NULLS LAST, name\n            ",
   "describe": {
     "columns": [
       {
@@ -25,26 +25,33 @@
       },
       {
         "ordinal": 4,
+        "name": "region",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "country",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
         "name": "location",
         "type_info": "Text"
       },
       {
-        "ordinal": 5,
+        "ordinal": 7,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 6,
+        "ordinal": 8,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Int8",
-        "Varchar",
-        "Text",
-        "Text"
+        "Int8"
       ]
     },
     "nullable": [
@@ -52,10 +59,12 @@
       false,
       false,
       true,
+      true,
+      true,
       null,
       false,
       false
     ]
   },
-  "hash": "31a13e08420523616501934e4e4a04a51e6446b2681b244d19ffec84278fed60"
+  "hash": "0b32eecfb8708cdae57528e282fc482a2b5910349db93c2ec9eed9cd5444a335"
 }

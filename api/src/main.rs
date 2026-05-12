@@ -21,6 +21,7 @@ use paddlemate_api::{
     layers::auth::{api_token_auth, api_token_auth_optional},
     routes::{
         docs::docs_routes,
+        gauges::gauges_routes,
         groups::group_routes,
         tokens::tokens_routes,
         users::{list_my_proposals, list_my_proposals_docs, list_users, list_users_docs},
@@ -133,7 +134,7 @@ async fn main() {
         .build();
 
     let state = AppState {
-        pg_pool: db,
+        pg_pool: db.clone(),
         keycloak_config: KeycloakState {
             url: keycloak_url.clone(),
             realm: keycloak_realm.clone(),
@@ -167,10 +168,13 @@ async fn main() {
 
     let waterway_app = ApiRouter::new()
         .nest_api_service("/waterways", waterways_routes(state.clone()))
+        .nest_api_service("/gauges", gauges_routes(state.clone()))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth_optional,
         ));
+
+    paddlemate_api::readers::run_all(db.clone());
 
     let api_v1 = ApiRouter::new()
         .merge(protected)
