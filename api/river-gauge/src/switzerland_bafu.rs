@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::Deserialize;
 
-use super::{BoxFuture, FetchRequest, GaugeReader};
+use crate::{BoxFuture, FetchRequest, GaugeReader};
 
 /// Reader for Swiss federal hydrology data (BAFU / FOEN).
 ///
@@ -180,5 +180,18 @@ impl GaugeReader for SwitzerlandBafuReader {
 
             Ok(results)
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // --- latest threshold boundary ---
+    // Verifies the constant matches the documented 4-hour window used to choose
+    // between the /latest and /daterange endpoints.
+    #[test]
+    fn latest_threshold_is_four_hours() {
+        assert_eq!(LATEST_THRESHOLD_SECS, 4 * 3600);
     }
 }

@@ -9,6 +9,8 @@ import {
   sectionsApi,
   commentsApi,
   featuresApi,
+  waterStatusApi,
+  gaugeReadingsApi,
   type CreateFeatureInput,
   type WaterwayFilters,
 } from "@/lib/api";
@@ -22,6 +24,10 @@ export const waterwayKeys = {
     [...waterwayKeys.detail(waterwayId), "sections", sectionId] as const,
   sectionComments: (waterwayId: number, sectionId: number) =>
     [...waterwayKeys.section(waterwayId, sectionId), "comments"] as const,
+  sectionWaterStatus: (waterwayId: number, sectionId: number) =>
+    [...waterwayKeys.section(waterwayId, sectionId), "water-status"] as const,
+  gaugeReadings: (gaugeId: number, seriesId: number, from?: string) =>
+    ["gauges", gaugeId, "series", seriesId, "readings", from] as const,
 };
 
 const PER_PAGE = 20;
@@ -88,5 +94,43 @@ export function useCreateFeature(waterwayId: number, sectionId: number) {
       queryClient.invalidateQueries({
         queryKey: waterwayKeys.section(waterwayId, sectionId),
       }),
+  });
+}
+
+export function useWaterStatus(
+  waterwayId: number,
+  sectionId: number | null,
+) {
+  return useQuery({
+    queryKey: waterwayKeys.sectionWaterStatus(waterwayId, sectionId ?? 0),
+    queryFn: () =>
+      waterStatusApi.getForSection(waterwayId, sectionId as number),
+    enabled: sectionId !== null,
+    // Re-fetch every 5 minutes — matches gauge reader poll interval
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useGaugeReadings(
+  gaugeId: number | null,
+  seriesId: number | null,
+  from?: string,
+  limit?: number,
+) {
+  return useQuery({
+    queryKey: waterwayKeys.gaugeReadings(
+      gaugeId ?? 0,
+      seriesId ?? 0,
+      from,
+    ),
+    queryFn: () =>
+      gaugeReadingsApi.list(
+        gaugeId as number,
+        seriesId as number,
+        from,
+        limit,
+      ),
+    enabled: gaugeId !== null && seriesId !== null,
+    staleTime: 5 * 60 * 1000,
   });
 }

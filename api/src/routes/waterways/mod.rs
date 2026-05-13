@@ -4,6 +4,7 @@ mod features;
 mod proposals;
 mod sections;
 mod water_ranges;
+mod water_status;
 mod waterways;
 
 use aide::axum::{
@@ -177,6 +178,14 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
             .delete_with(
                 water_ranges::delete_water_range,
                 water_ranges::delete_water_range_docs,
+            ),
+        )
+        // Section water status
+        .api_route(
+            "/{waterway_id}/sections/{section_id}/water-status",
+            get_with(
+                water_status::get_section_water_status,
+                water_status::get_section_water_status_docs,
             ),
         )
         .with_state(state)

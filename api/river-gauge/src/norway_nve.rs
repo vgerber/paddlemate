@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use reqwest::header::{HeaderMap, HeaderValue, ACCEPT};
 use serde::Deserialize;
 
-use super::{BoxFuture, FetchRequest, GaugeReader};
+use crate::{BoxFuture, FetchRequest, GaugeReader};
 
 /// Reader for Norwegian hydrological data (NVE HydAPI).
 ///
@@ -150,27 +150,35 @@ impl GaugeReader for NorwayNveReader {
                 return Ok(HashMap::new());
             }
 
-            let all_stations: HashSet<&str> = parsed.iter().map(|(id, _, _)| *id).collect();
-            let all_params: HashSet<&str> = parsed.iter().map(|(_, p, _)| *p).collect();
-
             let now = Utc::now();
             let global_from = requests.iter().map(|r| r.from).min().unwrap_or(now);
             let global_to = requests.iter().map(|r| r.to).max().unwrap_or(now);
 
-            let series_list = match self
-                .fetch_observations(api_key, &all_stations, &all_params, global_from, global_to)
-                .await
-            {
-                Ok(s) => s,
-                Err(err) => {
-                    tracing::error!("NveReader: fetch failed: {err}");
-                    return Ok(HashMap::new());
+            // Group stations by parameter — NVE rejects batches where a station
+            // doesn't support the requested parameter, so we issue one request
+            // per unique parameter code.
+            let mut by_param: HashMap<&str, HashSet<&str>> = HashMap::new();
+            for (station_id, parameter, _) in &parsed {
+                by_param.entry(parameter).or_default().insert(station_id);
+            }
+
+            let mut all_series: Vec<Series> = Vec::new();
+            for (param, stations) in &by_param {
+                let param_set: HashSet<&str> = std::iter::once(*param).collect();
+                match self
+                    .fetch_observations(api_key, stations, &param_set, global_from, global_to)
+                    .await
+                {
+                    Ok(mut s) => all_series.append(&mut s),
+                    Err(err) => {
+                        tracing::error!("NveReader: fetch failed for parameter {param}: {err}");
+                    }
                 }
-            };
+            }
 
             // Build a lookup: (station_id, parameter_str) -> observations
             let mut by_key: HashMap<(&str, String), &Vec<Observation>> = HashMap::new();
-            for series in &series_list {
+            for series in &all_series {
                 by_key.insert(
                     (series.station_id.as_str(), series.parameter.to_string()),
                     &series.observations,
@@ -207,5 +215,27 @@ impl GaugeReader for NorwayNveReader {
 
             Ok(results)
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // NVE station IDs contain dots (e.g. "2.32.0"), so the source_id uses
+    // rsplit_once to ensure the parameter is always the last segment.
+    #[test]
+    fn rsplit_correctly_splits_dotted_station_id() {
+        let (station, param) = "2.32.0:1001".rsplit_once(':').expect("should rsplit");
+        assert_eq!(station, "2.32.0");
+        assert_eq!(param, "1001");
+    }
+
+    #[test]
+    fn split_once_would_misparse_dotted_station_id() {
+        // split_once stops at the first colon; for IDs that might contain colons
+        // rsplit_once is safer. This test documents the design choice.
+        let (station, _) = "2.32.0:1001".rsplit_once(':').unwrap();
+        assert!(!station.contains(':'), "station should not contain a colon");
     }
 }

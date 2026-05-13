@@ -3,7 +3,7 @@ use sqlx::{PgPool, Row, postgres::PgRow};
 
 use crate::models::gauge::{
     FeatureWaterRange, Gauge, GaugeId, GaugeReading, GaugeSeries, GaugeWithSeries, MeasurementType,
-    SeriesId,
+    SectionWaterStatus, SeriesId, WaterLevel, WaterRangeWithStatus,
 };
 
 fn parse_measurement_type(s: &str) -> MeasurementType {
@@ -36,6 +36,7 @@ fn row_to_series(row: &PgRow) -> Result<GaugeSeries, sqlx::Error> {
         measurement_type: parse_measurement_type(&row.try_get::<String, _>("measurement_type")?),
         unit: row.try_get("unit")?,
         label: row.try_get("label")?,
+        source_id: row.try_get("source_id")?,
         created_at: row.try_get("created_at")?,
     })
 }
@@ -51,7 +52,7 @@ fn row_to_reading(row: &PgRow) -> Result<GaugeReading, sqlx::Error> {
 const GAUGE_COLS: &str =
     "id, name, provider, source_id, lat, lon, active, fetch_interval_secs, created_at, updated_at";
 const SERIES_COLS: &str =
-    "id, gauge_id, measurement_type::text AS measurement_type, unit, label, created_at";
+    "id, gauge_id, measurement_type::text AS measurement_type, unit, label, source_id, created_at";
 
 // --- Gauge CRUD ---
 
@@ -326,6 +327,7 @@ fn row_to_water_range(row: &PgRow) -> Result<FeatureWaterRange, sqlx::Error> {
             ),
             unit: row.try_get("gs_unit")?,
             label: row.try_get("gs_label")?,
+            source_id: row.try_get("gs_source_id").ok().flatten(),
             created_at: row.try_get("gs_created_at")?,
         },
     })
@@ -339,6 +341,7 @@ const WATER_RANGE_JOIN: &str = r#"
         gs.measurement_type::text AS gs_measurement_type,
         gs.unit             AS gs_unit,
         gs.label            AS gs_label,
+        gs.source_id        AS gs_source_id,
         gs.created_at       AS gs_created_at
     FROM feature_water_ranges fwr
     JOIN gauge_series gs ON fwr.series_id = gs.id
@@ -439,4 +442,118 @@ pub async fn delete_feature_water_range(
         .execute(pool)
         .await?;
     Ok(result.rows_affected() > 0)
+}
+
+// --- Section water status (ranges + latest reading) ---
+
+pub async fn water_status_for_section(
+    pool: &PgPool,
+    section_id: i64,
+) -> Result<SectionWaterStatus, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        SELECT
+            fwr.id,
+            fwr.feature_id,
+            fwr.range_low,
+            fwr.range_medium,
+            fwr.range_high,
+            fwr.created_at,
+            fwr.updated_at,
+            gs.id               AS gs_id,
+            gs.gauge_id         AS gs_gauge_id,
+            gs.measurement_type::text AS gs_measurement_type,
+            gs.unit             AS gs_unit,
+            gs.label            AS gs_label,
+            gs.source_id        AS gs_source_id,
+            gs.created_at       AS gs_created_at,
+            g.id                AS g_id,
+            g.name              AS g_name,
+            g.provider          AS g_provider,
+            g.source_id         AS g_source_id,
+            g.lat               AS g_lat,
+            g.lon               AS g_lon,
+            g.active            AS g_active,
+            g.fetch_interval_secs AS g_fetch_interval_secs,
+            g.created_at        AS g_created_at,
+            g.updated_at        AS g_updated_at,
+            lr.series_id        AS lr_series_id,
+            lr.measured_at      AS lr_measured_at,
+            lr.value            AS lr_value
+        FROM features f
+        JOIN feature_water_ranges fwr ON fwr.feature_id = f.id
+        JOIN gauge_series gs ON gs.id = fwr.series_id
+        JOIN gauges g ON g.id = gs.gauge_id
+        LEFT JOIN LATERAL (
+            SELECT series_id, measured_at, value
+            FROM gauge_readings
+            WHERE series_id = gs.id
+            ORDER BY measured_at DESC
+            LIMIT 1
+        ) lr ON TRUE
+        WHERE f.section_id = $1
+        ORDER BY fwr.id
+        "#,
+    )
+    .bind(section_id)
+    .fetch_all(pool)
+    .await?;
+
+    let ranges = rows
+        .iter()
+        .map(|row| {
+            let lr_series_id: Option<SeriesId> = row.try_get("lr_series_id")?;
+            let latest_reading = lr_series_id
+                .map(|_| {
+                    Ok::<GaugeReading, sqlx::Error>(GaugeReading {
+                        series_id: row.try_get("lr_series_id")?,
+                        measured_at: row.try_get("lr_measured_at")?,
+                        value: row.try_get("lr_value")?,
+                    })
+                })
+                .transpose()?;
+
+            Ok(WaterRangeWithStatus {
+                id: row.try_get("id")?,
+                feature_id: row.try_get("feature_id")?,
+                range_low: row.try_get("range_low")?,
+                range_medium: row.try_get("range_medium")?,
+                range_high: row.try_get("range_high")?,
+                created_at: row.try_get("created_at")?,
+                updated_at: row.try_get("updated_at")?,
+                series: GaugeSeries {
+                    id: row.try_get("gs_id")?,
+                    gauge_id: row.try_get("gs_gauge_id")?,
+                    measurement_type: parse_measurement_type(
+                        &row.try_get::<String, _>("gs_measurement_type")?,
+                    ),
+                    unit: row.try_get("gs_unit")?,
+                    label: row.try_get("gs_label")?,
+                    source_id: row.try_get("gs_source_id").ok().flatten(),
+                    created_at: row.try_get("gs_created_at")?,
+                },
+                gauge: Gauge {
+                    id: row.try_get("g_id")?,
+                    name: row.try_get("g_name")?,
+                    provider: row.try_get("g_provider")?,
+                    source_id: row.try_get("g_source_id")?,
+                    lat: row.try_get("g_lat")?,
+                    lon: row.try_get("g_lon")?,
+                    active: row.try_get("g_active")?,
+                    fetch_interval_secs: row.try_get("g_fetch_interval_secs")?,
+                    created_at: row.try_get("g_created_at")?,
+                    updated_at: row.try_get("g_updated_at")?,
+                },
+                level: WaterLevel::from_reading(
+                    latest_reading.as_ref().map(|r| r.value),
+                    row.try_get("range_low")?,
+                    row.try_get("range_medium")?,
+                    row.try_get("range_high")?,
+                ),
+                latest_reading,
+            })
+        })
+        .collect::<Result<Vec<_>, sqlx::Error>>()?;
+
+    Ok(SectionWaterStatus { ranges })
 }

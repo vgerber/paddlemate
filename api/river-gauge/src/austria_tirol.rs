@@ -7,7 +7,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use serde::Deserialize;
 use tokio::sync::Mutex;
 
-use super::{BoxFuture, FetchRequest, GaugeReader};
+use crate::{BoxFuture, FetchRequest, GaugeReader};
 
 /// Reader for the Tyrolean hydrographic service (HD Tirol).
 ///
@@ -205,5 +205,101 @@ impl GaugeReader for AustriaTirolReader {
 
             Ok(results)
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_stations(json: serde_json::Value) -> Vec<StationEntry> {
+        serde_json::from_value(json).expect("test fixture invalid")
+    }
+
+    // --- extract_reading ---
+
+    #[test]
+    fn extract_reading_water_level_ok() {
+        // dt is milliseconds since epoch: 1_747_000_000_000 ms = 2025-05-12 ...
+        let stations = make_stations(serde_json::json!([
+            {
+                "number": "201525",
+                "values": {
+                    "W": { "Cmd": { "v": 123.4, "dt": 1_747_000_000_000_u64 } }
+                }
+            }
+        ]));
+
+        let (ts, v) = AustriaTirolReader::extract_reading(&stations, "201525", "W")
+            .expect("should find a reading");
+
+        assert!((v - 123.4).abs() < 1e-9);
+        // epoch 1747000000 sec = 2025-05-12T02:06:40Z
+        assert_eq!(ts.timestamp(), 1_747_000_000);
+    }
+
+    #[test]
+    fn extract_reading_discharge_ok() {
+        let stations = make_stations(serde_json::json!([
+            {
+                "number": "201525",
+                "values": {
+                    "Q": { "15m.Cmd.HD": { "v": 55.0, "dt": 1_747_000_000_000_u64 } }
+                }
+            }
+        ]));
+
+        let (_, v) = AustriaTirolReader::extract_reading(&stations, "201525", "Q")
+            .expect("should find discharge");
+        assert!((v - 55.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn extract_reading_unknown_station_returns_none() {
+        let stations = make_stations(serde_json::json!([
+            { "number": "999999", "values": {} }
+        ]));
+        assert!(AustriaTirolReader::extract_reading(&stations, "111111", "W").is_none());
+    }
+
+    #[test]
+    fn extract_reading_unknown_param_returns_none() {
+        let stations = make_stations(serde_json::json!([
+            {
+                "number": "201525",
+                "values": { "W": { "Cmd": { "v": 1.0, "dt": 1_000_000_000_000_u64 } } }
+            }
+        ]));
+        // "XX" is not a valid param key
+        assert!(AustriaTirolReader::extract_reading(&stations, "201525", "XX").is_none());
+    }
+
+    #[test]
+    fn extract_reading_missing_value_key_returns_none() {
+        // Station exists but has no W entry in values
+        let stations = make_stations(serde_json::json!([
+            { "number": "201525", "values": {} }
+        ]));
+        assert!(AustriaTirolReader::extract_reading(&stations, "201525", "W").is_none());
+    }
+
+    // --- snapshot_url ---
+
+    #[test]
+    fn snapshot_url_discharge() {
+        let url = AustriaTirolReader::snapshot_url("Q");
+        assert!(url.contains("Durchfluss"), "expected Durchfluss in URL");
+    }
+
+    #[test]
+    fn snapshot_url_temperature() {
+        let url = AustriaTirolReader::snapshot_url("WT");
+        assert!(url.contains("Wassertemperatur"), "expected Wassertemperatur in URL");
+    }
+
+    #[test]
+    fn snapshot_url_default_is_water_level() {
+        let url = AustriaTirolReader::snapshot_url("W");
+        assert!(url.contains("Wasserstand"), "expected Wasserstand in URL");
     }
 }

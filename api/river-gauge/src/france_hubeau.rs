@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 
-use super::{BoxFuture, FetchRequest, GaugeReader};
+use crate::{BoxFuture, FetchRequest, GaugeReader};
 
 /// Reader for French national hydrology data (Hub'Eau Hydrométrie v2).
 ///
@@ -155,5 +155,22 @@ impl GaugeReader for FranceHubeauReader {
             // on the same station are automatically routed to different series.
             Ok(results)
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Hub'Eau uses grandeur in the source_id to route H vs Q readings to
+    // different series on the same station. Verify the split is unambiguous.
+    #[test]
+    fn source_id_grandeur_is_last_segment() {
+        let cases = [("K055001010:H", "K055001010", "H"), ("K055001010:Q", "K055001010", "Q")];
+        for (raw, want_station, want_grandeur) in cases {
+            let (station, grandeur) = raw.split_once(':').expect("should split");
+            assert_eq!(station, want_station);
+            assert_eq!(grandeur, want_grandeur);
+        }
     }
 }

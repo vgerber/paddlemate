@@ -8,7 +8,7 @@ use chrono_tz::Europe::Berlin;
 use serde::Deserialize;
 use tokio::sync::Mutex;
 
-use super::{BoxFuture, FetchRequest, GaugeReader};
+use crate::{BoxFuture, FetchRequest, GaugeReader};
 
 /// Reader for the Bavarian flood information service (HND Bayern / BLfU).
 ///
@@ -153,7 +153,7 @@ fn rebuild_map(stations: &HashMap<String, StationData>) -> HashMap<String, Stati
 
 impl GaugeReader for GermanyBavariaReader {
     fn provider_key(&self) -> &'static str {
-        "blfu"
+        "by"
     }
 
     fn fetch_all<'a>(
@@ -221,5 +221,55 @@ impl GaugeReader for GermanyBavariaReader {
 
             Ok(results)
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // --- parse_german_float ---
+
+    #[test]
+    fn parse_german_float_plain() {
+        assert_eq!(parse_german_float("28"), Some(28.0));
+    }
+
+    #[test]
+    fn parse_german_float_comma_decimal() {
+        assert_eq!(parse_german_float("7,82"), Some(7.82));
+    }
+
+    #[test]
+    fn parse_german_float_dot_decimal() {
+        assert_eq!(parse_german_float("7.82"), Some(7.82));
+    }
+
+    #[test]
+    fn parse_german_float_non_numeric_returns_none() {
+        assert!(parse_german_float("---").is_none());
+        assert!(parse_german_float("").is_none());
+    }
+
+    // --- parse_datum ---
+
+    #[test]
+    fn parse_datum_valid_converts_to_utc() {
+        // "12.05.2026, 12:00" in Berlin CEST (UTC+2) = 10:00 UTC
+        let utc = parse_datum("12.05.2026, 12:00").expect("should parse");
+        assert_eq!(utc.timestamp(), 1778580000);
+    }
+
+    #[test]
+    fn parse_datum_winter_time_uses_cet() {
+        // "12.01.2026, 12:00" in Berlin CET (UTC+1) = 11:00 UTC
+        let utc = parse_datum("12.01.2026, 12:00").expect("should parse winter");
+        assert_eq!(utc.timestamp(), 1768215600);
+    }
+
+    #[test]
+    fn parse_datum_invalid_returns_none() {
+        assert!(parse_datum("not-a-date").is_none());
+        assert!(parse_datum("").is_none());
     }
 }

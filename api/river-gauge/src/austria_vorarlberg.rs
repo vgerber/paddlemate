@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use tokio::sync::Mutex;
 
-use super::{BoxFuture, FetchRequest, GaugeReader};
+use crate::{BoxFuture, FetchRequest, GaugeReader};
 
 /// Reader for Vorarlberg surface water gauges.
 ///
@@ -137,5 +137,47 @@ impl GaugeReader for AustriaVorarlbergReader {
                 .filter(|(id, _)| wanted.contains(id.as_str()))
                 .collect())
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // --- parse_value ---
+
+    #[test]
+    fn parse_value_number() {
+        assert_eq!(parse_value(&serde_json::json!(123.4)), Some(123.4));
+    }
+
+    #[test]
+    fn parse_value_integer_number() {
+        assert_eq!(parse_value(&serde_json::json!(55)), Some(55.0));
+    }
+
+    #[test]
+    fn parse_value_string_plain() {
+        assert_eq!(parse_value(&serde_json::json!("78.5")), Some(78.5));
+    }
+
+    #[test]
+    fn parse_value_string_with_comma() {
+        assert_eq!(parse_value(&serde_json::json!("7,82")), Some(7.82));
+    }
+
+    #[test]
+    fn parse_value_string_with_leading_space() {
+        assert_eq!(parse_value(&serde_json::json!(" 12.3")), Some(12.3));
+    }
+
+    #[test]
+    fn parse_value_null_returns_none() {
+        assert!(parse_value(&serde_json::Value::Null).is_none());
+    }
+
+    #[test]
+    fn parse_value_non_numeric_string_returns_none() {
+        assert!(parse_value(&serde_json::json!("n/a")).is_none());
     }
 }

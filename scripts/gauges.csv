@@ -7,7 +7,7 @@ station_id,country,name,lat,lng,units,lw,mw,hw,rivers
 201368,AT,"Venter Ache @ Vent (altes Feuerwehrhaus)",46.859501,10.9146,cm,50,60,70,"Venter Ache / Heilligkreuz-Schlucht | Venter Ache / Untere (P4 - Zwieselstein) | Venter Ache / Obere (Vent - Strassenbrücke)"
 201376,AT,"Gurgler Ache @ Obergurgl",46.8689,11.0222,cm,50,65,None,"Gurgelener Ache / Obergurgl - Liftparkplatz Pill | Gurgelener Ache / Strassenbrücke - Sahnestüberl | Gurgelener Ache / Sahnestüberl - Zwieselstein"
 201384,AT,"Ötztaler Ache @ Sölden",46.9776,11.0117,cm,None,None,None,"Ötztaler Ache / Kühtrain Schlucht | Ötztaler Ache / Obere (Sölden - Bruggen)"
-201434,AT,"Ötztaler Ache @ Tumpen",47.163101,10.9105,cm,200,225,None,"Ötztaler Ache / Mittlere (Au - Köfelser Brücke) | Ötztaler Ache / Köfelser Strecke (Brücke - Umhausen) | Ötztaler Ache / Achestürze (Tumpen - Habichen) | Ötztaler Ache / Wellerbrücke (Habichen - Oetz) | Ötztaler Ache / Untere (Oetz - Haiming)"
+201434,AT,"Ötztaler Ache @ Tumpen",47.163101,10.9105,cm,200,225,240,"Ötztaler Ache / Mittlere (Au - Köfelser Brücke):200:225:240 | Ötztaler Ache / Köfelser Strecke (Brücke - Umhausen):200:230:265 | Ötztaler Ache / Achestürze (Tumpen - Habichen) | Ötztaler Ache / Wellerbrücke (Habichen - Oetz):180:200:215 | Ötztaler Ache / Untere (Oetz - Haiming):190:230:280"
 201459,AT,"Inn @ Magerbach",47.2593,10.8759,cm,200,300,400,"Inn / Imsterschlucht (Imst - Haiming)"
 201566,AT,"Gschnitzbach @ Steinach am Brenner",47.092899,11.4651,cm,190,195,210,"Gschnitzbach / Gschnitz - Trins | Gschnitzbach / Trins - Steinach"
 201574,AT,"Sill @ Puig (Matrei am Brenner)",47.113098,11.4524,cm,145,160,170,"Sill / Mittlere"

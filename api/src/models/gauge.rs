@@ -35,6 +35,8 @@ pub struct GaugeSeries {
     pub measurement_type: MeasurementType,
     pub unit: String,
     pub label: Option<String>,
+    /// Full reader source_id (e.g. "201038:W") used by the background dispatcher.
+    pub source_id: Option<String>,
     pub created_at: DateTime<Utc>,
 }
 
@@ -60,6 +62,33 @@ pub struct GaugeReading {
     pub value: f64,
 }
 
+/// Current water level state derived from a reading and its range thresholds.
+/// Empty = below low (gray), Low = green, Medium = orange, High = red.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum WaterLevel {
+    Empty,
+    Low,
+    Medium,
+    High,
+}
+
+impl WaterLevel {
+    pub fn from_reading(
+        value: Option<f64>,
+        range_low: f64,
+        range_medium: f64,
+        range_high: f64,
+    ) -> Self {
+        match value {
+            Some(v) if v >= range_high => WaterLevel::High,
+            Some(v) if v >= range_medium => WaterLevel::Medium,
+            Some(v) if v >= range_low => WaterLevel::Low,
+            _ => WaterLevel::Empty,
+        }
+    }
+}
+
 /// A water-level threshold range for a feature, referencing a gauge series.
 /// Embeds the full series so the frontend can construct readings URLs without a secondary lookup.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -75,6 +104,29 @@ pub struct FeatureWaterRange {
     pub range_high: f64,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+
+/// A water range entry enriched with the gauge and the most recent reading.
+/// Returned by the `water-status` endpoint for a section.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct WaterRangeWithStatus {
+    pub id: i64,
+    pub feature_id: i64,
+    pub series: GaugeSeries,
+    pub gauge: Gauge,
+    pub range_low: f64,
+    pub range_medium: f64,
+    pub range_high: f64,
+    pub latest_reading: Option<GaugeReading>,
+    pub level: WaterLevel,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+/// All water-level ranges for every feature in a section, with their latest readings.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SectionWaterStatus {
+    pub ranges: Vec<WaterRangeWithStatus>,
 }
 
 // --- Request types ---

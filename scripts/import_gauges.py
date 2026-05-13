@@ -159,7 +159,29 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
             mw = float(row["mw"]) if row["mw"] not in ("", "None", None) else None
             hw = float(row["hw"]) if row["hw"] not in ("", "None", None) else None
 
-            river_names = [r.strip() for r in row["rivers"].split("|") if r.strip()]
+            # Parse river entries. Each entry is either:
+            #   "River / Section"            — uses gauge-level lw/mw/hw
+            #   "River / Section:lw:mw:hw"  — per-section override
+            river_entries: list[tuple[str, float | None, float | None, float | None]] = []
+            for entry in row["rivers"].split("|"):
+                entry = entry.strip()
+                if not entry:
+                    continue
+                parts = entry.rsplit(":", 3)
+                if len(parts) == 4:
+                    section_name = parts[0].strip()
+                    try:
+                        s_lw = float(parts[1]) if parts[1].strip() not in ("", "None") else None
+                        s_mw = float(parts[2]) if parts[2].strip() not in ("", "None") else None
+                        s_hw = float(parts[3]) if parts[3].strip() not in ("", "None") else None
+                    except ValueError:
+                        # Not a threshold suffix — treat whole thing as section name
+                        section_name = entry
+                        s_lw, s_mw, s_hw = lw, mw, hw
+                else:
+                    section_name = entry
+                    s_lw, s_mw, s_hw = lw, mw, hw
+                river_entries.append((section_name, s_lw, s_mw, s_hw))
 
             provider, series_defs = derive_provider_and_source_ids(station_id, units)
 
@@ -186,39 +208,28 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
                 if not dry_run:
                     cur.execute(
                         """
-                        INSERT INTO gauge_series (gauge_id, measurement_type, unit)
-                        VALUES (%s, %s::measurement_type, %s)
-                        ON CONFLICT DO NOTHING
+                        INSERT INTO gauge_series (gauge_id, measurement_type, unit, source_id)
+                        VALUES (%s, %s::measurement_type, %s, %s)
+                        ON CONFLICT (gauge_id, measurement_type)
+                        DO UPDATE SET source_id = EXCLUDED.source_id, unit = EXCLUDED.unit
                         RETURNING id
                     """,
-                        (gauge_id, mtype, unit),
+                        (gauge_id, mtype, unit, source_id),
                     )
-                    row_result = cur.fetchone()
-                    if row_result is None:
-                        # Already existed — look it up
-                        cur.execute(
-                            """
-                            SELECT id FROM gauge_series
-                            WHERE gauge_id = %s AND measurement_type = %s::measurement_type
-                        """,
-                            (gauge_id, mtype),
-                        )
-                        series_id = cur.fetchone()[0]
-                    else:
-                        series_id = row_result[0]
+                    series_id = cur.fetchone()[0]
                 else:
                     series_id = -1
                 stats["series"] += 1
 
-                # Only link ranges when we have all three thresholds
-                if lw is None or mw is None or hw is None:
-                    stats["skipped_range"] += len(river_names)
-                    continue
-                if lw >= mw or mw >= hw:
-                    stats["skipped_range"] += len(river_names)
-                    continue
+                for river_section, s_lw, s_mw, s_hw in river_entries:
+                    # Skip if any threshold is missing or out of order
+                    if s_lw is None or s_mw is None or s_hw is None:
+                        stats["skipped_range"] += 1
+                        continue
+                    if s_lw >= s_mw or s_mw >= s_hw:
+                        stats["skipped_range"] += 1
+                        continue
 
-                for river_section in river_names:
                     feature_id = section_feature_map.get(river_section)
                     if feature_id is None:
                         stats["skipped_section"] += 1
@@ -235,7 +246,7 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
                                   range_medium = EXCLUDED.range_medium,
                                   range_high   = EXCLUDED.range_high
                         """,
-                            (feature_id, series_id, lw, mw, hw),
+                            (feature_id, series_id, s_lw, s_mw, s_hw),
                         )
                     stats["ranges"] += 1
 

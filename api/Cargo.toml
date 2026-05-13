@@ -1,3 +1,7 @@
+[workspace]
+members = [".", "river-gauge"]
+resolver = "2"
+
 [package]
 name = "paddlemate_api"
 version = "0.1.0"
@@ -5,6 +9,7 @@ edition = "2024"
 
 [dependencies]
 aide = { version = "0.15.1", features = ["axum", "axum-json", "axum-query", "macros"] }
+river-gauge = { path = "river-gauge" }
 anyhow = "1"
 axum = { version = "0.8.6", features = ["macros", "query"] }
 axum-keycloak-auth = "0.8.3"
