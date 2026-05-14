@@ -20,6 +20,15 @@ source_id conventions (must match reader expectations):
                               prefix = ooe/noe/sbg/stmk/ktn
   - bafu    (Switzerland):   "{station_id}:height" / "{station_id}:flow"
   - hubeau  (France):        "{station_id}:H"  / "{station_id}:Q"
+  - rz (IT only):            "{station_uuid}:W" / "{station_uuid}:Q"
+                              uuid resolved by name-matching against riverzone.eu HTML
+  - pl      (Poland):        "{local_id}:W" / "{local_id}:Q"
+  - cz      (Czech):         "{local_id}:H" / "{local_id}:Q"
+  - bw      (Baden-W.):      "{local_id}:W" / "{local_id}:Q"
+  - bw-x    (Baden-W. ext): same provider "bw", local_id zero-padded to 4 digits
+                              e.g. bw-x.170 → source_id "0170:W/Q"
+  - po      (PEGELONLINE):   "{station_uuid}:W" / "{station_uuid}:Q"
+  - sx      (Saxony HWIMS):  "{station_id}:W" / "{station_id}:Q"
   All others:                "{local_id}:W" / "{local_id}:Q"  (stub, no reader yet)
 
 Usage:
@@ -29,11 +38,19 @@ Usage:
 
 import argparse
 import csv
+import json
 import os
+import re
 import sys
+from typing import Optional
 
 import psycopg2
 import psycopg2.extras
+
+try:
+    import urllib.request as _urllib
+except ImportError:
+    pass  # stdlib always present
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
@@ -45,6 +62,73 @@ DEFAULT_INPUT = os.path.join(os.path.dirname(__file__), "gauges.csv")
 # ---------------------------------------------------------------------------
 # Provider + source_id derivation
 # ---------------------------------------------------------------------------
+
+
+_RZ_UUID_CACHE: Optional[dict] = None
+
+
+def _load_rz_stations() -> dict:
+    """Fetch riverzone.eu HTML and return a lookup: (river_lower, name_lower) -> uuid."""
+    global _RZ_UUID_CACHE
+    if _RZ_UUID_CACHE is not None:
+        return _RZ_UUID_CACHE
+
+    try:
+        import urllib.request
+
+        with urllib.request.urlopen("https://riverzone.eu/", timeout=15) as resp:
+            html = resp.read().decode("utf-8", errors="replace")
+    except Exception as exc:
+        print(f"WARNING: could not fetch riverzone.eu: {exc}", file=sys.stderr)
+        _RZ_UUID_CACHE = {}
+        return _RZ_UUID_CACHE
+
+    m = re.search(r"var\s+data\s*=\s*(\{.*?\})\s*;", html, re.DOTALL)
+    if not m:
+        print("WARNING: could not parse riverzone.eu data blob", file=sys.stderr)
+        _RZ_UUID_CACHE = {}
+        return _RZ_UUID_CACHE
+
+    try:
+        data = json.loads(m.group(1))
+    except json.JSONDecodeError as exc:
+        print(f"WARNING: riverzone.eu JSON parse error: {exc}", file=sys.stderr)
+        _RZ_UUID_CACHE = {}
+        return _RZ_UUID_CACHE
+
+    lookup: dict = {}
+    for uuid, station in data.get("stations", {}).items():
+        name = station.get("name", "").strip().lower()
+        river = station.get("river", "").strip().lower()
+        # Store both (river, name) and name-only for fallback
+        key = (river, name)
+        lookup[key] = uuid
+        # Also index by name alone for cases where river label differs
+        if name not in lookup:
+            lookup[name] = uuid
+
+    _RZ_UUID_CACHE = lookup
+    print(
+        f"Loaded {len([k for k in lookup if isinstance(k, tuple)])} Riverzone stations",
+        file=sys.stderr,
+    )
+    return _RZ_UUID_CACHE
+
+
+def _resolve_rz_uuid(station_id: str) -> Optional[str]:
+    """Resolve an rz.{id} CSV entry to a Riverzone station UUID.
+
+    The CSV name field follows the pattern "{river} @ {station_name}".
+    We match against the Riverzone page's (river, name) pairs.
+    The caller must pass the original CSV station name via module-level
+    _rz_name_map populated in derive_provider_and_source_ids.
+    """
+    # Name resolution is driven by the caller via _rz_name_map.
+    return _rz_name_map.get(station_id)
+
+
+# Maps rz local_id -> station UUID, populated during pre-processing in main.
+_rz_name_map: dict = {}
 
 
 def _nve_api_id(raw: str) -> str:
@@ -106,12 +190,67 @@ def derive_provider_and_source_ids(station_id: str, units: str):
         else:
             return provider, [(f"{full}:W", "water_level", "cm")]
 
-    elif prefix in ("rz",):
-        provider = "rz"
+    elif prefix == "pl":
+        provider = "pl"
         if is_discharge:
             return provider, [(f"{local_id}:Q", "discharge", "m³/s")]
         else:
             return provider, [(f"{local_id}:W", "water_level", "cm")]
+
+    elif prefix == "cz":
+        provider = "cz"
+        if is_discharge:
+            return provider, [(f"{local_id}:Q", "discharge", "m³/s")]
+        else:
+            return provider, [(f"{local_id}:H", "water_level", "cm")]
+
+    elif prefix == "bw":
+        provider = "bw"
+        if is_discharge:
+            return provider, [(f"{local_id}:Q", "discharge", "m³/s")]
+        else:
+            return provider, [(f"{local_id}:W", "water_level", "cm")]
+
+    elif prefix == "bw-x":
+        # bw-x stations are in the same HVZ BW snapshot but use 3- or 4-digit IDs.
+        # The BW reader adds one leading zero to derive the 5-digit snapshot key,
+        # so we zero-pad local_id to 4 digits here to keep the convention.
+        provider = "bw"
+        padded = local_id.zfill(4)
+        if is_discharge:
+            return provider, [(f"{padded}:Q", "discharge", "m³/s")]
+        else:
+            return provider, [(f"{padded}:W", "water_level", "cm")]
+
+    elif prefix == "po":
+        # PEGELONLINE WSV — station UUID used directly as the identifier.
+        provider = "po"
+        if is_discharge:
+            return provider, [(f"{local_id}:Q", "discharge", "m³/s")]
+        else:
+            return provider, [(f"{local_id}:W", "water_level", "cm")]
+
+    elif prefix == "sx":
+        # Saxony HWIMS RSS feed — station number used directly.
+        provider = "sx"
+        if is_discharge:
+            return provider, [(f"{local_id}:Q", "discharge", "m³/s")]
+        else:
+            return provider, [(f"{local_id}:W", "water_level", "cm")]
+
+    elif prefix in ("rz",):
+        provider = "rz"
+        uuid = _rz_name_map.get(local_id)
+        if uuid:
+            key = uuid
+        else:
+            # UUID not resolved (non-IT station or lookup failed) – use
+            # the numeric local_id as a fallback stub source_id.
+            key = local_id
+        if is_discharge:
+            return provider, [(f"{key}:Q", "discharge", "m³/s")]
+        else:
+            return provider, [(f"{key}:W", "water_level", "cm")]
 
     else:
         # Generic stub for unimplemented providers
@@ -162,7 +301,9 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
             # Parse river entries. Each entry is either:
             #   "River / Section"            — uses gauge-level lw/mw/hw
             #   "River / Section:lw:mw:hw"  — per-section override
-            river_entries: list[tuple[str, float | None, float | None, float | None]] = []
+            river_entries: list[
+                tuple[str, float | None, float | None, float | None]
+            ] = []
             for entry in row["rivers"].split("|"):
                 entry = entry.strip()
                 if not entry:
@@ -171,9 +312,21 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
                 if len(parts) == 4:
                     section_name = parts[0].strip()
                     try:
-                        s_lw = float(parts[1]) if parts[1].strip() not in ("", "None") else None
-                        s_mw = float(parts[2]) if parts[2].strip() not in ("", "None") else None
-                        s_hw = float(parts[3]) if parts[3].strip() not in ("", "None") else None
+                        s_lw = (
+                            float(parts[1])
+                            if parts[1].strip() not in ("", "None")
+                            else None
+                        )
+                        s_mw = (
+                            float(parts[2])
+                            if parts[2].strip() not in ("", "None")
+                            else None
+                        )
+                        s_hw = (
+                            float(parts[3])
+                            if parts[3].strip() not in ("", "None")
+                            else None
+                        )
                     except ValueError:
                         # Not a threshold suffix — treat whole thing as section name
                         section_name = entry
@@ -261,6 +414,53 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
     print(f"  Sections not found:   {stats['skipped_section']}")
 
 
+def _build_rz_name_map(rows: list[dict]) -> None:
+    """Populate _rz_name_map by matching rz.* CSV rows against Riverzone station names.
+
+    The CSV name field for rz entries follows the pattern:
+        "{river} @ {station_name}"   or   "{station_name}"
+    We match against the Riverzone HTML lookup keyed by (river_lower, name_lower).
+    """
+    global _rz_name_map
+
+    rz_rows = [r for r in rows if r["station_id"].startswith("rz.")]
+    if not rz_rows:
+        return
+
+    station_lookup = _load_rz_stations()
+    if not station_lookup:
+        print(
+            "WARNING: Riverzone UUID lookup is empty; rz stations will use numeric stub IDs",
+            file=sys.stderr,
+        )
+        return
+
+    resolved = 0
+    for row in rz_rows:
+        sid = row["station_id"]  # e.g. "rz.101"
+        local_id = sid.split(".", 1)[1]  # "101"
+        csv_name = row["name"]  # e.g. "Chiese @ Gavardo"
+
+        if "@" in csv_name:
+            river_part, name_part = csv_name.split("@", 1)
+            river_key = river_part.strip().lower()
+            name_key = name_part.strip().lower()
+        else:
+            river_key = ""
+            name_key = csv_name.strip().lower()
+
+        uuid = station_lookup.get((river_key, name_key)) or station_lookup.get(name_key)
+        if uuid:
+            _rz_name_map[local_id] = uuid
+            resolved += 1
+        # else: leave unmapped; derive_provider_and_source_ids will fall back to numeric id
+
+    print(
+        f"Resolved {resolved}/{len(rz_rows)} rz station UUIDs from riverzone.eu",
+        file=sys.stderr,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Import gauges.csv into the paddlemate DB"
@@ -276,6 +476,9 @@ def main():
     with open(args.input, newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
     print(f"Read {len(rows)} gauges from {args.input}")
+
+    # Pre-resolve Riverzone station UUIDs for all rz.* rows.
+    _build_rz_name_map(rows)
 
     conn = psycopg2.connect(DATABASE_URL)
     try:

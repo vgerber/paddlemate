@@ -7,7 +7,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use serde::Deserialize;
 use tokio::sync::Mutex;
 
-use crate::{BoxFuture, FetchRequest, GaugeReader};
+use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
 
 /// Reader for the Tyrolean hydrographic service (HD Tirol).
 ///
@@ -146,6 +146,49 @@ impl AustriaTirolReader {
 impl GaugeReader for AustriaTirolReader {
     fn provider_key(&self) -> &'static str {
         "tirol"
+    }
+
+    fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<crate::StationInfo>>> {
+        Box::pin(async {
+            Ok(vec![
+            StationInfo { station_id: "201038".to_owned(), name: Some("Grießau".to_owned()), river: Some("Lech".to_owned()), latitude: Some(47.298), longitude: Some(10.4631), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201053".to_owned(), name: Some("Vorderhornbach (Brücke)".to_owned()), river: Some("Hornbach".to_owned()), latitude: Some(47.368599), longitude: Some(10.538), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201095".to_owned(), name: Some("Scharnitz (Weidach)".to_owned()), river: Some("Isar".to_owned()), latitude: Some(47.389599), longitude: Some(11.264), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201293".to_owned(), name: Some("Landeck Perjen".to_owned()), river: Some("Inn".to_owned()), latitude: Some(47.146999), longitude: Some(10.5714), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201350".to_owned(), name: Some("Vent".to_owned()), river: Some("Rofenache".to_owned()), latitude: Some(46.857201), longitude: Some(10.9109), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201368".to_owned(), name: Some("Vent (altes Feuerwehrhaus)".to_owned()), river: Some("Venter Ache".to_owned()), latitude: Some(46.859501), longitude: Some(10.9146), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201376".to_owned(), name: Some("Obergurgl".to_owned()), river: Some("Gurgler Ache".to_owned()), latitude: Some(46.8689), longitude: Some(11.0222), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201384".to_owned(), name: Some("Sölden".to_owned()), river: Some("Ötztaler Ache".to_owned()), latitude: Some(46.9776), longitude: Some(11.0117), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201434".to_owned(), name: Some("Tumpen".to_owned()), river: Some("Ötztaler Ache".to_owned()), latitude: Some(47.163101), longitude: Some(10.9105), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201459".to_owned(), name: Some("Magerbach".to_owned()), river: Some("Inn".to_owned()), latitude: Some(47.2593), longitude: Some(10.8759), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201566".to_owned(), name: Some("Steinach am Brenner".to_owned()), river: Some("Gschnitzbach".to_owned()), latitude: Some(47.092899), longitude: Some(11.4651), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201574".to_owned(), name: Some("Puig (Matrei am Brenner)".to_owned()), river: Some("Sill".to_owned()), latitude: Some(47.113098), longitude: Some(11.4524), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201624".to_owned(), name: Some("Innsbruck Reichenau".to_owned()), river: Some("Sill".to_owned()), latitude: Some(47.2729), longitude: Some(11.4115), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201822".to_owned(), name: Some("Mariathal".to_owned()), river: Some("Brandenberger Ache".to_owned()), latitude: Some(47.4543), longitude: Some(11.865), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201848".to_owned(), name: Some("Hörbrunn".to_owned()), river: Some("Kelchsauer Ache".to_owned()), latitude: Some(47.420601), longitude: Some(12.1397), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "201897".to_owned(), name: Some("Kaiserwerk".to_owned()), river: Some("Weissache".to_owned()), latitude: Some(47.542198), longitude: Some(12.1777), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "201913".to_owned(), name: Some("Kitzbühel (Bahnhofsbrücke)".to_owned()), river: Some("Kitzbüheler Ache".to_owned()), latitude: Some(47.454899), longitude: Some(12.3894), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "201947".to_owned(), name: Some("Almdorf".to_owned()), river: Some("Fieberbrunner Ache".to_owned()), latitude: Some(47.5196), longitude: Some(12.4412), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "202036".to_owned(), name: Some("Landeck Bruggen".to_owned()), river: Some("Sanna".to_owned()), latitude: Some(47.143398), longitude: Some(10.5628), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "202127".to_owned(), name: Some("Leutasch (Klamm)".to_owned()), river: Some("Leutascher Ache".to_owned()), latitude: Some(47.3634), longitude: Some(11.1126), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "202218".to_owned(), name: Some("Unterwindau".to_owned()), river: Some("Windauer Ache".to_owned()), latitude: Some(47.4342), longitude: Some(12.176), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "202226".to_owned(), name: Some("Stanzach".to_owned()), river: Some("Namlosbach".to_owned()), latitude: Some(47.383499), longitude: Some(10.5631), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "202283".to_owned(), name: Some("Krössbach".to_owned()), river: Some("Ruetz".to_owned()), latitude: Some(47.080299), longitude: Some(11.2661), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "202523".to_owned(), name: Some("Arnbach".to_owned()), river: Some("Drau".to_owned()), latitude: Some(46.7411), longitude: Some(12.3726), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "202564".to_owned(), name: Some("St Anton am Arlberg-Salzhütte".to_owned()), river: Some("Rosanna".to_owned()), latitude: Some(47.096401), longitude: Some(10.2129), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "202622".to_owned(), name: Some("Kirchberg in Tirol".to_owned()), river: Some("Aschauer Ache".to_owned()), latitude: Some(47.446499), longitude: Some(12.3143), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "202754".to_owned(), name: Some("Heinfels".to_owned()), river: Some("Villgratenbach".to_owned()), latitude: Some(46.7542), longitude: Some(12.4359), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "212043".to_owned(), name: Some("Hinterbichl".to_owned()), river: Some("Isel".to_owned()), latitude: Some(47.015301), longitude: Some(12.337), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "212084".to_owned(), name: Some("Prossegg".to_owned()), river: Some("Tauernbach".to_owned()), latitude: Some(47.014999), longitude: Some(12.5304), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "212100".to_owned(), name: Some("Hopfgarten in Defereggen-Zwenewald".to_owned()), river: Some("Schwarzach".to_owned()), latitude: Some(46.917599), longitude: Some(12.5115), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "212142".to_owned(), name: Some("Staniska".to_owned()), river: Some("Kalserbach".to_owned()), latitude: Some(46.953999), longitude: Some(12.6159), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "230706".to_owned(), name: Some("In der Au".to_owned()), river: Some("Melach".to_owned()), latitude: Some(47.225201), longitude: Some(11.2327), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "231092".to_owned(), name: Some("Lienz Falkensteinsteg".to_owned()), river: Some("Drau".to_owned()), latitude: Some(46.817902), longitude: Some(12.7596), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "2hd705".to_owned(), name: Some("Wasserfassung Wenns".to_owned()), river: Some("Pitze".to_owned()), latitude: Some(47.158298), longitude: Some(10.7374), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "2hd769".to_owned(), name: Some("Kundl".to_owned()), river: Some("Wildschönauer Ache".to_owned()), latitude: Some(47.4669), longitude: Some(11.9886), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "2hd787".to_owned(), name: Some("Ischgl Platt".to_owned()), river: Some("Trisanna".to_owned()), latitude: Some(47.028301), longitude: Some(10.3145), params: vec!["W".to_owned()] },
+            ])
+        })
     }
 
     fn fetch_all<'a>(

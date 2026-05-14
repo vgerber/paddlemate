@@ -8,7 +8,7 @@ use chrono_tz::Europe::Berlin;
 use serde::Deserialize;
 use tokio::sync::Mutex;
 
-use crate::{BoxFuture, FetchRequest, GaugeReader};
+use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
 
 /// Reader for the Bavarian flood information service (HND Bayern / BLfU).
 ///
@@ -48,6 +48,8 @@ struct StationData {
     flow_m3s: Option<f64>,
     /// Timestamp of the reading in UTC.
     timestamp: DateTime<Utc>,
+    /// River name from the snapshot (`zeile2`).
+    river: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -68,6 +70,8 @@ struct PointerData {
     wert2: Option<String>,
     /// Timestamp in German local time: "DD.MM.YYYY, HH:MM".
     datum: String,
+    /// River name, e.g. "Isar".
+    zeile2: Option<String>,
 }
 
 impl Default for GermanyBavariaReader {
@@ -121,6 +125,7 @@ impl GermanyBavariaReader {
                     level_cm: entry.d.wert.as_deref().and_then(parse_german_float),
                     flow_m3s: entry.d.wert2.as_deref().and_then(parse_german_float),
                     timestamp: ts,
+                    river: entry.d.zeile2.clone(),
                 },
             );
         }
@@ -145,6 +150,7 @@ fn rebuild_map(stations: &HashMap<String, StationData>) -> HashMap<String, Stati
                     level_cm: v.level_cm,
                     flow_m3s: v.flow_m3s,
                     timestamp: v.timestamp,
+                    river: v.river.clone(),
                 },
             )
         })
@@ -154,6 +160,34 @@ fn rebuild_map(stations: &HashMap<String, StationData>) -> HashMap<String, Stati
 impl GaugeReader for GermanyBavariaReader {
     fn provider_key(&self) -> &'static str {
         "by"
+    }
+
+    fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<crate::StationInfo>>> {
+        Box::pin(async move {
+            let snapshot = self.get_snapshot().await?;
+            let mut stations: Vec<StationInfo> = snapshot
+                .into_iter()
+                .map(|(id, data)| {
+                    let mut params = Vec::new();
+                    if data.level_cm.is_some() {
+                        params.push("w".to_owned());
+                    }
+                    if data.flow_m3s.is_some() {
+                        params.push("q".to_owned());
+                    }
+                    StationInfo {
+                        station_id: id,
+                        name: None,
+                        river: data.river,
+                        latitude: None,
+                        longitude: None,
+                        params,
+                    }
+                })
+                .collect();
+            stations.sort_by(|a, b| a.station_id.cmp(&b.station_id));
+            Ok(stations)
+        })
     }
 
     fn fetch_all<'a>(
@@ -204,7 +238,11 @@ impl GaugeReader for GermanyBavariaReader {
                     "w" => data.level_cm,
                     "q" => data.flow_m3s,
                     other => {
-                        tracing::warn!("BlfuReader: unknown param '{}' for station {}", other, station_id);
+                        tracing::warn!(
+                            "BlfuReader: unknown param '{}' for station {}",
+                            other,
+                            station_id
+                        );
                         continue;
                     }
                 };

@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use tokio::sync::Mutex;
 
-use crate::{BoxFuture, FetchRequest, GaugeReader};
+use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
 
 /// Reader for Vorarlberg surface water gauges.
 ///
@@ -49,13 +49,22 @@ struct FeatureCollection {
 
 #[derive(Deserialize)]
 struct Feature {
+    geometry: Option<PointGeometry>,
     properties: Properties,
+}
+
+#[derive(Deserialize)]
+struct PointGeometry {
+    /// [longitude, latitude] in EPSG:4326.
+    coordinates: [f64; 2],
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 struct Properties {
     wisid: String,
+    #[serde(default)]
+    stationsname: Option<String>,
     /// Current water level in cm (string, may be null).
     w: Option<serde_json::Value>,
     /// UTC timestamp for W reading.
@@ -120,6 +129,37 @@ impl AustriaVorarlbergReader {
 impl GaugeReader for AustriaVorarlbergReader {
     fn provider_key(&self) -> &'static str {
         "vbg"
+    }
+
+    fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<StationInfo>>> {
+        Box::pin(async move {
+            let resp = reqwest::get(WFS_URL)
+                .await
+                .map_err(|e| anyhow::anyhow!("VorarlbergReader: list_stations HTTP error: {e}"))?
+                .json::<FeatureCollection>()
+                .await
+                .map_err(|e| anyhow::anyhow!("VorarlbergReader: list_stations JSON error: {e}"))?;
+
+            Ok(resp
+                .features
+                .into_iter()
+                .map(|f| {
+                    let coords = f.geometry.as_ref().map(|g| g.coordinates);
+                    let p = f.properties;
+                    let mut params = Vec::new();
+                    if p.w.is_some() { params.push("W".into()); }
+                    if p.q.is_some() { params.push("Q".into()); }
+                    StationInfo {
+                        station_id: p.wisid,
+                        name: p.stationsname,
+                        river: None,
+                        latitude: coords.map(|c| c[1]),
+                        longitude: coords.map(|c| c[0]),
+                        params,
+                    }
+                })
+                .collect())
+        })
     }
 
     fn fetch_all<'a>(

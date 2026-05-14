@@ -56,6 +56,19 @@
         "panel": "dedicated"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "DB: Import Gauges",
+      "type": "shell",
+      "command": "scripts/.venv/bin/python scripts/import_gauges.py",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
     }
   ]
 }

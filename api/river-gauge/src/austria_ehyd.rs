@@ -9,7 +9,7 @@ use chrono_tz::Europe::Vienna;
 use serde::Deserialize;
 use tokio::sync::Mutex;
 
-use crate::{BoxFuture, FetchRequest, GaugeReader};
+use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
 
 /// Reader for Austrian federal hydrography data (eHYD / BMLUK).
 ///
@@ -176,6 +176,47 @@ impl AustriaEhydReader {
 impl GaugeReader for AustriaEhydReader {
     fn provider_key(&self) -> &'static str {
         "ehyd"
+    }
+
+    fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<crate::StationInfo>>> {
+        Box::pin(async {
+            Ok(vec![
+            StationInfo { station_id: "ktn.2".to_owned(), name: Some("Spittal-Fasan".to_owned()), river: Some("Lieser".to_owned()), latitude: Some(46.807701), longitude: Some(13.4963), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ktn.4".to_owned(), name: Some("Miklauzhof".to_owned()), river: Some("Vellach".to_owned()), latitude: Some(46.536999), longitude: Some(14.5937), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ktn.6".to_owned(), name: Some("Sandriesen".to_owned()), river: Some("Malta".to_owned()), latitude: Some(46.911999), longitude: Some(13.532), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "ktn.7".to_owned(), name: Some("Maria Luggau-Moos".to_owned()), river: Some("Gail".to_owned()), latitude: Some(46.702702), longitude: Some(12.7406), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ktn.8".to_owned(), name: Some("Weitensfeld-Ost".to_owned()), river: Some("Gurk".to_owned()), latitude: Some(46.849499), longitude: Some(14.1997), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ktn.9".to_owned(), name: Some("Bad Eisenkappel - Forsthaus".to_owned()), river: Some("Ebriachbach".to_owned()), latitude: Some(46.4893), longitude: Some(14.5862), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "noe.207944".to_owned(), name: Some("Zwettl (Bahnbrücke) (EVN)".to_owned()), river: Some("Kamp".to_owned()), latitude: Some(48.610298), longitude: Some(15.1723), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "noe.208462".to_owned(), name: Some("Ehrendorf".to_owned()), river: Some("Lainsitz".to_owned()), latitude: Some(48.757999), longitude: Some(14.9618), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "noe.208579".to_owned(), name: Some("Hoheneich".to_owned()), river: Some("Braunaubach".to_owned()), latitude: Some(48.771301), longitude: Some(15.0079), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "noe.208850".to_owned(), name: Some("Erlaufboden (EVN)".to_owned()), river: Some("Große Erlauf".to_owned()), latitude: Some(47.881199), longitude: Some(15.2639), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "noe.209551".to_owned(), name: Some("Lunz am See (Seestraße)".to_owned()), river: Some("Ois".to_owned()), latitude: Some(47.8605), longitude: Some(15.0312), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "ooe.0150".to_owned(), name: Some("Leopoldschlag".to_owned()), river: Some("Maltsch".to_owned()), latitude: Some(48.6171), longitude: Some(14.5044), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.3475".to_owned(), name: Some("Bad Mühllacken".to_owned()), river: Some("Pesenbach".to_owned()), latitude: Some(48.364201), longitude: Some(14.0645), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.3850".to_owned(), name: Some("Zwettl an der Rodl".to_owned()), river: Some("Große Rodl".to_owned()), latitude: Some(48.468201), longitude: Some(14.2756), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.4030".to_owned(), name: Some("Obertraun".to_owned()), river: Some("Traun".to_owned()), latitude: Some(47.564499), longitude: Some(13.7215), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.6270".to_owned(), name: Some("Penningersteg".to_owned()), river: Some("Alm".to_owned()), latitude: Some(48.052898), longitude: Some(13.9227), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.8015".to_owned(), name: Some("Platzl".to_owned()), river: Some("Laussabach".to_owned()), latitude: Some(47.727699), longitude: Some(14.64), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.8130".to_owned(), name: Some("Reichraming".to_owned()), river: Some("Reichramingbach".to_owned()), latitude: Some(47.8862), longitude: Some(14.4545), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.8445".to_owned(), name: Some("Roßleithen".to_owned()), river: Some("Piessling".to_owned()), latitude: Some(47.705898), longitude: Some(14.2694), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.8580".to_owned(), name: Some("Steyrling".to_owned()), river: Some("Steyrling".to_owned()), latitude: Some(47.805), longitude: Some(14.1372), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.8620".to_owned(), name: Some("Klaus an der Pyhrnbahn".to_owned()), river: Some("Steyr".to_owned()), latitude: Some(47.830299), longitude: Some(14.1593), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.8790".to_owned(), name: Some("Molln".to_owned()), river: Some("Krumme Steyrling".to_owned()), latitude: Some(47.893799), longitude: Some(14.2798), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.9160".to_owned(), name: Some("Kefermarkt".to_owned()), river: Some("Feldaist".to_owned()), latitude: Some(48.443199), longitude: Some(14.5344), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.9220".to_owned(), name: Some("Weitersfelden".to_owned()), river: Some("Waldaist (Schwarze Aist)".to_owned()), latitude: Some(48.4716), longitude: Some(14.7219), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.9420".to_owned(), name: Some("Königswiesen (Ort)".to_owned()), river: Some("Große Naarn".to_owned()), latitude: Some(48.4039), longitude: Some(14.8395), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "ooe.9480".to_owned(), name: Some("Haid".to_owned()), river: Some("Naarn".to_owned()), latitude: Some(48.208599), longitude: Some(14.683), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "sbg.203265".to_owned(), name: Some("Schwaighofbrücke".to_owned()), river: Some("Lammer".to_owned()), latitude: Some(47.573898), longitude: Some(13.3847), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "sbg.203463".to_owned(), name: Some("Viehhofen".to_owned()), river: Some("Saalach".to_owned()), latitude: Some(47.3657), longitude: Some(12.7357), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "sbg.203901".to_owned(), name: Some("Wallnerau".to_owned()), river: Some("Salzach".to_owned()), latitude: Some(47.310101), longitude: Some(13.1202), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "sbg.204180".to_owned(), name: Some("Salzburg (Nonntaler Brücke)".to_owned()), river: Some("Salzach".to_owned()), latitude: Some(47.7981), longitude: Some(13.054), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "stmk.1035".to_owned(), name: Some("Schladming".to_owned()), river: Some("Enns".to_owned()), latitude: Some(47.397202), longitude: Some(13.6975), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "stmk.1554".to_owned(), name: Some("Admont".to_owned()), river: Some("Enns".to_owned()), latitude: Some(47.5811), longitude: Some(14.4621), params: vec!["Q".to_owned()] },
+            StationInfo { station_id: "stmk.1730".to_owned(), name: Some("Wildalpen".to_owned()), river: Some("Salza".to_owned()), latitude: Some(47.6651), longitude: Some(14.983), params: vec!["W".to_owned()] },
+            StationInfo { station_id: "stmk.3770".to_owned(), name: Some("Schwanberg".to_owned()), river: Some("Schwarze Sulm".to_owned()), latitude: Some(46.755901), longitude: Some(15.2044), params: vec!["Q".to_owned()] },
+            ])
+        })
     }
 
     fn fetch_all<'a>(
