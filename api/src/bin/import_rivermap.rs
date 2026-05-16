@@ -28,8 +28,7 @@ async fn main() -> anyhow::Result<()> {
 
     dotenvy::dotenv().ok();
 
-    let database_url =
-        std::env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
+    let database_url = std::env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
 
     let mut snapshot_path = default_snapshot_path();
     let mut args = std::env::args().skip(1);
@@ -54,8 +53,7 @@ async fn main() -> anyhow::Result<()> {
 
     let raw = fs::read_to_string(&snapshot_path)
         .with_context(|| format!("reading snapshot from {}", snapshot_path.display()))?;
-    let snapshot: RivermapSnapshot =
-        serde_json::from_str(&raw).context("parsing snapshot JSON")?;
+    let snapshot: RivermapSnapshot = serde_json::from_str(&raw).context("parsing snapshot JSON")?;
 
     let pool = PgPool::connect(&database_url).await?;
 
@@ -194,7 +192,10 @@ async fn import_stations(pool: &PgPool, stations: &[RivermapStation]) -> anyhow:
             count += 1;
         }
     }
-    println!("  Imported {count} gauge series from {} stations", stations.len());
+    println!(
+        "  Imported {count} gauge series from {} stations",
+        stations.len()
+    );
     Ok(())
 }
 
@@ -339,10 +340,7 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
             (Some(lat), Some(lon)) => (lat, lon),
             _ => continue,
         };
-        let (t_lat, t_lon) = (
-            take_lat.unwrap_or(p_lat),
-            take_lon.unwrap_or(p_lon),
-        );
+        let (t_lat, t_lon) = (take_lat.unwrap_or(p_lat), take_lon.unwrap_or(p_lon));
 
         // Upsert waterway
         let waterway_id: i64 = sqlx::query_scalar(
@@ -387,7 +385,10 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
 
         // Create whitewater feature with grade
         let grade = obj.get("grade").and_then(|v| v.as_str()).unwrap_or("");
-        let category = obj.get("category").and_then(|v| v.as_str()).unwrap_or("whitewater");
+        let category = obj
+            .get("category")
+            .and_then(|v| v.as_str())
+            .unwrap_or("whitewater");
         let feature_type = match category {
             "whitewater" | "play" | "slalom" | "drop" => "whitewater",
             _ => "whitewater",
