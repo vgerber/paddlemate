@@ -137,7 +137,7 @@ pub async fn create_gauge(
     }
 
     let active = body.active.unwrap_or(true);
-    let interval = body.fetch_interval_secs.unwrap_or(300);
+    let interval = body.fetch_interval_secs.unwrap_or(600);
 
     match gauges::create_gauge(
         &app.pg_pool,

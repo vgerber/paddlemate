@@ -8,5 +8,6 @@
     ".venv/bin/python": true,
     "scripts/.venv/bin/python3": true,
     "cargo run": true
-  }
+  },
+  "cSpell.words": ["Rivermap"]
 }

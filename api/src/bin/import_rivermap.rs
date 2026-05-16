@@ -147,7 +147,7 @@ async fn import_stations(pool: &PgPool, stations: &[RivermapStation]) -> anyhow:
             // Upsert gauge
             sqlx::query(
                 "INSERT INTO gauges (name, provider, source_id, data_source_id, lat, lon, active, fetch_interval_secs)
-                 VALUES ($1, 'rivermap', $2, $3, $4, $5, TRUE, 300)
+                 VALUES ($1, 'rivermap', $2, $3, $4, $5, TRUE, 600)
                  ON CONFLICT (provider, source_id) DO UPDATE
                  SET name = EXCLUDED.name,
                      data_source_id = EXCLUDED.data_source_id,

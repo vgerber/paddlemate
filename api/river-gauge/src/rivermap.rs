@@ -394,9 +394,13 @@ impl GaugeReader for RivermapReader {
         "rivermap"
     }
 
-    // Rivermap station reading endpoints cap each query range to 6 hours.
+    // Rivermap bulk endpoint caps each query range to 6 hours.
+    // On the scheduled poll we only need one interval back, but the
+    // cold-start path in readers/mod.rs uses this as the initial backfill
+    // window.  Cap at 10 minutes so the first fetch is the same size as
+    // every subsequent one – no massive backfill, no 400 from the API.
     fn history_depth(&self) -> Option<Duration> {
-        Some(Duration::minutes(MAX_RANGE_MINUTES))
+        Some(Duration::minutes(10))
     }
 
     fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<StationInfo>>> {
@@ -451,43 +455,66 @@ impl GaugeReader for RivermapReader {
                 return Ok(HashMap::new());
             }
 
-            let mut by_station: HashMap<&str, (DateTime<Utc>, DateTime<Utc>)> = HashMap::new();
+            if requests.is_empty() {
+                return Ok(HashMap::new());
+            }
+
+            let now = Utc::now();
+
+            // Use the earliest `from` across all requests, clamped to 6 hours back.
+            // The bulk endpoint rejects requests older than that.
+            let min_from = requests.iter().map(|r| r.from).min().unwrap();
+            let six_hours_ago = now - Duration::hours(6);
+            let effective_from = min_from.max(six_hours_ago);
+            let from_minutes = (effective_from - now).num_minutes().min(-1);
+
+            // One bulk request for all stations instead of one request per station.
+            let bulk = match self
+                .get_all_station_readings(Some(from_minutes), None)
+                .await
+            {
+                Ok(b) => b,
+                Err(err) => {
+                    tracing::warn!("RivermapReader: bulk readings fetch failed: {err}");
+                    return Ok(HashMap::new());
+                }
+            };
+
+            // Parse bulk response into station_id -> unit -> [(ts, value)].
+            let mut station_data: HashMap<String, HashMap<String, Vec<(DateTime<Utc>, f64)>>> =
+                HashMap::new();
+            for (station_id, range) in bulk {
+                let entry = station_data.entry(station_id).or_default();
+
+                let mut cm: Vec<(DateTime<Utc>, f64)> = range
+                    .cm
+                    .into_iter()
+                    .filter_map(|r| Utc.timestamp_opt(r.ts, 0).single().map(|ts| (ts, r.v)))
+                    .collect();
+                cm.sort_unstable_by_key(|(ts, _)| *ts);
+                if !cm.is_empty() {
+                    entry.insert("cm".to_string(), cm);
+                }
+
+                let mut m3s: Vec<(DateTime<Utc>, f64)> = range
+                    .m3s
+                    .into_iter()
+                    .filter_map(|r| Utc.timestamp_opt(r.ts, 0).single().map(|ts| (ts, r.v)))
+                    .collect();
+                m3s.sort_unstable_by_key(|(ts, _)| *ts);
+                if !m3s.is_empty() {
+                    entry.insert("m3s".to_string(), m3s);
+                }
+            }
+
+            // Map results back to per-source_id output.
+            let mut result: HashMap<String, Vec<(DateTime<Utc>, f64)>> = HashMap::new();
             for req in requests {
-                let Some((station_id, _param)) = Self::parse_source_id(&req.source_id) else {
+                let Some((station_id, param)) = Self::parse_source_id(&req.source_id) else {
                     tracing::warn!(
                         "RivermapReader: ignoring malformed source_id '{}'",
                         req.source_id
                     );
-                    continue;
-                };
-
-                by_station
-                    .entry(station_id)
-                    .and_modify(|(from, to)| {
-                        *from = (*from).min(req.from);
-                        *to = (*to).max(req.to);
-                    })
-                    .or_insert((req.from, req.to));
-            }
-
-            let mut station_data: HashMap<&str, HashMap<String, Vec<(DateTime<Utc>, f64)>>> =
-                HashMap::new();
-            for (station_id, (from, to)) in by_station {
-                match self.get_station_readings(station_id, from, to).await {
-                    Ok(readings) => {
-                        station_data.insert(station_id, readings);
-                    }
-                    Err(err) => {
-                        tracing::warn!(
-                            "RivermapReader: failed to fetch readings for station {station_id}: {err}"
-                        );
-                    }
-                }
-            }
-
-            let mut result: HashMap<String, Vec<(DateTime<Utc>, f64)>> = HashMap::new();
-            for req in requests {
-                let Some((station_id, param)) = Self::parse_source_id(&req.source_id) else {
                     continue;
                 };
                 let Some(unit) = Self::unit_for_param(param) else {
