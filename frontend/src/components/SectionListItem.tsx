@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
@@ -30,6 +31,10 @@ export default function SectionListItem({
     return diff ? <Chip label={diff} size="small" sx={{ ml: 0.5 }} /> : null;
   })();
 
+  const isRivermap = section.features?.some(
+    (f) => f.created_by === "rivermap-import",
+  );
+
   return (
     <ListItemButton
       selected={selected}
@@ -47,11 +52,23 @@ export default function SectionListItem({
           secondary: { variant: "caption" },
         }}
       />
-      {difficultyChip}
-      <WaterLevelChip
-        ranges={waterStatus?.ranges}
-        loading={waterLoading}
-      />
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 0.25 }}>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          {difficultyChip}
+          <WaterLevelChip
+            ranges={waterStatus?.ranges}
+            loading={waterLoading}
+          />
+        </Box>
+        {isRivermap && (
+          <Chip
+            label="rivermap"
+            size="small"
+            variant="outlined"
+            sx={{ fontSize: "0.6rem", height: 16, borderColor: "rgba(0,0,0,0.2)", color: "text.secondary" }}
+          />
+        )}
+      </Box>
     </ListItemButton>
   );
 }

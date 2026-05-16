@@ -33,11 +33,16 @@ mod germany_saxony;
 mod italy_riverzone;
 mod norway_nve;
 mod poland_imgw;
+mod rivermap;
 mod switzerland_bafu;
 
 use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc};
 
 use chrono::{DateTime, Duration, Utc};
+pub use rivermap::{
+    RivermapReader, RivermapReadingsRange, RivermapSectionBundle, RivermapSource, RivermapStation,
+    RivermapUserNote,
+};
 
 pub type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 
@@ -120,5 +125,6 @@ pub fn build_registry() -> Vec<Arc<dyn GaugeReader>> {
         Arc::new(germany_bw::GermanyBadenWuerttembergReader::default()),
         Arc::new(germany_pegelonline::GermanyPegelonlineReader),
         Arc::new(germany_saxony::GermanySaxonyReader),
+        Arc::new(rivermap::RivermapReader::default()),
     ]
 }

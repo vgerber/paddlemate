@@ -1930,6 +1930,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "chrono-tz",
+ "dotenvy",
  "reqwest",
  "serde",
  "serde_json",

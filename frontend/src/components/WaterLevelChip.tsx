@@ -16,7 +16,7 @@ const LEVEL_CONFIG: Record<
   WaterLevel,
   { label: string; color: string; bgcolor: string }
 > = {
-  empty: { label: "–", color: "text.disabled", bgcolor: "action.hover" },
+  empty: { label: "Empty", color: "#888", bgcolor: "transparent" },
   low: { label: "Low", color: "success.dark", bgcolor: "success.light" },
   medium: { label: "Medium", color: "warning.dark", bgcolor: "warning.light" },
   high: { label: "High", color: "error.dark", bgcolor: "error.light" },
@@ -41,6 +41,9 @@ export default function WaterLevelChip({
     );
   }
 
+  // No gauge configured for this section — don't show a chip
+  if (ranges.length === 0) return null;
+
   const level = maxLevel(ranges.map((r) => r.level));
   const cfg = LEVEL_CONFIG[level];
 
@@ -48,13 +51,14 @@ export default function WaterLevelChip({
     <Chip
       label={cfg.label}
       size="small"
+      variant={level === "empty" ? "outlined" : "filled"}
       sx={{
         ml: 0.5,
         fontSize: "0.65rem",
-        fontWeight: 600,
+        fontWeight: 400,
         color: cfg.color,
         bgcolor: cfg.bgcolor,
-        border: "none",
+        borderColor: level === "empty" ? "rgba(0,0,0,0.18)" : undefined,
         minWidth: 32,
       }}
     />

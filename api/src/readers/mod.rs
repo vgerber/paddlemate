@@ -91,8 +91,18 @@ pub fn run_all(pool: PgPool) {
                                 {
                                     Ok(Some(r)) => r.measured_at,
                                     _ => {
-                                        Utc::now()
-                                            - chrono::Duration::seconds(fetch_interval as i64 * 2)
+                                        // On cold start use the provider's history window so that
+                                        // history-capable providers (PEGELONLINE, BAFU, Hub'Eau,
+                                        // NVE…) pre-fill data. Cap at 30 days to avoid massive
+                                        // requests for providers like NVE that support 10 years.
+                                        let max_history = chrono::Duration::days(30);
+                                        let cold_start_window = reader
+                                            .history_depth()
+                                            .map(|d| d.min(max_history))
+                                            .unwrap_or_else(|| {
+                                                chrono::Duration::seconds(fetch_interval as i64 * 2)
+                                            });
+                                        Utc::now() - cold_start_window
                                     }
                                 };
 

@@ -11,7 +11,11 @@ For each gauge row:
      lw/mw/hw thresholds from the CSV.
 
 source_id conventions (must match reader expectations):
-  - tirol   (pure numbers):  "{hzbnr}:W"  / "{hzbnr}:Q"
+  - tirol   (pure numbers, country AT): "{hzbnr}:W"  / "{hzbnr}:Q"
+  - bafu    (pure numbers, country CH or explicit "bafu." prefix):
+              "{station_id}:height" / "{station_id}:flow"
+  - hubeau  (letter-code IDs, country FR or explicit "hubeau." prefix):
+              "{station_id}:H" / "{station_id}:Q"
   - by      (Bavaria BLfU):  "{local_id}:w" / "{local_id}:q"   (lowercase)
   - nve     (Norway):        "{api_station_id}:1000" (stage) / "{api_station_id}:1001" (discharge)
                               api_station_id = "2.32.0" from "nve.0002.00032.000"
@@ -136,7 +140,7 @@ def _nve_api_id(raw: str) -> str:
     return ".".join(str(int(seg)) for seg in raw.split("."))
 
 
-def derive_provider_and_source_ids(station_id: str, units: str):
+def derive_provider_and_source_ids(station_id: str, units: str, country: str = "AT"):
     """
     Return (provider_key, [(source_id, measurement_type, unit), ...]).
 
@@ -146,7 +150,13 @@ def derive_provider_and_source_ids(station_id: str, units: str):
     if "." in station_id:
         prefix, local_id = station_id.split(".", 1)
     else:
-        prefix = "tirol"
+        # No prefix — derive from country
+        if country == "CH":
+            prefix = "bafu"
+        elif country == "FR":
+            prefix = "hubeau"
+        else:
+            prefix = "tirol"
         local_id = station_id
 
     is_level = units == "cm"
@@ -237,6 +247,22 @@ def derive_provider_and_source_ids(station_id: str, units: str):
             return provider, [(f"{local_id}:Q", "discharge", "m³/s")]
         else:
             return provider, [(f"{local_id}:W", "water_level", "cm")]
+
+    elif prefix == "bafu":
+        # Swiss BAFU / FOEN via existenz.ch — uses :flow / :height suffixes.
+        provider = "bafu"
+        if is_discharge:
+            return provider, [(f"{local_id}:flow", "discharge", "m³/s")]
+        else:
+            return provider, [(f"{local_id}:height", "water_level", "cm")]
+
+    elif prefix == "hubeau":
+        # French Hub'Eau Hydrométrie — uses :Q / :H suffixes.
+        provider = "hubeau"
+        if is_discharge:
+            return provider, [(f"{local_id}:Q", "discharge", "m³/s")]
+        else:
+            return provider, [(f"{local_id}:H", "water_level", "cm")]
 
     elif prefix in ("rz",):
         provider = "rz"
@@ -336,7 +362,9 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
                     s_lw, s_mw, s_hw = lw, mw, hw
                 river_entries.append((section_name, s_lw, s_mw, s_hw))
 
-            provider, series_defs = derive_provider_and_source_ids(station_id, units)
+            provider, series_defs = derive_provider_and_source_ids(
+                station_id, units, country=row.get("country", "AT")
+            )
 
             if not dry_run:
                 # Upsert the gauge
@@ -375,11 +403,11 @@ def import_gauges(conn, rows: list[dict], dry_run: bool) -> None:
                 stats["series"] += 1
 
                 for river_section, s_lw, s_mw, s_hw in river_entries:
-                    # Skip if any threshold is missing or out of order
-                    if s_lw is None or s_mw is None or s_hw is None:
+                    # Skip if thresholds exist but are out of order
+                    if s_lw is not None and s_mw is not None and s_lw >= s_mw:
                         stats["skipped_range"] += 1
                         continue
-                    if s_lw >= s_mw or s_mw >= s_hw:
+                    if s_mw is not None and s_hw is not None and s_mw >= s_hw:
                         stats["skipped_range"] += 1
                         continue
 

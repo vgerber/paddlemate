@@ -29,20 +29,40 @@ use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
 ///   - Tirol:            `"{hzbnr}:{W|Q}"` (pure number, already covered by tirol reader)
 ///
 /// The snapshot is cached for `CACHE_TTL` seconds to avoid hammering the endpoint.
+/// For historical data, `Diagram/pegelBgis` returns ~7 days of 30-min readings per station.
 pub struct AustriaEhydReader {
+    /// Cached snapshot: source_id -> single (ts, value) from PegelAktuell.
+    /// Also used to build the source_id -> hzbnr map.
     cache: Arc<Mutex<Option<(Instant, HashMap<String, Vec<(DateTime<Utc>, f64)>>)>>>,
+    /// Cached mapping: source_id -> hzbnr, rebuilt alongside the snapshot.
+    hzbnr_map: Arc<Mutex<Option<(Instant, HashMap<String, i64>)>>>,
+    /// Cached timeseries per hzbnr: hzbnr -> sorted (ts, value) pairs.
+    ts_cache: Arc<Mutex<HashMap<i64, (Instant, Vec<(DateTime<Utc>, f64)>)>>>,
 }
 
 impl Default for AustriaEhydReader {
     fn default() -> Self {
         Self {
             cache: Arc::new(Mutex::new(None)),
+            hzbnr_map: Arc::new(Mutex::new(None)),
+            ts_cache: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 }
 
 const API_URL: &str = "https://ehyd.gv.at/services/PegelAktuell/json";
+/// Per-station timeseries: ~7 days of 30-min readings.
+const DIAGRAM_URL: &str = "https://ehyd.gv.at/services/Diagram/pegelBgis";
 const CACHE_TTL: Duration = Duration::from_secs(300);
+/// Timeseries cache TTL — data updates every ~30 min.
+const TS_CACHE_TTL: Duration = Duration::from_secs(300);
+
+#[derive(Deserialize)]
+struct DiagramResponse {
+    /// Timestamps as strings "YYYY-MM-DD HH:MM:SS" in Vienna local time.
+    categories: Vec<String>,
+    data: Vec<serde_json::Value>,
+}
 
 #[derive(Deserialize)]
 struct FeatureCollection {
@@ -126,12 +146,15 @@ fn parse_zp(zp: &str) -> Option<DateTime<Utc>> {
 }
 
 impl AustriaEhydReader {
+    /// Load PegelAktuell snapshot and populate both the reading cache and the
+    /// source_id -> hzbnr mapping.
     async fn load_snapshot(&self) -> anyhow::Result<HashMap<String, Vec<(DateTime<Utc>, f64)>>> {
-        let mut guard = self.cache.lock().await;
-
-        if let Some((ts, ref data)) = *guard {
-            if ts.elapsed() < CACHE_TTL {
-                return Ok(data.clone());
+        {
+            let guard = self.cache.lock().await;
+            if let Some((ts, ref data)) = *guard {
+                if ts.elapsed() < CACHE_TTL {
+                    return Ok(data.clone());
+                }
             }
         }
 
@@ -141,9 +164,18 @@ impl AustriaEhydReader {
             .await?;
 
         let mut map: HashMap<String, Vec<(DateTime<Utc>, f64)>> = HashMap::new();
+        let mut hzbnr_map: HashMap<String, i64> = HashMap::new();
 
         for feature in &resp.features {
             let p = &feature.properties;
+
+            let base = match derive_base_id(p) {
+                Some(b) => b,
+                None => continue,
+            };
+
+            let source_id = format!("{}:{}", base, p.parameter);
+            hzbnr_map.insert(source_id.clone(), p.hzbnr);
 
             let value: f64 = match p
                 .wert
@@ -153,29 +185,76 @@ impl AustriaEhydReader {
                 Some(v) => v,
                 None => continue,
             };
-
             let ts = match p.zp.as_deref().and_then(parse_zp) {
                 Some(t) => t,
                 None => continue,
             };
 
-            let base = match derive_base_id(p) {
-                Some(b) => b,
-                None => continue,
-            };
-
-            let source_id = format!("{}:{}", base, p.parameter);
             map.entry(source_id).or_default().push((ts, value));
         }
 
-        *guard = Some((Instant::now(), map.clone()));
+        let now = Instant::now();
+        *self.cache.lock().await = Some((now, map.clone()));
+        *self.hzbnr_map.lock().await = Some((now, hzbnr_map));
         Ok(map)
+    }
+
+    /// Fetch (or return cached) ~7-day timeseries for one station from pegelBgis.
+    async fn load_timeseries(
+        &self,
+        hzbnr: i64,
+    ) -> anyhow::Result<Vec<(DateTime<Utc>, f64)>> {
+        {
+            let cache = self.ts_cache.lock().await;
+            if let Some((ts, data)) = cache.get(&hzbnr) {
+                if ts.elapsed() < TS_CACHE_TTL {
+                    return Ok(data.clone());
+                }
+            }
+        }
+
+        let url = format!("{DIAGRAM_URL}?hzbnr={hzbnr}");
+        let body = reqwest::get(&url).await?.bytes().await?;
+        if body.is_empty() {
+            return Ok(vec![]);
+        }
+        let resp: DiagramResponse = serde_json::from_slice(&body)
+            .map_err(|e| anyhow::anyhow!("eHYD pegelBgis parse error for hzbnr {hzbnr}: {e}"))?;
+
+        let mut readings: Vec<(DateTime<Utc>, f64)> = Vec::with_capacity(resp.categories.len());
+        for (ts_str, val) in resp.categories.iter().zip(resp.data.iter()) {
+            let v = match val.as_f64() {
+                Some(f) => f,
+                None => continue,
+            };
+            // Timestamps are Vienna local time: "YYYY-MM-DD HH:MM:SS"
+            let naive = match NaiveDateTime::parse_from_str(ts_str, "%Y-%m-%d %H:%M:%S") {
+                Ok(n) => n,
+                Err(_) => continue,
+            };
+            let utc = match Vienna.from_local_datetime(&naive).single() {
+                Some(dt) => dt.with_timezone(&Utc),
+                None => continue,
+            };
+            readings.push((utc, v));
+        }
+        readings.sort_unstable_by_key(|(ts, _)| *ts);
+
+        self.ts_cache
+            .lock()
+            .await
+            .insert(hzbnr, (Instant::now(), readings.clone()));
+        Ok(readings)
     }
 }
 
 impl GaugeReader for AustriaEhydReader {
     fn provider_key(&self) -> &'static str {
         "ehyd"
+    }
+
+    fn history_depth(&self) -> Option<chrono::Duration> {
+        Some(chrono::Duration::days(7))
     }
 
     fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<crate::StationInfo>>> {
@@ -224,15 +303,40 @@ impl GaugeReader for AustriaEhydReader {
         requests: &'a [FetchRequest],
     ) -> BoxFuture<'a, anyhow::Result<HashMap<String, Vec<(DateTime<Utc>, f64)>>>> {
         Box::pin(async move {
-            let snapshot = self.load_snapshot().await?;
+            // Ensure snapshot is loaded so hzbnr_map is populated.
+            if let Err(e) = self.load_snapshot().await {
+                tracing::error!("eHYD snapshot load failed: {e}");
+            }
 
-            let wanted: std::collections::HashSet<&str> =
-                requests.iter().map(|r| r.source_id.as_str()).collect();
+            let hzbnr_lookup = {
+                let guard = self.hzbnr_map.lock().await;
+                guard.as_ref().map(|(_, m)| m.clone()).unwrap_or_default()
+            };
 
-            Ok(snapshot
-                .into_iter()
-                .filter(|(id, _)| wanted.contains(id.as_str()))
-                .collect())
+            let mut results: HashMap<String, Vec<(DateTime<Utc>, f64)>> = HashMap::new();
+
+            for req in requests {
+                let hzbnr = match hzbnr_lookup.get(&req.source_id) {
+                    Some(&h) => h,
+                    None => continue,
+                };
+                match self.load_timeseries(hzbnr).await {
+                    Ok(readings) => {
+                        let filtered: Vec<_> = readings
+                            .into_iter()
+                            .filter(|(ts, _)| *ts > req.from && *ts <= req.to)
+                            .collect();
+                        if !filtered.is_empty() {
+                            results.insert(req.source_id.clone(), filtered);
+                        }
+                    }
+                    Err(e) => {
+                        tracing::warn!("eHYD pegelBgis failed for {}: {e}", req.source_id);
+                    }
+                }
+            }
+
+            Ok(results)
         })
     }
 }

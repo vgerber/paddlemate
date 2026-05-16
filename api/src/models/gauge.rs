@@ -76,14 +76,14 @@ pub enum WaterLevel {
 impl WaterLevel {
     pub fn from_reading(
         value: Option<f64>,
-        range_low: f64,
-        range_medium: f64,
-        range_high: f64,
+        range_low: Option<f64>,
+        range_medium: Option<f64>,
+        range_high: Option<f64>,
     ) -> Self {
-        match value {
-            Some(v) if v >= range_high => WaterLevel::High,
-            Some(v) if v >= range_medium => WaterLevel::Medium,
-            Some(v) if v >= range_low => WaterLevel::Low,
+        match (value, range_low, range_medium, range_high) {
+            (Some(v), _, _, Some(rh)) if v >= rh => WaterLevel::High,
+            (Some(v), _, Some(rm), _) if v >= rm => WaterLevel::Medium,
+            (Some(v), Some(rl), _, _) if v >= rl => WaterLevel::Low,
             _ => WaterLevel::Empty,
         }
     }
@@ -97,11 +97,11 @@ pub struct FeatureWaterRange {
     pub feature_id: i64,
     pub series: GaugeSeries,
     /// Lower bound of the low range; below this the level is considered empty.
-    pub range_low: f64,
+    pub range_low: Option<f64>,
     /// Lower bound of the medium range.
-    pub range_medium: f64,
+    pub range_medium: Option<f64>,
     /// Lower bound of the high range.
-    pub range_high: f64,
+    pub range_high: Option<f64>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -114,9 +114,9 @@ pub struct WaterRangeWithStatus {
     pub feature_id: i64,
     pub series: GaugeSeries,
     pub gauge: Gauge,
-    pub range_low: f64,
-    pub range_medium: f64,
-    pub range_high: f64,
+    pub range_low: Option<f64>,
+    pub range_medium: Option<f64>,
+    pub range_high: Option<f64>,
     pub latest_reading: Option<GaugeReading>,
     pub level: WaterLevel,
     pub created_at: DateTime<Utc>,

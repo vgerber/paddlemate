@@ -50,9 +50,10 @@ function fromForRange(range: TimeRange): string {
 interface WaterChartProps {
   range: WaterRangeWithStatus;
   from: string;
+  showThresholds?: boolean;
 }
 
-function SeriesChart({ range, from }: WaterChartProps) {
+function SeriesChart({ range, from, showThresholds = true }: WaterChartProps) {
   const { series, gauge } = range;
 
   const { data: readings, isLoading } = useGaugeReadings(
@@ -157,27 +158,31 @@ function SeriesChart({ range, from }: WaterChartProps) {
         height={220}
         margin={{ top: 10, right: 16, bottom: 40, left: 56 }}
       >
-        <ChartsReferenceLine
-          y={range.range_low}
-          label={`Low  ${range.range_low}`}
-          labelAlign="end"
-          lineStyle={{ stroke: "#b0ceb8", strokeDasharray: "4 2" }}
-          labelStyle={{ fill: "#b0ceb8", fontSize: 10 }}
-        />
-        <ChartsReferenceLine
-          y={range.range_medium}
-          label={`Medium  ${range.range_medium}`}
-          labelAlign="end"
-          lineStyle={{ stroke: "#c2cf47", strokeDasharray: "4 2" }}
-          labelStyle={{ fill: "#c2cf47", fontSize: 10 }}
-        />
-        <ChartsReferenceLine
-          y={range.range_high}
-          label={`High  ${range.range_high}`}
-          labelAlign="end"
-          lineStyle={{ stroke: "#ffb4ab", strokeDasharray: "4 2" }}
-          labelStyle={{ fill: "#ffb4ab", fontSize: 10 }}
-        />
+        {showThresholds && (
+          <>
+            <ChartsReferenceLine
+              y={range.range_low}
+              label={`Low  ${range.range_low}`}
+              labelAlign="end"
+              lineStyle={{ stroke: "#b0ceb8", strokeDasharray: "4 2" }}
+              labelStyle={{ fill: "#b0ceb8", fontSize: 10 }}
+            />
+            <ChartsReferenceLine
+              y={range.range_medium}
+              label={`Medium  ${range.range_medium}`}
+              labelAlign="end"
+              lineStyle={{ stroke: "#c2cf47", strokeDasharray: "4 2" }}
+              labelStyle={{ fill: "#c2cf47", fontSize: 10 }}
+            />
+            <ChartsReferenceLine
+              y={range.range_high}
+              label={`High  ${range.range_high}`}
+              labelAlign="end"
+              lineStyle={{ stroke: "#ffb4ab", strokeDasharray: "4 2" }}
+              labelStyle={{ fill: "#ffb4ab", fontSize: 10 }}
+            />
+          </>
+        )}
       </LineChart>
     </Box>
   );
@@ -191,7 +196,7 @@ interface WaterChartListProps {
  * Renders all water ranges with a shared time-range filter.
  * Each range gets its own chart. Gaps in readings are shown as breaks.
  */
-export default function WaterChart({ ranges }: WaterChartListProps) {
+export default function WaterChart({ ranges, showThresholds = true }: WaterChartListProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const from = useMemo(() => fromForRange(timeRange), [timeRange]);
 
@@ -234,7 +239,7 @@ export default function WaterChart({ ranges }: WaterChartListProps) {
           }}
         >
           {ranges.map((range) => (
-            <SeriesChart key={range.id} range={range} from={from} />
+            <SeriesChart key={range.id} range={range} from={from} showThresholds={showThresholds} />
           ))}
         </Box>
       )}

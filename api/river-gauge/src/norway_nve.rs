@@ -51,7 +51,7 @@ struct Series {
 #[derive(Deserialize)]
 struct Observation {
     time: String,
-    value: f64,
+    value: Option<f64>,
 }
 
 impl Default for NorwayNveReader {
@@ -95,18 +95,26 @@ impl NorwayNveReader {
         );
 
         let client = reqwest::Client::new();
-        let resp: ApiResponse = client
+        let resp = client
             .get(&url)
             .headers(self.build_headers(api_key)?)
             .send()
             .await
             .map_err(|e| anyhow::anyhow!("NveReader: HTTP error: {e}"))?
             .error_for_status()
-            .map_err(|e| anyhow::anyhow!("NveReader: server error: {e}"))?
-            .json()
+            .map_err(|e| anyhow::anyhow!("NveReader: server error: {e}"))?;
+
+        let body = resp
+            .text()
             .await
-            .map_err(|e| anyhow::anyhow!("NveReader: JSON parse error: {e}"))?;
-        Ok(resp.data)
+            .map_err(|e| anyhow::anyhow!("NveReader: failed to read response body: {e}"))?;
+
+        serde_json::from_str::<ApiResponse>(&body)
+            .map(|r| r.data)
+            .map_err(|e| {
+                let preview = body.chars().take(200).collect::<String>();
+                anyhow::anyhow!("NveReader: JSON parse error: {e} — body: {preview:?}")
+            })
     }
 }
 
@@ -115,10 +123,13 @@ impl GaugeReader for NorwayNveReader {
         "nve"
     }
 
-    /// NVE HydAPI supports arbitrary date ranges with no documented hard limit.
-    /// We advertise 10 years as a practical upper bound.
+    /// NVE HydAPI imposes a hard limit of 150 000 observations per request.
+    /// With 10 stations per chunk and ~15-minute resolution that is roughly
+    /// 10 × 4 × 24 × 30 ≈ 29 000 observations for a 30-day window — safe.
+    /// A 10-year window would exceed the limit, so we advertise 30 days here
+    /// (matching the global `max_history` cap in the polling loop).
     fn history_depth(&self) -> Option<chrono::Duration> {
-        Some(chrono::Duration::days(3650))
+        Some(chrono::Duration::days(30))
     }
 
     fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<crate::StationInfo>>> {
@@ -469,6 +480,9 @@ impl GaugeReader for NorwayNveReader {
                     continue;
                 };
                 for obs in *observations {
+                    let Some(value) = obs.value else {
+                        continue;
+                    };
                     let ts = match obs.time.parse::<DateTime<Utc>>() {
                         Ok(t) => t,
                         Err(_) => {
@@ -484,7 +498,7 @@ impl GaugeReader for NorwayNveReader {
                         results
                             .entry(req.source_id.clone())
                             .or_default()
-                            .push((ts, obs.value));
+                            .push((ts, value));
                     }
                 }
             }

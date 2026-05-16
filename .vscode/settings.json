@@ -6,6 +6,7 @@
     "bunx": true,
     ".venv/bin/python3": true,
     ".venv/bin/python": true,
-    "scripts/.venv/bin/python3": true
+    "scripts/.venv/bin/python3": true,
+    "cargo run": true
   }
 }

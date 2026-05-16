@@ -1,6 +1,7 @@
 import {
   useInfiniteQuery,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -108,6 +109,21 @@ export function useWaterStatus(
     enabled: sectionId !== null,
     // Re-fetch every 5 minutes — matches gauge reader poll interval
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** Fetches water status for every section in a waterway. Results are
+ *  cached normally — reuses data already fetched by SectionListItem/SectionGaugeRows. */
+export function useAllSectionWaterStatus(
+  waterwayId: number,
+  sectionIds: number[],
+) {
+  return useQueries({
+    queries: sectionIds.map((sectionId) => ({
+      queryKey: waterwayKeys.sectionWaterStatus(waterwayId, sectionId),
+      queryFn: () => waterStatusApi.getForSection(waterwayId, sectionId),
+      staleTime: 5 * 60 * 1000,
+    })),
   });
 }
 

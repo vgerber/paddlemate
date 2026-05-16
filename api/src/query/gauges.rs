@@ -314,9 +314,9 @@ fn row_to_water_range(row: &PgRow) -> Result<FeatureWaterRange, sqlx::Error> {
     Ok(FeatureWaterRange {
         id: row.try_get("id")?,
         feature_id: row.try_get("feature_id")?,
-        range_low: row.try_get("range_low")?,
-        range_medium: row.try_get("range_medium")?,
-        range_high: row.try_get("range_high")?,
+        range_low: row.try_get::<Option<f64>, _>("range_low")?,
+        range_medium: row.try_get::<Option<f64>, _>("range_medium")?,
+        range_high: row.try_get::<Option<f64>, _>("range_high")?,
         created_at: row.try_get("created_at")?,
         updated_at: row.try_get("updated_at")?,
         series: GaugeSeries {
@@ -516,9 +516,9 @@ pub async fn water_status_for_section(
             Ok(WaterRangeWithStatus {
                 id: row.try_get("id")?,
                 feature_id: row.try_get("feature_id")?,
-                range_low: row.try_get("range_low")?,
-                range_medium: row.try_get("range_medium")?,
-                range_high: row.try_get("range_high")?,
+                range_low: row.try_get::<Option<f64>, _>("range_low")?,
+                range_medium: row.try_get::<Option<f64>, _>("range_medium")?,
+                range_high: row.try_get::<Option<f64>, _>("range_high")?,
                 created_at: row.try_get("created_at")?,
                 updated_at: row.try_get("updated_at")?,
                 series: GaugeSeries {
@@ -546,9 +546,9 @@ pub async fn water_status_for_section(
                 },
                 level: WaterLevel::from_reading(
                     latest_reading.as_ref().map(|r| r.value),
-                    row.try_get("range_low")?,
-                    row.try_get("range_medium")?,
-                    row.try_get("range_high")?,
+                    row.try_get::<Option<f64>, _>("range_low")?,
+                    row.try_get::<Option<f64>, _>("range_medium")?,
+                    row.try_get::<Option<f64>, _>("range_high")?,
                 ),
                 latest_reading,
             })
