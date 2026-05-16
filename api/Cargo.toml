@@ -6,6 +6,7 @@ resolver = "2"
 name = "paddlemate_api"
 version = "0.1.0"
 edition = "2024"
+default-run = "paddlemate_api"
 
 [dependencies]
 aide = { version = "0.15.1", features = ["axum", "axum-json", "axum-query", "macros"] }

@@ -59,6 +59,9 @@ pub struct RivermapStation {
     pub is_active: bool,
     #[serde(rename = "type")]
     pub station_type: String,
+    #[serde(default)]
+    #[serde(rename = "dataSourceId")]
+    pub data_source_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -137,13 +137,14 @@ pub async fn create_gauge(
     }
 
     let active = body.active.unwrap_or(true);
-    let interval = body.fetch_interval_secs.unwrap_or(900);
+    let interval = body.fetch_interval_secs.unwrap_or(300);
 
     match gauges::create_gauge(
         &app.pg_pool,
         &body.name,
         &body.provider,
         &body.source_id,
+        body.data_source_id.as_deref(),
         body.lat,
         body.lon,
         active,
@@ -188,6 +189,7 @@ pub async fn update_gauge(
         &body.name,
         &body.provider,
         &body.source_id,
+        body.data_source_id.as_deref(),
         body.lat,
         body.lon,
         body.active,

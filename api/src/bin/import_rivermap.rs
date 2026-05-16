@@ -1,0 +1,474 @@
+use std::{collections::HashMap, fs, path::PathBuf};
+
+use anyhow::Context;
+use river_gauge::{RivermapReadingsRange, RivermapSectionBundle, RivermapSource, RivermapStation};
+use serde::Deserialize;
+use serde_json::Value;
+use sqlx::PgPool;
+
+#[derive(Deserialize)]
+struct RivermapSnapshot {
+    sources: Vec<RivermapSource>,
+    stations: Vec<RivermapStation>,
+    sections: RivermapSectionBundle,
+    readings: HashMap<String, RivermapReadingsRange>,
+}
+
+fn manifest_dir() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+}
+
+fn default_snapshot_path() -> PathBuf {
+    manifest_dir().join("../scripts/rivermap_snapshot.json")
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt::init();
+
+    dotenvy::dotenv().ok();
+
+    let database_url =
+        std::env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
+
+    let mut snapshot_path = default_snapshot_path();
+    let mut args = std::env::args().skip(1);
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--snapshot" => {
+                snapshot_path = PathBuf::from(
+                    args.next()
+                        .ok_or_else(|| anyhow::anyhow!("--snapshot requires a path"))?,
+                );
+            }
+            "--help" | "-h" => {
+                println!(
+                    "Usage: import_rivermap [--snapshot PATH]\n\nDefault snapshot: {}",
+                    snapshot_path.display()
+                );
+                return Ok(());
+            }
+            other => anyhow::bail!("unknown argument: {other}"),
+        }
+    }
+
+    let raw = fs::read_to_string(&snapshot_path)
+        .with_context(|| format!("reading snapshot from {}", snapshot_path.display()))?;
+    let snapshot: RivermapSnapshot =
+        serde_json::from_str(&raw).context("parsing snapshot JSON")?;
+
+    let pool = PgPool::connect(&database_url).await?;
+
+    import_sources(&pool, &snapshot.sources).await?;
+    import_stations(&pool, &snapshot.stations).await?;
+    import_sections(&pool, &snapshot.sections).await?;
+    import_readings(&pool, &snapshot.readings).await?;
+
+    println!(
+        "Import complete: {} sources, {} sections, {} stations, {} readings batches",
+        snapshot.sources.len(),
+        snapshot.sections.sections.len(),
+        snapshot.stations.len(),
+        snapshot.readings.len(),
+    );
+
+    Ok(())
+}
+
+async fn import_sources(pool: &PgPool, sources: &[RivermapSource]) -> anyhow::Result<()> {
+    for s in sources {
+        sqlx::query(
+            "INSERT INTO sources (id, name, short_name, licensing_terms, website, country_code)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             ON CONFLICT (id) DO UPDATE
+             SET name = EXCLUDED.name,
+                 short_name = EXCLUDED.short_name,
+                 licensing_terms = EXCLUDED.licensing_terms,
+                 website = EXCLUDED.website,
+                 country_code = EXCLUDED.country_code",
+        )
+        .bind(&s.id)
+        .bind(&s.name)
+        .bind(&s.short_name)
+        .bind(&s.licensing_terms)
+        .bind(&s.website)
+        .bind(&s.country_code)
+        .execute(pool)
+        .await?;
+    }
+    println!("  Imported {} sources", sources.len());
+    Ok(())
+}
+
+async fn import_stations(pool: &PgPool, stations: &[RivermapStation]) -> anyhow::Result<()> {
+    let mut count = 0usize;
+    for st in stations {
+        // Skip inactive and non-online stations
+        if !st.is_active || st.station_type != "online" {
+            continue;
+        }
+
+        let river_name = st
+            .river
+            .get("en")
+            .or_else(|| st.river.get("de"))
+            .or_else(|| st.river.get("fr"))
+            .or_else(|| st.river.get("it"))
+            .or_else(|| st.river.values().next())
+            .cloned()
+            .unwrap_or_default();
+
+        let (lat, lon) = match &st.latlng {
+            Some(v) if v.len() == 2 => (
+                Some(v[0] as f64 / 1_000_000.0),
+                Some(v[1] as f64 / 1_000_000.0),
+            ),
+            _ => (None, None),
+        };
+
+        // Build source_id entries for each sensor
+        for sensor in &st.sensors {
+            let param = match sensor.as_str() {
+                "level" => "W",
+                "flow" => "Q",
+                _ => continue,
+            };
+            let source_id = format!("{}:{}", st.id, param);
+            let measurement_type = match param {
+                "W" => "water_level",
+                "Q" => "discharge",
+                _ => continue,
+            };
+            let unit = match param {
+                "W" => "cm",
+                "Q" => "m3s",
+                _ => continue,
+            };
+            let label = format!("{} ({})", st.name, param);
+
+            // Upsert gauge
+            sqlx::query(
+                "INSERT INTO gauges (name, provider, source_id, data_source_id, lat, lon, active, fetch_interval_secs)
+                 VALUES ($1, 'rivermap', $2, $3, $4, $5, TRUE, 300)
+                 ON CONFLICT (provider, source_id) DO UPDATE
+                 SET name = EXCLUDED.name,
+                     data_source_id = EXCLUDED.data_source_id,
+                     lat = EXCLUDED.lat,
+                     lon = EXCLUDED.lon,
+                     active = EXCLUDED.active,
+                     updated_at = NOW()",
+            )
+            .bind(&river_name)
+            .bind(&source_id)
+            .bind(&st.data_source_id)
+            .bind(lat)
+            .bind(lon)
+            .execute(pool)
+            .await?;
+
+            // Get the gauge id
+            let gauge_id: i64 = sqlx::query_scalar(
+                "SELECT id FROM gauges WHERE provider = 'rivermap' AND source_id = $1",
+            )
+            .bind(&source_id)
+            .fetch_one(pool)
+            .await?;
+
+            // Upsert gauge series
+            sqlx::query(
+                "INSERT INTO gauge_series (gauge_id, measurement_type, unit, label, source_id)
+                 VALUES ($1, $2::measurement_type, $3, $4, $5)
+                 ON CONFLICT (gauge_id, measurement_type) DO UPDATE
+                 SET unit = EXCLUDED.unit,
+                     label = EXCLUDED.label,
+                     source_id = EXCLUDED.source_id",
+            )
+            .bind(gauge_id)
+            .bind(measurement_type)
+            .bind(unit)
+            .bind(&label)
+            .bind(&source_id)
+            .execute(pool)
+            .await?;
+
+            count += 1;
+        }
+    }
+    println!("  Imported {count} gauge series from {} stations", stations.len());
+    Ok(())
+}
+
+async fn import_readings(
+    pool: &PgPool,
+    readings: &HashMap<String, RivermapReadingsRange>,
+) -> anyhow::Result<()> {
+    let mut total = 0usize;
+    for (station_id, range) in readings {
+        // cm readings -> W series
+        if !range.cm.is_empty() {
+            let source_id = format!("{station_id}:W");
+            let series_id: Option<i64> = sqlx::query_scalar(
+                "SELECT gs.id FROM gauge_series gs
+                 JOIN gauges g ON g.id = gs.gauge_id
+                 WHERE g.provider = 'rivermap' AND gs.source_id = $1",
+            )
+            .bind(&source_id)
+            .fetch_optional(pool)
+            .await?;
+
+            if let Some(sid) = series_id {
+                for tv in &range.cm {
+                    let measured_at =
+                        chrono::DateTime::from_timestamp(tv.ts, 0).unwrap_or_default();
+                    sqlx::query(
+                        "INSERT INTO gauge_readings (series_id, measured_at, value)
+                         VALUES ($1, $2, $3)
+                         ON CONFLICT (series_id, measured_at) DO NOTHING",
+                    )
+                    .bind(sid)
+                    .bind(measured_at)
+                    .bind(tv.v)
+                    .execute(pool)
+                    .await?;
+                    total += 1;
+                }
+            }
+        }
+
+        // m3s readings -> Q series
+        if !range.m3s.is_empty() {
+            let source_id = format!("{station_id}:Q");
+            let series_id: Option<i64> = sqlx::query_scalar(
+                "SELECT gs.id FROM gauge_series gs
+                 JOIN gauges g ON g.id = gs.gauge_id
+                 WHERE g.provider = 'rivermap' AND gs.source_id = $1",
+            )
+            .bind(&source_id)
+            .fetch_optional(pool)
+            .await?;
+
+            if let Some(sid) = series_id {
+                for tv in &range.m3s {
+                    let measured_at =
+                        chrono::DateTime::from_timestamp(tv.ts, 0).unwrap_or_default();
+                    sqlx::query(
+                        "INSERT INTO gauge_readings (series_id, measured_at, value)
+                         VALUES ($1, $2, $3)
+                         ON CONFLICT (series_id, measured_at) DO NOTHING",
+                    )
+                    .bind(sid)
+                    .bind(measured_at)
+                    .bind(tv.v)
+                    .execute(pool)
+                    .await?;
+                    total += 1;
+                }
+            }
+        }
+    }
+    println!("  Imported {total} readings");
+    Ok(())
+}
+
+fn preferred_name(map: &serde_json::Map<String, Value>) -> Option<String> {
+    ["en", "de", "fr", "it", "es"]
+        .iter()
+        .find_map(|lang| map.get(*lang).and_then(|v| v.as_str()).map(String::from))
+        .or_else(|| {
+            map.values()
+                .next()
+                .and_then(|v| v.as_str())
+                .map(String::from)
+        })
+}
+
+fn latlng_to_f64(arr: &[Value]) -> (Option<f64>, Option<f64>) {
+    if arr.len() == 2 {
+        let lat = arr[0].as_f64().map(|v| v / 1_000_000.0);
+        let lon = arr[1].as_f64().map(|v| v / 1_000_000.0);
+        (lat, lon)
+    } else {
+        (None, None)
+    }
+}
+
+async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyhow::Result<()> {
+    let mut waterway_count = 0usize;
+    let mut section_count = 0usize;
+    let mut feature_count = 0usize;
+    let mut range_count = 0usize;
+
+    for sec in &bundle.sections {
+        let obj = sec
+            .as_object()
+            .ok_or_else(|| anyhow::anyhow!("section is not an object"))?;
+
+        // Extract river name
+        let river_map = match obj.get("river").and_then(|v| v.as_object()) {
+            Some(m) => m,
+            None => continue,
+        };
+        let river_name = match preferred_name(river_map) {
+            Some(n) => n,
+            None => continue,
+        };
+
+        // Extract section name
+        let section_name_map = match obj.get("sectionName").and_then(|v| v.as_object()) {
+            Some(m) => m,
+            None => continue,
+        };
+        let section_name = preferred_name(section_name_map).unwrap_or_default();
+
+        let country_code = obj
+            .get("countryCode")
+            .and_then(|v| v.as_str())
+            .map(|s| &s[..s.len().min(2)]);
+
+        let region = obj.get("regionName").and_then(|v| v.as_str());
+
+        // Build a LineString from putIn -> takeOut
+        let put_in = obj.get("putInLatLng").and_then(|v| v.as_array());
+        let take_out = obj.get("takeOutLatLng").and_then(|v| v.as_array());
+
+        let (put_lat, put_lon) = put_in.map(|a| latlng_to_f64(a)).unwrap_or((None, None));
+        let (take_lat, take_lon) = take_out.map(|a| latlng_to_f64(a)).unwrap_or((None, None));
+
+        // Need at least a put-in to create geometry
+        let (p_lat, p_lon) = match (put_lat, put_lon) {
+            (Some(lat), Some(lon)) => (lat, lon),
+            _ => continue,
+        };
+        let (t_lat, t_lon) = (
+            take_lat.unwrap_or(p_lat),
+            take_lon.unwrap_or(p_lon),
+        );
+
+        // Upsert waterway
+        let waterway_id: i64 = sqlx::query_scalar(
+            "INSERT INTO waterways (waterway_type, name)
+             VALUES ('river', $1)
+             ON CONFLICT (name) DO UPDATE SET updated_at = NOW()
+             RETURNING id",
+        )
+        .bind(&river_name)
+        .fetch_one(pool)
+        .await?;
+        waterway_count += 1;
+
+        // Build LineString WKT
+        let line_wkt = format!(
+            "SRID=4326;LINESTRING({lon1} {lat1},{lon2} {lat2})",
+            lon1 = p_lon,
+            lat1 = p_lat,
+            lon2 = t_lon,
+            lat2 = t_lat,
+        );
+
+        // Upsert section
+        let section_id: i64 = sqlx::query_scalar(
+            "INSERT INTO water_sections (waterway_id, name, region, country, location)
+             VALUES ($1, $2, $3, $4, ST_GeomFromEWKT($5))
+             ON CONFLICT (waterway_id, name) DO UPDATE
+             SET region = EXCLUDED.region,
+                 country = EXCLUDED.country,
+                 location = EXCLUDED.location,
+                 updated_at = NOW()
+             RETURNING id",
+        )
+        .bind(waterway_id)
+        .bind(&section_name)
+        .bind(region)
+        .bind(country_code)
+        .bind(&line_wkt)
+        .fetch_one(pool)
+        .await?;
+        section_count += 1;
+
+        // Create whitewater feature with grade
+        let grade = obj.get("grade").and_then(|v| v.as_str()).unwrap_or("");
+        let category = obj.get("category").and_then(|v| v.as_str()).unwrap_or("whitewater");
+        let feature_type = match category {
+            "whitewater" | "play" | "slalom" | "drop" => "whitewater",
+            _ => "whitewater",
+        };
+        let metadata = serde_json::json!({ "difficulty": grade });
+
+        // Use put-in point as feature location
+        let point_wkt = format!("SRID=4326;POINT({p_lon} {p_lat})");
+
+        let feature_id: i64 = sqlx::query_scalar(
+            "INSERT INTO features (section_id, feature_type, metadata, location, created_by)
+             VALUES ($1, $2::feature_type, $3, ST_GeomFromEWKT($4), 'rivermap-import')
+             ON CONFLICT DO NOTHING
+             RETURNING id",
+        )
+        .bind(section_id)
+        .bind(feature_type)
+        .bind(&metadata)
+        .bind(&point_wkt)
+        .fetch_optional(pool)
+        .await?
+        .unwrap_or_else(|| {
+            // Feature already exists — we'll skip water range linking for duplicates
+            0
+        });
+
+        if feature_id == 0 {
+            continue;
+        }
+        feature_count += 1;
+
+        // Link calibration to gauge series (water ranges)
+        if let Some(calib) = obj.get("calibration").and_then(|v| v.as_object()) {
+            let station_id = calib.get("stationId").and_then(|v| v.as_str());
+            let unit = calib.get("unit").and_then(|v| v.as_str());
+            let lw = calib.get("lw").and_then(|v| v.as_f64());
+            let mw = calib.get("mw").and_then(|v| v.as_f64());
+            let hw = calib.get("hw").and_then(|v| v.as_f64());
+
+            if let (Some(station_id), Some(unit)) = (station_id, unit) {
+                // Map Rivermap unit to our param
+                let param = match unit {
+                    "m3s" | "cfs" | "lts" => "Q",
+                    _ => "W", // cm, m, ft
+                };
+                let source_id = format!("{station_id}:{param}");
+
+                let series_id: Option<i64> = sqlx::query_scalar(
+                    "SELECT gs.id FROM gauge_series gs
+                     JOIN gauges g ON g.id = gs.gauge_id
+                     WHERE g.provider = 'rivermap' AND gs.source_id = $1",
+                )
+                .bind(&source_id)
+                .fetch_optional(pool)
+                .await?;
+
+                if let Some(sid) = series_id {
+                    sqlx::query(
+                        "INSERT INTO feature_water_ranges (feature_id, series_id, range_low, range_medium, range_high)
+                         VALUES ($1, $2, $3, $4, $5)
+                         ON CONFLICT (feature_id, series_id) DO UPDATE
+                         SET range_low = EXCLUDED.range_low,
+                             range_medium = EXCLUDED.range_medium,
+                             range_high = EXCLUDED.range_high,
+                             updated_at = NOW()",
+                    )
+                    .bind(feature_id)
+                    .bind(sid)
+                    .bind(lw)
+                    .bind(mw)
+                    .bind(hw)
+                    .execute(pool)
+                    .await?;
+                    range_count += 1;
+                }
+            }
+        }
+    }
+
+    println!(
+        "  Imported {section_count} sections, {feature_count} features, {range_count} water ranges"
+    );
+    Ok(())
+}

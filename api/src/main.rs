@@ -174,7 +174,8 @@ async fn main() {
             api_token_auth_optional,
         ));
 
-    paddlemate_api::readers::run_all(db.clone());
+    // TODO: re-enable gauge polling when ready
+    // paddlemate_api::readers::run_all(db.clone());
 
     let api_v1 = ApiRouter::new()
         .merge(protected)

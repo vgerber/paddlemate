@@ -20,6 +20,7 @@ fn row_to_gauge(row: &PgRow) -> Result<Gauge, sqlx::Error> {
         name: row.try_get("name")?,
         provider: row.try_get("provider")?,
         source_id: row.try_get("source_id")?,
+        data_source_id: row.try_get("data_source_id")?,
         lat: row.try_get("lat")?,
         lon: row.try_get("lon")?,
         active: row.try_get("active")?,
@@ -49,8 +50,7 @@ fn row_to_reading(row: &PgRow) -> Result<GaugeReading, sqlx::Error> {
     })
 }
 
-const GAUGE_COLS: &str =
-    "id, name, provider, source_id, lat, lon, active, fetch_interval_secs, created_at, updated_at";
+const GAUGE_COLS: &str = "id, name, provider, source_id, data_source_id, lat, lon, active, fetch_interval_secs, created_at, updated_at";
 const SERIES_COLS: &str =
     "id, gauge_id, measurement_type::text AS measurement_type, unit, label, source_id, created_at";
 
@@ -93,6 +93,7 @@ pub async fn fetch_gauge_with_series(
         name: gauge.name,
         provider: gauge.provider,
         source_id: gauge.source_id,
+        data_source_id: gauge.data_source_id,
         lat: gauge.lat,
         lon: gauge.lon,
         active: gauge.active,
@@ -108,19 +109,21 @@ pub async fn create_gauge(
     name: &str,
     provider: &str,
     source_id: &str,
+    data_source_id: Option<&str>,
     lat: Option<f64>,
     lon: Option<f64>,
     active: bool,
     fetch_interval_secs: i32,
 ) -> Result<Gauge, sqlx::Error> {
     let row = sqlx::query(&format!(
-        "INSERT INTO gauges (name, provider, source_id, lat, lon, active, fetch_interval_secs)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        "INSERT INTO gauges (name, provider, source_id, data_source_id, lat, lon, active, fetch_interval_secs)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING {GAUGE_COLS}"
     ))
     .bind(name)
     .bind(provider)
     .bind(source_id)
+    .bind(data_source_id)
     .bind(lat)
     .bind(lon)
     .bind(active)
@@ -136,6 +139,7 @@ pub async fn update_gauge(
     name: &str,
     provider: &str,
     source_id: &str,
+    data_source_id: Option<&str>,
     lat: Option<f64>,
     lon: Option<f64>,
     active: bool,
@@ -143,8 +147,8 @@ pub async fn update_gauge(
 ) -> Result<Option<Gauge>, sqlx::Error> {
     let row = sqlx::query(&format!(
         "UPDATE gauges
-         SET name = $2, provider = $3, source_id = $4, lat = $5, lon = $6,
-             active = $7, fetch_interval_secs = $8, updated_at = NOW()
+         SET name = $2, provider = $3, source_id = $4, data_source_id = $5, lat = $6, lon = $7,
+             active = $8, fetch_interval_secs = $9, updated_at = NOW()
          WHERE id = $1
          RETURNING {GAUGE_COLS}"
     ))
@@ -152,6 +156,7 @@ pub async fn update_gauge(
     .bind(name)
     .bind(provider)
     .bind(source_id)
+    .bind(data_source_id)
     .bind(lat)
     .bind(lon)
     .bind(active)
@@ -471,6 +476,7 @@ pub async fn water_status_for_section(
             g.name              AS g_name,
             g.provider          AS g_provider,
             g.source_id         AS g_source_id,
+            g.data_source_id    AS g_data_source_id,
             g.lat               AS g_lat,
             g.lon               AS g_lon,
             g.active            AS g_active,
@@ -537,6 +543,7 @@ pub async fn water_status_for_section(
                     name: row.try_get("g_name")?,
                     provider: row.try_get("g_provider")?,
                     source_id: row.try_get("g_source_id")?,
+                    data_source_id: row.try_get("g_data_source_id")?,
                     lat: row.try_get("g_lat")?,
                     lon: row.try_get("g_lon")?,
                     active: row.try_get("g_active")?,
