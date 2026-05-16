@@ -398,35 +398,34 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
         // Use put-in point as feature location
         let point_wkt = format!("SRID=4326;POINT({p_lon} {p_lat})");
 
+        // Upsert feature: update if a rivermap-imported one already exists for this section.
         let feature_id: i64 = sqlx::query_scalar(
             "INSERT INTO features (section_id, feature_type, metadata, location, created_by)
              VALUES ($1, $2::feature_type, $3, ST_GeomFromEWKT($4), 'rivermap-import')
-             ON CONFLICT DO NOTHING
+             ON CONFLICT (section_id, created_by) DO UPDATE
+             SET feature_type = EXCLUDED.feature_type,
+                 metadata     = EXCLUDED.metadata,
+                 location     = EXCLUDED.location,
+                 updated_at   = NOW()
              RETURNING id",
         )
         .bind(section_id)
         .bind(feature_type)
         .bind(&metadata)
         .bind(&point_wkt)
-        .fetch_optional(pool)
-        .await?
-        .unwrap_or_else(|| {
-            // Feature already exists — we'll skip water range linking for duplicates
-            0
-        });
-
-        if feature_id == 0 {
-            continue;
-        }
+        .fetch_one(pool)
+        .await?;
         feature_count += 1;
 
         // Link calibration to gauge series (water ranges)
         if let Some(calib) = obj.get("calibration").and_then(|v| v.as_object()) {
             let station_id = calib.get("stationId").and_then(|v| v.as_str());
             let unit = calib.get("unit").and_then(|v| v.as_str());
-            let lw = calib.get("lw").and_then(|v| v.as_f64());
+            let mw_min = calib.get("mwMin").and_then(|v| v.as_f64());
+            let mw_max = calib.get("mwMax").and_then(|v| v.as_f64());
+            let lw = calib.get("lw").and_then(|v| v.as_f64()).or(mw_min);
             let mw = calib.get("mw").and_then(|v| v.as_f64());
-            let hw = calib.get("hw").and_then(|v| v.as_f64());
+            let hw = calib.get("hw").and_then(|v| v.as_f64()).or(mw_max);
 
             if let (Some(station_id), Some(unit)) = (station_id, unit) {
                 // Map Rivermap unit to our param

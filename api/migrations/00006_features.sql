@@ -8,7 +8,8 @@ CREATE TABLE features (
     location     geometry(Geometry, 4326) NOT NULL,
     created_by   VARCHAR(255) NOT NULL,
     created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    updated_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    UNIQUE (section_id, created_by)
 );
 
 CREATE TABLE feature_names (
