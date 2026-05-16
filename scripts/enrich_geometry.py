@@ -249,15 +249,22 @@ def main():
             put_in = Point(pi_lon, pi_lat)
             take_out = Point(to_lon, to_lat)
 
-            # Sanity: check distance to nearest point on river (degrees)
+            # Snap endpoints to the nearest point on the river line.
+            # If either is too far (> 0.05 deg) we still use the closest
+            # point rather than skipping — the section is at least on the
+            # right river.
             dist_in = river.distance(put_in)
             dist_out = river.distance(take_out)
-            if dist_in > 0.05 or dist_out > 0.05:
+            if dist_in > 0.05:
+                snapped = river.interpolate(river.project(put_in))
+                print(f"  Section {sid}: put-in {dist_in:.4f} deg from river, snapping")
+                put_in = snapped
+            if dist_out > 0.05:
+                snapped = river.interpolate(river.project(take_out))
                 print(
-                    f"  Section {sid}: endpoints too far from OSM line ({dist_in:.4f}, {dist_out:.4f} deg), skipping"
+                    f"  Section {sid}: take-out {dist_out:.4f} deg from river, snapping"
                 )
-                skipped += 1
-                continue
+                take_out = snapped
 
             result = extract_subsection(river, put_in, take_out)
             if not result:
