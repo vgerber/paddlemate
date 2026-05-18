@@ -53,7 +53,7 @@ pub struct WaterwayFilters {
     pub page: Option<i64>,
     /// Items per page (max 100, default 20).
     pub per_page: Option<i64>,
-    /// Filter by river name (case-insensitive substring match).
+    /// Filter by river or section name (case-insensitive substring match).
     pub name: Option<String>,
     /// Filter by ISO 3166-1 alpha-2 country code (e.g. "AT", "FR").
     pub country: Option<String>,
@@ -90,9 +90,11 @@ pub async fn list_waterways(
 
     if let Some(name) = &filters.name {
         if !name.is_empty() {
-            qb.push(" AND unaccent(w.name) ILIKE unaccent(");
+            qb.push(" AND (unaccent(w.name) ILIKE unaccent(");
             qb.push_bind(format!("%{}%", name));
-            qb.push(")");
+            qb.push(") OR EXISTS (SELECT 1 FROM water_sections ws_n WHERE ws_n.waterway_id = w.id AND unaccent(ws_n.name) ILIKE unaccent(");
+            qb.push_bind(format!("%{}%", name));
+            qb.push(")))");
         }
     }
 

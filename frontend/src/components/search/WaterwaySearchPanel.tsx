@@ -105,10 +105,24 @@ export default function WaterwaySearchPanel({
   );
   const total = data?.pages[0]?.total ?? 0;
 
+  // When searching by name, only show rivers whose name matches
+  const visibleRivers = useMemo(() => {
+    if (!debouncedName) return waterways;
+    const q = debouncedName.toLowerCase();
+    return waterways.filter((w) => w.name.toLowerCase().includes(q));
+  }, [waterways, debouncedName]);
+
+  // When searching by name, only show sections whose name matches
+  const visibleSections = useMemo(() => {
+    const sections = filteredSections ?? [];
+    if (!debouncedName) return sections;
+    const q = debouncedName.toLowerCase();
+    return sections.filter((s) => s.name.toLowerCase().includes(q));
+  }, [filteredSections, debouncedName]);
+
   useEffect(() => {
     onWaterwaysChange?.(waterways.map((w) => w.id));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [waterways]);
+  }, [waterways, onWaterwaysChange]);
 
   // Sync filter state to URL
   useEffect(() => {
@@ -189,7 +203,7 @@ export default function WaterwaySearchPanel({
             <>
               <TextField
                 fullWidth
-                placeholder="Search rivers…"
+                placeholder="Search rivers or sections…"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 size="small"
@@ -281,11 +295,11 @@ export default function WaterwaySearchPanel({
         >
           <ToggleButton value="rivers">
             <WaterIcon sx={{ fontSize: 14, mr: 0.5 }} /> Rivers (
-            {waterways.length})
+            {visibleRivers.length})
           </ToggleButton>
           <ToggleButton value="sections">
             <ListIcon sx={{ fontSize: 14, mr: 0.5 }} /> Sections (
-            {filteredSections?.length ?? 0})
+            {visibleSections.length})
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>
@@ -304,7 +318,7 @@ export default function WaterwaySearchPanel({
         )}
         {listView === "rivers" ? (
           <RiverList
-            waterways={waterways}
+            waterways={visibleRivers}
             isLoading={isLoading}
             hasNextPage={hasNextPage ?? false}
             isFetchingNextPage={isFetchingNextPage}
@@ -313,7 +327,7 @@ export default function WaterwaySearchPanel({
           />
         ) : (
           <SectionList
-            sections={filteredSections ?? []}
+            sections={visibleSections}
             selectedSectionId={selectedSectionId}
             waterwayNames={waterwayNames}
             onSectionClick={onSectionClick}
