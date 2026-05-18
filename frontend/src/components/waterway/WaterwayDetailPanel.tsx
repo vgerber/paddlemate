@@ -8,7 +8,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import SectionListItem from "@/components/SectionListItem";
+import SectionListItem from "@/components/waterway/SectionListItem";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import type { WaterRangeWithStatus } from "@/lib/api";
 
@@ -74,7 +74,11 @@ export default function WaterwayDetailPanel({
           size="small"
           sx={{
             width: "100%",
-            "& .MuiToggleButton-root": { flex: 1, py: 0.5, fontSize: "0.75rem" },
+            "& .MuiToggleButton-root": {
+              flex: 1,
+              py: 0.5,
+              fontSize: "0.75rem",
+            },
           }}
         >
           <ToggleButton value="sections">Sections</ToggleButton>
@@ -105,41 +109,43 @@ export default function WaterwayDetailPanel({
               ))}
             </List>
           )
+        ) : gaugeRanges.length === 0 ? (
+          <Typography color="text.secondary" variant="body2" sx={{ p: 1 }}>
+            No gauges found.
+          </Typography>
         ) : (
-          gaugeRanges.length === 0 ? (
-            <Typography color="text.secondary" variant="body2" sx={{ p: 1 }}>
-              No gauges found.
-            </Typography>
-          ) : (
-            <List dense disablePadding>
-              {gaugeRanges.map((range) => (
-                <ListItemButton
-                  key={range.gauge.id}
-                  selected={selectedGaugeId === range.gauge.id}
-                  onClick={() => onGaugeSelect?.(range.gauge.id)}
-                  sx={{ py: 0.75, px: 1.5, borderRadius: 1 }}
-                >
-                  <ListItemText
-                    primary={(range.series.label ?? range.gauge.name).replace(/\s*\([WQ]\)\s*$/, "")}
-                    secondary={range.gauge.name}
-                    slotProps={{
-                      primary: { variant: "body2" },
-                      secondary: { variant: "caption" },
-                    }}
-                  />
-                  {range.latest_reading != null && (
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ mr: 1, whiteSpace: "nowrap" }}
-                    >
-                      {range.latest_reading.value.toFixed(1)}&thinsp;{range.series.unit}
-                    </Typography>
+          <List dense disablePadding>
+            {gaugeRanges.map((range) => (
+              <ListItemButton
+                key={range.gauge.id}
+                selected={selectedGaugeId === range.gauge.id}
+                onClick={() => onGaugeSelect?.(range.gauge.id)}
+                sx={{ py: 0.75, px: 1.5, borderRadius: 1 }}
+              >
+                <ListItemText
+                  primary={(range.series.label ?? range.gauge.name).replace(
+                    /\s*\([WQ]\)\s*$/,
+                    "",
                   )}
-                </ListItemButton>
-              ))}
-            </List>
-          )
+                  secondary={range.gauge.name}
+                  slotProps={{
+                    primary: { variant: "body2" },
+                    secondary: { variant: "caption" },
+                  }}
+                />
+                {range.latest_reading != null && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mr: 1, whiteSpace: "nowrap" }}
+                  >
+                    {range.latest_reading.value.toFixed(1)}&thinsp;
+                    {range.series.unit}
+                  </Typography>
+                )}
+              </ListItemButton>
+            ))}
+          </List>
         )}
       </Box>
     </>

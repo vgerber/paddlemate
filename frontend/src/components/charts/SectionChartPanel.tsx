@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
-import WaterChart from "@/components/WaterChart";
+import WaterChart from "@/components/charts/WaterChart";
 import { useWaterStatus } from "@/lib/hooks/useWaterways";
 
 interface SectionChartPanelProps {

@@ -4,7 +4,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import type { SectionWithFeatures } from "@/lib/api";
 import { useWaterStatus } from "@/lib/hooks/useWaterways";
-import WaterLevelChip from "./WaterLevelChip";
+import WaterLevelChip from "@/components/WaterLevelChip";
 
 interface SectionListItemProps {
   section: SectionWithFeatures;
@@ -52,20 +52,29 @@ export default function SectionListItem({
           secondary: { variant: "caption" },
         }}
       />
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 0.25 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: 0.25,
+        }}
+      >
         <Box sx={{ display: "flex", gap: 0.5 }}>
           {difficultyChip}
-          <WaterLevelChip
-            ranges={waterStatus?.ranges}
-            loading={waterLoading}
-          />
+          <WaterLevelChip ranges={waterStatus?.ranges} loading={waterLoading} />
         </Box>
         {isRivermap && (
           <Chip
             label="rivermap"
             size="small"
             variant="outlined"
-            sx={{ fontSize: "0.6rem", height: 16, borderColor: "rgba(0,0,0,0.2)", color: "text.secondary" }}
+            sx={{
+              fontSize: "0.6rem",
+              height: 16,
+              borderColor: "rgba(0,0,0,0.2)",
+              color: "text.secondary",
+            }}
           />
         )}
       </Box>
