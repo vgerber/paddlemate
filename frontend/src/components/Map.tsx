@@ -44,6 +44,41 @@ export interface GaugePin {
   level: WaterLevel;
 }
 
+export interface AreaCircle {
+  lat: number;
+  lon: number;
+  radiusKm: number;
+}
+
+/** Generate a GeoJSON polygon approximating a circle (n-sided). */
+function circleGeoJSON(
+  lat: number,
+  lon: number,
+  radiusKm: number,
+  steps = 64,
+): GeoJSON.FeatureCollection {
+  const R = 6371;
+  const coords: [number, number][] = [];
+  for (let i = 0; i <= steps; i++) {
+    const angle = (i / steps) * 2 * Math.PI;
+    const dlat = (radiusKm / R) * (180 / Math.PI) * Math.cos(angle);
+    const dlon =
+      ((radiusKm / R) * (180 / Math.PI) * Math.sin(angle)) /
+      Math.cos((lat * Math.PI) / 180);
+    coords.push([lon + dlon, lat + dlat]);
+  }
+  return {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        properties: {},
+        geometry: { type: "Polygon", coordinates: [coords] },
+      },
+    ],
+  };
+}
+
 interface WaterwayMapProps {
   sections?: SectionWithFeatures[];
   features?: Feature[];
@@ -54,6 +89,14 @@ interface WaterwayMapProps {
   gaugePins?: GaugePin[];
   selectedGaugePinId?: number | null;
   onGaugeClick?: (pin: GaugePin) => void;
+  /** When set, the map is in circle-draw mode: click sets center, scroll adjusts radius. */
+  areaCircle?: AreaCircle | null;
+  areaLocked?: boolean;
+  onAreaCircleChange?: (circle: AreaCircle | null) => void;
+  /** Lookup of waterwayId → waterway name, used when labelMode is "river". */
+  waterwayNames?: Record<number, string>;
+  labelMode?: "section" | "river";
+  onLabelModeChange?: (mode: "section" | "river") => void;
 }
 
 export default function WaterwayMap({
@@ -66,6 +109,12 @@ export default function WaterwayMap({
   gaugePins,
   selectedGaugePinId,
   onGaugeClick,
+  areaCircle,
+  areaLocked,
+  onAreaCircleChange,
+  waterwayNames,
+  labelMode = "section",
+  onLabelModeChange,
 }: WaterwayMapProps) {
   const mapRef = useRef<MapRef>(null);
 
@@ -150,7 +199,15 @@ export default function WaterwayMap({
       const ww = s.features?.find((f) => f.feature_type === "whitewater");
       const diff = (ww?.metadata as Record<string, unknown> | undefined)
         ?.difficulty as string | undefined;
-      const label = diff ? `${s.name} \u2022 ${diff}` : s.name;
+      const riverName = waterwayNames?.[s.waterway_id] ?? s.name;
+      const label =
+        labelMode === "river"
+          ? diff
+            ? `${riverName} \u2022 ${diff}`
+            : riverName
+          : diff
+            ? `${s.name} \u2022 ${diff}`
+            : s.name;
       return [
         {
           type: "Feature" as const,
@@ -223,6 +280,15 @@ export default function WaterwayMap({
   };
 
   const handleClick = (e: MapLayerMouseEvent) => {
+    // Circle draw mode: clicking sets/clears the center
+    if (onAreaCircleChange) {
+      onAreaCircleChange({
+        lat: e.lngLat.lat,
+        lon: e.lngLat.lng,
+        radiusKm: areaCircle?.radiusKm ?? 20,
+      });
+      return;
+    }
     const sectionFeature = e.features?.find(
       (f) =>
         f.layer.id === "sections-line" || f.layer.id === "sections-line-casing",
@@ -236,14 +302,62 @@ export default function WaterwayMap({
     }
   };
 
+  const circleData = areaCircle
+    ? circleGeoJSON(areaCircle.lat, areaCircle.lon, areaCircle.radiusKm)
+    : ({
+        type: "FeatureCollection",
+        features: [],
+      } as GeoJSON.FeatureCollection);
+
   return (
     <div
       style={{
         width: "100%",
         height: "100%",
-        cursor: placingFeature ? "crosshair" : undefined,
+        position: "relative",
+        cursor: onAreaCircleChange
+          ? "crosshair"
+          : placingFeature
+            ? "crosshair"
+            : undefined,
       }}
     >
+      {/* Label mode toggle */}
+      {onLabelModeChange && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 32,
+            left: 8,
+            zIndex: 10,
+            display: "flex",
+            borderRadius: 4,
+            overflow: "hidden",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
+            fontSize: 12,
+          }}
+        >
+          {(["section", "river"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => onLabelModeChange(m)}
+              style={{
+                padding: "4px 10px",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                fontSize: 12,
+                background: labelMode === m ? "#1976d2" : "#fff",
+                color: labelMode === m ? "#fff" : "#333",
+                transition: "background 0.15s",
+              }}
+            >
+              {m === "section" ? "Section" : "River"}
+            </button>
+          ))}
+        </div>
+      )}
       <MapGL
         ref={mapRef}
         initialViewState={{ longitude: 13, latitude: 47, zoom: 5 }}
@@ -294,6 +408,7 @@ export default function WaterwayMap({
           <Layer
             id="section-endpoints-icon"
             type="symbol"
+            minzoom={9}
             layout={{
               "icon-image": [
                 "match",
@@ -303,8 +418,7 @@ export default function WaterwayMap({
                 "take-out-icon",
               ],
               "icon-size": 1,
-              "icon-allow-overlap": true,
-              "icon-ignore-placement": true,
+              "icon-padding": 4,
             }}
           />
         </Source>
@@ -313,12 +427,12 @@ export default function WaterwayMap({
           <Layer
             id="sections-label"
             type="symbol"
+            minzoom={7}
             layout={{
               "text-field": ["get", "label"],
-              "text-size": 15,
+              "text-size": 13,
               "text-font": ["Noto Sans Regular"],
-              "text-allow-overlap": true,
-              "text-ignore-placement": true,
+              "text-padding": 6,
             }}
             paint={{
               "text-color": "#ffffff",
@@ -356,7 +470,12 @@ export default function WaterwayMap({
         {(gaugePins ?? []).map((pin) => {
           const isSelected = selectedGaugePinId === pin.id;
           return (
-            <Marker key={pin.id} longitude={pin.lon} latitude={pin.lat} anchor="center">
+            <Marker
+              key={pin.id}
+              longitude={pin.lon}
+              latitude={pin.lat}
+              anchor="center"
+            >
               <button
                 type="button"
                 title={pin.name}
@@ -378,6 +497,43 @@ export default function WaterwayMap({
             </Marker>
           );
         })}
+
+        <Source id="area-circle" type="geojson" data={circleData}>
+          <Layer
+            id="area-circle-fill"
+            type="fill"
+            paint={{ "fill-color": "#1976d2", "fill-opacity": 0.08 }}
+          />
+          <Layer
+            id="area-circle-line"
+            type="line"
+            paint={{
+              "line-color": "#1976d2",
+              "line-width": 2,
+              ...(areaLocked ? {} : { "line-dasharray": [4, 3] }),
+            }}
+          />
+        </Source>
+
+        {areaCircle && (
+          <Marker
+            longitude={areaCircle.lon}
+            latitude={areaCircle.lat}
+            anchor="center"
+          >
+            <div
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                background: "#1976d2",
+                border: "2px solid #fff",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
+                pointerEvents: "none",
+              }}
+            />
+          </Marker>
+        )}
       </MapGL>
     </div>
   );

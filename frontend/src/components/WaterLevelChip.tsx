@@ -16,10 +16,10 @@ const LEVEL_CONFIG: Record<
   WaterLevel,
   { label: string; color: string; bgcolor: string }
 > = {
-  empty: { label: "Empty", color: "#888", bgcolor: "transparent" },
-  low: { label: "Low", color: "success.dark", bgcolor: "success.light" },
-  medium: { label: "Medium", color: "warning.dark", bgcolor: "warning.light" },
-  high: { label: "High", color: "error.dark", bgcolor: "error.light" },
+  empty: { label: "E", color: "#888", bgcolor: "transparent" },
+  low: { label: "L", color: "success.dark", bgcolor: "success.light" },
+  medium: { label: "M", color: "warning.dark", bgcolor: "warning.light" },
+  high: { label: "H", color: "error.dark", bgcolor: "error.light" },
 };
 
 interface WaterLevelChipProps {

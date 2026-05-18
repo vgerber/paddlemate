@@ -37,7 +37,7 @@ export function useWaterways(filters: Omit<WaterwayFilters, "page"> = {}) {
   return useInfiniteQuery({
     queryKey: waterwayKeys.lists(filters),
     queryFn: ({ pageParam }) =>
-      waterwaysApi.list({ ...filters, page: pageParam, per_page: PER_PAGE }),
+      waterwaysApi.list({ ...filters, page: pageParam, per_page: filters.per_page ?? PER_PAGE }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,

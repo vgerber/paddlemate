@@ -97,15 +97,18 @@ function SeriesChart({ range, from, showThresholds = true }: WaterChartProps) {
     return { xData: xOut, yData: yOut };
   }, [readings]);
 
-  // Y axis: include all three range thresholds in the extent, then add 1/3 padding
+  // Y axis: include calibrated thresholds in the extent when present, then add 1/3 padding
   const { yMin, yMax } = useMemo(() => {
     const values = yData.filter((v) => v !== null) as number[];
     if (values.length === 0) return { yMin: undefined, yMax: undefined };
-    const lo = Math.min(...values, range.range_low);
-    const hi = Math.max(...values, range.range_high);
+    const thresholds = [range.range_low, range.range_medium, range.range_high].filter(
+      (v): v is number => v != null,
+    );
+    const lo = Math.min(...values, ...thresholds);
+    const hi = Math.max(...values, ...thresholds);
     const span = hi - lo || 1;
     return { yMin: lo - span / 3, yMax: hi + span / 3 };
-  }, [yData, range.range_low, range.range_high]);
+  }, [yData, range.range_low, range.range_medium, range.range_high]);
 
   const unit = series.unit ?? "";
   const label = series.label ?? gauge.name;
@@ -160,27 +163,33 @@ function SeriesChart({ range, from, showThresholds = true }: WaterChartProps) {
       >
         {showThresholds && (
           <>
-            <ChartsReferenceLine
-              y={range.range_low}
-              label={`Low  ${range.range_low}`}
-              labelAlign="end"
-              lineStyle={{ stroke: "#b0ceb8", strokeDasharray: "4 2" }}
-              labelStyle={{ fill: "#b0ceb8", fontSize: 10 }}
-            />
-            <ChartsReferenceLine
-              y={range.range_medium}
-              label={`Medium  ${range.range_medium}`}
-              labelAlign="end"
-              lineStyle={{ stroke: "#c2cf47", strokeDasharray: "4 2" }}
-              labelStyle={{ fill: "#c2cf47", fontSize: 10 }}
-            />
-            <ChartsReferenceLine
-              y={range.range_high}
-              label={`High  ${range.range_high}`}
-              labelAlign="end"
-              lineStyle={{ stroke: "#ffb4ab", strokeDasharray: "4 2" }}
-              labelStyle={{ fill: "#ffb4ab", fontSize: 10 }}
-            />
+            {range.range_low != null && (
+              <ChartsReferenceLine
+                y={range.range_low}
+                label={`L  ${range.range_low}`}
+                labelAlign="end"
+                lineStyle={{ stroke: "#b0ceb8", strokeDasharray: "4 2" }}
+                labelStyle={{ fill: "#b0ceb8", fontSize: 10 }}
+              />
+            )}
+            {range.range_medium != null && (
+              <ChartsReferenceLine
+                y={range.range_medium}
+                label={`M  ${range.range_medium}`}
+                labelAlign="end"
+                lineStyle={{ stroke: "#c2cf47", strokeDasharray: "4 2" }}
+                labelStyle={{ fill: "#c2cf47", fontSize: 10 }}
+              />
+            )}
+            {range.range_high != null && (
+              <ChartsReferenceLine
+                y={range.range_high}
+                label={`H  ${range.range_high}`}
+                labelAlign="end"
+                lineStyle={{ stroke: "#ffb4ab", strokeDasharray: "4 2" }}
+                labelStyle={{ fill: "#ffb4ab", fontSize: 10 }}
+              />
+            )}
           </>
         )}
       </LineChart>
@@ -190,30 +199,72 @@ function SeriesChart({ range, from, showThresholds = true }: WaterChartProps) {
 
 interface WaterChartListProps {
   ranges: WaterRangeWithStatus[];
+  showThresholds?: boolean;
 }
 
 /**
  * Renders all water ranges with a shared time-range filter.
- * Each range gets its own chart. Gaps in readings are shown as breaks.
+ * When both W (water_level) and Q (discharge) series are present a toggle
+ * lets the user switch between them.  Gaps in readings are shown as breaks.
  */
 export default function WaterChart({ ranges, showThresholds = true }: WaterChartListProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const from = useMemo(() => fromForRange(timeRange), [timeRange]);
 
+  // Derive available measurement types from the ranges
+  const measurementTypes = useMemo(() => {
+    const types = new Set(ranges.map((r) => r.series.measurement_type));
+    return Array.from(types) as ("water_level" | "discharge" | "temperature")[];
+  }, [ranges]);
+
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+
+  // Auto-select the first calibrated type (one with non-null thresholds), or just first
+  const activeType = useMemo(() => {
+    if (selectedType && (measurementTypes as string[]).includes(selectedType)) return selectedType;
+    const calibrated = ranges.find(
+      (r) => r.range_low != null || r.range_medium != null || r.range_high != null,
+    );
+    return calibrated?.series.measurement_type ?? measurementTypes[0] ?? null;
+  }, [selectedType, measurementTypes, ranges]);
+
+  const visibleRanges = useMemo(
+    () => (activeType ? ranges.filter((r) => r.series.measurement_type === activeType) : ranges),
+    [ranges, activeType],
+  );
+
+  const typeLabel = (t: string) => (t === "water_level" ? "Level" : t === "discharge" ? "Flow" : t);
+
   return (
     <Box
       sx={{ display: "flex", flexDirection: "column", gap: 1, height: "100%" }}
     >
-      {/* Time range selector */}
-      <Box sx={{ display: "flex", justifyContent: "flex-end", flexShrink: 0 }}>
+      {/* Controls row — measurement type + time range in one line */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", flexShrink: 0, gap: 0.5 }}>
+        {measurementTypes.length > 1 && (
+          <>
+            <ToggleButtonGroup
+              value={activeType}
+              exclusive
+              size="small"
+              onChange={(_, v) => v && setSelectedType(v)}
+              sx={{ "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" } }}
+            >
+              {measurementTypes.map((t) => (
+                <ToggleButton key={t} value={t}>
+                  {typeLabel(t)}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+            <Box sx={{ width: "1px", height: 20, bgcolor: "divider", mx: 0.5 }} />
+          </>
+        )}
         <ToggleButtonGroup
           value={timeRange}
           exclusive
           size="small"
           onChange={(_, v) => v && setTimeRange(v)}
-          sx={{
-            "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" },
-          }}
+          sx={{ "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" } }}
         >
           {TIME_RANGE_OPTIONS.map((o) => (
             <ToggleButton key={o.value} value={o.value}>
@@ -223,7 +274,7 @@ export default function WaterChart({ ranges, showThresholds = true }: WaterChart
         </ToggleButtonGroup>
       </Box>
 
-      {ranges.length === 0 ? (
+      {visibleRanges.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>
           No gauge data configured for this section.
         </Typography>
@@ -238,7 +289,7 @@ export default function WaterChart({ ranges, showThresholds = true }: WaterChart
             gap: 1,
           }}
         >
-          {ranges.map((range) => (
+          {visibleRanges.map((range) => (
             <SeriesChart key={range.id} range={range} from={from} showThresholds={showThresholds} />
           ))}
         </Box>

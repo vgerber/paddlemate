@@ -127,6 +127,13 @@ pub fn run_all(pool: PgPool) {
 
                         match reader.fetch_all(&requests).await {
                             Ok(results) => {
+                                let total_readings: usize = results.values().map(|r| r.len()).sum();
+                                tracing::info!(
+                                    provider = %provider,
+                                    sources = results.len(),
+                                    readings = total_readings,
+                                    "fetch complete"
+                                );
                                 for (source_id, readings) in results {
                                     if let Some((_, series_ids)) = source_map.get(&source_id) {
                                         for &series_id in series_ids {
@@ -148,7 +155,8 @@ pub fn run_all(pool: PgPool) {
                             }
                             Err(err) => {
                                 tracing::error!(
-                                    "Error fetching readings for provider '{provider}': {err}"
+                                    provider = %provider,
+                                    "fetch failed: {err}"
                                 );
                             }
                         }

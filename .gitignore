@@ -1,3 +1,4 @@
 scripts/*.json
 scripts/.env.rivermap
 *.pyc
+enrich*.jsonl

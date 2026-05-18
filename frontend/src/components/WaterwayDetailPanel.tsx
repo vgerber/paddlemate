@@ -120,8 +120,8 @@ export default function WaterwayDetailPanel({
                   sx={{ py: 0.75, px: 1.5, borderRadius: 1 }}
                 >
                   <ListItemText
-                    primary={range.gauge.name}
-                    secondary={range.gauge.provider}
+                    primary={(range.series.label ?? range.gauge.name).replace(/\s*\([WQ]\)\s*$/, "")}
+                    secondary={range.gauge.name}
                     slotProps={{
                       primary: { variant: "body2" },
                       secondary: { variant: "caption" },

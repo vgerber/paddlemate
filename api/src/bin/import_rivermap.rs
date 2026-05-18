@@ -445,6 +445,7 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
                 .await?;
 
                 if let Some(sid) = series_id {
+                    // Primary calibrated range
                     sqlx::query(
                         "INSERT INTO feature_water_ranges (feature_id, series_id, range_low, range_medium, range_high)
                          VALUES ($1, $2, $3, $4, $5)
@@ -462,6 +463,31 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
                     .execute(pool)
                     .await?;
                     range_count += 1;
+
+                    // Also link the sibling series (same station, opposite param W↔Q)
+                    // with null thresholds so the user can toggle between them in the UI.
+                    let sibling_param = if param == "Q" { "W" } else { "Q" };
+                    let sibling_source_id = format!("{station_id}:{sibling_param}");
+                    let sibling_id: Option<i64> = sqlx::query_scalar(
+                        "SELECT gs.id FROM gauge_series gs
+                         JOIN gauges g ON g.id = gs.gauge_id
+                         WHERE g.provider = 'rivermap' AND gs.source_id = $1",
+                    )
+                    .bind(&sibling_source_id)
+                    .fetch_optional(pool)
+                    .await?;
+
+                    if let Some(sibling_id) = sibling_id {
+                        sqlx::query(
+                            "INSERT INTO feature_water_ranges (feature_id, series_id, range_low, range_medium, range_high)
+                             VALUES ($1, $2, NULL, NULL, NULL)
+                             ON CONFLICT (feature_id, series_id) DO NOTHING",
+                        )
+                        .bind(feature_id)
+                        .bind(sibling_id)
+                        .execute(pool)
+                        .await?;
+                    }
                 }
             }
         }
