@@ -40,6 +40,7 @@ interface WaterwayMapProps {
   waterwayNames?: Record<number, string>;
   labelMode?: "section" | "river";
   onLabelModeChange?: (mode: "section" | "river") => void;
+  sectionLevels?: Record<number, string>;
 }
 
 export default function WaterwayMap({
@@ -58,26 +59,37 @@ export default function WaterwayMap({
   waterwayNames,
   labelMode = "section",
   onLabelModeChange,
+  sectionLevels,
 }: WaterwayMapProps) {
   const mapRef = useRef<MapRef>(null);
 
   const handleMapLoad = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
-    const icons: [string, string][] = [
-      ["put-in-icon", "/icons/put-in.svg"],
-      ["take-out-icon", "/icons/take-out.svg"],
-    ];
-    for (const [id, url] of icons) {
-      fetch(url)
-        .then((r) => r.text())
-        .then((svg) => {
-          const img = new Image(28, 28);
-          img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-          img.onload = () => {
-            if (!map.hasImage(id)) map.addImage(id, img);
-          };
-        });
+
+    const LEVEL_COLORS: Record<string, string> = {
+      empty: "#9eaab0",
+      low: "#4caf50",
+      medium: "#ff9800",
+      high: "#f44336",
+    };
+
+    const makePutInSvg = (color: string) =>
+      `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="${color}" stroke="#121416" stroke-width="1.5"/><g transform="translate(4, 4) scale(0.833)"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z" fill="white"/></g></svg>`;
+    const makeTakeOutSvg = (color: string) =>
+      `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="${color}" stroke="#121416" stroke-width="1.5"/><g transform="translate(4, 4) scale(0.833)"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z" fill="white"/></g></svg>`;
+
+    for (const [level, color] of Object.entries(LEVEL_COLORS)) {
+      for (const [id, svg] of [
+        [`put-in-icon-${level}`, makePutInSvg(color)],
+        [`take-out-icon-${level}`, makeTakeOutSvg(color)],
+      ] as [string, string][]) {
+        const img = new Image(28, 28);
+        img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+        img.onload = () => {
+          if (!map.hasImage(id)) map.addImage(id, img);
+        };
+      }
     }
   }, []);
 
@@ -126,7 +138,10 @@ export default function WaterwayMap({
     labelMode,
     waterwayNames,
   );
-  const sectionEndpointsGeoJSON = buildSectionEndpointsGeoJSON(sections ?? []);
+  const sectionEndpointsGeoJSON = buildSectionEndpointsGeoJSON(
+    sections ?? [],
+    sectionLevels,
+  );
   const pointsGeoJSON = buildPointFeaturesGeoJSON(features ?? []);
   const linesGeoJSON = buildLineFeaturesGeoJSON(features ?? []);
 
@@ -141,7 +156,9 @@ export default function WaterwayMap({
     }
     const sectionFeature = e.features?.find(
       (f) =>
-        f.layer.id === "sections-line" || f.layer.id === "sections-line-casing",
+        f.layer.id === "sections-line" ||
+        f.layer.id === "sections-line-casing" ||
+        f.layer.id === "sections-line-hitbox",
     );
     if (sectionFeature?.id !== undefined && onSectionClick) {
       onSectionClick(Number(sectionFeature.id));
@@ -182,41 +199,15 @@ export default function WaterwayMap({
         mapStyle="https://tiles.openfreemap.org/styles/liberty"
         onClick={handleClick}
         onLoad={handleMapLoad}
-        interactiveLayerIds={["sections-line", "sections-line-casing"]}
+        interactiveLayerIds={[
+          "sections-line",
+          "sections-line-casing",
+          "sections-line-hitbox",
+        ]}
       >
         <NavigationControl position="top-right" />
 
-        <Source id="sections" type="geojson" data={sectionsGeoJSON}>
-          <Layer
-            id="sections-line-casing"
-            type="line"
-            paint={{
-              "line-color": "#121416",
-              "line-width": 5,
-              "line-opacity": 0.6,
-            }}
-          />
-          <Layer
-            id="sections-line"
-            type="line"
-            paint={{
-              "line-color": "#8bd1e8",
-              "line-width": 3,
-              "line-opacity": 0.9,
-            }}
-          />
-          <Layer
-            id="sections-line-selected"
-            type="line"
-            filter={["==", ["id"], selectedSectionId ?? -1]}
-            paint={{
-              "line-color": "#ff9800",
-              "line-width": 6,
-              "line-opacity": 1,
-            }}
-          />
-        </Source>
-
+        {/* Declare endpoints first so sections layers can reference it via beforeId */}
         <Source
           id="section-endpoints"
           type="geojson"
@@ -225,17 +216,65 @@ export default function WaterwayMap({
           <Layer
             id="section-endpoints-icon"
             type="symbol"
-            minzoom={9}
             layout={{
               "icon-image": [
-                "match",
-                ["get", "kind"],
-                "put_in",
-                "put-in-icon",
-                "take-out-icon",
+                "concat",
+                [
+                  "match",
+                  ["get", "kind"],
+                  "put_in",
+                  "put-in-icon-",
+                  "take-out-icon-",
+                ],
+                ["coalesce", ["get", "level"], "empty"],
               ],
-              "icon-size": 1,
+              "icon-size": ["interpolate", ["linear"], ["zoom"], 7, 0.5, 10, 1],
+              "icon-allow-overlap": true,
               "icon-padding": 4,
+            }}
+          />
+        </Source>
+
+        <Source id="sections" type="geojson" data={sectionsGeoJSON}>
+          <Layer
+            id="sections-line-hitbox"
+            beforeId="section-endpoints-icon"
+            type="line"
+            paint={{
+              "line-color": "#000000",
+              "line-width": 20,
+              "line-opacity": 0,
+            }}
+          />
+          <Layer
+            id="sections-line-casing"
+            beforeId="section-endpoints-icon"
+            type="line"
+            paint={{
+              "line-color": "#0a1a2e",
+              "line-width": 6,
+              "line-opacity": 0.85,
+            }}
+          />
+          <Layer
+            id="sections-line"
+            beforeId="section-endpoints-icon"
+            type="line"
+            paint={{
+              "line-color": "#29b6f6",
+              "line-width": 4,
+              "line-opacity": 1,
+            }}
+          />
+          <Layer
+            id="sections-line-selected"
+            beforeId="section-endpoints-icon"
+            type="line"
+            filter={["==", ["id"], selectedSectionId ?? -1]}
+            paint={{
+              "line-color": "#ff9800",
+              "line-width": 6,
+              "line-opacity": 1,
             }}
           />
         </Source>

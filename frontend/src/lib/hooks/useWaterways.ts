@@ -37,7 +37,11 @@ export function useWaterways(filters: Omit<WaterwayFilters, "page"> = {}) {
   return useInfiniteQuery({
     queryKey: waterwayKeys.lists(filters),
     queryFn: ({ pageParam }) =>
-      waterwaysApi.list({ ...filters, page: pageParam, per_page: filters.per_page ?? PER_PAGE }),
+      waterwaysApi.list({
+        ...filters,
+        page: pageParam,
+        per_page: filters.per_page ?? PER_PAGE,
+      }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
@@ -98,10 +102,7 @@ export function useCreateFeature(waterwayId: number, sectionId: number) {
   });
 }
 
-export function useWaterStatus(
-  waterwayId: number,
-  sectionId: number | null,
-) {
+export function useWaterStatus(waterwayId: number, sectionId: number | null) {
   return useQuery({
     queryKey: waterwayKeys.sectionWaterStatus(waterwayId, sectionId ?? 0),
     queryFn: () =>
@@ -127,6 +128,19 @@ export function useAllSectionWaterStatus(
   });
 }
 
+/** Fetches water status for arbitrary (waterwayId, sectionId) pairs — used for search results. */
+export function useSectionWaterStatuses(
+  pairs: { waterwayId: number; sectionId: number }[],
+) {
+  return useQueries({
+    queries: pairs.map(({ waterwayId, sectionId }) => ({
+      queryKey: waterwayKeys.sectionWaterStatus(waterwayId, sectionId),
+      queryFn: () => waterStatusApi.getForSection(waterwayId, sectionId),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+}
+
 export function useGaugeReadings(
   gaugeId: number | null,
   seriesId: number | null,
@@ -134,18 +148,9 @@ export function useGaugeReadings(
   limit?: number,
 ) {
   return useQuery({
-    queryKey: waterwayKeys.gaugeReadings(
-      gaugeId ?? 0,
-      seriesId ?? 0,
-      from,
-    ),
+    queryKey: waterwayKeys.gaugeReadings(gaugeId ?? 0, seriesId ?? 0, from),
     queryFn: () =>
-      gaugeReadingsApi.list(
-        gaugeId as number,
-        seriesId as number,
-        from,
-        limit,
-      ),
+      gaugeReadingsApi.list(gaugeId as number, seriesId as number, from, limit),
     enabled: gaugeId !== null && seriesId !== null,
     staleTime: 5 * 60 * 1000,
   });

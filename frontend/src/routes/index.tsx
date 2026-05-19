@@ -12,6 +12,7 @@ import WaterwayDetailPanel, {
 import WaterwaySearchPanel from "@/components/search/WaterwaySearchPanel";
 import {
   useAllSectionWaterStatus,
+  useSectionWaterStatuses,
   useWaterway,
   waterwayKeys,
 } from "@/lib/hooks/useWaterways";
@@ -124,12 +125,13 @@ function Home() {
 
   // Gauge data
   const sectionIds = useMemo(() => sections.map((s) => s.id), [sections]);
+  // Always fetch water statuses when a waterway is selected (powers map icons + gauge tab)
   const shouldFetchGauges =
     (detailTab === "gauges" || selectedGaugeId != null) &&
     selectedWaterwayId != null;
   const allWaterStatuses = useAllSectionWaterStatus(
     selectedWaterwayId ?? 0,
-    shouldFetchGauges ? sectionIds : [],
+    selectedWaterwayId != null ? sectionIds : [],
   );
   const { gaugePins, gaugeRanges, selectedGaugeRanges } = useGaugeData({
     allWaterStatuses,
@@ -137,6 +139,49 @@ function Home() {
     detailTab,
     shouldFetchGauges,
   });
+
+  const LEVEL_ORDER = ["empty", "low", "medium", "high"];
+  const sectionLevels = useMemo(() => {
+    const map: Record<number, string> = {};
+    allWaterStatuses.forEach((q, i) => {
+      if (!q.data?.ranges.length || sectionIds[i] == null) return;
+      const maxLevel = q.data.ranges.reduce<string>((best, r) => {
+        return LEVEL_ORDER.indexOf(r.level) > LEVEL_ORDER.indexOf(best)
+          ? r.level
+          : best;
+      }, "empty");
+      map[sectionIds[i]] = maxLevel;
+    });
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allWaterStatuses, sectionIds]);
+
+  // Water levels for search-mode sections (no selected waterway)
+  const searchSectionPairs = useMemo(
+    () =>
+      selectedWaterwayId == null
+        ? filteredSearchSections.slice(0, 60).map((s) => ({
+            waterwayId: s.waterway_id,
+            sectionId: s.id,
+          }))
+        : [],
+    [selectedWaterwayId, filteredSearchSections],
+  );
+  const searchWaterStatuses = useSectionWaterStatuses(searchSectionPairs);
+  const searchSectionLevels = useMemo(() => {
+    const map: Record<number, string> = {};
+    searchWaterStatuses.forEach((q, i) => {
+      if (!q.data?.ranges.length || searchSectionPairs[i] == null) return;
+      const maxLevel = q.data.ranges.reduce<string>((best, r) => {
+        return LEVEL_ORDER.indexOf(r.level) > LEVEL_ORDER.indexOf(best)
+          ? r.level
+          : best;
+      }, "empty");
+      map[searchSectionPairs[i].sectionId] = maxLevel;
+    });
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchWaterStatuses, searchSectionPairs]);
 
   const handleGaugeClick = useCallback((pin: GaugePin) => {
     setSelectedGaugeId((prev) => (prev === pin.id ? null : pin.id));
@@ -229,6 +274,9 @@ function Home() {
             waterwayNames={waterwayNames}
             labelMode={labelMode}
             onLabelModeChange={setLabelMode}
+            sectionLevels={
+              selectedWaterwayId != null ? sectionLevels : searchSectionLevels
+            }
           />
         </Box>
         {selectedGaugeId != null && selectedGaugeRanges.length > 0 ? (

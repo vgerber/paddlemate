@@ -71,6 +71,7 @@ export function buildSectionLabelsGeoJSON(
 
 export function buildSectionEndpointsGeoJSON(
   sections: SectionWithFeatures[],
+  sectionLevels?: Record<number, string>,
 ): GeoJSON.FeatureCollection {
   return {
     type: "FeatureCollection",
@@ -83,13 +84,23 @@ export function buildSectionEndpointsGeoJSON(
         {
           type: "Feature" as const,
           id: s.id * 2,
-          properties: { kind: "put_in", section_id: s.id, name: s.name },
+          properties: {
+            kind: "put_in",
+            section_id: s.id,
+            name: s.name,
+            level: sectionLevels?.[s.id] ?? "empty",
+          },
           geometry: { type: "Point" as const, coordinates: first },
         },
         {
           type: "Feature" as const,
           id: s.id * 2 + 1,
-          properties: { kind: "take_out", section_id: s.id, name: s.name },
+          properties: {
+            kind: "take_out",
+            section_id: s.id,
+            name: s.name,
+            level: sectionLevels?.[s.id] ?? "empty",
+          },
           geometry: { type: "Point" as const, coordinates: last },
         },
       ];

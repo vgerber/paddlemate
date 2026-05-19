@@ -124,6 +124,13 @@ export default function WaterwaySearchPanel({
     onWaterwaysChange?.(waterways.map((w) => w.id));
   }, [waterways, onWaterwaysChange]);
 
+  // In area mode, auto-fetch all pages so the map shows all results
+  useEffect(() => {
+    if (mode === "area" && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [mode, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   // Sync filter state to URL
   useEffect(() => {
     navigate({
@@ -320,7 +327,7 @@ export default function WaterwaySearchPanel({
           <RiverList
             waterways={visibleRivers}
             isLoading={isLoading}
-            hasNextPage={hasNextPage ?? false}
+            hasNextPage={mode === "name" && (hasNextPage ?? false)}
             isFetchingNextPage={isFetchingNextPage}
             onSelect={onSelect}
             onLoadMore={fetchNextPage}
