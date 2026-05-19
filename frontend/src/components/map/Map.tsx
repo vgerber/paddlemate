@@ -257,7 +257,7 @@ export default function WaterwayMap({
             filter={
               selectedSectionId != null
                 ? ["==", ["get", "section_id"], selectedSectionId]
-                : true
+                : ["!=", ["get", "section_id"], -1]
             }
             layout={{
               "icon-image": [
