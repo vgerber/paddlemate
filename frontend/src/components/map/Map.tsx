@@ -214,8 +214,51 @@ export default function WaterwayMap({
           data={sectionEndpointsGeoJSON}
         >
           <Layer
+            id="section-endpoints-dot"
+            type="circle"
+            filter={
+              selectedSectionId != null
+                ? ["!=", ["get", "section_id"], selectedSectionId]
+                : ["==", ["get", "section_id"], -1]
+            }
+            layout={{
+              visibility: selectedSectionId != null ? "visible" : "none",
+            }}
+            paint={{
+              "circle-radius": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                7,
+                3,
+                10,
+                5,
+              ],
+              "circle-color": [
+                "match",
+                ["get", "level"],
+                "low",
+                "#4caf50",
+                "medium",
+                "#ff9800",
+                "high",
+                "#f44336",
+                "#9eaab0",
+              ],
+              "circle-opacity": 1,
+              "circle-stroke-width": 1,
+              "circle-stroke-color": "#121416",
+              "circle-stroke-opacity": 1,
+            }}
+          />
+          <Layer
             id="section-endpoints-icon"
             type="symbol"
+            filter={
+              selectedSectionId != null
+                ? ["==", ["get", "section_id"], selectedSectionId]
+                : true
+            }
             layout={{
               "icon-image": [
                 "concat",
