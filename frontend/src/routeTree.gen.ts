@@ -8,161 +8,161 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as AuthCallbackRouteImport } from "./routes/auth/callback";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as LogsDescentIdRouteImport } from "./routes/logs/$descentId";
-import { Route as LogsIndexRouteImport } from "./routes/logs/index";
-import { Route as LogsNewRouteImport } from "./routes/logs/new";
-import { Route as WaterwaysWaterwayIdRouteImport } from "./routes/waterways/$waterwayId";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as LogsIndexRouteImport } from './routes/logs/index'
+import { Route as WaterwaysWaterwayIdRouteImport } from './routes/waterways/$waterwayId'
+import { Route as LogsNewRouteImport } from './routes/logs/new'
+import { Route as LogsDescentIdRouteImport } from './routes/logs/$descentId'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 
 const IndexRoute = IndexRouteImport.update({
-	id: "/",
-	path: "/",
-	getParentRoute: () => rootRouteImport,
-} as any);
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LogsIndexRoute = LogsIndexRouteImport.update({
-	id: "/logs/",
-	path: "/logs/",
-	getParentRoute: () => rootRouteImport,
-} as any);
+  id: '/logs/',
+  path: '/logs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WaterwaysWaterwayIdRoute = WaterwaysWaterwayIdRouteImport.update({
-	id: "/waterways/$waterwayId",
-	path: "/waterways/$waterwayId",
-	getParentRoute: () => rootRouteImport,
-} as any);
+  id: '/waterways/$waterwayId',
+  path: '/waterways/$waterwayId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LogsNewRoute = LogsNewRouteImport.update({
-	id: "/logs/new",
-	path: "/logs/new",
-	getParentRoute: () => rootRouteImport,
-} as any);
+  id: '/logs/new',
+  path: '/logs/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LogsDescentIdRoute = LogsDescentIdRouteImport.update({
-	id: "/logs/$descentId",
-	path: "/logs/$descentId",
-	getParentRoute: () => rootRouteImport,
-} as any);
+  id: '/logs/$descentId',
+  path: '/logs/$descentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
-	id: "/auth/callback",
-	path: "/auth/callback",
-	getParentRoute: () => rootRouteImport,
-} as any);
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
-	"/": typeof IndexRoute;
-	"/auth/callback": typeof AuthCallbackRoute;
-	"/logs/$descentId": typeof LogsDescentIdRoute;
-	"/logs/new": typeof LogsNewRoute;
-	"/waterways/$waterwayId": typeof WaterwaysWaterwayIdRoute;
-	"/logs/": typeof LogsIndexRoute;
+  '/': typeof IndexRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/logs/$descentId': typeof LogsDescentIdRoute
+  '/logs/new': typeof LogsNewRoute
+  '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
+  '/logs/': typeof LogsIndexRoute
 }
 export interface FileRoutesByTo {
-	"/": typeof IndexRoute;
-	"/auth/callback": typeof AuthCallbackRoute;
-	"/logs/$descentId": typeof LogsDescentIdRoute;
-	"/logs/new": typeof LogsNewRoute;
-	"/waterways/$waterwayId": typeof WaterwaysWaterwayIdRoute;
-	"/logs": typeof LogsIndexRoute;
+  '/': typeof IndexRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/logs/$descentId': typeof LogsDescentIdRoute
+  '/logs/new': typeof LogsNewRoute
+  '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
+  '/logs': typeof LogsIndexRoute
 }
 export interface FileRoutesById {
-	__root__: typeof rootRouteImport;
-	"/": typeof IndexRoute;
-	"/auth/callback": typeof AuthCallbackRoute;
-	"/logs/$descentId": typeof LogsDescentIdRoute;
-	"/logs/new": typeof LogsNewRoute;
-	"/waterways/$waterwayId": typeof WaterwaysWaterwayIdRoute;
-	"/logs/": typeof LogsIndexRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/logs/$descentId': typeof LogsDescentIdRoute
+  '/logs/new': typeof LogsNewRoute
+  '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
+  '/logs/': typeof LogsIndexRoute
 }
 export interface FileRouteTypes {
-	fileRoutesByFullPath: FileRoutesByFullPath;
-	fullPaths:
-		| "/"
-		| "/auth/callback"
-		| "/logs/$descentId"
-		| "/logs/new"
-		| "/waterways/$waterwayId"
-		| "/logs/";
-	fileRoutesByTo: FileRoutesByTo;
-	to:
-		| "/"
-		| "/auth/callback"
-		| "/logs/$descentId"
-		| "/logs/new"
-		| "/waterways/$waterwayId"
-		| "/logs";
-	id:
-		| "__root__"
-		| "/"
-		| "/auth/callback"
-		| "/logs/$descentId"
-		| "/logs/new"
-		| "/waterways/$waterwayId"
-		| "/logs/";
-	fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/auth/callback'
+    | '/logs/$descentId'
+    | '/logs/new'
+    | '/waterways/$waterwayId'
+    | '/logs/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/auth/callback'
+    | '/logs/$descentId'
+    | '/logs/new'
+    | '/waterways/$waterwayId'
+    | '/logs'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth/callback'
+    | '/logs/$descentId'
+    | '/logs/new'
+    | '/waterways/$waterwayId'
+    | '/logs/'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-	IndexRoute: typeof IndexRoute;
-	AuthCallbackRoute: typeof AuthCallbackRoute;
-	LogsDescentIdRoute: typeof LogsDescentIdRoute;
-	LogsNewRoute: typeof LogsNewRoute;
-	WaterwaysWaterwayIdRoute: typeof WaterwaysWaterwayIdRoute;
-	LogsIndexRoute: typeof LogsIndexRoute;
+  IndexRoute: typeof IndexRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  LogsDescentIdRoute: typeof LogsDescentIdRoute
+  LogsNewRoute: typeof LogsNewRoute
+  WaterwaysWaterwayIdRoute: typeof WaterwaysWaterwayIdRoute
+  LogsIndexRoute: typeof LogsIndexRoute
 }
 
-declare module "@tanstack/react-router" {
-	interface FileRoutesByPath {
-		"/": {
-			id: "/";
-			path: "/";
-			fullPath: "/";
-			preLoaderRoute: typeof IndexRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
-		"/logs/": {
-			id: "/logs/";
-			path: "/logs";
-			fullPath: "/logs/";
-			preLoaderRoute: typeof LogsIndexRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
-		"/waterways/$waterwayId": {
-			id: "/waterways/$waterwayId";
-			path: "/waterways/$waterwayId";
-			fullPath: "/waterways/$waterwayId";
-			preLoaderRoute: typeof WaterwaysWaterwayIdRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
-		"/logs/new": {
-			id: "/logs/new";
-			path: "/logs/new";
-			fullPath: "/logs/new";
-			preLoaderRoute: typeof LogsNewRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
-		"/logs/$descentId": {
-			id: "/logs/$descentId";
-			path: "/logs/$descentId";
-			fullPath: "/logs/$descentId";
-			preLoaderRoute: typeof LogsDescentIdRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
-		"/auth/callback": {
-			id: "/auth/callback";
-			path: "/auth/callback";
-			fullPath: "/auth/callback";
-			preLoaderRoute: typeof AuthCallbackRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
-	}
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logs/': {
+      id: '/logs/'
+      path: '/logs'
+      fullPath: '/logs/'
+      preLoaderRoute: typeof LogsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/waterways/$waterwayId': {
+      id: '/waterways/$waterwayId'
+      path: '/waterways/$waterwayId'
+      fullPath: '/waterways/$waterwayId'
+      preLoaderRoute: typeof WaterwaysWaterwayIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logs/new': {
+      id: '/logs/new'
+      path: '/logs/new'
+      fullPath: '/logs/new'
+      preLoaderRoute: typeof LogsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logs/$descentId': {
+      id: '/logs/$descentId'
+      path: '/logs/$descentId'
+      fullPath: '/logs/$descentId'
+      preLoaderRoute: typeof LogsDescentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-	IndexRoute: IndexRoute,
-	AuthCallbackRoute: AuthCallbackRoute,
-	LogsDescentIdRoute: LogsDescentIdRoute,
-	LogsNewRoute: LogsNewRoute,
-	WaterwaysWaterwayIdRoute: WaterwaysWaterwayIdRoute,
-	LogsIndexRoute: LogsIndexRoute,
-};
+  IndexRoute: IndexRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  LogsDescentIdRoute: LogsDescentIdRoute,
+  LogsNewRoute: LogsNewRoute,
+  WaterwaysWaterwayIdRoute: WaterwaysWaterwayIdRoute,
+  LogsIndexRoute: LogsIndexRoute,
+}
 export const routeTree = rootRouteImport
-	._addFileChildren(rootRouteChildren)
-	._addFileTypes<FileRouteTypes>();
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
