@@ -1,0 +1,31 @@
+{
+  "clientId": "paddlemate-web",
+  "name": "Paddlemate Web",
+  "description": "Public OIDC client for the Paddlemate frontend (PKCE, no secret).",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": true,
+  "standardFlowEnabled": true,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": false,
+  "serviceAccountsEnabled": false,
+  "redirectUris": ["http://localhost:5173/*", "http://localhost:4173/*"],
+  "webOrigins": ["http://localhost:5173", "http://localhost:4173"],
+  "attributes": {
+    "pkce.code.challenge.method": "S256",
+    "post.logout.redirect.uris": "http://localhost:5173/*##http://localhost:4173/*"
+  },
+  "protocolMappers": [
+    {
+      "name": "audience-account",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-audience-mapper",
+      "consentRequired": false,
+      "config": {
+        "included.client.audience": "account",
+        "id.token.claim": "false",
+        "access.token.claim": "true"
+      }
+    }
+  ]
+}

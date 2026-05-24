@@ -56,6 +56,11 @@ pub struct FeatureProposalPath {
 }
 
 #[derive(Deserialize, JsonSchema)]
+pub struct DescentPath {
+    pub descent_id: i64,
+}
+
+#[derive(Deserialize, JsonSchema)]
 pub struct GaugePath {
     pub gauge_id: i64,
 }

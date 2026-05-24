@@ -20,6 +20,7 @@ use moka::future::Cache;
 use paddlemate_api::{
     layers::auth::{api_token_auth, api_token_auth_optional},
     routes::{
+        descents::descents_routes,
         docs::docs_routes,
         gauges::gauges_routes,
         groups::group_routes,
@@ -169,12 +170,18 @@ async fn main() {
     let waterway_app = ApiRouter::new()
         .nest_api_service("/waterways", waterways_routes(state.clone()))
         .nest_api_service("/gauges", gauges_routes(state.clone()))
+        .nest_api_service("/descents", descents_routes(state.clone()))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth_optional,
         ));
 
-    paddlemate_api::readers::run_all(db.clone());
+    if dotenvy::var("DISABLE_GAUGE_READERS").ok().as_deref() != Some("true") {
+        tracing::info!("Starting gauge readers");
+        paddlemate_api::readers::run_all(db.clone());
+    } else {
+        tracing::info!("Gauge readers disabled (DISABLE_GAUGE_READERS=true)");
+    }
 
     let api_v1 = ApiRouter::new()
         .merge(protected)

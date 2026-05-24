@@ -44,7 +44,7 @@ pub async fn get_admin_token(app: &AppState) -> Result<String, StatusCode> {
         .get("access_token")
         .and_then(|v| v.as_str())
         .ok_or_else(|| {
-            tracing::error!("No access_token in Keycloak response");
+            tracing::error!("No access_token in Keycloak response: {}", data);
             StatusCode::INTERNAL_SERVER_ERROR
         })?
         .to_string();

@@ -32,7 +32,8 @@
                 "portage",
                 "put_in",
                 "take_out",
-                "waterfall"
+                "waterfall",
+                "strainer"
               ]
             }
           }
@@ -82,7 +83,8 @@
                 "portage",
                 "put_in",
                 "take_out",
-                "waterfall"
+                "waterfall",
+                "strainer"
               ]
             }
           }

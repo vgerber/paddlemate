@@ -294,7 +294,7 @@ fn latlng_to_f64(arr: &[Value]) -> (Option<f64>, Option<f64>) {
 }
 
 async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyhow::Result<()> {
-    let mut waterway_count = 0usize;
+    let mut _waterway_count = 0usize;
     let mut section_count = 0usize;
     let mut feature_count = 0usize;
     let mut range_count = 0usize;
@@ -352,7 +352,7 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
         .bind(&river_name)
         .fetch_one(pool)
         .await?;
-        waterway_count += 1;
+        _waterway_count += 1;
 
         // Build LineString WKT
         let line_wkt = format!(

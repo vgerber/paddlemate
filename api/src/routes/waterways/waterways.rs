@@ -144,7 +144,16 @@ pub async fn list_waterways(
         qb.push("))");
     }
 
-    qb.push(" ORDER BY w.name LIMIT ");
+    match &filters.name {
+        Some(name) if !name.is_empty() => {
+            qb.push(" ORDER BY CASE WHEN unaccent(w.name) ILIKE unaccent(");
+            qb.push_bind(format!("{}%", name));
+            qb.push(") THEN 0 ELSE 1 END, w.name LIMIT ");
+        }
+        _ => {
+            qb.push(" ORDER BY w.name LIMIT ");
+        }
+    }
     qb.push_bind(per_page);
     qb.push(" OFFSET ");
     qb.push_bind(offset);

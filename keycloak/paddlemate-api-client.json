@@ -1,0 +1,13 @@
+{
+  "clientId": "paddlemate-api",
+  "name": "Paddlemate API Service Account",
+  "description": "Confidential service-account client used by the API for admin user-info lookups.",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": false,
+  "standardFlowEnabled": false,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": false,
+  "serviceAccountsEnabled": true,
+  "attributes": {}
+}

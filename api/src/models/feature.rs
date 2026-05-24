@@ -15,6 +15,7 @@ pub enum FeatureType {
     FreestyleSpot,
     Hole,
     Siphon,
+    Strainer,
     Weir,
     Dam,
     Obstacle,

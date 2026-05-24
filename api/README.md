@@ -63,7 +63,7 @@ erDiagram
     features {
         bigserial id PK
         bigint section_id FK
-        enum feature_type "whitewater | freestyle_spot | hole | siphon | weir | dam | obstacle | bridge | portage | put_in | take_out | waterfall"
+        enum feature_type "whitewater | freestyle_spot | hole | siphon | strainer | weir | dam | obstacle | bridge | portage | put_in | take_out | waterfall"
         jsonb metadata
         geometry location "Point/LineString/Polygon WGS84"
         varchar created_by
@@ -103,3 +103,26 @@ Two authentication methods are supported:
 - **API Token** — `X-Api-Key: pm_<token>` header
 
 Server admin privileges are granted via the `server_admin` Keycloak realm role.
+
+## Keycloak Setup
+
+The API requires two Keycloak clients in your realm.
+
+### `paddlemate-web` (public OIDC client)
+
+Used by the frontend for PKCE login.
+
+1. Create a client with **Client authentication** OFF (public)
+2. Enable **Standard flow**
+3. Set redirect URIs and web origins to your frontend URL
+
+### `paddlemate-api` (service account client)
+
+Used by the API backend to look up usernames via the Keycloak Admin REST API.
+
+1. Create a client with **Client authentication** ON (confidential)
+2. Enable **Service accounts roles** — this grants the `client_credentials` flow
+3. Go to the **Service accounts roles** tab → **Assign role**
+   - Change filter to **"Filter by clients"**
+   - Search for `realm-management` and assign the **`view-users`** role
+4. Copy the client secret from the **Credentials** tab into `KEYCLOAK_CLIENT_SECRET` in `.env`

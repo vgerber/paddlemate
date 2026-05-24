@@ -7,7 +7,22 @@
     ".venv/bin/python3": true,
     ".venv/bin/python": true,
     "scripts/.venv/bin/python3": true,
-    "cargo run": true
+    "cargo run": true,
+    "./node_modules/.bin/biome": true
   },
-  "cSpell.words": ["Rivermap"]
+  "cSpell.words": ["Rivermap"],
+
+  // Use the project-local Biome binary
+  "biome.lsp.bin": "./frontend/node_modules/@biomejs/biome/bin/biome",
+
+  // Biome as default formatter for JS/TS
+  "[javascript]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[javascriptreact]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[typescript]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[typescriptreact]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[json]": { "editor.defaultFormatter": "biomejs.biome" },
+
+  // Disable ESLint for the frontend (Biome replaces it)
+  "eslint.workingDirectories": [],
+  "eslint.enable": false
 }
