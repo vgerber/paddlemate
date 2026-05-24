@@ -4,6 +4,7 @@ import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
+import { LEVEL_CONFIG, maxLevel } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
 
 function formatDate(iso: string) {
@@ -29,21 +30,6 @@ function durationLabel(start: string, end: string): string | null {
 	const m = Math.floor((ms % 3600000) / 60000);
 	if (h === 0) return m > 0 ? `${m}m` : null;
 	return m === 0 ? `${h}h` : `${h}h ${m}m`;
-}
-
-function timeAgo(iso: string): string {
-	const ms = Date.now() - new Date(iso).getTime();
-	const mins = Math.floor(ms / 60000);
-	if (mins < 60) return `${mins}m ago`;
-	const hours = Math.floor(mins / 60);
-	if (hours < 24) return `${hours}h ago`;
-	const days = Math.floor(hours / 24);
-	if (days < 14) return `${days}d ago`;
-	const weeks = Math.floor(days / 7);
-	if (weeks < 9) return `${weeks}w ago`;
-	const months = Math.floor(days / 30);
-	if (months < 24) return `${months}mo ago`;
-	return `${Math.floor(days / 365)}y ago`;
 }
 
 const VISIBILITY_ICONS = {
@@ -134,7 +120,7 @@ export default function DescentCard({ descent, onClick }: DescentCardProps) {
 				</Box>
 			</Box>
 
-			{/* Section chip + names */}
+			{/* Section names */}
 			{descent.sections.length > 0 && (
 				<Box
 					sx={{
@@ -144,18 +130,6 @@ export default function DescentCard({ descent, onClick }: DescentCardProps) {
 						flexWrap: "wrap",
 					}}
 				>
-					<Chip
-						label={`${descent.sections.length} SECTION${descent.sections.length !== 1 ? "S" : ""}`}
-						size="small"
-						sx={{
-							fontSize: "0.6rem",
-							fontFamily: '"Space Grotesk", monospace',
-							letterSpacing: "0.06em",
-							bgcolor: "action.selected",
-							color: "secondary.main",
-							height: 18,
-						}}
-					/>
 					{sectionNames.length > 0 &&
 						(descent.name || waterwayNames.length > 0) && (
 							<Typography sx={{ fontSize: "0.7rem", color: "text.secondary" }}>
@@ -187,8 +161,29 @@ export default function DescentCard({ descent, onClick }: DescentCardProps) {
 				</Typography>
 			)}
 
-			{/* Date + duration + time ago */}
 			<Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, mt: 0.25 }}>
+				{(() => {
+					const allSnapshots = descent.sections.flatMap(
+						(s) => s.water_snapshots ?? [],
+					);
+					if (allSnapshots.length === 0) return null;
+					const level = maxLevel(allSnapshots.map((s) => s.level));
+					const cfg = LEVEL_CONFIG[level];
+					return (
+						<Chip
+							label={cfg.label}
+							size="small"
+							variant={level === "empty" ? "outlined" : "filled"}
+							sx={{
+								fontSize: "0.6rem",
+								height: 18,
+								color: cfg.color,
+								bgcolor: cfg.bgcolor,
+								borderColor: cfg.border,
+							}}
+						/>
+					);
+				})()}
 				{!titleIsDate && (
 					<Typography
 						sx={{
@@ -220,16 +215,6 @@ export default function DescentCard({ descent, onClick }: DescentCardProps) {
 						{durationLabel(descent.start_time, descent.end_time)}
 					</Typography>
 				)}
-				<Typography
-					sx={{
-						fontFamily: '"Space Grotesk", monospace',
-						fontSize: "0.68rem",
-						color: "text.disabled",
-						ml: "auto",
-					}}
-				>
-					{timeAgo(descent.start_time)}
-				</Typography>
 			</Box>
 		</Box>
 	);

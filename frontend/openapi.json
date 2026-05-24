@@ -1,6 +1,0 @@
-[2m2026-05-23T11:15:47.833957Z[0m [32m INFO[0m [2mpaddlemate_api[0m[2m:[0m [2m99:[0m Keycloak URL: https://auth.vgerber.io
-[2m2026-05-23T11:15:47.834023Z[0m [32m INFO[0m [2mpaddlemate_api[0m[2m:[0m [2m100:[0m Keycloak realm: paddle
-[2m2026-05-23T11:15:47.834030Z[0m [32m INFO[0m [2mpaddlemate_api[0m[2m:[0m [2m101:[0m Keycloak audience: account
-[2m2026-05-23T11:15:47.860124Z[0m [32m INFO[0m [2msqlx::postgres::notice[0m[2m:[0m [2m185:[0m relation "_sqlx_migrations" already exists, skipping
-[2m2026-05-23T11:15:47.862332Z[0m [32m INFO[0m [1mperform_oidc_discovery[0m[1m{[0m[3mkc_instance_id[0m[2m=[0m019e548c-6616-76c2-9d32-03b3c84e62b2 [3mkc_server[0m[2m=[0m"https://auth.vgerber.io/" [3mkc_realm[0m[2m=[0m"paddle" [3moidc_discovery_endpoint[0m[2m=[0m"https://auth.vgerber.io/realms/paddle/.well-known/openid-configuration"[1m}[0m[2m:[0m [2maxum_keycloak_auth::instance[0m[2m:[0m [2m185:[0m Starting OIDC discovery.
-[2m2026-05-23T11:15:47.870520Z[0m [32m INFO[0m [2mpaddlemate_api[0m[2m:[0m [2m183:[0m Gauge readers disabled (DISABLE_GAUGE_READERS=true)

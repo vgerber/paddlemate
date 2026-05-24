@@ -7,8 +7,11 @@ use crate::models::{
     descent::{
         CreateDescentRequest, Descent, DescentId, DescentSection, PatchDescentRequest, Visibility,
     },
+    gauge::{SectionWaterSnapshot, WaterLevel, WaterRangeWithStatus},
     waterway::PaginatedResponse,
 };
+
+use super::gauges::water_status_for_section;
 
 fn row_to_descent(row: &PgRow) -> Result<Descent, sqlx::Error> {
     // Visibility audience is populated later by enrich_descent.
@@ -66,7 +69,8 @@ async fn load_sections(
     .fetch_all(pool)
     .await?;
 
-    rows.iter()
+    let mut sections: Vec<DescentSection> = rows
+        .iter()
         .map(|r| {
             Ok(DescentSection {
                 section_id: r.try_get("section_id")?,
@@ -77,9 +81,128 @@ async fn load_sections(
                 location: r
                     .try_get::<Option<String>, _>("section_location")?
                     .and_then(|g| serde_json::from_str(&g).ok()),
+                water_snapshots: vec![],
             })
         })
-        .collect()
+        .collect::<Result<_, sqlx::Error>>()?;
+
+    let snapshots = load_snapshots_for_descent(pool, descent_id).await?;
+    for s in &mut sections {
+        s.water_snapshots = snapshots.get(&s.section_id).cloned().unwrap_or_default();
+    }
+
+    Ok(sections)
+}
+
+async fn load_snapshots_for_descent(
+    pool: &PgPool,
+    descent_id: DescentId,
+) -> Result<HashMap<i64, Vec<SectionWaterSnapshot>>, sqlx::Error> {
+    let rows = sqlx::query(
+        "SELECT section_id, series_id, gauge_id, gauge_name, unit, \
+                value, level::text AS level, measured_at, \
+                range_low, range_medium, range_high \
+         FROM descent_section_water_snapshots \
+         WHERE descent_id = $1 \
+         ORDER BY section_id, id",
+    )
+    .bind(descent_id)
+    .fetch_all(pool)
+    .await?;
+
+    let mut map: HashMap<i64, Vec<SectionWaterSnapshot>> = HashMap::new();
+    for r in &rows {
+        let section_id: i64 = r.try_get("section_id")?;
+        map.entry(section_id).or_default().push(row_to_snapshot(r)?);
+    }
+    Ok(map)
+}
+
+async fn batch_load_snapshots(
+    pool: &PgPool,
+    descent_ids: &[DescentId],
+) -> Result<HashMap<i64, Vec<SectionWaterSnapshot>>, sqlx::Error> {
+    if descent_ids.is_empty() {
+        return Ok(HashMap::new());
+    }
+    let rows = sqlx::query(
+        "SELECT section_id, series_id, gauge_id, gauge_name, unit, \
+                value, level::text AS level, measured_at, \
+                range_low, range_medium, range_high \
+         FROM descent_section_water_snapshots \
+         WHERE descent_id = ANY($1) \
+         ORDER BY section_id, id",
+    )
+    .bind(descent_ids)
+    .fetch_all(pool)
+    .await?;
+
+    let mut map: HashMap<i64, Vec<SectionWaterSnapshot>> = HashMap::new();
+    for r in &rows {
+        let section_id: i64 = r.try_get("section_id")?;
+        map.entry(section_id).or_default().push(row_to_snapshot(r)?);
+    }
+    Ok(map)
+}
+
+fn row_to_snapshot(r: &sqlx::postgres::PgRow) -> Result<SectionWaterSnapshot, sqlx::Error> {
+    let level = match r.try_get::<String, _>("level")?.as_str() {
+        "low" => WaterLevel::Low,
+        "medium" => WaterLevel::Medium,
+        "high" => WaterLevel::High,
+        _ => WaterLevel::Empty,
+    };
+    Ok(SectionWaterSnapshot {
+        series_id: r.try_get("series_id")?,
+        gauge_id: r.try_get("gauge_id")?,
+        gauge_name: r.try_get("gauge_name")?,
+        unit: r.try_get("unit")?,
+        value: r.try_get("value")?,
+        level,
+        measured_at: r.try_get("measured_at")?,
+        range_low: r.try_get("range_low")?,
+        range_medium: r.try_get("range_medium")?,
+        range_high: r.try_get("range_high")?,
+    })
+}
+
+async fn insert_water_snapshots(
+    pool: &PgPool,
+    descent_id: DescentId,
+    section_id: i64,
+    ranges: &[WaterRangeWithStatus],
+) -> Result<(), sqlx::Error> {
+    for range in ranges {
+        let value = range.latest_reading.as_ref().map(|r| r.value);
+        let measured_at = range.latest_reading.as_ref().map(|r| r.measured_at);
+        let level_str = match &range.level {
+            WaterLevel::Low => "low",
+            WaterLevel::Medium => "medium",
+            WaterLevel::High => "high",
+            WaterLevel::Empty => "empty",
+        };
+        sqlx::query(
+            "INSERT INTO descent_section_water_snapshots \
+                (descent_id, section_id, series_id, gauge_id, gauge_name, unit, \
+                 value, level, measured_at, range_low, range_medium, range_high) \
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8::water_level, $9, $10, $11, $12)",
+        )
+        .bind(descent_id)
+        .bind(section_id)
+        .bind(range.series.id)
+        .bind(range.gauge.id)
+        .bind(&range.gauge.name)
+        .bind(&range.series.unit)
+        .bind(value)
+        .bind(level_str)
+        .bind(measured_at)
+        .bind(range.range_low)
+        .bind(range.range_medium)
+        .bind(range.range_high)
+        .execute(pool)
+        .await?;
+    }
+    Ok(())
 }
 
 async fn load_shared_users(
@@ -154,8 +277,17 @@ async fn batch_load_sections(
             location: r
                 .try_get::<Option<String>, _>("section_location")?
                 .and_then(|g| serde_json::from_str(&g).ok()),
+            water_snapshots: vec![],
         });
     }
+
+    let snapshots = batch_load_snapshots(pool, ids).await?;
+    for sections in map.values_mut() {
+        for s in sections.iter_mut() {
+            s.water_snapshots = snapshots.get(&s.section_id).cloned().unwrap_or_default();
+        }
+    }
+
     Ok(map)
 }
 
@@ -283,6 +415,17 @@ pub async fn create_descent(
     }
 
     tx.commit().await?;
+
+    // Snapshot current water levels for each section. Non-fatal: a gauge lookup
+    // failure must never prevent a descent from being saved.
+    for s in &req.sections {
+        if let Ok(status) = water_status_for_section(pool, s.section_id).await {
+            if !status.ranges.is_empty() {
+                let _ =
+                    insert_water_snapshots(pool, descent_id, s.section_id, &status.ranges).await;
+            }
+        }
+    }
 
     enrich_descent(pool, descent).await
 }

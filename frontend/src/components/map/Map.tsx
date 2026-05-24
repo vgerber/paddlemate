@@ -77,8 +77,10 @@ export default function WaterwayMap({
 }: WaterwayMapProps) {
 	const mapRef = useRef<MapRef>(null);
 	const [pickMode, setPickMode] = useState<"put-in" | "take-out" | null>(null);
+	const [mapLoaded, setMapLoaded] = useState(false);
 
 	const handleMapLoad = useCallback(() => {
+		setMapLoaded(true);
 		const map = mapRef.current?.getMap();
 		if (!map) return;
 
@@ -111,7 +113,7 @@ export default function WaterwayMap({
 	// Fit bounds to all sections
 	useEffect(() => {
 		const map = mapRef.current;
-		if (!map || !sections?.length) return;
+		if (!map || !mapLoaded || !sections?.length) return;
 		const coords: number[][] = [];
 		for (const s of sections) {
 			const geom = s.location as unknown as GeoJSON.LineString;
@@ -127,12 +129,12 @@ export default function WaterwayMap({
 			],
 			{ padding: 60, duration: 800 },
 		);
-	}, [sections]);
+	}, [sections, mapLoaded]);
 
 	// Fit bounds to selected section
 	useEffect(() => {
 		const map = mapRef.current;
-		if (!map || !selectedSectionId || !sections?.length) return;
+		if (!map || !mapLoaded || !selectedSectionId || !sections?.length) return;
 		const section = sections.find((s) => s.id === selectedSectionId);
 		const geom = section?.location as unknown as GeoJSON.LineString | undefined;
 		if (geom?.type !== "LineString" || !geom.coordinates.length) return;
@@ -145,7 +147,7 @@ export default function WaterwayMap({
 			],
 			{ padding: 80, duration: 600 },
 		);
-	}, [selectedSectionId, sections]);
+	}, [selectedSectionId, sections, mapLoaded]);
 
 	const sectionsGeoJSON = buildSectionsGeoJSON(sections ?? []);
 	const sectionLabelsGeoJSON = buildSectionLabelsGeoJSON(

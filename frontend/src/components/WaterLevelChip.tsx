@@ -14,12 +14,29 @@ function maxLevel(levels: WaterLevel[]): WaterLevel {
 
 const LEVEL_CONFIG: Record<
 	WaterLevel,
-	{ label: string; color: string; bgcolor: string }
+	{ label: string; color: string; bgcolor: string; border?: string }
 > = {
-	empty: { label: "E", color: "#888", bgcolor: "transparent" },
-	low: { label: "L", color: "success.dark", bgcolor: "success.light" },
-	medium: { label: "M", color: "warning.dark", bgcolor: "warning.light" },
-	high: { label: "H", color: "error.dark", bgcolor: "error.light" },
+	empty: {
+		label: "E",
+		color: "rgba(255,255,255,0.35)",
+		bgcolor: "transparent",
+		border: "rgba(255,255,255,0.18)",
+	},
+	low: {
+		label: "L",
+		color: "#81c784",
+		bgcolor: "rgba(129,199,132,0.15)",
+	},
+	medium: {
+		label: "M",
+		color: "#ffb74d",
+		bgcolor: "rgba(255,183,77,0.15)",
+	},
+	high: {
+		label: "H",
+		color: "#e57373",
+		bgcolor: "rgba(229,115,115,0.15)",
+	},
 };
 
 interface WaterLevelChipProps {
@@ -58,9 +75,12 @@ export default function WaterLevelChip({
 				fontWeight: 400,
 				color: cfg.color,
 				bgcolor: cfg.bgcolor,
-				borderColor: level === "empty" ? "rgba(0,0,0,0.18)" : undefined,
+				borderColor: cfg.border,
 				minWidth: 32,
 			}}
 		/>
 	);
 }
+
+export type { WaterLevel };
+export { LEVEL_CONFIG, maxLevel };

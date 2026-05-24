@@ -131,6 +131,22 @@ pub struct SectionWaterStatus {
     pub ranges: Vec<WaterRangeWithStatus>,
 }
 
+/// Snapshot of a single gauge-series reading captured when a descent is logged.
+/// Immutable record; reflects conditions at the time of the descent.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SectionWaterSnapshot {
+    pub series_id: i64,
+    pub gauge_id: i64,
+    pub gauge_name: String,
+    pub unit: String,
+    pub value: Option<f64>,
+    pub level: WaterLevel,
+    pub measured_at: Option<DateTime<Utc>>,
+    pub range_low: Option<f64>,
+    pub range_medium: Option<f64>,
+    pub range_high: Option<f64>,
+}
+
 // --- Request types ---
 
 #[derive(Debug, Deserialize, JsonSchema)]

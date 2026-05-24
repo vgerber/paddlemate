@@ -124,6 +124,8 @@ export const gaugeReadingsApi = {
 
 export type Descent = components["schemas"]["Descent"];
 export type DescentSection = components["schemas"]["DescentSection"];
+export type SectionWaterSnapshot =
+	components["schemas"]["SectionWaterSnapshot"];
 export type DescentSectionInput = components["schemas"]["DescentSectionInput"];
 export type Visibility = components["schemas"]["Visibility"];
 export type CreateDescentRequest =

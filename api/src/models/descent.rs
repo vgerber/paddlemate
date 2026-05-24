@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use super::gauge::SectionWaterSnapshot;
 use super::geometry::Geometry;
 
 pub type DescentId = i64;
@@ -45,6 +46,9 @@ pub struct DescentSection {
     /// GeoJSON LineString geometry of the section
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location: Option<Geometry>,
+    /// Water level snapshots captured at the time the descent was logged.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub water_snapshots: Vec<SectionWaterSnapshot>,
 }
 
 /// A logged paddling descent.
