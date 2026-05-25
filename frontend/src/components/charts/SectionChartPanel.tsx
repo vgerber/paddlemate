@@ -115,19 +115,6 @@ export default function SectionChartPanel({
 							>
 								Start
 							</Button>
-						) : standingDescent.sectionId === sectionId ? (
-							<Typography
-								sx={{
-									fontSize: "0.65rem",
-									fontFamily: '"Space Grotesk", monospace',
-									color: "success.main",
-									fontWeight: 700,
-									letterSpacing: "0.08em",
-									flexShrink: 0,
-								}}
-							>
-								● DESCENDING
-							</Typography>
 						) : null}
 						{!standingDescent && (
 							<Button

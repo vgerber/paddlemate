@@ -55,12 +55,29 @@ export default function StandingDescentBanner() {
 				}}
 			/>
 			<Typography
+				component="button"
+				onClick={() =>
+					navigate({
+						to: "/",
+						from: "/",
+						search: (prev) => ({
+							...prev,
+							waterway: current.waterwayId,
+							section: current.sectionId,
+						}),
+					})
+				}
 				sx={{
 					fontSize: "0.7rem",
 					fontFamily: '"Space Grotesk", monospace',
 					fontWeight: 600,
 					letterSpacing: "0.06em",
 					color: "text.secondary",
+					background: "none",
+					border: "none",
+					padding: 0,
+					cursor: "pointer",
+					"&:hover": { color: "text.primary" },
 				}}
 			>
 				{current.sectionName}
