@@ -29,11 +29,13 @@ export default function DifficultySelect({
 	onMaxChange,
 }: DifficultySelectProps) {
 	return (
-		<Box sx={{ display: "flex", gap: 1 }}>
-			<FormControl size="small" sx={{ minWidth: 100 }}>
-				<InputLabel>Min grade</InputLabel>
+		<Box sx={{ display: "flex", gap: 1, flex: 2 }}>
+			<FormControl size="small" sx={{ flex: 1, minWidth: 0 }}>
+				<InputLabel shrink>Min grade</InputLabel>
 				<Select
 					label="Min grade"
+					displayEmpty
+					notched
 					value={minDiff}
 					onChange={(e) => onMinChange(e.target.value as number | "")}
 				>
@@ -44,10 +46,12 @@ export default function DifficultySelect({
 					))}
 				</Select>
 			</FormControl>
-			<FormControl size="small" sx={{ minWidth: 100 }}>
-				<InputLabel>Max grade</InputLabel>
+			<FormControl size="small" sx={{ flex: 1, minWidth: 0 }}>
+				<InputLabel shrink>Max grade</InputLabel>
 				<Select
 					label="Max grade"
+					displayEmpty
+					notched
 					value={maxDiff}
 					onChange={(e) => onMaxChange(e.target.value as number | "")}
 				>

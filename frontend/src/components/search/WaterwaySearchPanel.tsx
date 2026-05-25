@@ -227,7 +227,7 @@ export default function WaterwaySearchPanel({
 									},
 								}}
 							/>
-							<Box sx={{ display: "flex", gap: 1 }}>
+							<Box sx={{ display: "flex", gap: 1, mt: 1 }}>
 								<TextField
 									label="Country"
 									placeholder="AT"
@@ -235,12 +235,13 @@ export default function WaterwaySearchPanel({
 									onChange={(e) => setCountry(e.target.value)}
 									size="small"
 									slotProps={{
+										inputLabel: { shrink: true },
 										htmlInput: {
 											maxLength: 2,
 											style: { textTransform: "uppercase" },
 										},
 									}}
-									sx={{ width: 90 }}
+									sx={{ flex: 1, minWidth: 0 }}
 								/>
 								<DifficultySelect
 									minDiff={minDiff}
