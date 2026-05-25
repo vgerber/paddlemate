@@ -81,12 +81,14 @@ export default function WaterwaySearchPanel({
 						max_difficulty: maxDiff !== "" ? maxDiff : undefined,
 						per_page: 100,
 					}
-				: {
-						name: debouncedName || undefined,
-						country: debouncedCountry || undefined,
-						min_difficulty: minDiff !== "" ? minDiff : undefined,
-						max_difficulty: maxDiff !== "" ? maxDiff : undefined,
-					},
+				: mode === "area"
+					? null // no circle drawn yet — don't fetch
+					: {
+							name: debouncedName || undefined,
+							country: debouncedCountry || undefined,
+							min_difficulty: minDiff !== "" ? minDiff : undefined,
+							max_difficulty: maxDiff !== "" ? maxDiff : undefined,
+						},
 		[mode, areaCircle, debouncedName, debouncedCountry, minDiff, maxDiff],
 	);
 

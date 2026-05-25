@@ -33,18 +33,21 @@ export const waterwayKeys = {
 
 const PER_PAGE = 20;
 
-export function useWaterways(filters: Omit<WaterwayFilters, "page"> = {}) {
+export function useWaterways(
+	filters: Omit<WaterwayFilters, "page"> | null = {},
+) {
 	return useInfiniteQuery({
-		queryKey: waterwayKeys.lists(filters),
+		queryKey: waterwayKeys.lists(filters ?? {}),
 		queryFn: ({ pageParam }) =>
 			waterwaysApi.list({
-				...filters,
+				...(filters ?? {}),
 				page: pageParam,
-				per_page: filters.per_page ?? PER_PAGE,
+				per_page: filters?.per_page ?? PER_PAGE,
 			}),
 		initialPageParam: 1,
 		getNextPageParam: (lastPage) =>
 			lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
+		enabled: filters !== null,
 	});
 }
 
