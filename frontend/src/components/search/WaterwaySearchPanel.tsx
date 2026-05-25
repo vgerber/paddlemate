@@ -76,7 +76,6 @@ export default function WaterwaySearchPanel({
 						lat: areaCircle.lat,
 						lon: areaCircle.lon,
 						radius_km: areaCircle.radiusKm,
-						name: debouncedName || undefined,
 						min_difficulty: minDiff !== "" ? minDiff : undefined,
 						max_difficulty: maxDiff !== "" ? maxDiff : undefined,
 						per_page: 100,
@@ -109,18 +108,18 @@ export default function WaterwaySearchPanel({
 
 	// When searching by name, only show rivers whose name matches
 	const visibleRivers = useMemo(() => {
-		if (!debouncedName) return waterways;
+		if (mode === "area" || !debouncedName) return waterways;
 		const q = debouncedName.toLowerCase();
 		return waterways.filter((w) => w.name.toLowerCase().includes(q));
-	}, [waterways, debouncedName]);
+	}, [mode, waterways, debouncedName]);
 
 	// When searching by name, only show sections whose name matches
 	const visibleSections = useMemo(() => {
 		const sections = filteredSections ?? [];
-		if (!debouncedName) return sections;
+		if (mode === "area" || !debouncedName) return sections;
 		const q = debouncedName.toLowerCase();
 		return sections.filter((s) => s.name.toLowerCase().includes(q));
-	}, [filteredSections, debouncedName]);
+	}, [mode, filteredSections, debouncedName]);
 
 	useEffect(() => {
 		onWaterwaysChange?.(waterways.map((w) => w.id));

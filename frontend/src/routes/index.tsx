@@ -95,11 +95,11 @@ function Home() {
 		[selectedWaterway],
 	);
 
-	// Fetch full waterway data for search results to show on map (capped to avoid fanout)
+	// Fetch full waterway data for search results to show on map
 	const searchWaterwayDetails = useQueries({
 		queries:
 			selectedWaterwayId == null
-				? searchWaterwayIds.slice(0, 20).map((id) => ({
+				? searchWaterwayIds.map((id) => ({
 						queryKey: waterwayKeys.detail(id),
 						queryFn: () => waterwaysApi.get(id),
 					}))
