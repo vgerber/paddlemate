@@ -24,6 +24,34 @@ import {
 export type { AreaCircle } from "@/lib/geo";
 export type { GaugePin } from "./GaugeMarkers";
 
+const LEVEL_COLORS: Record<string, string> = {
+	empty: "#9eaab0",
+	low: "#4caf50",
+	medium: "#ff9800",
+	high: "#f44336",
+};
+
+const makePutInSvg = (color: string) =>
+	`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="${color}" stroke="#121416" stroke-width="1.5"/><g transform="translate(4, 4) scale(0.833)"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z" fill="white"/></g></svg>`;
+const makeTakeOutSvg = (color: string) =>
+	`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="${color}" stroke="#121416" stroke-width="1.5"/><g transform="translate(4, 4) scale(0.833)"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z" fill="white"/></g></svg>`;
+
+function addMapImages(map: ReturnType<MapRef["getMap"]> | undefined) {
+	if (!map) return;
+	for (const [level, color] of Object.entries(LEVEL_COLORS)) {
+		for (const [id, svg] of [
+			[`put-in-icon-${level}`, makePutInSvg(color)],
+			[`take-out-icon-${level}`, makeTakeOutSvg(color)],
+		] as [string, string][]) {
+			const img = new Image(28, 28);
+			img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+			img.onload = () => {
+				if (!map.hasImage(id)) map.addImage(id, img);
+			};
+		}
+	}
+}
+
 const SATELLITE_STYLE = {
 	version: 8 as const,
 	sources: {
@@ -105,33 +133,19 @@ export default function WaterwayMap({
 	const handleMapLoad = useCallback(() => {
 		setMapLoaded(true);
 		const map = mapRef.current?.getMap();
-		if (!map) return;
-
-		const LEVEL_COLORS: Record<string, string> = {
-			empty: "#9eaab0",
-			low: "#4caf50",
-			medium: "#ff9800",
-			high: "#f44336",
-		};
-
-		const makePutInSvg = (color: string) =>
-			`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="${color}" stroke="#121416" stroke-width="1.5"/><g transform="translate(4, 4) scale(0.833)"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z" fill="white"/></g></svg>`;
-		const makeTakeOutSvg = (color: string) =>
-			`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="${color}" stroke="#121416" stroke-width="1.5"/><g transform="translate(4, 4) scale(0.833)"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z" fill="white"/></g></svg>`;
-
-		for (const [level, color] of Object.entries(LEVEL_COLORS)) {
-			for (const [id, svg] of [
-				[`put-in-icon-${level}`, makePutInSvg(color)],
-				[`take-out-icon-${level}`, makeTakeOutSvg(color)],
-			] as [string, string][]) {
-				const img = new Image(28, 28);
-				img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-				img.onload = () => {
-					if (!map.hasImage(id)) map.addImage(id, img);
-				};
-			}
-		}
+		addMapImages(map);
 	}, []);
+
+	// Re-add custom images whenever the style is swapped (e.g. satellite toggle)
+	useEffect(() => {
+		const map = mapRef.current?.getMap();
+		if (!map || !mapLoaded) return;
+		const handler = () => addMapImages(map);
+		map.on("style.load", handler);
+		return () => {
+			map.off("style.load", handler);
+		};
+	}, [mapLoaded]);
 
 	// Fit bounds to all sections
 	useEffect(() => {
