@@ -24,6 +24,28 @@ import {
 export type { AreaCircle } from "@/lib/geo";
 export type { GaugePin } from "./GaugeMarkers";
 
+const SATELLITE_STYLE = {
+	version: 8 as const,
+	sources: {
+		"esri-satellite": {
+			type: "raster" as const,
+			tiles: [
+				"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+			],
+			tileSize: 256,
+			attribution: "Tiles &copy; Esri",
+			maxzoom: 19,
+		},
+	},
+	layers: [
+		{
+			id: "esri-satellite-layer",
+			type: "raster" as const,
+			source: "esri-satellite",
+		},
+	],
+};
+
 interface WaterwayMapProps {
 	sections?: SectionWithFeatures[];
 	features?: Feature[];
@@ -78,6 +100,7 @@ export default function WaterwayMap({
 	const mapRef = useRef<MapRef>(null);
 	const [pickMode, setPickMode] = useState<"put-in" | "take-out" | null>(null);
 	const [mapLoaded, setMapLoaded] = useState(false);
+	const [satellite, setSatellite] = useState(false);
 
 	const handleMapLoad = useCallback(() => {
 		setMapLoaded(true);
@@ -222,11 +245,37 @@ export default function WaterwayMap({
 			{onLabelModeChange && (
 				<LabelModeToggle labelMode={labelMode} onChange={onLabelModeChange} />
 			)}
+			<button
+				type="button"
+				onClick={() => setSatellite((s) => !s)}
+				style={{
+					position: "absolute",
+					bottom: 8,
+					left: 8,
+					zIndex: 10,
+					padding: "4px 10px",
+					borderRadius: 4,
+					border: "none",
+					cursor: "pointer",
+					fontFamily: "inherit",
+					fontSize: 12,
+					boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
+					background: satellite ? "#1976d2" : "#fff",
+					color: satellite ? "#fff" : "#333",
+					transition: "background 0.15s",
+				}}
+			>
+				Satellite
+			</button>
 			<MapGL
 				ref={mapRef}
 				initialViewState={{ longitude: 13, latitude: 47, zoom: 5 }}
 				style={{ width: "100%", height: "100%" }}
-				mapStyle="https://tiles.openfreemap.org/styles/liberty"
+				mapStyle={
+					satellite
+						? SATELLITE_STYLE
+						: "https://tiles.openfreemap.org/styles/liberty"
+				}
 				onClick={handleClick}
 				onLoad={handleMapLoad}
 				interactiveLayerIds={[

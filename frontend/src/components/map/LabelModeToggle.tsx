@@ -11,7 +11,7 @@ export default function LabelModeToggle({
 		<div
 			style={{
 				position: "absolute",
-				bottom: 32,
+				bottom: 40,
 				left: 8,
 				zIndex: 10,
 				display: "flex",
