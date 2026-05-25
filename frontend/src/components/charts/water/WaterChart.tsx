@@ -15,10 +15,10 @@ import {
 export interface WaterChartProps {
 	ranges: WaterRangeWithStatus[];
 	showThresholds?: boolean;
-	/** Controlled time range — when provided the time-range toggle is hidden. */
+	/** Controlled time range - when provided the time-range toggle is hidden. */
 	timeRange?: TimeRange;
 	onTimeRangeChange?: (v: TimeRange) => void;
-	/** Controlled measurement type — when provided the type toggle is hidden. */
+	/** Controlled measurement type - when provided the type toggle is hidden. */
 	measurementType?: string | null;
 	onMeasurementTypeChange?: (v: string) => void;
 }

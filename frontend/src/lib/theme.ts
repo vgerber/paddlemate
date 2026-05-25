@@ -14,18 +14,18 @@ const tokens = {
 	onSurface: "#e2e2e5",
 	onSurfaceVariant: "#bfc8ca",
 
-	// Primary — cyan, used for key data values and interactive elements
+	// Primary - cyan, used for key data values and interactive elements
 	primary: "#8bd1e8",
 	onPrimary: "#003642",
 	primaryContainer: "#004b5b",
 	onPrimaryContainer: "#75bbd1",
 
-	// Secondary — muted green
+	// Secondary - muted green
 	secondary: "#b0ceb8",
 	secondaryContainer: "#354f3e",
 	onSecondaryContainer: "#a2bfaa",
 
-	// Tertiary — lime/yellow-green, used for CTA buttons, active states, selection
+	// Tertiary - lime/yellow-green, used for CTA buttons, active states, selection
 	tertiary: "#c2cf47",
 	tertiaryFixed: "#dfec60",
 	tertiaryContainer: "#424800",
@@ -85,7 +85,7 @@ export const theme = createTheme({
 	},
 
 	shape: {
-		// Sharp, technical aesthetic — no border radius
+		// Sharp, technical aesthetic - no border radius
 		borderRadius: 0,
 	},
 

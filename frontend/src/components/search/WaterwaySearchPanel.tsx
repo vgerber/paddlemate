@@ -81,15 +81,22 @@ export default function WaterwaySearchPanel({
 						per_page: 100,
 					}
 				: mode === "area"
-					? null // no circle drawn yet — don't fetch
-					: {
-							name: debouncedName || undefined,
-							country: debouncedCountry || undefined,
-							min_difficulty: minDiff !== "" ? minDiff : undefined,
-							max_difficulty: maxDiff !== "" ? maxDiff : undefined,
-						},
+					? null // no circle drawn yet - don't fetch
+					: debouncedName ||
+							debouncedCountry ||
+							minDiff !== "" ||
+							maxDiff !== ""
+						? {
+								name: debouncedName || undefined,
+								country: debouncedCountry || undefined,
+								min_difficulty: minDiff !== "" ? minDiff : undefined,
+								max_difficulty: maxDiff !== "" ? maxDiff : undefined,
+							}
+						: null, // no criteria - don't fetch all
 		[mode, areaCircle, debouncedName, debouncedCountry, minDiff, maxDiff],
 	);
+
+	const hasFilters = filters !== null;
 
 	const {
 		data,
@@ -325,7 +332,15 @@ export default function WaterwaySearchPanel({
 						Failed to load rivers.
 					</Typography>
 				)}
-				{listView === "rivers" ? (
+				{!hasFilters ? (
+					<Typography
+						variant="body2"
+						color="text.disabled"
+						sx={{ textAlign: "center", py: 4, fontStyle: "italic" }}
+					>
+						Type a name, country or difficulty to search
+					</Typography>
+				) : listView === "rivers" ? (
 					<RiverList
 						waterways={visibleRivers}
 						isLoading={isLoading}

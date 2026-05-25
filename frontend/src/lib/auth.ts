@@ -13,7 +13,7 @@ export function getUserManager(): UserManager {
 		_userManager = new UserManager({
 			authority: `${AUTH_SERVER}/realms/${REALM}`,
 			client_id: CLIENT_ID,
-			// Evaluated lazily — only in the browser.
+			// Evaluated lazily - only in the browser.
 			redirect_uri: `${window.location.origin}/auth/callback`,
 			scope: "openid profile email offline_access",
 			automaticSilentRenew: true,

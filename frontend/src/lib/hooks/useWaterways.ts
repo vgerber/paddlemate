@@ -111,13 +111,13 @@ export function useWaterStatus(waterwayId: number, sectionId: number | null) {
 		queryFn: () =>
 			waterStatusApi.getForSection(waterwayId, sectionId as number),
 		enabled: sectionId !== null,
-		// Re-fetch every 5 minutes — matches gauge reader poll interval
+		// Re-fetch every 5 minutes - matches gauge reader poll interval
 		staleTime: 5 * 60 * 1000,
 	});
 }
 
 /** Fetches water status for every section in a waterway. Results are
- *  cached normally — reuses data already fetched by SectionListItem/SectionGaugeRows. */
+ *  cached normally - reuses data already fetched by SectionListItem/SectionGaugeRows. */
 export function useAllSectionWaterStatus(
 	waterwayId: number,
 	sectionIds: number[],
@@ -131,7 +131,7 @@ export function useAllSectionWaterStatus(
 	});
 }
 
-/** Fetches water status for arbitrary (waterwayId, sectionId) pairs — used for search results. */
+/** Fetches water status for arbitrary (waterwayId, sectionId) pairs - used for search results. */
 export function useSectionWaterStatuses(
 	pairs: { waterwayId: number; sectionId: number }[],
 ) {

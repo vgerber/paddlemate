@@ -65,7 +65,7 @@ pub struct WaterwayFilters {
     pub lat: Option<f64>,
     /// Longitude for proximity filter (requires lat and radius_km).
     pub lon: Option<f64>,
-    /// Radius in km — returns waterways with at least one section within this distance.
+    /// Radius in km - returns waterways with at least one section within this distance.
     pub radius_km: Option<f64>,
 }
 

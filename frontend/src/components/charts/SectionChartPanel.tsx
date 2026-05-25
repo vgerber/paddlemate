@@ -85,7 +85,7 @@ export default function SectionChartPanel({
 							component="span"
 							sx={{ fontWeight: 400, color: "text.secondary" }}
 						>
-							{" — "}
+							{" - "}
 							{subtitle}
 						</Box>
 					)}

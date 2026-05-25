@@ -72,7 +72,7 @@ export default function GaugeChartPanel({
 							component="span"
 							sx={{ fontWeight: 400, color: "text.secondary" }}
 						>
-							{" — "}
+							{" - "}
 							{subtitle}
 						</Box>
 					)}

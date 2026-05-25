@@ -64,7 +64,7 @@ fn db_constraint_response(err: &sqlx::Error) -> Option<axum::response::Response>
                         .into_response(),
                 );
             }
-            // Foreign key violation — invalid section_id, feature_id, user_id, or group_id
+            // Foreign key violation - invalid section_id, feature_id, user_id, or group_id
             Some("23503") => {
                 return Some(
                     (

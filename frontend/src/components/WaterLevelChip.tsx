@@ -58,7 +58,7 @@ export default function WaterLevelChip({
 		);
 	}
 
-	// No gauge configured for this section — don't show a chip
+	// No gauge configured for this section - don't show a chip
 	if (ranges.length === 0) return null;
 
 	const level = maxLevel(ranges.map((r) => r.level));

@@ -370,13 +370,15 @@ function LocationPin({
 function StepSections({
 	form,
 	onChange,
+	initialWaterwayId = null,
 }: {
 	form: LogForm;
 	onChange: (p: Partial<LogForm>) => void;
+	initialWaterwayId?: number | null;
 }) {
 	const [waterwayInput, setWaterwayInput] = useState("");
 	const [selectedWaterwayId, setSelectedWaterwayId] = useState<number | null>(
-		null,
+		initialWaterwayId,
 	);
 
 	const { data: searchResults, isFetching: searching } = useQuery({
@@ -918,7 +920,13 @@ export default function DescentForm({
 
 			<Box sx={{ mb: 4 }}>
 				{step === 0 && <StepWhen form={form} onChange={patch} />}
-				{step === 1 && <StepSections form={form} onChange={patch} />}
+				{step === 1 && (
+					<StepSections
+						form={form}
+						onChange={patch}
+						initialWaterwayId={initialSection?.waterwayId}
+					/>
+				)}
 				{step === 2 && <StepDetails form={form} onChange={patch} />}
 			</Box>
 
