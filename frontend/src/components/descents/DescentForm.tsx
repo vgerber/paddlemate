@@ -27,8 +27,6 @@ import {
 } from "@/lib/api";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type VisibilityType = "private" | "public" | "shared";
 type TimingMode = "single" | "multi";
 type SectionLocation = { type: "LineString"; coordinates: number[][] };
@@ -61,13 +59,15 @@ interface LogForm {
 	visible_from: string;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function toDatetimeLocal(iso: string): string {
 	return new Date(iso)
 		.toLocaleString("sv-SE", { timeZoneName: undefined })
 		.slice(0, 16)
 		.replace(" ", "T");
+}
+
+function isValidCoord(val: string): boolean {
+	return val !== "" && !Number.isNaN(parseFloat(val));
 }
 
 function defaultForm(): LogForm {
@@ -124,7 +124,7 @@ function initFromDescent(d: Descent): LogForm {
 }
 
 function buildPayload(form: LogForm) {
-	const vis =
+	const visibility =
 		form.visibility_type === "shared"
 			? {
 					type: "shared" as const,
@@ -148,7 +148,7 @@ function buildPayload(form: LogForm) {
 		take_out_lon: form.take_out_lon ? parseFloat(form.take_out_lon) : null,
 		take_out_label: form.take_out_label || null,
 		take_out_feature_id: null,
-		visibility: vis,
+		visibility,
 		visible_from: form.visible_from
 			? new Date(form.visible_from).toISOString()
 			: null,
@@ -159,8 +159,6 @@ function buildPayload(form: LogForm) {
 		})),
 	};
 }
-
-// ─── Step: When ───────────────────────────────────────────────────────────────
 
 function StepWhen({
 	form,
@@ -252,8 +250,6 @@ function StepWhen({
 	);
 }
 
-// ─── Step: Sections ──────────────────────────────────────────────────────────
-
 function makeDraft(
 	section: SectionWithFeatures,
 	sortOrder: number,
@@ -269,6 +265,106 @@ function makeDraft(
 				? (section.location as SectionLocation)
 				: undefined,
 	};
+}
+
+interface LocationPinProps {
+	num: number;
+	color: string;
+	title: string;
+	lat: string;
+	lon: string;
+	label: string;
+	onClear: () => void;
+	onLabelChange: (v: string) => void;
+}
+
+function LocationPin({
+	num,
+	color,
+	title,
+	lat,
+	lon,
+	label,
+	onClear,
+	onLabelChange,
+}: LocationPinProps) {
+	const hasCoords = isValidCoord(lat);
+	return (
+		<Box
+			sx={{
+				flex: 1,
+				border: "1px solid",
+				borderColor: hasCoords ? color : "divider",
+				p: 1,
+				display: "flex",
+				flexDirection: "column",
+				gap: 1,
+				transition: "border-color 0.2s",
+			}}
+		>
+			<Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+				<div
+					style={{
+						width: 16,
+						height: 16,
+						borderRadius: "50%",
+						background: color,
+						color: "white",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						fontSize: 9,
+						fontWeight: 700,
+						flexShrink: 0,
+					}}
+				>
+					{num}
+				</div>
+				<Typography
+					variant="caption"
+					sx={{
+						fontFamily: '"Space Grotesk", monospace',
+						letterSpacing: "0.06em",
+						fontWeight: 600,
+						flex: 1,
+					}}
+				>
+					{title}
+				</Typography>
+				{hasCoords && (
+					<IconButton size="small" onClick={onClear} sx={{ p: 0.25 }}>
+						<DeleteOutlinedIcon sx={{ fontSize: 14 }} />
+					</IconButton>
+				)}
+			</Box>
+			{hasCoords ? (
+				<Typography
+					variant="caption"
+					sx={{
+						fontFamily: '"Space Grotesk", monospace',
+						color: "text.secondary",
+						fontSize: "0.7rem",
+					}}
+				>
+					{parseFloat(lat).toFixed(5)}, {parseFloat(lon).toFixed(5)}
+				</Typography>
+			) : (
+				<Typography
+					variant="caption"
+					sx={{ color: "text.disabled", fontStyle: "italic" }}
+				>
+					Click ①/② on map to set
+				</Typography>
+			)}
+			<TextField
+				label="Label (optional)"
+				value={label}
+				onChange={(e) => onLabelChange(e.target.value)}
+				size="small"
+				fullWidth
+			/>
+		</Box>
+	);
 }
 
 function StepSections({
@@ -335,15 +431,11 @@ function StepSections({
 		});
 	}
 
-	function removeSection(section: SectionWithFeatures) {
-		onChange({
-			sections: form.sections.filter((s) => s.section_id !== section.id),
-		});
-	}
-
-	function handleToggle(section: SectionWithFeatures) {
+	function toggleSection(section: SectionWithFeatures) {
 		if (selectedIds.has(section.id)) {
-			removeSection(section);
+			onChange({
+				sections: form.sections.filter((s) => s.section_id !== section.id),
+			});
 		} else {
 			addSection(section);
 		}
@@ -357,21 +449,11 @@ function StepSections({
 		onChange({ sections: arr });
 	}
 
-	const putInLat = parseFloat(form.put_in_lat);
-	const putInLon = parseFloat(form.put_in_lon);
-	const takeOutLat = parseFloat(form.take_out_lat);
-	const takeOutLon = parseFloat(form.take_out_lon);
 	const validPutIn =
-		!Number.isNaN(putInLat) &&
-		!Number.isNaN(putInLon) &&
-		form.put_in_lat !== "";
+		isValidCoord(form.put_in_lat) && isValidCoord(form.put_in_lon);
 	const validTakeOut =
-		!Number.isNaN(takeOutLat) &&
-		!Number.isNaN(takeOutLon) &&
-		form.take_out_lat !== "";
+		isValidCoord(form.take_out_lat) && isValidCoord(form.take_out_lon);
 
-	// When no waterway is searched, fall back to showing the already-added
-	// sections using their stored geometry so the map isn't blank.
 	const formSectionsForMap = useMemo(
 		() =>
 			form.sections
@@ -391,14 +473,11 @@ function StepSections({
 				})) as SectionWithFeatures[],
 		[form.sections],
 	);
-	const sectionsForMap = useMemo(
-		() => (mapSections.length > 0 ? mapSections : formSectionsForMap),
-		[mapSections, formSectionsForMap],
-	);
+	const sectionsForMap =
+		mapSections.length > 0 ? mapSections : formSectionsForMap;
 
 	return (
 		<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-			{/* Waterway search */}
 			<Autocomplete
 				options={searchResults?.items ?? []}
 				getOptionLabel={(opt) => opt.name}
@@ -414,7 +493,6 @@ function StepSections({
 				)}
 			/>
 
-			{/* Map */}
 			<Box
 				sx={{
 					height: 380,
@@ -445,15 +523,26 @@ function StepSections({
 					selectedSectionIds={selectedIds}
 					onSectionToggle={(id) => {
 						const section = sectionsForMap.find((s) => s.id === id);
-						if (section) handleToggle(section);
+						if (section) toggleSection(section);
 					}}
-					putIn={validPutIn ? { lat: putInLat, lon: putInLon } : null}
-					takeOut={validTakeOut ? { lat: takeOutLat, lon: takeOutLon } : null}
+					putIn={
+						validPutIn
+							? {
+									lat: parseFloat(form.put_in_lat),
+									lon: parseFloat(form.put_in_lon),
+								}
+							: null
+					}
+					takeOut={
+						validTakeOut
+							? {
+									lat: parseFloat(form.take_out_lat),
+									lon: parseFloat(form.take_out_lon),
+								}
+							: null
+					}
 					onPickPutIn={(lat, lon) =>
-						onChange({
-							put_in_lat: lat.toFixed(6),
-							put_in_lon: lon.toFixed(6),
-						})
+						onChange({ put_in_lat: lat.toFixed(6), put_in_lon: lon.toFixed(6) })
 					}
 					onPickTakeOut={(lat, lon) =>
 						onChange({
@@ -464,7 +553,6 @@ function StepSections({
 				/>
 			</Box>
 
-			{/* Section dropdown — alternative to clicking on the map */}
 			<Autocomplete
 				key={selectedWaterwayId ?? "none"}
 				options={unaddedSections}
@@ -489,7 +577,6 @@ function StepSections({
 				)}
 			/>
 
-			{/* Selected sections list */}
 			{form.sections.length > 0 && (
 				<Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
 					{form.sections.map((s, i) => (
@@ -547,131 +634,35 @@ function StepSections({
 				</Box>
 			)}
 
-			{/* Location status */}
 			<Box sx={{ display: "flex", gap: 1.5 }}>
-				{(
-					[
-						{
-							num: 1,
-							color: "#0072B2",
-							title: "PUT-IN",
-							lat: form.put_in_lat,
-							lon: form.put_in_lon,
-							labelVal: form.put_in_label,
-							onClear: () =>
-								onChange({ put_in_lat: "", put_in_lon: "", put_in_label: "" }),
-							onLabelChange: (v: string) => onChange({ put_in_label: v }),
-						},
-						{
-							num: 2,
-							color: "#D55E00",
-							title: "TAKE-OUT",
-							lat: form.take_out_lat,
-							lon: form.take_out_lon,
-							labelVal: form.take_out_label,
-							onClear: () =>
-								onChange({
-									take_out_lat: "",
-									take_out_lon: "",
-									take_out_label: "",
-								}),
-							onLabelChange: (v: string) => onChange({ take_out_label: v }),
-						},
-					] as const
-				).map(
-					({
-						num,
-						color,
-						title,
-						lat,
-						lon,
-						labelVal,
-						onClear,
-						onLabelChange,
-					}) => (
-						<Box
-							key={num}
-							sx={{
-								flex: 1,
-								border: "1px solid",
-								borderColor: lat ? color : "divider",
-								p: 1,
-								display: "flex",
-								flexDirection: "column",
-								gap: 1,
-								transition: "border-color 0.2s",
-							}}
-						>
-							<Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-								<div
-									style={{
-										width: 16,
-										height: 16,
-										borderRadius: "50%",
-										background: color,
-										color: "white",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-										fontSize: 9,
-										fontWeight: 700,
-										flexShrink: 0,
-									}}
-								>
-									{num}
-								</div>
-								<Typography
-									variant="caption"
-									sx={{
-										fontFamily: '"Space Grotesk", monospace',
-										letterSpacing: "0.06em",
-										fontWeight: 600,
-										flex: 1,
-									}}
-								>
-									{title}
-								</Typography>
-								{lat && (
-									<IconButton size="small" onClick={onClear} sx={{ p: 0.25 }}>
-										<DeleteOutlinedIcon sx={{ fontSize: 14 }} />
-									</IconButton>
-								)}
-							</Box>
-							{lat ? (
-								<Typography
-									variant="caption"
-									sx={{
-										fontFamily: '"Space Grotesk", monospace',
-										color: "text.secondary",
-										fontSize: "0.7rem",
-									}}
-								>
-									{parseFloat(lat).toFixed(5)}, {parseFloat(lon).toFixed(5)}
-								</Typography>
-							) : (
-								<Typography
-									variant="caption"
-									sx={{ color: "text.disabled", fontStyle: "italic" }}
-								>
-									Click ①/② on map to set
-								</Typography>
-							)}
-							<TextField
-								label="Label (optional)"
-								value={labelVal}
-								onChange={(e) => onLabelChange(e.target.value)}
-								size="small"
-								fullWidth
-							/>
-						</Box>
-					),
-				)}
+				<LocationPin
+					num={1}
+					color="#0072B2"
+					title="PUT-IN"
+					lat={form.put_in_lat}
+					lon={form.put_in_lon}
+					label={form.put_in_label}
+					onClear={() =>
+						onChange({ put_in_lat: "", put_in_lon: "", put_in_label: "" })
+					}
+					onLabelChange={(v) => onChange({ put_in_label: v })}
+				/>
+				<LocationPin
+					num={2}
+					color="#D55E00"
+					title="TAKE-OUT"
+					lat={form.take_out_lat}
+					lon={form.take_out_lon}
+					label={form.take_out_label}
+					onClear={() =>
+						onChange({ take_out_lat: "", take_out_lon: "", take_out_label: "" })
+					}
+					onLabelChange={(v) => onChange({ take_out_label: v })}
+				/>
 			</Box>
 		</Box>
 	);
 }
-
-// ─── Step: Details ────────────────────────────────────────────────────────────
 
 function StepDetails({
 	form,
@@ -699,7 +690,7 @@ function StepDetails({
 				value={form.name}
 				onChange={(e) => onChange({ name: e.target.value })}
 				fullWidth
-				placeholder={"Leave blank to use section / waterway name"}
+				placeholder="Leave blank to use section / waterway name"
 				slotProps={{ htmlInput: { maxLength: 255 } }}
 			/>
 			<TextField
@@ -843,25 +834,33 @@ function StepDetails({
 	);
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
 const STEPS = ["When", "Sections", "Details"];
 
 interface Props {
 	descent?: Descent;
 	initialSection?: { section: SectionWithFeatures; waterwayId: number };
+	initialStartTime?: string;
 	onSave: (id: number) => void;
 	onCancel: () => void;
 }
 
-export default function DescentForm({ descent, initialSection, onSave, onCancel }: Props) {
+export default function DescentForm({
+	descent,
+	initialSection,
+	initialStartTime,
+	onSave,
+	onCancel,
+}: Props) {
 	const [step, setStep] = useState(0);
 	const [form, setForm] = useState<LogForm>(() => {
 		if (descent) return initFromDescent(descent);
+		const base = initialStartTime
+			? { ...defaultForm(), start_time: toDatetimeLocal(initialStartTime) }
+			: defaultForm();
 		if (initialSection) {
-			return { ...defaultForm(), sections: [makeDraft(initialSection.section, 1)] };
+			return { ...base, sections: [makeDraft(initialSection.section, 1)] };
 		}
-		return defaultForm();
+		return base;
 	});
 
 	const createDescent = useCreateDescent();
@@ -884,7 +883,6 @@ export default function DescentForm({ descent, initialSection, onSave, onCancel 
 
 	return (
 		<Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: 3 }}>
-			{/* Header */}
 			<Box
 				sx={{
 					display: "flex",
@@ -910,7 +908,6 @@ export default function DescentForm({ descent, initialSection, onSave, onCancel 
 				</Button>
 			</Box>
 
-			{/* Stepper */}
 			<Stepper activeStep={step} alternativeLabel sx={{ mb: 4 }}>
 				{STEPS.map((label, i) => (
 					<Step key={label} completed={i < step}>
@@ -919,14 +916,12 @@ export default function DescentForm({ descent, initialSection, onSave, onCancel 
 				))}
 			</Stepper>
 
-			{/* Step content */}
 			<Box sx={{ mb: 4 }}>
 				{step === 0 && <StepWhen form={form} onChange={patch} />}
 				{step === 1 && <StepSections form={form} onChange={patch} />}
 				{step === 2 && <StepDetails form={form} onChange={patch} />}
 			</Box>
 
-			{/* Navigation */}
 			<Box
 				sx={{
 					display: "flex",

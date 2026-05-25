@@ -5,6 +5,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import StandingDescentBanner from "@/components/StandingDescentBanner";
 import { useSession } from "@/lib/hooks/useSession";
 
 const navLinkSx = {
@@ -104,8 +105,13 @@ function Layout() {
 				</Toolbar>
 			</AppBar>
 
-			<Box component="main" sx={{ flex: 1, mt: "48px" }}>
-				<Outlet />
+			<Box
+				sx={{ flex: 1, mt: "48px", display: "flex", flexDirection: "column" }}
+			>
+				<StandingDescentBanner />
+				<Box component="main" sx={{ flex: 1 }}>
+					<Outlet />
+				</Box>
 			</Box>
 		</Box>
 	);

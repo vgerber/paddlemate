@@ -14,6 +14,7 @@ import {
 	type TimeRange,
 } from "@/components/charts/water/types";
 import { useSession } from "@/lib/hooks/useSession";
+import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
 import { useWaterStatus } from "@/lib/hooks/useWaterways";
 
 interface SectionChartPanelProps {
@@ -29,6 +30,8 @@ export default function SectionChartPanel({
 }: SectionChartPanelProps) {
 	const { isAuthenticated } = useSession();
 	const navigate = useNavigate();
+	const { current: standingDescent, start: startDescent } =
+		useStandingDescent();
 	const { data: waterStatus, isLoading } = useWaterStatus(
 		waterwayId,
 		sectionId,
@@ -88,27 +91,68 @@ export default function SectionChartPanel({
 					)}
 				</Typography>
 				{isAuthenticated && (
-					<Button
-						size="small"
-						variant="contained"
-						color="secondary"
-						sx={{
-							borderRadius: 0,
-							fontSize: "0.7rem",
-							fontWeight: 700,
-							letterSpacing: "0.08em",
-							flexShrink: 0,
-							px: 1.5,
-						}}
-						onClick={() =>
-							navigate({
-								to: "/logs/new",
-								search: { waterwayId, sectionId },
-							})
-						}
-					>
-						Log descent
-					</Button>
+					<>
+						{!standingDescent ? (
+							<Button
+								size="small"
+								variant="outlined"
+								color="success"
+								sx={{
+									borderRadius: 0,
+									fontSize: "0.7rem",
+									fontWeight: 700,
+									letterSpacing: "0.08em",
+									flexShrink: 0,
+								}}
+								onClick={() =>
+									startDescent({
+										startTime: new Date().toISOString(),
+										waterwayId,
+										sectionId,
+										sectionName: sectionName ?? "",
+									})
+								}
+							>
+								Start
+							</Button>
+						) : standingDescent.sectionId === sectionId ? (
+							<Typography
+								sx={{
+									fontSize: "0.65rem",
+									fontFamily: '"Space Grotesk", monospace',
+									color: "success.main",
+									fontWeight: 700,
+									letterSpacing: "0.08em",
+									flexShrink: 0,
+								}}
+							>
+								● DESCENDING
+							</Typography>
+						) : null}
+						{!standingDescent && (
+							<Button
+								size="small"
+								variant="contained"
+								color="secondary"
+								sx={{
+									borderRadius: 0,
+									fontSize: "0.7rem",
+									fontWeight: 700,
+									letterSpacing: "0.08em",
+									flexShrink: 0,
+									px: 1.5,
+								}}
+								onClick={() =>
+									navigate({
+										to: "/logs/new",
+										search: { waterwayId, sectionId, startTime: undefined },
+									})
+								}
+							>
+								Log descent
+							</Button>
+						)}
+					</>
 				)}
 				{measurementTypes.length > 1 && (
 					<ToggleButtonGroup
