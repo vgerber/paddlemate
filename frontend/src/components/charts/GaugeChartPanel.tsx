@@ -2,8 +2,14 @@ import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import WaterChart from "@/components/charts/WaterChart";
+import { useMemo, useState } from "react";
+import WaterChart, {
+	TIME_RANGE_OPTIONS,
+	type TimeRange,
+} from "@/components/charts/WaterChart";
 import type { WaterRangeWithStatus } from "@/lib/api";
 
 interface GaugeChartPanelProps {
@@ -16,13 +22,21 @@ export default function GaugeChartPanel({
 	onClose,
 }: GaugeChartPanelProps) {
 	const gauge = ranges[0]?.gauge;
+	const [timeRange, setTimeRange] = useState<TimeRange>("7d");
+
+	const subtitle = useMemo(() => {
+		const r = ranges[0];
+		if (!r) return null;
+		const lbl = r.series.label ?? r.gauge.name;
+		return `${lbl} (${r.series.unit})`;
+	}, [ranges]);
 
 	return (
 		<Box
 			sx={{
 				borderTop: "1px solid",
 				borderColor: "divider",
-				height: 340,
+				height: 260,
 				display: "flex",
 				flexDirection: "column",
 				flexShrink: 0,
@@ -31,30 +45,67 @@ export default function GaugeChartPanel({
 			}}
 		>
 			<Box
-				sx={{ display: "flex", alignItems: "flex-start", mb: 1, flexShrink: 0 }}
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					mb: 1,
+					flexShrink: 0,
+					gap: 1,
+				}}
 			>
-				<Box sx={{ flex: 1, minWidth: 0 }}>
-					<Typography variant="subtitle2" sx={{ fontWeight: 600 }} noWrap>
-						{gauge?.name ?? "Gauge"}
-					</Typography>
-					{gauge && (
-						<Typography variant="caption" color="text.secondary">
-							{gauge.provider}
-						</Typography>
+				<Typography
+					variant="subtitle2"
+					sx={{ fontWeight: 600, flex: 1, minWidth: 0 }}
+					noWrap
+				>
+					{gauge?.name ?? "Gauge"}
+					{subtitle && (
+						<Box
+							component="span"
+							sx={{ fontWeight: 400, color: "text.secondary" }}
+						>
+							{" — "}
+							{subtitle}
+						</Box>
 					)}
-				</Box>
+				</Typography>
+				<ToggleButtonGroup
+					value={timeRange}
+					exclusive
+					size="small"
+					onChange={(_, v) => v && setTimeRange(v)}
+					sx={{
+						flexShrink: 0,
+						"& .MuiToggleButton-root": {
+							py: 0.25,
+							px: 1,
+							fontSize: "0.7rem",
+						},
+					}}
+				>
+					{TIME_RANGE_OPTIONS.map((o) => (
+						<ToggleButton key={o.value} value={o.value}>
+							{o.label}
+						</ToggleButton>
+					))}
+				</ToggleButtonGroup>
 				<IconButton
 					size="small"
 					onClick={onClose}
 					aria-label="Close gauge chart"
-					sx={{ mt: -0.5 }}
+					sx={{ flexShrink: 0 }}
 				>
 					<CloseIcon fontSize="small" />
 				</IconButton>
 			</Box>
 			<Divider sx={{ mb: 1, flexShrink: 0 }} />
 			<Box sx={{ flex: 1, minHeight: 0 }}>
-				<WaterChart ranges={ranges} showThresholds={false} />
+				<WaterChart
+					ranges={ranges}
+					showThresholds={false}
+					timeRange={timeRange}
+					onTimeRangeChange={setTimeRange}
+				/>
 			</Box>
 		</Box>
 	);
