@@ -5,10 +5,12 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
-import WaterChart, {
+import WaterChart from "@/components/charts/water/WaterChart";
+import {
 	TIME_RANGE_OPTIONS,
+	typeLabel,
 	type TimeRange,
-} from "@/components/charts/WaterChart";
+} from "@/components/charts/water/types";
 import { useWaterStatus } from "@/lib/hooks/useWaterways";
 
 interface SectionChartPanelProps {
@@ -27,6 +29,14 @@ export default function SectionChartPanel({
 		sectionId,
 	);
 	const [timeRange, setTimeRange] = useState<TimeRange>("7d");
+	const [measurementType, setMeasurementType] = useState<string | null>(null);
+
+	const measurementTypes = useMemo(() => {
+		const types = new Set(
+			(waterStatus?.ranges ?? []).map((r) => r.series.measurement_type),
+		);
+		return Array.from(types) as ("water_level" | "discharge" | "temperature")[];
+	}, [waterStatus?.ranges]);
 
 	const subtitle = useMemo(() => {
 		const r = waterStatus?.ranges[0];
@@ -72,6 +82,28 @@ export default function SectionChartPanel({
 						</Box>
 					)}
 				</Typography>
+				{measurementTypes.length > 1 && (
+					<ToggleButtonGroup
+						value={measurementType}
+						exclusive
+						size="small"
+						onChange={(_, v) => v && setMeasurementType(v)}
+						sx={{
+							flexShrink: 0,
+							"& .MuiToggleButton-root": {
+								py: 0.25,
+								px: 1,
+								fontSize: "0.7rem",
+							},
+						}}
+					>
+						{measurementTypes.map((t) => (
+							<ToggleButton key={t} value={t}>
+								{typeLabel(t)}
+							</ToggleButton>
+						))}
+					</ToggleButtonGroup>
+				)}
 				<ToggleButtonGroup
 					value={timeRange}
 					exclusive
@@ -104,6 +136,8 @@ export default function SectionChartPanel({
 						ranges={waterStatus?.ranges ?? []}
 						timeRange={timeRange}
 						onTimeRangeChange={setTimeRange}
+						measurementType={measurementType}
+						onMeasurementTypeChange={setMeasurementType}
 					/>
 				</Box>
 			)}
