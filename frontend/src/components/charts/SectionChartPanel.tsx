@@ -1,9 +1,11 @@
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Divider from "@mui/material/Divider";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import WaterChart from "@/components/charts/water/WaterChart";
 import {
@@ -11,6 +13,7 @@ import {
 	typeLabel,
 	type TimeRange,
 } from "@/components/charts/water/types";
+import { useSession } from "@/lib/hooks/useSession";
 import { useWaterStatus } from "@/lib/hooks/useWaterways";
 
 interface SectionChartPanelProps {
@@ -24,6 +27,8 @@ export default function SectionChartPanel({
 	sectionId,
 	sectionName,
 }: SectionChartPanelProps) {
+	const { isAuthenticated } = useSession();
+	const navigate = useNavigate();
 	const { data: waterStatus, isLoading } = useWaterStatus(
 		waterwayId,
 		sectionId,
@@ -82,6 +87,29 @@ export default function SectionChartPanel({
 						</Box>
 					)}
 				</Typography>
+				{isAuthenticated && (
+					<Button
+						size="small"
+						variant="contained"
+						color="secondary"
+						sx={{
+							borderRadius: 0,
+							fontSize: "0.7rem",
+							fontWeight: 700,
+							letterSpacing: "0.08em",
+							flexShrink: 0,
+							px: 1.5,
+						}}
+						onClick={() =>
+							navigate({
+								to: "/logs/new",
+								search: { waterwayId, sectionId },
+							})
+						}
+					>
+						Log descent
+					</Button>
+				)}
 				{measurementTypes.length > 1 && (
 					<ToggleButtonGroup
 						value={measurementType}

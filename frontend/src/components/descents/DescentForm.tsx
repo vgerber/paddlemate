@@ -849,15 +849,20 @@ const STEPS = ["When", "Sections", "Details"];
 
 interface Props {
 	descent?: Descent;
+	initialSection?: { section: SectionWithFeatures; waterwayId: number };
 	onSave: (id: number) => void;
 	onCancel: () => void;
 }
 
-export default function DescentForm({ descent, onSave, onCancel }: Props) {
+export default function DescentForm({ descent, initialSection, onSave, onCancel }: Props) {
 	const [step, setStep] = useState(0);
-	const [form, setForm] = useState<LogForm>(() =>
-		descent ? initFromDescent(descent) : defaultForm(),
-	);
+	const [form, setForm] = useState<LogForm>(() => {
+		if (descent) return initFromDescent(descent);
+		if (initialSection) {
+			return { ...defaultForm(), sections: [makeDraft(initialSection.section, 1)] };
+		}
+		return defaultForm();
+	});
 
 	const createDescent = useCreateDescent();
 	const patchDescent = usePatchDescent();
