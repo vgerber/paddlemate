@@ -21,11 +21,7 @@ export default function AreaControls({
 	onRadiusChange,
 }: AreaControlsProps) {
 	if (!areaCircle) {
-		return (
-			<Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-				Click on the map to set the search center.
-			</Typography>
-		);
+		return null;
 	}
 
 	return (
@@ -38,7 +34,7 @@ export default function AreaControls({
 					<IconButton
 						size="small"
 						onClick={() => onLockedChange(!locked)}
-						color={locked ? "primary" : "default"}
+						color={locked ? "default" : "secondary"}
 					>
 						{locked ? (
 							<LockIcon fontSize="small" />

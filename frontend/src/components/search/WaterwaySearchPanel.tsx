@@ -338,7 +338,9 @@ export default function WaterwaySearchPanel({
 						color="text.disabled"
 						sx={{ textAlign: "center", py: 4, fontStyle: "italic" }}
 					>
-						Type a name, country or difficulty to search
+						{mode === "area"
+							? "Click on the map to set the search center."
+							: "Type a name, country or difficulty to search"}
 					</Typography>
 				) : listView === "rivers" ? (
 					<RiverList
