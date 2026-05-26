@@ -43,7 +43,8 @@ function Root() {
 }
 
 function Layout() {
-	const { isAuthenticated, isLoading, user, login, logout } = useSession();
+	const { isAuthenticated, isLoading, isAdmin, user, login, logout } =
+		useSession();
 
 	return (
 		<Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -70,6 +71,14 @@ function Layout() {
 						<Box component={Link} to="/logs/" sx={navLinkSx}>
 							LOGS
 						</Box>
+						<Box component={Link} to="/proposals/" sx={navLinkSx}>
+							PROPOSALS
+						</Box>
+						{isAdmin && (
+							<Box component={Link} to="/admin/proposals/" sx={navLinkSx}>
+								ADMIN
+							</Box>
+						)}
 					</Box>
 					<Box sx={{ flex: 1 }} />
 					{!isLoading &&

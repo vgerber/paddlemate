@@ -1,7 +1,9 @@
-use serde_json::Value;
+use serde_json::{Value, json};
 use sqlx::{PgPool, Row, postgres::PgRow};
 
-use crate::models::proposal::{Proposal, ProposalEntityType, ProposalOperation, ProposalStatus};
+use crate::models::proposal::{
+    ListProposalsFilters, Proposal, ProposalEntityType, ProposalOperation, ProposalStatus,
+};
 
 fn parse_entity_type(s: &str) -> ProposalEntityType {
     match s {
@@ -27,6 +29,8 @@ fn parse_status(s: &str) -> ProposalStatus {
     }
 }
 
+/// Parse a row that contains only base proposal columns (no vote aggregates).
+/// Used for INSERT/UPDATE RETURNING results where subqueries are not possible.
 fn row_to_proposal(row: &PgRow) -> Proposal {
     Proposal {
         id: row.get("id"),
@@ -34,21 +38,120 @@ fn row_to_proposal(row: &PgRow) -> Proposal {
         entity_id: row.get("entity_id"),
         operation: parse_operation(&row.get::<String, _>("operation")),
         proposed_data: row.get("proposed_data"),
+        original_data: row.get("original_data"),
         submitted_by: row.get("submitted_by"),
         status: parse_status(&row.get::<String, _>("status")),
         reviewed_by: row.get("reviewed_by"),
         review_note: row.get("review_note"),
         created_at: row.get("created_at"),
         updated_at: row.get("updated_at"),
+        upvotes: 0,
+        downvotes: 0,
+        user_vote: None,
     }
 }
 
-const SELECT_PROPOSAL: &str = r#"
-    SELECT id, entity_type, entity_id, operation, proposed_data, submitted_by,
-           status, reviewed_by, review_note, created_at, updated_at
-    FROM proposals
-"#;
+/// Parse a row that includes vote aggregate columns (upvotes, downvotes, user_vote).
+fn row_to_proposal_full(row: &PgRow) -> Proposal {
+    let mut p = row_to_proposal(row);
+    p.upvotes = row.get("upvotes");
+    p.downvotes = row.get("downvotes");
+    p.user_vote = row.get("user_vote");
+    p
+}
 
+/// Base column list used in RETURNING clauses (no aggregates).
+const RETURNING_COLS: &str = "id, entity_type, entity_id, operation, proposed_data, submitted_by, \
+    original_data, status, reviewed_by, review_note, created_at, updated_at";
+
+/// Snapshot the current state of an entity row as JSON, for use as original_data.
+/// Returns None if the entity doesn't exist or the entity_type is unrecognised.
+async fn snapshot_entity(
+    db: &PgPool,
+    entity_type: &str,
+    entity_id: i64,
+) -> Result<Option<Value>, sqlx::Error> {
+    match entity_type {
+        "waterway" => {
+            let row = sqlx::query(
+                "SELECT id, waterway_type::text, name, description FROM waterways WHERE id = $1",
+            )
+            .bind(entity_id)
+            .fetch_optional(db)
+            .await?;
+
+            Ok(row.map(|r| {
+                json!({
+                    "id": r.get::<i64, _>("id"),
+                    "waterway_type": r.get::<String, _>("waterway_type"),
+                    "name": r.get::<String, _>("name"),
+                    "description": r.get::<Option<String>, _>("description"),
+                })
+            }))
+        }
+
+        "water_section" => {
+            let row = sqlx::query(
+                r#"SELECT id, waterway_id, name, description, region, country,
+                          river_km_start, river_km_end,
+                          ST_AsGeoJSON(location) AS location_geojson
+                   FROM water_sections WHERE id = $1"#,
+            )
+            .bind(entity_id)
+            .fetch_optional(db)
+            .await?;
+
+            Ok(row.map(|r| {
+                let loc: Option<String> = r.get("location_geojson");
+                let location: Value = loc
+                    .and_then(|s| serde_json::from_str(&s).ok())
+                    .unwrap_or(Value::Null);
+                json!({
+                    "id": r.get::<i64, _>("id"),
+                    "waterway_id": r.get::<i64, _>("waterway_id"),
+                    "name": r.get::<String, _>("name"),
+                    "description": r.get::<Option<String>, _>("description"),
+                    "region": r.get::<Option<String>, _>("region"),
+                    "country": r.get::<Option<String>, _>("country"),
+                    "river_km_start": r.get::<Option<f64>, _>("river_km_start"),
+                    "river_km_end": r.get::<Option<f64>, _>("river_km_end"),
+                    "location": location,
+                })
+            }))
+        }
+
+        "feature" => {
+            let row = sqlx::query(
+                r#"SELECT id, section_id, feature_type::text, metadata,
+                          ST_AsGeoJSON(location) AS location_geojson
+                   FROM features WHERE id = $1"#,
+            )
+            .bind(entity_id)
+            .fetch_optional(db)
+            .await?;
+
+            Ok(row.map(|r| {
+                let loc: Option<String> = r.get("location_geojson");
+                let location: Value = loc
+                    .and_then(|s| serde_json::from_str(&s).ok())
+                    .unwrap_or(Value::Null);
+                json!({
+                    "id": r.get::<i64, _>("id"),
+                    "section_id": r.get::<i64, _>("section_id"),
+                    "feature_type": r.get::<String, _>("feature_type"),
+                    "metadata": r.get::<Value, _>("metadata"),
+                    "location": location,
+                })
+            }))
+        }
+
+        _ => Ok(None),
+    }
+}
+
+/// Insert a new proposal.
+/// For update/delete operations the current entity state is automatically snapshotted
+/// into original_data so reviewers can see what changed.
 pub async fn insert_proposal(
     db: &PgPool,
     entity_type: &str,
@@ -57,18 +160,26 @@ pub async fn insert_proposal(
     proposed_data: Value,
     submitted_by: &str,
 ) -> Result<Proposal, sqlx::Error> {
-    let row = sqlx::query(
-        r#"
-        INSERT INTO proposals (entity_type, entity_id, operation, proposed_data, submitted_by)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, entity_type, entity_id, operation, proposed_data, submitted_by,
-                  status, reviewed_by, review_note, created_at, updated_at
-        "#,
-    )
+    let original_data = if matches!(operation, "update" | "delete") {
+        if let Some(eid) = entity_id {
+            snapshot_entity(db, entity_type, eid).await?
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    let row = sqlx::query(&format!(
+        r#"INSERT INTO proposals (entity_type, entity_id, operation, proposed_data, original_data, submitted_by)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           RETURNING {RETURNING_COLS}"#,
+    ))
     .bind(entity_type)
     .bind(entity_id)
     .bind(operation)
     .bind(proposed_data)
+    .bind(original_data)
     .bind(submitted_by)
     .fetch_one(db)
     .await?;
@@ -76,108 +187,147 @@ pub async fn insert_proposal(
     Ok(row_to_proposal(&row))
 }
 
-pub async fn get_proposal(db: &PgPool, proposal_id: i64) -> Result<Option<Proposal>, sqlx::Error> {
-    let row = sqlx::query(&format!("{} WHERE id = $1", SELECT_PROPOSAL))
-        .bind(proposal_id)
-        .fetch_optional(db)
-        .await?;
-
-    Ok(row.as_ref().map(row_to_proposal))
-}
-
-/// List proposals where entity_type is 'waterway' or 'water_section'.
-/// Optionally filter by status and/or entity_type.
-pub async fn list_waterway_proposals(
+/// List proposals with wide filtering support.
+/// Visibility (auth-based) filtering must be applied by the caller before invoking this:
+///   - unauthenticated: set filters.status = Some("pending")
+///   - non-admin auth: set filters.submitted_by = Some(viewer_user_id)
+///   - admin: leave unrestricted
+pub async fn list_proposals(
     db: &PgPool,
-    status: Option<&str>,
-    entity_type: Option<&str>,
+    filters: ListProposalsFilters,
+    viewer_user_id: Option<&str>,
 ) -> Result<Vec<Proposal>, sqlx::Error> {
-    let rows = sqlx::query(&format!(
-        "{} WHERE entity_type IN ('waterway', 'water_section')
-         AND ($1::text IS NULL OR entity_type = $1)
-         AND ($2::text IS NULL OR status = $2)
-         ORDER BY created_at DESC",
-        SELECT_PROPOSAL
-    ))
-    .bind(entity_type)
-    .bind(status)
+    let rows = sqlx::query(
+        r#"SELECT p.id, p.entity_type, p.entity_id, p.operation, p.proposed_data,
+                  p.submitted_by, p.original_data, p.status, p.reviewed_by, p.review_note,
+                  p.created_at, p.updated_at,
+                  COALESCE((
+                      SELECT SUM(CASE WHEN v.vote = 1 THEN 1 ELSE 0 END)::bigint
+                      FROM proposal_votes v WHERE v.proposal_id = p.id
+                  ), 0) AS upvotes,
+                  COALESCE((
+                      SELECT SUM(CASE WHEN v.vote = -1 THEN 1 ELSE 0 END)::bigint
+                      FROM proposal_votes v WHERE v.proposal_id = p.id
+                  ), 0) AS downvotes,
+                  (SELECT v.vote FROM proposal_votes v
+                   WHERE v.proposal_id = p.id AND v.user_id = $1) AS user_vote
+           FROM proposals p
+           WHERE ($2::text   IS NULL OR p.status       = $2)
+             AND ($3::text   IS NULL OR p.entity_type  = $3)
+             AND ($4::text   IS NULL OR p.operation    = $4)
+             AND ($5::text   IS NULL OR p.submitted_by = $5)
+             AND ($6::bigint IS NULL OR (
+                     p.entity_type = 'feature' AND p.entity_id = $6
+                 ))
+             AND ($7::bigint IS NULL OR (
+                     (p.entity_type = 'water_section' AND p.entity_id = $7)
+                     OR (p.entity_type = 'feature'
+                         AND p.entity_id IN (SELECT id FROM features WHERE section_id = $7))
+                     OR (p.entity_type = 'feature'
+                         AND p.entity_id IS NULL
+                         AND (p.proposed_data->>'section_id')::bigint = $7)
+                 ))
+             AND ($8::bigint IS NULL OR (
+                     (p.entity_type = 'waterway' AND p.entity_id = $8)
+                     OR (p.entity_type = 'water_section'
+                         AND p.entity_id IN (
+                             SELECT id FROM water_sections WHERE waterway_id = $8))
+                     OR (p.entity_type = 'water_section'
+                         AND p.entity_id IS NULL
+                         AND (p.proposed_data->>'waterway_id')::bigint = $8)
+                     OR (p.entity_type = 'feature'
+                         AND p.entity_id IN (
+                             SELECT f.id FROM features f
+                             JOIN water_sections s ON s.id = f.section_id
+                             WHERE s.waterway_id = $8))
+                     OR (p.entity_type = 'feature'
+                         AND p.entity_id IS NULL
+                         AND (p.proposed_data->>'section_id')::bigint IN (
+                             SELECT id FROM water_sections WHERE waterway_id = $8))
+                 ))
+           ORDER BY p.created_at DESC"#,
+    )
+    .bind(viewer_user_id)
+    .bind(filters.status.as_deref())
+    .bind(filters.entity_type.as_deref())
+    .bind(filters.operation.as_deref())
+    .bind(filters.submitted_by.as_deref())
+    .bind(filters.feature_id)
+    .bind(filters.section_id)
+    .bind(filters.waterway_id)
     .fetch_all(db)
     .await?;
 
-    Ok(rows.iter().map(row_to_proposal).collect())
+    Ok(rows.iter().map(row_to_proposal_full).collect())
 }
 
-/// List feature proposals scoped to a specific waterway via section membership.
-pub async fn list_feature_proposals(
-    db: &PgPool,
-    waterway_id: i64,
-    status: Option<&str>,
-) -> Result<Vec<Proposal>, sqlx::Error> {
-    let rows = sqlx::query(&format!(
-        "{} WHERE entity_type = 'feature'
-         AND (
-             (entity_id IS NOT NULL AND entity_id IN (
-                 SELECT f.id FROM features f
-                 JOIN water_sections s ON s.id = f.section_id
-                 WHERE s.waterway_id = $1
-             ))
-             OR
-             (entity_id IS NULL AND (proposed_data->>'section_id')::bigint IN (
-                 SELECT id FROM water_sections WHERE waterway_id = $1
-             ))
-         )
-         AND ($2::text IS NULL OR status = $2)
-         ORDER BY created_at DESC",
-        SELECT_PROPOSAL
-    ))
-    .bind(waterway_id)
-    .bind(status)
-    .fetch_all(db)
-    .await?;
-
-    Ok(rows.iter().map(row_to_proposal).collect())
-}
-
-/// Get a specific feature proposal, verified to belong to the given waterway.
-pub async fn get_feature_proposal(
+/// Fetch a single proposal by ID including vote counts.
+/// Visibility enforcement (status / ownership) is handled by the route handler.
+pub async fn get_proposal(
     db: &PgPool,
     proposal_id: i64,
-    waterway_id: i64,
+    viewer_user_id: Option<&str>,
 ) -> Result<Option<Proposal>, sqlx::Error> {
-    let row = sqlx::query(&format!(
-        "{} WHERE id = $1 AND entity_type = 'feature'
-         AND (
-             (entity_id IS NOT NULL AND entity_id IN (
-                 SELECT f.id FROM features f
-                 JOIN water_sections s ON s.id = f.section_id
-                 WHERE s.waterway_id = $2
-             ))
-             OR
-             (entity_id IS NULL AND (proposed_data->>'section_id')::bigint IN (
-                 SELECT id FROM water_sections WHERE waterway_id = $2
-             ))
-         )",
-        SELECT_PROPOSAL
-    ))
+    let row = sqlx::query(
+        r#"SELECT p.id, p.entity_type, p.entity_id, p.operation, p.proposed_data,
+                  p.submitted_by, p.original_data, p.status, p.reviewed_by, p.review_note,
+                  p.created_at, p.updated_at,
+                  COALESCE((
+                      SELECT SUM(CASE WHEN v.vote = 1 THEN 1 ELSE 0 END)::bigint
+                      FROM proposal_votes v WHERE v.proposal_id = p.id
+                  ), 0) AS upvotes,
+                  COALESCE((
+                      SELECT SUM(CASE WHEN v.vote = -1 THEN 1 ELSE 0 END)::bigint
+                      FROM proposal_votes v WHERE v.proposal_id = p.id
+                  ), 0) AS downvotes,
+                  (SELECT v.vote FROM proposal_votes v
+                   WHERE v.proposal_id = p.id AND v.user_id = $1) AS user_vote
+           FROM proposals p
+           WHERE p.id = $2"#,
+    )
+    .bind(viewer_user_id)
     .bind(proposal_id)
-    .bind(waterway_id)
     .fetch_optional(db)
     .await?;
 
-    Ok(row.as_ref().map(row_to_proposal))
+    Ok(row.as_ref().map(row_to_proposal_full))
 }
 
-/// List all proposals submitted by a specific user.
-pub async fn list_my_proposals(db: &PgPool, user_id: &str) -> Result<Vec<Proposal>, sqlx::Error> {
-    let rows = sqlx::query(&format!(
-        "{} WHERE submitted_by = $1 ORDER BY created_at DESC",
-        SELECT_PROPOSAL
-    ))
+/// Upsert a vote on a proposal. vote must be 1 or -1 (enforced by DB constraint).
+pub async fn vote_proposal(
+    db: &PgPool,
+    proposal_id: i64,
+    user_id: &str,
+    vote: i16,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"INSERT INTO proposal_votes (proposal_id, user_id, vote)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (proposal_id, user_id)
+           DO UPDATE SET vote = EXCLUDED.vote, created_at = NOW()"#,
+    )
+    .bind(proposal_id)
     .bind(user_id)
-    .fetch_all(db)
+    .bind(vote)
+    .execute(db)
     .await?;
 
-    Ok(rows.iter().map(row_to_proposal).collect())
+    Ok(())
+}
+
+/// Remove a user's vote from a proposal.
+pub async fn unvote_proposal(
+    db: &PgPool,
+    proposal_id: i64,
+    user_id: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("DELETE FROM proposal_votes WHERE proposal_id = $1 AND user_id = $2")
+        .bind(proposal_id)
+        .bind(user_id)
+        .execute(db)
+        .await?;
+
+    Ok(())
 }
 
 /// Review a proposal: approve or reject it.
@@ -199,8 +349,7 @@ pub async fn review_proposal(
     let mut tx = db.begin().await?;
 
     let row = sqlx::query(&format!(
-        "{} WHERE id = $1 AND status = 'pending' FOR UPDATE",
-        SELECT_PROPOSAL
+        "SELECT {RETURNING_COLS} FROM proposals WHERE id = $1 AND status = 'pending' FOR UPDATE"
     ))
     .bind(proposal_id)
     .fetch_optional(&mut *tx)
@@ -217,15 +366,12 @@ pub async fn review_proposal(
         apply_proposal(&mut tx, &proposal).await?;
     }
 
-    let updated_row = sqlx::query(
-        r#"
-        UPDATE proposals
-        SET status = $2, reviewed_by = $3, review_note = $4, updated_at = NOW()
-        WHERE id = $1
-        RETURNING id, entity_type, entity_id, operation, proposed_data, submitted_by,
-                  status, reviewed_by, review_note, created_at, updated_at
-        "#,
-    )
+    let updated_row = sqlx::query(&format!(
+        r#"UPDATE proposals
+           SET status = $2, reviewed_by = $3, review_note = $4, updated_at = NOW()
+           WHERE id = $1
+           RETURNING {RETURNING_COLS}"#,
+    ))
     .bind(proposal_id)
     .bind(status_str)
     .bind(reviewer_id)
@@ -259,7 +405,11 @@ async fn apply_proposal(
         (ProposalEntityType::Waterway, ProposalOperation::Update) => {
             if let Some(id) = proposal.entity_id {
                 sqlx::query(
-                    "UPDATE waterways SET name = COALESCE($1, name), description = COALESCE($2, description), updated_at = NOW() WHERE id = $3",
+                    "UPDATE waterways \
+                     SET name = COALESCE($1, name), \
+                         description = COALESCE($2, description), \
+                         updated_at = NOW() \
+                     WHERE id = $3",
                 )
                 .bind(data["name"].as_str())
                 .bind(data["description"].as_str())
@@ -283,7 +433,8 @@ async fn apply_proposal(
             let location = serde_json::to_string(&data["location"])
                 .map_err(|e| sqlx::Error::Decode(e.into()))?;
             sqlx::query(
-                "INSERT INTO water_sections (waterway_id, name, description, location) VALUES ($1, $2, $3, ST_GeomFromGeoJSON($4))",
+                "INSERT INTO water_sections (waterway_id, name, description, location) \
+                 VALUES ($1, $2, $3, ST_GeomFromGeoJSON($4))",
             )
             .bind(waterway_id)
             .bind(data["name"].as_str().unwrap_or_default())
@@ -295,20 +446,20 @@ async fn apply_proposal(
 
         (ProposalEntityType::WaterSection, ProposalOperation::Update) => {
             if let Some(id) = proposal.entity_id {
-                let location = match &data["location"] {
-                    Value::Null | Value::Object(_) if data["location"].is_null() => None,
-                    v if !v.is_null() => Some(
-                        serde_json::to_string(v)
+                let location = if data["location"].is_null() {
+                    None
+                } else {
+                    Some(
+                        serde_json::to_string(&data["location"])
                             .map_err(|e| sqlx::Error::Decode(e.into()))?,
-                    ),
-                    _ => None,
+                    )
                 };
                 sqlx::query(
                     r#"UPDATE water_sections
-                       SET name = COALESCE($1, name),
+                       SET name        = COALESCE($1, name),
                            description = COALESCE($2, description),
-                           location = COALESCE(ST_GeomFromGeoJSON($3), location),
-                           updated_at = NOW()
+                           location    = COALESCE(ST_GeomFromGeoJSON($3), location),
+                           updated_at  = NOW()
                        WHERE id = $4"#,
                 )
                 .bind(data["name"].as_str())
@@ -332,7 +483,10 @@ async fn apply_proposal(
         (ProposalEntityType::Feature, ProposalOperation::Create) => {
             let section_id = data["section_id"].as_i64();
             let feature_type = data["feature_type"].as_str().unwrap_or_default();
-            let metadata = data.get("metadata").cloned().unwrap_or(Value::Object(serde_json::Map::new()));
+            let metadata = data
+                .get("metadata")
+                .cloned()
+                .unwrap_or_else(|| Value::Object(serde_json::Map::new()));
             let location = serde_json::to_string(&data["location"])
                 .map_err(|e| sqlx::Error::Decode(e.into()))?;
             sqlx::query(
@@ -350,6 +504,29 @@ async fn apply_proposal(
 
         (ProposalEntityType::Feature, ProposalOperation::Update) => {
             if let Some(id) = proposal.entity_id {
+                // Apply water ranges if included in the delta
+                if let Some(ranges) = data.get("water_ranges").and_then(|v| v.as_array()) {
+                    for range in ranges {
+                        sqlx::query(
+                            r#"INSERT INTO feature_water_ranges
+                               (feature_id, series_id, range_low, range_medium, range_high)
+                               VALUES ($1, $2, $3, $4, $5)
+                               ON CONFLICT (feature_id, series_id)
+                               DO UPDATE SET range_low    = EXCLUDED.range_low,
+                                             range_medium = EXCLUDED.range_medium,
+                                             range_high   = EXCLUDED.range_high,
+                                             updated_at   = NOW()"#,
+                        )
+                        .bind(id)
+                        .bind(range["series_id"].as_i64())
+                        .bind(range["range_low"].as_f64())
+                        .bind(range["range_medium"].as_f64())
+                        .bind(range["range_high"].as_f64())
+                        .execute(&mut **tx)
+                        .await?;
+                    }
+                }
+
                 let feature_type = data["feature_type"].as_str();
                 let location = if data["location"].is_null() {
                     None
@@ -367,9 +544,9 @@ async fn apply_proposal(
                 sqlx::query(
                     r#"UPDATE features
                        SET feature_type = COALESCE($1::feature_type, feature_type),
-                           metadata = COALESCE($2, metadata),
-                           location = COALESCE(ST_GeomFromGeoJSON($3), location),
-                           updated_at = NOW()
+                           metadata     = COALESCE($2, metadata),
+                           location     = COALESCE(ST_GeomFromGeoJSON($3), location),
+                           updated_at   = NOW()
                        WHERE id = $4"#,
                 )
                 .bind(feature_type)

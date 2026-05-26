@@ -6,12 +6,12 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
-import WaterChart from "@/components/charts/water/WaterChart";
 import {
 	TIME_RANGE_OPTIONS,
-	typeLabel,
 	type TimeRange,
+	typeLabel,
 } from "@/components/charts/water/types";
+import WaterChart from "@/components/charts/water/WaterChart";
 import type { WaterRangeWithStatus } from "@/lib/api";
 
 interface GaugeChartPanelProps {

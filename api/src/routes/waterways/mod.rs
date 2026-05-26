@@ -1,7 +1,5 @@
 mod comments;
-mod feature_proposals;
 mod features;
-mod proposals;
 mod sections;
 mod water_ranges;
 mod water_status;
@@ -117,44 +115,6 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
             .delete_with(
                 comments::delete_feature_comment,
                 comments::delete_feature_comment_docs,
-            ),
-        )
-        // Waterway & section proposals
-        .api_route(
-            "/proposals",
-            get_with(
-                proposals::list_waterway_proposals,
-                proposals::list_waterway_proposals_docs,
-            ),
-        )
-        .api_route(
-            "/proposals/{proposal_id}",
-            get_with(
-                proposals::get_waterway_proposal,
-                proposals::get_waterway_proposal_docs,
-            )
-            .patch_with(
-                proposals::review_waterway_proposal,
-                proposals::review_waterway_proposal_docs,
-            ),
-        )
-        // Feature proposals scoped by waterway
-        .api_route(
-            "/{waterway_id}/features/proposals",
-            get_with(
-                feature_proposals::list_feature_proposals,
-                feature_proposals::list_feature_proposals_docs,
-            ),
-        )
-        .api_route(
-            "/{waterway_id}/features/proposals/{proposal_id}",
-            get_with(
-                feature_proposals::get_feature_proposal,
-                feature_proposals::get_feature_proposal_docs,
-            )
-            .patch_with(
-                feature_proposals::review_feature_proposal,
-                feature_proposals::review_feature_proposal_docs,
             ),
         )
         // Feature water ranges

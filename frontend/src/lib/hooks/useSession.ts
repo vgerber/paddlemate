@@ -13,6 +13,7 @@ export interface Session {
 		username: string;
 	} | null;
 	isAuthenticated: boolean;
+	isAdmin: boolean;
 	isLoading: boolean;
 	accessToken: string | null;
 }
@@ -25,14 +26,15 @@ interface UseSessionReturn extends Session {
 
 function userToSession(
 	user: User | null,
-): Pick<Session, "user" | "accessToken"> {
+): Pick<Session, "user" | "accessToken" | "isAdmin"> {
 	if (!user || user.expired) {
-		return { user: null, accessToken: null };
+		return { user: null, accessToken: null, isAdmin: false };
 	}
 	const profile = userToProfile(user);
 	return {
 		user: { id: profile.userId, username: profile.username },
 		accessToken: user.access_token,
+		isAdmin: profile.isAdmin,
 	};
 }
 
@@ -136,11 +138,12 @@ export function useSession(): UseSessionReturn {
 	}, []);
 
 	const isLoading = oidcUser === undefined || isRenewing;
-	const { user, accessToken } = userToSession(oidcUser ?? null);
+	const { user, accessToken, isAdmin } = userToSession(oidcUser ?? null);
 
 	return {
 		user,
 		isAuthenticated: !!accessToken,
+		isAdmin,
 		isLoading,
 		accessToken,
 		login,

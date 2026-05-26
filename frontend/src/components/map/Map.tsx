@@ -85,6 +85,8 @@ interface WaterwayMapProps {
 	// Put-in / take-out picking
 	putIn?: { lat: number; lon: number } | null;
 	takeOut?: { lat: number; lon: number } | null;
+	featureVertices?: { lng: number; lat: number }[];
+	featureGeomType?: "Point" | "LineString" | "Polygon";
 	onPickPutIn?: (lat: number, lon: number) => void;
 	onPickTakeOut?: (lat: number, lon: number) => void;
 	placingFeature?: boolean;
@@ -110,6 +112,8 @@ export default function WaterwayMap({
 	onSectionToggle,
 	putIn,
 	takeOut,
+	featureVertices,
+	featureGeomType,
 	onPickPutIn,
 	onPickTakeOut,
 	placingFeature,
@@ -221,16 +225,16 @@ export default function WaterwayMap({
 				f.layer.id === "sections-line-casing" ||
 				f.layer.id === "sections-line-hitbox",
 		);
+		if (placingFeature && onMapClick) {
+			onMapClick(e.lngLat.lng, e.lngLat.lat);
+			return;
+		}
 		if (sectionFeature?.id !== undefined) {
 			if (onSectionToggle) {
 				onSectionToggle(Number(sectionFeature.id));
 			} else if (onSectionClick) {
 				onSectionClick(Number(sectionFeature.id));
 			}
-			return;
-		}
-		if (placingFeature && onMapClick) {
-			onMapClick(e.lngLat.lng, e.lngLat.lat);
 		}
 	};
 
@@ -558,6 +562,80 @@ export default function WaterwayMap({
 						</div>
 					</Marker>
 				)}
+
+				{featureVertices && featureVertices.length >= 2 && (
+					<Source
+						id="feature-draft"
+						type="geojson"
+						data={
+							featureGeomType === "Polygon" && featureVertices.length >= 3
+								? {
+										type: "Feature" as const,
+										geometry: {
+											type: "Polygon" as const,
+											coordinates: [
+												[
+													...featureVertices.map((v) => [v.lng, v.lat]),
+													[featureVertices[0].lng, featureVertices[0].lat],
+												],
+											],
+										},
+										properties: {},
+									}
+								: {
+										type: "Feature" as const,
+										geometry: {
+											type: "LineString" as const,
+											coordinates: featureVertices.map((v) => [v.lng, v.lat]),
+										},
+										properties: {},
+									}
+						}
+					>
+						{featureGeomType === "Polygon" && featureVertices.length >= 3 && (
+							<Layer
+								id="feature-draft-fill"
+								type="fill"
+								paint={{
+									"fill-color": "#c2cf47",
+									"fill-opacity": 0.2,
+								}}
+							/>
+						)}
+						<Layer
+							id="feature-draft-line"
+							type="line"
+							paint={{
+								"line-color": "#c2cf47",
+								"line-width": 2,
+								"line-dasharray": [3, 2],
+							}}
+						/>
+					</Source>
+				)}
+				{featureVertices?.map((v, i) => (
+					<Marker key={i} latitude={v.lat} longitude={v.lng} anchor="center">
+						<div
+							style={{
+								width: featureVertices.length > 1 ? 20 : 18,
+								height: featureVertices.length > 1 ? 20 : 18,
+								borderRadius: "50%",
+								background: "#c2cf47",
+								color: "#1a1a1a",
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								fontSize: 11,
+								fontWeight: 700,
+								border: "2px solid white",
+								boxShadow: "0 1px 4px rgba(0,0,0,0.6)",
+								pointerEvents: "none",
+							}}
+						>
+							{featureVertices.length > 1 ? i + 1 : null}
+						</div>
+					</Marker>
+				))}
 
 				{areaCircle && (
 					<Marker

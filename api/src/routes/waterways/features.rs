@@ -34,6 +34,7 @@ pub struct CreateFeatureBody {
     #[serde(default = "default_metadata")]
     pub metadata: Value,
     pub location: Geometry,
+    pub name: Option<String>,
 }
 
 pub async fn create_feature(
@@ -68,7 +69,15 @@ pub async fn create_feature(
         )
         .await
         {
-            Ok(feature) => (StatusCode::CREATED, Json(feature)).into_response(),
+            Ok(mut feature) => {
+                if let Some(name) = &body.name {
+                    if let Ok(n) = features::upsert_name(&app.pg_pool, feature.id, "en", name).await
+                    {
+                        feature.names.push(n);
+                    }
+                }
+                (StatusCode::CREATED, Json(feature)).into_response()
+            }
             Err(err) => {
                 tracing::error!("Error creating feature: {}", err);
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
@@ -82,6 +91,7 @@ pub async fn create_feature(
         "feature_type": body.feature_type,
         "metadata": body.metadata,
         "location": body.location,
+        "name": body.name,
     });
     match proposals::insert_proposal(
         &app.pg_pool,
@@ -451,6 +461,7 @@ struct CreateFeatureBodyDoc {
     feature_type: FeatureType,
     metadata: Value,
     location: Geometry,
+    name: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

@@ -6,10 +6,10 @@ import { useMemo, useState } from "react";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import SeriesChart from "./SeriesChart";
 import {
-	TIME_RANGE_OPTIONS,
 	fromForRange,
-	typeLabel,
+	TIME_RANGE_OPTIONS,
 	type TimeRange,
+	typeLabel,
 } from "./types";
 
 export interface WaterChartProps {

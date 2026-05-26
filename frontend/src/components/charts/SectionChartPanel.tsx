@@ -7,12 +7,12 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import WaterChart from "@/components/charts/water/WaterChart";
 import {
 	TIME_RANGE_OPTIONS,
-	typeLabel,
 	type TimeRange,
+	typeLabel,
 } from "@/components/charts/water/types";
+import WaterChart from "@/components/charts/water/WaterChart";
 import { useSession } from "@/lib/hooks/useSession";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
 import { useWaterStatus } from "@/lib/hooks/useWaterways";

@@ -38,14 +38,22 @@ export type { User };
 export function userToProfile(user: User): {
 	userId: string;
 	username: string;
+	isAdmin: boolean;
 } {
 	const profile = user.profile;
+	// The OIDC profile shape extends JwtPayload which doesn't include realm_access;
+	// cast through unknown to access the Keycloak-specific claim.
+	const keycloakProfile = profile as unknown as {
+		realm_access?: { roles?: string[] };
+	};
+	const roles: string[] = keycloakProfile.realm_access?.roles ?? [];
 	return {
 		userId: profile.sub,
 		username:
 			(profile.preferred_username as string | undefined) ||
 			profile.name ||
 			profile.sub,
+		isAdmin: roles.includes("server_admin"),
 	};
 }
 

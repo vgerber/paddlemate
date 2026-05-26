@@ -9,9 +9,15 @@ export type SectionWithFeatures = components["schemas"]["SectionWithFeatures"];
 export type Feature = components["schemas"]["Feature"];
 export type Comment = components["schemas"]["Comment"];
 export type Proposal = components["schemas"]["Proposal"];
+export type ProposalEntityType = components["schemas"]["ProposalEntityType"];
+export type ProposalOperation = components["schemas"]["ProposalOperation"];
+export type ProposalStatus = components["schemas"]["ProposalStatus"];
+export type ReviewRequest = components["schemas"]["ReviewRequest"];
+export type FeatureType = components["schemas"]["FeatureType"];
 export type PaginatedResponse =
 	components["schemas"]["PaginatedResponse_for_Waterway"];
 export type CreateFeatureInput = components["schemas"]["CreateFeatureBody"];
+export type UpdateFeatureInput = components["schemas"]["UpdateFeatureBody"];
 export type SectionWaterStatus = components["schemas"]["SectionWaterStatus"];
 export type WaterRangeWithStatus =
 	components["schemas"]["WaterRangeWithStatus"];
@@ -19,6 +25,10 @@ export type GaugeReading = components["schemas"]["GaugeReading"];
 
 export type WaterwayFilters = NonNullable<
 	operations["list_waterways"]["parameters"]["query"]
+>;
+
+export type ProposalFilters = NonNullable<
+	operations["list_proposals"]["parameters"]["query"]
 >;
 
 function assertData<T>(data: T | undefined): T {
@@ -46,6 +56,30 @@ export const sectionsApi = {
 		const { data } = await client.GET(
 			"/api/v1/waterways/{waterway_id}/sections/{section_id}",
 			{ params: { path: { waterway_id: waterwayId, section_id: sectionId } } },
+		);
+		return assertData(data);
+	},
+	create: async (
+		waterwayId: number,
+		body: components["schemas"]["CreateSectionBody"],
+	) => {
+		const { data } = await client.POST(
+			"/api/v1/waterways/{waterway_id}/sections",
+			{ params: { path: { waterway_id: waterwayId } }, body },
+		);
+		return assertData(data);
+	},
+	update: async (
+		waterwayId: number,
+		sectionId: number,
+		body: components["schemas"]["UpdateSectionBody"],
+	) => {
+		const { data } = await client.PUT(
+			"/api/v1/waterways/{waterway_id}/sections/{section_id}",
+			{
+				params: { path: { waterway_id: waterwayId, section_id: sectionId } },
+				body,
+			},
 		);
 		return assertData(data);
 	},
@@ -89,6 +123,41 @@ export const featuresApi = {
 			},
 		);
 		return assertData(data);
+	},
+	update: async (
+		waterwayId: number,
+		sectionId: number,
+		featureId: number,
+		input: UpdateFeatureInput,
+	) => {
+		const { data } = await client.PUT(
+			"/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}",
+			{
+				params: {
+					path: {
+						waterway_id: waterwayId,
+						section_id: sectionId,
+						feature_id: featureId,
+					},
+				},
+				body: input,
+			},
+		);
+		return assertData(data);
+	},
+	remove: async (waterwayId: number, sectionId: number, featureId: number) => {
+		await client.DELETE(
+			"/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}",
+			{
+				params: {
+					path: {
+						waterway_id: waterwayId,
+						section_id: sectionId,
+						feature_id: featureId,
+					},
+				},
+			},
+		);
 	},
 };
 
@@ -173,6 +242,39 @@ export const descentsApi = {
 	remove: async (id: number) => {
 		await client.DELETE("/api/v1/descents/{descent_id}", {
 			params: { path: { descent_id: id } },
+		});
+	},
+};
+
+export const proposalsApi = {
+	list: async (filters: ProposalFilters = {}) => {
+		const { data } = await client.GET("/api/v1/proposals", {
+			params: { query: filters },
+		});
+		return assertData(data);
+	},
+	get: async (id: number) => {
+		const { data } = await client.GET("/api/v1/proposals/{proposal_id}", {
+			params: { path: { proposal_id: id } },
+		});
+		return assertData(data);
+	},
+	review: async (id: number, body: ReviewRequest) => {
+		const { data } = await client.PATCH("/api/v1/proposals/{proposal_id}", {
+			params: { path: { proposal_id: id } },
+			body,
+		});
+		return assertData(data);
+	},
+	vote: async (id: number, vote: 1 | -1) => {
+		await client.POST("/api/v1/proposals/{proposal_id}/vote", {
+			params: { path: { proposal_id: id } },
+			body: { vote },
+		});
+	},
+	unvote: async (id: number) => {
+		await client.DELETE("/api/v1/proposals/{proposal_id}/vote", {
+			params: { path: { proposal_id: id } },
 		});
 	},
 };

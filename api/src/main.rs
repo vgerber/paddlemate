@@ -24,8 +24,9 @@ use paddlemate_api::{
         docs::docs_routes,
         gauges::gauges_routes,
         groups::group_routes,
+        proposals::proposals_routes,
         tokens::tokens_routes,
-        users::{list_my_proposals, list_my_proposals_docs, list_users, list_users_docs},
+        users::{list_users, list_users_docs},
         waterways::waterways_routes,
     },
     state::{AppState, KeycloakState},
@@ -158,10 +159,6 @@ async fn main() {
         .nest_api_service("/tokens", tokens_routes(state.clone()))
         .nest_api_service("/groups", group_routes(state.clone()))
         .api_route("/users", get_with(list_users, list_users_docs))
-        .api_route(
-            "/users/me/proposals",
-            get_with(list_my_proposals, list_my_proposals_docs),
-        )
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth,
@@ -171,6 +168,7 @@ async fn main() {
         .nest_api_service("/waterways", waterways_routes(state.clone()))
         .nest_api_service("/gauges", gauges_routes(state.clone()))
         .nest_api_service("/descents", descents_routes(state.clone()))
+        .nest_api_service("/proposals", proposals_routes(state.clone()))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth_optional,

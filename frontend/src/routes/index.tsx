@@ -9,6 +9,7 @@ import WaterwayMap from "@/components/map/Map";
 import WaterwaySearchPanel from "@/components/search/WaterwaySearchPanel";
 import WaterwayDetailPanel, {
 	type DetailTab,
+	type SuggestMode,
 } from "@/components/waterway/WaterwayDetailPanel";
 import { waterwaysApi } from "@/lib/api";
 import { useFilteredSections } from "@/lib/hooks/useFilteredSections";
@@ -57,6 +58,30 @@ function Home() {
 	const [searchWaterwayIds, setSearchWaterwayIds] = useState<number[]>([]);
 	const [labelMode, setLabelMode] = useState<"section" | "river">("section");
 	const [areaLocked, setAreaLocked] = useState(false);
+
+	// Feature suggestion: pick geometry vertices from the map
+	const [featurePickingActive, setFeaturePickingActive] = useState(false);
+	const [featureGeomType, setFeatureGeomType] = useState<
+		"Point" | "LineString" | "Polygon"
+	>("Point");
+	const [featureVertices, setFeatureVertices] = useState<
+		{ lng: number; lat: number }[]
+	>([]);
+
+	// Section suggestion: pick put-in and take-out from the map
+	const [sectionPickingFor, setSectionPickingFor] = useState<
+		"put-in" | "take-out" | null
+	>(null);
+	const [sectionPutIn, setSectionPutIn] = useState<{
+		lat: number;
+		lon: number;
+	} | null>(null);
+	const [sectionTakeOut, setSectionTakeOut] = useState<{
+		lat: number;
+		lon: number;
+	} | null>(null);
+
+	const [suggestMode, setSuggestMode] = useState<SuggestMode | null>(null);
 
 	// Derive areaCircle from URL params
 	const areaCircle: AreaCircle | null =
@@ -194,6 +219,23 @@ function Home() {
 		setSelectedGaugeId((prev) => (prev === pin.id ? null : pin.id));
 	}, []);
 
+	const handleMapPick = useCallback(
+		(lng: number, lat: number) => {
+			if (featurePickingActive) {
+				setFeatureVertices((prev) => [...prev, { lng, lat }]);
+				// Don't stop — form controls when picking ends
+				return;
+			} else if (sectionPickingFor === "put-in") {
+				setSectionPutIn({ lat, lon: lng });
+				setSectionPickingFor(null);
+			} else if (sectionPickingFor === "take-out") {
+				setSectionTakeOut({ lat, lon: lng });
+				setSectionPickingFor(null);
+			}
+		},
+		[featurePickingActive, sectionPickingFor],
+	);
+
 	const handleGaugeSelect = useCallback((gaugeId: number) => {
 		setSelectedGaugeId((prev) => (prev === gaugeId ? null : gaugeId));
 	}, []);
@@ -211,94 +253,155 @@ function Home() {
 	};
 
 	return (
-		<Box sx={{ display: "flex", height: "calc(100vh - 48px)" }}>
-			{/* Sidebar */}
-			<Box
-				sx={{
-					width: 360,
-					display: "flex",
-					flexDirection: "column",
-					overflow: "hidden",
-					borderRight: "1px solid",
-					borderColor: "divider",
-					flexShrink: 0,
-				}}
-			>
-				{selectedWaterwayId == null ? (
-					<WaterwaySearchPanel
-						onSelect={setSelectedWaterwayId}
-						onWaterwaysChange={setSearchWaterwayIds}
-						areaCircle={areaCircle}
-						onAreaCircleChange={setAreaCircle}
-						areaLocked={areaLocked}
-						onAreaLockedChange={setAreaLocked}
-						filteredSections={filteredSearchSections}
-						selectedSectionId={selectedSectionId}
-						onSectionClick={handleSectionClick}
-						waterwayNames={waterwayNames}
-					/>
-				) : (
-					<WaterwayDetailPanel
-						waterwayId={selectedWaterwayId}
-						selectedSectionId={selectedSectionId}
-						selectedGaugeId={selectedGaugeId}
-						gaugeRanges={gaugeRanges}
-						tab={detailTab}
-						onTabChange={setDetailTab}
-						onBack={() => setSelectedWaterwayId(undefined)}
-						onSectionClick={handleSectionClick}
-						onGaugeSelect={handleGaugeSelect}
-					/>
-				)}
-			</Box>
-
-			{/* Map + chart */}
-			<Box
-				sx={{
-					flex: 1,
-					display: "flex",
-					flexDirection: "column",
-					overflow: "hidden",
-				}}
-			>
-				<Box sx={{ flex: 1, minHeight: 0 }}>
-					<WaterwayMap
-						sections={
-							selectedWaterwayId != null ? sections : filteredSearchSections
-						}
-						selectedSectionId={selectedSectionId}
-						onSectionClick={handleSectionClick}
-						gaugePins={gaugePins}
-						selectedGaugePinId={selectedGaugeId}
-						onGaugeClick={handleGaugeClick}
-						areaCircle={selectedWaterwayId == null ? areaCircle : null}
-						areaLocked={areaLocked}
-						onAreaCircleChange={
-							selectedWaterwayId == null && !areaLocked
-								? setAreaCircle
-								: undefined
-						}
-						waterwayNames={waterwayNames}
-						labelMode={labelMode}
-						onLabelModeChange={setLabelMode}
-						sectionLevels={
-							selectedWaterwayId != null ? sectionLevels : searchSectionLevels
-						}
-					/>
+		<>
+			<Box sx={{ display: "flex", height: "calc(100vh - 48px)" }}>
+				{/* Sidebar */}
+				<Box
+					sx={{
+						width: 360,
+						display: "flex",
+						flexDirection: "column",
+						overflow: "hidden",
+						borderRight: "1px solid",
+						borderColor: "divider",
+						flexShrink: 0,
+					}}
+				>
+					{selectedWaterwayId == null ? (
+						<WaterwaySearchPanel
+							onSelect={setSelectedWaterwayId}
+							onWaterwaysChange={setSearchWaterwayIds}
+							areaCircle={areaCircle}
+							onAreaCircleChange={setAreaCircle}
+							areaLocked={areaLocked}
+							onAreaLockedChange={setAreaLocked}
+							filteredSections={filteredSearchSections}
+							selectedSectionId={selectedSectionId}
+							onSectionClick={handleSectionClick}
+							waterwayNames={waterwayNames}
+						/>
+					) : (
+						<WaterwayDetailPanel
+							waterwayId={selectedWaterwayId}
+							selectedSectionId={selectedSectionId}
+							selectedGaugeId={selectedGaugeId}
+							gaugeRanges={gaugeRanges}
+							tab={detailTab}
+							onTabChange={setDetailTab}
+							onBack={() => {
+								setSuggestMode(null);
+								setSelectedWaterwayId(undefined);
+							}}
+							onSectionClick={handleSectionClick}
+							suggestMode={suggestMode}
+							onSuggestModeChange={(mode) => {
+								setSuggestMode(mode);
+								if (mode === null) {
+									setSectionPutIn(null);
+									setSectionTakeOut(null);
+									setSectionPickingFor(null);
+									setFeatureVertices([]);
+									setFeaturePickingActive(false);
+									setFeatureGeomType("Point");
+								}
+							}}
+							onGaugeSelect={handleGaugeSelect}
+							sectionPutIn={sectionPutIn}
+							sectionTakeOut={sectionTakeOut}
+							sectionPickingFor={sectionPickingFor}
+							onStartPickPutIn={() => setSectionPickingFor("put-in")}
+							onStartPickTakeOut={() => setSectionPickingFor("take-out")}
+							onSectionDraftClear={() => {
+								setSectionPutIn(null);
+								setSectionTakeOut(null);
+								setSectionPickingFor(null);
+							}}
+							featureVertices={featureVertices}
+							featureGeomType={featureGeomType}
+							featurePickingActive={featurePickingActive}
+							onStartPickFeature={() => setFeaturePickingActive(true)}
+							onStopPickFeature={() => setFeaturePickingActive(false)}
+							onPopFeatureVertex={() =>
+								setFeatureVertices((prev) => prev.slice(0, -1))
+							}
+							onRemoveFeatureVertex={(i) =>
+								setFeatureVertices((prev) => prev.filter((_, idx) => idx !== i))
+							}
+							onFeatureGeomTypeChange={(t) => {
+								setFeatureGeomType(t);
+								setFeatureVertices([]);
+								setFeaturePickingActive(false);
+							}}
+							onFeatureDraftClear={() => {
+								setFeatureVertices([]);
+								setFeaturePickingActive(false);
+							}}
+						/>
+					)}
 				</Box>
-				{selectedGaugeId != null && selectedGaugeRanges.length > 0 ? (
-					<GaugeChartPanel
-						ranges={selectedGaugeRanges}
-						onClose={() => setSelectedGaugeId(null)}
-					/>
-				) : selectedSectionId != null && selectedWaterwayId != null ? (
-					<SectionChartPanel
-						waterwayId={selectedWaterwayId}
-						sectionId={selectedSectionId}
-						sectionName={sections.find((s) => s.id === selectedSectionId)?.name}
-					/>
-				) : null}
+
+				{/* Map + chart */}
+				<Box
+					sx={{
+						flex: 1,
+						display: "flex",
+						flexDirection: "column",
+						overflow: "hidden",
+					}}
+				>
+					<Box sx={{ flex: 1, minHeight: 0, position: "relative" }}>
+						<WaterwayMap
+							sections={
+								selectedWaterwayId != null ? sections : filteredSearchSections
+							}
+							selectedSectionId={selectedSectionId}
+							onSectionClick={suggestMode ? undefined : handleSectionClick}
+							gaugePins={gaugePins}
+							selectedGaugePinId={selectedGaugeId}
+							onGaugeClick={handleGaugeClick}
+							areaCircle={selectedWaterwayId == null ? areaCircle : null}
+							areaLocked={areaLocked}
+							onAreaCircleChange={
+								selectedWaterwayId == null && !areaLocked
+									? setAreaCircle
+									: undefined
+							}
+							waterwayNames={waterwayNames}
+							labelMode={labelMode}
+							onLabelModeChange={setLabelMode}
+							sectionLevels={
+								selectedWaterwayId != null ? sectionLevels : searchSectionLevels
+							}
+							putIn={sectionPutIn}
+							takeOut={sectionTakeOut}
+							featureVertices={featureVertices}
+							featureGeomType={featureGeomType}
+							placingFeature={
+								featurePickingActive || sectionPickingFor !== null
+							}
+							onMapClick={
+								featurePickingActive || sectionPickingFor !== null
+									? handleMapPick
+									: undefined
+							}
+						/>
+					</Box>
+					{selectedGaugeId != null && selectedGaugeRanges.length > 0 ? (
+						<GaugeChartPanel
+							ranges={selectedGaugeRanges}
+							onClose={() => setSelectedGaugeId(null)}
+						/>
+					) : selectedSectionId != null && selectedWaterwayId != null ? (
+						<SectionChartPanel
+							waterwayId={selectedWaterwayId}
+							sectionId={selectedSectionId}
+							sectionName={
+								sections.find((s) => s.id === selectedSectionId)?.name
+							}
+						/>
+					) : null}
+				</Box>
 			</Box>
-		</Box>
+		</>
 	);
 }
