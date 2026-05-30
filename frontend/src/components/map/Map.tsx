@@ -614,7 +614,12 @@ export default function WaterwayMap({
 					</Source>
 				)}
 				{featureVertices?.map((v, i) => (
-					<Marker key={i} latitude={v.lat} longitude={v.lng} anchor="center">
+					<Marker
+						key={`fv-${v.lat},${v.lng}`}
+						latitude={v.lat}
+						longitude={v.lng}
+						anchor="center"
+					>
 						<div
 							style={{
 								width: featureVertices.length > 1 ? 20 : 18,

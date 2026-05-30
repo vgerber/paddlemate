@@ -75,7 +75,6 @@ export default function WaterwayDetailPanel({
 	featurePickingActive,
 	onStartPickFeature,
 	onStopPickFeature,
-	onPopFeatureVertex,
 	onRemoveFeatureVertex,
 	onFeatureGeomTypeChange,
 	onFeatureDraftClear,
@@ -177,7 +176,6 @@ export default function WaterwayDetailPanel({
 						pickingActive={featurePickingActive ?? false}
 						onRequestPick={() => onStartPickFeature?.()}
 						onStopPick={() => onStopPickFeature?.()}
-						onPopVertex={() => onPopFeatureVertex?.()}
 						onRemoveVertex={(i) => onRemoveFeatureVertex?.(i)}
 						onGeomTypeChange={(t) => onFeatureGeomTypeChange?.(t)}
 						onClearVertices={() => onFeatureDraftClear?.()}

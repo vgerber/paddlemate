@@ -1,5 +1,5 @@
+import CloseIcon from "@mui/icons-material/Close";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import UndoIcon from "@mui/icons-material/Undo";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -47,7 +47,6 @@ interface SuggestFeatureFormProps {
 	pickingActive: boolean;
 	onRequestPick: () => void;
 	onStopPick: () => void;
-	onPopVertex: () => void;
 	onRemoveVertex?: (i: number) => void;
 	onClearVertices: () => void;
 	onCancel: () => void;
@@ -63,7 +62,6 @@ export default function SuggestFeatureForm({
 	pickingActive,
 	onRequestPick,
 	onStopPick,
-	onPopVertex,
 	onRemoveVertex,
 	onClearVertices,
 	onCancel,
@@ -177,8 +175,23 @@ export default function SuggestFeatureForm({
 
 			{geomType === "Point" ? (
 				vertices.length > 0 ? (
-					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-						<LocationOnIcon fontSize="small" color="primary" />
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							gap: 1,
+							bgcolor: "action.hover",
+							borderRadius: 1,
+							px: 1,
+							py: 0.5,
+							border: "1px solid",
+							borderColor: "divider",
+						}}
+					>
+						<LocationOnIcon
+							fontSize="small"
+							sx={{ color: "text.disabled", flexShrink: 0 }}
+						/>
 						<Typography
 							variant="body2"
 							sx={{ flex: 1, fontFamily: "monospace", fontSize: "0.75rem" }}
@@ -229,56 +242,70 @@ export default function SuggestFeatureForm({
 									? `${vertices.length} point${vertices.length !== 1 ? "s" : ""} \u2014 ${minVertices - vertices.length} more needed`
 									: `${vertices.length} point${vertices.length !== 1 ? "s" : ""} placed`}
 						</Typography>
-						{vertices.length > 0 && (
-							<Button
-								size="small"
-								onClick={onPopVertex}
-								disabled={submitting}
-								startIcon={
-									<UndoIcon sx={{ fontSize: "0.875rem !important" }} />
-								}
-							>
-								Undo
-							</Button>
-						)}
 					</Box>
 					{vertices.length > 0 && (
-						<Box
-							sx={{
-								display: "flex",
-								flexWrap: "wrap",
-								gap: 0.5,
-							}}
-						>
-							{vertices.map((_, i) => (
+						<Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+							{vertices.map((v, i) => (
 								<Box
-									key={i}
-									component="span"
-									onClick={() => !submitting && onRemoveVertex?.(i)}
+									key={`${v.lat},${v.lng}`}
 									sx={{
-										display: "inline-flex",
+										display: "flex",
 										alignItems: "center",
-										gap: 0.25,
-										px: 0.75,
-										py: 0.25,
+										gap: 1,
+										bgcolor: "action.hover",
 										borderRadius: 1,
+										px: 1,
+										py: 0.5,
 										border: "1px solid",
 										borderColor: "divider",
-										fontSize: "0.7rem",
-										cursor: onRemoveVertex ? "pointer" : "default",
-										"&:hover": onRemoveVertex
-											? {
-													borderColor: "error.main",
-													color: "error.main",
-												}
-											: {},
 									}}
 								>
-									{i + 1}
+									<Typography
+										variant="caption"
+										sx={{
+											color: "text.disabled",
+											minWidth: "1rem",
+											textAlign: "center",
+											flexShrink: 0,
+										}}
+									>
+										{i + 1}
+									</Typography>
+									<Typography
+										variant="body2"
+										sx={{
+											flex: 1,
+											fontFamily: "monospace",
+											fontSize: "0.75rem",
+										}}
+									>
+										{coordLabel(v)}
+									</Typography>
 									{onRemoveVertex && (
-										<span style={{ opacity: 0.5, fontSize: "0.65rem" }}>
-											&times;
-										</span>
+										<Box
+											component="span"
+											onClick={() => !submitting && onRemoveVertex(i)}
+											sx={{
+												display: "inline-flex",
+												alignItems: "center",
+												justifyContent: "center",
+												width: 20,
+												height: 20,
+												borderRadius: 0.5,
+												bgcolor: "action.selected",
+												color: "text.disabled",
+												fontSize: "0.8rem",
+												cursor: submitting ? "default" : "pointer",
+												flexShrink: 0,
+												"&:hover": submitting
+													? {}
+													: {
+															color: "text.secondary",
+														},
+											}}
+										>
+											<CloseIcon sx={{ fontSize: "0.75rem" }} />
+										</Box>
 									)}
 								</Box>
 							))}

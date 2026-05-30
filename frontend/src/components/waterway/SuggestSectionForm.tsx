@@ -174,10 +174,17 @@ export default function SuggestSectionForm({
 					>
 						<Chip
 							size="small"
-							icon={<LocationOnIcon sx={{ fontSize: "0.875rem !important" }} />}
+							icon={
+								<LocationOnIcon
+									sx={{
+										fontSize: "0.875rem !important",
+										color: "text.secondary !important",
+									}}
+								/>
+							}
 							label={coordLabel(putIn)}
-							color="primary"
-							variant="outlined"
+							variant="filled"
+							sx={{ bgcolor: "action.selected" }}
 						/>
 						<IconButton
 							size="small"
@@ -221,10 +228,17 @@ export default function SuggestSectionForm({
 					>
 						<Chip
 							size="small"
-							icon={<LocationOnIcon sx={{ fontSize: "0.875rem !important" }} />}
+							icon={
+								<LocationOnIcon
+									sx={{
+										fontSize: "0.875rem !important",
+										color: "text.secondary !important",
+									}}
+								/>
+							}
 							label={coordLabel(takeOut)}
-							color="secondary"
-							variant="outlined"
+							variant="filled"
+							sx={{ bgcolor: "action.selected" }}
 						/>
 						<IconButton
 							size="small"
