@@ -89,6 +89,7 @@ interface WaterwayMapProps {
 	featureGeomType?: "Point" | "LineString" | "Polygon";
 	onPickPutIn?: (lat: number, lon: number) => void;
 	onPickTakeOut?: (lat: number, lon: number) => void;
+	sectionPreviewCoords?: [number, number][];
 	placingFeature?: boolean;
 	onMapClick?: (lng: number, lat: number) => void;
 	gaugePins?: GaugePin[];
@@ -116,6 +117,7 @@ export default function WaterwayMap({
 	featureGeomType,
 	onPickPutIn,
 	onPickTakeOut,
+	sectionPreviewCoords,
 	placingFeature,
 	onMapClick,
 	gaugePins,
@@ -512,19 +514,48 @@ export default function WaterwayMap({
 					</Source>
 				)}
 
+				{/* Section draft preview line — dashed straight until OSM snap resolves */}
+				{putIn && takeOut && (
+					<Source
+						id="section-preview"
+						type="geojson"
+						data={{
+							type: "Feature" as const,
+							geometry: {
+								type: "LineString" as const,
+								coordinates: sectionPreviewCoords ?? [
+									[putIn.lon, putIn.lat],
+									[takeOut.lon, takeOut.lat],
+								],
+							},
+							properties: {},
+						}}
+					>
+						<Layer
+							id="section-preview-line"
+							type="line"
+							paint={{
+								"line-color": "#c2cf47",
+								"line-width": 2,
+								...(sectionPreviewCoords ? {} : { "line-dasharray": [4, 3] }),
+							}}
+						/>
+					</Source>
+				)}
+
 				{putIn && (
 					<Marker latitude={putIn.lat} longitude={putIn.lon} anchor="center">
 						<div
 							style={{
-								width: 22,
-								height: 22,
+								width: 20,
+								height: 20,
 								borderRadius: "50%",
-								background: "#0072B2",
-								color: "white",
+								background: "#c2cf47",
+								color: "#1a1a1a",
 								display: "flex",
 								alignItems: "center",
 								justifyContent: "center",
-								fontSize: 12,
+								fontSize: 11,
 								fontWeight: 700,
 								border: "2px solid white",
 								boxShadow: "0 1px 4px rgba(0,0,0,0.6)",
@@ -543,15 +574,15 @@ export default function WaterwayMap({
 					>
 						<div
 							style={{
-								width: 22,
-								height: 22,
+								width: 20,
+								height: 20,
 								borderRadius: "50%",
-								background: "#D55E00",
-								color: "white",
+								background: "#c2cf47",
+								color: "#1a1a1a",
 								display: "flex",
 								alignItems: "center",
 								justifyContent: "center",
-								fontSize: 12,
+								fontSize: 11,
 								fontWeight: 700,
 								border: "2px solid white",
 								boxShadow: "0 1px 4px rgba(0,0,0,0.6)",
@@ -622,8 +653,8 @@ export default function WaterwayMap({
 					>
 						<div
 							style={{
-								width: featureVertices.length > 1 ? 20 : 18,
-								height: featureVertices.length > 1 ? 20 : 18,
+								width: 20,
+								height: 20,
 								borderRadius: "50%",
 								background: "#c2cf47",
 								color: "#1a1a1a",
@@ -637,7 +668,7 @@ export default function WaterwayMap({
 								pointerEvents: "none",
 							}}
 						>
-							{featureVertices.length > 1 ? i + 1 : null}
+							{i + 1}
 						</div>
 					</Marker>
 				))}

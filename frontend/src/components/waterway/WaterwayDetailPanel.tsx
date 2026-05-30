@@ -9,6 +9,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import SectionListItem from "@/components/waterway/SectionListItem";
 import SuggestFeatureForm from "@/components/waterway/SuggestFeatureForm";
@@ -40,6 +41,7 @@ interface WaterwayDetailPanelProps {
 	onStartPickPutIn?: () => void;
 	onStartPickTakeOut?: () => void;
 	onSectionDraftClear?: () => void;
+	onPreviewCoordsChange?: (coords: [number, number][] | null) => void;
 	// Feature draft (geometry picking coordinated with the map)
 	featureVertices?: { lng: number; lat: number }[];
 	featureGeomType?: "Point" | "LineString" | "Polygon";
@@ -70,6 +72,7 @@ export default function WaterwayDetailPanel({
 	onStartPickPutIn,
 	onStartPickTakeOut,
 	onSectionDraftClear,
+	onPreviewCoordsChange,
 	featureVertices,
 	featureGeomType,
 	featurePickingActive,
@@ -156,6 +159,7 @@ export default function WaterwayDetailPanel({
 				<Box sx={{ flex: 1, overflowY: "auto" }}>
 					<SuggestSectionForm
 						waterwayId={waterwayId}
+						waterwayName={waterway?.name ?? ""}
 						sections={sections}
 						putIn={sectionPutIn ?? null}
 						takeOut={sectionTakeOut ?? null}
@@ -164,6 +168,7 @@ export default function WaterwayDetailPanel({
 						onRequestPickTakeOut={() => onStartPickTakeOut?.()}
 						onCancel={exitSuggest}
 						onSubmitted={exitSuggest}
+						onPreviewCoordsChange={onPreviewCoordsChange}
 					/>
 				</Box>
 			) : suggestMode === "feature" && selectedSectionId != null ? (
@@ -267,15 +272,20 @@ export default function WaterwayDetailPanel({
 								borderColor: "divider",
 							}}
 						>
-							<Button
-								size="small"
-								startIcon={<AddIcon />}
-								variant="outlined"
-								fullWidth
-								onClick={() => onSuggestModeChange("section")}
-							>
-								New section
-							</Button>
+							<Tooltip title="Coming soon">
+								<span style={{ display: "contents" }}>
+									<Button
+										size="small"
+										startIcon={<AddIcon />}
+										variant="outlined"
+										fullWidth
+										disabled
+										onClick={() => onSuggestModeChange("section")}
+									>
+										New section
+									</Button>
+								</span>
+							</Tooltip>
 							{selectedSectionId != null && (
 								<Button
 									size="small"

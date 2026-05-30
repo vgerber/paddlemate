@@ -9,10 +9,11 @@ import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SectionWithFeatures } from "@/lib/api";
 import { sectionsApi } from "@/lib/api";
 import { waterwayKeys } from "@/lib/hooks/useWaterways";
+import { type Coord, fetchOsmRiver, snapSection } from "@/lib/riverSnap";
 
 /** Dot product of proposed direction vs. estimated river flow.
  *  Negative → proposed take-out is upstream of put-in. */
@@ -41,6 +42,8 @@ function downstreamDot(
 
 interface SuggestSectionFormProps {
 	waterwayId: number;
+	/** River name used for the Overpass geometry query. */
+	waterwayName: string;
 	sections: SectionWithFeatures[];
 	putIn: { lat: number; lon: number } | null;
 	takeOut: { lat: number; lon: number } | null;
@@ -49,10 +52,12 @@ interface SuggestSectionFormProps {
 	onRequestPickTakeOut: () => void;
 	onCancel: () => void;
 	onSubmitted: () => void;
+	onPreviewCoordsChange?: (coords: Coord[] | null) => void;
 }
 
 export default function SuggestSectionForm({
 	waterwayId,
+	waterwayName,
 	sections,
 	putIn,
 	takeOut,
@@ -61,6 +66,7 @@ export default function SuggestSectionForm({
 	onRequestPickTakeOut,
 	onCancel,
 	onSubmitted,
+	onPreviewCoordsChange,
 }: SuggestSectionFormProps) {
 	const queryClient = useQueryClient();
 	const [name, setName] = useState("");
@@ -69,6 +75,77 @@ export default function SuggestSectionForm({
 	const [description, setDescription] = useState("");
 	const [submitting, setSubmitting] = useState(false);
 	const [submitError, setSubmitError] = useState<string | null>(null);
+
+	// OSM river snap
+	type SnapStatus = "idle" | "loading" | "done" | "failed";
+	const [snapStatus, setSnapStatus] = useState<SnapStatus>("idle");
+	const [snappedCoords, setSnappedCoords] = useState<Coord[] | null>(null);
+	// Cache the fetched river so we only call Overpass once per waterway
+	const riverRef = useRef<Coord[] | null>(null);
+	const riverNameRef = useRef<string>("");
+
+	useEffect(() => {
+		if (!putIn || !takeOut || !waterwayName) return;
+
+		// Clear cached river if the waterway changed
+		if (riverNameRef.current !== waterwayName) {
+			riverRef.current = null;
+			riverNameRef.current = waterwayName;
+		}
+
+		const controller = new AbortController();
+
+		async function run() {
+			setSnapStatus("loading");
+
+			let river = riverRef.current;
+			if (!river) {
+				const pad = 0.05;
+				const bbox = {
+					south: Math.min(putIn.lat, takeOut.lat) - pad,
+					north: Math.max(putIn.lat, takeOut.lat) + pad,
+					west: Math.min(putIn.lon, takeOut.lon) - pad,
+					east: Math.max(putIn.lon, takeOut.lon) + pad,
+				};
+				try {
+					river = await fetchOsmRiver(waterwayName, bbox, controller.signal);
+					riverRef.current = river;
+				} catch (err) {
+					if (
+						!controller.signal.aborted &&
+						!(err instanceof Error && err.name === "AbortError")
+					) {
+						setSnapStatus("failed");
+						setSnappedCoords(null);
+					}
+					return;
+				}
+			}
+
+			if (!river) {
+				setSnapStatus("failed");
+				setSnappedCoords(null);
+				return;
+			}
+
+			const coords = snapSection(river, putIn, takeOut);
+			if (coords) {
+				setSnapStatus("done");
+				setSnappedCoords(coords);
+			} else {
+				setSnapStatus("failed");
+				setSnappedCoords(null);
+			}
+		}
+
+		run();
+		return () => controller.abort();
+	}, [putIn, takeOut, waterwayName]);
+
+	// Notify parent whenever the snapped coords change
+	useEffect(() => {
+		onPreviewCoordsChange?.(snappedCoords);
+	}, [snappedCoords, onPreviewCoordsChange]);
 
 	const hasLocation = putIn != null && takeOut != null;
 	const orderWrong =
@@ -81,6 +158,13 @@ export default function SuggestSectionForm({
 		setSubmitting(true);
 		setSubmitError(null);
 		try {
+			const coordinates: [number, number][] =
+				snappedCoords && snappedCoords.length >= 2
+					? snappedCoords
+					: [
+							[putIn.lon, putIn.lat],
+							[takeOut.lon, takeOut.lat],
+						];
 			await sectionsApi.create(waterwayId, {
 				name: name.trim(),
 				region: region.trim() || null,
@@ -88,10 +172,7 @@ export default function SuggestSectionForm({
 				description: description.trim() || null,
 				location: {
 					type: "LineString",
-					coordinates: [
-						[putIn.lon, putIn.lat],
-						[takeOut.lon, takeOut.lat],
-					],
+					coordinates,
 				} as never,
 			});
 			queryClient.invalidateQueries({
@@ -269,6 +350,14 @@ export default function SuggestSectionForm({
 					Put-in appears to be downstream of take-out — check the order.
 				</Alert>
 			)}
+
+			{/* Show a note only when OSM snap failed */}
+			{snapStatus === "failed" && hasLocation && (
+				<Typography variant="caption" color="text.disabled">
+					No OSM mapping found — straight line will be used.
+				</Typography>
+			)}
+
 			{submitError && (
 				<Alert severity="error" sx={{ py: 0.25, fontSize: "0.75rem" }}>
 					{submitError}

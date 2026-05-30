@@ -80,6 +80,9 @@ function Home() {
 		lat: number;
 		lon: number;
 	} | null>(null);
+	const [sectionPreviewCoords, setSectionPreviewCoords] = useState<
+		[number, number][] | null
+	>(null);
 
 	const [suggestMode, setSuggestMode] = useState<SuggestMode | null>(null);
 
@@ -300,6 +303,7 @@ function Home() {
 									setSectionPutIn(null);
 									setSectionTakeOut(null);
 									setSectionPickingFor(null);
+									setSectionPreviewCoords(null);
 									setFeatureVertices([]);
 									setFeaturePickingActive(false);
 									setFeatureGeomType("Point");
@@ -318,6 +322,7 @@ function Home() {
 							}}
 							featureVertices={featureVertices}
 							featureGeomType={featureGeomType}
+							onPreviewCoordsChange={setSectionPreviewCoords}
 							featurePickingActive={featurePickingActive}
 							onStartPickFeature={() => setFeaturePickingActive(true)}
 							onStopPickFeature={() => setFeaturePickingActive(false)}
@@ -374,6 +379,7 @@ function Home() {
 							}
 							putIn={sectionPutIn}
 							takeOut={sectionTakeOut}
+							sectionPreviewCoords={sectionPreviewCoords ?? undefined}
 							featureVertices={featureVertices}
 							featureGeomType={featureGeomType}
 							placingFeature={
