@@ -735,6 +735,7 @@ export interface components {
 			/** @default {} */
 			metadata: unknown;
 			name?: string | null;
+			description?: string | null;
 		};
 		CreateGaugeRequest: {
 			active?: boolean | null;

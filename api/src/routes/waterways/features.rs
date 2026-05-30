@@ -35,6 +35,7 @@ pub struct CreateFeatureBody {
     pub metadata: Value,
     pub location: Geometry,
     pub name: Option<String>,
+    pub description: Option<String>,
 }
 
 pub async fn create_feature(
@@ -76,6 +77,13 @@ pub async fn create_feature(
                         feature.names.push(n);
                     }
                 }
+                if let Some(desc) = &body.description {
+                    if let Ok(d) =
+                        features::upsert_description(&app.pg_pool, feature.id, "en", desc).await
+                    {
+                        feature.descriptions.push(d);
+                    }
+                }
                 (StatusCode::CREATED, Json(feature)).into_response()
             }
             Err(err) => {
@@ -92,6 +100,7 @@ pub async fn create_feature(
         "metadata": body.metadata,
         "location": body.location,
         "name": body.name,
+        "description": body.description,
     });
     match proposals::insert_proposal(
         &app.pg_pool,

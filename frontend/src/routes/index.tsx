@@ -156,9 +156,8 @@ function Home() {
 	// Gauge data
 	const sectionIds = useMemo(() => sections.map((s) => s.id), [sections]);
 	// Always fetch water statuses when a waterway is selected (powers map icons + gauge tab)
-	const shouldFetchGauges =
-		(detailTab === "gauges" || selectedGaugeId != null) &&
-		selectedWaterwayId != null;
+	// gaugeRanges must be available in all tabs (e.g. feature suggestion form uses them)
+	const shouldFetchGauges = selectedWaterwayId != null;
 	const allWaterStatuses = useAllSectionWaterStatus(
 		selectedWaterwayId ?? 0,
 		selectedWaterwayId != null ? sectionIds : [],

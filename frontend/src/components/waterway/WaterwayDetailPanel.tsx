@@ -176,6 +176,14 @@ export default function WaterwayDetailPanel({
 					<SuggestFeatureForm
 						waterwayId={waterwayId}
 						sectionId={selectedSectionId}
+						sectionLine={(() => {
+							const geom = sections.find((s) => s.id === selectedSectionId)
+								?.location as unknown as GeoJSON.LineString | undefined;
+							return geom?.type === "LineString"
+								? geom.coordinates.map(([lng, lat]) => ({ lng, lat }))
+								: undefined;
+						})()}
+						gaugeRanges={gaugeRanges}
 						vertices={featureVertices ?? []}
 						geomType={featureGeomType ?? "Point"}
 						pickingActive={featurePickingActive ?? false}
