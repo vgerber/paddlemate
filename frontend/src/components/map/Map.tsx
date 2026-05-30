@@ -154,7 +154,7 @@ export default function WaterwayMap({
 	// Fit bounds to all sections
 	useEffect(() => {
 		const map = mapRef.current;
-		if (!map || !mapLoaded || !sections?.length) return;
+		if (!map || !mapLoaded || !sections?.length || areaLocked) return;
 		const coords: number[][] = [];
 		for (const s of sections) {
 			const geom = s.location as unknown as GeoJSON.LineString;
@@ -170,7 +170,7 @@ export default function WaterwayMap({
 			],
 			{ padding: 60, duration: 800 },
 		);
-	}, [sections, mapLoaded]);
+	}, [sections, mapLoaded, areaLocked]);
 
 	// Fit bounds to selected section
 	useEffect(() => {
