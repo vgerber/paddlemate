@@ -99,51 +99,8 @@ export function computeExtent(
 }
 
 /**
- * Builds a two-level render tree from a flat list of computed features.
- *
- * Each feature is assigned to the *smallest* zone that fully contains it
- * (greedy containment). Features that belong to no zone become top-level nodes.
- * Both levels are sorted by ascending distM.
+ * Builds a flat sorted list from computed features.
  */
 export function buildTree(items: ComputedFeature[]): TreeNode[] {
-  const zones = items.filter((i) => i.isZone);
-
-  function findParent(item: ComputedFeature): ComputedFeature | null {
-    let best: ComputedFeature | null = null;
-    let bestSize = Infinity;
-    for (const z of zones) {
-      if (z.feature.id === item.feature.id) continue;
-      const contained = item.isZone
-        ? item.startM >= z.startM && item.endM <= z.endM
-        : item.distM >= z.startM && item.distM <= z.endM;
-      const size = z.endM - z.startM;
-      if (contained && size < bestSize) {
-        bestSize = size;
-        best = z;
-      }
-    }
-    return best;
-  }
-
-  const nestedIds = new Set<number>();
-  const childMap = new Map<number, ComputedFeature[]>();
-
-  for (const item of items) {
-    const parent = findParent(item);
-    if (parent) {
-      nestedIds.add(item.feature.id);
-      if (!childMap.has(parent.feature.id)) childMap.set(parent.feature.id, []);
-      childMap.get(parent.feature.id)?.push(item);
-    }
-  }
-
-  return items
-    .filter((i) => !nestedIds.has(i.feature.id))
-    .sort((a, b) => a.distM - b.distM)
-    .map((item) => ({
-      item,
-      nested: (childMap.get(item.feature.id) ?? []).sort(
-        (a, b) => a.distM - b.distM,
-      ),
-    }));
+  return items.sort((a, b) => a.distM - b.distM).map((item) => ({ item }));
 }
