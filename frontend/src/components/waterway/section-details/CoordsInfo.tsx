@@ -1,10 +1,12 @@
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import DoneIcon from "@mui/icons-material/Done";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import { useState } from "react";
-import { fonts, tokens } from "./tokens";
-import Box from "@mui/material/Box";
+import { fonts, theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 interface Props {
 	coords: [number, number]; // [lng, lat]

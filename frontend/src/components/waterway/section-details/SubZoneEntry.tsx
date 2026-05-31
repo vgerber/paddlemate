@@ -1,6 +1,9 @@
 import Typography from "@mui/material/Typography";
+import { fonts, theme } from "@/lib/theme";
+
+const { tokens } = theme;
+
 import { CoordsInfo } from "./CoordsInfo";
-import { fonts, tokens } from "./tokens";
 import type { ComputedFeature } from "./types";
 import { featureDesc, featureName, fmtKm } from "./utils";
 
