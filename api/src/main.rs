@@ -44,13 +44,11 @@ async fn index() -> impl IntoApiResponse {
 }
 
 fn api_docs(api: TransformOpenApi) -> TransformOpenApi {
-    let base_url = dotenvy::var("BASE_URL").unwrap_or_else(|_| "".to_string());
-
     api.title("Paddlemate API")
         .summary("Paddlemate platform")
         .description("API for managing the Paddlemate platform")
         .server(aide::openapi::Server {
-            url: base_url,
+            url: String::new(),
             description: Some("API Server".to_string()),
             ..Default::default()
         })
@@ -198,8 +196,10 @@ async fn main() {
         .nest_api_service("/docs", docs_routes(state.clone()))
         .with_state(state.clone());
 
+    let base_url = dotenvy::var("BASE_URL").unwrap_or_else(|_| "/api/v1".to_string());
+
     let app = ApiRouter::new()
-        .nest_api_service("/api/v1", api_v1)
+        .nest_api_service(&base_url, api_v1)
         .finish_api_with(&mut api, api_docs)
         .layer(Extension(Arc::new(api)))
         .layer(

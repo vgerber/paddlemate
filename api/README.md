@@ -126,3 +126,4 @@ Used by the API backend to look up usernames via the Keycloak Admin REST API.
    - Change filter to **"Filter by clients"**
    - Search for `realm-management` and assign the **`view-users`** role
 4. Copy the client secret from the **Credentials** tab into `KEYCLOAK_CLIENT_SECRET` in `.env`
+

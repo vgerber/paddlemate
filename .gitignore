@@ -1,4 +1,8 @@
 scripts/*.json
 scripts/.env.rivermap
+.env.backend
+deploy/backend/.env
 *.pyc
 enrich*.jsonl
+
+deploy/
