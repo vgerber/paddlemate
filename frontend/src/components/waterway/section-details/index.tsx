@@ -58,6 +58,7 @@ export default function FeatureTimeline({ section, onFeatureClick }: Props) {
           <ZoneEntry
             key={node.item.feature.id}
             item={node.item}
+            nested={node.nested}
             isLast={idx === tree.length - 1}
             activeId={activeId}
             onItemClick={handleItemClick}

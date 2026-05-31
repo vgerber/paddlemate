@@ -15,7 +15,8 @@ export interface ComputedFeature {
   coords: [number, number];
 }
 
-/** One node in the rendered tree: a top-level feature. */
+/** One node in the rendered tree: a top-level feature with its direct children. */
 export interface TreeNode {
   item: ComputedFeature;
+  nested: ComputedFeature[];
 }

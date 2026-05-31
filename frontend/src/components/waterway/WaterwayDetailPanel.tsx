@@ -269,21 +269,22 @@ export default function WaterwayDetailPanel({
 								borderColor: "divider",
 							}}
 						>
-							<Tooltip title="Coming soon">
-								<span style={{ display: "contents" }}>
-									<Button
-										size="small"
-										startIcon={<AddIcon />}
-										variant="outlined"
-										fullWidth
-										disabled
-										onClick={() => onSuggestModeChange("section")}
-									>
-										New section
-									</Button>
-								</span>
-							</Tooltip>
-							{selectedSectionId != null && (
+							{selectedSectionId == null ? (
+								<Tooltip title="Coming soon">
+									<span style={{ display: "contents" }}>
+										<Button
+											size="small"
+											startIcon={<AddIcon />}
+											variant="outlined"
+											fullWidth
+											disabled
+											onClick={() => onSuggestModeChange("section")}
+										>
+											New section
+										</Button>
+									</span>
+								</Tooltip>
+							) : (
 								<Button
 									size="small"
 									startIcon={<AddIcon />}

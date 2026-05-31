@@ -4,6 +4,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { fonts, theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
+import { PointEntry } from "./PointEntry";
 import type { ComputedFeature } from "./types";
 import { featureDesc, featureName, fmtKm } from "./utils";
 
@@ -11,6 +12,7 @@ const { tokens } = theme;
 
 interface Props {
   item: ComputedFeature;
+  nested: ComputedFeature[];
   isLast?: boolean;
   activeId?: number | null;
   onItemClick?: (item: ComputedFeature) => void;
@@ -26,6 +28,7 @@ interface Props {
  */
 export function ZoneEntry({
   item,
+  nested,
   isLast = false,
   activeId,
   onItemClick,
@@ -36,20 +39,6 @@ export function ZoneEntry({
 
   return (
     <Box sx={{ position: "relative", mb: isLast ? "4px" : 2 }}>
-      {/* Rail line spanning from below the ↓ to above the ↑ */}
-      <Box
-        sx={{
-          position: "absolute",
-          left: 7,
-          top: 13,
-          bottom: 13,
-          width: 2,
-          bgcolor: tokens.secondary,
-          opacity: 0.3,
-          zIndex: -1,
-        }}
-      />
-
       {/* Zone start row */}
       <ButtonBase
         component="div"
@@ -147,6 +136,16 @@ export function ZoneEntry({
           {desc}
         </Typography>
       )}
+
+      {nested.map((child, idx) => (
+        <PointEntry
+          key={child.feature.id}
+          item={child}
+          isLast={idx === nested.length - 1}
+          isActive={activeId === child.feature.id}
+          onClick={() => onItemClick?.(child)}
+        />
+      ))}
 
       {/* Zone end row */}
       <Stack direction="row" sx={{ gap: "10px", alignItems: "center" }}>
