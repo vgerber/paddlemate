@@ -284,6 +284,11 @@ def main():
                     "UPDATE water_sections SET location = ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), river_km_start = %s, river_km_end = %s WHERE id = %s",
                     (geojson, upstream_pos, downstream_pos, sid),
                 )
+                # Keep the whitewater feature geometry in sync with the section.
+                cur.execute(
+                    "UPDATE features SET location = ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), updated_at = NOW() WHERE section_id = %s AND feature_type = 'whitewater'",
+                    (geojson, sid),
+                )
                 append_log(
                     args.log_file,
                     {

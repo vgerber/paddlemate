@@ -16,6 +16,7 @@ import LabelModeToggle from "./LabelModeToggle";
 import {
 	buildLineFeaturesGeoJSON,
 	buildPointFeaturesGeoJSON,
+	buildPutInTakeOutConnectorsGeoJSON,
 	buildSectionEndpointsGeoJSON,
 	buildSectionLabelsGeoJSON,
 	buildSectionsGeoJSON,
@@ -102,6 +103,8 @@ interface WaterwayMapProps {
 	labelMode?: "section" | "river";
 	onLabelModeChange?: (mode: "section" | "river") => void;
 	sectionLevels?: Record<number, string>;
+	/** [lng, lat] to fly to and highlight; set by clicking a feature in the panel. */
+	focusedPoint?: [number, number] | null;
 }
 
 export default function WaterwayMap({
@@ -130,6 +133,7 @@ export default function WaterwayMap({
 	labelMode = "section",
 	onLabelModeChange,
 	sectionLevels,
+	focusedPoint,
 }: WaterwayMapProps) {
 	const mapRef = useRef<MapRef>(null);
 	const [pickMode, setPickMode] = useState<"put-in" | "take-out" | null>(null);
@@ -192,6 +196,17 @@ export default function WaterwayMap({
 		);
 	}, [selectedSectionId, sections, mapLoaded]);
 
+	// Fly to a focused feature point
+	useEffect(() => {
+		const map = mapRef.current;
+		if (!map || !mapLoaded || !focusedPoint) return;
+		map.flyTo({
+			center: focusedPoint,
+			zoom: Math.max(map.getZoom(), 14),
+			duration: 600,
+		});
+	}, [focusedPoint, mapLoaded]);
+
 	const sectionsGeoJSON = buildSectionsGeoJSON(sections ?? []);
 	const sectionLabelsGeoJSON = buildSectionLabelsGeoJSON(
 		sections ?? [],
@@ -202,6 +217,7 @@ export default function WaterwayMap({
 		sections ?? [],
 		sectionLevels,
 	);
+	const connectorsGeoJSON = buildPutInTakeOutConnectorsGeoJSON(sections ?? []);
 	const pointsGeoJSON = buildPointFeaturesGeoJSON(features ?? []);
 	const linesGeoJSON = buildLineFeaturesGeoJSON(features ?? []);
 
@@ -305,6 +321,24 @@ export default function WaterwayMap({
 				]}
 			>
 				<NavigationControl position="top-right" />
+
+				{/* Connector lines: put-in/take-out features → nearest section line point */}
+				<Source
+					id="access-point-connectors"
+					type="geojson"
+					data={connectorsGeoJSON}
+				>
+					<Layer
+						id="access-point-connectors-line"
+						type="line"
+						paint={{
+							"line-color": ["get", "color"],
+							"line-width": 1.5,
+							"line-opacity": 0.7,
+							"line-dasharray": [3, 2],
+						}}
+					/>
+				</Source>
 
 				{/* Declare endpoints first so sections layers can reference it via beforeId */}
 				<Source
@@ -687,6 +721,27 @@ export default function WaterwayMap({
 								background: "#1976d2",
 								border: "2px solid #fff",
 								boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
+								pointerEvents: "none",
+							}}
+						/>
+					</Marker>
+				)}
+
+				{focusedPoint && (
+					<Marker
+						longitude={focusedPoint[0]}
+						latitude={focusedPoint[1]}
+						anchor="center"
+					>
+						<div
+							style={{
+								width: 14,
+								height: 14,
+								borderRadius: "50%",
+								background: "#8bd1e8",
+								border: "2px solid rgba(255,255,255,0.9)",
+								boxShadow:
+									"0 0 0 3px rgba(139,209,232,0.35), 0 0 10px rgba(139,209,232,0.5)",
 								pointerEvents: "none",
 							}}
 						/>

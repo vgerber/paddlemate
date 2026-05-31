@@ -8,9 +8,9 @@ import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
-	TIME_RANGE_OPTIONS,
-	type TimeRange,
-	typeLabel,
+  TIME_RANGE_OPTIONS,
+  type TimeRange,
+  typeLabel,
 } from "@/components/charts/water/types";
 import WaterChart from "@/components/charts/water/WaterChart";
 import { useSession } from "@/lib/hooks/useSession";
@@ -18,188 +18,188 @@ import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
 import { useWaterStatus } from "@/lib/hooks/useWaterways";
 
 interface SectionChartPanelProps {
-	waterwayId: number;
-	sectionId: number;
-	sectionName?: string;
+  waterwayId: number;
+  sectionId: number;
+  sectionName?: string;
 }
 
 export default function SectionChartPanel({
-	waterwayId,
-	sectionId,
-	sectionName,
+  waterwayId,
+  sectionId,
+  sectionName,
 }: SectionChartPanelProps) {
-	const { isAuthenticated } = useSession();
-	const navigate = useNavigate();
-	const { current: standingDescent, start: startDescent } =
-		useStandingDescent();
-	const { data: waterStatus, isLoading } = useWaterStatus(
-		waterwayId,
-		sectionId,
-	);
-	const [timeRange, setTimeRange] = useState<TimeRange>("7d");
-	const [measurementType, setMeasurementType] = useState<string | null>(null);
+  const { isAuthenticated } = useSession();
+  const navigate = useNavigate();
+  const { current: standingDescent, start: startDescent } =
+    useStandingDescent();
+  const { data: waterStatus, isLoading } = useWaterStatus(
+    waterwayId,
+    sectionId,
+  );
+  const [timeRange, setTimeRange] = useState<TimeRange>("7d");
+  const [measurementType, setMeasurementType] = useState<string | null>(null);
 
-	const measurementTypes = useMemo(() => {
-		const types = new Set(
-			(waterStatus?.ranges ?? []).map((r) => r.series.measurement_type),
-		);
-		return Array.from(types) as ("water_level" | "discharge" | "temperature")[];
-	}, [waterStatus?.ranges]);
+  const measurementTypes = useMemo(() => {
+    const types = new Set(
+      (waterStatus?.ranges ?? []).map((r) => r.series.measurement_type),
+    );
+    return Array.from(types) as ("water_level" | "discharge" | "temperature")[];
+  }, [waterStatus?.ranges]);
 
-	const subtitle = useMemo(() => {
-		const r = waterStatus?.ranges[0];
-		if (!r) return null;
-		return `${r.gauge.name} (${r.series.unit})`;
-	}, [waterStatus]);
+  const subtitle = useMemo(() => {
+    const r = waterStatus?.ranges[0];
+    if (!r) return null;
+    return `${r.gauge.name} (${r.series.unit})`;
+  }, [waterStatus]);
 
-	return (
-		<Box
-			sx={{
-				borderTop: "1px solid",
-				borderColor: "divider",
-				height: 260,
-				display: "flex",
-				flexDirection: "column",
-				flexShrink: 0,
-				p: 1.5,
-				pb: 0.5,
-			}}
-		>
-			<Box
-				sx={{
-					display: "flex",
-					alignItems: "center",
-					mb: 1,
-					flexShrink: 0,
-					gap: 1,
-				}}
-			>
-				<Typography
-					variant="subtitle2"
-					sx={{ fontWeight: 600, flex: 1, minWidth: 0 }}
-					noWrap
-				>
-					{sectionName ?? "Section"}
-					{subtitle && (
-						<Box
-							component="span"
-							sx={{ fontWeight: 400, color: "text.secondary" }}
-						>
-							{" - "}
-							{subtitle}
-						</Box>
-					)}
-				</Typography>
-				{isAuthenticated && (
-					<>
-						{!standingDescent ? (
-							<Button
-								size="small"
-								variant="outlined"
-								color="success"
-								sx={{
-									borderRadius: 0,
-									fontSize: "0.7rem",
-									fontWeight: 700,
-									letterSpacing: "0.08em",
-									flexShrink: 0,
-								}}
-								onClick={() =>
-									startDescent({
-										startTime: new Date().toISOString(),
-										waterwayId,
-										sectionId,
-										sectionName: sectionName ?? "",
-									})
-								}
-							>
-								Start
-							</Button>
-						) : null}
-						{!standingDescent && (
-							<Button
-								size="small"
-								variant="contained"
-								color="secondary"
-								sx={{
-									borderRadius: 0,
-									fontSize: "0.7rem",
-									fontWeight: 700,
-									letterSpacing: "0.08em",
-									flexShrink: 0,
-									px: 1.5,
-								}}
-								onClick={() =>
-									navigate({
-										to: "/logs/new",
-										search: { waterwayId, sectionId, startTime: undefined },
-									})
-								}
-							>
-								Log descent
-							</Button>
-						)}
-					</>
-				)}
-				{measurementTypes.length > 1 && (
-					<ToggleButtonGroup
-						value={measurementType}
-						exclusive
-						size="small"
-						onChange={(_, v) => v && setMeasurementType(v)}
-						sx={{
-							flexShrink: 0,
-							"& .MuiToggleButton-root": {
-								py: 0.25,
-								px: 1,
-								fontSize: "0.7rem",
-							},
-						}}
-					>
-						{measurementTypes.map((t) => (
-							<ToggleButton key={t} value={t}>
-								{typeLabel(t)}
-							</ToggleButton>
-						))}
-					</ToggleButtonGroup>
-				)}
-				<ToggleButtonGroup
-					value={timeRange}
-					exclusive
-					size="small"
-					onChange={(_, v) => v && setTimeRange(v)}
-					sx={{
-						flexShrink: 0,
-						"& .MuiToggleButton-root": {
-							py: 0.25,
-							px: 1,
-							fontSize: "0.7rem",
-						},
-					}}
-				>
-					{TIME_RANGE_OPTIONS.map((o) => (
-						<ToggleButton key={o.value} value={o.value}>
-							{o.label}
-						</ToggleButton>
-					))}
-				</ToggleButtonGroup>
-			</Box>
-			<Divider sx={{ mb: 1, flexShrink: 0 }} />
-			{isLoading ? (
-				<Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-					<CircularProgress size={22} />
-				</Box>
-			) : (
-				<Box sx={{ flex: 1, minHeight: 0 }}>
-					<WaterChart
-						ranges={waterStatus?.ranges ?? []}
-						timeRange={timeRange}
-						onTimeRangeChange={setTimeRange}
-						measurementType={measurementType}
-						onMeasurementTypeChange={setMeasurementType}
-					/>
-				</Box>
-			)}
-		</Box>
-	);
+  return (
+    <Box
+      sx={{
+        borderTop: "1px solid",
+        borderColor: "divider",
+        height: 260,
+        display: "flex",
+        flexDirection: "column",
+        flexShrink: 0,
+        p: 1.5,
+        pb: 0.5,
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          mb: 1,
+          flexShrink: 0,
+          gap: 1,
+        }}
+      >
+        <Typography
+          variant="subtitle2"
+          sx={{ fontWeight: 600, flex: 1, minWidth: 0 }}
+          noWrap
+        >
+          {sectionName ?? "Section"}
+          {subtitle && (
+            <Box
+              component="span"
+              sx={{ fontWeight: 400, color: "text.secondary" }}
+            >
+              {" - "}
+              {subtitle}
+            </Box>
+          )}
+        </Typography>
+        {isAuthenticated && (
+          <>
+            {!standingDescent ? (
+              <Button
+                size="small"
+                variant="outlined"
+                color="success"
+                sx={{
+                  borderRadius: 0,
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  flexShrink: 0,
+                }}
+                onClick={() =>
+                  startDescent({
+                    startTime: new Date().toISOString(),
+                    waterwayId,
+                    sectionId,
+                    sectionName: sectionName ?? "",
+                  })
+                }
+              >
+                Start
+              </Button>
+            ) : null}
+            {!standingDescent && (
+              <Button
+                size="small"
+                variant="contained"
+                color="secondary"
+                sx={{
+                  borderRadius: 0,
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  flexShrink: 0,
+                  px: 1.5,
+                }}
+                onClick={() =>
+                  navigate({
+                    to: "/logs/new",
+                    search: { waterwayId, sectionId, startTime: undefined },
+                  })
+                }
+              >
+                Log descent
+              </Button>
+            )}
+          </>
+        )}
+        {measurementTypes.length > 1 && (
+          <ToggleButtonGroup
+            value={measurementType}
+            exclusive
+            size="small"
+            onChange={(_, v) => v && setMeasurementType(v)}
+            sx={{
+              flexShrink: 0,
+              "& .MuiToggleButton-root": {
+                py: 0.25,
+                px: 1,
+                fontSize: "0.7rem",
+              },
+            }}
+          >
+            {measurementTypes.map((t) => (
+              <ToggleButton key={t} value={t}>
+                {typeLabel(t)}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        )}
+        <ToggleButtonGroup
+          value={timeRange}
+          exclusive
+          size="small"
+          onChange={(_, v) => v && setTimeRange(v)}
+          sx={{
+            flexShrink: 0,
+            "& .MuiToggleButton-root": {
+              py: 0.25,
+              px: 1,
+              fontSize: "0.7rem",
+            },
+          }}
+        >
+          {TIME_RANGE_OPTIONS.map((o) => (
+            <ToggleButton key={o.value} value={o.value}>
+              {o.label}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Box>
+      <Divider sx={{ mb: 1, flexShrink: 0 }} />
+      {isLoading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+          <CircularProgress size={22} />
+        </Box>
+      ) : (
+        <Box sx={{ flex: 1, minHeight: 0 }}>
+          <WaterChart
+            ranges={waterStatus?.ranges ?? []}
+            timeRange={timeRange}
+            onTimeRangeChange={setTimeRange}
+            measurementType={measurementType}
+            onMeasurementTypeChange={setMeasurementType}
+          />
+        </Box>
+      )}
+    </Box>
+  );
 }

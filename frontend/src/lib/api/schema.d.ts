@@ -736,6 +736,8 @@ export interface components {
 			metadata: unknown;
 			name?: string | null;
 			description?: string | null;
+			/** BCP-47 language code for name/description (default: "en") */
+			lang_code?: string | null;
 		};
 		CreateGaugeRequest: {
 			active?: boolean | null;

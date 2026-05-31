@@ -8,7 +8,8 @@
     ".venv/bin/python": true,
     "scripts/.venv/bin/python3": true,
     "cargo run": true,
-    "./node_modules/.bin/biome": true
+    "./node_modules/.bin/biome": true,
+    "docker exec": true
   },
   "cSpell.words": ["Rivermap"],
 

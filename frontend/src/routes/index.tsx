@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import { useQueries } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import type { AreaCircle, GaugePin } from "@/components/map/Map";
@@ -85,6 +85,15 @@ function Home() {
 	>(null);
 
 	const [suggestMode, setSuggestMode] = useState<SuggestMode | null>(null);
+	const [focusedPoint, setFocusedPoint] = useState<[number, number] | null>(
+		null,
+	);
+
+	// Reset focused feature when the section changes
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on section change
+	useEffect(() => {
+		setFocusedPoint(null);
+	}, [selectedSectionId]);
 
 	// Derive areaCircle from URL params
 	const areaCircle: AreaCircle | null =
@@ -295,6 +304,7 @@ function Home() {
 								setSelectedWaterwayId(undefined);
 							}}
 							onSectionClick={handleSectionClick}
+							onSectionDeselect={() => setSelectedSectionId(undefined)}
 							suggestMode={suggestMode}
 							onSuggestModeChange={(mode) => {
 								setSuggestMode(mode);
@@ -340,6 +350,7 @@ function Home() {
 								setFeatureVertices([]);
 								setFeaturePickingActive(false);
 							}}
+							onFeatureClick={(coords) => setFocusedPoint(coords)}
 						/>
 					)}
 				</Box>
@@ -389,6 +400,7 @@ function Home() {
 									? handleMapPick
 									: undefined
 							}
+							focusedPoint={focusedPoint}
 						/>
 					</Box>
 					{selectedGaugeId != null && selectedGaugeRanges.length > 0 ? (

@@ -299,6 +299,14 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
     let mut feature_count = 0usize;
     let mut range_count = 0usize;
 
+    // Build a POI lookup map for put-in / take-out alternatives.
+    // Keys are POI UUID strings; values are references into the bundle.
+    let poi_map: HashMap<&str, &Value> = bundle
+        .pois
+        .iter()
+        .filter_map(|p| p.get("id").and_then(|id| id.as_str()).map(|id| (id, p)))
+        .collect();
+
     for sec in &bundle.sections {
         let obj = sec
             .as_object()
@@ -328,19 +336,22 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
 
         let region = obj.get("regionName").and_then(|v| v.as_str());
 
-        // Build a LineString from putIn -> takeOut
+        // Collect access-point coordinates from the section fields.
         let put_in = obj.get("putInLatLng").and_then(|v| v.as_array());
         let take_out = obj.get("takeOutLatLng").and_then(|v| v.as_array());
 
         let (put_lat, put_lon) = put_in.map(|a| latlng_to_f64(a)).unwrap_or((None, None));
         let (take_lat, take_lon) = take_out.map(|a| latlng_to_f64(a)).unwrap_or((None, None));
 
-        // Need at least a put-in to create geometry
+        // Need at least one valid endpoint to anchor the section.
+        // Fall back to the take-out when the put-in is absent.
         let (p_lat, p_lon) = match (put_lat, put_lon) {
             (Some(lat), Some(lon)) => (lat, lon),
-            _ => continue,
+            _ => match (take_lat, take_lon) {
+                (Some(lat), Some(lon)) => (lat, lon),
+                _ => continue, // no geometry at all — skip
+            },
         };
-        let (t_lat, t_lon) = (take_lat.unwrap_or(p_lat), take_lon.unwrap_or(p_lon));
 
         // Upsert waterway
         let waterway_id: i64 = sqlx::query_scalar(
@@ -354,23 +365,30 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
         .await?;
         _waterway_count += 1;
 
-        // Build LineString WKT
-        let line_wkt = format!(
-            "SRID=4326;LINESTRING({lon1} {lat1},{lon2} {lat2})",
-            lon1 = p_lon,
-            lat1 = p_lat,
-            lon2 = t_lon,
-            lat2 = t_lat,
-        );
+        // Build section geometry.
+        // When take_out is present: real LineString from put_in → take_out.
+        // When absent: degenerate line (put_in → put_in) so the INSERT is still valid;
+        // on re-runs the ON CONFLICT clause will keep the existing geometry via COALESCE.
+        let real_line_wkt: Option<String> = match (take_lat, take_lon) {
+            (Some(t_lat), Some(t_lon)) => Some(format!(
+                "SRID=4326;LINESTRING({p_lon} {p_lat},{t_lon} {t_lat})"
+            )),
+            _ => None,
+        };
+        let insert_line_wkt = real_line_wkt
+            .clone()
+            .unwrap_or_else(|| format!("SRID=4326;LINESTRING({p_lon} {p_lat},{p_lon} {p_lat})"));
 
-        // Upsert section
+        // Upsert section.
+        // $5 = geometry for INSERT (always valid, may be degenerate).
+        // $6 = geometry for UPDATE (NULL when take_out absent → COALESCE keeps stored value).
         let section_id: i64 = sqlx::query_scalar(
             "INSERT INTO water_sections (waterway_id, name, region, country, location)
              VALUES ($1, $2, $3, $4, ST_GeomFromEWKT($5))
              ON CONFLICT (waterway_id, name) DO UPDATE
-             SET region = EXCLUDED.region,
-                 country = EXCLUDED.country,
-                 location = EXCLUDED.location,
+             SET region     = EXCLUDED.region,
+                 country    = EXCLUDED.country,
+                 location   = COALESCE(ST_GeomFromEWKT($6), water_sections.location),
                  updated_at = NOW()
              RETURNING id",
         )
@@ -378,7 +396,8 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
         .bind(&section_name)
         .bind(region)
         .bind(country_code)
-        .bind(&line_wkt)
+        .bind(&insert_line_wkt)
+        .bind(real_line_wkt.as_deref())
         .fetch_one(pool)
         .await?;
         section_count += 1;
@@ -395,27 +414,122 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
         };
         let metadata = serde_json::json!({ "difficulty": grade });
 
-        // Use put-in point as feature location
-        let point_wkt = format!("SRID=4326;POINT({p_lon} {p_lat})");
-
-        // Upsert feature: update if a rivermap-imported one already exists for this section.
+        // Upsert the main whitewater feature for this section.
+        // No unique constraint exists so we use an UPDATE-or-INSERT CTE.
         let feature_id: i64 = sqlx::query_scalar(
-            "INSERT INTO features (section_id, feature_type, metadata, location, created_by)
-             VALUES ($1, $2::feature_type, $3, ST_GeomFromEWKT($4), 'rivermap-import')
-             ON CONFLICT (section_id, created_by) DO UPDATE
-             SET feature_type = EXCLUDED.feature_type,
-                 metadata     = EXCLUDED.metadata,
-                 location     = EXCLUDED.location,
-                 updated_at   = NOW()
-             RETURNING id",
+            "WITH upd AS (
+                 UPDATE features
+                 SET metadata = $3, location = ST_GeomFromEWKT($4), updated_at = NOW()
+                 WHERE section_id = $1 AND feature_type = $2::feature_type
+                   AND created_by = 'rivermap-import'
+                 RETURNING id
+             ), ins AS (
+                 INSERT INTO features (section_id, feature_type, metadata, location, created_by)
+                 SELECT $1, $2::feature_type, $3, ST_GeomFromEWKT($4), 'rivermap-import'
+                 WHERE NOT EXISTS (SELECT 1 FROM upd)
+                 RETURNING id
+             )
+             SELECT id FROM upd UNION ALL SELECT id FROM ins",
         )
         .bind(section_id)
         .bind(feature_type)
         .bind(&metadata)
-        .bind(&point_wkt)
+        .bind(&insert_line_wkt)
         .fetch_one(pool)
         .await?;
         feature_count += 1;
+
+        // Upsert put-in and take-out access-point features.
+        sqlx::query(
+            "WITH upd AS (
+                 UPDATE features
+                 SET location = ST_GeomFromEWKT($2), updated_at = NOW()
+                 WHERE section_id = $1 AND feature_type = 'put_in'
+                   AND created_by = 'rivermap-import'
+                 RETURNING id
+             )
+             INSERT INTO features (section_id, feature_type, metadata, location, created_by)
+             SELECT $1, 'put_in'::feature_type, '{}', ST_GeomFromEWKT($2), 'rivermap-import'
+             WHERE NOT EXISTS (SELECT 1 FROM upd)",
+        )
+        .bind(section_id)
+        .bind(format!("SRID=4326;POINT({p_lon} {p_lat})"))
+        .execute(pool)
+        .await?;
+        feature_count += 1;
+
+        // Only store take_out when the source data actually has coordinates.
+        if let (Some(t_lat), Some(t_lon)) = (take_lat, take_lon) {
+            sqlx::query(
+                "WITH upd AS (
+                     UPDATE features
+                     SET location = ST_GeomFromEWKT($2), updated_at = NOW()
+                     WHERE section_id = $1 AND feature_type = 'take_out'
+                       AND created_by = 'rivermap-import'
+                     RETURNING id
+                 )
+                 INSERT INTO features (section_id, feature_type, metadata, location, created_by)
+                 SELECT $1, 'take_out'::feature_type, '{}', ST_GeomFromEWKT($2), 'rivermap-import'
+                 WHERE NOT EXISTS (SELECT 1 FROM upd)",
+            )
+            .bind(section_id)
+            .bind(format!("SRID=4326;POINT({t_lon} {t_lat})"))
+            .execute(pool)
+            .await?;
+            feature_count += 1;
+        }
+
+        // Import alternative access-point POIs (putInAlt, takeOutAlt, takeOutEmergency, …).
+        // Each POI uses `created_by = "rivermap:{poi_id}"` so re-runs are idempotent
+        // without needing a unique constraint.
+        let poi_ids = obj
+            .get("poiIds")
+            .and_then(|v| v.as_array())
+            .map(|a| a.as_slice())
+            .unwrap_or_default();
+
+        for poi_ref in poi_ids {
+            let poi_id = poi_ref.as_str().unwrap_or_default();
+            let poi = match poi_map.get(poi_id) {
+                Some(p) => p,
+                None => continue,
+            };
+            let poi_type = poi.get("type").and_then(|v| v.as_str()).unwrap_or_default();
+            let feature_type = match poi_type {
+                "putIn" | "putInAlt" => "put_in",
+                "takeOut" | "takeOutAlt" | "takeOutEmergency" => "take_out",
+                _ => continue,
+            };
+            let latlng = match poi.get("latlng").and_then(|v| v.as_array()) {
+                Some(a) => a,
+                None => continue,
+            };
+            let (poi_lat, poi_lon) = latlng_to_f64(latlng);
+            let (poi_lat, poi_lon) = match (poi_lat, poi_lon) {
+                (Some(lat), Some(lon)) => (lat, lon),
+                _ => continue,
+            };
+            let creator = format!("rivermap:{poi_id}");
+            sqlx::query(
+                "WITH upd AS (
+                     UPDATE features
+                     SET location = ST_GeomFromEWKT($3), updated_at = NOW()
+                     WHERE section_id = $1 AND feature_type = $2::feature_type
+                       AND created_by = $4
+                     RETURNING id
+                 )
+                 INSERT INTO features (section_id, feature_type, metadata, location, created_by)
+                 SELECT $1, $2::feature_type, '{}', ST_GeomFromEWKT($3), $4
+                 WHERE NOT EXISTS (SELECT 1 FROM upd)",
+            )
+            .bind(section_id)
+            .bind(feature_type)
+            .bind(format!("SRID=4326;POINT({poi_lon} {poi_lat})"))
+            .bind(&creator)
+            .execute(pool)
+            .await?;
+            feature_count += 1;
+        }
 
         // Link calibration to gauge series (water ranges)
         if let Some(calib) = obj.get("calibration").and_then(|v| v.as_object()) {

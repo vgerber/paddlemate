@@ -1,10 +1,10 @@
 /* MuiCssBaseline handles the reset. This file only contains app-level overrides. */
 
 #root {
-	display: contents;
+  display: contents;
 }
 
 /* Ensure MapLibre GL canvas fills its container */
 .maplibregl-map {
-	font-family: "Space Grotesk", sans-serif;
+  font-family: "Space Grotesk", sans-serif;
 }

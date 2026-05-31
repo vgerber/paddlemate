@@ -198,8 +198,6 @@ impl GaugeReader for GermanyPegelonlineReader {
 
 #[cfg(test)]
 mod tests {
-    use chrono::TimeZone;
-
     use super::*;
 
     #[test]

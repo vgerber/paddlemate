@@ -510,8 +510,6 @@ impl GaugeReader for NorwayNveReader {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     // NVE station IDs contain dots (e.g. "2.32.0"), so the source_id uses
     // rsplit_once to ensure the parameter is always the last segment.
     #[test]

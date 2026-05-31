@@ -8,51 +8,51 @@ import Typography from "@mui/material/Typography";
 import type { AreaCircle } from "@/lib/geo";
 
 interface AreaControlsProps {
-	areaCircle: AreaCircle | null;
-	locked: boolean;
-	onLockedChange: (locked: boolean) => void;
-	onRadiusChange: (radiusKm: number) => void;
+  areaCircle: AreaCircle | null;
+  locked: boolean;
+  onLockedChange: (locked: boolean) => void;
+  onRadiusChange: (radiusKm: number) => void;
 }
 
 export default function AreaControls({
-	areaCircle,
-	locked,
-	onLockedChange,
-	onRadiusChange,
+  areaCircle,
+  locked,
+  onLockedChange,
+  onRadiusChange,
 }: AreaControlsProps) {
-	if (!areaCircle) {
-		return null;
-	}
+  if (!areaCircle) {
+    return null;
+  }
 
-	return (
-		<Box>
-			<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-				<Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-					Radius: {areaCircle.radiusKm} km
-				</Typography>
-				<Tooltip title={locked ? "Unlock area" : "Lock area"}>
-					<IconButton
-						size="small"
-						onClick={() => onLockedChange(!locked)}
-						color={locked ? "default" : "secondary"}
-					>
-						{locked ? (
-							<LockIcon fontSize="small" />
-						) : (
-							<LockOpenIcon fontSize="small" />
-						)}
-					</IconButton>
-				</Tooltip>
-			</Box>
-			<Slider
-				value={areaCircle.radiusKm}
-				min={1}
-				max={200}
-				step={1}
-				size="small"
-				onChange={(_, v) => onRadiusChange(v as number)}
-				sx={{ mt: 0.5 }}
-			/>
-		</Box>
-	);
+  return (
+    <Box>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+          Radius: {areaCircle.radiusKm} km
+        </Typography>
+        <Tooltip title={locked ? "Unlock area" : "Lock area"}>
+          <IconButton
+            size="small"
+            onClick={() => onLockedChange(!locked)}
+            color={locked ? "default" : "secondary"}
+          >
+            {locked ? (
+              <LockIcon fontSize="small" />
+            ) : (
+              <LockOpenIcon fontSize="small" />
+            )}
+          </IconButton>
+        </Tooltip>
+      </Box>
+      <Slider
+        value={areaCircle.radiusKm}
+        min={1}
+        max={200}
+        step={1}
+        size="small"
+        onChange={(_, v) => onRadiusChange(v as number)}
+        sx={{ mt: 0.5 }}
+      />
+    </Box>
+  );
 }

@@ -36,6 +36,8 @@ pub struct CreateFeatureBody {
     pub location: Geometry,
     pub name: Option<String>,
     pub description: Option<String>,
+    /// BCP-47 language code for name/description (default: "en")
+    pub lang_code: Option<String>,
 }
 
 pub async fn create_feature(
@@ -71,15 +73,16 @@ pub async fn create_feature(
         .await
         {
             Ok(mut feature) => {
+                let lang = body.lang_code.as_deref().unwrap_or("en");
                 if let Some(name) = &body.name {
-                    if let Ok(n) = features::upsert_name(&app.pg_pool, feature.id, "en", name).await
+                    if let Ok(n) = features::upsert_name(&app.pg_pool, feature.id, lang, name).await
                     {
                         feature.names.push(n);
                     }
                 }
                 if let Some(desc) = &body.description {
                     if let Ok(d) =
-                        features::upsert_description(&app.pg_pool, feature.id, "en", desc).await
+                        features::upsert_description(&app.pg_pool, feature.id, lang, desc).await
                     {
                         feature.descriptions.push(d);
                     }
@@ -101,6 +104,7 @@ pub async fn create_feature(
         "location": body.location,
         "name": body.name,
         "description": body.description,
+        "lang_code": body.lang_code,
     });
     match proposals::insert_proposal(
         &app.pg_pool,
