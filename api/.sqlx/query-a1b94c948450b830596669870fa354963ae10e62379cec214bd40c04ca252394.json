@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO users (id, username)\n        VALUES ($1, $2)\n        ON CONFLICT (id) DO UPDATE SET username = EXCLUDED.username, updated_at = NOW()\n        WHERE users.username IS DISTINCT FROM EXCLUDED.username\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a1b94c948450b830596669870fa354963ae10e62379cec214bd40c04ca252394"
+}

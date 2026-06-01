@@ -159,6 +159,7 @@ pub async fn upsert_user(
         INSERT INTO users (id, username)
         VALUES ($1, $2)
         ON CONFLICT (id) DO UPDATE SET username = EXCLUDED.username, updated_at = NOW()
+        WHERE users.username IS DISTINCT FROM EXCLUDED.username
         "#,
         user_id,
         username
