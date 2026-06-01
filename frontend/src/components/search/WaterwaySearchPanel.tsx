@@ -11,7 +11,7 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import type { SectionWithFeatures } from "@/lib/api";
+import type { FavoriteSection, SectionWithFeatures } from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
 import { useWaterways } from "@/lib/hooks/useWaterways";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
@@ -31,6 +31,9 @@ interface WaterwaySearchPanelProps {
   selectedSectionId?: number;
   onSectionClick?: (id: number) => void;
   waterwayNames?: Record<number, string>;
+  favorites?: FavoriteSection[];
+  favoritedIds?: Set<number>;
+  onToggleFavorite?: (id: number) => void;
 }
 
 type SearchMode = "name" | "area";
@@ -47,6 +50,9 @@ export default function WaterwaySearchPanel({
   selectedSectionId,
   onSectionClick,
   waterwayNames,
+  favorites = [],
+  favoritedIds,
+  onToggleFavorite,
 }: WaterwaySearchPanelProps) {
   const navigate = useNavigate({ from: "/" });
   const urlSearch = useSearch({ strict: false }) as {
@@ -333,15 +339,36 @@ export default function WaterwaySearchPanel({
           </Typography>
         )}
         {!hasFilters ? (
-          <Typography
-            variant="body2"
-            color="text.disabled"
-            sx={{ textAlign: "center", py: 4, fontStyle: "italic" }}
-          >
-            {mode === "area"
-              ? "Click on the map to set the search center."
-              : "Type a name, country or difficulty to search"}
-          </Typography>
+          mode === "area" ? (
+            <Typography
+              variant="body2"
+              color="text.disabled"
+              sx={{ textAlign: "center", py: 4, fontStyle: "italic" }}
+            >
+              Click on the map to set the search center.
+            </Typography>
+          ) : favorites.length > 0 ? (
+            <>
+              <SectionList
+                sections={favorites as unknown as SectionWithFeatures[]}
+                selectedSectionId={selectedSectionId}
+                waterwayNames={Object.fromEntries(
+                  favorites.map((f) => [f.waterway_id, f.waterway_name]),
+                )}
+                onSectionClick={onSectionClick}
+                favoritedIds={favoritedIds}
+                onToggleFavorite={onToggleFavorite}
+              />
+            </>
+          ) : (
+            <Typography
+              variant="body2"
+              color="text.disabled"
+              sx={{ textAlign: "center", py: 4, fontStyle: "italic" }}
+            >
+              Type a name, country or difficulty to search
+            </Typography>
+          )
         ) : listView === "rivers" ? (
           <RiverList
             waterways={visibleRivers}

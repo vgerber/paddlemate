@@ -26,6 +26,7 @@ export type WaterRangeWithStatus =
 export type GaugeReading = components["schemas"]["GaugeReading"];
 export type ApiToken = components["schemas"]["ApiToken"];
 export type ApiTokenCreated = components["schemas"]["ApiTokenCreated"];
+export type FavoriteSection = components["schemas"]["FavoriteSection"];
 
 export type WaterwayFilters = NonNullable<
   operations["list_waterways"]["parameters"]["query"]
@@ -300,6 +301,23 @@ export const tokensApi = {
   revoke: async (tokenId: number): Promise<void> => {
     await client.DELETE("/api/v1/tokens/{token_id}", {
       params: { path: { token_id: tokenId } },
+    });
+  },
+};
+
+export const favoritesApi = {
+  listSections: async (): Promise<FavoriteSection[]> => {
+    const { data } = await client.GET("/api/v1/favorites/sections");
+    return assertData(data);
+  },
+  addSection: async (sectionId: number): Promise<void> => {
+    await client.POST("/api/v1/favorites/sections/{section_id}", {
+      params: { path: { section_id: sectionId } },
+    });
+  },
+  removeSection: async (sectionId: number): Promise<void> => {
+    await client.DELETE("/api/v1/favorites/sections/{section_id}", {
+      params: { path: { section_id: sectionId } },
     });
   },
 };

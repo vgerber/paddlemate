@@ -1,5 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -45,6 +47,8 @@ interface WaterwayDetailPanelProps {
 	onSectionDraftClear?: () => void;
 	onPreviewCoordsChange?: (coords: [number, number][] | null) => void;
 	// Feature draft (geometry picking)
+	favoritedIds?: Set<number>;
+	onToggleFavorite?: (sectionId: number) => void;
 	featureVertices?: { lng: number; lat: number }[];
 	featureGeomType?: "Point" | "LineString" | "Polygon";
 	featurePickingActive?: boolean;
@@ -56,6 +60,7 @@ interface WaterwayDetailPanelProps {
 	onFeatureDraftClear?: () => void;
 	onFeatureClick?: (coords: [number, number] | null) => void;
 }
+
 
 export default function WaterwayDetailPanel({
 	waterwayId,
@@ -77,6 +82,8 @@ export default function WaterwayDetailPanel({
 	onStartPickTakeOut,
 	onSectionDraftClear,
 	onPreviewCoordsChange,
+	favoritedIds,
+	onToggleFavorite,
 	featureVertices,
 	featureGeomType,
 	featurePickingActive,
@@ -163,8 +170,17 @@ export default function WaterwayDetailPanel({
 										? (waterway?.name ?? "")
 										: (waterway?.waterway_type ?? "")}
 						</Typography>
-					</Box>
-				</Box>
+					</Box>				{inFeatures && onToggleFavorite && (
+					<IconButton
+						size="small"
+						onClick={() => onToggleFavorite(selectedSection.id)}
+						aria-label={favoritedIds?.has(selectedSection.id) ? "Remove from favorites" : "Add to favorites"}
+					>
+						{favoritedIds?.has(selectedSection.id)
+							? <StarIcon fontSize="small" sx={{ color: "warning.main" }} />
+							: <StarBorderIcon fontSize="small" />}
+					</IconButton>
+				)}				</Box>
 
 				{!suggestMode && !inFeatures && (
 					<ToggleButtonGroup

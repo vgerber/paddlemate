@@ -1,5 +1,8 @@
+import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
@@ -12,6 +15,8 @@ interface SectionListProps {
   selectedSectionId?: number;
   waterwayNames?: Record<number, string>;
   onSectionClick?: (id: number) => void;
+  favoritedIds?: Set<number>;
+  onToggleFavorite?: (id: number) => void;
 }
 
 export default function SectionList({
@@ -19,6 +24,8 @@ export default function SectionList({
   selectedSectionId,
   waterwayNames,
   onSectionClick,
+  favoritedIds,
+  onToggleFavorite,
 }: SectionListProps) {
   // Group sections by waterway
   const grouped = useMemo(() => {
@@ -107,6 +114,25 @@ export default function SectionList({
                 />
                 {diff && (
                   <Chip label={diff} size="small" sx={{ flexShrink: 0 }} />
+                )}
+                {onToggleFavorite && (
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleFavorite(section.id);
+                    }}
+                    sx={{ flexShrink: 0, ml: 0.5 }}
+                  >
+                    {favoritedIds?.has(section.id) ? (
+                      <StarIcon
+                        fontSize="small"
+                        sx={{ color: "warning.main" }}
+                      />
+                    ) : (
+                      <StarBorderIcon fontSize="small" />
+                    )}
+                  </IconButton>
                 )}
               </ListItemButton>
             );

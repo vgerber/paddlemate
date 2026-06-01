@@ -39,6 +39,43 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/favorites/sections": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description List all sections the authenticated user has starred. */
+		get: operations["list_section_favorites"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/favorites/sections/{section_id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				section_id: number;
+			};
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Star a section. */
+		post: operations["add_section_favorite"];
+		/** @description Unstar a section. */
+		delete: operations["remove_section_favorite"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/groups": {
 		parameters: {
 			query?: never;
@@ -847,6 +884,24 @@ export interface components {
 			/** Format: int32 */
 			sort_order: number;
 		};
+		FavoriteSection: {
+			/** Format: date-time */
+			created_at: string;
+			country?: string | null;
+			description?: string | null;
+			features: components["schemas"]["Feature"][];
+			/** Format: int64 */
+			id: number;
+			/** @description GeoJSON LineString geometry */
+			location: components["schemas"]["Geometry"];
+			name: string;
+			region?: string | null;
+			/** Format: date-time */
+			updated_at: string;
+			/** Format: int64 */
+			waterway_id: number;
+			waterway_name: string;
+		};
 		Feature: {
 			/** Format: date-time */
 			created_at: string;
@@ -1546,6 +1601,48 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+	list_section_favorites: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			200: {
+				headers: { [name: string]: unknown };
+				content: {
+					"application/json": components["schemas"]["FavoriteSection"][];
+				};
+			};
+		};
+	};
+	add_section_favorite: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { section_id: number };
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			204: { headers: { [name: string]: unknown }; content?: never };
+			404: { headers: { [name: string]: unknown }; content?: never };
+		};
+	};
+	remove_section_favorite: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { section_id: number };
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			204: { headers: { [name: string]: unknown }; content?: never };
+		};
+	};
 	list_tokens: {
 		parameters: {
 			query?: never;

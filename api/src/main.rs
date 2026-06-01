@@ -22,6 +22,7 @@ use paddlemate_api::{
     routes::{
         descents::descents_routes,
         docs::docs_routes,
+        favorites::favorites_routes,
         gauges::gauges_routes,
         groups::group_routes,
         proposals::proposals_routes,
@@ -156,6 +157,7 @@ async fn main() {
     let protected = ApiRouter::new()
         .nest_api_service("/tokens", tokens_routes(state.clone()))
         .nest_api_service("/groups", group_routes(state.clone()))
+        .nest_api_service("/favorites", favorites_routes(state.clone()))
         .api_route("/users", get_with(list_users, list_users_docs))
         .layer(middleware::from_fn_with_state(
             state.clone(),
