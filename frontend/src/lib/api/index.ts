@@ -27,6 +27,8 @@ export type GaugeReading = components["schemas"]["GaugeReading"];
 export type ApiToken = components["schemas"]["ApiToken"];
 export type ApiTokenCreated = components["schemas"]["ApiTokenCreated"];
 export type FavoriteSection = components["schemas"]["FavoriteSection"];
+export type UserWithFollowStatus = components["schemas"]["UserWithFollowStatus"];
+export type User = components["schemas"]["User"];
 
 export type WaterwayFilters = NonNullable<
   operations["list_waterways"]["parameters"]["query"]
@@ -318,6 +320,31 @@ export const favoritesApi = {
   removeSection: async (sectionId: number): Promise<void> => {
     await client.DELETE("/api/v1/favorites/sections/{section_id}", {
       params: { path: { section_id: sectionId } },
+    });
+  },
+};
+
+export const followsApi = {
+  listAll: async (): Promise<UserWithFollowStatus[]> => {
+    const { data } = await client.GET("/api/v1/follows/users");
+    return assertData(data);
+  },
+  listFollowing: async (): Promise<User[]> => {
+    const { data } = await client.GET("/api/v1/follows/users/following");
+    return assertData(data);
+  },
+  listFollowers: async (): Promise<User[]> => {
+    const { data } = await client.GET("/api/v1/follows/users/followers");
+    return assertData(data);
+  },
+  follow: async (userId: string): Promise<void> => {
+    await client.POST("/api/v1/follows/users/{user_id}", {
+      params: { path: { user_id: userId } },
+    });
+  },
+  unfollow: async (userId: string): Promise<void> => {
+    await client.DELETE("/api/v1/follows/users/{user_id}", {
+      params: { path: { user_id: userId } },
     });
   },
 };

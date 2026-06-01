@@ -76,6 +76,75 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/follows/users": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description List all users with follow status for the authenticated user. */
+		get: operations["list_users_with_follow_status"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/follows/users/following": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description List users the authenticated user is following. */
+		get: operations["list_following_users"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/follows/users/followers": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description List users who follow the authenticated user. */
+		get: operations["list_follower_users"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/follows/users/{user_id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { user_id: string };
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Follow a user. */
+		post: operations["follow_user"];
+		/** @description Unfollow a user. */
+		delete: operations["unfollow_user"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/groups": {
 		parameters: {
 			query?: never;
@@ -1455,6 +1524,11 @@ export interface components {
 		UpsertNameBody: {
 			name: string;
 		};
+		UserWithFollowStatus: {
+			id: string;
+			username: string;
+			is_following: boolean;
+		};
 		User: {
 			/** Format: date-time */
 			created_at: string;
@@ -1636,6 +1710,79 @@ export interface operations {
 			query?: never;
 			header?: never;
 			path: { section_id: number };
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			204: { headers: { [name: string]: unknown }; content?: never };
+		};
+	};
+	list_users_with_follow_status: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			200: {
+				headers: { [name: string]: unknown };
+				content: {
+					"application/json": components["schemas"]["UserWithFollowStatus"][];
+				};
+			};
+		};
+	};
+	list_following_users: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			200: {
+				headers: { [name: string]: unknown };
+				content: { "application/json": components["schemas"]["User"][] };
+			};
+		};
+	};
+	list_follower_users: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			200: {
+				headers: { [name: string]: unknown };
+				content: { "application/json": components["schemas"]["User"][] };
+			};
+		};
+	};
+	follow_user: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { user_id: string };
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			204: { headers: { [name: string]: unknown }; content?: never };
+			400: { headers: { [name: string]: unknown }; content?: never };
+			404: { headers: { [name: string]: unknown }; content?: never };
+		};
+	};
+	unfollow_user: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { user_id: string };
 			cookie?: never;
 		};
 		requestBody?: never;

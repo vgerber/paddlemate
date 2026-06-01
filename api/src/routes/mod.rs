@@ -1,6 +1,7 @@
 pub mod descents;
 pub mod docs;
 pub mod favorites;
+pub mod follows;
 pub mod gauges;
 pub mod groups;
 pub mod proposals;

@@ -2,6 +2,7 @@ pub mod comments;
 pub mod descents;
 pub mod favorites;
 pub mod features;
+pub mod follows;
 pub mod gauges;
 pub mod groups;
 pub mod proposals;
