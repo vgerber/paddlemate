@@ -1,10 +1,15 @@
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { createRootRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import { useSession } from "@/lib/hooks/useSession";
 
@@ -83,23 +88,7 @@ function Layout() {
           <Box sx={{ flex: 1 }} />
           {!isLoading &&
             (isAuthenticated ? (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: "text.secondary", letterSpacing: "0.08em" }}
-                >
-                  {user?.username}
-                </Typography>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  size="small"
-                  onClick={logout}
-                  sx={{ fontSize: "0.6875rem" }}
-                >
-                  Sign Out
-                </Button>
-              </Box>
+              <UserMenu username={user?.username ?? ""} logout={logout} />
             ) : (
               <Button
                 variant="contained"
@@ -123,5 +112,62 @@ function Layout() {
         </Box>
       </Box>
     </Box>
+  );
+}
+
+function UserMenu({
+  username,
+  logout,
+}: {
+  username: string;
+  logout: () => void;
+}) {
+  const [anchor, setAnchor] = useState<null | HTMLElement>(null);
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <Button
+        size="small"
+        endIcon={<ArrowDropDownIcon />}
+        onClick={(e) => setAnchor(e.currentTarget)}
+        sx={{
+          fontFamily: '"Space Grotesk", sans-serif',
+          fontSize: "0.6875rem",
+          fontWeight: 600,
+          letterSpacing: "0.08em",
+          color: "text.secondary",
+          textTransform: "none",
+        }}
+      >
+        {username}
+      </Button>
+      <Menu
+        anchorEl={anchor}
+        open={Boolean(anchor)}
+        onClose={() => setAnchor(null)}
+        slotProps={{ paper: { sx: { minWidth: 160 } } }}
+      >
+        <MenuItem
+          onClick={() => {
+            setAnchor(null);
+            navigate({ to: "/settings" });
+          }}
+          dense
+        >
+          Settings
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          onClick={() => {
+            setAnchor(null);
+            logout();
+          }}
+          dense
+        >
+          Sign Out
+        </MenuItem>
+      </Menu>
+    </>
   );
 }

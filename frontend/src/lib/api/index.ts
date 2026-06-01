@@ -24,6 +24,8 @@ export type SectionWaterStatus = components["schemas"]["SectionWaterStatus"];
 export type WaterRangeWithStatus =
   components["schemas"]["WaterRangeWithStatus"];
 export type GaugeReading = components["schemas"]["GaugeReading"];
+export type ApiToken = components["schemas"]["ApiToken"];
+export type ApiTokenCreated = components["schemas"]["ApiTokenCreated"];
 
 export type WaterwayFilters = NonNullable<
   operations["list_waterways"]["parameters"]["query"]
@@ -277,6 +279,27 @@ export const proposalsApi = {
   unvote: async (id: number) => {
     await client.DELETE("/api/v1/proposals/{proposal_id}/vote", {
       params: { path: { proposal_id: id } },
+    });
+  },
+};
+
+export const tokensApi = {
+  list: async (): Promise<ApiToken[]> => {
+    const { data } = await client.GET("/api/v1/tokens");
+    return assertData(data);
+  },
+  create: async (
+    name: string,
+    expiresAt?: string,
+  ): Promise<ApiTokenCreated> => {
+    const { data } = await client.POST("/api/v1/tokens", {
+      body: { name, expires_at: expiresAt ?? null },
+    });
+    return assertData(data);
+  },
+  revoke: async (tokenId: number): Promise<void> => {
+    await client.DELETE("/api/v1/tokens/{token_id}", {
+      params: { path: { token_id: tokenId } },
     });
   },
 };
