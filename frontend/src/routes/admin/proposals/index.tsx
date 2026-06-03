@@ -46,7 +46,21 @@ function AdminProposalsPage() {
   }
 
   if (!isAdmin) {
-    navigate({ to: "/" });
+    navigate({
+      to: "/",
+      search: {
+        waterway: undefined,
+        section: undefined,
+        q: undefined,
+        country: undefined,
+        min_diff: undefined,
+        max_diff: undefined,
+        mode: undefined,
+        lat: undefined,
+        lon: undefined,
+        radius: undefined,
+      },
+    });
     return null;
   }
 

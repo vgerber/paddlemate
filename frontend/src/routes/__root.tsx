@@ -73,14 +73,14 @@ function Layout() {
             <Box component={Link} to="/" sx={navLinkSx}>
               MAP
             </Box>
-            <Box component={Link} to="/logs/" sx={navLinkSx}>
+            <Box component={Link} to="/logs" sx={navLinkSx}>
               LOGS
             </Box>
-            <Box component={Link} to="/proposals/" sx={navLinkSx}>
+            <Box component={Link} to="/proposals" sx={navLinkSx}>
               PROPOSALS
             </Box>
             {isAdmin && (
-              <Box component={Link} to="/admin/proposals/" sx={navLinkSx}>
+              <Box component={Link} to="/admin/proposals" sx={navLinkSx}>
                 ADMIN
               </Box>
             )}

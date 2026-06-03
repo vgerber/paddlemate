@@ -87,6 +87,9 @@ export default function SuggestSectionForm({
   useEffect(() => {
     if (!putIn || !takeOut || !waterwayName) return;
 
+    const currentPutIn = putIn;
+    const currentTakeOut = takeOut;
+
     // Clear cached river if the waterway changed
     if (riverNameRef.current !== waterwayName) {
       riverRef.current = null;
@@ -102,10 +105,10 @@ export default function SuggestSectionForm({
       if (!river) {
         const pad = 0.05;
         const bbox = {
-          south: Math.min(putIn.lat, takeOut.lat) - pad,
-          north: Math.max(putIn.lat, takeOut.lat) + pad,
-          west: Math.min(putIn.lon, takeOut.lon) - pad,
-          east: Math.max(putIn.lon, takeOut.lon) + pad,
+          south: Math.min(currentPutIn.lat, currentTakeOut.lat) - pad,
+          north: Math.max(currentPutIn.lat, currentTakeOut.lat) + pad,
+          west: Math.min(currentPutIn.lon, currentTakeOut.lon) - pad,
+          east: Math.max(currentPutIn.lon, currentTakeOut.lon) + pad,
         };
         try {
           river = await fetchOsmRiver(waterwayName, bbox, controller.signal);
@@ -128,7 +131,7 @@ export default function SuggestSectionForm({
         return;
       }
 
-      const coords = snapSection(river, putIn, takeOut);
+      const coords = snapSection(river, currentPutIn, currentTakeOut);
       if (coords) {
         setSnapStatus("done");
         setSnappedCoords(coords);

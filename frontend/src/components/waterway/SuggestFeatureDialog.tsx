@@ -188,7 +188,7 @@ export default function SuggestFeatureDialog({
                 type="number"
                 value={lng}
                 onChange={(e) => setLng(e.target.value)}
-                inputProps={{ step: "any" }}
+                slotProps={{ htmlInput: { step: "any" } }}
                 error={!!locationError}
                 sx={{ flex: 1 }}
               />
@@ -198,7 +198,7 @@ export default function SuggestFeatureDialog({
                 type="number"
                 value={lat}
                 onChange={(e) => setLat(e.target.value)}
-                inputProps={{ step: "any" }}
+                slotProps={{ htmlInput: { step: "any" } }}
                 error={!!locationError}
                 sx={{ flex: 1 }}
               />
