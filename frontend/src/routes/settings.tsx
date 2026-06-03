@@ -15,6 +15,8 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
@@ -28,6 +30,8 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const [tab, setTab] = useState(0);
   const { isAuthenticated, isLoading } = useSession();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   if (isLoading) {
     return (
@@ -48,18 +52,19 @@ function SettingsPage() {
   }
 
   return (
-    <Box sx={{ display: "flex", minHeight: "calc(100vh - 48px)" }}>
+    <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, minHeight: "calc(100vh - 48px)" }}>
       <Tabs
-        orientation="vertical"
+        orientation={isMobile ? "horizontal" : "vertical"}
         value={tab}
         onChange={(_, v) => setTab(v)}
         sx={{
-          borderRight: 1,
+          borderRight: { xs: 0, sm: 1 },
+          borderBottom: { xs: 1, sm: 0 },
           borderColor: "divider",
-          minWidth: 180,
-          pt: 2,
+          minWidth: { xs: "auto", sm: 180 },
+          pt: { xs: 0, sm: 2 },
           "& .MuiTab-root": {
-            alignItems: "flex-start",
+            alignItems: { xs: "center", sm: "flex-start" },
             textAlign: "left",
             gap: 1,
             minHeight: 48,

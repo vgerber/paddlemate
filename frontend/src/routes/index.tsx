@@ -1,4 +1,10 @@
 import Box from "@mui/material/Box";
+import Fab from "@mui/material/Fab";
+import IconButton from "@mui/material/IconButton";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import CloseIcon from "@mui/icons-material/Close";
+import SearchIcon from "@mui/icons-material/Search";
 import { useQueries } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -90,12 +96,23 @@ function Home() {
   const [focusedPoint, setFocusedPoint] = useState<[number, number] | null>(
     null,
   );
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
 
   // Reset focused feature when the section changes
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on section change
   useEffect(() => {
     setFocusedPoint(null);
   }, [selectedSectionId]);
+
+  // Auto-open panel on mobile when a waterway is set (e.g. URL has ?waterway=…)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional auto-open on waterway/mobile change
+  useEffect(() => {
+    if (isMobile && selectedWaterwayId != null) {
+      setIsMobilePanelOpen(true);
+    }
+  }, [selectedWaterwayId, isMobile]);
 
   // Derive areaCircle from URL params
   const areaCircle: AreaCircle | null =
@@ -259,10 +276,12 @@ function Home() {
       if (section) {
         setSelectedWaterwayId(section.waterway_id);
         setSelectedSectionId(id);
+        if (isMobile) setIsMobilePanelOpen(true);
         return;
       }
     }
     setSelectedSectionId(id === selectedSectionId ? undefined : id);
+    if (isMobile && selectedWaterwayId != null) setIsMobilePanelOpen(true);
   };
 
   return (

@@ -7,8 +7,14 @@ import MenuItem from "@mui/material/MenuItem";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
+import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
+import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
+import BottomNavigation from "@mui/material/BottomNavigation";
+import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createRootRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createRootRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import { useSession } from "@/lib/hooks/useSession";
@@ -69,7 +75,7 @@ function Layout() {
           >
             PADDLEMATE
           </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: 2 }}>
+          <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 0.5, ml: 2 }}>
             <Box component={Link} to="/" sx={navLinkSx}>
               MAP
             </Box>
@@ -104,14 +110,65 @@ function Layout() {
       </AppBar>
 
       <Box
-        sx={{ flex: 1, mt: "48px", display: "flex", flexDirection: "column" }}
+        sx={{
+          flex: 1,
+          mt: "48px",
+          display: "flex",
+          flexDirection: "column",
+          pb: { xs: "calc(56px + env(safe-area-inset-bottom))", sm: 0 },
+        }}
       >
         <StandingDescentBanner />
         <Box component="main" sx={{ flex: 1 }}>
           <Outlet />
         </Box>
       </Box>
+      <BottomNav />
     </Box>
+  );
+}
+
+function BottomNav() {
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const activeTab =
+    pathname === "/"
+      ? 0
+      : pathname.startsWith("/logs")
+        ? 1
+        : pathname.startsWith("/proposals") || pathname.startsWith("/admin")
+          ? 2
+          : pathname.startsWith("/settings")
+            ? 3
+            : false;
+
+  return (
+    <BottomNavigation
+      value={activeTab}
+      onChange={(_, val: number) => {
+        const routes = ["/", "/logs", "/proposals", "/settings"] as const;
+        navigate({ to: routes[val] });
+      }}
+      sx={{
+        display: { xs: "flex", sm: "none" },
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: "auto",
+        minHeight: 56,
+        pb: "env(safe-area-inset-bottom)",
+        zIndex: 1300,
+        borderTop: "1px solid",
+        borderColor: "divider",
+        bgcolor: "background.paper",
+      }}
+    >
+      <BottomNavigationAction label="Map" icon={<MapOutlinedIcon />} />
+      <BottomNavigationAction label="Logs" icon={<DirectionsBoatOutlinedIcon />} />
+      <BottomNavigationAction label="Proposals" icon={<RateReviewOutlinedIcon />} />
+      <BottomNavigationAction label="Profile" icon={<AccountCircleOutlinedIcon />} />
+    </BottomNavigation>
   );
 }
 
