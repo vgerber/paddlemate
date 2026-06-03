@@ -57,6 +57,8 @@ pub struct Descent {
     pub id: DescentId,
     pub user_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub username: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
@@ -152,6 +154,7 @@ pub struct PatchDescentRequest {
 #[derive(Debug, Default, Deserialize, JsonSchema)]
 pub struct ListDescentsQuery {
     /// Filter scope: "owned" returns only the authenticated user's descents;
+    /// "following" returns public/shared descents from users you follow (auth required);
     /// "visible" (default) returns all descents visible to the viewer.
     pub scope: Option<String>,
     /// Narrow results by visibility: "private", "shared", or "public".

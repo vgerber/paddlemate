@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO user_follows (follower_id, following_id, status)\n        VALUES ($1, $2, 'pending')\n        ON CONFLICT DO NOTHING\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ce794a00df96255405c19822c12aa9ffdf13326942813235e2ac30f870b88f03"
+}

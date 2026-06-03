@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE user_follows\n        SET status = 'accepted'\n        WHERE follower_id = $1 AND following_id = $2 AND status = 'pending'\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d03d671bf4370fd164e1f151f4d36a2d592205d0f862aa19cb0c5f494d8fb7e0"
+}

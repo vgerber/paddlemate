@@ -56,9 +56,14 @@ const VISIBILITY_ICONS = {
 interface DescentCardProps {
   descent: Descent;
   onClick?: () => void;
+  showAuthor?: boolean;
 }
 
-export default function DescentCard({ descent, onClick }: DescentCardProps) {
+export default function DescentCard({
+  descent,
+  onClick,
+  showAuthor,
+}: DescentCardProps) {
   const waterwayNames = [
     ...new Set(
       descent.sections
@@ -134,6 +139,20 @@ export default function DescentCard({ descent, onClick }: DescentCardProps) {
           </Typography>
         </Box>
       </Box>
+
+      {/* Author attribution (feed view) */}
+      {showAuthor && descent.username && (
+        <Typography
+          sx={{
+            fontSize: "0.68rem",
+            color: "text.disabled",
+            fontFamily: '"Space Grotesk", monospace',
+            letterSpacing: "0.04em",
+          }}
+        >
+          {descent.username}
+        </Typography>
+      )}
 
       {/* Section names */}
       {descent.sections.length > 0 && (

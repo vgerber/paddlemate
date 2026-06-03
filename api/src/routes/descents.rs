@@ -102,8 +102,8 @@ pub async fn list_descents(
 ) -> impl IntoApiResponse {
     let viewer_id = auth.as_ref().map(|Extension(t)| t.user_id().to_string());
 
-    // scope=owned requires authentication
-    if q.scope.as_deref() == Some("owned") && viewer_id.is_none() {
+    // scope=owned and scope=following both require authentication
+    if matches!(q.scope.as_deref(), Some("owned") | Some("following")) && viewer_id.is_none() {
         return (StatusCode::UNAUTHORIZED, "Authentication required").into_response();
     }
 

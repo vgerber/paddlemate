@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT u.id, u.username, u.created_at, u.updated_at\n        FROM users u\n        JOIN user_follows uf ON uf.following_id = u.id\n        WHERE uf.follower_id = $1\n        ORDER BY u.username\n        ",
+  "query": "\n        SELECT u.id, u.username, u.created_at, u.updated_at\n        FROM users u\n        JOIN user_follows uf ON uf.following_id = u.id\n        WHERE uf.follower_id = $1 AND uf.status = 'accepted'\n        ORDER BY u.username\n        ",
   "describe": {
     "columns": [
       {
@@ -36,5 +36,5 @@
       false
     ]
   },
-  "hash": "e4b684ca3dfe2c6b98dee572c151e162f4b9605750067ffa6acc20b8984ff3d3"
+  "hash": "f4caa088ac26af3ef2d0e268305671d7454beb22a2513ed33a11dc9d65e14316"
 }

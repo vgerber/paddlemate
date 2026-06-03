@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM user_follows\n        WHERE (follower_id = $1 AND following_id = $2)\n           OR (follower_id = $2 AND following_id = $1 AND status = 'pending')\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2f608691021c6492c140f73a415b2975bfb0ec064929f249107801caf7e34129"
+}

@@ -13,6 +13,14 @@ use crate::models::{
 
 use super::gauges::water_status_for_section;
 
+fn optional_username(row: &PgRow) -> Result<Option<String>, sqlx::Error> {
+    match row.try_get::<Option<String>, _>("username") {
+        Ok(username) => Ok(username),
+        Err(sqlx::Error::ColumnNotFound(_)) => Ok(None),
+        Err(err) => Err(err),
+    }
+}
+
 fn row_to_descent(row: &PgRow) -> Result<Descent, sqlx::Error> {
     // Visibility audience is populated later by enrich_descent.
     let visibility = match row.try_get::<String, _>("visibility_scope")?.as_str() {
@@ -26,6 +34,8 @@ fn row_to_descent(row: &PgRow) -> Result<Descent, sqlx::Error> {
     Ok(Descent {
         id: row.try_get("id")?,
         user_id: row.try_get("user_id")?,
+        // Present only in list queries that join the users table; None otherwise.
+        username: optional_username(row)?,
         name: row.try_get("name")?,
         start_time: row.try_get("start_time")?,
         end_time: row.try_get("end_time")?,
@@ -50,6 +60,16 @@ const DESCENT_COLS: &str = "id, user_id, name, start_time, end_time, note, \
     put_in_feature_id, put_in_lat, put_in_lon, put_in_label, \
     take_out_feature_id, take_out_lat, take_out_lon, take_out_label, \
     visibility_scope::text AS visibility_scope, visible_from, created_at, updated_at";
+
+/// Column list for list queries that JOIN the users table for username attribution.
+const DESCENT_LIST_COLS: &str = concat!(
+    "descents.id, descents.user_id, descents.name, descents.start_time, descents.end_time, ",
+    "descents.note, descents.put_in_feature_id, descents.put_in_lat, descents.put_in_lon, ",
+    "descents.put_in_label, descents.take_out_feature_id, descents.take_out_lat, ",
+    "descents.take_out_lon, descents.take_out_label, ",
+    "descents.visibility_scope::text AS visibility_scope, descents.visible_from, ",
+    "descents.created_at, descents.updated_at, u.username"
+);
 
 async fn load_sections(
     pool: &PgPool,
@@ -505,12 +525,61 @@ pub async fn list_descents_for_viewer(
             }
         };
         sqlx::query(&format!(
-            "SELECT {DESCENT_COLS}, COUNT(*) OVER() AS total_count FROM descents \
-             WHERE user_id = $1 \
-               AND ($2::text IS NULL OR visibility_scope::text = $2) \
-               AND ($3::timestamptz IS NULL OR start_time >= $3) \
-               AND ($4::timestamptz IS NULL OR start_time <= $4) \
-             ORDER BY start_time DESC \
+            "SELECT {DESCENT_LIST_COLS}, COUNT(*) OVER() AS total_count \
+             FROM descents \
+             LEFT JOIN users u ON u.id = descents.user_id \
+             WHERE descents.user_id = $1 \
+               AND ($2::text IS NULL OR descents.visibility_scope::text = $2) \
+               AND ($3::timestamptz IS NULL OR descents.start_time >= $3) \
+               AND ($4::timestamptz IS NULL OR descents.start_time <= $4) \
+             ORDER BY descents.start_time DESC \
+             LIMIT $5 OFFSET $6"
+        ))
+        .bind(vid)
+        .bind(filters.visibility)
+        .bind(filters.from)
+        .bind(filters.to)
+        .bind(filters.per_page)
+        .bind(offset)
+        .fetch_all(pool)
+        .await?
+    } else if filters.scope == Some("following") {
+        let vid = match viewer_id {
+            Some(v) => v,
+            None => {
+                return Ok(PaginatedResponse {
+                    items: vec![],
+                    total: 0,
+                    page: filters.page,
+                    per_page: filters.per_page,
+                    total_pages: 0,
+                });
+            }
+        };
+        sqlx::query(&format!(
+            "SELECT {DESCENT_LIST_COLS}, COUNT(*) OVER() AS total_count \
+             FROM descents \
+             LEFT JOIN users u ON u.id = descents.user_id \
+             WHERE descents.user_id IN ( \
+                 SELECT following_id FROM user_follows \
+                 WHERE follower_id = $1 AND status = 'accepted' \
+             ) \
+             AND ( \
+                 (descents.visibility_scope = 'public' AND (descents.visible_from IS NULL OR descents.visible_from <= NOW())) \
+                 OR (descents.visibility_scope = 'shared' AND EXISTS ( \
+                     SELECT 1 FROM descent_visible_users \
+                     WHERE descent_id = descents.id AND user_id = $1 \
+                 )) \
+                 OR (descents.visibility_scope = 'shared' AND EXISTS ( \
+                     SELECT 1 FROM descent_visible_groups dvg \
+                     JOIN group_members gm ON gm.group_id = dvg.group_id \
+                     WHERE dvg.descent_id = descents.id AND gm.user_id = $1 \
+                 )) \
+             ) \
+               AND ($2::text IS NULL OR descents.visibility_scope::text = $2) \
+               AND ($3::timestamptz IS NULL OR descents.start_time >= $3) \
+               AND ($4::timestamptz IS NULL OR descents.start_time <= $4) \
+             ORDER BY descents.start_time DESC \
              LIMIT $5 OFFSET $6"
         ))
         .bind(vid)
@@ -523,24 +592,26 @@ pub async fn list_descents_for_viewer(
         .await?
     } else if let Some(vid) = viewer_id {
         sqlx::query(&format!(
-            "SELECT {DESCENT_COLS}, COUNT(*) OVER() AS total_count FROM descents \
+            "SELECT {DESCENT_LIST_COLS}, COUNT(*) OVER() AS total_count \
+             FROM descents \
+             LEFT JOIN users u ON u.id = descents.user_id \
              WHERE ( \
-                 user_id = $1 \
-                 OR (visibility_scope = 'public' AND (visible_from IS NULL OR visible_from <= NOW())) \
-                 OR (visibility_scope = 'shared' AND EXISTS ( \
+                 descents.user_id = $1 \
+                 OR (descents.visibility_scope = 'public' AND (descents.visible_from IS NULL OR descents.visible_from <= NOW())) \
+                 OR (descents.visibility_scope = 'shared' AND EXISTS ( \
                      SELECT 1 FROM descent_visible_users \
                      WHERE descent_id = descents.id AND user_id = $1 \
                  )) \
-                 OR (visibility_scope = 'shared' AND EXISTS ( \
+                 OR (descents.visibility_scope = 'shared' AND EXISTS ( \
                      SELECT 1 FROM descent_visible_groups dvg \
                      JOIN group_members gm ON gm.group_id = dvg.group_id \
                      WHERE dvg.descent_id = descents.id AND gm.user_id = $1 \
                  )) \
              ) \
-               AND ($2::text IS NULL OR visibility_scope::text = $2) \
-               AND ($3::timestamptz IS NULL OR start_time >= $3) \
-               AND ($4::timestamptz IS NULL OR start_time <= $4) \
-             ORDER BY start_time DESC \
+               AND ($2::text IS NULL OR descents.visibility_scope::text = $2) \
+               AND ($3::timestamptz IS NULL OR descents.start_time >= $3) \
+               AND ($4::timestamptz IS NULL OR descents.start_time <= $4) \
+             ORDER BY descents.start_time DESC \
              LIMIT $5 OFFSET $6"
         ))
         .bind(vid)
@@ -553,12 +624,14 @@ pub async fn list_descents_for_viewer(
         .await?
     } else {
         sqlx::query(&format!(
-            "SELECT {DESCENT_COLS}, COUNT(*) OVER() AS total_count FROM descents \
-             WHERE visibility_scope = 'public' \
-               AND (visible_from IS NULL OR visible_from <= NOW()) \
-               AND ($1::timestamptz IS NULL OR start_time >= $1) \
-               AND ($2::timestamptz IS NULL OR start_time <= $2) \
-             ORDER BY start_time DESC \
+            "SELECT {DESCENT_LIST_COLS}, COUNT(*) OVER() AS total_count \
+             FROM descents \
+             LEFT JOIN users u ON u.id = descents.user_id \
+             WHERE descents.visibility_scope = 'public' \
+               AND (descents.visible_from IS NULL OR descents.visible_from <= NOW()) \
+               AND ($1::timestamptz IS NULL OR descents.start_time >= $1) \
+               AND ($2::timestamptz IS NULL OR descents.start_time <= $2) \
+             ORDER BY descents.start_time DESC \
              LIMIT $3 OFFSET $4"
         ))
         .bind(filters.from)

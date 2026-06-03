@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            u.id,\n            u.username,\n            out_f.status AS \"outgoing_status?: String\",\n            (in_f.follower_id IS NOT NULL) AS \"incoming_pending!\"\n        FROM users u\n        LEFT JOIN user_follows out_f\n            ON out_f.follower_id = $1 AND out_f.following_id = u.id\n        LEFT JOIN user_follows in_f\n            ON in_f.following_id = $1\n            AND in_f.follower_id = u.id\n            AND in_f.status = 'pending'\n        WHERE u.id != $1\n        ORDER BY u.username\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "outgoing_status?: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "incoming_pending!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "480f2a9bd6e559477fc21d8d6a91e330689a535c2417ab949f6037c1fa2dad88"
+}

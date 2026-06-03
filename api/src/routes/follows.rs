@@ -1,6 +1,6 @@
 use aide::axum::{
     ApiRouter, IntoApiResponse,
-    routing::{get_with, post_with},
+    routing::{get_with, patch_with, post_with},
 };
 use axum::{
     Extension, Json,
@@ -16,6 +16,7 @@ use crate::{doc_fn, layers::auth::AuthToken, models::user::User, query::follows,
 pub fn follows_routes(state: AppState) -> ApiRouter {
     ApiRouter::new()
         .api_route("/users", get_with(list_users, list_users_docs))
+        .api_route("/users/pending", get_with(list_pending, list_pending_docs))
         .api_route(
             "/users/following",
             get_with(list_following, list_following_docs),
@@ -26,17 +27,24 @@ pub fn follows_routes(state: AppState) -> ApiRouter {
         )
         .api_route(
             "/users/{user_id}",
-            post_with(follow_user, follow_user_docs).delete_with(unfollow_user, unfollow_user_docs),
+            post_with(follow_user, follow_user_docs).delete_with(delete_follow, delete_follow_docs),
+        )
+        .api_route(
+            "/users/{user_id}/accept",
+            patch_with(accept_follow_request, accept_follow_request_docs),
         )
         .with_state(state)
 }
 
-/// A user with a flag indicating whether the viewer is following them.
+/// A user with the viewer's outgoing follow status and whether they have a pending request to the viewer.
 #[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct UserWithFollowStatusResponse {
     pub id: String,
     pub username: String,
-    pub is_following: bool,
+    /// The viewer's outgoing follow status toward this user: "pending", "accepted", or null.
+    pub outgoing_status: Option<String>,
+    /// Whether this user has a pending request to follow the viewer.
+    pub incoming_pending: bool,
 }
 
 #[derive(Deserialize, JsonSchema)]
@@ -57,7 +65,8 @@ async fn list_users(
                 .map(|u| UserWithFollowStatusResponse {
                     id: u.id,
                     username: u.username,
-                    is_following: u.is_following,
+                    outgoing_status: u.outgoing_status,
+                    incoming_pending: u.incoming_pending,
                 })
                 .collect::<Vec<_>>(),
         )
@@ -72,6 +81,28 @@ async fn list_users(
 doc_fn!(list_users_docs, op =>
     op.description("List all users with follow status for the authenticated user.")
         .response::<200, Json<Vec<UserWithFollowStatusResponse>>>()
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Follows")
+);
+
+async fn list_pending(
+    State(app): State<AppState>,
+    Extension(token): Extension<AuthToken>,
+) -> impl IntoApiResponse {
+    let user_id = token.user_id();
+
+    match follows::list_pending_requests(&app.pg_pool, &user_id).await {
+        Ok(users) => Json(users as Vec<User>).into_response(),
+        Err(err) => {
+            tracing::error!("Error listing pending requests: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+doc_fn!(list_pending_docs, op =>
+    op.description("List users who have sent a pending follow request to the authenticated user.")
+        .response::<200, Json<Vec<User>>>()
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Follows")
 );
@@ -92,7 +123,7 @@ async fn list_following(
 }
 
 doc_fn!(list_following_docs, op =>
-    op.description("List users the authenticated user is following.")
+    op.description("List users the authenticated user is following (accepted follows only).")
         .response::<200, Json<Vec<User>>>()
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Follows")
@@ -114,7 +145,7 @@ async fn list_followers(
 }
 
 doc_fn!(list_followers_docs, op =>
-    op.description("List users who follow the authenticated user.")
+    op.description("List users who follow the authenticated user (accepted follows only).")
         .response::<200, Json<Vec<User>>>()
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Follows")
@@ -145,33 +176,59 @@ async fn follow_user(
 }
 
 doc_fn!(follow_user_docs, op =>
-    op.description("Follow a user.")
-        .response_with::<204, (), _>(|res| res.description("Followed successfully"))
+    op.description("Send a follow request to a user.")
+        .response_with::<204, (), _>(|res| res.description("Follow request sent"))
         .response_with::<400, (), _>(|res| res.description("Cannot follow yourself"))
         .response_with::<404, (), _>(|res| res.description("User not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Follows")
 );
 
-async fn unfollow_user(
+async fn accept_follow_request(
     State(app): State<AppState>,
     Extension(token): Extension<AuthToken>,
     Path(path): Path<UserFollowPath>,
 ) -> impl IntoApiResponse {
     let user_id = token.user_id();
 
-    match follows::unfollow_user(&app.pg_pool, &user_id, &path.user_id).await {
-        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+    // path.user_id is the follower; auth user (following_id) accepts
+    match follows::accept_follow(&app.pg_pool, &path.user_id, &user_id).await {
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => StatusCode::NOT_FOUND.into_response(),
         Err(err) => {
-            tracing::error!("Error unfollowing user: {}", err);
+            tracing::error!("Error accepting follow request: {}", err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
 }
 
-doc_fn!(unfollow_user_docs, op =>
-    op.description("Unfollow a user.")
-        .response_with::<204, (), _>(|res| res.description("Unfollowed successfully"))
+doc_fn!(accept_follow_request_docs, op =>
+    op.description("Accept a pending follow request from a user.")
+        .response_with::<204, (), _>(|res| res.description("Request accepted"))
+        .response_with::<404, (), _>(|res| res.description("No pending request found"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Follows")
+);
+
+async fn delete_follow(
+    State(app): State<AppState>,
+    Extension(token): Extension<AuthToken>,
+    Path(path): Path<UserFollowPath>,
+) -> impl IntoApiResponse {
+    let user_id = token.user_id();
+
+    match follows::delete_follow(&app.pg_pool, &user_id, &path.user_id).await {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(err) => {
+            tracing::error!("Error removing follow: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+doc_fn!(delete_follow_docs, op =>
+    op.description("Remove a follow or reject/cancel a pending follow request.")
+        .response_with::<204, (), _>(|res| res.description("Removed successfully"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Follows")
 );

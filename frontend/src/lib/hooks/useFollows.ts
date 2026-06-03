@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { followsApi } from "@/lib/api";
 import { useSession } from "./useSession";
 
@@ -7,6 +6,7 @@ export const followKeys = {
   all: ["follows"] as const,
   following: ["follows", "following"] as const,
   followers: ["follows", "followers"] as const,
+  pending: ["follows", "pending"] as const,
 };
 
 export function useFollows() {
@@ -25,10 +25,11 @@ export function useFollows() {
     enabled: isAuthenticated,
   });
 
-  const followingIds = useMemo(
-    () => new Set(following.map((u) => u.id)),
-    [following],
-  );
+  const { data: pendingRequests = [], isLoading: pendingLoading } = useQuery({
+    queryKey: followKeys.pending,
+    queryFn: () => followsApi.listPendingRequests(),
+    enabled: isAuthenticated,
+  });
 
   const follow = useMutation({
     mutationFn: (userId: string) => followsApi.follow(userId),
@@ -40,19 +41,18 @@ export function useFollows() {
     onSuccess: () => qc.invalidateQueries({ queryKey: followKeys.all }),
   });
 
-  const toggle = (userId: string) => {
-    if (followingIds.has(userId)) {
-      unfollow.mutate(userId);
-    } else {
-      follow.mutate(userId);
-    }
-  };
+  const accept = useMutation({
+    mutationFn: (userId: string) => followsApi.acceptRequest(userId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: followKeys.all }),
+  });
 
   return {
     following,
     followers,
-    followingIds,
-    isLoading: followingLoading || followersLoading,
-    toggle,
+    pendingRequests,
+    isLoading: followingLoading || followersLoading || pendingLoading,
+    follow,
+    unfollow,
+    accept,
   };
 }

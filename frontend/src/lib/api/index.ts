@@ -27,7 +27,8 @@ export type GaugeReading = components["schemas"]["GaugeReading"];
 export type ApiToken = components["schemas"]["ApiToken"];
 export type ApiTokenCreated = components["schemas"]["ApiTokenCreated"];
 export type FavoriteSection = components["schemas"]["FavoriteSection"];
-export type UserWithFollowStatus = components["schemas"]["UserWithFollowStatus"];
+export type UserWithFollowStatus =
+  components["schemas"]["UserWithFollowStatus"];
 export type User = components["schemas"]["User"];
 
 export type WaterwayFilters = NonNullable<
@@ -337,6 +338,10 @@ export const followsApi = {
     const { data } = await client.GET("/api/v1/follows/users/followers");
     return assertData(data);
   },
+  listPendingRequests: async (): Promise<User[]> => {
+    const { data } = await client.GET("/api/v1/follows/users/pending");
+    return assertData(data);
+  },
   follow: async (userId: string): Promise<void> => {
     await client.POST("/api/v1/follows/users/{user_id}", {
       params: { path: { user_id: userId } },
@@ -344,6 +349,11 @@ export const followsApi = {
   },
   unfollow: async (userId: string): Promise<void> => {
     await client.DELETE("/api/v1/follows/users/{user_id}", {
+      params: { path: { user_id: userId } },
+    });
+  },
+  acceptRequest: async (userId: string): Promise<void> => {
+    await client.PATCH("/api/v1/follows/users/{user_id}/accept", {
       params: { path: { user_id: userId } },
     });
   },

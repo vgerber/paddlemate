@@ -127,6 +127,40 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/follows/users/pending": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description List pending follow requests sent to the authenticated user. */
+		get: operations["list_pending_requests"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/follows/users/{user_id}/accept": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { user_id: string };
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		/** @description Accept a pending follow request from a user. */
+		patch: operations["accept_follow_request"];
+		trace?: never;
+	};
 	"/api/v1/follows/users/{user_id}": {
 		parameters: {
 			query?: never;
@@ -923,6 +957,8 @@ export interface components {
 			/** Format: date-time */
 			updated_at: string;
 			user_id: string;
+			/** Username of the descent owner (populated in list responses). */
+			username?: string | null;
 			visibility: components["schemas"]["Visibility"];
 			/** Format: date-time */
 			visible_from?: string | null;
@@ -1527,7 +1563,10 @@ export interface components {
 		UserWithFollowStatus: {
 			id: string;
 			username: string;
-			is_following: boolean;
+			/** The viewer's outgoing follow status: "pending", "accepted", or null. */
+			outgoing_status: string | null;
+			/** Whether this user has a pending request to follow the viewer. */
+			incoming_pending: boolean;
 		};
 		User: {
 			/** Format: date-time */
@@ -1715,6 +1754,34 @@ export interface operations {
 		requestBody?: never;
 		responses: {
 			204: { headers: { [name: string]: unknown }; content?: never };
+		};
+	};
+	list_pending_requests: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			200: {
+				headers: { [name: string]: unknown };
+				content: { "application/json": components["schemas"]["User"][] };
+			};
+		};
+	};
+	accept_follow_request: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { user_id: string };
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			204: { headers: { [name: string]: unknown }; content?: never };
+			404: { headers: { [name: string]: unknown }; content?: never };
 		};
 	};
 	list_users_with_follow_status: {
