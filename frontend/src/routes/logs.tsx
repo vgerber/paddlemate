@@ -1,3 +1,8 @@
+import DescentCard from "@/components/descents/DescentCard";
+import DescentForm from "@/components/descents/DescentForm";
+import type { Descent } from "@/lib/api";
+import { useMyDescents } from "@/lib/hooks/useDescents";
+import { useSession } from "@/lib/hooks/useSession";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
@@ -11,11 +16,6 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import DescentCard from "@/components/descents/DescentCard";
-import DescentForm from "@/components/descents/DescentForm";
-import type { Descent } from "@/lib/api";
-import { useMyDescents } from "@/lib/hooks/useDescents";
-import { useSession } from "@/lib/hooks/useSession";
 
 export const Route = createFileRoute("/logs")({
   component: LogsPage,
