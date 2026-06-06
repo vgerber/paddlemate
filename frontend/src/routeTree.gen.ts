@@ -10,18 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as LogsRouteImport } from './routes/logs'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProposalsIndexRouteImport } from './routes/proposals/index'
-import { Route as LogsIndexRouteImport } from './routes/logs/index'
 import { Route as WaterwaysWaterwayIdRouteImport } from './routes/waterways/$waterwayId'
-import { Route as LogsNewRouteImport } from './routes/logs/new'
-import { Route as LogsDescentIdRouteImport } from './routes/logs/$descentId'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AdminProposalsIndexRouteImport } from './routes/admin/proposals/index'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogsRoute = LogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -34,24 +37,9 @@ const ProposalsIndexRoute = ProposalsIndexRouteImport.update({
   path: '/proposals/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LogsIndexRoute = LogsIndexRouteImport.update({
-  id: '/logs/',
-  path: '/logs/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const WaterwaysWaterwayIdRoute = WaterwaysWaterwayIdRouteImport.update({
   id: '/waterways/$waterwayId',
   path: '/waterways/$waterwayId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LogsNewRoute = LogsNewRouteImport.update({
-  id: '/logs/new',
-  path: '/logs/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LogsDescentIdRoute = LogsDescentIdRouteImport.update({
-  id: '/logs/$descentId',
-  path: '/logs/$descentId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -67,35 +55,29 @@ const AdminProposalsIndexRoute = AdminProposalsIndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/logs': typeof LogsRoute
   '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/logs/$descentId': typeof LogsDescentIdRoute
-  '/logs/new': typeof LogsNewRoute
   '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
-  '/logs/': typeof LogsIndexRoute
   '/proposals/': typeof ProposalsIndexRoute
   '/admin/proposals/': typeof AdminProposalsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/logs': typeof LogsRoute
   '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/logs/$descentId': typeof LogsDescentIdRoute
-  '/logs/new': typeof LogsNewRoute
   '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
-  '/logs': typeof LogsIndexRoute
   '/proposals': typeof ProposalsIndexRoute
   '/admin/proposals': typeof AdminProposalsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/logs': typeof LogsRoute
   '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/logs/$descentId': typeof LogsDescentIdRoute
-  '/logs/new': typeof LogsNewRoute
   '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
-  '/logs/': typeof LogsIndexRoute
   '/proposals/': typeof ProposalsIndexRoute
   '/admin/proposals/': typeof AdminProposalsIndexRoute
 }
@@ -103,46 +85,38 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/logs'
     | '/settings'
     | '/auth/callback'
-    | '/logs/$descentId'
-    | '/logs/new'
     | '/waterways/$waterwayId'
-    | '/logs/'
     | '/proposals/'
     | '/admin/proposals/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/logs'
     | '/settings'
     | '/auth/callback'
-    | '/logs/$descentId'
-    | '/logs/new'
     | '/waterways/$waterwayId'
-    | '/logs'
     | '/proposals'
     | '/admin/proposals'
   id:
     | '__root__'
     | '/'
+    | '/logs'
     | '/settings'
     | '/auth/callback'
-    | '/logs/$descentId'
-    | '/logs/new'
     | '/waterways/$waterwayId'
-    | '/logs/'
     | '/proposals/'
     | '/admin/proposals/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LogsRoute: typeof LogsRoute
   SettingsRoute: typeof SettingsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
-  LogsDescentIdRoute: typeof LogsDescentIdRoute
-  LogsNewRoute: typeof LogsNewRoute
   WaterwaysWaterwayIdRoute: typeof WaterwaysWaterwayIdRoute
-  LogsIndexRoute: typeof LogsIndexRoute
   ProposalsIndexRoute: typeof ProposalsIndexRoute
   AdminProposalsIndexRoute: typeof AdminProposalsIndexRoute
 }
@@ -154,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logs': {
+      id: '/logs'
+      path: '/logs'
+      fullPath: '/logs'
+      preLoaderRoute: typeof LogsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -170,32 +151,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProposalsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/logs/': {
-      id: '/logs/'
-      path: '/logs'
-      fullPath: '/logs/'
-      preLoaderRoute: typeof LogsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/waterways/$waterwayId': {
       id: '/waterways/$waterwayId'
       path: '/waterways/$waterwayId'
       fullPath: '/waterways/$waterwayId'
       preLoaderRoute: typeof WaterwaysWaterwayIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/logs/new': {
-      id: '/logs/new'
-      path: '/logs/new'
-      fullPath: '/logs/new'
-      preLoaderRoute: typeof LogsNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/logs/$descentId': {
-      id: '/logs/$descentId'
-      path: '/logs/$descentId'
-      fullPath: '/logs/$descentId'
-      preLoaderRoute: typeof LogsDescentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -217,12 +177,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LogsRoute: LogsRoute,
   SettingsRoute: SettingsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
-  LogsDescentIdRoute: LogsDescentIdRoute,
-  LogsNewRoute: LogsNewRoute,
   WaterwaysWaterwayIdRoute: WaterwaysWaterwayIdRoute,
-  LogsIndexRoute: LogsIndexRoute,
   ProposalsIndexRoute: ProposalsIndexRoute,
   AdminProposalsIndexRoute: AdminProposalsIndexRoute,
 }

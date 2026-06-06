@@ -34,6 +34,9 @@ interface WaterwaySearchPanelProps {
   favorites?: FavoriteSection[];
   favoritedIds?: Set<number>;
   onToggleFavorite?: (id: number) => void;
+  onAreaModeActivate?: () => void;
+  onRadiusPreview?: (radiusKm: number) => void;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
 type SearchMode = "name" | "area";
@@ -53,6 +56,9 @@ export default function WaterwaySearchPanel({
   favorites = [],
   favoritedIds,
   onToggleFavorite,
+  onAreaModeActivate,
+  onRadiusPreview,
+  onLoadingChange,
 }: WaterwaySearchPanelProps) {
   const navigate = useNavigate({ from: "/" });
   const urlSearch = useSearch({ strict: false }) as {
@@ -138,6 +144,10 @@ export default function WaterwaySearchPanel({
     onWaterwaysChange?.(waterways.map((w) => w.id));
   }, [waterways, onWaterwaysChange]);
 
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
+
   // In area mode, auto-fetch all pages so the map shows all results
   useEffect(() => {
     if (mode === "area" && hasNextPage && !isFetchingNextPage) {
@@ -164,7 +174,7 @@ export default function WaterwaySearchPanel({
   }, [navigate, debouncedName, debouncedCountry, minDiff, maxDiff, mode]);
 
   return (
-    <>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Filters header */}
       <Box
         sx={{
@@ -199,7 +209,10 @@ export default function WaterwaySearchPanel({
           exclusive
           size="small"
           onChange={(_, v) => {
-            if (v) setMode(v);
+            if (v) {
+              setMode(v);
+              if (v === "area") onAreaModeActivate?.();
+            }
           }}
           sx={{
             mb: 1.5,
@@ -275,6 +288,7 @@ export default function WaterwaySearchPanel({
                   areaCircle &&
                   onAreaCircleChange?.({ ...areaCircle, radiusKm: r })
                 }
+                onRadiusPreview={onRadiusPreview}
               />
               <DifficultySelect
                 minDiff={minDiff}
@@ -387,6 +401,6 @@ export default function WaterwaySearchPanel({
           />
         )}
       </Box>
-    </>
+    </Box>
   );
 }

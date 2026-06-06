@@ -42,7 +42,13 @@ export function PointEntry({
     >
       <Stack
         direction="column"
-        sx={{ width: 16, flexShrink: 0, pt: "3px", alignItems: "center", alignSelf: "stretch" }}
+        sx={{
+          width: 16,
+          flexShrink: 0,
+          pt: "3px",
+          alignItems: "center",
+          alignSelf: "stretch",
+        }}
       >
         <Box
           sx={{
