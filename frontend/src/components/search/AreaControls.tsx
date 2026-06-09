@@ -43,25 +43,7 @@ export default function AreaControls({
   }
 
   return (
-    <Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-          Radius: {localRadius} km
-        </Typography>
-        <Tooltip title={locked ? "Unlock area" : "Lock area"}>
-          <IconButton
-            size="small"
-            onClick={() => onLockedChange(!locked)}
-            color={locked ? "default" : "secondary"}
-          >
-            {locked ? (
-              <LockIcon fontSize="small" />
-            ) : (
-              <LockOpenIcon fontSize="small" />
-            )}
-          </IconButton>
-        </Tooltip>
-      </Box>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
       <Slider
         value={localRadius}
         min={1}
@@ -73,8 +55,28 @@ export default function AreaControls({
           setLocalRadius(km);
           onRadiusPreview?.(km);
         }}
-        sx={{ mt: 0.5 }}
+        sx={{ flex: 1 }}
       />
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ whiteSpace: "nowrap", minWidth: 36, textAlign: "right" }}
+      >
+        {localRadius} km
+      </Typography>
+      <Tooltip title={locked ? "Unlock area" : "Lock area"}>
+        <IconButton
+          size="small"
+          onClick={() => onLockedChange(!locked)}
+          color={locked ? "default" : "secondary"}
+        >
+          {locked ? (
+            <LockIcon fontSize="small" />
+          ) : (
+            <LockOpenIcon fontSize="small" />
+          )}
+        </IconButton>
+      </Tooltip>
     </Box>
   );
 }

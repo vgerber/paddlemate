@@ -6,6 +6,8 @@ interface SidebarContentProps {
   state: MapPageState;
   /** Mobile only: close the overlay when area mode is activated */
   onAreaModeActivate?: () => void;
+  /** Mobile only: close the overlay (replaces star icon with × in detail header) */
+  onMobileClose?: () => void;
 }
 
 /**
@@ -15,6 +17,7 @@ interface SidebarContentProps {
 export default function SidebarContent({
   state,
   onAreaModeActivate,
+  onMobileClose,
 }: SidebarContentProps) {
   const {
     selectedWaterwayId,
@@ -133,6 +136,7 @@ export default function SidebarContent({
         setFeaturePickingActive(false);
       }}
       onFeatureClick={(coords) => setFocusedPoint(coords)}
+      onMobileClose={onMobileClose}
     />
   );
 }

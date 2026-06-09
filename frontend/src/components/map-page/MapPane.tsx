@@ -136,7 +136,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
               borderTop: "1px solid",
               borderColor: "divider",
               px: 2,
-              py: 1,
+              py: 0.5,
               display: "flex",
               alignItems: "center",
               gap: 2,

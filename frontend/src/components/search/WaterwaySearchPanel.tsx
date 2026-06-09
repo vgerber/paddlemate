@@ -196,7 +196,7 @@ export default function WaterwaySearchPanel({
           {!isLoading && (
             <Typography
               variant="caption"
-              sx={{ color: "text.disabled", ml: "auto" }}
+              sx={{ color: "text.disabled", ml: "auto", display: { xs: "none", md: "block" } }}
             >
               {total} results
             </Typography>

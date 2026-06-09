@@ -1,10 +1,15 @@
 import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
+import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { useMemo, useState } from "react";
 import {
   TIME_RANGE_OPTIONS,
@@ -24,6 +29,8 @@ export default function GaugeChartPanel({
   onClose,
 }: GaugeChartPanelProps) {
   const gauge = ranges[0]?.gauge;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const [measurementType, setMeasurementType] = useState<string | null>(null);
 
@@ -77,12 +84,63 @@ export default function GaugeChartPanel({
             </Box>
           )}
         </Typography>
-        {measurementTypes.length > 1 && (
+        {measurementTypes.length > 1 &&
+          (isMobile ? (
+            <FormControl size="small" sx={{ flexShrink: 0 }}>
+              <Select
+                value={measurementType ?? measurementTypes[0]}
+                onChange={(e) => setMeasurementType(e.target.value)}
+                sx={{ fontSize: "0.75rem" }}
+              >
+                {measurementTypes.map((t) => (
+                  <MenuItem key={t} value={t}>
+                    {typeLabel(t)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ) : (
+            <ToggleButtonGroup
+              value={measurementType}
+              exclusive
+              size="small"
+              onChange={(_, v) => v && setMeasurementType(v)}
+              sx={{
+                flexShrink: 0,
+                "& .MuiToggleButton-root": {
+                  py: 0.25,
+                  px: 1,
+                  fontSize: "0.7rem",
+                },
+              }}
+            >
+              {measurementTypes.map((t) => (
+                <ToggleButton key={t} value={t}>
+                  {typeLabel(t)}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          ))}
+        {isMobile ? (
+          <FormControl size="small" sx={{ flexShrink: 0 }}>
+            <Select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+              sx={{ fontSize: "0.75rem" }}
+            >
+              {TIME_RANGE_OPTIONS.map((o) => (
+                <MenuItem key={o.value} value={o.value}>
+                  {o.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        ) : (
           <ToggleButtonGroup
-            value={measurementType}
+            value={timeRange}
             exclusive
             size="small"
-            onChange={(_, v) => v && setMeasurementType(v)}
+            onChange={(_, v) => v && setTimeRange(v)}
             sx={{
               flexShrink: 0,
               "& .MuiToggleButton-root": {
@@ -92,33 +150,13 @@ export default function GaugeChartPanel({
               },
             }}
           >
-            {measurementTypes.map((t) => (
-              <ToggleButton key={t} value={t}>
-                {typeLabel(t)}
+            {TIME_RANGE_OPTIONS.map((o) => (
+              <ToggleButton key={o.value} value={o.value}>
+                {o.label}
               </ToggleButton>
             ))}
           </ToggleButtonGroup>
         )}
-        <ToggleButtonGroup
-          value={timeRange}
-          exclusive
-          size="small"
-          onChange={(_, v) => v && setTimeRange(v)}
-          sx={{
-            flexShrink: 0,
-            "& .MuiToggleButton-root": {
-              py: 0.25,
-              px: 1,
-              fontSize: "0.7rem",
-            },
-          }}
-        >
-          {TIME_RANGE_OPTIONS.map((o) => (
-            <ToggleButton key={o.value} value={o.value}>
-              {o.label}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
         <IconButton
           size="small"
           onClick={onClose}

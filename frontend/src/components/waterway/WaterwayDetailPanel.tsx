@@ -1,5 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CloseIcon from "@mui/icons-material/Close";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
@@ -49,6 +50,7 @@ interface WaterwayDetailPanelProps {
   // Feature draft (geometry picking)
   favoritedIds?: Set<number>;
   onToggleFavorite?: (sectionId: number) => void;
+  onMobileClose?: () => void;
   featureVertices?: { lng: number; lat: number }[];
   featureGeomType?: "Point" | "LineString" | "Polygon";
   featurePickingActive?: boolean;
@@ -83,6 +85,7 @@ export default function WaterwayDetailPanel({
   onPreviewCoordsChange,
   favoritedIds,
   onToggleFavorite,
+  onMobileClose,
   featureVertices,
   featureGeomType,
   featurePickingActive,
@@ -169,23 +172,34 @@ export default function WaterwayDetailPanel({
                     : (waterway?.waterway_type ?? "")}
             </Typography>
           </Box>{" "}
-          {inFeatures && onToggleFavorite && (
-            <IconButton
-              size="small"
-              onClick={() => onToggleFavorite(selectedSection.id)}
-              aria-label={
-                favoritedIds?.has(selectedSection.id)
-                  ? "Remove from favorites"
-                  : "Add to favorites"
-              }
-            >
-              {favoritedIds?.has(selectedSection.id) ? (
-                <StarIcon fontSize="small" sx={{ color: "warning.main" }} />
-              ) : (
-                <StarBorderIcon fontSize="small" />
-              )}
-            </IconButton>
-          )}{" "}
+          {inFeatures &&
+            (onMobileClose ? (
+              <IconButton
+                size="small"
+                onClick={onMobileClose}
+                aria-label="Close"
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            ) : (
+              onToggleFavorite && (
+                <IconButton
+                  size="small"
+                  onClick={() => onToggleFavorite(selectedSection.id)}
+                  aria-label={
+                    favoritedIds?.has(selectedSection.id)
+                      ? "Remove from favorites"
+                      : "Add to favorites"
+                  }
+                >
+                  {favoritedIds?.has(selectedSection.id) ? (
+                    <StarIcon fontSize="small" sx={{ color: "warning.main" }} />
+                  ) : (
+                    <StarBorderIcon fontSize="small" />
+                  )}
+                </IconButton>
+              )
+            ))}{" "}
         </Box>
 
         {!suggestMode && !inFeatures && (
@@ -284,7 +298,7 @@ export default function WaterwayDetailPanel({
               sx={{
                 px: 1.5,
                 py: 1,
-                display: "flex",
+                display: { xs: "none", md: "flex" },
                 gap: 1,
                 flexShrink: 0,
                 borderTop: "1px solid",

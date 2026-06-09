@@ -2,9 +2,13 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Divider from "@mui/material/Divider";
+import FormControl from "@mui/material/FormControl";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
@@ -30,6 +34,8 @@ export default function SectionChartPanel({
 }: SectionChartPanelProps) {
   const { isAuthenticated } = useSession();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { current: standingDescent, start: startDescent } =
     useStandingDescent();
   const { data: waterStatus, isLoading } = useWaterStatus(
@@ -45,12 +51,6 @@ export default function SectionChartPanel({
     );
     return Array.from(types) as ("water_level" | "discharge" | "temperature")[];
   }, [waterStatus?.ranges]);
-
-  const subtitle = useMemo(() => {
-    const r = waterStatus?.ranges[0];
-    if (!r) return null;
-    return `${r.gauge.name} (${r.series.unit})`;
-  }, [waterStatus]);
 
   return (
     <Box
@@ -74,24 +74,15 @@ export default function SectionChartPanel({
           gap: 1,
         }}
       >
-        <Typography
-          variant="subtitle2"
-          sx={{ fontWeight: 600, flex: 1, minWidth: 0 }}
-          noWrap
-        >
-          {sectionName ?? "Section"}
-          {subtitle && (
-            <Box
-              component="span"
-              sx={{ fontWeight: 400, color: "text.secondary" }}
-            >
-              {" - "}
-              {subtitle}
-            </Box>
-          )}
-        </Typography>
         {isAuthenticated && (
-          <>
+          <Box
+            sx={{
+              display: { xs: "none", sm: "flex" },
+              alignItems: "center",
+              gap: 1,
+              flexShrink: 0,
+            }}
+          >
             {!standingDescent ? (
               <Button
                 size="small"
@@ -139,14 +130,65 @@ export default function SectionChartPanel({
                 Log descent
               </Button>
             )}
-          </>
+          </Box>
         )}
-        {measurementTypes.length > 1 && (
+        {measurementTypes.length > 1 &&
+          (isMobile ? (
+            <FormControl size="small" sx={{ flexShrink: 0 }}>
+              <Select
+                value={measurementType ?? measurementTypes[0]}
+                onChange={(e) => setMeasurementType(e.target.value)}
+                sx={{ fontSize: "0.75rem" }}
+              >
+                {measurementTypes.map((t) => (
+                  <MenuItem key={t} value={t}>
+                    {typeLabel(t)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ) : (
+            <ToggleButtonGroup
+              value={measurementType}
+              exclusive
+              size="small"
+              onChange={(_, v) => v && setMeasurementType(v)}
+              sx={{
+                flexShrink: 0,
+                "& .MuiToggleButton-root": {
+                  py: 0.25,
+                  px: 1,
+                  fontSize: "0.7rem",
+                },
+              }}
+            >
+              {measurementTypes.map((t) => (
+                <ToggleButton key={t} value={t}>
+                  {typeLabel(t)}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          ))}
+        {isMobile ? (
+          <FormControl size="small" sx={{ flexShrink: 0 }}>
+            <Select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+              sx={{ fontSize: "0.75rem" }}
+            >
+              {TIME_RANGE_OPTIONS.map((o) => (
+                <MenuItem key={o.value} value={o.value}>
+                  {o.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        ) : (
           <ToggleButtonGroup
-            value={measurementType}
+            value={timeRange}
             exclusive
             size="small"
-            onChange={(_, v) => v && setMeasurementType(v)}
+            onChange={(_, v) => v && setTimeRange(v)}
             sx={{
               flexShrink: 0,
               "& .MuiToggleButton-root": {
@@ -156,33 +198,13 @@ export default function SectionChartPanel({
               },
             }}
           >
-            {measurementTypes.map((t) => (
-              <ToggleButton key={t} value={t}>
-                {typeLabel(t)}
+            {TIME_RANGE_OPTIONS.map((o) => (
+              <ToggleButton key={o.value} value={o.value}>
+                {o.label}
               </ToggleButton>
             ))}
           </ToggleButtonGroup>
         )}
-        <ToggleButtonGroup
-          value={timeRange}
-          exclusive
-          size="small"
-          onChange={(_, v) => v && setTimeRange(v)}
-          sx={{
-            flexShrink: 0,
-            "& .MuiToggleButton-root": {
-              py: 0.25,
-              px: 1,
-              fontSize: "0.7rem",
-            },
-          }}
-        >
-          {TIME_RANGE_OPTIONS.map((o) => (
-            <ToggleButton key={o.value} value={o.value}>
-              {o.label}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
       </Box>
       <Divider sx={{ mb: 1, flexShrink: 0 }} />
       {isLoading ? (
