@@ -6,8 +6,10 @@ interface SidebarContentProps {
   state: MapPageState;
   /** Mobile only: close the overlay when area mode is activated */
   onAreaModeActivate?: () => void;
-  /** Mobile only: close the overlay (replaces star icon with × in detail header) */
-  onMobileClose?: () => void;
+  /** Mobile only: toggles between map view and detail view */
+  onMobileMapToggle?: () => void;
+  /** Mobile only: true when map view is active (icon shown as highlighted) */
+  mobileMapActive?: boolean;
 }
 
 /**
@@ -17,7 +19,8 @@ interface SidebarContentProps {
 export default function SidebarContent({
   state,
   onAreaModeActivate,
-  onMobileClose,
+  onMobileMapToggle,
+  mobileMapActive,
 }: SidebarContentProps) {
   const {
     selectedWaterwayId,
@@ -136,7 +139,8 @@ export default function SidebarContent({
         setFeaturePickingActive(false);
       }}
       onFeatureClick={(coords) => setFocusedPoint(coords)}
-      onMobileClose={onMobileClose}
+      onMobileMapToggle={onMobileMapToggle}
+      mobileMapActive={mobileMapActive}
     />
   );
 }

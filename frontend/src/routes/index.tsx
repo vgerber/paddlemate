@@ -17,6 +17,7 @@ export const Route = createFileRoute("/")({
     min_diff: search.min_diff != null ? Number(search.min_diff) : undefined,
     max_diff: search.max_diff != null ? Number(search.max_diff) : undefined,
     mode: search.mode === "area" ? ("area" as const) : undefined,
+    panel: search.panel === "1" ? ("1" as const) : undefined,
     lat: search.lat != null ? Number(search.lat) : undefined,
     lon: search.lon != null ? Number(search.lon) : undefined,
     radius: search.radius != null ? Number(search.radius) : undefined,

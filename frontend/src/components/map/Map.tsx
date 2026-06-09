@@ -105,6 +105,8 @@ interface WaterwayMapProps {
   sectionLevels?: Record<number, string>;
   /** [lng, lat] to fly to and highlight; set by clicking a feature in the panel. */
   focusedPoint?: [number, number] | null;
+  /** Extra px to add to the bottom offset of map controls (satellite/label toggle) so they clear any bottom strip. */
+  controlsBottomOffset?: number;
 }
 
 export default function WaterwayMap({
@@ -134,6 +136,7 @@ export default function WaterwayMap({
   onLabelModeChange,
   sectionLevels,
   focusedPoint,
+  controlsBottomOffset = 0,
 }: WaterwayMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [pickMode, setPickMode] = useState<"put-in" | "take-out" | null>(null);
@@ -279,14 +282,14 @@ export default function WaterwayMap({
       }}
     >
       {onLabelModeChange && (
-        <LabelModeToggle labelMode={labelMode} onChange={onLabelModeChange} />
+        <LabelModeToggle labelMode={labelMode} onChange={onLabelModeChange} bottomOffset={controlsBottomOffset} />
       )}
       <button
         type="button"
         onClick={() => setSatellite((s) => !s)}
         style={{
           position: "absolute",
-          bottom: 8,
+          bottom: 8 + controlsBottomOffset,
           left: 8,
           zIndex: 10,
           padding: "4px 10px",

@@ -9,6 +9,27 @@ export const TIME_RANGE_OPTIONS: { value: TimeRange; label: string }[] = [
   { value: "1y", label: "1Y" },
 ];
 
+const LS_KEY = "chart-time-range";
+
+function readStoredTimeRange(): TimeRange {
+  try {
+    const v = localStorage.getItem(LS_KEY);
+    if (TIME_RANGE_OPTIONS.some((o) => o.value === v)) return v as TimeRange;
+  } catch {}
+  return "7d";
+}
+
+import { useCallback, useState } from "react";
+
+/** Shared time-range state that persists the last selection in localStorage. */
+export function useChartTimeRange(): [TimeRange, (r: TimeRange) => void] {
+  const [timeRange, setTimeRangeRaw] = useState<TimeRange>(readStoredTimeRange);
+  const setTimeRange = useCallback((r: TimeRange) => {
+    try { localStorage.setItem(LS_KEY, r); } catch {}
+    setTimeRangeRaw(r);
+  }, []);
+  return [timeRange, setTimeRange];
+}
 export function fromForRange(range: TimeRange): string {
   const d = new Date();
   switch (range) {

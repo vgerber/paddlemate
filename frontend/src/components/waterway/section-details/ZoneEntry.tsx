@@ -53,6 +53,8 @@ export function ZoneEntry({
           background: isActive ? `${tokens.secondary}0d` : "transparent",
           width: "100%",
           textAlign: "left",
+          px: "6px",
+          borderRadius: "4px",
         }}
       >
         <Box
@@ -80,7 +82,7 @@ export function ZoneEntry({
             />
           </svg>
         </Box>
-        <Stack direction="column" sx={{ flex: 1, pt: "2px" }}>
+        <Stack direction="column" sx={{ flex: 1, pt: "4px" }}>
           <Stack
             direction="row"
             sx={{
@@ -148,7 +150,7 @@ export function ZoneEntry({
       ))}
 
       {/* Zone end row */}
-      <Stack direction="row" sx={{ gap: "10px", alignItems: "center" }}>
+      <Stack direction="row" sx={{ gap: "10px", alignItems: "center", px: "6px" }}>
         <Box
           sx={{
             width: 16,

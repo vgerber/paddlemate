@@ -25,6 +25,7 @@ export type RouteSearch = {
   lat?: number;
   lon?: number;
   radius?: number;
+  panel?: "1";
   min_diff?: number;
   max_diff?: number;
   mode?: "area";
@@ -36,6 +37,7 @@ export function useMapPageState(search: RouteSearch) {
   const {
     waterway: selectedWaterwayId,
     section: selectedSectionId,
+    panel,
     lat,
     lon,
     radius,
@@ -85,7 +87,39 @@ export function useMapPageState(search: RouteSearch) {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+
+  // isMobileMapView lets the user toggle the overlay away to see the map while
+  // keeping the section selected. Auto-resets when section is deselected.
+  const [isMobileMapViewRaw, setIsMobileMapViewRaw] = useState(false);
+  const isMobileMapView = isMobileMapViewRaw && selectedWaterwayId != null;
+  const toggleMobileMapView = useCallback(
+    () => setIsMobileMapViewRaw((v) => !v),
+    [],
+  );
+
+  // isMobilePanelOpen is URL-driven so the browser back button works through
+  // overlay history: FAB → /?panel=1 → /?panel=1&waterway=123 → back → back
+  const setIsMobilePanelOpen = useCallback(
+    (open: boolean) => {
+      if (open) {
+        setIsMobileMapViewRaw(false); // ensure overlay is visible when explicitly opening
+        navigate({ search: (prev) => ({ ...prev, panel: "1" }) });
+      } else {
+        navigate({
+          search: (prev) => ({
+            ...prev,
+            panel: undefined,
+            waterway: undefined,
+            section: undefined,
+          }),
+        });
+      }
+    },
+    [navigate],
+  );
+  const isMobilePanelOpen =
+    isMobile && (panel === "1" || selectedWaterwayId != null) && !isMobileMapView;
+
   const [previewRadius, setPreviewRadius] = useState<number | null>(null);
   const [isSearchPanelLoading, setIsSearchPanelLoading] = useState(false);
 
@@ -93,13 +127,6 @@ export function useMapPageState(search: RouteSearch) {
   useEffect(() => {
     setFocusedPoint(null);
   }, [selectedSectionId]);
-
-  // Auto-open panel on mobile when a waterway is set (e.g. URL has ?waterway=…)
-  useEffect(() => {
-    if (isMobile && selectedWaterwayId != null) {
-      setIsMobilePanelOpen(true);
-    }
-  }, [selectedWaterwayId, isMobile]);
 
   const areaCircle: AreaCircle | null =
     lat != null && lon != null && radius != null
@@ -274,7 +301,9 @@ export function useMapPageState(search: RouteSearch) {
   const handleSectionClick = useCallback(
     (id: number) => {
       if (selectedWaterwayId == null) {
-        const section = filteredSearchSections.find((s) => s.id === id);
+        const section =
+          filteredSearchSections.find((s) => s.id === id) ??
+          favorites.find((s) => s.id === id);
         if (section) {
           setSelectedWaterwayId(section.waterway_id);
           setSelectedSectionId(id);
@@ -283,15 +312,19 @@ export function useMapPageState(search: RouteSearch) {
         }
       }
       setSelectedSectionId(id === selectedSectionId ? undefined : id);
-      if (isMobile && selectedWaterwayId != null) setIsMobilePanelOpen(true);
+      if (isMobile && selectedWaterwayId != null && !isMobileMapView)
+        setIsMobilePanelOpen(true);
     },
     [
       selectedWaterwayId,
       selectedSectionId,
       filteredSearchSections,
+      favorites,
       isMobile,
+      isMobileMapView,
       setSelectedWaterwayId,
       setSelectedSectionId,
+      setIsMobilePanelOpen,
     ],
   );
 
@@ -349,6 +382,8 @@ export function useMapPageState(search: RouteSearch) {
     isMobile,
     isMobilePanelOpen,
     setIsMobilePanelOpen,
+    isMobileMapView,
+    toggleMobileMapView,
     previewRadius,
     setPreviewRadius,
     isSearchPanelLoading,

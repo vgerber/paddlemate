@@ -1,5 +1,6 @@
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -10,6 +11,7 @@ import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import WaterwayMap from "@/components/map/Map";
 import AreaControls from "@/components/search/AreaControls";
+import SectionSpeedDial from "./SectionSpeedDial";
 import type { MapPageState } from "./useMapPageState";
 
 interface MapPaneProps {
@@ -60,7 +62,19 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     isMobile,
     isAreaSearchLoading,
     selectedGaugeRanges,
+    isMobileMapView,
+    toggleMobileMapView,
   } = state;
+
+  const LEVEL_COLORS: Record<string, string> = {
+    low: "#4caf50",
+    medium: "#ff9800",
+    high: "#f44336",
+  };
+
+  const sectionName = sections.find((s) => s.id === selectedSectionId)?.name;
+  const waterwayName = selectedWaterwayId != null ? waterwayNames[selectedWaterwayId] : undefined;
+  const sectionLevel = selectedSectionId != null ? sectionLevels[selectedSectionId] : undefined;
 
   const visibleAreaCircle =
     selectedWaterwayId == null
@@ -122,6 +136,9 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
               : undefined
           }
           focusedPoint={focusedPoint}
+          controlsBottomOffset={
+            isMobile && (showAreaStrip || isMobileMapView) ? 60 : 0
+          }
         />
 
         {/* Area strip — mobile, area mode, no waterway selected */}
@@ -170,6 +187,69 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
               </IconButton>
             </Badge>
           </Box>
+        ) : isMobileMapView ? (
+          /* Map-view mini header — shown when the detail overlay is toggled away */
+          <>
+            <SectionSpeedDial
+              state={state}
+              sx={{
+                position: "absolute",
+                bottom: "calc(60px + 16px)",
+                right: 16,
+                display: { xs: "flex", md: "none" },
+              }}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                display: { xs: "flex", md: "none" },
+                bgcolor: "background.paper",
+                borderTop: "1px solid",
+                borderColor: "divider",
+                px: 2,
+                py: 1,
+                alignItems: "center",
+              gap: 1.5,
+              zIndex: 1100,
+            }}
+          >
+            {sectionLevel && LEVEL_COLORS[sectionLevel] && (
+              <Box
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  bgcolor: LEVEL_COLORS[sectionLevel],
+                  flexShrink: 0,
+                }}
+              />
+            )}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                variant="subtitle2"
+                noWrap
+                sx={{ fontWeight: 700, lineHeight: 1.3 }}
+              >
+                {sectionName ?? waterwayName ?? ""}
+              </Typography>
+              {sectionName && waterwayName && (
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {waterwayName}
+                </Typography>
+              )}
+            </Box>
+            <IconButton
+              size="small"
+              onClick={toggleMobileMapView}
+              aria-label="Show detail"
+            >
+              <KeyboardArrowUpIcon />
+            </IconButton>
+          </Box>
+          </>
         ) : (
           /* Search FAB — mobile only */
           <Box

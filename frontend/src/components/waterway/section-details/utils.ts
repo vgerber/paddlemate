@@ -16,7 +16,13 @@ export function fmtKm(m: number): string {
 
 /** Returns the feature's first name, falling back to a humanised type string. */
 export function featureName(f: Feature): string {
-  return f.names[0]?.name ?? f.feature_type.replace(/_/g, " ");
+  if (f.names[0]?.name) return f.names[0].name;
+  if (f.feature_type === "whitewater") {
+    const diff = (f.metadata as Record<string, unknown> | null)
+      ?.difficulty as string | undefined;
+    return diff ? `WW ${diff}` : "WW";
+  }
+  return f.feature_type.replace(/_/g, " ");
 }
 
 /** Returns the feature's first description or null. */

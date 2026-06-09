@@ -14,6 +14,7 @@ import { useMemo, useState } from "react";
 import {
   TIME_RANGE_OPTIONS,
   type TimeRange,
+  useChartTimeRange,
   typeLabel,
 } from "@/components/charts/water/types";
 import WaterChart from "@/components/charts/water/WaterChart";
@@ -42,7 +43,7 @@ export default function SectionChartPanel({
     waterwayId,
     sectionId,
   );
-  const [timeRange, setTimeRange] = useState<TimeRange>("7d");
+  const [timeRange, setTimeRange] = useChartTimeRange();
   const [measurementType, setMeasurementType] = useState<string | null>(null);
 
   const measurementTypes = useMemo(() => {

@@ -27,7 +27,7 @@ export function CoordsInfo({ coords }: Props) {
   }
 
   return (
-    <Stack direction="row" sx={{ mt: "4px", alignItems: "center", gap: "2px" }}>
+    <Stack direction="row" sx={{ mt: "4px", alignItems: "center", gap: "2px", ml: "-4px" }}>
       <Typography
         component="span"
         sx={{
@@ -41,13 +41,15 @@ export function CoordsInfo({ coords }: Props) {
         {lat.toFixed(5)}, {lng.toFixed(5)}
       </Typography>
       <IconButton
+        size="small"
         title={copied ? "Copied!" : "Copy coordinates"}
         onClick={handleCopy}
         sx={{ color: copied ? tokens.primary : tokens.secondary }}
       >
-        {copied ? <DoneIcon /> : <ContentCopyOutlinedIcon />}
+        {copied ? <DoneIcon fontSize="small" /> : <ContentCopyOutlinedIcon fontSize="small" />}
       </IconButton>
       <IconButton
+        size="small"
         title="Open in Google Maps"
         component="a"
         href={url}
@@ -56,7 +58,7 @@ export function CoordsInfo({ coords }: Props) {
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
         sx={{ color: tokens.secondary }}
       >
-        <OpenInNewIcon />
+        <OpenInNewIcon fontSize="small" />
       </IconButton>
     </Stack>
   );

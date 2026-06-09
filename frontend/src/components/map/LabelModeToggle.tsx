@@ -1,17 +1,19 @@
 interface LabelModeToggleProps {
   labelMode: "section" | "river";
   onChange: (mode: "section" | "river") => void;
+  bottomOffset?: number;
 }
 
 export default function LabelModeToggle({
   labelMode,
   onChange,
+  bottomOffset = 0,
 }: LabelModeToggleProps) {
   return (
     <div
       style={{
         position: "absolute",
-        bottom: 40,
+        bottom: 40 + bottomOffset,
         left: 8,
         zIndex: 10,
         display: "flex",

@@ -38,6 +38,8 @@ export function PointEntry({
         width: "100%",
         alignItems: "flex-start",
         textAlign: "left",
+        px: "6px",
+        borderRadius: "8px",
       }}
     >
       <Stack
@@ -79,7 +81,8 @@ export function PointEntry({
       <Box
         sx={{
           flex: 1,
-          pb: isLast ? "4px" : "20px",
+          pt: "4px",
+          pb: isLast ? "8px" : "20px",
           minWidth: 0,
           minHeight: 28,
         }}
