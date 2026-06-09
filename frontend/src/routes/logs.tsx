@@ -154,7 +154,8 @@ function LogsPage() {
         <Tabs
           value={tab}
           onChange={(_, v) => setTab(v)}
-          sx={{ px: 2, borderBottom: "1px solid", borderColor: "divider" }}
+          variant="fullWidth"
+          sx={{ borderBottom: "1px solid", borderColor: "divider" }}
         >
           <Tab
             icon={<DirectionsBoatOutlinedIcon fontSize="small" />}

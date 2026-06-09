@@ -1,7 +1,6 @@
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import KeyOutlinedIcon from "@mui/icons-material/KeyOutlined";
 import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -70,7 +69,8 @@ function SettingsPage() {
       <Tabs
         value={tab}
         onChange={(_, v) => setTab(v)}
-        sx={{ px: 2, borderBottom: "1px solid", borderColor: "divider" }}
+        variant="fullWidth"
+        sx={{ borderBottom: "1px solid", borderColor: "divider" }}
       >
         <Tab
           icon={<AccountCircleOutlinedIcon fontSize="small" />}
@@ -82,16 +82,10 @@ function SettingsPage() {
           iconPosition="start"
           label="Proposals"
         />
-        <Tab
-          icon={<KeyOutlinedIcon fontSize="small" />}
-          iconPosition="start"
-          label="Tokens"
-        />
       </Tabs>
       <Box sx={{ px: 2, py: 3 }}>
         {tab === 0 && <ProfilePanel />}
         {tab === 1 && <ProposalsPanel />}
-        {tab === 2 && <TokensPanel />}
       </Box>
     </Box>
   );
@@ -110,26 +104,30 @@ function ProposalsPanel() {
     operation: operation || undefined,
   });
 
-  const statusTabs = ["pending", "approved", "rejected"] as const;
+  const statusOptions = ["pending", "approved", "rejected"] as const;
 
   return (
     <Box>
-      <Tabs
-        value={status}
-        onChange={(_, v) => setStatus(v)}
-        sx={{ mb: 2 }}
-      >
-        {statusTabs.map((s) => (
-          <Tab
-            key={s}
-            label={s.charAt(0).toUpperCase() + s.slice(1)}
-            value={s}
-          />
-        ))}
-      </Tabs>
-
       <Box sx={{ display: "flex", gap: 1.5, mb: 2, flexWrap: "wrap" }}>
-        <FormControl size="small" sx={{ minWidth: 140 }}>
+        <FormControl size="small" sx={{ flex: 1 }}>
+          <InputLabel id="status-label">Status</InputLabel>
+          <Select
+            labelId="status-label"
+            label="Status"
+            value={status}
+            onChange={(e) =>
+              setStatus(e.target.value as typeof status)
+            }
+          >
+            {statusOptions.map((s) => (
+              <MenuItem key={s} value={s}>
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl size="small" sx={{ flex: 1 }}>
           <InputLabel id="entity-type-label">Entity type</InputLabel>
           <Select
             labelId="entity-type-label"
@@ -146,7 +144,7 @@ function ProposalsPanel() {
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 130 }}>
+        <FormControl size="small" sx={{ flex: 1 }}>
           <InputLabel id="operation-label">Operation</InputLabel>
           <Select
             labelId="operation-label"
@@ -182,7 +180,6 @@ function ProfilePanel() {
 
   return (
     <Stack spacing={3}>
-      <Typography variant="h6">Profile</Typography>
       <Stack spacing={2}>
         <TextField
           label="Username"
@@ -200,11 +197,11 @@ function ProfilePanel() {
         />
       </Stack>
       <Divider />
-      <Box>
-        <Button variant="outlined" color="error" onClick={logout}>
-          Sign Out
-        </Button>
-      </Box>
+      <Button variant="outlined" color="error" onClick={logout} fullWidth>
+        Sign Out
+      </Button>
+      <Divider />
+      <TokensPanel />
     </Stack>
   );
 }
