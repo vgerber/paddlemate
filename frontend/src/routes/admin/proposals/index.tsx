@@ -75,10 +75,6 @@ function AdminProposalsPage() {
 
   return (
     <Box sx={{ maxWidth: 900, mx: "auto", px: 2, py: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 700 }}>
-        Admin — Proposals
-      </Typography>
-
       <Tabs
         value={status ?? "pending"}
         onChange={(_, v) =>

@@ -34,7 +34,7 @@ function Home() {
         sx={{
           display: "flex",
           height: {
-            xs: "calc(100dvh - 48px - 56px - env(safe-area-inset-bottom))",
+            xs: "calc(100dvh - 56px - env(safe-area-inset-bottom))",
             sm: "calc(100dvh - 48px)",
           },
           overflow: "hidden",

@@ -2,7 +2,6 @@ import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
-import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
 import AppBar from "@mui/material/AppBar";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
@@ -67,7 +66,7 @@ function Layout() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <AppBar position="fixed">
+      <AppBar position="fixed" sx={{ display: { xs: "none", sm: "flex" } }}>
         <Toolbar variant="dense">
           <Typography
             variant="h6"
@@ -127,7 +126,7 @@ function Layout() {
       <Box
         sx={{
           flex: 1,
-          mt: "48px",
+          mt: { xs: 0, sm: "48px" },
           display: "flex",
           flexDirection: "column",
           pb: isMapPage
@@ -153,17 +152,17 @@ function BottomNav() {
       ? 0
       : pathname.startsWith("/logs")
         ? 1
-        : pathname.startsWith("/proposals") || pathname.startsWith("/admin")
+        : pathname.startsWith("/settings") ||
+            pathname.startsWith("/proposals") ||
+            pathname.startsWith("/admin")
           ? 2
-          : pathname.startsWith("/settings")
-            ? 3
-            : false;
+          : false;
 
   return (
     <BottomNavigation
       value={activeTab}
       onChange={(_, val: number) => {
-        const routes = ["/", "/logs", "/proposals", "/settings"] as const;
+        const routes = ["/", "/logs", "/settings"] as const;
         navigate({ to: routes[val] });
       }}
       sx={{
@@ -185,10 +184,6 @@ function BottomNav() {
       <BottomNavigationAction
         label="Logs"
         icon={<DirectionsBoatOutlinedIcon />}
-      />
-      <BottomNavigationAction
-        label="Proposals"
-        icon={<RateReviewOutlinedIcon />}
       />
       <BottomNavigationAction
         label="Profile"

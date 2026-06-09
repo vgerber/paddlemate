@@ -33,7 +33,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 export const Route = createFileRoute("/logs")({
   component: LogsPage,
@@ -118,30 +118,6 @@ function LogsPage() {
   if (view === "form") {
     return (
       <Box sx={{ maxWidth: 720, mx: "auto" }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            px: 1,
-            py: 1,
-            borderBottom: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <IconButton onClick={closeForm} size="small">
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              fontWeight: 700,
-              fontFamily: '"Space Grotesk", monospace',
-              ml: 1,
-            }}
-          >
-            {selected ? "Edit descent" : "Log a descent"}
-          </Typography>
-        </Box>
         <DescentForm
           descent={selected}
           onSave={closeForm}
@@ -155,32 +131,25 @@ function LogsPage() {
   return (
     <>
       <Box sx={{ maxWidth: 720, mx: "auto" }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            px: 2,
-            pt: 3,
-            pb: 0,
-          }}
-        >
-          <Typography variant="h5" sx={{ fontWeight: 700, flex: 1 }}>
-            Logs
-          </Typography>
-          {tab === 0 && (
+        {tab === 0 && (
+          <Box
+            sx={{
+              display: { xs: "none", md: "flex" },
+              justifyContent: "flex-end",
+              px: 2,
+              pt: 2,
+            }}
+          >
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => openForm()}
-              sx={{
-                borderRadius: 0,
-                display: { xs: "none", md: "inline-flex" },
-              }}
+              sx={{ borderRadius: 0 }}
             >
               Log descent
             </Button>
-          )}
-        </Box>
+          </Box>
+        )}
 
         <Tabs
           value={tab}
@@ -229,6 +198,19 @@ function MyLogsPanel({ onOpen }: { onOpen: (d: Descent) => void }) {
   const { data, isLoading } = useMyDescents({});
   const descents = data?.items ?? [];
 
+  const groups = useMemo(() => {
+    const map = new Map<string, Descent[]>();
+    for (const d of descents) {
+      const key = new Date(d.start_time).toLocaleDateString("en-GB", {
+        month: "long",
+        year: "numeric",
+      });
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(d);
+    }
+    return Array.from(map.entries());
+  }, [descents]);
+
   if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", pt: 6 }}>
@@ -256,9 +238,29 @@ function MyLogsPanel({ onOpen }: { onOpen: (d: Descent) => void }) {
   }
 
   return (
-    <Box sx={{ border: "1px solid", borderColor: "divider" }}>
-      {descents.map((d) => (
-        <DescentCard key={d.id} descent={d} onClick={() => onOpen(d)} />
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      {groups.map(([label, items]) => (
+        <Box key={label}>
+          <Typography
+            variant="caption"
+            sx={{
+              px: 0,
+              pb: 1,
+              display: "block",
+              color: "text.secondary",
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}
+          >
+            {label}
+          </Typography>
+          <Box sx={{ border: "1px solid", borderColor: "divider" }}>
+            {items.map((d) => (
+              <DescentCard key={d.id} descent={d} onClick={() => onOpen(d)} />
+            ))}
+          </Box>
+        </Box>
       ))}
     </Box>
   );

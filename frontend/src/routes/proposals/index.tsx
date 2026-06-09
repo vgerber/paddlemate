@@ -53,10 +53,6 @@ function ProposalsPage() {
         py: 3,
       }}
     >
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 700 }}>
-        Community Proposals
-      </Typography>
-
       <Tabs
         value={status ?? "pending"}
         onChange={(_, v) =>

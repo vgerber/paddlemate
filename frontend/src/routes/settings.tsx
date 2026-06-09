@@ -2,25 +2,30 @@ import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import KeyOutlinedIcon from "@mui/icons-material/KeyOutlined";
+import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Divider from "@mui/material/Divider";
+import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
+import Select from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
-import { useTheme } from "@mui/material/styles";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { type ApiToken, type ApiTokenCreated, tokensApi } from "@/lib/api";
+import ProposalCard from "@/components/waterway/ProposalCard";
+import { type ApiToken, type ApiTokenCreated, type ProposalEntityType, type ProposalOperation, tokensApi } from "@/lib/api";
+import { useProposals } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
 
 export const Route = createFileRoute("/settings")({
@@ -29,9 +34,7 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsPage() {
   const [tab, setTab] = useState(0);
-  const { isAuthenticated, isLoading } = useSession();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { isAuthenticated, isLoading, login } = useSession();
 
   if (isLoading) {
     return (
@@ -43,40 +46,31 @@ function SettingsPage() {
 
   if (!isAuthenticated) {
     return (
-      <Box sx={{ p: 4 }}>
-        <Typography color="text.secondary">
-          Sign in to access settings.
-        </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 2,
+          pt: 10,
+          px: 2,
+        }}
+      >
+        <AccountCircleOutlinedIcon sx={{ fontSize: 56, color: "text.disabled" }} />
+        <Typography color="text.secondary">Sign in to access settings.</Typography>
+        <Button variant="contained" color="secondary" onClick={login}>
+          Sign In
+        </Button>
       </Box>
     );
   }
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: { xs: "column", sm: "row" },
-        minHeight: "calc(100vh - 48px)",
-      }}
-    >
+    <Box sx={{ maxWidth: 800, mx: "auto" }}>
       <Tabs
-        orientation={isMobile ? "horizontal" : "vertical"}
         value={tab}
         onChange={(_, v) => setTab(v)}
-        sx={{
-          borderRight: { xs: 0, sm: 1 },
-          borderBottom: { xs: 1, sm: 0 },
-          borderColor: "divider",
-          minWidth: { xs: "auto", sm: 180 },
-          pt: { xs: 0, sm: 2 },
-          "& .MuiTab-root": {
-            alignItems: { xs: "center", sm: "flex-start" },
-            textAlign: "left",
-            gap: 1,
-            minHeight: 48,
-            px: 3,
-          },
-        }}
+        sx={{ px: 2, borderBottom: "1px solid", borderColor: "divider" }}
       >
         <Tab
           icon={<AccountCircleOutlinedIcon fontSize="small" />}
@@ -84,22 +78,107 @@ function SettingsPage() {
           label="Profile"
         />
         <Tab
+          icon={<RateReviewOutlinedIcon fontSize="small" />}
+          iconPosition="start"
+          label="Proposals"
+        />
+        <Tab
           icon={<KeyOutlinedIcon fontSize="small" />}
           iconPosition="start"
-          label="Access Tokens"
+          label="Tokens"
         />
       </Tabs>
-
-      <Box sx={{ flex: 1, p: 4 }}>
+      <Box sx={{ px: 2, py: 3 }}>
         {tab === 0 && <ProfilePanel />}
-        {tab === 1 && <TokensPanel />}
+        {tab === 1 && <ProposalsPanel />}
+        {tab === 2 && <TokensPanel />}
       </Box>
     </Box>
   );
 }
 
+function ProposalsPanel() {
+  const [status, setStatus] = useState<"pending" | "approved" | "rejected">(
+    "pending",
+  );
+  const [entityType, setEntityType] = useState<ProposalEntityType | "">("");
+  const [operation, setOperation] = useState<ProposalOperation | "">("");
+
+  const { data: proposals, isLoading } = useProposals({
+    status,
+    entity_type: entityType || undefined,
+    operation: operation || undefined,
+  });
+
+  const statusTabs = ["pending", "approved", "rejected"] as const;
+
+  return (
+    <Box>
+      <Tabs
+        value={status}
+        onChange={(_, v) => setStatus(v)}
+        sx={{ mb: 2 }}
+      >
+        {statusTabs.map((s) => (
+          <Tab
+            key={s}
+            label={s.charAt(0).toUpperCase() + s.slice(1)}
+            value={s}
+          />
+        ))}
+      </Tabs>
+
+      <Box sx={{ display: "flex", gap: 1.5, mb: 2, flexWrap: "wrap" }}>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel id="entity-type-label">Entity type</InputLabel>
+          <Select
+            labelId="entity-type-label"
+            label="Entity type"
+            value={entityType}
+            onChange={(e) =>
+              setEntityType(e.target.value as ProposalEntityType | "")
+            }
+          >
+            <MenuItem value="">All</MenuItem>
+            <MenuItem value="waterway">River</MenuItem>
+            <MenuItem value="water_section">Section</MenuItem>
+            <MenuItem value="feature">Feature</MenuItem>
+          </Select>
+        </FormControl>
+
+        <FormControl size="small" sx={{ minWidth: 130 }}>
+          <InputLabel id="operation-label">Operation</InputLabel>
+          <Select
+            labelId="operation-label"
+            label="Operation"
+            value={operation}
+            onChange={(e) =>
+              setOperation(e.target.value as ProposalOperation | "")
+            }
+          >
+            <MenuItem value="">All</MenuItem>
+            <MenuItem value="create">Create</MenuItem>
+            <MenuItem value="update">Update</MenuItem>
+            <MenuItem value="delete">Delete</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+
+      {isLoading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+          <CircularProgress />
+        </Box>
+      ) : !proposals || proposals.length === 0 ? (
+        <Typography color="text.secondary">No proposals found.</Typography>
+      ) : (
+        proposals.map((p) => <ProposalCard key={p.id} proposal={p} />)
+      )}
+    </Box>
+  );
+}
+
 function ProfilePanel() {
-  const { user } = useSession();
+  const { user, logout } = useSession();
 
   return (
     <Stack spacing={3}>
@@ -120,6 +199,12 @@ function ProfilePanel() {
           fullWidth
         />
       </Stack>
+      <Divider />
+      <Box>
+        <Button variant="outlined" color="error" onClick={logout}>
+          Sign Out
+        </Button>
+      </Box>
     </Stack>
   );
 }
