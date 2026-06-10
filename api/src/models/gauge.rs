@@ -145,6 +145,12 @@ pub struct SectionWaterSnapshot {
     pub range_low: Option<f64>,
     pub range_medium: Option<f64>,
     pub range_high: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub value_min: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub value_max: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub value_avg: Option<f64>,
 }
 
 // --- Request types ---

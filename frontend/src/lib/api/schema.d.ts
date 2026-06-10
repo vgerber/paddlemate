@@ -1479,6 +1479,12 @@ export interface components {
 			unit: string;
 			/** Format: double */
 			value?: number | null;
+			/** Format: double */
+			value_min?: number | null;
+			/** Format: double */
+			value_max?: number | null;
+			/** Format: double */
+			value_avg?: number | null;
 		};
 		/** @description All water-level ranges for every feature in a section, with their latest readings. */
 		SectionWaterStatus: {
