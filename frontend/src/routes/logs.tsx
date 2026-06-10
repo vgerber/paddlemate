@@ -40,12 +40,12 @@ export const Route = createFileRoute("/logs")({
 
 function LogsPage() {
   const childMatches = useChildMatches();
-  if (childMatches.length > 0) return <Outlet />;
-
   const { isAuthenticated, isLoading: sessionLoading, login } = useSession();
   const navigate = useNavigate();
   const isMobile = useMediaQuery((theme: any) => theme.breakpoints.down("md"));
   const [tab, setTab] = useState(0);
+
+  if (childMatches.length > 0) return <Outlet />;
 
   const onOpen = (id: number) =>
     navigate({

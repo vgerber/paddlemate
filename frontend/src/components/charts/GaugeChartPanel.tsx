@@ -5,10 +5,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
 import ChartControls from "@/components/charts/ChartControls";
-import {
-  type TimeRange,
-  useChartTimeRange,
-} from "@/components/charts/water/types";
+import { useChartTimeRange } from "@/components/charts/water/types";
 import WaterChart from "@/components/charts/water/WaterChart";
 import type { WaterRangeWithStatus } from "@/lib/api";
 

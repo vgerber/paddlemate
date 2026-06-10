@@ -5,10 +5,7 @@ import Divider from "@mui/material/Divider";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import ChartControls from "@/components/charts/ChartControls";
-import {
-  type TimeRange,
-  useChartTimeRange,
-} from "@/components/charts/water/types";
+import { useChartTimeRange } from "@/components/charts/water/types";
 import WaterChart from "@/components/charts/water/WaterChart";
 import { useSession } from "@/lib/hooks/useSession";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
