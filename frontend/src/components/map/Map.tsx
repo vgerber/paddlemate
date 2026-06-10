@@ -282,30 +282,14 @@ export default function WaterwayMap({
       }}
     >
       {onLabelModeChange && (
-        <LabelModeToggle labelMode={labelMode} onChange={onLabelModeChange} bottomOffset={controlsBottomOffset} />
+        <LabelModeToggle
+          labelMode={labelMode}
+          onChange={onLabelModeChange}
+          satellite={satellite}
+          onSatelliteChange={setSatellite}
+          bottomOffset={controlsBottomOffset}
+        />
       )}
-      <button
-        type="button"
-        onClick={() => setSatellite((s) => !s)}
-        style={{
-          position: "absolute",
-          bottom: 8 + controlsBottomOffset,
-          left: 8,
-          zIndex: 10,
-          padding: "4px 10px",
-          borderRadius: 4,
-          border: "none",
-          cursor: "pointer",
-          fontFamily: "inherit",
-          fontSize: 12,
-          boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
-          background: satellite ? "#1976d2" : "#fff",
-          color: satellite ? "#fff" : "#333",
-          transition: "background 0.15s",
-        }}
-      >
-        Satellite
-      </button>
       <MapGL
         ref={mapRef}
         initialViewState={{ longitude: 13, latitude: 47, zoom: 5 }}

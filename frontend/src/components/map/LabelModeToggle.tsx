@@ -1,47 +1,66 @@
+import ButtonBase from "@mui/material/ButtonBase";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+
 interface LabelModeToggleProps {
   labelMode: "section" | "river";
   onChange: (mode: "section" | "river") => void;
+  satellite: boolean;
+  onSatelliteChange: (v: boolean) => void;
   bottomOffset?: number;
 }
 
 export default function LabelModeToggle({
   labelMode,
   onChange,
+  satellite,
+  onSatelliteChange,
   bottomOffset = 0,
 }: LabelModeToggleProps) {
+  const btn = (active: boolean) =>
+    ({
+      px: 1.5,
+      py: 0.6,
+      fontSize: "0.75rem",
+      fontWeight: 500,
+      color: active ? "text.primary" : "text.secondary",
+      bgcolor: active ? "action.selected" : "transparent",
+    }) as const;
+
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         position: "absolute",
-        bottom: 40 + bottomOffset,
-        left: 8,
+        bottom: 14 + bottomOffset,
+        left: 10,
         zIndex: 10,
         display: "flex",
-        borderRadius: 4,
+        flexDirection: "column",
+        borderRadius: 2,
         overflow: "hidden",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
-        fontSize: 12,
+        border: "1px solid",
+        borderColor: "divider",
+        bgcolor: "background.paper",
+        gap: 0.5,
       }}
     >
-      {(["section", "river"] as const).map((m) => (
-        <button
-          key={m}
-          type="button"
-          onClick={() => onChange(m)}
-          style={{
-            padding: "4px 10px",
-            border: "none",
-            cursor: "pointer",
-            fontFamily: "inherit",
-            fontSize: 12,
-            background: labelMode === m ? "#1976d2" : "#fff",
-            color: labelMode === m ? "#fff" : "#333",
-            transition: "background 0.15s",
-          }}
-        >
-          {m === "section" ? "Section" : "River"}
-        </button>
-      ))}
-    </div>
+      <Box sx={{ display: "flex" }}>
+        {(["section", "river"] as const).map((m) => (
+          <ButtonBase
+            key={m}
+            onClick={() => onChange(m)}
+            sx={btn(labelMode === m)}
+          >
+            {m === "section" ? "Section" : "River"}
+          </ButtonBase>
+        ))}
+      </Box>
+      <ButtonBase
+        onClick={() => onSatelliteChange(!satellite)}
+        sx={btn(satellite)}
+      >
+        Satellite
+      </ButtonBase>
+    </Box>
   );
 }
