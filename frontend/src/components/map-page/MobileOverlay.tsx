@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Slide from "@mui/material/Slide";
+import StandingDescentBanner from "@/components/StandingDescentBanner";
 import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import SectionSpeedDial from "./SectionSpeedDial";
@@ -32,18 +33,18 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
   const closeOverlay = () => setIsMobilePanelOpen(false);
 
   return (
-    <Slide direction="up" in={isMobilePanelOpen} mountOnEnter unmountOnExit>
+    <Slide direction="up" in={isMobilePanelOpen}>
       <Box
         sx={{
           display: { xs: "flex", md: "none" },
           position: "fixed",
-          top: { xs: 0, sm: "48px" },
+          top: 0,
           bottom: "calc(56px + env(safe-area-inset-bottom))",
           left: 0,
           right: 0,
           zIndex: 1200,
           flexDirection: "column",
-          bgcolor: "background.paper",
+          bgcolor: "background.default",
           overflow: "hidden",
         }}
       >
@@ -56,9 +57,11 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
             flexDirection: "column",
           }}
         >
+          <StandingDescentBanner />
           <SidebarContent
             state={state}
             onAreaModeActivate={closeOverlay}
+            onClose={closeOverlay}
             onMobileMapToggle={toggleMobileMapView}
             mobileMapActive={isMobileMapView}
           />

@@ -6,6 +6,8 @@ interface SidebarContentProps {
   state: MapPageState;
   /** Mobile only: close the overlay when area mode is activated */
   onAreaModeActivate?: () => void;
+  /** Mobile only: close the overlay */
+  onClose?: () => void;
   /** Mobile only: toggles between map view and detail view */
   onMobileMapToggle?: () => void;
   /** Mobile only: true when map view is active (icon shown as highlighted) */
@@ -19,6 +21,7 @@ interface SidebarContentProps {
 export default function SidebarContent({
   state,
   onAreaModeActivate,
+  onClose,
   onMobileMapToggle,
   mobileMapActive,
 }: SidebarContentProps) {
@@ -83,6 +86,7 @@ export default function SidebarContent({
         onRadiusPreview={setPreviewRadius}
         onLoadingChange={setIsSearchPanelLoading}
         onAreaModeActivate={onAreaModeActivate}
+        onClose={onClose}
       />
     );
   }

@@ -1,9 +1,11 @@
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ListIcon from "@mui/icons-material/List";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SearchIcon from "@mui/icons-material/Search";
 import WaterIcon from "@mui/icons-material/Water";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
@@ -35,6 +37,7 @@ interface WaterwaySearchPanelProps {
   favoritedIds?: Set<number>;
   onToggleFavorite?: (id: number) => void;
   onAreaModeActivate?: () => void;
+  onClose?: () => void;
   onRadiusPreview?: (radiusKm: number) => void;
   onLoadingChange?: (loading: boolean) => void;
 }
@@ -57,6 +60,7 @@ export default function WaterwaySearchPanel({
   favoritedIds,
   onToggleFavorite,
   onAreaModeActivate,
+  onClose,
   onRadiusPreview,
   onLoadingChange,
 }: WaterwaySearchPanelProps) {
@@ -200,6 +204,16 @@ export default function WaterwaySearchPanel({
             >
               {total} results
             </Typography>
+          )}
+          {onClose && (
+            <IconButton
+              size="small"
+              onClick={onClose}
+              sx={{ ml: "auto", display: { xs: "flex", md: "none" } }}
+              aria-label="Close search panel"
+            >
+              <KeyboardArrowDownIcon fontSize="small" />
+            </IconButton>
           )}
         </Box>
 

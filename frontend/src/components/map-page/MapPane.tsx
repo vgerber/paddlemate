@@ -3,10 +3,12 @@ import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import CircularProgress from "@mui/material/CircularProgress";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import StandingDescentBanner from "@/components/StandingDescentBanner";
 import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import WaterwayMap from "@/components/map/Map";
@@ -102,6 +104,17 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     >
       {/* Map */}
       <Box sx={{ flex: 1, minHeight: 0, position: "relative" }}>
+        {/* Descent banner — mobile only, floats over the map when overlay is closed */}
+        <StandingDescentBanner
+          sx={{
+            display: { xs: "flex", md: "none" },
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 10,
+          }}
+        />
         <WaterwayMap
           sections={
             selectedWaterwayId != null ? sections : filteredSearchSections
@@ -199,7 +212,8 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
                 display: { xs: "flex", md: "none" },
               }}
             />
-            <Box
+            <ButtonBase
+              onClick={toggleMobileMapView}
               sx={{
                 position: "absolute",
                 bottom: 0,
@@ -227,7 +241,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
                 }}
               />
             )}
-            <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ flex: 1, minWidth: 0, textAlign: "left" }}>
               <Typography
                 variant="subtitle2"
                 noWrap
@@ -241,14 +255,8 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
                 </Typography>
               )}
             </Box>
-            <IconButton
-              size="small"
-              onClick={toggleMobileMapView}
-              aria-label="Show detail"
-            >
-              <KeyboardArrowUpIcon />
-            </IconButton>
-          </Box>
+            <KeyboardArrowUpIcon fontSize="small" sx={{ color: "action.active", flexShrink: 0 }} />
+          </ButtonBase>
           </>
         ) : (
           /* Search FAB — mobile only */

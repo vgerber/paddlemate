@@ -66,7 +66,7 @@ function Layout() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <AppBar position="fixed" sx={{ display: { xs: "none", sm: "flex" } }}>
+      <AppBar position="fixed" sx={{ display: { xs: "none", md: "flex" } }}>
         <Toolbar variant="dense">
           <Typography
             variant="h6"
@@ -84,7 +84,7 @@ function Layout() {
           </Typography>
           <Box
             sx={{
-              display: { xs: "none", sm: "flex" },
+              display: { xs: "none", md: "flex" },
               alignItems: "center",
               gap: 0.5,
               ml: 2,
@@ -126,15 +126,15 @@ function Layout() {
       <Box
         sx={{
           flex: 1,
-          mt: { xs: 0, sm: "48px" },
+          mt: { xs: 0, md: "48px" },
           display: "flex",
           flexDirection: "column",
           pb: isMapPage
             ? 0
-            : { xs: "calc(56px + env(safe-area-inset-bottom))", sm: 0 },
+            : { xs: "calc(56px + env(safe-area-inset-bottom))", md: 0 },
         }}
       >
-        <StandingDescentBanner />
+        <StandingDescentBanner sx={{ display: { xs: isMapPage ? "none" : "flex", md: "flex" } }} />
         <Box component="main" sx={{ flex: 1 }}>
           <Outlet />
         </Box>
@@ -166,7 +166,7 @@ function BottomNav() {
         navigate({ to: routes[val] });
       }}
       sx={{
-        display: { xs: "flex", sm: "none" },
+        display: { xs: "flex", md: "none" },
         position: "fixed",
         bottom: 0,
         left: 0,

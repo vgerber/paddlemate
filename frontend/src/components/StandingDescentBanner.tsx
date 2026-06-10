@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
+import type { SxProps } from "@mui/material/styles";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
@@ -14,7 +15,7 @@ function elapsed(startTime: string): string {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export default function StandingDescentBanner() {
+export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
   const { current, discard } = useStandingDescent();
   const navigate = useNavigate();
   const [, setTick] = useState(0);
@@ -29,16 +30,19 @@ export default function StandingDescentBanner() {
 
   return (
     <Box
-      sx={{
-        bgcolor: "background.paper",
-        borderBottom: "1px solid",
-        borderColor: "divider",
-        display: "flex",
-        alignItems: "center",
-        gap: 2,
-        px: 2,
-        py: 0.75,
-      }}
+      sx={[
+        {
+          bgcolor: "background.paper",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          px: 2,
+          py: 0.75,
+        },
+        ...(Array.isArray(sx) ? sx : [sx]),
+      ]}
     >
       <Box
         sx={{
