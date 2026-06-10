@@ -58,6 +58,33 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  build: {
+    chunkSizeWarningLimit: 1100,
+    rolldownOptions: {
+      output: {
+        advancedChunks: {
+          groups: [
+            {
+              name: "maplibre",
+              test: /maplibre-gl|react-map-gl/,
+            },
+            {
+              name: "mui",
+              test: /@mui/,
+            },
+            {
+              name: "recharts",
+              test: /recharts/,
+            },
+            {
+              name: "react-vendor",
+              test: /react|react-dom/,
+            },
+          ],
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       "/api": {

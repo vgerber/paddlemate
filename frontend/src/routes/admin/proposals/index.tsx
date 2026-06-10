@@ -59,6 +59,7 @@ function AdminProposalsPage() {
         lat: undefined,
         lon: undefined,
         radius: undefined,
+        panel: undefined,
       },
     });
     return null;

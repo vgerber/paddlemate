@@ -31,6 +31,7 @@ function AuthCallback() {
             lat: undefined,
             lon: undefined,
             radius: undefined,
+            panel: undefined,
           },
         }),
       )
@@ -59,6 +60,7 @@ function AuthCallback() {
                 lat: undefined,
                 lon: undefined,
                 radius: undefined,
+                panel: undefined,
               },
             })
           }

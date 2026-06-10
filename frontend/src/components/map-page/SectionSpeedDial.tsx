@@ -71,13 +71,13 @@ export default function SectionSpeedDial({ state, sx }: Props) {
             <StarBorderIcon />
           )
         }
-        tooltipTitle={isFavorited ? "Remove favorite" : "Add favorite"}
+        title={isFavorited ? "Remove favorite" : "Add favorite"}
         onClick={() => toggleFavorite?.(selectedSectionId!)}
       />
       {isAuthenticated && !standingDescent && (
         <SpeedDialAction
           icon={<PlayArrowIcon />}
-          tooltipTitle="Start descent"
+          title="Start descent"
           onClick={() =>
             startDescent({
               startTime: new Date().toISOString(),
@@ -91,7 +91,7 @@ export default function SectionSpeedDial({ state, sx }: Props) {
       {isAuthenticated && !standingDescent && (
         <SpeedDialAction
           icon={<DirectionsBoatIcon />}
-          tooltipTitle="Log descent"
+          title="Log descent"
           onClick={() =>
             navigate({
               to: "/logs/new",
@@ -107,7 +107,7 @@ export default function SectionSpeedDial({ state, sx }: Props) {
       {isAuthenticated && !isMobile && (
         <SpeedDialAction
           icon={<AddLocationAltIcon />}
-          tooltipTitle="Add feature"
+          title="Add feature"
           onClick={() => setSuggestMode("feature")}
         />
       )}
