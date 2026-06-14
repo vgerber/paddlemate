@@ -1,6 +1,5 @@
 import ButtonBase from "@mui/material/ButtonBase";
 import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
 
 interface LabelModeToggleProps {
   labelMode: "section" | "river";
