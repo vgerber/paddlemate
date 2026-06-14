@@ -1,14 +1,9 @@
-import StarIcon from "@mui/icons-material/Star";
-import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import type { SectionWithFeatures } from "@/lib/api";
+import SectionListItem from "@/components/waterway/SectionListItem";
 
 interface SectionListProps {
   sections: SectionWithFeatures[];
@@ -86,57 +81,17 @@ export default function SectionList({
             </Typography>
             <Box sx={{ flex: 1, height: "1px", bgcolor: "divider" }} />
           </Box>
-          {group.map((section) => {
-            const ww = section.features?.find(
-              (f) => f.feature_type === "whitewater",
-            );
-            const diff = (ww?.metadata as Record<string, unknown> | undefined)
-              ?.difficulty as string | undefined;
-
-            return (
-              <ListItemButton
-                key={section.id}
-                selected={section.id === selectedSectionId}
-                onClick={() => onSectionClick?.(section.id)}
-                sx={{ borderRadius: 1, mb: 0.5 }}
-              >
-                <ListItemText
-                  primary={section.name}
-                  secondary={
-                    [section.region, section.country]
-                      .filter(Boolean)
-                      .join(", ") || undefined
-                  }
-                  slotProps={{
-                    primary: { variant: "body2" },
-                    secondary: { variant: "caption" },
-                  }}
-                />
-                {diff && (
-                  <Chip label={diff} size="small" sx={{ flexShrink: 0 }} />
-                )}
-                {onToggleFavorite && (
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleFavorite(section.id);
-                    }}
-                    sx={{ flexShrink: 0, ml: 0.5 }}
-                  >
-                    {favoritedIds?.has(section.id) ? (
-                      <StarIcon
-                        fontSize="small"
-                        sx={{ color: "warning.main" }}
-                      />
-                    ) : (
-                      <StarBorderIcon fontSize="small" />
-                    )}
-                  </IconButton>
-                )}
-              </ListItemButton>
-            );
-          })}
+          {group.map((section) => (
+            <SectionListItem
+              key={section.id}
+              section={section}
+              waterwayId={section.waterway_id}
+              selected={section.id === selectedSectionId}
+              onClick={(id) => onSectionClick?.(id)}
+              isFavorite={favoritedIds?.has(section.id)}
+              onToggleFavorite={onToggleFavorite}
+            />
+          ))}
         </Box>
       ))}
     </List>

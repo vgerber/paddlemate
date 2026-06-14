@@ -1,6 +1,6 @@
 import Chip from "@mui/material/Chip";
-import type { WaterRangeWithStatus } from "@/lib/api";
 import type { components } from "@/lib/api/schema";
+import { useWaterStatus } from "@/lib/hooks/useWaterways";
 
 type WaterLevel = components["schemas"]["WaterLevel"];
 
@@ -40,15 +40,17 @@ const LEVEL_CONFIG: Record<
 };
 
 interface WaterLevelChipProps {
-  ranges: WaterRangeWithStatus[] | undefined;
-  loading?: boolean;
+  waterwayId: number | null;
+  sectionId: number | null;
 }
 
 export default function WaterLevelChip({
-  ranges,
-  loading,
+  waterwayId,
+  sectionId,
 }: WaterLevelChipProps) {
-  if (loading || ranges === undefined) {
+  const { data: waterStatus, isLoading } = useWaterStatus(waterwayId, sectionId);
+
+  if (isLoading || waterStatus === undefined) {
     return (
       <Chip
         label="–"
@@ -59,16 +61,16 @@ export default function WaterLevelChip({
   }
 
   // No gauge configured for this section - don't show a chip
-  if (ranges.length === 0) return null;
+  if (waterStatus.ranges.length === 0) return null;
 
-  const level = maxLevel(ranges.map((r) => r.level));
-  const cfg = LEVEL_CONFIG[level];
+  const computedLevel = maxLevel(waterStatus.ranges.map((r) => r.level));
+  const cfg = LEVEL_CONFIG[computedLevel];
 
   return (
     <Chip
       label={cfg.label}
       size="small"
-      variant={level === "empty" ? "outlined" : "filled"}
+      variant={computedLevel === "empty" ? "outlined" : "filled"}
       sx={{
         ml: 0.5,
         fontSize: "0.65rem",

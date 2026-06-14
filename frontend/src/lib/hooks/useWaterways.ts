@@ -105,12 +105,12 @@ export function useCreateFeature(waterwayId: number, sectionId: number) {
   });
 }
 
-export function useWaterStatus(waterwayId: number, sectionId: number | null) {
+export function useWaterStatus(waterwayId: number | null, sectionId: number | null) {
   return useQuery({
-    queryKey: waterwayKeys.sectionWaterStatus(waterwayId, sectionId ?? 0),
+    queryKey: waterwayKeys.sectionWaterStatus(waterwayId ?? 0, sectionId ?? 0),
     queryFn: () =>
-      waterStatusApi.getForSection(waterwayId, sectionId as number),
-    enabled: sectionId !== null,
+      waterStatusApi.getForSection(waterwayId as number, sectionId as number),
+    enabled: waterwayId !== null && sectionId !== null,
     // Re-fetch every 5 minutes - matches gauge reader poll interval
     staleTime: 5 * 60 * 1000,
   });
