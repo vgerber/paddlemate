@@ -155,7 +155,7 @@ export default function SeriesChart({
   const tickStyle = { fontSize: 11, fill: "#8a9295" };
 
   return (
-    <div ref={setContainer} style={{ width: "100%", height: "100%" }}>
+    <div ref={setContainer} style={{ width: "100%", height: "100%", WebkitTapHighlightColor: "transparent", outline: "none" }}>
       {size && (
         <AreaChart
           width={size.width}

@@ -8,3 +8,11 @@
 .maplibregl-map {
   font-family: "Space Grotesk", sans-serif;
 }
+
+/* Suppress browser tap highlight and focus outline on recharts SVG elements */
+.recharts-wrapper,
+.recharts-wrapper svg,
+.recharts-wrapper * {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
