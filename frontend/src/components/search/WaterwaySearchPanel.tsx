@@ -22,6 +22,11 @@ import DifficultySelect from "./DifficultySelect";
 import RiverList from "./RiverList";
 import SectionList from "./SectionList";
 
+/** Normalize a name for comparison: lowercase + remove accents */
+function normalizeForSearch(str: string): string {
+  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 interface WaterwaySearchPanelProps {
   onSelect: (waterwayId: number) => void;
   onWaterwaysChange?: (ids: number[]) => void;
@@ -132,17 +137,22 @@ export default function WaterwaySearchPanel({
   // When searching by name, only show rivers whose name matches
   const visibleRivers = useMemo(() => {
     if (mode === "area" || !debouncedName) return waterways;
-    const q = debouncedName.toLowerCase();
-    return waterways.filter((w) => w.name.toLowerCase().includes(q));
+    const q = normalizeForSearch(debouncedName);
+    return waterways.filter((w) => normalizeForSearch(w.name).includes(q));
   }, [mode, waterways, debouncedName]);
 
-  // When searching by name, only show sections whose name matches
+  // When searching by name, show sections whose name OR waterway name matches
   const visibleSections = useMemo(() => {
     const sections = filteredSections ?? [];
     if (mode === "area" || !debouncedName) return sections;
-    const q = debouncedName.toLowerCase();
-    return sections.filter((s) => s.name.toLowerCase().includes(q));
-  }, [mode, filteredSections, debouncedName]);
+    const q = normalizeForSearch(debouncedName);
+    return sections.filter((s) => {
+      const nameMatches = normalizeForSearch(s.name).includes(q);
+      const waterwayName = waterwayNames?.[s.waterway_id];
+      const waterwayMatches = waterwayName && normalizeForSearch(waterwayName).includes(q);
+      return nameMatches || waterwayMatches;
+    });
+  }, [mode, filteredSections, debouncedName, waterwayNames]);
 
   useEffect(() => {
     onWaterwaysChange?.(waterways.map((w) => w.id));
