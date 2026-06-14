@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import MapGL, {
   Layer,
   type MapLayerMouseEvent,
@@ -13,6 +13,7 @@ import type { AreaCircle } from "@/lib/geo";
 import { circleGeoJSON } from "@/lib/geo";
 import GaugeMarkers, { type GaugePin } from "./GaugeMarkers";
 import LabelModeToggle from "./LabelModeToggle";
+import { useMapCameraEffects } from "./useMapCameraEffects";
 import {
   buildLineFeaturesGeoJSON,
   buildPointFeaturesGeoJSON,
@@ -142,73 +143,17 @@ export default function WaterwayMap({
   const [pickMode, setPickMode] = useState<"put-in" | "take-out" | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [satellite, setSatellite] = useState(false);
-
-  const handleMapLoad = useCallback(() => {
-    setMapLoaded(true);
-    const map = mapRef.current?.getMap();
-    addMapImages(map);
-  }, []);
-
-  // Re-add custom images whenever the style is swapped (e.g. satellite toggle)
-  useEffect(() => {
-    const map = mapRef.current?.getMap();
-    if (!map || !mapLoaded) return;
-    const handler = () => addMapImages(map);
-    map.on("style.load", handler);
-    return () => {
-      map.off("style.load", handler);
-    };
-  }, [mapLoaded]);
-
-  // Fit bounds to all sections
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded || !sections?.length || areaLocked) return;
-    const coords: number[][] = [];
-    for (const s of sections) {
-      const geom = s.location as unknown as GeoJSON.LineString;
-      if (geom?.type === "LineString") coords.push(...geom.coordinates);
-    }
-    if (!coords.length) return;
-    const lngs = coords.map((c) => c[0]);
-    const lats = coords.map((c) => c[1]);
-    map.fitBounds(
-      [
-        [Math.min(...lngs), Math.min(...lats)],
-        [Math.max(...lngs), Math.max(...lats)],
-      ],
-      { padding: 60, duration: 800 },
-    );
-  }, [sections, mapLoaded, areaLocked]);
-
-  // Fit bounds to selected section
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded || !selectedSectionId || !sections?.length) return;
-    const section = sections.find((s) => s.id === selectedSectionId);
-    const geom = section?.location as unknown as GeoJSON.LineString | undefined;
-    if (geom?.type !== "LineString" || !geom.coordinates.length) return;
-    const lngs = geom.coordinates.map((c) => c[0]);
-    const lats = geom.coordinates.map((c) => c[1]);
-    map.fitBounds(
-      [
-        [Math.min(...lngs), Math.min(...lats)],
-        [Math.max(...lngs), Math.max(...lats)],
-      ],
-      { padding: 80, duration: 600 },
-    );
-  }, [selectedSectionId, sections, mapLoaded]);
-
-  // Fly to a focused feature point
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded || !focusedPoint) return;
-    map.flyTo({
-      center: focusedPoint,
-      zoom: Math.max(map.getZoom(), 14),
-      duration: 600,
-    });
-  }, [focusedPoint, mapLoaded]);
+  const { handleMapLoad } = useMapCameraEffects({
+    mapRef,
+    mapLoaded,
+    setMapLoaded,
+    addMapImages,
+    sections,
+    areaCircle,
+    areaLocked,
+    selectedSectionId,
+    focusedPoint,
+  });
 
   const sectionsGeoJSON = buildSectionsGeoJSON(sections ?? []);
   const sectionLabelsGeoJSON = buildSectionLabelsGeoJSON(

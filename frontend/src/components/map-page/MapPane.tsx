@@ -79,7 +79,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
   const sectionLevel = selectedSectionId != null ? sectionLevels[selectedSectionId] : undefined;
 
   const visibleAreaCircle =
-    selectedWaterwayId == null
+    selectedWaterwayId == null && isAreaMode
       ? previewRadius != null && areaCircle != null
         ? { ...areaCircle, radiusKm: previewRadius }
         : areaCircle
@@ -127,7 +127,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           areaCircle={visibleAreaCircle}
           areaLocked={areaLocked}
           onAreaCircleChange={
-            selectedWaterwayId == null && !areaLocked
+            isAreaMode && selectedWaterwayId == null && !areaLocked
               ? setAreaCircle
               : undefined
           }

@@ -209,7 +209,7 @@ export function useMapPageState(search: RouteSearch) {
   }, [searchWaterwayDetails, selectedWaterway]);
 
   const filteredSearchSections = useFilteredSections(searchSections, {
-    areaCircle,
+    areaCircle: isAreaMode ? areaCircle : null,
     minDiff: min_diff,
     maxDiff: max_diff,
   });
