@@ -1,8 +1,17 @@
+import { execSync } from "child_process";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+
+const commitHash = (() => {
+  try {
+    return execSync("git rev-parse --short HEAD").toString().trim();
+  } catch {
+    return "unknown";
+  }
+})();
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -53,6 +62,9 @@ export default defineConfig({
       },
     }),
   ],
+  define: {
+    __COMMIT_HASH__: JSON.stringify(commitHash),
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

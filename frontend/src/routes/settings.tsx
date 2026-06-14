@@ -202,6 +202,10 @@ function ProfilePanel() {
       </Button>
       <Divider />
       <TokensPanel />
+      <Divider />
+      <Typography variant="caption" color="text.disabled" sx={{ textAlign: "center" }}>
+        v{__COMMIT_HASH__}
+      </Typography>
     </Stack>
   );
 }
