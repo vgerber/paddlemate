@@ -48,6 +48,12 @@ const tokens = {
   // Borders
   outline: "#8a9295",
   outlineVariant: "#40484a",
+
+  // Water levels
+  waterEmpty:  { label: "E", color: "rgba(255,255,255,0.35)", bgcolor: "transparent",             border: "rgba(255,255,255,0.18)" },
+  waterLow:    { label: "L", color: "#81c784",                bgcolor: "rgba(129,199,132,0.15)" },
+  waterMedium: { label: "M", color: "#ffb74d",                bgcolor: "rgba(255,183,77,0.15)"  },
+  waterHigh:   { label: "H", color: "#e57373",                bgcolor: "rgba(229,115,115,0.15)" },
 } as const;
 
 export const theme = createTheme({

@@ -4,7 +4,8 @@ import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
-import { LEVEL_CONFIG, maxLevel } from "@/components/WaterLevelChip";
+import { useTheme } from "@mui/material/styles";
+import { maxLevel } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
 
 function formatDate(iso: string) {
@@ -64,6 +65,13 @@ export default function DescentCard({
   onClick,
   showAuthor,
 }: DescentCardProps) {
+  const { tokens } = useTheme();
+  const levelConfig = {
+    empty:  tokens.waterEmpty,
+    low:    tokens.waterLow,
+    medium: tokens.waterMedium,
+    high:   tokens.waterHigh,
+  };
   const waterwayNames = [
     ...new Set(
       descent.sections
@@ -202,7 +210,7 @@ export default function DescentCard({
           );
           if (allSnapshots.length === 0) return null;
           const level = maxLevel(allSnapshots.map((s) => s.level));
-          const cfg = LEVEL_CONFIG[level];
+          const cfg = levelConfig[level];
           return (
             <Chip
               label={cfg.label}

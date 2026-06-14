@@ -1,4 +1,5 @@
 import Chip from "@mui/material/Chip";
+import { useTheme } from "@mui/material/styles";
 import type { components } from "@/lib/api/schema";
 import { useWaterStatus } from "@/lib/hooks/useWaterways";
 
@@ -12,33 +13,6 @@ function maxLevel(levels: WaterLevel[]): WaterLevel {
   }, "empty");
 }
 
-const LEVEL_CONFIG: Record<
-  WaterLevel,
-  { label: string; color: string; bgcolor: string; border?: string }
-> = {
-  empty: {
-    label: "E",
-    color: "rgba(255,255,255,0.35)",
-    bgcolor: "transparent",
-    border: "rgba(255,255,255,0.18)",
-  },
-  low: {
-    label: "L",
-    color: "#81c784",
-    bgcolor: "rgba(129,199,132,0.15)",
-  },
-  medium: {
-    label: "M",
-    color: "#ffb74d",
-    bgcolor: "rgba(255,183,77,0.15)",
-  },
-  high: {
-    label: "H",
-    color: "#e57373",
-    bgcolor: "rgba(229,115,115,0.15)",
-  },
-};
-
 interface WaterLevelChipProps {
   waterwayId: number | null;
   sectionId: number | null;
@@ -48,7 +22,15 @@ export default function WaterLevelChip({
   waterwayId,
   sectionId,
 }: WaterLevelChipProps) {
+  const { tokens } = useTheme();
   const { data: waterStatus, isLoading } = useWaterStatus(waterwayId, sectionId);
+
+  const levelConfig = {
+    empty:  tokens.waterEmpty,
+    low:    tokens.waterLow,
+    medium: tokens.waterMedium,
+    high:   tokens.waterHigh,
+  } satisfies Record<WaterLevel, { label: string; color: string; bgcolor: string; border?: string }>;
 
   if (isLoading || waterStatus === undefined) {
     return (
@@ -64,7 +46,7 @@ export default function WaterLevelChip({
   if (waterStatus.ranges.length === 0) return null;
 
   const computedLevel = maxLevel(waterStatus.ranges.map((r) => r.level));
-  const cfg = LEVEL_CONFIG[computedLevel];
+  const cfg = levelConfig[computedLevel];
 
   return (
     <Chip
@@ -85,4 +67,4 @@ export default function WaterLevelChip({
 }
 
 export type { WaterLevel };
-export { LEVEL_CONFIG, maxLevel };
+export { maxLevel };
