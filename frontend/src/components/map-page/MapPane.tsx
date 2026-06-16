@@ -12,6 +12,7 @@ import StandingDescentBanner from "@/components/StandingDescentBanner";
 import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import WaterwayMap from "@/components/map/Map";
+import { proposalToPseudoFeature } from "@/components/waterway/section-details/utils";
 import AreaControls from "@/components/search/AreaControls";
 import SectionSpeedDial from "./SectionSpeedDial";
 import type { MapPageState } from "./useMapPageState";
@@ -66,6 +67,8 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     selectedGaugeRanges,
     isMobileMapView,
     toggleMobileMapView,
+    showProposedFeatures,
+    featureProposals,
   } = state;
 
   const LEVEL_COLORS: Record<string, string> = {
@@ -151,6 +154,16 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           focusedPoint={focusedPoint}
           controlsBottomOffset={
             isMobile && (showAreaStrip || isMobileMapView) ? 60 : 0
+          }
+          controlsAnchor={
+            isMobile && suggestMode === "feature" ? "top" : undefined
+          }
+          proposedFeatures={
+            showProposedFeatures
+              ? featureProposals
+                  .map(proposalToPseudoFeature)
+                  .filter(Boolean)
+              : undefined
           }
         />
 

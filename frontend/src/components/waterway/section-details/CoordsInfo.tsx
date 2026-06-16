@@ -4,27 +4,22 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import type { ReactNode } from "react";
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
 interface Props {
   coords: [number, number]; // [lng, lat]
+  actions?: ReactNode;
 }
 
-/** Formatted coordinate pair with a Google Maps link and copy-to-clipboard button. */
-export function CoordsInfo({ coords }: Props) {
+/** Formatted coordinate pair with copy and Google Maps buttons. Pass `actions` to append extra buttons to the same row. */
+export function CoordsInfo({ coords, actions }: Props) {
   const [lng, lat] = coords;
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
   const url = `https://www.google.com/maps?q=${lat},${lng}`;
-
-  function handleCopy(e: React.MouseEvent) {
-    e.stopPropagation();
-    navigator.clipboard.writeText(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
 
   return (
     <Stack direction="row" sx={{ mt: "4px", alignItems: "center", gap: "2px", ml: "-4px" }}>
@@ -43,7 +38,7 @@ export function CoordsInfo({ coords }: Props) {
       <IconButton
         size="small"
         title={copied ? "Copied!" : "Copy coordinates"}
-        onClick={handleCopy}
+        onClick={(e) => { e.stopPropagation(); copy(`${lat.toFixed(5)}, ${lng.toFixed(5)}`); }}
         sx={{ color: copied ? tokens.primary : tokens.secondary }}
       >
         {copied ? <DoneIcon fontSize="small" /> : <ContentCopyOutlinedIcon fontSize="small" />}
@@ -60,6 +55,7 @@ export function CoordsInfo({ coords }: Props) {
       >
         <OpenInNewIcon fontSize="small" />
       </IconButton>
+      {actions}
     </Stack>
   );
 }

@@ -257,3 +257,46 @@ export function buildLineFeaturesGeoJSON(
     })),
   };
 }
+
+/** GeoJSON for proposed (pending) point features — rendered with outline-only circles. */
+export function buildProposedPointFeaturesGeoJSON(
+  features: Feature[],
+): GeoJSON.FeatureCollection {
+  const points = features.filter(
+    (f) =>
+      f.location.type === "Point" &&
+      f.feature_type !== "put_in" &&
+      f.feature_type !== "take_out",
+  );
+  return {
+    type: "FeatureCollection",
+    features: points.map((f) => ({
+      type: "Feature" as const,
+      id: f.id,
+      properties: {
+        id: f.id,
+        color: FEATURE_COLORS[f.feature_type] ?? "#8bd1e8",
+      },
+      geometry: f.location as GeoJSON.Point,
+    })),
+  };
+}
+
+/** GeoJSON for proposed (pending) line features. */
+export function buildProposedLineFeaturesGeoJSON(
+  features: Feature[],
+): GeoJSON.FeatureCollection {
+  const lines = features.filter((f) => f.location.type === "LineString");
+  return {
+    type: "FeatureCollection",
+    features: lines.map((f) => ({
+      type: "Feature" as const,
+      id: f.id,
+      properties: {
+        id: f.id,
+        color: FEATURE_COLORS[f.feature_type] ?? "#8bd1e8",
+      },
+      geometry: f.location as GeoJSON.LineString,
+    })),
+  };
+}

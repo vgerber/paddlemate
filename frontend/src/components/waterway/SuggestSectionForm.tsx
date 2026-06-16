@@ -2,14 +2,13 @@ import EditLocationAltIcon from "@mui/icons-material/EditLocationAlt";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import type { SectionWithFeatures } from "@/lib/api";
 import { sectionsApi } from "@/lib/api";
 import { waterwayKeys } from "@/lib/hooks/useWaterways";
@@ -50,9 +49,10 @@ interface SuggestSectionFormProps {
   pickingFor: "put-in" | "take-out" | null;
   onRequestPickPutIn: () => void;
   onRequestPickTakeOut: () => void;
-  onCancel: () => void;
   onSubmitted: () => void;
   onPreviewCoordsChange?: (coords: Coord[] | null) => void;
+  submitRef?: RefObject<(() => void) | null>;
+  onCanSubmitChange?: (can: boolean) => void;
 }
 
 export default function SuggestSectionForm({
@@ -64,9 +64,10 @@ export default function SuggestSectionForm({
   pickingFor,
   onRequestPickPutIn,
   onRequestPickTakeOut,
-  onCancel,
   onSubmitted,
   onPreviewCoordsChange,
+  submitRef,
+  onCanSubmitChange,
 }: SuggestSectionFormProps) {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
@@ -156,6 +157,12 @@ export default function SuggestSectionForm({
     sections.length > 0 &&
     downstreamDot(sections, putIn, takeOut) < 0;
 
+  const canSubmit = !!(name.trim() && hasLocation && !submitting);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — always keep ref current
+  useEffect(() => { if (submitRef) submitRef.current = handleSubmit; });
+  useEffect(() => { onCanSubmitChange?.(canSubmit); }, [canSubmit, onCanSubmitChange]);
+
   async function handleSubmit() {
     if (!name.trim() || !hasLocation) return;
     setSubmitting(true);
@@ -201,6 +208,9 @@ export default function SuggestSectionForm({
         display: "flex",
         flexDirection: "column",
         gap: 1.5,
+        "& .MuiInputBase-inputSizeSmall": {
+          py: { xs: "12px", md: "8.5px" },
+        },
       }}
     >
       <TextField
@@ -366,20 +376,6 @@ export default function SuggestSectionForm({
           {submitError}
         </Alert>
       )}
-
-      <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-        <Button size="small" onClick={onCancel} disabled={submitting}>
-          Cancel
-        </Button>
-        <Button
-          size="small"
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={!name.trim() || !hasLocation || submitting}
-        >
-          Submit
-        </Button>
-      </Box>
     </Box>
   );
 }

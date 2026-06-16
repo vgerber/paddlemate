@@ -380,6 +380,7 @@ function StepSections({
   const [selectedWaterwayId, setSelectedWaterwayId] = useState<number | null>(
     initialWaterwayId,
   );
+  const [labelMode, setLabelMode] = useState<"section" | "river">("section");
 
   const { data: searchResults, isFetching: searching } = useQuery({
     queryKey: ["waterway-search", waterwayInput],
@@ -523,6 +524,8 @@ function StepSections({
         <WaterwayMap
           sections={sectionsForMap}
           selectedSectionIds={selectedIds}
+          labelMode={labelMode}
+          onLabelModeChange={setLabelMode}
           onSectionToggle={(id) => {
             const section = sectionsForMap.find((s) => s.id === id);
             if (section) toggleSection(section);

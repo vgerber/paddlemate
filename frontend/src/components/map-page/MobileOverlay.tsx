@@ -27,6 +27,7 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
     sections,
     isMobileMapView,
     toggleMobileMapView,
+    suggestMode,
   } = state;
 
   const sectionName = sections.find((s) => s.id === selectedSectionId)?.name;
@@ -38,14 +39,16 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
         sx={{
           display: { xs: "flex", md: "none" },
           position: "fixed",
-          top: 0,
-          bottom: "calc(56px + env(safe-area-inset-bottom))",
+          top: suggestMode ? "45%" : 0,
+          bottom: suggestMode ? 0 : "calc(56px + env(safe-area-inset-bottom))",
           left: 0,
           right: 0,
-          zIndex: 1200,
+          zIndex: suggestMode ? 1350 : 1200,
           flexDirection: "column",
           bgcolor: "background.default",
           overflow: "hidden",
+          borderTop: suggestMode ? "1px solid" : "none",
+          borderColor: "divider",
         }}
       >
         <Box
@@ -67,8 +70,8 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
           />
         </Box>
 
-        {/* Charts shown inline in the overlay on mobile */}
-        {selectedGaugeId != null && selectedGaugeRanges.length > 0 ? (
+        {/* Charts shown inline in the overlay on mobile (hidden in suggest mode) */}
+        {!suggestMode && (selectedGaugeId != null && selectedGaugeRanges.length > 0 ? (
           <GaugeChartPanel
             ranges={selectedGaugeRanges}
             onClose={() => setSelectedGaugeId(null)}
@@ -79,7 +82,7 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
             sectionId={selectedSectionId}
             sectionName={sectionName}
           />
-        ) : null}
+        ) : null)}
 
         {/* Speed Dial — section-specific actions on mobile */}
         <SectionSpeedDial

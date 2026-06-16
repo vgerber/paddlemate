@@ -2,7 +2,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -14,10 +13,11 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { type RefObject, useEffect, useState } from "react";
 import type { FeatureType, WaterRangeWithStatus } from "@/lib/api";
 import { featuresApi } from "@/lib/api";
 import { waterwayKeys } from "@/lib/hooks/useWaterways";
+import Button from "@mui/material/Button";
 
 type GeomType = "Point" | "LineString" | "Polygon";
 
@@ -55,8 +55,11 @@ interface SuggestFeatureFormProps {
   onStopPick: () => void;
   onRemoveVertex?: (i: number) => void;
   onClearVertices: () => void;
-  onCancel: () => void;
   onSubmitted: () => void;
+  /** Ref populated with the current handleSubmit — lets the parent header trigger submission. */
+  submitRef?: RefObject<(() => void) | null>;
+  /** Called whenever the form's canSubmit state changes. */
+  onCanSubmitChange?: (can: boolean) => void;
 }
 
 export default function SuggestFeatureForm({
@@ -72,8 +75,9 @@ export default function SuggestFeatureForm({
   onStopPick,
   onRemoveVertex,
   onClearVertices,
-  onCancel,
   onSubmitted,
+  submitRef,
+  onCanSubmitChange,
 }: SuggestFeatureFormProps) {
   const queryClient = useQueryClient();
   const [langCode, setLangCode] = useState("en");
@@ -89,13 +93,24 @@ export default function SuggestFeatureForm({
   const [seriesId, setSeriesId] = useState<number | "">(
     availableSeries[0]?.id ?? "",
   );
-  const [rangeLow, setRangeLow] = useState("");
-  const [rangeMedium, setRangeMedium] = useState("");
-  const [rangeHigh, setRangeHigh] = useState("");
+  const defaultRange = gaugeRanges?.[0];
+  const [rangeLow, setRangeLow] = useState(defaultRange?.range_low?.toString() ?? "");
+  const [rangeMedium, setRangeMedium] = useState(defaultRange?.range_medium?.toString() ?? "");
+  const [rangeHigh, setRangeHigh] = useState(defaultRange?.range_high?.toString() ?? "");
   const activeSeries =
     seriesId !== ""
       ? (gaugeRanges?.find((r) => r.series.id === seriesId) ?? gaugeRanges?.[0])
       : gaugeRanges?.[0];
+
+  useEffect(() => {
+    const range = seriesId !== ""
+      ? (gaugeRanges?.find((r) => r.series.id === seriesId) ?? gaugeRanges?.[0])
+      : gaugeRanges?.[0];
+    if (!range) return;
+    setRangeLow(range.range_low?.toString() ?? "");
+    setRangeMedium(range.range_medium?.toString() ?? "");
+    setRangeHigh(range.range_high?.toString() ?? "");
+  }, [gaugeRanges, seriesId]);
 
   // Auto-stop picking after first vertex in Point mode
   useEffect(() => {
@@ -115,6 +130,11 @@ export default function SuggestFeatureForm({
   const canSubmit =
     (useSectionLine && geomType === "LineString" && !!sectionLine) ||
     (vertices.length >= minVertices && !submitting);
+
+  // Keep parent's header button in sync
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — always keep ref current
+  useEffect(() => { if (submitRef) submitRef.current = handleSubmit; });
+  useEffect(() => { onCanSubmitChange?.(canSubmit); }, [canSubmit, onCanSubmitChange]);
 
   function buildGeometry() {
     if (useSectionLine && geomType === "LineString" && sectionLine) {
@@ -185,6 +205,9 @@ export default function SuggestFeatureForm({
         display: "flex",
         flexDirection: "column",
         gap: 1.5,
+        "& .MuiInputBase-inputSizeSmall": {
+          py: { xs: "12px", md: "8.5px" },
+        },
       }}
     >
       <FormControl size="small" sx={{ minWidth: 90, alignSelf: "flex-start" }}>
@@ -194,6 +217,7 @@ export default function SuggestFeatureForm({
           label="Language"
           value={langCode}
           onChange={(e) => setLangCode(e.target.value)}
+          MenuProps={{ sx: { zIndex: 1500 } }}
         >
           {[
             "en",
@@ -240,6 +264,7 @@ export default function SuggestFeatureForm({
           label="Feature type"
           value={featureType}
           onChange={(e) => setFeatureType(e.target.value as FeatureType)}
+          MenuProps={{ sx: { zIndex: 1500 } }}
         >
           {FEATURE_TYPES.map((t) => (
             <MenuItem key={t} value={t}>
@@ -268,6 +293,7 @@ export default function SuggestFeatureForm({
                 label="Gauge series"
                 value={seriesId}
                 onChange={(e) => setSeriesId(e.target.value as number | "")}
+                MenuProps={{ sx: { zIndex: 1500 } }}
               >
                 {(gaugeRanges ?? []).map((r) => (
                   <MenuItem key={r.series.id} value={r.series.id}>
@@ -326,7 +352,7 @@ export default function SuggestFeatureForm({
             color="text.secondary"
             sx={{ mt: -0.5 }}
           >
-            {activeSeries?.gauge.name}
+            {activeSeries?.series.label ?? activeSeries?.gauge.name}
             {activeSeries?.series.unit ? ` · ${activeSeries.series.unit}` : ""}
           </Typography>
         </>
@@ -386,8 +412,8 @@ export default function SuggestFeatureForm({
         ) : (
           <Button
             variant={pickingActive ? "contained" : "outlined"}
-            color="primary"
             size="small"
+            color="primary"
             fullWidth
             startIcon={<LocationOnIcon />}
             onClick={pickingActive ? onStopPick : onRequestPick}
@@ -532,20 +558,6 @@ export default function SuggestFeatureForm({
           {submitError}
         </Alert>
       )}
-
-      <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-        <Button size="small" onClick={onCancel} disabled={submitting}>
-          Cancel
-        </Button>
-        <Button
-          size="small"
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={!canSubmit}
-        >
-          Submit
-        </Button>
-      </Box>
     </Box>
   );
 }

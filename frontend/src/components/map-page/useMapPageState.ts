@@ -1,17 +1,15 @@
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AreaCircle, GaugePin } from "@/components/map/Map";
-import type {
-  DetailTab,
-  SuggestMode,
-} from "@/components/waterway/WaterwayDetailPanel";
-import { waterwaysApi } from "@/lib/api";
+import type { DetailTab, SuggestMode } from "@/components/waterway/types";
+import { proposalsApi, waterwaysApi } from "@/lib/api";
 import { useFavorites } from "@/lib/hooks/useFavorites";
 import { useFilteredSections } from "@/lib/hooks/useFilteredSections";
 import { useGaugeData } from "@/lib/hooks/useGaugeData";
+import { proposalKeys } from "@/lib/hooks/useProposals";
 import {
   useAllSectionWaterStatus,
   useSectionWaterStatuses,
@@ -85,6 +83,26 @@ export function useMapPageState(search: RouteSearch) {
     null,
   );
 
+  const [showProposedFeatures, setShowProposedFeatures] = useState(false);
+  const toggleShowProposedFeatures = useCallback(
+    () => setShowProposedFeatures((v) => !v),
+    [],
+  );
+  const { data: featureProposals = [] } = useQuery({
+    queryKey: proposalKeys.list({
+      entity_type: "feature",
+      status: "pending",
+      section_id: selectedSectionId,
+    }),
+    queryFn: () =>
+      proposalsApi.list({
+        entity_type: "feature",
+        status: "pending",
+        section_id: selectedSectionId,
+      }),
+    enabled: selectedSectionId != null && showProposedFeatures,
+  });
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -127,6 +145,14 @@ export function useMapPageState(search: RouteSearch) {
   useEffect(() => {
     setFocusedPoint(null);
   }, [selectedSectionId]);
+
+  // When suggest mode opens, always bring the overlay back (map-view hides it)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on suggest mode change
+  useEffect(() => {
+    if (suggestMode != null) {
+      setIsMobileMapViewRaw(false);
+    }
+  }, [suggestMode]);
 
   const areaCircle: AreaCircle | null =
     lat != null && lon != null && radius != null
@@ -226,6 +252,13 @@ export function useMapPageState(search: RouteSearch) {
     detailTab,
     shouldFetchGauges,
   });
+
+  const selectedSectionGaugeRanges = useMemo(() => {
+    if (selectedSectionId == null) return [];
+    const idx = sectionIds.indexOf(selectedSectionId);
+    if (idx < 0) return [];
+    return allWaterStatuses[idx]?.data?.ranges ?? [];
+  }, [selectedSectionId, sectionIds, allWaterStatuses]);
 
   const sectionLevels = useMemo(() => {
     const map: Record<number, string> = {};
@@ -379,6 +412,9 @@ export function useMapPageState(search: RouteSearch) {
     setSuggestMode,
     focusedPoint,
     setFocusedPoint,
+    showProposedFeatures,
+    toggleShowProposedFeatures,
+    featureProposals,
     isMobile,
     isMobilePanelOpen,
     setIsMobilePanelOpen,
@@ -400,6 +436,7 @@ export function useMapPageState(search: RouteSearch) {
     gaugePins,
     gaugeRanges,
     selectedGaugeRanges,
+    selectedSectionGaugeRanges,
     sectionLevels,
     searchSectionLevels,
     // Handlers

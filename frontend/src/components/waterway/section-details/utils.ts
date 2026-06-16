@@ -1,4 +1,4 @@
-import type { Feature } from "@/lib/api";
+import type { Feature, Proposal } from "@/lib/api";
 import { distanceAlongLineM, representativePoint } from "@/lib/geo";
 import type { ComputedFeature, TreeNode } from "./types";
 
@@ -105,12 +105,53 @@ export function computeExtent(
 }
 
 /**
+ * Converts a Proposal's proposed_data into a pseudo-Feature object.
+ * Returns null when the proposal lacks the geometry/type required.
+ */
+export function proposalToPseudoFeature(proposal: Proposal): Feature | null {
+  const data = proposal.proposed_data as Record<string, unknown> | null;
+  if (!data?.location || !data?.feature_type) return null;
+  const langCode = (data.lang_code as string | undefined) ?? "en";
+  return {
+    id: -proposal.id,
+    feature_type: data.feature_type as Feature["feature_type"],
+    location: data.location as Feature["location"],
+    metadata: (data.metadata ?? null) as Feature["metadata"],
+    names: data.name
+      ? [{ id: 0, feature_id: -proposal.id, lang_code: langCode, name: data.name as string }]
+      : [],
+    descriptions: data.description
+      ? [{ id: 0, feature_id: -proposal.id, lang_code: langCode, description: data.description as string }]
+      : [],
+    section_id: 0,
+    created_at: proposal.created_at,
+    updated_at: proposal.updated_at,
+    created_by: proposal.submitted_by,
+  } as Feature;
+}
+
+/**
+ * Converts a pending Proposal into a ComputedFeature so it can be sorted
+ * into the timeline alongside approved features. Returns null when the
+ * proposal lacks the location data required for positioning.
+ */
+export function proposalToComputedFeature(
+  proposal: Proposal,
+  line: [number, number][],
+): ComputedFeature | null {
+  const pseudoFeature = proposalToPseudoFeature(proposal);
+  if (!pseudoFeature) return null;
+  return { ...computeExtent(pseudoFeature, line), proposal };
+}
+
+/**
  * Builds a two-level render tree. Each feature is assigned to the smallest
  * zone that fully contains it. Uncontained features are top-level nodes.
  * Both levels are sorted by ascending distM.
  */
 export function buildTree(items: ComputedFeature[]): TreeNode[] {
-  const zones = items.filter((i) => i.isZone);
+  // Only approved (non-proposal) zones can act as parents; proposals are always leaves.
+  const zones = items.filter((i) => i.isZone && !i.proposal);
 
   function findParent(item: ComputedFeature): ComputedFeature | null {
     let best: ComputedFeature | null = null;

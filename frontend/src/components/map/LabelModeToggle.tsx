@@ -7,6 +7,7 @@ interface LabelModeToggleProps {
   satellite: boolean;
   onSatelliteChange: (v: boolean) => void;
   bottomOffset?: number;
+  anchor?: "top" | "bottom";
 }
 
 export default function LabelModeToggle({
@@ -15,6 +16,7 @@ export default function LabelModeToggle({
   satellite,
   onSatelliteChange,
   bottomOffset = 0,
+  anchor = "bottom",
 }: LabelModeToggleProps) {
   const btn = (active: boolean) =>
     ({
@@ -30,7 +32,7 @@ export default function LabelModeToggle({
     <Box
       sx={{
         position: "absolute",
-        bottom: 14 + bottomOffset,
+        ...(anchor === "top" ? { top: 14 } : { bottom: 14 + bottomOffset }),
         left: 10,
         zIndex: 10,
         display: "flex",

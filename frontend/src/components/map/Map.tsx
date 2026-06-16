@@ -17,6 +17,8 @@ import { useMapCameraEffects } from "./useMapCameraEffects";
 import {
   buildLineFeaturesGeoJSON,
   buildPointFeaturesGeoJSON,
+  buildProposedLineFeaturesGeoJSON,
+  buildProposedPointFeaturesGeoJSON,
   buildPutInTakeOutConnectorsGeoJSON,
   buildSectionEndpointsGeoJSON,
   buildSectionLabelsGeoJSON,
@@ -108,6 +110,10 @@ interface WaterwayMapProps {
   focusedPoint?: [number, number] | null;
   /** Extra px to add to the bottom offset of map controls (satellite/label toggle) so they clear any bottom strip. */
   controlsBottomOffset?: number;
+  /** Anchor the map controls to the top instead of the bottom (e.g. when the bottom is covered by a panel). */
+  controlsAnchor?: "top" | "bottom";
+  /** Pending proposals to show as ghost markers on the map. */
+  proposedFeatures?: Feature[];
 }
 
 export default function WaterwayMap({
@@ -138,6 +144,8 @@ export default function WaterwayMap({
   sectionLevels,
   focusedPoint,
   controlsBottomOffset = 0,
+  controlsAnchor,
+  proposedFeatures,
 }: WaterwayMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [pickMode, setPickMode] = useState<"put-in" | "take-out" | null>(null);
@@ -168,6 +176,8 @@ export default function WaterwayMap({
   const connectorsGeoJSON = buildPutInTakeOutConnectorsGeoJSON(sections ?? []);
   const pointsGeoJSON = buildPointFeaturesGeoJSON(features ?? []);
   const linesGeoJSON = buildLineFeaturesGeoJSON(features ?? []);
+  const proposedPointsGeoJSON = buildProposedPointFeaturesGeoJSON(proposedFeatures ?? []);
+  const proposedLinesGeoJSON = buildProposedLineFeaturesGeoJSON(proposedFeatures ?? []);
 
   const handleClick = (e: MapLayerMouseEvent) => {
     if (pickMode) {
@@ -233,6 +243,7 @@ export default function WaterwayMap({
           satellite={satellite}
           onSatelliteChange={setSatellite}
           bottomOffset={controlsBottomOffset}
+          anchor={controlsAnchor}
         />
       )}
       <MapGL
@@ -427,6 +438,31 @@ export default function WaterwayMap({
               "circle-color": ["get", "color"],
               "circle-stroke-width": 2,
               "circle-stroke-color": "#121416",
+            }}
+          />
+        </Source>
+
+        {/* Proposed (pending) features — ghost style */}
+        <Source id="proposed-feature-lines" type="geojson" data={proposedLinesGeoJSON}>
+          <Layer
+            id="proposed-feature-lines-layer"
+            type="line"
+            paint={{
+              "line-color": ["get", "color"],
+              "line-width": 2.5,
+              "line-dasharray": [3, 2],
+            }}
+          />
+        </Source>
+        <Source id="proposed-feature-points" type="geojson" data={proposedPointsGeoJSON}>
+          <Layer
+            id="proposed-feature-points-circle"
+            type="circle"
+            paint={{
+              "circle-radius": 7,
+              "circle-color": "rgba(0,0,0,0)",
+              "circle-stroke-width": 2.5,
+              "circle-stroke-color": ["get", "color"],
             }}
           />
         </Source>
