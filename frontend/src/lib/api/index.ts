@@ -285,6 +285,11 @@ export const proposalsApi = {
       params: { path: { proposal_id: id } },
     });
   },
+  delete: async (id: number) => {
+    await client.DELETE("/api/v1/proposals/{proposal_id}", {
+      params: { path: { proposal_id: id } },
+    });
+  },
 };
 
 export const tokensApi = {

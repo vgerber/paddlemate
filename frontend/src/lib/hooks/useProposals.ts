@@ -77,6 +77,16 @@ export function useUnvoteProposal() {
   });
 }
 
+export function useDeleteProposal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => proposalsApi.delete(id),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: proposalKeys.all });
+    },
+  });
+}
+
 export function useReviewProposal() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -253,6 +253,67 @@ doc_fn!(unvote_proposal_docs, op =>
         .tag("Proposals")
 );
 
+pub async fn delete_proposal(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path(path): Path<ProposalPath>,
+) -> impl IntoApiResponse {
+    let Extension(token) = match auth {
+        Some(a) => a,
+        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+    };
+
+    let proposal =
+        match proposals::get_proposal(&app.pg_pool, path.proposal_id, Some(token.user_id())).await {
+            Ok(Some(p)) => p,
+            Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+            Err(err) => {
+                tracing::error!(
+                    "Error fetching proposal {} for delete: {}",
+                    path.proposal_id,
+                    err
+                );
+                return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+            }
+        };
+
+    // Only the submitter or an admin may withdraw a proposal.
+    let is_owner = proposal.submitted_by == token.user_id();
+    if !is_owner && !token.is_server_admin() {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+
+    // Only pending proposals can be withdrawn; reviewed ones are immutable.
+    if proposal.status != ProposalStatus::Pending {
+        return (
+            StatusCode::CONFLICT,
+            "Only pending proposals can be deleted",
+        )
+            .into_response();
+    }
+
+    match proposals::delete_proposal(&app.pg_pool, path.proposal_id).await {
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Err(err) => {
+            tracing::error!("Error deleting proposal {}: {}", path.proposal_id, err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+doc_fn!(delete_proposal_docs, op =>
+    op.input::<Path<ProposalPath>>()
+        .description("Delete (withdraw) a pending proposal. Allowed for the submitter or an admin.")
+        .response_with::<204, (), _>(|res| res.description("Proposal deleted"))
+        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
+        .response_with::<403, (), _>(|res| res.description("Forbidden"))
+        .response_with::<404, (), _>(|res| res.description("Proposal not found"))
+        .response_with::<409, (), _>(|res| res.description("Proposal already reviewed"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Proposals")
+);
+
 // Aide requires a serializable type to generate the request body schema.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, JsonSchema)]
 #[allow(dead_code)]
@@ -272,7 +333,8 @@ pub fn proposals_routes(state: AppState) -> ApiRouter {
         .api_route(
             "/{proposal_id}",
             get_with(get_proposal, get_proposal_docs)
-                .patch_with(review_proposal, review_proposal_docs),
+                .patch_with(review_proposal, review_proposal_docs)
+                .delete_with(delete_proposal, delete_proposal_docs),
         )
         .api_route(
             "/{proposal_id}/vote",

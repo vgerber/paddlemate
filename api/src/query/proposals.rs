@@ -330,6 +330,18 @@ pub async fn unvote_proposal(
     Ok(())
 }
 
+/// Delete a proposal by ID. Existence, ownership and status checks are handled
+/// by the route handler. Associated votes are removed via ON DELETE CASCADE.
+/// Returns true if a row was removed.
+pub async fn delete_proposal(db: &PgPool, proposal_id: i64) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query("DELETE FROM proposals WHERE id = $1")
+        .bind(proposal_id)
+        .execute(db)
+        .await?;
+
+    Ok(result.rows_affected() > 0)
+}
+
 /// Review a proposal: approve or reject it.
 /// Approving applies the change to the live table within the same transaction.
 /// Returns None if the proposal does not exist or is not pending.

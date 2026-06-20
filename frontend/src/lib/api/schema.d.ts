@@ -726,7 +726,8 @@ export interface paths {
 		get: operations["get_proposal"];
 		put?: never;
 		post?: never;
-		delete?: never;
+		/** @description Delete (withdraw) a pending proposal. Allowed for the submitter or an admin. */
+		delete: operations["delete_proposal"];
 		options?: never;
 		head?: never;
 		/** @description Approve or reject a proposal (admin only) */
@@ -4185,6 +4186,54 @@ export interface operations {
 			};
 			/** @description Unauthorized */
 			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+		};
+	};
+	delete_proposal: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				proposal_id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Proposal deleted */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			/** @description Unauthorized */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			/** @description Forbidden */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			/** @description Proposal not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			/** @description Proposal already reviewed */
+			409: {
 				headers: {
 					[name: string]: unknown;
 				};
