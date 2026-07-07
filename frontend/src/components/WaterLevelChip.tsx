@@ -23,14 +23,20 @@ export default function WaterLevelChip({
   sectionId,
 }: WaterLevelChipProps) {
   const { tokens } = useTheme();
-  const { data: waterStatus, isLoading } = useWaterStatus(waterwayId, sectionId);
+  const { data: waterStatus, isLoading } = useWaterStatus(
+    waterwayId,
+    sectionId,
+  );
 
   const levelConfig = {
-    empty:  tokens.waterEmpty,
-    low:    tokens.waterLow,
+    empty: tokens.waterEmpty,
+    low: tokens.waterLow,
     medium: tokens.waterMedium,
-    high:   tokens.waterHigh,
-  } satisfies Record<WaterLevel, { label: string; color: string; bgcolor: string; border?: string }>;
+    high: tokens.waterHigh,
+  } satisfies Record<
+    WaterLevel,
+    { label: string; color: string; bgcolor: string; border?: string }
+  >;
 
   if (isLoading || waterStatus === undefined) {
     return (
@@ -59,7 +65,7 @@ export default function WaterLevelChip({
         fontWeight: 400,
         color: cfg.color,
         bgcolor: cfg.bgcolor,
-        borderColor: cfg.border,
+        borderColor: "border" in cfg ? cfg.border : undefined,
         minWidth: 32,
       }}
     />

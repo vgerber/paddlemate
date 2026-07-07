@@ -13,11 +13,15 @@ import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import SectionListItem from "@/components/waterway/SectionListItem";
 import FeatureTimeline from "@/components/waterway/section-details";
-import type { Proposal, SectionWithFeatures, WaterRangeWithStatus } from "@/lib/api";
+import type {
+  Proposal,
+  SectionWithFeatures,
+  WaterRangeWithStatus,
+} from "@/lib/api";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway } from "@/lib/hooks/useWaterways";
-import WaterwayDetailHeader from "./WaterwayDetailHeader";
 import type { DetailTab, SuggestMode } from "./types";
+import WaterwayDetailHeader from "./WaterwayDetailHeader";
 
 interface WaterwayBrowsePanelProps {
   waterwayId: number;
@@ -75,7 +79,11 @@ export default function WaterwayBrowsePanel({
         <IconButton
           size="small"
           onClick={onToggleProposedFeatures}
-          aria-label={showProposedFeatures ? "Hide proposed features" : "Show proposed features"}
+          aria-label={
+            showProposedFeatures
+              ? "Hide proposed features"
+              : "Show proposed features"
+          }
           color={showProposedFeatures ? "primary" : undefined}
         >
           <PendingActionsIcon fontSize="small" />
@@ -117,11 +125,7 @@ export default function WaterwayBrowsePanel({
         }
         onBack={inFeatures ? onSectionDeselect : onBack}
         actionButton={actionButton}
-        tabs={
-          inFeatures
-            ? undefined
-            : { value: tab, onChange: onTabChange }
-        }
+        tabs={inFeatures ? undefined : { value: tab, onChange: onTabChange }}
       />
 
       <Box sx={{ flex: 1, overflowY: "auto", p: 1 }}>
@@ -156,7 +160,12 @@ export default function WaterwayBrowsePanel({
           sx={{
             px: 1.5,
             py: 1,
-            display: { xs: "none", md: "flex" },
+            // "New section" opens its own page, so it works on mobile too;
+            // "New feature" is desktop-only here (mobile uses the speed dial).
+            display: {
+              xs: selectedSectionId == null ? "flex" : "none",
+              md: "flex",
+            },
             gap: 1,
             flexShrink: 0,
             borderTop: "1px solid",

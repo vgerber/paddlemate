@@ -11,21 +11,21 @@ import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import type { FavoriteSection, SectionWithFeatures } from "@/lib/api";
+import { proposalsApi } from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
+import { proposalKeys } from "@/lib/hooks/useProposals";
+import { useSession } from "@/lib/hooks/useSession";
 import { useWaterways } from "@/lib/hooks/useWaterways";
+import { normalizeForSearch } from "@/lib/text";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import AreaControls from "./AreaControls";
 import DifficultySelect from "./DifficultySelect";
 import RiverList from "./RiverList";
 import SectionList from "./SectionList";
-
-/** Normalize a name for comparison: lowercase + remove accents */
-function normalizeForSearch(str: string): string {
-  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
 
 interface WaterwaySearchPanelProps {
   onSelect: (waterwayId: number) => void;
@@ -45,6 +45,8 @@ interface WaterwaySearchPanelProps {
   onClose?: () => void;
   onRadiusPreview?: (radiusKm: number) => void;
   onLoadingChange?: (loading: boolean) => void;
+  /** Opens the "suggest new river" panel, prefilled with the searched name. */
+  onProposeRiver?: (name: string) => void;
 }
 
 type SearchMode = "name" | "area";
@@ -68,7 +70,9 @@ export default function WaterwaySearchPanel({
   onClose,
   onRadiusPreview,
   onLoadingChange,
+  onProposeRiver,
 }: WaterwaySearchPanelProps) {
+  const { isAuthenticated } = useSession();
   const navigate = useNavigate({ from: "/" });
   const urlSearch = useSearch({ strict: false }) as {
     q?: string;
@@ -141,6 +145,28 @@ export default function WaterwaySearchPanel({
     return waterways.filter((w) => normalizeForSearch(w.name).includes(q));
   }, [mode, waterways, debouncedName]);
 
+  // Own pending river proposals — shown as disabled "pending approval" entries
+  const pendingFilters = {
+    entity_type: "waterway",
+    status: "pending",
+    operation: "create",
+  } as const;
+  const { data: pendingWaterwayProposals = [] } = useQuery({
+    queryKey: proposalKeys.list(pendingFilters),
+    queryFn: () => proposalsApi.list(pendingFilters),
+    enabled: isAuthenticated && mode === "name" && !!debouncedName,
+  });
+  const pendingRivers = useMemo(() => {
+    if (mode === "area" || !debouncedName) return [];
+    const q = normalizeForSearch(debouncedName);
+    return pendingWaterwayProposals
+      .map((p) => ({
+        id: p.id,
+        name: (p.proposed_data as { name?: string }).name ?? "?",
+      }))
+      .filter((p) => normalizeForSearch(p.name).includes(q));
+  }, [mode, debouncedName, pendingWaterwayProposals]);
+
   // When searching by name, show sections whose name OR waterway name matches
   const visibleSections = useMemo(() => {
     const sections = filteredSections ?? [];
@@ -149,7 +175,8 @@ export default function WaterwaySearchPanel({
     return sections.filter((s) => {
       const nameMatches = normalizeForSearch(s.name).includes(q);
       const waterwayName = waterwayNames?.[s.waterway_id];
-      const waterwayMatches = waterwayName && normalizeForSearch(waterwayName).includes(q);
+      const waterwayMatches =
+        waterwayName && normalizeForSearch(waterwayName).includes(q);
       return nameMatches || waterwayMatches;
     });
   }, [mode, filteredSections, debouncedName, waterwayNames]);
@@ -210,7 +237,11 @@ export default function WaterwaySearchPanel({
           {!isLoading && (
             <Typography
               variant="caption"
-              sx={{ color: "text.disabled", ml: "auto", display: { xs: "none", md: "block" } }}
+              sx={{
+                color: "text.disabled",
+                ml: "auto",
+                display: { xs: "none", md: "block" },
+              }}
             >
               {total} results
             </Typography>
@@ -415,6 +446,13 @@ export default function WaterwaySearchPanel({
             isFetchingNextPage={isFetchingNextPage}
             onSelect={onSelect}
             onLoadMore={fetchNextPage}
+            pendingRivers={pendingRivers}
+            searchName={mode === "name" ? debouncedName : undefined}
+            onProposeRiver={
+              onProposeRiver && mode === "name" && debouncedName
+                ? () => onProposeRiver(debouncedName)
+                : undefined
+            }
           />
         ) : (
           <SectionList

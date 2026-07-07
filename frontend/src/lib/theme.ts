@@ -80,7 +80,9 @@ export const theme = createTheme({
     success: {
       main: tokens.secondary,
       dark: tokens.secondaryContainer,
-      contrastText: tokens.onSecondaryContainer,
+      // Dark green (M3 onSecondary) — light-on-light was illegible on
+      // contained success buttons.
+      contrastText: "#1c3524",
     },
     background: {
       default: "#121416",

@@ -4,4241 +4,4321 @@
  */
 
 export interface paths {
-	"/api/v1/tokens": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List all API tokens for the authenticated user. Does not include revoked tokens. */
-		get: operations["list_tokens"];
-		put?: never;
-		/** @description Create a new API token. The token is only shown once at creation time - store it securely! */
-		post: operations["create_token"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/tokens/{token_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		post?: never;
-		/** @description Revoke an API token. The token will no longer be usable for authentication. */
-		delete: operations["revoke_token"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/favorites/sections": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List all sections the authenticated user has starred. */
-		get: operations["list_section_favorites"];
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/favorites/sections/{section_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				section_id: number;
-			};
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/** @description Star a section. */
-		post: operations["add_section_favorite"];
-		/** @description Unstar a section. */
-		delete: operations["remove_section_favorite"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/follows/users": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List all users with follow status for the authenticated user. */
-		get: operations["list_users_with_follow_status"];
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/follows/users/following": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List users the authenticated user is following. */
-		get: operations["list_following_users"];
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/follows/users/followers": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List users who follow the authenticated user. */
-		get: operations["list_follower_users"];
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/follows/users/pending": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List pending follow requests sent to the authenticated user. */
-		get: operations["list_pending_requests"];
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/follows/users/{user_id}/accept": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: { user_id: string };
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		/** @description Accept a pending follow request from a user. */
-		patch: operations["accept_follow_request"];
-		trace?: never;
-	};
-	"/api/v1/follows/users/{user_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: { user_id: string };
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/** @description Follow a user. */
-		post: operations["follow_user"];
-		/** @description Unfollow a user. */
-		delete: operations["unfollow_user"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/groups": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List groups the authenticated user belongs to */
-		get: operations["list_groups"];
-		put?: never;
-		/** @description Create a new group; the caller becomes owner */
-		post: operations["create_group"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/groups/{group_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description Get a group with its members (members only) */
-		get: operations["get_group"];
-		/** @description Update a group (owner or group admin only) */
-		put: operations["update_group"];
-		post?: never;
-		/** @description Delete a group (owner or server admin only) */
-		delete: operations["delete_group"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/groups/{group_id}/members": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List members of a group (members only) */
-		get: operations["list_members"];
-		put?: never;
-		/** @description Add a user to a group (owner or group admin only) */
-		post: operations["add_member"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/groups/{group_id}/members/{user_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		/** @description Change a member's role (owner only; cannot assign owner role) */
-		put: operations["set_member_role"];
-		post?: never;
-		/** @description Remove a member or leave a group (owner/admin for others; any member for self) */
-		delete: operations["remove_member"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/users": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List all registered users (server admin only) */
-		get: operations["list_users"];
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List waterways with optional filters and pagination */
-		get: operations["list_waterways"];
-		put?: never;
-		/** @description Create a waterway (admin: immediate 201, others: proposal 202) */
-		post: operations["create_waterway"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description Get a waterway with its sections */
-		get: operations["get_waterway"];
-		/** @description Update a waterway (admin: immediate 200, others: proposal 202) */
-		put: operations["update_waterway"];
-		post?: never;
-		/** @description Delete a waterway (admin: immediate 204, others: proposal 202) */
-		delete: operations["delete_waterway"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/** @description Create a section (admin: immediate 201, others: proposal 202) */
-		post: operations["create_section"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections/{section_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description Get a section with its features */
-		get: operations["get_section"];
-		/** @description Update a section (admin: immediate 200, others: proposal 202) */
-		put: operations["update_section"];
-		post?: never;
-		/** @description Delete a section (admin: immediate 204, others: proposal 202) */
-		delete: operations["delete_section"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections/{section_id}/features": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/** @description Add a feature (admin: immediate 201, others: proposal 202) */
-		post: operations["create_feature"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		/** @description Update a feature (admin: immediate 200, others: proposal 202) */
-		put: operations["update_feature"];
-		post?: never;
-		/** @description Delete a feature (admin: immediate 204, others: proposal 202) */
-		delete: operations["delete_feature"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/names/{lang_code}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/** @description Add or update a localized name for a feature */
-		post: operations["upsert_feature_name"];
-		/** @description Delete a localized name for a feature */
-		delete: operations["delete_feature_name"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/descriptions/{lang_code}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/** @description Add or update a localized description for a feature */
-		post: operations["upsert_feature_description"];
-		/** @description Delete a localized description for a feature */
-		delete: operations["delete_feature_description"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections/{section_id}/comments": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List comments on a section */
-		get: operations["list_section_comments"];
-		put?: never;
-		/** @description Add a comment to a section */
-		post: operations["create_section_comment"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections/{section_id}/comments/{comment_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		/** @description Update a section comment (author only) */
-		put: operations["update_section_comment"];
-		post?: never;
-		/** @description Delete a section comment (author or admin) */
-		delete: operations["delete_section_comment"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/comments": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List comments on a feature */
-		get: operations["list_feature_comments"];
-		put?: never;
-		/** @description Add a comment to a feature */
-		post: operations["create_feature_comment"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/comments/{comment_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		/** @description Update a feature comment (author only) */
-		put: operations["update_feature_comment"];
-		post?: never;
-		/** @description Delete a feature comment (author or admin) */
-		delete: operations["delete_feature_comment"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/water-ranges": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List water-level threshold ranges for a feature */
-		get: operations["list_water_ranges"];
-		put?: never;
-		/** @description Create or update a water-level threshold range for a feature */
-		post: operations["create_water_range"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/water-ranges/{range_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		/** @description Update a water-level threshold range */
-		put: operations["update_water_range"];
-		post?: never;
-		/** @description Delete a water-level threshold range */
-		delete: operations["delete_water_range"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/waterways/{waterway_id}/sections/{section_id}/water-status": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description Returns all water-level ranges attached to features in the section, each with the gauge metadata and its most recent reading. Ranges without a reading (gauge not yet polled) will have `latest_reading: null`. */
-		get: operations["get_section_water_status"];
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/gauges": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List all gauges */
-		get: operations["list_gauges"];
-		put?: never;
-		/** @description Create a new gauge (admin only) */
-		post: operations["create_gauge"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/gauges/{gauge_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description Get a gauge with all its series */
-		get: operations["get_gauge"];
-		/** @description Update a gauge (admin only) */
-		put: operations["update_gauge"];
-		post?: never;
-		/** @description Delete a gauge (admin only) */
-		delete: operations["delete_gauge"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/gauges/{gauge_id}/series": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/** @description Add a measurement series to a gauge (admin only) */
-		post: operations["create_series"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/gauges/{gauge_id}/series/{series_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		/** @description Update a gauge series (admin only) */
-		put: operations["update_series"];
-		post?: never;
-		/** @description Delete a gauge series (admin only) */
-		delete: operations["delete_series"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/gauges/{gauge_id}/series/{series_id}/readings": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List readings for a gauge series (newest first, max 1000) */
-		get: operations["list_readings"];
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/gauges/{gauge_id}/series/{series_id}/readings/latest": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description Get the most recent reading for a gauge series */
-		get: operations["get_latest_reading"];
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/gauges/{gauge_id}/backfill": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/** @description Trigger a historical backfill for a gauge (admin only). Returns immediately. */
-		post: operations["backfill"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/descents": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List descents visible to the current viewer */
-		get: operations["list_descents"];
-		put?: never;
-		/** @description Log a new descent */
-		post: operations["create_descent"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/descents/{descent_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description Get a descent by ID */
-		get: operations["get_descent"];
-		put?: never;
-		post?: never;
-		/** @description Delete a descent (owner only) */
-		delete: operations["delete_descent"];
-		options?: never;
-		head?: never;
-		/** @description Partially update a descent (owner only) */
-		patch: operations["patch_descent"];
-		trace?: never;
-	};
-	"/api/v1/proposals": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description List proposals. Unauthenticated: pending only. Authenticated non-admin: own proposals (all statuses). Admin: all proposals. Supports filtering by status, entity_type, operation, waterway_id, section_id, feature_id, submitted_by. */
-		get: operations["list_proposals"];
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/proposals/{proposal_id}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description Get a proposal by ID. Pending proposals are visible to everyone. Non-pending proposals require admin or ownership. */
-		get: operations["get_proposal"];
-		put?: never;
-		post?: never;
-		/** @description Delete (withdraw) a pending proposal. Allowed for the submitter or an admin. */
-		delete: operations["delete_proposal"];
-		options?: never;
-		head?: never;
-		/** @description Approve or reject a proposal (admin only) */
-		patch: operations["review_proposal"];
-		trace?: never;
-	};
-	"/api/v1/proposals/{proposal_id}/vote": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/** @description Cast or change a vote on a proposal (1 = upvote, -1 = downvote) */
-		post: operations["vote_proposal"];
-		/** @description Remove the calling user's vote from a proposal */
-		delete: operations["unvote_proposal"];
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get: {
-			parameters: {
-				query?: never;
-				header?: never;
-				path?: never;
-				cookie?: never;
-			};
-			requestBody?: never;
-			responses: {
-				/** @description plain text */
-				200: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"text/plain; charset=utf-8": unknown;
-					};
-				};
-			};
-		};
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
+    "/api/v1/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List all API tokens for the authenticated user. Does not include revoked tokens. */
+        get: operations["list_tokens"];
+        put?: never;
+        /** @description Create a new API token. The token is only shown once at creation time - store it securely! */
+        post: operations["create_token"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tokens/{token_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Revoke an API token. The token will no longer be usable for authentication. */
+        delete: operations["revoke_token"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List groups the authenticated user belongs to */
+        get: operations["list_groups"];
+        put?: never;
+        /** @description Create a new group; the caller becomes owner */
+        post: operations["create_group"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get a group with its members (members only) */
+        get: operations["get_group"];
+        /** @description Update a group (owner or group admin only) */
+        put: operations["update_group"];
+        post?: never;
+        /** @description Delete a group (owner or server admin only) */
+        delete: operations["delete_group"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List members of a group (members only) */
+        get: operations["list_members"];
+        put?: never;
+        /** @description Add a user to a group (owner or group admin only) */
+        post: operations["add_member"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Change a member's role (owner only; cannot assign owner role) */
+        put: operations["set_member_role"];
+        post?: never;
+        /** @description Remove a member or leave a group (owner/admin for others; any member for self) */
+        delete: operations["remove_member"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/favorites/sections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List all sections the authenticated user has starred. */
+        get: operations["list_favorites"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/favorites/sections/{section_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Star a section. */
+        post: operations["add_favorite"];
+        /** @description Unstar a section. */
+        delete: operations["remove_favorite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/follows/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List all users with follow status for the authenticated user. */
+        get: operations["list_users"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/follows/users/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List users who have sent a pending follow request to the authenticated user. */
+        get: operations["list_pending"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/follows/users/following": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List users the authenticated user is following (accepted follows only). */
+        get: operations["list_following"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/follows/users/followers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List users who follow the authenticated user (accepted follows only). */
+        get: operations["list_followers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/follows/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Send a follow request to a user. */
+        post: operations["follow_user"];
+        /** @description Remove a follow or reject/cancel a pending follow request. */
+        delete: operations["delete_follow"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/follows/users/{user_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Accept a pending follow request from a user. */
+        patch: operations["accept_follow_request"];
+        trace?: never;
+    };
+    "/api/v1/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List all registered users (server admin only) */
+        get: operations["list_users"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List waterways with optional filters and pagination */
+        get: operations["list_waterways"];
+        put?: never;
+        /** @description Create a waterway (admin: immediate 201, others: proposal 202) */
+        post: operations["create_waterway"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get a waterway with its sections */
+        get: operations["get_waterway"];
+        /** @description Update a waterway (admin: immediate 200, others: proposal 202) */
+        put: operations["update_waterway"];
+        post?: never;
+        /** @description Delete a waterway (admin: immediate 204, others: proposal 202) */
+        delete: operations["delete_waterway"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Create a section (admin: immediate 201, others: proposal 202) */
+        post: operations["create_section"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get a section with its features */
+        get: operations["get_section"];
+        /** @description Update a section (admin: immediate 200, others: proposal 202) */
+        put: operations["update_section"];
+        post?: never;
+        /** @description Delete a section (admin: immediate 204, others: proposal 202) */
+        delete: operations["delete_section"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/features": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Add a feature (admin: immediate 201, others: proposal 202) */
+        post: operations["create_feature"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Update a feature (admin: immediate 200, others: proposal 202) */
+        put: operations["update_feature"];
+        post?: never;
+        /** @description Delete a feature (admin: immediate 204, others: proposal 202) */
+        delete: operations["delete_feature"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/names/{lang_code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Add or update a localized name for a feature */
+        post: operations["upsert_feature_name"];
+        /** @description Delete a localized name for a feature */
+        delete: operations["delete_feature_name"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/descriptions/{lang_code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Add or update a localized description for a feature */
+        post: operations["upsert_feature_description"];
+        /** @description Delete a localized description for a feature */
+        delete: operations["delete_feature_description"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List comments on a section */
+        get: operations["list_section_comments"];
+        put?: never;
+        /** @description Add a comment to a section */
+        post: operations["create_section_comment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/comments/{comment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Update a section comment (author only) */
+        put: operations["update_section_comment"];
+        post?: never;
+        /** @description Delete a section comment (author or admin) */
+        delete: operations["delete_section_comment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List comments on a feature */
+        get: operations["list_feature_comments"];
+        put?: never;
+        /** @description Add a comment to a feature */
+        post: operations["create_feature_comment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/comments/{comment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Update a feature comment (author only) */
+        put: operations["update_feature_comment"];
+        post?: never;
+        /** @description Delete a feature comment (author or admin) */
+        delete: operations["delete_feature_comment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/water-ranges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List water-level threshold ranges for a feature */
+        get: operations["list_water_ranges"];
+        put?: never;
+        /** @description Create or update a water-level threshold range for a feature */
+        post: operations["create_water_range"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/water-ranges/{range_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Update a water-level threshold range */
+        put: operations["update_water_range"];
+        post?: never;
+        /** @description Delete a water-level threshold range */
+        delete: operations["delete_water_range"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/water-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Returns all water-level ranges attached to features in the section, each with the gauge metadata and its most recent reading. Ranges without a reading (gauge not yet polled) will have `latest_reading: null`. */
+        get: operations["get_section_water_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gauges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List all gauges */
+        get: operations["list_gauges"];
+        put?: never;
+        /** @description Create a new gauge (admin only) */
+        post: operations["create_gauge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gauges/{gauge_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get a gauge with all its series */
+        get: operations["get_gauge"];
+        /** @description Update a gauge (admin only) */
+        put: operations["update_gauge"];
+        post?: never;
+        /** @description Delete a gauge (admin only) */
+        delete: operations["delete_gauge"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gauges/{gauge_id}/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Add a measurement series to a gauge (admin only) */
+        post: operations["create_series"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gauges/{gauge_id}/series/{series_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Update a gauge series (admin only) */
+        put: operations["update_series"];
+        post?: never;
+        /** @description Delete a gauge series (admin only) */
+        delete: operations["delete_series"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gauges/{gauge_id}/series/{series_id}/readings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List readings for a gauge series (newest first, max 1000) */
+        get: operations["list_readings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gauges/{gauge_id}/series/{series_id}/readings/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get the most recent reading for a gauge series */
+        get: operations["get_latest_reading"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gauges/{gauge_id}/backfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Trigger a historical backfill for a gauge (admin only). Returns immediately. */
+        post: operations["backfill"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/descents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List descents visible to the current viewer */
+        get: operations["list_descents"];
+        put?: never;
+        /** @description Log a new descent */
+        post: operations["create_descent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/descents/{descent_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get a descent by ID */
+        get: operations["get_descent"];
+        put?: never;
+        post?: never;
+        /** @description Delete a descent (owner only) */
+        delete: operations["delete_descent"];
+        options?: never;
+        head?: never;
+        /** @description Partially update a descent (owner only) */
+        patch: operations["patch_descent"];
+        trace?: never;
+    };
+    "/api/v1/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List proposals. Unauthenticated: pending only. Authenticated non-admin: own proposals (all statuses). Admin: all proposals. Supports filtering by status, entity_type, operation, waterway_id, section_id, feature_id, submitted_by. */
+        get: operations["list_proposals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/proposals/{proposal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get a proposal by ID. Pending proposals are visible to everyone. Non-pending proposals require admin or ownership. */
+        get: operations["get_proposal"];
+        put?: never;
+        post?: never;
+        /** @description Delete (withdraw) a pending proposal. Allowed for the submitter or an admin. */
+        delete: operations["delete_proposal"];
+        options?: never;
+        head?: never;
+        /** @description Approve or reject a proposal (admin only) */
+        patch: operations["review_proposal"];
+        trace?: never;
+    };
+    "/api/v1/proposals/{proposal_id}/vote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Cast or change a vote on a proposal (1 = upvote, -1 = downvote) */
+        post: operations["vote_proposal"];
+        /** @description Remove the calling user's vote from a proposal */
+        delete: operations["unvote_proposal"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description plain text */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain; charset=utf-8": unknown;
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-	schemas: {
-		AddMemberBody: {
-			/** @default member */
-			role: components["schemas"]["GroupMemberRole"];
-			user_id: string;
-		};
-		ApiToken: {
-			/** Format: date-time */
-			created_at: string;
-			/** Format: date-time */
-			expires_at?: string | null;
-			/** Format: int64 */
-			id: number;
-			is_active: boolean;
-			/** Format: date-time */
-			last_used_at?: string | null;
-			name: string;
-			user_id: string;
-		};
-		ApiTokenCreated: {
-			/** Format: date-time */
-			created_at: string;
-			/** Format: date-time */
-			expires_at?: string | null;
-			/** Format: int64 */
-			id: number;
-			name: string;
-			/** @description The plain token - only shown once at creation time! */
-			token: string;
-		};
-		BackfillRequest: {
-			/** Format: date-time */
-			from: string;
-			/** Format: date-time */
-			to: string;
-		};
-		Comment: {
-			author_id: string;
-			body: string;
-			/** Format: date-time */
-			created_at: string;
-			/** Format: int64 */
-			entity_id: number;
-			entity_type: components["schemas"]["CommentEntityType"];
-			/** Format: int64 */
-			id: number;
-			/** Format: date-time */
-			updated_at: string;
-		};
-		/** @enum {string} */
-		CommentEntityType: "water_section" | "feature";
-		CreateCommentRequest: {
-			body: string;
-		};
-		CreateDescentRequest: {
-			/** Format: date-time */
-			end_time: string;
-			name?: string | null;
-			note?: string | null;
-			/** Format: int64 */
-			put_in_feature_id?: number | null;
-			put_in_label?: string | null;
-			/** Format: double */
-			put_in_lat?: number | null;
-			/** Format: double */
-			put_in_lon?: number | null;
-			sections: components["schemas"]["DescentSectionInput"][];
-			/** Format: date-time */
-			start_time: string;
-			/** Format: int64 */
-			take_out_feature_id?: number | null;
-			take_out_label?: string | null;
-			/** Format: double */
-			take_out_lat?: number | null;
-			/** Format: double */
-			take_out_lon?: number | null;
-			visibility: components["schemas"]["Visibility"];
-			/** Format: date-time */
-			visible_from?: string | null;
-		};
-		CreateFeatureBody: {
-			feature_type: components["schemas"]["FeatureType"];
-			location: components["schemas"]["Geometry"];
-			/** @default {} */
-			metadata: unknown;
-			name?: string | null;
-			description?: string | null;
-			/** BCP-47 language code for name/description (default: "en") */
-			lang_code?: string | null;
-		};
-		CreateGaugeRequest: {
-			active?: boolean | null;
-			data_source_id?: string | null;
-			/** Format: int32 */
-			fetch_interval_secs?: number | null;
-			/** Format: double */
-			lat?: number | null;
-			/** Format: double */
-			lon?: number | null;
-			name: string;
-			provider: string;
-			source_id: string;
-		};
-		CreateGroupBody: {
-			description?: string | null;
-			name: string;
-		};
-		CreateSectionBody: {
-			description?: string | null;
-			country?: string | null;
-			location: components["schemas"]["Geometry"];
-			name: string;
-			region?: string | null;
-		};
-		CreateSeriesRequest: {
-			label?: string | null;
-			measurement_type: components["schemas"]["MeasurementType"];
-			unit: string;
-		};
-		CreateTokenBody: {
-			/** Format: int64 */
-			expires_in_days?: number | null;
-			name: string;
-		};
-		CreateWaterRangeRequest: {
-			/** Format: double */
-			range_high: number;
-			/** Format: double */
-			range_low: number;
-			/** Format: double */
-			range_medium: number;
-			/** Format: int64 */
-			series_id: number;
-		};
-		CreateWaterwayBody: {
-			description?: string | null;
-			name: string;
-		};
-		/** @description A logged paddling descent. */
-		Descent: {
-			/** Format: date-time */
-			created_at: string;
-			/** Format: date-time */
-			end_time: string;
-			/** Format: int64 */
-			id: number;
-			name?: string | null;
-			note?: string | null;
-			/** Format: int64 */
-			put_in_feature_id?: number | null;
-			put_in_label?: string | null;
-			/** Format: double */
-			put_in_lat?: number | null;
-			/** Format: double */
-			put_in_lon?: number | null;
-			sections: components["schemas"]["DescentSection"][];
-			/** Format: date-time */
-			start_time: string;
-			/** Format: int64 */
-			take_out_feature_id?: number | null;
-			take_out_label?: string | null;
-			/** Format: double */
-			take_out_lat?: number | null;
-			/** Format: double */
-			take_out_lon?: number | null;
-			/** Format: date-time */
-			updated_at: string;
-			user_id: string;
-			/** Username of the descent owner (populated in list responses). */
-			username?: string | null;
-			visibility: components["schemas"]["Visibility"];
-			/** Format: date-time */
-			visible_from?: string | null;
-		};
-		DescentPath: {
-			/** Format: int64 */
-			descent_id: number;
-		};
-		/** @description An ordered section that is part of a descent. */
-		DescentSection: {
-			/** @description GeoJSON LineString geometry of the section */
-			location?: components["schemas"]["Geometry"] | null;
-			note?: string | null;
-			/** Format: int64 */
-			section_id: number;
-			section_name?: string | null;
-			/** Format: int32 */
-			sort_order: number;
-			/** @description Water level snapshots captured at the time the descent was logged. */
-			water_snapshots?: components["schemas"]["SectionWaterSnapshot"][];
-			waterway_name?: string | null;
-		};
-		/** @description An ordered section entry for create/replace requests. */
-		DescentSectionInput: {
-			note?: string | null;
-			/** Format: int64 */
-			section_id: number;
-			/** Format: int32 */
-			sort_order: number;
-		};
-		FavoriteSection: {
-			/** Format: date-time */
-			created_at: string;
-			country?: string | null;
-			description?: string | null;
-			features: components["schemas"]["Feature"][];
-			/** Format: int64 */
-			id: number;
-			/** @description GeoJSON LineString geometry */
-			location: components["schemas"]["Geometry"];
-			name: string;
-			region?: string | null;
-			/** Format: date-time */
-			updated_at: string;
-			/** Format: int64 */
-			waterway_id: number;
-			waterway_name: string;
-		};
-		Feature: {
-			/** Format: date-time */
-			created_at: string;
-			created_by: string;
-			descriptions: components["schemas"]["FeatureDescription"][];
-			feature_type: components["schemas"]["FeatureType"];
-			/** Format: int64 */
-			id: number;
-			/** @description GeoJSON geometry (Point, LineString, or Polygon) */
-			location: components["schemas"]["Geometry"];
-			metadata: unknown;
-			names: components["schemas"]["FeatureName"][];
-			/** Format: int64 */
-			section_id: number;
-			/** Format: date-time */
-			updated_at: string;
-		};
-		FeatureCommentPath: {
-			/** Format: int64 */
-			comment_id: number;
-			/** Format: int64 */
-			feature_id: number;
-			/** Format: int64 */
-			section_id: number;
-			/** Format: int64 */
-			waterway_id: number;
-		};
-		FeatureDescription: {
-			description: string;
-			/** Format: int64 */
-			feature_id: number;
-			/** Format: int64 */
-			id: number;
-			lang_code: string;
-		};
-		FeatureLocalePath: {
-			/** Format: int64 */
-			feature_id: number;
-			lang_code: string;
-			/** Format: int64 */
-			section_id: number;
-			/** Format: int64 */
-			waterway_id: number;
-		};
-		FeatureName: {
-			/** Format: int64 */
-			feature_id: number;
-			/** Format: int64 */
-			id: number;
-			lang_code: string;
-			name: string;
-		};
-		FeaturePath: {
-			/** Format: int64 */
-			feature_id: number;
-			/** Format: int64 */
-			section_id: number;
-			/** Format: int64 */
-			waterway_id: number;
-		};
-		/** @enum {string} */
-		FeatureType:
-			| "whitewater"
-			| "freestyle_spot"
-			| "hole"
-			| "siphon"
-			| "strainer"
-			| "weir"
-			| "dam"
-			| "obstacle"
-			| "bridge"
-			| "portage"
-			| "put_in"
-			| "take_out"
-			| "waterfall";
-		/**
-		 * @description A water-level threshold range for a feature, referencing a gauge series.
-		 *      Embeds the full series so the frontend can construct readings URLs without a secondary lookup.
-		 */
-		FeatureWaterRange: {
-			/** Format: date-time */
-			created_at: string;
-			/** Format: int64 */
-			feature_id: number;
-			/** Format: int64 */
-			id: number;
-			/**
-			 * Format: double
-			 * @description Lower bound of the high range.
-			 */
-			range_high?: number | null;
-			/**
-			 * Format: double
-			 * @description Lower bound of the low range; below this the level is considered empty.
-			 */
-			range_low?: number | null;
-			/**
-			 * Format: double
-			 * @description Lower bound of the medium range.
-			 */
-			range_medium?: number | null;
-			series: components["schemas"]["GaugeSeries"];
-			/** Format: date-time */
-			updated_at: string;
-		};
-		FeatureWaterRangePath: {
-			/** Format: int64 */
-			feature_id: number;
-			/** Format: int64 */
-			range_id: number;
-			/** Format: int64 */
-			section_id: number;
-			/** Format: int64 */
-			waterway_id: number;
-		};
-		Gauge: {
-			active: boolean;
-			/** Format: date-time */
-			created_at: string;
-			data_source_id?: string | null;
-			/** Format: int32 */
-			fetch_interval_secs: number;
-			/** Format: int64 */
-			id: number;
-			/** Format: double */
-			lat?: number | null;
-			/** Format: double */
-			lon?: number | null;
-			name: string;
-			provider: string;
-			source_id: string;
-			/** Format: date-time */
-			updated_at: string;
-		};
-		GaugePath: {
-			/** Format: int64 */
-			gauge_id: number;
-		};
-		GaugeReading: {
-			/** Format: date-time */
-			measured_at: string;
-			/** Format: int64 */
-			series_id: number;
-			/** Format: double */
-			value: number;
-		};
-		GaugeSeries: {
-			/** Format: date-time */
-			created_at: string;
-			/** Format: int64 */
-			gauge_id: number;
-			/** Format: int64 */
-			id: number;
-			label?: string | null;
-			measurement_type: components["schemas"]["MeasurementType"];
-			/** @description Full reader source_id (e.g. "201038:W") used by the background dispatcher. */
-			source_id?: string | null;
-			unit: string;
-		};
-		GaugeSeriesPath: {
-			/** Format: int64 */
-			gauge_id: number;
-			/** Format: int64 */
-			series_id: number;
-		};
-		GaugeWithSeries: {
-			active: boolean;
-			/** Format: date-time */
-			created_at: string;
-			data_source_id?: string | null;
-			/** Format: int32 */
-			fetch_interval_secs: number;
-			/** Format: int64 */
-			id: number;
-			/** Format: double */
-			lat?: number | null;
-			/** Format: double */
-			lon?: number | null;
-			name: string;
-			provider: string;
-			series: components["schemas"]["GaugeSeries"][];
-			source_id: string;
-			/** Format: date-time */
-			updated_at: string;
-		};
-		/** @description GeoJSON geometry object (RFC 7946) */
-		Geometry:
-			| {
-					/** @constant */
-					type: "Point";
-					coordinates: number[];
-			  }
-			| {
-					/** @constant */
-					type: "LineString";
-					coordinates: number[][];
-			  }
-			| {
-					/** @constant */
-					type: "Polygon";
-					coordinates: number[][][];
-			  }
-			| {
-					/** @constant */
-					type: "MultiPoint";
-					coordinates: number[][];
-			  }
-			| {
-					/** @constant */
-					type: "MultiLineString";
-					coordinates: number[][][];
-			  }
-			| {
-					/** @constant */
-					type: "MultiPolygon";
-					coordinates: number[][][][];
-			  };
-		Group: {
-			description?: string | null;
-			/** Format: date-time */
-			created_at: string;
-			created_by: string;
-			/** Format: int64 */
-			id: number;
-			name: string;
-			/** Format: date-time */
-			updated_at: string;
-		};
-		GroupMember: {
-			added_by: string;
-			/** Format: date-time */
-			created_at: string;
-			/** Format: int64 */
-			group_id: number;
-			role: components["schemas"]["GroupMemberRole"];
-			user_id: string;
-			username: string;
-		};
-		/** @enum {string} */
-		GroupMemberRole: "owner" | "admin" | "member";
-		GroupWithMembers: {
-			description?: string | null;
-			/** Format: date-time */
-			created_at: string;
-			created_by: string;
-			/** Format: int64 */
-			id: number;
-			members: components["schemas"]["GroupMember"][];
-			name: string;
-			/** Format: date-time */
-			updated_at: string;
-		};
-		ListDescentsQuery: {
-			/**
-			 * Format: date-time
-			 * @description Only return descents whose start_time is on or after this timestamp.
-			 */
-			from?: string | null;
-			/** Format: int64 */
-			page?: number | null;
-			/** Format: int64 */
-			per_page?: number | null;
-			/**
-			 * @description Filter scope: "owned" returns only the authenticated user's descents;
-			 *      "visible" (default) returns all descents visible to the viewer.
-			 */
-			scope?: string | null;
-			/**
-			 * Format: date-time
-			 * @description Only return descents whose start_time is on or before this timestamp.
-			 */
-			to?: string | null;
-			/** @description Narrow results by visibility: "private", "shared", or "public". */
-			visibility?: string | null;
-		};
-		ListProposalsQuery: {
-			entity_type?: string | null;
-			/** Format: int64 */
-			feature_id?: number | null;
-			operation?: string | null;
-			/** Format: int64 */
-			section_id?: number | null;
-			status?: string | null;
-			submitted_by?: string | null;
-			/** Format: int64 */
-			waterway_id?: number | null;
-		};
-		/** @enum {string} */
-		MeasurementType: "water_level" | "discharge" | "temperature";
-		PaginatedResponse_for_Descent: {
-			items: components["schemas"]["Descent"][];
-			/** Format: int64 */
-			page: number;
-			/** Format: int64 */
-			per_page: number;
-			/** Format: int64 */
-			total: number;
-			/** Format: int64 */
-			total_pages: number;
-		};
-		PaginatedResponse_for_Waterway: {
-			items: components["schemas"]["Waterway"][];
-			/** Format: int64 */
-			page: number;
-			/** Format: int64 */
-			per_page: number;
-			/** Format: int64 */
-			total: number;
-			/** Format: int64 */
-			total_pages: number;
-		};
-		/**
-		 * @description Partial update for a descent.
-		 *      Omitted fields are left unchanged.
-		 *      For nullable fields (note, visible_from), send `null` to clear the value.
-		 *      Patching `visibility` to `shared` replaces the full audience inline.
-		 *      Patching to `private` or `public` clears any existing audience.
-		 *      Patching `sections` replaces the full ordered section list.
-		 */
-		PatchDescentRequest: {
-			/** Format: date-time */
-			end_time?: string | null;
-			/**
-			 * @description Omit to leave unchanged; send null to clear.
-			 * @default null
-			 */
-			name: string | null;
-			/**
-			 * @description Omit to leave unchanged; send null to clear.
-			 * @default null
-			 */
-			note: string | null;
-			/** Format: int64 */
-			put_in_feature_id?: number | null;
-			put_in_label?: string | null;
-			/** Format: double */
-			put_in_lat?: number | null;
-			/** Format: double */
-			put_in_lon?: number | null;
-			/** @description When provided, replaces the full ordered section list. */
-			sections?: components["schemas"]["DescentSectionInput"][] | null;
-			/** Format: date-time */
-			start_time?: string | null;
-			/** Format: int64 */
-			take_out_feature_id?: number | null;
-			take_out_label?: string | null;
-			/** Format: double */
-			take_out_lat?: number | null;
-			/** Format: double */
-			take_out_lon?: number | null;
-			visibility?: components["schemas"]["Visibility"] | null;
-			/**
-			 * Format: date-time
-			 * @description Omit to leave unchanged; send null to clear.
-			 * @default null
-			 */
-			visible_from: string | null;
-		};
-		Proposal: {
-			/** Format: date-time */
-			created_at: string;
-			/** Format: int64 */
-			downvotes: number;
-			/**
-			 * Format: int64
-			 * @description ID of the existing record for update/delete operations; null for create
-			 */
-			entity_id?: number | null;
-			entity_type: components["schemas"]["ProposalEntityType"];
-			/** Format: int64 */
-			id: number;
-			operation: components["schemas"]["ProposalOperation"];
-			/** @description Snapshot of the entity state before this proposal (null for create operations) */
-			original_data?: unknown;
-			/** @description Full snapshot of the proposed state */
-			proposed_data: unknown;
-			review_note?: string | null;
-			reviewed_by?: string | null;
-			status: components["schemas"]["ProposalStatus"];
-			submitted_by: string;
-			/** Format: date-time */
-			updated_at: string;
-			/** Format: int64 */
-			upvotes: number;
-			/**
-			 * Format: int16
-			 * @description The calling user's current vote (1 or -1), absent if not voted
-			 */
-			user_vote?: number | null;
-		};
-		/** @enum {string} */
-		ProposalEntityType: "waterway" | "water_section" | "feature";
-		/** @enum {string} */
-		ProposalOperation: "create" | "update" | "delete";
-		ProposalPath: {
-			/** Format: int64 */
-			proposal_id: number;
-		};
-		/** @enum {string} */
-		ProposalStatus: "pending" | "approved" | "rejected";
-		ReadingsQuery: {
-			/** Format: date-time */
-			from?: string | null;
-			/**
-			 * Format: int64
-			 * @description Maximum number of readings to return (capped at 1000, default 1000).
-			 */
-			limit?: number | null;
-			/** Format: date-time */
-			to?: string | null;
-		};
-		/** @description Request body for approving or rejecting a proposal */
-		ReviewRequest: {
-			review_note?: string | null;
-			status: components["schemas"]["ProposalStatus"];
-		};
-		RevokeTokenPath: {
-			/** Format: int64 */
-			token_id: number;
-		};
-		Section: {
-			description?: string | null;
-			country?: string | null;
-			/** Format: date-time */
-			created_at: string;
-			/** Format: int64 */
-			id: number;
-			/** @description GeoJSON LineString geometry */
-			location: components["schemas"]["Geometry"];
-			name: string;
-			region?: string | null;
-			/** Format: date-time */
-			updated_at: string;
-			/** Format: int64 */
-			waterway_id: number;
-		};
-		SectionCommentPath: {
-			/** Format: int64 */
-			comment_id: number;
-			/** Format: int64 */
-			section_id: number;
-			/** Format: int64 */
-			waterway_id: number;
-		};
-		SectionPath: {
-			/** Format: int64 */
-			section_id: number;
-			/** Format: int64 */
-			waterway_id: number;
-		};
-		/**
-		 * @description Snapshot of a single gauge-series reading captured when a descent is logged.
-		 *      Immutable record; reflects conditions at the time of the descent.
-		 */
-		SectionWaterSnapshot: {
-			/** Format: int64 */
-			gauge_id: number;
-			gauge_name: string;
-			level: components["schemas"]["WaterLevel"];
-			/** Format: date-time */
-			measured_at?: string | null;
-			/** Format: double */
-			range_high?: number | null;
-			/** Format: double */
-			range_low?: number | null;
-			/** Format: double */
-			range_medium?: number | null;
-			/** Format: int64 */
-			series_id: number;
-			unit: string;
-			/** Format: double */
-			value?: number | null;
-			/** Format: double */
-			value_min?: number | null;
-			/** Format: double */
-			value_max?: number | null;
-			/** Format: double */
-			value_avg?: number | null;
-		};
-		/** @description All water-level ranges for every feature in a section, with their latest readings. */
-		SectionWaterStatus: {
-			ranges: components["schemas"]["WaterRangeWithStatus"][];
-		};
-		SectionWithFeatures: {
-			description?: string | null;
-			country?: string | null;
-			/** Format: date-time */
-			created_at: string;
-			features: components["schemas"]["Feature"][];
-			/** Format: int64 */
-			id: number;
-			/** @description GeoJSON LineString geometry */
-			location: components["schemas"]["Geometry"];
-			name: string;
-			region?: string | null;
-			/** Format: date-time */
-			updated_at: string;
-			/** Format: int64 */
-			waterway_id: number;
-		};
-		SetRoleBody: {
-			role: components["schemas"]["GroupMemberRole"];
-		};
-		UpdateCommentRequest: {
-			body: string;
-		};
-		UpdateFeatureBody: {
-			feature_type?: components["schemas"]["FeatureType"] | null;
-			location?: components["schemas"]["Geometry"] | null;
-			metadata?: unknown;
-		};
-		UpdateGaugeRequest: {
-			active: boolean;
-			data_source_id?: string | null;
-			/** Format: int32 */
-			fetch_interval_secs: number;
-			/** Format: double */
-			lat?: number | null;
-			/** Format: double */
-			lon?: number | null;
-			name: string;
-			provider: string;
-			source_id: string;
-		};
-		UpdateGroupBody: {
-			/** @description Pass null to clear the description, omit to leave it unchanged */
-			description?: string | null;
-			name?: string | null;
-		};
-		UpdateSectionBody: {
-			description?: string | null;
-			country?: string | null;
-			location?: components["schemas"]["Geometry"] | null;
-			name?: string | null;
-			region?: string | null;
-		};
-		UpdateSeriesRequest: {
-			label?: string | null;
-			measurement_type: components["schemas"]["MeasurementType"];
-			unit: string;
-		};
-		UpdateWaterRangeRequest: {
-			/** Format: double */
-			range_high: number;
-			/** Format: double */
-			range_low: number;
-			/** Format: double */
-			range_medium: number;
-		};
-		UpdateWaterwayBody: {
-			description?: string | null;
-			name?: string | null;
-		};
-		UpsertDescriptionBody: {
-			description: string;
-		};
-		UpsertNameBody: {
-			name: string;
-		};
-		UserWithFollowStatus: {
-			id: string;
-			username: string;
-			/** The viewer's outgoing follow status: "pending", "accepted", or null. */
-			outgoing_status: string | null;
-			/** Whether this user has a pending request to follow the viewer. */
-			incoming_pending: boolean;
-		};
-		User: {
-			/** Format: date-time */
-			created_at: string;
-			id: string;
-			/** Format: date-time */
-			updated_at: string;
-			username: string;
-		};
-		/**
-		 * @description Visibility mode for a descent.
-		 *      For `shared`, the audience (users and groups) is embedded directly.
-		 */
-		Visibility:
-			| {
-					/** @constant */
-					type: "private";
-			  }
-			| {
-					/** @constant */
-					type: "public";
-			  }
-			| {
-					/** @constant */
-					type: "shared";
-					/** @default [] */
-					groups: number[];
-					/** @default [] */
-					users: string[];
-			  };
-		/** @description Request body for voting on a proposal */
-		VoteRequest: {
-			/**
-			 * Format: int16
-			 * @description 1 for upvote, -1 for downvote
-			 */
-			vote: number;
-		};
-		/**
-		 * @description Current water level state derived from a reading and its range thresholds.
-		 *      Empty = below low (gray), Low = green, Medium = orange, High = red.
-		 * @enum {string}
-		 */
-		WaterLevel: "empty" | "low" | "medium" | "high";
-		/**
-		 * @description A water range entry enriched with the gauge and the most recent reading.
-		 *      Returned by the `water-status` endpoint for a section.
-		 */
-		WaterRangeWithStatus: {
-			/** Format: date-time */
-			created_at: string;
-			/** Format: int64 */
-			feature_id: number;
-			gauge: components["schemas"]["Gauge"];
-			/** Format: int64 */
-			id: number;
-			latest_reading?: components["schemas"]["GaugeReading"] | null;
-			level: components["schemas"]["WaterLevel"];
-			/** Format: double */
-			range_high?: number | null;
-			/** Format: double */
-			range_low?: number | null;
-			/** Format: double */
-			range_medium?: number | null;
-			series: components["schemas"]["GaugeSeries"];
-			/** Format: date-time */
-			updated_at: string;
-		};
-		Waterway: {
-			description?: string | null;
-			/** Format: date-time */
-			created_at: string;
-			/** Format: int64 */
-			id: number;
-			name: string;
-			/** Format: date-time */
-			updated_at: string;
-			waterway_type: components["schemas"]["WaterwayType"];
-		};
-		WaterwayFilters: {
-			/** @description Filter by ISO 3166-1 alpha-2 country code (e.g. "AT", "FR"). */
-			country?: string | null;
-			/**
-			 * Format: double
-			 * @description Latitude for proximity filter (requires lon and radius_km).
-			 */
-			lat?: number | null;
-			/**
-			 * Format: double
-			 * @description Longitude for proximity filter (requires lat and radius_km).
-			 */
-			lon?: number | null;
-			/**
-			 * Format: int32
-			 * @description Maximum whitewater grade (1=I … 6=VI, 10=X).
-			 */
-			max_difficulty?: number | null;
-			/**
-			 * Format: int32
-			 * @description Minimum whitewater grade (1=I … 6=VI, 10=X).
-			 */
-			min_difficulty?: number | null;
-			/** @description Filter by river or section name (case-insensitive substring match). */
-			name?: string | null;
-			/**
-			 * Format: int64
-			 * @description Page number, starting at 1.
-			 */
-			page?: number | null;
-			/**
-			 * Format: int64
-			 * @description Items per page (max 100, default 20).
-			 */
-			per_page?: number | null;
-			/**
-			 * Format: double
-			 * @description Radius in km - returns waterways with at least one section within this distance.
-			 */
-			radius_km?: number | null;
-		};
-		WaterwayPath: {
-			/** Format: int64 */
-			waterway_id: number;
-		};
-		/** @enum {string} */
-		WaterwayType: "river";
-		WaterwayWithSections: {
-			description?: string | null;
-			/** Format: date-time */
-			created_at: string;
-			/** Format: int64 */
-			id: number;
-			name: string;
-			sections: components["schemas"]["SectionWithFeatures"][];
-			/** Format: date-time */
-			updated_at: string;
-			waterway_type: components["schemas"]["WaterwayType"];
-		};
-	};
-	responses: never;
-	parameters: never;
-	requestBodies: never;
-	headers: never;
-	pathItems: never;
+    schemas: {
+        AddMemberBody: {
+            /** @default member */
+            role: components["schemas"]["GroupMemberRole"];
+            user_id: string;
+        };
+        ApiToken: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** Format: int64 */
+            id: number;
+            is_active: boolean;
+            /** Format: date-time */
+            last_used_at?: string | null;
+            name: string;
+            user_id: string;
+        };
+        ApiTokenCreated: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** @description The plain token - only shown once at creation time! */
+            token: string;
+        };
+        BackfillRequest: {
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+        };
+        Comment: {
+            author_id: string;
+            body: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            entity_id: number;
+            entity_type: components["schemas"]["CommentEntityType"];
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        /** @enum {string} */
+        CommentEntityType: "water_section" | "feature";
+        CreateCommentRequest: {
+            body: string;
+        };
+        CreateDescentRequest: {
+            /** Format: date-time */
+            end_time: string;
+            name?: string | null;
+            note?: string | null;
+            /** Format: int64 */
+            put_in_feature_id?: number | null;
+            put_in_label?: string | null;
+            /** Format: double */
+            put_in_lat?: number | null;
+            /** Format: double */
+            put_in_lon?: number | null;
+            sections: components["schemas"]["DescentSectionInput"][];
+            /** Format: date-time */
+            start_time: string;
+            /** Format: int64 */
+            take_out_feature_id?: number | null;
+            take_out_label?: string | null;
+            /** Format: double */
+            take_out_lat?: number | null;
+            /** Format: double */
+            take_out_lon?: number | null;
+            visibility: components["schemas"]["Visibility"];
+            /** Format: date-time */
+            visible_from?: string | null;
+        };
+        CreateFeatureBody: {
+            description?: string | null;
+            feature_type: components["schemas"]["FeatureType"];
+            /** @description BCP-47 language code for name/description (default: "en") */
+            lang_code?: string | null;
+            location: components["schemas"]["Geometry"];
+            /** @default {} */
+            metadata: unknown;
+            name?: string | null;
+        };
+        CreateGaugeRequest: {
+            active?: boolean | null;
+            data_source_id?: string | null;
+            /** Format: int32 */
+            fetch_interval_secs?: number | null;
+            /** Format: double */
+            lat?: number | null;
+            /** Format: double */
+            lon?: number | null;
+            name: string;
+            provider: string;
+            source_id: string;
+        };
+        CreateGroupBody: {
+            description?: string | null;
+            name: string;
+        };
+        CreateSectionBody: {
+            description?: string | null;
+            country?: string | null;
+            location: components["schemas"]["Geometry"];
+            name: string;
+            region?: string | null;
+        };
+        CreateSeriesRequest: {
+            label?: string | null;
+            measurement_type: components["schemas"]["MeasurementType"];
+            unit: string;
+        };
+        CreateTokenBody: {
+            /** Format: int64 */
+            expires_in_days?: number | null;
+            name: string;
+        };
+        CreateWaterRangeRequest: {
+            /** Format: double */
+            range_high: number;
+            /** Format: double */
+            range_low: number;
+            /** Format: double */
+            range_medium: number;
+            /** Format: int64 */
+            series_id: number;
+        };
+        CreateWaterwayBody: {
+            description?: string | null;
+            name: string;
+        };
+        /** @description A logged paddling descent. */
+        Descent: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            end_time: string;
+            /** Format: int64 */
+            id: number;
+            name?: string | null;
+            note?: string | null;
+            /** Format: int64 */
+            put_in_feature_id?: number | null;
+            put_in_label?: string | null;
+            /** Format: double */
+            put_in_lat?: number | null;
+            /** Format: double */
+            put_in_lon?: number | null;
+            sections: components["schemas"]["DescentSection"][];
+            /** Format: date-time */
+            start_time: string;
+            /** Format: int64 */
+            take_out_feature_id?: number | null;
+            take_out_label?: string | null;
+            /** Format: double */
+            take_out_lat?: number | null;
+            /** Format: double */
+            take_out_lon?: number | null;
+            /** Format: date-time */
+            updated_at: string;
+            user_id: string;
+            username?: string | null;
+            visibility: components["schemas"]["Visibility"];
+            /** Format: date-time */
+            visible_from?: string | null;
+        };
+        DescentPath: {
+            /** Format: int64 */
+            descent_id: number;
+        };
+        /** @description An ordered section that is part of a descent. */
+        DescentSection: {
+            /** @description GeoJSON LineString geometry of the section */
+            location?: components["schemas"]["Geometry"] | null;
+            note?: string | null;
+            /** Format: int64 */
+            section_id: number;
+            section_name?: string | null;
+            /** Format: int32 */
+            sort_order: number;
+            /** @description Water level snapshots captured at the time the descent was logged. */
+            water_snapshots?: components["schemas"]["SectionWaterSnapshot"][];
+            waterway_name?: string | null;
+        };
+        /** @description An ordered section entry for create/replace requests. */
+        DescentSectionInput: {
+            note?: string | null;
+            /** Format: int64 */
+            section_id: number;
+            /** Format: int32 */
+            sort_order: number;
+        };
+        /** @description A favorited section, including its parent waterway name and full feature list. */
+        FavoriteSectionResponse: {
+            description?: string | null;
+            country?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            features: components["schemas"]["Feature"][];
+            /** Format: int64 */
+            id: number;
+            /** @description GeoJSON LineString geometry */
+            location: components["schemas"]["Geometry"];
+            name: string;
+            region?: string | null;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: int64 */
+            waterway_id: number;
+            waterway_name: string;
+        };
+        Feature: {
+            /** Format: date-time */
+            created_at: string;
+            created_by: string;
+            descriptions: components["schemas"]["FeatureDescription"][];
+            feature_type: components["schemas"]["FeatureType"];
+            /** Format: int64 */
+            id: number;
+            /** @description GeoJSON geometry (Point, LineString, or Polygon) */
+            location: components["schemas"]["Geometry"];
+            metadata: unknown;
+            names: components["schemas"]["FeatureName"][];
+            /** Format: int64 */
+            section_id: number;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        FeatureCommentPath: {
+            /** Format: int64 */
+            comment_id: number;
+            /** Format: int64 */
+            feature_id: number;
+            /** Format: int64 */
+            section_id: number;
+            /** Format: int64 */
+            waterway_id: number;
+        };
+        FeatureDescription: {
+            description: string;
+            /** Format: int64 */
+            feature_id: number;
+            /** Format: int64 */
+            id: number;
+            lang_code: string;
+        };
+        FeatureLocalePath: {
+            /** Format: int64 */
+            feature_id: number;
+            lang_code: string;
+            /** Format: int64 */
+            section_id: number;
+            /** Format: int64 */
+            waterway_id: number;
+        };
+        FeatureName: {
+            /** Format: int64 */
+            feature_id: number;
+            /** Format: int64 */
+            id: number;
+            lang_code: string;
+            name: string;
+        };
+        FeaturePath: {
+            /** Format: int64 */
+            feature_id: number;
+            /** Format: int64 */
+            section_id: number;
+            /** Format: int64 */
+            waterway_id: number;
+        };
+        /** @enum {string} */
+        FeatureType: "whitewater" | "freestyle_spot" | "hole" | "siphon" | "strainer" | "weir" | "dam" | "obstacle" | "bridge" | "portage" | "put_in" | "take_out" | "waterfall";
+        /**
+         * @description A water-level threshold range for a feature, referencing a gauge series.
+         *      Embeds the full series so the frontend can construct readings URLs without a secondary lookup.
+         */
+        FeatureWaterRange: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            feature_id: number;
+            /** Format: int64 */
+            id: number;
+            /**
+             * Format: double
+             * @description Lower bound of the high range.
+             */
+            range_high?: number | null;
+            /**
+             * Format: double
+             * @description Lower bound of the low range; below this the level is considered empty.
+             */
+            range_low?: number | null;
+            /**
+             * Format: double
+             * @description Lower bound of the medium range.
+             */
+            range_medium?: number | null;
+            series: components["schemas"]["GaugeSeries"];
+            /** Format: date-time */
+            updated_at: string;
+        };
+        FeatureWaterRangePath: {
+            /** Format: int64 */
+            feature_id: number;
+            /** Format: int64 */
+            range_id: number;
+            /** Format: int64 */
+            section_id: number;
+            /** Format: int64 */
+            waterway_id: number;
+        };
+        Gauge: {
+            active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            data_source_id?: string | null;
+            /** Format: int32 */
+            fetch_interval_secs: number;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            lat?: number | null;
+            /** Format: double */
+            lon?: number | null;
+            name: string;
+            provider: string;
+            source_id: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        GaugePath: {
+            /** Format: int64 */
+            gauge_id: number;
+        };
+        GaugeReading: {
+            /** Format: date-time */
+            measured_at: string;
+            /** Format: int64 */
+            series_id: number;
+            /** Format: double */
+            value: number;
+        };
+        GaugeSeries: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            gauge_id: number;
+            /** Format: int64 */
+            id: number;
+            label?: string | null;
+            measurement_type: components["schemas"]["MeasurementType"];
+            /** @description Full reader source_id (e.g. "201038:W") used by the background dispatcher. */
+            source_id?: string | null;
+            unit: string;
+        };
+        GaugeSeriesPath: {
+            /** Format: int64 */
+            gauge_id: number;
+            /** Format: int64 */
+            series_id: number;
+        };
+        GaugeWithSeries: {
+            active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            data_source_id?: string | null;
+            /** Format: int32 */
+            fetch_interval_secs: number;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            lat?: number | null;
+            /** Format: double */
+            lon?: number | null;
+            name: string;
+            provider: string;
+            series: components["schemas"]["GaugeSeries"][];
+            source_id: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        /** @description GeoJSON geometry object (RFC 7946) */
+        Geometry: {
+            /** @constant */
+            type: "Point";
+            coordinates: number[];
+        } | {
+            /** @constant */
+            type: "LineString";
+            coordinates: number[][];
+        } | {
+            /** @constant */
+            type: "Polygon";
+            coordinates: number[][][];
+        } | {
+            /** @constant */
+            type: "MultiPoint";
+            coordinates: number[][];
+        } | {
+            /** @constant */
+            type: "MultiLineString";
+            coordinates: number[][][];
+        } | {
+            /** @constant */
+            type: "MultiPolygon";
+            coordinates: number[][][][];
+        };
+        Group: {
+            description?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            created_by: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        GroupMember: {
+            added_by: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            group_id: number;
+            role: components["schemas"]["GroupMemberRole"];
+            user_id: string;
+            username: string;
+        };
+        /** @enum {string} */
+        GroupMemberRole: "owner" | "admin" | "member";
+        GroupWithMembers: {
+            description?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            created_by: string;
+            /** Format: int64 */
+            id: number;
+            members: components["schemas"]["GroupMember"][];
+            name: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        ListDescentsQuery: {
+            /**
+             * Format: date-time
+             * @description Only return descents whose start_time is on or after this timestamp.
+             */
+            from?: string | null;
+            /** Format: int64 */
+            page?: number | null;
+            /** Format: int64 */
+            per_page?: number | null;
+            /**
+             * @description Filter scope: "owned" returns only the authenticated user's descents;
+             *      "following" returns public/shared descents from users you follow (auth required);
+             *      "visible" (default) returns all descents visible to the viewer.
+             */
+            scope?: string | null;
+            /**
+             * Format: date-time
+             * @description Only return descents whose start_time is on or before this timestamp.
+             */
+            to?: string | null;
+            /** @description Narrow results by visibility: "private", "shared", or "public". */
+            visibility?: string | null;
+        };
+        ListProposalsQuery: {
+            entity_type?: string | null;
+            /** Format: int64 */
+            feature_id?: number | null;
+            operation?: string | null;
+            /** Format: int64 */
+            section_id?: number | null;
+            status?: string | null;
+            submitted_by?: string | null;
+            /** Format: int64 */
+            waterway_id?: number | null;
+        };
+        /** @enum {string} */
+        MeasurementType: "water_level" | "discharge" | "temperature";
+        PaginatedResponse_for_Descent: {
+            items: components["schemas"]["Descent"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            per_page: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            total_pages: number;
+        };
+        PaginatedResponse_for_Waterway: {
+            items: components["schemas"]["Waterway"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            per_page: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            total_pages: number;
+        };
+        /**
+         * @description Partial update for a descent.
+         *      Omitted fields are left unchanged.
+         *      For nullable fields (note, visible_from), send `null` to clear the value.
+         *      Patching `visibility` to `shared` replaces the full audience inline.
+         *      Patching to `private` or `public` clears any existing audience.
+         *      Patching `sections` replaces the full ordered section list.
+         */
+        PatchDescentRequest: {
+            /** Format: date-time */
+            end_time?: string | null;
+            /**
+             * @description Omit to leave unchanged; send null to clear.
+             * @default null
+             */
+            name: string | null;
+            /**
+             * @description Omit to leave unchanged; send null to clear.
+             * @default null
+             */
+            note: string | null;
+            /** Format: int64 */
+            put_in_feature_id?: number | null;
+            put_in_label?: string | null;
+            /** Format: double */
+            put_in_lat?: number | null;
+            /** Format: double */
+            put_in_lon?: number | null;
+            /** @description When provided, replaces the full ordered section list. */
+            sections?: components["schemas"]["DescentSectionInput"][] | null;
+            /** Format: date-time */
+            start_time?: string | null;
+            /** Format: int64 */
+            take_out_feature_id?: number | null;
+            take_out_label?: string | null;
+            /** Format: double */
+            take_out_lat?: number | null;
+            /** Format: double */
+            take_out_lon?: number | null;
+            visibility?: components["schemas"]["Visibility"] | null;
+            /**
+             * Format: date-time
+             * @description Omit to leave unchanged; send null to clear.
+             * @default null
+             */
+            visible_from: string | null;
+        };
+        Proposal: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            downvotes: number;
+            /**
+             * Format: int64
+             * @description ID of the existing record for update/delete operations; null for create
+             */
+            entity_id?: number | null;
+            entity_type: components["schemas"]["ProposalEntityType"];
+            /** Format: int64 */
+            id: number;
+            operation: components["schemas"]["ProposalOperation"];
+            /** @description Snapshot of the entity state before this proposal (null for create operations) */
+            original_data?: unknown;
+            /** @description Full snapshot of the proposed state */
+            proposed_data: unknown;
+            review_note?: string | null;
+            reviewed_by?: string | null;
+            status: components["schemas"]["ProposalStatus"];
+            submitted_by: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: int64 */
+            upvotes: number;
+            /**
+             * Format: int16
+             * @description The calling user's current vote (1 or -1), absent if not voted
+             */
+            user_vote?: number | null;
+        };
+        /** @enum {string} */
+        ProposalEntityType: "waterway" | "water_section" | "feature";
+        /** @enum {string} */
+        ProposalOperation: "create" | "update" | "delete";
+        ProposalPath: {
+            /** Format: int64 */
+            proposal_id: number;
+        };
+        /** @enum {string} */
+        ProposalStatus: "pending" | "approved" | "rejected";
+        ReadingsQuery: {
+            /** Format: date-time */
+            from?: string | null;
+            /**
+             * Format: int64
+             * @description Maximum number of readings to return (capped at 1000, default 1000).
+             */
+            limit?: number | null;
+            /** Format: date-time */
+            to?: string | null;
+        };
+        /** @description Request body for approving or rejecting a proposal */
+        ReviewRequest: {
+            review_note?: string | null;
+            status: components["schemas"]["ProposalStatus"];
+        };
+        RevokeTokenPath: {
+            /** Format: int64 */
+            token_id: number;
+        };
+        Section: {
+            description?: string | null;
+            country?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            id: number;
+            /** @description GeoJSON LineString geometry */
+            location: components["schemas"]["Geometry"];
+            name: string;
+            region?: string | null;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: int64 */
+            waterway_id: number;
+        };
+        SectionCommentPath: {
+            /** Format: int64 */
+            comment_id: number;
+            /** Format: int64 */
+            section_id: number;
+            /** Format: int64 */
+            waterway_id: number;
+        };
+        SectionFavoritePath: {
+            /** Format: int64 */
+            section_id: number;
+        };
+        SectionPath: {
+            /** Format: int64 */
+            section_id: number;
+            /** Format: int64 */
+            waterway_id: number;
+        };
+        /**
+         * @description Snapshot of a single gauge-series reading captured when a descent is logged.
+         *      Immutable record; reflects conditions at the time of the descent.
+         */
+        SectionWaterSnapshot: {
+            /** Format: int64 */
+            gauge_id: number;
+            gauge_name: string;
+            level: components["schemas"]["WaterLevel"];
+            /** Format: date-time */
+            measured_at?: string | null;
+            /** Format: double */
+            range_high?: number | null;
+            /** Format: double */
+            range_low?: number | null;
+            /** Format: double */
+            range_medium?: number | null;
+            /** Format: int64 */
+            series_id: number;
+            unit: string;
+            /** Format: double */
+            value?: number | null;
+            /** Format: double */
+            value_avg?: number | null;
+            /** Format: double */
+            value_max?: number | null;
+            /** Format: double */
+            value_min?: number | null;
+        };
+        /** @description All water-level ranges for every feature in a section, with their latest readings. */
+        SectionWaterStatus: {
+            ranges: components["schemas"]["WaterRangeWithStatus"][];
+        };
+        SectionWithFeatures: {
+            description?: string | null;
+            country?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            features: components["schemas"]["Feature"][];
+            /** Format: int64 */
+            id: number;
+            /** @description GeoJSON LineString geometry */
+            location: components["schemas"]["Geometry"];
+            name: string;
+            region?: string | null;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: int64 */
+            waterway_id: number;
+        };
+        SetRoleBody: {
+            role: components["schemas"]["GroupMemberRole"];
+        };
+        UpdateCommentRequest: {
+            body: string;
+        };
+        UpdateFeatureBody: {
+            feature_type?: components["schemas"]["FeatureType"] | null;
+            location?: components["schemas"]["Geometry"] | null;
+            metadata?: unknown;
+        };
+        UpdateGaugeRequest: {
+            active: boolean;
+            data_source_id?: string | null;
+            /** Format: int32 */
+            fetch_interval_secs: number;
+            /** Format: double */
+            lat?: number | null;
+            /** Format: double */
+            lon?: number | null;
+            name: string;
+            provider: string;
+            source_id: string;
+        };
+        UpdateGroupBody: {
+            /** @description Pass null to clear the description, omit to leave it unchanged */
+            description?: string | null;
+            name?: string | null;
+        };
+        UpdateSectionBody: {
+            description?: string | null;
+            country?: string | null;
+            location?: components["schemas"]["Geometry"] | null;
+            name?: string | null;
+            region?: string | null;
+        };
+        UpdateSeriesRequest: {
+            label?: string | null;
+            measurement_type: components["schemas"]["MeasurementType"];
+            unit: string;
+        };
+        UpdateWaterRangeRequest: {
+            /** Format: double */
+            range_high: number;
+            /** Format: double */
+            range_low: number;
+            /** Format: double */
+            range_medium: number;
+        };
+        UpdateWaterwayBody: {
+            description?: string | null;
+            name?: string | null;
+        };
+        UpsertDescriptionBody: {
+            description: string;
+        };
+        UpsertNameBody: {
+            name: string;
+        };
+        User: {
+            /** Format: date-time */
+            created_at: string;
+            id: string;
+            /** Format: date-time */
+            updated_at: string;
+            username: string;
+        };
+        UserFollowPath: {
+            user_id: string;
+        };
+        /** @description A user with the viewer's outgoing follow status and whether they have a pending request to the viewer. */
+        UserWithFollowStatusResponse: {
+            id: string;
+            /** @description Whether this user has a pending request to follow the viewer. */
+            incoming_pending: boolean;
+            /** @description The viewer's outgoing follow status toward this user: "pending", "accepted", or null. */
+            outgoing_status?: string | null;
+            username: string;
+        };
+        /**
+         * @description Visibility mode for a descent.
+         *      For `shared`, the audience (users and groups) is embedded directly.
+         */
+        Visibility: {
+            /** @constant */
+            type: "private";
+        } | {
+            /** @constant */
+            type: "public";
+        } | {
+            /** @constant */
+            type: "shared";
+            /** @default [] */
+            groups: number[];
+            /** @default [] */
+            users: string[];
+        };
+        /** @description Request body for voting on a proposal */
+        VoteRequest: {
+            /**
+             * Format: int16
+             * @description 1 for upvote, -1 for downvote
+             */
+            vote: number;
+        };
+        /**
+         * @description Current water level state derived from a reading and its range thresholds.
+         *      Empty = below low (gray), Low = green, Medium = orange, High = red.
+         * @enum {string}
+         */
+        WaterLevel: "empty" | "low" | "medium" | "high";
+        /**
+         * @description A water range entry enriched with the gauge and the most recent reading.
+         *      Returned by the `water-status` endpoint for a section.
+         */
+        WaterRangeWithStatus: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            feature_id: number;
+            gauge: components["schemas"]["Gauge"];
+            /** Format: int64 */
+            id: number;
+            latest_reading?: components["schemas"]["GaugeReading"] | null;
+            level: components["schemas"]["WaterLevel"];
+            /** Format: double */
+            range_high?: number | null;
+            /** Format: double */
+            range_low?: number | null;
+            /** Format: double */
+            range_medium?: number | null;
+            series: components["schemas"]["GaugeSeries"];
+            /** Format: date-time */
+            updated_at: string;
+        };
+        Waterway: {
+            description?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: date-time */
+            updated_at: string;
+            waterway_type: components["schemas"]["WaterwayType"];
+        };
+        WaterwayFilters: {
+            /** @description Filter by ISO 3166-1 alpha-2 country code (e.g. "AT", "FR"). */
+            country?: string | null;
+            /**
+             * Format: double
+             * @description Latitude for proximity filter (requires lon and radius_km).
+             */
+            lat?: number | null;
+            /**
+             * Format: double
+             * @description Longitude for proximity filter (requires lat and radius_km).
+             */
+            lon?: number | null;
+            /**
+             * Format: int32
+             * @description Maximum whitewater grade (1=I … 6=VI, 10=X).
+             */
+            max_difficulty?: number | null;
+            /**
+             * Format: int32
+             * @description Minimum whitewater grade (1=I … 6=VI, 10=X).
+             */
+            min_difficulty?: number | null;
+            /** @description Filter by river or section name (case-insensitive substring match). */
+            name?: string | null;
+            /**
+             * Format: int64
+             * @description Page number, starting at 1.
+             */
+            page?: number | null;
+            /**
+             * Format: int64
+             * @description Items per page (max 100, default 20).
+             */
+            per_page?: number | null;
+            /**
+             * Format: double
+             * @description Radius in km - returns waterways with at least one section within this distance.
+             */
+            radius_km?: number | null;
+        };
+        WaterwayPath: {
+            /** Format: int64 */
+            waterway_id: number;
+        };
+        /** @enum {string} */
+        WaterwayType: "river";
+        WaterwayWithSections: {
+            description?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            sections: components["schemas"]["SectionWithFeatures"][];
+            /** Format: date-time */
+            updated_at: string;
+            waterway_type: components["schemas"]["WaterwayType"];
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-	list_section_favorites: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: { [name: string]: unknown };
-				content: {
-					"application/json": components["schemas"]["FavoriteSection"][];
-				};
-			};
-		};
-	};
-	add_section_favorite: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: { section_id: number };
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			204: { headers: { [name: string]: unknown }; content?: never };
-			404: { headers: { [name: string]: unknown }; content?: never };
-		};
-	};
-	remove_section_favorite: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: { section_id: number };
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			204: { headers: { [name: string]: unknown }; content?: never };
-		};
-	};
-	list_pending_requests: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: { [name: string]: unknown };
-				content: { "application/json": components["schemas"]["User"][] };
-			};
-		};
-	};
-	accept_follow_request: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: { user_id: string };
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			204: { headers: { [name: string]: unknown }; content?: never };
-			404: { headers: { [name: string]: unknown }; content?: never };
-		};
-	};
-	list_users_with_follow_status: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: { [name: string]: unknown };
-				content: {
-					"application/json": components["schemas"]["UserWithFollowStatus"][];
-				};
-			};
-		};
-	};
-	list_following_users: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: { [name: string]: unknown };
-				content: { "application/json": components["schemas"]["User"][] };
-			};
-		};
-	};
-	list_follower_users: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: { [name: string]: unknown };
-				content: { "application/json": components["schemas"]["User"][] };
-			};
-		};
-	};
-	follow_user: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: { user_id: string };
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			204: { headers: { [name: string]: unknown }; content?: never };
-			400: { headers: { [name: string]: unknown }; content?: never };
-			404: { headers: { [name: string]: unknown }; content?: never };
-		};
-	};
-	unfollow_user: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: { user_id: string };
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			204: { headers: { [name: string]: unknown }; content?: never };
-		};
-	};
-	list_tokens: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					/**
-					 * @example [
-					 *       {
-					 *         "created_at": "2026-05-26T17:41:44.603390958Z",
-					 *         "expires_at": "2026-08-24T17:41:44.603393088Z",
-					 *         "id": 1,
-					 *         "is_active": true,
-					 *         "last_used_at": "2026-05-26T17:41:44.603398078Z",
-					 *         "name": "CI/CD Pipeline",
-					 *         "user_id": "user-uuid"
-					 *       }
-					 *     ]
-					 */
-					"application/json": components["schemas"]["ApiToken"][];
-				};
-			};
-		};
-	};
-	create_token: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["CreateTokenBody"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					/**
-					 * @example {
-					 *       "created_at": "2026-05-26T17:41:44.603555948Z",
-					 *       "expires_at": "2026-08-24T17:41:44.603556368Z",
-					 *       "id": 1,
-					 *       "name": "CI/CD Pipeline",
-					 *       "token": "pm_a1b2c3d4e5f6..."
-					 *     }
-					 */
-					"application/json": components["schemas"]["ApiTokenCreated"];
-				};
-			};
-			/** @description Token with this name already exists */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Internal server error */
-			500: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	revoke_token: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				token_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Token revoked successfully */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Token not found or already revoked */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	list_groups: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Group"][];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	create_group: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["CreateGroupBody"];
-			};
-		};
-		responses: {
-			/** @description Group created */
-			201: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Group"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	get_group: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["GroupWithMembers"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	update_group: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["UpdateGroupBody"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Group"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_group: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	list_members: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["GroupMember"][];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	add_member: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["AddMemberBody"];
-			};
-		};
-		responses: {
-			/** @description Member added */
-			201: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["GroupMember"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Group or user not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	set_member_role: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["SetRoleBody"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["GroupMember"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Member not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	remove_member: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Removed */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	list_users: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["User"][];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	list_waterways: {
-		parameters: {
-			query?: {
-				/** @description Filter by ISO 3166-1 alpha-2 country code (e.g. "AT", "FR"). */
-				country?: string | null;
-				/** @description Latitude for proximity filter (requires lon and radius_km). */
-				lat?: number | null;
-				/** @description Longitude for proximity filter (requires lat and radius_km). */
-				lon?: number | null;
-				/** @description Maximum whitewater grade (1=I … 6=VI, 10=X). */
-				max_difficulty?: number | null;
-				/** @description Minimum whitewater grade (1=I … 6=VI, 10=X). */
-				min_difficulty?: number | null;
-				/** @description Filter by river or section name (case-insensitive substring match). */
-				name?: string | null;
-				/** @description Page number, starting at 1. */
-				page?: number | null;
-				/** @description Items per page (max 100, default 20). */
-				per_page?: number | null;
-				/** @description Radius in km - returns waterways with at least one section within this distance. */
-				radius_km?: number | null;
-			};
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["PaginatedResponse_for_Waterway"];
-				};
-			};
-		};
-	};
-	create_waterway: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["CreateWaterwayBody"];
-			};
-		};
-		responses: {
-			/** @description Waterway created */
-			201: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Waterway"];
-				};
-			};
-			/** @description Proposal submitted */
-			202: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Proposal"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	get_waterway: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["WaterwayWithSections"];
-				};
-			};
-			/** @description Waterway not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	update_waterway: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["UpdateWaterwayBody"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Waterway"];
-				};
-			};
-			/** @description Proposal submitted */
-			202: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Proposal"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Waterway not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_waterway: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Proposal submitted */
-			202: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Proposal"];
-				};
-			};
-			/** @description Deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Waterway not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	create_section: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["CreateSectionBody"];
-			};
-		};
-		responses: {
-			/** @description Section created */
-			201: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Section"];
-				};
-			};
-			/** @description Proposal submitted */
-			202: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Proposal"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	get_section: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["SectionWithFeatures"];
-				};
-			};
-			/** @description Section not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	update_section: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["UpdateSectionBody"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Section"];
-				};
-			};
-			/** @description Proposal submitted */
-			202: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Proposal"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Section not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_section: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Proposal submitted */
-			202: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Proposal"];
-				};
-			};
-			/** @description Deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Section not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	create_feature: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["CreateFeatureBody"];
-			};
-		};
-		responses: {
-			/** @description Feature created */
-			201: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Feature"];
-				};
-			};
-			/** @description Proposal submitted */
-			202: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Proposal"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Section not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	update_feature: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				feature_id: number;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["UpdateFeatureBody"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Feature"];
-				};
-			};
-			/** @description Proposal submitted */
-			202: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Proposal"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Feature not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_feature: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				feature_id: number;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Proposal submitted */
-			202: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Proposal"];
-				};
-			};
-			/** @description Deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Feature not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	upsert_feature_name: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				feature_id: number;
-				lang_code: string;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["UpsertNameBody"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["FeatureName"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Feature not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_feature_name: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				feature_id: number;
-				lang_code: string;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Name not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	upsert_feature_description: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				feature_id: number;
-				lang_code: string;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["UpsertDescriptionBody"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["FeatureDescription"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Feature not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_feature_description: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				feature_id: number;
-				lang_code: string;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Description not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	list_section_comments: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Comment"][];
-				};
-			};
-		};
-	};
-	create_section_comment: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["CreateCommentRequest"];
-			};
-		};
-		responses: {
-			/** @description Comment created */
-			201: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Comment"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	update_section_comment: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				comment_id: number;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["UpdateCommentRequest"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Comment"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Comment not found or not your comment */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_section_comment: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				comment_id: number;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Comment not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	list_feature_comments: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				feature_id: number;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Comment"][];
-				};
-			};
-		};
-	};
-	create_feature_comment: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				feature_id: number;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["CreateCommentRequest"];
-			};
-		};
-		responses: {
-			/** @description Comment created */
-			201: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Comment"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	update_feature_comment: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				comment_id: number;
-				feature_id: number;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["UpdateCommentRequest"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Comment"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Comment not found or not your comment */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_feature_comment: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				comment_id: number;
-				feature_id: number;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Comment not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	list_water_ranges: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				feature_id: number;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["FeatureWaterRange"][];
-				};
-			};
-		};
-	};
-	create_water_range: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				feature_id: number;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["CreateWaterRangeRequest"];
-			};
-		};
-		responses: {
-			/** @description Range created or updated */
-			201: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["FeatureWaterRange"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Feature not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	update_water_range: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				feature_id: number;
-				range_id: number;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["UpdateWaterRangeRequest"];
-			};
-		};
-		responses: {
-			/**
-			 * @description A water-level threshold range for a feature, referencing a gauge series.
-			 *      Embeds the full series so the frontend can construct readings URLs without a secondary lookup.
-			 */
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["FeatureWaterRange"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Range not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_water_range: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				feature_id: number;
-				range_id: number;
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Range deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Range not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	get_section_water_status: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				section_id: number;
-				waterway_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description All water-level ranges for every feature in a section, with their latest readings. */
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["SectionWaterStatus"];
-				};
-			};
-		};
-	};
-	list_gauges: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Gauge"][];
-				};
-			};
-		};
-	};
-	create_gauge: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["CreateGaugeRequest"];
-			};
-		};
-		responses: {
-			/** @description Gauge created */
-			201: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Gauge"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	get_gauge: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				gauge_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["GaugeWithSeries"];
-				};
-			};
-			/** @description Gauge not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	update_gauge: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				gauge_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["UpdateGaugeRequest"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Gauge"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Gauge not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_gauge: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				gauge_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Gauge deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Gauge not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	create_series: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				gauge_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["CreateSeriesRequest"];
-			};
-		};
-		responses: {
-			/** @description Series created */
-			201: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["GaugeSeries"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	update_series: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				gauge_id: number;
-				series_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["UpdateSeriesRequest"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["GaugeSeries"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Series not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_series: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				gauge_id: number;
-				series_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Series deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Series not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	list_readings: {
-		parameters: {
-			query?: {
-				from?: string | null;
-				/** @description Maximum number of readings to return (capped at 1000, default 1000). */
-				limit?: number | null;
-				to?: string | null;
-			};
-			header?: never;
-			path: {
-				gauge_id: number;
-				series_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["GaugeReading"][];
-				};
-			};
-		};
-	};
-	get_latest_reading: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				gauge_id: number;
-				series_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["GaugeReading"];
-				};
-			};
-			/** @description No readings found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	backfill: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				gauge_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["BackfillRequest"];
-			};
-		};
-		responses: {
-			/** @description Backfill started */
-			202: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	list_descents: {
-		parameters: {
-			query?: {
-				/** @description Only return descents whose start_time is on or after this timestamp. */
-				from?: string | null;
-				page?: number | null;
-				per_page?: number | null;
-				/**
-				 * @description Filter scope: "owned" returns only the authenticated user's descents;
-				 *      "visible" (default) returns all descents visible to the viewer.
-				 */
-				scope?: string | null;
-				/** @description Only return descents whose start_time is on or before this timestamp. */
-				to?: string | null;
-				/** @description Narrow results by visibility: "private", "shared", or "public". */
-				visibility?: string | null;
-			};
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["PaginatedResponse_for_Descent"];
-				};
-			};
-			/** @description Unauthorized (scope=owned requires auth) */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	create_descent: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["CreateDescentRequest"];
-			};
-		};
-		responses: {
-			/** @description Descent created */
-			201: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Descent"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Validation error */
-			422: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	get_descent: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				descent_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description A logged paddling descent. */
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Descent"];
-				};
-			};
-			/** @description Not found or not visible */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_descent: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				descent_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Not found or not the owner */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	patch_descent: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				descent_id: number;
-			};
-			cookie?: never;
-		};
-		/**
-		 * @description Partial update for a descent.
-		 *      Omitted fields are left unchanged.
-		 *      For nullable fields (note, visible_from), send `null` to clear the value.
-		 *      Patching `visibility` to `shared` replaces the full audience inline.
-		 *      Patching to `private` or `public` clears any existing audience.
-		 *      Patching `sections` replaces the full ordered section list.
-		 */
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["PatchDescentRequest"];
-			};
-		};
-		responses: {
-			/** @description A logged paddling descent. */
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Descent"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Not found or not the owner */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Validation error */
-			422: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	list_proposals: {
-		parameters: {
-			query?: {
-				entity_type?: string | null;
-				feature_id?: number | null;
-				operation?: string | null;
-				section_id?: number | null;
-				status?: string | null;
-				submitted_by?: string | null;
-				waterway_id?: number | null;
-			};
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Proposal"][];
-				};
-			};
-		};
-	};
-	get_proposal: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				proposal_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Proposal"];
-				};
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Proposal not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	review_proposal: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				proposal_id: number;
-			};
-			cookie?: never;
-		};
-		/** @description Request body for approving or rejecting a proposal */
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["ReviewRequest"];
-			};
-		};
-		responses: {
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Proposal"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Proposal not found or already reviewed */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	vote_proposal: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				proposal_id: number;
-			};
-			cookie?: never;
-		};
-		/** @description Request body for voting on a proposal */
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["VoteRequest"];
-			};
-		};
-		responses: {
-			/** @description Vote recorded */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Invalid vote value */
-			422: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	unvote_proposal: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				proposal_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Vote removed */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
-	delete_proposal: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				proposal_id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Proposal deleted */
-			204: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Forbidden */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Proposal not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-			/** @description Proposal already reviewed */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content?: never;
-			};
-		};
-	};
+    list_tokens: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example [
+                     *       {
+                     *         "created_at": "2026-07-05T15:52:40.625497517Z",
+                     *         "expires_at": "2026-10-03T15:52:40.625499647Z",
+                     *         "id": 1,
+                     *         "is_active": true,
+                     *         "last_used_at": "2026-07-05T15:52:40.625509217Z",
+                     *         "name": "CI/CD Pipeline",
+                     *         "user_id": "user-uuid"
+                     *       }
+                     *     ]
+                     */
+                    "application/json": components["schemas"]["ApiToken"][];
+                };
+            };
+        };
+    };
+    create_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTokenBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "created_at": "2026-07-05T15:52:40.625763896Z",
+                     *       "expires_at": "2026-10-03T15:52:40.625764436Z",
+                     *       "id": 1,
+                     *       "name": "CI/CD Pipeline",
+                     *       "token": "pm_a1b2c3d4e5f6..."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiTokenCreated"];
+                };
+            };
+            /** @description Token with this name already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revoke_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Token revoked successfully */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token not found or already revoked */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_groups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Group"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    create_group: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGroupBody"];
+            };
+        };
+        responses: {
+            /** @description Group created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Group"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_group: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupWithMembers"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_group: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGroupBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Group"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_group: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_members: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupMember"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    add_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddMemberBody"];
+            };
+        };
+        responses: {
+            /** @description Member added */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupMember"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Group or user not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    set_member_role: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetRoleBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupMember"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Member not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    remove_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_favorites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FavoriteSectionResponse"][];
+                };
+            };
+        };
+    };
+    add_favorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Starred successfully */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Section not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    remove_favorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Unstarred successfully */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_users: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserWithFollowStatusResponse"][];
+                };
+            };
+        };
+    };
+    list_pending: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"][];
+                };
+            };
+        };
+    };
+    list_following: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"][];
+                };
+            };
+        };
+    };
+    list_followers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"][];
+                };
+            };
+        };
+    };
+    follow_user: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Follow request sent */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Cannot follow yourself */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description User not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_follow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed successfully */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    accept_follow_request: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request accepted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No pending request found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_users: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_waterways: {
+        parameters: {
+            query?: {
+                /** @description Filter by ISO 3166-1 alpha-2 country code (e.g. "AT", "FR"). */
+                country?: string | null;
+                /** @description Latitude for proximity filter (requires lon and radius_km). */
+                lat?: number | null;
+                /** @description Longitude for proximity filter (requires lat and radius_km). */
+                lon?: number | null;
+                /** @description Maximum whitewater grade (1=I … 6=VI, 10=X). */
+                max_difficulty?: number | null;
+                /** @description Minimum whitewater grade (1=I … 6=VI, 10=X). */
+                min_difficulty?: number | null;
+                /** @description Filter by river or section name (case-insensitive substring match). */
+                name?: string | null;
+                /** @description Page number, starting at 1. */
+                page?: number | null;
+                /** @description Items per page (max 100, default 20). */
+                per_page?: number | null;
+                /** @description Radius in km - returns waterways with at least one section within this distance. */
+                radius_km?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_for_Waterway"];
+                };
+            };
+        };
+    };
+    create_waterway: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWaterwayBody"];
+            };
+        };
+        responses: {
+            /** @description Waterway created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Waterway"];
+                };
+            };
+            /** @description Proposal submitted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A waterway with this name already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_waterway: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaterwayWithSections"];
+                };
+            };
+            /** @description Waterway not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_waterway: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWaterwayBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Waterway"];
+                };
+            };
+            /** @description Proposal submitted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Waterway not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_waterway: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proposal submitted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Waterway not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    create_section: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSectionBody"];
+            };
+        };
+        responses: {
+            /** @description Section created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Section"];
+                };
+            };
+            /** @description Proposal submitted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_section: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SectionWithFeatures"];
+                };
+            };
+            /** @description Section not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_section: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSectionBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Section"];
+                };
+            };
+            /** @description Proposal submitted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Section not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_section: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proposal submitted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Section not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    create_feature: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFeatureBody"];
+            };
+        };
+        responses: {
+            /** @description Feature created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Feature"];
+                };
+            };
+            /** @description Proposal submitted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Section not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_feature: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feature_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateFeatureBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Feature"];
+                };
+            };
+            /** @description Proposal submitted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_feature: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feature_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proposal submitted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    upsert_feature_name: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feature_id: number;
+                lang_code: string;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertNameBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureName"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_feature_name: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feature_id: number;
+                lang_code: string;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Name not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    upsert_feature_description: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feature_id: number;
+                lang_code: string;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertDescriptionBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDescription"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_feature_description: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feature_id: number;
+                lang_code: string;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Description not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_section_comments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"][];
+                };
+            };
+        };
+    };
+    create_section_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCommentRequest"];
+            };
+        };
+        responses: {
+            /** @description Comment created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_section_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCommentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Comment not found or not your comment */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_section_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Comment not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_feature_comments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feature_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"][];
+                };
+            };
+        };
+    };
+    create_feature_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feature_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCommentRequest"];
+            };
+        };
+        responses: {
+            /** @description Comment created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_feature_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: number;
+                feature_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCommentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Comment not found or not your comment */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_feature_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: number;
+                feature_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Comment not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_water_ranges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feature_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureWaterRange"][];
+                };
+            };
+        };
+    };
+    create_water_range: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feature_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWaterRangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Range created or updated */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureWaterRange"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_water_range: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feature_id: number;
+                range_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWaterRangeRequest"];
+            };
+        };
+        responses: {
+            /**
+             * @description A water-level threshold range for a feature, referencing a gauge series.
+             *      Embeds the full series so the frontend can construct readings URLs without a secondary lookup.
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureWaterRange"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Range not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_water_range: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feature_id: number;
+                range_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Range deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Range not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_section_water_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All water-level ranges for every feature in a section, with their latest readings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SectionWaterStatus"];
+                };
+            };
+        };
+    };
+    list_gauges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Gauge"][];
+                };
+            };
+        };
+    };
+    create_gauge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGaugeRequest"];
+            };
+        };
+        responses: {
+            /** @description Gauge created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Gauge"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_gauge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gauge_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GaugeWithSeries"];
+                };
+            };
+            /** @description Gauge not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_gauge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gauge_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGaugeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Gauge"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Gauge not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_gauge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gauge_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Gauge deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Gauge not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    create_series: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gauge_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSeriesRequest"];
+            };
+        };
+        responses: {
+            /** @description Series created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GaugeSeries"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_series: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gauge_id: number;
+                series_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSeriesRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GaugeSeries"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Series not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_series: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gauge_id: number;
+                series_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Series deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Series not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_readings: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                /** @description Maximum number of readings to return (capped at 1000, default 1000). */
+                limit?: number | null;
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                gauge_id: number;
+                series_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GaugeReading"][];
+                };
+            };
+        };
+    };
+    get_latest_reading: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gauge_id: number;
+                series_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GaugeReading"];
+                };
+            };
+            /** @description No readings found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    backfill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gauge_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BackfillRequest"];
+            };
+        };
+        responses: {
+            /** @description Backfill started */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_descents: {
+        parameters: {
+            query?: {
+                /** @description Only return descents whose start_time is on or after this timestamp. */
+                from?: string | null;
+                page?: number | null;
+                per_page?: number | null;
+                /**
+                 * @description Filter scope: "owned" returns only the authenticated user's descents;
+                 *      "following" returns public/shared descents from users you follow (auth required);
+                 *      "visible" (default) returns all descents visible to the viewer.
+                 */
+                scope?: string | null;
+                /** @description Only return descents whose start_time is on or before this timestamp. */
+                to?: string | null;
+                /** @description Narrow results by visibility: "private", "shared", or "public". */
+                visibility?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_for_Descent"];
+                };
+            };
+            /** @description Unauthorized (scope=owned requires auth) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    create_descent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDescentRequest"];
+            };
+        };
+        responses: {
+            /** @description Descent created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Descent"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_descent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                descent_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A logged paddling descent. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Descent"];
+                };
+            };
+            /** @description Not found or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_descent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                descent_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found or not the owner */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    patch_descent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                descent_id: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * @description Partial update for a descent.
+         *      Omitted fields are left unchanged.
+         *      For nullable fields (note, visible_from), send `null` to clear the value.
+         *      Patching `visibility` to `shared` replaces the full audience inline.
+         *      Patching to `private` or `public` clears any existing audience.
+         *      Patching `sections` replaces the full ordered section list.
+         */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchDescentRequest"];
+            };
+        };
+        responses: {
+            /** @description A logged paddling descent. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Descent"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found or not the owner */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_proposals: {
+        parameters: {
+            query?: {
+                entity_type?: string | null;
+                feature_id?: number | null;
+                operation?: string | null;
+                section_id?: number | null;
+                status?: string | null;
+                submitted_by?: string | null;
+                waterway_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"][];
+                };
+            };
+        };
+    };
+    get_proposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Proposal not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_proposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proposal deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Proposal not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Proposal already reviewed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    review_proposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: number;
+            };
+            cookie?: never;
+        };
+        /** @description Request body for approving or rejecting a proposal */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Proposal not found or already reviewed */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Approving would create a duplicate */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    vote_proposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: number;
+            };
+            cookie?: never;
+        };
+        /** @description Request body for voting on a proposal */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoteRequest"];
+            };
+        };
+        responses: {
+            /** @description Vote recorded */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid vote value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    unvote_proposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Vote removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
 }

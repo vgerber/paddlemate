@@ -26,9 +26,9 @@ export type WaterRangeWithStatus =
 export type GaugeReading = components["schemas"]["GaugeReading"];
 export type ApiToken = components["schemas"]["ApiToken"];
 export type ApiTokenCreated = components["schemas"]["ApiTokenCreated"];
-export type FavoriteSection = components["schemas"]["FavoriteSection"];
+export type FavoriteSection = components["schemas"]["FavoriteSectionResponse"];
 export type UserWithFollowStatus =
-  components["schemas"]["UserWithFollowStatus"];
+  components["schemas"]["UserWithFollowStatusResponse"];
 export type User = components["schemas"]["User"];
 
 export type WaterwayFilters = NonNullable<
@@ -55,6 +55,11 @@ export const waterwaysApi = {
     const { data } = await client.GET("/api/v1/waterways/{waterway_id}", {
       params: { path: { waterway_id: id } },
     });
+    return assertData(data);
+  },
+  create: async (body: components["schemas"]["CreateWaterwayBody"]) => {
+    const { data } = await client.POST("/api/v1/waterways", { body });
+    // 201 (admin, Waterway) or 202 (proposal); client throws ApiError on 409.
     return assertData(data);
   },
 };

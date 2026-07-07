@@ -59,8 +59,7 @@ function Root() {
 }
 
 function Layout() {
-  const { isAuthenticated, isLoading, isAdmin, user, login, logout } =
-    useSession();
+  const { isAuthenticated, isLoading, user, login, logout } = useSession();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isMapPage = pathname === "/";
 
@@ -99,11 +98,6 @@ function Layout() {
             <Box component={Link} to="/proposals" sx={navLinkSx}>
               PROPOSALS
             </Box>
-            {isAdmin && (
-              <Box component={Link} to="/admin/proposals" sx={navLinkSx}>
-                ADMIN
-              </Box>
-            )}
           </Box>
           <Box sx={{ flex: 1 }} />
           {!isLoading &&
@@ -134,7 +128,9 @@ function Layout() {
             : { xs: "calc(56px + env(safe-area-inset-bottom))", md: 0 },
         }}
       >
-        <StandingDescentBanner sx={{ display: { xs: isMapPage ? "none" : "flex", md: "flex" } }} />
+        <StandingDescentBanner
+          sx={{ display: { xs: isMapPage ? "none" : "flex", md: "flex" } }}
+        />
         <Box component="main" sx={{ flex: 1 }}>
           <Outlet />
         </Box>
@@ -152,9 +148,7 @@ function BottomNav() {
       ? 0
       : pathname.startsWith("/logs")
         ? 1
-        : pathname.startsWith("/settings") ||
-            pathname.startsWith("/proposals") ||
-            pathname.startsWith("/admin")
+        : pathname.startsWith("/settings") || pathname.startsWith("/proposals")
           ? 2
           : false;
 

@@ -168,6 +168,12 @@ pub async fn review_proposal(
     {
         Ok(Some(p)) => Json(p).into_response(),
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        // Unique violation while applying the change (e.g. duplicate waterway name).
+        Err(sqlx::Error::Database(db_err)) if db_err.code().as_deref() == Some("23505") => (
+            StatusCode::CONFLICT,
+            "Approving would create a duplicate (name already exists) — reject the proposal instead",
+        )
+            .into_response(),
         Err(err) => {
             tracing::error!("Error reviewing proposal {}: {}", path.proposal_id, err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
@@ -182,6 +188,7 @@ doc_fn!(review_proposal_docs, op =>
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<403, (), _>(|res| res.description("Forbidden"))
         .response_with::<404, (), _>(|res| res.description("Proposal not found or already reviewed"))
+        .response_with::<409, (), _>(|res| res.description("Approving would create a duplicate"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Proposals")
 );

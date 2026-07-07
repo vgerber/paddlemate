@@ -25,13 +25,14 @@ import { CoordsInfo } from "./CoordsInfo";
 const { tokens } = theme;
 
 function ProposalActions({ proposal }: { proposal: Proposal }) {
-  const { isAuthenticated, user } = useSession();
+  const { isAuthenticated, user, isAdmin } = useSession();
   const vote = useVoteProposal();
   const unvote = useUnvoteProposal();
   const del = useDeleteProposal();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const isOwner = !!user && user.id === proposal.submitted_by;
+  const canDelete = isOwner || isAdmin;
 
   function handleVote(v: 1 | -1) {
     if (proposal.user_vote === v) unvote.mutate(proposal.id);
@@ -100,8 +101,11 @@ function ProposalActions({ proposal }: { proposal: Proposal }) {
         {proposal.downvotes}
       </Typography>
 
-      {isOwner && (
-        <Tooltip title="Withdraw proposal" placement="top">
+      {canDelete && (
+        <Tooltip
+          title={isOwner ? "Withdraw proposal" : "Delete proposal (admin)"}
+          placement="top"
+        >
           <IconButton
             size="small"
             onClick={(e) => {
@@ -123,8 +127,9 @@ function ProposalActions({ proposal }: { proposal: Proposal }) {
         <DialogTitle>Withdraw proposal?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            This permanently removes your pending proposal. This action cannot
-            be undone.
+            {isOwner
+              ? "This permanently removes your pending proposal. This action cannot be undone."
+              : "This permanently removes this pending proposal. This action cannot be undone."}
           </DialogContentText>
         </DialogContent>
         <DialogActions>

@@ -11,9 +11,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { Feature, SectionWithFeatures } from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
 import { circleGeoJSON } from "@/lib/geo";
+import { theme } from "@/lib/theme";
 import GaugeMarkers, { type GaugePin } from "./GaugeMarkers";
 import LabelModeToggle from "./LabelModeToggle";
-import { useMapCameraEffects } from "./useMapCameraEffects";
 import {
   buildLineFeaturesGeoJSON,
   buildPointFeaturesGeoJSON,
@@ -24,9 +24,12 @@ import {
   buildSectionLabelsGeoJSON,
   buildSectionsGeoJSON,
 } from "./mapLayers";
+import { useMapCameraEffects } from "./useMapCameraEffects";
 
 export type { AreaCircle } from "@/lib/geo";
 export type { GaugePin } from "./GaugeMarkers";
+
+const { tokens } = theme;
 
 const LEVEL_COLORS: Record<string, string> = {
   empty: "#9eaab0",
@@ -114,6 +117,15 @@ interface WaterwayMapProps {
   controlsAnchor?: "top" | "bottom";
   /** Pending proposals to show as ghost markers on the map. */
   proposedFeatures?: Feature[];
+  /** Reports the current viewport bounds (on load and after each move). */
+  onBoundsChange?: (bounds: {
+    south: number;
+    west: number;
+    north: number;
+    east: number;
+  }) => void;
+  /** River course to highlight subtly (e.g. the OSM riverbed a section will snap to). */
+  riverHighlightCoords?: [number, number][] | null;
 }
 
 export default function WaterwayMap({
@@ -146,6 +158,8 @@ export default function WaterwayMap({
   controlsBottomOffset = 0,
   controlsAnchor,
   proposedFeatures,
+  onBoundsChange,
+  riverHighlightCoords,
 }: WaterwayMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [pickMode, setPickMode] = useState<"put-in" | "take-out" | null>(null);
@@ -176,8 +190,12 @@ export default function WaterwayMap({
   const connectorsGeoJSON = buildPutInTakeOutConnectorsGeoJSON(sections ?? []);
   const pointsGeoJSON = buildPointFeaturesGeoJSON(features ?? []);
   const linesGeoJSON = buildLineFeaturesGeoJSON(features ?? []);
-  const proposedPointsGeoJSON = buildProposedPointFeaturesGeoJSON(proposedFeatures ?? []);
-  const proposedLinesGeoJSON = buildProposedLineFeaturesGeoJSON(proposedFeatures ?? []);
+  const proposedPointsGeoJSON = buildProposedPointFeaturesGeoJSON(
+    proposedFeatures ?? [],
+  );
+  const proposedLinesGeoJSON = buildProposedLineFeaturesGeoJSON(
+    proposedFeatures ?? [],
+  );
 
   const handleClick = (e: MapLayerMouseEvent) => {
     if (pickMode) {
@@ -212,6 +230,17 @@ export default function WaterwayMap({
         onSectionClick(Number(sectionFeature.id));
       }
     }
+  };
+
+  const reportBounds = () => {
+    const b = mapRef.current?.getBounds();
+    if (!b) return;
+    onBoundsChange?.({
+      south: b.getSouth(),
+      west: b.getWest(),
+      north: b.getNorth(),
+      east: b.getEast(),
+    });
   };
 
   const circleData = areaCircle
@@ -256,7 +285,11 @@ export default function WaterwayMap({
             : "https://tiles.openfreemap.org/styles/liberty"
         }
         onClick={handleClick}
-        onLoad={handleMapLoad}
+        onLoad={() => {
+          handleMapLoad();
+          reportBounds();
+        }}
+        onMoveEnd={reportBounds}
         interactiveLayerIds={[
           "sections-line",
           "sections-line-casing",
@@ -443,7 +476,11 @@ export default function WaterwayMap({
         </Source>
 
         {/* Proposed (pending) features — ghost style */}
-        <Source id="proposed-feature-lines" type="geojson" data={proposedLinesGeoJSON}>
+        <Source
+          id="proposed-feature-lines"
+          type="geojson"
+          data={proposedLinesGeoJSON}
+        >
           <Layer
             id="proposed-feature-lines-layer"
             type="line"
@@ -454,7 +491,11 @@ export default function WaterwayMap({
             }}
           />
         </Source>
-        <Source id="proposed-feature-points" type="geojson" data={proposedPointsGeoJSON}>
+        <Source
+          id="proposed-feature-points"
+          type="geojson"
+          data={proposedPointsGeoJSON}
+        >
           <Layer
             id="proposed-feature-points-circle"
             type="circle"
@@ -516,8 +557,37 @@ export default function WaterwayMap({
           </Source>
         )}
 
-        {/* Section draft preview line — dashed straight until OSM snap resolves */}
-        {putIn && takeOut && (
+        {/* River course highlight — subtle guide under the section preview */}
+        {riverHighlightCoords && riverHighlightCoords.length >= 2 && (
+          <Source
+            id="river-highlight"
+            type="geojson"
+            data={{
+              type: "Feature" as const,
+              geometry: {
+                type: "LineString" as const,
+                coordinates: riverHighlightCoords,
+              },
+              properties: {},
+            }}
+          >
+            <Layer
+              id="river-highlight-line"
+              type="line"
+              paint={{
+                "line-color": tokens.tertiary,
+                "line-width": 3,
+                "line-opacity": 0.45,
+                "line-dasharray": [2, 2],
+              }}
+            />
+          </Source>
+        )}
+
+        {/* Preview line — snapped/OSM coords when available (also used to
+            highlight a checked river), dashed straight put-in→take-out until
+            the OSM snap resolves */}
+        {(sectionPreviewCoords || (putIn && takeOut)) && (
           <Source
             id="section-preview"
             type="geojson"
@@ -525,20 +595,35 @@ export default function WaterwayMap({
               type: "Feature" as const,
               geometry: {
                 type: "LineString" as const,
-                coordinates: sectionPreviewCoords ?? [
-                  [putIn.lon, putIn.lat],
-                  [takeOut.lon, takeOut.lat],
-                ],
+                coordinates:
+                  sectionPreviewCoords ??
+                  (putIn && takeOut
+                    ? [
+                        [putIn.lon, putIn.lat],
+                        [takeOut.lon, takeOut.lat],
+                      ]
+                    : []),
               },
               properties: {},
             }}
           >
+            {sectionPreviewCoords && (
+              <Layer
+                id="section-preview-casing"
+                type="line"
+                paint={{
+                  "line-color": tokens.surfaceLowest,
+                  "line-width": 7,
+                  "line-opacity": 0.85,
+                }}
+              />
+            )}
             <Layer
               id="section-preview-line"
               type="line"
               paint={{
-                "line-color": "#c2cf47",
-                "line-width": 2,
+                "line-color": tokens.tertiary,
+                "line-width": sectionPreviewCoords ? 5 : 2,
                 ...(sectionPreviewCoords ? {} : { "line-dasharray": [4, 3] }),
               }}
             />

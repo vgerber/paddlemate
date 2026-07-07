@@ -3,8 +3,8 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
-import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
 import { maxLevel } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
 
@@ -67,10 +67,10 @@ export default function DescentCard({
 }: DescentCardProps) {
   const { tokens } = useTheme();
   const levelConfig = {
-    empty:  tokens.waterEmpty,
-    low:    tokens.waterLow,
+    empty: tokens.waterEmpty,
+    low: tokens.waterLow,
     medium: tokens.waterMedium,
-    high:   tokens.waterHigh,
+    high: tokens.waterHigh,
   };
   const waterwayNames = [
     ...new Set(
@@ -221,7 +221,7 @@ export default function DescentCard({
                 height: 18,
                 color: cfg.color,
                 bgcolor: cfg.bgcolor,
-                borderColor: cfg.border,
+                borderColor: "border" in cfg ? cfg.border : undefined,
               }}
             />
           );

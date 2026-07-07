@@ -8,12 +8,12 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import StandingDescentBanner from "@/components/StandingDescentBanner";
 import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import WaterwayMap from "@/components/map/Map";
-import { proposalToPseudoFeature } from "@/components/waterway/section-details/utils";
+import StandingDescentBanner from "@/components/StandingDescentBanner";
 import AreaControls from "@/components/search/AreaControls";
+import { proposalToPseudoFeature } from "@/components/waterway/section-details/utils";
 import SectionSpeedDial from "./SectionSpeedDial";
 import type { MapPageState } from "./useMapPageState";
 
@@ -52,13 +52,10 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     setLabelMode,
     sectionLevels,
     searchSectionLevels,
-    sectionPutIn,
-    sectionTakeOut,
     sectionPreviewCoords,
     featureVertices,
     featureGeomType,
     featurePickingActive,
-    sectionPickingFor,
     handleMapPick,
     focusedPoint,
     isAreaMode,
@@ -69,6 +66,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     toggleMobileMapView,
     showProposedFeatures,
     featureProposals,
+    setMapBounds,
   } = state;
 
   const LEVEL_COLORS: Record<string, string> = {
@@ -78,8 +76,10 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
   };
 
   const sectionName = sections.find((s) => s.id === selectedSectionId)?.name;
-  const waterwayName = selectedWaterwayId != null ? waterwayNames[selectedWaterwayId] : undefined;
-  const sectionLevel = selectedSectionId != null ? sectionLevels[selectedSectionId] : undefined;
+  const waterwayName =
+    selectedWaterwayId != null ? waterwayNames[selectedWaterwayId] : undefined;
+  const sectionLevel =
+    selectedSectionId != null ? sectionLevels[selectedSectionId] : undefined;
 
   const visibleAreaCircle =
     selectedWaterwayId == null && isAreaMode
@@ -140,17 +140,11 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           sectionLevels={
             selectedWaterwayId != null ? sectionLevels : searchSectionLevels
           }
-          putIn={sectionPutIn}
-          takeOut={sectionTakeOut}
           sectionPreviewCoords={sectionPreviewCoords ?? undefined}
           featureVertices={featureVertices}
           featureGeomType={featureGeomType}
-          placingFeature={featurePickingActive || sectionPickingFor !== null}
-          onMapClick={
-            featurePickingActive || sectionPickingFor !== null
-              ? handleMapPick
-              : undefined
-          }
+          placingFeature={featurePickingActive}
+          onMapClick={featurePickingActive ? handleMapPick : undefined}
           focusedPoint={focusedPoint}
           controlsBottomOffset={
             isMobile && (showAreaStrip || isMobileMapView) ? 60 : 0
@@ -162,9 +156,10 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             showProposedFeatures
               ? featureProposals
                   .map(proposalToPseudoFeature)
-                  .filter(Boolean)
+                  .filter((f) => f !== null)
               : undefined
           }
+          onBoundsChange={setMapBounds}
         />
 
         {/* Area strip — mobile, area mode, no waterway selected */}
@@ -239,37 +234,40 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
                 px: 2,
                 py: 1,
                 alignItems: "center",
-              gap: 1.5,
-              zIndex: 1100,
-            }}
-          >
-            {sectionLevel && LEVEL_COLORS[sectionLevel] && (
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  bgcolor: LEVEL_COLORS[sectionLevel],
-                  flexShrink: 0,
-                }}
-              />
-            )}
-            <Box sx={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-              <Typography
-                variant="subtitle2"
-                noWrap
-                sx={{ fontWeight: 700, lineHeight: 1.3 }}
-              >
-                {sectionName ?? waterwayName ?? ""}
-              </Typography>
-              {sectionName && waterwayName && (
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  {waterwayName}
-                </Typography>
+                gap: 1.5,
+                zIndex: 1100,
+              }}
+            >
+              {sectionLevel && LEVEL_COLORS[sectionLevel] && (
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    bgcolor: LEVEL_COLORS[sectionLevel],
+                    flexShrink: 0,
+                  }}
+                />
               )}
-            </Box>
-            <KeyboardArrowUpIcon fontSize="small" sx={{ color: "action.active", flexShrink: 0 }} />
-          </ButtonBase>
+              <Box sx={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                <Typography
+                  variant="subtitle2"
+                  noWrap
+                  sx={{ fontWeight: 700, lineHeight: 1.3 }}
+                >
+                  {sectionName ?? waterwayName ?? ""}
+                </Typography>
+                {sectionName && waterwayName && (
+                  <Typography variant="caption" color="text.secondary" noWrap>
+                    {waterwayName}
+                  </Typography>
+                )}
+              </Box>
+              <KeyboardArrowUpIcon
+                fontSize="small"
+                sx={{ color: "action.active", flexShrink: 0 }}
+              />
+            </ButtonBase>
           </>
         ) : (
           /* Search FAB — mobile only */

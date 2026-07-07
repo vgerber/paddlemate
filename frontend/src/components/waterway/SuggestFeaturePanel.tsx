@@ -65,7 +65,15 @@ export default function SuggestFeaturePanel({
 
   return (
     <>
-      <Box sx={{ flex: 1, overflowY: "auto", borderTop: "3px solid", borderColor: "divider", paddingTop: 2 }}>
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: "auto",
+          borderTop: "3px solid",
+          borderColor: "divider",
+          paddingTop: 2,
+        }}
+      >
         <SuggestFeatureForm
           waterwayId={waterwayId}
           sectionId={sectionId}
@@ -104,7 +112,11 @@ export default function SuggestFeaturePanel({
           <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700 }}>
             {selectedSection?.name ?? waterway?.name ?? "…"}
           </Typography>
-          <Typography variant="caption" color="text.secondary" display="block">
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block" }}
+          >
             Suggest new feature
           </Typography>
         </Box>

@@ -62,26 +62,25 @@ export function useMapPageState(search: RouteSearch) {
     { lng: number; lat: number }[]
   >([]);
 
-  // Section suggestion: pick put-in and take-out from the map
-  const [sectionPickingFor, setSectionPickingFor] = useState<
-    "put-in" | "take-out" | null
-  >(null);
-  const [sectionPutIn, setSectionPutIn] = useState<{
-    lat: number;
-    lon: number;
-  } | null>(null);
-  const [sectionTakeOut, setSectionTakeOut] = useState<{
-    lat: number;
-    lon: number;
-  } | null>(null);
+  // Preview line drawn on the map (e.g. OSM river highlight in suggest flows)
   const [sectionPreviewCoords, setSectionPreviewCoords] = useState<
     [number, number][] | null
   >(null);
 
   const [suggestMode, setSuggestMode] = useState<SuggestMode | null>(null);
+  // Name prefill for the "suggest new river" panel (from the search field)
+  const [suggestWaterwayName, setSuggestWaterwayName] = useState("");
   const [focusedPoint, setFocusedPoint] = useState<[number, number] | null>(
     null,
   );
+
+  // Current map viewport bounds (used for OSM lookups in suggest flows)
+  const [mapBounds, setMapBounds] = useState<{
+    south: number;
+    west: number;
+    north: number;
+    east: number;
+  } | null>(null);
 
   const [showProposedFeatures, setShowProposedFeatures] = useState(false);
   const toggleShowProposedFeatures = useCallback(
@@ -136,7 +135,9 @@ export function useMapPageState(search: RouteSearch) {
     [navigate],
   );
   const isMobilePanelOpen =
-    isMobile && (panel === "1" || selectedWaterwayId != null) && !isMobileMapView;
+    isMobile &&
+    (panel === "1" || selectedWaterwayId != null) &&
+    !isMobileMapView;
 
   const [previewRadius, setPreviewRadius] = useState<number | null>(null);
   const [isSearchPanelLoading, setIsSearchPanelLoading] = useState(false);
@@ -315,16 +316,9 @@ export function useMapPageState(search: RouteSearch) {
     (lng: number, lat: number) => {
       if (featurePickingActive) {
         setFeatureVertices((prev) => [...prev, { lng, lat }]);
-        return;
-      } else if (sectionPickingFor === "put-in") {
-        setSectionPutIn({ lat, lon: lng });
-        setSectionPickingFor(null);
-      } else if (sectionPickingFor === "take-out") {
-        setSectionTakeOut({ lat, lon: lng });
-        setSectionPickingFor(null);
       }
     },
-    [featurePickingActive, sectionPickingFor],
+    [featurePickingActive],
   );
 
   const handleGaugeSelect = useCallback((gaugeId: number) => {
@@ -363,13 +357,11 @@ export function useMapPageState(search: RouteSearch) {
 
   /** Clears all suggest/feature-picking state (called when suggestMode is set to null). */
   const clearSuggestState = useCallback(() => {
-    setSectionPutIn(null);
-    setSectionTakeOut(null);
-    setSectionPickingFor(null);
     setSectionPreviewCoords(null);
     setFeatureVertices([]);
     setFeaturePickingActive(false);
     setFeatureGeomType("Point");
+    setSuggestWaterwayName("");
   }, []);
 
   return {
@@ -400,16 +392,14 @@ export function useMapPageState(search: RouteSearch) {
     setFeatureGeomType,
     featureVertices,
     setFeatureVertices,
-    sectionPickingFor,
-    setSectionPickingFor,
-    sectionPutIn,
-    setSectionPutIn,
-    sectionTakeOut,
-    setSectionTakeOut,
     sectionPreviewCoords,
     setSectionPreviewCoords,
     suggestMode,
     setSuggestMode,
+    suggestWaterwayName,
+    setSuggestWaterwayName,
+    mapBounds,
+    setMapBounds,
     focusedPoint,
     setFocusedPoint,
     showProposedFeatures,

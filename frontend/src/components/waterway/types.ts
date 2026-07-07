@@ -1,2 +1,2 @@
 export type DetailTab = "sections" | "gauges";
-export type SuggestMode = "section" | "feature";
+export type SuggestMode = "section" | "feature" | "waterway";

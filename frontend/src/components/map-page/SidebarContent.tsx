@@ -1,6 +1,7 @@
+import { useNavigate } from "@tanstack/react-router";
 import WaterwaySearchPanel from "@/components/search/WaterwaySearchPanel";
 import SuggestFeaturePanel from "@/components/waterway/SuggestFeaturePanel";
-import SuggestSectionPanel from "@/components/waterway/SuggestSectionPanel";
+import SuggestWaterwayPanel from "@/components/waterway/SuggestWaterwayPanel";
 import WaterwayBrowsePanel from "@/components/waterway/WaterwayBrowsePanel";
 import type { MapPageState } from "./useMapPageState";
 
@@ -17,9 +18,9 @@ interface SidebarContentProps {
 }
 
 /**
- * Routes between WaterwaySearchPanel, WaterwayBrowsePanel, SuggestSectionPanel,
+ * Routes between WaterwaySearchPanel, WaterwayBrowsePanel, SuggestWaterwayPanel,
  * and SuggestFeaturePanel based on current state. Shared by DesktopSidebar and
- * MobileOverlay.
+ * MobileOverlay. (Suggesting a section navigates to its own page.)
  */
 export default function SidebarContent({
   state,
@@ -28,6 +29,7 @@ export default function SidebarContent({
   onMobileMapToggle,
   mobileMapActive,
 }: SidebarContentProps) {
+  const navigate = useNavigate();
   const {
     selectedWaterwayId,
     selectedSectionId,
@@ -55,10 +57,6 @@ export default function SidebarContent({
     suggestMode,
     setSuggestMode,
     clearSuggestState,
-    sectionPutIn,
-    sectionTakeOut,
-    sectionPickingFor,
-    setSectionPickingFor,
     setSectionPreviewCoords,
     featureVertices,
     setFeatureVertices,
@@ -70,12 +68,33 @@ export default function SidebarContent({
     showProposedFeatures,
     toggleShowProposedFeatures,
     featureProposals,
+    suggestWaterwayName,
+    setSuggestWaterwayName,
+    mapBounds,
   } = state;
+
+  if (suggestMode === "waterway") {
+    return (
+      <SuggestWaterwayPanel
+        initialName={suggestWaterwayName}
+        mapBounds={mapBounds}
+        onPreviewCoordsChange={setSectionPreviewCoords}
+        onClose={() => {
+          setSuggestMode(null);
+          clearSuggestState();
+        }}
+      />
+    );
+  }
 
   if (selectedWaterwayId == null) {
     return (
       <WaterwaySearchPanel
         onSelect={setSelectedWaterwayId}
+        onProposeRiver={(name) => {
+          setSuggestWaterwayName(name);
+          setSuggestMode("waterway");
+        }}
         onWaterwaysChange={setSearchWaterwayIds}
         areaCircle={areaCircle}
         onAreaCircleChange={handleAreaCircleChange}
@@ -92,25 +111,6 @@ export default function SidebarContent({
         onLoadingChange={setIsSearchPanelLoading}
         onAreaModeActivate={onAreaModeActivate}
         onClose={onClose}
-      />
-    );
-  }
-
-  if (suggestMode === "section") {
-    return (
-      <SuggestSectionPanel
-        waterwayId={selectedWaterwayId}
-        onClose={() => {
-          setSuggestMode(null);
-          clearSuggestState();
-        }}
-        putIn={sectionPutIn}
-        takeOut={sectionTakeOut}
-        pickingFor={sectionPickingFor}
-        onStartPickPutIn={() => setSectionPickingFor("put-in")}
-        onStartPickTakeOut={() => setSectionPickingFor("take-out")}
-        onDraftClear={clearSuggestState}
-        onPreviewCoordsChange={setSectionPreviewCoords}
       />
     );
   }
@@ -162,7 +162,17 @@ export default function SidebarContent({
       onSectionClick={handleSectionClick}
       onSectionDeselect={() => setSelectedSectionId(undefined)}
       onGaugeSelect={handleGaugeSelect}
-      onSuggestModeChange={setSuggestMode}
+      onSuggestModeChange={(mode) => {
+        // Section suggestion lives on its own page (like /logs/new)
+        if (mode === "section") {
+          navigate({
+            to: "/waterways/suggest-section",
+            search: { waterway: selectedWaterwayId },
+          });
+        } else {
+          setSuggestMode(mode);
+        }
+      }}
       favoritedIds={favoritedIds}
       onToggleFavorite={toggleFavorite}
       onMobileMapToggle={onMobileMapToggle}

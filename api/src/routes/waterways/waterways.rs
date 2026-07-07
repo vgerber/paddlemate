@@ -290,6 +290,29 @@ pub async fn create_waterway(
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
+    // Reject duplicates up front (case-insensitive) for both the admin and
+    // proposal paths; the UNIQUE constraint still guards against races.
+    match sqlx::query_scalar!(
+        r#"SELECT EXISTS(SELECT 1 FROM waterways WHERE lower(name) = lower($1)) AS "exists!""#,
+        body.name
+    )
+    .fetch_one(&app.pg_pool)
+    .await
+    {
+        Ok(true) => {
+            return (
+                StatusCode::CONFLICT,
+                "A waterway with this name already exists",
+            )
+                .into_response();
+        }
+        Ok(false) => {}
+        Err(err) => {
+            tracing::error!("Error checking waterway name: {}", err);
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        }
+    }
+
     if token.is_server_admin() {
         let result = sqlx::query!(
             r#"
@@ -314,6 +337,11 @@ pub async fn create_waterway(
                     created_at: r.created_at,
                     updated_at: r.updated_at,
                 }),
+            )
+                .into_response(),
+            Err(sqlx::Error::Database(db_err)) if db_err.code().as_deref() == Some("23505") => (
+                StatusCode::CONFLICT,
+                "A waterway with this name already exists",
             )
                 .into_response(),
             Err(err) => {
@@ -347,6 +375,7 @@ doc_fn!(create_waterway_docs, op =>
         .response_with::<201, Json<Waterway>, _>(|res| res.description("Waterway created"))
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
+        .response_with::<409, (), _>(|res| res.description("A waterway with this name already exists"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Waterways")
 );
