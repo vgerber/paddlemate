@@ -24,6 +24,9 @@ export type SectionWaterStatus = components["schemas"]["SectionWaterStatus"];
 export type WaterRangeWithStatus =
   components["schemas"]["WaterRangeWithStatus"];
 export type GaugeReading = components["schemas"]["GaugeReading"];
+export type GaugeWithSeries = components["schemas"]["GaugeWithSeries"];
+export type FeatureWaterRangeBody =
+  components["schemas"]["FeatureWaterRangeBody"];
 export type ApiToken = components["schemas"]["ApiToken"];
 export type ApiTokenCreated = components["schemas"]["ApiTokenCreated"];
 export type FavoriteSection = components["schemas"]["FavoriteSectionResponse"];
@@ -180,6 +183,21 @@ export const waterStatusApi = {
       "/api/v1/waterways/{waterway_id}/sections/{section_id}/water-status",
       { params: { path: { waterway_id: waterwayId, section_id: sectionId } } },
     );
+    return assertData(data);
+  },
+};
+
+export const gaugesApi = {
+  /** Search active gauges by name and/or proximity (nearest-first). */
+  search: async (params: {
+    q?: string;
+    lat?: number;
+    lon?: number;
+    limit?: number;
+  }) => {
+    const { data } = await client.GET("/api/v1/gauges/search", {
+      params: { query: params },
+    });
     return assertData(data);
   },
 };

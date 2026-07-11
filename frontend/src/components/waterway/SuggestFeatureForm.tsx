@@ -1,6 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import Alert from "@mui/material/Alert";
+import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -13,10 +14,21 @@ import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import { useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, type RefObject, useEffect, useState } from "react";
-import type { FeatureType, WaterRangeWithStatus } from "@/lib/api";
-import { featuresApi } from "@/lib/api";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import type {
+  FeatureType,
+  FeatureWaterRangeBody,
+  GaugeWithSeries,
+  WaterRangeWithStatus,
+} from "@/lib/api";
+import { featuresApi, gaugesApi } from "@/lib/api";
 import { waterwayKeys } from "@/lib/hooks/useWaterways";
 import { theme } from "@/lib/theme";
 
@@ -63,6 +75,9 @@ export interface SectionFeatureDraft {
   name: string | null;
   description: string | null;
   lang_code: string;
+  water_ranges: FeatureWaterRangeBody[];
+  /** Display-only: name of the selected gauge (not sent to the API). */
+  gauge_name: string | null;
   /** True when "Use full section line" was checked — the wizard substitutes
    * the final section line at submit time. */
   used_section_line: boolean;
@@ -93,7 +108,7 @@ interface SuggestFeatureFormProps {
   onStopPick: () => void;
   onRemoveVertex?: (i: number) => void;
   onClearVertices: () => void;
-  onSubmitted: () => void;
+  onSubmitted?: () => void;
   /** Draft mode: receive the built feature instead of creating it via the
    * API, then reset the form for the next one. */
   onDraft?: (feature: SectionFeatureDraft) => void;
@@ -101,6 +116,8 @@ interface SuggestFeatureFormProps {
   headerAction?: ReactNode;
   /** Initial language for name/description (default "en"). */
   defaultLangCode?: string;
+  /** Reference point for the gauge search — nearby gauges are listed first. */
+  nearPoint?: { lat: number; lon: number };
   /** Ref populated with the current handleSubmit — lets the parent header trigger submission. */
   submitRef?: RefObject<(() => void) | null>;
   /** Called whenever the form's canSubmit state changes. */
@@ -124,6 +141,7 @@ export default function SuggestFeatureForm({
   onDraft,
   headerAction,
   defaultLangCode,
+  nearPoint,
   submitRef,
   onCanSubmitChange,
 }: SuggestFeatureFormProps) {
@@ -136,37 +154,93 @@ export default function SuggestFeatureForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [useSectionLine, setUseSectionLine] = useState(false);
   const [difficulty, setDifficulty] = useState("");
-  // Gauge range thresholds
-  const availableSeries = gaugeRanges?.map((r) => r.series) ?? [];
-  const [seriesId, setSeriesId] = useState<number | "">(
-    availableSeries[0]?.id ?? "",
-  );
-  const defaultRange = gaugeRanges?.[0];
-  const [rangeLow, setRangeLow] = useState(
-    defaultRange?.range_low?.toString() ?? "",
-  );
-  const [rangeMedium, setRangeMedium] = useState(
-    defaultRange?.range_medium?.toString() ?? "",
-  );
-  const [rangeHigh, setRangeHigh] = useState(
-    defaultRange?.range_high?.toString() ?? "",
-  );
-  const activeSeries =
-    seriesId !== ""
-      ? (gaugeRanges?.find((r) => r.series.id === seriesId) ?? gaugeRanges?.[0])
-      : gaugeRanges?.[0];
+  // ── Gauge selection ──
+  // Gauges already attached to the section (grouped from its water ranges)
+  const sectionGauges = useMemo(() => {
+    const byId = new Map<number, GaugeWithSeries>();
+    for (const range of gaugeRanges ?? []) {
+      const existing = byId.get(range.gauge.id);
+      if (existing) {
+        if (!existing.series.some((s) => s.id === range.series.id)) {
+          existing.series.push(range.series);
+        }
+      } else {
+        byId.set(range.gauge.id, { ...range.gauge, series: [range.series] });
+      }
+    }
+    return [...byId.values()];
+  }, [gaugeRanges]);
 
+  const [selectedGauge, setSelectedGauge] = useState<GaugeWithSeries | null>(
+    null,
+  );
+  const [seriesId, setSeriesId] = useState<number | "">("");
+  const [rangeLow, setRangeLow] = useState("");
+  const [rangeMedium, setRangeMedium] = useState("");
+  const [rangeHigh, setRangeHigh] = useState("");
+
+  // Search the full gauge collection (all providers), nearby-first
+  const [gaugeQuery, setGaugeQuery] = useState("");
+  const [debouncedGaugeQuery, setDebouncedGaugeQuery] = useState("");
   useEffect(() => {
-    const range =
-      seriesId !== ""
-        ? (gaugeRanges?.find((r) => r.series.id === seriesId) ??
-          gaugeRanges?.[0])
-        : gaugeRanges?.[0];
-    if (!range) return;
-    setRangeLow(range.range_low?.toString() ?? "");
-    setRangeMedium(range.range_medium?.toString() ?? "");
-    setRangeHigh(range.range_high?.toString() ?? "");
-  }, [gaugeRanges, seriesId]);
+    const timer = setTimeout(() => setDebouncedGaugeQuery(gaugeQuery), 400);
+    return () => clearTimeout(timer);
+  }, [gaugeQuery]);
+  const { data: searchedGauges } = useQuery({
+    queryKey: [
+      "gauge-search",
+      debouncedGaugeQuery,
+      nearPoint?.lat,
+      nearPoint?.lon,
+    ],
+    queryFn: () =>
+      gaugesApi.search({
+        q: debouncedGaugeQuery || undefined,
+        lat: nearPoint?.lat,
+        lon: nearPoint?.lon,
+        limit: 15,
+      }),
+    staleTime: 60_000,
+  });
+
+  const sectionGaugeIds = useMemo(
+    () => new Set(sectionGauges.map((g) => g.id)),
+    [sectionGauges],
+  );
+  const gaugeOptions = useMemo(
+    () => [
+      ...sectionGauges,
+      ...(searchedGauges ?? []).filter((g) => !sectionGaugeIds.has(g.id)),
+    ],
+    [sectionGauges, searchedGauges, sectionGaugeIds],
+  );
+
+  // Default to the section's first gauge (previous behavior)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only seed the default once the section gauges arrive
+  useEffect(() => {
+    if (selectedGauge == null && sectionGauges.length > 0) {
+      applyGaugeSelection(sectionGauges[0]);
+    }
+  }, [sectionGauges]);
+
+  // Selecting a gauge picks its first series; thresholds prefill from the
+  // section's existing range for that series (empty for new gauges)
+  function applyGaugeSelection(gauge: GaugeWithSeries | null) {
+    setSelectedGauge(gauge);
+    const firstSeries = gauge?.series[0]?.id ?? "";
+    setSeriesId(firstSeries);
+    const existing = (gaugeRanges ?? []).find(
+      (r) => r.series.id === firstSeries,
+    );
+    setRangeLow(existing?.range_low?.toString() ?? "");
+    setRangeMedium(existing?.range_medium?.toString() ?? "");
+    setRangeHigh(existing?.range_high?.toString() ?? "");
+  }
+
+  const selectedSeries =
+    seriesId !== ""
+      ? selectedGauge?.series.find((s) => s.id === seriesId)
+      : undefined;
 
   // Auto-stop picking after first vertex in Point mode
   useEffect(() => {
@@ -228,19 +302,17 @@ export default function SuggestFeatureForm({
     const high = rangeHigh !== "" ? Number(rangeHigh) : null;
     const hasRange =
       seriesId !== "" && (low != null || med != null || high != null);
-    const metadata = {
-      ...(diff ? { difficulty: diff } : {}),
-      ...(hasRange
-        ? {
-            water_range: {
-              series_id: seriesId,
-              ...(low != null ? { range_low: low } : {}),
-              ...(med != null ? { range_medium: med } : {}),
-              ...(high != null ? { range_high: high } : {}),
-            },
-          }
-        : {}),
-    };
+    const metadata = diff ? { difficulty: diff } : {};
+    const waterRanges: FeatureWaterRangeBody[] = hasRange
+      ? [
+          {
+            series_id: seriesId as number,
+            range_low: low,
+            range_medium: med,
+            range_high: high,
+          },
+        ]
+      : [];
 
     if (onDraft) {
       onDraft({
@@ -250,11 +322,13 @@ export default function SuggestFeatureForm({
         name: name.trim() || null,
         description: description.trim() || null,
         lang_code: langCode,
+        water_ranges: waterRanges,
+        gauge_name: hasRange ? (selectedGauge?.name ?? null) : null,
         used_section_line:
           useSectionLine && geomType === "LineString" && !!sectionLine,
       });
       resetFields();
-      onSubmitted();
+      onSubmitted?.();
       return;
     }
 
@@ -269,11 +343,12 @@ export default function SuggestFeatureForm({
         lang_code: langCode,
         name: name.trim() || null,
         description: description.trim() || null,
+        water_ranges: waterRanges,
       });
       queryClient.invalidateQueries({
         queryKey: waterwayKeys.detail(waterwayId),
       });
-      onSubmitted();
+      onSubmitted?.();
     } catch {
       setSubmitError("Failed to submit. Please try again.");
     } finally {
@@ -367,9 +442,51 @@ export default function SuggestFeatureForm({
         fullWidth
       />
 
-      {availableSeries.length > 0 && (
+      <Autocomplete
+        options={gaugeOptions}
+        value={selectedGauge}
+        onChange={(_, gauge) => applyGaugeSelection(gauge)}
+        onInputChange={(_, value, reason) => {
+          if (reason === "input") setGaugeQuery(value);
+        }}
+        getOptionLabel={(gauge) => gauge.name}
+        isOptionEqualToValue={(a, b) => a.id === b.id}
+        filterOptions={(options) => options}
+        groupBy={
+          sectionGauges.length > 0
+            ? (gauge) =>
+                sectionGaugeIds.has(gauge.id) ? "On this section" : "All gauges"
+            : undefined
+        }
+        renderOption={(props, gauge) => (
+          <Box component="li" {...props} key={gauge.id}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2" noWrap>
+                {gauge.name}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {gauge.provider}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="Gauge"
+            size="small"
+            placeholder="Search by name…"
+          />
+        )}
+        size="small"
+        slotProps={{ popper: { sx: { zIndex: 1500 } } }}
+        noOptionsText="No gauges found"
+        clearOnBlur={false}
+      />
+
+      {selectedGauge && (
         <>
-          {availableSeries.length > 1 && (
+          {selectedGauge.series.length > 1 && (
             <FormControl fullWidth size="small">
               <InputLabel id="series-label">Gauge series</InputLabel>
               <Select
@@ -379,9 +496,10 @@ export default function SuggestFeatureForm({
                 onChange={(e) => setSeriesId(e.target.value as number | "")}
                 MenuProps={{ sx: { zIndex: 1500 } }}
               >
-                {(gaugeRanges ?? []).map((r) => (
-                  <MenuItem key={r.series.id} value={r.series.id}>
-                    {r.series.label ?? r.gauge.name}
+                {selectedGauge.series.map((series) => (
+                  <MenuItem key={series.id} value={series.id}>
+                    {series.label ?? series.measurement_type.replace(/_/g, " ")}
+                    {` (${series.unit})`}
                   </MenuItem>
                 ))}
               </Select>
@@ -438,8 +556,8 @@ export default function SuggestFeatureForm({
             color="text.secondary"
             sx={{ mt: -0.5 }}
           >
-            {activeSeries?.series.label ?? activeSeries?.gauge.name}
-            {activeSeries?.series.unit ? ` · ${activeSeries.series.unit}` : ""}
+            {selectedSeries?.label ?? selectedGauge.name}
+            {selectedSeries?.unit ? ` · ${selectedSeries.unit}` : ""}
           </Typography>
         </>
       )}

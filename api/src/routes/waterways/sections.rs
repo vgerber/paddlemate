@@ -118,6 +118,9 @@ pub struct SectionFeatureBody {
     pub description: Option<String>,
     /// BCP-47 language code for name/description (default: "en")
     pub lang_code: Option<String>,
+    /// Gauge thresholds created together with the feature
+    #[serde(default)]
+    pub water_ranges: Vec<crate::models::gauge::FeatureWaterRangeBody>,
 }
 
 #[derive(Deserialize, JsonSchema)]
@@ -213,6 +216,17 @@ pub async fn create_section(
                                     created.id,
                                     lang,
                                     desc,
+                                )
+                                .await;
+                            }
+                            for range in &feature.water_ranges {
+                                let _ = crate::query::gauges::upsert_feature_water_range_partial(
+                                    &app.pg_pool,
+                                    created.id,
+                                    range.series_id,
+                                    range.range_low,
+                                    range.range_medium,
+                                    range.range_high,
                                 )
                                 .await;
                             }

@@ -14,13 +14,14 @@ use crate::{
     layers::auth::AuthToken,
     models::{
         feature::{Feature, FeatureDescription, FeatureName, FeatureType},
+        gauge::FeatureWaterRangeBody,
         geometry::Geometry,
         path_params::{FeatureLocalePath, FeaturePath, SectionPath},
         proposal::Proposal,
         water_section::SectionId,
         waterway::WaterwayId,
     },
-    query::{features, proposals},
+    query::{features, gauges, proposals},
     state::AppState,
 };
 
@@ -38,6 +39,9 @@ pub struct CreateFeatureBody {
     pub description: Option<String>,
     /// BCP-47 language code for name/description (default: "en")
     pub lang_code: Option<String>,
+    /// Gauge thresholds created together with the feature
+    #[serde(default)]
+    pub water_ranges: Vec<FeatureWaterRangeBody>,
 }
 
 pub async fn create_feature(
@@ -87,6 +91,20 @@ pub async fn create_feature(
                         feature.descriptions.push(d);
                     }
                 }
+                for range in &body.water_ranges {
+                    if let Err(err) = gauges::upsert_feature_water_range_partial(
+                        &app.pg_pool,
+                        feature.id,
+                        range.series_id,
+                        range.range_low,
+                        range.range_medium,
+                        range.range_high,
+                    )
+                    .await
+                    {
+                        tracing::error!("Error creating water range: {}", err);
+                    }
+                }
                 (StatusCode::CREATED, Json(feature)).into_response()
             }
             Err(err) => {
@@ -105,6 +123,7 @@ pub async fn create_feature(
         "name": body.name,
         "description": body.description,
         "lang_code": body.lang_code,
+        "water_ranges": body.water_ranges,
     });
     match proposals::insert_proposal(
         &app.pg_pool,
@@ -475,6 +494,7 @@ struct CreateFeatureBodyDoc {
     metadata: Value,
     location: Geometry,
     name: Option<String>,
+    water_ranges: Vec<FeatureWaterRangeBody>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

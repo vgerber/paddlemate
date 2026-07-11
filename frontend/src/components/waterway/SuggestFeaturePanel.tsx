@@ -78,6 +78,14 @@ export default function SuggestFeaturePanel({
           waterwayId={waterwayId}
           sectionId={sectionId}
           sectionLine={sectionLine}
+          nearPoint={
+            sectionLine
+              ? {
+                  lat: sectionLine[Math.floor(sectionLine.length / 2)].lat,
+                  lon: sectionLine[Math.floor(sectionLine.length / 2)].lng,
+                }
+              : undefined
+          }
           gaugeRanges={gaugeRanges}
           vertices={vertices}
           geomType={geomType}

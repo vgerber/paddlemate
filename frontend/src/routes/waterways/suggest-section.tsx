@@ -261,6 +261,7 @@ function SuggestSectionPage() {
           name: feature.name,
           description: feature.description,
           lang_code: feature.lang_code,
+          water_ranges: feature.water_ranges,
         })),
       });
       queryClient.invalidateQueries({
@@ -695,6 +696,15 @@ function SuggestSectionPage() {
                       >
                         {feature.feature_type.replace(/_/g, " ")}
                       </Typography>
+                      {feature.gauge_name && (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: "block" }}
+                        >
+                          Gauge · {feature.gauge_name}
+                        </Typography>
+                      )}
                     </Box>
                     <Box
                       sx={{
@@ -744,6 +754,14 @@ function SuggestSectionPage() {
                 sectionLine={
                   finalCoords?.map(([lng, lat]) => ({ lng, lat })) ?? undefined
                 }
+                nearPoint={
+                  finalCoords
+                    ? {
+                        lat: finalCoords[Math.floor(finalCoords.length / 2)][1],
+                        lon: finalCoords[Math.floor(finalCoords.length / 2)][0],
+                      }
+                    : (putIn ?? undefined)
+                }
                 vertices={featureVertices}
                 geomType={featureGeomType}
                 onGeomTypeChange={(t) => {
@@ -763,7 +781,6 @@ function SuggestSectionPage() {
                   setDraftFeatures((features) => [...features, feature])
                 }
                 defaultLangCode={naming.langCode}
-                onSubmitted={() => {}}
                 submitRef={featureSubmitRef}
                 onCanSubmitChange={setCanAddFeature}
                 headerAction={

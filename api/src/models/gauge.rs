@@ -201,6 +201,16 @@ pub struct CreateWaterRangeRequest {
     pub range_high: f64,
 }
 
+/// Water-range thresholds submitted together with a new feature (create
+/// endpoints and proposals); thresholds are optional individually.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct FeatureWaterRangeBody {
+    pub series_id: SeriesId,
+    pub range_low: Option<f64>,
+    pub range_medium: Option<f64>,
+    pub range_high: Option<f64>,
+}
+
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct UpdateWaterRangeRequest {
     pub range_low: f64,

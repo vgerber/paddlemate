@@ -70,6 +70,79 @@ pub async fn list_gauges(pool: &PgPool, active_only: bool) -> Result<Vec<Gauge>,
         .collect()
 }
 
+/// Search active gauges by name and/or proximity to a point, returning them
+/// with their series so a picker can offer measurement types immediately.
+/// With `lat`/`lon` results are ordered nearest-first, otherwise by name.
+pub async fn search_gauges(
+    pool: &PgPool,
+    q: Option<&str>,
+    lat: Option<f64>,
+    lon: Option<f64>,
+    limit: i64,
+) -> Result<Vec<GaugeWithSeries>, sqlx::Error> {
+    let order = if lat.is_some() && lon.is_some() {
+        // Squared equirectangular distance — fine for ranking at picker scale
+        "((lat - $2) * (lat - $2)) + ((lon - $3) * (lon - $3) * cos(radians($2)) * cos(radians($2)))"
+    } else {
+        "name"
+    };
+    let sql = format!(
+        "SELECT {GAUGE_COLS} FROM gauges \
+         WHERE active = TRUE \
+           AND ($1::text IS NULL OR name ILIKE '%' || $1 || '%') \
+           AND ($2::float8 IS NULL OR $3::float8 IS NULL \
+                OR (lat IS NOT NULL AND lon IS NOT NULL)) \
+         ORDER BY {order} \
+         LIMIT $4"
+    );
+    let gauges: Vec<Gauge> = sqlx::query(&sql)
+        .bind(q)
+        .bind(lat)
+        .bind(lon)
+        .bind(limit)
+        .fetch_all(pool)
+        .await?
+        .iter()
+        .map(row_to_gauge)
+        .collect::<Result<_, _>>()?;
+
+    let ids: Vec<GaugeId> = gauges.iter().map(|g| g.id).collect();
+    let series_rows = sqlx::query(&format!(
+        "SELECT {SERIES_COLS} FROM gauge_series WHERE gauge_id = ANY($1) ORDER BY gauge_id, id"
+    ))
+    .bind(&ids)
+    .fetch_all(pool)
+    .await?;
+
+    let mut series_by_gauge: std::collections::HashMap<GaugeId, Vec<GaugeSeries>> =
+        std::collections::HashMap::new();
+    for row in &series_rows {
+        let series = row_to_series(row)?;
+        series_by_gauge
+            .entry(series.gauge_id)
+            .or_default()
+            .push(series);
+    }
+
+    Ok(gauges
+        .into_iter()
+        .map(|gauge| GaugeWithSeries {
+            series: series_by_gauge.remove(&gauge.id).unwrap_or_default(),
+            id: gauge.id,
+            name: gauge.name,
+            provider: gauge.provider,
+            source_id: gauge.source_id,
+            data_source_id: gauge.data_source_id,
+            lat: gauge.lat,
+            lon: gauge.lon,
+            active: gauge.active,
+            fetch_interval_secs: gauge.fetch_interval_secs,
+            created_at: gauge.created_at,
+            updated_at: gauge.updated_at,
+        })
+        .collect())
+}
+
 pub async fn fetch_gauge(pool: &PgPool, gauge_id: GaugeId) -> Result<Option<Gauge>, sqlx::Error> {
     sqlx::query(&format!("SELECT {GAUGE_COLS} FROM gauges WHERE id = $1"))
         .bind(gauge_id)
@@ -365,6 +438,32 @@ pub async fn list_feature_water_ranges(
     .iter()
     .map(row_to_water_range)
     .collect()
+}
+
+/// Upsert a water range where individual thresholds may be absent — used
+/// when ranges arrive bundled with a new feature.
+pub async fn upsert_feature_water_range_partial(
+    pool: &PgPool,
+    feature_id: i64,
+    series_id: SeriesId,
+    range_low: Option<f64>,
+    range_medium: Option<f64>,
+    range_high: Option<f64>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "INSERT INTO feature_water_ranges (feature_id, series_id, range_low, range_medium, range_high)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (feature_id, series_id) DO UPDATE
+         SET range_low = EXCLUDED.range_low, range_medium = EXCLUDED.range_medium, range_high = EXCLUDED.range_high, updated_at = NOW()",
+    )
+    .bind(feature_id)
+    .bind(series_id)
+    .bind(range_low)
+    .bind(range_medium)
+    .bind(range_high)
+    .execute(pool)
+    .await?;
+    Ok(())
 }
 
 pub async fn upsert_feature_water_range(

@@ -449,6 +449,32 @@ async fn insert_feature_from_data(
         .execute(&mut **tx)
         .await?;
     }
+
+    // Gauge thresholds bundled with the feature
+    if let Some(ranges) = data.get("water_ranges").and_then(|v| v.as_array()) {
+        for range in ranges {
+            let Some(series_id) = range["series_id"].as_i64() else {
+                continue;
+            };
+            sqlx::query(
+                r#"INSERT INTO feature_water_ranges
+                   (feature_id, series_id, range_low, range_medium, range_high)
+                   VALUES ($1, $2, $3, $4, $5)
+                   ON CONFLICT (feature_id, series_id)
+                   DO UPDATE SET range_low    = EXCLUDED.range_low,
+                                 range_medium = EXCLUDED.range_medium,
+                                 range_high   = EXCLUDED.range_high,
+                                 updated_at   = NOW()"#,
+            )
+            .bind(feature_id)
+            .bind(series_id)
+            .bind(range["range_low"].as_f64())
+            .bind(range["range_medium"].as_f64())
+            .bind(range["range_high"].as_f64())
+            .execute(&mut **tx)
+            .await?;
+        }
+    }
     Ok(())
 }
 

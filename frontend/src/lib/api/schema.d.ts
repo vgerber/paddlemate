@@ -554,6 +554,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gauges/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Search active gauges by name and/or proximity, with their series */
+        get: operations["search_gauges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/gauges/{gauge_id}": {
         parameters: {
             query?: never;
@@ -877,6 +894,11 @@ export interface components {
             /** @default {} */
             metadata: unknown;
             name?: string | null;
+            /**
+             * @description Gauge thresholds created together with the feature
+             * @default []
+             */
+            water_ranges: components["schemas"]["FeatureWaterRangeBody"][];
         };
         CreateGaugeRequest: {
             active?: boolean | null;
@@ -1108,6 +1130,20 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        /**
+         * @description Water-range thresholds submitted together with a new feature (create
+         *      endpoints and proposals); thresholds are optional individually.
+         */
+        FeatureWaterRangeBody: {
+            /** Format: double */
+            range_high?: number | null;
+            /** Format: double */
+            range_low?: number | null;
+            /** Format: double */
+            range_medium?: number | null;
+            /** Format: int64 */
+            series_id: number;
+        };
         FeatureWaterRangePath: {
             /** Format: int64 */
             feature_id: number;
@@ -1148,6 +1184,22 @@ export interface components {
             series_id: number;
             /** Format: double */
             value: number;
+        };
+        GaugeSearchQuery: {
+            /**
+             * Format: double
+             * @description Together with `lon`: sort results nearest to this point first
+             */
+            lat?: number | null;
+            /**
+             * Format: int64
+             * @description Maximum number of results (default 20, capped at 50)
+             */
+            limit?: number | null;
+            /** Format: double */
+            lon?: number | null;
+            /** @description Case-insensitive name filter */
+            q?: string | null;
         };
         GaugeSeries: {
             /** Format: date-time */
@@ -1467,6 +1519,11 @@ export interface components {
             /** @default {} */
             metadata: unknown;
             name?: string | null;
+            /**
+             * @description Gauge thresholds created together with the feature
+             * @default []
+             */
+            water_ranges: components["schemas"]["FeatureWaterRangeBody"][];
         };
         SectionName: {
             /** Format: int64 */
@@ -1783,11 +1840,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-07-08T17:16:52.008816993Z",
-                     *         "expires_at": "2026-10-06T17:16:52.008818933Z",
+                     *         "created_at": "2026-07-11T12:46:56.496212947Z",
+                     *         "expires_at": "2026-10-09T12:46:56.496214767Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-07-08T17:16:52.008823133Z",
+                     *         "last_used_at": "2026-07-11T12:46:56.496222217Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -1818,8 +1875,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-07-08T17:16:52.008980263Z",
-                     *       "expires_at": "2026-10-06T17:16:52.008980663Z",
+                     *       "created_at": "2026-07-11T12:46:56.496391726Z",
+                     *       "expires_at": "2026-10-09T12:46:56.496392146Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -3613,6 +3670,33 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    search_gauges: {
+        parameters: {
+            query?: {
+                /** @description Together with `lon`: sort results nearest to this point first */
+                lat?: number | null;
+                /** @description Maximum number of results (default 20, capped at 50) */
+                limit?: number | null;
+                lon?: number | null;
+                /** @description Case-insensitive name filter */
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GaugeWithSeries"][];
+                };
             };
         };
     };

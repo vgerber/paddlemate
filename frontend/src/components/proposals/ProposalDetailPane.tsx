@@ -16,6 +16,7 @@ interface BundledFeatureData {
   name?: string | null;
   description?: string | null;
   lang_code?: string | null;
+  water_ranges?: Array<{ series_id: number }> | null;
 }
 
 interface TranslationData {
@@ -85,6 +86,8 @@ export default function ProposalDetailPane({
             name: data.name as string | null,
             description: data.description as string | null,
             lang_code: data.lang_code as string | null,
+            water_ranges: (data.water_ranges ??
+              null) as BundledFeatureData["water_ranges"],
           },
         ]
       : [];
@@ -205,8 +208,7 @@ export default function ProposalDetailPane({
               ? computeExtent(pseudoFeatures[index], sectionLine)
               : null;
             const isFullSection =
-              extent != null &&
-              extent.isZone &&
+              extent?.isZone === true &&
               extent.startM < 50 &&
               totalM - extent.endM < 50;
             return (
@@ -234,6 +236,15 @@ export default function ProposalDetailPane({
                   {feature.description && (
                     <Typography variant="caption" color="text.secondary">
                       {feature.description}
+                    </Typography>
+                  )}
+                  {(feature.water_ranges?.length ?? 0) > 0 && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: "block" }}
+                    >
+                      Gauge thresholds set
                     </Typography>
                   )}
                 </Box>
