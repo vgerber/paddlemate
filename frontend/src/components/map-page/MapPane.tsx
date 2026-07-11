@@ -8,6 +8,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import { useMemo } from "react";
 import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import WaterwayMap from "@/components/map/Map";
@@ -82,12 +83,17 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
   const sectionLevel =
     selectedSectionId != null ? sectionLevels[selectedSectionId] : undefined;
 
-  const visibleAreaCircle =
-    selectedWaterwayId == null && isAreaMode
-      ? previewRadius != null && areaCircle != null
-        ? { ...areaCircle, radiusKm: previewRadius }
-        : areaCircle
-      : null;
+  // Stable identity — feeds the map's area fitBounds effect, which must not
+  // refire on unrelated re-renders (see useMapPageState.areaCircle).
+  const visibleAreaCircle = useMemo(
+    () =>
+      selectedWaterwayId == null && isAreaMode
+        ? previewRadius != null && areaCircle != null
+          ? { ...areaCircle, radiusKm: previewRadius }
+          : areaCircle
+        : null,
+    [selectedWaterwayId, isAreaMode, previewRadius, areaCircle],
+  );
 
   const showAreaStrip = isMobile && isAreaMode && selectedWaterwayId == null;
 

@@ -75,12 +75,28 @@ export function useMapPageState(search: RouteSearch) {
   );
 
   // Current map viewport bounds (used for OSM lookups in suggest flows)
-  const [mapBounds, setMapBounds] = useState<{
+  const [mapBounds, setMapBoundsRaw] = useState<{
     south: number;
     west: number;
     north: number;
     east: number;
   } | null>(null);
+  // Keep the previous reference for identical bounds — the map reports on
+  // every moveend (including camera-effect fitBounds), and a fresh object
+  // for unchanged bounds would re-render the whole page in a loop.
+  const setMapBounds = useCallback(
+    (b: { south: number; west: number; north: number; east: number }) =>
+      setMapBoundsRaw((prev) =>
+        prev &&
+        prev.south === b.south &&
+        prev.west === b.west &&
+        prev.north === b.north &&
+        prev.east === b.east
+          ? prev
+          : b,
+      ),
+    [],
+  );
 
   const [showProposedFeatures, setShowProposedFeatures] = useState(false);
   const toggleShowProposedFeatures = useCallback(
@@ -154,10 +170,16 @@ export function useMapPageState(search: RouteSearch) {
     }
   }, [suggestMode]);
 
-  const areaCircle: AreaCircle | null =
-    lat != null && lon != null && radius != null
-      ? { lat, lon, radiusKm: radius }
-      : null;
+  // Stable identity per (lat, lon, radius) — camera effects and section
+  // filters depend on this object; rebuilding it every render made the
+  // area-mode fitBounds effect refire on each render (update-depth loop).
+  const areaCircle: AreaCircle | null = useMemo(
+    () =>
+      lat != null && lon != null && radius != null
+        ? { lat, lon, radiusKm: radius }
+        : null,
+    [lat, lon, radius],
+  );
 
   const isAreaMode = mode === "area";
 
