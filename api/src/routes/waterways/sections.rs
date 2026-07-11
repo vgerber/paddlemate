@@ -19,7 +19,7 @@ use crate::{
         water_section::{Section, SectionId, SectionWithFeatures},
         waterway::WaterwayId,
     },
-    query::{features, proposals},
+    query::{features, proposals, sections},
     state::AppState,
 };
 
@@ -47,10 +47,14 @@ pub async fn get_section(
         }
     };
 
-    let features = features::fetch_features_for_section(&app.pg_pool, section_id).await;
+    let (features, names, descriptions) = tokio::join!(
+        features::fetch_features_for_section(&app.pg_pool, section_id),
+        sections::fetch_names_for_section(&app.pg_pool, section_id),
+        sections::fetch_descriptions_for_section(&app.pg_pool, section_id),
+    );
 
-    match features {
-        Ok(features) => {
+    match (features, names, descriptions) {
+        (Ok(features), Ok(names), Ok(descriptions)) => {
             let features: Vec<Feature> = features;
             Json(SectionWithFeatures {
                 id: section.id,
@@ -62,14 +66,16 @@ pub async fn get_section(
                 location: serde_json::from_str(&section.location.expect("location NOT NULL"))
                     .expect("valid GeoJSON"),
                 features,
+                names,
+                descriptions,
                 created_at: section.created_at,
                 updated_at: section.updated_at,
             })
             .into_response()
         }
-        Err(err) => {
+        (Err(err), _, _) | (_, Err(err), _) | (_, _, Err(err)) => {
             tracing::error!(
-                "Error fetching features for section {}: {}",
+                "Error fetching details for section {}: {}",
                 section_id,
                 err
             );
@@ -86,6 +92,34 @@ doc_fn!(get_section_docs, op =>
         .tag("Sections")
 );
 
+fn default_metadata() -> serde_json::Value {
+    serde_json::Value::Object(serde_json::Map::new())
+}
+
+/// A localized name/description pair submitted with a new section. The plain
+/// `name`/`description` fields stay the default (fallback) text.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SectionTranslationBody {
+    /// BCP-47 language code, e.g. "de"
+    pub lang_code: String,
+    pub name: Option<String>,
+    pub description: Option<String>,
+}
+
+/// A feature submitted together with a new section (e.g. whitewater for the
+/// full stretch, or a weir at a specific point).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SectionFeatureBody {
+    pub feature_type: crate::models::feature::FeatureType,
+    #[serde(default = "default_metadata")]
+    pub metadata: serde_json::Value,
+    pub location: Geometry,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    /// BCP-47 language code for name/description (default: "en")
+    pub lang_code: Option<String>,
+}
+
 #[derive(Deserialize, JsonSchema)]
 pub struct CreateSectionBody {
     pub name: String,
@@ -93,6 +127,12 @@ pub struct CreateSectionBody {
     pub region: Option<String>,
     pub country: Option<String>,
     pub location: Geometry,
+    /// Localized names/descriptions created together with the section
+    #[serde(default)]
+    pub translations: Vec<SectionTranslationBody>,
+    /// Features created together with the section
+    #[serde(default)]
+    pub features: Vec<SectionFeatureBody>,
 }
 
 pub async fn create_section(
@@ -126,22 +166,79 @@ pub async fn create_section(
         .await;
 
         return match result {
-            Ok(r) => (
-                StatusCode::CREATED,
-                Json(Section {
-                    id: r.id,
-                    waterway_id: r.waterway_id,
-                    name: r.name,
-                    description: r.description,
-                    region: r.region,
-                    country: r.country,
-                    location: serde_json::from_str(&r.location.expect("location NOT NULL"))
-                        .expect("valid GeoJSON"),
-                    created_at: r.created_at,
-                    updated_at: r.updated_at,
-                }),
-            )
-                .into_response(),
+            Ok(r) => {
+                for translation in &body.translations {
+                    if let Some(name) = &translation.name {
+                        let _ = sections::upsert_name(
+                            &app.pg_pool,
+                            r.id,
+                            &translation.lang_code,
+                            name,
+                        )
+                        .await;
+                    }
+                    if let Some(desc) = &translation.description {
+                        let _ = sections::upsert_description(
+                            &app.pg_pool,
+                            r.id,
+                            &translation.lang_code,
+                            desc,
+                        )
+                        .await;
+                    }
+                }
+                for feature in &body.features {
+                    let feature_location =
+                        serde_json::to_string(&feature.location).expect("valid geometry");
+                    match features::insert_feature(
+                        &app.pg_pool,
+                        r.id,
+                        feature.feature_type.clone(),
+                        feature.metadata.clone(),
+                        &feature_location,
+                        token.user_id(),
+                    )
+                    .await
+                    {
+                        Ok(created) => {
+                            let lang = feature.lang_code.as_deref().unwrap_or("en");
+                            if let Some(name) = &feature.name {
+                                let _ =
+                                    features::upsert_name(&app.pg_pool, created.id, lang, name)
+                                        .await;
+                            }
+                            if let Some(desc) = &feature.description {
+                                let _ = features::upsert_description(
+                                    &app.pg_pool,
+                                    created.id,
+                                    lang,
+                                    desc,
+                                )
+                                .await;
+                            }
+                        }
+                        Err(err) => {
+                            tracing::error!("Error creating bundled feature: {}", err);
+                        }
+                    }
+                }
+                (
+                    StatusCode::CREATED,
+                    Json(Section {
+                        id: r.id,
+                        waterway_id: r.waterway_id,
+                        name: r.name,
+                        description: r.description,
+                        region: r.region,
+                        country: r.country,
+                        location: serde_json::from_str(&r.location.expect("location NOT NULL"))
+                            .expect("valid GeoJSON"),
+                        created_at: r.created_at,
+                        updated_at: r.updated_at,
+                    }),
+                )
+                    .into_response()
+            }
             Err(err) => {
                 tracing::error!("Error creating section: {}", err);
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
@@ -153,7 +250,11 @@ pub async fn create_section(
         "waterway_id": waterway_id,
         "name": body.name,
         "description": body.description,
+        "region": body.region,
+        "country": body.country,
         "location": body.location,
+        "translations": body.translations,
+        "features": body.features,
     });
     match proposals::insert_proposal(
         &app.pg_pool,
@@ -359,6 +460,8 @@ struct CreateSectionBodyDoc {
     region: Option<String>,
     country: Option<String>,
     location: Geometry,
+    translations: Vec<SectionTranslationBody>,
+    features: Vec<SectionFeatureBody>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

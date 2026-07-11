@@ -1,20 +1,10 @@
 import type { Feature, SectionWithFeatures } from "@/lib/api";
+import { representativePoint } from "@/lib/geo";
+import { localizedName } from "@/lib/localization";
+import { theme } from "@/lib/theme";
 
-export const FEATURE_COLORS: Record<string, string> = {
-  whitewater: "#CC79A7",
-  hole: "#D55E00",
-  siphon: "#D55E00",
-  strainer: "#D55E00",
-  waterfall: "#56B4E9",
-  freestyle_spot: "#F0E442",
-  put_in: "#0072B2",
-  take_out: "#D55E00",
-  portage: "#E69F00",
-  weir: "#E69F00",
-  dam: "#E69F00",
-  obstacle: "#CC79A7",
-  bridge: "#bfc8ca",
-};
+export const FEATURE_COLORS: Record<string, string> =
+  theme.tokens.featureColors;
 
 // ─── Geometry helpers ────────────────────────────────────────────────────────
 
@@ -55,6 +45,21 @@ function nearestPointOnPolyline(
   return best;
 }
 
+/** Feature difficulty from metadata, if set. */
+function featureDifficulty(f: Feature): string | undefined {
+  return (f.metadata as Record<string, unknown> | null)?.difficulty as
+    | string
+    | undefined;
+}
+
+/** Map label: "Name (III+)", name or difficulty alone, or "" when neither. */
+function featureLabel(f: Feature): string {
+  const name = f.names[0]?.name;
+  const difficulty = featureDifficulty(f);
+  if (name) return difficulty ? `${name} (${difficulty})` : name;
+  return difficulty ?? "";
+}
+
 // ─── GeoJSON builders ────────────────────────────────────────────────────────
 
 export function buildSectionsGeoJSON(
@@ -90,15 +95,16 @@ export function buildSectionLabelsGeoJSON(
       const ww = s.features?.find((f) => f.feature_type === "whitewater");
       const diff = (ww?.metadata as Record<string, unknown> | undefined)
         ?.difficulty as string | undefined;
-      const riverName = waterwayNames?.[s.waterway_id] ?? s.name;
+      const sectionName = localizedName(s.name, s.names);
+      const riverName = waterwayNames?.[s.waterway_id] ?? sectionName;
       const label =
         labelMode === "river"
           ? diff
             ? `${riverName} \u2022 ${diff}`
             : riverName
           : diff
-            ? `${s.name} \u2022 ${diff}`
-            : s.name;
+            ? `${sectionName} \u2022 ${diff}`
+            : sectionName;
       return [
         {
           type: "Feature" as const,
@@ -202,7 +208,7 @@ export function buildPutInTakeOutConnectorsGeoJSON(
         id: ap.id,
         properties: {
           feature_type: ap.feature_type,
-          color: FEATURE_COLORS[ap.feature_type] ?? "#888",
+          color: FEATURE_COLORS[ap.feature_type] ?? theme.tokens.outline,
         },
         geometry: {
           type: "LineString" as const,
@@ -231,8 +237,8 @@ export function buildPointFeaturesGeoJSON(
       properties: {
         id: f.id,
         feature_type: f.feature_type,
-        label: f.names[0]?.name ?? f.feature_type.replace(/_/g, " "),
-        color: FEATURE_COLORS[f.feature_type] ?? "#8bd1e8",
+        label: featureLabel(f) || f.feature_type.replace(/_/g, " "),
+        color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
       },
       geometry: f.location as GeoJSON.Point,
     })),
@@ -245,16 +251,68 @@ export function buildLineFeaturesGeoJSON(
   const lines = features.filter((f) => f.location.type === "LineString");
   return {
     type: "FeatureCollection",
-    features: lines.map((f) => ({
+    features: lines.map((f, index) => ({
       type: "Feature" as const,
       id: f.id,
       properties: {
         id: f.id,
         feature_type: f.feature_type,
-        color: FEATURE_COLORS[f.feature_type] ?? "#8bd1e8",
+        label: featureLabel(f),
+        // Sideways offset step so overlapping lines stay distinguishable
+        stack: index,
+        color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
       },
       geometry: f.location as GeoJSON.LineString,
     })),
+  };
+}
+
+/** Point-style name labels for line/area features, anchored at the
+ * geometry's midpoint so they are as easy to spot as point features. */
+export function buildLineFeatureLabelsGeoJSON(
+  features: Feature[],
+): GeoJSON.FeatureCollection {
+  const lines = features.filter(
+    (f) => f.location.type === "LineString" || f.location.type === "Polygon",
+  );
+  return {
+    type: "FeatureCollection",
+    features: lines.flatMap((f) => {
+      const label = featureLabel(f);
+      if (!label) return [];
+      return [
+        {
+          type: "Feature" as const,
+          properties: { label },
+          geometry: {
+            type: "Point" as const,
+            coordinates: representativePoint(
+              f.location as GeoJSON.LineString | GeoJSON.Polygon,
+            ),
+          },
+        },
+      ];
+    }),
+  };
+}
+
+/** Small start/end dots for line features, delimiting each stretch. */
+export function buildLineFeatureEndpointsGeoJSON(
+  features: Feature[],
+): GeoJSON.FeatureCollection {
+  const lines = features.filter((f) => f.location.type === "LineString");
+  return {
+    type: "FeatureCollection",
+    features: lines.flatMap((f) => {
+      const coords = (f.location as GeoJSON.LineString).coordinates;
+      if (coords.length < 2) return [];
+      const color = FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary;
+      return [coords[0], coords[coords.length - 1]].map((c) => ({
+        type: "Feature" as const,
+        properties: { color },
+        geometry: { type: "Point" as const, coordinates: c },
+      }));
+    }),
   };
 }
 
@@ -275,28 +333,35 @@ export function buildProposedPointFeaturesGeoJSON(
       id: f.id,
       properties: {
         id: f.id,
-        color: FEATURE_COLORS[f.feature_type] ?? "#8bd1e8",
+        label: featureLabel(f) || f.feature_type.replace(/_/g, " "),
+        color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
       },
       geometry: f.location as GeoJSON.Point,
     })),
   };
 }
 
-/** GeoJSON for proposed (pending) line features. */
+/** GeoJSON for proposed (pending) line and area features (areas render as
+ * outlines). */
 export function buildProposedLineFeaturesGeoJSON(
   features: Feature[],
 ): GeoJSON.FeatureCollection {
-  const lines = features.filter((f) => f.location.type === "LineString");
+  const lines = features.filter(
+    (f) => f.location.type === "LineString" || f.location.type === "Polygon",
+  );
   return {
     type: "FeatureCollection",
-    features: lines.map((f) => ({
+    features: lines.map((f, index) => ({
       type: "Feature" as const,
       id: f.id,
       properties: {
         id: f.id,
-        color: FEATURE_COLORS[f.feature_type] ?? "#8bd1e8",
+        label: featureLabel(f),
+        // Sideways offset step so overlapping lines stay distinguishable
+        stack: index,
+        color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
       },
-      geometry: f.location as GeoJSON.LineString,
+      geometry: f.location as GeoJSON.LineString | GeoJSON.Polygon,
     })),
   };
 }

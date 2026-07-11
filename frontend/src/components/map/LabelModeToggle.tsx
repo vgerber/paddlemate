@@ -1,11 +1,15 @@
-import ButtonBase from "@mui/material/ButtonBase";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 
 interface LabelModeToggleProps {
   labelMode: "section" | "river";
-  onChange: (mode: "section" | "river") => void;
+  /** When omitted, only the satellite toggle is shown. */
+  onChange?: (mode: "section" | "river") => void;
   satellite: boolean;
   onSatelliteChange: (v: boolean) => void;
+  /** Whether feature name labels are shown on the map. */
+  featureNames?: boolean;
+  onFeatureNamesChange?: (v: boolean) => void;
   bottomOffset?: number;
   anchor?: "top" | "bottom";
 }
@@ -15,6 +19,8 @@ export default function LabelModeToggle({
   onChange,
   satellite,
   onSatelliteChange,
+  featureNames,
+  onFeatureNamesChange,
   bottomOffset = 0,
   anchor = "bottom",
 }: LabelModeToggleProps) {
@@ -45,23 +51,33 @@ export default function LabelModeToggle({
         gap: 0.5,
       }}
     >
-      <Box sx={{ display: "flex" }}>
-        {(["section", "river"] as const).map((m) => (
-          <ButtonBase
-            key={m}
-            onClick={() => onChange(m)}
-            sx={btn(labelMode === m)}
-          >
-            {m === "section" ? "Section" : "River"}
-          </ButtonBase>
-        ))}
-      </Box>
+      {onChange && (
+        <Box sx={{ display: "flex" }}>
+          {(["section", "river"] as const).map((m) => (
+            <ButtonBase
+              key={m}
+              onClick={() => onChange(m)}
+              sx={btn(labelMode === m)}
+            >
+              {m === "section" ? "Section" : "River"}
+            </ButtonBase>
+          ))}
+        </Box>
+      )}
       <ButtonBase
         onClick={() => onSatelliteChange(!satellite)}
         sx={btn(satellite)}
       >
         Satellite
       </ButtonBase>
+      {onFeatureNamesChange && (
+        <ButtonBase
+          onClick={() => onFeatureNamesChange(!featureNames)}
+          sx={btn(!!featureNames)}
+        >
+          Names
+        </ButtonBase>
+      )}
     </Box>
   );
 }

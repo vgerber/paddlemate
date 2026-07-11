@@ -20,6 +20,7 @@ import type {
 } from "@/lib/api";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway } from "@/lib/hooks/useWaterways";
+import { localizedName } from "@/lib/localization";
 import type { DetailTab, SuggestMode } from "./types";
 import WaterwayDetailHeader from "./WaterwayDetailHeader";
 
@@ -119,7 +120,11 @@ export default function WaterwayBrowsePanel({
   return (
     <>
       <WaterwayDetailHeader
-        title={inFeatures ? selectedSection.name : (waterway?.name ?? "…")}
+        title={
+          inFeatures
+            ? localizedName(selectedSection.name, selectedSection.names)
+            : (waterway?.name ?? "…")
+        }
         subtitle={
           inFeatures ? (waterway?.name ?? "") : (waterway?.waterway_type ?? "")
         }

@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO section_descriptions (section_id, lang_code, description)\n           VALUES ($1, $2, $3)\n           ON CONFLICT (section_id, lang_code) DO UPDATE SET description = EXCLUDED.description\n           RETURNING id, section_id, lang_code, description",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "section_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "lang_code",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Varchar",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "43dd94d488bba59d9d75a685beecb2e690efca16c7e0df1d9d14f2e40e3889c2"
+}

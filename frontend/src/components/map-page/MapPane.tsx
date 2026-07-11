@@ -14,6 +14,8 @@ import WaterwayMap from "@/components/map/Map";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import AreaControls from "@/components/search/AreaControls";
 import { proposalToPseudoFeature } from "@/components/waterway/section-details/utils";
+import { localizedName } from "@/lib/localization";
+import { theme } from "@/lib/theme";
 import SectionSpeedDial from "./SectionSpeedDial";
 import type { MapPageState } from "./useMapPageState";
 
@@ -69,13 +71,12 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     setMapBounds,
   } = state;
 
-  const LEVEL_COLORS: Record<string, string> = {
-    low: "#4caf50",
-    medium: "#ff9800",
-    high: "#f44336",
-  };
+  const LEVEL_COLORS: Record<string, string> = theme.tokens.levelColors;
 
-  const sectionName = sections.find((s) => s.id === selectedSectionId)?.name;
+  const selectedSection = sections.find((s) => s.id === selectedSectionId);
+  const sectionName = selectedSection
+    ? localizedName(selectedSection.name, selectedSection.names)
+    : undefined;
   const waterwayName =
     selectedWaterwayId != null ? waterwayNames[selectedWaterwayId] : undefined;
   const sectionLevel =
@@ -299,7 +300,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           <SectionChartPanel
             waterwayId={selectedWaterwayId}
             sectionId={selectedSectionId}
-            sectionName={sections.find((s) => s.id === selectedSectionId)?.name}
+            sectionName={sectionName}
           />
         ) : null}
       </Box>

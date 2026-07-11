@@ -1,5 +1,6 @@
 import type { Feature, Proposal } from "@/lib/api";
 import { distanceAlongLineM, representativePoint } from "@/lib/geo";
+import { localizedDescription, localizedName } from "@/lib/localization";
 import type { ComputedFeature, TreeNode } from "./types";
 
 /** Formats a metre distance as "X.X KM". */
@@ -7,9 +8,11 @@ export function fmtKm(m: number): string {
   return `${(m / 1000).toFixed(1)} KM`;
 }
 
-/** Returns the feature's first name, falling back to a humanised type string. */
+/** Returns the feature's name in the user's language (first name as
+ * fallback), else a humanised type string. */
 export function featureName(f: Feature): string {
-  if (f.names[0]?.name) return f.names[0].name;
+  const name = localizedName(f.names[0]?.name ?? "", f.names);
+  if (name) return name;
   if (f.feature_type === "whitewater") {
     const diff = (f.metadata as Record<string, unknown> | null)
       ?.difficulty as string | undefined;
@@ -18,9 +21,9 @@ export function featureName(f: Feature): string {
   return f.feature_type.replace(/_/g, " ");
 }
 
-/** Returns the feature's first description or null. */
+/** Returns the feature's description in the user's language or null. */
 export function featureDesc(f: Feature): string | null {
-  return f.descriptions[0]?.description ?? null;
+  return localizedDescription(f.descriptions[0]?.description, f.descriptions);
 }
 
 /**

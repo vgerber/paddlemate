@@ -385,6 +385,8 @@ function StepSections({
           description: null,
           location: s.location,
           features: [],
+          names: [],
+          descriptions: [],
           created_at: "",
           updated_at: "",
         })) as SectionWithFeatures[],

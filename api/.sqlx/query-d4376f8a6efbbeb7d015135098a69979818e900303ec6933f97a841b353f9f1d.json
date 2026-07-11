@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT sd.id, sd.section_id, sd.lang_code, sd.description\n           FROM section_descriptions sd\n           JOIN water_sections s ON s.id = sd.section_id\n           WHERE s.waterway_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "section_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "lang_code",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d4376f8a6efbbeb7d015135098a69979818e900303ec6933f97a841b353f9f1d"
+}

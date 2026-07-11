@@ -898,9 +898,19 @@ export interface components {
         CreateSectionBody: {
             description?: string | null;
             country?: string | null;
+            /**
+             * @description Features created together with the section
+             * @default []
+             */
+            features: components["schemas"]["SectionFeatureBody"][];
             location: components["schemas"]["Geometry"];
             name: string;
             region?: string | null;
+            /**
+             * @description Localized names/descriptions created together with the section
+             * @default []
+             */
+            translations: components["schemas"]["SectionTranslationBody"][];
         };
         CreateSeriesRequest: {
             label?: string | null;
@@ -1432,7 +1442,37 @@ export interface components {
             /** Format: int64 */
             waterway_id: number;
         };
+        SectionDescription: {
+            description: string;
+            /** Format: int64 */
+            id: number;
+            lang_code: string;
+            /** Format: int64 */
+            section_id: number;
+        };
         SectionFavoritePath: {
+            /** Format: int64 */
+            section_id: number;
+        };
+        /**
+         * @description A feature submitted together with a new section (e.g. whitewater for the
+         *      full stretch, or a weir at a specific point).
+         */
+        SectionFeatureBody: {
+            description?: string | null;
+            feature_type: components["schemas"]["FeatureType"];
+            /** @description BCP-47 language code for name/description (default: "en") */
+            lang_code?: string | null;
+            location: components["schemas"]["Geometry"];
+            /** @default {} */
+            metadata: unknown;
+            name?: string | null;
+        };
+        SectionName: {
+            /** Format: int64 */
+            id: number;
+            lang_code: string;
+            name: string;
             /** Format: int64 */
             section_id: number;
         };
@@ -1441,6 +1481,16 @@ export interface components {
             section_id: number;
             /** Format: int64 */
             waterway_id: number;
+        };
+        /**
+         * @description A localized name/description pair submitted with a new section. The plain
+         *      `name`/`description` fields stay the default (fallback) text.
+         */
+        SectionTranslationBody: {
+            description?: string | null;
+            /** @description BCP-47 language code, e.g. "de" */
+            lang_code: string;
+            name?: string | null;
         };
         /**
          * @description Snapshot of a single gauge-series reading captured when a descent is logged.
@@ -1480,12 +1530,22 @@ export interface components {
             country?: string | null;
             /** Format: date-time */
             created_at: string;
+            /**
+             * @description Localized descriptions; the plain `description` column is the fallback
+             * @default []
+             */
+            descriptions: components["schemas"]["SectionDescription"][];
             features: components["schemas"]["Feature"][];
             /** Format: int64 */
             id: number;
             /** @description GeoJSON LineString geometry */
             location: components["schemas"]["Geometry"];
             name: string;
+            /**
+             * @description Localized names; the plain `name` column is the fallback
+             * @default []
+             */
+            names: components["schemas"]["SectionName"][];
             region?: string | null;
             /** Format: date-time */
             updated_at: string;
@@ -1723,11 +1783,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-07-05T15:52:40.625497517Z",
-                     *         "expires_at": "2026-10-03T15:52:40.625499647Z",
+                     *         "created_at": "2026-07-08T17:16:52.008816993Z",
+                     *         "expires_at": "2026-10-06T17:16:52.008818933Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-07-05T15:52:40.625509217Z",
+                     *         "last_used_at": "2026-07-08T17:16:52.008823133Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -1758,8 +1818,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-07-05T15:52:40.625763896Z",
-                     *       "expires_at": "2026-10-03T15:52:40.625764436Z",
+                     *       "created_at": "2026-07-08T17:16:52.008980263Z",
+                     *       "expires_at": "2026-10-06T17:16:52.008980663Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."

@@ -3,9 +3,10 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { theme } from "@/lib/theme";
 
-export const PUT_IN_COLOR = "#0072B2";
-export const TAKE_OUT_COLOR = "#D55E00";
+export const PUT_IN_COLOR = theme.tokens.putIn;
+export const TAKE_OUT_COLOR = theme.tokens.takeOut;
 
 interface LocationPinProps {
   num: number;

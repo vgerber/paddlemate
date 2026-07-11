@@ -2,6 +2,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -13,15 +14,30 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useQueryClient } from "@tanstack/react-query";
-import { type RefObject, useEffect, useState } from "react";
+import { type ReactNode, type RefObject, useEffect, useState } from "react";
 import type { FeatureType, WaterRangeWithStatus } from "@/lib/api";
 import { featuresApi } from "@/lib/api";
 import { waterwayKeys } from "@/lib/hooks/useWaterways";
-import Button from "@mui/material/Button";
+import { theme } from "@/lib/theme";
 
 type GeomType = "Point" | "LineString" | "Polygon";
 
-const FEATURE_TYPES: FeatureType[] = [
+/** Languages offered for localized names/descriptions across the app. */
+export const LANGUAGE_CODES = [
+  "en",
+  "de",
+  "fr",
+  "cs",
+  "sk",
+  "pl",
+  "sl",
+  "hr",
+  "it",
+  "es",
+  "pt",
+];
+
+export const FEATURE_TYPES: FeatureType[] = [
   "whitewater",
   "freestyle_spot",
   "hole",
@@ -37,9 +53,31 @@ const FEATURE_TYPES: FeatureType[] = [
   "waterfall",
 ];
 
+/** A feature built by the form without being submitted to the API — used by
+ * the suggest-section wizard, where features travel inside the section
+ * proposal instead of being created on an existing section. */
+export interface SectionFeatureDraft {
+  feature_type: FeatureType;
+  metadata: Record<string, unknown>;
+  location: ReturnType<SuggestFeatureFormBuildGeometry>;
+  name: string | null;
+  description: string | null;
+  lang_code: string;
+  /** True when "Use full section line" was checked — the wizard substitutes
+   * the final section line at submit time. */
+  used_section_line: boolean;
+}
+
+type SuggestFeatureFormBuildGeometry = () =>
+  | { type: "Point"; coordinates: [number, number] }
+  | { type: "LineString"; coordinates: [number, number][] }
+  | { type: "Polygon"; coordinates: [number, number][][] };
+
 interface SuggestFeatureFormProps {
-  waterwayId: number;
-  sectionId: number;
+  /** Required unless `onDraft` is set. */
+  waterwayId?: number;
+  /** Required unless `onDraft` is set. */
+  sectionId?: number;
   /** Full line of the section, offered as a one-click fill for LineString features. */
   sectionLine?: { lng: number; lat: number }[];
   /** Gauge ranges for the section — drives the water-level threshold fields. */
@@ -56,6 +94,13 @@ interface SuggestFeatureFormProps {
   onRemoveVertex?: (i: number) => void;
   onClearVertices: () => void;
   onSubmitted: () => void;
+  /** Draft mode: receive the built feature instead of creating it via the
+   * API, then reset the form for the next one. */
+  onDraft?: (feature: SectionFeatureDraft) => void;
+  /** Rendered at the right end of the language row (e.g. an add button). */
+  headerAction?: ReactNode;
+  /** Initial language for name/description (default "en"). */
+  defaultLangCode?: string;
   /** Ref populated with the current handleSubmit — lets the parent header trigger submission. */
   submitRef?: RefObject<(() => void) | null>;
   /** Called whenever the form's canSubmit state changes. */
@@ -76,11 +121,14 @@ export default function SuggestFeatureForm({
   onRemoveVertex,
   onClearVertices,
   onSubmitted,
+  onDraft,
+  headerAction,
+  defaultLangCode,
   submitRef,
   onCanSubmitChange,
 }: SuggestFeatureFormProps) {
   const queryClient = useQueryClient();
-  const [langCode, setLangCode] = useState("en");
+  const [langCode, setLangCode] = useState(defaultLangCode ?? "en");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [featureType, setFeatureType] = useState<FeatureType>("whitewater");
@@ -94,18 +142,26 @@ export default function SuggestFeatureForm({
     availableSeries[0]?.id ?? "",
   );
   const defaultRange = gaugeRanges?.[0];
-  const [rangeLow, setRangeLow] = useState(defaultRange?.range_low?.toString() ?? "");
-  const [rangeMedium, setRangeMedium] = useState(defaultRange?.range_medium?.toString() ?? "");
-  const [rangeHigh, setRangeHigh] = useState(defaultRange?.range_high?.toString() ?? "");
+  const [rangeLow, setRangeLow] = useState(
+    defaultRange?.range_low?.toString() ?? "",
+  );
+  const [rangeMedium, setRangeMedium] = useState(
+    defaultRange?.range_medium?.toString() ?? "",
+  );
+  const [rangeHigh, setRangeHigh] = useState(
+    defaultRange?.range_high?.toString() ?? "",
+  );
   const activeSeries =
     seriesId !== ""
       ? (gaugeRanges?.find((r) => r.series.id === seriesId) ?? gaugeRanges?.[0])
       : gaugeRanges?.[0];
 
   useEffect(() => {
-    const range = seriesId !== ""
-      ? (gaugeRanges?.find((r) => r.series.id === seriesId) ?? gaugeRanges?.[0])
-      : gaugeRanges?.[0];
+    const range =
+      seriesId !== ""
+        ? (gaugeRanges?.find((r) => r.series.id === seriesId) ??
+          gaugeRanges?.[0])
+        : gaugeRanges?.[0];
     if (!range) return;
     setRangeLow(range.range_low?.toString() ?? "");
     setRangeMedium(range.range_medium?.toString() ?? "");
@@ -131,10 +187,14 @@ export default function SuggestFeatureForm({
     (useSectionLine && geomType === "LineString" && !!sectionLine) ||
     (vertices.length >= minVertices && !submitting);
 
-  // Keep parent's header button in sync
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — always keep ref current
-  useEffect(() => { if (submitRef) submitRef.current = handleSubmit; });
-  useEffect(() => { onCanSubmitChange?.(canSubmit); }, [canSubmit, onCanSubmitChange]);
+  // No dependency list: keep the parent's submit ref pointing at the latest
+  // handleSubmit
+  useEffect(() => {
+    if (submitRef) submitRef.current = handleSubmit;
+  });
+  useEffect(() => {
+    onCanSubmitChange?.(canSubmit);
+  }, [canSubmit, onCanSubmitChange]);
 
   function buildGeometry() {
     if (useSectionLine && geomType === "LineString" && sectionLine) {
@@ -151,33 +211,61 @@ export default function SuggestFeatureForm({
     return { type: "Polygon" as const, coordinates: [[...coords, coords[0]]] };
   }
 
+  function resetFields() {
+    setName("");
+    setDescription("");
+    setDifficulty("");
+    setUseSectionLine(false);
+    onClearVertices();
+    onStopPick();
+  }
+
   async function handleSubmit() {
     if (!canSubmit) return;
+    const diff = difficulty.trim() || null;
+    const low = rangeLow !== "" ? Number(rangeLow) : null;
+    const med = rangeMedium !== "" ? Number(rangeMedium) : null;
+    const high = rangeHigh !== "" ? Number(rangeHigh) : null;
+    const hasRange =
+      seriesId !== "" && (low != null || med != null || high != null);
+    const metadata = {
+      ...(diff ? { difficulty: diff } : {}),
+      ...(hasRange
+        ? {
+            water_range: {
+              series_id: seriesId,
+              ...(low != null ? { range_low: low } : {}),
+              ...(med != null ? { range_medium: med } : {}),
+              ...(high != null ? { range_high: high } : {}),
+            },
+          }
+        : {}),
+    };
+
+    if (onDraft) {
+      onDraft({
+        feature_type: featureType,
+        metadata,
+        location: buildGeometry(),
+        name: name.trim() || null,
+        description: description.trim() || null,
+        lang_code: langCode,
+        used_section_line:
+          useSectionLine && geomType === "LineString" && !!sectionLine,
+      });
+      resetFields();
+      onSubmitted();
+      return;
+    }
+
+    if (waterwayId == null || sectionId == null) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const diff = difficulty.trim() || null;
-      const low = rangeLow !== "" ? Number(rangeLow) : null;
-      const med = rangeMedium !== "" ? Number(rangeMedium) : null;
-      const high = rangeHigh !== "" ? Number(rangeHigh) : null;
-      const hasRange =
-        seriesId !== "" && (low != null || med != null || high != null);
       await featuresApi.create(waterwayId, sectionId, {
         feature_type: featureType,
         location: buildGeometry() as never,
-        metadata: {
-          ...(diff ? { difficulty: diff } : {}),
-          ...(hasRange
-            ? {
-                water_range: {
-                  series_id: seriesId,
-                  ...(low != null ? { range_low: low } : {}),
-                  ...(med != null ? { range_medium: med } : {}),
-                  ...(high != null ? { range_high: high } : {}),
-                },
-              }
-            : {}),
-        },
+        metadata,
         lang_code: langCode,
         name: name.trim() || null,
         description: description.trim() || null,
@@ -210,34 +298,30 @@ export default function SuggestFeatureForm({
         },
       }}
     >
-      <FormControl size="small" sx={{ minWidth: 90, alignSelf: "flex-start" }}>
-        <InputLabel id="lang-label">Language</InputLabel>
-        <Select
-          labelId="lang-label"
-          label="Language"
-          value={langCode}
-          onChange={(e) => setLangCode(e.target.value)}
-          MenuProps={{ sx: { zIndex: 1500 } }}
-        >
-          {[
-            "en",
-            "de",
-            "fr",
-            "cs",
-            "sk",
-            "pl",
-            "sl",
-            "hr",
-            "it",
-            "es",
-            "pt",
-          ].map((lc) => (
-            <MenuItem key={lc} value={lc}>
-              {lc.toUpperCase()}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <FormControl size="small" sx={{ minWidth: 90 }}>
+          <InputLabel id="lang-label">Language</InputLabel>
+          <Select
+            labelId="lang-label"
+            label="Language"
+            value={langCode}
+            onChange={(e) => setLangCode(e.target.value)}
+            MenuProps={{ sx: { zIndex: 1500 } }}
+          >
+            {LANGUAGE_CODES.map((lc) => (
+              <MenuItem key={lc} value={lc}>
+                {lc.toUpperCase()}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {headerAction && (
+          <>
+            <Box sx={{ flex: 1 }} />
+            {headerAction}
+          </>
+        )}
+      </Box>
 
       <TextField
         label="Name"
@@ -312,10 +396,10 @@ export default function SuggestFeatureForm({
               onChange={(e) => setRangeLow(e.target.value)}
               sx={{
                 flex: 1,
-                "& label": { color: "#81c784" },
-                "& label.Mui-focused": { color: "#81c784" },
+                "& label": { color: theme.tokens.waterLow.color },
+                "& label.Mui-focused": { color: theme.tokens.waterLow.color },
                 "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
-                  { borderColor: "#81c784" },
+                  { borderColor: theme.tokens.waterLow.color },
               }}
             />
             <TextField
@@ -326,10 +410,12 @@ export default function SuggestFeatureForm({
               onChange={(e) => setRangeMedium(e.target.value)}
               sx={{
                 flex: 1,
-                "& label": { color: "#ffb74d" },
-                "& label.Mui-focused": { color: "#ffb74d" },
+                "& label": { color: theme.tokens.waterMedium.color },
+                "& label.Mui-focused": {
+                  color: theme.tokens.waterMedium.color,
+                },
                 "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
-                  { borderColor: "#ffb74d" },
+                  { borderColor: theme.tokens.waterMedium.color },
               }}
             />
             <TextField
@@ -340,10 +426,10 @@ export default function SuggestFeatureForm({
               onChange={(e) => setRangeHigh(e.target.value)}
               sx={{
                 flex: 1,
-                "& label": { color: "#e57373" },
-                "& label.Mui-focused": { color: "#e57373" },
+                "& label": { color: theme.tokens.waterHigh.color },
+                "& label.Mui-focused": { color: theme.tokens.waterHigh.color },
                 "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
-                  { borderColor: "#e57373" },
+                  { borderColor: theme.tokens.waterHigh.color },
               }}
             />
           </Box>

@@ -65,8 +65,23 @@ function diffObjects(
   return diffs;
 }
 
-function shortValue(v: unknown): string {
+function shortValue(key: string, v: unknown): string {
   if (v === null || v === undefined) return "—";
+  // Features bundled with a new-section proposal: summarize instead of JSON
+  if (key === "features" && Array.isArray(v)) {
+    return v
+      .map((f) => {
+        const feature = f as {
+          feature_type?: string;
+          name?: string | null;
+          metadata?: { difficulty?: string };
+        };
+        const type = (feature.feature_type ?? "feature").replace(/_/g, " ");
+        const extra = feature.name || feature.metadata?.difficulty;
+        return extra ? `${type} (${extra})` : type;
+      })
+      .join(", ");
+  }
   if (typeof v === "string") return v.length > 60 ? `${v.slice(0, 57)}…` : v;
   return JSON.stringify(v).slice(0, 80);
 }
@@ -257,7 +272,7 @@ export default function ProposalCard({
                   {k.replace(/_/g, " ")}
                 </Typography>
                 <Typography variant="caption" sx={{ lineHeight: 1.8 }}>
-                  {shortValue(v)}
+                  {shortValue(k, v)}
                 </Typography>
               </Fragment>
             ))}
@@ -298,10 +313,10 @@ export default function ProposalCard({
                   variant="caption"
                   sx={{ textDecoration: "line-through", color: "error.main" }}
                 >
-                  {shortValue(from)}
+                  {shortValue(key, from)}
                 </Typography>
                 <Typography variant="caption" sx={{ color: "success.main" }}>
-                  {shortValue(to)}
+                  {shortValue(key, to)}
                 </Typography>
               </Fragment>
             ))}

@@ -7,6 +7,7 @@ import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import type { SectionWithFeatures } from "@/lib/api";
+import { localizedName } from "@/lib/localization";
 
 interface SectionListItemProps {
   section: SectionWithFeatures;
@@ -44,7 +45,7 @@ export default function SectionListItem({
       sx={{ borderRadius: 1, py: 0.5 }}
     >
       <ListItemText
-        primary={section.name}
+        primary={localizedName(section.name, section.names)}
         secondary={
           [section.region, section.country].filter(Boolean).join(", ") ||
           undefined

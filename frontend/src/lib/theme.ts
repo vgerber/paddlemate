@@ -49,11 +49,72 @@ const tokens = {
   outline: "#8a9295",
   outlineVariant: "#40484a",
 
+  // Base
+  background: "#121416",
+  white: "#ffffff",
+  // Text on tertiary (CTA) surfaces
+  onTertiary: "#1a1d00",
+  // Text on secondary (success) surfaces — dark green, M3 onSecondary
+  onSecondary: "#1c3524",
+
   // Water levels
-  waterEmpty:  { label: "E", color: "rgba(255,255,255,0.35)", bgcolor: "transparent",             border: "rgba(255,255,255,0.18)" },
-  waterLow:    { label: "L", color: "#81c784",                bgcolor: "rgba(129,199,132,0.15)" },
-  waterMedium: { label: "M", color: "#ffb74d",                bgcolor: "rgba(255,183,77,0.15)"  },
-  waterHigh:   { label: "H", color: "#e57373",                bgcolor: "rgba(229,115,115,0.15)" },
+  waterEmpty: {
+    label: "E",
+    color: "rgba(255,255,255,0.35)",
+    bgcolor: "transparent",
+    border: "rgba(255,255,255,0.18)",
+  },
+  waterLow: { label: "L", color: "#81c784", bgcolor: "rgba(129,199,132,0.15)" },
+  waterMedium: {
+    label: "M",
+    color: "#ffb74d",
+    bgcolor: "rgba(255,183,77,0.15)",
+  },
+  waterHigh: {
+    label: "H",
+    color: "#e57373",
+    bgcolor: "rgba(229,115,115,0.15)",
+  },
+
+  // Water level status markers (gauge pins, section endpoints, level dots)
+  levelColors: {
+    empty: "#9eaab0",
+    low: "#4caf50",
+    medium: "#ff9800",
+    high: "#f44336",
+  },
+
+  // Feature markers on the map (Okabe-Ito palette — colorblind safe)
+  featureColors: {
+    whitewater: "#CC79A7",
+    hole: "#D55E00",
+    siphon: "#D55E00",
+    strainer: "#D55E00",
+    waterfall: "#56B4E9",
+    freestyle_spot: "#F0E442",
+    put_in: "#0072B2",
+    take_out: "#D55E00",
+    portage: "#E69F00",
+    weir: "#E69F00",
+    dam: "#E69F00",
+    obstacle: "#CC79A7",
+    bridge: "#bfc8ca",
+  },
+
+  // Put-in / take-out picking (same hues as featureColors.put_in/take_out)
+  putIn: "#0072B2",
+  takeOut: "#D55E00",
+
+  // Map rendering
+  mapSectionLine: "#29b6f6",
+  mapSectionLineCasing: "#0a1a2e",
+  mapSelectedLine: "#ff9800",
+  mapAreaCircle: "#1976d2",
+  mapLabelHalo: "rgb(21, 37, 52)",
+
+  // Charts
+  chartSeries: "#1a8ca0",
+  chartGrid: "rgba(255,255,255,0.06)",
 } as const;
 
 export const theme = createTheme({
@@ -71,7 +132,7 @@ export const theme = createTheme({
       main: tokens.tertiary,
       light: tokens.tertiaryFixed,
       dark: tokens.onTertiaryContainer,
-      contrastText: "#1a1d00",
+      contrastText: tokens.onTertiary,
     },
     error: {
       main: tokens.error,
@@ -80,12 +141,11 @@ export const theme = createTheme({
     success: {
       main: tokens.secondary,
       dark: tokens.secondaryContainer,
-      // Dark green (M3 onSecondary) — light-on-light was illegible on
-      // contained success buttons.
-      contrastText: "#1c3524",
+      // Light-on-light was illegible on contained success buttons
+      contrastText: tokens.onSecondary,
     },
     background: {
-      default: "#121416",
+      default: tokens.background,
       paper: tokens.surface,
     },
     text: {
@@ -178,7 +238,7 @@ export const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: "#121416",
+          backgroundColor: tokens.background,
           scrollbarColor: `${tokens.outlineVariant} ${tokens.surfaceLowest}`,
           "&::-webkit-scrollbar": { width: 6 },
           "&::-webkit-scrollbar-track": { background: tokens.surfaceLowest },

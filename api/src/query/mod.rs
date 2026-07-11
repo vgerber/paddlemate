@@ -6,5 +6,6 @@ pub mod follows;
 pub mod gauges;
 pub mod groups;
 pub mod proposals;
+pub mod sections;
 pub mod tokens;
 pub mod users;

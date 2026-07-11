@@ -18,7 +18,7 @@ use crate::{
         water_section::SectionWithFeatures,
         waterway::{PaginatedResponse, Waterway, WaterwayId, WaterwayType, WaterwayWithSections},
     },
-    query::{features, proposals},
+    query::{features, proposals, sections as query_sections},
     state::AppState,
 };
 
@@ -214,7 +214,7 @@ pub async fn get_waterway(
         }
     };
 
-    let (sections_result, features_result) = tokio::join!(
+    let (sections_result, features_result, names_result, descriptions_result) = tokio::join!(
         sqlx::query!(
             r#"
             SELECT id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_at, updated_at
@@ -223,11 +223,18 @@ pub async fn get_waterway(
             waterway_id
         )
         .fetch_all(&app.pg_pool),
-        features::fetch_features_for_waterway(&app.pg_pool, waterway_id)
+        features::fetch_features_for_waterway(&app.pg_pool, waterway_id),
+        query_sections::fetch_names_for_waterway(&app.pg_pool, waterway_id),
+        query_sections::fetch_descriptions_for_waterway(&app.pg_pool, waterway_id)
     );
 
-    match (sections_result, features_result) {
-        (Ok(records), Ok(mut features_map)) => {
+    match (
+        sections_result,
+        features_result,
+        names_result,
+        descriptions_result,
+    ) {
+        (Ok(records), Ok(mut features_map), Ok(mut names_map), Ok(mut descriptions_map)) => {
             let sections: Vec<SectionWithFeatures> = records
                 .into_iter()
                 .map(|s| SectionWithFeatures {
@@ -238,6 +245,8 @@ pub async fn get_waterway(
                     region: s.region,
                     country: s.country,
                     features: features_map.remove(&s.id).unwrap_or_default(),
+                    names: names_map.remove(&s.id).unwrap_or_default(),
+                    descriptions: descriptions_map.remove(&s.id).unwrap_or_default(),
                     location: serde_json::from_str(&s.location.expect("location NOT NULL"))
                         .expect("valid GeoJSON"),
                     created_at: s.created_at,
@@ -255,7 +264,7 @@ pub async fn get_waterway(
             })
             .into_response()
         }
-        (Err(err), _) | (_, Err(err)) => {
+        (Err(err), _, _, _) | (_, Err(err), _, _) | (_, _, Err(err), _) | (_, _, _, Err(err)) => {
             tracing::error!(
                 "Error fetching sections for waterway {}: {}",
                 waterway_id,

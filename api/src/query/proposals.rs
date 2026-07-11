@@ -396,6 +396,62 @@ pub async fn review_proposal(
     Ok(Some(row_to_proposal(&updated_row)))
 }
 
+/// Insert a feature (plus optional localized name/description) described by
+/// proposal JSON — used for standalone feature proposals and for features
+/// bundled with a new-section proposal.
+async fn insert_feature_from_data(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    section_id: i64,
+    data: &Value,
+    created_by: &str,
+) -> Result<(), sqlx::Error> {
+    let feature_type = data["feature_type"].as_str().unwrap_or_default();
+    let metadata = data
+        .get("metadata")
+        .cloned()
+        .unwrap_or_else(|| Value::Object(serde_json::Map::new()));
+    let location = serde_json::to_string(&data["location"])
+        .map_err(|e| sqlx::Error::Decode(e.into()))?;
+    let row = sqlx::query(
+        r#"INSERT INTO features (section_id, feature_type, metadata, location, created_by)
+           VALUES ($1, $2::feature_type, $3, ST_GeomFromGeoJSON($4), $5) RETURNING id"#,
+    )
+    .bind(section_id)
+    .bind(feature_type)
+    .bind(metadata)
+    .bind(&location)
+    .bind(created_by)
+    .fetch_one(&mut **tx)
+    .await?;
+    let feature_id: i64 = row.get("id");
+
+    let lang_code = data["lang_code"].as_str().unwrap_or("en");
+    if let Some(name) = data["name"].as_str() {
+        sqlx::query(
+            "INSERT INTO feature_names (feature_id, lang_code, name) VALUES ($1, $2, $3) \
+             ON CONFLICT (feature_id, lang_code) DO UPDATE SET name = EXCLUDED.name",
+        )
+        .bind(feature_id)
+        .bind(lang_code)
+        .bind(name)
+        .execute(&mut **tx)
+        .await?;
+    }
+    if let Some(description) = data["description"].as_str() {
+        sqlx::query(
+            "INSERT INTO feature_descriptions (feature_id, lang_code, description) \
+             VALUES ($1, $2, $3) \
+             ON CONFLICT (feature_id, lang_code) DO UPDATE SET description = EXCLUDED.description",
+        )
+        .bind(feature_id)
+        .bind(lang_code)
+        .bind(description)
+        .execute(&mut **tx)
+        .await?;
+    }
+    Ok(())
+}
+
 /// Apply the proposed change to the live table within an open transaction.
 async fn apply_proposal(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
@@ -444,16 +500,60 @@ async fn apply_proposal(
             let waterway_id = data["waterway_id"].as_i64();
             let location = serde_json::to_string(&data["location"])
                 .map_err(|e| sqlx::Error::Decode(e.into()))?;
-            sqlx::query(
-                "INSERT INTO water_sections (waterway_id, name, description, location) \
-                 VALUES ($1, $2, $3, ST_GeomFromGeoJSON($4))",
+            let row = sqlx::query(
+                "INSERT INTO water_sections (waterway_id, name, description, region, country, location) \
+                 VALUES ($1, $2, $3, $4, $5, ST_GeomFromGeoJSON($6)) RETURNING id",
             )
             .bind(waterway_id)
             .bind(data["name"].as_str().unwrap_or_default())
             .bind(data["description"].as_str())
+            .bind(data["region"].as_str())
+            .bind(data["country"].as_str())
             .bind(&location)
-            .execute(&mut **tx)
+            .fetch_one(&mut **tx)
             .await?;
+            let section_id: i64 = row.get("id");
+
+            // Localized names/descriptions bundled with the section proposal
+            if let Some(translations) = data.get("translations").and_then(|v| v.as_array()) {
+                for translation in translations {
+                    let Some(lang_code) = translation["lang_code"].as_str() else {
+                        continue;
+                    };
+                    if let Some(name) = translation["name"].as_str() {
+                        sqlx::query(
+                            "INSERT INTO section_names (section_id, lang_code, name) \
+                             VALUES ($1, $2, $3) \
+                             ON CONFLICT (section_id, lang_code) DO UPDATE SET name = EXCLUDED.name",
+                        )
+                        .bind(section_id)
+                        .bind(lang_code)
+                        .bind(name)
+                        .execute(&mut **tx)
+                        .await?;
+                    }
+                    if let Some(description) = translation["description"].as_str() {
+                        sqlx::query(
+                            "INSERT INTO section_descriptions (section_id, lang_code, description) \
+                             VALUES ($1, $2, $3) \
+                             ON CONFLICT (section_id, lang_code) DO UPDATE SET description = EXCLUDED.description",
+                        )
+                        .bind(section_id)
+                        .bind(lang_code)
+                        .bind(description)
+                        .execute(&mut **tx)
+                        .await?;
+                    }
+                }
+            }
+
+            // Features bundled with the section proposal
+            if let Some(features) = data.get("features").and_then(|v| v.as_array()) {
+                for feature in features {
+                    insert_feature_from_data(tx, section_id, feature, &proposal.submitted_by)
+                        .await?;
+                }
+            }
         }
 
         (ProposalEntityType::WaterSection, ProposalOperation::Update) => {
@@ -493,25 +593,9 @@ async fn apply_proposal(
         }
 
         (ProposalEntityType::Feature, ProposalOperation::Create) => {
-            let section_id = data["section_id"].as_i64();
-            let feature_type = data["feature_type"].as_str().unwrap_or_default();
-            let metadata = data
-                .get("metadata")
-                .cloned()
-                .unwrap_or_else(|| Value::Object(serde_json::Map::new()));
-            let location = serde_json::to_string(&data["location"])
-                .map_err(|e| sqlx::Error::Decode(e.into()))?;
-            sqlx::query(
-                r#"INSERT INTO features (section_id, feature_type, metadata, location, created_by)
-                   VALUES ($1, $2::feature_type, $3, ST_GeomFromGeoJSON($4), $5)"#,
-            )
-            .bind(section_id)
-            .bind(feature_type)
-            .bind(metadata)
-            .bind(&location)
-            .bind(&proposal.submitted_by)
-            .execute(&mut **tx)
-            .await?;
+            if let Some(section_id) = data["section_id"].as_i64() {
+                insert_feature_from_data(tx, section_id, data, &proposal.submitted_by).await?;
+            }
         }
 
         (ProposalEntityType::Feature, ProposalOperation::Update) => {
