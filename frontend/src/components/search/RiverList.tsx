@@ -26,7 +26,7 @@ interface RiverListProps {
   isFetchingNextPage: boolean;
   onSelect: (id: number) => void;
   onLoadMore: () => void;
-  /** Own pending river proposals matching the search — shown as disabled entries. */
+  /** Own pending river proposals matching the search - shown as disabled entries. */
   pendingRivers?: PendingRiver[];
   /** Current name search term (used for the "add it" CTA). */
   searchName?: string;

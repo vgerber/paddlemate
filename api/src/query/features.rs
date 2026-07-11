@@ -127,8 +127,8 @@ pub async fn insert_feature(
     })
 }
 
-/// Persist a `CreateFeatureBody` — feature row plus localized texts and
-/// gauge thresholds — on one connection (callers wrap in a transaction).
+/// Persist a `CreateFeatureBody` - feature row plus localized texts and
+/// gauge thresholds - on one connection (callers wrap in a transaction).
 /// The single write path shared by the admin endpoint and proposal approval.
 pub async fn create_feature_bundle(
     conn: &mut sqlx::PgConnection,

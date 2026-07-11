@@ -91,7 +91,7 @@ function SuggestSectionPage() {
   };
 
   // Bring the map into view whenever a pick starts (any trigger: place
-  // point, start drawing a line/area, move) — the buttons sit below the
+  // point, start drawing a line/area, move) - the buttons sit below the
   // map, often off-screen on mobile. Deferred a frame so the button's own
   // focus scrolling can't cancel the smooth scroll.
   useEffect(() => {
@@ -156,7 +156,7 @@ function SuggestSectionPage() {
             location: (feature.used_section_line && finalCoords
               ? { type: "LineString", coordinates: finalCoords }
               : feature.location) as Feature["location"],
-            // Full-section features skip the on-map name label — the section
+            // Full-section features skip the on-map name label - the section
             // label already covers the whole line
             name: feature.used_section_line ? null : feature.name,
             lang_code: feature.lang_code,
@@ -195,7 +195,7 @@ function SuggestSectionPage() {
         country: naming.country.trim() || null,
         description: naming.description.trim() || null,
         location: { type: "LineString", coordinates } as never,
-        // The primary entry is stored as a tagged localization too — the
+        // The primary entry is stored as a tagged localization too - the
         // plain columns are just the untagged fallback
         translations: [
           {
@@ -294,7 +294,7 @@ function SuggestSectionPage() {
 
   return (
     <Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: { xs: 1.5, md: 2 } }}>
-      {/* Header — compact single row: title, cancel */}
+      {/* Header - compact single row: title, cancel */}
       <Box
         sx={{
           display: "flex",
@@ -344,7 +344,7 @@ function SuggestSectionPage() {
         </Box>
       ) : (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {/* Map — for picking the section line and placing features */}
+          {/* Map - for picking the section line and placing features */}
           {step > 0 && (
             <Box
               ref={mapContainerRef}
@@ -451,7 +451,7 @@ function SuggestSectionPage() {
             </Alert>
           )}
 
-          {/* Bottom bar — pinned to the viewport bottom, above the mobile
+          {/* Bottom bar - pinned to the viewport bottom, above the mobile
               bottom navigation (zIndex 1300) */}
           <Box
             sx={{

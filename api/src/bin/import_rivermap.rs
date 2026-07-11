@@ -349,7 +349,7 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
             (Some(lat), Some(lon)) => (lat, lon),
             _ => match (take_lat, take_lon) {
                 (Some(lat), Some(lon)) => (lat, lon),
-                _ => continue, // no geometry at all — skip
+                _ => continue, // no geometry at all - skip
             },
         };
 

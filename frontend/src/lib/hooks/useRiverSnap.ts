@@ -12,7 +12,7 @@ import {
   stitchWays,
 } from "@/lib/riverSnap";
 
-/** Snap pipeline state — `searching` is the river lookup, `routing` the
+/** Snap pipeline state - `searching` is the river lookup, `routing` the
  * confluence-crossing stage. */
 export type RiverSnapStatus =
   | "idle"
@@ -31,7 +31,7 @@ export type RiverLookupStatus =
 
 /**
  * A point further than this (m) from the named river is treated as lying on
- * another river — triggers routing through the waterway network.
+ * another river - triggers routing through the waterway network.
  */
 const ON_RIVER_THRESHOLD_METERS = 150;
 
@@ -99,7 +99,7 @@ function boundingBoxContainsBox(
  * Snaps a put-in/take-out pair to the OSM riverbed of the given waterway.
  *
  * While points are missing, the hook looks up the river course for the
- * current map view (`viewBounds`) so the user sees where to place them —
+ * current map view (`viewBounds`) so the user sees where to place them -
  * exposed as `river` / `riverLookup`. Once both points are set: stage 1
  * fetches the named river and extracts the part between the points; stage 2,
  * when a point lies off the named river (take-out downstream of a
@@ -183,7 +183,7 @@ export function useRiverSnap(
     // Debounce so panning doesn't fire a request per move
     const timer = setTimeout(async () => {
       setRiverLookup("searching");
-      // Fetch well beyond the viewport so panning keeps hitting the cache —
+      // Fetch well beyond the viewport so panning keeps hitting the cache -
       // Overpass allows very few requests per IP, so every saved one counts
       const padding = viewSpan;
       const fetchBox: BoundingBox = {
@@ -284,7 +284,7 @@ export function useRiverSnap(
         distanceToLineInMeters(namedRiver, takeOutCoordinate) <=
           ON_RIVER_THRESHOLD_METERS;
 
-      // ── Stage 2: a point sits on another river past a confluence —
+      // ── Stage 2: a point sits on another river past a confluence -
       //    fetch the connecting rivers and route through the network ──
       if (!bothPointsOnNamedRiver) {
         setStatus("routing");
@@ -341,7 +341,7 @@ export function useRiverSnap(
         }
 
         // Without a route the named-river snap would clamp at the
-        // confluence and silently draw a wrong line — report failure
+        // confluence and silently draw a wrong line - report failure
         // instead so the UI offers the straight line and a retry.
         const routed = network
           ? routeSection(

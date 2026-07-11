@@ -93,8 +93,8 @@ pub async fn delete_section(
     Ok(result.rows_affected() > 0)
 }
 
-/// Persist a `CreateSectionBody` — section row plus localized texts and
-/// bundled features — on one connection (callers wrap in a transaction).
+/// Persist a `CreateSectionBody` - section row plus localized texts and
+/// bundled features - on one connection (callers wrap in a transaction).
 /// The single write path shared by the admin endpoint and proposal approval.
 pub async fn create_section_bundle(
     conn: &mut sqlx::PgConnection,

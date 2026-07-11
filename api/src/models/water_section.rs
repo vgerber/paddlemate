@@ -84,7 +84,7 @@ pub struct SectionTranslationBody {
 }
 
 /// Payload for creating a section together with its localized texts and
-/// features — one reviewable unit for the proposal workflow.
+/// features - one reviewable unit for the proposal workflow.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CreateSectionBody {
     pub name: String,

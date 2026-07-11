@@ -29,7 +29,7 @@ pub struct Gauge {
     pub updated_at: DateTime<Utc>,
 }
 
-/// Upstream data source of a gauge — carries the attribution and licensing
+/// Upstream data source of a gauge - carries the attribution and licensing
 /// terms of the provider (imported into the `sources` table by the readers).
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct GaugeSource {

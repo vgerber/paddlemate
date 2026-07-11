@@ -316,7 +316,7 @@ export function buildLineFeatureEndpointsGeoJSON(
   };
 }
 
-/** GeoJSON for proposed (pending) point features — rendered with outline-only circles. */
+/** GeoJSON for proposed (pending) point features - rendered with outline-only circles. */
 export function buildProposedPointFeaturesGeoJSON(
   features: Feature[],
 ): GeoJSON.FeatureCollection {

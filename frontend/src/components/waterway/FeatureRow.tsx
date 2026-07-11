@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { fonts } from "@/lib/theme";
 import { fmtKm } from "./section-details/utils";
 
-/** Position along the section line — the subset of ComputedFeature the row
+/** Position along the section line - the subset of ComputedFeature the row
  * needs, so callers can also pass hand-built extents (e.g. endpoints). */
 export interface FeatureExtent {
   distM: number;
@@ -24,7 +24,7 @@ const labelSx = {
 } as const;
 
 interface FeatureRowProps {
-  /** Feature type key, e.g. "whitewater" — rendered as the small label. */
+  /** Feature type key, e.g. "whitewater" - rendered as the small label. */
   featureType: string;
   name?: string | null;
   difficulty?: string | null;
@@ -34,7 +34,7 @@ interface FeatureRowProps {
   locationType: "Point" | "LineString" | "Polygon";
   /** Position along the section line, when a line is available. */
   extent?: FeatureExtent | null;
-  /** Total section length in metres — for full-section detection. */
+  /** Total section length in metres - for full-section detection. */
   totalM?: number;
   onRemove?: () => void;
   leading?: ReactNode;

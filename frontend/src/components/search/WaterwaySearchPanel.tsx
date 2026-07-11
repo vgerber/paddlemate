@@ -145,7 +145,7 @@ export default function WaterwaySearchPanel({
     return waterways.filter((w) => normalizeForSearch(w.name).includes(q));
   }, [mode, waterways, debouncedName]);
 
-  // Own pending river proposals — shown as disabled "pending approval" entries
+  // Own pending river proposals - shown as disabled "pending approval" entries
   const pendingFilters = {
     entity_type: "waterway",
     status: "pending",

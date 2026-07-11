@@ -83,7 +83,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
   const sectionLevel =
     selectedSectionId != null ? sectionLevels[selectedSectionId] : undefined;
 
-  // Stable identity — feeds the map's area fitBounds effect, which must not
+  // Stable identity - feeds the map's area fitBounds effect, which must not
   // refire on unrelated re-renders (see useMapPageState.areaCircle).
   const visibleAreaCircle = useMemo(
     () =>
@@ -114,7 +114,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     >
       {/* Map */}
       <Box sx={{ flex: 1, minHeight: 0, position: "relative" }}>
-        {/* Descent banner — mobile only, floats over the map when overlay is closed */}
+        {/* Descent banner - mobile only, floats over the map when overlay is closed */}
         <StandingDescentBanner
           sx={{
             display: { xs: "flex", md: "none" },
@@ -169,7 +169,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           onBoundsChange={setMapBounds}
         />
 
-        {/* Area strip — mobile, area mode, no waterway selected */}
+        {/* Area strip - mobile, area mode, no waterway selected */}
         {showAreaStrip ? (
           <Box
             sx={{
@@ -216,7 +216,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             </Badge>
           </Box>
         ) : isMobileMapView ? (
-          /* Map-view mini header — shown when the detail overlay is toggled away */
+          /* Map-view mini header - shown when the detail overlay is toggled away */
           <>
             <SectionSpeedDial
               state={state}
@@ -277,7 +277,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             </ButtonBase>
           </>
         ) : (
-          /* Search FAB — mobile only */
+          /* Search FAB - mobile only */
           <Box
             sx={{
               display: { xs: "block", md: "none" },
@@ -295,7 +295,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
         )}
       </Box>
 
-      {/* Charts — desktop only */}
+      {/* Charts - desktop only */}
       <Box sx={{ display: { xs: "none", md: "block" } }}>
         {selectedGaugeId != null && selectedGaugeRanges.length > 0 ? (
           <GaugeChartPanel

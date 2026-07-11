@@ -8,9 +8,9 @@ import type {
 import { gaugesApi } from "@/lib/api";
 
 interface UseGaugePickerOptions {
-  /** Ranges already attached to the section — offered as the first options. */
+  /** Ranges already attached to the section - offered as the first options. */
   gaugeRanges?: WaterRangeWithStatus[];
-  /** Reference point for the gauge search — nearby gauges are listed first. */
+  /** Reference point for the gauge search - nearby gauges are listed first. */
   nearPoint?: { lat: number; lon: number };
 }
 

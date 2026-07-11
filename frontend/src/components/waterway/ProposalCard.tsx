@@ -63,7 +63,7 @@ const CREATE_HIDDEN_KEYS = new Set([
   "lang_code",
 ]);
 
-/** Skip values that would render as noise ("—", "{}", "[]"). */
+/** Skip values that would render as noise ("-", "{}", "[]"). */
 function isDisplayable(v: unknown): boolean {
   if (v == null || v === "") return false;
   if (Array.isArray(v)) return v.length > 0;
@@ -86,7 +86,7 @@ function diffObjects(
 }
 
 function shortValue(key: string, v: unknown): string {
-  if (v === null || v === undefined) return "—";
+  if (v === null || v === undefined) return "-";
   // Features bundled with a new-section proposal: summarize instead of JSON
   if (key === "features" && Array.isArray(v)) {
     return v

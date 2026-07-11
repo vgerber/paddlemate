@@ -101,7 +101,7 @@ pub async fn search_gauges(
     limit: i64,
 ) -> Result<Vec<GaugeWithSeries>, sqlx::Error> {
     let order = if lat.is_some() && lon.is_some() {
-        // Squared equirectangular distance — fine for ranking at picker scale
+        // Squared equirectangular distance - fine for ranking at picker scale
         "((lat - $2) * (lat - $2)) + ((lon - $3) * (lon - $3) * cos(radians($2)) * cos(radians($2)))"
     } else {
         "name"
@@ -459,7 +459,7 @@ pub async fn list_feature_water_ranges(
 }
 
 /// Upsert a water range; individual thresholds may be absent. The single
-/// write path for ranges — bundled feature creation and the standalone
+/// write path for ranges - bundled feature creation and the standalone
 /// endpoint both go through it.
 pub async fn upsert_feature_water_range_partial(
     executor: impl sqlx::PgExecutor<'_>,

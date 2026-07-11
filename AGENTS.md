@@ -42,7 +42,7 @@ cd frontend && npx biome check src 2>&1
 ```
 
 Note: the root tsconfig is solution-style (`files: []` + references), so a
-plain `tsc --noEmit` type-checks nothing and always passes — use `tsc -b`.
+plain `tsc --noEmit` type-checks nothing and always passes - use `tsc -b`.
 
 Regenerate the API client types after backend API changes (API must be
 running on :3000):
@@ -53,7 +53,7 @@ cd frontend && npm run generate:api
 
 ### Database
 
-PostgreSQL runs in Docker — there is no local `psql`. Always use:
+PostgreSQL runs in Docker - there is no local `psql`. Always use:
 
 ```
 docker exec paddlemate-db-1 psql -U postgres -d paddlemate -c "<SQL>"
@@ -69,7 +69,7 @@ Connection string (from `api/.env`): `postgresql://postgres:postgres@localhost:6
 
 ### Migrations
 
-Always create migration files with the SQLx CLI — **never by hand**:
+Always create migration files with the SQLx CLI - **never by hand**:
 
 ```
 cd api && cargo sqlx migrate add <name>
@@ -93,7 +93,7 @@ time.
 - Stay consistent with Rust community conventions.
 - Design for flexibility and extensibility, allowing future changes and
   additions without breaking existing code.
-- Routes should not contain implementation details — they define the API
+- Routes should not contain implementation details - they define the API
   contract. Keep the implementation in the query layer or service layer.
 
 ## Tests

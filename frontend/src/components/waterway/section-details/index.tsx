@@ -39,7 +39,7 @@ export default function FeatureTimeline({ section, proposals = [], onFeatureClic
   function handleItemClick(cf: ComputedFeature) {
     const newId = activeId === cf.feature.id ? null : cf.feature.id;
     setActiveId(newId);
-    // Don't fly to map for proposals — they aren't approved yet
+    // Don't fly to map for proposals - they aren't approved yet
     if (!cf.proposal) {
       onFeatureClick?.(newId != null ? cf.coords : null);
     }

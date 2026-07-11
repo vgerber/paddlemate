@@ -31,7 +31,7 @@ interface SectionFeaturesStepProps {
 
 /** Features step of the suggest-section wizard: the section's fixed
  * endpoints, the drafted features so far, and the shared feature form in
- * draft mode — each added feature travels inside the section proposal. */
+ * draft mode - each added feature travels inside the section proposal. */
 export default function SectionFeaturesStep({
   finalCoords,
   nearPoint,

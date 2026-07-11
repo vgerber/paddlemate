@@ -170,7 +170,7 @@ export default function GeometryPicker({
                   {vertices.length === 0
                     ? `Min. ${minVertices} points required`
                     : vertices.length < minVertices
-                      ? `${vertices.length} point${vertices.length !== 1 ? "s" : ""} — ${minVertices - vertices.length} more needed`
+                      ? `${vertices.length} point${vertices.length !== 1 ? "s" : ""} - ${minVertices - vertices.length} more needed`
                       : `${vertices.length} point${vertices.length !== 1 ? "s" : ""} placed`}
                 </Typography>
               </Box>

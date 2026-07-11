@@ -61,7 +61,7 @@ fn default_metadata() -> Value {
     Value::Object(serde_json::Map::new())
 }
 
-/// Payload for creating a feature — used by the feature endpoint, by bundled
+/// Payload for creating a feature - used by the feature endpoint, by bundled
 /// section-create payloads, and inside proposals.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CreateFeatureBody {

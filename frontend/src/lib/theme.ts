@@ -54,7 +54,7 @@ const tokens = {
   white: "#ffffff",
   // Text on tertiary (CTA) surfaces
   onTertiary: "#1a1d00",
-  // Text on secondary (success) surfaces — dark green, M3 onSecondary
+  // Text on secondary (success) surfaces - dark green, M3 onSecondary
   onSecondary: "#1c3524",
 
   // Water levels
@@ -84,7 +84,7 @@ const tokens = {
     high: "#f44336",
   },
 
-  // Feature markers on the map (Okabe-Ito palette — colorblind safe)
+  // Feature markers on the map (Okabe-Ito palette - colorblind safe)
   featureColors: {
     whitewater: "#CC79A7",
     hole: "#D55E00",

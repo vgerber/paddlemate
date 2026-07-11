@@ -61,12 +61,12 @@ export default function SectionLineStep({
           )}
           {snap.riverLookup === "found" && (
             <Typography variant="caption" color="text.secondary">
-              River course highlighted on the map — pick your points on it.
+              River course highlighted on the map - pick your points on it.
             </Typography>
           )}
           {snap.riverLookup === "not-found" && (
             <Typography variant="caption" color="text.secondary">
-              Couldn't find {waterwayName ?? "the river"} in this map view — pan
+              Couldn't find {waterwayName ?? "the river"} in this map view - pan
               or zoom to it, or pick your points anyway.
             </Typography>
           )}
@@ -99,7 +99,7 @@ export default function SectionLineStep({
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           {snap.status === "failed" && (
             <Alert severity="warning" sx={{ py: 0.25, fontSize: "0.75rem" }}>
-              Couldn't match this river on OpenStreetMap — a straight line
+              Couldn't match this river on OpenStreetMap - a straight line
               between your points will be used.
             </Alert>
           )}
@@ -147,7 +147,7 @@ export default function SectionLineStep({
           </Box>
           {orderWrong && (
             <Alert severity="warning" sx={{ py: 0.25, fontSize: "0.75rem" }}>
-              Put-in appears to be downstream of take-out — check the order.
+              Put-in appears to be downstream of take-out - check the order.
             </Alert>
           )}
         </Box>

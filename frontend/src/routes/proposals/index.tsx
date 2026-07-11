@@ -30,7 +30,7 @@ export const Route = createFileRoute("/proposals/")({
 function ProposalsPage() {
   const navigate = useNavigate({ from: "/proposals/" });
   const { status, entity_type, operation } = Route.useSearch();
-  // Review tools are shown inline for admins — there is no separate admin page.
+  // Review tools are shown inline for admins - there is no separate admin page.
   const { isAdmin } = useSession();
 
   return (

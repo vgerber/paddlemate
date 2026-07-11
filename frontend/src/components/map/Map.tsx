@@ -555,7 +555,7 @@ export default function WaterwayMap({
           />
         </Source>
 
-        {/* River course highlight — subtle guide under the section preview.
+        {/* River course highlight - subtle guide under the section preview.
             Always mounted (empty when unused) so the layer order stays
             deterministic: highlight < preview < proposed features. */}
         <Source
@@ -585,7 +585,7 @@ export default function WaterwayMap({
           />
         </Source>
 
-        {/* Preview line — snapped/OSM coords when available (also used to
+        {/* Preview line - snapped/OSM coords when available (also used to
             highlight a checked river), dashed straight put-in→take-out until
             the OSM snap resolves. Always mounted, see above. */}
         <Source
@@ -627,7 +627,7 @@ export default function WaterwayMap({
           />
         </Source>
 
-        {/* Proposed (pending) features — like the confirmed markers but with
+        {/* Proposed (pending) features - like the confirmed markers but with
             a white ring/casing (confirmed use a dark one), which also keeps
             them visible on satellite imagery */}
         <Source

@@ -81,7 +81,7 @@ export function useMapPageState(search: RouteSearch) {
     north: number;
     east: number;
   } | null>(null);
-  // Keep the previous reference for identical bounds — the map reports on
+  // Keep the previous reference for identical bounds - the map reports on
   // every moveend (including camera-effect fitBounds), and a fresh object
   // for unchanged bounds would re-render the whole page in a loop.
   const setMapBounds = useCallback(
@@ -170,7 +170,7 @@ export function useMapPageState(search: RouteSearch) {
     }
   }, [suggestMode]);
 
-  // Stable identity per (lat, lon, radius) — camera effects and section
+  // Stable identity per (lat, lon, radius) - camera effects and section
   // filters depend on this object; rebuilding it every render made the
   // area-mode fitBounds effect refire on each render (update-depth loop).
   const areaCircle: AreaCircle | null = useMemo(

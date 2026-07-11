@@ -886,7 +886,7 @@ export interface components {
             visible_from?: string | null;
         };
         /**
-         * @description Payload for creating a feature — used by the feature endpoint, by bundled
+         * @description Payload for creating a feature - used by the feature endpoint, by bundled
          *      section-create payloads, and inside proposals.
          */
         CreateFeatureBody: {
@@ -924,7 +924,7 @@ export interface components {
         };
         /**
          * @description Payload for creating a section together with its localized texts and
-         *      features — one reviewable unit for the proposal workflow.
+         *      features - one reviewable unit for the proposal workflow.
          */
         CreateSectionBody: {
             description?: string | null;
@@ -1231,7 +1231,7 @@ export interface components {
             series_id: number;
         };
         /**
-         * @description Upstream data source of a gauge — carries the attribution and licensing
+         * @description Upstream data source of a gauge - carries the attribution and licensing
          *      terms of the provider (imported into the `sources` table by the readers).
          */
         GaugeSource: {
@@ -1851,11 +1851,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-07-11T15:53:00.760544587Z",
-                     *         "expires_at": "2026-10-09T15:53:00.760546417Z",
+                     *         "created_at": "2026-07-11T16:10:41.410525106Z",
+                     *         "expires_at": "2026-10-09T16:10:41.410527146Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-07-11T15:53:00.760554547Z",
+                     *         "last_used_at": "2026-07-11T16:10:41.410535356Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -1886,8 +1886,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-07-11T15:53:00.760712086Z",
-                     *       "expires_at": "2026-10-09T15:53:00.760712476Z",
+                     *       "created_at": "2026-07-11T16:10:41.410689986Z",
+                     *       "expires_at": "2026-10-09T16:10:41.410690356Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -2730,7 +2730,7 @@ export interface operations {
         };
         /**
          * @description Payload for creating a section together with its localized texts and
-         *      features — one reviewable unit for the proposal workflow.
+         *      features - one reviewable unit for the proposal workflow.
          */
         requestBody: {
             content: {
@@ -2905,7 +2905,7 @@ export interface operations {
             cookie?: never;
         };
         /**
-         * @description Payload for creating a feature — used by the feature endpoint, by bundled
+         * @description Payload for creating a feature - used by the feature endpoint, by bundled
          *      section-create payloads, and inside proposals.
          */
         requestBody: {

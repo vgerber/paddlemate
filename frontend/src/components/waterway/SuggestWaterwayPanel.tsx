@@ -17,7 +17,7 @@ import { useSession } from "@/lib/hooks/useSession";
 import { type Coordinate, fetchOsmRiver } from "@/lib/riverSnap";
 import { normalizeForSearch } from "@/lib/text";
 
-/** Max viewport span (degrees) for the OSM check — larger areas make Overpass
+/** Max viewport span (degrees) for the OSM check - larger areas make Overpass
  * regex queries slow and ambiguous. */
 const MAX_OSM_CHECK_SPAN_DEG = 3;
 
@@ -124,7 +124,7 @@ export default function SuggestWaterwayPanel({
         existing.items.some((w) => normalizeForSearch(w.name) === normalized)
       ) {
         setSubmitError(
-          `"${trimmedName}" already exists — search for it instead.`,
+          `"${trimmedName}" already exists - search for it instead.`,
         );
         return;
       }
@@ -139,7 +139,7 @@ export default function SuggestWaterwayPanel({
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setSubmitError(
-          `"${trimmedName}" already exists — search for it instead.`,
+          `"${trimmedName}" already exists - search for it instead.`,
         );
       } else {
         setSubmitError("Failed to submit. Please try again.");
@@ -241,13 +241,13 @@ export default function SuggestWaterwayPanel({
             )}
             {osmCheck.state === "found" && (
               <Alert severity="success" sx={{ py: 0.25, fontSize: "0.75rem" }}>
-                Found "{name.trim()}" on OpenStreetMap — it's highlighted on the
+                Found "{name.trim()}" on OpenStreetMap - it's highlighted on the
                 map.
               </Alert>
             )}
             {osmCheck.state === "not-found" && (
               <Alert severity="info" sx={{ py: 0.25, fontSize: "0.75rem" }}>
-                Not found in the visible map area — you can still submit.
+                Not found in the visible map area - you can still submit.
               </Alert>
             )}
 

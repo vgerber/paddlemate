@@ -34,7 +34,7 @@ const labelSx = {
   fontSize: "0.62rem",
 } as const;
 
-/** Read-only full view of a proposal — the wizard's review layout without
+/** Read-only full view of a proposal - the wizard's review layout without
  * the editing: map, naming, translations and feature rows with positions. */
 export default function ProposalDetailPane({
   proposal,

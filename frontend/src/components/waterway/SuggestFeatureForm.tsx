@@ -23,7 +23,7 @@ import GeometryPicker, {
   minVerticesFor,
 } from "./GeometryPicker";
 
-/** A feature built by the form without being submitted to the API — used by
+/** A feature built by the form without being submitted to the API - used by
  * the suggest-section wizard, where features travel inside the section
  * proposal instead of being created on an existing section. */
 export interface SectionFeatureDraft {
@@ -36,7 +36,7 @@ export interface SectionFeatureDraft {
   water_ranges: FeatureWaterRangeBody[];
   /** Display-only: name of the selected gauge (not sent to the API). */
   gauge_name: string | null;
-  /** True when "Use full section line" was checked — the wizard substitutes
+  /** True when "Use full section line" was checked - the wizard substitutes
    * the final section line at submit time. */
   used_section_line: boolean;
 }
@@ -53,7 +53,7 @@ interface SuggestFeatureFormProps {
   sectionId?: number;
   /** Full line of the section, offered as a one-click fill for LineString features. */
   sectionLine?: { lng: number; lat: number }[];
-  /** Gauge ranges for the section — drives the water-level threshold fields. */
+  /** Gauge ranges for the section - drives the water-level threshold fields. */
   gaugeRanges?: WaterRangeWithStatus[];
   /** Map-driven geometry drawing state, owned by the page/panel. */
   geometry: GeometryPicking;
@@ -65,9 +65,9 @@ interface SuggestFeatureFormProps {
   headerAction?: ReactNode;
   /** Initial language for name/description (default "en"). */
   defaultLangCode?: string;
-  /** Reference point for the gauge search — nearby gauges are listed first. */
+  /** Reference point for the gauge search - nearby gauges are listed first. */
   nearPoint?: { lat: number; lon: number };
-  /** Ref populated with the current handleSubmit — lets the parent header trigger submission. */
+  /** Ref populated with the current handleSubmit - lets the parent header trigger submission. */
   submitRef?: RefObject<(() => void) | null>;
   /** Called whenever the form's canSubmit state changes. */
   onCanSubmitChange?: (can: boolean) => void;

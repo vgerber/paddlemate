@@ -3,7 +3,7 @@
  * OpenStreetMap.
  *
  * Design decision: OpenStreetMap is the single source of truth for river
- * geometry — we never store river courses ourselves. Geometry is fetched
+ * geometry - we never store river courses ourselves. Geometry is fetched
  * live from Overpass in the browser, so every user spends their own
  * per-IP quota instead of funneling through one server IP. A section only
  * keeps the snapped line it was authored with, as a snapshot.
@@ -16,13 +16,13 @@
  * 2. Stitch those fragments into one continuous polyline (`stitchWays`):
  *    grow chains where fragment endpoints touch exactly, bridge gaps of up
  *    to ~50 m (splits at weirs or renamed pieces), and keep the longest
- *    resulting chain — mirroring the linemerge + longest-line selection in
+ *    resulting chain - mirroring the linemerge + longest-line selection in
  *    scripts/enrich_geometry.py.
  * 3. Project the put-in and take-out onto that polyline and cut out the part
  *    between them (`snapSection`).
  *
- * When a point lies on a *different* river — the take-out downstream of a
- * confluence, e.g. Ötztaler Ache → Inn — the named river can never reach it.
+ * When a point lies on a *different* river - the take-out downstream of a
+ * confluence, e.g. Ötztaler Ache → Inn - the named river can never reach it.
  * For that case `routeSection` builds a graph from all river ways in the
  * area (fetched with `fetchOsmNetworkAroundLine` in a corridor along the
  * named river's course) and finds the shortest path through the river
@@ -30,7 +30,7 @@
  */
 
 /**
- * Public Overpass instances, tried in order — the main instance rate-limits
+ * Public Overpass instances, tried in order - the main instance rate-limits
  * aggressively (406/429/504), so a failed request falls through to a mirror.
  */
 const OVERPASS_ENDPOINTS = [
@@ -90,7 +90,7 @@ interface OverpassResponse {
 /** Pause between retry attempts within a round. */
 const RETRY_GAP_MS = 2_000;
 
-/** Pause before the second retry round — the per-IP rate limiter frees a
+/** Pause before the second retry round - the per-IP rate limiter frees a
  * slot after ~20 s. */
 const RATE_LIMIT_COOLDOWN_MS = 20_000;
 
@@ -106,7 +106,7 @@ let lastRequestFinishedAt = 0;
 
 /**
  * Run `task` after all previously queued Overpass work, with a minimum gap
- * between requests. The public instances allow only ~2 slots per IP — and an
+ * between requests. The public instances allow only ~2 slots per IP - and an
  * aborted fetch still occupies its slot server-side, so requests must never
  * run in parallel. Tasks whose `signal` was aborted while still queued are
  * skipped entirely (nothing is sent).
@@ -126,7 +126,7 @@ function enqueueOverpass<T>(
       lastRequestFinishedAt = Date.now();
     }
   });
-  // Keep the queue alive when a task fails — the failure is still
+  // Keep the queue alive when a task fails - the failure is still
   // propagated to the caller through `run`.
   overpassQueue = run.catch(() => undefined);
   return run;
@@ -138,7 +138,7 @@ async function runOverpass(
 ): Promise<OverpassElement[]> {
   return enqueueOverpass(async () => {
     let lastError: unknown = null;
-    // Two rounds over the endpoints — the main instance often rejects a
+    // Two rounds over the endpoints - the main instance often rejects a
     // request (406/429/504); a slot usually frees up within ~20 s.
     for (let round = 0; round < 2; round++) {
       for (const url of OVERPASS_ENDPOINTS) {
@@ -224,7 +224,7 @@ export async function fetchOsmRiver(
 
 /**
  * Fetch all `waterway=river` ways within `radiusMeters` of the polyline
- * `line` — the raw material for routing across confluences with
+ * `line` - the raw material for routing across confluences with
  * `routeSection`. A corridor along the (known) river course is far cheaper
  * than a bounding rectangle, which times out on Overpass (504) for long
  * sections. Canals are excluded so shortest-path routing cannot shortcut
@@ -428,7 +428,7 @@ function growChain(
  * Stitch way fragments into the longest continuous polyline:
  *
  *   1. Grow chains from exactly touching fragments until all are consumed.
- *   2. Bridge small gaps (< ~50 m) between the chains — OSM rivers are often
+ *   2. Bridge small gaps (< ~50 m) between the chains - OSM rivers are often
  *      interrupted at confluences by splits, renames or unnamed pieces.
  *   3. Return the geographically longest chain.
  */
@@ -610,7 +610,7 @@ function extractLineBetween(
 
 /**
  * Route between `putIn` and `takeOut` through the river network formed by
- * `ways` — needed when the two points lie on different rivers (the take-out
+ * `ways` - needed when the two points lie on different rivers (the take-out
  * downstream of a confluence, e.g. Ötztaler Ache → Inn).
  *
  * Builds a graph with a node per way vertex (OSM ways share the exact

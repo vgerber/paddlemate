@@ -84,7 +84,7 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
           />
         ) : null)}
 
-        {/* Speed Dial — section-specific actions on mobile */}
+        {/* Speed Dial - section-specific actions on mobile */}
         <SectionSpeedDial
           state={state}
           sx={{ position: "absolute", bottom: "calc(260px + 16px)", right: 16 }}

@@ -38,7 +38,7 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const [tab, setTab] = useState(0);
   const { isAuthenticated, isLoading, login } = useSession();
-  // Desktop reaches proposals via the top nav — the tab is mobile-only
+  // Desktop reaches proposals via the top nav - the tab is mobile-only
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const effectiveTab = isDesktop ? 0 : tab;
 
@@ -231,7 +231,7 @@ function TokensPanel() {
               sx={{ wordBreak: "break-all" }}
             >
               <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 600 }}>
-                Copy this token — it won't be shown again.
+                Copy this token - it won't be shown again.
               </Typography>
               <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                 <Typography

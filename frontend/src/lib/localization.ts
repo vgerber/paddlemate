@@ -29,7 +29,7 @@ export const LANGUAGE_CODES = [
   "pt",
 ];
 
-// Computed once — called per list item during rendering
+// Computed once - called per list item during rendering
 const browserLanguage = (navigator.language || "en").slice(0, 2).toLowerCase();
 
 /** Two-letter language code the browser prefers, e.g. "de". */
