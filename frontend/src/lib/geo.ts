@@ -91,6 +91,33 @@ export function representativePoint(geom: AnyGeometry): [number, number] {
 }
 
 /**
+ * Dot product of a proposed put-in→take-out direction vs. the estimated
+ * river flow (summed start→end direction of the given lines, [lng, lat]
+ * order). Negative → the proposed take-out is upstream of the put-in.
+ */
+export function downstreamDot(
+  lines: [number, number][][],
+  putIn: { lat: number; lon: number },
+  takeOut: { lat: number; lon: number },
+): number {
+  let dx = 0;
+  let dy = 0;
+  for (const coords of lines) {
+    if (coords.length >= 2) {
+      const start = coords[0];
+      const end = coords[coords.length - 1];
+      dx += end[0] - start[0];
+      dy += end[1] - start[1];
+    }
+  }
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len === 0) return 1;
+  const fx = dx / len;
+  const fy = dy / len;
+  return (takeOut.lon - putIn.lon) * fx + (takeOut.lat - putIn.lat) * fy;
+}
+
+/**
  * Arc-length distance in meters from the start of `line` to the
  * nearest point on it from `pt` (both in [lng, lat] order).
  */

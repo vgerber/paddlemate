@@ -1,9 +1,10 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import WaterwayMap from "@/components/map/Map";
+import FeatureRow from "@/components/waterway/FeatureRow";
 import {
   computeExtent,
-  fmtKm,
+  toPseudoFeature,
 } from "@/components/waterway/section-details/utils";
 import type { Feature, FeatureType, Proposal } from "@/lib/api";
 import { distanceAlongLineM, representativePoint } from "@/lib/geo";
@@ -32,30 +33,6 @@ const labelSx = {
   letterSpacing: "0.08em",
   fontSize: "0.62rem",
 } as const;
-
-function toPseudoFeature(data: BundledFeatureData, index: number): Feature {
-  return {
-    id: -(index + 1),
-    section_id: 0,
-    feature_type: data.feature_type,
-    metadata: (data.metadata ?? {}) as Feature["metadata"],
-    location: data.location,
-    names: data.name
-      ? [
-          {
-            id: 0,
-            feature_id: -(index + 1),
-            lang_code: data.lang_code ?? "en",
-            name: data.name,
-          },
-        ]
-      : [],
-    descriptions: [],
-    created_by: "",
-    created_at: "",
-    updated_at: "",
-  } as Feature;
-}
 
 /** Read-only full view of a proposal — the wizard's review layout without
  * the editing: map, naming, translations and feature rows with positions. */
@@ -100,7 +77,7 @@ export default function ProposalDetailPane({
 
   const totalM = sectionLine
     ? distanceAlongLineM(sectionLine[sectionLine.length - 1], sectionLine)
-    : 0;
+    : undefined;
 
   const detailRows: Array<[string, string]> = [];
   if (typeof data.description === "string" && data.description) {
@@ -195,92 +172,32 @@ export default function ProposalDetailPane({
           <Typography variant="overline" sx={{ lineHeight: 1 }}>
             Features
           </Typography>
-          {featureData.map((feature, index) => {
-            const difficulty = (
-              feature.metadata as Record<string, unknown> | null
-            )?.difficulty as string | undefined;
-            const detail = feature.name
-              ? difficulty
-                ? `${feature.name} (${difficulty})`
-                : feature.name
-              : (difficulty ?? "");
-            const extent = sectionLine
-              ? computeExtent(pseudoFeatures[index], sectionLine)
-              : null;
-            const isFullSection =
-              extent?.isZone === true &&
-              extent.startM < 50 &&
-              totalM - extent.endM < 50;
-            return (
-              <Box
-                key={`${feature.feature_type}-${index}`}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1.5,
-                  px: 1.5,
-                  py: 1,
-                  border: "1px solid",
-                  borderColor: "divider",
-                }}
-              >
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  {detail && (
-                    <Typography variant="body2" noWrap>
-                      {detail}
-                    </Typography>
-                  )}
-                  <Typography sx={{ ...labelSx, color: "text.secondary" }}>
-                    {feature.feature_type.replace(/_/g, " ")}
-                  </Typography>
-                  {feature.description && (
-                    <Typography variant="caption" color="text.secondary">
-                      {feature.description}
-                    </Typography>
-                  )}
-                  {(feature.water_ranges?.length ?? 0) > 0 && (
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "block" }}
-                    >
-                      Gauge thresholds set
-                    </Typography>
-                  )}
-                </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-end",
-                  }}
-                >
-                  <Typography variant="caption" color="text.secondary">
-                    {isFullSection
-                      ? "Full section"
-                      : feature.location.type === "LineString"
-                        ? "Line"
-                        : feature.location.type === "Polygon"
-                          ? "Area"
-                          : "Point"}
-                  </Typography>
-                  {extent && (
-                    <Typography
-                      sx={{
-                        fontFamily: fonts.mono,
-                        fontSize: "0.65rem",
-                        color: "text.disabled",
-                      }}
-                    >
-                      {extent.isZone
-                        ? `${fmtKm(extent.startM)} – ${fmtKm(extent.endM)}`
-                        : fmtKm(extent.distM)}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-            );
-          })}
+          {featureData.map((feature, index) => (
+            <FeatureRow
+              key={`${feature.feature_type}-${index}`}
+              featureType={feature.feature_type}
+              name={feature.name}
+              difficulty={
+                (feature.metadata as Record<string, unknown> | null)
+                  ?.difficulty as string | undefined
+              }
+              description={feature.description}
+              gaugeName={
+                (feature.water_ranges?.length ?? 0) > 0
+                  ? "thresholds set"
+                  : undefined
+              }
+              locationType={
+                feature.location.type as "Point" | "LineString" | "Polygon"
+              }
+              extent={
+                sectionLine
+                  ? computeExtent(pseudoFeatures[index], sectionLine)
+                  : null
+              }
+              totalM={totalM}
+            />
+          ))}
         </Box>
       )}
 

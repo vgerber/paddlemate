@@ -8,8 +8,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { preferredLanguage } from "@/lib/localization";
-import { LANGUAGE_CODES } from "./SuggestFeatureForm";
+import { LANGUAGE_CODES, preferredLanguage } from "@/lib/localization";
 
 export interface SectionTranslationDraft {
   langCode: string;
@@ -28,7 +27,7 @@ export interface SectionNamingValue {
 }
 
 /** Fresh naming state; the primary language defaults to the browser's. */
-export function initialNaming(): SectionNamingValue {
+export function createInitialNaming(): SectionNamingValue {
   const browser = preferredLanguage();
   return {
     langCode: LANGUAGE_CODES.includes(browser) ? browser : "en",
@@ -211,7 +210,6 @@ export default function SectionNamingForm({
               />
             </Box>
           ))}
-
         </Box>
       )}
     </Box>

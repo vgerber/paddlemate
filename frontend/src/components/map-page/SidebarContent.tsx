@@ -129,22 +129,23 @@ export default function SidebarContent({
           setSuggestMode(null);
           clearSuggestState();
         }}
-        vertices={featureVertices}
-        geomType={featureGeomType}
-        pickingActive={featurePickingActive}
-        onStartPick={() => setFeaturePickingActive(true)}
-        onStopPick={() => setFeaturePickingActive(false)}
-        onRemoveVertex={(i) =>
-          setFeatureVertices((prev) => prev.filter((_, idx) => idx !== i))
-        }
-        onGeomTypeChange={(t) => {
-          setFeatureGeomType(t);
-          setFeatureVertices([]);
-          setFeaturePickingActive(false);
-        }}
-        onDraftClear={() => {
-          setFeatureVertices([]);
-          setFeaturePickingActive(false);
+        geometry={{
+          vertices: featureVertices,
+          geomType: featureGeomType,
+          pickingActive: featurePickingActive,
+          onRequestPick: () => setFeaturePickingActive(true),
+          onStopPick: () => setFeaturePickingActive(false),
+          onRemoveVertex: (i) =>
+            setFeatureVertices((prev) => prev.filter((_, idx) => idx !== i)),
+          onGeomTypeChange: (t) => {
+            setFeatureGeomType(t);
+            setFeatureVertices([]);
+            setFeaturePickingActive(false);
+          },
+          onClearVertices: () => {
+            setFeatureVertices([]);
+            setFeaturePickingActive(false);
+          },
         }}
       />
     );

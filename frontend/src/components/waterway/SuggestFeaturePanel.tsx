@@ -1,11 +1,11 @@
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { useWaterway } from "@/lib/hooks/useWaterways";
+import type { GeometryPicking } from "./GeometryPicker";
 import SuggestFeatureForm from "./SuggestFeatureForm";
 
 interface SuggestFeaturePanelProps {
@@ -13,14 +13,7 @@ interface SuggestFeaturePanelProps {
   sectionId: number;
   gaugeRanges?: WaterRangeWithStatus[];
   onClose: () => void;
-  vertices: { lng: number; lat: number }[];
-  geomType: "Point" | "LineString" | "Polygon";
-  pickingActive: boolean;
-  onStartPick: () => void;
-  onStopPick: () => void;
-  onRemoveVertex: (i: number) => void;
-  onGeomTypeChange: (t: "Point" | "LineString" | "Polygon") => void;
-  onDraftClear: () => void;
+  geometry: GeometryPicking;
 }
 
 export default function SuggestFeaturePanel({
@@ -28,14 +21,7 @@ export default function SuggestFeaturePanel({
   sectionId,
   gaugeRanges,
   onClose,
-  vertices,
-  geomType,
-  pickingActive,
-  onStartPick,
-  onStopPick,
-  onRemoveVertex,
-  onGeomTypeChange,
-  onDraftClear,
+  geometry,
 }: SuggestFeaturePanelProps) {
   const { data: waterway } = useWaterway(waterwayId);
   const sections = waterway?.sections ?? [];
@@ -53,13 +39,9 @@ export default function SuggestFeaturePanel({
   const submitRef = useRef<(() => void) | null>(null);
   const [canSubmit, setCanSubmit] = useState(false);
 
-  useEffect(() => {
-    setCanSubmit(false);
-  }, []);
-
   function handleClose() {
-    onDraftClear();
-    onStopPick();
+    geometry.onClearVertices();
+    geometry.onStopPick();
     onClose();
   }
 
@@ -87,66 +69,28 @@ export default function SuggestFeaturePanel({
               : undefined
           }
           gaugeRanges={gaugeRanges}
-          vertices={vertices}
-          geomType={geomType}
-          pickingActive={pickingActive}
-          onRequestPick={onStartPick}
-          onStopPick={onStopPick}
-          onRemoveVertex={onRemoveVertex}
-          onGeomTypeChange={onGeomTypeChange}
-          onClearVertices={onDraftClear}
+          geometry={geometry}
           onSubmitted={onClose}
           submitRef={submitRef}
           onCanSubmitChange={setCanSubmit}
         />
       </Box>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          px: 1,
-          pt: 1,
-          pb: "calc(8px + env(safe-area-inset-bottom))",
-          borderTop: "1px solid",
-          borderColor: "divider",
-          flexShrink: 0,
-          gap: 1,
-        }}
-      >
-        <IconButton onClick={handleClose} aria-label="Cancel">
-          <CloseIcon />
-        </IconButton>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700 }}>
-            {selectedSection?.name ?? waterway?.name ?? "…"}
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: "block" }}
+      <PanelBottomBar
+        leftIcon={<CloseIcon />}
+        onLeftClick={handleClose}
+        leftLabel="Cancel"
+        title={selectedSection?.name ?? waterway?.name ?? "…"}
+        subtitle="Suggest new feature"
+        action={
+          <RoundActionButton
+            onClick={() => submitRef.current?.()}
+            disabled={!canSubmit}
+            ariaLabel="Submit"
           >
-            Suggest new feature
-          </Typography>
-        </Box>
-        <IconButton
-          size="large"
-          onClick={() => submitRef.current?.()}
-          disabled={!canSubmit}
-          aria-label="Submit"
-          sx={{
-            borderRadius: "50%",
-            bgcolor: "secondary.main",
-            color: "secondary.contrastText",
-            "&:hover": { bgcolor: "secondary.light" },
-            "&.Mui-disabled": {
-              bgcolor: "action.disabledBackground",
-              color: "action.disabled",
-            },
-          }}
-        >
-          <CheckIcon fontSize="small" />
-        </IconButton>
-      </Box>
+            <CheckIcon fontSize="small" />
+          </RoundActionButton>
+        }
+      />
     </>
   );
 }

@@ -1,9 +1,12 @@
 use serde_json::{Value, json};
 use sqlx::{PgPool, Row, postgres::PgRow};
 
-use crate::models::proposal::{
-    ListProposalsFilters, Proposal, ProposalEntityType, ProposalOperation, ProposalStatus,
+use crate::models::{
+    feature::CreateFeatureBody,
+    proposal::{ListProposalsFilters, Proposal, ProposalEntityType, ProposalOperation, ProposalStatus},
+    water_section::CreateSectionBody,
 };
+use crate::query::{features, gauges, sections};
 
 fn parse_entity_type(s: &str) -> ProposalEntityType {
     match s {
@@ -396,88 +399,6 @@ pub async fn review_proposal(
     Ok(Some(row_to_proposal(&updated_row)))
 }
 
-/// Insert a feature (plus optional localized name/description) described by
-/// proposal JSON — used for standalone feature proposals and for features
-/// bundled with a new-section proposal.
-async fn insert_feature_from_data(
-    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-    section_id: i64,
-    data: &Value,
-    created_by: &str,
-) -> Result<(), sqlx::Error> {
-    let feature_type = data["feature_type"].as_str().unwrap_or_default();
-    let metadata = data
-        .get("metadata")
-        .cloned()
-        .unwrap_or_else(|| Value::Object(serde_json::Map::new()));
-    let location = serde_json::to_string(&data["location"])
-        .map_err(|e| sqlx::Error::Decode(e.into()))?;
-    let row = sqlx::query(
-        r#"INSERT INTO features (section_id, feature_type, metadata, location, created_by)
-           VALUES ($1, $2::feature_type, $3, ST_GeomFromGeoJSON($4), $5) RETURNING id"#,
-    )
-    .bind(section_id)
-    .bind(feature_type)
-    .bind(metadata)
-    .bind(&location)
-    .bind(created_by)
-    .fetch_one(&mut **tx)
-    .await?;
-    let feature_id: i64 = row.get("id");
-
-    let lang_code = data["lang_code"].as_str().unwrap_or("en");
-    if let Some(name) = data["name"].as_str() {
-        sqlx::query(
-            "INSERT INTO feature_names (feature_id, lang_code, name) VALUES ($1, $2, $3) \
-             ON CONFLICT (feature_id, lang_code) DO UPDATE SET name = EXCLUDED.name",
-        )
-        .bind(feature_id)
-        .bind(lang_code)
-        .bind(name)
-        .execute(&mut **tx)
-        .await?;
-    }
-    if let Some(description) = data["description"].as_str() {
-        sqlx::query(
-            "INSERT INTO feature_descriptions (feature_id, lang_code, description) \
-             VALUES ($1, $2, $3) \
-             ON CONFLICT (feature_id, lang_code) DO UPDATE SET description = EXCLUDED.description",
-        )
-        .bind(feature_id)
-        .bind(lang_code)
-        .bind(description)
-        .execute(&mut **tx)
-        .await?;
-    }
-
-    // Gauge thresholds bundled with the feature
-    if let Some(ranges) = data.get("water_ranges").and_then(|v| v.as_array()) {
-        for range in ranges {
-            let Some(series_id) = range["series_id"].as_i64() else {
-                continue;
-            };
-            sqlx::query(
-                r#"INSERT INTO feature_water_ranges
-                   (feature_id, series_id, range_low, range_medium, range_high)
-                   VALUES ($1, $2, $3, $4, $5)
-                   ON CONFLICT (feature_id, series_id)
-                   DO UPDATE SET range_low    = EXCLUDED.range_low,
-                                 range_medium = EXCLUDED.range_medium,
-                                 range_high   = EXCLUDED.range_high,
-                                 updated_at   = NOW()"#,
-            )
-            .bind(feature_id)
-            .bind(series_id)
-            .bind(range["range_low"].as_f64())
-            .bind(range["range_medium"].as_f64())
-            .bind(range["range_high"].as_f64())
-            .execute(&mut **tx)
-            .await?;
-        }
-    }
-    Ok(())
-}
-
 /// Apply the proposed change to the live table within an open transaction.
 async fn apply_proposal(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
@@ -523,63 +444,11 @@ async fn apply_proposal(
         }
 
         (ProposalEntityType::WaterSection, ProposalOperation::Create) => {
-            let waterway_id = data["waterway_id"].as_i64();
-            let location = serde_json::to_string(&data["location"])
+            let waterway_id = data["waterway_id"].as_i64().unwrap_or_default();
+            let body: CreateSectionBody = serde_json::from_value(data.clone())
                 .map_err(|e| sqlx::Error::Decode(e.into()))?;
-            let row = sqlx::query(
-                "INSERT INTO water_sections (waterway_id, name, description, region, country, location) \
-                 VALUES ($1, $2, $3, $4, $5, ST_GeomFromGeoJSON($6)) RETURNING id",
-            )
-            .bind(waterway_id)
-            .bind(data["name"].as_str().unwrap_or_default())
-            .bind(data["description"].as_str())
-            .bind(data["region"].as_str())
-            .bind(data["country"].as_str())
-            .bind(&location)
-            .fetch_one(&mut **tx)
-            .await?;
-            let section_id: i64 = row.get("id");
-
-            // Localized names/descriptions bundled with the section proposal
-            if let Some(translations) = data.get("translations").and_then(|v| v.as_array()) {
-                for translation in translations {
-                    let Some(lang_code) = translation["lang_code"].as_str() else {
-                        continue;
-                    };
-                    if let Some(name) = translation["name"].as_str() {
-                        sqlx::query(
-                            "INSERT INTO section_names (section_id, lang_code, name) \
-                             VALUES ($1, $2, $3) \
-                             ON CONFLICT (section_id, lang_code) DO UPDATE SET name = EXCLUDED.name",
-                        )
-                        .bind(section_id)
-                        .bind(lang_code)
-                        .bind(name)
-                        .execute(&mut **tx)
-                        .await?;
-                    }
-                    if let Some(description) = translation["description"].as_str() {
-                        sqlx::query(
-                            "INSERT INTO section_descriptions (section_id, lang_code, description) \
-                             VALUES ($1, $2, $3) \
-                             ON CONFLICT (section_id, lang_code) DO UPDATE SET description = EXCLUDED.description",
-                        )
-                        .bind(section_id)
-                        .bind(lang_code)
-                        .bind(description)
-                        .execute(&mut **tx)
-                        .await?;
-                    }
-                }
-            }
-
-            // Features bundled with the section proposal
-            if let Some(features) = data.get("features").and_then(|v| v.as_array()) {
-                for feature in features {
-                    insert_feature_from_data(tx, section_id, feature, &proposal.submitted_by)
-                        .await?;
-                }
-            }
+            sections::create_section_bundle(&mut **tx, waterway_id, &body, &proposal.submitted_by)
+                .await?;
         }
 
         (ProposalEntityType::WaterSection, ProposalOperation::Update) => {
@@ -596,12 +465,16 @@ async fn apply_proposal(
                     r#"UPDATE water_sections
                        SET name        = COALESCE($1, name),
                            description = COALESCE($2, description),
-                           location    = COALESCE(ST_GeomFromGeoJSON($3), location),
+                           region      = COALESCE($3, region),
+                           country     = COALESCE($4, country),
+                           location    = COALESCE(ST_GeomFromGeoJSON($5), location),
                            updated_at  = NOW()
-                       WHERE id = $4"#,
+                       WHERE id = $6"#,
                 )
                 .bind(data["name"].as_str())
                 .bind(data["description"].as_str())
+                .bind(data["region"].as_str())
+                .bind(data["country"].as_str())
                 .bind(location.as_deref())
                 .bind(id)
                 .execute(&mut **tx)
@@ -620,7 +493,15 @@ async fn apply_proposal(
 
         (ProposalEntityType::Feature, ProposalOperation::Create) => {
             if let Some(section_id) = data["section_id"].as_i64() {
-                insert_feature_from_data(tx, section_id, data, &proposal.submitted_by).await?;
+                let body: CreateFeatureBody = serde_json::from_value(data.clone())
+                    .map_err(|e| sqlx::Error::Decode(e.into()))?;
+                features::create_feature_bundle(
+                    &mut **tx,
+                    section_id,
+                    &body,
+                    &proposal.submitted_by,
+                )
+                .await?;
             }
         }
 
@@ -629,22 +510,17 @@ async fn apply_proposal(
                 // Apply water ranges if included in the delta
                 if let Some(ranges) = data.get("water_ranges").and_then(|v| v.as_array()) {
                     for range in ranges {
-                        sqlx::query(
-                            r#"INSERT INTO feature_water_ranges
-                               (feature_id, series_id, range_low, range_medium, range_high)
-                               VALUES ($1, $2, $3, $4, $5)
-                               ON CONFLICT (feature_id, series_id)
-                               DO UPDATE SET range_low    = EXCLUDED.range_low,
-                                             range_medium = EXCLUDED.range_medium,
-                                             range_high   = EXCLUDED.range_high,
-                                             updated_at   = NOW()"#,
+                        let Some(series_id) = range["series_id"].as_i64() else {
+                            continue;
+                        };
+                        gauges::upsert_feature_water_range_partial(
+                            &mut **tx,
+                            id,
+                            series_id,
+                            range["range_low"].as_f64(),
+                            range["range_medium"].as_f64(),
+                            range["range_high"].as_f64(),
                         )
-                        .bind(id)
-                        .bind(range["series_id"].as_i64())
-                        .bind(range["range_low"].as_f64())
-                        .bind(range["range_medium"].as_f64())
-                        .bind(range["range_high"].as_f64())
-                        .execute(&mut **tx)
                         .await?;
                     }
                 }

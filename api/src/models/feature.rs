@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::{geometry::Geometry, water_section::SectionId};
+use super::{gauge::FeatureWaterRangeBody, geometry::Geometry, water_section::SectionId};
 
 pub type FeatureId = i64;
 
@@ -55,4 +55,26 @@ pub struct Feature {
     pub created_by: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+
+fn default_metadata() -> Value {
+    Value::Object(serde_json::Map::new())
+}
+
+/// Payload for creating a feature — used by the feature endpoint, by bundled
+/// section-create payloads, and inside proposals.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct CreateFeatureBody {
+    pub feature_type: FeatureType,
+    #[serde(default = "default_metadata")]
+    pub metadata: Value,
+    /// GeoJSON geometry (Point, LineString, or Polygon)
+    pub location: Geometry,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    /// BCP-47 language code for name/description (default: "en")
+    pub lang_code: Option<String>,
+    /// Gauge thresholds created together with the feature
+    #[serde(default)]
+    pub water_ranges: Vec<FeatureWaterRangeBody>,
 }

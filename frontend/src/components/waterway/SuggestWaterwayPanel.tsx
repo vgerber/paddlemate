@@ -5,11 +5,11 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import { waterwaysApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { proposalKeys } from "@/lib/hooks/useProposals";
@@ -259,53 +259,22 @@ export default function SuggestWaterwayPanel({
           </>
         )}
       </Box>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          px: 1,
-          pt: 1,
-          pb: "calc(8px + env(safe-area-inset-bottom))",
-          borderTop: "1px solid",
-          borderColor: "divider",
-          flexShrink: 0,
-          gap: 1,
-        }}
-      >
-        <IconButton onClick={onClose} aria-label="Cancel">
-          <CloseIcon />
-        </IconButton>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700 }}>
-            New river
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: "block" }}
+      <PanelBottomBar
+        leftIcon={<CloseIcon />}
+        onLeftClick={onClose}
+        leftLabel="Cancel"
+        title="New river"
+        subtitle="Suggest a missing river"
+        action={
+          <RoundActionButton
+            onClick={handleSubmit}
+            disabled={!canSubmit || !isAuthenticated}
+            ariaLabel="Submit"
           >
-            Suggest a missing river
-          </Typography>
-        </Box>
-        <IconButton
-          size="large"
-          onClick={handleSubmit}
-          disabled={!canSubmit || !isAuthenticated}
-          aria-label="Submit"
-          sx={{
-            borderRadius: "50%",
-            bgcolor: "secondary.main",
-            color: "secondary.contrastText",
-            "&:hover": { bgcolor: "secondary.light" },
-            "&.Mui-disabled": {
-              bgcolor: "action.disabledBackground",
-              color: "action.disabled",
-            },
-          }}
-        >
-          <CheckIcon fontSize="small" />
-        </IconButton>
-      </Box>
+            <CheckIcon fontSize="small" />
+          </RoundActionButton>
+        }
+      />
     </>
   );
 }

@@ -174,6 +174,18 @@ pub async fn review_proposal(
             "Approving would create a duplicate (name already exists) — reject the proposal instead",
         )
             .into_response(),
+        // Check violation (e.g. water range thresholds out of order).
+        Err(sqlx::Error::Database(db_err)) if db_err.code().as_deref() == Some("23514") => (
+            StatusCode::CONFLICT,
+            "The proposed data violates a data constraint (e.g. water range thresholds) — reject the proposal instead",
+        )
+            .into_response(),
+        // Foreign key violation (e.g. a referenced gauge series was deleted).
+        Err(sqlx::Error::Database(db_err)) if db_err.code().as_deref() == Some("23503") => (
+            StatusCode::CONFLICT,
+            "The proposal references data that no longer exists (e.g. a deleted gauge) — reject the proposal instead",
+        )
+            .into_response(),
         Err(err) => {
             tracing::error!("Error reviewing proposal {}: {}", path.proposal_id, err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()

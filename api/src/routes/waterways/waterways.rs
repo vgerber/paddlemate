@@ -18,7 +18,7 @@ use crate::{
         water_section::SectionWithFeatures,
         waterway::{PaginatedResponse, Waterway, WaterwayId, WaterwayType, WaterwayWithSections},
     },
-    query::{features, proposals, sections as query_sections},
+    query::{features, proposals, sections as query_sections, waterways as query_waterways},
     state::AppState,
 };
 
@@ -301,13 +301,7 @@ pub async fn create_waterway(
 
     // Reject duplicates up front (case-insensitive) for both the admin and
     // proposal paths; the UNIQUE constraint still guards against races.
-    match sqlx::query_scalar!(
-        r#"SELECT EXISTS(SELECT 1 FROM waterways WHERE lower(name) = lower($1)) AS "exists!""#,
-        body.name
-    )
-    .fetch_one(&app.pg_pool)
-    .await
-    {
+    match query_waterways::name_exists(&app.pg_pool, &body.name).await {
         Ok(true) => {
             return (
                 StatusCode::CONFLICT,
@@ -348,7 +342,7 @@ pub async fn create_waterway(
                 }),
             )
                 .into_response(),
-            Err(sqlx::Error::Database(db_err)) if db_err.code().as_deref() == Some("23505") => (
+            Err(err) if crate::query::is_unique_violation(&err) => (
                 StatusCode::CONFLICT,
                 "A waterway with this name already exists",
             )

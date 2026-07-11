@@ -2,45 +2,36 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import ReplayIcon from "@mui/icons-material/Replay";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import IconButton from "@mui/material/IconButton";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import LocationPin, {
-  PUT_IN_COLOR,
-  TAKE_OUT_COLOR,
-} from "@/components/map/LocationPin";
 import WaterwayMap from "@/components/map/Map";
+import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
+import type {
+  GeometryPicking,
+  GeomType,
+} from "@/components/waterway/GeometryPicker";
+import SectionFeaturesStep from "@/components/waterway/SectionFeaturesStep";
+import SectionLineStep from "@/components/waterway/SectionLineStep";
 import SectionNamingForm, {
-  initialNaming,
+  createInitialNaming,
   type SectionNamingValue,
 } from "@/components/waterway/SectionNamingForm";
-import SuggestFeatureForm, {
-  type SectionFeatureDraft,
-} from "@/components/waterway/SuggestFeatureForm";
-import {
-  computeExtent,
-  fmtKm,
-} from "@/components/waterway/section-details/utils";
-import type { Feature, SectionWithFeatures } from "@/lib/api";
+import type { SectionFeatureDraft } from "@/components/waterway/SuggestFeatureForm";
+import { toPseudoFeature } from "@/components/waterway/section-details/utils";
+import type { Feature } from "@/lib/api";
 import { sectionsApi } from "@/lib/api";
-import { distanceAlongLineM } from "@/lib/geo";
+import { downstreamDot } from "@/lib/geo";
 import { useRiverSnap } from "@/lib/hooks/useRiverSnap";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway, waterwayKeys } from "@/lib/hooks/useWaterways";
 import type { BoundingBox, Coordinate } from "@/lib/riverSnap";
-import { fonts, theme } from "@/lib/theme";
-
-const { tokens } = theme;
+import { fonts } from "@/lib/theme";
 
 export const Route = createFileRoute("/waterways/suggest-section")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -50,31 +41,6 @@ export const Route = createFileRoute("/waterways/suggest-section")({
 });
 
 const STEPS = ["Naming", "Section", "Features"] as const;
-
-/** Dot product of proposed direction vs. estimated river flow.
- *  Negative → proposed take-out is upstream of put-in. */
-function downstreamDot(
-  sections: SectionWithFeatures[],
-  putIn: { lat: number; lon: number },
-  takeOut: { lat: number; lon: number },
-): number {
-  let dx = 0;
-  let dy = 0;
-  for (const s of sections) {
-    const coords = (s.location as unknown as GeoJSON.LineString).coordinates;
-    if (coords.length >= 2) {
-      const start = coords[0];
-      const end = coords[coords.length - 1];
-      dx += end[0] - start[0];
-      dy += end[1] - start[1];
-    }
-  }
-  const len = Math.sqrt(dx * dx + dy * dy);
-  if (len === 0) return 1;
-  const fx = dx / len;
-  const fy = dy / len;
-  return (takeOut.lon - putIn.lon) * fx + (takeOut.lat - putIn.lat) * fy;
-}
 
 function SuggestSectionPage() {
   const router = useRouter();
@@ -87,7 +53,7 @@ function SuggestSectionPage() {
   const [step, setStep] = useState(0);
 
   // Step 1: naming
-  const [naming, setNaming] = useState<SectionNamingValue>(initialNaming);
+  const [naming, setNaming] = useState<SectionNamingValue>(createInitialNaming);
 
   // Step 2: section line
   const [putIn, setPutIn] = useState<{ lat: number; lon: number } | null>(null);
@@ -103,13 +69,26 @@ function SuggestSectionPage() {
   const [featureVertices, setFeatureVertices] = useState<
     { lng: number; lat: number }[]
   >([]);
-  const [featureGeomType, setFeatureGeomType] = useState<
-    "Point" | "LineString" | "Polygon"
-  >("Point");
+  const [featureGeomType, setFeatureGeomType] = useState<GeomType>("Point");
   const [featurePickActive, setFeaturePickActive] = useState(false);
-  const featureSubmitRef = useRef<(() => void) | null>(null);
-  const [canAddFeature, setCanAddFeature] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const featureGeometry: GeometryPicking = {
+    vertices: featureVertices,
+    geomType: featureGeomType,
+    pickingActive: featurePickActive,
+    onGeomTypeChange: (t) => {
+      setFeatureGeomType(t);
+      setFeatureVertices([]);
+    },
+    onRequestPick: () => setFeaturePickActive(true),
+    onStopPick: () => setFeaturePickActive(false),
+    onRemoveVertex: (i) =>
+      setFeatureVertices((vertices) =>
+        vertices.filter((_, index) => index !== i),
+      ),
+    onClearVertices: () => setFeatureVertices([]),
+  };
 
   // Bring the map into view whenever a pick starts (any trigger: place
   // point, start drawing a line/area, move) — the buttons sit below the
@@ -132,8 +111,6 @@ function SuggestSectionPage() {
 
   const hasLocation = putIn != null && takeOut != null;
   const snapActive = lineSource === "snap" && snap.status === "done";
-  const snapInProgress =
-    snap.status === "searching" || snap.status === "routing";
 
   const finalCoords: Coordinate[] | null = useMemo(
     () =>
@@ -153,17 +130,23 @@ function SuggestSectionPage() {
   const orderWrong =
     hasLocation &&
     sections.length > 0 &&
-    downstreamDot(sections, putIn, takeOut) < 0;
+    downstreamDot(
+      sections.map(
+        (s) =>
+          (s.location as unknown as GeoJSON.LineString)
+            .coordinates as Coordinate[],
+      ),
+      putIn,
+      takeOut,
+    ) < 0;
 
   // Drafted features shown on the map as ghost markers (same rendering as
   // pending feature proposals)
   const draftFeaturePseudos: Feature[] = useMemo(
     () =>
-      draftFeatures.map(
-        (feature, index) =>
-          ({
-            id: -(index + 1),
-            section_id: 0,
+      draftFeatures.map((feature, index) =>
+        toPseudoFeature(
+          {
             feature_type: feature.feature_type,
             // Full-section features are label-suppressed on the map, so
             // the difficulty fallback must not resurface there either
@@ -175,35 +158,13 @@ function SuggestSectionPage() {
               : feature.location) as Feature["location"],
             // Full-section features skip the on-map name label — the section
             // label already covers the whole line
-            names:
-              feature.name && !feature.used_section_line
-                ? [
-                    {
-                      id: 0,
-                      feature_id: -(index + 1),
-                      lang_code: feature.lang_code,
-                      name: feature.name,
-                    },
-                  ]
-                : [],
-            descriptions: [],
-            created_by: "",
-            created_at: "",
-            updated_at: "",
-          }) as Feature,
+            name: feature.used_section_line ? null : feature.name,
+            lang_code: feature.lang_code,
+          },
+          index,
+        ),
       ),
     [draftFeatures, finalCoords],
-  );
-
-  // Position of each draft along the section line, for the list rows
-  const draftFeatureExtents = useMemo(
-    () =>
-      finalCoords
-        ? draftFeaturePseudos.map((feature) =>
-            computeExtent(feature, finalCoords),
-          )
-        : [],
-    [draftFeaturePseudos, finalCoords],
   );
 
   const canProceed =
@@ -333,7 +294,7 @@ function SuggestSectionPage() {
 
   return (
     <Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: { xs: 1.5, md: 2 } }}>
-      {/* Header — compact single row: title, step progress, cancel */}
+      {/* Header — compact single row: title, cancel */}
       <Box
         sx={{
           display: "flex",
@@ -440,370 +401,48 @@ function SuggestSectionPage() {
             </Box>
           )}
 
-          {/* Step 1 — Naming */}
           {step === 0 && (
             <SectionNamingForm value={naming} onChange={setNaming} />
           )}
 
-          {/* Step 2 — Section line */}
           {step === 1 && (
-            <>
-              {!hasLocation && (
-                <>
-                  {snap.riverLookup === "searching" && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <CircularProgress size={14} />
-                      <Typography variant="caption" color="text.secondary">
-                        Searching for {waterway?.name ?? "the river"} on
-                        OpenStreetMap…
-                      </Typography>
-                    </Box>
-                  )}
-                  {snap.riverLookup === "found" && (
-                    <Typography variant="caption" color="text.secondary">
-                      River course highlighted on the map — pick your points on
-                      it.
-                    </Typography>
-                  )}
-                  {snap.riverLookup === "not-found" && (
-                    <Typography variant="caption" color="text.secondary">
-                      Couldn't find {waterway?.name ?? "the river"} in this map
-                      view — pan or zoom to it, or pick your points anyway.
-                    </Typography>
-                  )}
-                  {snap.riverLookup === "zoomed-out" && (
-                    <Typography variant="caption" color="text.secondary">
-                      Zoom in to preview the river course.
-                    </Typography>
-                  )}
-                </>
-              )}
-
-              <Box sx={{ display: "flex", gap: 1.5 }}>
-                <LocationPin
-                  num={1}
-                  color={PUT_IN_COLOR}
-                  title="PUT-IN"
-                  coords={putIn}
-                  onClear={() => setPutIn(null)}
-                />
-                <LocationPin
-                  num={2}
-                  color={TAKE_OUT_COLOR}
-                  title="TAKE-OUT"
-                  coords={takeOut}
-                  onClear={() => setTakeOut(null)}
-                />
-              </Box>
-
-              {hasLocation && (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  {snap.status === "failed" && (
-                    <Alert
-                      severity="warning"
-                      sx={{ py: 0.25, fontSize: "0.75rem" }}
-                    >
-                      Couldn't match this river on OpenStreetMap — a straight
-                      line between your points will be used.
-                    </Alert>
-                  )}
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <ToggleButtonGroup
-                      value={snapActive ? "snap" : "straight"}
-                      exclusive
-                      size="small"
-                      onChange={(_, v) => {
-                        if (v) setLineSource(v);
-                      }}
-                      sx={{
-                        flex: 1,
-                        "& .MuiToggleButton-root": {
-                          flex: 1,
-                          py: { xs: 1.25, md: 0.5 },
-                          fontSize: { xs: "0.75rem", md: "0.7rem" },
-                        },
-                      }}
-                    >
-                      <ToggleButton
-                        value="snap"
-                        disabled={snap.status !== "done"}
-                      >
-                        {snapInProgress && (
-                          <CircularProgress
-                            size={12}
-                            color="inherit"
-                            sx={{ mr: 0.75 }}
-                          />
-                        )}
-                        Snapped course
-                      </ToggleButton>
-                      <ToggleButton value="straight">
-                        Straight line
-                      </ToggleButton>
-                    </ToggleButtonGroup>
-                    <Tooltip title="Retry OSM matching">
-                      <span>
-                        <IconButton
-                          size="small"
-                          onClick={snap.retry}
-                          disabled={snapInProgress}
-                          sx={{ p: { xs: 1.25, md: 0.625 } }}
-                        >
-                          <ReplayIcon fontSize="small" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                  </Box>
-                  {orderWrong && (
-                    <Alert
-                      severity="warning"
-                      sx={{ py: 0.25, fontSize: "0.75rem" }}
-                    >
-                      Put-in appears to be downstream of take-out — check the
-                      order.
-                    </Alert>
-                  )}
-                </Box>
-              )}
-            </>
+            <SectionLineStep
+              waterwayName={waterway?.name}
+              snap={snap}
+              putIn={putIn}
+              takeOut={takeOut}
+              onClearPutIn={() => setPutIn(null)}
+              onClearTakeOut={() => setTakeOut(null)}
+              snapActive={snapActive}
+              onLineSourceChange={setLineSource}
+              orderWrong={orderWrong}
+            />
           )}
 
-          {/* Step 3 — Features: the shared feature form in draft mode;
-              each added feature travels inside the section proposal */}
           {step === 2 && (
-            <>
-              {/* Fixed entries: the section's own endpoints (derived from the
-                  line, not submitted as separate features) */}
-              {finalCoords &&
-                (
-                  [
-                    { num: 1, label: "put in", color: PUT_IN_COLOR, km: 0 },
-                    {
-                      num: 2,
-                      label: "take out",
-                      color: TAKE_OUT_COLOR,
-                      km: distanceAlongLineM(
-                        finalCoords[finalCoords.length - 1],
-                        finalCoords,
-                      ),
-                    },
-                  ] as const
-                ).map((endpoint) => (
-                  <Box
-                    key={endpoint.label}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1.5,
-                      px: 1.5,
-                      py: 1,
-                      border: "1px solid",
-                      borderColor: "divider",
-                      opacity: 0.8,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 18,
-                        height: 18,
-                        borderRadius: "50%",
-                        bgcolor: endpoint.color,
-                        color: tokens.white,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "0.65rem",
-                        fontWeight: 700,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {endpoint.num}
-                    </Box>
-                    <Typography
-                      sx={{
-                        flex: 1,
-                        color: "text.secondary",
-                        fontFamily: fonts.label,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                        fontSize: "0.62rem",
-                      }}
-                    >
-                      {endpoint.label}
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-end",
-                      }}
-                    >
-                      <Typography variant="caption" color="text.secondary">
-                        Point
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: fonts.mono,
-                          fontSize: "0.65rem",
-                          color: "text.disabled",
-                        }}
-                      >
-                        {fmtKm(endpoint.km)}
-                      </Typography>
-                    </Box>
-                    {/* Spacer where removable rows show the ✕ */}
-                    <Box sx={{ width: 34, flexShrink: 0 }} />
-                  </Box>
-                ))}
-
-              {draftFeatures.map((feature, index) => {
-                const difficulty = feature.metadata.difficulty as
-                  | string
-                  | undefined;
-                const detail = feature.name
-                  ? difficulty
-                    ? `${feature.name} (${difficulty})`
-                    : feature.name
-                  : (difficulty ?? "");
-                const extent = draftFeatureExtents[index];
-                return (
-                  <Box
-                    key={`${feature.feature_type}-${index}`}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1.5,
-                      px: 1.5,
-                      py: 1,
-                      border: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  >
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      {detail && (
-                        <Typography variant="body2" noWrap>
-                          {detail}
-                        </Typography>
-                      )}
-                      <Typography
-                        sx={{
-                          color: "text.secondary",
-                          fontFamily: fonts.label,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.08em",
-                          fontSize: "0.62rem",
-                        }}
-                      >
-                        {feature.feature_type.replace(/_/g, " ")}
-                      </Typography>
-                      {feature.gauge_name && (
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ display: "block" }}
-                        >
-                          Gauge · {feature.gauge_name}
-                        </Typography>
-                      )}
-                    </Box>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-end",
-                      }}
-                    >
-                      <Typography variant="caption" color="text.secondary">
-                        {feature.used_section_line
-                          ? "Full section"
-                          : feature.location.type === "LineString"
-                            ? "Line"
-                            : feature.location.type === "Polygon"
-                              ? "Area"
-                              : "Point"}
-                      </Typography>
-                      {extent && (
-                        <Typography
-                          sx={{
-                            fontFamily: fonts.mono,
-                            fontSize: "0.65rem",
-                            color: "text.disabled",
-                          }}
-                        >
-                          {extent.isZone
-                            ? `${fmtKm(extent.startM)} – ${fmtKm(extent.endM)}`
-                            : fmtKm(extent.distM)}
-                        </Typography>
-                      )}
-                    </Box>
-                    <IconButton
-                      aria-label="Remove feature"
-                      onClick={() =>
-                        setDraftFeatures(
-                          draftFeatures.filter((_, i) => i !== index),
-                        )
-                      }
-                    >
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                );
-              })}
-
-              <SuggestFeatureForm
-                sectionLine={
-                  finalCoords?.map(([lng, lat]) => ({ lng, lat })) ?? undefined
-                }
-                nearPoint={
-                  finalCoords
-                    ? {
-                        lat: finalCoords[Math.floor(finalCoords.length / 2)][1],
-                        lon: finalCoords[Math.floor(finalCoords.length / 2)][0],
-                      }
-                    : (putIn ?? undefined)
-                }
-                vertices={featureVertices}
-                geomType={featureGeomType}
-                onGeomTypeChange={(t) => {
-                  setFeatureGeomType(t);
-                  setFeatureVertices([]);
-                }}
-                pickingActive={featurePickActive}
-                onRequestPick={() => setFeaturePickActive(true)}
-                onStopPick={() => setFeaturePickActive(false)}
-                onRemoveVertex={(i) =>
-                  setFeatureVertices(
-                    featureVertices.filter((_, index) => index !== i),
-                  )
-                }
-                onClearVertices={() => setFeatureVertices([])}
-                onDraft={(feature) =>
-                  setDraftFeatures((features) => [...features, feature])
-                }
-                defaultLangCode={naming.langCode}
-                submitRef={featureSubmitRef}
-                onCanSubmitChange={setCanAddFeature}
-                headerAction={
-                  <IconButton
-                    onClick={() => featureSubmitRef.current?.()}
-                    disabled={!canAddFeature}
-                    aria-label="Add feature"
-                    sx={{
-                      borderRadius: "50%",
-                      bgcolor: "secondary.main",
-                      color: "secondary.contrastText",
-                      "&:hover": { bgcolor: "secondary.light" },
-                      "&.Mui-disabled": {
-                        bgcolor: "action.disabledBackground",
-                        color: "action.disabled",
-                      },
-                    }}
-                  >
-                    <CheckIcon fontSize="small" />
-                  </IconButton>
-                }
-              />
-            </>
+            <SectionFeaturesStep
+              finalCoords={finalCoords}
+              nearPoint={
+                finalCoords
+                  ? {
+                      lat: finalCoords[Math.floor(finalCoords.length / 2)][1],
+                      lon: finalCoords[Math.floor(finalCoords.length / 2)][0],
+                    }
+                  : (putIn ?? undefined)
+              }
+              draftFeatures={draftFeatures}
+              draftFeaturePseudos={draftFeaturePseudos}
+              onAddDraft={(feature) =>
+                setDraftFeatures((features) => [...features, feature])
+              }
+              onRemoveDraft={(index) =>
+                setDraftFeatures((features) =>
+                  features.filter((_, i) => i !== index),
+                )
+              }
+              geometry={featureGeometry}
+              defaultLangCode={naming.langCode}
+            />
           )}
 
           {submitError && (
@@ -812,9 +451,8 @@ function SuggestSectionPage() {
             </Alert>
           )}
 
-          {/* Bottom bar — mirrors the suggest-feature panel: pinned to the
-              viewport bottom (over the bottom navigation), back/cancel left,
-              progress in the middle, round action right */}
+          {/* Bottom bar — pinned to the viewport bottom, above the mobile
+              bottom navigation (zIndex 1300) */}
           <Box
             sx={{
               position: "fixed",
@@ -823,64 +461,39 @@ function SuggestSectionPage() {
               transform: "translateX(-50%)",
               width: "100%",
               maxWidth: 720,
-              // Above the mobile bottom navigation (zIndex 1300)
               zIndex: 1350,
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              px: 1,
-              pt: 1,
-              pb: "calc(8px + env(safe-area-inset-bottom))",
-              borderTop: "1px solid",
-              borderColor: "divider",
               bgcolor: "background.paper",
             }}
           >
-            <IconButton
-              onClick={step === 0 ? backToMap : () => setStep(step - 1)}
-              disabled={submitting}
-              aria-label={step === 0 ? "Cancel" : "Back"}
-            >
-              {step === 0 ? <CloseIcon /> : <ArrowBackIcon />}
-            </IconButton>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700 }}>
-                {waterway?.name ?? "…"}
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: "block" }}
-              >
-                Step {step + 1} of {STEPS.length} · {STEPS[step]}
-              </Typography>
-            </Box>
-            <IconButton
-              size="large"
-              onClick={
-                step < STEPS.length - 1 ? () => setStep(step + 1) : handleSubmit
+            <PanelBottomBar
+              leftIcon={step === 0 ? <CloseIcon /> : <ArrowBackIcon />}
+              onLeftClick={step === 0 ? backToMap : () => setStep(step - 1)}
+              leftLabel={step === 0 ? "Cancel" : "Back"}
+              leftDisabled={submitting}
+              title={waterway?.name ?? "…"}
+              subtitle={`Step ${step + 1} of ${STEPS.length} · ${STEPS[step]}`}
+              action={
+                <RoundActionButton
+                  onClick={
+                    step < STEPS.length - 1
+                      ? () => setStep(step + 1)
+                      : handleSubmit
+                  }
+                  disabled={!canProceed || submitting}
+                  ariaLabel={
+                    step < STEPS.length - 1 ? "Next" : "Suggest section"
+                  }
+                >
+                  {submitting ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : step < STEPS.length - 1 ? (
+                    <ArrowForwardIcon fontSize="small" />
+                  ) : (
+                    <CheckIcon fontSize="small" />
+                  )}
+                </RoundActionButton>
               }
-              disabled={!canProceed || submitting}
-              aria-label={step < STEPS.length - 1 ? "Next" : "Suggest section"}
-              sx={{
-                borderRadius: "50%",
-                bgcolor: "secondary.main",
-                color: "secondary.contrastText",
-                "&:hover": { bgcolor: "secondary.light" },
-                "&.Mui-disabled": {
-                  bgcolor: "action.disabledBackground",
-                  color: "action.disabled",
-                },
-              }}
-            >
-              {submitting ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : step < STEPS.length - 1 ? (
-                <ArrowForwardIcon fontSize="small" />
-              ) : (
-                <CheckIcon fontSize="small" />
-              )}
-            </IconButton>
+            />
           </Box>
         </Box>
       )}

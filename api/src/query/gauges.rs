@@ -126,19 +126,9 @@ pub async fn search_gauges(
 
     Ok(gauges
         .into_iter()
-        .map(|gauge| GaugeWithSeries {
-            series: series_by_gauge.remove(&gauge.id).unwrap_or_default(),
-            id: gauge.id,
-            name: gauge.name,
-            provider: gauge.provider,
-            source_id: gauge.source_id,
-            data_source_id: gauge.data_source_id,
-            lat: gauge.lat,
-            lon: gauge.lon,
-            active: gauge.active,
-            fetch_interval_secs: gauge.fetch_interval_secs,
-            created_at: gauge.created_at,
-            updated_at: gauge.updated_at,
+        .map(|gauge| {
+            let series = series_by_gauge.remove(&gauge.id).unwrap_or_default();
+            GaugeWithSeries::from_parts(gauge, series)
         })
         .collect())
 }
@@ -161,20 +151,7 @@ pub async fn fetch_gauge_with_series(
         None => return Ok(None),
     };
     let series = list_series(pool, gauge_id).await?;
-    Ok(Some(GaugeWithSeries {
-        id: gauge.id,
-        name: gauge.name,
-        provider: gauge.provider,
-        source_id: gauge.source_id,
-        data_source_id: gauge.data_source_id,
-        lat: gauge.lat,
-        lon: gauge.lon,
-        active: gauge.active,
-        fetch_interval_secs: gauge.fetch_interval_secs,
-        created_at: gauge.created_at,
-        updated_at: gauge.updated_at,
-        series,
-    }))
+    Ok(Some(GaugeWithSeries::from_parts(gauge, series)))
 }
 
 pub async fn create_gauge(
@@ -440,10 +417,11 @@ pub async fn list_feature_water_ranges(
     .collect()
 }
 
-/// Upsert a water range where individual thresholds may be absent — used
-/// when ranges arrive bundled with a new feature.
+/// Upsert a water range; individual thresholds may be absent. The single
+/// write path for ranges — bundled feature creation and the standalone
+/// endpoint both go through it.
 pub async fn upsert_feature_water_range_partial(
-    pool: &PgPool,
+    executor: impl sqlx::PgExecutor<'_>,
     feature_id: i64,
     series_id: SeriesId,
     range_low: Option<f64>,
@@ -461,7 +439,7 @@ pub async fn upsert_feature_water_range_partial(
     .bind(range_low)
     .bind(range_medium)
     .bind(range_high)
-    .execute(pool)
+    .execute(executor)
     .await?;
     Ok(())
 }
@@ -474,18 +452,14 @@ pub async fn upsert_feature_water_range(
     range_medium: f64,
     range_high: f64,
 ) -> Result<FeatureWaterRange, sqlx::Error> {
-    sqlx::query(
-        "INSERT INTO feature_water_ranges (feature_id, series_id, range_low, range_medium, range_high)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (feature_id, series_id) DO UPDATE
-         SET range_low = EXCLUDED.range_low, range_medium = EXCLUDED.range_medium, range_high = EXCLUDED.range_high, updated_at = NOW()",
+    upsert_feature_water_range_partial(
+        pool,
+        feature_id,
+        series_id,
+        Some(range_low),
+        Some(range_medium),
+        Some(range_high),
     )
-    .bind(feature_id)
-    .bind(series_id)
-    .bind(range_low)
-    .bind(range_medium)
-    .bind(range_high)
-    .execute(pool)
     .await?;
 
     let row = sqlx::query(&format!(

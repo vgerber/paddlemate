@@ -14,9 +14,27 @@ interface LocalizedDescriptionEntry {
   description: string;
 }
 
+/** Languages offered for localized names/descriptions across the app. */
+export const LANGUAGE_CODES = [
+  "en",
+  "de",
+  "fr",
+  "cs",
+  "sk",
+  "pl",
+  "sl",
+  "hr",
+  "it",
+  "es",
+  "pt",
+];
+
+// Computed once — called per list item during rendering
+const browserLanguage = (navigator.language || "en").slice(0, 2).toLowerCase();
+
 /** Two-letter language code the browser prefers, e.g. "de". */
 export function preferredLanguage(): string {
-  return (navigator.language || "en").slice(0, 2).toLowerCase();
+  return browserLanguage;
 }
 
 export function localizedName(
@@ -31,8 +49,6 @@ export function localizedDescription(
   fallback: string | null | undefined,
   descriptions?: LocalizedDescriptionEntry[] | null,
 ): string | null {
-  const match = descriptions?.find(
-    (d) => d.lang_code === preferredLanguage(),
-  );
+  const match = descriptions?.find((d) => d.lang_code === preferredLanguage());
   return match?.description ?? fallback ?? null;
 }

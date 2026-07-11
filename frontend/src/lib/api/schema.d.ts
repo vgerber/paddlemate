@@ -885,11 +885,16 @@ export interface components {
             /** Format: date-time */
             visible_from?: string | null;
         };
+        /**
+         * @description Payload for creating a feature — used by the feature endpoint, by bundled
+         *      section-create payloads, and inside proposals.
+         */
         CreateFeatureBody: {
             description?: string | null;
             feature_type: components["schemas"]["FeatureType"];
             /** @description BCP-47 language code for name/description (default: "en") */
             lang_code?: string | null;
+            /** @description GeoJSON geometry (Point, LineString, or Polygon) */
             location: components["schemas"]["Geometry"];
             /** @default {} */
             metadata: unknown;
@@ -917,6 +922,10 @@ export interface components {
             description?: string | null;
             name: string;
         };
+        /**
+         * @description Payload for creating a section together with its localized texts and
+         *      features — one reviewable unit for the proposal workflow.
+         */
         CreateSectionBody: {
             description?: string | null;
             country?: string | null;
@@ -924,7 +933,8 @@ export interface components {
              * @description Features created together with the section
              * @default []
              */
-            features: components["schemas"]["SectionFeatureBody"][];
+            features: components["schemas"]["CreateFeatureBody"][];
+            /** @description GeoJSON LineString geometry */
             location: components["schemas"]["Geometry"];
             name: string;
             region?: string | null;
@@ -1506,25 +1516,6 @@ export interface components {
             /** Format: int64 */
             section_id: number;
         };
-        /**
-         * @description A feature submitted together with a new section (e.g. whitewater for the
-         *      full stretch, or a weir at a specific point).
-         */
-        SectionFeatureBody: {
-            description?: string | null;
-            feature_type: components["schemas"]["FeatureType"];
-            /** @description BCP-47 language code for name/description (default: "en") */
-            lang_code?: string | null;
-            location: components["schemas"]["Geometry"];
-            /** @default {} */
-            metadata: unknown;
-            name?: string | null;
-            /**
-             * @description Gauge thresholds created together with the feature
-             * @default []
-             */
-            water_ranges: components["schemas"]["FeatureWaterRangeBody"][];
-        };
         SectionName: {
             /** Format: int64 */
             id: number;
@@ -1840,11 +1831,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-07-11T12:46:56.496212947Z",
-                     *         "expires_at": "2026-10-09T12:46:56.496214767Z",
+                     *         "created_at": "2026-07-11T15:06:27.551129668Z",
+                     *         "expires_at": "2026-10-09T15:06:27.551131478Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-07-11T12:46:56.496222217Z",
+                     *         "last_used_at": "2026-07-11T15:06:27.551136668Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -1875,8 +1866,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-07-11T12:46:56.496391726Z",
-                     *       "expires_at": "2026-10-09T12:46:56.496392146Z",
+                     *       "created_at": "2026-07-11T15:06:27.551304698Z",
+                     *       "expires_at": "2026-10-09T15:06:27.551305118Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -2717,6 +2708,10 @@ export interface operations {
             };
             cookie?: never;
         };
+        /**
+         * @description Payload for creating a section together with its localized texts and
+         *      features — one reviewable unit for the proposal workflow.
+         */
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CreateSectionBody"];
@@ -2743,6 +2738,13 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid water range thresholds */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2882,6 +2884,10 @@ export interface operations {
             };
             cookie?: never;
         };
+        /**
+         * @description Payload for creating a feature — used by the feature endpoint, by bundled
+         *      section-create payloads, and inside proposals.
+         */
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CreateFeatureBody"];
@@ -2915,6 +2921,13 @@ export interface operations {
             };
             /** @description Section not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid water range thresholds */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

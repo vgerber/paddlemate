@@ -41,6 +41,25 @@ pub struct GaugeSeries {
     pub created_at: DateTime<Utc>,
 }
 
+impl GaugeWithSeries {
+    pub fn from_parts(gauge: Gauge, series: Vec<GaugeSeries>) -> Self {
+        Self {
+            id: gauge.id,
+            name: gauge.name,
+            provider: gauge.provider,
+            source_id: gauge.source_id,
+            data_source_id: gauge.data_source_id,
+            lat: gauge.lat,
+            lon: gauge.lon,
+            active: gauge.active,
+            fetch_interval_secs: gauge.fetch_interval_secs,
+            created_at: gauge.created_at,
+            updated_at: gauge.updated_at,
+            series,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct GaugeWithSeries {
     pub id: GaugeId,
@@ -209,6 +228,24 @@ pub struct FeatureWaterRangeBody {
     pub range_low: Option<f64>,
     pub range_medium: Option<f64>,
     pub range_high: Option<f64>,
+}
+
+impl FeatureWaterRangeBody {
+    /// Thresholds must be strictly increasing where present. Rejecting this
+    /// at submission avoids a database CHECK violation at approval time.
+    pub fn validate(&self) -> Result<(), &'static str> {
+        let ordered = |a: Option<f64>, b: Option<f64>| match (a, b) {
+            (Some(a), Some(b)) => a < b,
+            _ => true,
+        };
+        if !ordered(self.range_low, self.range_medium)
+            || !ordered(self.range_medium, self.range_high)
+            || !ordered(self.range_low, self.range_high)
+        {
+            return Err("water range thresholds must be increasing: low < medium < high");
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]

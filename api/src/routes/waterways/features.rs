@@ -6,43 +6,23 @@ use axum::{
     response::IntoResponse,
 };
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
     doc_fn,
     layers::auth::AuthToken,
     models::{
-        feature::{Feature, FeatureDescription, FeatureName, FeatureType},
-        gauge::FeatureWaterRangeBody,
+        feature::{CreateFeatureBody, Feature, FeatureDescription, FeatureName, FeatureType},
         geometry::Geometry,
         path_params::{FeatureLocalePath, FeaturePath, SectionPath},
         proposal::Proposal,
         water_section::SectionId,
         waterway::WaterwayId,
     },
-    query::{features, gauges, proposals},
+    query::{features, proposals},
     state::AppState,
 };
-
-fn default_metadata() -> Value {
-    Value::Object(serde_json::Map::new())
-}
-
-#[derive(Deserialize, JsonSchema)]
-pub struct CreateFeatureBody {
-    pub feature_type: FeatureType,
-    #[serde(default = "default_metadata")]
-    pub metadata: Value,
-    pub location: Geometry,
-    pub name: Option<String>,
-    pub description: Option<String>,
-    /// BCP-47 language code for name/description (default: "en")
-    pub lang_code: Option<String>,
-    /// Gauge thresholds created together with the feature
-    #[serde(default)]
-    pub water_ranges: Vec<FeatureWaterRangeBody>,
-}
 
 pub async fn create_feature(
     State(app): State<AppState>,
@@ -64,49 +44,30 @@ pub async fn create_feature(
         }
     }
 
+    for range in &body.water_ranges {
+        if let Err(msg) = range.validate() {
+            return (StatusCode::UNPROCESSABLE_ENTITY, msg).into_response();
+        }
+    }
+
     if token.is_server_admin() {
-        let location_json = serde_json::to_string(&body.location).expect("valid geometry");
-        return match features::insert_feature(
-            &app.pg_pool,
-            section_id,
-            body.feature_type,
-            body.metadata,
-            &location_json,
-            token.user_id(),
-        )
-        .await
-        {
-            Ok(mut feature) => {
-                let lang = body.lang_code.as_deref().unwrap_or("en");
-                if let Some(name) = &body.name {
-                    if let Ok(n) = features::upsert_name(&app.pg_pool, feature.id, lang, name).await
-                    {
-                        feature.names.push(n);
-                    }
-                }
-                if let Some(desc) = &body.description {
-                    if let Ok(d) =
-                        features::upsert_description(&app.pg_pool, feature.id, lang, desc).await
-                    {
-                        feature.descriptions.push(d);
-                    }
-                }
-                for range in &body.water_ranges {
-                    if let Err(err) = gauges::upsert_feature_water_range_partial(
-                        &app.pg_pool,
-                        feature.id,
-                        range.series_id,
-                        range.range_low,
-                        range.range_medium,
-                        range.range_high,
-                    )
-                    .await
-                    {
-                        tracing::error!("Error creating water range: {}", err);
-                    }
-                }
-                (StatusCode::CREATED, Json(feature)).into_response()
+        let mut tx = match app.pg_pool.begin().await {
+            Ok(tx) => tx,
+            Err(err) => {
+                tracing::error!("Error starting transaction: {}", err);
+                return StatusCode::INTERNAL_SERVER_ERROR.into_response();
             }
+        };
+        let feature =
+            features::create_feature_bundle(&mut tx, section_id, &body, token.user_id()).await;
+        return match feature {
+            Ok(feature) => match tx.commit().await {
+                Ok(()) => (StatusCode::CREATED, Json(feature)).into_response(),
+                Err(err) => {
+                    tracing::error!("Error committing feature: {}", err);
+                    StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                }
+            },
             Err(err) => {
                 tracing::error!("Error creating feature: {}", err);
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
@@ -114,17 +75,9 @@ pub async fn create_feature(
         };
     }
 
-    let data = serde_json::json!({
-        "waterway_id": waterway_id,
-        "section_id": section_id,
-        "feature_type": body.feature_type,
-        "metadata": body.metadata,
-        "location": body.location,
-        "name": body.name,
-        "description": body.description,
-        "lang_code": body.lang_code,
-        "water_ranges": body.water_ranges,
-    });
+    let mut data = serde_json::to_value(&body).expect("serializable body");
+    data["waterway_id"] = serde_json::json!(waterway_id);
+    data["section_id"] = serde_json::json!(section_id);
     match proposals::insert_proposal(
         &app.pg_pool,
         "feature",
@@ -150,6 +103,7 @@ doc_fn!(create_feature_docs, op =>
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Section not found"))
+        .response_with::<422, (), _>(|res| res.description("Invalid water range thresholds"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Features")
 );
@@ -485,34 +439,3 @@ doc_fn!(delete_feature_description_docs, op =>
         .tag("Features")
 );
 
-// Aide requires serializable types to generate request body schemas.
-// These mirror the request body structs above.
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-#[allow(dead_code)]
-struct CreateFeatureBodyDoc {
-    feature_type: FeatureType,
-    metadata: Value,
-    location: Geometry,
-    name: Option<String>,
-    water_ranges: Vec<FeatureWaterRangeBody>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-#[allow(dead_code)]
-struct UpdateFeatureBodyDoc {
-    feature_type: Option<FeatureType>,
-    metadata: Option<Value>,
-    location: Option<Geometry>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-#[allow(dead_code)]
-struct UpsertNameBodyDoc {
-    name: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-#[allow(dead_code)]
-struct UpsertDescriptionBodyDoc {
-    description: String,
-}

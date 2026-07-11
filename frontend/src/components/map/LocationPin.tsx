@@ -3,7 +3,8 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { theme } from "@/lib/theme";
+import NumberBadge from "@/components/NumberBadge";
+import { fonts, theme } from "@/lib/theme";
 
 export const PUT_IN_COLOR = theme.tokens.putIn;
 export const TAKE_OUT_COLOR = theme.tokens.takeOut;
@@ -44,27 +45,11 @@ export default function LocationPin({
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-        <div
-          style={{
-            width: 16,
-            height: 16,
-            borderRadius: "50%",
-            background: color,
-            color: "white",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 9,
-            fontWeight: 700,
-            flexShrink: 0,
-          }}
-        >
-          {num}
-        </div>
+        <NumberBadge num={num} color={color} size={16} />
         <Typography
           variant="caption"
           sx={{
-            fontFamily: '"Space Grotesk", monospace',
+            fontFamily: fonts.label,
             letterSpacing: "0.06em",
             fontWeight: 600,
             flex: 1,
@@ -82,7 +67,7 @@ export default function LocationPin({
         <Typography
           variant="caption"
           sx={{
-            fontFamily: '"Space Grotesk", monospace',
+            fontFamily: fonts.mono,
             color: "text.secondary",
             fontSize: "0.7rem",
           }}

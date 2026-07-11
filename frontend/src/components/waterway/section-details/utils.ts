@@ -14,8 +14,9 @@ export function featureName(f: Feature): string {
   const name = localizedName(f.names[0]?.name ?? "", f.names);
   if (name) return name;
   if (f.feature_type === "whitewater") {
-    const diff = (f.metadata as Record<string, unknown> | null)
-      ?.difficulty as string | undefined;
+    const diff = (f.metadata as Record<string, unknown> | null)?.difficulty as
+      | string
+      | undefined;
     return diff ? `WW ${diff}` : "WW";
   }
   return f.feature_type.replace(/_/g, " ");
@@ -82,6 +83,41 @@ export function computeExtent(
   };
 }
 
+/** Build a display-only `Feature` from draft/bundled proposal data, for map
+ * rendering and extent computation before the feature exists. */
+export function toPseudoFeature(
+  data: {
+    feature_type: Feature["feature_type"];
+    metadata?: Record<string, unknown> | null;
+    location: Feature["location"];
+    name?: string | null;
+    lang_code?: string | null;
+  },
+  index: number,
+): Feature {
+  return {
+    id: -(index + 1),
+    section_id: 0,
+    feature_type: data.feature_type,
+    metadata: (data.metadata ?? {}) as Feature["metadata"],
+    location: data.location,
+    names: data.name
+      ? [
+          {
+            id: 0,
+            feature_id: -(index + 1),
+            lang_code: data.lang_code ?? "en",
+            name: data.name,
+          },
+        ]
+      : [],
+    descriptions: [],
+    created_by: "",
+    created_at: "",
+    updated_at: "",
+  } as Feature;
+}
+
 /**
  * Converts a Proposal's proposed_data into a pseudo-Feature object.
  * Returns null when the proposal lacks the geometry/type required.
@@ -96,10 +132,24 @@ export function proposalToPseudoFeature(proposal: Proposal): Feature | null {
     location: data.location as Feature["location"],
     metadata: (data.metadata ?? null) as Feature["metadata"],
     names: data.name
-      ? [{ id: 0, feature_id: -proposal.id, lang_code: langCode, name: data.name as string }]
+      ? [
+          {
+            id: 0,
+            feature_id: -proposal.id,
+            lang_code: langCode,
+            name: data.name as string,
+          },
+        ]
       : [],
     descriptions: data.description
-      ? [{ id: 0, feature_id: -proposal.id, lang_code: langCode, description: data.description as string }]
+      ? [
+          {
+            id: 0,
+            feature_id: -proposal.id,
+            lang_code: langCode,
+            description: data.description as string,
+          },
+        ]
       : [],
     section_id: 0,
     created_at: proposal.created_at,

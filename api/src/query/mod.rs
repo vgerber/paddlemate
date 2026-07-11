@@ -9,3 +9,9 @@ pub mod proposals;
 pub mod sections;
 pub mod tokens;
 pub mod users;
+pub mod waterways;
+
+/// True when the error is a Postgres unique constraint violation (23505).
+pub fn is_unique_violation(err: &sqlx::Error) -> bool {
+    matches!(err, sqlx::Error::Database(db) if db.code().as_deref() == Some("23505"))
+}

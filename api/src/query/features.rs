@@ -89,7 +89,7 @@ pub async fn fetch_descriptions(
 }
 
 pub async fn insert_feature(
-    pool: &PgPool,
+    executor: impl sqlx::PgExecutor<'_>,
     section_id: SectionId,
     feature_type: FeatureType,
     metadata: Value,
@@ -109,7 +109,7 @@ pub async fn insert_feature(
         location_json,
         created_by
     )
-    .fetch_one(pool)
+    .fetch_one(executor)
     .await?;
 
     Ok(Feature {
@@ -125,6 +125,52 @@ pub async fn insert_feature(
         created_at: r.created_at,
         updated_at: r.updated_at,
     })
+}
+
+/// Persist a `CreateFeatureBody` — feature row plus localized texts and
+/// gauge thresholds — on one connection (callers wrap in a transaction).
+/// The single write path shared by the admin endpoint and proposal approval.
+pub async fn create_feature_bundle(
+    conn: &mut sqlx::PgConnection,
+    section_id: SectionId,
+    body: &crate::models::feature::CreateFeatureBody,
+    created_by: &str,
+) -> Result<Feature, sqlx::Error> {
+    let location_json =
+        serde_json::to_string(&body.location).map_err(|e| sqlx::Error::Decode(e.into()))?;
+    let mut feature = insert_feature(
+        &mut *conn,
+        section_id,
+        body.feature_type.clone(),
+        body.metadata.clone(),
+        &location_json,
+        created_by,
+    )
+    .await?;
+
+    let lang = body.lang_code.as_deref().unwrap_or("en");
+    if let Some(name) = &body.name {
+        feature
+            .names
+            .push(upsert_name(&mut *conn, feature.id, lang, name).await?);
+    }
+    if let Some(description) = &body.description {
+        feature
+            .descriptions
+            .push(upsert_description(&mut *conn, feature.id, lang, description).await?);
+    }
+    for range in &body.water_ranges {
+        crate::query::gauges::upsert_feature_water_range_partial(
+            &mut *conn,
+            feature.id,
+            range.series_id,
+            range.range_low,
+            range.range_medium,
+            range.range_high,
+        )
+        .await?;
+    }
+    Ok(feature)
 }
 
 pub async fn update_feature(
@@ -204,7 +250,7 @@ pub async fn delete_feature(
 }
 
 pub async fn upsert_name(
-    pool: &PgPool,
+    executor: impl sqlx::PgExecutor<'_>,
     feature_id: FeatureId,
     lang_code: &str,
     name: &str,
@@ -220,7 +266,7 @@ pub async fn upsert_name(
         lang_code,
         name
     )
-    .fetch_one(pool)
+    .fetch_one(executor)
     .await?;
 
     Ok(FeatureName {
@@ -259,7 +305,7 @@ pub async fn delete_name(
 }
 
 pub async fn upsert_description(
-    pool: &PgPool,
+    executor: impl sqlx::PgExecutor<'_>,
     feature_id: FeatureId,
     lang_code: &str,
     description: &str,
@@ -275,7 +321,7 @@ pub async fn upsert_description(
         lang_code,
         description
     )
-    .fetch_one(pool)
+    .fetch_one(executor)
     .await?;
 
     Ok(FeatureDescription {

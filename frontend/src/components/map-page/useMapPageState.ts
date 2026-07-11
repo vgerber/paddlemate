@@ -148,7 +148,6 @@ export function useMapPageState(search: RouteSearch) {
   }, [selectedSectionId]);
 
   // When suggest mode opens, always bring the overlay back (map-view hides it)
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on suggest mode change
   useEffect(() => {
     if (suggestMode != null) {
       setIsMobileMapViewRaw(false);
