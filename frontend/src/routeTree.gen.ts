@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProposalsIndexRouteImport } from './routes/proposals/index'
 import { Route as WaterwaysSuggestSectionRouteImport } from './routes/waterways/suggest-section'
 import { Route as WaterwaysWaterwayIdRouteImport } from './routes/waterways/$waterwayId'
+import { Route as ProposalsProposalIdRouteImport } from './routes/proposals/$proposalId'
 import { Route as LogsNewRouteImport } from './routes/logs/new'
 import { Route as LogsDescentIdRouteImport } from './routes/logs/$descentId'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
@@ -50,6 +51,11 @@ const WaterwaysWaterwayIdRoute = WaterwaysWaterwayIdRouteImport.update({
   path: '/waterways/$waterwayId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProposalsProposalIdRoute = ProposalsProposalIdRouteImport.update({
+  id: '/proposals/$proposalId',
+  path: '/proposals/$proposalId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LogsNewRoute = LogsNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/logs/$descentId': typeof LogsDescentIdRoute
   '/logs/new': typeof LogsNewRoute
+  '/proposals/$proposalId': typeof ProposalsProposalIdRoute
   '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
   '/waterways/suggest-section': typeof WaterwaysSuggestSectionRoute
   '/proposals/': typeof ProposalsIndexRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/logs/$descentId': typeof LogsDescentIdRoute
   '/logs/new': typeof LogsNewRoute
+  '/proposals/$proposalId': typeof ProposalsProposalIdRoute
   '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
   '/waterways/suggest-section': typeof WaterwaysSuggestSectionRoute
   '/proposals': typeof ProposalsIndexRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/logs/$descentId': typeof LogsDescentIdRoute
   '/logs/new': typeof LogsNewRoute
+  '/proposals/$proposalId': typeof ProposalsProposalIdRoute
   '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
   '/waterways/suggest-section': typeof WaterwaysSuggestSectionRoute
   '/proposals/': typeof ProposalsIndexRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/logs/$descentId'
     | '/logs/new'
+    | '/proposals/$proposalId'
     | '/waterways/$waterwayId'
     | '/waterways/suggest-section'
     | '/proposals/'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/logs/$descentId'
     | '/logs/new'
+    | '/proposals/$proposalId'
     | '/waterways/$waterwayId'
     | '/waterways/suggest-section'
     | '/proposals'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/logs/$descentId'
     | '/logs/new'
+    | '/proposals/$proposalId'
     | '/waterways/$waterwayId'
     | '/waterways/suggest-section'
     | '/proposals/'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   LogsRoute: typeof LogsRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  ProposalsProposalIdRoute: typeof ProposalsProposalIdRoute
   WaterwaysWaterwayIdRoute: typeof WaterwaysWaterwayIdRoute
   WaterwaysSuggestSectionRoute: typeof WaterwaysSuggestSectionRoute
   ProposalsIndexRoute: typeof ProposalsIndexRoute
@@ -202,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WaterwaysWaterwayIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/proposals/$proposalId': {
+      id: '/proposals/$proposalId'
+      path: '/proposals/$proposalId'
+      fullPath: '/proposals/$proposalId'
+      preLoaderRoute: typeof ProposalsProposalIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/logs/new': {
       id: '/logs/new'
       path: '/new'
@@ -250,6 +270,7 @@ const rootRouteChildren: RootRouteChildren = {
   LogsRoute: LogsRouteWithChildren,
   SettingsRoute: SettingsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  ProposalsProposalIdRoute: ProposalsProposalIdRoute,
   WaterwaysWaterwayIdRoute: WaterwaysWaterwayIdRoute,
   WaterwaysSuggestSectionRoute: WaterwaysSuggestSectionRoute,
   ProposalsIndexRoute: ProposalsIndexRoute,
