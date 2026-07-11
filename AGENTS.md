@@ -1,7 +1,6 @@
 # Agent instructions
 
-Merged from `.github/instructions/` so all coding agents share the same
-guidance. Keep both in sync when either changes.
+Shared guidance for all coding agents working on this repository.
 
 ## Tooling
 
@@ -105,7 +104,6 @@ time.
 
 ## Documentation
 
-- Update this file (and `.github/instructions/`) when you add new features or
-  make significant changes to the codebase, so the documentation stays
-  accurate and up to date.
+- Update this file when you add new features or make significant changes to
+  the codebase, so the documentation stays accurate and up to date.
 - Documentation should be clear and concise.
