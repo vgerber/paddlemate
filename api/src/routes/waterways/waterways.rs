@@ -18,7 +18,7 @@ use crate::{
         water_section::SectionWithFeatures,
         waterway::{PaginatedResponse, Waterway, WaterwayId, WaterwayType, WaterwayWithSections},
     },
-    query::{features, proposals},
+    query::{features, proposals, sections as query_sections, waterways as query_waterways},
     state::AppState,
 };
 
@@ -214,20 +214,27 @@ pub async fn get_waterway(
         }
     };
 
-    let (sections_result, features_result) = tokio::join!(
+    let (sections_result, features_result, names_result, descriptions_result) = tokio::join!(
         sqlx::query!(
             r#"
-            SELECT id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_at, updated_at
+            SELECT id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at
             FROM water_sections WHERE waterway_id = $1 ORDER BY river_km_start NULLS LAST, name
             "#,
             waterway_id
         )
         .fetch_all(&app.pg_pool),
-        features::fetch_features_for_waterway(&app.pg_pool, waterway_id)
+        features::fetch_features_for_waterway(&app.pg_pool, waterway_id),
+        query_sections::fetch_names_for_waterway(&app.pg_pool, waterway_id),
+        query_sections::fetch_descriptions_for_waterway(&app.pg_pool, waterway_id)
     );
 
-    match (sections_result, features_result) {
-        (Ok(records), Ok(mut features_map)) => {
+    match (
+        sections_result,
+        features_result,
+        names_result,
+        descriptions_result,
+    ) {
+        (Ok(records), Ok(mut features_map), Ok(mut names_map), Ok(mut descriptions_map)) => {
             let sections: Vec<SectionWithFeatures> = records
                 .into_iter()
                 .map(|s| SectionWithFeatures {
@@ -238,8 +245,11 @@ pub async fn get_waterway(
                     region: s.region,
                     country: s.country,
                     features: features_map.remove(&s.id).unwrap_or_default(),
+                    names: names_map.remove(&s.id).unwrap_or_default(),
+                    descriptions: descriptions_map.remove(&s.id).unwrap_or_default(),
                     location: serde_json::from_str(&s.location.expect("location NOT NULL"))
                         .expect("valid GeoJSON"),
+                    created_by: s.created_by,
                     created_at: s.created_at,
                     updated_at: s.updated_at,
                 })
@@ -255,7 +265,7 @@ pub async fn get_waterway(
             })
             .into_response()
         }
-        (Err(err), _) | (_, Err(err)) => {
+        (Err(err), _, _, _) | (_, Err(err), _, _) | (_, _, Err(err), _) | (_, _, _, Err(err)) => {
             tracing::error!(
                 "Error fetching sections for waterway {}: {}",
                 waterway_id,
@@ -290,6 +300,23 @@ pub async fn create_waterway(
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
+    // Reject duplicates up front (case-insensitive) for both the admin and
+    // proposal paths; the UNIQUE constraint still guards against races.
+    match query_waterways::name_exists(&app.pg_pool, &body.name).await {
+        Ok(true) => {
+            return (
+                StatusCode::CONFLICT,
+                "A waterway with this name already exists",
+            )
+                .into_response();
+        }
+        Ok(false) => {}
+        Err(err) => {
+            tracing::error!("Error checking waterway name: {}", err);
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        }
+    }
+
     if token.is_server_admin() {
         let result = sqlx::query!(
             r#"
@@ -314,6 +341,11 @@ pub async fn create_waterway(
                     created_at: r.created_at,
                     updated_at: r.updated_at,
                 }),
+            )
+                .into_response(),
+            Err(err) if crate::query::is_unique_violation(&err) => (
+                StatusCode::CONFLICT,
+                "A waterway with this name already exists",
             )
                 .into_response(),
             Err(err) => {
@@ -347,6 +379,7 @@ doc_fn!(create_waterway_docs, op =>
         .response_with::<201, Json<Waterway>, _>(|res| res.description("Waterway created"))
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
+        .response_with::<409, (), _>(|res| res.description("A waterway with this name already exists"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Waterways")
 );

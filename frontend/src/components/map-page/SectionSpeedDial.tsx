@@ -8,12 +8,10 @@ import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import type { SxProps } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useSession } from "@/lib/hooks/useSession";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
-import { theme } from "@/lib/theme";
 import type { MapPageState } from "./useMapPageState";
 
 interface Props {
@@ -40,7 +38,6 @@ export default function SectionSpeedDial({ state, sx }: Props) {
   const { isAuthenticated } = useSession();
   const navigate = useNavigate();
   const { current: standingDescent, start: startDescent } = useStandingDescent();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const sectionName = sections.find((s) => s.id === selectedSectionId)?.name;
   const isFavorited = favoritedIds?.has(selectedSectionId ?? -1) ?? false;
@@ -104,7 +101,7 @@ export default function SectionSpeedDial({ state, sx }: Props) {
           }
         />
       )}
-      {isAuthenticated && !isMobile && (
+      {isAuthenticated && (
         <SpeedDialAction
           icon={<AddLocationAltIcon />}
           title="Add feature"

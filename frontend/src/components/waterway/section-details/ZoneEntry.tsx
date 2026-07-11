@@ -1,10 +1,12 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
+import Collapse from "@mui/material/Collapse";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { fonts, theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
 import { PointEntry } from "./PointEntry";
+import { ProposalDetail } from "./ProposalDetail";
 import type { ComputedFeature } from "./types";
 import { featureDesc, featureName, fmtKm } from "./utils";
 
@@ -21,10 +23,6 @@ interface Props {
 /**
  * Renders a zone as a vertical bracket: a ↓ chevron at the start row and a ↑
  * chevron at the end row, connected by a faint rail line.
- *
- * The rail is `position: absolute` with `zIndex: -1` so it paints behind the
- * normal-flow dot elements of nested entries, which each sit in a 16 px left
- * column aligned with the rail centre (x = 8 px).
  */
 export function ZoneEntry({
   item,
@@ -36,9 +34,12 @@ export function ZoneEntry({
   const name = featureName(item.feature);
   const desc = featureDesc(item.feature);
   const isActive = activeId === item.feature.id;
+  const isProposal = !!item.proposal;
+
+  const zoneColor = isProposal ? tokens.onSurfaceVariant : tokens.secondary;
 
   return (
-    <Box sx={{ position: "relative", mb: isLast ? "4px" : 2 }}>
+    <Box sx={{ position: "relative", mb: isLast ? "4px" : 2, opacity: isProposal ? 0.6 : 1 }}>
       {/* Zone start row */}
       <ButtonBase
         component="div"
@@ -50,7 +51,11 @@ export function ZoneEntry({
           alignItems: "flex-start",
           pb: 2,
           cursor: onItemClick ? "pointer" : "default",
-          background: isActive ? `${tokens.secondary}0d` : "transparent",
+          background: isActive
+            ? isProposal
+              ? `${tokens.onSurfaceVariant}0a`
+              : `${tokens.secondary}0d`
+            : "transparent",
           width: "100%",
           textAlign: "left",
           px: "6px",
@@ -75,10 +80,11 @@ export function ZoneEntry({
           >
             <path
               d="M2 3.5 L5 6.5 L8 3.5"
-              stroke={tokens.secondary}
-              strokeWidth="1.5"
+              stroke={zoneColor}
+              strokeWidth={isProposal ? "1" : "1.5"}
               strokeLinecap="round"
               strokeLinejoin="round"
+              strokeDasharray={isProposal ? "2 1.5" : undefined}
             />
           </svg>
         </Box>
@@ -99,7 +105,7 @@ export function ZoneEntry({
                 fontWeight: 900,
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
-                color: tokens.secondary,
+                color: zoneColor,
                 lineHeight: 1.25,
               }}
             >
@@ -118,7 +124,18 @@ export function ZoneEntry({
               {fmtKm(item.startM)}
             </Typography>
           </Stack>
-          {isActive && <CoordsInfo coords={item.coords} />}
+          <Collapse in={isActive} timeout={200} unmountOnExit>
+            {!isProposal
+              ? <CoordsInfo coords={item.coords} />
+              : item.proposal && (
+                  <ProposalDetail
+                    proposal={item.proposal}
+                    coords={item.coords}
+                    featureType={item.feature.feature_type}
+                  />
+                )
+            }
+          </Collapse>
         </Stack>
       </ButtonBase>
 
@@ -168,10 +185,11 @@ export function ZoneEntry({
           >
             <path
               d="M2 6.5 L5 3.5 L8 6.5"
-              stroke={tokens.secondary}
-              strokeWidth="1.5"
+              stroke={zoneColor}
+              strokeWidth={isProposal ? "1" : "1.5"}
               strokeLinecap="round"
               strokeLinejoin="round"
+              strokeDasharray={isProposal ? "2 1.5" : undefined}
             />
           </svg>
         </Box>
@@ -191,3 +209,4 @@ export function ZoneEntry({
     </Box>
   );
 }
+

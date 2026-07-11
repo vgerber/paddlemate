@@ -29,6 +29,18 @@ pub struct Gauge {
     pub updated_at: DateTime<Utc>,
 }
 
+/// Upstream data source of a gauge - carries the attribution and licensing
+/// terms of the provider (imported into the `sources` table by the readers).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct GaugeSource {
+    pub id: String,
+    pub name: String,
+    pub short_name: Option<String>,
+    pub licensing_terms: Option<String>,
+    pub website: Option<String>,
+    pub country_code: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct GaugeSeries {
     pub id: SeriesId,
@@ -39,6 +51,26 @@ pub struct GaugeSeries {
     /// Full reader source_id (e.g. "201038:W") used by the background dispatcher.
     pub source_id: Option<String>,
     pub created_at: DateTime<Utc>,
+}
+
+impl GaugeWithSeries {
+    pub fn from_parts(gauge: Gauge, series: Vec<GaugeSeries>, source: Option<GaugeSource>) -> Self {
+        Self {
+            id: gauge.id,
+            name: gauge.name,
+            provider: gauge.provider,
+            source_id: gauge.source_id,
+            data_source_id: gauge.data_source_id,
+            lat: gauge.lat,
+            lon: gauge.lon,
+            active: gauge.active,
+            fetch_interval_secs: gauge.fetch_interval_secs,
+            created_at: gauge.created_at,
+            updated_at: gauge.updated_at,
+            series,
+            source,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -55,6 +87,9 @@ pub struct GaugeWithSeries {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub series: Vec<GaugeSeries>,
+    /// Attribution/licensing of the upstream provider, when known.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<GaugeSource>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -121,6 +156,9 @@ pub struct WaterRangeWithStatus {
     pub range_high: Option<f64>,
     pub latest_reading: Option<GaugeReading>,
     pub level: WaterLevel,
+    /// Attribution/licensing of the upstream provider, when known.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<GaugeSource>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -199,6 +237,34 @@ pub struct CreateWaterRangeRequest {
     pub range_low: f64,
     pub range_medium: f64,
     pub range_high: f64,
+}
+
+/// Water-range thresholds submitted together with a new feature (create
+/// endpoints and proposals); thresholds are optional individually.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct FeatureWaterRangeBody {
+    pub series_id: SeriesId,
+    pub range_low: Option<f64>,
+    pub range_medium: Option<f64>,
+    pub range_high: Option<f64>,
+}
+
+impl FeatureWaterRangeBody {
+    /// Thresholds must be strictly increasing where present. Rejecting this
+    /// at submission avoids a database CHECK violation at approval time.
+    pub fn validate(&self) -> Result<(), &'static str> {
+        let ordered = |a: Option<f64>, b: Option<f64>| match (a, b) {
+            (Some(a), Some(b)) => a < b,
+            _ => true,
+        };
+        if !ordered(self.range_low, self.range_medium)
+            || !ordered(self.range_medium, self.range_high)
+            || !ordered(self.range_low, self.range_high)
+        {
+            return Err("water range thresholds must be increasing: low < medium < high");
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]

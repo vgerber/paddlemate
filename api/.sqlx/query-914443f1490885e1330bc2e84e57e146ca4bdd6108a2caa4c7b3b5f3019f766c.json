@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, section_id, lang_code, description FROM section_descriptions WHERE section_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "section_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "lang_code",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "914443f1490885e1330bc2e84e57e146ca4bdd6108a2caa4c7b3b5f3019f766c"
+}

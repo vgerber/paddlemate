@@ -13,7 +13,10 @@ import {
 } from "recharts";
 import type { GaugeReading, WaterRangeWithStatus } from "@/lib/api";
 import { useGaugeReadings } from "@/lib/hooks/useWaterways";
+import { theme } from "@/lib/theme";
 import type { TimeRange } from "./types";
+
+const { tokens } = theme;
 
 export interface SeriesChartProps {
   range: WaterRangeWithStatus;
@@ -152,10 +155,18 @@ export default function SeriesChart({
     );
   }
 
-  const tickStyle = { fontSize: 11, fill: "#8a9295" };
+  const tickStyle = { fontSize: 11, fill: tokens.outline };
 
   return (
-    <div ref={setContainer} style={{ width: "100%", height: "100%", WebkitTapHighlightColor: "transparent", outline: "none" }}>
+    <div
+      ref={setContainer}
+      style={{
+        width: "100%",
+        height: "100%",
+        WebkitTapHighlightColor: "transparent",
+        outline: "none",
+      }}
+    >
       {size && (
         <AreaChart
           width={size.width}
@@ -171,13 +182,21 @@ export default function SeriesChart({
               x2="0"
               y2="1"
             >
-              <stop offset="5%" stopColor="#004b5b" stopOpacity={0.9} />
-              <stop offset="95%" stopColor="#004b5b" stopOpacity={0.55} />
+              <stop
+                offset="5%"
+                stopColor={tokens.primaryContainer}
+                stopOpacity={0.9}
+              />
+              <stop
+                offset="95%"
+                stopColor={tokens.primaryContainer}
+                stopOpacity={0.55}
+              />
             </linearGradient>
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="rgba(255,255,255,0.06)"
+            stroke={tokens.chartGrid}
             vertical={false}
           />
           <XAxis
@@ -228,18 +247,18 @@ export default function SeriesChart({
               series.label ?? gauge.name,
             ]}
             contentStyle={{
-              backgroundColor: "#1e2124",
-              border: "1px solid #2e3236",
+              backgroundColor: tokens.surface,
+              border: `1px solid ${tokens.outlineVariant}`,
               borderRadius: 6,
               fontSize: 12,
             }}
-            itemStyle={{ color: "#e2e2e5" }}
-            labelStyle={{ color: "#8a9295", marginBottom: 2 }}
+            itemStyle={{ color: tokens.onSurface }}
+            labelStyle={{ color: tokens.outline, marginBottom: 2 }}
           />
           <Area
             type="monotone"
             dataKey="value"
-            stroke="#1a8ca0"
+            stroke={tokens.chartSeries}
             strokeWidth={1.5}
             fill={`url(#fill-${series.id})`}
             dot={false}
@@ -249,39 +268,39 @@ export default function SeriesChart({
           {showThresholds && range.range_low != null && (
             <ReferenceLine
               y={range.range_low}
-              stroke="#b0ceb8"
+              stroke={tokens.secondary}
               strokeDasharray="4 2"
               label={{
                 value: `L ${range.range_low}`,
                 position: "insideTopRight",
                 fontSize: 10,
-                fill: "#b0ceb8",
+                fill: tokens.secondary,
               }}
             />
           )}
           {showThresholds && range.range_medium != null && (
             <ReferenceLine
               y={range.range_medium}
-              stroke="#c2cf47"
+              stroke={tokens.tertiary}
               strokeDasharray="4 2"
               label={{
                 value: `M ${range.range_medium}`,
                 position: "insideTopRight",
                 fontSize: 10,
-                fill: "#c2cf47",
+                fill: tokens.tertiary,
               }}
             />
           )}
           {showThresholds && range.range_high != null && (
             <ReferenceLine
               y={range.range_high}
-              stroke="#ffb4ab"
+              stroke={tokens.error}
               strokeDasharray="4 2"
               label={{
                 value: `H ${range.range_high}`,
                 position: "insideTopRight",
                 fontSize: 10,
-                fill: "#ffb4ab",
+                fill: tokens.error,
               }}
             />
           )}

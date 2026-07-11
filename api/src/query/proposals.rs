@@ -1,9 +1,12 @@
 use serde_json::{Value, json};
 use sqlx::{PgPool, Row, postgres::PgRow};
 
-use crate::models::proposal::{
-    ListProposalsFilters, Proposal, ProposalEntityType, ProposalOperation, ProposalStatus,
+use crate::models::{
+    feature::CreateFeatureBody,
+    proposal::{ListProposalsFilters, Proposal, ProposalEntityType, ProposalOperation, ProposalStatus},
+    water_section::CreateSectionBody,
 };
+use crate::query::{features, gauges, sections};
 
 fn parse_entity_type(s: &str) -> ProposalEntityType {
     match s {
@@ -330,6 +333,18 @@ pub async fn unvote_proposal(
     Ok(())
 }
 
+/// Delete a proposal by ID. Existence, ownership and status checks are handled
+/// by the route handler. Associated votes are removed via ON DELETE CASCADE.
+/// Returns true if a row was removed.
+pub async fn delete_proposal(db: &PgPool, proposal_id: i64) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query("DELETE FROM proposals WHERE id = $1")
+        .bind(proposal_id)
+        .execute(db)
+        .await?;
+
+    Ok(result.rows_affected() > 0)
+}
+
 /// Review a proposal: approve or reject it.
 /// Approving applies the change to the live table within the same transaction.
 /// Returns None if the proposal does not exist or is not pending.
@@ -429,19 +444,11 @@ async fn apply_proposal(
         }
 
         (ProposalEntityType::WaterSection, ProposalOperation::Create) => {
-            let waterway_id = data["waterway_id"].as_i64();
-            let location = serde_json::to_string(&data["location"])
+            let waterway_id = data["waterway_id"].as_i64().unwrap_or_default();
+            let body: CreateSectionBody = serde_json::from_value(data.clone())
                 .map_err(|e| sqlx::Error::Decode(e.into()))?;
-            sqlx::query(
-                "INSERT INTO water_sections (waterway_id, name, description, location) \
-                 VALUES ($1, $2, $3, ST_GeomFromGeoJSON($4))",
-            )
-            .bind(waterway_id)
-            .bind(data["name"].as_str().unwrap_or_default())
-            .bind(data["description"].as_str())
-            .bind(&location)
-            .execute(&mut **tx)
-            .await?;
+            sections::create_section_bundle(&mut **tx, waterway_id, &body, &proposal.submitted_by)
+                .await?;
         }
 
         (ProposalEntityType::WaterSection, ProposalOperation::Update) => {
@@ -458,12 +465,16 @@ async fn apply_proposal(
                     r#"UPDATE water_sections
                        SET name        = COALESCE($1, name),
                            description = COALESCE($2, description),
-                           location    = COALESCE(ST_GeomFromGeoJSON($3), location),
+                           region      = COALESCE($3, region),
+                           country     = COALESCE($4, country),
+                           location    = COALESCE(ST_GeomFromGeoJSON($5), location),
                            updated_at  = NOW()
-                       WHERE id = $4"#,
+                       WHERE id = $6"#,
                 )
                 .bind(data["name"].as_str())
                 .bind(data["description"].as_str())
+                .bind(data["region"].as_str())
+                .bind(data["country"].as_str())
                 .bind(location.as_deref())
                 .bind(id)
                 .execute(&mut **tx)
@@ -481,25 +492,17 @@ async fn apply_proposal(
         }
 
         (ProposalEntityType::Feature, ProposalOperation::Create) => {
-            let section_id = data["section_id"].as_i64();
-            let feature_type = data["feature_type"].as_str().unwrap_or_default();
-            let metadata = data
-                .get("metadata")
-                .cloned()
-                .unwrap_or_else(|| Value::Object(serde_json::Map::new()));
-            let location = serde_json::to_string(&data["location"])
-                .map_err(|e| sqlx::Error::Decode(e.into()))?;
-            sqlx::query(
-                r#"INSERT INTO features (section_id, feature_type, metadata, location, created_by)
-                   VALUES ($1, $2::feature_type, $3, ST_GeomFromGeoJSON($4), $5)"#,
-            )
-            .bind(section_id)
-            .bind(feature_type)
-            .bind(metadata)
-            .bind(&location)
-            .bind(&proposal.submitted_by)
-            .execute(&mut **tx)
-            .await?;
+            if let Some(section_id) = data["section_id"].as_i64() {
+                let body: CreateFeatureBody = serde_json::from_value(data.clone())
+                    .map_err(|e| sqlx::Error::Decode(e.into()))?;
+                features::create_feature_bundle(
+                    &mut **tx,
+                    section_id,
+                    &body,
+                    &proposal.submitted_by,
+                )
+                .await?;
+            }
         }
 
         (ProposalEntityType::Feature, ProposalOperation::Update) => {
@@ -507,22 +510,17 @@ async fn apply_proposal(
                 // Apply water ranges if included in the delta
                 if let Some(ranges) = data.get("water_ranges").and_then(|v| v.as_array()) {
                     for range in ranges {
-                        sqlx::query(
-                            r#"INSERT INTO feature_water_ranges
-                               (feature_id, series_id, range_low, range_medium, range_high)
-                               VALUES ($1, $2, $3, $4, $5)
-                               ON CONFLICT (feature_id, series_id)
-                               DO UPDATE SET range_low    = EXCLUDED.range_low,
-                                             range_medium = EXCLUDED.range_medium,
-                                             range_high   = EXCLUDED.range_high,
-                                             updated_at   = NOW()"#,
+                        let Some(series_id) = range["series_id"].as_i64() else {
+                            continue;
+                        };
+                        gauges::upsert_feature_water_range_partial(
+                            &mut **tx,
+                            id,
+                            series_id,
+                            range["range_low"].as_f64(),
+                            range["range_medium"].as_f64(),
+                            range["range_high"].as_f64(),
                         )
-                        .bind(id)
-                        .bind(range["series_id"].as_i64())
-                        .bind(range["range_low"].as_f64())
-                        .bind(range["range_medium"].as_f64())
-                        .bind(range["range_high"].as_f64())
-                        .execute(&mut **tx)
                         .await?;
                     }
                 }

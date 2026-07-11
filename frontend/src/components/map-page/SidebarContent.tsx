@@ -1,5 +1,8 @@
+import { useNavigate } from "@tanstack/react-router";
 import WaterwaySearchPanel from "@/components/search/WaterwaySearchPanel";
-import WaterwayDetailPanel from "@/components/waterway/WaterwayDetailPanel";
+import SuggestFeaturePanel from "@/components/waterway/SuggestFeaturePanel";
+import SuggestWaterwayPanel from "@/components/waterway/SuggestWaterwayPanel";
+import WaterwayBrowsePanel from "@/components/waterway/WaterwayBrowsePanel";
 import type { MapPageState } from "./useMapPageState";
 
 interface SidebarContentProps {
@@ -15,8 +18,9 @@ interface SidebarContentProps {
 }
 
 /**
- * Renders either WaterwaySearchPanel (no selection) or WaterwayDetailPanel
- * (waterway selected). Shared between DesktopSidebar and MobileOverlay.
+ * Routes between WaterwaySearchPanel, WaterwayBrowsePanel, SuggestWaterwayPanel,
+ * and SuggestFeaturePanel based on current state. Shared by DesktopSidebar and
+ * MobileOverlay. (Suggesting a section navigates to its own page.)
  */
 export default function SidebarContent({
   state,
@@ -25,6 +29,7 @@ export default function SidebarContent({
   onMobileMapToggle,
   mobileMapActive,
 }: SidebarContentProps) {
+  const navigate = useNavigate();
   const {
     selectedWaterwayId,
     selectedSectionId,
@@ -48,15 +53,10 @@ export default function SidebarContent({
     setDetailTab,
     selectedGaugeId,
     gaugeRanges,
+    selectedSectionGaugeRanges,
     suggestMode,
     setSuggestMode,
     clearSuggestState,
-    sectionPutIn,
-    sectionTakeOut,
-    sectionPickingFor,
-    setSectionPickingFor,
-    setSectionPutIn,
-    setSectionTakeOut,
     setSectionPreviewCoords,
     featureVertices,
     setFeatureVertices,
@@ -65,12 +65,36 @@ export default function SidebarContent({
     featurePickingActive,
     setFeaturePickingActive,
     setFocusedPoint,
+    showProposedFeatures,
+    toggleShowProposedFeatures,
+    featureProposals,
+    suggestWaterwayName,
+    setSuggestWaterwayName,
+    mapBounds,
   } = state;
+
+  if (suggestMode === "waterway") {
+    return (
+      <SuggestWaterwayPanel
+        initialName={suggestWaterwayName}
+        mapBounds={mapBounds}
+        onPreviewCoordsChange={setSectionPreviewCoords}
+        onClose={() => {
+          setSuggestMode(null);
+          clearSuggestState();
+        }}
+      />
+    );
+  }
 
   if (selectedWaterwayId == null) {
     return (
       <WaterwaySearchPanel
         onSelect={setSelectedWaterwayId}
+        onProposeRiver={(name) => {
+          setSuggestWaterwayName(name);
+          setSuggestMode("waterway");
+        }}
         onWaterwaysChange={setSearchWaterwayIds}
         areaCircle={areaCircle}
         onAreaCircleChange={handleAreaCircleChange}
@@ -91,60 +115,73 @@ export default function SidebarContent({
     );
   }
 
+  if (suggestMode === "feature" && selectedSectionId != null) {
+    return (
+      <SuggestFeaturePanel
+        waterwayId={selectedWaterwayId}
+        sectionId={selectedSectionId}
+        gaugeRanges={
+          selectedSectionGaugeRanges?.length
+            ? selectedSectionGaugeRanges
+            : gaugeRanges
+        }
+        onClose={() => {
+          setSuggestMode(null);
+          clearSuggestState();
+        }}
+        geometry={{
+          vertices: featureVertices,
+          geomType: featureGeomType,
+          pickingActive: featurePickingActive,
+          onRequestPick: () => setFeaturePickingActive(true),
+          onStopPick: () => setFeaturePickingActive(false),
+          onRemoveVertex: (i) =>
+            setFeatureVertices((prev) => prev.filter((_, idx) => idx !== i)),
+          onGeomTypeChange: (t) => {
+            setFeatureGeomType(t);
+            setFeatureVertices([]);
+            setFeaturePickingActive(false);
+          },
+          onClearVertices: () => {
+            setFeatureVertices([]);
+            setFeaturePickingActive(false);
+          },
+        }}
+      />
+    );
+  }
+
   return (
-    <WaterwayDetailPanel
+    <WaterwayBrowsePanel
       waterwayId={selectedWaterwayId}
       selectedSectionId={selectedSectionId}
       selectedGaugeId={selectedGaugeId}
       gaugeRanges={gaugeRanges}
       tab={detailTab}
       onTabChange={setDetailTab}
-      onBack={() => {
-        setSuggestMode(null);
-        setSelectedWaterwayId(undefined);
-      }}
+      onBack={() => setSelectedWaterwayId(undefined)}
       onSectionClick={handleSectionClick}
       onSectionDeselect={() => setSelectedSectionId(undefined)}
-      suggestMode={suggestMode}
-      onSuggestModeChange={(mode) => {
-        setSuggestMode(mode);
-        if (mode === null) clearSuggestState();
-      }}
       onGaugeSelect={handleGaugeSelect}
+      onSuggestModeChange={(mode) => {
+        // Section suggestion lives on its own page (like /logs/new)
+        if (mode === "section") {
+          navigate({
+            to: "/waterways/suggest-section",
+            search: { waterway: selectedWaterwayId },
+          });
+        } else {
+          setSuggestMode(mode);
+        }
+      }}
       favoritedIds={favoritedIds}
       onToggleFavorite={toggleFavorite}
-      sectionPutIn={sectionPutIn}
-      sectionTakeOut={sectionTakeOut}
-      sectionPickingFor={sectionPickingFor}
-      onStartPickPutIn={() => setSectionPickingFor("put-in")}
-      onStartPickTakeOut={() => setSectionPickingFor("take-out")}
-      onSectionDraftClear={() => {
-        setSectionPutIn(null);
-        setSectionTakeOut(null);
-        setSectionPickingFor(null);
-      }}
-      featureVertices={featureVertices}
-      featureGeomType={featureGeomType}
-      onPreviewCoordsChange={setSectionPreviewCoords}
-      featurePickingActive={featurePickingActive}
-      onStartPickFeature={() => setFeaturePickingActive(true)}
-      onStopPickFeature={() => setFeaturePickingActive(false)}
-      onPopFeatureVertex={() => setFeatureVertices((prev) => prev.slice(0, -1))}
-      onRemoveFeatureVertex={(i) =>
-        setFeatureVertices((prev) => prev.filter((_, idx) => idx !== i))
-      }
-      onFeatureGeomTypeChange={(t) => {
-        setFeatureGeomType(t);
-        setFeatureVertices([]);
-        setFeaturePickingActive(false);
-      }}
-      onFeatureDraftClear={() => {
-        setFeatureVertices([]);
-        setFeaturePickingActive(false);
-      }}
-      onFeatureClick={(coords) => setFocusedPoint(coords)}
       onMobileMapToggle={onMobileMapToggle}
       mobileMapActive={mobileMapActive}
+      onFeatureClick={(coords) => setFocusedPoint(coords)}
+      showProposedFeatures={showProposedFeatures}
+      onToggleProposedFeatures={toggleShowProposedFeatures}
+      featureProposals={featureProposals}
     />
   );
 }

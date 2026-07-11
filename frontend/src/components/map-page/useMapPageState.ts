@@ -1,17 +1,15 @@
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AreaCircle, GaugePin } from "@/components/map/Map";
-import type {
-  DetailTab,
-  SuggestMode,
-} from "@/components/waterway/WaterwayDetailPanel";
-import { waterwaysApi } from "@/lib/api";
+import type { DetailTab, SuggestMode } from "@/components/waterway/types";
+import { proposalsApi, waterwaysApi } from "@/lib/api";
 import { useFavorites } from "@/lib/hooks/useFavorites";
 import { useFilteredSections } from "@/lib/hooks/useFilteredSections";
 import { useGaugeData } from "@/lib/hooks/useGaugeData";
+import { proposalKeys } from "@/lib/hooks/useProposals";
 import {
   useAllSectionWaterStatus,
   useSectionWaterStatuses,
@@ -64,26 +62,61 @@ export function useMapPageState(search: RouteSearch) {
     { lng: number; lat: number }[]
   >([]);
 
-  // Section suggestion: pick put-in and take-out from the map
-  const [sectionPickingFor, setSectionPickingFor] = useState<
-    "put-in" | "take-out" | null
-  >(null);
-  const [sectionPutIn, setSectionPutIn] = useState<{
-    lat: number;
-    lon: number;
-  } | null>(null);
-  const [sectionTakeOut, setSectionTakeOut] = useState<{
-    lat: number;
-    lon: number;
-  } | null>(null);
+  // Preview line drawn on the map (e.g. OSM river highlight in suggest flows)
   const [sectionPreviewCoords, setSectionPreviewCoords] = useState<
     [number, number][] | null
   >(null);
 
   const [suggestMode, setSuggestMode] = useState<SuggestMode | null>(null);
+  // Name prefill for the "suggest new river" panel (from the search field)
+  const [suggestWaterwayName, setSuggestWaterwayName] = useState("");
   const [focusedPoint, setFocusedPoint] = useState<[number, number] | null>(
     null,
   );
+
+  // Current map viewport bounds (used for OSM lookups in suggest flows)
+  const [mapBounds, setMapBoundsRaw] = useState<{
+    south: number;
+    west: number;
+    north: number;
+    east: number;
+  } | null>(null);
+  // Keep the previous reference for identical bounds - the map reports on
+  // every moveend (including camera-effect fitBounds), and a fresh object
+  // for unchanged bounds would re-render the whole page in a loop.
+  const setMapBounds = useCallback(
+    (b: { south: number; west: number; north: number; east: number }) =>
+      setMapBoundsRaw((prev) =>
+        prev &&
+        prev.south === b.south &&
+        prev.west === b.west &&
+        prev.north === b.north &&
+        prev.east === b.east
+          ? prev
+          : b,
+      ),
+    [],
+  );
+
+  const [showProposedFeatures, setShowProposedFeatures] = useState(false);
+  const toggleShowProposedFeatures = useCallback(
+    () => setShowProposedFeatures((v) => !v),
+    [],
+  );
+  const { data: featureProposals = [] } = useQuery({
+    queryKey: proposalKeys.list({
+      entity_type: "feature",
+      status: "pending",
+      section_id: selectedSectionId,
+    }),
+    queryFn: () =>
+      proposalsApi.list({
+        entity_type: "feature",
+        status: "pending",
+        section_id: selectedSectionId,
+      }),
+    enabled: selectedSectionId != null && showProposedFeatures,
+  });
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -118,7 +151,9 @@ export function useMapPageState(search: RouteSearch) {
     [navigate],
   );
   const isMobilePanelOpen =
-    isMobile && (panel === "1" || selectedWaterwayId != null) && !isMobileMapView;
+    isMobile &&
+    (panel === "1" || selectedWaterwayId != null) &&
+    !isMobileMapView;
 
   const [previewRadius, setPreviewRadius] = useState<number | null>(null);
   const [isSearchPanelLoading, setIsSearchPanelLoading] = useState(false);
@@ -128,10 +163,23 @@ export function useMapPageState(search: RouteSearch) {
     setFocusedPoint(null);
   }, [selectedSectionId]);
 
-  const areaCircle: AreaCircle | null =
-    lat != null && lon != null && radius != null
-      ? { lat, lon, radiusKm: radius }
-      : null;
+  // When suggest mode opens, always bring the overlay back (map-view hides it)
+  useEffect(() => {
+    if (suggestMode != null) {
+      setIsMobileMapViewRaw(false);
+    }
+  }, [suggestMode]);
+
+  // Stable identity per (lat, lon, radius) - camera effects and section
+  // filters depend on this object; rebuilding it every render made the
+  // area-mode fitBounds effect refire on each render (update-depth loop).
+  const areaCircle: AreaCircle | null = useMemo(
+    () =>
+      lat != null && lon != null && radius != null
+        ? { lat, lon, radiusKm: radius }
+        : null,
+    [lat, lon, radius],
+  );
 
   const isAreaMode = mode === "area";
 
@@ -227,6 +275,13 @@ export function useMapPageState(search: RouteSearch) {
     shouldFetchGauges,
   });
 
+  const selectedSectionGaugeRanges = useMemo(() => {
+    if (selectedSectionId == null) return [];
+    const idx = sectionIds.indexOf(selectedSectionId);
+    if (idx < 0) return [];
+    return allWaterStatuses[idx]?.data?.ranges ?? [];
+  }, [selectedSectionId, sectionIds, allWaterStatuses]);
+
   const sectionLevels = useMemo(() => {
     const map: Record<number, string> = {};
     allWaterStatuses.forEach((q, i) => {
@@ -282,16 +337,9 @@ export function useMapPageState(search: RouteSearch) {
     (lng: number, lat: number) => {
       if (featurePickingActive) {
         setFeatureVertices((prev) => [...prev, { lng, lat }]);
-        return;
-      } else if (sectionPickingFor === "put-in") {
-        setSectionPutIn({ lat, lon: lng });
-        setSectionPickingFor(null);
-      } else if (sectionPickingFor === "take-out") {
-        setSectionTakeOut({ lat, lon: lng });
-        setSectionPickingFor(null);
       }
     },
-    [featurePickingActive, sectionPickingFor],
+    [featurePickingActive],
   );
 
   const handleGaugeSelect = useCallback((gaugeId: number) => {
@@ -330,13 +378,11 @@ export function useMapPageState(search: RouteSearch) {
 
   /** Clears all suggest/feature-picking state (called when suggestMode is set to null). */
   const clearSuggestState = useCallback(() => {
-    setSectionPutIn(null);
-    setSectionTakeOut(null);
-    setSectionPickingFor(null);
     setSectionPreviewCoords(null);
     setFeatureVertices([]);
     setFeaturePickingActive(false);
     setFeatureGeomType("Point");
+    setSuggestWaterwayName("");
   }, []);
 
   return {
@@ -367,18 +413,19 @@ export function useMapPageState(search: RouteSearch) {
     setFeatureGeomType,
     featureVertices,
     setFeatureVertices,
-    sectionPickingFor,
-    setSectionPickingFor,
-    sectionPutIn,
-    setSectionPutIn,
-    sectionTakeOut,
-    setSectionTakeOut,
     sectionPreviewCoords,
     setSectionPreviewCoords,
     suggestMode,
     setSuggestMode,
+    suggestWaterwayName,
+    setSuggestWaterwayName,
+    mapBounds,
+    setMapBounds,
     focusedPoint,
     setFocusedPoint,
+    showProposedFeatures,
+    toggleShowProposedFeatures,
+    featureProposals,
     isMobile,
     isMobilePanelOpen,
     setIsMobilePanelOpen,
@@ -400,6 +447,7 @@ export function useMapPageState(search: RouteSearch) {
     gaugePins,
     gaugeRanges,
     selectedGaugeRanges,
+    selectedSectionGaugeRanges,
     sectionLevels,
     searchSectionLevels,
     // Handlers

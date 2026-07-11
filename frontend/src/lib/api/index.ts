@@ -24,11 +24,15 @@ export type SectionWaterStatus = components["schemas"]["SectionWaterStatus"];
 export type WaterRangeWithStatus =
   components["schemas"]["WaterRangeWithStatus"];
 export type GaugeReading = components["schemas"]["GaugeReading"];
+export type GaugeWithSeries = components["schemas"]["GaugeWithSeries"];
+export type GaugeSource = components["schemas"]["GaugeSource"];
+export type FeatureWaterRangeBody =
+  components["schemas"]["FeatureWaterRangeBody"];
 export type ApiToken = components["schemas"]["ApiToken"];
 export type ApiTokenCreated = components["schemas"]["ApiTokenCreated"];
-export type FavoriteSection = components["schemas"]["FavoriteSection"];
+export type FavoriteSection = components["schemas"]["FavoriteSectionResponse"];
 export type UserWithFollowStatus =
-  components["schemas"]["UserWithFollowStatus"];
+  components["schemas"]["UserWithFollowStatusResponse"];
 export type User = components["schemas"]["User"];
 
 export type WaterwayFilters = NonNullable<
@@ -55,6 +59,11 @@ export const waterwaysApi = {
     const { data } = await client.GET("/api/v1/waterways/{waterway_id}", {
       params: { path: { waterway_id: id } },
     });
+    return assertData(data);
+  },
+  create: async (body: components["schemas"]["CreateWaterwayBody"]) => {
+    const { data } = await client.POST("/api/v1/waterways", { body });
+    // 201 (admin, Waterway) or 202 (proposal); client throws ApiError on 409.
     return assertData(data);
   },
 };
@@ -179,6 +188,21 @@ export const waterStatusApi = {
   },
 };
 
+export const gaugesApi = {
+  /** Search active gauges by name and/or proximity (nearest-first). */
+  search: async (params: {
+    q?: string;
+    lat?: number;
+    lon?: number;
+    limit?: number;
+  }) => {
+    const { data } = await client.GET("/api/v1/gauges/search", {
+      params: { query: params },
+    });
+    return assertData(data);
+  },
+};
+
 export const gaugeReadingsApi = {
   list: async (
     gaugeId: number,
@@ -282,6 +306,11 @@ export const proposalsApi = {
   },
   unvote: async (id: number) => {
     await client.DELETE("/api/v1/proposals/{proposal_id}/vote", {
+      params: { path: { proposal_id: id } },
+    });
+  },
+  delete: async (id: number) => {
+    await client.DELETE("/api/v1/proposals/{proposal_id}", {
       params: { path: { proposal_id: id } },
     });
   },

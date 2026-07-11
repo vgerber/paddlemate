@@ -8,11 +8,15 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import StandingDescentBanner from "@/components/StandingDescentBanner";
+import { useMemo } from "react";
 import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import WaterwayMap from "@/components/map/Map";
+import StandingDescentBanner from "@/components/StandingDescentBanner";
 import AreaControls from "@/components/search/AreaControls";
+import { proposalToPseudoFeature } from "@/components/waterway/section-details/utils";
+import { localizedName } from "@/lib/localization";
+import { theme } from "@/lib/theme";
 import SectionSpeedDial from "./SectionSpeedDial";
 import type { MapPageState } from "./useMapPageState";
 
@@ -51,13 +55,10 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     setLabelMode,
     sectionLevels,
     searchSectionLevels,
-    sectionPutIn,
-    sectionTakeOut,
     sectionPreviewCoords,
     featureVertices,
     featureGeomType,
     featurePickingActive,
-    sectionPickingFor,
     handleMapPick,
     focusedPoint,
     isAreaMode,
@@ -66,24 +67,33 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     selectedGaugeRanges,
     isMobileMapView,
     toggleMobileMapView,
+    showProposedFeatures,
+    featureProposals,
+    setMapBounds,
   } = state;
 
-  const LEVEL_COLORS: Record<string, string> = {
-    low: "#4caf50",
-    medium: "#ff9800",
-    high: "#f44336",
-  };
+  const LEVEL_COLORS: Record<string, string> = theme.tokens.levelColors;
 
-  const sectionName = sections.find((s) => s.id === selectedSectionId)?.name;
-  const waterwayName = selectedWaterwayId != null ? waterwayNames[selectedWaterwayId] : undefined;
-  const sectionLevel = selectedSectionId != null ? sectionLevels[selectedSectionId] : undefined;
+  const selectedSection = sections.find((s) => s.id === selectedSectionId);
+  const sectionName = selectedSection
+    ? localizedName(selectedSection.name, selectedSection.names)
+    : undefined;
+  const waterwayName =
+    selectedWaterwayId != null ? waterwayNames[selectedWaterwayId] : undefined;
+  const sectionLevel =
+    selectedSectionId != null ? sectionLevels[selectedSectionId] : undefined;
 
-  const visibleAreaCircle =
-    selectedWaterwayId == null && isAreaMode
-      ? previewRadius != null && areaCircle != null
-        ? { ...areaCircle, radiusKm: previewRadius }
-        : areaCircle
-      : null;
+  // Stable identity - feeds the map's area fitBounds effect, which must not
+  // refire on unrelated re-renders (see useMapPageState.areaCircle).
+  const visibleAreaCircle = useMemo(
+    () =>
+      selectedWaterwayId == null && isAreaMode
+        ? previewRadius != null && areaCircle != null
+          ? { ...areaCircle, radiusKm: previewRadius }
+          : areaCircle
+        : null,
+    [selectedWaterwayId, isAreaMode, previewRadius, areaCircle],
+  );
 
   const showAreaStrip = isMobile && isAreaMode && selectedWaterwayId == null;
 
@@ -104,7 +114,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     >
       {/* Map */}
       <Box sx={{ flex: 1, minHeight: 0, position: "relative" }}>
-        {/* Descent banner — mobile only, floats over the map when overlay is closed */}
+        {/* Descent banner - mobile only, floats over the map when overlay is closed */}
         <StandingDescentBanner
           sx={{
             display: { xs: "flex", md: "none" },
@@ -137,24 +147,29 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           sectionLevels={
             selectedWaterwayId != null ? sectionLevels : searchSectionLevels
           }
-          putIn={sectionPutIn}
-          takeOut={sectionTakeOut}
           sectionPreviewCoords={sectionPreviewCoords ?? undefined}
           featureVertices={featureVertices}
           featureGeomType={featureGeomType}
-          placingFeature={featurePickingActive || sectionPickingFor !== null}
-          onMapClick={
-            featurePickingActive || sectionPickingFor !== null
-              ? handleMapPick
-              : undefined
-          }
+          placingFeature={featurePickingActive}
+          onMapClick={featurePickingActive ? handleMapPick : undefined}
           focusedPoint={focusedPoint}
           controlsBottomOffset={
             isMobile && (showAreaStrip || isMobileMapView) ? 60 : 0
           }
+          controlsAnchor={
+            isMobile && suggestMode === "feature" ? "top" : undefined
+          }
+          proposedFeatures={
+            showProposedFeatures
+              ? featureProposals
+                  .map(proposalToPseudoFeature)
+                  .filter((f) => f !== null)
+              : undefined
+          }
+          onBoundsChange={setMapBounds}
         />
 
-        {/* Area strip — mobile, area mode, no waterway selected */}
+        {/* Area strip - mobile, area mode, no waterway selected */}
         {showAreaStrip ? (
           <Box
             sx={{
@@ -201,7 +216,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             </Badge>
           </Box>
         ) : isMobileMapView ? (
-          /* Map-view mini header — shown when the detail overlay is toggled away */
+          /* Map-view mini header - shown when the detail overlay is toggled away */
           <>
             <SectionSpeedDial
               state={state}
@@ -226,40 +241,43 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
                 px: 2,
                 py: 1,
                 alignItems: "center",
-              gap: 1.5,
-              zIndex: 1100,
-            }}
-          >
-            {sectionLevel && LEVEL_COLORS[sectionLevel] && (
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  bgcolor: LEVEL_COLORS[sectionLevel],
-                  flexShrink: 0,
-                }}
-              />
-            )}
-            <Box sx={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-              <Typography
-                variant="subtitle2"
-                noWrap
-                sx={{ fontWeight: 700, lineHeight: 1.3 }}
-              >
-                {sectionName ?? waterwayName ?? ""}
-              </Typography>
-              {sectionName && waterwayName && (
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  {waterwayName}
-                </Typography>
+                gap: 1.5,
+                zIndex: 1100,
+              }}
+            >
+              {sectionLevel && LEVEL_COLORS[sectionLevel] && (
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    bgcolor: LEVEL_COLORS[sectionLevel],
+                    flexShrink: 0,
+                  }}
+                />
               )}
-            </Box>
-            <KeyboardArrowUpIcon fontSize="small" sx={{ color: "action.active", flexShrink: 0 }} />
-          </ButtonBase>
+              <Box sx={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                <Typography
+                  variant="subtitle2"
+                  noWrap
+                  sx={{ fontWeight: 700, lineHeight: 1.3 }}
+                >
+                  {sectionName ?? waterwayName ?? ""}
+                </Typography>
+                {sectionName && waterwayName && (
+                  <Typography variant="caption" color="text.secondary" noWrap>
+                    {waterwayName}
+                  </Typography>
+                )}
+              </Box>
+              <KeyboardArrowUpIcon
+                fontSize="small"
+                sx={{ color: "action.active", flexShrink: 0 }}
+              />
+            </ButtonBase>
           </>
         ) : (
-          /* Search FAB — mobile only */
+          /* Search FAB - mobile only */
           <Box
             sx={{
               display: { xs: "block", md: "none" },
@@ -277,7 +295,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
         )}
       </Box>
 
-      {/* Charts — desktop only */}
+      {/* Charts - desktop only */}
       <Box sx={{ display: { xs: "none", md: "block" } }}>
         {selectedGaugeId != null && selectedGaugeRanges.length > 0 ? (
           <GaugeChartPanel
@@ -288,7 +306,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           <SectionChartPanel
             waterwayId={selectedWaterwayId}
             sectionId={selectedSectionId}
-            sectionName={sections.find((s) => s.id === selectedSectionId)?.name}
+            sectionName={sectionName}
           />
         ) : null}
       </Box>

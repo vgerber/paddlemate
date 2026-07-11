@@ -1,22 +1,23 @@
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
-import type { SectionWithFeatures } from "@/lib/api";
+import type { Proposal, SectionWithFeatures } from "@/lib/api";
 import { fonts, theme } from "@/lib/theme";
 import { PointEntry } from "./PointEntry";
 
 const { tokens } = theme;
 
 import type { ComputedFeature } from "./types";
-import { buildTree, computeExtent } from "./utils";
+import { buildTree, computeExtent, proposalToComputedFeature } from "./utils";
 import { ZoneEntry } from "./ZoneEntry";
 
 interface Props {
   section: SectionWithFeatures;
+  proposals?: Proposal[];
   onFeatureClick?: (coords: [number, number] | null) => void;
 }
 
-export default function FeatureTimeline({ section, onFeatureClick }: Props) {
+export default function FeatureTimeline({ section, proposals = [], onFeatureClick }: Props) {
   const [activeId, setActiveId] = useState<number | null>(null);
   const lineCoords = useMemo((): [number, number][] => {
     if (section.location?.type !== "LineString") return [];
@@ -26,14 +27,22 @@ export default function FeatureTimeline({ section, onFeatureClick }: Props) {
   }, [section.location]);
 
   const tree = useMemo(() => {
-    if (!section.features.length) return [];
-    return buildTree(section.features.map((f) => computeExtent(f, lineCoords)));
-  }, [section.features, lineCoords]);
+    const approved = section.features.map((f) => computeExtent(f, lineCoords));
+    const proposed = proposals
+      .map((p) => proposalToComputedFeature(p, lineCoords))
+      .filter((cf): cf is ComputedFeature => cf !== null);
+    const all = [...approved, ...proposed];
+    if (!all.length) return [];
+    return buildTree(all);
+  }, [section.features, proposals, lineCoords]);
 
   function handleItemClick(cf: ComputedFeature) {
     const newId = activeId === cf.feature.id ? null : cf.feature.id;
     setActiveId(newId);
-    onFeatureClick?.(newId != null ? cf.coords : null);
+    // Don't fly to map for proposals - they aren't approved yet
+    if (!cf.proposal) {
+      onFeatureClick?.(newId != null ? cf.coords : null);
+    }
   }
 
   if (!tree.length) {

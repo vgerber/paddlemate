@@ -11,32 +11,34 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { Feature, SectionWithFeatures } from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
 import { circleGeoJSON } from "@/lib/geo";
+import { theme } from "@/lib/theme";
 import GaugeMarkers, { type GaugePin } from "./GaugeMarkers";
 import LabelModeToggle from "./LabelModeToggle";
-import { useMapCameraEffects } from "./useMapCameraEffects";
 import {
+  buildLineFeatureEndpointsGeoJSON,
+  buildLineFeatureLabelsGeoJSON,
   buildLineFeaturesGeoJSON,
   buildPointFeaturesGeoJSON,
+  buildProposedLineFeaturesGeoJSON,
+  buildProposedPointFeaturesGeoJSON,
   buildPutInTakeOutConnectorsGeoJSON,
   buildSectionEndpointsGeoJSON,
   buildSectionLabelsGeoJSON,
   buildSectionsGeoJSON,
 } from "./mapLayers";
+import { useMapCameraEffects } from "./useMapCameraEffects";
 
 export type { AreaCircle } from "@/lib/geo";
 export type { GaugePin } from "./GaugeMarkers";
 
-const LEVEL_COLORS: Record<string, string> = {
-  empty: "#9eaab0",
-  low: "#4caf50",
-  medium: "#ff9800",
-  high: "#f44336",
-};
+const { tokens } = theme;
+
+const LEVEL_COLORS: Record<string, string> = tokens.levelColors;
 
 const makePutInSvg = (color: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="${color}" stroke="#121416" stroke-width="1.5"/><g transform="translate(4, 4) scale(0.833)"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z" fill="white"/></g></svg>`;
+  `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="${color}" stroke="${tokens.background}" stroke-width="1.5"/><g transform="translate(4, 4) scale(0.833)"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z" fill="white"/></g></svg>`;
 const makeTakeOutSvg = (color: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="${color}" stroke="#121416" stroke-width="1.5"/><g transform="translate(4, 4) scale(0.833)"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z" fill="white"/></g></svg>`;
+  `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="${color}" stroke="${tokens.background}" stroke-width="1.5"/><g transform="translate(4, 4) scale(0.833)"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z" fill="white"/></g></svg>`;
 
 function addMapImages(map: ReturnType<MapRef["getMap"]> | undefined) {
   if (!map) return;
@@ -108,6 +110,22 @@ interface WaterwayMapProps {
   focusedPoint?: [number, number] | null;
   /** Extra px to add to the bottom offset of map controls (satellite/label toggle) so they clear any bottom strip. */
   controlsBottomOffset?: number;
+  /** Anchor the map controls to the top instead of the bottom (e.g. when the bottom is covered by a panel). */
+  controlsAnchor?: "top" | "bottom";
+  /** Pending proposals to show as ghost markers on the map. */
+  proposedFeatures?: Feature[];
+  /** Reports the current viewport bounds (on load and after each move). */
+  onBoundsChange?: (bounds: {
+    south: number;
+    west: number;
+    north: number;
+    east: number;
+  }) => void;
+  /** River course to highlight subtly (e.g. the OSM riverbed a section will snap to). */
+  riverHighlightCoords?: [number, number][] | null;
+  /** For maps embedded in scrollable pages: page scroll passes over the map;
+   * zooming needs Ctrl/Cmd+scroll (or two fingers on touch). */
+  cooperativeGestures?: boolean;
 }
 
 export default function WaterwayMap({
@@ -138,11 +156,17 @@ export default function WaterwayMap({
   sectionLevels,
   focusedPoint,
   controlsBottomOffset = 0,
+  controlsAnchor,
+  proposedFeatures,
+  onBoundsChange,
+  riverHighlightCoords,
+  cooperativeGestures,
 }: WaterwayMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [pickMode, setPickMode] = useState<"put-in" | "take-out" | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [satellite, setSatellite] = useState(false);
+  const [showFeatureNames, setShowFeatureNames] = useState(true);
   const { handleMapLoad } = useMapCameraEffects({
     mapRef,
     mapLoaded,
@@ -168,6 +192,20 @@ export default function WaterwayMap({
   const connectorsGeoJSON = buildPutInTakeOutConnectorsGeoJSON(sections ?? []);
   const pointsGeoJSON = buildPointFeaturesGeoJSON(features ?? []);
   const linesGeoJSON = buildLineFeaturesGeoJSON(features ?? []);
+  const proposedPointsGeoJSON = buildProposedPointFeaturesGeoJSON(
+    proposedFeatures ?? [],
+  );
+  const lineEndpointsGeoJSON = buildLineFeatureEndpointsGeoJSON(features ?? []);
+  const proposedLineEndpointsGeoJSON = buildLineFeatureEndpointsGeoJSON(
+    proposedFeatures ?? [],
+  );
+  const lineLabelsGeoJSON = buildLineFeatureLabelsGeoJSON(features ?? []);
+  const proposedLineLabelsGeoJSON = buildLineFeatureLabelsGeoJSON(
+    proposedFeatures ?? [],
+  );
+  const proposedLinesGeoJSON = buildProposedLineFeaturesGeoJSON(
+    proposedFeatures ?? [],
+  );
 
   const handleClick = (e: MapLayerMouseEvent) => {
     if (pickMode) {
@@ -204,6 +242,17 @@ export default function WaterwayMap({
     }
   };
 
+  const reportBounds = () => {
+    const b = mapRef.current?.getBounds();
+    if (!b) return;
+    onBoundsChange?.({
+      south: b.getSouth(),
+      west: b.getWest(),
+      north: b.getNorth(),
+      east: b.getEast(),
+    });
+  };
+
   const circleData = areaCircle
     ? circleGeoJSON(areaCircle.lat, areaCircle.lon, areaCircle.radiusKm)
     : ({
@@ -226,17 +275,19 @@ export default function WaterwayMap({
               : undefined,
       }}
     >
-      {onLabelModeChange && (
-        <LabelModeToggle
-          labelMode={labelMode}
-          onChange={onLabelModeChange}
-          satellite={satellite}
-          onSatelliteChange={setSatellite}
-          bottomOffset={controlsBottomOffset}
-        />
-      )}
+      <LabelModeToggle
+        labelMode={labelMode}
+        onChange={onLabelModeChange}
+        satellite={satellite}
+        onSatelliteChange={setSatellite}
+        featureNames={showFeatureNames}
+        onFeatureNamesChange={setShowFeatureNames}
+        bottomOffset={controlsBottomOffset}
+        anchor={controlsAnchor}
+      />
       <MapGL
         ref={mapRef}
+        cooperativeGestures={cooperativeGestures}
         initialViewState={{ longitude: 13, latitude: 47, zoom: 5 }}
         style={{ width: "100%", height: "100%" }}
         mapStyle={
@@ -245,7 +296,11 @@ export default function WaterwayMap({
             : "https://tiles.openfreemap.org/styles/liberty"
         }
         onClick={handleClick}
-        onLoad={handleMapLoad}
+        onLoad={() => {
+          handleMapLoad();
+          reportBounds();
+        }}
+        onMoveEnd={reportBounds}
         interactiveLayerIds={[
           "sections-line",
           "sections-line-casing",
@@ -303,16 +358,16 @@ export default function WaterwayMap({
                 "match",
                 ["get", "level"],
                 "low",
-                "#4caf50",
+                tokens.levelColors.low,
                 "medium",
-                "#ff9800",
+                tokens.levelColors.medium,
                 "high",
-                "#f44336",
-                "#9eaab0",
+                tokens.levelColors.high,
+                tokens.levelColors.empty,
               ],
               "circle-opacity": 1,
               "circle-stroke-width": 1,
-              "circle-stroke-color": "#121416",
+              "circle-stroke-color": tokens.background,
               "circle-stroke-opacity": 1,
             }}
           />
@@ -349,7 +404,7 @@ export default function WaterwayMap({
             beforeId="section-endpoints-icon"
             type="line"
             paint={{
-              "line-color": "#000000",
+              "line-color": tokens.background,
               "line-width": 20,
               "line-opacity": 0,
             }}
@@ -359,7 +414,7 @@ export default function WaterwayMap({
             beforeId="section-endpoints-icon"
             type="line"
             paint={{
-              "line-color": "#0a1a2e",
+              "line-color": tokens.mapSectionLineCasing,
               "line-width": 6,
               "line-opacity": 0.85,
             }}
@@ -369,7 +424,7 @@ export default function WaterwayMap({
             beforeId="section-endpoints-icon"
             type="line"
             paint={{
-              "line-color": "#29b6f6",
+              "line-color": tokens.mapSectionLine,
               "line-width": 4,
               "line-opacity": 1,
             }}
@@ -380,7 +435,7 @@ export default function WaterwayMap({
             type="line"
             filter={["==", ["id"], selectedSectionId ?? -1]}
             paint={{
-              "line-color": "#ff9800",
+              "line-color": tokens.mapSelectedLine,
               "line-width": 6,
               "line-opacity": 1,
             }}
@@ -399,8 +454,8 @@ export default function WaterwayMap({
               "text-padding": 6,
             }}
             paint={{
-              "text-color": "#ffffff",
-              "text-halo-color": "rgb(21, 37, 52)",
+              "text-color": tokens.white,
+              "text-halo-color": tokens.mapLabelHalo,
               "text-halo-width": 2,
             }}
           />
@@ -408,12 +463,64 @@ export default function WaterwayMap({
 
         <Source id="feature-lines" type="geojson" data={linesGeoJSON}>
           <Layer
+            id="feature-lines-casing"
+            type="line"
+            paint={{
+              "line-color": tokens.background,
+              "line-width": 3.5,
+              "line-opacity": 0.8,
+              "line-offset": ["*", ["get", "stack"], 5],
+            }}
+          />
+          <Layer
             id="feature-lines-layer"
             type="line"
             paint={{
               "line-color": ["get", "color"],
               "line-width": 2,
               "line-dasharray": [2, 2],
+              "line-offset": ["*", ["get", "stack"], 5],
+            }}
+          />
+        </Source>
+
+        <Source
+          id="feature-line-labels"
+          type="geojson"
+          data={lineLabelsGeoJSON}
+        >
+          <Layer
+            id="feature-lines-label"
+            type="symbol"
+            layout={{
+              "text-field": ["get", "label"],
+              "text-size": 11,
+              "text-font": ["Noto Sans Regular"],
+              "text-anchor": "top",
+              "text-offset": [0, 0.6],
+              visibility: showFeatureNames ? "visible" : "none",
+            }}
+            paint={{
+              "text-color": tokens.white,
+              "text-halo-color": tokens.mapLabelHalo,
+              "text-halo-width": 1.5,
+            }}
+          />
+        </Source>
+
+        <Source
+          id="feature-line-endpoints"
+          type="geojson"
+          data={lineEndpointsGeoJSON}
+        >
+          <Layer
+            id="feature-line-endpoints-circle"
+            type="circle"
+            paint={{
+              "circle-radius": 3.5,
+              "circle-color": ["get", "color"],
+              "circle-stroke-width": 1.5,
+              "circle-stroke-color": tokens.background,
             }}
           />
         </Source>
@@ -426,7 +533,210 @@ export default function WaterwayMap({
               "circle-radius": 7,
               "circle-color": ["get", "color"],
               "circle-stroke-width": 2,
-              "circle-stroke-color": "#121416",
+              "circle-stroke-color": tokens.background,
+            }}
+          />
+          <Layer
+            id="feature-points-label"
+            type="symbol"
+            layout={{
+              "text-field": ["get", "label"],
+              "text-size": 11,
+              "text-font": ["Noto Sans Regular"],
+              "text-anchor": "top",
+              "text-offset": [0, 0.9],
+              visibility: showFeatureNames ? "visible" : "none",
+            }}
+            paint={{
+              "text-color": tokens.white,
+              "text-halo-color": tokens.mapLabelHalo,
+              "text-halo-width": 1.5,
+            }}
+          />
+        </Source>
+
+        {/* River course highlight - subtle guide under the section preview.
+            Always mounted (empty when unused) so the layer order stays
+            deterministic: highlight < preview < proposed features. */}
+        <Source
+          id="river-highlight"
+          type="geojson"
+          data={{
+            type: "Feature" as const,
+            geometry: {
+              type: "LineString" as const,
+              coordinates:
+                riverHighlightCoords && riverHighlightCoords.length >= 2
+                  ? riverHighlightCoords
+                  : [],
+            },
+            properties: {},
+          }}
+        >
+          <Layer
+            id="river-highlight-line"
+            type="line"
+            paint={{
+              "line-color": tokens.tertiary,
+              "line-width": 3,
+              "line-opacity": 0.45,
+              "line-dasharray": [2, 2],
+            }}
+          />
+        </Source>
+
+        {/* Preview line - snapped/OSM coords when available (also used to
+            highlight a checked river), dashed straight put-in→take-out until
+            the OSM snap resolves. Always mounted, see above. */}
+        <Source
+          id="section-preview"
+          type="geojson"
+          data={{
+            type: "Feature" as const,
+            geometry: {
+              type: "LineString" as const,
+              coordinates:
+                sectionPreviewCoords ??
+                (putIn && takeOut
+                  ? [
+                      [putIn.lon, putIn.lat],
+                      [takeOut.lon, takeOut.lat],
+                    ]
+                  : []),
+            },
+            properties: {},
+          }}
+        >
+          <Layer
+            id="section-preview-casing"
+            type="line"
+            paint={{
+              "line-color": tokens.surfaceLowest,
+              "line-width": 7,
+              "line-opacity": sectionPreviewCoords ? 0.85 : 0,
+            }}
+          />
+          <Layer
+            id="section-preview-line"
+            type="line"
+            paint={{
+              "line-color": tokens.tertiary,
+              "line-width": sectionPreviewCoords ? 5 : 2,
+              ...(sectionPreviewCoords ? {} : { "line-dasharray": [4, 3] }),
+            }}
+          />
+        </Source>
+
+        {/* Proposed (pending) features - like the confirmed markers but with
+            a white ring/casing (confirmed use a dark one), which also keeps
+            them visible on satellite imagery */}
+        <Source
+          id="proposed-feature-lines"
+          type="geojson"
+          data={proposedLinesGeoJSON}
+        >
+          <Layer
+            id="proposed-feature-lines-casing"
+            type="line"
+            paint={{
+              "line-color": tokens.white,
+              "line-width": 6.5,
+              "line-opacity": 0.9,
+              "line-offset": ["*", ["get", "stack"], 7],
+            }}
+          />
+          <Layer
+            id="proposed-feature-lines-rim"
+            type="line"
+            paint={{
+              "line-color": tokens.background,
+              "line-width": 4,
+              "line-opacity": 0.85,
+              "line-offset": ["*", ["get", "stack"], 7],
+            }}
+          />
+          <Layer
+            id="proposed-feature-lines-layer"
+            type="line"
+            paint={{
+              "line-color": ["get", "color"],
+              "line-width": 2.5,
+              "line-dasharray": [3, 2],
+              "line-offset": ["*", ["get", "stack"], 7],
+            }}
+          />
+        </Source>
+
+        <Source
+          id="proposed-feature-line-labels"
+          type="geojson"
+          data={proposedLineLabelsGeoJSON}
+        >
+          <Layer
+            id="proposed-feature-lines-label"
+            type="symbol"
+            layout={{
+              "text-field": ["get", "label"],
+              "text-size": 11,
+              "text-font": ["Noto Sans Regular"],
+              "text-anchor": "top",
+              "text-offset": [0, 0.6],
+              visibility: showFeatureNames ? "visible" : "none",
+            }}
+            paint={{
+              "text-color": tokens.white,
+              "text-halo-color": tokens.mapLabelHalo,
+              "text-halo-width": 1.5,
+            }}
+          />
+        </Source>
+
+        <Source
+          id="proposed-feature-line-endpoints"
+          type="geojson"
+          data={proposedLineEndpointsGeoJSON}
+        >
+          <Layer
+            id="proposed-feature-line-endpoints-circle"
+            type="circle"
+            paint={{
+              "circle-radius": 3.5,
+              "circle-color": ["get", "color"],
+              "circle-stroke-width": 1.5,
+              "circle-stroke-color": tokens.white,
+            }}
+          />
+        </Source>
+        <Source
+          id="proposed-feature-points"
+          type="geojson"
+          data={proposedPointsGeoJSON}
+        >
+          <Layer
+            id="proposed-feature-points-circle"
+            type="circle"
+            paint={{
+              "circle-radius": 7,
+              "circle-color": ["get", "color"],
+              "circle-stroke-width": 2.5,
+              "circle-stroke-color": tokens.white,
+            }}
+          />
+          <Layer
+            id="proposed-feature-points-label"
+            type="symbol"
+            layout={{
+              "text-field": ["get", "label"],
+              "text-size": 11,
+              "text-font": ["Noto Sans Regular"],
+              "text-anchor": "top",
+              "text-offset": [0, 0.9],
+              visibility: showFeatureNames ? "visible" : "none",
+            }}
+            paint={{
+              "text-color": tokens.white,
+              "text-halo-color": tokens.mapLabelHalo,
+              "text-halo-width": 1.5,
             }}
           />
         </Source>
@@ -441,13 +751,13 @@ export default function WaterwayMap({
           <Layer
             id="area-circle-fill"
             type="fill"
-            paint={{ "fill-color": "#1976d2", "fill-opacity": 0.08 }}
+            paint={{ "fill-color": tokens.mapAreaCircle, "fill-opacity": 0.08 }}
           />
           <Layer
             id="area-circle-line"
             type="line"
             paint={{
-              "line-color": "#1976d2",
+              "line-color": tokens.mapAreaCircle,
               "line-width": 2,
               ...(areaLocked ? {} : { "line-dasharray": [4, 3] }),
             }}
@@ -467,7 +777,7 @@ export default function WaterwayMap({
               id="sections-picker-sel-casing"
               type="line"
               paint={{
-                "line-color": "#0a1a2e",
+                "line-color": tokens.mapSectionLineCasing,
                 "line-width": 7,
                 "line-opacity": 0.85,
               }}
@@ -475,36 +785,7 @@ export default function WaterwayMap({
             <Layer
               id="sections-picker-sel-line"
               type="line"
-              paint={{ "line-color": "#c2cf47", "line-width": 5 }}
-            />
-          </Source>
-        )}
-
-        {/* Section draft preview line — dashed straight until OSM snap resolves */}
-        {putIn && takeOut && (
-          <Source
-            id="section-preview"
-            type="geojson"
-            data={{
-              type: "Feature" as const,
-              geometry: {
-                type: "LineString" as const,
-                coordinates: sectionPreviewCoords ?? [
-                  [putIn.lon, putIn.lat],
-                  [takeOut.lon, takeOut.lat],
-                ],
-              },
-              properties: {},
-            }}
-          >
-            <Layer
-              id="section-preview-line"
-              type="line"
-              paint={{
-                "line-color": "#c2cf47",
-                "line-width": 2,
-                ...(sectionPreviewCoords ? {} : { "line-dasharray": [4, 3] }),
-              }}
+              paint={{ "line-color": tokens.tertiary, "line-width": 5 }}
             />
           </Source>
         )}
@@ -516,8 +797,8 @@ export default function WaterwayMap({
                 width: 20,
                 height: 20,
                 borderRadius: "50%",
-                background: "#c2cf47",
-                color: "#1a1a1a",
+                background: tokens.tertiary,
+                color: tokens.onTertiary,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -543,8 +824,8 @@ export default function WaterwayMap({
                 width: 20,
                 height: 20,
                 borderRadius: "50%",
-                background: "#c2cf47",
-                color: "#1a1a1a",
+                background: tokens.tertiary,
+                color: tokens.onTertiary,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -594,7 +875,7 @@ export default function WaterwayMap({
                 id="feature-draft-fill"
                 type="fill"
                 paint={{
-                  "fill-color": "#c2cf47",
+                  "fill-color": tokens.tertiary,
                   "fill-opacity": 0.2,
                 }}
               />
@@ -603,7 +884,7 @@ export default function WaterwayMap({
               id="feature-draft-line"
               type="line"
               paint={{
-                "line-color": "#c2cf47",
+                "line-color": tokens.tertiary,
                 "line-width": 2,
                 "line-dasharray": [3, 2],
               }}
@@ -622,8 +903,8 @@ export default function WaterwayMap({
                 width: 20,
                 height: 20,
                 borderRadius: "50%",
-                background: "#c2cf47",
-                color: "#1a1a1a",
+                background: tokens.tertiary,
+                color: tokens.onTertiary,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -650,8 +931,8 @@ export default function WaterwayMap({
                 width: 10,
                 height: 10,
                 borderRadius: "50%",
-                background: "#1976d2",
-                border: "2px solid #fff",
+                background: tokens.mapAreaCircle,
+                border: `2px solid ${tokens.white}`,
                 boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
                 pointerEvents: "none",
               }}
@@ -670,7 +951,7 @@ export default function WaterwayMap({
                 width: 14,
                 height: 14,
                 borderRadius: "50%",
-                background: "#8bd1e8",
+                background: tokens.primary,
                 border: "2px solid rgba(255,255,255,0.9)",
                 boxShadow:
                   "0 0 0 3px rgba(139,209,232,0.35), 0 0 10px rgba(139,209,232,0.5)",
@@ -700,7 +981,7 @@ export default function WaterwayMap({
               }
               style={{
                 background:
-                  pickMode === "put-in" ? "#0072B2" : "rgba(18,20,22,0.88)",
+                  pickMode === "put-in" ? tokens.putIn : "rgba(18,20,22,0.88)",
                 color: "white",
                 border: `1px solid ${pickMode === "put-in" ? "rgba(0,114,178,0.9)" : "rgba(139,209,232,0.35)"}`,
                 borderRadius: 0,
@@ -723,7 +1004,9 @@ export default function WaterwayMap({
               }
               style={{
                 background:
-                  pickMode === "take-out" ? "#D55E00" : "rgba(18,20,22,0.88)",
+                  pickMode === "take-out"
+                    ? tokens.takeOut
+                    : "rgba(18,20,22,0.88)",
                 color: "white",
                 border: `1px solid ${pickMode === "take-out" ? "rgba(213,94,0,0.9)" : "rgba(139,209,232,0.35)"}`,
                 borderRadius: 0,

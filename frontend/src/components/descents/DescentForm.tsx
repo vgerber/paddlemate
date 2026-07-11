@@ -17,6 +17,10 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import LocationPin, {
+  PUT_IN_COLOR,
+  TAKE_OUT_COLOR,
+} from "@/components/map/LocationPin";
 import WaterwayMap from "@/components/map/Map";
 import {
   type Descent,
@@ -267,104 +271,14 @@ function makeDraft(
   };
 }
 
-interface LocationPinProps {
-  num: number;
-  color: string;
-  title: string;
-  lat: string;
-  lon: string;
-  label: string;
-  onClear: () => void;
-  onLabelChange: (v: string) => void;
-}
-
-function LocationPin({
-  num,
-  color,
-  title,
-  lat,
-  lon,
-  label,
-  onClear,
-  onLabelChange,
-}: LocationPinProps) {
-  const hasCoords = isValidCoord(lat);
-  return (
-    <Box
-      sx={{
-        flex: 1,
-        border: "1px solid",
-        borderColor: hasCoords ? color : "divider",
-        p: 1,
-        display: "flex",
-        flexDirection: "column",
-        gap: 1,
-        transition: "border-color 0.2s",
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-        <div
-          style={{
-            width: 16,
-            height: 16,
-            borderRadius: "50%",
-            background: color,
-            color: "white",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 9,
-            fontWeight: 700,
-            flexShrink: 0,
-          }}
-        >
-          {num}
-        </div>
-        <Typography
-          variant="caption"
-          sx={{
-            fontFamily: '"Space Grotesk", monospace',
-            letterSpacing: "0.06em",
-            fontWeight: 600,
-            flex: 1,
-          }}
-        >
-          {title}
-        </Typography>
-        {hasCoords && (
-          <IconButton size="small" onClick={onClear} sx={{ p: 0.25 }}>
-            <DeleteOutlinedIcon sx={{ fontSize: 14 }} />
-          </IconButton>
-        )}
-      </Box>
-      {hasCoords ? (
-        <Typography
-          variant="caption"
-          sx={{
-            fontFamily: '"Space Grotesk", monospace',
-            color: "text.secondary",
-            fontSize: "0.7rem",
-          }}
-        >
-          {parseFloat(lat).toFixed(5)}, {parseFloat(lon).toFixed(5)}
-        </Typography>
-      ) : (
-        <Typography
-          variant="caption"
-          sx={{ color: "text.disabled", fontStyle: "italic" }}
-        >
-          Click ①/② on map to set
-        </Typography>
-      )}
-      <TextField
-        label="Label (optional)"
-        value={label}
-        onChange={(e) => onLabelChange(e.target.value)}
-        size="small"
-        fullWidth
-      />
-    </Box>
-  );
+/** Parse a "lat,lon" string pair into coords, or null when invalid. */
+function coordsFromStrings(
+  lat: string,
+  lon: string,
+): { lat: number; lon: number } | null {
+  return isValidCoord(lat) && isValidCoord(lon)
+    ? { lat: parseFloat(lat), lon: parseFloat(lon) }
+    : null;
 }
 
 function StepSections({
@@ -380,6 +294,7 @@ function StepSections({
   const [selectedWaterwayId, setSelectedWaterwayId] = useState<number | null>(
     initialWaterwayId,
   );
+  const [labelMode, setLabelMode] = useState<"section" | "river">("section");
 
   const { data: searchResults, isFetching: searching } = useQuery({
     queryKey: ["waterway-search", waterwayInput],
@@ -470,6 +385,8 @@ function StepSections({
           description: null,
           location: s.location,
           features: [],
+          names: [],
+          descriptions: [],
           created_at: "",
           updated_at: "",
         })) as SectionWithFeatures[],
@@ -523,6 +440,8 @@ function StepSections({
         <WaterwayMap
           sections={sectionsForMap}
           selectedSectionIds={selectedIds}
+          labelMode={labelMode}
+          onLabelModeChange={setLabelMode}
           onSectionToggle={(id) => {
             const section = sectionsForMap.find((s) => s.id === id);
             if (section) toggleSection(section);
@@ -639,10 +558,9 @@ function StepSections({
       <Box sx={{ display: "flex", gap: 1.5 }}>
         <LocationPin
           num={1}
-          color="#0072B2"
+          color={PUT_IN_COLOR}
           title="PUT-IN"
-          lat={form.put_in_lat}
-          lon={form.put_in_lon}
+          coords={coordsFromStrings(form.put_in_lat, form.put_in_lon)}
           label={form.put_in_label}
           onClear={() =>
             onChange({ put_in_lat: "", put_in_lon: "", put_in_label: "" })
@@ -651,10 +569,9 @@ function StepSections({
         />
         <LocationPin
           num={2}
-          color="#D55E00"
+          color={TAKE_OUT_COLOR}
           title="TAKE-OUT"
-          lat={form.take_out_lat}
-          lon={form.take_out_lon}
+          coords={coordsFromStrings(form.take_out_lat, form.take_out_lon)}
           label={form.take_out_label}
           onClear={() =>
             onChange({ take_out_lat: "", take_out_lon: "", take_out_label: "" })

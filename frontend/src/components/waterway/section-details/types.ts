@@ -1,4 +1,4 @@
-import type { Feature } from "@/lib/api";
+import type { Feature, Proposal } from "@/lib/api";
 
 /** A feature with its computed position(s) along the section line. */
 export interface ComputedFeature {
@@ -13,6 +13,8 @@ export interface ComputedFeature {
   isZone: boolean;
   /** Representative [lng, lat] of the feature's geometry, for map flyTo. */
   coords: [number, number];
+  /** Present when this item is a pending proposal rather than an approved feature. */
+  proposal?: Proposal;
 }
 
 /** One node in the rendered tree: a top-level feature with its direct children. */

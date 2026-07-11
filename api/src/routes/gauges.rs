@@ -50,6 +50,38 @@ doc_fn!(list_gauges_docs, op =>
         .tag("Gauges")
 );
 
+#[derive(Debug, Default, Deserialize, JsonSchema)]
+pub struct GaugeSearchQuery {
+    /// Case-insensitive name filter
+    pub q: Option<String>,
+    /// Together with `lon`: sort results nearest to this point first
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
+    /// Maximum number of results (default 20, capped at 50)
+    pub limit: Option<i64>,
+}
+
+pub async fn search_gauges(
+    State(app): State<AppState>,
+    Query(query): Query<GaugeSearchQuery>,
+) -> impl IntoApiResponse {
+    let limit = query.limit.unwrap_or(20).clamp(1, 50);
+    let q = query.q.as_deref().map(str::trim).filter(|s| !s.is_empty());
+    match gauges::search_gauges(&app.pg_pool, q, query.lat, query.lon, limit).await {
+        Ok(list) => Json(list).into_response(),
+        Err(err) => {
+            tracing::error!("Error searching gauges: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+doc_fn!(search_gauges_docs, op =>
+    op.description("Search active gauges by name and/or proximity, with their series")
+        .response::<200, Json<Vec<GaugeWithSeries>>>()
+        .tag("Gauges")
+);
+
 pub async fn get_gauge(
     State(app): State<AppState>,
     Path(GaugePath { gauge_id }): Path<GaugePath>,
@@ -423,6 +455,7 @@ pub fn gauges_routes(state: AppState) -> aide::axum::ApiRouter {
             "/",
             get_with(list_gauges, list_gauges_docs).post_with(create_gauge, create_gauge_docs),
         )
+        .api_route("/search", get_with(search_gauges, search_gauges_docs))
         .api_route(
             "/{gauge_id}",
             get_with(get_gauge, get_gauge_docs)

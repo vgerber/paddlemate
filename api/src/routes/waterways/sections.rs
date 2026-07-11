@@ -5,21 +5,19 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
 use crate::{
     doc_fn,
     layers::auth::AuthToken,
     models::{
         feature::Feature,
-        geometry::Geometry,
         path_params::{SectionPath, WaterwayPath},
         proposal::Proposal,
-        water_section::{Section, SectionId, SectionWithFeatures},
+        water_section::{
+            CreateSectionBody, Section, SectionId, SectionWithFeatures, UpdateSectionBody,
+        },
         waterway::WaterwayId,
     },
-    query::{features, proposals},
+    query::{features, proposals, sections},
     state::AppState,
 };
 
@@ -27,19 +25,8 @@ pub async fn get_section(
     State(app): State<AppState>,
     Path((waterway_id, section_id)): Path<(WaterwayId, SectionId)>,
 ) -> impl IntoApiResponse {
-    let section = sqlx::query!(
-        r#"
-        SELECT id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_at, updated_at
-        FROM water_sections WHERE id = $1 AND waterway_id = $2
-        "#,
-        section_id,
-        waterway_id
-    )
-    .fetch_optional(&app.pg_pool)
-    .await;
-
-    let section = match section {
-        Ok(Some(r)) => r,
+    let section = match sections::fetch_section(&app.pg_pool, waterway_id, section_id).await {
+        Ok(Some(s)) => s,
         Ok(None) => return StatusCode::NOT_FOUND.into_response(),
         Err(err) => {
             tracing::error!("Error fetching section {}: {}", section_id, err);
@@ -47,10 +34,14 @@ pub async fn get_section(
         }
     };
 
-    let features = features::fetch_features_for_section(&app.pg_pool, section_id).await;
+    let (features, names, descriptions) = tokio::join!(
+        features::fetch_features_for_section(&app.pg_pool, section_id),
+        sections::fetch_names_for_section(&app.pg_pool, section_id),
+        sections::fetch_descriptions_for_section(&app.pg_pool, section_id),
+    );
 
-    match features {
-        Ok(features) => {
+    match (features, names, descriptions) {
+        (Ok(features), Ok(names), Ok(descriptions)) => {
             let features: Vec<Feature> = features;
             Json(SectionWithFeatures {
                 id: section.id,
@@ -59,17 +50,19 @@ pub async fn get_section(
                 description: section.description,
                 region: section.region,
                 country: section.country,
-                location: serde_json::from_str(&section.location.expect("location NOT NULL"))
-                    .expect("valid GeoJSON"),
+                location: section.location,
                 features,
+                names,
+                descriptions,
+                created_by: section.created_by,
                 created_at: section.created_at,
                 updated_at: section.updated_at,
             })
             .into_response()
         }
-        Err(err) => {
+        (Err(err), _, _) | (_, Err(err), _) | (_, _, Err(err)) => {
             tracing::error!(
-                "Error fetching features for section {}: {}",
+                "Error fetching details for section {}: {}",
                 section_id,
                 err
             );
@@ -86,15 +79,6 @@ doc_fn!(get_section_docs, op =>
         .tag("Sections")
 );
 
-#[derive(Deserialize, JsonSchema)]
-pub struct CreateSectionBody {
-    pub name: String,
-    pub description: Option<String>,
-    pub region: Option<String>,
-    pub country: Option<String>,
-    pub location: Geometry,
-}
-
 pub async fn create_section(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
@@ -106,42 +90,32 @@ pub async fn create_section(
         None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
     };
 
+    for feature in &body.features {
+        for range in &feature.water_ranges {
+            if let Err(msg) = range.validate() {
+                return (StatusCode::UNPROCESSABLE_ENTITY, msg).into_response();
+            }
+        }
+    }
+
     if token.is_server_admin() {
-        let location_json = serde_json::to_string(&body.location).expect("valid geometry");
-
-        let result = sqlx::query!(
-            r#"
-        INSERT INTO water_sections (waterway_id, name, description, region, country, location)
-        VALUES ($1, $2, $3, $4, $5, ST_GeomFromGeoJSON($6))
-        RETURNING id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_at, updated_at
-        "#,
-            waterway_id,
-            body.name,
-            body.description,
-            body.region,
-            body.country,
-            location_json
-        )
-        .fetch_one(&app.pg_pool)
-        .await;
-
-        return match result {
-            Ok(r) => (
-                StatusCode::CREATED,
-                Json(Section {
-                    id: r.id,
-                    waterway_id: r.waterway_id,
-                    name: r.name,
-                    description: r.description,
-                    region: r.region,
-                    country: r.country,
-                    location: serde_json::from_str(&r.location.expect("location NOT NULL"))
-                        .expect("valid GeoJSON"),
-                    created_at: r.created_at,
-                    updated_at: r.updated_at,
-                }),
-            )
-                .into_response(),
+        let mut tx = match app.pg_pool.begin().await {
+            Ok(tx) => tx,
+            Err(err) => {
+                tracing::error!("Error starting transaction: {}", err);
+                return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+            }
+        };
+        let section =
+            sections::create_section_bundle(&mut tx, waterway_id, &body, token.user_id()).await;
+        return match section {
+            Ok(section) => match tx.commit().await {
+                Ok(()) => (StatusCode::CREATED, Json(section)).into_response(),
+                Err(err) => {
+                    tracing::error!("Error committing section: {}", err);
+                    StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                }
+            },
             Err(err) => {
                 tracing::error!("Error creating section: {}", err);
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
@@ -149,12 +123,8 @@ pub async fn create_section(
         };
     }
 
-    let data = serde_json::json!({
-        "waterway_id": waterway_id,
-        "name": body.name,
-        "description": body.description,
-        "location": body.location,
-    });
+    let mut data = serde_json::to_value(&body).expect("serializable body");
+    data["waterway_id"] = serde_json::json!(waterway_id);
     match proposals::insert_proposal(
         &app.pg_pool,
         "water_section",
@@ -179,18 +149,10 @@ doc_fn!(create_section_docs, op =>
         .response_with::<201, Json<Section>, _>(|res| res.description("Section created"))
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
+        .response_with::<422, (), _>(|res| res.description("Invalid water range thresholds"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Sections")
 );
-
-#[derive(Deserialize, JsonSchema)]
-pub struct UpdateSectionBody {
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub region: Option<String>,
-    pub country: Option<String>,
-    pub location: Option<Geometry>,
-}
 
 pub async fn update_section(
     State(app): State<AppState>,
@@ -204,49 +166,9 @@ pub async fn update_section(
     };
 
     if token.is_server_admin() {
-        let location_json = body
-            .location
-            .as_ref()
-            .map(|g| serde_json::to_string(g).expect("valid geometry"));
-
-        let result = sqlx::query!(
-            r#"
-        UPDATE water_sections
-        SET
-            name = COALESCE($1, name),
-            description = COALESCE($2, description),
-            region = COALESCE($3, region),
-            country = COALESCE($4, country),
-            location = COALESCE(ST_GeomFromGeoJSON($5), location),
-            updated_at = NOW()
-        WHERE id = $6 AND waterway_id = $7
-        RETURNING id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_at, updated_at
-        "#,
-            body.name,
-            body.description,
-            body.region,
-            body.country,
-            location_json,
-            section_id,
-            waterway_id
-        )
-        .fetch_optional(&app.pg_pool)
-        .await;
-
-        return match result {
-            Ok(Some(r)) => Json(Section {
-                id: r.id,
-                waterway_id: r.waterway_id,
-                name: r.name,
-                description: r.description,
-                region: r.region,
-                country: r.country,
-                location: serde_json::from_str(&r.location.expect("location NOT NULL"))
-                    .expect("valid GeoJSON"),
-                created_at: r.created_at,
-                updated_at: r.updated_at,
-            })
-            .into_response(),
+        return match sections::update_section(&app.pg_pool, waterway_id, section_id, &body).await
+        {
+            Ok(Some(section)) => Json(section).into_response(),
             Ok(None) => StatusCode::NOT_FOUND.into_response(),
             Err(err) => {
                 tracing::error!("Error updating section {}: {}", section_id, err);
@@ -255,12 +177,8 @@ pub async fn update_section(
         };
     }
 
-    let data = serde_json::json!({
-        "waterway_id": waterway_id,
-        "name": body.name,
-        "description": body.description,
-        "location": body.location,
-    });
+    let mut data = serde_json::to_value(&body).expect("serializable body");
+    data["waterway_id"] = serde_json::json!(waterway_id);
     match proposals::insert_proposal(
         &app.pg_pool,
         "water_section",
@@ -301,17 +219,9 @@ pub async fn delete_section(
     };
 
     if token.is_server_admin() {
-        let result = sqlx::query!(
-            "DELETE FROM water_sections WHERE id = $1 AND waterway_id = $2 RETURNING id",
-            section_id,
-            waterway_id
-        )
-        .fetch_optional(&app.pg_pool)
-        .await;
-
-        return match result {
-            Ok(Some(_)) => StatusCode::NO_CONTENT.into_response(),
-            Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        return match sections::delete_section(&app.pg_pool, waterway_id, section_id).await {
+            Ok(true) => StatusCode::NO_CONTENT.into_response(),
+            Ok(false) => StatusCode::NOT_FOUND.into_response(),
             Err(err) => {
                 tracing::error!("Error deleting section {}: {}", section_id, err);
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
@@ -348,25 +258,3 @@ doc_fn!(delete_section_docs, op =>
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Sections")
 );
-
-// Aide requires serializable types to generate request body schemas.
-// These mirror the request body structs above.
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-#[allow(dead_code)]
-struct CreateSectionBodyDoc {
-    name: String,
-    description: Option<String>,
-    region: Option<String>,
-    country: Option<String>,
-    location: Geometry,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-#[allow(dead_code)]
-struct UpdateSectionBodyDoc {
-    name: Option<String>,
-    description: Option<String>,
-    region: Option<String>,
-    country: Option<String>,
-    location: Option<Geometry>,
-}
