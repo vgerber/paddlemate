@@ -20,10 +20,12 @@ import type { AreaCircle } from "@/lib/geo";
 import { proposalKeys } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterways } from "@/lib/hooks/useWaterways";
+import { readRecentWaterways } from "@/lib/recentWaterways";
 import { normalizeForSearch } from "@/lib/text";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import AreaControls from "./AreaControls";
 import DifficultySelect from "./DifficultySelect";
+import RecentRiverList from "./RecentRiverList";
 import RiverList from "./RiverList";
 import SectionList from "./SectionList";
 
@@ -93,6 +95,10 @@ export default function WaterwaySearchPanel({
 
   const debouncedName = useDebouncedValue(name);
   const debouncedCountry = useDebouncedValue(country.toUpperCase());
+
+  // Read once per mount - the panel remounts when returning from a river,
+  // which is exactly when the list can have changed
+  const [recentRivers] = useState(readRecentWaterways);
 
   const filters = useMemo(
     () =>
@@ -416,18 +422,21 @@ export default function WaterwaySearchPanel({
             >
               Click on the map to set the search center.
             </Typography>
-          ) : favorites.length > 0 ? (
+          ) : favorites.length > 0 || recentRivers.length > 0 ? (
             <>
-              <SectionList
-                sections={favorites as unknown as SectionWithFeatures[]}
-                selectedSectionId={selectedSectionId}
-                waterwayNames={Object.fromEntries(
-                  favorites.map((f) => [f.waterway_id, f.waterway_name]),
-                )}
-                onSectionClick={onSectionClick}
-                favoritedIds={favoritedIds}
-                onToggleFavorite={onToggleFavorite}
-              />
+              {favorites.length > 0 && (
+                <SectionList
+                  sections={favorites as unknown as SectionWithFeatures[]}
+                  selectedSectionId={selectedSectionId}
+                  waterwayNames={Object.fromEntries(
+                    favorites.map((f) => [f.waterway_id, f.waterway_name]),
+                  )}
+                  onSectionClick={onSectionClick}
+                  favoritedIds={favoritedIds}
+                  onToggleFavorite={onToggleFavorite}
+                />
+              )}
+              <RecentRiverList rivers={recentRivers} onSelect={onSelect} />
             </>
           ) : (
             <Typography

@@ -16,6 +16,7 @@ import {
   useWaterway,
   waterwayKeys,
 } from "@/lib/hooks/useWaterways";
+import { pushRecentWaterway } from "@/lib/recentWaterways";
 
 export type RouteSearch = {
   waterway?: number;
@@ -229,6 +230,17 @@ export function useMapPageState(search: RouteSearch) {
     () => selectedWaterway?.sections ?? [],
     [selectedWaterway],
   );
+
+  // Remember opened rivers for the "recent" list in the search panel
+  const selectedWaterwayName = selectedWaterway?.name;
+  useEffect(() => {
+    if (selectedWaterwayId != null && selectedWaterwayName) {
+      pushRecentWaterway({
+        id: selectedWaterwayId,
+        name: selectedWaterwayName,
+      });
+    }
+  }, [selectedWaterwayId, selectedWaterwayName]);
 
   const searchWaterwayDetails = useQueries({
     queries:
