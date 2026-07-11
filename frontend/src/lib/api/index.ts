@@ -25,6 +25,7 @@ export type WaterRangeWithStatus =
   components["schemas"]["WaterRangeWithStatus"];
 export type GaugeReading = components["schemas"]["GaugeReading"];
 export type GaugeWithSeries = components["schemas"]["GaugeWithSeries"];
+export type GaugeSource = components["schemas"]["GaugeSource"];
 export type FeatureWaterRangeBody =
   components["schemas"]["FeatureWaterRangeBody"];
 export type ApiToken = components["schemas"]["ApiToken"];

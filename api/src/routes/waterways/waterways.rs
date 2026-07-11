@@ -217,7 +217,7 @@ pub async fn get_waterway(
     let (sections_result, features_result, names_result, descriptions_result) = tokio::join!(
         sqlx::query!(
             r#"
-            SELECT id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_at, updated_at
+            SELECT id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at
             FROM water_sections WHERE waterway_id = $1 ORDER BY river_km_start NULLS LAST, name
             "#,
             waterway_id
@@ -249,6 +249,7 @@ pub async fn get_waterway(
                     descriptions: descriptions_map.remove(&s.id).unwrap_or_default(),
                     location: serde_json::from_str(&s.location.expect("location NOT NULL"))
                         .expect("valid GeoJSON"),
+                    created_by: s.created_by,
                     created_at: s.created_at,
                     updated_at: s.updated_at,
                 })

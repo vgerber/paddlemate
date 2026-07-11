@@ -2,8 +2,8 @@ use chrono::{DateTime, Utc};
 use sqlx::{PgPool, Row, postgres::PgRow};
 
 use crate::models::gauge::{
-    FeatureWaterRange, Gauge, GaugeId, GaugeReading, GaugeSeries, GaugeWithSeries, MeasurementType,
-    SectionWaterStatus, SeriesId, WaterLevel, WaterRangeWithStatus,
+    FeatureWaterRange, Gauge, GaugeId, GaugeReading, GaugeSeries, GaugeSource, GaugeWithSeries,
+    MeasurementType, SectionWaterStatus, SeriesId, WaterLevel, WaterRangeWithStatus,
 };
 
 fn parse_measurement_type(s: &str) -> MeasurementType {
@@ -53,6 +53,26 @@ fn row_to_reading(row: &PgRow) -> Result<GaugeReading, sqlx::Error> {
 const GAUGE_COLS: &str = "id, name, provider, source_id, data_source_id, lat, lon, active, fetch_interval_secs, created_at, updated_at";
 const SERIES_COLS: &str =
     "id, gauge_id, measurement_type::text AS measurement_type, unit, label, source_id, created_at";
+
+/// Fetch the upstream sources (attribution/licensing) for a set of
+/// `data_source_id`s, keyed by id.
+async fn fetch_sources_by_ids(
+    pool: &PgPool,
+    ids: &[String],
+) -> Result<std::collections::HashMap<String, GaugeSource>, sqlx::Error> {
+    if ids.is_empty() {
+        return Ok(std::collections::HashMap::new());
+    }
+    let sources = sqlx::query_as!(
+        GaugeSource,
+        "SELECT id, name, short_name, licensing_terms, website, country_code
+         FROM sources WHERE id = ANY($1)",
+        ids
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(sources.into_iter().map(|s| (s.id.clone(), s)).collect())
+}
 
 // --- Gauge CRUD ---
 
@@ -124,11 +144,26 @@ pub async fn search_gauges(
             .push(series);
     }
 
+    let source_ids: Vec<String> = {
+        let mut ids: Vec<String> = gauges
+            .iter()
+            .filter_map(|g| g.data_source_id.clone())
+            .collect();
+        ids.sort();
+        ids.dedup();
+        ids
+    };
+    let sources = fetch_sources_by_ids(pool, &source_ids).await?;
+
     Ok(gauges
         .into_iter()
         .map(|gauge| {
             let series = series_by_gauge.remove(&gauge.id).unwrap_or_default();
-            GaugeWithSeries::from_parts(gauge, series)
+            let source = gauge
+                .data_source_id
+                .as_ref()
+                .and_then(|id| sources.get(id).cloned());
+            GaugeWithSeries::from_parts(gauge, series, source)
         })
         .collect())
 }
@@ -151,7 +186,13 @@ pub async fn fetch_gauge_with_series(
         None => return Ok(None),
     };
     let series = list_series(pool, gauge_id).await?;
-    Ok(Some(GaugeWithSeries::from_parts(gauge, series)))
+    let source = match &gauge.data_source_id {
+        Some(id) => fetch_sources_by_ids(pool, std::slice::from_ref(id))
+            .await?
+            .remove(id),
+        None => None,
+    };
+    Ok(Some(GaugeWithSeries::from_parts(gauge, series, source)))
 }
 
 pub async fn create_gauge(
@@ -569,6 +610,12 @@ pub async fn water_status_for_section_at(
             g.fetch_interval_secs AS g_fetch_interval_secs,
             g.created_at        AS g_created_at,
             g.updated_at        AS g_updated_at,
+            src.id              AS src_id,
+            src.name            AS src_name,
+            src.short_name      AS src_short_name,
+            src.licensing_terms AS src_licensing_terms,
+            src.website         AS src_website,
+            src.country_code    AS src_country_code,
             lr.series_id        AS lr_series_id,
             lr.measured_at      AS lr_measured_at,
             lr.value            AS lr_value
@@ -576,6 +623,7 @@ pub async fn water_status_for_section_at(
         JOIN feature_water_ranges fwr ON fwr.feature_id = f.id
         JOIN gauge_series gs ON gs.id = fwr.series_id
         JOIN gauges g ON g.id = gs.gauge_id
+        LEFT JOIN sources src ON src.id = g.data_source_id
         LEFT JOIN LATERAL (
             SELECT series_id, measured_at, value
             FROM gauge_readings
@@ -602,6 +650,20 @@ pub async fn water_status_for_section_at(
 }
 
 fn row_to_water_range_with_status(row: &PgRow) -> Result<WaterRangeWithStatus, sqlx::Error> {
+    let src_id: Option<String> = row.try_get("src_id")?;
+    let source = src_id
+        .map(|id| {
+            Ok::<GaugeSource, sqlx::Error>(GaugeSource {
+                id,
+                name: row.try_get("src_name")?,
+                short_name: row.try_get("src_short_name")?,
+                licensing_terms: row.try_get("src_licensing_terms")?,
+                website: row.try_get("src_website")?,
+                country_code: row.try_get("src_country_code")?,
+            })
+        })
+        .transpose()?;
+
     let lr_series_id: Option<SeriesId> = row.try_get("lr_series_id")?;
     let latest_reading = lr_series_id
         .map(|_| {
@@ -652,5 +714,6 @@ fn row_to_water_range_with_status(row: &PgRow) -> Result<WaterRangeWithStatus, s
             row.try_get::<Option<f64>, _>("range_high")?,
         ),
         latest_reading,
+        source,
     })
 }

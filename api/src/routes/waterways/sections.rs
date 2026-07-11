@@ -54,6 +54,7 @@ pub async fn get_section(
                 features,
                 names,
                 descriptions,
+                created_by: section.created_by,
                 created_at: section.created_at,
                 updated_at: section.updated_at,
             })

@@ -10,7 +10,7 @@ use crate::models::{
 };
 use crate::query::features;
 
-const SECTION_COLS: &str = "id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_at, updated_at";
+const SECTION_COLS: &str = "id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at";
 
 fn row_to_section(row: &sqlx::postgres::PgRow) -> Result<Section, sqlx::Error> {
     use sqlx::Row;
@@ -24,6 +24,7 @@ fn row_to_section(row: &sqlx::postgres::PgRow) -> Result<Section, sqlx::Error> {
         country: row.try_get("country")?,
         location: serde_json::from_str(&location.expect("location NOT NULL"))
             .expect("valid GeoJSON"),
+        created_by: row.try_get("created_by")?,
         created_at: row.try_get("created_at")?,
         updated_at: row.try_get("updated_at")?,
     })
@@ -104,8 +105,8 @@ pub async fn create_section_bundle(
     let location_json =
         serde_json::to_string(&body.location).map_err(|e| sqlx::Error::Decode(e.into()))?;
     let row = sqlx::query(&format!(
-        "INSERT INTO water_sections (waterway_id, name, description, region, country, location)
-         VALUES ($1, $2, $3, $4, $5, ST_GeomFromGeoJSON($6))
+        "INSERT INTO water_sections (waterway_id, name, description, region, country, location, created_by)
+         VALUES ($1, $2, $3, $4, $5, ST_GeomFromGeoJSON($6), $7)
          RETURNING {SECTION_COLS}"
     ))
     .bind(waterway_id)
@@ -114,6 +115,7 @@ pub async fn create_section_bundle(
     .bind(&body.region)
     .bind(&body.country)
     .bind(&location_json)
+    .bind(created_by)
     .fetch_one(&mut *conn)
     .await?;
     let section = row_to_section(&row)?;

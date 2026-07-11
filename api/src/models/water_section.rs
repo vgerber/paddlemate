@@ -39,6 +39,9 @@ pub struct Section {
     pub country: Option<String>,
     /// GeoJSON LineString geometry
     pub location: Geometry,
+    /// User who added the section; unset for imported/legacy rows.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created_by: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -63,6 +66,9 @@ pub struct SectionWithFeatures {
     /// Localized descriptions; the plain `description` column is the fallback
     #[serde(default)]
     pub descriptions: Vec<SectionDescription>,
+    /// User who added the section; unset for imported/legacy rows.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created_by: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }

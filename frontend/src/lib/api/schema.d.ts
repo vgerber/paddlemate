@@ -1230,6 +1230,18 @@ export interface components {
             /** Format: int64 */
             series_id: number;
         };
+        /**
+         * @description Upstream data source of a gauge — carries the attribution and licensing
+         *      terms of the provider (imported into the `sources` table by the readers).
+         */
+        GaugeSource: {
+            country_code?: string | null;
+            id: string;
+            licensing_terms?: string | null;
+            name: string;
+            short_name?: string | null;
+            website?: string | null;
+        };
         GaugeWithSeries: {
             active: boolean;
             /** Format: date-time */
@@ -1246,6 +1258,8 @@ export interface components {
             name: string;
             provider: string;
             series: components["schemas"]["GaugeSeries"][];
+            /** @description Attribution/licensing of the upstream provider, when known. */
+            source?: components["schemas"]["GaugeSource"] | null;
             source_id: string;
             /** Format: date-time */
             updated_at: string;
@@ -1485,6 +1499,8 @@ export interface components {
             country?: string | null;
             /** Format: date-time */
             created_at: string;
+            /** @description User who added the section; unset for imported/legacy rows. */
+            created_by?: string | null;
             /** Format: int64 */
             id: number;
             /** @description GeoJSON LineString geometry */
@@ -1578,6 +1594,8 @@ export interface components {
             country?: string | null;
             /** Format: date-time */
             created_at: string;
+            /** @description User who added the section; unset for imported/legacy rows. */
+            created_by?: string | null;
             /**
              * @description Localized descriptions; the plain `description` column is the fallback
              * @default []
@@ -1732,6 +1750,8 @@ export interface components {
             /** Format: double */
             range_medium?: number | null;
             series: components["schemas"]["GaugeSeries"];
+            /** @description Attribution/licensing of the upstream provider, when known. */
+            source?: components["schemas"]["GaugeSource"] | null;
             /** Format: date-time */
             updated_at: string;
         };
@@ -1831,11 +1851,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-07-11T15:06:27.551129668Z",
-                     *         "expires_at": "2026-10-09T15:06:27.551131478Z",
+                     *         "created_at": "2026-07-11T15:53:00.760544587Z",
+                     *         "expires_at": "2026-10-09T15:53:00.760546417Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-07-11T15:06:27.551136668Z",
+                     *         "last_used_at": "2026-07-11T15:53:00.760554547Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -1866,8 +1886,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-07-11T15:06:27.551304698Z",
-                     *       "expires_at": "2026-10-09T15:06:27.551305118Z",
+                     *       "created_at": "2026-07-11T15:53:00.760712086Z",
+                     *       "expires_at": "2026-10-09T15:53:00.760712476Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."

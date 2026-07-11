@@ -383,8 +383,8 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
         // $5 = geometry for INSERT (always valid, may be degenerate).
         // $6 = geometry for UPDATE (NULL when take_out absent → COALESCE keeps stored value).
         let section_id: i64 = sqlx::query_scalar(
-            "INSERT INTO water_sections (waterway_id, name, region, country, location)
-             VALUES ($1, $2, $3, $4, ST_GeomFromEWKT($5))
+            "INSERT INTO water_sections (waterway_id, name, region, country, location, created_by)
+             VALUES ($1, $2, $3, $4, ST_GeomFromEWKT($5), 'rivermap-import')
              ON CONFLICT (waterway_id, name) DO UPDATE
              SET region     = EXCLUDED.region,
                  country    = EXCLUDED.country,

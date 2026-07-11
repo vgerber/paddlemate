@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import ChartControls from "@/components/charts/ChartControls";
 import { useChartTimeRange } from "@/components/charts/water/types";
 import WaterChart from "@/components/charts/water/WaterChart";
+import GaugeAttribution from "@/components/GaugeAttribution";
 import type { WaterRangeWithStatus } from "@/lib/api";
 
 interface GaugeChartPanelProps {
@@ -101,6 +102,7 @@ export default function GaugeChartPanel({
           onMeasurementTypeChange={setMeasurementType}
         />
       </Box>
+      <GaugeAttribution source={ranges[0]?.source} />
     </Box>
   );
 }
