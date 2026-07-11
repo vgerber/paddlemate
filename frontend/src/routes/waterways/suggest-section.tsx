@@ -1,3 +1,5 @@
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import ReplayIcon from "@mui/icons-material/Replay";
@@ -6,9 +8,6 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
-import Step from "@mui/material/Step";
-import StepLabel from "@mui/material/StepLabel";
-import Stepper from "@mui/material/Stepper";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
@@ -383,24 +382,6 @@ function SuggestSectionPage() {
         </Box>
       ) : (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Stepper
-            activeStep={step}
-            alternativeLabel
-            sx={{
-              // Compact: keep the vertical space for the map and the form
-              "& .MuiStepLabel-label.MuiStepLabel-alternativeLabel": {
-                marginTop: 0.5,
-                fontSize: "0.7rem",
-              },
-            }}
-          >
-            {STEPS.map((label, index) => (
-              <Step key={label} completed={index < step}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
           {/* Map — for picking the section line and placing features */}
           {step > 0 && (
             <Box
@@ -516,26 +497,6 @@ function SuggestSectionPage() {
 
               {hasLocation && (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  {snapInProgress && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <CircularProgress size={18} />
-                      <Typography variant="body2" color="text.secondary">
-                        {snap.status === "searching"
-                          ? `Looking up ${waterway?.name ?? "the river"} on OpenStreetMap…`
-                          : "A point is past a confluence — following the connecting rivers…"}
-                      </Typography>
-                    </Box>
-                  )}
-                  {snap.status === "done" && (
-                    <Alert
-                      severity="success"
-                      sx={{ py: 0.25, fontSize: "0.75rem" }}
-                    >
-                      {snap.crossedConfluence
-                        ? `Snapped along ${waterway?.name ?? "the river"} and across the confluence onto the connecting river.`
-                        : `Snapped to the riverbed of ${waterway?.name ?? "the river"}.`}
-                    </Alert>
-                  )}
                   {snap.status === "failed" && (
                     <Alert
                       severity="warning"
@@ -566,6 +527,13 @@ function SuggestSectionPage() {
                         value="snap"
                         disabled={snap.status !== "done"}
                       >
+                        {snapInProgress && (
+                          <CircularProgress
+                            size={12}
+                            color="inherit"
+                            sx={{ mr: 0.75 }}
+                          />
+                        )}
                         Snapped course
                       </ToggleButton>
                       <ToggleButton value="straight">
@@ -827,54 +795,75 @@ function SuggestSectionPage() {
             </Alert>
           )}
 
-          {/* Footer */}
+          {/* Bottom bar — mirrors the suggest-feature panel: pinned to the
+              viewport bottom (over the bottom navigation), back/cancel left,
+              progress in the middle, round action right */}
           <Box
             sx={{
+              position: "fixed",
+              bottom: 0,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "100%",
+              maxWidth: 720,
+              // Above the mobile bottom navigation (zIndex 1300)
+              zIndex: 1350,
               display: "flex",
+              alignItems: "center",
               gap: 1,
-              pt: 1.5,
+              px: 1,
+              pt: 1,
+              pb: "calc(8px + env(safe-area-inset-bottom))",
               borderTop: "1px solid",
               borderColor: "divider",
+              bgcolor: "background.paper",
             }}
           >
-            {step > 0 && (
-              <Button
-                variant="outlined"
-                onClick={() => setStep(step - 1)}
-                disabled={submitting}
-                sx={{ borderRadius: 0, py: { xs: 1.25, md: 0.75 } }}
+            <IconButton
+              onClick={step === 0 ? backToMap : () => setStep(step - 1)}
+              disabled={submitting}
+              aria-label={step === 0 ? "Cancel" : "Back"}
+            >
+              {step === 0 ? <CloseIcon /> : <ArrowBackIcon />}
+            </IconButton>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700 }}>
+                {waterway?.name ?? "…"}
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block" }}
               >
-                Back
-              </Button>
-            )}
-            <Box sx={{ flex: 1 }} />
-            {step < STEPS.length - 1 ? (
-              <Button
-                variant="contained"
-                disabled={!canProceed}
-                onClick={() => setStep(step + 1)}
-                sx={{
-                  borderRadius: 0,
-                  py: { xs: 1.25, md: 0.75 },
-                  px: { xs: 4, md: 3 },
-                }}
-              >
-                Next
-              </Button>
-            ) : (
-              <Button
-                variant="contained"
-                disabled={submitting}
-                onClick={handleSubmit}
-                sx={{
-                  borderRadius: 0,
-                  py: { xs: 1.25, md: 0.75 },
-                  px: { xs: 4, md: 3 },
-                }}
-              >
-                {submitting ? "Submitting…" : "Suggest section"}
-              </Button>
-            )}
+                Step {step + 1} of {STEPS.length} · {STEPS[step]}
+              </Typography>
+            </Box>
+            <IconButton
+              size="large"
+              onClick={
+                step < STEPS.length - 1 ? () => setStep(step + 1) : handleSubmit
+              }
+              disabled={!canProceed || submitting}
+              aria-label={step < STEPS.length - 1 ? "Next" : "Suggest section"}
+              sx={{
+                borderRadius: "50%",
+                bgcolor: "secondary.main",
+                color: "secondary.contrastText",
+                "&:hover": { bgcolor: "secondary.light" },
+                "&.Mui-disabled": {
+                  bgcolor: "action.disabledBackground",
+                  color: "action.disabled",
+                },
+              }}
+            >
+              {submitting ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : step < STEPS.length - 1 ? (
+                <ArrowForwardIcon fontSize="small" />
+              ) : (
+                <CheckIcon fontSize="small" />
+              )}
+            </IconButton>
           </Box>
         </Box>
       )}
