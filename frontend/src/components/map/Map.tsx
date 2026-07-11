@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import MapGL, {
   Layer,
   type MapLayerMouseEvent,
@@ -179,32 +179,56 @@ export default function WaterwayMap({
     focusedPoint,
   });
 
-  const sectionsGeoJSON = buildSectionsGeoJSON(sections ?? []);
-  const sectionLabelsGeoJSON = buildSectionLabelsGeoJSON(
-    sections ?? [],
-    labelMode,
-    waterwayNames,
+  // Memoized per input identity: a new `data` object makes react-map-gl call
+  // setData, so rebuilding these every render re-ingests all geometry into
+  // MapLibre on each of the many re-renders during a search burst.
+  const sectionsGeoJSON = useMemo(
+    () => buildSectionsGeoJSON(sections ?? []),
+    [sections],
   );
-  const sectionEndpointsGeoJSON = buildSectionEndpointsGeoJSON(
-    sections ?? [],
-    sectionLevels,
+  const sectionLabelsGeoJSON = useMemo(
+    () => buildSectionLabelsGeoJSON(sections ?? [], labelMode, waterwayNames),
+    [sections, labelMode, waterwayNames],
   );
-  const connectorsGeoJSON = buildPutInTakeOutConnectorsGeoJSON(sections ?? []);
-  const pointsGeoJSON = buildPointFeaturesGeoJSON(features ?? []);
-  const linesGeoJSON = buildLineFeaturesGeoJSON(features ?? []);
-  const proposedPointsGeoJSON = buildProposedPointFeaturesGeoJSON(
-    proposedFeatures ?? [],
+  const sectionEndpointsGeoJSON = useMemo(
+    () => buildSectionEndpointsGeoJSON(sections ?? [], sectionLevels),
+    [sections, sectionLevels],
   );
-  const lineEndpointsGeoJSON = buildLineFeatureEndpointsGeoJSON(features ?? []);
-  const proposedLineEndpointsGeoJSON = buildLineFeatureEndpointsGeoJSON(
-    proposedFeatures ?? [],
+  const connectorsGeoJSON = useMemo(
+    () => buildPutInTakeOutConnectorsGeoJSON(sections ?? []),
+    [sections],
   );
-  const lineLabelsGeoJSON = buildLineFeatureLabelsGeoJSON(features ?? []);
-  const proposedLineLabelsGeoJSON = buildLineFeatureLabelsGeoJSON(
-    proposedFeatures ?? [],
+  const pointsGeoJSON = useMemo(
+    () => buildPointFeaturesGeoJSON(features ?? []),
+    [features],
   );
-  const proposedLinesGeoJSON = buildProposedLineFeaturesGeoJSON(
-    proposedFeatures ?? [],
+  const linesGeoJSON = useMemo(
+    () => buildLineFeaturesGeoJSON(features ?? []),
+    [features],
+  );
+  const proposedPointsGeoJSON = useMemo(
+    () => buildProposedPointFeaturesGeoJSON(proposedFeatures ?? []),
+    [proposedFeatures],
+  );
+  const lineEndpointsGeoJSON = useMemo(
+    () => buildLineFeatureEndpointsGeoJSON(features ?? []),
+    [features],
+  );
+  const proposedLineEndpointsGeoJSON = useMemo(
+    () => buildLineFeatureEndpointsGeoJSON(proposedFeatures ?? []),
+    [proposedFeatures],
+  );
+  const lineLabelsGeoJSON = useMemo(
+    () => buildLineFeatureLabelsGeoJSON(features ?? []),
+    [features],
+  );
+  const proposedLineLabelsGeoJSON = useMemo(
+    () => buildLineFeatureLabelsGeoJSON(proposedFeatures ?? []),
+    [proposedFeatures],
+  );
+  const proposedLinesGeoJSON = useMemo(
+    () => buildProposedLineFeaturesGeoJSON(proposedFeatures ?? []),
+    [proposedFeatures],
   );
 
   const handleClick = (e: MapLayerMouseEvent) => {

@@ -95,6 +95,9 @@ export default function WaterwaySearchPanel({
 
   const debouncedName = useDebouncedValue(name);
   const debouncedCountry = useDebouncedValue(country.toUpperCase());
+  // A single character matches half the database and fires the full
+  // details/water-status fan-out for results nobody wants; wait for 2 chars.
+  const searchName = debouncedName.trim().length >= 2 ? debouncedName : "";
 
   // Read once per mount - the panel remounts when returning from a river,
   // which is exactly when the list can have changed
@@ -113,18 +116,15 @@ export default function WaterwaySearchPanel({
           }
         : mode === "area"
           ? null // no circle drawn yet - don't fetch
-          : debouncedName ||
-              debouncedCountry ||
-              minDiff !== "" ||
-              maxDiff !== ""
+          : searchName || debouncedCountry || minDiff !== "" || maxDiff !== ""
             ? {
-                name: debouncedName || undefined,
+                name: searchName || undefined,
                 country: debouncedCountry || undefined,
                 min_difficulty: minDiff !== "" ? minDiff : undefined,
                 max_difficulty: maxDiff !== "" ? maxDiff : undefined,
               }
             : null, // no criteria - don't fetch all
-    [mode, areaCircle, debouncedName, debouncedCountry, minDiff, maxDiff],
+    [mode, areaCircle, searchName, debouncedCountry, minDiff, maxDiff],
   );
 
   const hasFilters = filters !== null;
@@ -146,10 +146,10 @@ export default function WaterwaySearchPanel({
 
   // When searching by name, only show rivers whose name matches
   const visibleRivers = useMemo(() => {
-    if (mode === "area" || !debouncedName) return waterways;
-    const q = normalizeForSearch(debouncedName);
+    if (mode === "area" || !searchName) return waterways;
+    const q = normalizeForSearch(searchName);
     return waterways.filter((w) => normalizeForSearch(w.name).includes(q));
-  }, [mode, waterways, debouncedName]);
+  }, [mode, waterways, searchName]);
 
   // Own pending river proposals - shown as disabled "pending approval" entries
   const pendingFilters = {
@@ -160,24 +160,24 @@ export default function WaterwaySearchPanel({
   const { data: pendingWaterwayProposals = [] } = useQuery({
     queryKey: proposalKeys.list(pendingFilters),
     queryFn: () => proposalsApi.list(pendingFilters),
-    enabled: isAuthenticated && mode === "name" && !!debouncedName,
+    enabled: isAuthenticated && mode === "name" && !!searchName,
   });
   const pendingRivers = useMemo(() => {
-    if (mode === "area" || !debouncedName) return [];
-    const q = normalizeForSearch(debouncedName);
+    if (mode === "area" || !searchName) return [];
+    const q = normalizeForSearch(searchName);
     return pendingWaterwayProposals
       .map((p) => ({
         id: p.id,
         name: (p.proposed_data as { name?: string }).name ?? "?",
       }))
       .filter((p) => normalizeForSearch(p.name).includes(q));
-  }, [mode, debouncedName, pendingWaterwayProposals]);
+  }, [mode, searchName, pendingWaterwayProposals]);
 
   // When searching by name, show sections whose name OR waterway name matches
   const visibleSections = useMemo(() => {
     const sections = filteredSections ?? [];
-    if (mode === "area" || !debouncedName) return sections;
-    const q = normalizeForSearch(debouncedName);
+    if (mode === "area" || !searchName) return sections;
+    const q = normalizeForSearch(searchName);
     return sections.filter((s) => {
       const nameMatches = normalizeForSearch(s.name).includes(q);
       const waterwayName = waterwayNames?.[s.waterway_id];
@@ -185,7 +185,7 @@ export default function WaterwaySearchPanel({
         waterwayName && normalizeForSearch(waterwayName).includes(q);
       return nameMatches || waterwayMatches;
     });
-  }, [mode, filteredSections, debouncedName, waterwayNames]);
+  }, [mode, filteredSections, searchName, waterwayNames]);
 
   useEffect(() => {
     onWaterwaysChange?.(waterways.map((w) => w.id));
@@ -456,10 +456,10 @@ export default function WaterwaySearchPanel({
             onSelect={onSelect}
             onLoadMore={fetchNextPage}
             pendingRivers={pendingRivers}
-            searchName={mode === "name" ? debouncedName : undefined}
+            searchName={mode === "name" ? searchName : undefined}
             onProposeRiver={
-              onProposeRiver && mode === "name" && debouncedName
-                ? () => onProposeRiver(debouncedName)
+              onProposeRiver && mode === "name" && searchName
+                ? () => onProposeRiver(searchName)
                 : undefined
             }
           />

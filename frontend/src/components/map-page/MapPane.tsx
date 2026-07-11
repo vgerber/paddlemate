@@ -97,6 +97,18 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
 
   const showAreaStrip = isMobile && isAreaMode && selectedWaterwayId == null;
 
+  // Stable identity - inline mapping in JSX would rebuild the array every
+  // render and defeat the map's GeoJSON memoization.
+  const proposedFeatures = useMemo(
+    () =>
+      showProposedFeatures
+        ? featureProposals
+            .map(proposalToPseudoFeature)
+            .filter((f) => f !== null)
+        : undefined,
+    [showProposedFeatures, featureProposals],
+  );
+
   const resultsBadge = isAreaSearchLoading ? (
     <CircularProgress size={10} color="inherit" />
   ) : (
@@ -159,13 +171,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           controlsAnchor={
             isMobile && suggestMode === "feature" ? "top" : undefined
           }
-          proposedFeatures={
-            showProposedFeatures
-              ? featureProposals
-                  .map(proposalToPseudoFeature)
-                  .filter((f) => f !== null)
-              : undefined
-          }
+          proposedFeatures={proposedFeatures}
           onBoundsChange={setMapBounds}
         />
 

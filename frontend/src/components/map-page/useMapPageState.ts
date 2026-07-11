@@ -247,7 +247,11 @@ export function useMapPageState(search: RouteSearch) {
       selectedWaterwayId == null
         ? searchWaterwayIds.map((id) => ({
             queryKey: waterwayKeys.detail(id),
-            queryFn: () => waterwaysApi.get(id),
+            queryFn: ({ signal }: { signal: AbortSignal }) =>
+              waterwaysApi.get(id, signal),
+            // Result ids change on every keystroke; don't refetch details
+            // that were already loaded for a previous search.
+            staleTime: 5 * 60 * 1000,
           }))
         : [],
   });

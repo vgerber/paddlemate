@@ -49,15 +49,17 @@ function assertData<T>(data: T | undefined): T {
 }
 
 export const waterwaysApi = {
-  list: async (filters: WaterwayFilters = {}) => {
+  list: async (filters: WaterwayFilters = {}, signal?: AbortSignal) => {
     const { data } = await client.GET("/api/v1/waterways", {
       params: { query: filters },
+      signal,
     });
     return assertData(data);
   },
-  get: async (id: number) => {
+  get: async (id: number, signal?: AbortSignal) => {
     const { data } = await client.GET("/api/v1/waterways/{waterway_id}", {
       params: { path: { waterway_id: id } },
+      signal,
     });
     return assertData(data);
   },
@@ -179,10 +181,17 @@ export const featuresApi = {
 };
 
 export const waterStatusApi = {
-  getForSection: async (waterwayId: number, sectionId: number) => {
+  getForSection: async (
+    waterwayId: number,
+    sectionId: number,
+    signal?: AbortSignal,
+  ) => {
     const { data } = await client.GET(
       "/api/v1/waterways/{waterway_id}/sections/{section_id}/water-status",
-      { params: { path: { waterway_id: waterwayId, section_id: sectionId } } },
+      {
+        params: { path: { waterway_id: waterwayId, section_id: sectionId } },
+        signal,
+      },
     );
     return assertData(data);
   },

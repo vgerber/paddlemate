@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useInfiniteQuery,
   useMutation,
   useQueries,
@@ -38,24 +39,37 @@ export function useWaterways(
 ) {
   return useInfiniteQuery({
     queryKey: waterwayKeys.lists(filters ?? {}),
-    queryFn: ({ pageParam }) =>
-      waterwaysApi.list({
-        ...(filters ?? {}),
-        page: pageParam,
-        per_page: filters?.per_page ?? PER_PAGE,
-      }),
+    // The signal aborts stale in-flight requests when the filters change,
+    // freeing the browser's connection slots for the current search.
+    queryFn: ({ pageParam, signal }) =>
+      waterwaysApi.list(
+        {
+          ...(filters ?? {}),
+          page: pageParam,
+          per_page: filters?.per_page ?? PER_PAGE,
+        },
+        signal,
+      ),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     enabled: filters !== null,
+    // Typing refines the filters on every debounce tick: keep the previous
+    // results on screen instead of flashing a spinner, and serve repeated
+    // queries (backspacing, re-typing) from cache.
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
   });
 }
 
 export function useWaterway(id: number | null) {
   return useQuery({
     queryKey: waterwayKeys.detail(id ?? 0),
-    queryFn: () => waterwaysApi.get(id as number),
+    queryFn: ({ signal }) => waterwaysApi.get(id as number, signal),
     enabled: id !== null,
+    // Details (sections + geometry) rarely change; search results remount
+    // these queries on every keystroke, so don't refetch each time.
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -125,7 +139,8 @@ export function useAllSectionWaterStatus(
   return useQueries({
     queries: sectionIds.map((sectionId) => ({
       queryKey: waterwayKeys.sectionWaterStatus(waterwayId, sectionId),
-      queryFn: () => waterStatusApi.getForSection(waterwayId, sectionId),
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        waterStatusApi.getForSection(waterwayId, sectionId, signal),
       staleTime: 5 * 60 * 1000,
     })),
   });
@@ -138,7 +153,8 @@ export function useSectionWaterStatuses(
   return useQueries({
     queries: pairs.map(({ waterwayId, sectionId }) => ({
       queryKey: waterwayKeys.sectionWaterStatus(waterwayId, sectionId),
-      queryFn: () => waterStatusApi.getForSection(waterwayId, sectionId),
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        waterStatusApi.getForSection(waterwayId, sectionId, signal),
       staleTime: 5 * 60 * 1000,
     })),
   });
