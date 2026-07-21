@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
 import Slide from "@mui/material/Slide";
-import StandingDescentBanner from "@/components/StandingDescentBanner";
 import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
+import StandingDescentBanner from "@/components/StandingDescentBanner";
 import SectionSpeedDial from "./SectionSpeedDial";
 import SidebarContent from "./SidebarContent";
 import type { MapPageState } from "./useMapPageState";
@@ -21,6 +21,7 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
     setIsMobilePanelOpen,
     selectedWaterwayId,
     selectedSectionId,
+    sectionDetailTab,
     selectedGaugeId,
     setSelectedGaugeId,
     selectedGaugeRanges,
@@ -32,6 +33,8 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
 
   const sectionName = sections.find((s) => s.id === selectedSectionId)?.name;
   const closeOverlay = () => setIsMobilePanelOpen(false);
+  // The chart is hidden on the section Logs tab to give the list more space.
+  const chartsHidden = selectedSectionId != null && sectionDetailTab === "logs";
 
   return (
     <Slide direction="up" in={isMobilePanelOpen}>
@@ -71,23 +74,29 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
         </Box>
 
         {/* Charts shown inline in the overlay on mobile (hidden in suggest mode) */}
-        {!suggestMode && (selectedGaugeId != null && selectedGaugeRanges.length > 0 ? (
-          <GaugeChartPanel
-            ranges={selectedGaugeRanges}
-            onClose={() => setSelectedGaugeId(null)}
-          />
-        ) : selectedSectionId != null && selectedWaterwayId != null ? (
-          <SectionChartPanel
-            waterwayId={selectedWaterwayId}
-            sectionId={selectedSectionId}
-            sectionName={sectionName}
-          />
-        ) : null)}
+        {!suggestMode &&
+          !chartsHidden &&
+          (selectedGaugeId != null && selectedGaugeRanges.length > 0 ? (
+            <GaugeChartPanel
+              ranges={selectedGaugeRanges}
+              onClose={() => setSelectedGaugeId(null)}
+            />
+          ) : selectedSectionId != null && selectedWaterwayId != null ? (
+            <SectionChartPanel
+              waterwayId={selectedWaterwayId}
+              sectionId={selectedSectionId}
+              sectionName={sectionName}
+            />
+          ) : null)}
 
         {/* Speed Dial - section-specific actions on mobile */}
         <SectionSpeedDial
           state={state}
-          sx={{ position: "absolute", bottom: "calc(260px + 16px)", right: 16 }}
+          sx={{
+            position: "absolute",
+            bottom: chartsHidden ? 16 : "calc(260px + 16px)",
+            right: 16,
+          }}
         />
       </Box>
     </Slide>

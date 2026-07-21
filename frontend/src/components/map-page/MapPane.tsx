@@ -36,6 +36,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
   const {
     selectedWaterwayId,
     selectedSectionId,
+    sectionDetailTab,
     sections,
     filteredSearchSections,
     suggestMode,
@@ -301,9 +302,11 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
         )}
       </Box>
 
-      {/* Charts - desktop only */}
+      {/* Charts - desktop only (hidden while viewing section logs) */}
       <Box sx={{ display: { xs: "none", md: "block" } }}>
-        {selectedGaugeId != null && selectedGaugeRanges.length > 0 ? (
+        {selectedSectionId != null &&
+        sectionDetailTab === "logs" ? null : selectedGaugeId != null &&
+          selectedGaugeRanges.length > 0 ? (
           <GaugeChartPanel
             ranges={selectedGaugeRanges}
             onClose={() => setSelectedGaugeId(null)}
