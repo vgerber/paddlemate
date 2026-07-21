@@ -12,6 +12,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import SectionListItem from "@/components/waterway/SectionListItem";
+import SectionLogsList from "@/components/waterway/SectionLogsList";
 import FeatureTimeline from "@/components/waterway/section-details";
 import type {
   Proposal,
@@ -21,7 +22,7 @@ import type {
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { localizedName } from "@/lib/localization";
-import type { DetailTab, SuggestMode } from "./types";
+import type { DetailTab, SectionDetailTab, SuggestMode } from "./types";
 import WaterwayDetailHeader from "./WaterwayDetailHeader";
 
 interface WaterwayBrowsePanelProps {
@@ -31,6 +32,8 @@ interface WaterwayBrowsePanelProps {
   gaugeRanges?: WaterRangeWithStatus[];
   tab: DetailTab;
   onTabChange: (tab: DetailTab) => void;
+  sectionDetailTab: SectionDetailTab;
+  onSectionDetailTabChange: (tab: SectionDetailTab) => void;
   onBack: () => void;
   onSectionClick: (id: number) => void;
   onSectionDeselect: () => void;
@@ -53,6 +56,8 @@ export default function WaterwayBrowsePanel({
   gaugeRanges = [],
   tab,
   onTabChange,
+  sectionDetailTab,
+  onSectionDetailTabChange,
   onBack,
   onSectionClick,
   onSectionDeselect,
@@ -117,6 +122,25 @@ export default function WaterwayBrowsePanel({
     </IconButton>
   ) : undefined;
 
+  const headerTabs = inFeatures
+    ? {
+        value: sectionDetailTab as string,
+        onChange: (t: string) =>
+          onSectionDetailTabChange(t as SectionDetailTab),
+        options: [
+          { value: "features", label: "Features" },
+          { value: "logs", label: "Logs" },
+        ],
+      }
+    : {
+        value: tab as string,
+        onChange: (t: string) => onTabChange(t as DetailTab),
+        options: [
+          { value: "sections", label: "Sections" },
+          { value: "gauges", label: "Gauges" },
+        ],
+      };
+
   return (
     <>
       <WaterwayDetailHeader
@@ -130,7 +154,7 @@ export default function WaterwayBrowsePanel({
         }
         onBack={inFeatures ? onSectionDeselect : onBack}
         actionButton={actionButton}
-        tabs={inFeatures ? undefined : { value: tab, onChange: onTabChange }}
+        tabs={headerTabs}
       />
 
       <Box sx={{ flex: 1, overflowY: "auto", p: 1 }}>
@@ -139,11 +163,18 @@ export default function WaterwayBrowsePanel({
             <CircularProgress size={22} />
           </Box>
         ) : inFeatures ? (
-          <FeatureTimeline
-            section={selectedSection}
-            proposals={showProposedFeatures ? featureProposals : undefined}
-            onFeatureClick={onFeatureClick}
-          />
+          sectionDetailTab === "logs" ? (
+            <SectionLogsList
+              waterwayId={waterwayId}
+              sectionId={selectedSection.id}
+            />
+          ) : (
+            <FeatureTimeline
+              section={selectedSection}
+              proposals={showProposedFeatures ? featureProposals : undefined}
+              onFeatureClick={onFeatureClick}
+            />
+          )
         ) : tab === "sections" ? (
           <SectionsList
             sections={sections}

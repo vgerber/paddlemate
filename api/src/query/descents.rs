@@ -536,6 +536,7 @@ pub struct ListFilters<'a> {
     pub visibility: Option<&'a str>,
     pub from: Option<DateTime<Utc>>,
     pub to: Option<DateTime<Utc>>,
+    pub section_id: Option<i64>,
     pub page: i64,
     pub per_page: i64,
 }
@@ -568,13 +569,18 @@ pub async fn list_descents_for_viewer(
                AND ($2::text IS NULL OR descents.visibility_scope::text = $2) \
                AND ($3::timestamptz IS NULL OR descents.start_time >= $3) \
                AND ($4::timestamptz IS NULL OR descents.start_time <= $4) \
+               AND ($5::bigint IS NULL OR EXISTS ( \
+                   SELECT 1 FROM descent_sections ds \
+                   WHERE ds.descent_id = descents.id AND ds.section_id = $5 \
+               )) \
              ORDER BY descents.start_time DESC \
-             LIMIT $5 OFFSET $6"
+             LIMIT $6 OFFSET $7"
         ))
         .bind(vid)
         .bind(filters.visibility)
         .bind(filters.from)
         .bind(filters.to)
+        .bind(filters.section_id)
         .bind(filters.per_page)
         .bind(offset)
         .fetch_all(pool)
@@ -615,13 +621,18 @@ pub async fn list_descents_for_viewer(
                AND ($2::text IS NULL OR descents.visibility_scope::text = $2) \
                AND ($3::timestamptz IS NULL OR descents.start_time >= $3) \
                AND ($4::timestamptz IS NULL OR descents.start_time <= $4) \
+               AND ($5::bigint IS NULL OR EXISTS ( \
+                   SELECT 1 FROM descent_sections ds \
+                   WHERE ds.descent_id = descents.id AND ds.section_id = $5 \
+               )) \
              ORDER BY descents.start_time DESC \
-             LIMIT $5 OFFSET $6"
+             LIMIT $6 OFFSET $7"
         ))
         .bind(vid)
         .bind(filters.visibility)
         .bind(filters.from)
         .bind(filters.to)
+        .bind(filters.section_id)
         .bind(filters.per_page)
         .bind(offset)
         .fetch_all(pool)
@@ -647,13 +658,18 @@ pub async fn list_descents_for_viewer(
                AND ($2::text IS NULL OR descents.visibility_scope::text = $2) \
                AND ($3::timestamptz IS NULL OR descents.start_time >= $3) \
                AND ($4::timestamptz IS NULL OR descents.start_time <= $4) \
+               AND ($5::bigint IS NULL OR EXISTS ( \
+                   SELECT 1 FROM descent_sections ds \
+                   WHERE ds.descent_id = descents.id AND ds.section_id = $5 \
+               )) \
              ORDER BY descents.start_time DESC \
-             LIMIT $5 OFFSET $6"
+             LIMIT $6 OFFSET $7"
         ))
         .bind(vid)
         .bind(filters.visibility)
         .bind(filters.from)
         .bind(filters.to)
+        .bind(filters.section_id)
         .bind(filters.per_page)
         .bind(offset)
         .fetch_all(pool)
@@ -667,11 +683,16 @@ pub async fn list_descents_for_viewer(
                AND (descents.visible_from IS NULL OR descents.visible_from <= NOW()) \
                AND ($1::timestamptz IS NULL OR descents.start_time >= $1) \
                AND ($2::timestamptz IS NULL OR descents.start_time <= $2) \
+               AND ($3::bigint IS NULL OR EXISTS ( \
+                   SELECT 1 FROM descent_sections ds \
+                   WHERE ds.descent_id = descents.id AND ds.section_id = $3 \
+               )) \
              ORDER BY descents.start_time DESC \
-             LIMIT $3 OFFSET $4"
+             LIMIT $4 OFFSET $5"
         ))
         .bind(filters.from)
         .bind(filters.to)
+        .bind(filters.section_id)
         .bind(filters.per_page)
         .bind(offset)
         .fetch_all(pool)

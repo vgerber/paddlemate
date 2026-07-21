@@ -115,6 +115,7 @@ pub async fn list_descents(
         visibility: q.visibility.as_deref(),
         from: q.from,
         to: q.to,
+        section_id: q.section_id,
         page,
         per_page,
     };

@@ -4,7 +4,11 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AreaCircle, GaugePin } from "@/components/map/Map";
-import type { DetailTab, SuggestMode } from "@/components/waterway/types";
+import type {
+  DetailTab,
+  SectionDetailTab,
+  SuggestMode,
+} from "@/components/waterway/types";
 import { proposalsApi, waterwaysApi } from "@/lib/api";
 import { useFavorites } from "@/lib/hooks/useFavorites";
 import { useFilteredSections } from "@/lib/hooks/useFilteredSections";
@@ -48,6 +52,8 @@ export function useMapPageState(search: RouteSearch) {
   const navigate = useNavigate({ from: "/" });
 
   const [detailTab, setDetailTab] = useState<DetailTab>("sections");
+  const [sectionDetailTab, setSectionDetailTab] =
+    useState<SectionDetailTab>("features");
   const [selectedGaugeId, setSelectedGaugeId] = useState<number | null>(null);
   const [searchWaterwayIds, setSearchWaterwayIds] = useState<number[]>([]);
   const [labelMode, setLabelMode] = useState<"section" | "river">("section");
@@ -211,6 +217,7 @@ export function useMapPageState(search: RouteSearch) {
   const setSelectedWaterwayId = useCallback(
     (id: number | undefined) => {
       setDetailTab("sections");
+      setSectionDetailTab("features");
       setSelectedGaugeId(null);
       navigate({
         search: (prev) => ({ ...prev, waterway: id, section: undefined }),
@@ -220,8 +227,10 @@ export function useMapPageState(search: RouteSearch) {
   );
 
   const setSelectedSectionId = useCallback(
-    (id: number | undefined) =>
-      navigate({ search: (prev) => ({ ...prev, section: id }) }),
+    (id: number | undefined) => {
+      setSectionDetailTab("features");
+      navigate({ search: (prev) => ({ ...prev, section: id }) });
+    },
     [navigate],
   );
 
@@ -415,6 +424,8 @@ export function useMapPageState(search: RouteSearch) {
     // UI state
     detailTab,
     setDetailTab,
+    sectionDetailTab,
+    setSectionDetailTab,
     selectedGaugeId,
     setSelectedGaugeId,
     searchWaterwayIds,

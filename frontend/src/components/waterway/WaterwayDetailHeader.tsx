@@ -6,25 +6,28 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import type { DetailTab } from "./types";
 
-interface WaterwayDetailHeaderProps {
+interface WaterwayDetailHeaderProps<T extends string> {
   title: string;
   subtitle?: string;
   onBack: () => void;
   backIcon?: "arrow" | "close";
   actionButton?: ReactNode;
-  tabs?: { value: DetailTab; onChange: (t: DetailTab) => void };
+  tabs?: {
+    value: T;
+    onChange: (t: T) => void;
+    options: { value: T; label: string }[];
+  };
 }
 
-export default function WaterwayDetailHeader({
+export default function WaterwayDetailHeader<T extends string>({
   title,
   subtitle,
   onBack,
   backIcon = "arrow",
   actionButton,
   tabs,
-}: WaterwayDetailHeaderProps) {
+}: WaterwayDetailHeaderProps<T>) {
   return (
     <Box
       sx={{
@@ -83,8 +86,11 @@ export default function WaterwayDetailHeader({
             },
           }}
         >
-          <ToggleButton value="sections">Sections</ToggleButton>
-          <ToggleButton value="gauges">Gauges</ToggleButton>
+          {tabs.options.map((option) => (
+            <ToggleButton key={option.value} value={option.value}>
+              {option.label}
+            </ToggleButton>
+          ))}
         </ToggleButtonGroup>
       )}
     </Box>

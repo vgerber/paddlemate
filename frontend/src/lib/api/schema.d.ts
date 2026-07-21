@@ -1342,6 +1342,11 @@ export interface components {
              */
             scope?: string | null;
             /**
+             * Format: int64
+             * @description Only return descents that include this water section.
+             */
+            section_id?: number | null;
+            /**
              * Format: date-time
              * @description Only return descents whose start_time is on or before this timestamp.
              */
@@ -1851,11 +1856,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-07-11T16:10:41.410525106Z",
-                     *         "expires_at": "2026-10-09T16:10:41.410527146Z",
+                     *         "created_at": "2026-07-19T07:18:56.017927328Z",
+                     *         "expires_at": "2026-10-17T07:18:56.017931021Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-07-11T16:10:41.410535356Z",
+                     *         "last_used_at": "2026-07-19T07:18:56.017948573Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -1886,8 +1891,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-07-11T16:10:41.410689986Z",
-                     *       "expires_at": "2026-10-09T16:10:41.410690356Z",
+                     *       "created_at": "2026-07-19T07:18:56.018562503Z",
+                     *       "expires_at": "2026-10-17T07:18:56.018564297Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -4084,6 +4089,8 @@ export interface operations {
                  *      "visible" (default) returns all descents visible to the viewer.
                  */
                 scope?: string | null;
+                /** @description Only return descents that include this water section. */
+                section_id?: number | null;
                 /** @description Only return descents whose start_time is on or before this timestamp. */
                 to?: string | null;
                 /** @description Narrow results by visibility: "private", "shared", or "public". */

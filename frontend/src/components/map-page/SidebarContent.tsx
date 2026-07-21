@@ -51,6 +51,8 @@ export default function SidebarContent({
     setIsSearchPanelLoading,
     detailTab,
     setDetailTab,
+    sectionDetailTab,
+    setSectionDetailTab,
     selectedGaugeId,
     gaugeRanges,
     selectedSectionGaugeRanges,
@@ -159,6 +161,8 @@ export default function SidebarContent({
       gaugeRanges={gaugeRanges}
       tab={detailTab}
       onTabChange={setDetailTab}
+      sectionDetailTab={sectionDetailTab}
+      onSectionDetailTabChange={setSectionDetailTab}
       onBack={() => setSelectedWaterwayId(undefined)}
       onSectionClick={handleSectionClick}
       onSectionDeselect={() => setSelectedSectionId(undefined)}

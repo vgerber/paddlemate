@@ -163,6 +163,8 @@ pub struct ListDescentsQuery {
     pub from: Option<DateTime<Utc>>,
     /// Only return descents whose start_time is on or before this timestamp.
     pub to: Option<DateTime<Utc>>,
+    /// Only return descents that include this water section.
+    pub section_id: Option<i64>,
     pub page: Option<i64>,
     pub per_page: Option<i64>,
 }

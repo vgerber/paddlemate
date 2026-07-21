@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   type CreateDescentRequest,
   type DescentFilters,
@@ -10,6 +15,8 @@ export const descentKeys = {
   all: ["descents"] as const,
   lists: () => [...descentKeys.all, "list"] as const,
   list: (filters: DescentFilters) => [...descentKeys.lists(), filters] as const,
+  infinite: (filters: DescentFilters) =>
+    [...descentKeys.lists(), "infinite", filters] as const,
   detail: (id: number) => [...descentKeys.all, id] as const,
 };
 
@@ -17,6 +24,19 @@ export function useDescents(filters: DescentFilters = {}) {
   return useQuery({
     queryKey: descentKeys.list(filters),
     queryFn: () => descentsApi.list(filters),
+  });
+}
+
+export function useInfiniteDescents(
+  filters: Omit<DescentFilters, "page"> = {},
+) {
+  return useInfiniteQuery({
+    queryKey: descentKeys.infinite(filters),
+    queryFn: ({ pageParam }) =>
+      descentsApi.list({ ...filters, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.page < last.total_pages ? last.page + 1 : undefined,
   });
 }
 
