@@ -67,6 +67,18 @@ docker start paddlemate-db-1
 
 Connection string (from `api/.env`): `postgresql://postgres:postgres@localhost:6432/paddlemate`
 
+### Test data
+
+A self-contained dev fixture (Test River with sections incl. put-in/take-out
+features, gauge with a week of readings, descents, API token) lives in
+`.claude/skills/test-data/`. See `SKILL.md` there for details; all fixture
+ids are in the 9xxx range. Reset and seed with:
+
+```
+docker exec -i paddlemate-db-1 psql -U postgres -d paddlemate -v ON_ERROR_STOP=1 < .claude/skills/test-data/cleanup.sql
+docker exec -i paddlemate-db-1 psql -U postgres -d paddlemate -v ON_ERROR_STOP=1 < .claude/skills/test-data/seed.sql
+```
+
 ### Migrations
 
 Always create migration files with the SQLx CLI - **never by hand**:

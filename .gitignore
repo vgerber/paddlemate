@@ -6,4 +6,5 @@ deploy/backend/.env
 enrich*.jsonl
 
 deploy/
-.claude
+.claude/*
+!.claude/skills
