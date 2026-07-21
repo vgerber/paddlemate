@@ -73,7 +73,11 @@ export default function SectionListItem({
               size="small"
               variant="outlined"
               title={`Paddled ${descentCount} ${descentCount === 1 ? "time" : "times"}`}
-              sx={{ ml: 0.5, color: "text.secondary" }}
+              sx={{
+                ml: 0.5,
+                color: "text.secondary",
+                "& .MuiChip-icon": { color: "text.disabled" },
+              }}
             />
           )}
           {difficultyChip}
