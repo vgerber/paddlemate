@@ -9,6 +9,7 @@ use crate::{
     doc_fn,
     layers::auth::AuthToken,
     models::{
+        descent::SectionDescentCount,
         feature::Feature,
         path_params::{SectionPath, WaterwayPath},
         proposal::Proposal,
@@ -17,7 +18,7 @@ use crate::{
         },
         waterway::WaterwayId,
     },
-    query::{features, proposals, sections},
+    query::{descents, features, proposals, sections},
     state::AppState,
 };
 
@@ -256,5 +257,40 @@ doc_fn!(delete_section_docs, op =>
         .response_with::<401, (), _>(|res| res.description("Unauthorized"))
         .response_with::<404, (), _>(|res| res.description("Section not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Sections")
+);
+
+pub async fn list_section_descent_counts(
+    State(app): State<AppState>,
+    Path(path): Path<WaterwayPath>,
+    auth: Option<Extension<AuthToken>>,
+) -> impl IntoApiResponse {
+    let viewer_id = auth.as_ref().map(|Extension(t)| t.user_id().to_string());
+    match descents::count_descents_per_section(
+        &app.pg_pool,
+        path.waterway_id,
+        viewer_id.as_deref(),
+    )
+    .await
+    {
+        Ok(counts) => Json(counts).into_response(),
+        Err(err) => {
+            tracing::error!(
+                "Error counting descents for waterway {}: {}",
+                path.waterway_id,
+                err
+            );
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+doc_fn!(list_section_descent_counts_docs, op =>
+    op.input::<Path<WaterwayPath>>()
+        .description(
+            "Number of descents per section of the waterway, counting only \
+             descents visible to the viewer. Sections without descents are omitted."
+        )
+        .response::<200, Json<Vec<SectionDescentCount>>>()
         .tag("Sections")
 );

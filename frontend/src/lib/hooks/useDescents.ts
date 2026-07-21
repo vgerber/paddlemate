@@ -9,6 +9,7 @@ import {
   type DescentFilters,
   descentsApi,
   type PatchDescentRequest,
+  sectionsApi,
 } from "@/lib/api";
 
 export const descentKeys = {
@@ -17,6 +18,8 @@ export const descentKeys = {
   list: (filters: DescentFilters) => [...descentKeys.lists(), filters] as const,
   infinite: (filters: DescentFilters) =>
     [...descentKeys.lists(), "infinite", filters] as const,
+  sectionCounts: (waterwayId: number) =>
+    [...descentKeys.lists(), "section-counts", waterwayId] as const,
   detail: (id: number) => [...descentKeys.all, id] as const,
 };
 
@@ -37,6 +40,17 @@ export function useInfiniteDescents(
     initialPageParam: 1,
     getNextPageParam: (last) =>
       last.page < last.total_pages ? last.page + 1 : undefined,
+  });
+}
+
+/** Descent count per section of a waterway, as a section_id -> count map. */
+export function useSectionDescentCounts(waterwayId: number | null) {
+  return useQuery({
+    queryKey: descentKeys.sectionCounts(waterwayId ?? 0),
+    queryFn: () => sectionsApi.descentCounts(waterwayId as number),
+    enabled: waterwayId != null,
+    select: (rows): Record<number, number> =>
+      Object.fromEntries(rows.map((r) => [r.section_id, r.count])),
   });
 }
 

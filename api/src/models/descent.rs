@@ -149,6 +149,13 @@ pub struct PatchDescentRequest {
     pub sections: Option<Vec<DescentSectionInput>>,
 }
 
+/// Number of descents that include a section, as visible to the viewer.
+#[derive(Debug, Serialize, JsonSchema)]
+pub struct SectionDescentCount {
+    pub section_id: i64,
+    pub count: i64,
+}
+
 // --- Query parameters ---
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]

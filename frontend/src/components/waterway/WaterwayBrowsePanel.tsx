@@ -19,6 +19,7 @@ import type {
   SectionWithFeatures,
   WaterRangeWithStatus,
 } from "@/lib/api";
+import { useSectionDescentCounts } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { localizedName } from "@/lib/localization";
@@ -73,6 +74,7 @@ export default function WaterwayBrowsePanel({
   featureProposals = [],
 }: WaterwayBrowsePanelProps) {
   const { data: waterway, isLoading } = useWaterway(waterwayId);
+  const { data: descentCounts } = useSectionDescentCounts(waterwayId);
   const { isAuthenticated } = useSession();
   const sections: SectionWithFeatures[] = waterway?.sections ?? [];
 
@@ -181,6 +183,7 @@ export default function WaterwayBrowsePanel({
             waterwayId={waterwayId}
             selectedSectionId={selectedSectionId}
             onSectionClick={onSectionClick}
+            descentCounts={descentCounts}
           />
         ) : (
           <GaugesList
@@ -242,6 +245,7 @@ interface SectionsListProps {
   waterwayId: number;
   selectedSectionId: number | undefined;
   onSectionClick: (id: number) => void;
+  descentCounts?: Record<number, number>;
 }
 
 function SectionsList({
@@ -249,6 +253,7 @@ function SectionsList({
   waterwayId,
   selectedSectionId,
   onSectionClick,
+  descentCounts,
 }: SectionsListProps) {
   if (sections.length === 0) {
     return (
@@ -266,6 +271,7 @@ function SectionsList({
           waterwayId={waterwayId}
           selected={section.id === selectedSectionId}
           onClick={onSectionClick}
+          descentCount={descentCounts?.[section.id]}
         />
       ))}
     </List>

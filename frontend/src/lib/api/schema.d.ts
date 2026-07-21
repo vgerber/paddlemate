@@ -321,6 +321,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/waterways/{waterway_id}/descents/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Number of descents per section of the waterway, counting only descents visible to the viewer. Sections without descents are omitted. */
+        get: operations["list_section_descent_counts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/waterways/{waterway_id}/sections/{section_id}": {
         parameters: {
             query?: never;
@@ -1525,6 +1542,13 @@ export interface components {
             /** Format: int64 */
             waterway_id: number;
         };
+        /** @description Number of descents that include a section, as visible to the viewer. */
+        SectionDescentCount: {
+            /** Format: int64 */
+            count: number;
+            /** Format: int64 */
+            section_id: number;
+        };
         SectionDescription: {
             description: string;
             /** Format: int64 */
@@ -1856,11 +1880,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-07-19T07:18:56.017927328Z",
-                     *         "expires_at": "2026-10-17T07:18:56.017931021Z",
+                     *         "created_at": "2026-07-21T20:48:29.001381005Z",
+                     *         "expires_at": "2026-10-19T20:48:29.001385243Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-07-19T07:18:56.017948573Z",
+                     *         "last_used_at": "2026-07-21T20:48:29.001406433Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -1891,8 +1915,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-07-19T07:18:56.018562503Z",
-                     *       "expires_at": "2026-10-17T07:18:56.018564297Z",
+                     *       "created_at": "2026-07-21T20:48:29.002120476Z",
+                     *       "expires_at": "2026-10-19T20:48:29.002122708Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -2774,6 +2798,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list_section_descent_counts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SectionDescentCount"][];
+                };
             };
         };
     };

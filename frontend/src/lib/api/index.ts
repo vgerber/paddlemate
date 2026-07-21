@@ -71,6 +71,13 @@ export const waterwaysApi = {
 };
 
 export const sectionsApi = {
+  descentCounts: async (waterwayId: number) => {
+    const { data } = await client.GET(
+      "/api/v1/waterways/{waterway_id}/descents/count",
+      { params: { path: { waterway_id: waterwayId } } },
+    );
+    return assertData(data);
+  },
   get: async (waterwayId: number, sectionId: number) => {
     const { data } = await client.GET(
       "/api/v1/waterways/{waterway_id}/sections/{section_id}",

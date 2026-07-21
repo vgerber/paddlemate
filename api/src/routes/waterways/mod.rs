@@ -33,6 +33,14 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
             "/{waterway_id}/sections",
             post_with(sections::create_section, sections::create_section_docs),
         )
+        // Per-section descent counts
+        .api_route(
+            "/{waterway_id}/descents/count",
+            get_with(
+                sections::list_section_descent_counts,
+                sections::list_section_descent_counts_docs,
+            ),
+        )
         .api_route(
             "/{waterway_id}/sections/{section_id}",
             get_with(sections::get_section, sections::get_section_docs)

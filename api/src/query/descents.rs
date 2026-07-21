@@ -5,7 +5,8 @@ use sqlx::{PgPool, Row, postgres::PgRow};
 
 use crate::models::{
     descent::{
-        CreateDescentRequest, Descent, DescentId, DescentSection, PatchDescentRequest, Visibility,
+        CreateDescentRequest, Descent, DescentId, DescentSection, PatchDescentRequest,
+        SectionDescentCount, Visibility,
     },
     gauge::{SectionWaterSnapshot, WaterLevel, WaterRangeWithStatus},
     waterway::PaginatedResponse,
@@ -731,6 +732,65 @@ pub async fn list_descents_for_viewer(
         per_page: filters.per_page,
         total_pages,
     })
+}
+
+/// Per-section descent counts for a waterway, honoring the same
+/// visibility rules as the descent list (owner, public, shared).
+pub async fn count_descents_per_section(
+    pool: &PgPool,
+    waterway_id: i64,
+    viewer_id: Option<&str>,
+) -> Result<Vec<SectionDescentCount>, sqlx::Error> {
+    let rows = if let Some(vid) = viewer_id {
+        sqlx::query(
+            "SELECT ds.section_id, COUNT(*) AS count \
+             FROM descent_sections ds \
+             JOIN descents ON descents.id = ds.descent_id \
+             JOIN water_sections ws ON ws.id = ds.section_id \
+             WHERE ws.waterway_id = $1 \
+               AND ( \
+                 descents.user_id = $2 \
+                 OR (descents.visibility_scope = 'public' AND (descents.visible_from IS NULL OR descents.visible_from <= NOW())) \
+                 OR (descents.visibility_scope = 'shared' AND EXISTS ( \
+                     SELECT 1 FROM descent_visible_users \
+                     WHERE descent_id = descents.id AND user_id = $2 \
+                 )) \
+                 OR (descents.visibility_scope = 'shared' AND EXISTS ( \
+                     SELECT 1 FROM descent_visible_groups dvg \
+                     JOIN group_members gm ON gm.group_id = dvg.group_id \
+                     WHERE dvg.descent_id = descents.id AND gm.user_id = $2 \
+                 )) \
+               ) \
+             GROUP BY ds.section_id",
+        )
+        .bind(waterway_id)
+        .bind(vid)
+        .fetch_all(pool)
+        .await?
+    } else {
+        sqlx::query(
+            "SELECT ds.section_id, COUNT(*) AS count \
+             FROM descent_sections ds \
+             JOIN descents ON descents.id = ds.descent_id \
+             JOIN water_sections ws ON ws.id = ds.section_id \
+             WHERE ws.waterway_id = $1 \
+               AND descents.visibility_scope = 'public' \
+               AND (descents.visible_from IS NULL OR descents.visible_from <= NOW()) \
+             GROUP BY ds.section_id",
+        )
+        .bind(waterway_id)
+        .fetch_all(pool)
+        .await?
+    };
+
+    rows.iter()
+        .map(|r| {
+            Ok(SectionDescentCount {
+                section_id: r.try_get("section_id")?,
+                count: r.try_get("count")?,
+            })
+        })
+        .collect()
 }
 
 pub async fn patch_descent(
