@@ -6,6 +6,7 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  ReferenceArea,
   ReferenceLine,
   Tooltip,
   XAxis,
@@ -14,7 +15,7 @@ import {
 import type { GaugeReading, WaterRangeWithStatus } from "@/lib/api";
 import { useGaugeReadings } from "@/lib/hooks/useWaterways";
 import { theme } from "@/lib/theme";
-import type { TimeRange } from "./types";
+import type { DescentSpan, TimeRange } from "./types";
 
 const { tokens } = theme;
 
@@ -23,6 +24,8 @@ export interface SeriesChartProps {
   from: string;
   showThresholds?: boolean;
   timeRange: TimeRange;
+  /** Own descents drawn as shaded time bands. */
+  descentSpans?: DescentSpan[];
 }
 
 function formatTick(v: number): string {
@@ -36,6 +39,7 @@ export default function SeriesChart({
   from,
   showThresholds = true,
   timeRange,
+  descentSpans,
 }: SeriesChartProps) {
   const { series, gauge } = range;
 
@@ -74,6 +78,27 @@ export default function SeriesChart({
     }
     return out;
   }, [readings]);
+
+  // Clamp descent bands to the visible domain and give very short runs a
+  // minimum visual width so they stay visible in long time ranges.
+  const visibleSpans = useMemo(() => {
+    if (!descentSpans?.length || chartData.length === 0) return [];
+    const dataMin = chartData[0].time;
+    const dataMax = chartData[chartData.length - 1].time;
+    const minWidth = (dataMax - dataMin) * 0.005;
+    return descentSpans
+      .filter((s) => s.end >= dataMin && s.start <= dataMax)
+      .map((s) => {
+        let x1 = Math.max(s.start, dataMin);
+        let x2 = Math.min(s.end, dataMax);
+        if (x2 - x1 < minWidth) {
+          const mid = (x1 + x2) / 2;
+          x1 = Math.max(mid - minWidth / 2, dataMin);
+          x2 = Math.min(mid + minWidth / 2, dataMax);
+        }
+        return { id: s.id, x1, x2, name: s.name };
+      });
+  }, [descentSpans, chartData]);
 
   const { yMin, yMax, yAxisWidth } = useMemo(() => {
     const values = chartData
@@ -199,6 +224,17 @@ export default function SeriesChart({
             stroke={tokens.chartGrid}
             vertical={false}
           />
+          {visibleSpans.map((s) => (
+            <ReferenceArea
+              key={s.id}
+              x1={s.x1}
+              x2={s.x2}
+              fill={tokens.secondary}
+              fillOpacity={0.15}
+              stroke={tokens.secondary}
+              strokeOpacity={0.35}
+            />
+          ))}
           <XAxis
             dataKey="time"
             type="number"
@@ -234,26 +270,42 @@ export default function SeriesChart({
             tickFormatter={formatTick}
           />
           <Tooltip
-            labelFormatter={(ts) =>
-              new Date(ts as number).toLocaleString(undefined, {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            }
-            formatter={(value) => [
-              value != null ? `${Number(value).toFixed(1)} ${series.unit}` : "",
-              series.label ?? gauge.name,
-            ]}
-            contentStyle={{
-              backgroundColor: tokens.surface,
-              border: `1px solid ${tokens.outlineVariant}`,
-              borderRadius: 6,
-              fontSize: 12,
+            content={({ active, payload, label }) => {
+              const value = payload?.[0]?.value;
+              if (!active || value == null) return null;
+              const ts = label as number;
+              const span = visibleSpans.find(
+                (s) => ts >= s.x1 && ts <= s.x2 && s.name,
+              );
+              return (
+                <div
+                  style={{
+                    backgroundColor: tokens.surface,
+                    border: `1px solid ${tokens.outlineVariant}`,
+                    borderRadius: 6,
+                    fontSize: 12,
+                    padding: "8px 10px",
+                  }}
+                >
+                  <div style={{ color: tokens.outline, marginBottom: 2 }}>
+                    {new Date(ts).toLocaleString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                  <div style={{ color: tokens.onSurface }}>
+                    {`${Number(value).toFixed(1)} ${series.unit}`}
+                  </div>
+                  {span && (
+                    <div style={{ color: tokens.secondary, marginTop: 2 }}>
+                      {span.name}
+                    </div>
+                  )}
+                </div>
+              );
             }}
-            itemStyle={{ color: tokens.onSurface }}
-            labelStyle={{ color: tokens.outline, marginBottom: 2 }}
           />
           <Area
             type="monotone"

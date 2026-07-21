@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import SeriesChart from "./SeriesChart";
 import {
+  type DescentSpan,
   fromForRange,
   TIME_RANGE_OPTIONS,
   type TimeRange,
@@ -21,6 +22,8 @@ export interface WaterChartProps {
   /** Controlled measurement type - when provided the type toggle is hidden. */
   measurementType?: string | null;
   onMeasurementTypeChange?: (v: string) => void;
+  /** Own descents drawn as shaded time bands in each series chart. */
+  descentSpans?: DescentSpan[];
 }
 
 export default function WaterChart({
@@ -30,6 +33,7 @@ export default function WaterChart({
   onTimeRangeChange,
   measurementType: controlledMeasurementType,
   onMeasurementTypeChange,
+  descentSpans,
 }: WaterChartProps) {
   const [internalTimeRange, setInternalTimeRange] = useState<TimeRange>("7d");
   const timeRange = controlledTimeRange ?? internalTimeRange;
@@ -165,6 +169,7 @@ export default function WaterChart({
                   from={from}
                   showThresholds={showThresholds}
                   timeRange={timeRange}
+                  descentSpans={descentSpans}
                 />
               </Box>
             </Box>

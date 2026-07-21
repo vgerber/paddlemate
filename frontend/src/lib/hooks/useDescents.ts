@@ -23,10 +23,11 @@ export const descentKeys = {
   detail: (id: number) => [...descentKeys.all, id] as const,
 };
 
-export function useDescents(filters: DescentFilters = {}) {
+export function useDescents(filters: DescentFilters = {}, enabled = true) {
   return useQuery({
     queryKey: descentKeys.list(filters),
     queryFn: () => descentsApi.list(filters),
+    enabled,
   });
 }
 
@@ -54,8 +55,11 @@ export function useSectionDescentCounts(waterwayId: number | null) {
   });
 }
 
-export function useMyDescents(filters: Omit<DescentFilters, "scope"> = {}) {
-  return useDescents({ ...filters, scope: "owned" });
+export function useMyDescents(
+  filters: Omit<DescentFilters, "scope"> = {},
+  enabled = true,
+) {
+  return useDescents({ ...filters, scope: "owned" }, enabled);
 }
 
 export function useDescent(id: number | null) {

@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import ChartControls from "@/components/charts/ChartControls";
 import { useChartTimeRange } from "@/components/charts/water/types";
 import WaterChart from "@/components/charts/water/WaterChart";
+import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
 import { useWaterStatus } from "@/lib/hooks/useWaterways";
@@ -32,6 +33,28 @@ export default function SectionChartPanel({
   );
   const [timeRange, setTimeRange] = useChartTimeRange();
   const [measurementType, setMeasurementType] = useState<string | null>(null);
+
+  // Own descents on this section, shown as shaded bands in the charts.
+  const { data: myDescents } = useMyDescents(
+    { section_id: sectionId, per_page: 100 },
+    isAuthenticated,
+  );
+  const descentSpans = useMemo(
+    () =>
+      (myDescents?.items ?? []).map((d) => ({
+        id: d.id,
+        start: new Date(d.start_time).getTime(),
+        end: new Date(d.end_time).getTime(),
+        name:
+          d.name ||
+          new Date(d.start_time).toLocaleDateString(undefined, {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          }),
+      })),
+    [myDescents],
+  );
 
   const measurementTypes = useMemo(() => {
     const types = new Set(
@@ -143,6 +166,7 @@ export default function SectionChartPanel({
             onTimeRangeChange={setTimeRange}
             measurementType={measurementType}
             onMeasurementTypeChange={setMeasurementType}
+            descentSpans={descentSpans}
           />
         </Box>
       )}
