@@ -6,8 +6,6 @@ import { theme } from "@/lib/theme";
 export const FEATURE_COLORS: Record<string, string> =
   theme.tokens.featureColors;
 
-// ─── Geometry helpers ────────────────────────────────────────────────────────
-
 function nearestPointOnSegment(
   p: [number, number],
   a: [number, number],
@@ -59,8 +57,6 @@ function featureLabel(f: Feature): string {
   if (name) return difficulty ? `${name} (${difficulty})` : name;
   return difficulty ?? "";
 }
-
-// ─── GeoJSON builders ────────────────────────────────────────────────────────
 
 export function buildSectionsGeoJSON(
   sections: SectionWithFeatures[],

@@ -6,6 +6,7 @@ import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
+import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -124,6 +125,12 @@ export default function WaterwayBrowsePanel({
     </IconButton>
   ) : undefined;
 
+  const showNewSectionFab =
+    isAuthenticated &&
+    tab === "sections" &&
+    !inFeatures &&
+    selectedSectionId == null;
+
   const headerTabs = inFeatures
     ? {
         value: sectionDetailTab as string,
@@ -159,69 +166,88 @@ export default function WaterwayBrowsePanel({
         tabs={headerTabs}
       />
 
-      <Box sx={{ flex: 1, overflowY: "auto", p: 1 }}>
-        {isLoading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-            <CircularProgress size={22} />
-          </Box>
-        ) : inFeatures ? (
-          sectionDetailTab === "logs" ? (
-            <SectionLogsList
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: "auto",
+            p: 1,
+            // Leave room so the FAB never covers the last row
+            pb: showNewSectionFab ? 9 : 1,
+          }}
+        >
+          {isLoading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+              <CircularProgress size={22} />
+            </Box>
+          ) : inFeatures ? (
+            sectionDetailTab === "logs" ? (
+              <SectionLogsList
+                waterwayId={waterwayId}
+                sectionId={selectedSection.id}
+              />
+            ) : (
+              <FeatureTimeline
+                section={selectedSection}
+                proposals={showProposedFeatures ? featureProposals : undefined}
+                onFeatureClick={onFeatureClick}
+              />
+            )
+          ) : tab === "sections" ? (
+            <SectionsList
+              sections={sections}
               waterwayId={waterwayId}
-              sectionId={selectedSection.id}
+              selectedSectionId={selectedSectionId}
+              onSectionClick={onSectionClick}
+              descentCounts={descentCounts}
             />
           ) : (
-            <FeatureTimeline
-              section={selectedSection}
-              proposals={showProposedFeatures ? featureProposals : undefined}
-              onFeatureClick={onFeatureClick}
+            <GaugesList
+              gaugeRanges={gaugeRanges}
+              selectedGaugeId={selectedGaugeId}
+              onGaugeSelect={onGaugeSelect}
             />
-          )
-        ) : tab === "sections" ? (
-          <SectionsList
-            sections={sections}
-            waterwayId={waterwayId}
-            selectedSectionId={selectedSectionId}
-            onSectionClick={onSectionClick}
-            descentCounts={descentCounts}
-          />
-        ) : (
-          <GaugesList
-            gaugeRanges={gaugeRanges}
-            selectedGaugeId={selectedGaugeId}
-            onGaugeSelect={onGaugeSelect}
-          />
+          )}
+        </Box>
+
+        {showNewSectionFab && (
+          <Fab
+            color="secondary"
+            size="medium"
+            aria-label="New section"
+            title="New section"
+            onClick={() => onSuggestModeChange("section")}
+            sx={{ position: "absolute", bottom: 16, right: 16 }}
+          >
+            <AddIcon />
+          </Fab>
         )}
       </Box>
 
-      {isAuthenticated && tab === "sections" && !inFeatures && (
-        <Box
-          sx={{
-            px: 1.5,
-            py: 1,
-            // "New section" opens its own page, so it works on mobile too;
-            // "New feature" is desktop-only here (mobile uses the speed dial).
-            display: {
-              xs: selectedSectionId == null ? "flex" : "none",
-              md: "flex",
-            },
-            gap: 1,
-            flexShrink: 0,
-            borderTop: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          {selectedSectionId == null ? (
-            <Button
-              size="small"
-              startIcon={<AddIcon />}
-              variant="outlined"
-              fullWidth
-              onClick={() => onSuggestModeChange("section")}
-            >
-              New section
-            </Button>
-          ) : (
+      {/* "New feature" is desktop-only here (mobile uses the speed dial). */}
+      {isAuthenticated &&
+        tab === "sections" &&
+        !inFeatures &&
+        selectedSectionId != null && (
+          <Box
+            sx={{
+              px: 1.5,
+              py: 1,
+              display: { xs: "none", md: "flex" },
+              gap: 1,
+              flexShrink: 0,
+              borderTop: "1px solid",
+              borderColor: "divider",
+            }}
+          >
             <Button
               size="small"
               startIcon={<AddIcon />}
@@ -231,14 +257,11 @@ export default function WaterwayBrowsePanel({
             >
               New feature
             </Button>
-          )}
-        </Box>
-      )}
+          </Box>
+        )}
     </>
   );
 }
-
-// ─── Sections list ───────────────────────────────────────────────────────────
 
 interface SectionsListProps {
   sections: SectionWithFeatures[];
@@ -277,8 +300,6 @@ function SectionsList({
     </List>
   );
 }
-
-// ─── Gauges list ─────────────────────────────────────────────────────────────
 
 interface GaugesListProps {
   gaugeRanges: WaterRangeWithStatus[];

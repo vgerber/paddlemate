@@ -140,8 +140,8 @@ export function useRiverSnap(
     setRetryToken((token) => token + 1);
   }, []);
 
-  // ── River-course preview: look up the river for the current map view
-  //    while the user hasn't picked both points yet ──
+  // River-course preview: look up the river for the current map view
+  // while the user hasn't picked both points yet
   // biome-ignore lint/correctness/useExhaustiveDependencies: retryToken re-triggers the lookup after the caches were cleared
   useEffect(() => {
     if (!waterwayName) {
@@ -215,7 +215,7 @@ export function useRiverSnap(
     };
   }, [waterwayName, viewBounds, putIn, takeOut, retryToken]);
 
-  // ── Snap pipeline: runs once both points are picked ──
+  // Snap pipeline: runs once both points are picked
   // biome-ignore lint/correctness/useExhaustiveDependencies: retryToken re-triggers the fetch after the caches were cleared
   useEffect(() => {
     if (!putIn || !takeOut || !waterwayName) {
@@ -232,7 +232,7 @@ export function useRiverSnap(
     async function run() {
       setStatus("searching");
 
-      // ── Stage 1: named river ──
+      // Stage 1: named river
       const cachedNamed = namedRiverCache.current;
       let named =
         cachedNamed &&
@@ -284,8 +284,8 @@ export function useRiverSnap(
         distanceToLineInMeters(namedRiver, takeOutCoordinate) <=
           ON_RIVER_THRESHOLD_METERS;
 
-      // ── Stage 2: a point sits on another river past a confluence -
-      //    fetch the connecting rivers and route through the network ──
+      // Stage 2: a point sits on another river past a confluence -
+      // fetch the connecting rivers and route through the network
       if (!bothPointsOnNamedRiver) {
         setStatus("routing");
         // The named river itself is already part of the routing graph, so

@@ -31,7 +31,6 @@ import { useRiverSnap } from "@/lib/hooks/useRiverSnap";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway, waterwayKeys } from "@/lib/hooks/useWaterways";
 import type { BoundingBox, Coordinate } from "@/lib/riverSnap";
-import { fonts } from "@/lib/theme";
 
 export const Route = createFileRoute("/waterways/suggest-section")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -294,39 +293,7 @@ function SuggestSectionPage() {
 
   return (
     <Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: { xs: 1.5, md: 2 } }}>
-      {/* Header - compact single row: title, cancel */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          mb: 1.5,
-          pb: 1,
-          borderBottom: "1px solid",
-          borderColor: "divider",
-        }}
-      >
-        <Typography
-          sx={{
-            fontFamily: fonts.label,
-            fontWeight: 700,
-            fontSize: "0.9rem",
-            letterSpacing: "0.05em",
-            minWidth: 0,
-          }}
-          noWrap
-        >
-          Suggest section · {waterway?.name ?? "…"}
-        </Typography>
-        <Button
-          onClick={backToMap}
-          size="small"
-          sx={{ ml: "auto", borderRadius: 0, flexShrink: 0 }}
-        >
-          Cancel
-        </Button>
-      </Box>
-
+      {/* No header - the bottom bar carries the title, step and cancel. */}
       {submitted ? (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Alert severity="success">
@@ -470,7 +437,7 @@ function SuggestSectionPage() {
               onLeftClick={step === 0 ? backToMap : () => setStep(step - 1)}
               leftLabel={step === 0 ? "Cancel" : "Back"}
               leftDisabled={submitting}
-              title={waterway?.name ?? "…"}
+              title={`New section · ${waterway?.name ?? "…"}`}
               subtitle={`Step ${step + 1} of ${STEPS.length} · ${STEPS[step]}`}
               action={
                 <RoundActionButton

@@ -91,6 +91,11 @@ This assigns the correct sequential numeric prefix automatically. Manually
 created files risk duplicate prefixes, which cause SQLx to panic at compile
 time.
 
+## Code style
+
+- Do not use section divider comments (e.g. `// --- Gauges list ---`) to
+  group code within a file; if a file needs sections, split it into modules.
+
 ## Rust code style (api/)
 
 - Keep names readable and consistent with Rust community conventions.
