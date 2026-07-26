@@ -1,4 +1,6 @@
 use aide::axum::IntoApiResponse;
+
+use super::authorize_localization;
 use axum::{
     Extension, Json,
     extract::{Path, State},
@@ -11,6 +13,7 @@ use serde_json::Value;
 
 use crate::{
     doc_fn,
+    error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
         feature::{CreateFeatureBody, Feature, FeatureDescription, FeatureName, FeatureType},
@@ -20,7 +23,7 @@ use crate::{
         water_section::SectionId,
         waterway::WaterwayId,
     },
-    query::{features, proposals},
+    query::{features, proposals, sections},
     state::AppState,
 };
 
@@ -28,26 +31,32 @@ pub async fn create_feature(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id)): Path<(WaterwayId, SectionId)>,
-    Json(body): Json<CreateFeatureBody>,
+    Json(mut body): Json<CreateFeatureBody>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
-    match features::section_belongs_to_waterway(&app.pg_pool, section_id, waterway_id).await {
+    match sections::section_exists(&app.pg_pool, waterway_id, section_id).await {
         Ok(true) => {}
-        Ok(false) => return StatusCode::NOT_FOUND.into_response(),
+        Ok(false) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error verifying section {}: {}", section_id, err);
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+            return ApiError::internal().into_response();
         }
     }
 
     for range in &body.water_ranges {
         if let Err(msg) = range.validate() {
-            return (StatusCode::UNPROCESSABLE_ENTITY, msg).into_response();
+            return ApiError::validation(msg).into_response();
         }
+    }
+
+    // Normalizing here means the proposal payload below is stored with the
+    // canonical code, so approval never has to validate again.
+    if let Err(msg) = body.normalize_lang_code() {
+        return ApiError::validation(msg).into_response();
     }
 
     if token.is_server_admin() {
@@ -55,7 +64,7 @@ pub async fn create_feature(
             Ok(tx) => tx,
             Err(err) => {
                 tracing::error!("Error starting transaction: {}", err);
-                return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+                return ApiError::internal().into_response();
             }
         };
         let feature =
@@ -65,12 +74,12 @@ pub async fn create_feature(
                 Ok(()) => (StatusCode::CREATED, Json(feature)).into_response(),
                 Err(err) => {
                     tracing::error!("Error committing feature: {}", err);
-                    StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                    ApiError::internal().into_response()
                 }
             },
             Err(err) => {
                 tracing::error!("Error creating feature: {}", err);
-                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                ApiError::internal().into_response()
             }
         };
     }
@@ -91,7 +100,7 @@ pub async fn create_feature(
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
             tracing::error!("Error submitting feature proposal: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -101,9 +110,9 @@ doc_fn!(create_feature_docs, op =>
         .description("Add a feature (admin: immediate 201, others: proposal 202)")
         .response_with::<201, Json<Feature>, _>(|res| res.description("Feature created"))
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Section not found"))
-        .response_with::<422, (), _>(|res| res.description("Invalid water range thresholds"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Section not found"))
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Invalid lang_code or water range thresholds"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Features")
 );
@@ -123,7 +132,7 @@ pub async fn update_feature(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     if token.is_server_admin() {
@@ -144,10 +153,10 @@ pub async fn update_feature(
         .await
         {
             Ok(Some(feature)) => Json(feature).into_response(),
-            Ok(None) => StatusCode::NOT_FOUND.into_response(),
+            Ok(None) => ApiError::not_found("Not found").into_response(),
             Err(err) => {
                 tracing::error!("Error updating feature {}: {}", feature_id, err);
-                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                ApiError::internal().into_response()
             }
         };
     }
@@ -172,7 +181,7 @@ pub async fn update_feature(
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
             tracing::error!("Error submitting feature update proposal: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -182,8 +191,8 @@ doc_fn!(update_feature_docs, op =>
         .description("Update a feature (admin: immediate 200, others: proposal 202)")
         .response::<200, Json<Feature>>()
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Feature not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Feature not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Features")
 );
@@ -195,7 +204,7 @@ pub async fn delete_feature(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     if token.is_server_admin() {
@@ -203,10 +212,10 @@ pub async fn delete_feature(
             .await
         {
             Ok(true) => StatusCode::NO_CONTENT.into_response(),
-            Ok(false) => StatusCode::NOT_FOUND.into_response(),
+            Ok(false) => ApiError::not_found("Not found").into_response(),
             Err(err) => {
                 tracing::error!("Error deleting feature {}: {}", feature_id, err);
-                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                ApiError::internal().into_response()
             }
         };
     }
@@ -225,7 +234,7 @@ pub async fn delete_feature(
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
             tracing::error!("Error submitting feature delete proposal: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -235,8 +244,8 @@ doc_fn!(delete_feature_docs, op =>
         .description("Delete a feature (admin: immediate 204, others: proposal 202)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Feature not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Feature not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Features")
 );
@@ -257,19 +266,19 @@ pub async fn upsert_feature_name(
     )>,
     Json(body): Json<UpsertNameBody>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
-        Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+    let lang_code = match authorize_localization(auth, &lang_code) {
+        Ok(code) => code,
+        Err(response) => return response,
     };
 
     match features::feature_belongs_to_section(&app.pg_pool, waterway_id, section_id, feature_id)
         .await
     {
         Ok(true) => {}
-        Ok(false) => return StatusCode::NOT_FOUND.into_response(),
+        Ok(false) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error checking feature {}: {}", feature_id, err);
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+            return ApiError::internal().into_response();
         }
     }
 
@@ -277,17 +286,18 @@ pub async fn upsert_feature_name(
         Ok(name) => Json(name).into_response(),
         Err(err) => {
             tracing::error!("Error upserting name for feature {}: {}", feature_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
 
 doc_fn!(upsert_feature_name_docs, op =>
     op.input::<Path<FeatureLocalePath>>()
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Invalid lang_code"))
         .description("Add or update a localized name for a feature")
         .response::<200, Json<FeatureName>>()
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Feature not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Feature not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Features")
 );
@@ -302,9 +312,9 @@ pub async fn delete_feature_name(
         String,
     )>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
-        Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+    let lang_code = match authorize_localization(auth, &lang_code) {
+        Ok(code) => code,
+        Err(response) => return response,
     };
 
     match features::delete_name(
@@ -317,20 +327,21 @@ pub async fn delete_feature_name(
     .await
     {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error deleting name for feature {}: {}", feature_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
 
 doc_fn!(delete_feature_name_docs, op =>
     op.input::<Path<FeatureLocalePath>>()
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Invalid lang_code"))
         .description("Delete a localized name for a feature")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Name not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Name not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Features")
 );
@@ -351,19 +362,19 @@ pub async fn upsert_feature_description(
     )>,
     Json(body): Json<UpsertDescriptionBody>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
-        Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+    let lang_code = match authorize_localization(auth, &lang_code) {
+        Ok(code) => code,
+        Err(response) => return response,
     };
 
     match features::feature_belongs_to_section(&app.pg_pool, waterway_id, section_id, feature_id)
         .await
     {
         Ok(true) => {}
-        Ok(false) => return StatusCode::NOT_FOUND.into_response(),
+        Ok(false) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error checking feature {}: {}", feature_id, err);
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+            return ApiError::internal().into_response();
         }
     }
 
@@ -377,17 +388,18 @@ pub async fn upsert_feature_description(
                 feature_id,
                 err
             );
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
 
 doc_fn!(upsert_feature_description_docs, op =>
     op.input::<Path<FeatureLocalePath>>()
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Invalid lang_code"))
         .description("Add or update a localized description for a feature")
         .response::<200, Json<FeatureDescription>>()
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Feature not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Feature not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Features")
 );
@@ -402,9 +414,9 @@ pub async fn delete_feature_description(
         String,
     )>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
-        Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+    let lang_code = match authorize_localization(auth, &lang_code) {
+        Ok(code) => code,
+        Err(response) => return response,
     };
 
     match features::delete_description(
@@ -417,25 +429,25 @@ pub async fn delete_feature_description(
     .await
     {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!(
                 "Error deleting description for feature {}: {}",
                 feature_id,
                 err
             );
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
 
 doc_fn!(delete_feature_description_docs, op =>
     op.input::<Path<FeatureLocalePath>>()
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Invalid lang_code"))
         .description("Delete a localized description for a feature")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Description not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Description not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Features")
 );
-

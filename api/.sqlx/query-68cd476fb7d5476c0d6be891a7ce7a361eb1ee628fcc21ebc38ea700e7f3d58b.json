@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM section_names\n           WHERE section_id = $1 AND lang_code = $2\n             AND $1 IN (SELECT id FROM water_sections WHERE waterway_id = $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "68cd476fb7d5476c0d6be891a7ce7a361eb1ee628fcc21ebc38ea700e7f3d58b"
+}

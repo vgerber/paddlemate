@@ -5,6 +5,7 @@ pub mod feature;
 pub mod gauge;
 pub mod geometry;
 pub mod group;
+pub mod lang;
 pub mod path_params;
 pub mod proposal;
 pub mod user;

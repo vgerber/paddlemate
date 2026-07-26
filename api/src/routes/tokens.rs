@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     doc_fn,
+    error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::api_token::{ApiToken, ApiTokenId},
     query::tokens::generate_token_pair,
@@ -84,14 +85,10 @@ async fn create_token(
         .into_response(),
         Err(err) => {
             if err.to_string().contains("duplicate key") {
-                return (
-                    StatusCode::CONFLICT,
-                    "A token with this name already exists",
-                )
-                    .into_response();
+                return ApiError::conflict("A token with this name already exists").into_response();
             }
             tracing::error!("Error creating API token: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -107,8 +104,8 @@ doc_fn!(create_token_docs, op =>
                 expires_at: Some(Utc::now() + Duration::days(90)),
             })
         })
-        .response_with::<409, (), _>(|res| res.description("Token with this name already exists"))
-        .response_with::<500, (), _>(|res| res.description("Internal server error"))
+        .response_with::<409, Json<ErrorResponse>, _>(|res| res.description("Token with this name already exists"))
+        .response_with::<500, Json<ErrorResponse>, _>(|res| res.description("Internal server error"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("API Tokens")
 );
@@ -153,7 +150,7 @@ async fn list_tokens(
         }
         Err(err) => {
             tracing::error!("Error listing API tokens: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -202,14 +199,14 @@ async fn revoke_token(
     match result {
         Ok(res) => {
             if res.rows_affected() == 0 {
-                StatusCode::NOT_FOUND.into_response()
+                ApiError::not_found("Not found").into_response()
             } else {
                 StatusCode::NO_CONTENT.into_response()
             }
         }
         Err(err) => {
             tracing::error!("Error revoking API token: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -217,7 +214,7 @@ async fn revoke_token(
 doc_fn!(revoke_token_docs, op =>
     op.description("Revoke an API token. The token will no longer be usable for authentication.")
         .response_with::<204, (), _>(|res| res.description("Token revoked successfully"))
-        .response_with::<404, (), _>(|res| res.description("Token not found or already revoked"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Token not found or already revoked"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("API Tokens")
 );

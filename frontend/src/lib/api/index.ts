@@ -17,7 +17,10 @@ export type ProposalStatus = components["schemas"]["ProposalStatus"];
 export type ReviewRequest = components["schemas"]["ReviewRequest"];
 export type FeatureType = components["schemas"]["FeatureType"];
 export type PaginatedResponse =
-  components["schemas"]["PaginatedResponse_for_Waterway"];
+  components["schemas"]["PaginatedResponse_for_WaterwayListItem"];
+/** A waterway in search results, carrying which text matched the query. */
+export type WaterwayListItem = components["schemas"]["WaterwayListItem"];
+export type MatchSource = components["schemas"]["MatchSource"];
 export type CreateFeatureInput = components["schemas"]["CreateFeatureBody"];
 export type UpdateFeatureInput = components["schemas"]["UpdateFeatureBody"];
 export type SectionWaterStatus = components["schemas"]["SectionWaterStatus"];

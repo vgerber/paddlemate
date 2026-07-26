@@ -204,7 +204,9 @@ impl AustriaTirolReader {
                 Err(_) => continue,
             };
 
-            data.entry(station.to_string()).or_default().push((ts, value));
+            data.entry(station.to_string())
+                .or_default()
+                .push((ts, value));
         }
 
         for readings in data.values_mut() {
@@ -559,8 +561,7 @@ impl GaugeReader for AustriaTirolReader {
                         if !missing.is_empty() {
                             if let Ok(stations) = self.get_stations("W").await {
                                 for (station, _, req) in missing {
-                                    if let Some(r) =
-                                        Self::extract_reading(&stations, station, "W")
+                                    if let Some(r) = Self::extract_reading(&stations, station, "W")
                                     {
                                         if r.0 > req.from && r.0 <= req.to {
                                             results
@@ -581,10 +582,7 @@ impl GaugeReader for AustriaTirolReader {
                             for (station, _, req) in &w_reqs {
                                 if let Some(r) = Self::extract_reading(&stations, station, "W") {
                                     if r.0 > req.from && r.0 <= req.to {
-                                        results
-                                            .entry(req.source_id.clone())
-                                            .or_default()
-                                            .push(r);
+                                        results.entry(req.source_id.clone()).or_default().push(r);
                                     }
                                 }
                             }
@@ -595,8 +593,7 @@ impl GaugeReader for AustriaTirolReader {
 
             // --- Q / WT readings: snapshot ---
             if !snapshot_reqs.is_empty() {
-                let param_keys: HashSet<&str> =
-                    snapshot_reqs.iter().map(|(_, p, _)| *p).collect();
+                let param_keys: HashSet<&str> = snapshot_reqs.iter().map(|(_, p, _)| *p).collect();
                 let mut snapshots: HashMap<&str, Vec<StationEntry>> = HashMap::new();
                 for param_key in param_keys {
                     match self.get_stations(param_key).await {

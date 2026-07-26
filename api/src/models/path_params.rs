@@ -29,6 +29,14 @@ pub struct FeatureLocalePath {
     pub lang_code: String,
 }
 
+/// A section together with the language of one of its translations.
+#[derive(Deserialize, JsonSchema)]
+pub struct SectionLocalePath {
+    pub waterway_id: WaterwayId,
+    pub section_id: SectionId,
+    pub lang_code: String,
+}
+
 #[derive(Deserialize, JsonSchema)]
 pub struct SectionCommentPath {
     pub waterway_id: WaterwayId,

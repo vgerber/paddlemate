@@ -7,67 +7,23 @@ use axum::{
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use sqlx::QueryBuilder;
 
 use crate::{
     doc_fn,
+    error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
         path_params::WaterwayPath,
         proposal::Proposal,
         water_section::SectionWithFeatures,
-        waterway::{PaginatedResponse, Waterway, WaterwayId, WaterwayType, WaterwayWithSections},
+        waterway::{
+            PaginatedResponse, Waterway, WaterwayFilters, WaterwayId, WaterwayListItem,
+            WaterwayType, WaterwayWithSections,
+        },
     },
     query::{features, proposals, sections as query_sections, waterways as query_waterways},
     state::AppState,
 };
-
-// Internal row type for the dynamic list query.
-#[derive(sqlx::FromRow)]
-struct WaterwayRow {
-    id: i64,
-    waterway_type: WaterwayType,
-    name: String,
-    description: Option<String>,
-    created_at: chrono::DateTime<chrono::Utc>,
-    updated_at: chrono::DateTime<chrono::Utc>,
-    total_count: Option<i64>,
-}
-
-impl From<WaterwayRow> for Waterway {
-    fn from(r: WaterwayRow) -> Self {
-        Waterway {
-            id: r.id,
-            waterway_type: r.waterway_type,
-            name: r.name,
-            description: r.description,
-            created_at: r.created_at,
-            updated_at: r.updated_at,
-        }
-    }
-}
-
-#[derive(Debug, Default, Deserialize, JsonSchema)]
-pub struct WaterwayFilters {
-    /// Page number, starting at 1.
-    pub page: Option<i64>,
-    /// Items per page (max 100, default 20).
-    pub per_page: Option<i64>,
-    /// Filter by river or section name (case-insensitive substring match).
-    pub name: Option<String>,
-    /// Filter by ISO 3166-1 alpha-2 country code (e.g. "AT", "FR").
-    pub country: Option<String>,
-    /// Minimum whitewater grade (1=I … 6=VI, 10=X).
-    pub min_difficulty: Option<i32>,
-    /// Maximum whitewater grade (1=I … 6=VI, 10=X).
-    pub max_difficulty: Option<i32>,
-    /// Latitude for proximity filter (requires lon and radius_km).
-    pub lat: Option<f64>,
-    /// Longitude for proximity filter (requires lat and radius_km).
-    pub lon: Option<f64>,
-    /// Radius in km - returns waterways with at least one section within this distance.
-    pub radius_km: Option<f64>,
-}
 
 pub async fn list_waterways(
     State(app): State<AppState>,
@@ -75,122 +31,26 @@ pub async fn list_waterways(
 ) -> impl IntoApiResponse {
     let page = filters.page.unwrap_or(1).max(1);
     let per_page = filters.per_page.unwrap_or(20).clamp(1, 100);
-    let offset = (page - 1) * per_page;
 
-    let mut qb: QueryBuilder<sqlx::Postgres> = QueryBuilder::new(
-        r#"
-        SELECT
-            w.id, w.waterway_type, w.name, w.description,
-            w.created_at, w.updated_at,
-            COUNT(*) OVER () AS total_count
-        FROM waterways w
-        WHERE 1=1
-        "#,
-    );
-
-    if let Some(name) = &filters.name {
-        if !name.is_empty() {
-            qb.push(" AND (unaccent(w.name) ILIKE unaccent(");
-            qb.push_bind(format!("%{}%", name));
-            qb.push(") OR EXISTS (SELECT 1 FROM water_sections ws_n WHERE ws_n.waterway_id = w.id AND unaccent(ws_n.name) ILIKE unaccent(");
-            qb.push_bind(format!("%{}%", name));
-            qb.push(")))");
-        }
-    }
-
-    if let Some(country) = &filters.country {
-        if !country.is_empty() {
-            qb.push(" AND EXISTS (SELECT 1 FROM water_sections ws WHERE ws.waterway_id = w.id AND ws.country = ");
-            qb.push_bind(country.to_uppercase());
-            qb.push(")");
-        }
-    }
-
-    if filters.min_difficulty.is_some() || filters.max_difficulty.is_some() {
-        let min = filters.min_difficulty.unwrap_or(1);
-        let max = filters.max_difficulty.unwrap_or(10);
-        qb.push(
-            r#" AND EXISTS (
-            SELECT 1 FROM water_sections ws
-            JOIN features f ON f.section_id = ws.id AND f.feature_type = 'whitewater'
-            WHERE ws.waterway_id = w.id
-            AND (CASE
-                WHEN f.metadata->>'difficulty' ~ '^X'   THEN 10
-                WHEN f.metadata->>'difficulty' ~ '^VI'  THEN 6
-                WHEN f.metadata->>'difficulty' ~ '^V'   THEN 5
-                WHEN f.metadata->>'difficulty' ~ '^IV'  THEN 4
-                WHEN f.metadata->>'difficulty' ~ '^III' THEN 3
-                WHEN f.metadata->>'difficulty' ~ '^II'  THEN 2
-                WHEN f.metadata->>'difficulty' ~ '^I'   THEN 1
-                ELSE NULL
-            END) BETWEEN "#,
-        );
-        qb.push_bind(min);
-        qb.push(" AND ");
-        qb.push_bind(max);
-        qb.push(")");
-    }
-
-    if let (Some(lat), Some(lon), Some(radius_km)) = (filters.lat, filters.lon, filters.radius_km) {
-        qb.push(
-            " AND EXISTS (SELECT 1 FROM water_sections ws2 WHERE ws2.waterway_id = w.id
-            AND ST_DWithin(ws2.location::geography, ST_SetSRID(ST_MakePoint(",
-        );
-        qb.push_bind(lon);
-        qb.push(", ");
-        qb.push_bind(lat);
-        qb.push("), 4326)::geography, ");
-        qb.push_bind(radius_km * 1000.0);
-        qb.push("))");
-    }
-
-    match &filters.name {
-        Some(name) if !name.is_empty() => {
-            qb.push(" ORDER BY CASE WHEN unaccent(w.name) ILIKE unaccent(");
-            qb.push_bind(format!("{}%", name));
-            qb.push(") THEN 0 ELSE 1 END, w.name LIMIT ");
-        }
-        _ => {
-            qb.push(" ORDER BY w.name LIMIT ");
-        }
-    }
-    qb.push_bind(per_page);
-    qb.push(" OFFSET ");
-    qb.push_bind(offset);
-
-    let rows = qb
-        .build_query_as::<WaterwayRow>()
-        .fetch_all(&app.pg_pool)
-        .await;
-
-    match rows {
-        Ok(records) => {
-            let total = records.first().and_then(|r| r.total_count).unwrap_or(0);
-            let total_pages = if per_page > 0 {
-                (total + per_page - 1) / per_page
-            } else {
-                0
-            };
-            let items: Vec<Waterway> = records.into_iter().map(Waterway::from).collect();
-            Json(PaginatedResponse {
-                items,
-                total,
-                page,
-                per_page,
-                total_pages,
-            })
-            .into_response()
-        }
+    match query_waterways::search(&app.pg_pool, &filters, page, per_page).await {
+        Ok((items, total)) => Json(PaginatedResponse {
+            items,
+            total,
+            page,
+            per_page,
+            total_pages: (total + per_page - 1) / per_page,
+        })
+        .into_response(),
         Err(err) => {
             tracing::error!("Error listing waterways: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
 
 doc_fn!(list_waterways_docs, op =>
     op.description("List waterways with optional filters and pagination")
-        .response::<200, Json<PaginatedResponse<Waterway>>>()
+        .response::<200, Json<PaginatedResponse<WaterwayListItem>>>()
         .tag("Waterways")
 );
 
@@ -207,10 +67,10 @@ pub async fn get_waterway(
 
     let waterway = match waterway {
         Ok(Some(r)) => r,
-        Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+        Ok(None) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error fetching waterway {}: {}", waterway_id, err);
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+            return ApiError::internal().into_response();
         }
     };
 
@@ -271,7 +131,7 @@ pub async fn get_waterway(
                 waterway_id,
                 err
             );
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -280,7 +140,7 @@ doc_fn!(get_waterway_docs, op =>
     op.input::<Path<WaterwayPath>>()
         .description("Get a waterway with its sections")
         .response::<200, Json<WaterwayWithSections>>()
-        .response_with::<404, (), _>(|res| res.description("Waterway not found"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Waterway not found"))
         .tag("Waterways")
 );
 
@@ -297,23 +157,19 @@ pub async fn create_waterway(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     // Reject duplicates up front (case-insensitive) for both the admin and
     // proposal paths; the UNIQUE constraint still guards against races.
     match query_waterways::name_exists(&app.pg_pool, &body.name).await {
         Ok(true) => {
-            return (
-                StatusCode::CONFLICT,
-                "A waterway with this name already exists",
-            )
-                .into_response();
+            return ApiError::conflict("A waterway with this name already exists").into_response();
         }
         Ok(false) => {}
         Err(err) => {
             tracing::error!("Error checking waterway name: {}", err);
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+            return ApiError::internal().into_response();
         }
     }
 
@@ -343,14 +199,12 @@ pub async fn create_waterway(
                 }),
             )
                 .into_response(),
-            Err(err) if crate::query::is_unique_violation(&err) => (
-                StatusCode::CONFLICT,
-                "A waterway with this name already exists",
-            )
-                .into_response(),
+            Err(err) if crate::query::is_unique_violation(&err) => {
+                ApiError::conflict("A waterway with this name already exists").into_response()
+            }
             Err(err) => {
                 tracing::error!("Error creating waterway: {}", err);
-                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                ApiError::internal().into_response()
             }
         };
     }
@@ -369,7 +223,7 @@ pub async fn create_waterway(
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
             tracing::error!("Error submitting waterway proposal: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -378,8 +232,8 @@ doc_fn!(create_waterway_docs, op =>
     op.description("Create a waterway (admin: immediate 201, others: proposal 202)")
         .response_with::<201, Json<Waterway>, _>(|res| res.description("Waterway created"))
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<409, (), _>(|res| res.description("A waterway with this name already exists"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<409, Json<ErrorResponse>, _>(|res| res.description("A waterway with this name already exists"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Waterways")
 );
@@ -398,7 +252,7 @@ pub async fn update_waterway(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     if token.is_server_admin() {
@@ -429,10 +283,10 @@ pub async fn update_waterway(
                 updated_at: r.updated_at,
             })
             .into_response(),
-            Ok(None) => StatusCode::NOT_FOUND.into_response(),
+            Ok(None) => ApiError::not_found("Not found").into_response(),
             Err(err) => {
                 tracing::error!("Error updating waterway {}: {}", waterway_id, err);
-                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                ApiError::internal().into_response()
             }
         };
     }
@@ -451,7 +305,7 @@ pub async fn update_waterway(
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
             tracing::error!("Error submitting waterway update proposal: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -461,8 +315,8 @@ doc_fn!(update_waterway_docs, op =>
         .description("Update a waterway (admin: immediate 200, others: proposal 202)")
         .response::<200, Json<Waterway>>()
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Waterway not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Waterway not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Waterways")
 );
@@ -474,7 +328,7 @@ pub async fn delete_waterway(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     if token.is_server_admin() {
@@ -487,10 +341,10 @@ pub async fn delete_waterway(
 
         return match result {
             Ok(Some(_)) => StatusCode::NO_CONTENT.into_response(),
-            Ok(None) => StatusCode::NOT_FOUND.into_response(),
+            Ok(None) => ApiError::not_found("Not found").into_response(),
             Err(err) => {
                 tracing::error!("Error deleting waterway {}: {}", waterway_id, err);
-                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                ApiError::internal().into_response()
             }
         };
     }
@@ -508,7 +362,7 @@ pub async fn delete_waterway(
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
             tracing::error!("Error submitting waterway delete proposal: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -518,8 +372,8 @@ doc_fn!(delete_waterway_docs, op =>
         .description("Delete a waterway (admin: immediate 204, others: proposal 202)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
         .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Waterway not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Waterway not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Waterways")
 );

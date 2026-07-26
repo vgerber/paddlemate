@@ -74,8 +74,6 @@ async fn fetch_sources_by_ids(
     Ok(sources.into_iter().map(|s| (s.id.clone(), s)).collect())
 }
 
-// --- Gauge CRUD ---
-
 pub async fn list_gauges(pool: &PgPool, active_only: bool) -> Result<Vec<Gauge>, sqlx::Error> {
     let sql = if active_only {
         format!("SELECT {GAUGE_COLS} FROM gauges WHERE active = TRUE ORDER BY name")
@@ -265,8 +263,6 @@ pub async fn delete_gauge(pool: &PgPool, gauge_id: GaugeId) -> Result<bool, sqlx
     Ok(result.rows_affected() > 0)
 }
 
-// --- Series ---
-
 pub async fn list_series(
     pool: &PgPool,
     gauge_id: GaugeId,
@@ -332,8 +328,6 @@ pub async fn delete_series(pool: &PgPool, series_id: SeriesId) -> Result<bool, s
         .await?;
     Ok(result.rows_affected() > 0)
 }
-
-// --- Readings ---
 
 pub async fn fetch_readings(
     pool: &PgPool,
@@ -403,8 +397,6 @@ pub async fn insert_readings_batch(
     }
     tx.commit().await
 }
-
-// --- Feature water ranges ---
 
 fn row_to_water_range(row: &PgRow) -> Result<FeatureWaterRange, sqlx::Error> {
     Ok(FeatureWaterRange {
@@ -562,8 +554,6 @@ pub async fn delete_feature_water_range(
         .await?;
     Ok(result.rows_affected() > 0)
 }
-
-// --- Section water status (ranges + latest reading) ---
 
 /// Fetch water status for a section, using the latest available reading.
 pub async fn water_status_for_section(

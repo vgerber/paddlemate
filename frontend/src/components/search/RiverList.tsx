@@ -7,20 +7,42 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
-
-interface Waterway {
-  id: number;
-  name: string;
-  waterway_type: string;
-}
+import { Fragment } from "react";
+import type { WaterwayListItem } from "@/lib/api";
 
 interface PendingRiver {
   id: number;
   name: string;
 }
 
+/** Why a river is in the results, when it did not match on its own name.
+ * Without this a hit through a rapid or a translation looks arbitrary. */
+function matchReason(waterway: WaterwayListItem): string | undefined {
+  const { matched_source, matched_name, matched_lang, matched_section_name } =
+    waterway;
+  if (!matched_source || !matched_name || matched_source === "waterway") {
+    return undefined;
+  }
+  if (matched_source === "section") return `Section: ${matched_name}`;
+  if (matched_source === "feature_name") {
+    // A rapid name alone does not say where on the river it is, so name the
+    // section it belongs to as well.
+    return matched_section_name
+      ? `Rapid: ${matched_section_name} - ${matched_name}`
+      : `Rapid: ${matched_name}`;
+  }
+  const label = matched_lang
+    ? `${matched_lang.toUpperCase()} name: ${matched_name}`
+    : matched_name;
+  // The translation and the section's own name are different strings; showing
+  // both makes clear which section matched.
+  return matched_section_name && matched_section_name !== matched_name
+    ? `${label} - ${matched_section_name}`
+    : label;
+}
+
 interface RiverListProps {
-  waterways: Waterway[];
+  waterways: WaterwayListItem[];
   isLoading: boolean;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
@@ -111,26 +133,40 @@ export default function RiverList({
     <>
       <List dense disablePadding>
         <PendingRiverItems pendingRivers={pendingRivers} />
-        {waterways.map((waterway) => (
-          <ListItemButton
-            key={waterway.id}
-            onClick={() => onSelect(waterway.id)}
-            sx={{ borderRadius: 1, mb: 0.5 }}
-          >
-            <ListItemText
-              primary={waterway.name}
-              slotProps={{
-                primary: { variant: "body2", sx: { fontWeight: 600 } },
-              }}
-            />
-            <Chip
-              label={waterway.waterway_type.toUpperCase()}
-              color="primary"
-              size="small"
-              variant="outlined"
-              sx={{ flexShrink: 0, fontSize: "0.65rem" }}
-            />
-          </ListItemButton>
+        {waterways.map((waterway, index) => (
+          <Fragment key={waterway.id}>
+            {/* Approximate matches sort last, so one divider separates them
+                from the exact ones and explains why they are here. */}
+            {waterway.fuzzy && !waterways[index - 1]?.fuzzy && (
+              <Typography
+                variant="overline"
+                color="text.disabled"
+                sx={{ display: "block", px: 1, pt: 1, lineHeight: 1.6 }}
+              >
+                Similar names
+              </Typography>
+            )}
+            <ListItemButton
+              onClick={() => onSelect(waterway.id)}
+              sx={{ borderRadius: 1, mb: 0.5 }}
+            >
+              <ListItemText
+                primary={waterway.name}
+                secondary={matchReason(waterway)}
+                slotProps={{
+                  primary: { variant: "body2", sx: { fontWeight: 600 } },
+                  secondary: { variant: "caption" },
+                }}
+              />
+              <Chip
+                label={waterway.waterway_type.toUpperCase()}
+                color="primary"
+                size="small"
+                variant="outlined"
+                sx={{ flexShrink: 0, fontSize: "0.65rem" }}
+              />
+            </ListItemButton>
+          </Fragment>
         ))}
       </List>
       {hasNextPage && (

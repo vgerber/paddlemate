@@ -88,8 +88,6 @@ pub struct Descent {
     pub updated_at: DateTime<Utc>,
 }
 
-// --- Request bodies ---
-
 /// An ordered section entry for create/replace requests.
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
 pub struct DescentSectionInput {
@@ -155,8 +153,6 @@ pub struct SectionDescentCount {
     pub section_id: i64,
     pub count: i64,
 }
-
-// --- Query parameters ---
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]
 pub struct ListDescentsQuery {

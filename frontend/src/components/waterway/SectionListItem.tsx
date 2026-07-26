@@ -18,6 +18,9 @@ interface SectionListItemProps {
   isFavorite?: boolean;
   onToggleFavorite?: (sectionId: number) => void;
   descentCount?: number;
+  /** Rapid whose name matched the search, shown instead of the region so the
+   * reader can see why this section is in the results. */
+  matchedFeature?: string;
 }
 
 export default function SectionListItem({
@@ -28,6 +31,7 @@ export default function SectionListItem({
   isFavorite,
   onToggleFavorite,
   descentCount,
+  matchedFeature,
 }: SectionListItemProps) {
   const difficultyChip = (() => {
     const ww = section.features?.find((f) => f.feature_type === "whitewater");
@@ -49,8 +53,10 @@ export default function SectionListItem({
       <ListItemText
         primary={localizedName(section.name, section.names)}
         secondary={
-          [section.region, section.country].filter(Boolean).join(", ") ||
-          undefined
+          matchedFeature
+            ? `Rapid: ${matchedFeature}`
+            : [section.region, section.country].filter(Boolean).join(", ") ||
+              undefined
         }
         slotProps={{
           primary: { variant: "body2" },

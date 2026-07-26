@@ -7,11 +7,40 @@ const API_BASE = import.meta.env.VITE_API_URL ?? window.location.origin;
 
 export class ApiError extends Error {
   readonly status: number;
-  constructor(status: number, message: string) {
+  /** Stable identifier from the API, e.g. "validation_failed". */
+  readonly code?: string;
+  /** The request field the error is about, when the API names one. */
+  readonly target?: string;
+
+  constructor(
+    status: number,
+    message: string,
+    options?: { code?: string; target?: string },
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = options?.code;
+    this.target = options?.target;
   }
+}
+
+/** Read the API error envelope, falling back to the raw body for anything
+ * that did not come from the API itself (a proxy or gateway, say). */
+async function toApiError(response: Response): Promise<ApiError> {
+  const body = await response.text().catch(() => "");
+  try {
+    const parsed = JSON.parse(body);
+    if (parsed?.error?.message) {
+      return new ApiError(response.status, parsed.error.message, {
+        code: parsed.error.code,
+        target: parsed.error.target,
+      });
+    }
+  } catch {
+    // not JSON - fall through to the raw body
+  }
+  return new ApiError(response.status, body || response.statusText);
 }
 
 export const client = createClient<paths>({ baseUrl: API_BASE });
@@ -27,8 +56,7 @@ client.use({
   },
   async onResponse({ response }) {
     if (!response.ok && response.status !== 204) {
-      const text = await response.text().catch(() => response.statusText);
-      throw new ApiError(response.status, text);
+      throw await toApiError(response);
     }
     return response;
   },

@@ -8,6 +8,8 @@ use aide::{
     openapi::OpenApi,
     transform::TransformOpenApi,
 };
+use axum::http::HeaderValue;
+use axum::response::IntoResponse;
 use axum::{Extension, middleware};
 use axum_keycloak_auth::{
     Url,
@@ -18,6 +20,7 @@ use axum_keycloak_auth::{
 use indexmap::IndexMap;
 use moka::future::Cache;
 use paddlemate_api::{
+    error::ApiError,
     layers::auth::{api_token_auth, api_token_auth_optional},
     routes::{
         descents::descents_routes,
@@ -36,8 +39,12 @@ use paddlemate_api::{
 use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HeaderName};
 use sqlx::postgres::PgPoolOptions;
 use std::time::Duration;
+use tower_governor::{
+    GovernorLayer, errors::GovernorError, governor::GovernorConfigBuilder,
+    key_extractor::SmartIpKeyExtractor,
+};
 use tower_http::{
-    cors::{Any, CorsLayer},
+    cors::{AllowOrigin, Any, CorsLayer},
     trace::TraceLayer,
 };
 
@@ -109,8 +116,29 @@ async fn main() {
         }
     };
 
+    // How close a name has to be for search to treat a misspelling as a match.
+    // Only the pg_trgm operators consult this setting, and only they can use
+    // the trigram indexes, so it has to be set per connection rather than
+    // written into the query.
+    let word_similarity_threshold = std::env::var("SEARCH_WORD_SIMILARITY_THRESHOLD")
+        .ok()
+        .and_then(|raw| raw.parse::<f64>().ok())
+        .map(|value| value.clamp(0.0, 1.0))
+        .unwrap_or(0.5);
+    tracing::info!("Search word similarity threshold: {word_similarity_threshold}");
+
     let db = match PgPoolOptions::new()
         .max_connections(20)
+        .after_connect(move |conn, _meta| {
+            Box::pin(async move {
+                sqlx::query(&format!(
+                    "SET pg_trgm.word_similarity_threshold = {word_similarity_threshold}"
+                ))
+                .execute(conn)
+                .await?;
+                Ok(())
+            })
+        })
         .connect(&database_url)
         .await
     {
@@ -121,10 +149,40 @@ async fn main() {
         }
     };
 
-    sqlx::migrate!("./migrations")
-        .run(&db)
-        .await
-        .expect("Failed to run database migrations");
+    // Applying migrations on boot is convenient in development, but it ties
+    // every deploy to a schema change that cannot be rolled back. Set
+    // RUN_MIGRATIONS=false to run them as a separate, reviewed step instead.
+    // sqlx takes an advisory lock while migrating, so several instances
+    // starting at once is safe either way.
+    let run_migrations = std::env::var("RUN_MIGRATIONS")
+        .map(|value| value != "false")
+        .unwrap_or(true);
+    if run_migrations {
+        sqlx::migrate!("./migrations")
+            .run(&db)
+            .await
+            .expect("Failed to run database migrations");
+    } else {
+        tracing::info!("Skipping migrations (RUN_MIGRATIONS=false)");
+    }
+
+    // Comma separated list of origins allowed to call the API from a browser.
+    // Unset means any origin, which suits local development and a public
+    // read-only deployment; set it in production to name the web app.
+    let cors_origins = match std::env::var("CORS_ALLOWED_ORIGINS") {
+        Ok(raw) if !raw.trim().is_empty() => {
+            let origins: Vec<_> = raw
+                .split(',')
+                .filter_map(|origin| origin.trim().parse::<HeaderValue>().ok())
+                .collect();
+            tracing::info!("CORS allowed origins: {}", raw);
+            AllowOrigin::list(origins)
+        }
+        _ => {
+            tracing::warn!("CORS_ALLOWED_ORIGINS is unset, allowing any origin");
+            AllowOrigin::any()
+        }
+    };
 
     aide::generate::extract_schemas(true);
 
@@ -202,13 +260,54 @@ async fn main() {
 
     let base_url = dotenvy::var("BASE_URL").unwrap_or_else(|_| "/api/v1".to_string());
 
-    let app = ApiRouter::new()
+    // Per-caller request budget. Anyone can submit proposals and comments, so
+    // without this a single client can flood the review queue. The allowance
+    // is generous enough that the map, which fires several requests per pan,
+    // never notices; RATE_LIMIT_PER_SECOND=0 turns it off.
+    let rate_limit_per_second = std::env::var("RATE_LIMIT_PER_SECOND")
+        .ok()
+        .and_then(|raw| raw.parse::<u64>().ok())
+        .unwrap_or(20);
+    let rate_limiter = (rate_limit_per_second > 0).then(|| {
+        tracing::info!("Rate limit: {rate_limit_per_second}/s per caller");
+        GovernorLayer::new(
+            GovernorConfigBuilder::default()
+                // Read the caller from the proxy headers, falling back to the
+                // peer address, so that everyone behind the reverse proxy is
+                // not treated as one client.
+                .key_extractor(SmartIpKeyExtractor)
+                .per_second(rate_limit_per_second)
+                .burst_size(rate_limit_per_second.saturating_mul(5) as u32)
+                .finish()
+                .expect("valid rate limit configuration"),
+        )
+        // Report exhaustion in the same shape as every other failure.
+        .error_handler(|err| match err {
+            GovernorError::TooManyRequests { wait_time, .. } => {
+                ApiError::too_many_requests(format!("Too many requests, retry in {wait_time}s"))
+                    .into_response()
+            }
+            _ => ApiError::internal().into_response(),
+        })
+    });
+
+    let routed = ApiRouter::new()
         .nest_api_service(&base_url, api_v1)
         .finish_api_with(&mut api, api_docs)
-        .layer(Extension(Arc::new(api)))
+        .layer(Extension(Arc::new(api)));
+
+    // Applied inside CORS on purpose: a rejected request still needs the CORS
+    // headers, or the browser reports a cross-origin failure rather than the
+    // 429 the caller should act on.
+    let limited = match rate_limiter {
+        Some(layer) => routed.layer(layer),
+        None => routed,
+    };
+
+    let app = limited
         .layer(
             CorsLayer::new()
-                .allow_origin(Any)
+                .allow_origin(cors_origins)
                 .allow_methods(Any)
                 .allow_headers([
                     AUTHORIZATION,
@@ -252,5 +351,12 @@ async fn main() {
         .await
         .unwrap();
     tracing::info!("Listening on port {}", port);
-    axum::serve(listener, app).await.unwrap();
+    // Connect info is what lets the rate limiter identify a direct caller when
+    // there are no proxy headers to read.
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .await
+    .unwrap();
 }

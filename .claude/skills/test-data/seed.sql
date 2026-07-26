@@ -96,6 +96,53 @@ INSERT INTO descent_sections (descent_id, section_id, sort_order) VALUES
   (9203, 9102, 1),
   (9204, 9102, 1);
 
+-- Search fixture: real river names carrying the diacritics this app has to
+-- cope with, plus translations and rapid names so every match source and
+-- every special-character case can be exercised. Far too small to tune the
+-- fuzzy similarity threshold on - that needs production-sized data.
+INSERT INTO waterways (id, waterway_type, name) VALUES
+  (9002, 'river', 'Ötztaler Ache'),   -- umlaut, and "oe" digraph typing
+  (9003, 'river', 'Soča'),            -- caron
+  (9004, 'river', 'Große Ohe'),       -- eszett
+  (9005, 'river', 'Vltava'),          -- plain ASCII, typo target
+  (9006, 'river', 'Wisła'),           -- stroked l, which NFD cannot decompose
+  (9007, 'river', 'Salzach');         -- typo target
+
+INSERT INTO water_sections (id, waterway_id, name, location) VALUES
+  (9111, 9002, 'Wellerbrücke',     ST_GeomFromText('LINESTRING(10.9 47.2, 10.91 47.21)', 4326)),
+  (9112, 9002, 'Ötz Stadtstrecke', ST_GeomFromText('LINESTRING(10.91 47.21, 10.92 47.22)', 4326)),
+  (9121, 9003, 'Kršovec',          ST_GeomFromText('LINESTRING(13.6 46.3, 13.61 46.31)', 4326)),
+  (9131, 9004, 'Weißenbach',       ST_GeomFromText('LINESTRING(13.4 48.9, 13.41 48.91)', 4326)),
+  (9145, 9005, 'Čertovy proudy',   ST_GeomFromText('LINESTRING(14.3 48.8, 14.31 48.81)', 4326));
+
+-- A German translation of a Czech section proves cross-language matching;
+-- Kršovec/Krsovec proves the two spellings normalize to the same key.
+INSERT INTO section_names (id, section_id, lang_code, name) VALUES
+  (9701, 9111, 'de', 'Wellerbrücke'),
+  (9702, 9111, 'en', 'Weller Bridge'),
+  (9703, 9145, 'cs', 'Čertovy proudy'),
+  (9704, 9145, 'de', 'Teufelsstromschnellen'),
+  (9705, 9121, 'sl', 'Kršovec'),
+  (9706, 9121, 'it', 'Krsovec');
+
+INSERT INTO features (id, section_id, feature_type, location, created_by)
+SELECT v.id, v.section_id, v.feature_type::feature_type, ST_GeomFromText(v.wkt, 4326), u.id
+FROM (VALUES
+  (9581, 9111, 'whitewater', 'POINT(10.905 47.205)'),
+  (9582, 9145, 'whitewater', 'POINT(14.305 48.805)'),
+  (9583, 9131, 'weir',       'POINT(13.405 48.905)'),
+  (9584, 9112, 'hole',       'POINT(10.915 47.215)')
+) AS v(id, section_id, feature_type, wkt)
+CROSS JOIN (SELECT id FROM users LIMIT 1) u;
+
+-- Rapid names, the search source that has no untagged fallback column.
+INSERT INTO feature_names (id, feature_id, lang_code, name) VALUES
+  (9801, 9581, 'de', 'Riesenschlucht'),
+  (9802, 9581, 'en', 'Giant Gorge'),
+  (9803, 9582, 'cs', 'Šumavský slalom'),
+  (9804, 9583, 'de', 'Hüttenwehr'),
+  (9805, 9584, 'de', 'Grieß');
+
 -- API token "pm_testtoken123" for the first user (sha256 of the plain token).
 INSERT INTO api_tokens (user_id, name, token_hash)
 SELECT id, 'test-data', 'ffd2e7ff161f619163861f2870c0fdf91508ae8851743d855d2661aa13738ec8' FROM users LIMIT 1;

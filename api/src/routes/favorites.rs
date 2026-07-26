@@ -14,12 +14,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     doc_fn,
+    error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
-        feature::Feature,
-        geometry::Geometry,
-        water_section::SectionId,
-        waterway::WaterwayId,
+        feature::Feature, geometry::Geometry, water_section::SectionId, waterway::WaterwayId,
     },
     query::{favorites, features},
     state::AppState,
@@ -71,19 +69,20 @@ async fn list_favorites(
         Ok(rows) => rows,
         Err(err) => {
             tracing::error!("Error listing favorites: {}", err);
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+            return ApiError::internal().into_response();
         }
     };
 
     let mut result = Vec::with_capacity(metas.len());
     for meta in metas {
-        let section_features = match features::fetch_features_for_section(&app.pg_pool, meta.id).await {
-            Ok(f) => f,
-            Err(err) => {
-                tracing::error!("Error fetching features for section {}: {}", meta.id, err);
-                return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-            }
-        };
+        let section_features =
+            match features::fetch_features_for_section(&app.pg_pool, meta.id).await {
+                Ok(f) => f,
+                Err(err) => {
+                    tracing::error!("Error fetching features for section {}: {}", meta.id, err);
+                    return ApiError::internal().into_response();
+                }
+            };
         result.push(FavoriteSectionResponse {
             id: meta.id,
             waterway_id: meta.waterway_id,
@@ -121,10 +120,10 @@ async fn add_favorite(
         Err(err) => {
             let msg = err.to_string();
             if msg.contains("foreign key") {
-                return StatusCode::NOT_FOUND.into_response();
+                return ApiError::not_found("Not found").into_response();
             }
             tracing::error!("Error adding favorite: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -132,7 +131,7 @@ async fn add_favorite(
 doc_fn!(add_favorite_docs, op =>
     op.description("Star a section.")
         .response_with::<204, (), _>(|res| res.description("Starred successfully"))
-        .response_with::<404, (), _>(|res| res.description("Section not found"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Section not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Favorites")
 );
@@ -148,7 +147,7 @@ async fn remove_favorite(
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(err) => {
             tracing::error!("Error removing favorite: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }

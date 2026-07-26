@@ -7,6 +7,7 @@ import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, type RefObject, useEffect, useState } from "react";
+import LanguagePicker from "@/components/LanguagePicker";
 import type {
   FeatureType,
   FeatureWaterRangeBody,
@@ -16,7 +17,7 @@ import { featuresApi } from "@/lib/api";
 import { FEATURE_TYPES } from "@/lib/featureTypes";
 import { useGaugePicker } from "@/lib/hooks/useGaugePicker";
 import { waterwayKeys } from "@/lib/hooks/useWaterways";
-import { LANGUAGE_CODES } from "@/lib/localization";
+import { preferredLanguage } from "@/lib/languagePreference";
 import GaugeRangePicker from "./GaugeRangePicker";
 import GeometryPicker, {
   type GeometryPicking,
@@ -63,7 +64,9 @@ interface SuggestFeatureFormProps {
   onDraft?: (feature: SectionFeatureDraft) => void;
   /** Rendered at the right end of the language row (e.g. an add button). */
   headerAction?: ReactNode;
-  /** Initial language for name/description (default "en"). */
+  /** Initial language for name/description; defaults to the display language.
+   * Read once on mount, so changing it later does not override a deliberate
+   * per-feature choice. */
   defaultLangCode?: string;
   /** Reference point for the gauge search - nearby gauges are listed first. */
   nearPoint?: { lat: number; lon: number };
@@ -88,7 +91,9 @@ export default function SuggestFeatureForm({
   onCanSubmitChange,
 }: SuggestFeatureFormProps) {
   const queryClient = useQueryClient();
-  const [langCode, setLangCode] = useState(defaultLangCode ?? "en");
+  const [langCode, setLangCode] = useState(
+    defaultLangCode ?? preferredLanguage(),
+  );
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [featureType, setFeatureType] = useState<FeatureType>("whitewater");
@@ -212,22 +217,12 @@ export default function SuggestFeatureForm({
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <FormControl size="small" sx={{ minWidth: 90 }}>
-          <InputLabel id="lang-label">Language</InputLabel>
-          <Select
-            labelId="lang-label"
-            label="Language"
-            value={langCode}
-            onChange={(e) => setLangCode(e.target.value)}
-            MenuProps={{ sx: { zIndex: 1500 } }}
-          >
-            {LANGUAGE_CODES.map((lc) => (
-              <MenuItem key={lc} value={lc}>
-                {lc.toUpperCase()}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <LanguagePicker
+          value={langCode}
+          onChange={setLangCode}
+          size="small"
+          overlay
+        />
         {headerAction && (
           <>
             <Box sx={{ flex: 1 }} />

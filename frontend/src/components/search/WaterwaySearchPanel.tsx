@@ -21,7 +21,8 @@ import { proposalKeys } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterways } from "@/lib/hooks/useWaterways";
 import { readRecentWaterways } from "@/lib/recentWaterways";
-import { normalizeForSearch } from "@/lib/text";
+import { sectionMatches } from "@/lib/sectionMatch";
+import { searchKey } from "@/lib/text";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import AreaControls from "./AreaControls";
 import DifficultySelect from "./DifficultySelect";
@@ -144,12 +145,10 @@ export default function WaterwaySearchPanel({
   );
   const total = data?.pages[0]?.total ?? 0;
 
-  // When searching by name, only show rivers whose name matches
-  const visibleRivers = useMemo(() => {
-    if (mode === "area" || !searchName) return waterways;
-    const q = normalizeForSearch(searchName);
-    return waterways.filter((w) => normalizeForSearch(w.name).includes(q));
-  }, [mode, waterways, searchName]);
+  // The server decides what matches: it also searches translations and rapid
+  // names, tolerates misspellings, and folds characters the browser cannot.
+  // Re-filtering here could only drop rows it deliberately returned.
+  const visibleRivers = waterways;
 
   // Own pending river proposals - shown as disabled "pending approval" entries
   const pendingFilters = {
@@ -164,27 +163,41 @@ export default function WaterwaySearchPanel({
   });
   const pendingRivers = useMemo(() => {
     if (mode === "area" || !searchName) return [];
-    const q = normalizeForSearch(searchName);
+    const q = searchKey(searchName);
     return pendingWaterwayProposals
       .map((p) => ({
         id: p.id,
         name: (p.proposed_data as { name?: string }).name ?? "?",
       }))
-      .filter((p) => normalizeForSearch(p.name).includes(q));
+      .filter((p) => searchKey(p.name).includes(q));
   }, [mode, searchName, pendingWaterwayProposals]);
 
-  // When searching by name, show sections whose name OR waterway name matches
+  // Sections are not returned by the search endpoint, so which of them to show
+  // is decided here, per river: the ones that match, or - when none of them
+  // does - all of them. A river reached through a fuzzy match or through its
+  // own name has no matching section, and an empty list would then hide the
+  // very sections the user is looking for.
   const visibleSections = useMemo(() => {
     const sections = filteredSections ?? [];
     if (mode === "area" || !searchName) return sections;
-    const q = normalizeForSearch(searchName);
-    return sections.filter((s) => {
-      const nameMatches = normalizeForSearch(s.name).includes(q);
-      const waterwayName = waterwayNames?.[s.waterway_id];
-      const waterwayMatches =
-        waterwayName && normalizeForSearch(waterwayName).includes(q);
-      return nameMatches || waterwayMatches;
-    });
+
+    const byWaterway = new Map<number, typeof sections>();
+    for (const section of sections) {
+      const group = byWaterway.get(section.waterway_id);
+      if (group) group.push(section);
+      else byWaterway.set(section.waterway_id, [section]);
+    }
+
+    const keep = new Set<number>();
+    for (const [waterwayId, group] of byWaterway) {
+      const matching = group.filter((section) =>
+        sectionMatches(section, searchName, waterwayNames?.[waterwayId]),
+      );
+      for (const section of matching.length > 0 ? matching : group) {
+        keep.add(section.id);
+      }
+    }
+    return sections.filter((section) => keep.has(section.id));
   }, [mode, filteredSections, searchName, waterwayNames]);
 
   useEffect(() => {
@@ -469,6 +482,7 @@ export default function WaterwaySearchPanel({
             selectedSectionId={selectedSectionId}
             waterwayNames={waterwayNames}
             onSectionClick={onSectionClick}
+            searchName={mode === "name" ? searchName : undefined}
           />
         )}
       </Box>

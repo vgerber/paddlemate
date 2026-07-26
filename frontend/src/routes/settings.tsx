@@ -19,6 +19,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import LanguagePicker from "@/components/LanguagePicker";
 import ProposalsView from "@/components/proposals/ProposalsView";
 import {
   type ApiToken,
@@ -29,6 +30,7 @@ import {
   tokensApi,
 } from "@/lib/api";
 import { useSession } from "@/lib/hooks/useSession";
+import { useLanguagePreference } from "@/lib/languagePreference";
 import { theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/settings")({
@@ -129,6 +131,7 @@ function ProposalsPanel() {
 
 function ProfilePanel() {
   const { user, logout } = useSession();
+  const [language, setLanguage] = useLanguagePreference();
 
   return (
     <Stack spacing={3}>
@@ -147,6 +150,22 @@ function ProfilePanel() {
           size="small"
           fullWidth
         />
+      </Stack>
+      <Divider />
+      <Stack spacing={1}>
+        <Typography variant="overline" sx={{ lineHeight: 1 }}>
+          Display language
+        </Typography>
+        <LanguagePicker
+          value={language}
+          onChange={setLanguage}
+          size="small"
+          label="Language"
+        />
+        <Typography variant="caption" color="text.secondary">
+          Which translation of river, section and rapid names is shown. The app
+          interface stays in English.
+        </Typography>
       </Stack>
       <Divider />
       <Button variant="outlined" color="error" onClick={logout} fullWidth>

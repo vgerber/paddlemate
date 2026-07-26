@@ -90,14 +90,13 @@ pub async fn delete_comment(
     caller_id: &str,
     is_admin: bool,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query(
-        "DELETE FROM comments WHERE id = $1 AND (author_id = $2 OR $3::boolean)",
-    )
-    .bind(comment_id)
-    .bind(caller_id)
-    .bind(is_admin)
-    .execute(db)
-    .await?;
+    let result =
+        sqlx::query("DELETE FROM comments WHERE id = $1 AND (author_id = $2 OR $3::boolean)")
+            .bind(comment_id)
+            .bind(caller_id)
+            .bind(is_admin)
+            .execute(db)
+            .await?;
 
     Ok(result.rows_affected() > 0)
 }

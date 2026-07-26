@@ -2,7 +2,9 @@ use std::{collections::HashMap, fs, path::PathBuf};
 
 use anyhow::Context;
 use chrono::Utc;
-use river_gauge::{RivermapReader, RivermapReadingsRange, RivermapSectionBundle, RivermapSource, RivermapStation};
+use river_gauge::{
+    RivermapReader, RivermapReadingsRange, RivermapSectionBundle, RivermapSource, RivermapStation,
+};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -70,9 +72,13 @@ async fn main() -> anyhow::Result<()> {
 
     let reader = RivermapReader::default();
     let sources = reader.list_sources().await?;
-    let stations = reader.list_stations_raw(Some("active"), Some("all")).await?;
+    let stations = reader
+        .list_stations_raw(Some("active"), Some("all"))
+        .await?;
     let sections = reader.list_sections().await?;
-    let readings = reader.get_all_station_readings(Some(360), Some(360)).await?;
+    let readings = reader
+        .get_all_station_readings(Some(360), Some(360))
+        .await?;
 
     let snapshot = RivermapSnapshot {
         fetched_at: Utc::now().to_rfc3339(),

@@ -390,8 +390,6 @@ async fn batch_load_shared_groups(
     Ok(map)
 }
 
-// --- Public API ---
-
 pub async fn create_descent(
     pool: &PgPool,
     user_id: &str,
@@ -494,9 +492,10 @@ pub async fn get_descent_for_viewer(
 ) -> Result<Option<Descent>, sqlx::Error> {
     let row = if let Some(vid) = viewer_id {
         sqlx::query(&format!(
-            "SELECT {DESCENT_COLS} FROM descents \
-             WHERE id = $1 AND ( \
-                 user_id = $2 \
+            "SELECT {DESCENT_LIST_COLS} FROM descents \
+             LEFT JOIN users u ON u.id = descents.user_id \
+             WHERE descents.id = $1 AND ( \
+                 descents.user_id = $2 \
                  OR (visibility_scope = 'public' AND (visible_from IS NULL OR visible_from <= NOW())) \
                  OR (visibility_scope = 'shared' AND EXISTS ( \
                      SELECT 1 FROM descent_visible_users \
@@ -515,10 +514,11 @@ pub async fn get_descent_for_viewer(
         .await?
     } else {
         sqlx::query(&format!(
-            "SELECT {DESCENT_COLS} FROM descents \
-             WHERE id = $1 \
-               AND visibility_scope = 'public' \
-               AND (visible_from IS NULL OR visible_from <= NOW())"
+            "SELECT {DESCENT_LIST_COLS} FROM descents \
+             LEFT JOIN users u ON u.id = descents.user_id \
+             WHERE descents.id = $1 \
+               AND descents.visibility_scope = 'public' \
+               AND (descents.visible_from IS NULL OR descents.visible_from <= NOW())"
         ))
         .bind(descent_id)
         .fetch_optional(pool)

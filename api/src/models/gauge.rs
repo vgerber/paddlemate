@@ -191,8 +191,6 @@ pub struct SectionWaterSnapshot {
     pub value_avg: Option<f64>,
 }
 
-// --- Request types ---
-
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct CreateGaugeRequest {
     pub name: String,

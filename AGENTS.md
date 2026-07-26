@@ -112,6 +112,40 @@ time.
   additions without breaking existing code.
 - Routes should not contain implementation details - they define the API
   contract. Keep the implementation in the query layer or service layer.
+- Follow the Microsoft REST API guidelines: plural noun collections, no verbs
+  in paths, standard status codes, ISO 8601 UTC timestamps. Two deliberate
+  deviations: JSON stays snake_case, and paging uses
+  `page`/`per_page`/`total`/`total_pages` rather than `$top`/`$skip`.
+- Every failure returns the envelope from `models`/`error.rs`:
+  `{"error": {"code", "message", "target"}}`. Build one with `ApiError` and
+  never return a bare status or a plain string.
+- Validation failures are **400**, not 422. `ApiError::validation` is the only
+  way to report one, so clients have a single status to handle.
+- Internal faults use `ApiError::from_db`, which logs the cause and returns an
+  opaque message. Do not put database errors in a response.
+
+### Environment
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `RUN_MIGRATIONS` | `true` | Set to `false` to apply migrations as a separate step instead of on boot |
+| `CORS_ALLOWED_ORIGINS` | any origin | Comma separated allowlist; set it in production |
+| `RATE_LIMIT_PER_SECOND` | `20` | Per-caller budget, burst is five times this; `0` disables |
+| `SEARCH_WORD_SIMILARITY_THRESHOLD` | `0.5` | How close a misspelling must be to still match a name |
+
+### Search
+
+Name search matches river names, section names, and the localized names of
+sections and rapids, through the `searchable_names` view. Add new searchable
+sources to that view rather than to the query layer.
+
+Both stored names and the query run through `public.search_key`, which removes
+diacritics, lower cases, and folds the German digraphs so "oetztaler" and
+"otztaler" agree. **Changing `search_key` does not rebuild the trigram indexes
+built on it** - old rows keep the old normalization and search silently returns
+wrong results, so any migration that changes it must `REINDEX` the four
+`*_name_trgm` indexes in the same migration. A Postgres major upgrade or an
+`unaccent` update has the same effect.
 
 ## Tests
 

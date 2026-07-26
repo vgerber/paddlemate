@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use super::{
     feature::{CreateFeatureBody, Feature},
     geometry::Geometry,
+    lang::normalize_lang_code,
     waterway::WaterwayId,
 };
 
@@ -77,7 +78,7 @@ pub struct SectionWithFeatures {
 /// `name`/`description` fields stay the default (fallback) text.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct SectionTranslationBody {
-    /// BCP-47 language code, e.g. "de"
+    /// Language tag, stored lowercase, e.g. "de"
     pub lang_code: String,
     pub name: Option<String>,
     pub description: Option<String>,
@@ -99,6 +100,20 @@ pub struct CreateSectionBody {
     /// Features created together with the section
     #[serde(default)]
     pub features: Vec<CreateFeatureBody>,
+}
+
+impl CreateSectionBody {
+    /// Put every language tag in the bundle into its stored form, covering the
+    /// section translations and the names of the bundled features.
+    pub fn normalize_lang_codes(&mut self) -> Result<(), &'static str> {
+        for translation in &mut self.translations {
+            translation.lang_code = normalize_lang_code(&translation.lang_code)?;
+        }
+        for feature in &mut self.features {
+            feature.normalize_lang_code()?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

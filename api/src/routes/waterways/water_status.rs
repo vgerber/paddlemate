@@ -2,12 +2,12 @@ use aide::axum::IntoApiResponse;
 use axum::{
     Json,
     extract::{Path, State},
-    http::StatusCode,
     response::IntoResponse,
 };
 
 use crate::{
     doc_fn,
+    error::ApiError,
     models::{gauge::SectionWaterStatus, path_params::SectionPath},
     query::gauges,
     state::AppState,
@@ -25,7 +25,7 @@ pub async fn get_section_water_status(
                 path.section_id,
                 err
             );
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }

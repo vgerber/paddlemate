@@ -1,8 +1,10 @@
 /**
- * Pick the right localized text for the user's browser language, falling
- * back to the entity's default text. Sections and features both carry
+ * Pick the right localized text for the language the user reads, falling back
+ * to the entity's own text. Sections and features both carry
  * `names`/`descriptions` arrays with `lang_code` entries.
  */
+
+import { preferredLanguage } from "./languagePreference";
 
 interface LocalizedNameEntry {
   lang_code: string;
@@ -14,41 +16,41 @@ interface LocalizedDescriptionEntry {
   description: string;
 }
 
-/** Languages offered for localized names/descriptions across the app. */
-export const LANGUAGE_CODES = [
-  "en",
-  "de",
-  "fr",
-  "cs",
-  "sk",
-  "pl",
-  "sl",
-  "hr",
-  "it",
-  "es",
-  "pt",
-];
+/**
+ * Exact match first, then a regional variant of the same language, so a "de-AT"
+ * translation still serves a reader who chose German.
+ *
+ * There is deliberately no "try English" or "take the first translation" step:
+ * the fallback the caller passes is the name the section was created with,
+ * usually the local name of the river, which is more useful than an arbitrary
+ * translation - and the stored order of translations is not defined.
+ */
+function pickLocalized<T extends { lang_code: string }>(
+  entries: T[] | null | undefined,
+): T | undefined {
+  if (!entries?.length) return undefined;
+  const preferred = preferredLanguage();
 
-// Computed once - called per list item during rendering
-const browserLanguage = (navigator.language || "en").slice(0, 2).toLowerCase();
+  const exact = entries.find(
+    (entry) => entry.lang_code.toLowerCase() === preferred,
+  );
+  if (exact) return exact;
 
-/** Two-letter language code the browser prefers, e.g. "de". */
-export function preferredLanguage(): string {
-  return browserLanguage;
+  return entries.find(
+    (entry) => entry.lang_code.toLowerCase().split("-")[0] === preferred,
+  );
 }
 
 export function localizedName(
   fallback: string,
   names?: LocalizedNameEntry[] | null,
 ): string {
-  const match = names?.find((n) => n.lang_code === preferredLanguage());
-  return match?.name ?? fallback;
+  return pickLocalized(names)?.name ?? fallback;
 }
 
 export function localizedDescription(
   fallback: string | null | undefined,
   descriptions?: LocalizedDescriptionEntry[] | null,
 ): string | null {
-  const match = descriptions?.find((d) => d.lang_code === preferredLanguage());
-  return match?.description ?? fallback ?? null;
+  return pickLocalized(descriptions)?.description ?? fallback ?? null;
 }

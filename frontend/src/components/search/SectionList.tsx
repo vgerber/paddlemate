@@ -2,8 +2,9 @@ import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
-import type { SectionWithFeatures } from "@/lib/api";
 import SectionListItem from "@/components/waterway/SectionListItem";
+import type { SectionWithFeatures } from "@/lib/api";
+import { matchedFeatureName } from "@/lib/sectionMatch";
 
 interface SectionListProps {
   sections: SectionWithFeatures[];
@@ -12,6 +13,8 @@ interface SectionListProps {
   onSectionClick?: (id: number) => void;
   favoritedIds?: Set<number>;
   onToggleFavorite?: (id: number) => void;
+  /** Active name search, used to say which rapid made a section match. */
+  searchName?: string;
 }
 
 export default function SectionList({
@@ -21,6 +24,7 @@ export default function SectionList({
   onSectionClick,
   favoritedIds,
   onToggleFavorite,
+  searchName,
 }: SectionListProps) {
   // Group sections by waterway
   const grouped = useMemo(() => {
@@ -90,6 +94,9 @@ export default function SectionList({
               onClick={(id) => onSectionClick?.(id)}
               isFavorite={favoritedIds?.has(section.id)}
               onToggleFavorite={onToggleFavorite}
+              matchedFeature={
+                searchName ? matchedFeatureName(section, searchName) : undefined
+              }
             />
           ))}
         </Box>

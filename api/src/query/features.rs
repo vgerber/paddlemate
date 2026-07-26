@@ -4,24 +4,10 @@ use sqlx::PgPool;
 use crate::models::{
     feature::{Feature, FeatureDescription, FeatureId, FeatureName, FeatureType},
     geometry::Geometry,
+    lang::{DEFAULT_LANG_CODE, debug_assert_normalized},
     water_section::SectionId,
     waterway::WaterwayId,
 };
-
-pub async fn section_belongs_to_waterway(
-    pool: &PgPool,
-    section_id: SectionId,
-    waterway_id: WaterwayId,
-) -> Result<bool, sqlx::Error> {
-    sqlx::query!(
-        "SELECT id FROM water_sections WHERE id = $1 AND waterway_id = $2",
-        section_id,
-        waterway_id
-    )
-    .fetch_optional(pool)
-    .await
-    .map(|r| r.is_some())
-}
 
 pub async fn feature_belongs_to_section(
     pool: &PgPool,
@@ -148,7 +134,7 @@ pub async fn create_feature_bundle(
     )
     .await?;
 
-    let lang = body.lang_code.as_deref().unwrap_or("en");
+    let lang = body.lang_code.as_deref().unwrap_or(DEFAULT_LANG_CODE);
     if let Some(name) = &body.name {
         feature
             .names
@@ -255,6 +241,7 @@ pub async fn upsert_name(
     lang_code: &str,
     name: &str,
 ) -> Result<FeatureName, sqlx::Error> {
+    debug_assert_normalized(lang_code);
     let r = sqlx::query!(
         r#"
         INSERT INTO feature_names (feature_id, lang_code, name)
@@ -310,6 +297,7 @@ pub async fn upsert_description(
     lang_code: &str,
     description: &str,
 ) -> Result<FeatureDescription, sqlx::Error> {
+    debug_assert_normalized(lang_code);
     let r = sqlx::query!(
         r#"
         INSERT INTO feature_descriptions (feature_id, lang_code, description)

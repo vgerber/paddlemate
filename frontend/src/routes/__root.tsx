@@ -23,6 +23,7 @@ import {
 import { useState } from "react";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import { useSession } from "@/lib/hooks/useSession";
+import { useLanguage } from "@/lib/languagePreference";
 
 const navLinkSx = {
   fontFamily: '"Space Grotesk", sans-serif',
@@ -59,6 +60,9 @@ function Root() {
 }
 
 function Layout() {
+  // Subscribing here re-renders every localized name in the app when the
+  // display language changes; no component below memoizes its render.
+  useLanguage();
   const { isAuthenticated, isLoading, user, login, logout } = useSession();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isMapPage = pathname === "/";

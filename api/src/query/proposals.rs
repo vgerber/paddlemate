@@ -3,10 +3,49 @@ use sqlx::{PgPool, Row, postgres::PgRow};
 
 use crate::models::{
     feature::CreateFeatureBody,
-    proposal::{ListProposalsFilters, Proposal, ProposalEntityType, ProposalOperation, ProposalStatus},
+    lang::{DEFAULT_LANG_CODE, normalize_lang_code},
+    proposal::{
+        ListProposalsFilters, Proposal, ProposalEntityType, ProposalOperation, ProposalStatus,
+    },
     water_section::CreateSectionBody,
 };
 use crate::query::{features, gauges, sections};
+
+/// Proposals submitted before language tags were normalized at the API
+/// boundary still hold whatever the client sent. Approving one must not fail on
+/// that, so the tag is normalized here and an unusable one falls back to the
+/// default rather than blocking the reviewer.
+fn normalize_stored_feature_lang_code(body: &mut CreateFeatureBody, proposal_id: i64) {
+    if body.normalize_lang_code().is_err() {
+        tracing::warn!(
+            "Proposal {} carries an invalid lang_code {:?}; storing it as {}",
+            proposal_id,
+            body.lang_code,
+            DEFAULT_LANG_CODE
+        );
+        body.lang_code = Some(DEFAULT_LANG_CODE.to_string());
+    }
+}
+
+/// Same for a section bundle, covering its translations and bundled features.
+fn normalize_stored_lang_codes(body: &mut CreateSectionBody, proposal_id: i64) {
+    for translation in &mut body.translations {
+        if let Ok(code) = normalize_lang_code(&translation.lang_code) {
+            translation.lang_code = code;
+        } else {
+            tracing::warn!(
+                "Proposal {} carries an invalid lang_code {:?}; storing it as {}",
+                proposal_id,
+                translation.lang_code,
+                DEFAULT_LANG_CODE
+            );
+            translation.lang_code = DEFAULT_LANG_CODE.to_string();
+        }
+    }
+    for feature in &mut body.features {
+        normalize_stored_feature_lang_code(feature, proposal_id);
+    }
+}
 
 fn parse_entity_type(s: &str) -> ProposalEntityType {
     match s {
@@ -445,8 +484,9 @@ async fn apply_proposal(
 
         (ProposalEntityType::WaterSection, ProposalOperation::Create) => {
             let waterway_id = data["waterway_id"].as_i64().unwrap_or_default();
-            let body: CreateSectionBody = serde_json::from_value(data.clone())
-                .map_err(|e| sqlx::Error::Decode(e.into()))?;
+            let mut body: CreateSectionBody =
+                serde_json::from_value(data.clone()).map_err(|e| sqlx::Error::Decode(e.into()))?;
+            normalize_stored_lang_codes(&mut body, proposal.id);
             sections::create_section_bundle(&mut **tx, waterway_id, &body, &proposal.submitted_by)
                 .await?;
         }
@@ -493,8 +533,9 @@ async fn apply_proposal(
 
         (ProposalEntityType::Feature, ProposalOperation::Create) => {
             if let Some(section_id) = data["section_id"].as_i64() {
-                let body: CreateFeatureBody = serde_json::from_value(data.clone())
+                let mut body: CreateFeatureBody = serde_json::from_value(data.clone())
                     .map_err(|e| sqlx::Error::Decode(e.into()))?;
+                normalize_stored_feature_lang_code(&mut body, proposal.id);
                 features::create_feature_bundle(
                     &mut **tx,
                     section_id,

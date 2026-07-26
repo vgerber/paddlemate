@@ -11,7 +11,14 @@ use axum::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{doc_fn, layers::auth::AuthToken, models::user::User, query::follows, state::AppState};
+use crate::{
+    doc_fn,
+    error::{ApiError, ErrorResponse},
+    layers::auth::AuthToken,
+    models::user::User,
+    query::follows,
+    state::AppState,
+};
 
 pub fn follows_routes(state: AppState) -> ApiRouter {
     ApiRouter::new()
@@ -73,7 +80,7 @@ async fn list_users(
         .into_response(),
         Err(err) => {
             tracing::error!("Error listing users: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -95,7 +102,7 @@ async fn list_pending(
         Ok(users) => Json(users as Vec<User>).into_response(),
         Err(err) => {
             tracing::error!("Error listing pending requests: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -117,7 +124,7 @@ async fn list_following(
         Ok(users) => Json(users as Vec<User>).into_response(),
         Err(err) => {
             tracing::error!("Error listing following: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -139,7 +146,7 @@ async fn list_followers(
         Ok(users) => Json(users as Vec<User>).into_response(),
         Err(err) => {
             tracing::error!("Error listing followers: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -159,7 +166,7 @@ async fn follow_user(
     let user_id = token.user_id();
 
     if user_id == path.user_id {
-        return StatusCode::BAD_REQUEST.into_response();
+        return ApiError::validation("Invalid request").into_response();
     }
 
     match follows::follow_user(&app.pg_pool, &user_id, &path.user_id).await {
@@ -167,10 +174,10 @@ async fn follow_user(
         Err(err) => {
             let msg = err.to_string();
             if msg.contains("foreign key") {
-                return StatusCode::NOT_FOUND.into_response();
+                return ApiError::not_found("Not found").into_response();
             }
             tracing::error!("Error following user: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -178,8 +185,8 @@ async fn follow_user(
 doc_fn!(follow_user_docs, op =>
     op.description("Send a follow request to a user.")
         .response_with::<204, (), _>(|res| res.description("Follow request sent"))
-        .response_with::<400, (), _>(|res| res.description("Cannot follow yourself"))
-        .response_with::<404, (), _>(|res| res.description("User not found"))
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Cannot follow yourself"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("User not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Follows")
 );
@@ -194,10 +201,10 @@ async fn accept_follow_request(
     // path.user_id is the follower; auth user (following_id) accepts
     match follows::accept_follow(&app.pg_pool, &path.user_id, &user_id).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error accepting follow request: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -205,7 +212,7 @@ async fn accept_follow_request(
 doc_fn!(accept_follow_request_docs, op =>
     op.description("Accept a pending follow request from a user.")
         .response_with::<204, (), _>(|res| res.description("Request accepted"))
-        .response_with::<404, (), _>(|res| res.description("No pending request found"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("No pending request found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Follows")
 );
@@ -221,7 +228,7 @@ async fn delete_follow(
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(err) => {
             tracing::error!("Error removing follow: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }

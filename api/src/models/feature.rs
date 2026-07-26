@@ -3,7 +3,12 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::{gauge::FeatureWaterRangeBody, geometry::Geometry, water_section::SectionId};
+use super::{
+    gauge::FeatureWaterRangeBody,
+    geometry::Geometry,
+    lang::{DEFAULT_LANG_CODE, normalize_lang_code},
+    water_section::SectionId,
+};
 
 pub type FeatureId = i64;
 
@@ -72,9 +77,20 @@ pub struct CreateFeatureBody {
     pub location: Geometry,
     pub name: Option<String>,
     pub description: Option<String>,
-    /// BCP-47 language code for name/description (default: "en")
+    /// Language tag for name/description, stored lowercase (default: "en")
     pub lang_code: Option<String>,
     /// Gauge thresholds created together with the feature
     #[serde(default)]
     pub water_ranges: Vec<FeatureWaterRangeBody>,
+}
+
+impl CreateFeatureBody {
+    /// Put the language tag into its stored form and fill in the default, so
+    /// that everything downstream - including a proposal payload serialized
+    /// from this body - carries a code that is already canonical.
+    pub fn normalize_lang_code(&mut self) -> Result<(), &'static str> {
+        let code = self.lang_code.as_deref().unwrap_or(DEFAULT_LANG_CODE);
+        self.lang_code = Some(normalize_lang_code(code)?);
+        Ok(())
+    }
 }

@@ -11,6 +11,7 @@ use serde::Deserialize;
 
 use crate::{
     doc_fn,
+    error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
         gauge::{
@@ -32,14 +33,12 @@ pub struct ReadingsQuery {
     pub limit: Option<i64>,
 }
 
-// --- Public GET handlers ---
-
 pub async fn list_gauges(State(app): State<AppState>) -> impl IntoApiResponse {
     match gauges::list_gauges(&app.pg_pool, false).await {
         Ok(list) => Json(list).into_response(),
         Err(err) => {
             tracing::error!("Error listing gauges: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -71,7 +70,7 @@ pub async fn search_gauges(
         Ok(list) => Json(list).into_response(),
         Err(err) => {
             tracing::error!("Error searching gauges: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -88,10 +87,10 @@ pub async fn get_gauge(
 ) -> impl IntoApiResponse {
     match gauges::fetch_gauge_with_series(&app.pg_pool, gauge_id).await {
         Ok(Some(g)) => Json(g).into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error fetching gauge {}: {}", gauge_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -100,7 +99,7 @@ doc_fn!(get_gauge_docs, op =>
     op.input::<Path<GaugePath>>()
         .description("Get a gauge with all its series")
         .response::<200, Json<GaugeWithSeries>>()
-        .response_with::<404, (), _>(|res| res.description("Gauge not found"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Gauge not found"))
         .tag("Gauges")
 );
 
@@ -114,7 +113,7 @@ pub async fn list_readings(
         Ok(list) => Json(list).into_response(),
         Err(err) => {
             tracing::error!("Error fetching readings for series {}: {}", series_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -133,14 +132,14 @@ pub async fn get_latest_reading(
 ) -> impl IntoApiResponse {
     match gauges::fetch_latest_reading(&app.pg_pool, series_id).await {
         Ok(Some(r)) => Json(r).into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!(
                 "Error fetching latest reading for series {}: {}",
                 series_id,
                 err
             );
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -149,11 +148,9 @@ doc_fn!(get_latest_reading_docs, op =>
     op.input::<Path<GaugeSeriesPath>>()
         .description("Get the most recent reading for a gauge series")
         .response::<200, Json<GaugeReading>>()
-        .response_with::<404, (), _>(|res| res.description("No readings found"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("No readings found"))
         .tag("Gauges")
 );
-
-// --- Admin-only handlers ---
 
 pub async fn create_gauge(
     State(app): State<AppState>,
@@ -162,10 +159,10 @@ pub async fn create_gauge(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
     if !token.is_server_admin() {
-        return StatusCode::FORBIDDEN.into_response();
+        return ApiError::forbidden("Not permitted").into_response();
     }
 
     let active = body.active.unwrap_or(true);
@@ -187,7 +184,7 @@ pub async fn create_gauge(
         Ok(g) => (StatusCode::CREATED, Json(g)).into_response(),
         Err(err) => {
             tracing::error!("Error creating gauge: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -195,8 +192,8 @@ pub async fn create_gauge(
 doc_fn!(create_gauge_docs, op =>
     op.description("Create a new gauge (admin only)")
         .response_with::<201, Json<Gauge>, _>(|res| res.description("Gauge created"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<403, (), _>(|res| res.description("Forbidden"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Forbidden"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Gauges")
 );
@@ -209,10 +206,10 @@ pub async fn update_gauge(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
     if !token.is_server_admin() {
-        return StatusCode::FORBIDDEN.into_response();
+        return ApiError::forbidden("Not permitted").into_response();
     }
 
     match gauges::update_gauge(
@@ -230,10 +227,10 @@ pub async fn update_gauge(
     .await
     {
         Ok(Some(g)) => Json(g).into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error updating gauge {}: {}", gauge_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -242,9 +239,9 @@ doc_fn!(update_gauge_docs, op =>
     op.input::<Path<GaugePath>>()
         .description("Update a gauge (admin only)")
         .response::<200, Json<Gauge>>()
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<403, (), _>(|res| res.description("Forbidden"))
-        .response_with::<404, (), _>(|res| res.description("Gauge not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Forbidden"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Gauge not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Gauges")
 );
@@ -256,18 +253,18 @@ pub async fn delete_gauge(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
     if !token.is_server_admin() {
-        return StatusCode::FORBIDDEN.into_response();
+        return ApiError::forbidden("Not permitted").into_response();
     }
 
     match gauges::delete_gauge(&app.pg_pool, gauge_id).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error deleting gauge {}: {}", gauge_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -276,9 +273,9 @@ doc_fn!(delete_gauge_docs, op =>
     op.input::<Path<GaugePath>>()
         .description("Delete a gauge (admin only)")
         .response_with::<204, (), _>(|res| res.description("Gauge deleted"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<403, (), _>(|res| res.description("Forbidden"))
-        .response_with::<404, (), _>(|res| res.description("Gauge not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Forbidden"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Gauge not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Gauges")
 );
@@ -291,10 +288,10 @@ pub async fn create_series(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
     if !token.is_server_admin() {
-        return StatusCode::FORBIDDEN.into_response();
+        return ApiError::forbidden("Not permitted").into_response();
     }
 
     let mt = serde_json::to_string(&body.measurement_type)
@@ -314,7 +311,7 @@ pub async fn create_series(
         Ok(s) => (StatusCode::CREATED, Json(s)).into_response(),
         Err(err) => {
             tracing::error!("Error creating series for gauge {}: {}", gauge_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -323,8 +320,8 @@ doc_fn!(create_series_docs, op =>
     op.input::<Path<GaugePath>>()
         .description("Add a measurement series to a gauge (admin only)")
         .response_with::<201, Json<crate::models::gauge::GaugeSeries>, _>(|res| res.description("Series created"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<403, (), _>(|res| res.description("Forbidden"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Forbidden"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Gauges")
 );
@@ -337,10 +334,10 @@ pub async fn update_series(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
     if !token.is_server_admin() {
-        return StatusCode::FORBIDDEN.into_response();
+        return ApiError::forbidden("Not permitted").into_response();
     }
 
     let mt = serde_json::to_string(&body.measurement_type)
@@ -358,10 +355,10 @@ pub async fn update_series(
     .await
     {
         Ok(Some(s)) => Json(s).into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error updating series {}: {}", series_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -370,9 +367,9 @@ doc_fn!(update_series_docs, op =>
     op.input::<Path<GaugeSeriesPath>>()
         .description("Update a gauge series (admin only)")
         .response::<200, Json<crate::models::gauge::GaugeSeries>>()
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<403, (), _>(|res| res.description("Forbidden"))
-        .response_with::<404, (), _>(|res| res.description("Series not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Forbidden"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Series not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Gauges")
 );
@@ -384,18 +381,18 @@ pub async fn delete_series(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
     if !token.is_server_admin() {
-        return StatusCode::FORBIDDEN.into_response();
+        return ApiError::forbidden("Not permitted").into_response();
     }
 
     match gauges::delete_series(&app.pg_pool, series_id).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error deleting series {}: {}", series_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -404,9 +401,9 @@ doc_fn!(delete_series_docs, op =>
     op.input::<Path<GaugeSeriesPath>>()
         .description("Delete a gauge series (admin only)")
         .response_with::<204, (), _>(|res| res.description("Series deleted"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<403, (), _>(|res| res.description("Forbidden"))
-        .response_with::<404, (), _>(|res| res.description("Series not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Forbidden"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Series not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Gauges")
 );
@@ -419,10 +416,10 @@ pub async fn backfill(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
     if !token.is_server_admin() {
-        return StatusCode::FORBIDDEN.into_response();
+        return ApiError::forbidden("Not permitted").into_response();
     }
 
     let pool = app.pg_pool.clone();
@@ -439,13 +436,11 @@ doc_fn!(backfill_docs, op =>
     op.input::<Path<GaugePath>>()
         .description("Trigger a historical backfill for a gauge (admin only). Returns immediately.")
         .response_with::<202, (), _>(|res| res.description("Backfill started"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<403, (), _>(|res| res.description("Forbidden"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Forbidden"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Gauges")
 );
-
-// --- Router ---
 
 pub fn gauges_routes(state: AppState) -> aide::axum::ApiRouter {
     use aide::axum::routing::{get_with, post_with, put_with};

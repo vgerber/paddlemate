@@ -1,16 +1,16 @@
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
-import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { LANGUAGE_CODES, preferredLanguage } from "@/lib/localization";
+import LanguagePicker from "@/components/LanguagePicker";
+import { preferredLanguage } from "@/lib/languagePreference";
+import { languageOptions } from "@/lib/languages";
 
 export interface SectionTranslationDraft {
+  /** Stable across language changes, so editing a row does not remount it. */
+  id: string;
   langCode: string;
   name: string;
   description: string;
@@ -26,11 +26,10 @@ export interface SectionNamingValue {
   translations: SectionTranslationDraft[];
 }
 
-/** Fresh naming state; the primary language defaults to the browser's. */
+/** Fresh naming state; the primary language defaults to the reader's. */
 export function createInitialNaming(): SectionNamingValue {
-  const browser = preferredLanguage();
   return {
-    langCode: LANGUAGE_CODES.includes(browser) ? browser : "en",
+    langCode: preferredLanguage(),
     name: "",
     description: "",
     region: "",
@@ -51,13 +50,19 @@ export default function SectionNamingForm({
   value,
   onChange,
 }: SectionNamingFormProps) {
-  const usedLanguages = new Set([
+  const usedLanguages = [
     value.langCode,
     ...value.translations.map((t) => t.langCode),
-  ]);
-  const availableLanguages = LANGUAGE_CODES.filter(
-    (lc) => !usedLanguages.has(lc),
-  );
+  ];
+
+  /** Language to seed a new row with: the first suggested one still free. */
+  function nextFreeLanguage(): string {
+    const used = new Set(usedLanguages);
+    const free = languageOptions(preferredLanguage()).find(
+      (option) => !used.has(option.code),
+    );
+    return free?.code ?? "en";
+  }
 
   function updateTranslation(
     index: number,
@@ -74,21 +79,11 @@ export default function SectionNamingForm({
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <Box sx={{ display: "flex", gap: 2 }}>
-        <FormControl sx={{ minWidth: 100 }}>
-          <InputLabel id="primary-lang-label">Language</InputLabel>
-          <Select
-            labelId="primary-lang-label"
-            label="Language"
-            value={value.langCode}
-            onChange={(e) => onChange({ ...value, langCode: e.target.value })}
-          >
-            {[value.langCode, ...availableLanguages].map((lc) => (
-              <MenuItem key={lc} value={lc}>
-                {lc.toUpperCase()}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <LanguagePicker
+          value={value.langCode}
+          onChange={(langCode) => onChange({ ...value, langCode })}
+          exclude={value.translations.map((t) => t.langCode)}
+        />
         <TextField
           label="Name"
           value={value.name}
@@ -122,60 +117,49 @@ export default function SectionNamingForm({
         fullWidth
       />
 
-      {(value.translations.length > 0 || availableLanguages.length > 0) && (
+      {
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Typography variant="overline" sx={{ lineHeight: 1 }}>
               Translations (optional)
             </Typography>
             <Box sx={{ flex: 1 }} />
-            {availableLanguages.length > 0 && (
-              <IconButton
-                aria-label="Add translation"
-                onClick={() =>
-                  onChange({
-                    ...value,
-                    translations: [
-                      ...value.translations,
-                      {
-                        langCode: availableLanguages[0],
-                        name: "",
-                        description: "",
-                      },
-                    ],
-                  })
-                }
-              >
-                <AddIcon fontSize="small" />
-              </IconButton>
-            )}
+            <IconButton
+              aria-label="Add translation"
+              onClick={() =>
+                onChange({
+                  ...value,
+                  translations: [
+                    ...value.translations,
+                    {
+                      id: crypto.randomUUID(),
+                      langCode: nextFreeLanguage(),
+                      name: "",
+                      description: "",
+                    },
+                  ],
+                })
+              }
+            >
+              <AddIcon fontSize="small" />
+            </IconButton>
           </Box>
 
           {value.translations.map((translation, index) => (
             <Box
-              key={translation.langCode}
+              key={translation.id}
               sx={{ display: "flex", flexDirection: "column", gap: 2 }}
             >
               <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-                <FormControl sx={{ minWidth: 100 }}>
-                  <InputLabel id={`translation-lang-${translation.langCode}`}>
-                    Language
-                  </InputLabel>
-                  <Select
-                    labelId={`translation-lang-${translation.langCode}`}
-                    label="Language"
-                    value={translation.langCode}
-                    onChange={(e) =>
-                      updateTranslation(index, { langCode: e.target.value })
-                    }
-                  >
-                    {[translation.langCode, ...availableLanguages].map((lc) => (
-                      <MenuItem key={lc} value={lc}>
-                        {lc.toUpperCase()}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <LanguagePicker
+                  value={translation.langCode}
+                  onChange={(langCode) =>
+                    updateTranslation(index, { langCode })
+                  }
+                  exclude={usedLanguages.filter(
+                    (lc) => lc !== translation.langCode,
+                  )}
+                />
                 <TextField
                   label="Name"
                   value={translation.name}
@@ -211,7 +195,7 @@ export default function SectionNamingForm({
             </Box>
           ))}
         </Box>
-      )}
+      }
     </Box>
   );
 }

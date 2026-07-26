@@ -15,7 +15,6 @@ import { ApiError } from "@/lib/api/client";
 import { proposalKeys } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
 import { type Coordinate, fetchOsmRiver } from "@/lib/riverSnap";
-import { normalizeForSearch } from "@/lib/text";
 
 /** Max viewport span (degrees) for the OSM check - larger areas make Overpass
  * regex queries slow and ambiguous. */
@@ -114,21 +113,10 @@ export default function SuggestWaterwayPanel({
     setSubmitting(true);
     setSubmitError(null);
     try {
-      // Pre-check for an existing river with the same (normalized) name
-      const existing = await waterwaysApi.list({
-        name: trimmedName,
-        per_page: 100,
-      });
-      const normalized = normalizeForSearch(trimmedName);
-      if (
-        existing.items.some((w) => normalizeForSearch(w.name) === normalized)
-      ) {
-        setSubmitError(
-          `"${trimmedName}" already exists - search for it instead.`,
-        );
-        return;
-      }
-
+      // No pre-check: the API rejects a duplicate name with 409, handled
+      // below. Checking here as well would cost a request and, because the
+      // server compares case-insensitively rather than ignoring diacritics,
+      // could refuse a name the server would have accepted.
       await waterwaysApi.create({
         name: trimmedName,
         description: description.trim() || null,

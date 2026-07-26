@@ -2,8 +2,7 @@ mod members;
 
 #[allow(unused_imports)]
 use aide::axum::{
-    ApiRouter,
-    IntoApiResponse,
+    ApiRouter, IntoApiResponse,
     routing::{get_with, post_with, put_with},
 };
 use axum::{
@@ -17,6 +16,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     doc_fn,
+    error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::group::{Group, GroupMemberRole, GroupWithMembers},
     query::groups,
@@ -25,7 +25,10 @@ use crate::{
 
 pub fn group_routes(state: AppState) -> ApiRouter {
     ApiRouter::new()
-        .api_route("/", get_with(list_groups, list_groups_docs).post_with(create_group, create_group_docs))
+        .api_route(
+            "/",
+            get_with(list_groups, list_groups_docs).post_with(create_group, create_group_docs),
+        )
         .api_route(
             "/{group_id}",
             get_with(get_group, get_group_docs)
@@ -42,14 +45,14 @@ pub async fn list_groups(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     match groups::list_groups_for_user(&app.pg_pool, token.user_id()).await {
         Ok(list) => Json(list).into_response(),
         Err(err) => {
             tracing::error!("Error listing groups: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -57,7 +60,7 @@ pub async fn list_groups(
 doc_fn!(list_groups_docs, op =>
     op.description("List groups the authenticated user belongs to")
         .response::<200, Json<Vec<Group>>>()
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Groups")
 );
@@ -75,7 +78,7 @@ pub async fn create_group(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     let user_id = token.user_id().to_string();
@@ -91,7 +94,7 @@ pub async fn create_group(
         Ok(g) => g,
         Err(err) => {
             tracing::error!("Error creating group: {}", err);
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+            return ApiError::internal().into_response();
         }
     };
 
@@ -106,7 +109,7 @@ pub async fn create_group(
     .await
     {
         tracing::error!("Error adding owner to group {}: {}", group.id, err);
-        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        return ApiError::internal().into_response();
     }
 
     (StatusCode::CREATED, Json(group)).into_response()
@@ -115,7 +118,7 @@ pub async fn create_group(
 doc_fn!(create_group_docs, op =>
     op.description("Create a new group; the caller becomes owner")
         .response_with::<201, Json<Group>, _>(|res| res.description("Group created"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Groups")
 );
@@ -127,16 +130,16 @@ pub async fn get_group(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     match groups::get_group_for_member(&app.pg_pool, group_id, token.user_id()).await {
         Ok(Some(group)) => Json(group).into_response(),
         // Return 404 for non-members to avoid leaking group existence
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error fetching group {}: {}", group_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -144,8 +147,8 @@ pub async fn get_group(
 doc_fn!(get_group_docs, op =>
     op.description("Get a group with its members (members only)")
         .response::<200, Json<GroupWithMembers>>()
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Groups")
 );
@@ -165,7 +168,7 @@ pub async fn update_group(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     // Map Option<Option<String>> to Option<Option<&str>> for the query layer
@@ -181,10 +184,10 @@ pub async fn update_group(
     .await
     {
         Ok(Some(group)) => Json(group).into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error updating group {}: {}", group_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -192,8 +195,8 @@ pub async fn update_group(
 doc_fn!(update_group_docs, op =>
     op.description("Update a group (owner or group admin only)")
         .response::<200, Json<Group>>()
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Groups")
 );
@@ -205,7 +208,7 @@ pub async fn delete_group(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     match groups::delete_group(
@@ -217,10 +220,10 @@ pub async fn delete_group(
     .await
     {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error deleting group {}: {}", group_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -228,8 +231,8 @@ pub async fn delete_group(
 doc_fn!(delete_group_docs, op =>
     op.description("Delete a group (owner or server admin only)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Not found"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Groups")
 );

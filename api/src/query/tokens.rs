@@ -25,3 +25,29 @@ pub fn generate_token_pair() -> (String, String) {
     let token_hash = hash_token(&plain_token);
     (plain_token, token_hash)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{API_TOKEN_PREFIX, generate_token_pair, hash_token};
+
+    #[test]
+    fn hashing_is_stable_and_hex_encoded() {
+        // The fixture in .claude/skills/test-data depends on this exact value.
+        assert_eq!(
+            hash_token("pm_testtoken123"),
+            "ffd2e7ff161f619163861f2870c0fdf91508ae8851743d855d2661aa13738ec8"
+        );
+    }
+
+    #[test]
+    fn pairs_are_prefixed_unique_and_never_stored_in_the_clear() {
+        let (plain, hash) = generate_token_pair();
+        let (other_plain, _) = generate_token_pair();
+
+        assert!(plain.starts_with(API_TOKEN_PREFIX));
+        assert_ne!(plain, other_plain, "tokens must not repeat");
+        assert_eq!(hash, hash_token(&plain));
+        assert!(!hash.contains(&plain), "the hash must not embed the token");
+        assert_eq!(hash.len(), 64);
+    }
+}

@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use sqlx::PgPool;
 
 use crate::models::{
+    lang::debug_assert_normalized,
     water_section::{
         CreateSectionBody, Section, SectionDescription, SectionId, SectionName, UpdateSectionBody,
     },
@@ -125,8 +126,7 @@ pub async fn create_section_bundle(
             upsert_name(&mut *conn, section.id, &translation.lang_code, name).await?;
         }
         if let Some(description) = &translation.description {
-            upsert_description(&mut *conn, section.id, &translation.lang_code, description)
-                .await?;
+            upsert_description(&mut *conn, section.id, &translation.lang_code, description).await?;
         }
     }
 
@@ -213,6 +213,7 @@ pub async fn upsert_name(
     lang_code: &str,
     name: &str,
 ) -> Result<SectionName, sqlx::Error> {
+    debug_assert_normalized(lang_code);
     sqlx::query_as!(
         SectionName,
         r#"INSERT INTO section_names (section_id, lang_code, name)
@@ -233,6 +234,7 @@ pub async fn upsert_description(
     lang_code: &str,
     description: &str,
 ) -> Result<SectionDescription, sqlx::Error> {
+    debug_assert_normalized(lang_code);
     sqlx::query_as!(
         SectionDescription,
         r#"INSERT INTO section_descriptions (section_id, lang_code, description)
@@ -245,4 +247,76 @@ pub async fn upsert_description(
     )
     .fetch_one(executor)
     .await
+}
+
+/// Sections of a waterway without their features or translations, for callers
+/// that only need the list rather than the whole waterway payload.
+pub async fn list_sections(
+    pool: &PgPool,
+    waterway_id: WaterwayId,
+) -> Result<Vec<Section>, sqlx::Error> {
+    let rows = sqlx::query(&format!(
+        "SELECT {SECTION_COLS} FROM water_sections WHERE waterway_id = $1 ORDER BY name"
+    ))
+    .bind(waterway_id)
+    .fetch_all(pool)
+    .await?;
+    rows.iter().map(row_to_section).collect()
+}
+
+/// Returns false when the section has no name in that language, so the caller
+/// can answer 404 rather than pretend it deleted something.
+pub async fn delete_name(
+    pool: &PgPool,
+    waterway_id: WaterwayId,
+    section_id: SectionId,
+    lang_code: &str,
+) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query!(
+        r#"DELETE FROM section_names
+           WHERE section_id = $1 AND lang_code = $2
+             AND $1 IN (SELECT id FROM water_sections WHERE waterway_id = $3)"#,
+        section_id,
+        lang_code,
+        waterway_id
+    )
+    .execute(pool)
+    .await?;
+    Ok(result.rows_affected() > 0)
+}
+
+pub async fn delete_description(
+    pool: &PgPool,
+    waterway_id: WaterwayId,
+    section_id: SectionId,
+    lang_code: &str,
+) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query!(
+        r#"DELETE FROM section_descriptions
+           WHERE section_id = $1 AND lang_code = $2
+             AND $1 IN (SELECT id FROM water_sections WHERE waterway_id = $3)"#,
+        section_id,
+        lang_code,
+        waterway_id
+    )
+    .execute(pool)
+    .await?;
+    Ok(result.rows_affected() > 0)
+}
+
+/// Whether the section exists under that waterway, used to tell "no such
+/// section" apart from "no translation in that language".
+pub async fn section_exists(
+    pool: &PgPool,
+    waterway_id: WaterwayId,
+    section_id: SectionId,
+) -> Result<bool, sqlx::Error> {
+    let row: (bool,) = sqlx::query_as(
+        "SELECT EXISTS(SELECT 1 FROM water_sections WHERE id = $1 AND waterway_id = $2)",
+    )
+    .bind(section_id)
+    .bind(waterway_id)
+    .fetch_one(pool)
+    .await?;
+    Ok(row.0)
 }

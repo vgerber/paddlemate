@@ -11,6 +11,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { Feature, SectionWithFeatures } from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
 import { circleGeoJSON } from "@/lib/geo";
+import { useLanguage } from "@/lib/languagePreference";
 import { theme } from "@/lib/theme";
 import GaugeMarkers, { type GaugePin } from "./GaugeMarkers";
 import LabelModeToggle from "./LabelModeToggle";
@@ -186,9 +187,12 @@ export default function WaterwayMap({
     () => buildSectionsGeoJSON(sections ?? []),
     [sections],
   );
+  // The label builder localizes section names, so the language has to be a
+  // dependency - without it the map keeps the labels of the previous language.
+  const language = useLanguage();
   const sectionLabelsGeoJSON = useMemo(
     () => buildSectionLabelsGeoJSON(sections ?? [], labelMode, waterwayNames),
-    [sections, labelMode, waterwayNames],
+    [sections, labelMode, waterwayNames, language],
   );
   const sectionEndpointsGeoJSON = useMemo(
     () => buildSectionEndpointsGeoJSON(sections ?? [], sectionLevels),

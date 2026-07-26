@@ -9,8 +9,26 @@ use aide::axum::{
     ApiRouter,
     routing::{get_with, post_with, put_with},
 };
+use axum::{Extension, response::IntoResponse, response::Response};
 
-use crate::state::AppState;
+use crate::{error::ApiError, layers::auth::AuthToken, models::lang::normalize_lang_code, state::AppState};
+
+/// The two checks every localized name and description endpoint starts with:
+/// the caller must be signed in, and the language tag must be storable.
+/// Returns the normalized tag, or the response to send instead.
+pub(crate) fn authorize_localization(
+    auth: Option<Extension<AuthToken>>,
+    lang_code: &str,
+) -> Result<String, Response> {
+    if auth.is_none() {
+        return Err(ApiError::unauthorized("Authentication required").into_response());
+    }
+    normalize_lang_code(lang_code).map_err(|msg| {
+        ApiError::validation(msg)
+            .with_target("lang_code")
+            .into_response()
+    })
+}
 
 /// All waterway routes combined into a single router.
 /// Authentication is handled per-handler based on the operation.
@@ -31,7 +49,31 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
         // Section CRUD
         .api_route(
             "/{waterway_id}/sections",
-            post_with(sections::create_section, sections::create_section_docs),
+            get_with(sections::list_sections, sections::list_sections_docs)
+                .post_with(sections::create_section, sections::create_section_docs),
+        )
+        // Section translations
+        .api_route(
+            "/{waterway_id}/sections/{section_id}/names/{lang_code}",
+            post_with(
+                sections::upsert_section_name,
+                sections::upsert_section_name_docs,
+            )
+            .delete_with(
+                sections::delete_section_name,
+                sections::delete_section_name_docs,
+            ),
+        )
+        .api_route(
+            "/{waterway_id}/sections/{section_id}/descriptions/{lang_code}",
+            post_with(
+                sections::upsert_section_description,
+                sections::upsert_section_description_docs,
+            )
+            .delete_with(
+                sections::delete_section_description,
+                sections::delete_section_description_docs,
+            ),
         )
         // Per-section descent counts
         .api_route(

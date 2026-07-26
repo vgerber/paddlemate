@@ -8,6 +8,7 @@ use axum::{
 
 use crate::{
     doc_fn,
+    error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
         descent::{
@@ -36,8 +37,6 @@ pub fn descents_routes(state: AppState) -> ApiRouter {
         .with_state(state)
 }
 
-// --- Helpers ---
-
 fn validate_put_in(feature_id: Option<i64>, lat: Option<f64>, lon: Option<f64>) -> bool {
     matches!(
         (feature_id.is_some(), lat.is_some(), lon.is_some()),
@@ -45,8 +44,8 @@ fn validate_put_in(feature_id: Option<i64>, lat: Option<f64>, lon: Option<f64>) 
     )
 }
 
-/// Map known PostgreSQL constraint violation codes to 422 responses.
-/// Returns None for errors that should remain 500.
+/// Turn the constraint violations a client can actually cause into validation
+/// errors. Returns None for anything else, which stays an internal error.
 fn db_constraint_response(err: &sqlx::Error) -> Option<axum::response::Response> {
     use axum::response::IntoResponse;
     if let sqlx::Error::Database(db_err) = err {
@@ -54,24 +53,19 @@ fn db_constraint_response(err: &sqlx::Error) -> Option<axum::response::Response>
             // CHECK constraint violation
             Some("23514") => {
                 return Some(
-                    (
-                        StatusCode::UNPROCESSABLE_ENTITY,
+                    ApiError::validation(
                         db_err
                             .constraint()
                             .map(constraint_message)
                             .unwrap_or("Constraint violation"),
                     )
-                        .into_response(),
+                    .into_response(),
                 );
             }
             // Foreign key violation - invalid section_id, feature_id, user_id, or group_id
             Some("23503") => {
                 return Some(
-                    (
-                        StatusCode::UNPROCESSABLE_ENTITY,
-                        "Referenced resource does not exist",
-                    )
-                        .into_response(),
+                    ApiError::validation("Referenced resource does not exist").into_response(),
                 );
             }
             _ => {}
@@ -93,8 +87,6 @@ fn constraint_message(name: &str) -> &'static str {
     }
 }
 
-// --- Handlers ---
-
 pub async fn list_descents(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
@@ -104,7 +96,7 @@ pub async fn list_descents(
 
     // scope=owned and scope=following both require authentication
     if matches!(q.scope.as_deref(), Some("owned") | Some("following")) && viewer_id.is_none() {
-        return (StatusCode::UNAUTHORIZED, "Authentication required").into_response();
+        return ApiError::unauthorized("Authentication required").into_response();
     }
 
     let page = q.page.unwrap_or(1).max(1);
@@ -124,7 +116,7 @@ pub async fn list_descents(
         Ok(list) => Json(list).into_response(),
         Err(err) => {
             tracing::error!("Error listing descents: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -133,7 +125,7 @@ doc_fn!(list_descents_docs, op =>
     op.input::<Query<ListDescentsQuery>>()
         .description("List descents visible to the current viewer")
         .response::<200, Json<PaginatedResponse<Descent>>>()
-        .response_with::<401, (), _>(|res| res.description("Unauthorized (scope=owned requires auth)"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized (scope=owned requires auth)"))
         .tag("Descents")
 );
 
@@ -144,15 +136,14 @@ pub async fn create_descent(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     if !validate_put_in(body.put_in_feature_id, body.put_in_lat, body.put_in_lon) {
-        return (
-            StatusCode::UNPROCESSABLE_ENTITY,
+        return ApiError::validation(
             "put_in must specify either feature_id or lat+lon, not both or neither",
         )
-            .into_response();
+        .into_response();
     }
 
     if !validate_put_in(
@@ -160,19 +151,14 @@ pub async fn create_descent(
         body.take_out_lat,
         body.take_out_lon,
     ) {
-        return (
-            StatusCode::UNPROCESSABLE_ENTITY,
+        return ApiError::validation(
             "take_out must specify either feature_id or lat+lon, not both or neither",
         )
-            .into_response();
+        .into_response();
     }
 
     if body.end_time < body.start_time {
-        return (
-            StatusCode::UNPROCESSABLE_ENTITY,
-            "end_time must be on or after start_time",
-        )
-            .into_response();
+        return ApiError::validation("end_time must be on or after start_time").into_response();
     }
 
     if let Visibility::Shared {
@@ -181,10 +167,7 @@ pub async fn create_descent(
     } = body.visibility
     {
         if users.is_empty() && groups.is_empty() {
-            return (
-                StatusCode::UNPROCESSABLE_ENTITY,
-                "shared visibility requires at least one user or group",
-            )
+            return ApiError::validation("shared visibility requires at least one user or group")
                 .into_response();
         }
     }
@@ -196,7 +179,7 @@ pub async fn create_descent(
         }
         Err(err) => {
             tracing::error!("Error creating descent: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -204,8 +187,8 @@ pub async fn create_descent(
 doc_fn!(create_descent_docs, op =>
     op.description("Log a new descent")
         .response_with::<201, Json<Descent>, _>(|res| res.description("Descent created"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<422, (), _>(|res| res.description("Validation error"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Validation error"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Descents")
 );
@@ -219,10 +202,10 @@ pub async fn get_descent(
 
     match descents::get_descent_for_viewer(&app.pg_pool, descent_id, viewer_id.as_deref()).await {
         Ok(Some(d)) => Json(d).into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error fetching descent {}: {}", descent_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -231,7 +214,7 @@ doc_fn!(get_descent_docs, op =>
     op.input::<Path<DescentPath>>()
         .description("Get a descent by ID")
         .response::<200, Json<Descent>>()
-        .response_with::<404, (), _>(|res| res.description("Not found or not visible"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found or not visible"))
         .tag("Descents")
 );
 
@@ -243,7 +226,7 @@ pub async fn patch_descent(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     if let Some(Visibility::Shared {
@@ -252,10 +235,7 @@ pub async fn patch_descent(
     }) = body.visibility
     {
         if users.is_empty() && groups.is_empty() {
-            return (
-                StatusCode::UNPROCESSABLE_ENTITY,
-                "shared visibility requires at least one user or group",
-            )
+            return ApiError::validation("shared visibility requires at least one user or group")
                 .into_response();
         }
     }
@@ -265,11 +245,10 @@ pub async fn patch_descent(
         || body.put_in_lon.is_some()
         || body.put_in_label.is_some();
     if update_put_in && !validate_put_in(body.put_in_feature_id, body.put_in_lat, body.put_in_lon) {
-        return (
-            StatusCode::UNPROCESSABLE_ENTITY,
+        return ApiError::validation(
             "put_in must specify either feature_id or lat+lon, not both or neither",
         )
-            .into_response();
+        .into_response();
     }
 
     let update_take_out = body.take_out_feature_id.is_some()
@@ -283,32 +262,27 @@ pub async fn patch_descent(
             body.take_out_lon,
         )
     {
-        return (
-            StatusCode::UNPROCESSABLE_ENTITY,
+        return ApiError::validation(
             "take_out must specify either feature_id or lat+lon, not both or neither",
         )
-            .into_response();
+        .into_response();
     }
 
     if let (Some(start), Some(end)) = (body.start_time, body.end_time) {
         if end < start {
-            return (
-                StatusCode::UNPROCESSABLE_ENTITY,
-                "end_time must be on or after start_time",
-            )
-                .into_response();
+            return ApiError::validation("end_time must be on or after start_time").into_response();
         }
     }
 
     match descents::patch_descent(&app.pg_pool, descent_id, token.user_id(), &body).await {
         Ok(Some(d)) => Json(d).into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(ref err) if db_constraint_response(err).is_some() => {
             db_constraint_response(err).unwrap()
         }
         Err(err) => {
             tracing::error!("Error patching descent {}: {}", descent_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -317,9 +291,9 @@ doc_fn!(patch_descent_docs, op =>
     op.input::<Path<DescentPath>>()
         .description("Partially update a descent (owner only)")
         .response::<200, Json<Descent>>()
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Not found or not the owner"))
-        .response_with::<422, (), _>(|res| res.description("Validation error"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found or not the owner"))
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Validation error"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Descents")
 );
@@ -331,15 +305,15 @@ pub async fn delete_descent(
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
-        None => return (StatusCode::UNAUTHORIZED, "Authentication required").into_response(),
+        None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
     match descents::delete_descent(&app.pg_pool, descent_id, token.user_id()).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error deleting descent {}: {}", descent_id, err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            ApiError::internal().into_response()
         }
     }
 }
@@ -348,8 +322,37 @@ doc_fn!(delete_descent_docs, op =>
     op.input::<Path<DescentPath>>()
         .description("Delete a descent (owner only)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
-        .response_with::<401, (), _>(|res| res.description("Unauthorized"))
-        .response_with::<404, (), _>(|res| res.description("Not found or not the owner"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found or not the owner"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Descents")
 );
+
+#[cfg(test)]
+mod tests {
+    use super::{constraint_message, validate_put_in};
+
+    #[test]
+    fn a_point_is_either_a_feature_or_coordinates() {
+        assert!(validate_put_in(Some(1), None, None));
+        assert!(validate_put_in(None, Some(47.0), Some(11.0)));
+    }
+
+    #[test]
+    fn a_point_is_never_both_partial_nor_empty() {
+        assert!(!validate_put_in(None, None, None), "nothing given");
+        assert!(
+            !validate_put_in(Some(1), Some(47.0), Some(11.0)),
+            "both given"
+        );
+        assert!(!validate_put_in(None, Some(47.0), None), "latitude only");
+        assert!(!validate_put_in(None, None, Some(11.0)), "longitude only");
+    }
+
+    #[test]
+    fn known_constraints_explain_themselves() {
+        assert!(constraint_message("chk_descent_times").contains("start_time"));
+        assert!(constraint_message("chk_descent_put_in").contains("put_in"));
+        assert_eq!(constraint_message("something_else"), "Constraint violation");
+    }
+}

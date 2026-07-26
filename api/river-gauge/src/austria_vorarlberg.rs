@@ -147,8 +147,12 @@ impl GaugeReader for AustriaVorarlbergReader {
                     let coords = f.geometry.as_ref().map(|g| g.coordinates);
                     let p = f.properties;
                     let mut params = Vec::new();
-                    if p.w.is_some() { params.push("W".into()); }
-                    if p.q.is_some() { params.push("Q".into()); }
+                    if p.w.is_some() {
+                        params.push("W".into());
+                    }
+                    if p.q.is_some() {
+                        params.push("Q".into());
+                    }
                     StationInfo {
                         station_id: p.wisid,
                         name: p.stationsname,
