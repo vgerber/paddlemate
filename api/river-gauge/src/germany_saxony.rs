@@ -79,9 +79,7 @@ fn extract_tag<'a>(xml: &'a str, tag: &str) -> Option<&'a str> {
 fn parse_desc_value(desc: &str, label: &str) -> Option<f64> {
     let after = desc.split_once(label)?.1.trim();
     // The value ends at the first space or `<`.
-    let end = after
-        .find(|c: char| c == ' ' || c == '<')
-        .unwrap_or(after.len());
+    let end = after.find([' ', '<']).unwrap_or(after.len());
     let num_str = &after[..end];
     // German decimal separator is comma.
     num_str.replace(',', ".").parse::<f64>().ok()

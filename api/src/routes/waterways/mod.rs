@@ -1,33 +1,31 @@
 mod comments;
+mod crud;
 mod features;
 mod sections;
 mod water_ranges;
 mod water_status;
-mod waterways;
 
 use aide::axum::{
     ApiRouter,
     routing::{get_with, post_with, put_with},
 };
-use axum::{Extension, response::IntoResponse, response::Response};
+use axum::Extension;
 
-use crate::{error::ApiError, layers::auth::AuthToken, models::lang::normalize_lang_code, state::AppState};
+use crate::{
+    error::ApiError, layers::auth::AuthToken, models::lang::normalize_lang_code, state::AppState,
+};
 
 /// The two checks every localized name and description endpoint starts with:
 /// the caller must be signed in, and the language tag must be storable.
-/// Returns the normalized tag, or the response to send instead.
+/// Returns the normalized tag, or the error to send instead.
 pub(crate) fn authorize_localization(
     auth: Option<Extension<AuthToken>>,
     lang_code: &str,
-) -> Result<String, Response> {
+) -> Result<String, ApiError> {
     if auth.is_none() {
-        return Err(ApiError::unauthorized("Authentication required").into_response());
+        return Err(ApiError::unauthorized("Authentication required"));
     }
-    normalize_lang_code(lang_code).map_err(|msg| {
-        ApiError::validation(msg)
-            .with_target("lang_code")
-            .into_response()
-    })
+    normalize_lang_code(lang_code).map_err(|msg| ApiError::validation(msg).with_target("lang_code"))
 }
 
 /// All waterway routes combined into a single router.
@@ -37,14 +35,14 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
         // Waterway CRUD
         .api_route(
             "/",
-            get_with(waterways::list_waterways, waterways::list_waterways_docs)
-                .post_with(waterways::create_waterway, waterways::create_waterway_docs),
+            get_with(crud::list_waterways, crud::list_waterways_docs)
+                .post_with(crud::create_waterway, crud::create_waterway_docs),
         )
         .api_route(
             "/{waterway_id}",
-            get_with(waterways::get_waterway, waterways::get_waterway_docs)
-                .put_with(waterways::update_waterway, waterways::update_waterway_docs)
-                .delete_with(waterways::delete_waterway, waterways::delete_waterway_docs),
+            get_with(crud::get_waterway, crud::get_waterway_docs)
+                .put_with(crud::update_waterway, crud::update_waterway_docs)
+                .delete_with(crud::delete_waterway, crud::delete_waterway_docs),
         )
         // Section CRUD
         .api_route(

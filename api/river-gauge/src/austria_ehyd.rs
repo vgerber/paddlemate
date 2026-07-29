@@ -9,7 +9,9 @@ use chrono_tz::Europe::Vienna;
 use serde::Deserialize;
 use tokio::sync::Mutex;
 
-use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
+use crate::{
+    BoxFuture, FetchRequest, GaugeReader, Readings, ReadingsBySource, SnapshotCache, StationInfo,
+};
 
 /// Reader for Austrian federal hydrography data (eHYD / BMLUK).
 ///
@@ -33,11 +35,11 @@ use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
 pub struct AustriaEhydReader {
     /// Cached snapshot: source_id -> single (ts, value) from PegelAktuell.
     /// Also used to build the source_id -> hzbnr map.
-    cache: Arc<Mutex<Option<(Instant, HashMap<String, Vec<(DateTime<Utc>, f64)>>)>>>,
+    cache: SnapshotCache<ReadingsBySource>,
     /// Cached mapping: source_id -> hzbnr, rebuilt alongside the snapshot.
-    hzbnr_map: Arc<Mutex<Option<(Instant, HashMap<String, i64>)>>>,
+    hzbnr_map: SnapshotCache<HashMap<String, i64>>,
     /// Cached timeseries per hzbnr: hzbnr -> sorted (ts, value) pairs.
-    ts_cache: Arc<Mutex<HashMap<i64, (Instant, Vec<(DateTime<Utc>, f64)>)>>>,
+    ts_cache: Arc<Mutex<HashMap<i64, (Instant, Readings)>>>,
 }
 
 impl Default for AustriaEhydReader {

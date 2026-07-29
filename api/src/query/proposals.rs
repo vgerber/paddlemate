@@ -487,8 +487,7 @@ async fn apply_proposal(
             let mut body: CreateSectionBody =
                 serde_json::from_value(data.clone()).map_err(|e| sqlx::Error::Decode(e.into()))?;
             normalize_stored_lang_codes(&mut body, proposal.id);
-            sections::create_section_bundle(&mut **tx, waterway_id, &body, &proposal.submitted_by)
-                .await?;
+            sections::create_section_bundle(tx, waterway_id, &body, &proposal.submitted_by).await?;
         }
 
         (ProposalEntityType::WaterSection, ProposalOperation::Update) => {
@@ -536,13 +535,8 @@ async fn apply_proposal(
                 let mut body: CreateFeatureBody = serde_json::from_value(data.clone())
                     .map_err(|e| sqlx::Error::Decode(e.into()))?;
                 normalize_stored_feature_lang_code(&mut body, proposal.id);
-                features::create_feature_bundle(
-                    &mut **tx,
-                    section_id,
-                    &body,
-                    &proposal.submitted_by,
-                )
-                .await?;
+                features::create_feature_bundle(tx, section_id, &body, &proposal.submitted_by)
+                    .await?;
             }
         }
 

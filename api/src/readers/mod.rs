@@ -180,7 +180,7 @@ pub async fn backfill(
 
     let gauge_with_series = crate::query::gauges::fetch_gauge_with_series(&pool, gauge_id)
         .await?
-        .ok_or_else(|| anyhow::anyhow!("Gauge {} not found", gauge_id))?;
+        .ok_or_else(|| anyhow::anyhow!("Gauge {gauge_id} not found"))?;
 
     let reader = readers
         .iter()

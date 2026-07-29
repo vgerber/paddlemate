@@ -72,10 +72,17 @@ export function buildSectionsGeoJSON(
   };
 }
 
+/**
+ * Section labels for the map. `language` is taken as an argument rather than
+ * read from the preference, because callers memoize the result: an implicit
+ * read would leave the map showing the previous language's labels, and nothing
+ * would flag the missing dependency.
+ */
 export function buildSectionLabelsGeoJSON(
   sections: SectionWithFeatures[],
   labelMode: "section" | "river",
-  waterwayNames?: Record<number, string>,
+  waterwayNames: Record<number, string> | undefined,
+  language: string,
 ): GeoJSON.FeatureCollection {
   return {
     type: "FeatureCollection",
@@ -91,7 +98,7 @@ export function buildSectionLabelsGeoJSON(
       const ww = s.features?.find((f) => f.feature_type === "whitewater");
       const diff = (ww?.metadata as Record<string, unknown> | undefined)
         ?.difficulty as string | undefined;
-      const sectionName = localizedName(s.name, s.names);
+      const sectionName = localizedName(s.name, s.names, language);
       const riverName = waterwayNames?.[s.waterway_id] ?? sectionName;
       const label =
         labelMode === "river"

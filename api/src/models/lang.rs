@@ -1,7 +1,7 @@
 //! Canonical form for the `lang_code` columns of the localization tables.
 
-/// Longest tag the localization columns can hold (`VARCHAR(10)`).
-const MAX_LEN: usize = 10;
+/// Longest tag the localization columns can hold (`VARCHAR(35)`).
+const MAX_LEN: usize = 35;
 
 /// Language assumed when a client submits a name without a tag.
 pub const DEFAULT_LANG_CODE: &str = "en";
@@ -21,7 +21,7 @@ pub fn normalize_lang_code(input: &str) -> Result<String, &'static str> {
         return Err("lang_code must be a language tag such as \"de\" or \"pt-br\"");
     }
     if normalized.len() > MAX_LEN {
-        return Err("lang_code must be at most 10 characters");
+        return Err("lang_code must be at most 35 characters");
     }
     Ok(normalized)
 }
@@ -87,6 +87,15 @@ mod tests {
     #[test]
     fn rejects_tags_that_do_not_fit_the_column() {
         assert_eq!(normalize_lang_code("zh-hant-hk").unwrap(), "zh-hant-hk");
-        assert!(normalize_lang_code("deu-latn-de-1996").is_err());
+        assert_eq!(
+            normalize_lang_code("deu-latn-de-1996").unwrap(),
+            "deu-latn-de-1996"
+        );
+
+        // No registered tag comes close; the limit only exists so that a
+        // request can never be rejected by the database instead of the API.
+        let too_long = "de-latn-variant1-variant2-variant3-variant4";
+        assert!(too_long.len() > 35);
+        assert!(normalize_lang_code(too_long).is_err());
     }
 }

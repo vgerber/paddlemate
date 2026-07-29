@@ -10,7 +10,7 @@ use crate::state::AppState;
 
 pub fn docs_routes(state: AppState) -> ApiRouter {
     let base_url = dotenvy::var("BASE_URL").unwrap_or_else(|_| "/api/v1".to_string());
-    let openapi_url = format!("{}/docs/openapi.json", base_url);
+    let openapi_url = format!("{base_url}/docs/openapi.json");
     ApiRouter::new()
         .route(
             "/",
@@ -33,15 +33,14 @@ async fn serve_stoplight(openapi_url: String) -> impl IntoResponse {
 </head>
 <body>
   <elements-api
-    apiDescriptionUrl="{}"
+    apiDescriptionUrl="{openapi_url}"
     router="hash"
     layout="sidebar"
     hideSchemas
   />
 </body>
 </html>
-"#,
-        openapi_url
+"#
     );
     ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], html)
 }

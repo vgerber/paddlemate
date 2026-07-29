@@ -187,11 +187,15 @@ export default function WaterwayMap({
     () => buildSectionsGeoJSON(sections ?? []),
     [sections],
   );
-  // The label builder localizes section names, so the language has to be a
-  // dependency - without it the map keeps the labels of the previous language.
   const language = useLanguage();
   const sectionLabelsGeoJSON = useMemo(
-    () => buildSectionLabelsGeoJSON(sections ?? [], labelMode, waterwayNames),
+    () =>
+      buildSectionLabelsGeoJSON(
+        sections ?? [],
+        labelMode,
+        waterwayNames,
+        language,
+      ),
     [sections, labelMode, waterwayNames, language],
   );
   const sectionEndpointsGeoJSON = useMemo(

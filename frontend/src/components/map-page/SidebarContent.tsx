@@ -43,6 +43,7 @@ export default function SidebarContent({
     areaLocked,
     setAreaLocked,
     filteredSearchSections,
+    areSearchSectionsPending,
     waterwayNames,
     favorites,
     favoritedIds,
@@ -103,6 +104,7 @@ export default function SidebarContent({
         areaLocked={areaLocked}
         onAreaLockedChange={setAreaLocked}
         filteredSections={filteredSearchSections}
+        sectionsPending={areSearchSectionsPending}
         selectedSectionId={selectedSectionId}
         onSectionClick={handleSectionClick}
         waterwayNames={waterwayNames}

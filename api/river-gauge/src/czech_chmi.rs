@@ -311,9 +311,10 @@ impl GaugeReader for CzechChmiReader {
         Box::pin(async move {
             let mut results: HashMap<String, Vec<(DateTime<Utc>, f64)>> = HashMap::new();
 
-            // Group requests by station_id.
-            let mut station_map: HashMap<&str, Vec<(&str, &str, DateTime<Utc>, DateTime<Utc>)>> =
-                HashMap::new();
+            // Group requests by station_id: the parameter, the full source_id
+            // to key the result by, and the requested window.
+            type Wanted<'r> = (&'r str, &'r str, DateTime<Utc>, DateTime<Utc>);
+            let mut station_map: HashMap<&str, Vec<Wanted<'_>>> = HashMap::new();
             for req in requests {
                 let parts: Vec<&str> = req.source_id.splitn(2, ':').collect();
                 if parts.len() == 2 {

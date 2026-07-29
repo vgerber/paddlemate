@@ -268,7 +268,7 @@ pub async fn upsert_feature_name(
 ) -> impl IntoApiResponse {
     let lang_code = match authorize_localization(auth, &lang_code) {
         Ok(code) => code,
-        Err(response) => return response,
+        Err(error) => return error.into_response(),
     };
 
     match features::feature_belongs_to_section(&app.pg_pool, waterway_id, section_id, feature_id)
@@ -314,7 +314,7 @@ pub async fn delete_feature_name(
 ) -> impl IntoApiResponse {
     let lang_code = match authorize_localization(auth, &lang_code) {
         Ok(code) => code,
-        Err(response) => return response,
+        Err(error) => return error.into_response(),
     };
 
     match features::delete_name(
@@ -364,7 +364,7 @@ pub async fn upsert_feature_description(
 ) -> impl IntoApiResponse {
     let lang_code = match authorize_localization(auth, &lang_code) {
         Ok(code) => code,
-        Err(response) => return response,
+        Err(error) => return error.into_response(),
     };
 
     match features::feature_belongs_to_section(&app.pg_pool, waterway_id, section_id, feature_id)
@@ -416,7 +416,7 @@ pub async fn delete_feature_description(
 ) -> impl IntoApiResponse {
     let lang_code = match authorize_localization(auth, &lang_code) {
         Ok(code) => code,
-        Err(response) => return response,
+        Err(error) => return error.into_response(),
     };
 
     match features::delete_description(

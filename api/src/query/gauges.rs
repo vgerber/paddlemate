@@ -193,17 +193,31 @@ pub async fn fetch_gauge_with_series(
     Ok(Some(GaugeWithSeries::from_parts(gauge, series, source)))
 }
 
-pub async fn create_gauge(
-    pool: &PgPool,
-    name: &str,
-    provider: &str,
-    source_id: &str,
-    data_source_id: Option<&str>,
-    lat: Option<f64>,
-    lon: Option<f64>,
-    active: bool,
-    fetch_interval_secs: i32,
-) -> Result<Gauge, sqlx::Error> {
+/// Every column a caller may set on a gauge. Create and update write the same
+/// set, so they take the same struct rather than eight positional arguments
+/// each, where two of the same type are easy to swap by accident.
+pub struct GaugeFields<'a> {
+    pub name: &'a str,
+    pub provider: &'a str,
+    pub source_id: &'a str,
+    pub data_source_id: Option<&'a str>,
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
+    pub active: bool,
+    pub fetch_interval_secs: i32,
+}
+
+pub async fn create_gauge(pool: &PgPool, fields: GaugeFields<'_>) -> Result<Gauge, sqlx::Error> {
+    let GaugeFields {
+        name,
+        provider,
+        source_id,
+        data_source_id,
+        lat,
+        lon,
+        active,
+        fetch_interval_secs,
+    } = fields;
     let row = sqlx::query(&format!(
         "INSERT INTO gauges (name, provider, source_id, data_source_id, lat, lon, active, fetch_interval_secs)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -225,15 +239,18 @@ pub async fn create_gauge(
 pub async fn update_gauge(
     pool: &PgPool,
     gauge_id: GaugeId,
-    name: &str,
-    provider: &str,
-    source_id: &str,
-    data_source_id: Option<&str>,
-    lat: Option<f64>,
-    lon: Option<f64>,
-    active: bool,
-    fetch_interval_secs: i32,
+    fields: GaugeFields<'_>,
 ) -> Result<Option<Gauge>, sqlx::Error> {
+    let GaugeFields {
+        name,
+        provider,
+        source_id,
+        data_source_id,
+        lat,
+        lon,
+        active,
+        fetch_interval_secs,
+    } = fields;
     let row = sqlx::query(&format!(
         "UPDATE gauges
          SET name = $2, provider = $3, source_id = $4, data_source_id = $5, lat = $6, lon = $7,

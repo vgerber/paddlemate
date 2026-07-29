@@ -82,7 +82,7 @@ pub async fn fetch_username_from_keycloak(
     let client = reqwest::Client::new();
     let response = client
         .get(&user_url)
-        .header("Authorization", format!("Bearer {}", admin_token))
+        .header("Authorization", format!("Bearer {admin_token}"))
         .send()
         .await
         .map_err(|err| {
@@ -138,7 +138,7 @@ pub async fn user_exists_in_keycloak(app: &AppState, user_id: &str) -> Result<bo
     let client = reqwest::Client::new();
     let response = client
         .get(&user_url)
-        .header("Authorization", format!("Bearer {}", admin_token))
+        .header("Authorization", format!("Bearer {admin_token}"))
         .send()
         .await
         .map_err(|err| {

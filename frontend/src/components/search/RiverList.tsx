@@ -7,7 +7,6 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
-import { Fragment } from "react";
 import type { WaterwayListItem } from "@/lib/api";
 
 interface PendingRiver {
@@ -39,6 +38,37 @@ function matchReason(waterway: WaterwayListItem): string | undefined {
   return matched_section_name && matched_section_name !== matched_name
     ? `${label} - ${matched_section_name}`
     : label;
+}
+
+function RiverItem({
+  waterway,
+  onSelect,
+}: {
+  waterway: WaterwayListItem;
+  onSelect: (id: number) => void;
+}) {
+  return (
+    <ListItemButton
+      onClick={() => onSelect(waterway.id)}
+      sx={{ borderRadius: 1, mb: 0.5 }}
+    >
+      <ListItemText
+        primary={waterway.name}
+        secondary={matchReason(waterway)}
+        slotProps={{
+          primary: { variant: "body2", sx: { fontWeight: 600 } },
+          secondary: { variant: "caption" },
+        }}
+      />
+      <Chip
+        label={waterway.waterway_type.toUpperCase()}
+        color="primary"
+        size="small"
+        variant="outlined"
+        sx={{ flexShrink: 0, fontSize: "0.65rem" }}
+      />
+    </ListItemButton>
+  );
 }
 
 interface RiverListProps {
@@ -133,41 +163,35 @@ export default function RiverList({
     <>
       <List dense disablePadding>
         <PendingRiverItems pendingRivers={pendingRivers} />
-        {waterways.map((waterway, index) => (
-          <Fragment key={waterway.id}>
-            {/* Approximate matches sort last, so one divider separates them
-                from the exact ones and explains why they are here. */}
-            {waterway.fuzzy && !waterways[index - 1]?.fuzzy && (
-              <Typography
-                variant="overline"
-                color="text.disabled"
-                sx={{ display: "block", px: 1, pt: 1, lineHeight: 1.6 }}
-              >
-                Similar names
-              </Typography>
-            )}
-            <ListItemButton
-              onClick={() => onSelect(waterway.id)}
-              sx={{ borderRadius: 1, mb: 0.5 }}
-            >
-              <ListItemText
-                primary={waterway.name}
-                secondary={matchReason(waterway)}
-                slotProps={{
-                  primary: { variant: "body2", sx: { fontWeight: 600 } },
-                  secondary: { variant: "caption" },
-                }}
-              />
-              <Chip
-                label={waterway.waterway_type.toUpperCase()}
-                color="primary"
-                size="small"
-                variant="outlined"
-                sx={{ flexShrink: 0, fontSize: "0.65rem" }}
-              />
-            </ListItemButton>
-          </Fragment>
-        ))}
+        {waterways
+          .filter((w) => !w.fuzzy)
+          .map((waterway) => (
+            <RiverItem
+              key={waterway.id}
+              waterway={waterway}
+              onSelect={onSelect}
+            />
+          ))}
+        {/* Approximate matches are grouped rather than assumed to come last,
+            so the divider stays correct whatever order the API returns. */}
+        {waterways.some((w) => w.fuzzy) && (
+          <Typography
+            variant="overline"
+            color="text.disabled"
+            sx={{ display: "block", px: 1, pt: 1, lineHeight: 1.6 }}
+          >
+            Similar names
+          </Typography>
+        )}
+        {waterways
+          .filter((w) => w.fuzzy)
+          .map((waterway) => (
+            <RiverItem
+              key={waterway.id}
+              waterway={waterway}
+              onSelect={onSelect}
+            />
+          ))}
       </List>
       {hasNextPage && (
         <Button

@@ -27,30 +27,37 @@ interface LocalizedDescriptionEntry {
  */
 function pickLocalized<T extends { lang_code: string }>(
   entries: T[] | null | undefined,
+  language: string,
 ): T | undefined {
   if (!entries?.length) return undefined;
-  const preferred = preferredLanguage();
 
   const exact = entries.find(
-    (entry) => entry.lang_code.toLowerCase() === preferred,
+    (entry) => entry.lang_code.toLowerCase() === language,
   );
   if (exact) return exact;
 
   return entries.find(
-    (entry) => entry.lang_code.toLowerCase().split("-")[0] === preferred,
+    (entry) => entry.lang_code.toLowerCase().split("-")[0] === language,
   );
 }
 
+/**
+ * Pass `language` when the result is cached - in a memo, or in a module that
+ * builds map data - so the cache has something to key on. Callers that render
+ * directly can leave it out and take the current preference.
+ */
 export function localizedName(
   fallback: string,
   names?: LocalizedNameEntry[] | null,
+  language: string = preferredLanguage(),
 ): string {
-  return pickLocalized(names)?.name ?? fallback;
+  return pickLocalized(names, language)?.name ?? fallback;
 }
 
 export function localizedDescription(
   fallback: string | null | undefined,
   descriptions?: LocalizedDescriptionEntry[] | null,
+  language: string = preferredLanguage(),
 ): string | null {
-  return pickLocalized(descriptions)?.description ?? fallback ?? null;
+  return pickLocalized(descriptions, language)?.description ?? fallback ?? null;
 }

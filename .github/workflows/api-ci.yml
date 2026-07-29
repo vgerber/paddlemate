@@ -5,9 +5,11 @@ on:
     branches: [main]
     paths:
       - "api/**"
+      - ".github/workflows/api-ci.yml"
   pull_request:
     paths:
       - "api/**"
+      - ".github/workflows/api-ci.yml"
 
 jobs:
   build:
@@ -48,6 +50,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
+            ~/.cargo/bin
             api/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('api/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
@@ -63,3 +66,28 @@ jobs:
       - name: Build
         working-directory: api
         run: cargo build
+
+      # Includes tests/migration_rules.rs, which fails on a migration that
+      # changes search_key without a REINDEX - a fresh CI database cannot
+      # catch that, because it builds its indexes from the current function.
+      - name: Test
+        working-directory: api
+        run: cargo test
+
+      - name: Install sqlx-cli
+        run: |
+          command -v sqlx >/dev/null ||
+            cargo install sqlx-cli --version 0.8.6 --locked \
+              --no-default-features --features rustls,postgres
+
+      # SQLX_OFFLINE only governs the compile-time query cache; the migrations
+      # run against the Postgres service above, which is the only place they are
+      # exercised before a deploy.
+      - name: Apply migrations
+        working-directory: api
+        run: sqlx migrate run
+
+      - name: Assert search normalization
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+            -f api/tests/sql/search_key_assertions.sql

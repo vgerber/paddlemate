@@ -65,7 +65,7 @@ async fn list_users(
 ) -> impl IntoApiResponse {
     let viewer_id = token.user_id();
 
-    match follows::list_all_users_with_follow_status(&app.pg_pool, &viewer_id).await {
+    match follows::list_all_users_with_follow_status(&app.pg_pool, viewer_id).await {
         Ok(users) => Json(
             users
                 .into_iter()
@@ -98,7 +98,7 @@ async fn list_pending(
 ) -> impl IntoApiResponse {
     let user_id = token.user_id();
 
-    match follows::list_pending_requests(&app.pg_pool, &user_id).await {
+    match follows::list_pending_requests(&app.pg_pool, user_id).await {
         Ok(users) => Json(users as Vec<User>).into_response(),
         Err(err) => {
             tracing::error!("Error listing pending requests: {}", err);
@@ -120,7 +120,7 @@ async fn list_following(
 ) -> impl IntoApiResponse {
     let user_id = token.user_id();
 
-    match follows::list_following(&app.pg_pool, &user_id).await {
+    match follows::list_following(&app.pg_pool, user_id).await {
         Ok(users) => Json(users as Vec<User>).into_response(),
         Err(err) => {
             tracing::error!("Error listing following: {}", err);
@@ -142,7 +142,7 @@ async fn list_followers(
 ) -> impl IntoApiResponse {
     let user_id = token.user_id();
 
-    match follows::list_followers(&app.pg_pool, &user_id).await {
+    match follows::list_followers(&app.pg_pool, user_id).await {
         Ok(users) => Json(users as Vec<User>).into_response(),
         Err(err) => {
             tracing::error!("Error listing followers: {}", err);
@@ -169,7 +169,7 @@ async fn follow_user(
         return ApiError::validation("Invalid request").into_response();
     }
 
-    match follows::follow_user(&app.pg_pool, &user_id, &path.user_id).await {
+    match follows::follow_user(&app.pg_pool, user_id, &path.user_id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(err) => {
             let msg = err.to_string();
@@ -199,7 +199,7 @@ async fn accept_follow_request(
     let user_id = token.user_id();
 
     // path.user_id is the follower; auth user (following_id) accepts
-    match follows::accept_follow(&app.pg_pool, &path.user_id, &user_id).await {
+    match follows::accept_follow(&app.pg_pool, &path.user_id, user_id).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
@@ -224,7 +224,7 @@ async fn delete_follow(
 ) -> impl IntoApiResponse {
     let user_id = token.user_id();
 
-    match follows::delete_follow(&app.pg_pool, &user_id, &path.user_id).await {
+    match follows::delete_follow(&app.pg_pool, user_id, &path.user_id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(err) => {
             tracing::error!("Error removing follow: {}", err);

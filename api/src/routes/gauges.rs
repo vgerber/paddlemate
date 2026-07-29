@@ -170,14 +170,16 @@ pub async fn create_gauge(
 
     match gauges::create_gauge(
         &app.pg_pool,
-        &body.name,
-        &body.provider,
-        &body.source_id,
-        body.data_source_id.as_deref(),
-        body.lat,
-        body.lon,
-        active,
-        interval,
+        gauges::GaugeFields {
+            name: &body.name,
+            provider: &body.provider,
+            source_id: &body.source_id,
+            data_source_id: body.data_source_id.as_deref(),
+            lat: body.lat,
+            lon: body.lon,
+            active,
+            fetch_interval_secs: interval,
+        },
     )
     .await
     {
@@ -215,14 +217,16 @@ pub async fn update_gauge(
     match gauges::update_gauge(
         &app.pg_pool,
         gauge_id,
-        &body.name,
-        &body.provider,
-        &body.source_id,
-        body.data_source_id.as_deref(),
-        body.lat,
-        body.lon,
-        body.active,
-        body.fetch_interval_secs,
+        gauges::GaugeFields {
+            name: &body.name,
+            provider: &body.provider,
+            source_id: &body.source_id,
+            data_source_id: body.data_source_id.as_deref(),
+            lat: body.lat,
+            lon: body.lon,
+            active: body.active,
+            fetch_interval_secs: body.fetch_interval_secs,
+        },
     )
     .await
     {

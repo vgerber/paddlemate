@@ -26,13 +26,12 @@ use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
 ///
 /// Only the most recent reading is returned. The value is included only when
 /// its timestamp falls within the requested window.
+/// One station's latest line from the snapshot: when it was measured, the water
+/// level in cm and the discharge in m3/s. Either value can be absent.
+type Snapshot = HashMap<String, (DateTime<Utc>, Option<f64>, Option<f64>)>;
+
 pub struct GermanyBadenWuerttembergReader {
-    cache: Mutex<
-        Option<(
-            std::time::Instant,
-            HashMap<String, (DateTime<Utc>, Option<f64>, Option<f64>)>,
-        )>,
-    >,
+    cache: Mutex<Option<(std::time::Instant, Snapshot)>>,
 }
 
 const SNAPSHOT_URL: &str = "https://www.hvz.baden-wuerttemberg.de/js/hvz_peg_stmn.js";
@@ -63,7 +62,7 @@ fn parse_bw_timestamp(s: &str) -> Option<DateTime<Utc>> {
 }
 
 /// Parse the JS snapshot into `station_5digit -> (timestamp, W_cm, Q_m3s)`.
-fn parse_snapshot(js: &str) -> HashMap<String, (DateTime<Utc>, Option<f64>, Option<f64>)> {
+fn parse_snapshot(js: &str) -> Snapshot {
     let mut map = HashMap::new();
 
     // Each station line contains: ['NNNNN','name','river',FG,'W','dim','W_ts','Q','dim','Q_ts',...]

@@ -224,20 +224,18 @@ pub async fn api_token_auth_optional(
     next: Next,
 ) -> Response {
     // Keycloak bearer token (PassthroughMode::Pass sets KeycloakAuthStatus)
-    if let Some(auth_status) = request
+    if let Some(KeycloakAuthStatus::Success(keycloak_token)) = request
         .extensions()
         .get::<KeycloakAuthStatus<String, ProfileAndEmail>>()
         .cloned()
     {
-        if let KeycloakAuthStatus::Success(keycloak_token) = auth_status {
-            let auth_token = AuthToken(keycloak_token);
-            upsert_user_from_token(&state, &auth_token).await;
-            request.extensions_mut().insert(auth_token);
-            request.extensions_mut().insert(AuthMethod {
-                kind: AuthMethodKind::Keycloak,
-            });
-            return next.run(request).await;
-        }
+        let auth_token = AuthToken(keycloak_token);
+        upsert_user_from_token(&state, &auth_token).await;
+        request.extensions_mut().insert(auth_token);
+        request.extensions_mut().insert(AuthMethod {
+            kind: AuthMethodKind::Keycloak,
+        });
+        return next.run(request).await;
     }
 
     // Direct KeycloakToken (Block mode)

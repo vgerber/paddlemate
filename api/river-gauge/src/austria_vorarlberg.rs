@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use tokio::sync::Mutex;
 
-use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
+use crate::{BoxFuture, FetchRequest, GaugeReader, ReadingsBySource, SnapshotCache, StationInfo};
 
 /// Reader for Vorarlberg surface water gauges.
 ///
@@ -25,7 +25,7 @@ use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
 ///
 /// The snapshot is cached for `CACHE_TTL` seconds.
 pub struct AustriaVorarlbergReader {
-    cache: Arc<Mutex<Option<(Instant, HashMap<String, Vec<(DateTime<Utc>, f64)>>)>>>,
+    cache: SnapshotCache<ReadingsBySource>,
 }
 
 impl Default for AustriaVorarlbergReader {

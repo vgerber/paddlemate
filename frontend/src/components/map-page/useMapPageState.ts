@@ -272,6 +272,14 @@ export function useMapPageState(search: RouteSearch) {
     isSearchPanelLoading ||
     searchWaterwayDetails.some((q) => q.isLoading || q.isFetching);
 
+  // Sections arrive one round trip after the rivers - the search returns ids,
+  // then each river's details are fetched - so any section count taken before
+  // they land is partial. A failed fetch leaves isPending false, so this
+  // cannot stick.
+  const areSearchSectionsPending = searchWaterwayDetails.some(
+    (q) => q.isPending,
+  );
+
   const waterwayNames = useMemo(() => {
     const map: Record<number, string> = {};
     for (const q of searchWaterwayDetails) {
@@ -471,6 +479,7 @@ export function useMapPageState(search: RouteSearch) {
     filteredSearchSections,
     waterwayNames,
     isAreaSearchLoading,
+    areSearchSectionsPending,
     gaugePins,
     gaugeRanges,
     selectedGaugeRanges,

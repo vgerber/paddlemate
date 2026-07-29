@@ -111,7 +111,7 @@ async fn main() {
     let database_url = match dotenvy::var("DATABASE_URL") {
         Ok(url) => url,
         Err(err) => {
-            eprintln!("Error loading DATABASE_URL: {}", err);
+            eprintln!("Error loading DATABASE_URL: {err}");
             return;
         }
     };
@@ -144,7 +144,7 @@ async fn main() {
     {
         Ok(pool) => pool,
         Err(err) => {
-            eprintln!("Error connecting to the database: {}", err);
+            eprintln!("Error connecting to the database: {err}");
             return;
         }
     };
@@ -276,7 +276,11 @@ async fn main() {
                 // peer address, so that everyone behind the reverse proxy is
                 // not treated as one client.
                 .key_extractor(SmartIpKeyExtractor)
-                .per_second(rate_limit_per_second)
+                // per_second() sets the gap between replenished requests, not
+                // the rate: passing 20 there means one request every 20
+                // seconds. The interval is the reciprocal, and must not be
+                // zero, so a rate above 1000/s replenishes every millisecond.
+                .per_millisecond((1000 / rate_limit_per_second).max(1))
                 .burst_size(rate_limit_per_second.saturating_mul(5) as u32)
                 .finish()
                 .expect("valid rate limit configuration"),
@@ -347,7 +351,7 @@ async fn main() {
         .with_state(state);
 
     let port = dotenvy::var("PORT").unwrap_or_else(|_| "3000".to_string());
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}"))
         .await
         .unwrap();
     tracing::info!("Listening on port {}", port);

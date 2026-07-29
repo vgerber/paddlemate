@@ -336,7 +336,7 @@ pub async fn upsert_section_name(
 ) -> impl IntoApiResponse {
     let lang_code = match authorize_localization(auth, &path.lang_code) {
         Ok(code) => code,
-        Err(response) => return response,
+        Err(error) => return error.into_response(),
     };
 
     match sections::section_exists(&app.pg_pool, path.waterway_id, path.section_id).await {
@@ -369,7 +369,7 @@ pub async fn delete_section_name(
 ) -> impl IntoApiResponse {
     let lang_code = match authorize_localization(auth, &path.lang_code) {
         Ok(code) => code,
-        Err(response) => return response,
+        Err(error) => return error.into_response(),
     };
 
     match sections::delete_name(&app.pg_pool, path.waterway_id, path.section_id, &lang_code).await {
@@ -398,7 +398,7 @@ pub async fn upsert_section_description(
 ) -> impl IntoApiResponse {
     let lang_code = match authorize_localization(auth, &path.lang_code) {
         Ok(code) => code,
-        Err(response) => return response,
+        Err(error) => return error.into_response(),
     };
 
     match sections::section_exists(&app.pg_pool, path.waterway_id, path.section_id).await {
@@ -433,7 +433,7 @@ pub async fn delete_section_description(
 ) -> impl IntoApiResponse {
     let lang_code = match authorize_localization(auth, &path.lang_code) {
         Ok(code) => code,
-        Err(response) => return response,
+        Err(error) => return error.into_response(),
     };
 
     match sections::delete_description(&app.pg_pool, path.waterway_id, path.section_id, &lang_code)

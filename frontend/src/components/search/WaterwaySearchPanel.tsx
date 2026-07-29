@@ -38,6 +38,8 @@ interface WaterwaySearchPanelProps {
   areaLocked?: boolean;
   onAreaLockedChange?: (locked: boolean) => void;
   filteredSections?: SectionWithFeatures[];
+  /** True while the sections of the current results are still being fetched. */
+  sectionsPending?: boolean;
   selectedSectionId?: number;
   onSectionClick?: (id: number) => void;
   waterwayNames?: Record<number, string>;
@@ -63,6 +65,7 @@ export default function WaterwaySearchPanel({
   areaLocked,
   onAreaLockedChange,
   filteredSections,
+  sectionsPending = false,
   selectedSectionId,
   onSectionClick,
   waterwayNames,
@@ -139,11 +142,13 @@ export default function WaterwaySearchPanel({
     error,
   } = useWaterways(filters);
 
+  // Without filters the query is disabled, but keepPreviousData still hands
+  // out the last search's pages - clearing the input must clear the results.
   const waterways = useMemo(
-    () => data?.pages.flatMap((p) => p.items) ?? [],
-    [data],
+    () => (hasFilters ? (data?.pages.flatMap((p) => p.items) ?? []) : []),
+    [hasFilters, data],
   );
-  const total = data?.pages[0]?.total ?? 0;
+  const total = hasFilters ? (data?.pages[0]?.total ?? 0) : 0;
 
   // The server decides what matches: it also searches translations and rapid
   // names, tolerates misspellings, and folds characters the browser cannot.
@@ -178,7 +183,13 @@ export default function WaterwaySearchPanel({
   // own name has no matching section, and an empty list would then hide the
   // very sections the user is looking for.
   const visibleSections = useMemo(() => {
-    const sections = filteredSections ?? [];
+    // Sections lag a round trip behind the rivers, so the ones still in hand
+    // can belong to the previous search term. Showing those would list, and
+    // count, sections of rivers that are no longer a result.
+    const resultIds = new Set(waterways.map((w) => w.id));
+    const sections = (filteredSections ?? []).filter((s) =>
+      resultIds.has(s.waterway_id),
+    );
     if (mode === "area" || !searchName) return sections;
 
     const byWaterway = new Map<number, typeof sections>();
@@ -198,7 +209,7 @@ export default function WaterwaySearchPanel({
       }
     }
     return sections.filter((section) => keep.has(section.id));
-  }, [mode, filteredSections, searchName, waterwayNames]);
+  }, [mode, filteredSections, searchName, waterwayNames, waterways]);
 
   useEffect(() => {
     onWaterwaysChange?.(waterways.map((w) => w.id));
@@ -404,12 +415,14 @@ export default function WaterwaySearchPanel({
           }}
         >
           <ToggleButton value="rivers">
+            {/* The server total, not the number loaded: paging in more results
+                must not look like the search found more. */}
             <WaterIcon sx={{ fontSize: 14, mr: 0.5 }} /> Rivers (
-            {visibleRivers.length})
+            {total + pendingRivers.length})
           </ToggleButton>
           <ToggleButton value="sections">
             <ListIcon sx={{ fontSize: 14, mr: 0.5 }} /> Sections (
-            {visibleSections.length})
+            {sectionsPending ? "…" : visibleSections.length})
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>

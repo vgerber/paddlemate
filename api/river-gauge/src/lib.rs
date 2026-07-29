@@ -36,7 +36,7 @@ mod poland_imgw;
 mod rivermap;
 mod switzerland_bafu;
 
-use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc};
+use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc, time::Instant};
 
 use chrono::{DateTime, Duration, Utc};
 pub use rivermap::{
@@ -45,6 +45,16 @@ pub use rivermap::{
 };
 
 pub type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
+
+/// Timestamped values for one gauge, oldest first.
+pub type Readings = Vec<(DateTime<Utc>, f64)>;
+
+/// Readings keyed by `source_id`, the shape every reader returns.
+pub type ReadingsBySource = HashMap<String, Readings>;
+
+/// A whole response held until it goes stale, as the providers that only offer
+/// one big snapshot per request cache it.
+pub type SnapshotCache<T> = Arc<tokio::sync::Mutex<Option<(Instant, T)>>>;
 
 /// One entry in a batch fetch request.
 pub struct FetchRequest {
@@ -106,7 +116,7 @@ pub trait GaugeReader: Send + Sync {
     fn fetch_all<'a>(
         &'a self,
         requests: &'a [FetchRequest],
-    ) -> BoxFuture<'a, anyhow::Result<HashMap<String, Vec<(DateTime<Utc>, f64)>>>>;
+    ) -> BoxFuture<'a, anyhow::Result<ReadingsBySource>>;
 }
 
 /// Build the registry of all available readers.

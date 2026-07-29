@@ -65,7 +65,7 @@ async fn list_favorites(
 ) -> impl IntoApiResponse {
     let user_id = token.user_id();
 
-    let metas = match favorites::list_section_favorites(&app.pg_pool, &user_id).await {
+    let metas = match favorites::list_section_favorites(&app.pg_pool, user_id).await {
         Ok(rows) => rows,
         Err(err) => {
             tracing::error!("Error listing favorites: {}", err);
@@ -115,7 +115,7 @@ async fn add_favorite(
 ) -> impl IntoApiResponse {
     let user_id = token.user_id();
 
-    match favorites::add_section_favorite(&app.pg_pool, &user_id, path.section_id).await {
+    match favorites::add_section_favorite(&app.pg_pool, user_id, path.section_id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(err) => {
             let msg = err.to_string();
@@ -143,7 +143,7 @@ async fn remove_favorite(
 ) -> impl IntoApiResponse {
     let user_id = token.user_id();
 
-    match favorites::remove_section_favorite(&app.pg_pool, &user_id, path.section_id).await {
+    match favorites::remove_section_favorite(&app.pg_pool, user_id, path.section_id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(err) => {
             tracing::error!("Error removing favorite: {}", err);

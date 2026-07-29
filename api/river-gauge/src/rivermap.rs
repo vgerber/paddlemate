@@ -481,8 +481,7 @@ impl GaugeReader for RivermapReader {
             };
 
             // Parse bulk response into station_id -> unit -> [(ts, value)].
-            let mut station_data: HashMap<String, HashMap<String, Vec<(DateTime<Utc>, f64)>>> =
-                HashMap::new();
+            let mut station_data: HashMap<String, crate::ReadingsBySource> = HashMap::new();
             for (station_id, range) in bulk {
                 let entry = station_data.entry(station_id).or_default();
 

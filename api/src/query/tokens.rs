@@ -8,7 +8,7 @@ fn generate_token() -> String {
     getrandom::fill(&mut bytes).expect("Failed to generate random bytes");
     let mut token = String::with_capacity(64);
     for byte in bytes {
-        write!(&mut token, "{:02x}", byte).unwrap();
+        write!(&mut token, "{byte:02x}").unwrap();
     }
     token
 }
@@ -17,7 +17,7 @@ pub fn hash_token(token: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(token.as_bytes());
     let result = hasher.finalize();
-    format!("{:x}", result)
+    format!("{result:x}")
 }
 
 pub fn generate_token_pair() -> (String, String) {
