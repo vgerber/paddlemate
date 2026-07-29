@@ -2,6 +2,28 @@
 
 Shared guidance for all coding agents working on this repository.
 
+## Documentation
+
+The feature list lives directly on the main `README.md`; below it, a
+Documentation table links the reference docs in `doc/` (setup, search,
+translations, rivers-and-features) and `api/README.md`. Topic docs go deep on
+one area each.
+
+Rules for the docs:
+
+- **Written for the general user first.** Each doc opens in plain language
+  with what the feature does and concrete examples; implementation detail
+  (tables, file paths, invariants) goes into an `## Internals` section at the
+  bottom. A user can stop reading halfway; a developer reads to the end.
+- **Reference style**: precise and complete, prefer tables for enumerable
+  facts, link to the code files instead of restating them.
+- **Keep them true.** When a feature is added or changed, update the affected
+  doc and the README feature list in the same change. Fact-check claims
+  against the code (env var names, endpoint paths, enum values) rather than
+  against other docs.
+- **When a new rule is agreed in a conversation, add it to this file in the
+  same session** - chat is not a durable place for rules; this file is.
+
 ## Tooling
 
 ### Rust (api/)
@@ -135,17 +157,13 @@ time.
 
 ### Search
 
-Name search matches river names, section names, and the localized names of
-sections and rapids, through the `searchable_names` view. Add new searchable
-sources to that view rather than to the query layer.
+See [doc/search.md](doc/search.md) for the full reference. The two rules that
+bite when editing:
 
-Both stored names and the query run through `public.search_key`, which removes
-diacritics, lower cases, and folds the German digraphs so "oetztaler" and
-"otztaler" agree. **Changing `search_key` does not rebuild the trigram indexes
-built on it** - old rows keep the old normalization and search silently returns
-wrong results, so any migration that changes it must `REINDEX` the four
-`*_name_trgm` indexes in the same migration. A Postgres major upgrade or an
-`unaccent` update has the same effect.
+- Add new searchable sources to the `searchable_names` view, not to the query.
+- A migration that changes `public.search_key` must `REINDEX` the four
+  `*_name_trgm` indexes in the same migration (enforced by
+  `api/tests/migration_rules.rs`).
 
 ## Tests
 
@@ -153,8 +171,3 @@ wrong results, so any migration that changes it must `REINDEX` the four
 - Organize tests so they are easy to find and run.
 - Write tests so they are easy to understand and maintain.
 
-## Documentation
-
-- Update this file when you add new features or make significant changes to
-  the codebase, so the documentation stays accurate and up to date.
-- Documentation should be clear and concise.

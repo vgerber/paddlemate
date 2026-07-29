@@ -1,34 +1,37 @@
 # Paddlemate
 
-Platform for managing whitewater rivers, sections, and features.
+Platform for whitewater paddlers: rivers, sections and rapids on a map, live
+water levels, and a shared logbook.
 
-## Services
+## Features
 
-| Service  | Path        | Description                    |
-|----------|-------------|--------------------------------|
-| API      | `api/`      | Rust/axum backend with PostGIS |
-| Frontend | `frontend/` | React/Vite SPA                 |
+- **Map** — rivers, sections and their features with difficulty labels, a
+  satellite layer, and put-in/take-out markers colored by live water status.
+- **Search** — find rivers by name, section, translation or rapid name;
+  accent-, digraph- and typo-tolerant, with an explanation of why each result
+  matched. Area search by map point and radius; filters for country and grade.
+- **Sections & features** — named paddleable stretches with typed features:
+  rapids, hazards, structures, portages, access points, play spots.
+- **Water levels** — live gauge readings from public hydrological services;
+  per-feature low/medium/high ranges classify the current level, shown on
+  markers, chips and a per-section chart.
+- **Logs** — record a descent across one or more sections; counts per section,
+  a log list in the section view, and your descents shaded into the gauge
+  chart at the level you paddled.
+- **Languages** — section and rapid names in any language, with a per-device
+  display language applied live, map labels included.
+- **Community** — proposals with review and voting for non-admin edits,
+  comments on sections and features, favorites, follows, and per-user or
+  per-group visibility of logs.
+- **Access** — Keycloak (OIDC) sign-in, API tokens for programmatic use,
+  public read access to rivers and water data.
 
-See [api/README.md](api/README.md) for API details — database schema, authentication, and Keycloak setup.
+## Documentation
 
-## Development
-
-### Requirements
-
-- Rust (see `api/rust-toolchain.toml`)
-- [sqlx-cli](https://github.com/launchbear/sqlx): `cargo install sqlx-cli`
-- Bun
-- Docker (for the database)
-
-### Start
-
-```sh
-# Database
-docker compose up -d
-
-# API
-cd api && cargo run
-
-# Frontend
-cd frontend && bun install && bun run dev
-```
+| | |
+|---|---|
+| [Setup](doc/setup.md) | Requirements, running the stack, test data |
+| [Rivers, sections and features](doc/rivers-and-features.md) | The core data hierarchy, feature types, water levels and gauges |
+| [Search](doc/search.md) | What you can type, how results rank, normalization and the REINDEX rule |
+| [Translations](doc/translations.md) | Display language, translation endpoints, language codes end to end |
+| [API](api/README.md) | Database schema, authentication, Keycloak setup |

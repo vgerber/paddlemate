@@ -1,6 +1,6 @@
 -- Pick the fuzzy search threshold from data instead of from taste.
 --
--- The API ships PADDLEMATE_SEARCH_SIMILARITY=0.5, which was chosen against
+-- The API ships SEARCH_WORD_SIMILARITY_THRESHOLD=0.5, which was chosen against
 -- seven fixture rivers - far too few to say anything. Restore a production dump
 -- and run this to see what the number costs and buys at that scale.
 --
