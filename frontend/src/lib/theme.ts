@@ -314,6 +314,17 @@ export const theme = createTheme({
       },
     },
 
+    MuiFab: {
+      styleOverrides: {
+        primary: {
+          "&:hover": {
+            backgroundColor: tokens.primary,
+            filter: "brightness(1.1)",
+          },
+        },
+      },
+    },
+
     MuiChip: {
       styleOverrides: {
         root: {
