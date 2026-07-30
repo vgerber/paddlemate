@@ -63,6 +63,13 @@ cd frontend && npx tsc -b --force 2>&1
 cd frontend && npx biome check src 2>&1
 ```
 
+Tests use Bun's built-in runner (`*.test.ts` next to the module, typed via
+`tsconfig.test.json`):
+
+```
+cd frontend && bun test
+```
+
 Note: the root tsconfig is solution-style (`files: []` + references), so a
 plain `tsc --noEmit` type-checks nothing and always passes - use `tsc -b`.
 

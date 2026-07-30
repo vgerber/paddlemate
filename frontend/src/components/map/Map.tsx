@@ -207,16 +207,16 @@ export default function WaterwayMap({
     [sections],
   );
   const pointsGeoJSON = useMemo(
-    () => buildPointFeaturesGeoJSON(features ?? []),
-    [features],
+    () => buildPointFeaturesGeoJSON(features ?? [], language),
+    [features, language],
   );
   const linesGeoJSON = useMemo(
-    () => buildLineFeaturesGeoJSON(features ?? []),
-    [features],
+    () => buildLineFeaturesGeoJSON(features ?? [], language),
+    [features, language],
   );
   const proposedPointsGeoJSON = useMemo(
-    () => buildProposedPointFeaturesGeoJSON(proposedFeatures ?? []),
-    [proposedFeatures],
+    () => buildProposedPointFeaturesGeoJSON(proposedFeatures ?? [], language),
+    [proposedFeatures, language],
   );
   const lineEndpointsGeoJSON = useMemo(
     () => buildLineFeatureEndpointsGeoJSON(features ?? []),
@@ -227,16 +227,16 @@ export default function WaterwayMap({
     [proposedFeatures],
   );
   const lineLabelsGeoJSON = useMemo(
-    () => buildLineFeatureLabelsGeoJSON(features ?? []),
-    [features],
+    () => buildLineFeatureLabelsGeoJSON(features ?? [], language),
+    [features, language],
   );
   const proposedLineLabelsGeoJSON = useMemo(
-    () => buildLineFeatureLabelsGeoJSON(proposedFeatures ?? []),
-    [proposedFeatures],
+    () => buildLineFeatureLabelsGeoJSON(proposedFeatures ?? [], language),
+    [proposedFeatures, language],
   );
   const proposedLinesGeoJSON = useMemo(
-    () => buildProposedLineFeaturesGeoJSON(proposedFeatures ?? []),
-    [proposedFeatures],
+    () => buildProposedLineFeaturesGeoJSON(proposedFeatures ?? [], language),
+    [proposedFeatures, language],
   );
 
   const handleClick = (e: MapLayerMouseEvent) => {

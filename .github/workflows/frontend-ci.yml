@@ -1,0 +1,42 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+  pull_request:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+
+jobs:
+  check:
+    name: Check & test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: bun install --frozen-lockfile
+
+      - name: Type check
+        working-directory: frontend
+        run: bunx tsc -b --force
+
+      - name: Lint
+        working-directory: frontend
+        run: bunx biome check src
+
+      # Includes src/lib/text.test.ts: the TypeScript searchKey must agree
+      # with the SQL search_key, or names typed in the browser stop matching
+      # the rows they are stored as. The SQL side of the same contract runs
+      # in api-ci.yml.
+      - name: Test
+        working-directory: frontend
+        run: bun test

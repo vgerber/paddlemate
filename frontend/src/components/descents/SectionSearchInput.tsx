@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { waterwaysApi } from "@/lib/api";
+import { localizedName } from "@/lib/localization";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
 export interface SectionResult {
@@ -84,13 +85,13 @@ export default function SectionSearchInput({ onAdd }: SectionSearchInputProps) {
         <Autocomplete
           size="small"
           options={sectionOptions}
-          getOptionLabel={(s) => s.name}
+          getOptionLabel={(s) => localizedName(s.name, s.names)}
           loading={loadingSections}
           onChange={(_, val) => {
             if (val && selectedWaterway) {
               onAdd({
                 sectionId: val.id,
-                sectionName: val.name,
+                sectionName: localizedName(val.name, val.names),
                 waterwayId: selectedWaterwayId,
                 waterwayName: selectedWaterway.name,
               });
@@ -108,7 +109,9 @@ export default function SectionSearchInput({ onAdd }: SectionSearchInputProps) {
           )}
           renderOption={(props, option) => (
             <Box component="li" {...props} key={option.id}>
-              <Typography sx={{ fontSize: "0.8rem" }}>{option.name}</Typography>
+              <Typography sx={{ fontSize: "0.8rem" }}>
+                {localizedName(option.name, option.names)}
+              </Typography>
             </Box>
           )}
         />

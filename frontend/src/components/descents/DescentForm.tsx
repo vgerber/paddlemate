@@ -30,6 +30,7 @@ import {
   waterwaysApi,
 } from "@/lib/api";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
+import { localizedName } from "@/lib/localization";
 
 type VisibilityType = "private" | "public" | "shared";
 type TimingMode = "single" | "multi";
@@ -263,7 +264,7 @@ function makeDraft(
     section_id: section.id,
     sort_order: sortOrder,
     note: "",
-    display_name: section.name,
+    display_name: localizedName(section.name, section.names),
     location:
       section.location.type === "LineString"
         ? (section.location as SectionLocation)
@@ -477,7 +478,7 @@ function StepSections({
       <Autocomplete
         key={selectedWaterwayId ?? "none"}
         options={unaddedSections}
-        getOptionLabel={(opt) => opt.name}
+        getOptionLabel={(opt) => localizedName(opt.name, opt.names)}
         value={null}
         onChange={(_, val) => val && addSection(val)}
         disabled={mapSections.length === 0}

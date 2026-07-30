@@ -72,7 +72,7 @@ The normalization exists three times and must agree:
 | Where | File | Guarded by |
 | ----- | ---- | ---------- |
 | SQL   | `public.search_key` (migration `00023`) | `api/tests/sql/search_key_assertions.sql`, run in CI |
-| TypeScript | `frontend/src/lib/text.ts` `searchKey()` | nothing (frontend has no CI yet) |
+| TypeScript | `frontend/src/lib/text.ts` `searchKey()` | `frontend/src/lib/text.test.ts` (same cases as the SQL side), run in CI |
 | Rust  | `api/src/models/lang.rs` (language codes only) | unit tests |
 
 ### Ranking

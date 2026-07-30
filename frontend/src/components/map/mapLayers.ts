@@ -50,9 +50,11 @@ function featureDifficulty(f: Feature): string | undefined {
     | undefined;
 }
 
-/** Map label: "Name (III+)", name or difficulty alone, or "" when neither. */
-function featureLabel(f: Feature): string {
-  const name = f.names[0]?.name;
+/** Map label: "Name (III+)", name or difficulty alone, or "" when neither.
+ * Features have no untagged name, so the first stored name is the fallback
+ * when no translation matches the reader's language. */
+function featureLabel(f: Feature, language: string): string {
+  const name = localizedName(f.names[0]?.name ?? "", f.names, language);
   const difficulty = featureDifficulty(f);
   if (name) return difficulty ? `${name} (${difficulty})` : name;
   return difficulty ?? "";
@@ -225,6 +227,7 @@ export function buildPutInTakeOutConnectorsGeoJSON(
 
 export function buildPointFeaturesGeoJSON(
   features: Feature[],
+  language: string,
 ): GeoJSON.FeatureCollection {
   const points = features.filter(
     (f) =>
@@ -240,7 +243,7 @@ export function buildPointFeaturesGeoJSON(
       properties: {
         id: f.id,
         feature_type: f.feature_type,
-        label: featureLabel(f) || f.feature_type.replace(/_/g, " "),
+        label: featureLabel(f, language) || f.feature_type.replace(/_/g, " "),
         color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
       },
       geometry: f.location as GeoJSON.Point,
@@ -250,6 +253,7 @@ export function buildPointFeaturesGeoJSON(
 
 export function buildLineFeaturesGeoJSON(
   features: Feature[],
+  language: string,
 ): GeoJSON.FeatureCollection {
   const lines = features.filter((f) => f.location.type === "LineString");
   return {
@@ -260,7 +264,7 @@ export function buildLineFeaturesGeoJSON(
       properties: {
         id: f.id,
         feature_type: f.feature_type,
-        label: featureLabel(f),
+        label: featureLabel(f, language),
         // Sideways offset step so overlapping lines stay distinguishable
         stack: index,
         color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
@@ -274,6 +278,7 @@ export function buildLineFeaturesGeoJSON(
  * geometry's midpoint so they are as easy to spot as point features. */
 export function buildLineFeatureLabelsGeoJSON(
   features: Feature[],
+  language: string,
 ): GeoJSON.FeatureCollection {
   const lines = features.filter(
     (f) => f.location.type === "LineString" || f.location.type === "Polygon",
@@ -281,7 +286,7 @@ export function buildLineFeatureLabelsGeoJSON(
   return {
     type: "FeatureCollection",
     features: lines.flatMap((f) => {
-      const label = featureLabel(f);
+      const label = featureLabel(f, language);
       if (!label) return [];
       return [
         {
@@ -322,6 +327,7 @@ export function buildLineFeatureEndpointsGeoJSON(
 /** GeoJSON for proposed (pending) point features - rendered with outline-only circles. */
 export function buildProposedPointFeaturesGeoJSON(
   features: Feature[],
+  language: string,
 ): GeoJSON.FeatureCollection {
   const points = features.filter(
     (f) =>
@@ -336,7 +342,7 @@ export function buildProposedPointFeaturesGeoJSON(
       id: f.id,
       properties: {
         id: f.id,
-        label: featureLabel(f) || f.feature_type.replace(/_/g, " "),
+        label: featureLabel(f, language) || f.feature_type.replace(/_/g, " "),
         color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
       },
       geometry: f.location as GeoJSON.Point,
@@ -348,6 +354,7 @@ export function buildProposedPointFeaturesGeoJSON(
  * outlines). */
 export function buildProposedLineFeaturesGeoJSON(
   features: Feature[],
+  language: string,
 ): GeoJSON.FeatureCollection {
   const lines = features.filter(
     (f) => f.location.type === "LineString" || f.location.type === "Polygon",
@@ -359,7 +366,7 @@ export function buildProposedLineFeaturesGeoJSON(
       id: f.id,
       properties: {
         id: f.id,
-        label: featureLabel(f),
+        label: featureLabel(f, language),
         // Sideways offset step so overlapping lines stay distinguishable
         stack: index,
         color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,

@@ -125,13 +125,25 @@ INSERT INTO section_names (id, section_id, lang_code, name) VALUES
   (9705, 9121, 'sl', 'Kršovec'),
   (9706, 9121, 'it', 'Krsovec');
 
+-- Every section gets put_in and take_out at its line endpoints, like a real
+-- entry; the named features sit between them.
 INSERT INTO features (id, section_id, feature_type, location, created_by)
 SELECT v.id, v.section_id, v.feature_type::feature_type, ST_GeomFromText(v.wkt, 4326), u.id
 FROM (VALUES
   (9581, 9111, 'whitewater', 'POINT(10.905 47.205)'),
   (9582, 9145, 'whitewater', 'POINT(14.305 48.805)'),
   (9583, 9131, 'weir',       'POINT(13.405 48.905)'),
-  (9584, 9112, 'hole',       'POINT(10.915 47.215)')
+  (9584, 9112, 'hole',       'POINT(10.915 47.215)'),
+  (9585, 9111, 'put_in',     'POINT(10.9 47.2)'),
+  (9586, 9111, 'take_out',   'POINT(10.91 47.21)'),
+  (9587, 9112, 'put_in',     'POINT(10.91 47.21)'),
+  (9588, 9112, 'take_out',   'POINT(10.92 47.22)'),
+  (9589, 9121, 'put_in',     'POINT(13.6 46.3)'),
+  (9590, 9121, 'take_out',   'POINT(13.61 46.31)'),
+  (9591, 9131, 'put_in',     'POINT(13.4 48.9)'),
+  (9592, 9131, 'take_out',   'POINT(13.41 48.91)'),
+  (9593, 9145, 'put_in',     'POINT(14.3 48.8)'),
+  (9594, 9145, 'take_out',   'POINT(14.31 48.81)')
 ) AS v(id, section_id, feature_type, wkt)
 CROSS JOIN (SELECT id FROM users LIMIT 1) u;
 
