@@ -1,5 +1,9 @@
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import Autocomplete, {
   type AutocompleteRenderValueGetItemProps,
@@ -7,10 +11,8 @@ import Autocomplete, {
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
-import Step from "@mui/material/Step";
-import StepLabel from "@mui/material/StepLabel";
-import Stepper from "@mui/material/Stepper";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
@@ -22,6 +24,7 @@ import LocationPin, {
   TAKE_OUT_COLOR,
 } from "@/components/map/LocationPin";
 import WaterwayMap from "@/components/map/Map";
+import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import {
   type Descent,
   type Group,
@@ -802,89 +805,64 @@ export default function DescentForm({
   const isBusy = createDescent.isPending || patchDescent.isPending;
 
   return (
-    <Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: 3 }}>
+    <Box
+      sx={{
+        maxWidth: 720,
+        mx: "auto",
+        px: 2,
+        py: 3,
+        // Clear the fixed bottom bar so the last field stays reachable.
+        pb: "calc(88px + env(safe-area-inset-bottom))",
+      }}
+    >
+      {step === 0 && <StepWhen form={form} onChange={patch} />}
+      {step === 1 && (
+        <StepSections
+          form={form}
+          onChange={patch}
+          initialWaterwayId={initialSection?.waterwayId}
+        />
+      )}
+      {step === 2 && <StepDetails form={form} onChange={patch} />}
+
+      {/* Bottom bar - pinned to the viewport bottom, above the mobile
+          bottom navigation (zIndex 1300); same pattern as the section and
+          feature wizards. */}
       <Box
         sx={{
-          display: "flex",
-          alignItems: "center",
-          mb: 3,
-          pb: 1.5,
-          borderBottom: "1px solid",
-          borderColor: "divider",
+          position: "fixed",
+          bottom: 0,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "100%",
+          maxWidth: 720,
+          zIndex: 1350,
+          bgcolor: "background.paper",
         }}
       >
-        <Typography
-          sx={{
-            fontFamily: '"Space Grotesk", monospace',
-            fontWeight: 700,
-            fontSize: "0.9rem",
-            letterSpacing: "0.05em",
-          }}
-        >
-          {descent ? "Edit descent" : "Log descent"}
-        </Typography>
-        <Button onClick={onCancel} sx={{ ml: "auto", borderRadius: 0 }}>
-          Cancel
-        </Button>
-      </Box>
-
-      <Stepper activeStep={step} alternativeLabel sx={{ mb: 4 }}>
-        {STEPS.map((label, i) => (
-          <Step key={label} completed={i < step}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-
-      <Box sx={{ mb: 4 }}>
-        {step === 0 && <StepWhen form={form} onChange={patch} />}
-        {step === 1 && (
-          <StepSections
-            form={form}
-            onChange={patch}
-            initialWaterwayId={initialSection?.waterwayId}
-          />
-        )}
-        {step === 2 && <StepDetails form={form} onChange={patch} />}
-      </Box>
-
-      <Box
-        sx={{
-          display: "flex",
-          gap: 1,
-          pt: 1.5,
-          borderTop: "1px solid",
-          borderColor: "divider",
-        }}
-      >
-        {step > 0 && (
-          <Button
-            variant="outlined"
-            onClick={() => setStep((s) => s - 1)}
-            sx={{ borderRadius: 0 }}
-          >
-            Back
-          </Button>
-        )}
-        <Box sx={{ flex: 1 }} />
-        {isLast ? (
-          <Button
-            variant="contained"
-            onClick={handleSave}
-            disabled={isBusy}
-            sx={{ borderRadius: 0 }}
-          >
-            {isBusy ? "Saving…" : "Save"}
-          </Button>
-        ) : (
-          <Button
-            variant="contained"
-            onClick={() => setStep((s) => s + 1)}
-            sx={{ borderRadius: 0 }}
-          >
-            Next
-          </Button>
-        )}
+        <PanelBottomBar
+          leftIcon={step === 0 ? <CloseIcon /> : <ArrowBackIcon />}
+          onLeftClick={step === 0 ? onCancel : () => setStep((s) => s - 1)}
+          leftLabel={step === 0 ? "Cancel" : "Back"}
+          leftDisabled={isBusy}
+          title={descent ? "Edit descent" : "Log descent"}
+          subtitle={`Step ${step + 1} of ${STEPS.length} · ${STEPS[step]}`}
+          action={
+            <RoundActionButton
+              onClick={isLast ? handleSave : () => setStep((s) => s + 1)}
+              disabled={isBusy}
+              ariaLabel={isLast ? "Save" : "Next"}
+            >
+              {isBusy ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : isLast ? (
+                <CheckIcon fontSize="small" />
+              ) : (
+                <ArrowForwardIcon fontSize="small" />
+              )}
+            </RoundActionButton>
+          }
+        />
       </Box>
     </Box>
   );

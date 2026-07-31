@@ -1,4 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -7,30 +6,19 @@ import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import DescentCard from "@/components/descents/DescentCard";
 import { useInfiniteDescents } from "@/lib/hooks/useDescents";
-import { useSession } from "@/lib/hooks/useSession";
 
 interface SectionLogsListProps {
-  waterwayId: number;
   sectionId: number;
 }
 
-/** Descents that include the given section, newest first. */
-export default function SectionLogsList({
-  waterwayId,
-  sectionId,
-}: SectionLogsListProps) {
+/** Descents that include the given section, newest first. Logging a new one
+ * is the add FAB's job, not this list's. */
+export default function SectionLogsList({ sectionId }: SectionLogsListProps) {
   const navigate = useNavigate();
-  const { isAuthenticated } = useSession();
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useInfiniteDescents({ section_id: sectionId, per_page: 20 });
 
   const descents = data?.pages.flatMap((page) => page.items) ?? [];
-
-  const onLogDescent = () =>
-    navigate({
-      to: "/logs/new",
-      search: { waterwayId, sectionId, startTime: undefined },
-    });
 
   if (isLoading) {
     return (
@@ -56,16 +44,6 @@ export default function SectionLogsList({
         <Typography variant="body2">
           No descents logged for this section yet.
         </Typography>
-        {isAuthenticated && (
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={onLogDescent}
-          >
-            Log descent
-          </Button>
-        )}
       </Box>
     );
   }

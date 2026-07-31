@@ -325,6 +325,20 @@ export const theme = createTheme({
       },
     },
 
+    MuiSpeedDialAction: {
+      styleOverrides: {
+        fab: {
+          backgroundColor: tokens.surfaceHighest,
+          color: tokens.onSurface,
+          border: `1px solid ${tokens.outline}`,
+          "&:hover": {
+            backgroundColor: tokens.surfaceHighest,
+            filter: "brightness(1.2)",
+          },
+        },
+      },
+    },
+
     MuiChip: {
       styleOverrides: {
         root: {

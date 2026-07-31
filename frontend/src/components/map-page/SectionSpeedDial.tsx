@@ -1,9 +1,11 @@
+import AddIcon from "@mui/icons-material/Add";
 import AddLocationAltIcon from "@mui/icons-material/AddLocationAlt";
 import CloseIcon from "@mui/icons-material/Close";
 import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
+import Fab from "@mui/material/Fab";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
@@ -30,6 +32,7 @@ export default function SectionSpeedDial({ state, sx }: Props) {
     selectedWaterwayId,
     suggestMode,
     setSuggestMode,
+    sectionDetailTab,
     favoritedIds,
     toggleFavorite,
     sections,
@@ -37,16 +40,42 @@ export default function SectionSpeedDial({ state, sx }: Props) {
 
   const { isAuthenticated } = useSession();
   const navigate = useNavigate();
-  const { current: standingDescent, start: startDescent } = useStandingDescent();
+  const { current: standingDescent, start: startDescent } =
+    useStandingDescent();
 
   const sectionName = sections.find((s) => s.id === selectedSectionId)?.name;
   const isFavorited = favoritedIds?.has(selectedSectionId ?? -1) ?? false;
   const [open, setOpen] = useState(false);
 
-  const show =
-    selectedSectionId != null && selectedWaterwayId != null && !suggestMode;
+  if (selectedSectionId == null || selectedWaterwayId == null || suggestMode) {
+    return null;
+  }
 
-  if (!show) return null;
+  // The logs tab exists to add a log; the button goes straight to the form
+  // instead of opening the action menu.
+  if (sectionDetailTab === "logs") {
+    if (!isAuthenticated) return null;
+    return (
+      <Fab
+        color="primary"
+        aria-label="Log descent"
+        title="Log descent"
+        sx={sx}
+        onClick={() =>
+          navigate({
+            to: "/logs/new",
+            search: {
+              waterwayId: selectedWaterwayId,
+              sectionId: selectedSectionId,
+              startTime: undefined,
+            },
+          })
+        }
+      >
+        <AddIcon />
+      </Fab>
+    );
+  }
 
   return (
     <SpeedDial
@@ -69,7 +98,7 @@ export default function SectionSpeedDial({ state, sx }: Props) {
           )
         }
         title={isFavorited ? "Remove favorite" : "Add favorite"}
-        onClick={() => toggleFavorite?.(selectedSectionId!)}
+        onClick={() => toggleFavorite?.(selectedSectionId)}
       />
       {isAuthenticated && !standingDescent && (
         <SpeedDialAction
@@ -78,8 +107,8 @@ export default function SectionSpeedDial({ state, sx }: Props) {
           onClick={() =>
             startDescent({
               startTime: new Date().toISOString(),
-              waterwayId: selectedWaterwayId!,
-              sectionId: selectedSectionId!,
+              waterwayId: selectedWaterwayId,
+              sectionId: selectedSectionId,
               sectionName: sectionName ?? "",
             })
           }
@@ -93,8 +122,8 @@ export default function SectionSpeedDial({ state, sx }: Props) {
             navigate({
               to: "/logs/new",
               search: {
-                waterwayId: selectedWaterwayId!,
-                sectionId: selectedSectionId!,
+                waterwayId: selectedWaterwayId,
+                sectionId: selectedSectionId,
                 startTime: undefined,
               },
             })

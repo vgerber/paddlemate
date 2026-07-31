@@ -5,9 +5,12 @@ Shared guidance for all coding agents working on this repository.
 ## Documentation
 
 The feature list lives directly on the main `README.md`; below it, a
-Documentation table links the reference docs in `doc/` (setup, search,
+Documentation table links the reference docs in `doc/` (setup, design, search,
 translations, rivers-and-features) and `api/README.md`. Topic docs go deep on
 one area each.
+
+UI work follows the layout and color rules in [doc/design.md](doc/design.md);
+new patterns agreed in review get added there.
 
 Rules for the docs:
 

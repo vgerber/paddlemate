@@ -31,6 +31,7 @@ water levels, and a shared logbook.
 | | |
 |---|---|
 | [Setup](doc/setup.md) | Requirements, running the stack, test data |
+| [Design language](doc/design.md) | Layout patterns, color rules, and the tokens behind them |
 | [Rivers, sections and features](doc/rivers-and-features.md) | The core data hierarchy, feature types, water levels and gauges |
 | [Search](doc/search.md) | What you can type, how results rank, normalization and the REINDEX rule |
 | [Translations](doc/translations.md) | Display language, translation endpoints, language codes end to end |

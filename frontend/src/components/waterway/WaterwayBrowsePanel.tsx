@@ -12,6 +12,7 @@ import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
+import { useNavigate } from "@tanstack/react-router";
 import SectionListItem from "@/components/waterway/SectionListItem";
 import SectionLogsList from "@/components/waterway/SectionLogsList";
 import FeatureTimeline from "@/components/waterway/section-details";
@@ -74,6 +75,7 @@ export default function WaterwayBrowsePanel({
   onToggleProposedFeatures,
   featureProposals = [],
 }: WaterwayBrowsePanelProps) {
+  const navigate = useNavigate();
   const { data: waterway, isLoading } = useWaterway(waterwayId);
   const { data: descentCounts } = useSectionDescentCounts(waterwayId);
   const { isAuthenticated } = useSession();
@@ -131,6 +133,9 @@ export default function WaterwayBrowsePanel({
     !inFeatures &&
     selectedSectionId == null;
 
+  const showLogDescentFab =
+    isAuthenticated && inFeatures && sectionDetailTab === "logs";
+
   const headerTabs = inFeatures
     ? {
         value: sectionDetailTab as string,
@@ -181,7 +186,7 @@ export default function WaterwayBrowsePanel({
             overflowY: "auto",
             p: 1,
             // Leave room so the FAB never covers the last row
-            pb: showNewSectionFab ? 9 : 1,
+            pb: showNewSectionFab || showLogDescentFab ? 9 : 1,
           }}
         >
           {isLoading ? (
@@ -190,10 +195,7 @@ export default function WaterwayBrowsePanel({
             </Box>
           ) : inFeatures ? (
             sectionDetailTab === "logs" ? (
-              <SectionLogsList
-                waterwayId={waterwayId}
-                sectionId={selectedSection.id}
-              />
+              <SectionLogsList sectionId={selectedSection.id} />
             ) : (
               <FeatureTimeline
                 section={selectedSection}
@@ -225,6 +227,28 @@ export default function WaterwayBrowsePanel({
             aria-label="New section"
             title="New section"
             onClick={() => onSuggestModeChange("section")}
+            sx={{ position: "absolute", bottom: 16, right: 16 }}
+          >
+            <AddIcon />
+          </Fab>
+        )}
+
+        {showLogDescentFab && (
+          <Fab
+            color="primary"
+            size="medium"
+            aria-label="Log descent"
+            title="Log descent"
+            onClick={() =>
+              navigate({
+                to: "/logs/new",
+                search: {
+                  waterwayId,
+                  sectionId: selectedSectionId,
+                  startTime: undefined,
+                },
+              })
+            }
             sx={{ position: "absolute", bottom: 16, right: 16 }}
           >
             <AddIcon />
