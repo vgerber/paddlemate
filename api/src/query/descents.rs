@@ -109,24 +109,32 @@ async fn load_sections(
 
     let snapshots = load_snapshots_for_descent(pool, descent_id).await?;
     for s in &mut sections {
-        s.water_snapshots = snapshots.get(&s.section_id).cloned().unwrap_or_default();
+        s.water_snapshots = snapshots
+            .get(&(descent_id, s.section_id))
+            .cloned()
+            .unwrap_or_default();
     }
 
     Ok(sections)
 }
 
-const SNAPSHOT_COLS: &str = "section_id, series_id, gauge_id, gauge_name, unit, \
+const SNAPSHOT_COLS: &str = "descent_id, section_id, series_id, gauge_id, gauge_name, unit, \
     value, level::text AS level, measured_at, \
     range_low, range_medium, range_high, \
     value_min, value_max, value_avg";
 
+/// Keyed by (descent_id, section_id): several descents can cover the same
+/// section, and each carries only the snapshots taken when *it* was logged.
 fn collect_snapshots(
     rows: &[PgRow],
-) -> Result<HashMap<i64, Vec<SectionWaterSnapshot>>, sqlx::Error> {
-    let mut map: HashMap<i64, Vec<SectionWaterSnapshot>> = HashMap::new();
+) -> Result<HashMap<(i64, i64), Vec<SectionWaterSnapshot>>, sqlx::Error> {
+    let mut map: HashMap<(i64, i64), Vec<SectionWaterSnapshot>> = HashMap::new();
     for r in rows {
+        let descent_id: i64 = r.try_get("descent_id")?;
         let section_id: i64 = r.try_get("section_id")?;
-        map.entry(section_id).or_default().push(row_to_snapshot(r)?);
+        map.entry((descent_id, section_id))
+            .or_default()
+            .push(row_to_snapshot(r)?);
     }
     Ok(map)
 }
@@ -134,7 +142,7 @@ fn collect_snapshots(
 async fn load_snapshots_for_descent(
     pool: &PgPool,
     descent_id: DescentId,
-) -> Result<HashMap<i64, Vec<SectionWaterSnapshot>>, sqlx::Error> {
+) -> Result<HashMap<(i64, i64), Vec<SectionWaterSnapshot>>, sqlx::Error> {
     let rows = sqlx::query(&format!(
         "SELECT {SNAPSHOT_COLS} \
          FROM descent_section_water_snapshots \
@@ -151,7 +159,7 @@ async fn load_snapshots_for_descent(
 async fn batch_load_snapshots(
     pool: &PgPool,
     descent_ids: &[DescentId],
-) -> Result<HashMap<i64, Vec<SectionWaterSnapshot>>, sqlx::Error> {
+) -> Result<HashMap<(i64, i64), Vec<SectionWaterSnapshot>>, sqlx::Error> {
     if descent_ids.is_empty() {
         return Ok(HashMap::new());
     }
@@ -331,9 +339,12 @@ async fn batch_load_sections(
     }
 
     let snapshots = batch_load_snapshots(pool, ids).await?;
-    for sections in map.values_mut() {
+    for (descent_id, sections) in map.iter_mut() {
         for s in sections.iter_mut() {
-            s.water_snapshots = snapshots.get(&s.section_id).cloned().unwrap_or_default();
+            s.water_snapshots = snapshots
+                .get(&(*descent_id, s.section_id))
+                .cloned()
+                .unwrap_or_default();
         }
     }
 

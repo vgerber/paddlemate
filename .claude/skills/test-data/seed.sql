@@ -96,6 +96,19 @@ INSERT INTO descent_sections (descent_id, section_id, sort_order) VALUES
   (9203, 9102, 1),
   (9204, 9102, 1);
 
+-- Water levels captured when the descent was logged, shown on the log detail
+-- page. One per descent section that has a calibrated gauge (9102).
+INSERT INTO descent_section_water_snapshots
+  (id, descent_id, section_id, series_id, gauge_id, gauge_name, unit, value,
+   level, measured_at, range_low, range_medium, range_high)
+VALUES
+  (9210, 9201, 9102, 9401, 9301, 'Test Gauge', 'cm', 95,  'medium',
+   NOW() - interval '2 days', 60, 80, 120),
+  (9211, 9203, 9102, 9401, 9301, 'Test Gauge', 'cm', 72,  'low',
+   NOW() - interval '3 days', 60, 80, 120),
+  (9212, 9204, 9102, 9401, 9301, 'Test Gauge', 'cm', 126, 'high',
+   NOW() - interval '6 days', 60, 80, 120);
+
 -- Search fixture: real river names carrying the diacritics this app has to
 -- cope with, plus translations and rapid names so every match source and
 -- every special-character case can be exercised. Far too small to tune the

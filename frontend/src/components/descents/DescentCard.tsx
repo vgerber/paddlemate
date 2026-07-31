@@ -48,7 +48,7 @@ function timeAgo(iso: string): string {
   return `${Math.floor(days / 365)}y ago`;
 }
 
-const VISIBILITY_ICONS = {
+export const VISIBILITY_ICONS = {
   private: <LockOutlinedIcon sx={{ fontSize: 13 }} />,
   shared: <GroupOutlinedIcon sx={{ fontSize: 13 }} />,
   public: <PublicOutlinedIcon sx={{ fontSize: 13 }} />,
@@ -211,9 +211,23 @@ export default function DescentCard({
           if (allSnapshots.length === 0) return null;
           const level = maxLevel(allSnapshots.map((s) => s.level));
           const cfg = levelConfig[level];
+          // One gauge behind every snapshot means one unambiguous reading -
+          // show it like the section list does. Mixed gauges fall back to the
+          // level letter, where a single number would be misleading.
+          const sameGauge = allSnapshots.every(
+            (s) => s.series_id === allSnapshots[0].series_id,
+          );
+          const reading = sameGauge
+            ? (allSnapshots.find((s) => s.level === level && s.value != null) ??
+              allSnapshots.find((s) => s.value != null))
+            : undefined;
           return (
             <Chip
-              label={cfg.label}
+              label={
+                reading?.value != null
+                  ? `${Number(reading.value.toFixed(1))} ${reading.unit}`
+                  : cfg.label
+              }
               size="small"
               variant={level === "empty" ? "outlined" : "filled"}
               sx={{
