@@ -1,6 +1,5 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
 import WaterwayMap from "@/components/map/Map";
 import type { SectionWithFeatures } from "@/lib/api";
 
@@ -24,8 +23,6 @@ export default function SectionPickerMap({
   onPickPutIn,
   onPickTakeOut,
 }: Props) {
-  const [labelMode, setLabelMode] = useState<"section" | "river">("section");
-
   return (
     <Box
       sx={{
@@ -55,8 +52,6 @@ export default function SectionPickerMap({
       <WaterwayMap
         sections={sections}
         selectedSectionIds={selectedIds}
-        labelMode={labelMode}
-        onLabelModeChange={setLabelMode}
         onSectionToggle={(id) => {
           const section = sections.find((s) => s.id === id);
           if (section) onSectionToggle(section);

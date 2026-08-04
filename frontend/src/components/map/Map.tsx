@@ -309,11 +309,17 @@ export default function WaterwayMap({
     >
       <LabelModeToggle
         labelMode={labelMode}
-        onChange={onLabelModeChange}
+        // Without river names the river mode would silently fall back to
+        // section names - hide the switch instead of showing a dead control.
+        onChange={waterwayNames ? onLabelModeChange : undefined}
         satellite={satellite}
         onSatelliteChange={setSatellite}
         featureNames={showFeatureNames}
-        onFeatureNamesChange={setShowFeatureNames}
+        onFeatureNamesChange={
+          features?.length || proposedFeatures?.length
+            ? setShowFeatureNames
+            : undefined
+        }
         bottomOffset={controlsBottomOffset}
         anchor={controlsAnchor}
       />

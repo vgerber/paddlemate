@@ -245,6 +245,24 @@ export const theme = createTheme({
           "&::-webkit-scrollbar-track": { background: tokens.surfaceLowest },
           "&::-webkit-scrollbar-thumb": { background: tokens.outlineVariant },
         },
+        // MapLibre's zoom/compass controls, restyled to match the app's own
+        // map controls (LabelModeToggle): dark, square, bordered.
+        ".maplibregl-ctrl.maplibregl-ctrl-group": {
+          backgroundColor: tokens.surface,
+          border: `1px solid ${tokens.outlineVariant}`,
+          borderRadius: 0,
+          boxShadow: "none",
+        },
+        ".maplibregl-ctrl-group button": {
+          borderRadius: 0,
+          "&:hover": { backgroundColor: tokens.surfaceHighest },
+          "& + button": { borderTop: `1px solid ${tokens.outlineVariant}` },
+        },
+        // Stock icons are dark-on-light; invert for the dark surface while
+        // keeping the compass needle's hue.
+        ".maplibregl-ctrl button .maplibregl-ctrl-icon": {
+          filter: "invert(1) hue-rotate(180deg)",
+        },
       },
     },
 
