@@ -160,7 +160,9 @@ export default function WaterChart({
         >
           {visibleRanges.map((range) => (
             <Box
-              key={range.id}
+              // timeRange in the key remounts the chart, dropping its zoom
+              // window - a new time axis is a new chart.
+              key={`${range.id}-${timeRange}`}
               sx={{ flex: 1, minHeight: 0, position: "relative" }}
             >
               <Box sx={{ position: "absolute", inset: 0 }}>
