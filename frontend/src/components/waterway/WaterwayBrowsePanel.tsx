@@ -223,7 +223,6 @@ export default function WaterwayBrowsePanel({
         {showNewSectionFab && (
           <Fab
             color="secondary"
-            size="medium"
             aria-label="New section"
             title="New section"
             onClick={() => onSuggestModeChange("section")}
@@ -236,7 +235,6 @@ export default function WaterwayBrowsePanel({
         {showLogDescentFab && (
           <Fab
             color="primary"
-            size="medium"
             aria-label="Log descent"
             title="Log descent"
             onClick={() =>
