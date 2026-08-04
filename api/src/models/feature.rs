@@ -17,6 +17,7 @@ pub type FeatureId = i64;
 #[sqlx(type_name = "feature_type", rename_all = "snake_case")]
 pub enum FeatureType {
     Whitewater,
+    Rapid,
     FreestyleSpot,
     Hole,
     Siphon,

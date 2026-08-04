@@ -33,7 +33,8 @@
                 "put_in",
                 "take_out",
                 "waterfall",
-                "strainer"
+                "strainer",
+                "rapid"
               ]
             }
           }
@@ -85,7 +86,8 @@
                 "put_in",
                 "take_out",
                 "waterfall",
-                "strainer"
+                "strainer",
+                "rapid"
               ]
             }
           }

@@ -87,6 +87,7 @@ const tokens = {
   // Feature markers on the map (Okabe-Ito palette - colorblind safe)
   featureColors: {
     whitewater: "#CC79A7",
+    rapid: "#009E73",
     hole: "#D55E00",
     siphon: "#D55E00",
     strainer: "#D55E00",

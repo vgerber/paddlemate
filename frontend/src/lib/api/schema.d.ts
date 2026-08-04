@@ -1178,7 +1178,7 @@ export interface components {
             waterway_id: number;
         };
         /** @enum {string} */
-        FeatureType: "whitewater" | "freestyle_spot" | "hole" | "siphon" | "strainer" | "weir" | "dam" | "obstacle" | "bridge" | "portage" | "put_in" | "take_out" | "waterfall";
+        FeatureType: "whitewater" | "rapid" | "freestyle_spot" | "hole" | "siphon" | "strainer" | "weir" | "dam" | "obstacle" | "bridge" | "portage" | "put_in" | "take_out" | "waterfall";
         /**
          * @description A water-level threshold range for a feature, referencing a gauge series.
          *      Embeds the full series so the frontend can construct readings URLs without a secondary lookup.
@@ -1985,11 +1985,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-07-26T20:17:37.336624849Z",
-                     *         "expires_at": "2026-10-24T20:17:37.336626745Z",
+                     *         "created_at": "2026-08-04T16:54:02.470954583Z",
+                     *         "expires_at": "2026-11-02T16:54:02.470957133Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-07-26T20:17:37.336632532Z",
+                     *         "last_used_at": "2026-08-04T16:54:02.470958963Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -2020,8 +2020,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-07-26T20:17:37.336895592Z",
-                     *       "expires_at": "2026-10-24T20:17:37.336896331Z",
+                     *       "created_at": "2026-08-04T16:54:02.471109954Z",
+                     *       "expires_at": "2026-11-02T16:54:02.471110344Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."

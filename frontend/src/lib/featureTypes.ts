@@ -3,6 +3,7 @@ import type { FeatureType } from "@/lib/api";
 /** All selectable feature types, in display order. */
 export const FEATURE_TYPES: FeatureType[] = [
   "whitewater",
+  "rapid",
   "freestyle_spot",
   "hole",
   "siphon",
