@@ -24,6 +24,11 @@ export interface WaterChartProps {
   onMeasurementTypeChange?: (v: string) => void;
   /** Own descents drawn as shaded time bands in each series chart. */
   descentSpans?: DescentSpan[];
+  /** Feature whose water ranges are brought to the front; the default
+   * thresholds dim while it is set. */
+  selectedFeatureId?: number | null;
+  /** Name and type of that feature, shown as a chart caption. */
+  selectedFeature?: { name: string; type: string } | null;
 }
 
 export default function WaterChart({
@@ -34,6 +39,8 @@ export default function WaterChart({
   measurementType: controlledMeasurementType,
   onMeasurementTypeChange,
   descentSpans,
+  selectedFeatureId,
+  selectedFeature,
 }: WaterChartProps) {
   const [internalTimeRange, setInternalTimeRange] = useState<TimeRange>("7d");
   const timeRange = controlledTimeRange ?? internalTimeRange;
@@ -73,6 +80,29 @@ export default function WaterChart({
         : ranges,
     [ranges, activeType],
   );
+
+  // One chart per gauge series, not per feature range - sections with many
+  // features would otherwise stack charts until unreadable. Each chart shows
+  // its series' default (first calibrated) range; the selected feature's
+  // range is passed alongside so it can be brought to the front.
+  const seriesGroups = useMemo(() => {
+    const bySeries = new Map<number, WaterRangeWithStatus[]>();
+    for (const r of visibleRanges) {
+      const group = bySeries.get(r.series.id);
+      if (group) group.push(r);
+      else bySeries.set(r.series.id, [r]);
+    }
+    return [...bySeries.values()].map((group) => ({
+      primary:
+        group.find(
+          (r) =>
+            r.range_low != null ||
+            r.range_medium != null ||
+            r.range_high != null,
+        ) ?? group[0],
+      group,
+    }));
+  }, [visibleRanges]);
 
   const showInternalControls =
     onTimeRangeChange == null ||
@@ -158,16 +188,24 @@ export default function WaterChart({
             gap: 1,
           }}
         >
-          {visibleRanges.map((range) => (
+          {seriesGroups.map(({ primary, group }) => (
             <Box
               // timeRange in the key remounts the chart, dropping its zoom
               // window - a new time axis is a new chart.
-              key={`${range.id}-${timeRange}`}
+              key={`${primary.series.id}-${timeRange}`}
               sx={{ flex: 1, minHeight: 0, position: "relative" }}
             >
               <Box sx={{ position: "absolute", inset: 0 }}>
                 <SeriesChart
-                  range={range}
+                  range={primary}
+                  selectedRange={
+                    selectedFeatureId != null
+                      ? (group.find(
+                          (r) => r.feature_id === selectedFeatureId,
+                        ) ?? null)
+                      : null
+                  }
+                  selectedFeature={selectedFeature}
                   from={from}
                   showThresholds={showThresholds}
                   timeRange={timeRange}

@@ -16,12 +16,19 @@ interface SectionChartPanelProps {
   waterwayId: number;
   sectionId: number;
   sectionName?: string;
+  /** Feature highlighted in the section's feature timeline - its water
+   * ranges are brought to the front in the chart. */
+  selectedFeatureId?: number | null;
+  /** Name and type of that feature, shown as a chart caption. */
+  selectedFeature?: { name: string; type: string } | null;
 }
 
 export default function SectionChartPanel({
   waterwayId,
   sectionId,
   sectionName,
+  selectedFeatureId,
+  selectedFeature,
 }: SectionChartPanelProps) {
   const { isAuthenticated } = useSession();
   const navigate = useNavigate();
@@ -162,6 +169,8 @@ export default function SectionChartPanel({
         <Box sx={{ flex: 1, minHeight: 0 }}>
           <WaterChart
             ranges={waterStatus?.ranges ?? []}
+            selectedFeatureId={selectedFeatureId}
+            selectedFeature={selectedFeature}
             timeRange={timeRange}
             onTimeRangeChange={setTimeRange}
             measurementType={measurementType}

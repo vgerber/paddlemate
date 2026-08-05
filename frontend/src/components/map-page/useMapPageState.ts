@@ -80,6 +80,11 @@ export function useMapPageState(search: RouteSearch) {
   const [focusedPoint, setFocusedPoint] = useState<[number, number] | null>(
     null,
   );
+  // Feature highlighted in the section's feature timeline; the chart panel
+  // brings this feature's water ranges to the front.
+  const [selectedFeatureId, setSelectedFeatureId] = useState<number | null>(
+    null,
+  );
 
   // Current map viewport bounds (used for OSM lookups in suggest flows)
   const [mapBounds, setMapBoundsRaw] = useState<{
@@ -122,7 +127,10 @@ export function useMapPageState(search: RouteSearch) {
         status: "pending",
         section_id: selectedSectionId,
       }),
-    enabled: selectedSectionId != null && showProposedFeatures,
+    // Always loaded for the selected section (not just when the proposals
+    // toggle is on): the feature timeline marks features with a pending
+    // delete proposal.
+    enabled: selectedSectionId != null,
   });
 
   const theme = useTheme();
@@ -229,6 +237,7 @@ export function useMapPageState(search: RouteSearch) {
   const setSelectedSectionId = useCallback(
     (id: number | undefined) => {
       setSectionDetailTab("features");
+      setSelectedFeatureId(null);
       navigate({ search: (prev) => ({ ...prev, section: id }) });
     },
     [navigate],
@@ -458,6 +467,8 @@ export function useMapPageState(search: RouteSearch) {
     setMapBounds,
     focusedPoint,
     setFocusedPoint,
+    selectedFeatureId,
+    setSelectedFeatureId,
     showProposedFeatures,
     toggleShowProposedFeatures,
     featureProposals,

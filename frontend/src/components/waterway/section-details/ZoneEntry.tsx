@@ -5,19 +5,28 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { fonts, theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
-import { PointEntry } from "./PointEntry";
+import {
+  DeleteFeatureButton,
+  PendingDeleteMarker,
+  PointEntry,
+} from "./PointEntry";
 import { ProposalDetail } from "./ProposalDetail";
-import type { ComputedFeature } from "./types";
-import { featureDesc, featureName, fmtKm } from "./utils";
+import type { ComputedFeature, TreeNode } from "./types";
+import { featureDesc, featureName, featureTypeLabel, fmtKm } from "./utils";
 
 const { tokens } = theme;
 
 interface Props {
   item: ComputedFeature;
-  nested: ComputedFeature[];
+  nested: TreeNode[];
   isLast?: boolean;
   activeId?: number | null;
   onItemClick?: (item: ComputedFeature) => void;
+  /** Delete action for the zone itself and its nested features; omitted for
+   * signed-out users. Proposals never get one. */
+  onDeleteItem?: (item: ComputedFeature) => void;
+  /** Features (zone or nested) with a pending delete proposal. */
+  pendingDeleteIds?: Set<number>;
 }
 
 /**
@@ -30,8 +39,11 @@ export function ZoneEntry({
   isLast = false,
   activeId,
   onItemClick,
+  onDeleteItem,
+  pendingDeleteIds,
 }: Props) {
   const name = featureName(item.feature);
+  const typeLabel = featureTypeLabel(item.feature);
   const desc = featureDesc(item.feature);
   const isActive = activeId === item.feature.id;
   const isProposal = !!item.proposal;
@@ -68,7 +80,9 @@ export function ZoneEntry({
             flexShrink: 0,
             display: "flex",
             justifyContent: "center",
-            pt: "3px",
+            // Centers the 12px chevron on the first text line, like the
+            // point entry's dot.
+            pt: "6px",
           }}
         >
           <svg
@@ -97,20 +111,28 @@ export function ZoneEntry({
               gap: 1,
             }}
           >
-            <Typography
-              component="span"
-              sx={{
-                fontFamily: fonts.label,
-                fontSize: 13,
-                fontWeight: 900,
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: zoneColor,
-                lineHeight: 1.25,
-              }}
+            <Stack
+              direction="row"
+              sx={{ alignItems: "center", gap: 0.5, minWidth: 0 }}
             >
-              {name}
-            </Typography>
+              <Typography
+                component="span"
+                sx={{
+                  fontFamily: fonts.label,
+                  fontSize: 13,
+                  fontWeight: 900,
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  color: zoneColor,
+                  lineHeight: 1.25,
+                }}
+              >
+                {name}
+              </Typography>
+              {pendingDeleteIds?.has(item.feature.id) && (
+                <PendingDeleteMarker />
+              )}
+            </Stack>
             <Typography
               component="span"
               sx={{
@@ -124,17 +146,39 @@ export function ZoneEntry({
               {fmtKm(item.startM)}
             </Typography>
           </Stack>
+          {typeLabel && (
+            <Typography
+              sx={{
+                fontFamily: fonts.label,
+                fontSize: "0.62rem",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: tokens.outline,
+                lineHeight: 1.4,
+              }}
+            >
+              {typeLabel}
+            </Typography>
+          )}
           <Collapse in={isActive} timeout={200} unmountOnExit>
-            {!isProposal
-              ? <CoordsInfo coords={item.coords} />
-              : item.proposal && (
-                  <ProposalDetail
-                    proposal={item.proposal}
-                    coords={item.coords}
-                    featureType={item.feature.feature_type}
-                  />
-                )
-            }
+            {!isProposal ? (
+              <CoordsInfo
+                coords={item.coords}
+                actions={
+                  onDeleteItem && (
+                    <DeleteFeatureButton onDelete={() => onDeleteItem(item)} />
+                  )
+                }
+              />
+            ) : (
+              item.proposal && (
+                <ProposalDetail
+                  proposal={item.proposal}
+                  coords={item.coords}
+                  featureType={item.feature.feature_type}
+                />
+              )
+            )}
           </Collapse>
         </Stack>
       </ButtonBase>
@@ -156,15 +200,31 @@ export function ZoneEntry({
         </Typography>
       )}
 
-      {nested.map((child, idx) => (
-        <PointEntry
-          key={child.feature.id}
-          item={child}
-          isLast={idx === nested.length - 1}
-          isActive={activeId === child.feature.id}
-          onClick={() => onItemClick?.(child)}
-        />
-      ))}
+      {nested.map((child, idx) =>
+        // Same rule as the top level: an empty zone renders as a dot entry.
+        child.item.isZone && child.nested.length > 0 ? (
+          <ZoneEntry
+            key={child.item.feature.id}
+            item={child.item}
+            nested={child.nested}
+            isLast={idx === nested.length - 1}
+            activeId={activeId}
+            onItemClick={onItemClick}
+            onDeleteItem={onDeleteItem}
+            pendingDeleteIds={pendingDeleteIds}
+          />
+        ) : (
+          <PointEntry
+            key={child.item.feature.id}
+            item={child.item}
+            isLast={idx === nested.length - 1}
+            isActive={activeId === child.item.feature.id}
+            onClick={() => onItemClick?.(child.item)}
+            onDelete={onDeleteItem && (() => onDeleteItem(child.item))}
+            pendingDelete={pendingDeleteIds?.has(child.item.feature.id)}
+          />
+        ),
+      )}
 
       {/* Zone end row */}
       <Stack direction="row" sx={{ gap: "10px", alignItems: "center", px: "6px" }}>

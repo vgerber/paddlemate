@@ -17,8 +17,10 @@ export interface ComputedFeature {
   proposal?: Proposal;
 }
 
-/** One node in the rendered tree: a top-level feature with its direct children. */
+/** One node in the rendered tree: a feature with its direct children.
+ * Children of zones can themselves be zones (a rapid inside the whitewater
+ * zone containing a hole), so the tree nests recursively. */
 export interface TreeNode {
   item: ComputedFeature;
-  nested: ComputedFeature[];
+  nested: TreeNode[];
 }

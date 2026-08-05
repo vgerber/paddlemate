@@ -68,6 +68,8 @@ export default function SidebarContent({
     featurePickingActive,
     setFeaturePickingActive,
     setFocusedPoint,
+    selectedFeatureId,
+    setSelectedFeatureId,
     showProposedFeatures,
     toggleShowProposedFeatures,
     featureProposals,
@@ -185,6 +187,8 @@ export default function SidebarContent({
       onMobileMapToggle={onMobileMapToggle}
       mobileMapActive={mobileMapActive}
       onFeatureClick={(coords) => setFocusedPoint(coords)}
+      activeFeatureId={selectedFeatureId}
+      onActiveFeatureChange={setSelectedFeatureId}
       showProposedFeatures={showProposedFeatures}
       onToggleProposedFeatures={toggleShowProposedFeatures}
       featureProposals={featureProposals}

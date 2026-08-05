@@ -38,14 +38,31 @@ FROM (VALUES
 CROSS JOIN (SELECT id FROM users LIMIT 1) u;
 
 -- Whitewater features with a difficulty label (shown as a chip in the
--- section list), matching the shape the rivermap import produces.
+-- section list), matching the shape the rivermap import produces. The zone
+-- spans the whole section: whitewater starts at the put-in and ends at the
+-- take-out.
 INSERT INTO features (id, section_id, feature_type, metadata, location, created_by)
 SELECT v.id, v.section_id, 'whitewater', v.meta::jsonb, ST_GeomFromText(v.wkt, 4326), u.id
 FROM (VALUES
-  (9523, 9102, '{"difficulty": "III", "length_km": 1.5}',   'LINESTRING(11.012 47.012, 11.018 47.018)'),
-  (9543, 9104, '{"difficulty": "II", "length_km": 1.5}',    'LINESTRING(11.032 47.032, 11.038 47.038)'),
-  (9553, 9105, '{"difficulty": "IV-V", "length_km": 1.5}',  'LINESTRING(11.042 47.042, 11.048 47.048)')
+  (9523, 9102, '{"difficulty": "III", "length_km": 1.5}',   'LINESTRING(11.01 47.01, 11.02 47.02)'),
+  (9543, 9104, '{"difficulty": "II", "length_km": 1.5}',    'LINESTRING(11.03 47.03, 11.04 47.04)'),
+  (9553, 9105, '{"difficulty": "IV-V", "length_km": 1.5}',  'LINESTRING(11.04 47.04, 11.05 47.05)')
 ) AS v(id, section_id, meta, wkt)
+CROSS JOIN (SELECT id FROM users LIMIT 1) u;
+
+-- A feature-rich section: Lower Test (9102) gets a run of rapids, hazards
+-- and infrastructure between put-in and take-out, for testing the feature
+-- timeline, map markers and per-feature water ranges (see 9607/9608 below).
+INSERT INTO features (id, section_id, feature_type, metadata, location, created_by)
+SELECT v.id, v.section_id, v.feature_type::feature_type, v.meta::jsonb, ST_GeomFromText(v.wkt, 4326), u.id
+FROM (VALUES
+  (9524, 9102, 'rapid',    '{"difficulty": "III+"}', 'LINESTRING(11.012 47.012, 11.014 47.014)'),
+  (9525, 9102, 'hole',     '{}',                     'POINT(11.013 47.013)'),
+  (9526, 9102, 'weir',     '{}',                     'POINT(11.015 47.015)'),
+  (9527, 9102, 'strainer', '{}',                     'POINT(11.016 47.016)'),
+  (9528, 9102, 'portage',  '{}',                     'LINESTRING(11.0155 47.0155, 11.017 47.017)'),
+  (9529, 9102, 'bridge',   '{}',                     'POINT(11.018 47.018)')
+) AS v(id, section_id, feature_type, meta, wkt)
 CROSS JOIN (SELECT id FROM users LIMIT 1) u;
 
 -- Gauge with a week of sinusoidal water-level readings, calibrated on the
@@ -74,7 +91,12 @@ INSERT INTO feature_water_ranges (id, feature_id, series_id, range_low, range_me
   (9603, 9541, 9401, 80, 100, 130),
   (9604, 9551, 9401, 40, 50, 70),
   (9605, 9561, 9401, 100, 120, 150),
-  (9606, 9571, 9402, 60, 80, 120);
+  (9606, 9571, 9402, 60, 80, 120),
+  -- Per-feature ranges on Lower Test, same series as the section default
+  -- (9601): selecting the rapid/hole in the timeline swaps the chart
+  -- thresholds instead of stacking extra charts.
+  (9607, 9524, 9401, 70, 90, 110),
+  (9608, 9525, 9401, 50, 70, 90);
 
 -- Descents owned by the first user, exercising visibility, multi-section
 -- membership, and band widths in the chart (short runs + a 36h trip).
@@ -143,8 +165,8 @@ INSERT INTO section_names (id, section_id, lang_code, name) VALUES
 INSERT INTO features (id, section_id, feature_type, location, created_by)
 SELECT v.id, v.section_id, v.feature_type::feature_type, ST_GeomFromText(v.wkt, 4326), u.id
 FROM (VALUES
-  (9581, 9111, 'whitewater', 'POINT(10.905 47.205)'),
-  (9582, 9145, 'whitewater', 'POINT(14.305 48.805)'),
+  (9581, 9111, 'whitewater', 'LINESTRING(10.9 47.2, 10.91 47.21)'),
+  (9582, 9145, 'whitewater', 'LINESTRING(14.3 48.8, 14.31 48.81)'),
   (9583, 9131, 'weir',       'POINT(13.405 48.905)'),
   (9584, 9112, 'hole',       'POINT(10.915 47.215)'),
   (9585, 9111, 'put_in',     'POINT(10.9 47.2)'),
@@ -166,7 +188,10 @@ INSERT INTO feature_names (id, feature_id, lang_code, name) VALUES
   (9802, 9581, 'en', 'Giant Gorge'),
   (9803, 9582, 'cs', 'Šumavský slalom'),
   (9804, 9583, 'de', 'Hüttenwehr'),
-  (9805, 9584, 'de', 'Grieß');
+  (9805, 9584, 'de', 'Grieß'),
+  (9810, 9524, 'en', 'Slot Machine'),
+  (9811, 9525, 'en', 'Big Hole'),
+  (9812, 9526, 'de', 'Altes Wehr');
 
 -- API token "pm_testtoken123" for the first user (sha256 of the plain token).
 INSERT INTO api_tokens (user_id, name, token_hash)

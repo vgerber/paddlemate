@@ -16,6 +16,7 @@ import {
   waterStatusApi,
   waterwaysApi,
 } from "@/lib/api";
+import { proposalKeys } from "./useProposals";
 
 export const waterwayKeys = {
   all: ["waterways"] as const,
@@ -116,6 +117,22 @@ export function useCreateFeature(waterwayId: number, sectionId: number) {
       queryClient.invalidateQueries({
         queryKey: waterwayKeys.section(waterwayId, sectionId),
       }),
+  });
+}
+
+export function useDeleteFeature(waterwayId: number, sectionId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (featureId: number) =>
+      featuresApi.remove(waterwayId, sectionId, featureId),
+    // Refresh the waterway (feature list) and the pending proposals, so the
+    // timeline's "deletion proposed" marker shows up right away.
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: waterwayKeys.detail(waterwayId),
+      });
+      queryClient.invalidateQueries({ queryKey: proposalKeys.all });
+    },
   });
 }
 

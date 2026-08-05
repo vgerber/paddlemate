@@ -8,18 +8,47 @@ export function fmtKm(m: number): string {
   return `${(m / 1000).toFixed(1)} KM`;
 }
 
+/** Difficulty grade from feature metadata, or null. */
+export function featureDifficulty(f: Feature): string | null {
+  const d = (f.metadata as Record<string, unknown> | null)?.difficulty;
+  return typeof d === "string" && d ? d : null;
+}
+
 /** Returns the feature's name in the user's language (first name as
- * fallback), else a humanised type string. */
+ * fallback, else a humanised type string), with the difficulty right behind
+ * it - "Slot Machine III+" like the whitewater fallback "WW III". */
 export function featureName(f: Feature): string {
-  const name = localizedName(f.names[0]?.name ?? "", f.names);
-  if (name) return name;
-  if (f.feature_type === "whitewater") {
-    const diff = (f.metadata as Record<string, unknown> | null)?.difficulty as
-      | string
-      | undefined;
-    return diff ? `WW ${diff}` : "WW";
-  }
-  return f.feature_type.replace(/_/g, " ");
+  const diff = featureDifficulty(f);
+  const name =
+    localizedName(f.names[0]?.name ?? "", f.names) ||
+    (f.feature_type === "whitewater"
+      ? "WW"
+      : f.feature_type.replace(/_/g, " "));
+  return diff ? `${name} ${diff}` : name;
+}
+
+/** Tolerance (m) when detecting that a zone spans the whole section. */
+export const FULL_SECTION_TOLERANCE_M = 50;
+
+/** True when a line feature covers (nearly) the whole section line. */
+export function spansWholeSection(
+  f: Feature,
+  line: [number, number][],
+): boolean {
+  if (f.location.type !== "LineString" || line.length < 2) return false;
+  const totalM = distanceAlongLineM(line[line.length - 1], line);
+  const extent = computeExtent(f, line);
+  return (
+    extent.startM < FULL_SECTION_TOLERANCE_M &&
+    totalM - extent.endM < FULL_SECTION_TOLERANCE_M
+  );
+}
+
+/** Humanised feature type for the small label under the name; null when the
+ * entry has no own name, because featureName already falls back to the type. */
+export function featureTypeLabel(f: Feature): string | null {
+  const hasName = !!localizedName(f.names[0]?.name ?? "", f.names);
+  return hasName ? f.feature_type.replace(/_/g, " ") : null;
 }
 
 /** Returns the feature's description in the user's language or null. */
@@ -173,9 +202,10 @@ export function proposalToComputedFeature(
 }
 
 /**
- * Builds a two-level render tree. Each feature is assigned to the smallest
- * zone that fully contains it. Uncontained features are top-level nodes.
- * Both levels are sorted by ascending distM.
+ * Builds a recursive render tree. Each feature is assigned to the smallest
+ * zone that fully contains it, so a zone inside a zone nests another level
+ * deep. Uncontained features are top-level nodes. Every level is sorted by
+ * ascending distM.
  */
 export function buildTree(items: ComputedFeature[]): TreeNode[] {
   // Only approved (non-proposal) zones can act as parents; proposals are always leaves.
@@ -184,13 +214,19 @@ export function buildTree(items: ComputedFeature[]): TreeNode[] {
   function findParent(item: ComputedFeature): ComputedFeature | null {
     let best: ComputedFeature | null = null;
     let bestSize = Infinity;
+    const itemSize = item.endM - item.startM;
     for (const z of zones) {
       if (z.feature.id === item.feature.id) continue;
       const contained = item.isZone
         ? item.startM >= z.startM && item.endM <= z.endM
         : item.distM >= z.startM && item.distM <= z.endM;
+      if (!contained) continue;
       const size = z.endM - z.startM;
-      if (contained && size < bestSize) {
+      // Two zones with the same extent contain each other; the lower id
+      // wins as parent so they can't both disappear into the other.
+      if (item.isZone && size === itemSize && z.feature.id > item.feature.id)
+        continue;
+      if (size < bestSize) {
         bestSize = size;
         best = z;
       }
@@ -210,13 +246,17 @@ export function buildTree(items: ComputedFeature[]): TreeNode[] {
     }
   }
 
+  function toNode(item: ComputedFeature): TreeNode {
+    return {
+      item,
+      nested: (childMap.get(item.feature.id) ?? [])
+        .sort((a, b) => a.distM - b.distM)
+        .map(toNode),
+    };
+  }
+
   return items
     .filter((i) => !nestedIds.has(i.feature.id))
     .sort((a, b) => a.distM - b.distM)
-    .map((item) => ({
-      item,
-      nested: (childMap.get(item.feature.id) ?? []).sort(
-        (a, b) => a.distM - b.distM,
-      ),
-    }));
+    .map(toNode);
 }

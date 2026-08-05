@@ -34,9 +34,10 @@ Remove only: run just `cleanup.sql`.
 |---|---|---|
 | Waterway "Test River" | 9001 | river |
 | Sections | 9101-9107 | each with put_in + take_out features (9511-9572) at its line ends, like a normal entry |
-| Whitewater features | 9523/9543/9553 | difficulty III / II / IV-V on sections 9102/9104/9105 - difficulty chip in the section list |
+| Whitewater features | 9523/9543/9553 | difficulty III / II / IV-V on sections 9102/9104/9105, spanning put-in to take-out - difficulty chip in the section list |
+| Extra features on Lower Test | 9524-9529 | rapid "Slot Machine" (III+), hole "Big Hole", weir "Altes Wehr", strainer, portage, bridge - 9102 is the feature-rich section for timeline/map/delete testing |
 | Gauge "Test Gauge" + series | 9301 / 9401, 9402 | water_level in cm; 9401 has a week of 2-hourly sinusoidal readings (55-115, latest ~85), 9402 has none |
-| Water ranges | 9601-9606 | thresholds around the ~85 cm reading so the section list shows every chip variant (see below) |
+| Water ranges | 9601-9608 | thresholds around the ~85 cm reading so the section list shows every chip variant (see below); 9607/9608 sit on the Lower Test rapid/hole (same series as the 9601 default) so selecting them in the timeline swaps the chart thresholds |
 | Descents | 9201-9204 | see below; all owned by the first user |
 | API token `pm_testtoken123` | name `test-data` | for authed curl: `-H "X-Api-Key: pm_testtoken123"` |
 

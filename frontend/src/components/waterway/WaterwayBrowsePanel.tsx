@@ -47,6 +47,8 @@ interface WaterwayBrowsePanelProps {
   onMobileMapToggle?: () => void;
   mobileMapActive?: boolean;
   onFeatureClick?: (coords: [number, number] | null) => void;
+  activeFeatureId?: number | null;
+  onActiveFeatureChange?: (id: number | null) => void;
   showProposedFeatures?: boolean;
   onToggleProposedFeatures?: () => void;
   featureProposals?: Proposal[];
@@ -71,6 +73,8 @@ export default function WaterwayBrowsePanel({
   onMobileMapToggle,
   mobileMapActive,
   onFeatureClick,
+  activeFeatureId,
+  onActiveFeatureChange,
   showProposedFeatures = false,
   onToggleProposedFeatures,
   featureProposals = [],
@@ -185,8 +189,10 @@ export default function WaterwayBrowsePanel({
             flex: 1,
             overflowY: "auto",
             p: 1,
-            // Leave room so the FAB never covers the last row
-            pb: showNewSectionFab || showLogDescentFab ? 9 : 1,
+            // Leave room so a floating button never covers the last row -
+            // the panel's own FABs, or the mobile speed dial in the
+            // section features view (its km labels are right-aligned).
+            pb: showNewSectionFab || showLogDescentFab || inFeatures ? 9 : 1,
           }}
         >
           {isLoading ? (
@@ -199,8 +205,11 @@ export default function WaterwayBrowsePanel({
             ) : (
               <FeatureTimeline
                 section={selectedSection}
-                proposals={showProposedFeatures ? featureProposals : undefined}
+                proposals={featureProposals}
+                showProposed={showProposedFeatures}
                 onFeatureClick={onFeatureClick}
+                activeFeatureId={activeFeatureId}
+                onActiveFeatureChange={onActiveFeatureChange}
               />
             )
           ) : tab === "sections" ? (

@@ -14,7 +14,10 @@ import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import WaterwayMap from "@/components/map/Map";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import AreaControls from "@/components/search/AreaControls";
-import { proposalToPseudoFeature } from "@/components/waterway/section-details/utils";
+import {
+  proposalToPseudoFeature,
+  spansWholeSection,
+} from "@/components/waterway/section-details/utils";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
 import SectionSpeedDial from "./SectionSpeedDial";
@@ -71,6 +74,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     showProposedFeatures,
     featureProposals,
     setMapBounds,
+    selectedFeatureId,
   } = state;
 
   const LEVEL_COLORS: Record<string, string> = theme.tokens.levelColors;
@@ -79,6 +83,19 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
   const sectionName = selectedSection
     ? localizedName(selectedSection.name, selectedSection.names)
     : undefined;
+  const selectedFeature =
+    selectedFeatureId != null
+      ? selectedSection?.features.find((f) => f.id === selectedFeatureId)
+      : undefined;
+  const selectedFeatureInfo = selectedFeature
+    ? {
+        name: localizedName(
+          selectedFeature.names[0]?.name ?? "",
+          selectedFeature.names,
+        ),
+        type: selectedFeature.feature_type,
+      }
+    : null;
   const waterwayName =
     selectedWaterwayId != null ? waterwayNames[selectedWaterwayId] : undefined;
   const sectionLevel =
@@ -97,6 +114,19 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
   );
 
   const showAreaStrip = isMobile && isAreaMode && selectedWaterwayId == null;
+
+  // Line features spanning (nearly) the whole section (e.g. the whitewater
+  // zone) would just redraw the section line - keep them in the timeline
+  // but off the map.
+  const mapFeatures = useMemo(() => {
+    if (!selectedSection) return undefined;
+    if (selectedSection.location.type !== "LineString")
+      return selectedSection.features;
+    const line = (selectedSection.location.coordinates as number[][]).map(
+      (c): [number, number] => [c[0], c[1]],
+    );
+    return selectedSection.features.filter((f) => !spansWholeSection(f, line));
+  }, [selectedSection]);
 
   // Stable identity - inline mapping in JSX would rebuild the array every
   // render and defeat the map's GeoJSON memoization.
@@ -142,6 +172,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           sections={
             selectedWaterwayId != null ? sections : filteredSearchSections
           }
+          features={mapFeatures}
           selectedSectionId={selectedSectionId}
           onSectionClick={suggestMode ? undefined : handleSectionClick}
           gaugePins={gaugePins}
@@ -316,6 +347,8 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             waterwayId={selectedWaterwayId}
             sectionId={selectedSectionId}
             sectionName={sectionName}
+            selectedFeatureId={selectedFeatureId}
+            selectedFeature={selectedFeatureInfo}
           />
         ) : null}
       </Box>

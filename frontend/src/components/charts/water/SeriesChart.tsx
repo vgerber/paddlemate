@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import type { JSX } from "react";
 import { useLayoutEffect, useMemo, useState } from "react";
 import {
   Area,
@@ -16,7 +17,7 @@ import {
 } from "recharts";
 import type { GaugeReading, WaterRangeWithStatus } from "@/lib/api";
 import { useGaugeReadings } from "@/lib/hooks/useWaterways";
-import { theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 import type { DescentSpan, TimeRange } from "./types";
 import { useChartZoom } from "./useChartZoom";
 
@@ -28,6 +29,12 @@ const CHART_MARGIN = { top: 6, right: 12, bottom: 4, left: 0 };
 
 export interface SeriesChartProps {
   range: WaterRangeWithStatus;
+  /** Range of the feature selected in the timeline. While set (and not the
+   * default range itself), the default thresholds dim and these render on
+   * top. */
+  selectedRange?: WaterRangeWithStatus | null;
+  /** Name and type of the selected feature, shown as a chart caption. */
+  selectedFeature?: { name: string; type: string } | null;
   from: string;
   showThresholds?: boolean;
   timeRange: TimeRange;
@@ -57,8 +64,44 @@ function yDomainOf(
   };
 }
 
+/** Threshold reference lines for one range. Returned as an element array
+ * because recharts only recognizes direct children. */
+function thresholdLines(
+  r: WaterRangeWithStatus,
+  opacity: number,
+  keyPrefix: string,
+) {
+  const line = (key: string, y: number, color: string, labelText: string) => (
+    <ReferenceLine
+      key={`${keyPrefix}-${key}`}
+      y={y}
+      ifOverflow="hidden"
+      stroke={color}
+      strokeOpacity={opacity}
+      strokeDasharray="4 2"
+      label={{
+        value: labelText,
+        position: "insideTopRight",
+        fontSize: 10,
+        fill: color,
+        opacity,
+      }}
+    />
+  );
+  return [
+    r.range_low != null &&
+      line("low", r.range_low, tokens.secondary, `L ${r.range_low}`),
+    r.range_medium != null &&
+      line("medium", r.range_medium, tokens.tertiary, `M ${r.range_medium}`),
+    r.range_high != null &&
+      line("high", r.range_high, tokens.error, `H ${r.range_high}`),
+  ].filter((l): l is JSX.Element => l !== false);
+}
+
 export default function SeriesChart({
   range,
+  selectedRange,
+  selectedFeature,
   from,
   showThresholds = true,
   timeRange,
@@ -127,12 +170,24 @@ export default function SeriesChart({
     () => chartData.map((d) => d.value).filter((v): v is number => v !== null),
     [chartData],
   );
+  // The selected feature's range drives the y window so its thresholds are
+  // always clearly in view; otherwise the default range does.
+  const displayRange = selectedRange ?? range;
+  const hasSelectedRange = selectedRange != null;
+  // No dimming when the selected feature owns the default range itself.
+  const dimDefault = selectedRange != null && selectedRange.id !== range.id;
   const thresholds = useMemo(
     () =>
-      [range.range_low, range.range_medium, range.range_high].filter(
-        (v): v is number => v != null,
-      ),
-    [range.range_low, range.range_medium, range.range_high],
+      [
+        displayRange.range_low,
+        displayRange.range_medium,
+        displayRange.range_high,
+      ].filter((v): v is number => v != null),
+    [
+      displayRange.range_low,
+      displayRange.range_medium,
+      displayRange.range_high,
+    ],
   );
 
   // Axis width from the full data range so the plot geometry (and with it
@@ -389,49 +444,46 @@ export default function SeriesChart({
             connectNulls={false}
             isAnimationActive={false}
           />
-          {showThresholds && range.range_low != null && (
-            <ReferenceLine
-              y={range.range_low}
-              ifOverflow="hidden"
-              stroke={tokens.secondary}
-              strokeDasharray="4 2"
-              label={{
-                value: `L ${range.range_low}`,
-                position: "insideTopRight",
-                fontSize: 10,
-                fill: tokens.secondary,
-              }}
-            />
-          )}
-          {showThresholds && range.range_medium != null && (
-            <ReferenceLine
-              y={range.range_medium}
-              ifOverflow="hidden"
-              stroke={tokens.tertiary}
-              strokeDasharray="4 2"
-              label={{
-                value: `M ${range.range_medium}`,
-                position: "insideTopRight",
-                fontSize: 10,
-                fill: tokens.tertiary,
-              }}
-            />
-          )}
-          {showThresholds && range.range_high != null && (
-            <ReferenceLine
-              y={range.range_high}
-              ifOverflow="hidden"
-              stroke={tokens.error}
-              strokeDasharray="4 2"
-              label={{
-                value: `H ${range.range_high}`,
-                position: "insideTopRight",
-                fontSize: 10,
-                fill: tokens.error,
-              }}
-            />
-          )}
+          {showThresholds &&
+            thresholdLines(range, dimDefault ? 0.25 : 1, "default")}
+          {showThresholds &&
+            dimDefault &&
+            selectedRange &&
+            thresholdLines(selectedRange, 1, "selected")}
         </AreaChart>
+      )}
+      {hasSelectedRange && selectedFeature && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 2,
+            left: yAxisWidth + 8,
+            zIndex: 2,
+            pointerEvents: "none",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: "0.7rem",
+              fontWeight: 600,
+              color: "text.primary",
+              lineHeight: 1.2,
+            }}
+          >
+            {selectedFeature.name}
+          </Typography>
+          <Typography
+            sx={{
+              fontFamily: fonts.label,
+              fontSize: "0.55rem",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "text.secondary",
+            }}
+          >
+            {selectedFeature.type.replace(/_/g, " ")}
+          </Typography>
+        </Box>
       )}
     </div>
   );

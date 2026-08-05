@@ -3,6 +3,7 @@ import Slide from "@mui/material/Slide";
 import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
+import { localizedName } from "@/lib/localization";
 import SectionSpeedDial from "./SectionSpeedDial";
 import SidebarContent from "./SidebarContent";
 import type { MapPageState } from "./useMapPageState";
@@ -29,9 +30,15 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
     isMobileMapView,
     toggleMobileMapView,
     suggestMode,
+    selectedFeatureId,
   } = state;
 
-  const sectionName = sections.find((s) => s.id === selectedSectionId)?.name;
+  const selectedSection = sections.find((s) => s.id === selectedSectionId);
+  const sectionName = selectedSection?.name;
+  const selectedFeature =
+    selectedFeatureId != null
+      ? selectedSection?.features.find((f) => f.id === selectedFeatureId)
+      : undefined;
   const closeOverlay = () => setIsMobilePanelOpen(false);
   // The chart is hidden on the section Logs tab to give the list more space.
   const chartsHidden = selectedSectionId != null && sectionDetailTab === "logs";
@@ -86,6 +93,18 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
               waterwayId={selectedWaterwayId}
               sectionId={selectedSectionId}
               sectionName={sectionName}
+              selectedFeatureId={selectedFeatureId}
+              selectedFeature={
+                selectedFeature
+                  ? {
+                      name: localizedName(
+                        selectedFeature.names[0]?.name ?? "",
+                        selectedFeature.names,
+                      ),
+                      type: selectedFeature.feature_type,
+                    }
+                  : null
+              }
             />
           ) : null)}
 
