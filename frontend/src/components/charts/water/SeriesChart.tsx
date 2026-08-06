@@ -233,20 +233,12 @@ export default function SeriesChart({
     plotWidth: Math.max((size?.width ?? 0) - plotLeft - CHART_MARGIN.right, 1),
   });
 
-  // Y window follows the zoom; thresholds only stretch it in the full view.
+  // Zooming only narrows the time axis; the y window stays fixed on the
+  // full data range so values remain comparable while panning.
   const yDomain = useMemo<[number | "auto", number | "auto"]>(() => {
-    let d: ReturnType<typeof yDomainOf>;
-    if (domain) {
-      const visible = chartData
-        .filter((p) => p.time >= domain[0] && p.time <= domain[1])
-        .map((p) => p.value)
-        .filter((v): v is number => v !== null);
-      d = yDomainOf(visible.length > 0 ? visible : allValues, []);
-    } else {
-      d = yDomainOf(allValues, thresholds);
-    }
+    const d = yDomainOf(allValues, thresholds);
     return d ? [d.lo, d.hi] : ["auto", "auto"];
-  }, [chartData, allValues, thresholds, domain]);
+  }, [allValues, thresholds]);
 
   if (isLoading) {
     return (
