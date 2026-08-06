@@ -67,6 +67,8 @@ export default function SidebarContent({
     setFeatureGeomType,
     featurePickingActive,
     setFeaturePickingActive,
+    editFeature,
+    startEditFeature,
     setFocusedPoint,
     selectedFeatureId,
     setSelectedFeatureId,
@@ -126,6 +128,7 @@ export default function SidebarContent({
       <SuggestFeaturePanel
         waterwayId={selectedWaterwayId}
         sectionId={selectedSectionId}
+        editFeature={editFeature}
         gaugeRanges={
           selectedSectionGaugeRanges?.length
             ? selectedSectionGaugeRanges
@@ -187,6 +190,7 @@ export default function SidebarContent({
       onMobileMapToggle={onMobileMapToggle}
       mobileMapActive={mobileMapActive}
       onFeatureClick={(coords) => setFocusedPoint(coords)}
+      onEditFeature={startEditFeature}
       activeFeatureId={selectedFeatureId}
       onActiveFeatureChange={setSelectedFeatureId}
       showProposedFeatures={showProposedFeatures}

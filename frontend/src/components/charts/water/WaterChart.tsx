@@ -27,6 +27,10 @@ export interface WaterChartProps {
   /** Feature whose water ranges are brought to the front; the default
    * thresholds dim while it is set. */
   selectedFeatureId?: number | null;
+  /** Feature whose ranges act as each chart's default thresholds (usually
+   * the section-spanning whitewater feature). Without it, the first
+   * calibrated range of a series wins - an arbitrary pick. */
+  preferredFeatureId?: number | null;
   /** Name and type of that feature, shown as a chart caption. */
   selectedFeature?: { name: string; type: string } | null;
 }
@@ -40,6 +44,7 @@ export default function WaterChart({
   onMeasurementTypeChange,
   descentSpans,
   selectedFeatureId,
+  preferredFeatureId,
   selectedFeature,
 }: WaterChartProps) {
   const [internalTimeRange, setInternalTimeRange] = useState<TimeRange>("7d");
@@ -92,17 +97,20 @@ export default function WaterChart({
       if (group) group.push(r);
       else bySeries.set(r.series.id, [r]);
     }
+    const isCalibrated = (r: WaterRangeWithStatus) =>
+      r.range_low != null || r.range_medium != null || r.range_high != null;
     return [...bySeries.values()].map((group) => ({
       primary:
-        group.find(
-          (r) =>
-            r.range_low != null ||
-            r.range_medium != null ||
-            r.range_high != null,
-        ) ?? group[0],
+        (preferredFeatureId != null
+          ? group.find(
+              (r) => r.feature_id === preferredFeatureId && isCalibrated(r),
+            )
+          : undefined) ??
+        group.find(isCalibrated) ??
+        group[0],
       group,
     }));
-  }, [visibleRanges]);
+  }, [visibleRanges, preferredFeatureId]);
 
   const showInternalControls =
     onTimeRangeChange == null ||

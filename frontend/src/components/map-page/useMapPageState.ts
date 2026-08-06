@@ -9,7 +9,7 @@ import type {
   SectionDetailTab,
   SuggestMode,
 } from "@/components/waterway/types";
-import { proposalsApi, waterwaysApi } from "@/lib/api";
+import { type Feature, proposalsApi, waterwaysApi } from "@/lib/api";
 import { useFavorites } from "@/lib/hooks/useFavorites";
 import { useFilteredSections } from "@/lib/hooks/useFilteredSections";
 import { useGaugeData } from "@/lib/hooks/useGaugeData";
@@ -68,6 +68,40 @@ export function useMapPageState(search: RouteSearch) {
   const [featureVertices, setFeatureVertices] = useState<
     { lng: number; lat: number }[]
   >([]);
+  // Feature being edited in the suggest-feature panel; null = creating new.
+  const [editFeature, setEditFeature] = useState<Feature | null>(null);
+
+  /** Open the suggest-feature panel prefilled with an existing feature; its
+   * geometry seeds the picker so it is visible and adjustable on the map. */
+  const startEditFeature = useCallback((f: Feature) => {
+    const loc = f.location;
+    if (loc.type === "Point") {
+      const [lng, lat] = loc.coordinates as [number, number];
+      setFeatureGeomType("Point");
+      setFeatureVertices([{ lng, lat }]);
+    } else if (loc.type === "LineString") {
+      setFeatureGeomType("LineString");
+      setFeatureVertices(
+        (loc.coordinates as [number, number][]).map(([lng, lat]) => ({
+          lng,
+          lat,
+        })),
+      );
+    } else if (loc.type === "Polygon") {
+      const ring = (loc.coordinates as [number, number][][])[0] ?? [];
+      setFeatureGeomType("Polygon");
+      setFeatureVertices(
+        // Drop the closing vertex; the picker re-closes the ring on submit.
+        ring.slice(0, Math.max(ring.length - 1, 0)).map(([lng, lat]) => ({
+          lng,
+          lat,
+        })),
+      );
+    }
+    setFeaturePickingActive(false);
+    setEditFeature(f);
+    setSuggestMode("feature");
+  }, []);
 
   // Preview line drawn on the map (e.g. OSM river highlight in suggest flows)
   const [sectionPreviewCoords, setSectionPreviewCoords] = useState<
@@ -425,6 +459,7 @@ export function useMapPageState(search: RouteSearch) {
     setFeaturePickingActive(false);
     setFeatureGeomType("Point");
     setSuggestWaterwayName("");
+    setEditFeature(null);
   }, []);
 
   return {
@@ -457,6 +492,8 @@ export function useMapPageState(search: RouteSearch) {
     setFeatureGeomType,
     featureVertices,
     setFeatureVertices,
+    editFeature,
+    startEditFeature,
     sectionPreviewCoords,
     setSectionPreviewCoords,
     suggestMode,

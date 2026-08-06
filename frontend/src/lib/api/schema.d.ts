@@ -1720,9 +1720,20 @@ export interface components {
             body: string;
         };
         UpdateFeatureBody: {
+            /** @description New description in `lang_code`; omit to leave descriptions unchanged */
+            description?: string | null;
             feature_type?: components["schemas"]["FeatureType"] | null;
+            /** @description Language tag for name/description, stored lowercase (default: "en") */
+            lang_code?: string | null;
             location?: components["schemas"]["Geometry"] | null;
             metadata?: unknown;
+            /** @description New name in `lang_code`; omit to leave names unchanged */
+            name?: string | null;
+            /**
+             * @description Gauge thresholds upserted together with the update
+             * @default []
+             */
+            water_ranges: components["schemas"]["FeatureWaterRangeBody"][];
         };
         UpdateGaugeRequest: {
             active: boolean;
@@ -1985,11 +1996,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-08-04T16:54:02.470954583Z",
-                     *         "expires_at": "2026-11-02T16:54:02.470957133Z",
+                     *         "created_at": "2026-08-06T16:12:54.474835177Z",
+                     *         "expires_at": "2026-11-04T16:12:54.474837507Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-08-04T16:54:02.470958963Z",
+                     *         "last_used_at": "2026-08-06T16:12:54.474839587Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -2020,8 +2031,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-08-04T16:54:02.471109954Z",
-                     *       "expires_at": "2026-11-02T16:54:02.471110344Z",
+                     *       "created_at": "2026-08-06T16:12:54.475007137Z",
+                     *       "expires_at": "2026-11-04T16:12:54.475007547Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."

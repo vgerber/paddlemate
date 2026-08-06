@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, type RefObject, useEffect, useState } from "react";
 import LanguagePicker from "@/components/LanguagePicker";
 import type {
+  Feature,
   FeatureType,
   FeatureWaterRangeBody,
   WaterRangeWithStatus,
@@ -74,6 +75,10 @@ interface SuggestFeatureFormProps {
   submitRef?: RefObject<(() => void) | null>;
   /** Called whenever the form's canSubmit state changes. */
   onCanSubmitChange?: (can: boolean) => void;
+  /** Edit mode: prefill from this feature and submit as an update proposal
+   * instead of creating. Give the form a key of the feature id so a new
+   * target remounts it. */
+  editFeature?: Feature | null;
 }
 
 export default function SuggestFeatureForm({
@@ -89,18 +94,36 @@ export default function SuggestFeatureForm({
   nearPoint,
   submitRef,
   onCanSubmitChange,
+  editFeature,
 }: SuggestFeatureFormProps) {
   const queryClient = useQueryClient();
   const [langCode, setLangCode] = useState(
-    defaultLangCode ?? preferredLanguage(),
+    () =>
+      editFeature?.names[0]?.lang_code ??
+      defaultLangCode ??
+      preferredLanguage(),
   );
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [featureType, setFeatureType] = useState<FeatureType>("whitewater");
+  const [name, setName] = useState(() => editFeature?.names[0]?.name ?? "");
+  const [description, setDescription] = useState(() => {
+    if (!editFeature) return "";
+    const lang = editFeature.names[0]?.lang_code;
+    return (
+      editFeature.descriptions.find((d) => d.lang_code === lang)?.description ??
+      editFeature.descriptions[0]?.description ??
+      ""
+    );
+  });
+  const [featureType, setFeatureType] = useState<FeatureType>(
+    () => editFeature?.feature_type ?? "whitewater",
+  );
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [useSectionLine, setUseSectionLine] = useState(false);
-  const [difficulty, setDifficulty] = useState("");
+  const [difficulty, setDifficulty] = useState(() => {
+    const d = (editFeature?.metadata as Record<string, unknown> | null)
+      ?.difficulty;
+    return typeof d === "string" ? d : "";
+  });
 
   const gaugePicker = useGaugePicker({ gaugeRanges, nearPoint });
 
@@ -182,18 +205,35 @@ export default function SuggestFeatureForm({
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await featuresApi.create(waterwayId, sectionId, {
-        feature_type: featureType,
-        location: buildGeometry() as never,
-        metadata,
-        lang_code: langCode,
-        name: name.trim() || null,
-        description: description.trim() || null,
-        water_ranges: waterRanges,
-      });
+      if (editFeature) {
+        await featuresApi.update(waterwayId, sectionId, editFeature.id, {
+          feature_type: featureType,
+          location: buildGeometry() as never,
+          // Preserve metadata keys the form doesn't manage.
+          metadata: {
+            ...((editFeature.metadata as Record<string, unknown> | null) ?? {}),
+            difficulty: diff ?? undefined,
+          },
+          lang_code: langCode,
+          name: name.trim() || null,
+          description: description.trim() || null,
+          water_ranges: waterRanges,
+        });
+      } else {
+        await featuresApi.create(waterwayId, sectionId, {
+          feature_type: featureType,
+          location: buildGeometry() as never,
+          metadata,
+          lang_code: langCode,
+          name: name.trim() || null,
+          description: description.trim() || null,
+          water_ranges: waterRanges,
+        });
+      }
       queryClient.invalidateQueries({
         queryKey: waterwayKeys.detail(waterwayId),
       });
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
       onSubmitted?.();
     } catch {
       setSubmitError("Failed to submit. Please try again.");

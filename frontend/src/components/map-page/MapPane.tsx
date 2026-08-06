@@ -15,6 +15,7 @@ import WaterwayMap from "@/components/map/Map";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import AreaControls from "@/components/search/AreaControls";
 import {
+  defaultRangeFeature,
   proposalToPseudoFeature,
   spansWholeSection,
 } from "@/components/waterway/section-details/utils";
@@ -349,6 +350,11 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             sectionName={sectionName}
             selectedFeatureId={selectedFeatureId}
             selectedFeature={selectedFeatureInfo}
+            preferredFeatureId={
+              selectedSection
+                ? defaultRangeFeature(selectedSection)?.id
+                : undefined
+            }
           />
         ) : null}
       </Box>

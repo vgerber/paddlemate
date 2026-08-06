@@ -17,13 +17,15 @@ use crate::{
     layers::auth::AuthToken,
     models::{
         feature::{CreateFeatureBody, Feature, FeatureDescription, FeatureName, FeatureType},
+        gauge::FeatureWaterRangeBody,
         geometry::Geometry,
+        lang::{DEFAULT_LANG_CODE, normalize_lang_code},
         path_params::{FeatureLocalePath, FeaturePath, SectionPath},
         proposal::Proposal,
         water_section::SectionId,
         waterway::WaterwayId,
     },
-    query::{features, proposals, sections},
+    query::{features, gauges, proposals, sections},
     state::AppState,
 };
 
@@ -122,6 +124,15 @@ pub struct UpdateFeatureBody {
     pub feature_type: Option<FeatureType>,
     pub metadata: Option<Value>,
     pub location: Option<Geometry>,
+    /// New name in `lang_code`; omit to leave names unchanged
+    pub name: Option<String>,
+    /// New description in `lang_code`; omit to leave descriptions unchanged
+    pub description: Option<String>,
+    /// Language tag for name/description, stored lowercase (default: "en")
+    pub lang_code: Option<String>,
+    /// Gauge thresholds upserted together with the update
+    #[serde(default)]
+    pub water_ranges: Vec<FeatureWaterRangeBody>,
 }
 
 pub async fn update_feature(
@@ -135,30 +146,82 @@ pub async fn update_feature(
         None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
+    for range in &body.water_ranges {
+        if let Err(msg) = range.validate() {
+            return ApiError::validation(msg).into_response();
+        }
+    }
+    let lang_code =
+        match normalize_lang_code(body.lang_code.as_deref().unwrap_or(DEFAULT_LANG_CODE)) {
+            Ok(code) => code,
+            Err(msg) => return ApiError::validation(msg).into_response(),
+        };
+
     if token.is_server_admin() {
         let location_json = body
             .location
             .as_ref()
             .map(|g| serde_json::to_string(g).expect("valid geometry"));
 
-        return match features::update_feature(
+        let feature = match features::update_feature(
             &app.pg_pool,
             waterway_id,
             section_id,
             feature_id,
             body.feature_type,
-            body.metadata,
+            body.metadata.clone(),
             location_json,
         )
         .await
         {
-            Ok(Some(feature)) => Json(feature).into_response(),
-            Ok(None) => ApiError::not_found("Not found").into_response(),
+            Ok(Some(feature)) => feature,
+            Ok(None) => return ApiError::not_found("Not found").into_response(),
             Err(err) => {
                 tracing::error!("Error updating feature {}: {}", feature_id, err);
-                ApiError::internal().into_response()
+                return ApiError::internal().into_response();
             }
         };
+
+        let name = body.name.as_deref().map(str::trim).filter(|s| !s.is_empty());
+        if let Some(name) = name {
+            if let Err(err) =
+                features::upsert_name(&app.pg_pool, feature_id, &lang_code, name).await
+            {
+                tracing::error!("Error updating feature {} name: {}", feature_id, err);
+                return ApiError::internal().into_response();
+            }
+        }
+        let description = body
+            .description
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        if let Some(description) = description {
+            if let Err(err) =
+                features::upsert_description(&app.pg_pool, feature_id, &lang_code, description)
+                    .await
+            {
+                tracing::error!("Error updating feature {} description: {}", feature_id, err);
+                return ApiError::internal().into_response();
+            }
+        }
+        for range in &body.water_ranges {
+            if let Err(err) = gauges::upsert_feature_water_range_partial(
+                &app.pg_pool,
+                feature_id,
+                range.series_id,
+                range.range_low,
+                range.range_medium,
+                range.range_high,
+            )
+            .await
+            {
+                tracing::error!("Error updating feature {} ranges: {}", feature_id, err);
+                return ApiError::internal().into_response();
+            }
+        }
+        // Names/descriptions changed after the fetch; clients refetch anyway.
+        return Json(feature).into_response();
     }
 
     let data = serde_json::json!({
@@ -167,6 +230,10 @@ pub async fn update_feature(
         "feature_type": body.feature_type,
         "metadata": body.metadata,
         "location": body.location,
+        "name": body.name,
+        "description": body.description,
+        "lang_code": lang_code,
+        "water_ranges": body.water_ranges,
     });
     match proposals::insert_proposal(
         &app.pg_pool,

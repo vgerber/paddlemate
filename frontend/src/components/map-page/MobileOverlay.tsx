@@ -3,6 +3,7 @@ import Slide from "@mui/material/Slide";
 import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
+import { defaultRangeFeature } from "@/components/waterway/section-details/utils";
 import { localizedName } from "@/lib/localization";
 import SectionSpeedDial from "./SectionSpeedDial";
 import SidebarContent from "./SidebarContent";
@@ -94,6 +95,11 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
               sectionId={selectedSectionId}
               sectionName={sectionName}
               selectedFeatureId={selectedFeatureId}
+              preferredFeatureId={
+                selectedSection
+                  ? defaultRangeFeature(selectedSection)?.id
+                  : undefined
+              }
               selectedFeature={
                 selectedFeature
                   ? {

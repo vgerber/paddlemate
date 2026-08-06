@@ -7,7 +7,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
-import type { Proposal, SectionWithFeatures } from "@/lib/api";
+import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
 import { useSession } from "@/lib/hooks/useSession";
 import { useDeleteFeature } from "@/lib/hooks/useWaterways";
 import { fonts, theme } from "@/lib/theme";
@@ -29,6 +29,8 @@ interface Props {
    * on existing features show regardless. */
   showProposed?: boolean;
   onFeatureClick?: (coords: [number, number] | null) => void;
+  /** Opens the full edit panel for a feature (map page suggest mode). */
+  onEditFeature?: (f: Feature) => void;
   /** Controlled active feature - lets the chart panel react to the
    * selection. Falls back to internal state when omitted. */
   activeFeatureId?: number | null;
@@ -40,6 +42,7 @@ export default function FeatureTimeline({
   proposals = [],
   showProposed = true,
   onFeatureClick,
+  onEditFeature,
   activeFeatureId,
   onActiveFeatureChange,
 }: Props) {
@@ -106,6 +109,11 @@ export default function FeatureTimeline({
 
   const onDeleteItem = isAuthenticated ? setDeleteTarget : undefined;
 
+  const onEditItem =
+    isAuthenticated && onEditFeature
+      ? (cf: ComputedFeature) => onEditFeature(cf.feature)
+      : undefined;
+
   if (!tree.length) {
     return (
       <Typography
@@ -134,6 +142,7 @@ export default function FeatureTimeline({
             isLast={idx === tree.length - 1}
             activeId={activeId}
             onItemClick={handleItemClick}
+            onEditItem={onEditItem}
             onDeleteItem={onDeleteItem}
             pendingDeleteIds={pendingDeleteIds}
           />
@@ -144,6 +153,7 @@ export default function FeatureTimeline({
             isLast={idx === tree.length - 1}
             isActive={activeId === node.item.feature.id}
             onClick={() => handleItemClick(node.item)}
+            onEdit={onEditItem && (() => onEditItem(node.item))}
             onDelete={onDeleteItem && (() => onDeleteItem(node.item))}
             pendingDelete={pendingDeleteIds.has(node.item.feature.id)}
           />

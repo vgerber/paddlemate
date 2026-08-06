@@ -1,4 +1,4 @@
-import type { Feature, Proposal } from "@/lib/api";
+import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
 import { distanceAlongLineM, representativePoint } from "@/lib/geo";
 import { localizedDescription, localizedName } from "@/lib/localization";
 import type { ComputedFeature, TreeNode } from "./types";
@@ -42,6 +42,23 @@ export function spansWholeSection(
     extent.startM < FULL_SECTION_TOLERANCE_M &&
     totalM - extent.endM < FULL_SECTION_TOLERANCE_M
   );
+}
+
+/** The feature whose water ranges act as the section's default in charts:
+ * the whitewater feature, preferring one that spans the whole section. */
+export function defaultRangeFeature(
+  section: SectionWithFeatures,
+): Feature | undefined {
+  const line =
+    section.location.type === "LineString"
+      ? (section.location.coordinates as number[][]).map(
+          (c): [number, number] => [c[0], c[1]],
+        )
+      : [];
+  const whitewater = section.features.filter(
+    (f) => f.feature_type === "whitewater",
+  );
+  return whitewater.find((f) => spansWholeSection(f, line)) ?? whitewater[0];
 }
 
 /** Humanised feature type for the small label under the name; null when the

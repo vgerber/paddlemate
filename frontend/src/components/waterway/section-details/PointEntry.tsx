@@ -2,7 +2,6 @@ import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Collapse from "@mui/material/Collapse";
-import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { fonts, theme } from "@/lib/theme";
@@ -12,23 +11,6 @@ import type { ComputedFeature } from "./types";
 import { featureDesc, featureName, featureTypeLabel, fmtKm } from "./utils";
 
 const { tokens } = theme;
-
-/** Delete action for the coords row, matching its copy/open buttons. */
-export function DeleteFeatureButton({ onDelete }: { onDelete: () => void }) {
-  return (
-    <IconButton
-      size="small"
-      title="Delete feature"
-      onClick={(e: React.MouseEvent) => {
-        e.stopPropagation();
-        onDelete();
-      }}
-      sx={{ color: tokens.error }}
-    >
-      <DeleteOutlinedIcon fontSize="small" />
-    </IconButton>
-  );
-}
 
 /** Marker behind a feature name when a delete proposal is pending. */
 export function PendingDeleteMarker() {
@@ -45,7 +27,9 @@ interface Props {
   isLast?: boolean;
   isActive?: boolean;
   onClick?: () => void;
-  /** Shown in the expanded area; omitted for proposals or signed-out users. */
+  /** Menu actions in the expanded area; omitted for proposals or signed-out
+   * users. */
+  onEdit?: () => void;
   onDelete?: () => void;
   /** True when a delete proposal is pending for this feature. */
   pendingDelete?: boolean;
@@ -56,6 +40,7 @@ export function PointEntry({
   isLast = false,
   isActive = false,
   onClick,
+  onEdit,
   onDelete,
   pendingDelete = false,
 }: Props) {
@@ -224,7 +209,8 @@ export function PointEntry({
           {!isProposal ? (
             <CoordsInfo
               coords={item.coords}
-              actions={onDelete && <DeleteFeatureButton onDelete={onDelete} />}
+              onEdit={onEdit}
+              onDelete={onDelete}
             />
           ) : (
             item.proposal && (

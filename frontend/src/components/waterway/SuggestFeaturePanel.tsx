@@ -3,7 +3,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import { useRef, useState } from "react";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
-import type { WaterRangeWithStatus } from "@/lib/api";
+import type { Feature, WaterRangeWithStatus } from "@/lib/api";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import type { GeometryPicking } from "./GeometryPicker";
 import SuggestFeatureForm from "./SuggestFeatureForm";
@@ -14,6 +14,8 @@ interface SuggestFeaturePanelProps {
   gaugeRanges?: WaterRangeWithStatus[];
   onClose: () => void;
   geometry: GeometryPicking;
+  /** Edit mode: the form is prefilled and submits an update proposal. */
+  editFeature?: Feature | null;
 }
 
 export default function SuggestFeaturePanel({
@@ -22,6 +24,7 @@ export default function SuggestFeaturePanel({
   gaugeRanges,
   onClose,
   geometry,
+  editFeature,
 }: SuggestFeaturePanelProps) {
   const { data: waterway } = useWaterway(waterwayId);
   const sections = waterway?.sections ?? [];
@@ -57,6 +60,8 @@ export default function SuggestFeaturePanel({
         }}
       >
         <SuggestFeatureForm
+          key={editFeature?.id ?? "new"}
+          editFeature={editFeature}
           waterwayId={waterwayId}
           sectionId={sectionId}
           sectionLine={sectionLine}
@@ -80,7 +85,7 @@ export default function SuggestFeaturePanel({
         onLeftClick={handleClose}
         leftLabel="Cancel"
         title={selectedSection?.name ?? waterway?.name ?? "…"}
-        subtitle="Suggest new feature"
+        subtitle={editFeature ? "Edit feature" : "Suggest new feature"}
         action={
           <RoundActionButton
             onClick={() => submitRef.current?.()}

@@ -86,10 +86,12 @@ FROM generate_series(0, 168, 2) AS n;
 --   9106 empty (100/120/150), 9107 calibrated but no readings,
 --   9101 uncalibrated (plain reading), 9103 no gauge (no chip).
 INSERT INTO feature_water_ranges (id, feature_id, series_id, range_low, range_medium, range_high) VALUES
-  (9601, 9521, 9401, 60, 80, 120),
+  -- Section defaults sit on the whitewater features - the app treats the
+  -- section-spanning whitewater range as each chart's default thresholds.
+  (9601, 9523, 9401, 60, 80, 120),
   (9602, 9511, 9401, NULL, NULL, NULL),
-  (9603, 9541, 9401, 80, 100, 130),
-  (9604, 9551, 9401, 40, 50, 70),
+  (9603, 9543, 9401, 80, 100, 130),
+  (9604, 9553, 9401, 40, 50, 70),
   (9605, 9561, 9401, 100, 120, 150),
   (9606, 9571, 9402, 60, 80, 120),
   -- Per-feature ranges on Lower Test, same series as the section default
@@ -196,5 +198,16 @@ INSERT INTO feature_names (id, feature_id, lang_code, name) VALUES
 -- API token "pm_testtoken123" for the first user (sha256 of the plain token).
 INSERT INTO api_tokens (user_id, name, token_hash)
 SELECT id, 'test-data', 'ffd2e7ff161f619163861f2870c0fdf91508ae8851743d855d2661aa13738ec8' FROM users LIMIT 1;
+
+-- The explicit 9xxx ids above bypass the id sequences. Bump them past the
+-- fixture range so rows created through the app get higher ids - otherwise
+-- they sort before the fixture rows (breaking "first range wins" defaults)
+-- and eventually collide with seeded ids.
+SELECT setval(pg_get_serial_sequence(t, 'id'), 10000, true)
+FROM unnest(ARRAY[
+  'waterways', 'water_sections', 'features', 'feature_names',
+  'section_names', 'gauges', 'gauge_series', 'feature_water_ranges',
+  'descents'
+]) AS t;
 
 COMMIT;

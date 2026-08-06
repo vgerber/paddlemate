@@ -5,11 +5,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { fonts, theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
-import {
-  DeleteFeatureButton,
-  PendingDeleteMarker,
-  PointEntry,
-} from "./PointEntry";
+import { PendingDeleteMarker, PointEntry } from "./PointEntry";
 import { ProposalDetail } from "./ProposalDetail";
 import type { ComputedFeature, TreeNode } from "./types";
 import { featureDesc, featureName, featureTypeLabel, fmtKm } from "./utils";
@@ -22,8 +18,9 @@ interface Props {
   isLast?: boolean;
   activeId?: number | null;
   onItemClick?: (item: ComputedFeature) => void;
-  /** Delete action for the zone itself and its nested features; omitted for
-   * signed-out users. Proposals never get one. */
+  /** Edit/delete actions for the zone itself and its nested features;
+   * omitted for signed-out users. Proposals never get them. */
+  onEditItem?: (item: ComputedFeature) => void;
   onDeleteItem?: (item: ComputedFeature) => void;
   /** Features (zone or nested) with a pending delete proposal. */
   pendingDeleteIds?: Set<number>;
@@ -39,6 +36,7 @@ export function ZoneEntry({
   isLast = false,
   activeId,
   onItemClick,
+  onEditItem,
   onDeleteItem,
   pendingDeleteIds,
 }: Props) {
@@ -164,11 +162,8 @@ export function ZoneEntry({
             {!isProposal ? (
               <CoordsInfo
                 coords={item.coords}
-                actions={
-                  onDeleteItem && (
-                    <DeleteFeatureButton onDelete={() => onDeleteItem(item)} />
-                  )
-                }
+                onEdit={onEditItem && (() => onEditItem(item))}
+                onDelete={onDeleteItem && (() => onDeleteItem(item))}
               />
             ) : (
               item.proposal && (
@@ -210,6 +205,7 @@ export function ZoneEntry({
             isLast={idx === nested.length - 1}
             activeId={activeId}
             onItemClick={onItemClick}
+            onEditItem={onEditItem}
             onDeleteItem={onDeleteItem}
             pendingDeleteIds={pendingDeleteIds}
           />
@@ -220,6 +216,7 @@ export function ZoneEntry({
             isLast={idx === nested.length - 1}
             isActive={activeId === child.item.feature.id}
             onClick={() => onItemClick?.(child.item)}
+            onEdit={onEditItem && (() => onEditItem(child.item))}
             onDelete={onDeleteItem && (() => onDeleteItem(child.item))}
             pendingDelete={pendingDeleteIds?.has(child.item.feature.id)}
           />

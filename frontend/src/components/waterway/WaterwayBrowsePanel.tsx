@@ -17,6 +17,7 @@ import SectionListItem from "@/components/waterway/SectionListItem";
 import SectionLogsList from "@/components/waterway/SectionLogsList";
 import FeatureTimeline from "@/components/waterway/section-details";
 import type {
+  Feature,
   Proposal,
   SectionWithFeatures,
   WaterRangeWithStatus,
@@ -47,6 +48,7 @@ interface WaterwayBrowsePanelProps {
   onMobileMapToggle?: () => void;
   mobileMapActive?: boolean;
   onFeatureClick?: (coords: [number, number] | null) => void;
+  onEditFeature?: (f: Feature) => void;
   activeFeatureId?: number | null;
   onActiveFeatureChange?: (id: number | null) => void;
   showProposedFeatures?: boolean;
@@ -73,6 +75,7 @@ export default function WaterwayBrowsePanel({
   onMobileMapToggle,
   mobileMapActive,
   onFeatureClick,
+  onEditFeature,
   activeFeatureId,
   onActiveFeatureChange,
   showProposedFeatures = false,
@@ -208,6 +211,7 @@ export default function WaterwayBrowsePanel({
                 proposals={featureProposals}
                 showProposed={showProposedFeatures}
                 onFeatureClick={onFeatureClick}
+                onEditFeature={onEditFeature}
                 activeFeatureId={activeFeatureId}
                 onActiveFeatureChange={onActiveFeatureChange}
               />

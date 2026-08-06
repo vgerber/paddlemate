@@ -21,6 +21,8 @@ interface SectionChartPanelProps {
   selectedFeatureId?: number | null;
   /** Name and type of that feature, shown as a chart caption. */
   selectedFeature?: { name: string; type: string } | null;
+  /** Feature owning the section's default thresholds (whitewater). */
+  preferredFeatureId?: number | null;
 }
 
 export default function SectionChartPanel({
@@ -29,6 +31,7 @@ export default function SectionChartPanel({
   sectionName,
   selectedFeatureId,
   selectedFeature,
+  preferredFeatureId,
 }: SectionChartPanelProps) {
   const { isAuthenticated } = useSession();
   const navigate = useNavigate();
@@ -171,6 +174,7 @@ export default function SectionChartPanel({
             ranges={waterStatus?.ranges ?? []}
             selectedFeatureId={selectedFeatureId}
             selectedFeature={selectedFeature}
+            preferredFeatureId={preferredFeatureId}
             timeRange={timeRange}
             onTimeRangeChange={setTimeRange}
             measurementType={measurementType}

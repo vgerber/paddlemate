@@ -560,6 +560,28 @@ async fn apply_proposal(
                     }
                 }
 
+                // Apply name/description if included in the delta
+                let lang = data["lang_code"].as_str().unwrap_or(DEFAULT_LANG_CODE);
+                let lang = normalize_lang_code(lang).unwrap_or_else(|_| {
+                    tracing::warn!(
+                        "Proposal {} carries an invalid lang_code; applying as {}",
+                        proposal.id,
+                        DEFAULT_LANG_CODE
+                    );
+                    DEFAULT_LANG_CODE.to_string()
+                });
+                if let Some(name) = data["name"].as_str().map(str::trim).filter(|s| !s.is_empty())
+                {
+                    features::upsert_name(&mut **tx, id, &lang, name).await?;
+                }
+                if let Some(description) = data["description"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                {
+                    features::upsert_description(&mut **tx, id, &lang, description).await?;
+                }
+
                 let feature_type = data["feature_type"].as_str();
                 let location = if data["location"].is_null() {
                     None
