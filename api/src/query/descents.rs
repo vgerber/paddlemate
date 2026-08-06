@@ -208,7 +208,42 @@ async fn insert_water_snapshots(
     start_time: DateTime<Utc>,
     end_time: DateTime<Utc>,
 ) -> Result<(), sqlx::Error> {
+    // One snapshot per gauge series - the section-level reading - not one
+    // per feature range. The whitewater feature's calibration wins, like the
+    // section display; then any calibrated range, then the first.
+    let whitewater_ids: Vec<i64> = sqlx::query_scalar(
+        "SELECT id FROM features WHERE section_id = $1 AND feature_type = 'whitewater'",
+    )
+    .bind(section_id)
+    .fetch_all(pool)
+    .await?;
+
+    let is_calibrated = |r: &WaterRangeWithStatus| {
+        r.range_low.is_some() || r.range_medium.is_some() || r.range_high.is_some()
+    };
+    let rank = |r: &WaterRangeWithStatus| {
+        if whitewater_ids.contains(&r.feature_id) && is_calibrated(r) {
+            0
+        } else if is_calibrated(r) {
+            1
+        } else {
+            2
+        }
+    };
+    let mut by_series: std::collections::BTreeMap<i64, &WaterRangeWithStatus> =
+        std::collections::BTreeMap::new();
     for range in ranges {
+        by_series
+            .entry(range.series.id)
+            .and_modify(|best| {
+                if rank(range) < rank(best) {
+                    *best = range;
+                }
+            })
+            .or_insert(range);
+    }
+
+    for range in by_series.into_values() {
         let value = range.latest_reading.as_ref().map(|r| r.value);
         let measured_at = range.latest_reading.as_ref().map(|r| r.measured_at);
         let level_str = match &range.level {

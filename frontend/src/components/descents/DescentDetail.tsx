@@ -4,7 +4,21 @@ import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import WaterwayMap from "@/components/map/Map";
-import type { Descent, SectionWithFeatures } from "@/lib/api";
+import type {
+  Descent,
+  SectionWaterSnapshot,
+  SectionWithFeatures,
+} from "@/lib/api";
+
+/** One snapshot per gauge series - older descents stored one per feature
+ * range, which would repeat the same reading. */
+export function uniqueSnapshotsBySeries(
+  snaps: SectionWaterSnapshot[],
+): SectionWaterSnapshot[] {
+  return snaps.filter(
+    (s, i) => snaps.findIndex((x) => x.series_id === s.series_id) === i,
+  );
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -238,7 +252,8 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
                     {s.note}
                   </Typography>
                 )}
-                {(s.water_snapshots ?? []).length > 0 && (
+                {uniqueSnapshotsBySeries(s.water_snapshots ?? []).length >
+                  0 && (
                   <Box
                     sx={{
                       display: "flex",
@@ -247,45 +262,50 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
                       mt: 0.25,
                     }}
                   >
-                    {(s.water_snapshots ?? []).map((snap) => {
-                      const cfg = levelConfig[snap.level];
-                      return (
-                        <Box
-                          key={snap.series_id}
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.75,
-                          }}
-                        >
-                          <Chip
-                            size="small"
-                            variant={
-                              snap.level === "empty" ? "outlined" : "filled"
-                            }
-                            label={
-                              snap.value != null
-                                ? `${Number(snap.value.toFixed(1))} ${snap.unit}`
-                                : cfg.label
-                            }
+                    {uniqueSnapshotsBySeries(s.water_snapshots ?? []).map(
+                      (snap) => {
+                        const cfg = levelConfig[snap.level];
+                        return (
+                          <Box
+                            key={snap.series_id}
                             sx={{
-                              fontSize: "0.65rem",
-                              height: 20,
-                              minWidth: 32,
-                              color: cfg.color,
-                              bgcolor: cfg.bgcolor,
-                              borderColor:
-                                "border" in cfg ? cfg.border : undefined,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.75,
                             }}
-                          />
-                          <Typography
-                            sx={{ fontSize: "0.7rem", color: "text.disabled" }}
                           >
-                            {snap.gauge_name}
-                          </Typography>
-                        </Box>
-                      );
-                    })}
+                            <Chip
+                              size="small"
+                              variant={
+                                snap.level === "empty" ? "outlined" : "filled"
+                              }
+                              label={
+                                snap.value != null
+                                  ? `${Number(snap.value.toFixed(1))} ${snap.unit}`
+                                  : cfg.label
+                              }
+                              sx={{
+                                fontSize: "0.65rem",
+                                height: 20,
+                                minWidth: 32,
+                                color: cfg.color,
+                                bgcolor: cfg.bgcolor,
+                                borderColor:
+                                  "border" in cfg ? cfg.border : undefined,
+                              }}
+                            />
+                            <Typography
+                              sx={{
+                                fontSize: "0.7rem",
+                                color: "text.disabled",
+                              }}
+                            >
+                              {snap.gauge_name}
+                            </Typography>
+                          </Box>
+                        );
+                      },
+                    )}
                   </Box>
                 )}
               </Box>

@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
+import { uniqueSnapshotsBySeries } from "@/components/descents/DescentDetail";
 import { maxLevel } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
 
@@ -205,8 +206,8 @@ export default function DescentCard({
 
       <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, mt: 0.25 }}>
         {(() => {
-          const allSnapshots = descent.sections.flatMap(
-            (s) => s.water_snapshots ?? [],
+          const allSnapshots = descent.sections.flatMap((s) =>
+            uniqueSnapshotsBySeries(s.water_snapshots ?? []),
           );
           if (allSnapshots.length === 0) return null;
           const level = maxLevel(allSnapshots.map((s) => s.level));
