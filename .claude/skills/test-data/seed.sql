@@ -70,9 +70,11 @@ CROSS JOIN (SELECT id FROM users LIMIT 1) u;
 -- 9401 has a week of readings (latest ~85 cm); 9402 ("Silent Gauge") is
 -- calibrated but never polled, so its section shows the level fallback
 -- without a reading. A gauge allows one series per measurement type.
-INSERT INTO gauges (id, name, provider, source_id) VALUES
-  (9301, 'Test Gauge', 'test', 'test-1'),
-  (9302, 'Silent Gauge', 'test', 'test-2');
+-- fetch_interval_secs matches the seeded 2-hourly readings; staleness is
+-- defined per gauge as "no reading within twice its own interval".
+INSERT INTO gauges (id, name, provider, source_id, fetch_interval_secs) VALUES
+  (9301, 'Test Gauge', 'test', 'test-1', 7200),
+  (9302, 'Silent Gauge', 'test', 'test-2', 7200);
 INSERT INTO gauge_series (id, gauge_id, measurement_type, unit) VALUES
   (9401, 9301, 'water_level', 'cm'),
   (9402, 9302, 'water_level', 'cm');

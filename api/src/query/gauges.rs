@@ -636,6 +636,12 @@ pub async fn water_status_for_section_at(
             FROM gauge_readings
             WHERE series_id = gs.id
               AND ($2::timestamptz IS NULL OR measured_at <= $2)
+              -- Stale = the gauge missed its last tick: no reading within
+              -- twice its own fetch interval (2x absorbs publish/fetch
+              -- jitter). Silent gauges must not keep reporting their last
+              -- value as the present level.
+              AND measured_at > COALESCE($2, NOW())
+                  - make_interval(secs => g.fetch_interval_secs * 2)
             ORDER BY measured_at DESC
             LIMIT 1
         ) lr ON TRUE

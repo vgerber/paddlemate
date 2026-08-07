@@ -77,6 +77,27 @@ export default function WaterLevelChip({
     );
   }
 
+  // Calibrated but no current reading (silent or never-polled gauge): the
+  // backend's level would read as "empty" (= too low to paddle), which is
+  // misleading when the truth is "unknown" - show a neutral dash instead.
+  if (calibrated.every((r) => r.latest_reading == null)) {
+    return (
+      <Chip
+        label="–"
+        title="No current reading"
+        size="small"
+        variant="outlined"
+        sx={{
+          ml: 0.5,
+          opacity: 0.5,
+          fontSize: "0.65rem",
+          minWidth: 32,
+          color: "text.secondary",
+        }}
+      />
+    );
+  }
+
   const computedLevel = maxLevel(calibrated.map((r) => r.level));
   const cfg = levelConfig[computedLevel];
   // Reading from the range that determined the level, if it has one

@@ -48,14 +48,17 @@ function formatTick(v: number): string {
     : String(Math.round(v));
 }
 
-/** Padded y range for a set of values, or null when there are none. */
+/** Padded y range for a set of values (falling back to the thresholds alone
+ * when there are no values, so an empty chart still frames its calibration),
+ * or null when there is nothing at all. */
 function yDomainOf(
   values: number[],
   thresholds: number[],
 ): { lo: number; hi: number } | null {
-  if (values.length === 0) return null;
-  const lo = Math.min(...values, ...thresholds);
-  const hi = Math.max(...values, ...thresholds);
+  const all = values.length > 0 ? [...values, ...thresholds] : thresholds;
+  if (all.length === 0) return null;
+  const lo = Math.min(...all);
+  const hi = Math.max(...all);
   const span = hi - lo || 1;
   const margin = span * 0.2;
   return {
@@ -147,24 +150,32 @@ export default function SeriesChart({
 
   // Clamp descent bands to the visible domain and give very short runs a
   // minimum visual width so they stay visible in long time ranges.
+  // The time axis spans the SELECTED range up to the present, not the data
+  // extent - a silent gauge shows a visible gap instead of the axis quietly
+  // ending at the last reading, and short data doesn't shrink a 3m view
+  // down to a week.
+  const extent = useMemo<[number, number]>(() => {
+    const lastReading = chartData[chartData.length - 1]?.time ?? 0;
+    return [new Date(from).getTime(), Math.max(Date.now(), lastReading)];
+  }, [chartData, from]);
+
   const visibleSpans = useMemo(() => {
-    if (!descentSpans?.length || chartData.length === 0) return [];
-    const dataMin = chartData[0].time;
-    const dataMax = chartData[chartData.length - 1].time;
-    const minWidth = (dataMax - dataMin) * 0.005;
+    if (!descentSpans?.length) return [];
+    const [axisMin, axisMax] = extent;
+    const minWidth = (axisMax - axisMin) * 0.005;
     return descentSpans
-      .filter((s) => s.end >= dataMin && s.start <= dataMax)
+      .filter((s) => s.end >= axisMin && s.start <= axisMax)
       .map((s) => {
-        let x1 = Math.max(s.start, dataMin);
-        let x2 = Math.min(s.end, dataMax);
+        let x1 = Math.max(s.start, axisMin);
+        let x2 = Math.min(s.end, axisMax);
         if (x2 - x1 < minWidth) {
           const mid = (x1 + x2) / 2;
-          x1 = Math.max(mid - minWidth / 2, dataMin);
-          x2 = Math.min(mid + minWidth / 2, dataMax);
+          x1 = Math.max(mid - minWidth / 2, axisMin);
+          x2 = Math.min(mid + minWidth / 2, axisMax);
         }
         return { id: s.id, x1, x2, name: s.name };
       });
-  }, [descentSpans, chartData]);
+  }, [descentSpans, extent]);
 
   const allValues = useMemo(
     () => chartData.map((d) => d.value).filter((v): v is number => v !== null),
@@ -221,11 +232,6 @@ export default function SeriesChart({
     return () => ro.disconnect();
   }, [container]);
 
-  const extent: [number, number] | null =
-    chartData.length >= 2
-      ? [chartData[0].time, chartData[chartData.length - 1].time]
-      : null;
-
   const plotLeft = yAxisWidth + CHART_MARGIN.left;
   const { domain, reset } = useChartZoom(container, {
     extent,
@@ -255,23 +261,6 @@ export default function SeriesChart({
     );
   }
 
-  if (chartData.length === 0) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100%",
-        }}
-      >
-        <Typography variant="caption" color="text.secondary">
-          No readings available.
-        </Typography>
-      </Box>
-    );
-  }
-
   const tickStyle = { fontSize: 11, fill: tokens.outline };
 
   return (
@@ -288,6 +277,23 @@ export default function SeriesChart({
         outline: "none",
       }}
     >
+      {chartData.length === 0 && (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        >
+          <Typography variant="caption" color="text.secondary">
+            No readings in this time range.
+          </Typography>
+        </Box>
+      )}
       {domain && (
         <IconButton
           size="small"
@@ -357,7 +363,7 @@ export default function SeriesChart({
             dataKey="time"
             type="number"
             scale="time"
-            domain={domain ?? ["dataMin", "dataMax"]}
+            domain={domain ?? extent ?? ["dataMin", "dataMax"]}
             allowDataOverflow
             tickFormatter={(ts: number) => {
               const d = new Date(ts);
