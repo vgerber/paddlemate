@@ -79,6 +79,7 @@ async fn load_sections(
     let rows = sqlx::query(
         "SELECT ds.section_id, ds.sort_order, ds.note, \
                 ws.name AS section_name, w.name AS waterway_name, \
+                ws.waterway_id, \
                 ST_AsGeoJSON(ws.location) AS section_location \
          FROM descent_sections ds \
          LEFT JOIN water_sections ws ON ws.id = ds.section_id \
@@ -99,6 +100,7 @@ async fn load_sections(
                 note: r.try_get("note")?,
                 section_name: r.try_get("section_name")?,
                 waterway_name: r.try_get("waterway_name")?,
+            waterway_id: r.try_get("waterway_id")?,
                 location: r
                     .try_get::<Option<String>, _>("section_location")?
                     .and_then(|g| serde_json::from_str(&g).ok()),
@@ -346,6 +348,7 @@ async fn batch_load_sections(
     let rows = sqlx::query(
         "SELECT ds.descent_id, ds.section_id, ds.sort_order, ds.note, \
                 ws.name AS section_name, w.name AS waterway_name, \
+                ws.waterway_id, \
                 ST_AsGeoJSON(ws.location) AS section_location \
          FROM descent_sections ds \
          LEFT JOIN water_sections ws ON ws.id = ds.section_id \
@@ -366,6 +369,7 @@ async fn batch_load_sections(
             note: r.try_get("note")?,
             section_name: r.try_get("section_name")?,
             waterway_name: r.try_get("waterway_name")?,
+            waterway_id: r.try_get("waterway_id")?,
             location: r
                 .try_get::<Option<String>, _>("section_location")?
                 .and_then(|g| serde_json::from_str(&g).ok()),

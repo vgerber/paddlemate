@@ -43,6 +43,9 @@ pub struct DescentSection {
     pub section_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub waterway_name: Option<String>,
+    /// Waterway the section belongs to, for linking back to the map view
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub waterway_id: Option<i64>,
     /// GeoJSON LineString geometry of the section
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location: Option<Geometry>,

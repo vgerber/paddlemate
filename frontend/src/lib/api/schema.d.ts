@@ -1073,6 +1073,11 @@ export interface components {
             sort_order: number;
             /** @description Water level snapshots captured at the time the descent was logged. */
             water_snapshots?: components["schemas"]["SectionWaterSnapshot"][];
+            /**
+             * Format: int64
+             * @description Waterway the section belongs to, for linking back to the map view
+             */
+            waterway_id?: number | null;
             waterway_name?: string | null;
         };
         /** @description An ordered section entry for create/replace requests. */
@@ -1996,11 +2001,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-08-06T16:12:54.474835177Z",
-                     *         "expires_at": "2026-11-04T16:12:54.474837507Z",
+                     *         "created_at": "2026-08-07T16:18:48.187457582Z",
+                     *         "expires_at": "2026-11-05T16:18:48.187459862Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-08-06T16:12:54.474839587Z",
+                     *         "last_used_at": "2026-08-07T16:18:48.187466902Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -2031,8 +2036,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-08-06T16:12:54.475007137Z",
-                     *       "expires_at": "2026-11-04T16:12:54.475007547Z",
+                     *       "created_at": "2026-08-07T16:18:48.187636541Z",
+                     *       "expires_at": "2026-11-05T16:18:48.187636971Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."

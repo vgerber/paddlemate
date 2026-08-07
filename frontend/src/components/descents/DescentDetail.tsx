@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
+import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import WaterwayMap from "@/components/map/Map";
 import type {
@@ -87,6 +88,7 @@ function Fact({
  * order with their notes and the water levels captured when it was logged. */
 export default function DescentDetail({ descent }: { descent: Descent }) {
   const { tokens } = useTheme();
+  const navigate = useNavigate();
   const levelConfig = {
     empty: tokens.waterEmpty,
     low: tokens.waterLow,
@@ -211,6 +213,28 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
             {sections.map((s, index) => (
               <Box
                 key={s.section_id}
+                onClick={
+                  s.waterway_id != null
+                    ? () =>
+                        navigate({
+                          to: "/",
+                          // Fresh map search state - only the target section.
+                          search: {
+                            waterway: s.waterway_id ?? undefined,
+                            section: s.section_id,
+                            q: undefined,
+                            country: undefined,
+                            min_diff: undefined,
+                            max_diff: undefined,
+                            mode: undefined,
+                            panel: undefined,
+                            lat: undefined,
+                            lon: undefined,
+                            radius: undefined,
+                          },
+                        })
+                    : undefined
+                }
                 sx={{
                   display: "flex",
                   flexDirection: "column",
@@ -218,6 +242,11 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
                   p: 1.5,
                   borderBottom: index < sections.length - 1 ? "1px solid" : 0,
                   borderColor: "divider",
+                  // Rows with a known waterway link back to the section pane.
+                  ...(s.waterway_id != null && {
+                    cursor: "pointer",
+                    "&:hover": { bgcolor: "action.hover" },
+                  }),
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
