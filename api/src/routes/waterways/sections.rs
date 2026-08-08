@@ -119,7 +119,11 @@ pub async fn create_section(
             sections::create_section_bundle(&mut tx, waterway_id, &body, token.user_id()).await;
         return match section {
             Ok(section) => match tx.commit().await {
-                Ok(()) => (StatusCode::CREATED, Json(section)).into_response(),
+                Ok(()) => {
+                    // A feature's range may have created + activated a gauge.
+                    app.gauge_wake.notify_waiters();
+                    (StatusCode::CREATED, Json(section)).into_response()
+                }
                 Err(err) => {
                     tracing::error!("Error committing section: {}", err);
                     ApiError::internal().into_response()

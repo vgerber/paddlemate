@@ -44,6 +44,10 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
                 .put_with(crud::update_waterway, crud::update_waterway_docs)
                 .delete_with(crud::delete_waterway, crud::delete_waterway_docs),
         )
+        .api_route(
+            "/{waterway_id}/gauges",
+            get_with(crud::list_waterway_gauges, crud::list_waterway_gauges_docs),
+        )
         // Section CRUD
         .api_route(
             "/{waterway_id}/sections",

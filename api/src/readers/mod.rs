@@ -8,50 +8,89 @@ use sqlx::PgPool;
 // continues to work without changes.
 pub use river_gauge::{BoxFuture, GaugeReader};
 
-/// Start background polling loops, one task per provider. Fire-and-forget.
-pub fn run_all(pool: PgPool) {
+/// Start background polling. A supervisor reconciles one task per provider
+/// that has active gauges - re-checking periodically so a provider that gains
+/// its first gauge (e.g. a freshly linked catalog station) starts polling
+/// without an app restart. Fire-and-forget.
+///
+/// `wake` is signalled after a gauge is linked so the supervisor reconciles at
+/// once instead of waiting for its next tick; the periodic tick is the robust
+/// fallback for anything that misses the signal (proposal approvals, direct DB
+/// changes).
+pub fn run_all(pool: PgPool, wake: std::sync::Arc<tokio::sync::Notify>) {
+    // How often the supervisor re-checks which providers need a task.
+    const SUPERVISOR_INTERVAL: std::time::Duration = std::time::Duration::from_secs(60);
+
     tokio::spawn(async move {
         let readers = build_registry();
+        // Providers that already have a running poll task; tasks are never
+        // torn down (an idle one is cheap and self-heals when gauges return).
+        let mut running: std::collections::HashSet<String> = std::collections::HashSet::new();
 
-        let gauges = match crate::query::gauges::list_gauges(&pool, true).await {
-            Ok(g) => g,
-            Err(err) => {
-                tracing::error!("Failed to load gauges for background readers: {}", err);
-                return;
-            }
-        };
-
-        // Group gauges by provider so each provider gets one polling task.
-        let mut by_provider: HashMap<String, Vec<_>> = HashMap::new();
-        for gauge in gauges {
-            by_provider
-                .entry(gauge.provider.clone())
-                .or_default()
-                .push(gauge);
-        }
-
-        for (provider, gauges) in by_provider {
-            let reader = match readers.iter().find(|r| r.provider_key() == provider) {
-                Some(r) => r.clone(),
-                None => {
-                    tracing::warn!(
-                        "No reader registered for provider '{provider}', skipping {} gauge(s)",
-                        gauges.len()
-                    );
-                    continue;
+        loop {
+            match crate::query::gauges::list_active_providers(&pool).await {
+                Ok(providers) => {
+                    for provider in providers {
+                        if running.contains(&provider) {
+                            continue;
+                        }
+                        let reader = match readers.iter().find(|r| r.provider_key() == provider) {
+                            Some(r) => r.clone(),
+                            None => {
+                                tracing::warn!(
+                                    "No reader registered for provider '{provider}', skipping"
+                                );
+                                continue;
+                            }
+                        };
+                        running.insert(provider.clone());
+                        spawn_provider_loop(pool.clone(), reader, provider, wake.clone());
+                    }
                 }
-            };
+                Err(err) => tracing::error!("Poll supervisor: failed to list providers: {err}"),
+            }
 
-            // Use the shortest interval across all gauges of this provider.
+            tokio::select! {
+                _ = tokio::time::sleep(SUPERVISOR_INTERVAL) => {}
+                _ = wake.notified() => {}
+            }
+        }
+    });
+}
+
+/// Poll one provider forever. Its gauge set is re-read from the DB every cycle
+/// (not captured once), so newly linked gauges are fetched on the next tick and
+/// a provider that loses all its gauges simply idles. `wake` cuts the
+/// inter-cycle sleep short when a gauge is linked, so a station added to a
+/// provider that is mid-sleep is fetched at once instead of on its next cycle.
+fn spawn_provider_loop(
+    pool: PgPool,
+    reader: std::sync::Arc<dyn GaugeReader>,
+    provider: String,
+    wake: std::sync::Arc<tokio::sync::Notify>,
+) {
+    let pool_clone = pool;
+    tokio::spawn(async move {
+        loop {
+            let gauges =
+                match crate::query::gauges::list_active_gauges_by_provider(&pool_clone, &provider)
+                    .await
+                {
+                    Ok(g) => g,
+                    Err(err) => {
+                        tracing::error!(provider = %provider, "failed to load gauges: {err}");
+                        tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+                        continue;
+                    }
+                };
+            // Shortest interval across this provider's current gauges.
             let fetch_interval = gauges
                 .iter()
                 .map(|g| g.fetch_interval_secs as u64)
                 .min()
                 .unwrap_or(900);
 
-            let pool_clone = pool.clone();
-            tokio::spawn(async move {
-                loop {
+            {
                     // Build one FetchRequest per source_id, using the earliest
                     // `from` across all series that share that source_id.
                     // source_id -> (earliest_from, [series_ids])
@@ -162,9 +201,13 @@ pub fn run_all(pool: PgPool) {
                         }
                     }
 
-                    tokio::time::sleep(tokio::time::Duration::from_secs(fetch_interval)).await;
-                }
-            });
+            }
+
+            // Sleep until the next cycle, but wake early if a gauge is linked.
+            tokio::select! {
+                _ = tokio::time::sleep(tokio::time::Duration::from_secs(fetch_interval)) => {}
+                _ = wake.notified() => {}
+            }
         }
     });
 }

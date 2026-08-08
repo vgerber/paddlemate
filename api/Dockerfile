@@ -31,6 +31,9 @@ COPY --from=builder /app/target/release/paddlemate_api /usr/local/bin/paddlemate
 # (docker cp the snapshot in, then docker exec import_rivermap --snapshot ...).
 # Shipped in the image because the DB is only reachable from this network.
 COPY --from=builder /app/target/release/import_rivermap /usr/local/bin/import_rivermap
+# Operational tool: syncs the multi-provider gauge discovery catalog from each
+# reader's live list_stations(). Run on a schedule: docker exec sync_gauge_catalog.
+COPY --from=builder /app/target/release/sync_gauge_catalog /usr/local/bin/sync_gauge_catalog
 
 ENV PORT=3000
 EXPOSE 3000

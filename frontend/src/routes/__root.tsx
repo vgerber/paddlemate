@@ -90,7 +90,8 @@ function Layout() {
   useLanguage();
   const { isAuthenticated, isLoading, user, login, logout } = useSession();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isMapPage = pathname === "/";
+  // Full-bleed map pages: the main world map and the gauge coverage map.
+  const isMapPage = pathname === "/" || pathname === "/tools/gauge-catalog";
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -124,8 +125,8 @@ function Layout() {
             <Box component={Link} to="/logs" sx={navLinkSx}>
               LOGS
             </Box>
-            <Box component={Link} to="/proposals" sx={navLinkSx}>
-              PROPOSALS
+            <Box component={Link} to="/tools" sx={navLinkSx}>
+              TOOLS
             </Box>
           </Box>
           <Box sx={{ flex: 1 }} />
@@ -178,7 +179,9 @@ function BottomNav() {
       ? 0
       : pathname.startsWith("/logs")
         ? 1
-        : pathname.startsWith("/settings") || pathname.startsWith("/proposals")
+        : pathname.startsWith("/settings") ||
+            pathname.startsWith("/proposals") ||
+            pathname.startsWith("/tools")
           ? 2
           : false;
 

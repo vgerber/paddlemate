@@ -21,7 +21,10 @@ use crate::{
             WaterwayType, WaterwayWithSections,
         },
     },
-    query::{features, proposals, sections as query_sections, waterways as query_waterways},
+    query::{
+        features, gauges as query_gauges, proposals, sections as query_sections,
+        waterways as query_waterways,
+    },
     state::AppState,
 };
 
@@ -51,6 +54,27 @@ pub async fn list_waterways(
 doc_fn!(list_waterways_docs, op =>
     op.description("List waterways with optional filters and pagination")
         .response::<200, Json<PaginatedResponse<WaterwayListItem>>>()
+        .tag("Waterways")
+);
+
+/// Gauges already linked to any section of this waterway - the picker offers
+/// these first ("on this river") when adding a new section.
+pub async fn list_waterway_gauges(
+    State(app): State<AppState>,
+    Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
+) -> impl IntoApiResponse {
+    match query_gauges::list_waterway_gauges(&app.pg_pool, waterway_id).await {
+        Ok(gauges) => Json(gauges).into_response(),
+        Err(err) => {
+            tracing::error!("Error listing gauges for waterway {}: {}", waterway_id, err);
+            ApiError::internal().into_response()
+        }
+    }
+}
+
+doc_fn!(list_waterway_gauges_docs, op =>
+    op.description("Gauges already linked to a waterway's sections")
+        .response::<200, Json<Vec<crate::models::gauge::GaugeWithSeries>>>()
         .tag("Waterways")
 );
 

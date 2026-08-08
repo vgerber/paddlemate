@@ -87,4 +87,43 @@ describe("buildSectionPayload", () => {
       coordinates: LINE,
     });
   });
+
+  test("picked put-in and take-out become features at their points", () => {
+    const body = buildSectionPayload(
+      naming(),
+      LINE,
+      [],
+      { lat: 47.0, lon: 11.0 },
+      { lat: 47.1, lon: 11.1 },
+    );
+    const byType = Object.fromEntries(
+      (body.features ?? []).map((f) => [f.feature_type, f]),
+    );
+    expect(byType.put_in?.location).toEqual({
+      type: "Point",
+      coordinates: [11.0, 47.0],
+    });
+    expect(byType.take_out?.location).toEqual({
+      type: "Point",
+      coordinates: [11.1, 47.1],
+    });
+  });
+
+  test("does not duplicate an access point the user already drafted", () => {
+    const body = buildSectionPayload(
+      naming(),
+      LINE,
+      [draft({ feature_type: "put_in" })],
+      { lat: 47.0, lon: 11.0 },
+      { lat: 47.1, lon: 11.1 },
+    );
+    const putIns = (body.features ?? []).filter(
+      (f) => f.feature_type === "put_in",
+    );
+    expect(putIns).toHaveLength(1);
+    // The take-out is still added.
+    expect(
+      (body.features ?? []).some((f) => f.feature_type === "take_out"),
+    ).toBe(true);
+  });
 });

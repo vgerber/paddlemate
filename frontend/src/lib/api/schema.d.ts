@@ -304,6 +304,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/waterways/{waterway_id}/gauges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Gauges already linked to a waterway's sections */
+        get: operations["list_waterway_gauges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/waterways/{waterway_id}/sections": {
         parameters: {
             query?: never;
@@ -625,6 +642,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gauges/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The gauge catalog: all available gauges (real + catalog stations), filterable by name and/or proximity */
+        get: operations["search_gauge_catalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gauges/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every gauge as a coverage-map point, classified used / fetched / available */
+        get: operations["list_gauge_map"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/gauges/{gauge_id}": {
         parameters: {
             query?: never;
@@ -894,6 +945,44 @@ export interface components {
             from: string;
             /** Format: date-time */
             to: string;
+        };
+        /**
+         * @description Water-range thresholds submitted together with a new feature (create
+         *      endpoints and proposals); thresholds are optional individually.
+         *      A gauge referenced by its catalog station rather than an existing series.
+         *      Carried when the user links a station that is not yet a real gauge; the
+         *      apply path resolves it to (or creates) a gauge + series and starts fetching.
+         */
+        CatalogGaugeRef: {
+            /** Format: double */
+            lat?: number | null;
+            /** Format: double */
+            lon?: number | null;
+            measurement_type: components["schemas"]["MeasurementType"];
+            name?: string | null;
+            /** @description Parameter key appended to build the series source_id, e.g. "W" / "Q". */
+            param: string;
+            /** @description Reader provider key (`gauges.provider`), e.g. "hubeau". */
+            provider: string;
+            /** @description Station id prefix (the `gauges.source_id` for a resolved gauge). */
+            station_id: string;
+            unit?: string | null;
+        };
+        /**
+         * @description Catalog search: existing real gauges plus not-yet-fetched catalog stations
+         *      across every provider. `radius_km` bounds the spatial match when a point is
+         *      given.
+         */
+        CatalogSearchQuery: {
+            /** Format: double */
+            lat?: number | null;
+            /** Format: int64 */
+            limit?: number | null;
+            /** Format: double */
+            lon?: number | null;
+            q?: string | null;
+            /** Format: double */
+            radius_km?: number | null;
         };
         Comment: {
             author_id: string;
@@ -1215,10 +1304,12 @@ export interface components {
             updated_at: string;
         };
         /**
-         * @description Water-range thresholds submitted together with a new feature (create
-         *      endpoints and proposals); thresholds are optional individually.
+         * @description A water range to attach to a feature. It names its gauge one of two ways:
+         *      an existing `series_id`, or a `gauge_ref` to a catalog station that is
+         *      resolved-or-created at apply time. Exactly one must be present.
          */
         FeatureWaterRangeBody: {
+            gauge_ref?: components["schemas"]["CatalogGaugeRef"] | null;
             /** Format: double */
             range_high?: number | null;
             /** Format: double */
@@ -1226,7 +1317,7 @@ export interface components {
             /** Format: double */
             range_medium?: number | null;
             /** Format: int64 */
-            series_id: number;
+            series_id?: number | null;
         };
         FeatureWaterRangePath: {
             /** Format: int64 */
@@ -1256,6 +1347,54 @@ export interface components {
             source_id: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        /** @description One gauge as a point on the coverage map, classified by how it is used. */
+        GaugeMapPoint: {
+            /** Format: double */
+            lat: number;
+            /** Format: double */
+            lon: number;
+            name?: string | null;
+            /**
+             * @description Measurement kinds available: series types for a real gauge, catalog
+             *      params (e.g. "W"/"Q") for an available station.
+             */
+            params: string[];
+            /** @description Reader provider key (`gauges.provider` / `gauge_catalog.provider`). */
+            provider: string;
+            river?: string | null;
+            state: components["schemas"]["GaugeMapState"];
+            /** @description `gauges.source_id` for a real gauge, `gauge_catalog.station_id` otherwise. */
+            station_id: string;
+        };
+        /**
+         * @description Coverage state of a gauge point.
+         *      `used` = linked to a section feature; `fetched` = polled but unlinked;
+         *      `available` = a catalog station not yet fetched.
+         * @enum {string}
+         */
+        GaugeMapState: "used" | "fetched" | "available";
+        /**
+         * @description A search hit from the gauge catalog: either an existing real gauge (with
+         *      series) or a catalog-only station not yet fetched.
+         */
+        GaugeOption: {
+            gauge: components["schemas"]["GaugeWithSeries"];
+            /** @constant */
+            kind: "gauge";
+        } | {
+            country?: string | null;
+            /** @constant */
+            kind: "catalog";
+            /** Format: double */
+            lat?: number | null;
+            /** Format: double */
+            lon?: number | null;
+            name?: string | null;
+            params: string[];
+            provider: string;
+            river?: string | null;
+            station_id: string;
         };
         GaugePath: {
             /** Format: int64 */
@@ -1312,12 +1451,12 @@ export interface components {
             country_code?: string | null;
             id: string;
             /**
-             * @description Short licence label derived from `licensing_terms`, e.g. "CC BY 4.0".
-             *      None when the provider names no licence we recognise.
+             * @description Short license label derived from `licensing_terms`, e.g. "CC BY 4.0".
+             *      None when the provider names no license we recognise.
              */
             license_name?: string | null;
             /**
-             * @description Where the licence can be read. None when no formal licence is stated,
+             * @description Where the license can be read. None when no formal license is stated,
              *      in which case clients link `website` instead.
              */
             license_url?: string | null;
@@ -2012,11 +2151,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-08-08T10:25:21.753400167Z",
-                     *         "expires_at": "2026-11-06T10:25:21.753402887Z",
+                     *         "created_at": "2026-08-08T16:31:03.016971831Z",
+                     *         "expires_at": "2026-11-06T16:31:03.016973901Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-08-08T10:25:21.753407767Z",
+                     *         "last_used_at": "2026-08-08T16:31:03.016975471Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -2047,8 +2186,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-08-08T10:25:21.753604317Z",
-                     *       "expires_at": "2026-11-06T10:25:21.753604847Z",
+                     *       "created_at": "2026-08-08T16:31:03.017139451Z",
+                     *       "expires_at": "2026-11-06T16:31:03.017139861Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -2949,6 +3088,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_waterway_gauges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GaugeWithSeries"][];
                 };
             };
         };
@@ -4327,6 +4487,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GaugeWithSeries"][];
+                };
+            };
+        };
+    };
+    search_gauge_catalog: {
+        parameters: {
+            query?: {
+                lat?: number | null;
+                limit?: number | null;
+                lon?: number | null;
+                q?: string | null;
+                radius_km?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GaugeOption"][];
+                };
+            };
+        };
+    };
+    list_gauge_map: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GaugeMapPoint"][];
                 };
             };
         };

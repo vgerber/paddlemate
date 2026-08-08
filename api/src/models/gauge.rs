@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub type GaugeId = i64;
 pub type SeriesId = i64;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, sqlx::Type)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
 #[sqlx(type_name = "measurement_type", rename_all = "snake_case")]
 pub enum MeasurementType {
@@ -246,18 +246,45 @@ pub struct CreateWaterRangeRequest {
 
 /// Water-range thresholds submitted together with a new feature (create
 /// endpoints and proposals); thresholds are optional individually.
+/// A gauge referenced by its catalog station rather than an existing series.
+/// Carried when the user links a station that is not yet a real gauge; the
+/// apply path resolves it to (or creates) a gauge + series and starts fetching.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct CatalogGaugeRef {
+    /// Reader provider key (`gauges.provider`), e.g. "hubeau".
+    pub provider: String,
+    /// Station id prefix (the `gauges.source_id` for a resolved gauge).
+    pub station_id: String,
+    pub measurement_type: MeasurementType,
+    /// Parameter key appended to build the series source_id, e.g. "W" / "Q".
+    pub param: String,
+    pub name: Option<String>,
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
+    pub unit: Option<String>,
+}
+
+/// A water range to attach to a feature. It names its gauge one of two ways:
+/// an existing `series_id`, or a `gauge_ref` to a catalog station that is
+/// resolved-or-created at apply time. Exactly one must be present.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct FeatureWaterRangeBody {
-    pub series_id: SeriesId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub series_id: Option<SeriesId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gauge_ref: Option<CatalogGaugeRef>,
     pub range_low: Option<f64>,
     pub range_medium: Option<f64>,
     pub range_high: Option<f64>,
 }
 
 impl FeatureWaterRangeBody {
-    /// Thresholds must be strictly increasing where present. Rejecting this
-    /// at submission avoids a database CHECK violation at approval time.
+    /// Exactly one gauge reference, and thresholds strictly increasing where
+    /// present. Rejecting here avoids a database CHECK violation at approval.
     pub fn validate(&self) -> Result<(), &'static str> {
+        if self.series_id.is_some() == self.gauge_ref.is_some() {
+            return Err("a water range needs exactly one of series_id or gauge_ref");
+        }
         let ordered = |a: Option<f64>, b: Option<f64>| match (a, b) {
             (Some(a), Some(b)) => a < b,
             _ => true,
@@ -272,6 +299,54 @@ impl FeatureWaterRangeBody {
     }
 }
 
+/// A search hit from the gauge catalog: either an existing real gauge (with
+/// series) or a catalog-only station not yet fetched.
+#[derive(Debug, Clone, Serialize, JsonSchema)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum GaugeOption {
+    Gauge {
+        gauge: GaugeWithSeries,
+    },
+    Catalog {
+        provider: String,
+        station_id: String,
+        name: Option<String>,
+        river: Option<String>,
+        country: Option<String>,
+        lat: Option<f64>,
+        lon: Option<f64>,
+        params: Vec<String>,
+    },
+}
+
+/// One gauge as a point on the coverage map, classified by how it is used.
+#[derive(Debug, Clone, Serialize, JsonSchema)]
+pub struct GaugeMapPoint {
+    /// Reader provider key (`gauges.provider` / `gauge_catalog.provider`).
+    pub provider: String,
+    /// `gauges.source_id` for a real gauge, `gauge_catalog.station_id` otherwise.
+    pub station_id: String,
+    pub name: Option<String>,
+    pub river: Option<String>,
+    pub lat: f64,
+    pub lon: f64,
+    pub state: GaugeMapState,
+    /// Measurement kinds available: series types for a real gauge, catalog
+    /// params (e.g. "W"/"Q") for an available station.
+    pub params: Vec<String>,
+}
+
+/// Coverage state of a gauge point.
+/// `used` = linked to a section feature; `fetched` = polled but unlinked;
+/// `available` = a catalog station not yet fetched.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum GaugeMapState {
+    Used,
+    Fetched,
+    Available,
+}
+
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct UpdateWaterRangeRequest {
     pub range_low: f64,
@@ -283,4 +358,79 @@ pub struct UpdateWaterRangeRequest {
 pub struct BackfillRequest {
     pub from: DateTime<Utc>,
     pub to: DateTime<Utc>,
+}
+
+#[cfg(test)]
+mod water_range_body_tests {
+    use super::*;
+
+    fn base() -> FeatureWaterRangeBody {
+        FeatureWaterRangeBody {
+            series_id: Some(1),
+            gauge_ref: None,
+            range_low: None,
+            range_medium: None,
+            range_high: None,
+        }
+    }
+
+    fn catalog_ref() -> CatalogGaugeRef {
+        CatalogGaugeRef {
+            provider: "hubeau".into(),
+            station_id: "X001".into(),
+            measurement_type: MeasurementType::WaterLevel,
+            param: "W".into(),
+            name: None,
+            lat: None,
+            lon: None,
+            unit: None,
+        }
+    }
+
+    #[test]
+    fn accepts_exactly_one_reference() {
+        assert!(base().validate().is_ok());
+        let by_ref = FeatureWaterRangeBody {
+            series_id: None,
+            gauge_ref: Some(catalog_ref()),
+            ..base()
+        };
+        assert!(by_ref.validate().is_ok());
+    }
+
+    #[test]
+    fn rejects_both_or_neither_reference() {
+        let both = FeatureWaterRangeBody {
+            series_id: Some(1),
+            gauge_ref: Some(catalog_ref()),
+            ..base()
+        };
+        assert!(both.validate().is_err());
+        let neither = FeatureWaterRangeBody {
+            series_id: None,
+            gauge_ref: None,
+            ..base()
+        };
+        assert!(neither.validate().is_err());
+    }
+
+    #[test]
+    fn rejects_non_increasing_thresholds() {
+        let bad = FeatureWaterRangeBody {
+            range_low: Some(100.0),
+            range_medium: Some(50.0),
+            ..base()
+        };
+        assert!(bad.validate().is_err());
+    }
+
+    #[test]
+    fn allows_sparse_increasing_thresholds() {
+        let ok = FeatureWaterRangeBody {
+            range_low: Some(10.0),
+            range_high: Some(30.0),
+            ..base()
+        };
+        assert!(ok.validate().is_ok());
+    }
 }

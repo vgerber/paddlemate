@@ -73,7 +73,11 @@ pub async fn create_feature(
             features::create_feature_bundle(&mut tx, section_id, &body, token.user_id()).await;
         return match feature {
             Ok(feature) => match tx.commit().await {
-                Ok(()) => (StatusCode::CREATED, Json(feature)).into_response(),
+                Ok(()) => {
+                    // A range may have created + activated a gauge; wake the poller.
+                    app.gauge_wake.notify_waiters();
+                    (StatusCode::CREATED, Json(feature)).into_response()
+                }
                 Err(err) => {
                     tracing::error!("Error committing feature: {}", err);
                     ApiError::internal().into_response()
@@ -206,10 +210,27 @@ pub async fn update_feature(
             }
         }
         for range in &body.water_ranges {
+            // Resolve a catalog reference (creating + activating a gauge) or
+            // pass through an existing series_id, then upsert the range.
+            let mut conn = match app.pg_pool.acquire().await {
+                Ok(c) => c,
+                Err(err) => {
+                    tracing::error!("Error acquiring connection: {}", err);
+                    return ApiError::internal().into_response();
+                }
+            };
+            let series_id =
+                match crate::query::features::resolve_range_series(&mut conn, range).await {
+                    Ok(id) => id,
+                    Err(err) => {
+                        tracing::error!("Error resolving gauge for feature {}: {}", feature_id, err);
+                        return ApiError::internal().into_response();
+                    }
+                };
             if let Err(err) = gauges::upsert_feature_water_range_partial(
-                &app.pg_pool,
+                &mut *conn,
                 feature_id,
-                range.series_id,
+                series_id,
                 range.range_low,
                 range.range_medium,
                 range.range_high,
@@ -220,6 +241,8 @@ pub async fn update_feature(
                 return ApiError::internal().into_response();
             }
         }
+        // A range may have created + activated a gauge; wake the poller.
+        app.gauge_wake.notify_waiters();
         // Names/descriptions changed after the fetch; clients refetch anyway.
         return Json(feature).into_response();
     }

@@ -146,10 +146,14 @@ pub async fn create_feature_bundle(
             .push(upsert_description(&mut *conn, feature.id, lang, description).await?);
     }
     for range in &body.water_ranges {
+        // A range names its gauge either by an existing series_id or by a
+        // catalog station reference, which we resolve-or-create here (creating
+        // the gauge + series and marking it active for the poller).
+        let series_id = resolve_range_series(&mut *conn, range).await?;
         crate::query::gauges::upsert_feature_water_range_partial(
             &mut *conn,
             feature.id,
-            range.series_id,
+            series_id,
             range.range_low,
             range.range_medium,
             range.range_high,
@@ -157,6 +161,27 @@ pub async fn create_feature_bundle(
         .await?;
     }
     Ok(feature)
+}
+
+/// Resolve a water-range body to a concrete `series_id`: pass through an
+/// existing `series_id`, or resolve-or-create the referenced catalog station.
+/// New gauges created here are logged so the caller/poller can backfill them.
+pub async fn resolve_range_series(
+    conn: &mut sqlx::PgConnection,
+    range: &crate::models::gauge::FeatureWaterRangeBody,
+) -> Result<crate::models::gauge::SeriesId, sqlx::Error> {
+    if let Some(series_id) = range.series_id {
+        return Ok(series_id);
+    }
+    let gauge_ref = range.gauge_ref.as_ref().ok_or_else(|| {
+        sqlx::Error::Protocol("water range has neither series_id nor gauge_ref".into())
+    })?;
+    let (series_id, gauge_id, created) =
+        crate::query::gauges::resolve_or_create_series_for_ref(&mut *conn, gauge_ref).await?;
+    if created {
+        tracing::info!(gauge_id, provider = %gauge_ref.provider, "gauge created from catalog link");
+    }
+    Ok(series_id)
 }
 
 pub async fn update_feature(

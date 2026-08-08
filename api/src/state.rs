@@ -22,4 +22,7 @@ pub struct AppState {
     pub keycloak_config: KeycloakState,
     pub admin_token_cache: Arc<RwLock<Option<AdminToken>>>,
     pub username_cache: Cache<String, String>,
+    /// Signalled after a gauge is linked so the poll supervisor reconciles at
+    /// once instead of waiting for its next tick.
+    pub gauge_wake: Arc<tokio::sync::Notify>,
 }

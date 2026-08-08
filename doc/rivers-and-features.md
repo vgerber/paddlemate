@@ -50,6 +50,27 @@ latest reading classified against those ranges is the section's water status.
 The section view charts the readings and overlays your descents, so you can
 see the level you paddled at.
 
+### Choosing a gauge, and the catalog
+
+When adding a section, the gauge picker searches **all available gauges across
+every provider**, not just the ones already fetched. That works via a
+`gauge_catalog` table — one lightweight row per station (name, river, params,
+PostGIS point) synced from each reader's `list_stations()` by the
+`sync_gauge_catalog` binary (run on a schedule; shipped in the API image).
+The catalog holds no readings and is not polled.
+
+Only when a catalog station is **linked to a feature** does it become a real
+gauge: the water-range body carries either an existing `series_id` or a
+catalog reference (`gauge_ref` = provider + station_id + param), and the apply
+path (`resolve_or_create_series_for_ref`, hit by both direct creates and
+proposal approvals) creates the `gauges` + `gauge_series` rows and marks the
+gauge active. A background supervisor in `readers/mod.rs` then starts fetching
+it **without an app restart** — each provider loop re-reads its active gauges
+every cycle, the supervisor spawns a loop for a provider that gains its first
+gauge, and a `Notify` cuts the inter-cycle sleep short so a freshly linked
+gauge is polled within seconds. The picker recommends gauges already used on
+the same river first (`GET /waterways/{id}/gauges`).
+
 ### Data sources and licenses
 
 Every gauge is credited to the authority that publishes it, with a link to

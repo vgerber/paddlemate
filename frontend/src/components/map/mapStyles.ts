@@ -1,3 +1,6 @@
+/** OpenFreeMap "liberty" vector base style (the default map background). */
+export const LIBERTY_STYLE = "https://tiles.openfreemap.org/styles/liberty";
+
 /** Esri aerial imagery raster style for the satellite toggle. */
 export const SATELLITE_STYLE = {
   version: 8 as const,

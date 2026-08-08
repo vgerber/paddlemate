@@ -18,7 +18,7 @@ import LabelModeToggle from "./LabelModeToggle";
 import MapNumberMarker from "./MapNumberMarker";
 import { addMapImages } from "./mapIcons";
 import { buildSectionsGeoJSON } from "./mapLayers";
-import { SATELLITE_STYLE } from "./mapStyles";
+import { LIBERTY_STYLE, SATELLITE_STYLE } from "./mapStyles";
 import PickModeButtons from "./PickModeButtons";
 import SectionLayers from "./SectionLayers";
 import { useMapCameraEffects } from "./useMapCameraEffects";
@@ -249,11 +249,7 @@ export default function WaterwayMap({
         cooperativeGestures={cooperativeGestures}
         initialViewState={{ longitude: 13, latitude: 47, zoom: 5 }}
         style={{ width: "100%", height: "100%" }}
-        mapStyle={
-          satellite
-            ? SATELLITE_STYLE
-            : "https://tiles.openfreemap.org/styles/liberty"
-        }
+        mapStyle={satellite ? SATELLITE_STYLE : LIBERTY_STYLE}
         onClick={handleClick}
         onLoad={() => {
           handleMapLoad();

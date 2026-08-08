@@ -17,6 +17,7 @@ import { apiErrorMessage } from "@/lib/api/client";
 import { FEATURE_TYPES } from "@/lib/featureTypes";
 import { humanize } from "@/lib/format";
 import { useGaugePicker } from "@/lib/hooks/useGaugePicker";
+import { useWaterwayGauges } from "@/lib/hooks/useGauges";
 import { useCreateFeature, useUpdateFeature } from "@/lib/hooks/useSections";
 import { preferredLanguage } from "@/lib/languagePreference";
 import GaugeRangePicker from "./GaugeRangePicker";
@@ -134,7 +135,8 @@ export default function SuggestFeatureForm({
     return typeof d === "string" ? d : "";
   });
 
-  const gaugePicker = useGaugePicker({ gaugeRanges, nearPoint });
+  const { data: riverGauges } = useWaterwayGauges(waterwayId ?? null);
+  const gaugePicker = useGaugePicker({ gaugeRanges, riverGauges, nearPoint });
 
   const { vertices, geomType, pickingActive, onStopPick, onClearVertices } =
     geometry;
@@ -199,9 +201,7 @@ export default function SuggestFeatureForm({
         lang_code: langCode,
         water_ranges: waterRanges,
         gauge_name:
-          waterRanges.length > 0
-            ? (gaugePicker.selectedGauge?.name ?? null)
-            : null,
+          waterRanges.length > 0 ? (gaugePicker.selected?.label ?? null) : null,
         used_section_line:
           useSectionLine && geomType === "LineString" && !!sectionLine,
       });

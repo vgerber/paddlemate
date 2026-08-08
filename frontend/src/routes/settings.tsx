@@ -1,8 +1,8 @@
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import BuildOutlinedIcon from "@mui/icons-material/BuildOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import DoneIcon from "@mui/icons-material/Done";
-import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -21,16 +21,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import LanguagePicker from "@/components/LanguagePicker";
-import ProposalsView from "@/components/proposals/ProposalsView";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
-import {
-  type ApiToken,
-  type ApiTokenCreated,
-  type ProposalEntityType,
-  type ProposalOperation,
-  type ProposalStatus,
-} from "@/lib/api";
+import ToolsList from "@/components/ToolsList";
+import { type ApiToken, type ApiTokenCreated } from "@/lib/api";
 import {
   useApiTokens,
   useCreateApiToken,
@@ -84,40 +78,17 @@ function SettingsPage() {
             label="Profile"
           />
           <Tab
-            icon={<RateReviewOutlinedIcon fontSize="small" />}
+            icon={<BuildOutlinedIcon fontSize="small" />}
             iconPosition="start"
-            label="Proposals"
+            label="Tools"
           />
         </Tabs>
       )}
       <Box sx={{ px: 2, py: 3 }}>
         {effectiveTab === 0 && <ProfilePanel />}
-        {effectiveTab === 1 && <ProposalsPanel />}
+        {effectiveTab === 1 && <ToolsList />}
       </Box>
     </Box>
-  );
-}
-
-function ProposalsPanel() {
-  const { isAdmin } = useSession();
-  const [status, setStatus] = useState<ProposalStatus>("pending");
-  const [entityType, setEntityType] = useState<ProposalEntityType | undefined>(
-    undefined,
-  );
-  const [operation, setOperation] = useState<ProposalOperation | undefined>(
-    undefined,
-  );
-
-  return (
-    <ProposalsView
-      adminMode={isAdmin}
-      status={status}
-      entityType={entityType}
-      operation={operation}
-      onStatusChange={setStatus}
-      onEntityTypeChange={setEntityType}
-      onOperationChange={setOperation}
-    />
   );
 }
 

@@ -15,8 +15,8 @@ use crate::{
     layers::auth::AuthToken,
     models::{
         gauge::{
-            BackfillRequest, CreateGaugeRequest, CreateSeriesRequest, Gauge, GaugeReading,
-            GaugeWithSeries, UpdateGaugeRequest, UpdateSeriesRequest,
+            BackfillRequest, CreateGaugeRequest, CreateSeriesRequest, Gauge, GaugeMapPoint,
+            GaugeOption, GaugeReading, GaugeWithSeries, UpdateGaugeRequest, UpdateSeriesRequest,
         },
         path_params::{GaugePath, GaugeSeriesPath},
     },
@@ -78,6 +78,64 @@ pub async fn search_gauges(
 doc_fn!(search_gauges_docs, op =>
     op.description("Search active gauges by name and/or proximity, with their series")
         .response::<200, Json<Vec<GaugeWithSeries>>>()
+        .tag("Gauges")
+);
+
+/// Catalog search: existing real gauges plus not-yet-fetched catalog stations
+/// across every provider. `radius_km` bounds the spatial match when a point is
+/// given.
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct CatalogSearchQuery {
+    pub q: Option<String>,
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
+    pub radius_km: Option<f64>,
+    pub limit: Option<i64>,
+}
+
+pub async fn search_gauge_catalog(
+    State(app): State<AppState>,
+    Query(query): Query<CatalogSearchQuery>,
+) -> impl IntoApiResponse {
+    let limit = query.limit.unwrap_or(20).clamp(1, 50);
+    let q = query.q.as_deref().map(str::trim).filter(|s| !s.is_empty());
+    match gauges::search_gauge_catalog(
+        &app.pg_pool,
+        q,
+        query.lat,
+        query.lon,
+        query.radius_km,
+        limit,
+    )
+    .await
+    {
+        Ok(list) => Json(list).into_response(),
+        Err(err) => {
+            tracing::error!("Error searching gauge catalog: {}", err);
+            ApiError::internal().into_response()
+        }
+    }
+}
+
+doc_fn!(search_gauge_catalog_docs, op =>
+    op.description("The gauge catalog: all available gauges (real + catalog stations), filterable by name and/or proximity")
+        .response::<200, Json<Vec<GaugeOption>>>()
+        .tag("Gauges")
+);
+
+pub async fn list_gauge_map(State(app): State<AppState>) -> impl IntoApiResponse {
+    match gauges::list_gauge_map(&app.pg_pool).await {
+        Ok(list) => Json(list).into_response(),
+        Err(err) => {
+            tracing::error!("Error building gauge map: {}", err);
+            ApiError::internal().into_response()
+        }
+    }
+}
+
+doc_fn!(list_gauge_map_docs, op =>
+    op.description("Every gauge as a coverage-map point, classified used / fetched / available")
+        .response::<200, Json<Vec<GaugeMapPoint>>>()
         .tag("Gauges")
 );
 
@@ -455,6 +513,11 @@ pub fn gauges_routes(state: AppState) -> aide::axum::ApiRouter {
             get_with(list_gauges, list_gauges_docs).post_with(create_gauge, create_gauge_docs),
         )
         .api_route("/search", get_with(search_gauges, search_gauges_docs))
+        .api_route(
+            "/catalog",
+            get_with(search_gauge_catalog, search_gauge_catalog_docs),
+        )
+        .api_route("/map", get_with(list_gauge_map, list_gauge_map_docs))
         .api_route(
             "/{gauge_id}",
             get_with(get_gauge, get_gauge_docs)

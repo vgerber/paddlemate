@@ -29,6 +29,10 @@ export type WaterRangeWithStatus =
 export type GaugeReading = components["schemas"]["GaugeReading"];
 export type GaugeWithSeries = components["schemas"]["GaugeWithSeries"];
 export type GaugeSource = components["schemas"]["GaugeSource"];
+export type GaugeOption = components["schemas"]["GaugeOption"];
+export type CatalogGaugeRef = components["schemas"]["CatalogGaugeRef"];
+export type GaugeMapPoint = components["schemas"]["GaugeMapPoint"];
+export type GaugeMapState = components["schemas"]["GaugeMapState"];
 export type FeatureWaterRangeBody =
   components["schemas"]["FeatureWaterRangeBody"];
 export type ApiToken = components["schemas"]["ApiToken"];
@@ -69,6 +73,16 @@ export const waterwaysApi = {
   create: async (body: components["schemas"]["CreateWaterwayBody"]) => {
     const { data } = await client.POST("/api/v1/waterways", { body });
     // 201 (admin, Waterway) or 202 (proposal); client throws ApiError on 409.
+    return assertData(data);
+  },
+  /** Gauges already linked to any section of the waterway. */
+  gauges: async (id: number) => {
+    const { data } = await client.GET(
+      "/api/v1/waterways/{waterway_id}/gauges",
+      {
+        params: { path: { waterway_id: id } },
+      },
+    );
     return assertData(data);
   },
 };
@@ -180,6 +194,25 @@ export const gaugesApi = {
     const { data } = await client.GET("/api/v1/gauges/search", {
       params: { query: params },
     });
+    return assertData(data);
+  },
+  /** The gauge catalog: all available gauges (existing + catalog stations
+   * across every provider), filtered by name and/or proximity. */
+  catalogSearch: async (params: {
+    q?: string;
+    lat?: number;
+    lon?: number;
+    radius_km?: number;
+    limit?: number;
+  }) => {
+    const { data } = await client.GET("/api/v1/gauges/catalog", {
+      params: { query: params },
+    });
+    return assertData(data);
+  },
+  /** Every gauge as a coverage-map point (used / fetched / available). */
+  map: async () => {
+    const { data } = await client.GET("/api/v1/gauges/map");
     return assertData(data);
   },
 };

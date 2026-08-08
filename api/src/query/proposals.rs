@@ -542,19 +542,31 @@ async fn apply_proposal(
 
         (ProposalEntityType::Feature, ProposalOperation::Update) => {
             if let Some(id) = proposal.entity_id {
-                // Apply water ranges if included in the delta
+                // Apply water ranges if included in the delta. Each range names
+                // its gauge by an existing series_id or by a catalog reference
+                // resolved-or-created here (same path as create_feature_bundle).
                 if let Some(ranges) = data.get("water_ranges").and_then(|v| v.as_array()) {
                     for range in ranges {
-                        let Some(series_id) = range["series_id"].as_i64() else {
-                            continue;
-                        };
+                        let body: crate::models::gauge::FeatureWaterRangeBody =
+                            match serde_json::from_value(range.clone()) {
+                                Ok(b) => b,
+                                Err(e) => {
+                                    tracing::warn!(
+                                        "Proposal {} has an unparseable water range: {e}",
+                                        proposal.id
+                                    );
+                                    continue;
+                                }
+                            };
+                        let series_id =
+                            crate::query::features::resolve_range_series(&mut **tx, &body).await?;
                         gauges::upsert_feature_water_range_partial(
                             &mut **tx,
                             id,
                             series_id,
-                            range["range_low"].as_f64(),
-                            range["range_medium"].as_f64(),
-                            range["range_high"].as_f64(),
+                            body.range_low,
+                            body.range_medium,
+                            body.range_high,
                         )
                         .await?;
                     }

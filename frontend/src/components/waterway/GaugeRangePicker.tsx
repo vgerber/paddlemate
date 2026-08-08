@@ -8,8 +8,7 @@ import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import GaugeAttribution from "@/components/GaugeAttribution";
-import { humanize } from "@/lib/format";
-import type { GaugePicker } from "@/lib/hooks/useGaugePicker";
+import type { GaugePicker, PickerOption } from "@/lib/hooks/useGaugePicker";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -24,20 +23,21 @@ const rangeFieldSx = (color: string) =>
     },
   }) as const;
 
-/** Gauge selection + water-level thresholds: an async search over the full
- * gauge collection (the section's own gauges grouped first), a series select
- * for multi-series gauges, and the low/medium/high fields. */
+/** Gauge selection + water-level thresholds: an async search over every
+ * available gauge (the river's and section's own recommended first, then all
+ * providers' catalog stations), a measurement select, and the low/medium/high
+ * fields. A catalog station is created and starts fetching when submitted. */
 export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
   const {
-    gaugeOptions,
-    sectionGaugeIds,
-    selectedGauge,
-    applyGaugeSelection,
-    seriesId,
-    setSeriesId,
-    selectedSeries,
-    setGaugeQuery,
+    options,
+    selected,
+    applySelection,
+    setQuery,
+    measurementOptions,
+    measurement,
+    setMeasurement,
     thresholdError,
+    attributionSource,
   } = picker;
 
   const thresholdFields = [
@@ -63,30 +63,26 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
 
   return (
     <>
-      <Autocomplete
-        options={gaugeOptions}
-        value={selectedGauge}
-        onChange={(_, gauge) => applyGaugeSelection(gauge)}
+      <Autocomplete<PickerOption>
+        options={options}
+        value={selected}
+        onChange={(_, option) => applySelection(option)}
         onInputChange={(_, value, reason) => {
-          if (reason === "input") setGaugeQuery(value);
+          if (reason === "input") setQuery(value);
         }}
-        getOptionLabel={(gauge) => gauge.name}
-        isOptionEqualToValue={(a, b) => a.id === b.id}
-        filterOptions={(options) => options}
-        groupBy={
-          sectionGaugeIds.size > 0
-            ? (gauge) =>
-                sectionGaugeIds.has(gauge.id) ? "On this section" : "All gauges"
-            : undefined
-        }
-        renderOption={(props, gauge) => (
-          <Box component="li" {...props} key={gauge.id}>
+        getOptionLabel={(option) => option.label}
+        isOptionEqualToValue={(a, b) => a.key === b.key}
+        filterOptions={(opts) => opts}
+        groupBy={(option) => option.group}
+        renderOption={(props, option) => (
+          <Box component="li" {...props} key={option.key}>
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="body2" noWrap>
-                {gauge.name}
+                {option.label}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {gauge.provider}
+                {option.provider}
+                {option.catalog ? " · not yet fetched" : ""}
               </Typography>
             </Box>
           </Box>
@@ -105,22 +101,21 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
         clearOnBlur={false}
       />
 
-      {selectedGauge && (
+      {selected && (
         <>
-          {selectedGauge.series.length > 1 && (
+          {measurementOptions.length > 1 && (
             <FormControl fullWidth size="small">
-              <InputLabel id="series-label">Gauge series</InputLabel>
+              <InputLabel id="measurement-label">Measurement</InputLabel>
               <Select
-                labelId="series-label"
-                label="Gauge series"
-                value={seriesId}
-                onChange={(e) => setSeriesId(e.target.value as number | "")}
+                labelId="measurement-label"
+                label="Measurement"
+                value={measurement}
+                onChange={(e) => setMeasurement(e.target.value)}
                 MenuProps={{ sx: { zIndex: 1500 } }}
               >
-                {selectedGauge.series.map((series) => (
-                  <MenuItem key={series.id} value={series.id}>
-                    {series.label ?? humanize(series.measurement_type)}
-                    {` (${series.unit})`}
+                {measurementOptions.map((m) => (
+                  <MenuItem key={m.value} value={m.value}>
+                    {m.label}
                   </MenuItem>
                 ))}
               </Select>
@@ -144,16 +139,17 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
               {thresholdError}
             </Alert>
           ) : (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mt: -0.5 }}
-            >
-              {selectedSeries?.label ?? selectedGauge.name}
-              {selectedSeries?.unit ? ` · ${selectedSeries.unit}` : ""}
-            </Typography>
+            selected.catalog && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mt: -0.5 }}
+              >
+                New gauge - it starts being fetched once the section is saved.
+              </Typography>
+            )
           )}
-          <GaugeAttribution source={selectedGauge.source} />
+          <GaugeAttribution source={attributionSource} />
         </>
       )}
     </>

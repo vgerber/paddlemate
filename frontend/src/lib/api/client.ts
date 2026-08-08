@@ -1,5 +1,5 @@
 import createClient from "openapi-fetch";
-import { getUserManager } from "@/lib/auth";
+import { getUserManager, type User } from "@/lib/auth";
 import type { paths } from "./schema.d.ts";
 
 // Paths in the generated schema already include /api/v1, so baseUrl must be the origin only.
@@ -56,10 +56,34 @@ async function toApiError(response: Response): Promise<ApiError> {
 
 export const client = createClient<paths>({ baseUrl: API_BASE });
 
+// A single in-flight silent renew shared by concurrent requests, so an expired
+// token triggers one refresh rather than a stampede.
+let renewing: Promise<User | null> | null = null;
+
+/** The current user with a valid access token. `getUser()` returns the stored
+ * user even when its access token has expired (oidc-client-ts does not refresh
+ * on read), which is what caused signed-in requests to 401. If the token is
+ * expired we refresh once via the refresh token before using it; if that fails
+ * we proceed unauthenticated rather than send a known-stale token. */
+async function activeUser(): Promise<User | null> {
+  const um = getUserManager();
+  const user = await um.getUser();
+  if (!user?.expired) return user;
+  if (!renewing) {
+    renewing = um
+      .signinSilent()
+      .catch(() => null)
+      .finally(() => {
+        renewing = null;
+      });
+  }
+  return renewing;
+}
+
 // Inject the Bearer token on every request when the user is signed in.
 client.use({
   async onRequest({ request }) {
-    const user = await getUserManager().getUser();
+    const user = await activeUser();
     if (user?.access_token) {
       request.headers.set("Authorization", `Bearer ${user.access_token}`);
     }

@@ -163,7 +163,11 @@ pub async fn review_proposal(
     )
     .await
     {
-        Ok(Some(p)) => Json(p).into_response(),
+        Ok(Some(p)) => {
+            // Approval may have created + activated a gauge; wake the poller.
+            app.gauge_wake.notify_waiters();
+            Json(p).into_response()
+        }
         Ok(None) => ApiError::not_found("Not found").into_response(),
         // Unique violation while applying the change (e.g. duplicate waterway name).
         Err(sqlx::Error::Database(db_err)) if db_err.code().as_deref() == Some("23505") => ApiError::conflict("Approving would create a duplicate (name already exists) - reject the proposal instead").into_response(),

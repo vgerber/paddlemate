@@ -203,6 +203,7 @@ async fn main() {
         },
         admin_token_cache: Arc::new(tokio::sync::RwLock::new(None)),
         username_cache,
+        gauge_wake: Arc::new(tokio::sync::Notify::new()),
     };
 
     let keycloak_auth_instance = Arc::new(KeycloakAuthInstance::new(
@@ -236,7 +237,7 @@ async fn main() {
 
     if dotenvy::var("DISABLE_GAUGE_READERS").ok().as_deref() != Some("true") {
         tracing::info!("Starting gauge readers");
-        paddlemate_api::readers::run_all(db.clone());
+        paddlemate_api::readers::run_all(db.clone(), state.gauge_wake.clone());
     } else {
         tracing::info!("Gauge readers disabled (DISABLE_GAUGE_READERS=true)");
     }

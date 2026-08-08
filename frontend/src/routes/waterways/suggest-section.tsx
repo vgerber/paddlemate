@@ -67,7 +67,13 @@ function SuggestSectionPage() {
             [takeOut.lon, takeOut.lat],
           ];
     createSection.mutate(
-      buildSectionPayload(wizard.naming, coordinates, wizard.draftFeatures),
+      buildSectionPayload(
+        wizard.naming,
+        coordinates,
+        wizard.draftFeatures,
+        putIn,
+        takeOut,
+      ),
       {
         onSuccess: () => setSubmitted(true),
       },

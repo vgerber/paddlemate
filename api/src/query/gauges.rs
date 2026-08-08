@@ -2,9 +2,11 @@ use chrono::{DateTime, Utc};
 use sqlx::{PgPool, Row, postgres::PgRow};
 
 use crate::models::gauge::{
-    FeatureWaterRange, Gauge, GaugeId, GaugeReading, GaugeSeries, GaugeSource, GaugeWithSeries,
-    MeasurementType, SectionWaterStatus, SeriesId, WaterLevel, WaterRangeWithStatus,
+    CatalogGaugeRef, FeatureWaterRange, Gauge, GaugeId, GaugeMapPoint, GaugeMapState, GaugeOption,
+    GaugeReading, GaugeSeries, GaugeSource, GaugeWithSeries, MeasurementType, SectionWaterStatus,
+    SeriesId, WaterLevel, WaterRangeWithStatus,
 };
+use river_gauge::StationInfo;
 
 fn parse_measurement_type(s: &str) -> MeasurementType {
     match s {
@@ -774,4 +776,287 @@ fn row_to_water_range_with_status(row: &PgRow) -> Result<WaterRangeWithStatus, s
         latest_reading,
         source,
     })
+}
+
+// ---------------------------------------------------------------------------
+// Gauge catalog: the multi-provider discovery surface (see migration 0029).
+// ---------------------------------------------------------------------------
+
+/// Default unit for a measurement type when the catalog station omits one.
+fn default_unit(mt: MeasurementType) -> &'static str {
+    match mt {
+        MeasurementType::WaterLevel => "cm",
+        MeasurementType::Discharge => "m3s",
+        MeasurementType::Temperature => "C",
+    }
+}
+
+/// Upsert one provider's stations into the catalog. Idempotent on
+/// (provider, station_id); refreshes metadata and `last_seen_at`.
+pub async fn upsert_catalog_stations(
+    pool: &PgPool,
+    provider: &str,
+    stations: &[StationInfo],
+) -> Result<u64, sqlx::Error> {
+    let mut n = 0u64;
+    for s in stations {
+        let res = sqlx::query(
+            "INSERT INTO gauge_catalog
+                 (provider, station_id, name, river, lat, lon, geom, params, last_seen_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6,
+                     CASE WHEN $5 IS NOT NULL AND $6 IS NOT NULL
+                          THEN ST_SetSRID(ST_MakePoint($6, $5), 4326) END,
+                     $7, NOW(), NOW())
+             ON CONFLICT (provider, station_id) DO UPDATE SET
+                 name = EXCLUDED.name,
+                 river = EXCLUDED.river,
+                 lat = EXCLUDED.lat,
+                 lon = EXCLUDED.lon,
+                 geom = EXCLUDED.geom,
+                 params = EXCLUDED.params,
+                 last_seen_at = NOW(),
+                 updated_at = NOW()",
+        )
+        .bind(provider)
+        .bind(&s.station_id)
+        .bind(&s.name)
+        .bind(&s.river)
+        .bind(s.latitude)
+        .bind(s.longitude)
+        .bind(&s.params)
+        .execute(pool)
+        .await?;
+        n += res.rows_affected();
+    }
+    Ok(n)
+}
+
+/// Search the catalog for the picker: existing real gauges (via `search_gauges`)
+/// plus catalog-only stations, nearest-first. Catalog rows already backed by a
+/// real gauge are suppressed so a station never appears twice.
+pub async fn search_gauge_catalog(
+    pool: &PgPool,
+    q: Option<&str>,
+    lat: Option<f64>,
+    lon: Option<f64>,
+    radius_km: Option<f64>,
+    limit: i64,
+) -> Result<Vec<GaugeOption>, sqlx::Error> {
+    // Real gauges first (already fetched), reusing the existing search.
+    let mut options: Vec<GaugeOption> = search_gauges(pool, q, lat, lon, limit)
+        .await?
+        .into_iter()
+        .map(|gauge| GaugeOption::Gauge { gauge })
+        .collect();
+
+    // Catalog-only stations. Spatial radius when a point is given, else name.
+    let has_point = lat.is_some() && lon.is_some();
+    let order = if has_point {
+        "geom <-> ST_SetSRID(ST_MakePoint($3, $2), 4326)"
+    } else {
+        "name"
+    };
+    let radius_m = radius_km.map(|km| km * 1000.0);
+    let sql = format!(
+        "SELECT provider, station_id, name, river, country, lat, lon, params
+         FROM gauge_catalog c
+         WHERE ($1::text IS NULL OR name ILIKE '%' || $1 || '%')
+           AND ($2::float8 IS NULL OR $3::float8 IS NULL OR $4::float8 IS NULL
+                OR (geom IS NOT NULL
+                    AND ST_DWithin(geom::geography,
+                                   ST_SetSRID(ST_MakePoint($3, $2), 4326)::geography, $4)))
+           AND NOT EXISTS (
+                SELECT 1 FROM gauges g
+                WHERE g.provider = c.provider AND g.source_id = c.station_id)
+         ORDER BY {order}
+         LIMIT $5"
+    );
+    let rows = sqlx::query(&sql)
+        .bind(q)
+        .bind(lat)
+        .bind(lon)
+        .bind(radius_m)
+        .bind(limit)
+        .fetch_all(pool)
+        .await?;
+    for row in &rows {
+        options.push(GaugeOption::Catalog {
+            provider: row.try_get("provider")?,
+            station_id: row.try_get("station_id")?,
+            name: row.try_get("name")?,
+            river: row.try_get("river")?,
+            country: row.try_get("country")?,
+            lat: row.try_get("lat")?,
+            lon: row.try_get("lon")?,
+            params: row.try_get("params")?,
+        });
+    }
+    Ok(options)
+}
+
+/// Resolve a catalog station reference to a `gauge_series.id`, creating the
+/// gauge and series if they do not yet exist and marking the gauge active so
+/// the poller fetches it. Returns (series_id, gauge_id, created) where
+/// `created` is true only when the gauge row was newly inserted (for the
+/// caller to trigger a one-time history backfill). Idempotent; runs inside the
+/// caller's transaction.
+pub async fn resolve_or_create_series_for_ref(
+    conn: &mut sqlx::PgConnection,
+    r: &CatalogGaugeRef,
+) -> Result<(SeriesId, GaugeId, bool), sqlx::Error> {
+    // Upsert the gauge; xmax = 0 on the returned row iff it was freshly inserted.
+    let gauge_row = sqlx::query(
+        "INSERT INTO gauges (name, provider, source_id, lat, lon, active, fetch_interval_secs)
+         VALUES ($1, $2, $3, $4, $5, TRUE, 600)
+         ON CONFLICT (provider, source_id) DO UPDATE SET active = TRUE, updated_at = NOW()
+         RETURNING id, (xmax = 0) AS inserted",
+    )
+    .bind(r.name.as_deref().unwrap_or(&r.station_id))
+    .bind(&r.provider)
+    .bind(&r.station_id)
+    .bind(r.lat)
+    .bind(r.lon)
+    .fetch_one(&mut *conn)
+    .await?;
+    let gauge_id: GaugeId = gauge_row.try_get("id")?;
+    let created: bool = gauge_row.try_get("inserted")?;
+
+    // Upsert the series. Its source_id (`station:param`) is what the poller
+    // fetches; measurement_type is unique per gauge.
+    let unit = r.unit.as_deref().unwrap_or_else(|| default_unit(r.measurement_type));
+    let series_source_id = format!("{}:{}", r.station_id, r.param);
+    let series_row = sqlx::query(
+        "INSERT INTO gauge_series (gauge_id, measurement_type, unit, label, source_id)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (gauge_id, measurement_type) DO UPDATE SET source_id = EXCLUDED.source_id
+         RETURNING id",
+    )
+    .bind(gauge_id)
+    .bind(r.measurement_type)
+    .bind(unit)
+    .bind(r.name.as_deref())
+    .bind(&series_source_id)
+    .fetch_one(&mut *conn)
+    .await?;
+    let series_id: SeriesId = series_row.try_get("id")?;
+
+    Ok((series_id, gauge_id, created))
+}
+
+/// Distinct providers that currently have at least one active gauge. Used by
+/// the poll supervisor to decide which per-provider tasks must exist.
+pub async fn list_active_providers(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
+    let rows = sqlx::query("SELECT DISTINCT provider FROM gauges WHERE active = TRUE")
+        .fetch_all(pool)
+        .await?;
+    rows.iter().map(|r| r.try_get("provider")).collect()
+}
+
+/// Active gauges for one provider. A provider's poll loop re-reads this every
+/// cycle so a newly linked gauge is fetched without a restart.
+pub async fn list_active_gauges_by_provider(
+    pool: &PgPool,
+    provider: &str,
+) -> Result<Vec<Gauge>, sqlx::Error> {
+    sqlx::query(&format!(
+        "SELECT {GAUGE_COLS} FROM gauges WHERE active = TRUE AND provider = $1 ORDER BY id"
+    ))
+    .bind(provider)
+    .fetch_all(pool)
+    .await?
+    .iter()
+    .map(row_to_gauge)
+    .collect()
+}
+
+/// Distinct gauges already linked to any section of a waterway, with series.
+/// Feeds the "on this river" recommendation in the gauge picker.
+pub async fn list_waterway_gauges(
+    pool: &PgPool,
+    waterway_id: i64,
+) -> Result<Vec<GaugeWithSeries>, sqlx::Error> {
+    let ids: Vec<GaugeId> = sqlx::query(
+        "SELECT DISTINCT g.id
+         FROM gauges g
+         JOIN gauge_series gs ON gs.gauge_id = g.id
+         JOIN feature_water_ranges fwr ON fwr.series_id = gs.id
+         JOIN features f ON f.id = fwr.feature_id
+         JOIN water_sections ws ON ws.id = f.section_id
+         WHERE ws.waterway_id = $1",
+    )
+    .bind(waterway_id)
+    .fetch_all(pool)
+    .await?
+    .iter()
+    .map(|r| r.try_get("id"))
+    .collect::<Result<_, _>>()?;
+
+    let mut out = Vec::with_capacity(ids.len());
+    for id in ids {
+        if let Some(g) = fetch_gauge_with_series(pool, id).await? {
+            out.push(g);
+        }
+    }
+    Ok(out)
+}
+
+/// Every gauge as a point for the coverage map, each classified `used` (linked
+/// to a section feature), `fetched` (polled but unlinked) or `available` (a
+/// catalog station not yet backed by a real gauge). Real gauges union catalog
+/// stations; a catalog row already present as a real gauge is suppressed so a
+/// station is never plotted twice. Read-only, one shot - the client clusters.
+pub async fn list_gauge_map(pool: &PgPool) -> Result<Vec<GaugeMapPoint>, sqlx::Error> {
+    // Real gauges are collapsed by station: some providers (rivermap) store one
+    // gauge row per parameter, keyed `<station>:W` / `<station>:Q`, so a station
+    // measuring both is two rows. Grouping by (provider, station-before-colon)
+    // yields one point per station with its parameters merged - unlike grouping
+    // by coordinate, this never merges two distinct stations that share a point.
+    // Providers without a ':' suffix keep one row per station unchanged.
+    let rows = sqlx::query(
+        "SELECT g.provider,
+                split_part(g.source_id, ':', 1) AS station_id,
+                (array_agg(g.name ORDER BY g.id))[1] AS name,
+                NULL::text AS river,
+                (array_agg(g.lat ORDER BY g.id))[1] AS lat,
+                (array_agg(g.lon ORDER BY g.id))[1] AS lon,
+                CASE WHEN bool_or(EXISTS (
+                    SELECT 1 FROM feature_water_ranges f WHERE f.series_id = s.id
+                )) THEN 'used' ELSE 'fetched' END AS state,
+                COALESCE(array_agg(DISTINCT s.measurement_type::text)
+                         FILTER (WHERE s.id IS NOT NULL), '{}'::text[]) AS params
+         FROM gauges g
+         LEFT JOIN gauge_series s ON s.gauge_id = g.id
+         WHERE g.lat IS NOT NULL AND g.lon IS NOT NULL AND g.active = TRUE
+         GROUP BY g.provider, split_part(g.source_id, ':', 1)
+         UNION ALL
+         SELECT c.provider, c.station_id, c.name, c.river, c.lat, c.lon,
+                'available' AS state, c.params
+         FROM gauge_catalog c
+         WHERE c.lat IS NOT NULL AND c.lon IS NOT NULL
+           AND NOT EXISTS (
+                SELECT 1 FROM gauges g
+                WHERE g.provider = c.provider AND g.source_id = c.station_id)",
+    )
+    .fetch_all(pool)
+    .await?;
+
+    rows.iter()
+        .map(|row| {
+            let state = match row.try_get::<String, _>("state")?.as_str() {
+                "used" => GaugeMapState::Used,
+                "available" => GaugeMapState::Available,
+                _ => GaugeMapState::Fetched,
+            };
+            Ok(GaugeMapPoint {
+                provider: row.try_get("provider")?,
+                station_id: row.try_get("station_id")?,
+                name: row.try_get("name")?,
+                river: row.try_get("river")?,
+                lat: row.try_get("lat")?,
+                lon: row.try_get("lon")?,
+                state,
+                params: row.try_get("params")?,
+            })
+        })
+        .collect()
 }
