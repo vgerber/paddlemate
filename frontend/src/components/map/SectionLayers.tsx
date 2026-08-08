@@ -12,8 +12,8 @@ interface SectionLayersProps {
 }
 
 /** Section lines with casing/hitbox/selection, put-in/take-out endpoint
- * icons, connector lines and section labels. The endpoints source mounts
- * first so the section line layers can slot under it via beforeId. */
+ * icons, connector lines and section labels. Access points always render
+ * above the lines - see the beforeId note below. */
 export default function SectionLayers({
   sections,
   labels,
@@ -37,7 +37,11 @@ export default function SectionLayers({
         />
       </Source>
 
-      {/* Declare endpoints first so sections layers can reference it via beforeId */}
+      {/* Declare endpoints first so the section layers can slot underneath
+          them via beforeId. Anchoring on the dot (the lowest of the two
+          endpoint layers) keeps every access point above the lines: sections
+          are chained end to end, so a dot sits exactly where the neighbouring
+          section's line runs and would otherwise be painted over. */}
       <Source id="section-endpoints" type="geojson" data={endpoints}>
         <Layer
           id="section-endpoints-dot"
@@ -99,7 +103,7 @@ export default function SectionLayers({
       <Source id="sections" type="geojson" data={sections}>
         <Layer
           id="sections-line-hitbox"
-          beforeId="section-endpoints-icon"
+          beforeId="section-endpoints-dot"
           type="line"
           paint={{
             "line-color": tokens.background,
@@ -109,7 +113,7 @@ export default function SectionLayers({
         />
         <Layer
           id="sections-line-casing"
-          beforeId="section-endpoints-icon"
+          beforeId="section-endpoints-dot"
           type="line"
           paint={{
             "line-color": tokens.mapSectionLineCasing,
@@ -119,7 +123,7 @@ export default function SectionLayers({
         />
         <Layer
           id="sections-line"
-          beforeId="section-endpoints-icon"
+          beforeId="section-endpoints-dot"
           type="line"
           paint={{
             "line-color": tokens.mapSectionLine,
@@ -129,7 +133,7 @@ export default function SectionLayers({
         />
         <Layer
           id="sections-line-selected"
-          beforeId="section-endpoints-icon"
+          beforeId="section-endpoints-dot"
           type="line"
           filter={["==", ["id"], selectedSectionId ?? -1]}
           paint={{
