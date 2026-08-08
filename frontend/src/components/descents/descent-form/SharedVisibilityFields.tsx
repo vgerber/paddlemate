@@ -4,20 +4,16 @@ import Autocomplete, {
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import TextField from "@mui/material/TextField";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { type Group, groupsApi } from "@/lib/api";
+import type { Group } from "@/lib/api";
+import { useGroups } from "@/lib/hooks/useGroups";
 import type { StepProps } from "./model";
 
 /** Group and user pickers shown when visibility is "shared". */
 export default function SharedVisibilityFields({ form, onChange }: StepProps) {
   const [userInput, setUserInput] = useState("");
 
-  const { data: groups } = useQuery({
-    queryKey: ["groups"],
-    queryFn: groupsApi.list,
-    staleTime: 60_000,
-  });
+  const { data: groups } = useGroups();
 
   const selectedGroups: Group[] = (groups ?? []).filter((g) =>
     form.shared_groups.includes(g.id),

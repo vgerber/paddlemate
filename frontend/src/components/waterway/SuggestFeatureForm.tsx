@@ -5,7 +5,6 @@ import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
-import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, type RefObject, useEffect, useState } from "react";
 import LanguagePicker from "@/components/LanguagePicker";
 import type {
@@ -14,10 +13,11 @@ import type {
   FeatureWaterRangeBody,
   WaterRangeWithStatus,
 } from "@/lib/api";
-import { featuresApi } from "@/lib/api";
+import { apiErrorMessage } from "@/lib/api/client";
 import { FEATURE_TYPES } from "@/lib/featureTypes";
+import { humanize } from "@/lib/format";
 import { useGaugePicker } from "@/lib/hooks/useGaugePicker";
-import { waterwayKeys } from "@/lib/hooks/useWaterways";
+import { useCreateFeature, useUpdateFeature } from "@/lib/hooks/useSections";
 import { preferredLanguage } from "@/lib/languagePreference";
 import GaugeRangePicker from "./GaugeRangePicker";
 import GeometryPicker, {
@@ -96,7 +96,6 @@ export default function SuggestFeatureForm({
   onCanSubmitChange,
   editFeature,
 }: SuggestFeatureFormProps) {
-  const queryClient = useQueryClient();
   const [langCode, setLangCode] = useState(
     () =>
       editFeature?.names[0]?.lang_code ??
@@ -116,8 +115,18 @@ export default function SuggestFeatureForm({
   const [featureType, setFeatureType] = useState<FeatureType>(
     () => editFeature?.feature_type ?? "whitewater",
   );
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const createFeature = useCreateFeature(waterwayId ?? 0, sectionId ?? 0);
+  const updateFeature = useUpdateFeature(waterwayId ?? 0, sectionId ?? 0);
+  const submitting = createFeature.isPending || updateFeature.isPending;
+  const submitMutationError = editFeature
+    ? updateFeature.error
+    : createFeature.error;
+  const submitError = submitMutationError
+    ? apiErrorMessage(
+        submitMutationError,
+        "Failed to submit. Please try again.",
+      )
+    : null;
   const [useSectionLine, setUseSectionLine] = useState(false);
   const [difficulty, setDifficulty] = useState(() => {
     const d = (editFeature?.metadata as Record<string, unknown> | null)
@@ -174,7 +183,7 @@ export default function SuggestFeatureForm({
     onStopPick();
   }
 
-  async function handleSubmit() {
+  function handleSubmit() {
     if (!canSubmit) return;
     const diff = difficulty.trim() || null;
     const metadata = diff ? { difficulty: diff } : {};
@@ -202,43 +211,40 @@ export default function SuggestFeatureForm({
     }
 
     if (waterwayId == null || sectionId == null) return;
-    setSubmitting(true);
-    setSubmitError(null);
-    try {
-      if (editFeature) {
-        await featuresApi.update(waterwayId, sectionId, editFeature.id, {
-          feature_type: featureType,
-          location: buildGeometry() as never,
-          // Preserve metadata keys the form doesn't manage.
-          metadata: {
-            ...((editFeature.metadata as Record<string, unknown> | null) ?? {}),
-            difficulty: diff ?? undefined,
+    if (editFeature) {
+      updateFeature.mutate(
+        {
+          featureId: editFeature.id,
+          body: {
+            feature_type: featureType,
+            location: buildGeometry(),
+            // Preserve metadata keys the form doesn't manage.
+            metadata: {
+              ...((editFeature.metadata as Record<string, unknown> | null) ??
+                {}),
+              difficulty: diff ?? undefined,
+            },
+            lang_code: langCode,
+            name: name.trim() || null,
+            description: description.trim() || null,
+            water_ranges: waterRanges,
           },
-          lang_code: langCode,
-          name: name.trim() || null,
-          description: description.trim() || null,
-          water_ranges: waterRanges,
-        });
-      } else {
-        await featuresApi.create(waterwayId, sectionId, {
+        },
+        { onSuccess: () => onSubmitted?.() },
+      );
+    } else {
+      createFeature.mutate(
+        {
           feature_type: featureType,
-          location: buildGeometry() as never,
+          location: buildGeometry(),
           metadata,
           lang_code: langCode,
           name: name.trim() || null,
           description: description.trim() || null,
           water_ranges: waterRanges,
-        });
-      }
-      queryClient.invalidateQueries({
-        queryKey: waterwayKeys.detail(waterwayId),
-      });
-      queryClient.invalidateQueries({ queryKey: ["proposals"] });
-      onSubmitted?.();
-    } catch {
-      setSubmitError("Failed to submit. Please try again.");
-    } finally {
-      setSubmitting(false);
+        },
+        { onSuccess: () => onSubmitted?.() },
+      );
     }
   }
 
@@ -300,7 +306,7 @@ export default function SuggestFeatureForm({
         >
           {FEATURE_TYPES.map((t) => (
             <MenuItem key={t} value={t}>
-              {t.replace(/_/g, " ")}
+              {humanize(t)}
             </MenuItem>
           ))}
         </Select>

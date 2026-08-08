@@ -3,13 +3,13 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   TIME_RANGE_OPTIONS,
-  type TimeRange,
   typeLabel,
-} from "@/components/charts/water/types";
+} from "@/components/charts/water/chartTime";
+import type { TimeRange } from "@/components/charts/water/types";
+import { theme } from "@/lib/theme";
 
 const toggleGroupSx = {
   flexShrink: 0,
@@ -31,7 +31,6 @@ export default function ChartControls({
   timeRange,
   onTimeRangeChange,
 }: ChartControlsProps) {
-  const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (

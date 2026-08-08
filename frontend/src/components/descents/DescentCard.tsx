@@ -3,51 +3,18 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
-import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
-import { uniqueSnapshotsBySeries } from "@/components/descents/DescentDetail";
-import { maxLevel } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
-
-function durationLabel(start: string, end: string): string | null {
-  const ms = new Date(end).getTime() - new Date(start).getTime();
-  if (ms <= 0) return null;
-  const h = Math.floor(ms / 3600000);
-  const m = Math.floor((ms % 3600000) / 60000);
-  if (h === 0) return m > 0 ? `${m}m` : null;
-  return m === 0 ? `${h}h` : `${h}h ${m}m`;
-}
-
-function timeAgo(iso: string): string {
-  const ms = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(ms / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 14) return `${days}d ago`;
-  const weeks = Math.floor(days / 7);
-  if (weeks < 9) return `${weeks}w ago`;
-  const months = Math.floor(days / 30);
-  if (months < 24) return `${months}mo ago`;
-  return `${Math.floor(days / 365)}y ago`;
-}
+import { uniqueSnapshotsBySeries } from "@/lib/descents";
+import {
+  durationLabel,
+  formatDate,
+  formatReading,
+  formatTime,
+  timeAgo,
+} from "@/lib/format";
+import { fonts } from "@/lib/theme";
+import { levelConfig, maxLevel } from "@/lib/waterLevel";
 
 export const VISIBILITY_ICONS = {
   private: <LockOutlinedIcon sx={{ fontSize: 13 }} />,
@@ -66,13 +33,6 @@ export default function DescentCard({
   onClick,
   showAuthor,
 }: DescentCardProps) {
-  const { tokens } = useTheme();
-  const levelConfig = {
-    empty: tokens.waterEmpty,
-    low: tokens.waterLow,
-    medium: tokens.waterMedium,
-    high: tokens.waterHigh,
-  };
   const waterwayNames = [
     ...new Set(
       descent.sections
@@ -116,7 +76,7 @@ export default function DescentCard({
       <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
         <Typography
           sx={{
-            fontFamily: '"Space Grotesk", monospace',
+            fontFamily: fonts.label,
             fontWeight: 700,
             fontSize: "0.9rem",
             color: "text.primary",
@@ -141,7 +101,7 @@ export default function DescentCard({
               fontSize: "0.6rem",
               textTransform: "uppercase",
               letterSpacing: "0.08em",
-              fontFamily: '"Space Grotesk", monospace',
+              fontFamily: fonts.label,
             }}
           >
             {descent.visibility.type}
@@ -155,7 +115,7 @@ export default function DescentCard({
           sx={{
             fontSize: "0.68rem",
             color: "text.disabled",
-            fontFamily: '"Space Grotesk", monospace',
+            fontFamily: fonts.label,
             letterSpacing: "0.04em",
           }}
         >
@@ -226,7 +186,7 @@ export default function DescentCard({
             <Chip
               label={
                 reading?.value != null
-                  ? `${Number(reading.value.toFixed(1))} ${reading.unit}`
+                  ? formatReading(reading.value, reading.unit)
                   : cfg.label
               }
               size="small"
@@ -244,7 +204,7 @@ export default function DescentCard({
         {!titleIsDate && (
           <Typography
             sx={{
-              fontFamily: '"Space Grotesk", monospace',
+              fontFamily: fonts.label,
               fontSize: "0.72rem",
               color: "primary.main",
             }}
@@ -254,7 +214,7 @@ export default function DescentCard({
         )}
         <Typography
           sx={{
-            fontFamily: '"Space Grotesk", monospace',
+            fontFamily: fonts.label,
             fontSize: "0.68rem",
             color: titleIsDate ? "primary.main" : "text.disabled",
           }}
@@ -264,7 +224,7 @@ export default function DescentCard({
         {durationLabel(descent.start_time, descent.end_time) && (
           <Typography
             sx={{
-              fontFamily: '"Space Grotesk", monospace',
+              fontFamily: fonts.label,
               fontSize: "0.68rem",
               color: "text.disabled",
             }}
@@ -274,7 +234,7 @@ export default function DescentCard({
         )}
         <Typography
           sx={{
-            fontFamily: '"Space Grotesk", monospace',
+            fontFamily: fonts.label,
             fontSize: "0.68rem",
             color: "text.disabled",
             ml: "auto",

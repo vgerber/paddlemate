@@ -1,9 +1,8 @@
 import HistoryIcon from "@mui/icons-material/History";
 import List from "@mui/material/List";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import type { RecentWaterway } from "@/lib/recentWaterways";
+import RiverRow from "./RiverRow";
 
 interface RecentRiverListProps {
   rivers: RecentWaterway[];
@@ -37,18 +36,11 @@ export default function RecentRiverList({
       </Typography>
       <List dense disablePadding>
         {rivers.map((river) => (
-          <ListItemButton
+          <RiverRow
             key={river.id}
+            name={river.name}
             onClick={() => onSelect(river.id)}
-            sx={{ borderRadius: 1, mb: 0.5 }}
-          >
-            <ListItemText
-              primary={river.name}
-              slotProps={{
-                primary: { variant: "body2", sx: { fontWeight: 600 } },
-              }}
-            />
-          </ListItemButton>
+          />
         ))}
       </List>
     </>

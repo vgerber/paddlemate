@@ -1,18 +1,15 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import ThumbDownOutlinedIcon from "@mui/icons-material/ThumbDownOutlined";
 import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
+import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import type { Proposal } from "@/lib/api";
+import { humanize } from "@/lib/format";
 import {
   useDeleteProposal,
   useUnvoteProposal,
@@ -119,31 +116,24 @@ function ProposalActions({ proposal }: { proposal: Proposal }) {
         </Tooltip>
       )}
 
-      <Dialog
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <DialogTitle>Withdraw proposal?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {isOwner
+      {/* The dialog lives inside a clickable entry - keep its clicks local. */}
+      <Box onClick={(e) => e.stopPropagation()}>
+        <ConfirmDialog
+          open={confirmOpen}
+          title="Withdraw proposal?"
+          body={
+            isOwner
               ? "This permanently removes your pending proposal. This action cannot be undone."
-              : "This permanently removes this pending proposal. This action cannot be undone."}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setConfirmOpen(false)}
-            disabled={del.isPending}
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleDelete} color="error" disabled={del.isPending}>
-            {del.isPending ? "Withdrawing…" : "Withdraw"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+              : "This permanently removes this pending proposal. This action cannot be undone."
+          }
+          confirmLabel="Withdraw"
+          pendingLabel="Withdrawing…"
+          color="error"
+          pending={del.isPending}
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={handleDelete}
+        />
+      </Box>
     </>
   );
 }
@@ -167,7 +157,7 @@ export function ProposalDetail({ proposal, coords, featureType }: Props) {
           color: tokens.outline,
         }}
       >
-        {featureType.replace(/_/g, " ")}
+        {humanize(featureType)}
       </Typography>
       <CoordsInfo
         coords={coords}

@@ -1,15 +1,12 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
-import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import ProposalDetailPane from "@/components/proposals/ProposalDetailPane";
-import {
-  proposalTitle,
-  STATUS_COLOR,
-} from "@/components/waterway/ProposalCard";
+import LoadingBox from "@/components/states/LoadingBox";
 import { useProposal } from "@/lib/hooks/useProposals";
+import { proposalTitle, STATUS_COLOR } from "@/lib/proposals";
 import { fonts } from "@/lib/theme";
 
 export const Route = createFileRoute("/proposals/$proposalId")({
@@ -75,16 +72,14 @@ function ProposalDetailPage() {
         <Button
           onClick={goBack}
           size="small"
-          sx={{ ml: "auto", borderRadius: 0, flexShrink: 0 }}
+          sx={{ ml: "auto", flexShrink: 0 }}
         >
           Back
         </Button>
       </Box>
 
       {isLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-          <CircularProgress size={22} />
-        </Box>
+        <LoadingBox size={22} py={6} />
       ) : proposal ? (
         <ProposalDetailPane proposal={proposal} />
       ) : (

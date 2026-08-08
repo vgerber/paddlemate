@@ -7,7 +7,17 @@ export const followKeys = {
   following: ["follows", "following"] as const,
   followers: ["follows", "followers"] as const,
   pending: ["follows", "pending"] as const,
+  allUsers: ["follows", "users"] as const,
 };
+
+/** Every user with their follow relation, for the social search list. */
+export function useAllUsers(enabled: boolean) {
+  return useQuery({
+    queryKey: followKeys.allUsers,
+    queryFn: () => followsApi.listAll(),
+    enabled,
+  });
+}
 
 export function useFollows() {
   const { isAuthenticated } = useSession();

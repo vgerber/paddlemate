@@ -4,18 +4,21 @@ import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import Typography from "@mui/material/Typography";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { VISIBILITY_ICONS } from "@/components/descents/DescentCard";
 import DescentDetail from "@/components/descents/DescentDetail";
 import DescentForm from "@/components/descents/DescentForm";
+import LoadingBox from "@/components/states/LoadingBox";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
+import { fonts } from "@/lib/theme";
 
 export const Route = createFileRoute("/logs/$descentId")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -31,6 +34,7 @@ function LogDetailPage() {
   const { user } = useSession();
   const { data: descent, isLoading } = useDescent(Number(descentId));
   const deleteDescent = useDeleteDescent();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const setEdit = (value: boolean) =>
     navigate({
@@ -41,11 +45,7 @@ function LogDetailPage() {
     });
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <LoadingBox size={40} pt={8} />;
   }
 
   if (!descent) {
@@ -122,7 +122,7 @@ function LogDetailPage() {
                   fontSize: "0.6rem",
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
-                  fontFamily: '"Space Grotesk", monospace',
+                  fontFamily: fonts.label,
                 }}
               >
                 {descent.visibility.type}
@@ -156,15 +156,27 @@ function LogDetailPage() {
           <SpeedDialAction
             icon={<DeleteOutlinedIcon />}
             title="Delete"
-            onClick={async () => {
-              if (deleteDescent.isPending) return;
-              if (!window.confirm("Delete this log?")) return;
-              await deleteDescent.mutateAsync(descent.id);
-              navigate({ to: "/logs" });
-            }}
+            onClick={() => setConfirmDelete(true)}
           />
         </SpeedDial>
       )}
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete this log?"
+        body="The log and its water level snapshots are removed permanently."
+        confirmLabel="Delete"
+        pendingLabel="Deleting…"
+        color="error"
+        pending={deleteDescent.isPending}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={() =>
+          // A failure surfaces via the global error snackbar; the dialog
+          // stays open so the user can retry or cancel.
+          deleteDescent.mutate(descent.id, {
+            onSuccess: () => navigate({ to: "/logs" }),
+          })
+        }
+      />
     </Box>
   );
 }

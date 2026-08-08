@@ -67,7 +67,6 @@ export function PointEntry({
         alignItems: "flex-start",
         textAlign: "left",
         px: "6px",
-        borderRadius: "8px",
       }}
     >
       <Stack

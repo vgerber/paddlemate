@@ -8,8 +8,10 @@ import {
 
 export const proposalKeys = {
   all: ["proposals"] as const,
+  /** Prefix of every list query - safe scope for bulk cache updates. */
+  lists: () => [...proposalKeys.all, "list"] as const,
   list: (filters: ProposalFilters) =>
-    [...proposalKeys.all, "list", filters] as const,
+    [...proposalKeys.lists(), filters] as const,
   detail: (id: number) => [...proposalKeys.all, id] as const,
 };
 
@@ -33,14 +35,17 @@ export function useVoteProposal() {
     mutationFn: ({ id, vote }: { id: number; vote: 1 | -1 }) =>
       proposalsApi.vote(id, vote),
     onMutate: async ({ id, vote }) => {
-      await queryClient.cancelQueries({ queryKey: proposalKeys.all });
+      // Scope to list caches only: proposalKeys.all also prefix-matches the
+      // detail caches, which hold a single Proposal, not an array.
+      await queryClient.cancelQueries({ queryKey: proposalKeys.lists() });
       const previous = queryClient.getQueriesData<Proposal[]>({
-        queryKey: proposalKeys.all,
+        queryKey: proposalKeys.lists(),
       });
       queryClient.setQueriesData<Proposal[]>(
-        { queryKey: proposalKeys.all },
-        (old) =>
-          old?.map((p) => {
+        { queryKey: proposalKeys.lists() },
+        (old) => {
+          if (!Array.isArray(old)) return old;
+          return old.map((p) => {
             if (p.id !== id) return p;
             const prev = p.user_vote;
             return {
@@ -50,7 +55,8 @@ export function useVoteProposal() {
               downvotes:
                 p.downvotes + (vote === -1 ? 1 : 0) + (prev === -1 ? -1 : 0),
             };
-          }),
+          });
+        },
       );
       return { previous };
     },
@@ -92,6 +98,8 @@ export function useReviewProposal() {
   return useMutation({
     mutationFn: ({ id, body }: { id: number; body: ReviewRequest }) =>
       proposalsApi.review(id, body),
+    // The review dialog renders the failure inline.
+    meta: { errorHandledLocally: true },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: proposalKeys.all });
     },

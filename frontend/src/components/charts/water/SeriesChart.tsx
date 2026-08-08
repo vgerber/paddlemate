@@ -16,7 +16,8 @@ import {
   YAxis,
 } from "recharts";
 import type { GaugeReading, WaterRangeWithStatus } from "@/lib/api";
-import { useGaugeReadings } from "@/lib/hooks/useWaterways";
+import { humanize } from "@/lib/format";
+import { useGaugeReadings } from "@/lib/hooks/useGauges";
 import { fonts, theme } from "@/lib/theme";
 import type { DescentSpan, TimeRange } from "./types";
 import { useChartZoom } from "./useChartZoom";
@@ -407,7 +408,6 @@ export default function SeriesChart({
                   style={{
                     backgroundColor: tokens.surface,
                     border: `1px solid ${tokens.outlineVariant}`,
-                    borderRadius: 6,
                     fontSize: 12,
                     padding: "8px 10px",
                   }}
@@ -479,7 +479,7 @@ export default function SeriesChart({
               color: "text.secondary",
             }}
           >
-            {selectedFeature.type.replace(/_/g, " ")}
+            {humanize(selectedFeature.type)}
           </Typography>
         </Box>
       )}

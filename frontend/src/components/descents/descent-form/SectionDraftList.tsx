@@ -4,6 +4,7 @@ import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import { fonts } from "@/lib/theme";
 import type { SectionDraft } from "./model";
 
 interface Props {
@@ -41,7 +42,7 @@ export default function SectionDraftList({ sections, onChange }: Props) {
           <Typography
             variant="caption"
             sx={{
-              fontFamily: '"Space Grotesk", monospace',
+              fontFamily: fonts.label,
               color: "text.disabled",
               minWidth: 20,
             }}

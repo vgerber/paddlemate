@@ -5,7 +5,6 @@ import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
@@ -13,6 +12,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
+import LoadingBox from "@/components/states/LoadingBox";
 import SectionListItem from "@/components/waterway/SectionListItem";
 import SectionLogsList from "@/components/waterway/SectionLogsList";
 import FeatureTimeline from "@/components/waterway/section-details";
@@ -26,6 +26,7 @@ import { useSectionDescentCounts } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { localizedName } from "@/lib/localization";
+import { theme } from "@/lib/theme";
 import type { DetailTab, SectionDetailTab, SuggestMode } from "./types";
 import WaterwayDetailHeader from "./WaterwayDetailHeader";
 
@@ -47,13 +48,17 @@ interface WaterwayBrowsePanelProps {
   onToggleFavorite?: (id: number) => void;
   onMobileMapToggle?: () => void;
   mobileMapActive?: boolean;
-  onFeatureClick?: (coords: [number, number] | null) => void;
-  onEditFeature?: (f: Feature) => void;
-  activeFeatureId?: number | null;
-  onActiveFeatureChange?: (id: number | null) => void;
-  showProposedFeatures?: boolean;
-  onToggleProposedFeatures?: () => void;
-  featureProposals?: Proposal[];
+  /** Everything the section feature timeline needs - passed through as one
+   * group instead of seven loose props. */
+  featureTimeline?: {
+    onFeatureClick?: (coords: [number, number] | null) => void;
+    onEditFeature?: (f: Feature) => void;
+    activeFeatureId?: number | null;
+    onActiveFeatureChange?: (id: number | null) => void;
+    showProposed?: boolean;
+    onToggleProposed?: () => void;
+    proposals?: Proposal[];
+  };
 }
 
 export default function WaterwayBrowsePanel({
@@ -74,13 +79,7 @@ export default function WaterwayBrowsePanel({
   onToggleFavorite,
   onMobileMapToggle,
   mobileMapActive,
-  onFeatureClick,
-  onEditFeature,
-  activeFeatureId,
-  onActiveFeatureChange,
-  showProposedFeatures = false,
-  onToggleProposedFeatures,
-  featureProposals = [],
+  featureTimeline,
 }: WaterwayBrowsePanelProps) {
   const navigate = useNavigate();
   const { data: waterway, isLoading } = useWaterway(waterwayId);
@@ -93,16 +92,16 @@ export default function WaterwayBrowsePanel({
 
   const actionButton = onMobileMapToggle ? (
     <>
-      {inFeatures && onToggleProposedFeatures && (
+      {inFeatures && featureTimeline?.onToggleProposed && (
         <IconButton
           size="small"
-          onClick={onToggleProposedFeatures}
+          onClick={featureTimeline.onToggleProposed}
           aria-label={
-            showProposedFeatures
+            featureTimeline.showProposed
               ? "Hide proposed features"
               : "Show proposed features"
           }
-          color={showProposedFeatures ? "primary" : undefined}
+          color={featureTimeline.showProposed ? "primary" : undefined}
         >
           <PendingActionsIcon fontSize="small" />
         </IconButton>
@@ -127,7 +126,7 @@ export default function WaterwayBrowsePanel({
       }
     >
       {favoritedIds?.has(selectedSection.id) ? (
-        <StarIcon fontSize="small" sx={{ color: "warning.main" }} />
+        <StarIcon fontSize="small" sx={{ color: theme.tokens.tertiary }} />
       ) : (
         <StarBorderIcon fontSize="small" />
       )}
@@ -199,21 +198,19 @@ export default function WaterwayBrowsePanel({
           }}
         >
           {isLoading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-              <CircularProgress size={22} />
-            </Box>
+            <LoadingBox size={22} />
           ) : inFeatures ? (
             sectionDetailTab === "logs" ? (
               <SectionLogsList sectionId={selectedSection.id} />
             ) : (
               <FeatureTimeline
                 section={selectedSection}
-                proposals={featureProposals}
-                showProposed={showProposedFeatures}
-                onFeatureClick={onFeatureClick}
-                onEditFeature={onEditFeature}
-                activeFeatureId={activeFeatureId}
-                onActiveFeatureChange={onActiveFeatureChange}
+                proposals={featureTimeline?.proposals ?? []}
+                showProposed={featureTimeline?.showProposed ?? false}
+                onFeatureClick={featureTimeline?.onFeatureClick}
+                onEditFeature={featureTimeline?.onEditFeature}
+                activeFeatureId={featureTimeline?.activeFeatureId}
+                onActiveFeatureChange={featureTimeline?.onActiveFeatureChange}
               />
             )
           ) : tab === "sections" ? (
@@ -361,7 +358,7 @@ function GaugesList({
           key={range.gauge.id}
           selected={selectedGaugeId === range.gauge.id}
           onClick={() => onGaugeSelect?.(range.gauge.id)}
-          sx={{ py: 0.75, px: 1.5, borderRadius: 1 }}
+          sx={{ py: 0.75, px: 1.5 }}
         >
           <ListItemText
             primary={(range.series.label ?? range.gauge.name).replace(

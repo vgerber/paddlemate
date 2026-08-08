@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { SectionWithFeatures } from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
-import { haversineKm, parseDifficulty } from "@/lib/geo";
+import { haversineKm, lineCoords, parseDifficulty } from "@/lib/geo";
 
 interface FilterOptions {
   areaCircle: AreaCircle | null;
@@ -19,10 +19,8 @@ export function useFilteredSections(
 
     if (areaCircle) {
       result = result.filter((s) => {
-        const geom = s.location as unknown as GeoJSON.LineString;
-        if (geom?.type !== "LineString" || !geom.coordinates.length)
-          return false;
-        const coords = geom.coordinates;
+        const coords = lineCoords(s.location);
+        if (!coords || coords.length === 0) return false;
         const first = coords[0];
         const last = coords[coords.length - 1];
         const mid = coords[Math.floor(coords.length / 2)];

@@ -7,30 +7,25 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import WaterwayMap from "@/components/map/Map";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
-import type {
-  GeometryPicking,
-  GeomType,
-} from "@/components/waterway/GeometryPicker";
+import LoadingBox from "@/components/states/LoadingBox";
+import SignInGate from "@/components/states/SignInGate";
 import SectionFeaturesStep from "@/components/waterway/SectionFeaturesStep";
 import SectionLineStep from "@/components/waterway/SectionLineStep";
-import SectionNamingForm, {
-  createInitialNaming,
-  type SectionNamingValue,
-} from "@/components/waterway/SectionNamingForm";
-import type { SectionFeatureDraft } from "@/components/waterway/SuggestFeatureForm";
-import { toPseudoFeature } from "@/components/waterway/section-details/utils";
-import type { Feature } from "@/lib/api";
-import { sectionsApi } from "@/lib/api";
-import { downstreamDot } from "@/lib/geo";
-import { useRiverSnap } from "@/lib/hooks/useRiverSnap";
+import SectionNamingForm from "@/components/waterway/SectionNamingForm";
+import { buildSectionPayload } from "@/components/waterway/sectionPayload";
+import {
+  useSectionWizardState,
+  WIZARD_STEPS,
+} from "@/components/waterway/useSectionWizardState";
+import { apiErrorMessage } from "@/lib/api/client";
+import { useCreateSection } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
-import { useWaterway, waterwayKeys } from "@/lib/hooks/useWaterways";
-import type { BoundingBox, Coordinate } from "@/lib/riverSnap";
+import { useWaterway } from "@/lib/hooks/useWaterways";
+import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
 
 export const Route = createFileRoute("/waterways/suggest-section")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -39,218 +34,50 @@ export const Route = createFileRoute("/waterways/suggest-section")({
   component: SuggestSectionPage,
 });
 
-const STEPS = ["Naming", "Section", "Features"] as const;
-
 function SuggestSectionPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { waterway: waterwayId } = Route.useSearch();
-  const { isAuthenticated, isLoading: sessionLoading, login } = useSession();
+  const { isAuthenticated, isLoading: sessionLoading } = useSession();
   const { data: waterway } = useWaterway(waterwayId ?? null);
   const sections = waterway?.sections ?? [];
 
-  const [step, setStep] = useState(0);
+  const wizard = useSectionWizardState(waterway?.name ?? "", sections);
+  const { step, putIn, takeOut, finalCoords, featurePickActive } = wizard;
 
-  // Step 1: naming
-  const [naming, setNaming] = useState<SectionNamingValue>(createInitialNaming);
-
-  // Step 2: section line
-  const [putIn, setPutIn] = useState<{ lat: number; lon: number } | null>(null);
-  const [takeOut, setTakeOut] = useState<{ lat: number; lon: number } | null>(
-    null,
-  );
-  const [lineSource, setLineSource] = useState<"snap" | "straight">("snap");
-  const [mapBounds, setMapBounds] = useState<BoundingBox | null>(null);
-  const snap = useRiverSnap(waterway?.name ?? "", putIn, takeOut, mapBounds);
-
-  // Step 3: features (drafted with the shared feature form, drawn on the map)
-  const [draftFeatures, setDraftFeatures] = useState<SectionFeatureDraft[]>([]);
-  const [featureVertices, setFeatureVertices] = useState<
-    { lng: number; lat: number }[]
-  >([]);
-  const [featureGeomType, setFeatureGeomType] = useState<GeomType>("Point");
-  const [featurePickActive, setFeaturePickActive] = useState(false);
-  const mapContainerRef = useRef<HTMLDivElement | null>(null);
-
-  const featureGeometry: GeometryPicking = {
-    vertices: featureVertices,
-    geomType: featureGeomType,
-    pickingActive: featurePickActive,
-    onGeomTypeChange: (t) => {
-      setFeatureGeomType(t);
-      setFeatureVertices([]);
-    },
-    onRequestPick: () => setFeaturePickActive(true),
-    onStopPick: () => setFeaturePickActive(false),
-    onRemoveVertex: (i) =>
-      setFeatureVertices((vertices) =>
-        vertices.filter((_, index) => index !== i),
-      ),
-    onClearVertices: () => setFeatureVertices([]),
-  };
-
-  // Bring the map into view whenever a pick starts (any trigger: place
-  // point, start drawing a line/area, move) - the buttons sit below the
-  // map, often off-screen on mobile. Deferred a frame so the button's own
-  // focus scrolling can't cancel the smooth scroll.
-  useEffect(() => {
-    if (!featurePickActive) return;
-    const frame = requestAnimationFrame(() => {
-      mapContainerRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [featurePickActive]);
-
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const createSection = useCreateSection(waterwayId ?? 0);
+  const submitting = createSection.isPending;
+  const submitError = createSection.error
+    ? apiErrorMessage(
+        createSection.error,
+        "Failed to submit. Please try again.",
+      )
+    : null;
   const [submitted, setSubmitted] = useState(false);
-
-  const hasLocation = putIn != null && takeOut != null;
-  const snapActive = lineSource === "snap" && snap.status === "done";
-
-  const finalCoords: Coordinate[] | null = useMemo(
-    () =>
-      lineSource === "snap" &&
-      snap.snappedCoords &&
-      snap.snappedCoords.length >= 2
-        ? snap.snappedCoords
-        : putIn && takeOut
-          ? [
-              [putIn.lon, putIn.lat],
-              [takeOut.lon, takeOut.lat],
-            ]
-          : null,
-    [lineSource, snap.snappedCoords, putIn, takeOut],
-  );
-
-  const orderWrong =
-    hasLocation &&
-    sections.length > 0 &&
-    downstreamDot(
-      sections.map(
-        (s) =>
-          (s.location as unknown as GeoJSON.LineString)
-            .coordinates as Coordinate[],
-      ),
-      putIn,
-      takeOut,
-    ) < 0;
-
-  // Drafted features shown on the map as ghost markers (same rendering as
-  // pending feature proposals)
-  const draftFeaturePseudos: Feature[] = useMemo(
-    () =>
-      draftFeatures.map((feature, index) =>
-        toPseudoFeature(
-          {
-            feature_type: feature.feature_type,
-            // Full-section features are label-suppressed on the map, so
-            // the difficulty fallback must not resurface there either
-            metadata: feature.used_section_line
-              ? { ...feature.metadata, difficulty: undefined }
-              : feature.metadata,
-            location: (feature.used_section_line && finalCoords
-              ? { type: "LineString", coordinates: finalCoords }
-              : feature.location) as Feature["location"],
-            // Full-section features skip the on-map name label - the section
-            // label already covers the whole line
-            name: feature.used_section_line ? null : feature.name,
-            lang_code: feature.lang_code,
-          },
-          index,
-        ),
-      ),
-    [draftFeatures, finalCoords],
-  );
-
-  const canProceed =
-    step === 0
-      ? naming.name.trim().length > 0
-      : step === 1
-        ? hasLocation
-        : true;
 
   const onSectionStep = step === 1;
   const onFeaturesStep = step === 2;
 
-  async function handleSubmit() {
-    if (!naming.name.trim() || !putIn || !takeOut || submitting) return;
-    setSubmitting(true);
-    setSubmitError(null);
-    try {
-      const coordinates: [number, number][] =
-        finalCoords && finalCoords.length >= 2
-          ? finalCoords
-          : [
-              [putIn.lon, putIn.lat],
-              [takeOut.lon, takeOut.lat],
-            ];
-      await sectionsApi.create(waterwayId as number, {
-        name: naming.name.trim(),
-        region: naming.region.trim() || null,
-        country: naming.country.trim() || null,
-        description: naming.description.trim() || null,
-        location: { type: "LineString", coordinates } as never,
-        // The primary entry is stored as a tagged localization too - the
-        // plain columns are just the untagged fallback
-        translations: [
-          {
-            lang_code: naming.langCode,
-            name: naming.name.trim(),
-            description: naming.description.trim() || null,
-          },
-          ...naming.translations
-            .filter((t) => t.name.trim() || t.description.trim())
-            .map((t) => ({
-              lang_code: t.langCode,
-              name: t.name.trim() || null,
-              description: t.description.trim() || null,
-            })),
-        ],
-        // "Use full section line" features get the final line; everything
-        // else keeps the geometry drawn on the map
-        features: draftFeatures.map((feature) => ({
-          feature_type: feature.feature_type,
-          metadata: feature.metadata,
-          location: (feature.used_section_line
-            ? { type: "LineString", coordinates }
-            : feature.location) as never,
-          name: feature.name,
-          description: feature.description,
-          lang_code: feature.lang_code,
-          water_ranges: feature.water_ranges,
-        })),
-      });
-      queryClient.invalidateQueries({
-        queryKey: waterwayKeys.detail(waterwayId as number),
-      });
-      setSubmitted(true);
-    } catch {
-      setSubmitError("Failed to submit. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
+  function handleSubmit() {
+    if (!wizard.naming.name.trim() || !putIn || !takeOut || submitting) return;
+    const coordinates: [number, number][] =
+      finalCoords && finalCoords.length >= 2
+        ? finalCoords
+        : [
+            [putIn.lon, putIn.lat],
+            [takeOut.lon, takeOut.lat],
+          ];
+    createSection.mutate(
+      buildSectionPayload(wizard.naming, coordinates, wizard.draftFeatures),
+      {
+        onSuccess: () => setSubmitted(true),
+      },
+    );
   }
 
   const backToMap = () =>
     router.navigate({
       to: "/",
-      search: {
-        waterway: waterwayId,
-        section: undefined,
-        q: undefined,
-        country: undefined,
-        min_diff: undefined,
-        max_diff: undefined,
-        mode: undefined,
-        lat: undefined,
-        lon: undefined,
-        radius: undefined,
-        panel: undefined,
-      },
+      search: { ...EMPTY_MAP_SEARCH, waterway: waterwayId },
     });
 
   if (waterwayId == null) {
@@ -262,33 +89,11 @@ function SuggestSectionPage() {
   }
 
   if (sessionLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <LoadingBox size={40} pt={8} />;
   }
 
   if (!isAuthenticated) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 2,
-          pt: 10,
-          px: 2,
-        }}
-      >
-        <Typography variant="h6" color="text.secondary">
-          Sign in to suggest a section
-        </Typography>
-        <Button variant="contained" color="secondary" onClick={login}>
-          Sign In
-        </Button>
-      </Box>
-    );
+    return <SignInGate icon={null} title="Sign in to suggest a section" />;
   }
 
   return (
@@ -304,7 +109,7 @@ function SuggestSectionPage() {
             variant="contained"
             color="secondary"
             onClick={backToMap}
-            sx={{ alignSelf: "flex-start", borderRadius: 0 }}
+            sx={{ alignSelf: "flex-start" }}
           >
             Back to map
           </Button>
@@ -314,7 +119,7 @@ function SuggestSectionPage() {
           {/* Map - for picking the section line and placing features */}
           {step > 0 && (
             <Box
-              ref={mapContainerRef}
+              ref={wizard.mapContainerRef}
               sx={{
                 height: 380,
                 border: "1px solid",
@@ -332,36 +137,36 @@ function SuggestSectionPage() {
                 takeOut={takeOut}
                 onPickPutIn={
                   onSectionStep
-                    ? (lat, lon) => setPutIn({ lat, lon })
+                    ? (lat, lon) => wizard.setPutIn({ lat, lon })
                     : undefined
                 }
                 onPickTakeOut={
                   onSectionStep
-                    ? (lat, lon) => setTakeOut({ lat, lon })
+                    ? (lat, lon) => wizard.setTakeOut({ lat, lon })
                     : undefined
                 }
                 sectionPreviewCoords={finalCoords ?? undefined}
-                riverHighlightCoords={snap.river}
-                onBoundsChange={setMapBounds}
+                riverHighlightCoords={wizard.snap.river}
+                onBoundsChange={wizard.setMapBounds}
                 placingFeature={onFeaturesStep && featurePickActive}
                 onMapClick={
                   onFeaturesStep && featurePickActive
                     ? (lng, lat) =>
-                        setFeatureVertices((vertices) => [
+                        wizard.setFeatureVertices((vertices) => [
                           ...vertices,
                           { lng, lat },
                         ])
                     : undefined
                 }
                 featureVertices={
-                  onFeaturesStep && featureVertices.length > 0
-                    ? featureVertices
+                  onFeaturesStep && wizard.featureVertices.length > 0
+                    ? wizard.featureVertices
                     : undefined
                 }
-                featureGeomType={featureGeomType}
+                featureGeomType={wizard.featureGeomType}
                 proposedFeatures={
-                  onFeaturesStep && draftFeaturePseudos.length > 0
-                    ? draftFeaturePseudos
+                  onFeaturesStep && wizard.draftFeaturePseudos.length > 0
+                    ? wizard.draftFeaturePseudos
                     : undefined
                 }
               />
@@ -369,20 +174,23 @@ function SuggestSectionPage() {
           )}
 
           {step === 0 && (
-            <SectionNamingForm value={naming} onChange={setNaming} />
+            <SectionNamingForm
+              value={wizard.naming}
+              onChange={wizard.setNaming}
+            />
           )}
 
           {step === 1 && (
             <SectionLineStep
               waterwayName={waterway?.name}
-              snap={snap}
+              snap={wizard.snap}
               putIn={putIn}
               takeOut={takeOut}
-              onClearPutIn={() => setPutIn(null)}
-              onClearTakeOut={() => setTakeOut(null)}
-              snapActive={snapActive}
-              onLineSourceChange={setLineSource}
-              orderWrong={orderWrong}
+              onClearPutIn={() => wizard.setPutIn(null)}
+              onClearTakeOut={() => wizard.setTakeOut(null)}
+              snapActive={wizard.snapActive}
+              onLineSourceChange={wizard.setLineSource}
+              orderWrong={wizard.orderWrong}
             />
           )}
 
@@ -397,18 +205,18 @@ function SuggestSectionPage() {
                     }
                   : (putIn ?? undefined)
               }
-              draftFeatures={draftFeatures}
-              draftFeaturePseudos={draftFeaturePseudos}
+              draftFeatures={wizard.draftFeatures}
+              draftFeaturePseudos={wizard.draftFeaturePseudos}
               onAddDraft={(feature) =>
-                setDraftFeatures((features) => [...features, feature])
+                wizard.setDraftFeatures((features) => [...features, feature])
               }
               onRemoveDraft={(index) =>
-                setDraftFeatures((features) =>
+                wizard.setDraftFeatures((features) =>
                   features.filter((_, i) => i !== index),
                 )
               }
-              geometry={featureGeometry}
-              defaultLangCode={naming.langCode}
+              geometry={wizard.featureGeometry}
+              defaultLangCode={wizard.naming.langCode}
             />
           )}
 
@@ -434,26 +242,28 @@ function SuggestSectionPage() {
           >
             <PanelBottomBar
               leftIcon={step === 0 ? <CloseIcon /> : <ArrowBackIcon />}
-              onLeftClick={step === 0 ? backToMap : () => setStep(step - 1)}
+              onLeftClick={
+                step === 0 ? backToMap : () => wizard.setStep(step - 1)
+              }
               leftLabel={step === 0 ? "Cancel" : "Back"}
               leftDisabled={submitting}
               title={`New section · ${waterway?.name ?? "…"}`}
-              subtitle={`Step ${step + 1} of ${STEPS.length} · ${STEPS[step]}`}
+              subtitle={`Step ${step + 1} of ${WIZARD_STEPS.length} · ${WIZARD_STEPS[step]}`}
               action={
                 <RoundActionButton
                   onClick={
-                    step < STEPS.length - 1
-                      ? () => setStep(step + 1)
+                    step < WIZARD_STEPS.length - 1
+                      ? () => wizard.setStep(step + 1)
                       : handleSubmit
                   }
-                  disabled={!canProceed || submitting}
+                  disabled={!wizard.canProceed || submitting}
                   ariaLabel={
-                    step < STEPS.length - 1 ? "Next" : "Suggest section"
+                    step < WIZARD_STEPS.length - 1 ? "Next" : "Suggest section"
                   }
                 >
                   {submitting ? (
                     <CircularProgress size={20} color="inherit" />
-                  ) : step < STEPS.length - 1 ? (
+                  ) : step < WIZARD_STEPS.length - 1 ? (
                     <ArrowForwardIcon fontSize="small" />
                   ) : (
                     <CheckIcon fontSize="small" />

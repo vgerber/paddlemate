@@ -1,8 +1,8 @@
-import { useCallback, useEffect } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
+import { useCallback, useEffect } from "react";
 import type { MapRef } from "react-map-gl/maplibre";
 import type { SectionWithFeatures } from "@/lib/api";
-import type { AreaCircle } from "@/lib/geo";
+import { type AreaCircle, lineCoords } from "@/lib/geo";
 
 interface UseMapCameraEffectsParams {
   mapRef: RefObject<MapRef | null>;
@@ -51,8 +51,8 @@ export function useMapCameraEffects({
     if (!map || !mapLoaded || !sections?.length || areaLocked) return;
     const coords: number[][] = [];
     for (const s of sections) {
-      const geom = s.location as unknown as GeoJSON.LineString;
-      if (geom?.type === "LineString") coords.push(...geom.coordinates);
+      const line = lineCoords(s.location);
+      if (line) coords.push(...line);
     }
     if (!coords.length) return;
     const lngs = coords.map((c) => c[0]);
@@ -88,10 +88,10 @@ export function useMapCameraEffects({
     const map = mapRef.current;
     if (!map || !mapLoaded || !selectedSectionId || !sections?.length) return;
     const section = sections.find((s) => s.id === selectedSectionId);
-    const geom = section?.location as unknown as GeoJSON.LineString | undefined;
-    if (geom?.type !== "LineString" || !geom.coordinates.length) return;
-    const lngs = geom.coordinates.map((c) => c[0]);
-    const lats = geom.coordinates.map((c) => c[1]);
+    const line = lineCoords(section?.location);
+    if (!line?.length) return;
+    const lngs = line.map((c) => c[0]);
+    const lats = line.map((c) => c[1]);
     map.fitBounds(
       [
         [Math.min(...lngs), Math.min(...lats)],

@@ -8,6 +8,7 @@ import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import GaugeAttribution from "@/components/GaugeAttribution";
+import { humanize } from "@/lib/format";
 import type { GaugePicker } from "@/lib/hooks/useGaugePicker";
 import { theme } from "@/lib/theme";
 
@@ -118,7 +119,7 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
               >
                 {selectedGauge.series.map((series) => (
                   <MenuItem key={series.id} value={series.id}>
-                    {series.label ?? series.measurement_type.replace(/_/g, " ")}
+                    {series.label ?? humanize(series.measurement_type)}
                     {` (${series.unit})`}
                   </MenuItem>
                 ))}

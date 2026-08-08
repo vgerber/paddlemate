@@ -128,6 +128,100 @@ time.
 - Do not use section divider comments (e.g. `// --- Gauges list ---`) to
   group code within a file; if a file needs sections, split it into modules.
 
+## Frontend code style (frontend/)
+
+Conventions established in the pre-release cleanup. New code follows them;
+when touching old code that violates one, fix it in the same change.
+
+### Shared modules - reuse before writing
+
+Component files are not util modules; cross-cutting helpers live in `lib/`:
+
+| Module | Owns |
+|---|---|
+| `lib/format.ts` | `formatDate`, `formatTime`, `durationLabel`, `timeAgo`, `humanize` (snake_case to label), `formatReading` |
+| `lib/waterLevel.ts` | `LEVEL_ORDER`, `maxLevel`, `levelConfig`, `isCalibrated` |
+| `lib/proposals.ts` | proposal labels, diffing, `proposalTitle`, `shortValue` |
+| `lib/descents.ts` | `uniqueSnapshotsBySeries`, `toPseudoSection` |
+| `lib/geo.ts` | geometry math plus `lineCoords`/`pointCoords` narrowing |
+| `lib/mapSearch.ts` | `EMPTY_MAP_SEARCH` (the map route's full search shape) |
+
+Shared UI: `ConfirmDialog` (every confirmation - never `window.confirm`),
+`components/states/` (`LoadingBox`, `EmptyState`, `SignInGate`,
+`ErrorFallback`), `WaterLevelChip`, `search/RiverRow`,
+`charts/ChartPanelShell`. Do not hand-roll a spinner box, confirm dialog or
+sign-in gate.
+
+The map's layer JSX lives in per-concern components, not in `Map.tsx`:
+`SectionLayers`, `FeatureGeoJSONLayers` (one implementation for confirmed
+and proposed features, switched by the `proposed` flag), `DraftLayers` /
+`FeatureDraftLayer`, `PickModeButtons`, `MapNumberMarker`, with click
+dispatch in `useMapClickHandler` and the GeoJSON memos in `useMapSources`.
+A new layer group joins one of these or becomes a new sibling.
+
+### Query layer
+
+- Every query key comes from a key factory (`waterwayKeys`, `proposalKeys`,
+  `gaugeKeys`, `descentKeys`, `followKeys`, `groupKeys`, `tokenKeys`). No
+  inline `["..."]` keys - a new domain gets a new factory in its hook module.
+- Factories nest by prefix so invalidation prefixes work; bulk cache updates
+  scope to `*.lists()`, never `*.all` (detail caches hold single objects).
+- Server writes go through `useMutation` hooks in `lib/hooks/` with their
+  invalidations inside. Never hand-roll `submitting`/`submitError` state
+  around a raw api call.
+- Debounce text inputs with `useDebouncedValue` before they hit a query key.
+
+### Error handling
+
+- The QueryClient's `MutationCache.onError` shows a global error snackbar -
+  the floor for every mutation. A mutation whose caller renders the failure
+  inline sets `meta: { errorHandledLocally: true }`.
+- Surface server messages with `apiErrorMessage(err, fallback)` from
+  `lib/api/client.ts`; never discard an `ApiError` into a bare generic
+  string, and never leave a `catch` binding unused.
+- The router has a `defaultErrorComponent`; route components may throw.
+- A dialog that triggers a mutation stays open on failure so the user can
+  retry or cancel.
+
+### Types
+
+- No `as never` and no `as unknown as GeoJSON.*`: the generated `Geometry`
+  type is a discriminated union - narrow with `lineCoords`/`pointCoords` or
+  a `type` check.
+- No `any` (the codebase has zero).
+
+### Theme and styling
+
+- Static `import { theme, fonts, labelSx } from "@/lib/theme"` - not
+  `useTheme()` (single theme, no mode switching).
+- Colors come from tokens; transparency via hex-alpha suffix on a token
+  (e.g. `` `${tokens.primary}59` ``), never a literal hex/rgba duplicating
+  a token. Map-marker legibility shadows are the documented exception.
+- No `borderRadius` - the theme is square (`shape.borderRadius: 0`); adding
+  scale values is dead code and string values violate the design language.
+- Small uppercase labels spread `labelSx` and override size/color, instead
+  of re-declaring the five-property block.
+
+### Component shape
+
+- Early returns over nested ternaries; a three-branch conditional render is
+  a sub-component (see `map-page/MapCharts.tsx`).
+- Keep prop lists small: a cluster of related props passed through a layer
+  becomes one grouped object (see `WaterwayBrowsePanel`'s `featureTimeline`).
+- Map-page components take the single `state: MapPageState` prop; new state
+  clusters go into focused hooks (`useFeaturePicker`, `useMobilePanelState`,
+  `useSuggestMode` pattern) rather than growing `useMapPageState`.
+- A page that owns a multi-step form keeps its state in one hook next to the
+  step components (`useSectionWizardState`, `useWaterwaySearchFilters`), so
+  the route file is layout plus submit.
+
+### Tests
+
+`bun test` runs `*.test.ts` files next to their module. Pure logic gets
+tests: formatting, level math, proposal diffing, payload builders. Both
+`tsc -b` and biome cover them, so tests follow the same style rules as app
+code. Component rendering is not tested; the UI is verified by running it.
+
 ## Rust code style (api/)
 
 - Keep names readable and consistent with Rust community conventions.

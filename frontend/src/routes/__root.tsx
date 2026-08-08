@@ -12,7 +12,11 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  MutationCache,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 import {
   createRootRoute,
   Link,
@@ -21,12 +25,15 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { useState } from "react";
+import AppSnackbar, { showErrorSnackbar } from "@/components/AppSnackbar";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
+import { apiErrorMessage } from "@/lib/api/client";
 import { useSession } from "@/lib/hooks/useSession";
 import { useLanguage } from "@/lib/languagePreference";
+import { fonts } from "@/lib/theme";
 
 const navLinkSx = {
-  fontFamily: '"Space Grotesk", sans-serif',
+  fontFamily: fonts.label,
   fontSize: "0.7rem",
   fontWeight: 600,
   letterSpacing: "0.1em",
@@ -38,6 +45,14 @@ const navLinkSx = {
   "&.active": { color: "primary.main" },
 };
 
+declare module "@tanstack/react-query" {
+  interface Register {
+    /** Mutations rendering their own inline error UI set this to skip the
+     * global error snackbar. */
+    mutationMeta: { errorHandledLocally?: boolean };
+  }
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -45,6 +60,16 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: true,
     },
   },
+  // Failure floor for every mutation: nothing fails silently. Mutations with
+  // dedicated inline error UI opt out via meta.errorHandledLocally.
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _context, mutation) => {
+      if (mutation.meta?.errorHandledLocally) return;
+      showErrorSnackbar(
+        apiErrorMessage(error, "Something went wrong. Please try again."),
+      );
+    },
+  }),
 });
 
 export const Route = createRootRoute({
@@ -76,7 +101,7 @@ function Layout() {
             component={Link}
             to="/"
             sx={{
-              fontFamily: '"Space Grotesk", sans-serif',
+              fontFamily: fonts.label,
               fontWeight: 900,
               letterSpacing: "-0.02em",
               color: "primary.main",
@@ -140,6 +165,7 @@ function Layout() {
         </Box>
       </Box>
       <BottomNav />
+      <AppSnackbar />
     </Box>
   );
 }
@@ -208,7 +234,7 @@ function UserMenu({
         endIcon={<ArrowDropDownIcon />}
         onClick={(e) => setAnchor(e.currentTarget)}
         sx={{
-          fontFamily: '"Space Grotesk", sans-serif',
+          fontFamily: fonts.label,
           fontSize: "0.6875rem",
           fontWeight: 600,
           letterSpacing: "0.08em",

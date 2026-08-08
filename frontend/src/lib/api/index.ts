@@ -98,44 +98,6 @@ export const sectionsApi = {
     );
     return assertData(data);
   },
-  update: async (
-    waterwayId: number,
-    sectionId: number,
-    body: components["schemas"]["UpdateSectionBody"],
-  ) => {
-    const { data } = await client.PUT(
-      "/api/v1/waterways/{waterway_id}/sections/{section_id}",
-      {
-        params: { path: { waterway_id: waterwayId, section_id: sectionId } },
-        body,
-      },
-    );
-    return assertData(data);
-  },
-};
-
-export const commentsApi = {
-  listForSection: async (waterwayId: number, sectionId: number) => {
-    const { data } = await client.GET(
-      "/api/v1/waterways/{waterway_id}/sections/{section_id}/comments",
-      { params: { path: { waterway_id: waterwayId, section_id: sectionId } } },
-    );
-    return assertData(data);
-  },
-  createForSection: async (
-    waterwayId: number,
-    sectionId: number,
-    body: string,
-  ) => {
-    const { data } = await client.POST(
-      "/api/v1/waterways/{waterway_id}/sections/{section_id}/comments",
-      {
-        params: { path: { waterway_id: waterwayId, section_id: sectionId } },
-        body: { body },
-      },
-    );
-    return assertData(data);
-  },
 };
 
 export const featuresApi = {

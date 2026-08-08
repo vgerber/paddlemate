@@ -1,6 +1,4 @@
-import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AreaCircle, GaugePin } from "@/components/map/Map";
@@ -9,18 +7,17 @@ import type {
   SectionDetailTab,
   SuggestMode,
 } from "@/components/waterway/types";
-import { type Feature, proposalsApi, waterwaysApi } from "@/lib/api";
+import { type Feature, proposalsApi } from "@/lib/api";
 import { useFavorites } from "@/lib/hooks/useFavorites";
 import { useFilteredSections } from "@/lib/hooks/useFilteredSections";
 import { useGaugeData } from "@/lib/hooks/useGaugeData";
 import { proposalKeys } from "@/lib/hooks/useProposals";
-import {
-  useAllSectionWaterStatus,
-  useSectionWaterStatuses,
-  useWaterway,
-  waterwayKeys,
-} from "@/lib/hooks/useWaterways";
+import { useSearchResultSections } from "@/lib/hooks/useSearchResultSections";
+import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
+import { useWaterway } from "@/lib/hooks/useWaterways";
 import { pushRecentWaterway } from "@/lib/recentWaterways";
+import { useFeaturePicker } from "./useFeaturePicker";
+import { useMobilePanelState } from "./useMobilePanelState";
 
 export type RouteSearch = {
   waterway?: number;
@@ -33,8 +30,6 @@ export type RouteSearch = {
   max_diff?: number;
   mode?: "area";
 };
-
-const LEVEL_ORDER = ["empty", "low", "medium", "high"] as const;
 
 export function useMapPageState(search: RouteSearch) {
   const {
@@ -61,47 +56,26 @@ export function useMapPageState(search: RouteSearch) {
   const { favorites, favoritedIds, toggle: toggleFavorite } = useFavorites();
 
   // Feature suggestion: pick geometry vertices from the map
-  const [featurePickingActive, setFeaturePickingActive] = useState(false);
-  const [featureGeomType, setFeatureGeomType] = useState<
-    "Point" | "LineString" | "Polygon"
-  >("Point");
-  const [featureVertices, setFeatureVertices] = useState<
-    { lng: number; lat: number }[]
-  >([]);
-  // Feature being edited in the suggest-feature panel; null = creating new.
-  const [editFeature, setEditFeature] = useState<Feature | null>(null);
+  const featurePicker = useFeaturePicker();
+  const {
+    featurePickingActive,
+    setFeaturePickingActive,
+    featureGeomType,
+    setFeatureGeomType,
+    featureVertices,
+    setFeatureVertices,
+    editFeature,
+    handleMapPick,
+  } = featurePicker;
 
-  /** Open the suggest-feature panel prefilled with an existing feature; its
-   * geometry seeds the picker so it is visible and adjustable on the map. */
-  const startEditFeature = useCallback((f: Feature) => {
-    const loc = f.location;
-    if (loc.type === "Point") {
-      const [lng, lat] = loc.coordinates as [number, number];
-      setFeatureGeomType("Point");
-      setFeatureVertices([{ lng, lat }]);
-    } else if (loc.type === "LineString") {
-      setFeatureGeomType("LineString");
-      setFeatureVertices(
-        (loc.coordinates as [number, number][]).map(([lng, lat]) => ({
-          lng,
-          lat,
-        })),
-      );
-    } else if (loc.type === "Polygon") {
-      const ring = (loc.coordinates as [number, number][][])[0] ?? [];
-      setFeatureGeomType("Polygon");
-      setFeatureVertices(
-        // Drop the closing vertex; the picker re-closes the ring on submit.
-        ring.slice(0, Math.max(ring.length - 1, 0)).map(([lng, lat]) => ({
-          lng,
-          lat,
-        })),
-      );
-    }
-    setFeaturePickingActive(false);
-    setEditFeature(f);
-    setSuggestMode("feature");
-  }, []);
+  /** Open the suggest-feature panel prefilled with an existing feature. */
+  const startEditFeature = useCallback(
+    (f: Feature) => {
+      featurePicker.seedFromFeature(f);
+      setSuggestMode("feature");
+    },
+    [featurePicker.seedFromFeature],
+  );
 
   // Preview line drawn on the map (e.g. OSM river highlight in suggest flows)
   const [sectionPreviewCoords, setSectionPreviewCoords] = useState<
@@ -167,42 +141,14 @@ export function useMapPageState(search: RouteSearch) {
     enabled: selectedSectionId != null,
   });
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  // isMobileMapView lets the user toggle the overlay away to see the map while
-  // keeping the section selected. Auto-resets when section is deselected.
-  const [isMobileMapViewRaw, setIsMobileMapViewRaw] = useState(false);
-  const isMobileMapView = isMobileMapViewRaw && selectedWaterwayId != null;
-  const toggleMobileMapView = useCallback(
-    () => setIsMobileMapViewRaw((v) => !v),
-    [],
-  );
-
-  // isMobilePanelOpen is URL-driven so the browser back button works through
-  // overlay history: FAB → /?panel=1 → /?panel=1&waterway=123 → back → back
-  const setIsMobilePanelOpen = useCallback(
-    (open: boolean) => {
-      if (open) {
-        setIsMobileMapViewRaw(false); // ensure overlay is visible when explicitly opening
-        navigate({ search: (prev) => ({ ...prev, panel: "1" }) });
-      } else {
-        navigate({
-          search: (prev) => ({
-            ...prev,
-            panel: undefined,
-            waterway: undefined,
-            section: undefined,
-          }),
-        });
-      }
-    },
-    [navigate],
-  );
-  const isMobilePanelOpen =
-    isMobile &&
-    (panel === "1" || selectedWaterwayId != null) &&
-    !isMobileMapView;
+  const {
+    isMobile,
+    isMobileMapView,
+    toggleMobileMapView,
+    isMobilePanelOpen,
+    setIsMobilePanelOpen,
+    exitMapView,
+  } = useMobilePanelState(panel, selectedWaterwayId);
 
   const [previewRadius, setPreviewRadius] = useState<number | null>(null);
   const [isSearchPanelLoading, setIsSearchPanelLoading] = useState(false);
@@ -215,9 +161,9 @@ export function useMapPageState(search: RouteSearch) {
   // When suggest mode opens, always bring the overlay back (map-view hides it)
   useEffect(() => {
     if (suggestMode != null) {
-      setIsMobileMapViewRaw(false);
+      exitMapView();
     }
-  }, [suggestMode]);
+  }, [suggestMode, exitMapView]);
 
   // Stable identity per (lat, lon, radius) - camera effects and section
   // filters depend on this object; rebuilding it every render made the
@@ -294,43 +240,19 @@ export function useMapPageState(search: RouteSearch) {
     }
   }, [selectedWaterwayId, selectedWaterwayName]);
 
-  const searchWaterwayDetails = useQueries({
-    queries:
-      selectedWaterwayId == null
-        ? searchWaterwayIds.map((id) => ({
-            queryKey: waterwayKeys.detail(id),
-            queryFn: ({ signal }: { signal: AbortSignal }) =>
-              waterwaysApi.get(id, signal),
-            // Result ids change on every keystroke; don't refetch details
-            // that were already loaded for a previous search.
-            staleTime: 5 * 60 * 1000,
-          }))
-        : [],
-  });
-  const searchSections = useMemo(
-    () => searchWaterwayDetails.flatMap((q) => q.data?.sections ?? []),
-    [searchWaterwayDetails],
+  const searchResults = useSearchResultSections(
+    searchWaterwayIds,
+    selectedWaterwayId == null,
   );
-  const isAreaSearchLoading =
-    isSearchPanelLoading ||
-    searchWaterwayDetails.some((q) => q.isLoading || q.isFetching);
-
-  // Sections arrive one round trip after the rivers - the search returns ids,
-  // then each river's details are fetched - so any section count taken before
-  // they land is partial. A failed fetch leaves isPending false, so this
-  // cannot stick.
-  const areSearchSectionsPending = searchWaterwayDetails.some(
-    (q) => q.isPending,
-  );
+  const searchSections = searchResults.sections;
+  const isAreaSearchLoading = isSearchPanelLoading || searchResults.isFetching;
+  const areSearchSectionsPending = searchResults.arePending;
 
   const waterwayNames = useMemo(() => {
-    const map: Record<number, string> = {};
-    for (const q of searchWaterwayDetails) {
-      if (q.data) map[q.data.id] = q.data.name;
-    }
+    const map: Record<number, string> = { ...searchResults.names };
     if (selectedWaterway) map[selectedWaterway.id] = selectedWaterway.name;
     return map;
-  }, [searchWaterwayDetails, selectedWaterway]);
+  }, [searchResults.names, selectedWaterway]);
 
   const filteredSearchSections = useFilteredSections(searchSections, {
     areaCircle: isAreaMode ? areaCircle : null,
@@ -340,10 +262,18 @@ export function useMapPageState(search: RouteSearch) {
 
   const sectionIds = useMemo(() => sections.map((s) => s.id), [sections]);
   const shouldFetchGauges = selectedWaterwayId != null;
-  const allWaterStatuses = useAllSectionWaterStatus(
-    selectedWaterwayId ?? 0,
-    selectedWaterwayId != null ? sectionIds : [],
+  const sectionPairs = useMemo(
+    () =>
+      selectedWaterwayId != null
+        ? sectionIds.map((sectionId) => ({
+            waterwayId: selectedWaterwayId,
+            sectionId,
+          }))
+        : [],
+    [selectedWaterwayId, sectionIds],
   );
+  const { statuses: allWaterStatuses, levels: sectionLevels } =
+    useSectionLevels(sectionPairs);
   const { gaugePins, gaugeRanges, selectedGaugeRanges } = useGaugeData({
     allWaterStatuses,
     selectedGaugeId,
@@ -358,24 +288,6 @@ export function useMapPageState(search: RouteSearch) {
     return allWaterStatuses[idx]?.data?.ranges ?? [];
   }, [selectedSectionId, sectionIds, allWaterStatuses]);
 
-  const sectionLevels = useMemo(() => {
-    const map: Record<number, string> = {};
-    allWaterStatuses.forEach((q, i) => {
-      if (!q.data?.ranges.length || sectionIds[i] == null) return;
-      const maxLevel = q.data.ranges.reduce<(typeof LEVEL_ORDER)[number]>(
-        (best, r) => {
-          const level = r.level as (typeof LEVEL_ORDER)[number];
-          return LEVEL_ORDER.indexOf(level) > LEVEL_ORDER.indexOf(best)
-            ? level
-            : best;
-        },
-        "empty",
-      );
-      map[sectionIds[i]] = maxLevel;
-    });
-    return map;
-  }, [allWaterStatuses, sectionIds]);
-
   const searchSectionPairs = useMemo(
     () =>
       selectedWaterwayId == null
@@ -386,37 +298,11 @@ export function useMapPageState(search: RouteSearch) {
         : [],
     [selectedWaterwayId, filteredSearchSections],
   );
-  const searchWaterStatuses = useSectionWaterStatuses(searchSectionPairs);
-  const searchSectionLevels = useMemo(() => {
-    const map: Record<number, string> = {};
-    searchWaterStatuses.forEach((q, i) => {
-      if (!q.data?.ranges.length || searchSectionPairs[i] == null) return;
-      const maxLevel = q.data.ranges.reduce<(typeof LEVEL_ORDER)[number]>(
-        (best, r) => {
-          const level = r.level as (typeof LEVEL_ORDER)[number];
-          return LEVEL_ORDER.indexOf(level) > LEVEL_ORDER.indexOf(best)
-            ? level
-            : best;
-        },
-        "empty",
-      );
-      map[searchSectionPairs[i].sectionId] = maxLevel;
-    });
-    return map;
-  }, [searchWaterStatuses, searchSectionPairs]);
+  const { levels: searchSectionLevels } = useSectionLevels(searchSectionPairs);
 
   const handleGaugeClick = useCallback((pin: GaugePin) => {
     setSelectedGaugeId((prev) => (prev === pin.id ? null : pin.id));
   }, []);
-
-  const handleMapPick = useCallback(
-    (lng: number, lat: number) => {
-      if (featurePickingActive) {
-        setFeatureVertices((prev) => [...prev, { lng, lat }]);
-      }
-    },
-    [featurePickingActive],
-  );
 
   const handleGaugeSelect = useCallback((gaugeId: number) => {
     setSelectedGaugeId((prev) => (prev === gaugeId ? null : gaugeId));
@@ -455,12 +341,15 @@ export function useMapPageState(search: RouteSearch) {
   /** Clears all suggest/feature-picking state (called when suggestMode is set to null). */
   const clearSuggestState = useCallback(() => {
     setSectionPreviewCoords(null);
-    setFeatureVertices([]);
-    setFeaturePickingActive(false);
-    setFeatureGeomType("Point");
     setSuggestWaterwayName("");
-    setEditFeature(null);
-  }, []);
+    featurePicker.reset();
+  }, [featurePicker.reset]);
+
+  /** Leave suggest mode AND clear its state - the two must always pair. */
+  const closeSuggest = useCallback(() => {
+    setSuggestMode(null);
+    clearSuggestState();
+  }, [clearSuggestState]);
 
   return {
     // URL-derived (read-only from search params)
@@ -540,6 +429,7 @@ export function useMapPageState(search: RouteSearch) {
     handleMapPick,
     handleGaugeSelect,
     clearSuggestState,
+    closeSuggest,
   };
 }
 

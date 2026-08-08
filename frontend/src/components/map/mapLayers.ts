@@ -1,5 +1,6 @@
 import type { Feature, SectionWithFeatures } from "@/lib/api";
-import { representativePoint } from "@/lib/geo";
+import { humanize } from "@/lib/format";
+import { lineCoords, pointCoords, representativePoint } from "@/lib/geo";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
 
@@ -89,9 +90,8 @@ export function buildSectionLabelsGeoJSON(
   return {
     type: "FeatureCollection",
     features: sections.flatMap((s) => {
-      const geom = s.location as unknown as GeoJSON.LineString;
-      if (geom?.type !== "LineString" || !geom.coordinates.length) return [];
-      const coords = geom.coordinates;
+      const coords = lineCoords(s.location);
+      if (!coords?.length) return [];
       const sum = coords.reduce(
         (acc, c) => [acc[0] + c[0], acc[1] + c[1]],
         [0, 0],
@@ -129,8 +129,8 @@ export function buildSectionEndpointsGeoJSON(
   return {
     type: "FeatureCollection",
     features: sections.flatMap((s) => {
-      const geom = s.location as unknown as GeoJSON.LineString;
-      if (geom?.type !== "LineString" || !geom.coordinates.length) return [];
+      const coords = lineCoords(s.location);
+      if (!coords?.length) return [];
       const level = sectionLevels?.[s.id] ?? "empty";
       const commonProps = { section_id: s.id, name: s.name, level };
 
@@ -147,7 +147,10 @@ export function buildSectionEndpointsGeoJSON(
               type: "Feature" as const,
               id: f.id,
               properties: { ...commonProps, kind: "put_in", feature_id: f.id },
-              geometry: f.location as GeoJSON.Point,
+              geometry: {
+                type: "Point" as const,
+                coordinates: pointCoords(f.location) ?? coords[0],
+              },
             }))
           : [
               {
@@ -156,7 +159,7 @@ export function buildSectionEndpointsGeoJSON(
                 properties: { ...commonProps, kind: "put_in" },
                 geometry: {
                   type: "Point" as const,
-                  coordinates: geom.coordinates[0],
+                  coordinates: coords[0],
                 },
               },
             ];
@@ -171,7 +174,11 @@ export function buildSectionEndpointsGeoJSON(
                 kind: "take_out",
                 feature_id: f.id,
               },
-              geometry: f.location as GeoJSON.Point,
+              geometry: {
+                type: "Point" as const,
+                coordinates:
+                  pointCoords(f.location) ?? coords[coords.length - 1],
+              },
             }))
           : [
               {
@@ -180,7 +187,7 @@ export function buildSectionEndpointsGeoJSON(
                 properties: { ...commonProps, kind: "take_out" },
                 geometry: {
                   type: "Point" as const,
-                  coordinates: geom.coordinates[geom.coordinates.length - 1],
+                  coordinates: coords[coords.length - 1],
                 },
               },
             ];
@@ -195,16 +202,16 @@ export function buildPutInTakeOutConnectorsGeoJSON(
 ): GeoJSON.FeatureCollection {
   const connectors: GeoJSON.Feature[] = [];
   for (const s of sections) {
-    const geom = s.location as unknown as GeoJSON.LineString;
-    if (geom?.type !== "LineString" || geom.coordinates.length < 2) continue;
-    const line = geom.coordinates as [number, number][];
+    const line = lineCoords(s.location);
+    if (!line || line.length < 2) continue;
     const accessPoints = (s.features ?? []).filter(
       (f) =>
         (f.feature_type === "put_in" || f.feature_type === "take_out") &&
         f.location.type === "Point",
     );
     for (const ap of accessPoints) {
-      const pt = (ap.location as GeoJSON.Point).coordinates as [number, number];
+      const pt = pointCoords(ap.location);
+      if (!pt) continue;
       const nearest = nearestPointOnPolyline(pt, line);
       // Skip if point is essentially on the section line (~10 m threshold)
       if (Math.hypot(nearest[0] - pt[0], nearest[1] - pt[1]) < 0.0001) continue;
@@ -229,25 +236,30 @@ export function buildPointFeaturesGeoJSON(
   features: Feature[],
   language: string,
 ): GeoJSON.FeatureCollection {
-  const points = features.filter(
-    (f) =>
-      f.location.type === "Point" &&
-      f.feature_type !== "put_in" &&
-      f.feature_type !== "take_out",
-  );
   return {
     type: "FeatureCollection",
-    features: points.map((f) => ({
-      type: "Feature" as const,
-      id: f.id,
-      properties: {
-        id: f.id,
-        feature_type: f.feature_type,
-        label: featureLabel(f, language) || f.feature_type.replace(/_/g, " "),
-        color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
-      },
-      geometry: f.location as GeoJSON.Point,
-    })),
+    features: features.flatMap((f) => {
+      if (
+        f.location.type !== "Point" ||
+        f.feature_type === "put_in" ||
+        f.feature_type === "take_out"
+      ) {
+        return [];
+      }
+      return [
+        {
+          type: "Feature" as const,
+          id: f.id,
+          properties: {
+            id: f.id,
+            feature_type: f.feature_type,
+            label: featureLabel(f, language) || humanize(f.feature_type),
+            color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
+          },
+          geometry: f.location,
+        },
+      ];
+    }),
   };
 }
 
@@ -255,10 +267,12 @@ export function buildLineFeaturesGeoJSON(
   features: Feature[],
   language: string,
 ): GeoJSON.FeatureCollection {
-  const lines = features.filter((f) => f.location.type === "LineString");
+  const lines = features.flatMap((f) =>
+    f.location.type === "LineString" ? [{ f, geometry: f.location }] : [],
+  );
   return {
     type: "FeatureCollection",
-    features: lines.map((f, index) => ({
+    features: lines.map(({ f, geometry }, index) => ({
       type: "Feature" as const,
       id: f.id,
       properties: {
@@ -269,7 +283,7 @@ export function buildLineFeaturesGeoJSON(
         stack: index,
         color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
       },
-      geometry: f.location as GeoJSON.LineString,
+      geometry,
     })),
   };
 }
@@ -280,12 +294,11 @@ export function buildLineFeatureLabelsGeoJSON(
   features: Feature[],
   language: string,
 ): GeoJSON.FeatureCollection {
-  const lines = features.filter(
-    (f) => f.location.type === "LineString" || f.location.type === "Polygon",
-  );
   return {
     type: "FeatureCollection",
-    features: lines.flatMap((f) => {
+    features: features.flatMap((f) => {
+      const loc = f.location;
+      if (loc.type !== "LineString" && loc.type !== "Polygon") return [];
       const label = featureLabel(f, language);
       if (!label) return [];
       return [
@@ -294,9 +307,7 @@ export function buildLineFeatureLabelsGeoJSON(
           properties: { label },
           geometry: {
             type: "Point" as const,
-            coordinates: representativePoint(
-              f.location as GeoJSON.LineString | GeoJSON.Polygon,
-            ),
+            coordinates: representativePoint(loc),
           },
         },
       ];
@@ -308,12 +319,11 @@ export function buildLineFeatureLabelsGeoJSON(
 export function buildLineFeatureEndpointsGeoJSON(
   features: Feature[],
 ): GeoJSON.FeatureCollection {
-  const lines = features.filter((f) => f.location.type === "LineString");
   return {
     type: "FeatureCollection",
-    features: lines.flatMap((f) => {
-      const coords = (f.location as GeoJSON.LineString).coordinates;
-      if (coords.length < 2) return [];
+    features: features.flatMap((f) => {
+      const coords = lineCoords(f.location);
+      if (!coords || coords.length < 2) return [];
       const color = FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary;
       return [coords[0], coords[coords.length - 1]].map((c) => ({
         type: "Feature" as const,
@@ -329,24 +339,29 @@ export function buildProposedPointFeaturesGeoJSON(
   features: Feature[],
   language: string,
 ): GeoJSON.FeatureCollection {
-  const points = features.filter(
-    (f) =>
-      f.location.type === "Point" &&
-      f.feature_type !== "put_in" &&
-      f.feature_type !== "take_out",
-  );
   return {
     type: "FeatureCollection",
-    features: points.map((f) => ({
-      type: "Feature" as const,
-      id: f.id,
-      properties: {
-        id: f.id,
-        label: featureLabel(f, language) || f.feature_type.replace(/_/g, " "),
-        color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
-      },
-      geometry: f.location as GeoJSON.Point,
-    })),
+    features: features.flatMap((f) => {
+      if (
+        f.location.type !== "Point" ||
+        f.feature_type === "put_in" ||
+        f.feature_type === "take_out"
+      ) {
+        return [];
+      }
+      return [
+        {
+          type: "Feature" as const,
+          id: f.id,
+          properties: {
+            id: f.id,
+            label: featureLabel(f, language) || humanize(f.feature_type),
+            color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
+          },
+          geometry: f.location,
+        },
+      ];
+    }),
   };
 }
 
@@ -356,12 +371,14 @@ export function buildProposedLineFeaturesGeoJSON(
   features: Feature[],
   language: string,
 ): GeoJSON.FeatureCollection {
-  const lines = features.filter(
-    (f) => f.location.type === "LineString" || f.location.type === "Polygon",
+  const lines = features.flatMap((f) =>
+    f.location.type === "LineString" || f.location.type === "Polygon"
+      ? [{ f, geometry: f.location }]
+      : [],
   );
   return {
     type: "FeatureCollection",
-    features: lines.map((f, index) => ({
+    features: lines.map(({ f, geometry }, index) => ({
       type: "Feature" as const,
       id: f.id,
       properties: {
@@ -371,7 +388,7 @@ export function buildProposedLineFeaturesGeoJSON(
         stack: index,
         color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
       },
-      geometry: f.location as GeoJSON.LineString | GeoJSON.Polygon,
+      geometry,
     })),
   };
 }

@@ -11,10 +11,8 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { followsApi } from "@/lib/api";
-import { useFollows } from "@/lib/hooks/useFollows";
+import { useAllUsers, useFollows } from "@/lib/hooks/useFollows";
 import { useSession } from "@/lib/hooks/useSession";
 
 /** Follow requests, following/followers lists and user search. */
@@ -31,11 +29,8 @@ export default function SocialPanel() {
   } = useFollows();
   const [search, setSearch] = useState("");
 
-  const { data: allUsers = [], isLoading: usersLoading } = useQuery({
-    queryKey: ["follows", "all"],
-    queryFn: () => followsApi.listAll(),
-    enabled: isAuthenticated,
-  });
+  const { data: allUsers = [], isLoading: usersLoading } =
+    useAllUsers(isAuthenticated);
 
   const filtered = search.trim()
     ? allUsers.filter((u) =>
@@ -73,11 +68,7 @@ export default function SocialPanel() {
             </Typography>
           ) : (
             filtered.map((u) => (
-              <Paper
-                key={u.id}
-                variant="outlined"
-                sx={{ px: 2, py: 1.5, borderRadius: 0 }}
-              >
+              <Paper key={u.id} variant="outlined" sx={{ px: 2, py: 1.5 }}>
                 <Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
                   <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
                     {u.username}
@@ -129,11 +120,7 @@ export default function SocialPanel() {
                   Pending requests ({pendingRequests.length})
                 </Typography>
                 {pendingRequests.map((u) => (
-                  <Paper
-                    key={u.id}
-                    variant="outlined"
-                    sx={{ px: 2, py: 1.5, borderRadius: 0 }}
-                  >
+                  <Paper key={u.id} variant="outlined" sx={{ px: 2, py: 1.5 }}>
                     <Stack
                       direction="row"
                       sx={{ alignItems: "center", gap: 1 }}
@@ -179,11 +166,7 @@ export default function SocialPanel() {
               </Typography>
             ) : (
               following.map((u) => (
-                <Paper
-                  key={u.id}
-                  variant="outlined"
-                  sx={{ px: 2, py: 1.5, borderRadius: 0 }}
-                >
+                <Paper key={u.id} variant="outlined" sx={{ px: 2, py: 1.5 }}>
                   <Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
                     <Typography
                       variant="body2"
@@ -218,11 +201,7 @@ export default function SocialPanel() {
               </Typography>
             ) : (
               followers.map((u) => (
-                <Paper
-                  key={u.id}
-                  variant="outlined"
-                  sx={{ px: 2, py: 1.5, borderRadius: 0 }}
-                >
+                <Paper key={u.id} variant="outlined" sx={{ px: 2, py: 1.5 }}>
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
                     {u.username}
                   </Typography>

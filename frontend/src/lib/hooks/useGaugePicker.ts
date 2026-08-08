@@ -1,11 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import type {
   FeatureWaterRangeBody,
   GaugeWithSeries,
   WaterRangeWithStatus,
 } from "@/lib/api";
-import { gaugesApi } from "@/lib/api";
+import { useDebouncedValue } from "./useDebouncedValue";
+import { useGaugeSearch } from "./useGauges";
 
 interface UseGaugePickerOptions {
   /** Ranges already attached to the section - offered as the first options. */
@@ -71,27 +71,11 @@ export function useGaugePicker({
 
   // Search the full gauge collection (all providers), nearby-first
   const [gaugeQuery, setGaugeQuery] = useState("");
-  const [debouncedGaugeQuery, setDebouncedGaugeQuery] = useState("");
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedGaugeQuery(gaugeQuery), 400);
-    return () => clearTimeout(timer);
-  }, [gaugeQuery]);
-  const { data: searchedGauges } = useQuery({
-    queryKey: [
-      "gauge-search",
-      debouncedGaugeQuery,
-      nearPoint?.lat,
-      nearPoint?.lon,
-    ],
-    queryFn: () =>
-      gaugesApi.search({
-        q: debouncedGaugeQuery || undefined,
-        lat: nearPoint?.lat,
-        lon: nearPoint?.lon,
-        limit: 15,
-      }),
-    staleTime: 60_000,
-  });
+  const debouncedGaugeQuery = useDebouncedValue(gaugeQuery, 400);
+  const { data: searchedGauges } = useGaugeSearch(
+    debouncedGaugeQuery,
+    nearPoint,
+  );
 
   const sectionGaugeIds = useMemo(
     () => new Set(sectionGauges.map((g) => g.id)),

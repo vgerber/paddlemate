@@ -1,14 +1,22 @@
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineOutlined";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import LoadingBox from "@/components/states/LoadingBox";
 import { getUserManager } from "@/lib/auth";
+import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
 
 export const Route = createFileRoute("/auth/callback")({
   component: AuthCallback,
 });
 
+/** OAuth redirect target: completes the sign-in and returns to the map. */
 function AuthCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  // StrictMode double-invokes effects; the token exchange must run once.
   const hasProcessed = useRef(false);
 
   useEffect(() => {
@@ -17,24 +25,7 @@ function AuthCallback() {
 
     getUserManager()
       .signinRedirectCallback()
-      .then(() =>
-        navigate({
-          to: "/",
-          search: {
-            waterway: undefined,
-            section: undefined,
-            q: undefined,
-            country: undefined,
-            min_diff: undefined,
-            max_diff: undefined,
-            mode: undefined,
-            lat: undefined,
-            lon: undefined,
-            radius: undefined,
-            panel: undefined,
-          },
-        }),
-      )
+      .then(() => navigate({ to: "/", search: EMPTY_MAP_SEARCH }))
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : "Authentication failed");
       });
@@ -42,38 +33,34 @@ function AuthCallback() {
 
   if (error) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        <p>Authentication error: {error}</p>
-        <button
-          type="button"
-          onClick={() =>
-            navigate({
-              to: "/",
-              search: {
-                waterway: undefined,
-                section: undefined,
-                q: undefined,
-                country: undefined,
-                min_diff: undefined,
-                max_diff: undefined,
-                mode: undefined,
-                lat: undefined,
-                lon: undefined,
-                radius: undefined,
-                panel: undefined,
-              },
-            })
-          }
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 2,
+          pt: 10,
+          px: 2,
+          textAlign: "center",
+        }}
+      >
+        <ErrorOutlineIcon sx={{ fontSize: 56, color: "text.disabled" }} />
+        <Typography variant="h6" color="text.secondary">
+          Sign-in failed
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {error}
+        </Typography>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={() => navigate({ to: "/", search: EMPTY_MAP_SEARCH })}
         >
           Go home
-        </button>
-      </div>
+        </Button>
+      </Box>
     );
   }
 
-  return (
-    <div style={{ padding: "2rem", textAlign: "center" }}>
-      Completing sign-in…
-    </div>
-  );
+  return <LoadingBox size={40} pt={10} />;
 }

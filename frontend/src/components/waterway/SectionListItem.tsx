@@ -9,6 +9,7 @@ import ListItemText from "@mui/material/ListItemText";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import type { SectionWithFeatures } from "@/lib/api";
 import { localizedName } from "@/lib/localization";
+import { theme } from "@/lib/theme";
 
 interface SectionListItemProps {
   section: SectionWithFeatures;
@@ -48,7 +49,7 @@ export default function SectionListItem({
     <ListItemButton
       selected={selected}
       onClick={() => onClick(section.id)}
-      sx={{ borderRadius: 1, py: 0.5 }}
+      sx={{ py: 0.5 }}
     >
       <ListItemText
         primary={localizedName(section.name, section.names)}
@@ -98,7 +99,10 @@ export default function SectionListItem({
               sx={{ p: 0.25 }}
             >
               {isFavorite ? (
-                <StarIcon fontSize="small" sx={{ color: "warning.main" }} />
+                <StarIcon
+                  fontSize="small"
+                  sx={{ color: theme.tokens.tertiary }}
+                />
               ) : (
                 <StarBorderIcon fontSize="small" />
               )}

@@ -1,11 +1,12 @@
 import HowToVoteOutlinedIcon from "@mui/icons-material/HowToVoteOutlined";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import EmptyState from "@/components/states/EmptyState";
+import LoadingBox from "@/components/states/LoadingBox";
 import ProposalCard from "@/components/waterway/ProposalCard";
 import type {
   ProposalEntityType,
@@ -153,27 +154,16 @@ export default function ProposalsView({
 
       {/* List */}
       {isLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-          <CircularProgress />
-        </Box>
+        <LoadingBox size={40} py={6} />
       ) : !proposals || proposals.length === 0 ? (
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 1.5,
-            pt: 6,
-            px: 2,
-          }}
-        >
-          <HowToVoteOutlinedIcon
-            sx={{ fontSize: 56, color: "text.disabled" }}
-          />
-          <Typography variant="body2" color="text.secondary">
-            No {status} proposals.
-          </Typography>
-        </Box>
+        <EmptyState
+          icon={
+            <HowToVoteOutlinedIcon
+              sx={{ fontSize: 56, color: "text.disabled" }}
+            />
+          }
+          title={`No ${status} proposals.`}
+        />
       ) : (
         <Box sx={{ borderTop: "1px solid", borderColor: "divider" }}>
           {proposals.map((p) => (

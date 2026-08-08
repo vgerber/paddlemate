@@ -4,10 +4,10 @@ import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import type { WaterwayListItem } from "@/lib/api";
+import RiverRow from "./RiverRow";
 
 interface PendingRiver {
   id: number;
@@ -48,26 +48,20 @@ function RiverItem({
   onSelect: (id: number) => void;
 }) {
   return (
-    <ListItemButton
+    <RiverRow
+      name={waterway.name}
+      secondary={matchReason(waterway)}
       onClick={() => onSelect(waterway.id)}
-      sx={{ borderRadius: 1, mb: 0.5 }}
-    >
-      <ListItemText
-        primary={waterway.name}
-        secondary={matchReason(waterway)}
-        slotProps={{
-          primary: { variant: "body2", sx: { fontWeight: 600 } },
-          secondary: { variant: "caption" },
-        }}
-      />
-      <Chip
-        label={waterway.waterway_type.toUpperCase()}
-        color="primary"
-        size="small"
-        variant="outlined"
-        sx={{ flexShrink: 0, fontSize: "0.65rem" }}
-      />
-    </ListItemButton>
+      trailing={
+        <Chip
+          label={waterway.waterway_type.toUpperCase()}
+          color="primary"
+          size="small"
+          variant="outlined"
+          sx={{ flexShrink: 0, fontSize: "0.65rem" }}
+        />
+      }
+    />
   );
 }
 
@@ -94,10 +88,7 @@ function PendingRiverItems({
   return (
     <>
       {pendingRivers.map((p) => (
-        <ListItem
-          key={`pending-${p.id}`}
-          sx={{ borderRadius: 1, mb: 0.5, opacity: 0.6 }}
-        >
+        <ListItem key={`pending-${p.id}`} sx={{ mb: 0.5, opacity: 0.6 }}>
           <ListItemText
             primary={p.name}
             slotProps={{

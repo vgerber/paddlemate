@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import { useRef, useState } from "react";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Feature, WaterRangeWithStatus } from "@/lib/api";
+import { lineCoords } from "@/lib/geo";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import type { GeometryPicking } from "./GeometryPicker";
 import SuggestFeatureForm from "./SuggestFeatureForm";
@@ -30,14 +31,9 @@ export default function SuggestFeaturePanel({
   const sections = waterway?.sections ?? [];
 
   const selectedSection = sections.find((s) => s.id === sectionId);
-  const sectionLine = (() => {
-    const geom = selectedSection?.location as unknown as
-      | GeoJSON.LineString
-      | undefined;
-    return geom?.type === "LineString"
-      ? geom.coordinates.map(([lng, lat]) => ({ lng, lat }))
-      : undefined;
-  })();
+  const sectionLine = lineCoords(selectedSection?.location)?.map(
+    ([lng, lat]) => ({ lng, lat }),
+  );
 
   const submitRef = useRef<(() => void) | null>(null);
   const [canSubmit, setCanSubmit] = useState(false);

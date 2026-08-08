@@ -1,15 +1,11 @@
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
+import { lineCoords } from "@/lib/geo";
+import { useDeleteFeature } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
-import { useDeleteFeature } from "@/lib/hooks/useWaterways";
 import { fonts, theme } from "@/lib/theme";
 import { PointEntry } from "./PointEntry";
 import { featureName } from "./utils";
@@ -50,24 +46,22 @@ export default function FeatureTimeline({
   const activeId =
     activeFeatureId !== undefined ? activeFeatureId : internalActiveId;
   const setActiveId = onActiveFeatureChange ?? setInternalActiveId;
-  const lineCoords = useMemo((): [number, number][] => {
-    if (section.location?.type !== "LineString") return [];
-    return (section.location.coordinates as number[][]).map(
-      (c): [number, number] => [c[0], c[1]],
-    );
-  }, [section.location]);
+  const sectionLine = useMemo(
+    () => lineCoords(section.location) ?? [],
+    [section.location],
+  );
 
   const tree = useMemo(() => {
-    const approved = section.features.map((f) => computeExtent(f, lineCoords));
+    const approved = section.features.map((f) => computeExtent(f, sectionLine));
     const proposed = showProposed
       ? proposals
-          .map((p) => proposalToComputedFeature(p, lineCoords))
+          .map((p) => proposalToComputedFeature(p, sectionLine))
           .filter((cf): cf is ComputedFeature => cf !== null)
       : [];
     const all = [...approved, ...proposed];
     if (!all.length) return [];
     return buildTree(all);
-  }, [section.features, proposals, showProposed, lineCoords]);
+  }, [section.features, proposals, showProposed, sectionLine]);
 
   // Existing features with a pending delete proposal get a marker icon.
   const pendingDeleteIds = useMemo(
@@ -160,35 +154,17 @@ export default function FeatureTimeline({
         ),
       )}
 
-      {/* Delete confirmation - same dialog pattern as proposal review */}
-      <Dialog
+      <ConfirmDialog
         open={deleteTarget !== null}
-        onClose={() => setDeleteTarget(null)}
-      >
-        <DialogTitle>Delete feature?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {deleteTarget ? `"${featureName(deleteTarget.feature)}" ` : ""}
-            The deletion is submitted as a proposal first; the feature stays
-            until the proposal is approved.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setDeleteTarget(null)}
-            disabled={deleteFeature.isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={confirmDelete}
-            color="error"
-            disabled={deleteFeature.isPending}
-          >
-            {deleteFeature.isPending ? "Submitting…" : "Delete"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        title="Delete feature?"
+        body={`${deleteTarget ? `"${featureName(deleteTarget.feature)}" - the` : "The"} deletion is submitted as a proposal first; the feature stays until the proposal is approved.`}
+        confirmLabel="Delete"
+        pendingLabel="Submitting…"
+        color="error"
+        pending={deleteFeature.isPending}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
     </Stack>
   );
 }

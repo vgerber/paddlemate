@@ -1,10 +1,7 @@
 import Box from "@mui/material/Box";
 import Slide from "@mui/material/Slide";
-import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
-import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
-import { defaultRangeFeature } from "@/components/waterway/section-details/utils";
-import { localizedName } from "@/lib/localization";
+import MapCharts from "./MapCharts";
 import SectionSpeedDial from "./SectionSpeedDial";
 import SidebarContent from "./SidebarContent";
 import type { MapPageState } from "./useMapPageState";
@@ -21,25 +18,13 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
   const {
     isMobilePanelOpen,
     setIsMobilePanelOpen,
-    selectedWaterwayId,
     selectedSectionId,
     sectionDetailTab,
-    selectedGaugeId,
-    setSelectedGaugeId,
-    selectedGaugeRanges,
-    sections,
     isMobileMapView,
     toggleMobileMapView,
     suggestMode,
-    selectedFeatureId,
   } = state;
 
-  const selectedSection = sections.find((s) => s.id === selectedSectionId);
-  const sectionName = selectedSection?.name;
-  const selectedFeature =
-    selectedFeatureId != null
-      ? selectedSection?.features.find((f) => f.id === selectedFeatureId)
-      : undefined;
   const closeOverlay = () => setIsMobilePanelOpen(false);
   // The chart is hidden on the section Logs tab to give the list more space.
   const chartsHidden = selectedSectionId != null && sectionDetailTab === "logs";
@@ -82,37 +67,7 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
         </Box>
 
         {/* Charts shown inline in the overlay on mobile (hidden in suggest mode) */}
-        {!suggestMode &&
-          !chartsHidden &&
-          (selectedGaugeId != null && selectedGaugeRanges.length > 0 ? (
-            <GaugeChartPanel
-              ranges={selectedGaugeRanges}
-              onClose={() => setSelectedGaugeId(null)}
-            />
-          ) : selectedSectionId != null && selectedWaterwayId != null ? (
-            <SectionChartPanel
-              waterwayId={selectedWaterwayId}
-              sectionId={selectedSectionId}
-              sectionName={sectionName}
-              selectedFeatureId={selectedFeatureId}
-              preferredFeatureId={
-                selectedSection
-                  ? defaultRangeFeature(selectedSection)?.id
-                  : undefined
-              }
-              selectedFeature={
-                selectedFeature
-                  ? {
-                      name: localizedName(
-                        selectedFeature.names[0]?.name ?? "",
-                        selectedFeature.names,
-                      ),
-                      type: selectedFeature.feature_type,
-                    }
-                  : null
-              }
-            />
-          ) : null)}
+        {!suggestMode && <MapCharts state={state} />}
 
         {/* Speed Dial - section-specific actions on mobile */}
         <SectionSpeedDial

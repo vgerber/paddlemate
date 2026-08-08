@@ -59,7 +59,7 @@ export default function SidebarContent({
     selectedSectionGaugeRanges,
     suggestMode,
     setSuggestMode,
-    clearSuggestState,
+    closeSuggest,
     setSectionPreviewCoords,
     featureVertices,
     setFeatureVertices,
@@ -86,10 +86,7 @@ export default function SidebarContent({
         initialName={suggestWaterwayName}
         mapBounds={mapBounds}
         onPreviewCoordsChange={setSectionPreviewCoords}
-        onClose={() => {
-          setSuggestMode(null);
-          clearSuggestState();
-        }}
+        onClose={closeSuggest}
       />
     );
   }
@@ -134,10 +131,7 @@ export default function SidebarContent({
             ? selectedSectionGaugeRanges
             : gaugeRanges
         }
-        onClose={() => {
-          setSuggestMode(null);
-          clearSuggestState();
-        }}
+        onClose={closeSuggest}
         geometry={{
           vertices: featureVertices,
           geomType: featureGeomType,
@@ -189,13 +183,15 @@ export default function SidebarContent({
       onToggleFavorite={toggleFavorite}
       onMobileMapToggle={onMobileMapToggle}
       mobileMapActive={mobileMapActive}
-      onFeatureClick={(coords) => setFocusedPoint(coords)}
-      onEditFeature={startEditFeature}
-      activeFeatureId={selectedFeatureId}
-      onActiveFeatureChange={setSelectedFeatureId}
-      showProposedFeatures={showProposedFeatures}
-      onToggleProposedFeatures={toggleShowProposedFeatures}
-      featureProposals={featureProposals}
+      featureTimeline={{
+        onFeatureClick: setFocusedPoint,
+        onEditFeature: startEditFeature,
+        activeFeatureId: selectedFeatureId,
+        onActiveFeatureChange: setSelectedFeatureId,
+        showProposed: showProposedFeatures,
+        onToggleProposed: toggleShowProposedFeatures,
+        proposals: featureProposals,
+      }}
     />
   );
 }

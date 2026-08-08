@@ -9,18 +9,17 @@ import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
-import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
-import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import WaterwayMap from "@/components/map/Map";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import AreaControls from "@/components/search/AreaControls";
 import {
-  defaultRangeFeature,
   proposalToPseudoFeature,
   spansWholeSection,
 } from "@/components/waterway/section-details/utils";
+import { lineCoords } from "@/lib/geo";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
+import MapCharts from "./MapCharts";
 import SectionSpeedDial from "./SectionSpeedDial";
 import type { MapPageState } from "./useMapPageState";
 
@@ -40,14 +39,12 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
   const {
     selectedWaterwayId,
     selectedSectionId,
-    sectionDetailTab,
     sections,
     filteredSearchSections,
     suggestMode,
     handleSectionClick,
     gaugePins,
     selectedGaugeId,
-    setSelectedGaugeId,
     handleGaugeClick,
     areaCircle,
     setAreaCircle,
@@ -69,13 +66,11 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     isAreaMode,
     isMobile,
     isAreaSearchLoading,
-    selectedGaugeRanges,
     isMobileMapView,
     toggleMobileMapView,
     showProposedFeatures,
     featureProposals,
     setMapBounds,
-    selectedFeatureId,
   } = state;
 
   const LEVEL_COLORS: Record<string, string> = theme.tokens.levelColors;
@@ -84,19 +79,6 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
   const sectionName = selectedSection
     ? localizedName(selectedSection.name, selectedSection.names)
     : undefined;
-  const selectedFeature =
-    selectedFeatureId != null
-      ? selectedSection?.features.find((f) => f.id === selectedFeatureId)
-      : undefined;
-  const selectedFeatureInfo = selectedFeature
-    ? {
-        name: localizedName(
-          selectedFeature.names[0]?.name ?? "",
-          selectedFeature.names,
-        ),
-        type: selectedFeature.feature_type,
-      }
-    : null;
   const waterwayName =
     selectedWaterwayId != null ? waterwayNames[selectedWaterwayId] : undefined;
   const sectionLevel =
@@ -121,11 +103,8 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
   // but off the map.
   const mapFeatures = useMemo(() => {
     if (!selectedSection) return undefined;
-    if (selectedSection.location.type !== "LineString")
-      return selectedSection.features;
-    const line = (selectedSection.location.coordinates as number[][]).map(
-      (c): [number, number] => [c[0], c[1]],
-    );
+    const line = lineCoords(selectedSection.location);
+    if (!line) return selectedSection.features;
     return selectedSection.features.filter((f) => !spansWholeSection(f, line));
   }, [selectedSection]);
 
@@ -334,29 +313,9 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
         )}
       </Box>
 
-      {/* Charts - desktop only (hidden while viewing section logs) */}
+      {/* Charts - desktop only */}
       <Box sx={{ display: { xs: "none", md: "block" } }}>
-        {selectedSectionId != null &&
-        sectionDetailTab === "logs" ? null : selectedGaugeId != null &&
-          selectedGaugeRanges.length > 0 ? (
-          <GaugeChartPanel
-            ranges={selectedGaugeRanges}
-            onClose={() => setSelectedGaugeId(null)}
-          />
-        ) : selectedSectionId != null && selectedWaterwayId != null ? (
-          <SectionChartPanel
-            waterwayId={selectedWaterwayId}
-            sectionId={selectedSectionId}
-            sectionName={sectionName}
-            selectedFeatureId={selectedFeatureId}
-            selectedFeature={selectedFeatureInfo}
-            preferredFeatureId={
-              selectedSection
-                ? defaultRangeFeature(selectedSection)?.id
-                : undefined
-            }
-          />
-        ) : null}
+        <MapCharts state={state} />
       </Box>
     </Box>
   );

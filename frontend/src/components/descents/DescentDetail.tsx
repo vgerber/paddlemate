@@ -1,62 +1,33 @@
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
-import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import WaterwayMap from "@/components/map/Map";
-import type {
-  Descent,
-  SectionWaterSnapshot,
-  SectionWithFeatures,
-} from "@/lib/api";
+import type { Descent, SectionWithFeatures } from "@/lib/api";
+import { toPseudoSection, uniqueSnapshotsBySeries } from "@/lib/descents";
+import {
+  durationLabel,
+  formatDate,
+  formatReading,
+  formatTime,
+} from "@/lib/format";
+import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
+import { fonts, labelSx } from "@/lib/theme";
+import { levelConfig } from "@/lib/waterLevel";
 
-/** One snapshot per gauge series - older descents stored one per feature
- * range, which would repeat the same reading. */
-export function uniqueSnapshotsBySeries(
-  snaps: SectionWaterSnapshot[],
-): SectionWaterSnapshot[] {
-  return snaps.filter(
-    (s, i) => snaps.findIndex((x) => x.series_id === s.series_id) === i,
-  );
-}
+const formatDateWithWeekday = (iso: string) =>
+  formatDate(iso, { weekday: true });
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
-
-function durationLabel(start: string, end: string): string | null {
-  const ms = new Date(end).getTime() - new Date(start).getTime();
-  if (ms <= 0) return null;
-  const h = Math.floor(ms / 3600000);
-  const m = Math.floor((ms % 3600000) / 60000);
-  if (h === 0) return m > 0 ? `${m}m` : null;
-  return m === 0 ? `${h}h` : `${h}h ${m}m`;
-}
-
-const labelSx = {
+const factLabelSx = {
+  ...labelSx,
   fontSize: "0.6rem",
-  textTransform: "uppercase",
   letterSpacing: "0.1em",
   color: "text.disabled",
-  fontFamily: '"Space Grotesk", monospace',
 } as const;
 
 const valueSx = {
-  fontFamily: '"Space Grotesk", monospace',
+  fontFamily: fonts.label,
   fontSize: "0.8rem",
 } as const;
 
@@ -71,11 +42,11 @@ function Fact({
 }) {
   return (
     <Box>
-      <Typography sx={labelSx}>{label}</Typography>
+      <Typography sx={factLabelSx}>{label}</Typography>
       <Typography sx={valueSx}>{value}</Typography>
       {caption && (
         <Typography
-          sx={{ ...labelSx, textTransform: "none", letterSpacing: 0 }}
+          sx={{ ...factLabelSx, textTransform: "none", letterSpacing: 0 }}
         >
           {caption}
         </Typography>
@@ -87,14 +58,7 @@ function Fact({
 /** Full trip view for one descent: facts, route map, the sections in paddled
  * order with their notes and the water levels captured when it was logged. */
 export default function DescentDetail({ descent }: { descent: Descent }) {
-  const { tokens } = useTheme();
   const navigate = useNavigate();
-  const levelConfig = {
-    empty: tokens.waterEmpty,
-    low: tokens.waterLow,
-    medium: tokens.waterMedium,
-    high: tokens.waterHigh,
-  };
 
   const sections = useMemo(
     () => [...descent.sections].sort((a, b) => a.sort_order - b.sort_order),
@@ -102,23 +66,21 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
   );
 
   // The section lines travel with the descent, so the route renders without
-  // fetching each waterway. Same pseudo-section shape the form's map uses.
+  // fetching each waterway.
   const mapSections = useMemo(
     () =>
       sections
-        .filter((s) => s.location?.type === "LineString")
-        .map((s) => ({
-          id: s.section_id,
-          name: s.section_name ?? `Section #${s.section_id}`,
-          waterway_id: 0,
-          description: null,
-          location: s.location,
-          features: [],
-          names: [],
-          descriptions: [],
-          created_at: "",
-          updated_at: "",
-        })) as SectionWithFeatures[],
+        .filter(
+          (s): s is typeof s & { location: SectionWithFeatures["location"] } =>
+            s.location?.type === "LineString",
+        )
+        .map((s) =>
+          toPseudoSection({
+            id: s.section_id,
+            name: s.section_name ?? `Section #${s.section_id}`,
+            location: s.location,
+          }),
+        ),
     [sections],
   );
 
@@ -142,19 +104,22 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
           <>
             <Fact
               label="From"
-              value={formatDate(descent.start_time)}
+              value={formatDateWithWeekday(descent.start_time)}
               caption={formatTime(descent.start_time)}
             />
             <Fact
               label="To"
-              value={formatDate(descent.end_time)}
+              value={formatDateWithWeekday(descent.end_time)}
               caption={formatTime(descent.end_time)}
             />
             {duration && <Fact label="Duration" value={duration} />}
           </>
         ) : (
           <>
-            <Fact label="Date" value={formatDate(descent.start_time)} />
+            <Fact
+              label="Date"
+              value={formatDateWithWeekday(descent.start_time)}
+            />
             <Fact
               label="Time"
               value={duration ?? "-"}
@@ -206,7 +171,7 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
       {/* Sections in paddled order */}
       {sections.length > 0 && (
         <Box>
-          <Typography sx={{ ...labelSx, mb: 1 }}>
+          <Typography sx={{ ...factLabelSx, mb: 1 }}>
             Sections ({sections.length})
           </Typography>
           <Box sx={{ border: "1px solid", borderColor: "divider" }}>
@@ -220,17 +185,9 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
                           to: "/",
                           // Fresh map search state - only the target section.
                           search: {
+                            ...EMPTY_MAP_SEARCH,
                             waterway: s.waterway_id ?? undefined,
                             section: s.section_id,
-                            q: undefined,
-                            country: undefined,
-                            min_diff: undefined,
-                            max_diff: undefined,
-                            mode: undefined,
-                            panel: undefined,
-                            lat: undefined,
-                            lon: undefined,
-                            radius: undefined,
                           },
                         })
                     : undefined
@@ -310,7 +267,7 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
                               }
                               label={
                                 snap.value != null
-                                  ? `${Number(snap.value.toFixed(1))} ${snap.unit}`
+                                  ? formatReading(snap.value, snap.unit)
                                   : cfg.label
                               }
                               sx={{
@@ -346,7 +303,7 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
       {/* Trip note */}
       {descent.note && (
         <Box>
-          <Typography sx={{ ...labelSx, mb: 0.5 }}>Note</Typography>
+          <Typography sx={{ ...factLabelSx, mb: 0.5 }}>Note</Typography>
           <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
             {descent.note}
           </Typography>

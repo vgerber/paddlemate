@@ -118,6 +118,13 @@ const tokens = {
   chartGrid: "rgba(255,255,255,0.06)",
 } as const;
 
+/** Font stacks used across the app. */
+export const fonts = {
+  label: '"Space Grotesk", sans-serif',
+  body: '"Inter", sans-serif',
+  mono: '"Space Mono", "Courier New", monospace',
+} as const;
+
 export const theme = createTheme({
   tokens,
   palette: {
@@ -138,6 +145,11 @@ export const theme = createTheme({
     error: {
       main: tokens.error,
       dark: tokens.errorContainer,
+    },
+    // Amber for pending/incomplete states, aligned with the medium water
+    // level so the app has one orange, not MUI's stock one.
+    warning: {
+      main: tokens.levelColors.medium,
     },
     success: {
       main: tokens.secondary,
@@ -172,40 +184,40 @@ export const theme = createTheme({
   typography: {
     fontFamily: '"Inter", "Space Grotesk", system-ui, sans-serif',
     h1: {
-      fontFamily: '"Space Grotesk", sans-serif',
+      fontFamily: fonts.label,
       fontWeight: 700,
       letterSpacing: "-0.02em",
     },
     h2: {
-      fontFamily: '"Space Grotesk", sans-serif',
+      fontFamily: fonts.label,
       fontWeight: 700,
       letterSpacing: "-0.01em",
     },
     h3: {
-      fontFamily: '"Space Grotesk", sans-serif',
+      fontFamily: fonts.label,
       fontWeight: 700,
     },
     h4: {
-      fontFamily: '"Space Grotesk", sans-serif',
+      fontFamily: fonts.label,
       fontWeight: 700,
     },
     h5: {
-      fontFamily: '"Space Grotesk", sans-serif',
+      fontFamily: fonts.label,
       fontWeight: 600,
     },
     h6: {
-      fontFamily: '"Space Grotesk", sans-serif',
+      fontFamily: fonts.label,
       fontWeight: 600,
     },
     subtitle1: {
-      fontFamily: '"Space Grotesk", sans-serif',
+      fontFamily: fonts.label,
       fontWeight: 500,
       letterSpacing: "0.05em",
       textTransform: "uppercase",
       fontSize: "0.75rem",
     },
     subtitle2: {
-      fontFamily: '"Space Grotesk", sans-serif',
+      fontFamily: fonts.label,
       fontWeight: 500,
       letterSpacing: "0.04em",
       fontSize: "0.6875rem",
@@ -218,17 +230,17 @@ export const theme = createTheme({
       fontSize: "0.8125rem",
     },
     overline: {
-      fontFamily: '"Space Grotesk", sans-serif',
+      fontFamily: fonts.label,
       letterSpacing: "0.12em",
       fontWeight: 500,
     },
     caption: {
-      fontFamily: '"Space Grotesk", sans-serif',
+      fontFamily: fonts.label,
       letterSpacing: "0.06em",
       color: tokens.outline,
     },
     button: {
-      fontFamily: '"Space Grotesk", sans-serif',
+      fontFamily: fonts.label,
       fontWeight: 700,
       letterSpacing: "0.1em",
       textTransform: "uppercase",
@@ -318,7 +330,7 @@ export const theme = createTheme({
         root: {
           borderRadius: 0,
           letterSpacing: "0.1em",
-          fontFamily: '"Space Grotesk", sans-serif',
+          fontFamily: fonts.label,
           fontWeight: 700,
           textTransform: "uppercase",
           transition: "none",
@@ -362,7 +374,7 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 0,
-          fontFamily: '"Space Grotesk", sans-serif',
+          fontFamily: fonts.label,
           fontWeight: 700,
           fontSize: "0.6875rem",
           letterSpacing: "0.08em",
@@ -398,7 +410,7 @@ export const theme = createTheme({
     MuiInputLabel: {
       styleOverrides: {
         root: {
-          fontFamily: '"Space Grotesk", sans-serif',
+          fontFamily: fonts.label,
           fontSize: "0.75rem",
           letterSpacing: "0.06em",
           textTransform: "uppercase",
@@ -431,7 +443,7 @@ export const theme = createTheme({
           borderRadius: 0,
           backgroundColor: tokens.surfaceHighest,
           border: `1px solid ${tokens.outlineVariant}`,
-          fontFamily: '"Space Grotesk", sans-serif',
+          fontFamily: fonts.label,
           fontSize: "0.6875rem",
           letterSpacing: "0.05em",
         },
@@ -453,7 +465,7 @@ export const theme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         head: {
-          fontFamily: '"Space Grotesk", sans-serif',
+          fontFamily: fonts.label,
           fontWeight: 700,
           fontSize: "0.6875rem",
           letterSpacing: "0.1em",
@@ -475,9 +487,12 @@ export const theme = createTheme({
   },
 });
 
-/** Font stacks used across the app. */
-export const fonts = {
-  label: '"Space Grotesk", sans-serif',
-  body: '"Inter", sans-serif',
-  mono: '"Space Mono", "Courier New", monospace',
+/** The app's standard small uppercase label. Spread into sx and override
+ * size or color where a variant is needed. */
+export const labelSx = {
+  fontFamily: fonts.label,
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+  fontSize: "0.62rem",
+  color: "text.secondary",
 } as const;

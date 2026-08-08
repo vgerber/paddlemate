@@ -7,8 +7,13 @@ export function useCopyToClipboard(resetMs = 1500) {
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const copy = useCallback(
-    (text: string) => {
-      navigator.clipboard.writeText(text);
+    async (text: string) => {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        // Insecure context or denied permission: never claim success.
+        return;
+      }
       setCopied(true);
       clearTimeout(timer.current);
       timer.current = setTimeout(() => setCopied(false), resetMs);

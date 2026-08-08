@@ -1,6 +1,7 @@
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import DoneIcon from "@mui/icons-material/Done";
 import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -16,19 +17,26 @@ import Tabs from "@mui/material/Tabs";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import LanguagePicker from "@/components/LanguagePicker";
 import ProposalsView from "@/components/proposals/ProposalsView";
+import LoadingBox from "@/components/states/LoadingBox";
+import SignInGate from "@/components/states/SignInGate";
 import {
   type ApiToken,
   type ApiTokenCreated,
   type ProposalEntityType,
   type ProposalOperation,
   type ProposalStatus,
-  tokensApi,
 } from "@/lib/api";
+import {
+  useApiTokens,
+  useCreateApiToken,
+  useRevokeApiToken,
+} from "@/lib/hooks/useApiTokens";
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { useSession } from "@/lib/hooks/useSession";
 import { useLanguagePreference } from "@/lib/languagePreference";
 import { theme } from "@/lib/theme";
@@ -39,41 +47,25 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsPage() {
   const [tab, setTab] = useState(0);
-  const { isAuthenticated, isLoading, login } = useSession();
+  const { isAuthenticated, isLoading } = useSession();
   // Desktop reaches proposals via the top nav - the tab is mobile-only
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const effectiveTab = isDesktop ? 0 : tab;
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <LoadingBox size={40} pt={8} />;
   }
 
   if (!isAuthenticated) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 2,
-          pt: 10,
-          px: 2,
-        }}
-      >
-        <AccountCircleOutlinedIcon
-          sx={{ fontSize: 56, color: "text.disabled" }}
-        />
-        <Typography color="text.secondary">
-          Sign in to access settings.
-        </Typography>
-        <Button variant="contained" color="secondary" onClick={login}>
-          Sign In
-        </Button>
-      </Box>
+      <SignInGate
+        icon={
+          <AccountCircleOutlinedIcon
+            sx={{ fontSize: 56, color: "text.disabled" }}
+          />
+        }
+        title="Sign in to access settings"
+      />
     );
   }
 
@@ -186,28 +178,25 @@ function ProfilePanel() {
 }
 
 function TokensPanel() {
-  const qc = useQueryClient();
   const [name, setName] = useState("");
   const [newToken, setNewToken] = useState<ApiTokenCreated | null>(null);
 
-  const { data: tokens, isLoading } = useQuery({
-    queryKey: ["tokens"],
-    queryFn: () => tokensApi.list(),
-  });
+  const { data: tokens, isLoading } = useApiTokens();
 
-  const create = useMutation({
-    mutationFn: () => tokensApi.create(name.trim()),
-    onSuccess: (created) => {
-      setNewToken(created);
-      setName("");
-      qc.invalidateQueries({ queryKey: ["tokens"] });
-    },
-  });
+  function handleCreate() {
+    create.mutate(name.trim(), {
+      onSuccess: (created) => {
+        setNewToken(created);
+        setName("");
+      },
+    });
+  }
 
-  const revoke = useMutation({
-    mutationFn: (id: number) => tokensApi.revoke(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tokens"] }),
-  });
+  const create = useCreateApiToken();
+  const revoke = useRevokeApiToken();
+  // Token queued for revocation; drives the confirm dialog.
+  const [revokeTarget, setRevokeTarget] = useState<ApiToken | null>(null);
+  const { copied: tokenCopied, copy: copyToken } = useCopyToClipboard();
 
   return (
     <Stack spacing={3}>
@@ -227,13 +216,13 @@ function TokensPanel() {
               size="small"
               sx={{ flex: 1 }}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && name.trim()) create.mutate();
+                if (e.key === "Enter" && name.trim()) handleCreate();
               }}
             />
             <Button
               variant="contained"
               disabled={!name.trim() || create.isPending}
-              onClick={() => create.mutate()}
+              onClick={handleCreate}
             >
               Create
             </Button>
@@ -261,9 +250,14 @@ function TokensPanel() {
                 </Typography>
                 <IconButton
                   size="small"
-                  onClick={() => navigator.clipboard.writeText(newToken.token)}
+                  title={tokenCopied ? "Copied!" : "Copy token"}
+                  onClick={() => copyToken(newToken.token)}
                 >
-                  <ContentCopyOutlinedIcon fontSize="small" />
+                  {tokenCopied ? (
+                    <DoneIcon fontSize="small" />
+                  ) : (
+                    <ContentCopyOutlinedIcon fontSize="small" />
+                  )}
                 </IconButton>
               </Stack>
             </Alert>
@@ -285,12 +279,28 @@ function TokensPanel() {
             <TokenRow
               key={token.id}
               token={token}
-              onRevoke={() => revoke.mutate(token.id)}
+              onRevoke={() => setRevokeTarget(token)}
               revoking={revoke.isPending}
             />
           ))}
         </Stack>
       )}
+      <ConfirmDialog
+        open={revokeTarget !== null}
+        title="Revoke token?"
+        body={`"${revokeTarget?.name ?? ""}" stops working immediately and cannot be restored.`}
+        confirmLabel="Revoke"
+        pendingLabel="Revoking…"
+        color="error"
+        pending={revoke.isPending}
+        onCancel={() => setRevokeTarget(null)}
+        onConfirm={() => {
+          if (!revokeTarget) return;
+          revoke.mutate(revokeTarget.id, {
+            onSuccess: () => setRevokeTarget(null),
+          });
+        }}
+      />
     </Stack>
   );
 }

@@ -38,15 +38,9 @@ export default function StepDetails({ form, onChange }: StepProps) {
           onChange={(_, v) => v && onChange({ visibility_type: v })}
           size="small"
         >
-          <ToggleButton value="private" sx={{ borderRadius: 0 }}>
-            Private
-          </ToggleButton>
-          <ToggleButton value="shared" sx={{ borderRadius: 0 }}>
-            Shared
-          </ToggleButton>
-          <ToggleButton value="public" sx={{ borderRadius: 0 }}>
-            Public
-          </ToggleButton>
+          <ToggleButton value="private">Private</ToggleButton>
+          <ToggleButton value="shared">Shared</ToggleButton>
+          <ToggleButton value="public">Public</ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
@@ -65,7 +59,7 @@ export default function StepDetails({ form, onChange }: StepProps) {
               key={days}
               size="small"
               variant="outlined"
-              sx={{ borderRadius: 0, fontSize: "0.65rem", px: 1 }}
+              sx={{ fontSize: "0.65rem", px: 1 }}
               onClick={() => {
                 const d = new Date();
                 d.setDate(d.getDate() + days);
@@ -78,7 +72,7 @@ export default function StepDetails({ form, onChange }: StepProps) {
           {form.visible_from && (
             <Button
               size="small"
-              sx={{ borderRadius: 0, fontSize: "0.65rem", px: 1, ml: "auto" }}
+              sx={{ fontSize: "0.65rem", px: 1, ml: "auto" }}
               onClick={() => onChange({ visible_from: "" })}
             >
               Clear

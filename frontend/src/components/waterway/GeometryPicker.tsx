@@ -92,7 +92,7 @@ export default function GeometryPicker({
               alignItems: "center",
               gap: 1,
               bgcolor: "action.hover",
-              borderRadius: 1,
+
               px: 1,
               py: 0.5,
               border: "1px solid",
@@ -186,7 +186,7 @@ export default function GeometryPicker({
                         alignItems: "center",
                         gap: 1,
                         bgcolor: "action.hover",
-                        borderRadius: 1,
+
                         px: 1,
                         py: 0.5,
                         border: "1px solid",
@@ -224,7 +224,7 @@ export default function GeometryPicker({
                             justifyContent: "center",
                             width: 20,
                             height: 20,
-                            borderRadius: 0.5,
+
                             bgcolor: "action.selected",
                             color: "text.disabled",
                             fontSize: "0.8rem",

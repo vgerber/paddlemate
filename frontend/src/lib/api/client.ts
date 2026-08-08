@@ -25,6 +25,17 @@ export class ApiError extends Error {
   }
 }
 
+/** Human-readable message for a failed API call: the server's own message
+ * when the error is an ApiError with one, else the given fallback. Raw
+ * non-API bodies (proxy HTML pages, stack dumps) fall back too. */
+export function apiErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) {
+    const msg = err.message.trim();
+    if (msg && msg.length <= 200 && !msg.startsWith("<")) return msg;
+  }
+  return fallback;
+}
+
 /** Read the API error envelope, falling back to the raw body for anything
  * that did not come from the API itself (a proxy or gateway, say). */
 async function toApiError(response: Response): Promise<ApiError> {

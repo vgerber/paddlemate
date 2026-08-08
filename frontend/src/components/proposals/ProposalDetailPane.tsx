@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import WaterwayMap from "@/components/map/Map";
+import ProposalDiffTable from "@/components/proposals/ProposalDiffTable";
 import FeatureRow from "@/components/waterway/FeatureRow";
 import {
   computeExtent,
@@ -8,7 +9,7 @@ import {
 } from "@/components/waterway/section-details/utils";
 import type { Feature, FeatureType, Proposal } from "@/lib/api";
 import { distanceAlongLineM, representativePoint } from "@/lib/geo";
-import { fonts } from "@/lib/theme";
+import { labelSx } from "@/lib/theme";
 
 interface BundledFeatureData {
   feature_type: FeatureType;
@@ -26,13 +27,7 @@ interface TranslationData {
   description?: string | null;
 }
 
-const labelSx = {
-  color: "text.disabled",
-  fontFamily: fonts.label,
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-  fontSize: "0.62rem",
-} as const;
+const paneLabelSx = { ...labelSx, color: "text.disabled" } as const;
 
 /** Read-only full view of a proposal - the wizard's review layout without
  * the editing: map, naming, translations and feature rows with positions. */
@@ -90,8 +85,18 @@ export default function ProposalDetailPane({
 
   const focus = location ? representativePoint(location) : null;
 
+  const original = proposal.original_data as
+    | Record<string, unknown>
+    | null
+    | undefined;
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      {/* What an update changes, before the full proposed state below */}
+      {original && proposal.operation === "update" && (
+        <ProposalDiffTable original={original} proposed={data} />
+      )}
+
       {/* Map */}
       {(sectionLine || pseudoFeatures.length > 0) && (
         <Box
@@ -124,7 +129,7 @@ export default function ProposalDetailPane({
         >
           {detailRows.map(([key, value]) => (
             <Box key={key} sx={{ display: "contents" }}>
-              <Typography sx={{ ...labelSx, lineHeight: 1.8 }}>
+              <Typography sx={{ ...paneLabelSx, lineHeight: 1.8 }}>
                 {key}
               </Typography>
               <Typography variant="body2" sx={{ lineHeight: 1.8 }}>
@@ -147,7 +152,7 @@ export default function ProposalDetailPane({
               sx={{ display: "flex", gap: 1.5, alignItems: "baseline" }}
             >
               <Typography
-                sx={{ ...labelSx, minWidth: 24, color: "text.secondary" }}
+                sx={{ ...paneLabelSx, minWidth: 24, color: "text.secondary" }}
               >
                 {translation.lang_code.toUpperCase()}
               </Typography>

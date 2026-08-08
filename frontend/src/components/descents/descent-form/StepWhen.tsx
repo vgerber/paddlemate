@@ -18,12 +18,8 @@ export default function StepWhen({ form, onChange }: StepProps) {
         onChange={(_, v) => v && onChange({ timing_mode: v })}
         size="small"
       >
-        <ToggleButton value="single" sx={{ borderRadius: 0 }}>
-          Single day
-        </ToggleButton>
-        <ToggleButton value="multi" sx={{ borderRadius: 0 }}>
-          Multi day
-        </ToggleButton>
+        <ToggleButton value="single">Single day</ToggleButton>
+        <ToggleButton value="multi">Multi day</ToggleButton>
       </ToggleButtonGroup>
 
       {form.timing_mode === "single" ? (

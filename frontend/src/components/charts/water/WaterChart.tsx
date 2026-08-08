@@ -4,14 +4,9 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
 import type { WaterRangeWithStatus } from "@/lib/api";
+import { fromForRange, TIME_RANGE_OPTIONS, typeLabel } from "./chartTime";
 import SeriesChart from "./SeriesChart";
-import {
-  type DescentSpan,
-  fromForRange,
-  TIME_RANGE_OPTIONS,
-  type TimeRange,
-  typeLabel,
-} from "./types";
+import type { DescentSpan, TimeRange } from "./types";
 
 export interface WaterChartProps {
   ranges: WaterRangeWithStatus[];

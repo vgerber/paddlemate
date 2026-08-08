@@ -39,6 +39,8 @@ sparingly and always carries meaning.
 - **Map feature markers** use the Okabe-Ito colorblind-safe palette.
 - **Hover keeps the element's color** and raises brightness slightly; it never
   switches to a darker token.
+- Exception: map markers and overlays may carry a subtle drop shadow - it is
+  load-bearing for legibility over aerial tiles, not decoration.
 - No hex values in components: all color comes from the tokens in
   `frontend/src/lib/theme.ts`, component-wide rules from the theme's
   `styleOverrides` in the same file.

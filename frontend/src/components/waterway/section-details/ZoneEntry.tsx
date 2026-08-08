@@ -49,7 +49,13 @@ export function ZoneEntry({
   const zoneColor = isProposal ? tokens.onSurfaceVariant : tokens.secondary;
 
   return (
-    <Box sx={{ position: "relative", mb: isLast ? "4px" : 2, opacity: isProposal ? 0.6 : 1 }}>
+    <Box
+      sx={{
+        position: "relative",
+        mb: isLast ? "4px" : 2,
+        opacity: isProposal ? 0.6 : 1,
+      }}
+    >
       {/* Zone start row */}
       <ButtonBase
         component="div"
@@ -69,7 +75,6 @@ export function ZoneEntry({
           width: "100%",
           textAlign: "left",
           px: "6px",
-          borderRadius: "4px",
         }}
       >
         <Box
@@ -224,7 +229,10 @@ export function ZoneEntry({
       )}
 
       {/* Zone end row */}
-      <Stack direction="row" sx={{ gap: "10px", alignItems: "center", px: "6px" }}>
+      <Stack
+        direction="row"
+        sx={{ gap: "10px", alignItems: "center", px: "6px" }}
+      >
         <Box
           sx={{
             width: 16,
@@ -266,4 +274,3 @@ export function ZoneEntry({
     </Box>
   );
 }
-

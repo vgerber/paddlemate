@@ -3,11 +3,9 @@ import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlin
 import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import Fab from "@mui/material/Fab";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
-import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   createFileRoute,
@@ -18,7 +16,10 @@ import {
 import { useState } from "react";
 import MyLogsPanel from "@/components/logs-page/MyLogsPanel";
 import SocialPanel from "@/components/logs-page/SocialPanel";
+import LoadingBox from "@/components/states/LoadingBox";
+import SignInGate from "@/components/states/SignInGate";
 import { useSession } from "@/lib/hooks/useSession";
+import { theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/logs")({
   component: LogsPage,
@@ -26,9 +27,9 @@ export const Route = createFileRoute("/logs")({
 
 function LogsPage() {
   const childMatches = useChildMatches();
-  const { isAuthenticated, isLoading: sessionLoading, login } = useSession();
+  const { isAuthenticated, isLoading: sessionLoading } = useSession();
   const navigate = useNavigate();
-  const isMobile = useMediaQuery((theme: any) => theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [tab, setTab] = useState(0);
 
   if (childMatches.length > 0) return <Outlet />;
@@ -51,35 +52,19 @@ function LogsPage() {
     });
 
   if (sessionLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <LoadingBox size={40} pt={8} />;
   }
 
   if (!isAuthenticated) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 2,
-          pt: 10,
-          px: 2,
-        }}
-      >
-        <DirectionsBoatOutlinedIcon
-          sx={{ fontSize: 56, color: "text.disabled" }}
-        />
-        <Typography variant="h6" color="text.secondary">
-          Sign in to view your logs
-        </Typography>
-        <Button variant="contained" color="secondary" onClick={login}>
-          Sign In
-        </Button>
-      </Box>
+      <SignInGate
+        icon={
+          <DirectionsBoatOutlinedIcon
+            sx={{ fontSize: 56, color: "text.disabled" }}
+          />
+        }
+        title="Sign in to view your logs"
+      />
     );
   }
 
@@ -126,12 +111,7 @@ function LogsDesktop({ tab, onTabChange, onOpen, onNew }: LogsViewProps) {
     <Box sx={{ maxWidth: 720, mx: "auto" }}>
       {tab === 0 && (
         <Box sx={{ display: "flex", justifyContent: "flex-end", px: 2, pt: 2 }}>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={onNew}
-            sx={{ borderRadius: 0 }}
-          >
+          <Button variant="contained" startIcon={<AddIcon />} onClick={onNew}>
             Log descent
           </Button>
         </Box>

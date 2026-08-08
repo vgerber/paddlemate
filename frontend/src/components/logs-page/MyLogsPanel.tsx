@@ -1,9 +1,10 @@
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import DescentCard from "@/components/descents/DescentCard";
+import EmptyState from "@/components/states/EmptyState";
+import LoadingBox from "@/components/states/LoadingBox";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 
 /** The signed-in user's own descents, grouped by month. */
@@ -22,35 +23,28 @@ export default function MyLogsPanel({
         month: "long",
         year: "numeric",
       });
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(d);
+      const group = map.get(key);
+      if (group) group.push(d);
+      else map.set(key, [d]);
     }
     return Array.from(map.entries());
   }, [descents]);
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", pt: 6 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <LoadingBox size={40} pt={6} />;
   }
 
   if (descents.length === 0) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 1.5,
-          pt: 8,
-          color: "text.disabled",
-        }}
-      >
-        <DirectionsBoatOutlinedIcon sx={{ fontSize: 48 }} />
-        <Typography variant="body2">No descents logged yet.</Typography>
-      </Box>
+      <EmptyState
+        icon={
+          <DirectionsBoatOutlinedIcon
+            sx={{ fontSize: 48, color: "text.disabled" }}
+          />
+        }
+        title="No descents logged yet."
+        py={8}
+      />
     );
   }
 

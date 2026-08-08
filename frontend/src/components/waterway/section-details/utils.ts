@@ -1,5 +1,6 @@
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
-import { distanceAlongLineM, representativePoint } from "@/lib/geo";
+import { humanize } from "@/lib/format";
+import { distanceAlongLineM, lineCoords, representativePoint } from "@/lib/geo";
 import { localizedDescription, localizedName } from "@/lib/localization";
 import type { ComputedFeature, TreeNode } from "./types";
 
@@ -21,9 +22,7 @@ export function featureName(f: Feature): string {
   const diff = featureDifficulty(f);
   const name =
     localizedName(f.names[0]?.name ?? "", f.names) ||
-    (f.feature_type === "whitewater"
-      ? "WW"
-      : f.feature_type.replace(/_/g, " "));
+    (f.feature_type === "whitewater" ? "WW" : humanize(f.feature_type));
   return diff ? `${name} ${diff}` : name;
 }
 
@@ -49,12 +48,7 @@ export function spansWholeSection(
 export function defaultRangeFeature(
   section: SectionWithFeatures,
 ): Feature | undefined {
-  const line =
-    section.location.type === "LineString"
-      ? (section.location.coordinates as number[][]).map(
-          (c): [number, number] => [c[0], c[1]],
-        )
-      : [];
+  const line = lineCoords(section.location) ?? [];
   const whitewater = section.features.filter(
     (f) => f.feature_type === "whitewater",
   );
@@ -65,7 +59,7 @@ export function defaultRangeFeature(
  * entry has no own name, because featureName already falls back to the type. */
 export function featureTypeLabel(f: Feature): string | null {
   const hasName = !!localizedName(f.names[0]?.name ?? "", f.names);
-  return hasName ? f.feature_type.replace(/_/g, " ") : null;
+  return hasName ? humanize(f.feature_type) : null;
 }
 
 /** Returns the feature's description in the user's language or null. */

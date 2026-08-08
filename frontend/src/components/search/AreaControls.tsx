@@ -7,7 +7,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
 import type { AreaCircle } from "@/lib/geo";
-import { useDebouncedValue } from "@/lib/useDebouncedValue";
+import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 
 interface AreaControlsProps {
   areaCircle: AreaCircle | null;
@@ -33,9 +33,9 @@ export default function AreaControls({
   }, [areaCircle?.radiusKm]);
 
   // Fire the query-triggering callback only after debounce
+  // biome-ignore lint/correctness/useExhaustiveDependencies: onRadiusChange is intentionally omitted; only the debounced value should trigger the callback
   useEffect(() => {
     onRadiusChange(debouncedRadius);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedRadius]);
 
   if (!areaCircle) {

@@ -69,6 +69,27 @@ interface AnyGeometry {
   coordinates: unknown;
 }
 
+/** Coordinates of a LineString geometry, or null for any other type.
+ * Central owner of the geometry narrowing - callers should not cast. */
+export function lineCoords(
+  geom: AnyGeometry | null | undefined,
+): [number, number][] | null {
+  if (geom?.type !== "LineString") return null;
+  return (geom.coordinates as number[][]).map((c): [number, number] => [
+    c[0],
+    c[1],
+  ]);
+}
+
+/** Coordinates of a Point geometry, or null for any other type. */
+export function pointCoords(
+  geom: AnyGeometry | null | undefined,
+): [number, number] | null {
+  if (geom?.type !== "Point") return null;
+  const c = geom.coordinates as number[];
+  return [c[0], c[1]];
+}
+
 /** Get a representative [lng, lat] for any GeoJSON geometry. */
 export function representativePoint(geom: AnyGeometry): [number, number] {
   if (geom.type === "Point") {

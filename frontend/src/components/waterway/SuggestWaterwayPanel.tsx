@@ -7,13 +7,11 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
-import { waterwaysApi } from "@/lib/api";
-import { ApiError } from "@/lib/api/client";
-import { proposalKeys } from "@/lib/hooks/useProposals";
+import { ApiError, apiErrorMessage } from "@/lib/api/client";
 import { useSession } from "@/lib/hooks/useSession";
+import { useCreateWaterway } from "@/lib/hooks/useWaterways";
 import { type Coordinate, fetchOsmRiver } from "@/lib/riverSnap";
 
 /** Max viewport span (degrees) for the OSM check - larger areas make Overpass
@@ -49,12 +47,12 @@ export default function SuggestWaterwayPanel({
   onPreviewCoordsChange,
 }: SuggestWaterwayPanelProps) {
   const { isAuthenticated, login } = useSession();
-  const queryClient = useQueryClient();
 
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState("");
   const [osmCheck, setOsmCheck] = useState<OsmCheck>({ state: "idle" });
-  const [submitting, setSubmitting] = useState(false);
+  const createWaterway = useCreateWaterway();
+  const submitting = createWaterway.isPending;
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const osmAbortRef = useRef<AbortController | null>(null);
@@ -107,34 +105,34 @@ export default function SuggestWaterwayPanel({
     }
   }
 
-  async function handleSubmit() {
+  function handleSubmit() {
     const trimmedName = name.trim();
     if (!trimmedName || submitting) return;
-    setSubmitting(true);
     setSubmitError(null);
-    try {
-      // No pre-check: the API rejects a duplicate name with 409, handled
-      // below. Checking here as well would cost a request and, because the
-      // server compares case-insensitively rather than ignoring diacritics,
-      // could refuse a name the server would have accepted.
-      await waterwaysApi.create({
-        name: trimmedName,
-        description: description.trim() || null,
-      });
-      queryClient.invalidateQueries({ queryKey: proposalKeys.all });
-      onPreviewCoordsChange(null);
-      setSubmitted(true);
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 409) {
-        setSubmitError(
-          `"${trimmedName}" already exists - search for it instead.`,
-        );
-      } else {
-        setSubmitError("Failed to submit. Please try again.");
-      }
-    } finally {
-      setSubmitting(false);
-    }
+    // No pre-check: the API rejects a duplicate name with 409, handled in
+    // onError. Checking here as well would cost a request and, because the
+    // server compares case-insensitively rather than ignoring diacritics,
+    // could refuse a name the server would have accepted.
+    createWaterway.mutate(
+      { name: trimmedName, description: description.trim() || null },
+      {
+        onSuccess: () => {
+          onPreviewCoordsChange(null);
+          setSubmitted(true);
+        },
+        onError: (err) => {
+          if (err instanceof ApiError && err.status === 409) {
+            setSubmitError(
+              `"${trimmedName}" already exists - search for it instead.`,
+            );
+          } else {
+            setSubmitError(
+              apiErrorMessage(err, "Failed to submit. Please try again."),
+            );
+          }
+        },
+      },
+    );
   }
 
   const canSubmit = !!name.trim() && !submitting && !submitted;

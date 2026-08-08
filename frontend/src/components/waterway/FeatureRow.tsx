@@ -3,7 +3,8 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { fonts } from "@/lib/theme";
+import { humanize } from "@/lib/format";
+import { fonts, labelSx } from "@/lib/theme";
 import { fmtKm } from "./section-details/utils";
 
 /** Position along the section line - the subset of ComputedFeature the row
@@ -14,14 +15,6 @@ export interface FeatureExtent {
   endM: number;
   isZone: boolean;
 }
-
-const labelSx = {
-  color: "text.secondary",
-  fontFamily: fonts.label,
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-  fontSize: "0.62rem",
-} as const;
 
 interface FeatureRowProps {
   /** Feature type key, e.g. "whitewater" - rendered as the small label. */
@@ -103,7 +96,7 @@ export default function FeatureRow({
             {detail}
           </Typography>
         )}
-        <Typography sx={labelSx}>{featureType.replace(/_/g, " ")}</Typography>
+        <Typography sx={labelSx}>{humanize(featureType)}</Typography>
         {description && (
           <Typography variant="caption" color="text.secondary">
             {description}

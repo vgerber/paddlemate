@@ -1,10 +1,10 @@
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
-import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import DescentCard from "@/components/descents/DescentCard";
+import EmptyState from "@/components/states/EmptyState";
+import LoadingBox from "@/components/states/LoadingBox";
 import { useInfiniteDescents } from "@/lib/hooks/useDescents";
 
 interface SectionLogsListProps {
@@ -21,30 +21,19 @@ export default function SectionLogsList({ sectionId }: SectionLogsListProps) {
   const descents = data?.pages.flatMap((page) => page.items) ?? [];
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-        <CircularProgress size={22} />
-      </Box>
-    );
+    return <LoadingBox size={22} />;
   }
 
   if (descents.length === 0) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 1.5,
-          py: 6,
-          color: "text.disabled",
-        }}
-      >
-        <DirectionsBoatOutlinedIcon sx={{ fontSize: 40 }} />
-        <Typography variant="body2">
-          No descents logged for this section yet.
-        </Typography>
-      </Box>
+      <EmptyState
+        icon={
+          <DirectionsBoatOutlinedIcon
+            sx={{ fontSize: 40, color: "text.disabled" }}
+          />
+        }
+        title="No descents logged for this section yet."
+      />
     );
   }
 

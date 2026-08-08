@@ -74,6 +74,8 @@ export function useCreateDescent() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateDescentRequest) => descentsApi.create(body),
+    // DescentForm renders the failure inline next to the save button.
+    meta: { errorHandledLocally: true },
     onSuccess: () => qc.invalidateQueries({ queryKey: descentKeys.lists() }),
   });
 }
@@ -83,6 +85,8 @@ export function usePatchDescent() {
   return useMutation({
     mutationFn: ({ id, body }: { id: number; body: PatchDescentRequest }) =>
       descentsApi.update(id, body),
+    // DescentForm renders the failure inline next to the save button.
+    meta: { errorHandledLocally: true },
     onSuccess: (data) => {
       qc.setQueryData(descentKeys.detail(data.id), data);
       qc.invalidateQueries({ queryKey: descentKeys.lists() });

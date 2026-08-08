@@ -2,11 +2,13 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useState } from "react";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
+import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
 import {
   buildPayload,
@@ -55,13 +57,19 @@ export default function DescentForm({
 
   const createDescent = useCreateDescent();
   const patchDescent = usePatchDescent();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   async function handleSave() {
-    const payload = buildPayload(form);
-    const result = descent
-      ? await patchDescent.mutateAsync({ id: descent.id, body: payload })
-      : await createDescent.mutateAsync(payload);
-    onSave(result.id);
+    setSaveError(null);
+    try {
+      const payload = buildPayload(form);
+      const result = descent
+        ? await patchDescent.mutateAsync({ id: descent.id, body: payload })
+        : await createDescent.mutateAsync(payload);
+      onSave(result.id);
+    } catch (err) {
+      setSaveError(apiErrorMessage(err, "Saving failed. Please try again."));
+    }
   }
 
   function patch(update: Partial<LogForm>) {
@@ -91,6 +99,12 @@ export default function DescentForm({
         />
       )}
       {step === 2 && <StepDetails form={form} onChange={patch} />}
+
+      {saveError && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {saveError}
+        </Alert>
+      )}
 
       {/* Bottom bar - pinned to the viewport bottom, above the mobile
           bottom navigation (zIndex 1300); same pattern as the section and

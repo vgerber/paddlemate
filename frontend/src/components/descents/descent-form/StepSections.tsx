@@ -8,6 +8,9 @@ import LocationPin, {
   TAKE_OUT_COLOR,
 } from "@/components/map/LocationPin";
 import { type SectionWithFeatures, waterwaysApi } from "@/lib/api";
+import { toPseudoSection } from "@/lib/descents";
+import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
+import { useWaterway, waterwayKeys } from "@/lib/hooks/useWaterways";
 import { localizedName } from "@/lib/localization";
 import {
   coordsFromStrings,
@@ -35,18 +38,18 @@ export default function StepSections({
     initialWaterwayId,
   );
 
+  // Shares the map page's cache keys, so a waterway browsed there loads
+  // instantly here (and vice versa). Debounced to one request per pause.
+  const debouncedInput = useDebouncedValue(waterwayInput, 300);
+  const searchFilters = { name: debouncedInput, per_page: 10 };
   const { data: searchResults, isFetching: searching } = useQuery({
-    queryKey: ["waterway-search", waterwayInput],
-    queryFn: () => waterwaysApi.list({ name: waterwayInput, per_page: 10 }),
-    enabled: waterwayInput.trim().length >= 2,
-    staleTime: 30_000,
+    queryKey: waterwayKeys.lists(searchFilters),
+    queryFn: ({ signal }) => waterwaysApi.list(searchFilters, signal),
+    enabled: debouncedInput.trim().length >= 2,
+    staleTime: 60_000,
   });
 
-  const { data: selectedWaterway } = useQuery({
-    queryKey: ["waterway", selectedWaterwayId],
-    queryFn: () => waterwaysApi.get(selectedWaterwayId as number),
-    enabled: selectedWaterwayId !== null,
-  });
+  const { data: selectedWaterway } = useWaterway(selectedWaterwayId);
 
   const mapSections = useMemo<SectionWithFeatures[]>(
     () => selectedWaterway?.sections ?? [],
@@ -106,18 +109,13 @@ export default function StepSections({
           (s): s is SectionDraft & { location: SectionLocation } =>
             !!s.location,
         )
-        .map((s) => ({
-          id: s.section_id,
-          name: s.display_name,
-          waterway_id: 0,
-          description: null,
-          location: s.location,
-          features: [],
-          names: [],
-          descriptions: [],
-          created_at: "",
-          updated_at: "",
-        })) as SectionWithFeatures[],
+        .map((s) =>
+          toPseudoSection({
+            id: s.section_id,
+            name: s.display_name,
+            location: s.location as SectionWithFeatures["location"],
+          }),
+        ),
     [form.sections],
   );
   const sectionsForMap =

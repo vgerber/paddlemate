@@ -1,10 +1,11 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
 import type { SxProps } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
+import { fonts } from "@/lib/theme";
 
 function elapsed(startTime: string): string {
   const ms = Date.now() - new Date(startTime).getTime();
@@ -73,7 +74,7 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
         }
         sx={{
           fontSize: "0.7rem",
-          fontFamily: '"Space Grotesk", monospace',
+          fontFamily: fonts.label,
           fontWeight: 600,
           letterSpacing: "0.06em",
           color: "text.secondary",
@@ -89,7 +90,7 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
       <Typography
         sx={{
           fontSize: "0.85rem",
-          fontFamily: '"Space Grotesk", monospace',
+          fontFamily: fonts.label,
           fontWeight: 700,
           letterSpacing: "0.04em",
           minWidth: 52,

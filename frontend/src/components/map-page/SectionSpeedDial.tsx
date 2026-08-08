@@ -14,6 +14,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useSession } from "@/lib/hooks/useSession";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
+import { theme } from "@/lib/theme";
 import type { MapPageState } from "./useMapPageState";
 
 interface Props {
@@ -92,7 +93,7 @@ export default function SectionSpeedDial({ state, sx }: Props) {
       <SpeedDialAction
         icon={
           isFavorited ? (
-            <StarIcon sx={{ color: "warning.main" }} />
+            <StarIcon sx={{ color: theme.tokens.tertiary }} />
           ) : (
             <StarBorderIcon />
           )
