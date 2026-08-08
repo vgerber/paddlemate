@@ -1,5 +1,12 @@
 // Shared CDP helpers: connect, navigate, evaluate, click, screenshot.
+import { mkdirSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, isAbsolute, join } from "node:path";
+
 const CDP = "http://localhost:9222";
+// Screenshots land outside the repo by default so a run never dirties the
+// working tree. Override with E2E_OUT to collect them somewhere specific.
+const OUT_DIR = process.env.E2E_OUT ?? join(tmpdir(), "paddlemate-e2e");
 
 export async function connect() {
   const targets = (await (await fetch(`${CDP}/json`)).json()) as any[];
@@ -55,9 +62,12 @@ export async function connect() {
 
   const url = () => evaluate("location.href");
 
-  const shot = async (path: string) => {
+  const shot = async (name: string) => {
     const res = await send("Page.captureScreenshot", { format: "png" });
+    const path = isAbsolute(name) ? name : join(OUT_DIR, name);
+    mkdirSync(dirname(path), { recursive: true });
     await Bun.write(path, Buffer.from(res.result.data, "base64"));
+    console.log(`  screenshot: ${path}`);
     return path;
   };
 

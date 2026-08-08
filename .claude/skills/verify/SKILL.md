@@ -87,12 +87,9 @@ cd api && KEYCLOAK_URL=http://localhost:8080 \
   KEYCLOAK_CLIENT_SECRET=local-dev-secret cargo run
 ```
 
-Then, with headless Chrome up (below):
-
-```sh
-bun .claude/skills/verify/login.ts    # real PKCE redirect through the login form
-bun .claude/skills/verify/smoke.ts    # authenticated smoke, prints PASS/FAIL
-```
+Then, with headless Chrome up (below), the end-to-end scripts in `e2e/` sign
+in and drive the authed flows - `bun e2e/login.ts` first, then `smoke.ts` /
+`draw-feature.ts`. See `e2e/README.md`.
 
 Gotchas that cost time:
 

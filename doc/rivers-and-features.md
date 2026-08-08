@@ -71,7 +71,25 @@ section chart). The pieces:
   therefore need no per-row bookkeeping.
 - Hand-authored source rows use `provider:*` ids so a Rivermap import can
   never overwrite them. Re-check their terms occasionally; nothing refreshes
-  them automatically.
+  them automatically. A `Reviewed <date>` comment in the migration records
+  the last check - three rows (`provider:po/ehyd/rz`), so a manual re-read is
+  proportionate.
+
+Standing decisions on attribution, so they are not re-litigated:
+
+- **Restricted licenses are displayed, not filtered.** Some authorities
+  release under NonCommercial / NoDerivatives terms (CHMI is CC BY-NC-ND).
+  paddlemate shows their current readings with the license named and linked,
+  the same treatment every source gets. Rationale: the data is publicly
+  released for public use, naming the license correctly is the compliant
+  thing to do, and this is a non-commercial tool. If a provider's terms ever
+  forbid display outright, drop it by removing its `provider_sources` row (or
+  the gauges); the attribution makes such cases visible.
+- **Redistributors are credited as the distributor.** Riverzone (`rz`) and
+  eHYD aggregate other authorities' data; we credit the aggregator we
+  actually fetch from, because the per-gauge underlying authority is not
+  reliably known. Splitting `rz` per region is a future data-enrichment task,
+  not a correctness fix.
 
 ## Who can change what
 
