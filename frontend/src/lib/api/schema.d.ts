@@ -1311,6 +1311,17 @@ export interface components {
         GaugeSource: {
             country_code?: string | null;
             id: string;
+            /**
+             * @description Short licence label derived from `licensing_terms`, e.g. "CC BY 4.0".
+             *      None when the provider names no licence we recognise.
+             */
+            license_name?: string | null;
+            /**
+             * @description Where the licence can be read. None when no formal licence is stated,
+             *      in which case clients link `website` instead.
+             */
+            license_url?: string | null;
+            /** @description The provider's own statement, verbatim. Prose, sometimes with links. */
             licensing_terms?: string | null;
             name: string;
             short_name?: string | null;
@@ -2001,11 +2012,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-08-07T16:18:48.187457582Z",
-                     *         "expires_at": "2026-11-05T16:18:48.187459862Z",
+                     *         "created_at": "2026-08-08T10:25:21.753400167Z",
+                     *         "expires_at": "2026-11-06T10:25:21.753402887Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-08-07T16:18:48.187466902Z",
+                     *         "last_used_at": "2026-08-08T10:25:21.753407767Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -2036,8 +2047,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-08-07T16:18:48.187636541Z",
-                     *       "expires_at": "2026-11-05T16:18:48.187636971Z",
+                     *       "created_at": "2026-08-08T10:25:21.753604317Z",
+                     *       "expires_at": "2026-11-06T10:25:21.753604847Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."

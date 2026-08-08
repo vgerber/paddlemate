@@ -50,6 +50,29 @@ latest reading classified against those ranges is the section's water status.
 The section view charts the readings and overlays your descents, so you can
 see the level you paddled at.
 
+### Data sources and licenses
+
+Every gauge is credited to the authority that publishes it, with a link to
+the license or terms, wherever readings appear (gauges tab, gauge chart,
+section chart). The pieces:
+
+- `sources` holds one row per authority: name, website, the provider's
+  verbatim `licensing_terms`, and a derived `license_name`/`license_url`
+  pair. The derivation (`api/river-gauge/src/license.rs`) only names a
+  license when the terms verifiably state one; most authorities state none,
+  and then only their terms page is linked. `licensing_terms` remains the
+  authoritative text and is shown as a tooltip.
+- Rivermap gauges link per station via `gauges.data_source_id`, written by
+  `import_rivermap` (re-run with `--only sources,stations` to refresh
+  attribution without touching sections or readings).
+- Directly-polled providers (`nve`, `bafu`, ...) have no per-station source;
+  `provider_sources` maps each provider key to its authority, and source
+  resolution falls back to it whenever `data_source_id` is NULL. New gauges
+  therefore need no per-row bookkeeping.
+- Hand-authored source rows use `provider:*` ids so a Rivermap import can
+  never overwrite them. Re-check their terms occasionally; nothing refreshes
+  them automatically.
+
 ## Who can change what
 
 All community edits — new rivers, sections, features, translations — go

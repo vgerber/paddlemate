@@ -27,6 +27,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/target/release/paddlemate_api /usr/local/bin/paddlemate_api
+# Operational tool: refreshes gauge/source data from a Rivermap snapshot
+# (docker cp the snapshot in, then docker exec import_rivermap --snapshot ...).
+# Shipped in the image because the DB is only reachable from this network.
+COPY --from=builder /app/target/release/import_rivermap /usr/local/bin/import_rivermap
 
 ENV PORT=3000
 EXPOSE 3000

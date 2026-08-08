@@ -9,7 +9,7 @@ import ChartPanelShell, {
   useMeasurementTypes,
 } from "@/components/charts/ChartPanelShell";
 import WaterChart from "@/components/charts/water/WaterChart";
-import GaugeAttribution from "@/components/GaugeAttribution";
+import { GaugeAttributions } from "@/components/GaugeAttribution";
 import type { WaterRangeWithStatus } from "@/lib/api";
 
 interface GaugeChartPanelProps {
@@ -35,7 +35,7 @@ export default function GaugeChartPanel({
 
   return (
     <ChartPanelShell
-      footer={<GaugeAttribution source={ranges[0]?.source} />}
+      footer={<GaugeAttributions sources={ranges.map((r) => r.source)} />}
       header={
         <>
           <Typography

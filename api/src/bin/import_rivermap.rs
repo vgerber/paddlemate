@@ -1,7 +1,9 @@
 use std::{collections::HashMap, fs, path::PathBuf};
 
 use anyhow::Context;
-use river_gauge::{RivermapReadingsRange, RivermapSectionBundle, RivermapSource, RivermapStation};
+use river_gauge::{
+    license, RivermapReadingsRange, RivermapSectionBundle, RivermapSource, RivermapStation,
+};
 use serde::Deserialize;
 use serde_json::Value;
 use sqlx::PgPool;
@@ -13,6 +15,8 @@ struct RivermapSnapshot {
     sections: RivermapSectionBundle,
     readings: HashMap<String, RivermapReadingsRange>,
 }
+
+const STEPS: &[&str] = &["sources", "stations", "sections", "readings"];
 
 fn manifest_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -31,6 +35,10 @@ async fn main() -> anyhow::Result<()> {
     let database_url = std::env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
 
     let mut snapshot_path = default_snapshot_path();
+    // Which import steps to run. The full set rewrites waterways, sections and
+    // features too, so a targeted fix (e.g. re-linking gauges to their source)
+    // can restrict itself with --only sources,stations.
+    let mut only: Option<Vec<String>> = None;
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -40,9 +48,26 @@ async fn main() -> anyhow::Result<()> {
                         .ok_or_else(|| anyhow::anyhow!("--snapshot requires a path"))?,
                 );
             }
+            "--only" => {
+                let list = args
+                    .next()
+                    .ok_or_else(|| anyhow::anyhow!("--only requires a comma separated list"))?;
+                let steps: Vec<String> =
+                    list.split(',').map(|s| s.trim().to_lowercase()).collect();
+                for step in &steps {
+                    if !STEPS.contains(&step.as_str()) {
+                        anyhow::bail!("unknown step '{step}', expected one of {}", STEPS.join(", "));
+                    }
+                }
+                only = Some(steps);
+            }
             "--help" | "-h" => {
                 println!(
-                    "Usage: import_rivermap [--snapshot PATH]\n\nDefault snapshot: {}",
+                    "Usage: import_rivermap [--snapshot PATH] [--only {}]\n\n\
+                     Default snapshot: {}\n\
+                     Without --only every step runs, which also rewrites waterways,\n\
+                     sections and features from the snapshot.",
+                    STEPS.join(","),
                     snapshot_path.display()
                 );
                 return Ok(());
@@ -57,33 +82,68 @@ async fn main() -> anyhow::Result<()> {
 
     let pool = PgPool::connect(&database_url).await?;
 
-    import_sources(&pool, &snapshot.sources).await?;
-    import_stations(&pool, &snapshot.stations).await?;
-    import_sections(&pool, &snapshot.sections).await?;
-    import_readings(&pool, &snapshot.readings).await?;
+    let wanted = |step: &str| only.as_ref().is_none_or(|s| s.iter().any(|x| x == step));
+
+    if wanted("sources") {
+        import_sources(&pool, &snapshot.sources).await?;
+    }
+    if wanted("stations") {
+        import_stations(&pool, &snapshot.stations, &snapshot.sources).await?;
+    }
+    if wanted("sections") {
+        import_sections(&pool, &snapshot.sections).await?;
+    }
+    if wanted("readings") {
+        import_readings(&pool, &snapshot.readings).await?;
+    }
 
     println!(
-        "Import complete: {} sources, {} sections, {} stations, {} readings batches",
-        snapshot.sources.len(),
-        snapshot.sections.sections.len(),
-        snapshot.stations.len(),
-        snapshot.readings.len(),
+        "Import complete ({})",
+        match &only {
+            Some(steps) => steps.join(", "),
+            None => "all steps".to_string(),
+        }
     );
 
     Ok(())
 }
 
+/// Directly-polled providers whose authority also publishes through Rivermap.
+/// Mapped by short name so we do not duplicate license text for the same
+/// organisation, and so the link survives a change of Rivermap's UUIDs.
+const PROVIDER_SHORT_NAMES: &[(&str, &str)] = &[
+    ("nve", "NVE"),
+    ("bafu", "BAFU"),
+    ("cz", "CHMI"),
+    ("hubeau", "SCHAPI"),
+    ("tirol", "Tirol"),
+    ("vbg", "Vorarlberg"),
+    ("bw", "HVZ (BW)"),
+    ("sx", "Sachsen"),
+    ("pl", "Poland"),
+    ("by", "HND (BY)"),
+];
+
 async fn import_sources(pool: &PgPool, sources: &[RivermapSource]) -> anyhow::Result<()> {
     for s in sources {
+        let license = s
+            .licensing_terms
+            .as_deref()
+            .map(license::parse_license)
+            .unwrap_or_default();
+
         sqlx::query(
-            "INSERT INTO sources (id, name, short_name, licensing_terms, website, country_code)
-             VALUES ($1, $2, $3, $4, $5, $6)
+            "INSERT INTO sources (id, name, short_name, licensing_terms, website, country_code,
+                                  license_name, license_url)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
              ON CONFLICT (id) DO UPDATE
              SET name = EXCLUDED.name,
                  short_name = EXCLUDED.short_name,
                  licensing_terms = EXCLUDED.licensing_terms,
                  website = EXCLUDED.website,
-                 country_code = EXCLUDED.country_code",
+                 country_code = EXCLUDED.country_code,
+                 license_name = EXCLUDED.license_name,
+                 license_url = EXCLUDED.license_url",
         )
         .bind(&s.id)
         .bind(&s.name)
@@ -91,14 +151,45 @@ async fn import_sources(pool: &PgPool, sources: &[RivermapSource]) -> anyhow::Re
         .bind(&s.licensing_terms)
         .bind(&s.website)
         .bind(&s.country_code)
+        .bind(&license.name)
+        .bind(&license.url)
         .execute(pool)
         .await?;
     }
     println!("  Imported {} sources", sources.len());
+
+    // Re-establish the provider mapping now that the source rows exist. The
+    // migration seeds this too, but only matches on a database that already
+    // had an import, so doing it here keeps a fresh database consistent.
+    let mut linked = 0u64;
+    for (provider, short_name) in PROVIDER_SHORT_NAMES {
+        let res = sqlx::query(
+            // ORDER BY + LIMIT keeps this deterministic (and non-fatal) if
+            // Rivermap ever ships two sources with the same short name: a
+            // multi-row insert would make DO UPDATE fail the whole import.
+            "INSERT INTO provider_sources (provider, source_id)
+             SELECT $1, id FROM sources WHERE short_name = $2 ORDER BY id LIMIT 1
+             ON CONFLICT (provider) DO UPDATE SET source_id = EXCLUDED.source_id",
+        )
+        .bind(provider)
+        .bind(short_name)
+        .execute(pool)
+        .await?;
+        linked += res.rows_affected();
+    }
+    println!("  Linked {linked} direct providers to their source");
     Ok(())
 }
 
-async fn import_stations(pool: &PgPool, stations: &[RivermapStation]) -> anyhow::Result<()> {
+async fn import_stations(
+    pool: &PgPool,
+    stations: &[RivermapStation],
+    sources: &[RivermapSource],
+) -> anyhow::Result<()> {
+    // A station may reference a source the snapshot does not carry. Dropping
+    // the link keeps the row importable; failing the FK would abort the lot.
+    let known: std::collections::HashSet<&str> = sources.iter().map(|s| s.id.as_str()).collect();
+    let mut unknown = 0usize;
     let mut count = 0usize;
     for st in stations {
         // Skip inactive and non-online stations
@@ -132,6 +223,13 @@ async fn import_stations(pool: &PgPool, stations: &[RivermapStation]) -> anyhow:
                 _ => continue,
             };
             let source_id = format!("{}:{}", st.id, param);
+            let data_source_id = st.data_source_id.as_deref().filter(|id| {
+                let ok = known.contains(id);
+                if !ok {
+                    unknown += 1;
+                }
+                ok
+            });
             let measurement_type = match param {
                 "W" => "water_level",
                 "Q" => "discharge",
@@ -158,7 +256,7 @@ async fn import_stations(pool: &PgPool, stations: &[RivermapStation]) -> anyhow:
             )
             .bind(&river_name)
             .bind(&source_id)
-            .bind(&st.data_source_id)
+            .bind(data_source_id)
             .bind(lat)
             .bind(lon)
             .execute(pool)
@@ -191,6 +289,9 @@ async fn import_stations(pool: &PgPool, stations: &[RivermapStation]) -> anyhow:
 
             count += 1;
         }
+    }
+    if unknown > 0 {
+        println!("  {unknown} station series referenced an unknown source, left unlinked");
     }
     println!(
         "  Imported {count} gauge series from {} stations",

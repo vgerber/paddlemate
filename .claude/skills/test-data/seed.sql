@@ -72,9 +72,21 @@ CROSS JOIN (SELECT id FROM users LIMIT 1) u;
 -- without a reading. A gauge allows one series per measurement type.
 -- fetch_interval_secs matches the seeded 2-hourly readings; staleness is
 -- defined per gauge as "no reading within twice its own interval".
-INSERT INTO gauges (id, name, provider, source_id, fetch_interval_secs) VALUES
-  (9301, 'Test Gauge', 'test', 'test-1', 7200),
-  (9302, 'Silent Gauge', 'test', 'test-2', 7200);
+-- Two data sources so the attribution UI has both shapes to render: one
+-- naming a common license, one stating none (the majority case upstream).
+INSERT INTO sources (id, name, short_name, licensing_terms, website, country_code,
+                     license_name, license_url) VALUES
+  ('9901', 'Test Hydrographic Service', 'THS',
+   'Data is not validated and is released by the authority under (CC BY 4.0)[https://creativecommons.org/licenses/by/4.0/]',
+   'https://example.org/ths', 'AT', 'CC BY 4.0', 'https://creativecommons.org/licenses/by/4.0/'),
+  ('9902', 'Test Terms Authority', 'TTA',
+   'Data is not validated. We are not aware of a formal license. Please publicly credit the station data and observations to the source organisation',
+   'https://example.org/tta', 'DE', NULL, NULL);
+
+-- 9301 carries a license, 9302 only a distributor, 9303 nothing at all.
+INSERT INTO gauges (id, name, provider, source_id, data_source_id, fetch_interval_secs) VALUES
+  (9301, 'Test Gauge', 'test', 'test-1', '9901', 7200),
+  (9302, 'Silent Gauge', 'test', 'test-2', '9902', 7200);
 INSERT INTO gauge_series (id, gauge_id, measurement_type, unit) VALUES
   (9401, 9301, 'water_level', 'cm'),
   (9402, 9302, 'water_level', 'cm');

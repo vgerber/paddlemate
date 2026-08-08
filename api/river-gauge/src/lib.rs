@@ -31,6 +31,7 @@ mod germany_bw;
 mod germany_pegelonline;
 mod germany_saxony;
 mod italy_riverzone;
+pub mod license;
 mod norway_nve;
 mod poland_imgw;
 mod rivermap;

@@ -8,8 +8,6 @@ import Button from "@mui/material/Button";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -27,6 +25,7 @@ import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
+import GaugesList from "./GaugesList";
 import type { DetailTab, SectionDetailTab, SuggestMode } from "./types";
 import WaterwayDetailHeader from "./WaterwayDetailHeader";
 
@@ -328,59 +327,6 @@ function SectionsList({
           onClick={onSectionClick}
           descentCount={descentCounts?.[section.id]}
         />
-      ))}
-    </List>
-  );
-}
-
-interface GaugesListProps {
-  gaugeRanges: WaterRangeWithStatus[];
-  selectedGaugeId?: number | null;
-  onGaugeSelect?: (id: number) => void;
-}
-
-function GaugesList({
-  gaugeRanges,
-  selectedGaugeId,
-  onGaugeSelect,
-}: GaugesListProps) {
-  if (gaugeRanges.length === 0) {
-    return (
-      <Typography color="text.secondary" variant="body2" sx={{ p: 1 }}>
-        No gauges found.
-      </Typography>
-    );
-  }
-  return (
-    <List dense disablePadding>
-      {gaugeRanges.map((range) => (
-        <ListItemButton
-          key={range.gauge.id}
-          selected={selectedGaugeId === range.gauge.id}
-          onClick={() => onGaugeSelect?.(range.gauge.id)}
-          sx={{ py: 0.75, px: 1.5 }}
-        >
-          <ListItemText
-            primary={(range.series.label ?? range.gauge.name).replace(
-              /\s*\([WQ]\)\s*$/,
-              "",
-            )}
-            secondary={range.gauge.name}
-            slotProps={{
-              primary: { variant: "body2" },
-              secondary: { variant: "caption" },
-            }}
-          />
-          {range.latest_reading != null && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mr: 1, whiteSpace: "nowrap" }}
-            >
-              {range.latest_reading.value.toFixed(1)}&thinsp;{range.series.unit}
-            </Typography>
-          )}
-        </ListItemButton>
       ))}
     </List>
   );

@@ -8,6 +8,7 @@ import ChartPanelShell, {
   useMeasurementTypes,
 } from "@/components/charts/ChartPanelShell";
 import WaterChart from "@/components/charts/water/WaterChart";
+import { GaugeAttributions } from "@/components/GaugeAttribution";
 import LoadingBox from "@/components/states/LoadingBox";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
@@ -76,6 +77,7 @@ export default function SectionChartPanel({
 
   return (
     <ChartPanelShell
+      footer={<GaugeAttributions sources={ranges.map((r) => r.source)} />}
       header={
         <>
           {isAuthenticated && (

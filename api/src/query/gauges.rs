@@ -65,13 +65,55 @@ async fn fetch_sources_by_ids(
     }
     let sources = sqlx::query_as!(
         GaugeSource,
-        "SELECT id, name, short_name, licensing_terms, website, country_code
+        "SELECT id, name, short_name, licensing_terms, website, country_code,
+                license_name, license_url
          FROM sources WHERE id = ANY($1)",
         ids
     )
     .fetch_all(pool)
     .await?;
     Ok(sources.into_iter().map(|s| (s.id.clone(), s)).collect())
+}
+
+/// The gauge's own source link, or its provider's mapped authority.
+/// Directly-polled providers carry no per-station source, so attribution
+/// falls back to the provider_sources mapping.
+async fn effective_source_id(
+    pool: &PgPool,
+    gauges: &[Gauge],
+) -> Result<std::collections::HashMap<GaugeId, String>, sqlx::Error> {
+    let providers: Vec<String> = {
+        let mut ps: Vec<String> = gauges
+            .iter()
+            .filter(|g| g.data_source_id.is_none())
+            .map(|g| g.provider.clone())
+            .collect();
+        ps.sort();
+        ps.dedup();
+        ps
+    };
+    let mapped: std::collections::HashMap<String, String> = if providers.is_empty() {
+        std::collections::HashMap::new()
+    } else {
+        sqlx::query!(
+            "SELECT provider, source_id FROM provider_sources WHERE provider = ANY($1)",
+            &providers
+        )
+        .fetch_all(pool)
+        .await?
+        .into_iter()
+        .map(|r| (r.provider, r.source_id))
+        .collect()
+    };
+    Ok(gauges
+        .iter()
+        .filter_map(|g| {
+            g.data_source_id
+                .clone()
+                .or_else(|| mapped.get(&g.provider).cloned())
+                .map(|id| (g.id, id))
+        })
+        .collect())
 }
 
 pub async fn list_gauges(pool: &PgPool, active_only: bool) -> Result<Vec<Gauge>, sqlx::Error> {
@@ -142,11 +184,9 @@ pub async fn search_gauges(
             .push(series);
     }
 
+    let effective = effective_source_id(pool, &gauges).await?;
     let source_ids: Vec<String> = {
-        let mut ids: Vec<String> = gauges
-            .iter()
-            .filter_map(|g| g.data_source_id.clone())
-            .collect();
+        let mut ids: Vec<String> = effective.values().cloned().collect();
         ids.sort();
         ids.dedup();
         ids
@@ -157,9 +197,8 @@ pub async fn search_gauges(
         .into_iter()
         .map(|gauge| {
             let series = series_by_gauge.remove(&gauge.id).unwrap_or_default();
-            let source = gauge
-                .data_source_id
-                .as_ref()
+            let source = effective
+                .get(&gauge.id)
                 .and_then(|id| sources.get(id).cloned());
             GaugeWithSeries::from_parts(gauge, series, source)
         })
@@ -184,7 +223,8 @@ pub async fn fetch_gauge_with_series(
         None => return Ok(None),
     };
     let series = list_series(pool, gauge_id).await?;
-    let source = match &gauge.data_source_id {
+    let effective = effective_source_id(pool, std::slice::from_ref(&gauge)).await?;
+    let source = match effective.get(&gauge.id) {
         Some(id) => fetch_sources_by_ids(pool, std::slice::from_ref(id))
             .await?
             .remove(id),
@@ -623,6 +663,8 @@ pub async fn water_status_for_section_at(
             src.licensing_terms AS src_licensing_terms,
             src.website         AS src_website,
             src.country_code    AS src_country_code,
+            src.license_name    AS src_license_name,
+            src.license_url     AS src_license_url,
             lr.series_id        AS lr_series_id,
             lr.measured_at      AS lr_measured_at,
             lr.value            AS lr_value
@@ -630,7 +672,8 @@ pub async fn water_status_for_section_at(
         JOIN feature_water_ranges fwr ON fwr.feature_id = f.id
         JOIN gauge_series gs ON gs.id = fwr.series_id
         JOIN gauges g ON g.id = gs.gauge_id
-        LEFT JOIN sources src ON src.id = g.data_source_id
+        LEFT JOIN provider_sources ps ON ps.provider = g.provider
+        LEFT JOIN sources src ON src.id = COALESCE(g.data_source_id, ps.source_id)
         LEFT JOIN LATERAL (
             SELECT series_id, measured_at, value
             FROM gauge_readings
@@ -673,6 +716,8 @@ fn row_to_water_range_with_status(row: &PgRow) -> Result<WaterRangeWithStatus, s
                 licensing_terms: row.try_get("src_licensing_terms")?,
                 website: row.try_get("src_website")?,
                 country_code: row.try_get("src_country_code")?,
+                license_name: row.try_get("src_license_name")?,
+                license_url: row.try_get("src_license_url")?,
             })
         })
         .transpose()?;

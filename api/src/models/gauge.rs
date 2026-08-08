@@ -36,9 +36,16 @@ pub struct GaugeSource {
     pub id: String,
     pub name: String,
     pub short_name: Option<String>,
+    /// The provider's own statement, verbatim. Prose, sometimes with links.
     pub licensing_terms: Option<String>,
     pub website: Option<String>,
     pub country_code: Option<String>,
+    /// Short license label derived from `licensing_terms`, e.g. "CC BY 4.0".
+    /// None when the provider names no license we recognise.
+    pub license_name: Option<String>,
+    /// Where the license can be read. None when no formal license is stated,
+    /// in which case clients link `website` instead.
+    pub license_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
