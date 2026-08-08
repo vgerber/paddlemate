@@ -30,42 +30,60 @@ export type { GaugePin } from "./GaugeMarkers";
 
 const { tokens } = theme;
 
+/** Clicking the map to choose places: the section put-in/take-out pair and
+ * multi-section selection. Present only while a form is picking. */
+export interface MapPicking {
+  putIn?: { lat: number; lon: number } | null;
+  takeOut?: { lat: number; lon: number } | null;
+  onPickPutIn?: (lat: number, lon: number) => void;
+  onPickTakeOut?: (lat: number, lon: number) => void;
+  selectedSectionIds?: Set<number>;
+  onSectionToggle?: (id: number) => void;
+}
+
+/** Geometry being drafted on the map: feature vertices under construction
+ * and the preview/highlight lines of a section in progress. */
+export interface MapDrawing {
+  featureVertices?: { lng: number; lat: number }[];
+  featureGeomType?: "Point" | "LineString" | "Polygon";
+  /** Route map clicks to `onMapClick` instead of section selection. */
+  placingFeature?: boolean;
+  onMapClick?: (lng: number, lat: number) => void;
+  sectionPreviewCoords?: [number, number][];
+  /** River course to highlight subtly (e.g. the OSM riverbed a section will snap to). */
+  riverHighlightCoords?: [number, number][] | null;
+}
+
+/** Controls and labelling around the map surface, not the data on it. */
+export interface MapChrome {
+  waterwayNames?: Record<number, string>;
+  labelMode?: "section" | "river";
+  onLabelModeChange?: (mode: "section" | "river") => void;
+  /** Extra px to add to the bottom offset of map controls (satellite/label toggle) so they clear any bottom strip. */
+  controlsBottomOffset?: number;
+  /** Anchor the map controls to the top instead of the bottom (e.g. when the bottom is covered by a panel). */
+  controlsAnchor?: "top" | "bottom";
+  /** For maps embedded in scrollable pages: page scroll passes over the map;
+   * zooming needs Ctrl/Cmd+scroll (or two fingers on touch). */
+  cooperativeGestures?: boolean;
+}
+
 interface WaterwayMapProps {
   sections?: SectionWithFeatures[];
   features?: Feature[];
   selectedSectionId?: number | null;
   onSectionClick?: (id: number) => void;
-  // Multi-selection picker mode
-  selectedSectionIds?: Set<number>;
-  onSectionToggle?: (id: number) => void;
-  // Put-in / take-out picking
-  putIn?: { lat: number; lon: number } | null;
-  takeOut?: { lat: number; lon: number } | null;
-  featureVertices?: { lng: number; lat: number }[];
-  featureGeomType?: "Point" | "LineString" | "Polygon";
-  onPickPutIn?: (lat: number, lon: number) => void;
-  onPickTakeOut?: (lat: number, lon: number) => void;
-  sectionPreviewCoords?: [number, number][];
-  placingFeature?: boolean;
-  onMapClick?: (lng: number, lat: number) => void;
+  sectionLevels?: Record<number, string>;
+  /** Pending proposals to show as ghost markers on the map. */
+  proposedFeatures?: Feature[];
   gaugePins?: GaugePin[];
   selectedGaugePinId?: number | null;
   onGaugeClick?: (pin: GaugePin) => void;
   areaCircle?: AreaCircle | null;
   areaLocked?: boolean;
   onAreaCircleChange?: (circle: AreaCircle | null) => void;
-  waterwayNames?: Record<number, string>;
-  labelMode?: "section" | "river";
-  onLabelModeChange?: (mode: "section" | "river") => void;
-  sectionLevels?: Record<number, string>;
   /** [lng, lat] to fly to and highlight; set by clicking a feature in the panel. */
   focusedPoint?: [number, number] | null;
-  /** Extra px to add to the bottom offset of map controls (satellite/label toggle) so they clear any bottom strip. */
-  controlsBottomOffset?: number;
-  /** Anchor the map controls to the top instead of the bottom (e.g. when the bottom is covered by a panel). */
-  controlsAnchor?: "top" | "bottom";
-  /** Pending proposals to show as ghost markers on the map. */
-  proposedFeatures?: Feature[];
   /** Reports the current viewport bounds (on load and after each move). */
   onBoundsChange?: (bounds: {
     south: number;
@@ -73,47 +91,52 @@ interface WaterwayMapProps {
     north: number;
     east: number;
   }) => void;
-  /** River course to highlight subtly (e.g. the OSM riverbed a section will snap to). */
-  riverHighlightCoords?: [number, number][] | null;
-  /** For maps embedded in scrollable pages: page scroll passes over the map;
-   * zooming needs Ctrl/Cmd+scroll (or two fingers on touch). */
-  cooperativeGestures?: boolean;
+  picking?: MapPicking;
+  drawing?: MapDrawing;
+  chrome?: MapChrome;
 }
+
+const NO_PICKING: MapPicking = {};
+const NO_DRAWING: MapDrawing = {};
+const NO_CHROME: MapChrome = {};
 
 export default function WaterwayMap({
   sections,
   features,
   selectedSectionId,
   onSectionClick,
-  selectedSectionIds,
-  onSectionToggle,
-  putIn,
-  takeOut,
-  featureVertices,
-  featureGeomType,
-  onPickPutIn,
-  onPickTakeOut,
-  sectionPreviewCoords,
-  placingFeature,
-  onMapClick,
+  sectionLevels,
+  proposedFeatures,
   gaugePins,
   selectedGaugePinId,
   onGaugeClick,
   areaCircle,
   areaLocked,
   onAreaCircleChange,
-  waterwayNames,
-  labelMode = "section",
-  onLabelModeChange,
-  sectionLevels,
   focusedPoint,
-  controlsBottomOffset = 0,
-  controlsAnchor,
-  proposedFeatures,
   onBoundsChange,
-  riverHighlightCoords,
-  cooperativeGestures,
+  picking = NO_PICKING,
+  drawing = NO_DRAWING,
+  chrome = NO_CHROME,
 }: WaterwayMapProps) {
+  const { putIn, takeOut, onPickPutIn, onPickTakeOut, selectedSectionIds } =
+    picking;
+  const {
+    featureVertices,
+    featureGeomType,
+    placingFeature,
+    onMapClick,
+    sectionPreviewCoords,
+    riverHighlightCoords,
+  } = drawing;
+  const {
+    waterwayNames,
+    labelMode = "section",
+    onLabelModeChange,
+    controlsBottomOffset = 0,
+    controlsAnchor,
+    cooperativeGestures,
+  } = chrome;
   const mapRef = useRef<MapRef>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [satellite, setSatellite] = useState(false);
@@ -159,7 +182,7 @@ export default function WaterwayMap({
     onAreaCircleChange,
     placingFeature,
     onMapClick,
-    onSectionToggle,
+    onSectionToggle: picking.onSectionToggle,
     onSectionClick,
   });
 

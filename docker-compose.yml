@@ -10,6 +10,25 @@ services:
     volumes:
       - db_data:/var/lib/postgresql
 
+  # Local identity provider, so authenticated flows can be exercised against
+  # a real token instead of a hand-written session. Imports keycloak/realm-local.json
+  # (regenerate with `sh keycloak/build-realm.sh`). Opt in with:
+  #   docker compose --profile auth up -d keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    profiles: ["auth"]
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    volumes:
+      # Only the realm file - Keycloak treats every JSON in this directory as
+      # a realm, and the *-client.json files are fragments, not realms.
+      - ./keycloak/realm-local.json:/opt/keycloak/data/import/realm-local.json:ro
+
   # api:
   #   build:
   #     context: ./api

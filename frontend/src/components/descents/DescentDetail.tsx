@@ -154,16 +154,16 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
         >
           <WaterwayMap
             sections={mapSections}
-            putIn={
-              descent.put_in_lat != null && descent.put_in_lon != null
-                ? { lat: descent.put_in_lat, lon: descent.put_in_lon }
-                : null
-            }
-            takeOut={
-              descent.take_out_lat != null && descent.take_out_lon != null
-                ? { lat: descent.take_out_lat, lon: descent.take_out_lon }
-                : null
-            }
+            picking={{
+              putIn:
+                descent.put_in_lat != null && descent.put_in_lon != null
+                  ? { lat: descent.put_in_lat, lon: descent.put_in_lon }
+                  : null,
+              takeOut:
+                descent.take_out_lat != null && descent.take_out_lon != null
+                  ? { lat: descent.take_out_lat, lon: descent.take_out_lon }
+                  : null,
+            }}
           />
         </Box>
       )}

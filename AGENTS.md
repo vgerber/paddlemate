@@ -152,6 +152,12 @@ Shared UI: `ConfirmDialog` (every confirmation - never `window.confirm`),
 `charts/ChartPanelShell`. Do not hand-roll a spinner box, confirm dialog or
 sign-in gate.
 
+`WaterwayMap` takes its optional behaviour as three grouped objects rather
+than loose props: `picking` (put-in/take-out and section selection),
+`drawing` (feature vertices, preview and highlight lines) and `chrome`
+(labels, control placement, gestures). A new map capability joins the group
+it belongs to; only data and always-on callbacks stay top-level.
+
 The map's layer JSX lives in per-concern components, not in `Map.tsx`:
 `SectionLayers`, `FeatureGeoJSONLayers` (one implementation for confirmed
 and proposed features, switched by the `proposed` flag), `DraftLayers` /

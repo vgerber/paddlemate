@@ -108,8 +108,8 @@ export default function ProposalDetailPane({
           }}
         >
           <WaterwayMap
-            cooperativeGestures
-            sectionPreviewCoords={sectionLine}
+            chrome={{ cooperativeGestures: true }}
+            drawing={{ sectionPreviewCoords: sectionLine }}
             proposedFeatures={
               pseudoFeatures.length > 0 ? pseudoFeatures : undefined
             }

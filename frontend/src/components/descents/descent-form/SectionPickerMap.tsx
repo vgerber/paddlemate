@@ -51,15 +51,17 @@ export default function SectionPickerMap({
       )}
       <WaterwayMap
         sections={sections}
-        selectedSectionIds={selectedIds}
-        onSectionToggle={(id) => {
-          const section = sections.find((s) => s.id === id);
-          if (section) onSectionToggle(section);
+        picking={{
+          selectedSectionIds: selectedIds,
+          onSectionToggle: (id) => {
+            const section = sections.find((s) => s.id === id);
+            if (section) onSectionToggle(section);
+          },
+          putIn,
+          takeOut,
+          onPickPutIn,
+          onPickTakeOut,
         }}
-        putIn={putIn}
-        takeOut={takeOut}
-        onPickPutIn={onPickPutIn}
-        onPickTakeOut={onPickTakeOut}
       />
     </Box>
   );

@@ -68,4 +68,6 @@ Section chip variants in the list view:
   (the checked-out `.env` points at production).
 - Authed API checks: `curl -H "X-Api-Key: pm_testtoken123" localhost:3000/api/v1/descents?scope=owned`
 - To drive an authenticated browser session headlessly, see the `verify`
-  skill (fake oidc user in localStorage + CDP header rewrite to the API key).
+  skill: it signs in through a local Keycloak whose user id matches this
+  fixture's owner, so the session sees exactly this data. Do not hand-write
+  an oidc session into localStorage.

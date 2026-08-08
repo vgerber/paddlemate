@@ -1,0 +1,117 @@
+{
+  "realm": "paddle",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "accessTokenLifespan": 1800,
+  "ssoSessionIdleTimeout": 7200,
+  "roles": {
+    "realm": [
+      {
+        "name": "server_admin",
+        "description": "Full administrative access"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "paddlemate-web",
+      "name": "Paddlemate Web",
+      "description": "Public OIDC client for the Paddlemate frontend (PKCE, no secret).",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://localhost:4173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "http://localhost:4173"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*##http://localhost:4173/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-account",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "account",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "realm-roles-in-id-token",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "paddlemate-api",
+      "name": "Paddlemate API Service Account",
+      "description": "Confidential service-account client used by the API for admin user-info lookups.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "attributes": {},
+      "secret": "local-dev-secret"
+    }
+  ],
+  "users": [
+    {
+      "id": "5a5e307b-bd29-4f61-a9e3-b29df4cb1744",
+      "username": "vincent",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "vincent@example.test",
+      "firstName": "Vincent",
+      "lastName": "Local",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "paddle",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-paddle",
+        "server_admin"
+      ]
+    },
+    {
+      "username": "service-account-paddlemate-api",
+      "enabled": true,
+      "serviceAccountClientId": "paddlemate-api",
+      "clientRoles": {
+        "realm-management": [
+          "view-users"
+        ]
+      }
+    }
+  ]
+}

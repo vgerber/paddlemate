@@ -68,6 +68,7 @@ export default function ProposalVoteBar({
         <span>
           <IconButton
             size="small"
+            aria-label="Upvote proposal"
             disabled={!isAuthenticated}
             onClick={() => handleVote(1)}
             sx={{
@@ -93,6 +94,7 @@ export default function ProposalVoteBar({
         <span>
           <IconButton
             size="small"
+            aria-label="Downvote proposal"
             disabled={!isAuthenticated}
             onClick={() => handleVote(-1)}
             sx={{
@@ -119,6 +121,7 @@ export default function ProposalVoteBar({
           <Tooltip title="Approve proposal" placement="top">
             <IconButton
               size="small"
+              aria-label="Approve proposal"
               onClick={() => onReview("approved")}
               sx={{ ml: 1, color: tokens.secondary }}
             >
@@ -128,6 +131,7 @@ export default function ProposalVoteBar({
           <Tooltip title="Reject proposal" placement="top">
             <IconButton
               size="small"
+              aria-label="Reject proposal"
               onClick={() => onReview("rejected")}
               sx={{ color: "error.main" }}
             >

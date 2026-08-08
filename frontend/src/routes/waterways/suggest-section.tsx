@@ -132,43 +132,41 @@ function SuggestSectionPage() {
             >
               <WaterwayMap
                 sections={sections}
-                cooperativeGestures
-                putIn={putIn}
-                takeOut={takeOut}
-                onPickPutIn={
-                  onSectionStep
-                    ? (lat, lon) => wizard.setPutIn({ lat, lon })
-                    : undefined
-                }
-                onPickTakeOut={
-                  onSectionStep
-                    ? (lat, lon) => wizard.setTakeOut({ lat, lon })
-                    : undefined
-                }
-                sectionPreviewCoords={finalCoords ?? undefined}
-                riverHighlightCoords={wizard.snap.river}
                 onBoundsChange={wizard.setMapBounds}
-                placingFeature={onFeaturesStep && featurePickActive}
-                onMapClick={
-                  onFeaturesStep && featurePickActive
-                    ? (lng, lat) =>
-                        wizard.setFeatureVertices((vertices) => [
-                          ...vertices,
-                          { lng, lat },
-                        ])
-                    : undefined
-                }
-                featureVertices={
-                  onFeaturesStep && wizard.featureVertices.length > 0
-                    ? wizard.featureVertices
-                    : undefined
-                }
-                featureGeomType={wizard.featureGeomType}
                 proposedFeatures={
                   onFeaturesStep && wizard.draftFeaturePseudos.length > 0
                     ? wizard.draftFeaturePseudos
                     : undefined
                 }
+                chrome={{ cooperativeGestures: true }}
+                picking={{
+                  putIn,
+                  takeOut,
+                  onPickPutIn: onSectionStep
+                    ? (lat, lon) => wizard.setPutIn({ lat, lon })
+                    : undefined,
+                  onPickTakeOut: onSectionStep
+                    ? (lat, lon) => wizard.setTakeOut({ lat, lon })
+                    : undefined,
+                }}
+                drawing={{
+                  sectionPreviewCoords: finalCoords ?? undefined,
+                  riverHighlightCoords: wizard.snap.river,
+                  placingFeature: onFeaturesStep && featurePickActive,
+                  onMapClick:
+                    onFeaturesStep && featurePickActive
+                      ? (lng, lat) =>
+                          wizard.setFeatureVertices((vertices) => [
+                            ...vertices,
+                            { lng, lat },
+                          ])
+                      : undefined,
+                  featureVertices:
+                    onFeaturesStep && wizard.featureVertices.length > 0
+                      ? wizard.featureVertices
+                      : undefined,
+                  featureGeomType: wizard.featureGeomType,
+                }}
               />
             </Box>
           )}

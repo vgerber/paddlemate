@@ -42,6 +42,69 @@ Constraints to satisfy: `water_sections.location` is a required PostGIS
 LineString; `descents` needs put-in as feature-id XOR lat+lon. Use high ids
 (9000+) and delete them when done (descents cascade to descent_sections).
 
+## Signing in (authenticated flows)
+
+Do **not** hand-write an oidc session into localStorage. It puts the app in a
+state no real user reaches: the browser believes one identity while the API
+acts on another, so ownership, visibility and admin checks are all tested
+against a fiction, and token expiry/refresh/401 paths never run.
+
+Instead run a local identity provider and sign in for real:
+
+```sh
+docker compose --profile auth up -d keycloak    # imports keycloak/realm-local.json
+```
+
+There are two ways to provision a Keycloak, and they are not interchangeable:
+
+| | `docker compose --profile auth up` | `keycloak/setup-keycloak.sh` |
+|---|---|---|
+| How | imports `realm-local.json` at boot | Admin REST API |
+| Works on | a container with an empty database only | any reachable Keycloak, any time |
+| Re-runnable | no - needs a fresh container | yes, idempotent |
+| Creates the dev user | **yes, with a pinned id** | no |
+
+Use the compose path for local development: pinning the user id to the
+fixture owner is what makes a signed-in session see the seeded data, and only
+realm import can do that. Use the script for a server, for a realm that
+already exists, or to roll out an edit to `paddlemate-*-client.json`:
+
+```sh
+./keycloak/setup-keycloak.sh https://auth.example.com https://app.example.com
+```
+
+The realm ships a user `vincent` / `paddle` whose subject **equals the
+fixture owner id**, so a signed-in session sees the seeded descents,
+favourites and proposals, and carries `server_admin` for the review controls.
+
+Point both sides at it (neither file needs editing - process env wins over
+`.env`, and `frontend/.env.development.local` already has the three
+`VITE_AUTH_*` lines):
+
+```sh
+cd api && KEYCLOAK_URL=http://localhost:8080 \
+  KEYCLOAK_TOKEN_URL=http://localhost:8080/realms/paddle/protocol/openid-connect/token \
+  KEYCLOAK_CLIENT_SECRET=local-dev-secret cargo run
+```
+
+Then, with headless Chrome up (below):
+
+```sh
+bun .claude/skills/verify/login.ts    # real PKCE redirect through the login form
+bun .claude/skills/verify/smoke.ts    # authenticated smoke, prints PASS/FAIL
+```
+
+Gotchas that cost time:
+
+- **Recreating the keycloak container mints new realm signing keys.** The API
+  caches the JWK set at startup, so restart the API after any
+  `docker compose up --force-recreate keycloak`, or every request 401s.
+- Keycloak's SSO cookie survives between runs; `login.ts` clears cookies so
+  each run exercises the full form, not a silent re-issue.
+- Realm changes go in `keycloak/build-realm.sh` (regenerates
+  `realm-local.json` from the shared `*-client.json`), never in the generated
+  file. Import only runs on a fresh container.
+
 ## Driving the UI headlessly
 
 No Playwright installed; use system Chrome + CDP over WebSocket with a bun

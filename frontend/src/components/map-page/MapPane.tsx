@@ -165,26 +165,28 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
               ? setAreaCircle
               : undefined
           }
-          waterwayNames={waterwayNames}
-          labelMode={labelMode}
-          onLabelModeChange={setLabelMode}
           sectionLevels={
             selectedWaterwayId != null ? sectionLevels : searchSectionLevels
           }
-          sectionPreviewCoords={sectionPreviewCoords ?? undefined}
-          featureVertices={featureVertices}
-          featureGeomType={featureGeomType}
-          placingFeature={featurePickingActive}
-          onMapClick={featurePickingActive ? handleMapPick : undefined}
           focusedPoint={focusedPoint}
-          controlsBottomOffset={
-            isMobile && (showAreaStrip || isMobileMapView) ? 60 : 0
-          }
-          controlsAnchor={
-            isMobile && suggestMode === "feature" ? "top" : undefined
-          }
           proposedFeatures={proposedFeatures}
           onBoundsChange={setMapBounds}
+          drawing={{
+            sectionPreviewCoords: sectionPreviewCoords ?? undefined,
+            featureVertices,
+            featureGeomType,
+            placingFeature: featurePickingActive,
+            onMapClick: featurePickingActive ? handleMapPick : undefined,
+          }}
+          chrome={{
+            waterwayNames,
+            labelMode,
+            onLabelModeChange: setLabelMode,
+            controlsBottomOffset:
+              isMobile && (showAreaStrip || isMobileMapView) ? 60 : 0,
+            controlsAnchor:
+              isMobile && suggestMode === "feature" ? "top" : undefined,
+          }}
         />
 
         {/* Area strip - mobile, area mode, no waterway selected */}
