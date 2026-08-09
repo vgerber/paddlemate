@@ -226,8 +226,11 @@ async fn main() {
         ));
 
     let waterway_app = ApiRouter::new()
-        .nest_api_service("/waterways", waterways_routes(state.clone()))
-        .nest_api_service("/gauges", gauges_routes(state.clone()))
+        .nest_api_service(
+            "/waterways",
+            waterways_routes(state.clone())
+                .nest_api_service("/gauges", gauges_routes(state.clone())),
+        )
         .nest_api_service("/descents", descents_routes(state.clone()))
         .nest_api_service("/proposals", proposals_routes(state.clone()))
         .layer(middleware::from_fn_with_state(

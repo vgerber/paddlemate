@@ -191,7 +191,7 @@ export const gaugesApi = {
     lon?: number;
     limit?: number;
   }) => {
-    const { data } = await client.GET("/api/v1/gauges/search", {
+    const { data } = await client.GET("/api/v1/waterways/gauges/search", {
       params: { query: params },
     });
     return assertData(data);
@@ -205,14 +205,14 @@ export const gaugesApi = {
     radius_km?: number;
     limit?: number;
   }) => {
-    const { data } = await client.GET("/api/v1/gauges/catalog", {
+    const { data } = await client.GET("/api/v1/waterways/gauges/catalog", {
       params: { query: params },
     });
     return assertData(data);
   },
   /** Every gauge as a coverage-map point (used / fetched / available). */
   map: async () => {
-    const { data } = await client.GET("/api/v1/gauges/map");
+    const { data } = await client.GET("/api/v1/waterways/gauges/map");
     return assertData(data);
   },
 };
@@ -225,7 +225,7 @@ export const gaugeReadingsApi = {
     limit?: number,
   ) => {
     const { data } = await client.GET(
-      "/api/v1/gauges/{gauge_id}/series/{series_id}/readings",
+      "/api/v1/waterways/gauges/{gauge_id}/series/{series_id}/readings",
       {
         params: {
           path: { gauge_id: gaugeId, series_id: seriesId },

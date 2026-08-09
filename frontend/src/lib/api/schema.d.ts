@@ -607,7 +607,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/gauges": {
+    "/api/v1/waterways/gauges": {
         parameters: {
             query?: never;
             header?: never;
@@ -625,7 +625,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/gauges/search": {
+    "/api/v1/waterways/gauges/search": {
         parameters: {
             query?: never;
             header?: never;
@@ -642,7 +642,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/gauges/catalog": {
+    "/api/v1/waterways/gauges/catalog": {
         parameters: {
             query?: never;
             header?: never;
@@ -659,7 +659,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/gauges/map": {
+    "/api/v1/waterways/gauges/map": {
         parameters: {
             query?: never;
             header?: never;
@@ -676,7 +676,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/gauges/{gauge_id}": {
+    "/api/v1/waterways/gauges/{gauge_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -695,7 +695,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/gauges/{gauge_id}/series": {
+    "/api/v1/waterways/gauges/{gauge_id}/series": {
         parameters: {
             query?: never;
             header?: never;
@@ -712,7 +712,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/gauges/{gauge_id}/series/{series_id}": {
+    "/api/v1/waterways/gauges/{gauge_id}/series/{series_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -730,7 +730,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/gauges/{gauge_id}/series/{series_id}/readings": {
+    "/api/v1/waterways/gauges/{gauge_id}/series/{series_id}/readings": {
         parameters: {
             query?: never;
             header?: never;
@@ -747,7 +747,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/gauges/{gauge_id}/series/{series_id}/readings/latest": {
+    "/api/v1/waterways/gauges/{gauge_id}/series/{series_id}/readings/latest": {
         parameters: {
             query?: never;
             header?: never;
@@ -764,7 +764,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/gauges/{gauge_id}/backfill": {
+    "/api/v1/waterways/gauges/{gauge_id}/backfill": {
         parameters: {
             query?: never;
             header?: never;
@@ -2151,11 +2151,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-08-08T16:31:03.016971831Z",
-                     *         "expires_at": "2026-11-06T16:31:03.016973901Z",
+                     *         "created_at": "2026-08-08T18:23:22.800352374Z",
+                     *         "expires_at": "2026-11-06T18:23:22.800354734Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-08-08T16:31:03.016975471Z",
+                     *         "last_used_at": "2026-08-08T18:23:22.800356274Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -2186,8 +2186,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-08-08T16:31:03.017139451Z",
-                     *       "expires_at": "2026-11-06T16:31:03.017139861Z",
+                     *       "created_at": "2026-08-08T18:23:22.800523594Z",
+                     *       "expires_at": "2026-11-06T18:23:22.800524044Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
