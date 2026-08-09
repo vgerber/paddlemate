@@ -19,10 +19,8 @@ import { LIBERTY_STYLE } from "@/components/map/mapStyles";
 import type { GaugeMapState } from "@/lib/api";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
 import { labelSx, theme } from "@/lib/theme";
-import {
-  type GaugePointProperties,
-  toFeatureCollection,
-} from "./toFeatureCollection";
+import { groupByProximity, type MapGroup } from "./groupByProximity";
+import { toFeatureCollection } from "./toFeatureCollection";
 
 const { tokens } = theme;
 
@@ -66,20 +64,24 @@ interface ClusterInfo {
   counts: Record<GaugeMapState, number>;
 }
 
-/** A read-only coverage map of every gauge. Points are colored by state -
- * used (linked to a section), fetched (polled but unlinked) or available (a
- * catalog station not yet fetched) - and clusters render as donut charts that
- * carry the mix of those state colors. Legend rows toggle a state on and off,
- * which re-clusters so the colors always reflect what is shown. */
+/** Read-only coverage map: points colored by state (used/fetched/available),
+ * clustered into donut charts; legend rows toggle each state. */
 export default function GaugeCatalogMap() {
   const mapRef = useRef<MapRef>(null);
   const { data: points, isLoading, isError } = useGaugeMap();
   const [hidden, setHidden] = useState<Set<GaugeMapState>>(new Set());
-  const [selected, setSelected] = useState<GaugePointProperties | null>(null);
+  const [selected, setSelected] = useState<MapGroup | null>(null);
   const [clusters, setClusters] = useState<ClusterInfo[]>([]);
   // Signature of the last cluster set, so frequent render events only trigger a
   // React update when the clusters actually changed.
   const lastSig = useRef("");
+
+  // Merge points within ~250m into one marker (same station, many providers).
+  const groups = useMemo(() => groupByProximity(points ?? []), [points]);
+  const groupsById = useMemo(
+    () => new Map(groups.map((g) => [g.id, g])),
+    [groups],
+  );
 
   const counts = useMemo(() => {
     const c: Record<GaugeMapState, number> = {
@@ -87,14 +89,13 @@ export default function GaugeCatalogMap() {
       fetched: 0,
       available: 0,
     };
-    for (const p of points ?? []) c[p.state] += 1;
+    for (const g of groups) c[g.state] += 1;
     return c;
-  }, [points]);
+  }, [groups]);
 
   const data = useMemo(
-    () =>
-      toFeatureCollection((points ?? []).filter((p) => !hidden.has(p.state))),
-    [points, hidden],
+    () => toFeatureCollection(groups.filter((g) => !hidden.has(g.state))),
+    [groups, hidden],
   );
 
   // Re-read the clusters MapLibre generated for the current viewport, with the
@@ -157,8 +158,8 @@ export default function GaugeCatalogMap() {
   };
 
   const handleClick = (e: MapLayerMouseEvent) => {
-    const feature = e.features?.[0];
-    setSelected(feature ? (feature.properties as GaugePointProperties) : null);
+    const id = e.features?.[0]?.properties?.group_id as string | undefined;
+    setSelected(id ? (groupsById.get(id) ?? null) : null);
   };
 
   return (
@@ -370,7 +371,7 @@ export default function GaugeCatalogMap() {
         })}
       </Box>
 
-      {/* Detail card for a clicked point (top-left, clear of the nav control). */}
+      {/* Detail card: the merged location and every gauge reported there. */}
       {selected && (
         <Box
           sx={{
@@ -378,7 +379,9 @@ export default function GaugeCatalogMap() {
             top: 14,
             left: 10,
             zIndex: 11,
-            width: 240,
+            width: 270,
+            maxHeight: "calc(100% - 28px)",
+            overflowY: "auto",
             border: "1px solid",
             borderColor: "divider",
             bgcolor: "background.paper",
@@ -393,25 +396,14 @@ export default function GaugeCatalogMap() {
               gap: 1,
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.75,
-                minWidth: 0,
-              }}
-            >
-              <Box
-                sx={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: "50%",
-                  bgcolor: stateMeta(selected.state).color,
-                  flexShrink: 0,
-                }}
-              />
-              <Typography sx={labelSx}>
-                {stateMeta(selected.state).label}
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="subtitle2" sx={{ wordBreak: "break-word" }}>
+                {selected.river || selected.name || selected.station_id}
+              </Typography>
+              <Typography sx={{ ...labelSx, display: "block" }}>
+                {selected.members.length > 1
+                  ? `${selected.members.length} gauges here`
+                  : "1 gauge"}
               </Typography>
             </Box>
             <IconButton
@@ -423,34 +415,47 @@ export default function GaugeCatalogMap() {
               <CloseIcon fontSize="inherit" />
             </IconButton>
           </Box>
-          <Typography
-            variant="subtitle2"
-            sx={{ mt: 0.5, wordBreak: "break-word" }}
-          >
-            {selected.name || selected.station_id}
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: "block" }}
-          >
-            {selected.provider}
-            {selected.river ? ` · ${selected.river}` : ""}
-          </Typography>
-          {selected.params && (
-            <Typography variant="caption" sx={{ display: "block", mt: 0.5 }}>
-              Measurements: {selected.params}
-            </Typography>
-          )}
-          {selected.state === "available" && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ display: "block", mt: 0.5 }}
-            >
-              We don't collect this station yet - link it to a section to start.
-            </Typography>
-          )}
+
+          <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+            {selected.members.map((m) => {
+              const meta = stateMeta(m.state);
+              return (
+                <Box
+                  key={`${m.provider}:${m.station_id}`}
+                  sx={{ display: "flex", gap: 0.75, alignItems: "flex-start" }}
+                >
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      bgcolor: meta.color,
+                      flexShrink: 0,
+                      mt: 0.4,
+                    }}
+                  />
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ wordBreak: "break-word" }}
+                    >
+                      {m.name || m.river || m.station_id}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: "block" }}
+                    >
+                      {m.provider} · {meta.label}
+                      {m.params && m.params.length > 0
+                        ? ` · ${m.params.join(", ")}`
+                        : ""}
+                    </Typography>
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
         </Box>
       )}
 

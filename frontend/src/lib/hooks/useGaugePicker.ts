@@ -18,14 +18,21 @@ const SECTION = "On this section";
 const ALL = "All providers";
 
 /** Map a catalog station's parameter key to a measurement type. Providers use
- * different vocabularies - rivermap "W"/"Q", others "level"/"flow" - so match
- * on the meaning rather than an exact key. */
+ * different vocabularies - rivermap "W"/"Q", NVE "1000"/"1001", others
+ * "level"/"flow" - so match on the meaning rather than an exact key. */
 function measurementOf(param: string): MeasurementType {
   const p = param.toLowerCase();
-  if (p === "q" || p.includes("flow") || p.includes("discharge")) {
+  if (
+    p === "q" ||
+    p === "1001" ||
+    p.includes("flow") ||
+    p.includes("discharge")
+  ) {
     return "discharge";
   }
-  if (p === "t" || p.includes("temp")) return "temperature";
+  if (p === "wt" || p === "1003" || p === "t" || p.includes("temp")) {
+    return "temperature";
+  }
   return "water_level";
 }
 function measurementLabel(m: MeasurementType): string {

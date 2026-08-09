@@ -1,14 +1,15 @@
-import type { GaugeMapPoint, GaugeMapState } from "@/lib/api";
+import type { GaugeMapState } from "@/lib/api";
+import type { MapGroup } from "./groupByProximity";
 
-/** Feature properties carried into the MapLibre source. MapLibre only keeps
- * scalar property values, so `params` is joined and nullable text coalesced. */
-export interface GaugePointProperties {
-  provider: string;
-  station_id: string;
+/** Scalar feature properties for the source; members are looked up by `group_id`. */
+export interface GroupProperties {
+  group_id: string;
+  state: GaugeMapState;
   name: string;
   river: string;
-  state: GaugeMapState;
-  params: string;
+  provider: string;
+  station_id: string;
+  count: number;
 }
 
 export type GaugeFeatureCollection = {
@@ -16,32 +17,28 @@ export type GaugeFeatureCollection = {
   features: Array<{
     type: "Feature";
     geometry: { type: "Point"; coordinates: [number, number] };
-    properties: GaugePointProperties;
+    properties: GroupProperties;
   }>;
 };
 
-/** Turn the coverage-map points into a GeoJSON FeatureCollection the clustered
- * source consumes. Points with a non-finite lat/lon are dropped defensively -
- * the API only returns points with coordinates, but a bad row must not break
- * the whole layer. */
+/** Groups to a GeoJSON FeatureCollection: one feature per location, with `count`. */
 export function toFeatureCollection(
-  points: GaugeMapPoint[],
+  groups: MapGroup[],
 ): GaugeFeatureCollection {
   return {
     type: "FeatureCollection",
-    features: points
-      .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon))
-      .map((p) => ({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [p.lon, p.lat] },
-        properties: {
-          provider: p.provider,
-          station_id: p.station_id,
-          name: p.name ?? "",
-          river: p.river ?? "",
-          state: p.state,
-          params: (p.params ?? []).join(", "),
-        },
-      })),
+    features: groups.map((g) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [g.lon, g.lat] },
+      properties: {
+        group_id: g.id,
+        state: g.state,
+        name: g.name,
+        river: g.river,
+        provider: g.provider,
+        station_id: g.station_id,
+        count: g.members.length,
+      },
+    })),
   };
 }
