@@ -5,11 +5,12 @@ import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { GeoJSONSource } from "maplibre-gl";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import MapGL, {
   Layer,
   type MapLayerMouseEvent,
   type MapRef,
+  Marker,
   NavigationControl,
   Source,
 } from "react-map-gl/maplibre";
@@ -26,7 +27,6 @@ import {
 const { tokens } = theme;
 
 const SOURCE_ID = "gauge-points-src";
-const CLUSTER_LAYER = "gauge-clusters";
 const POINT_LAYER = "gauge-points";
 
 const STATES: {
@@ -37,36 +37,49 @@ const STATES: {
 }[] = [
   {
     key: "used",
-    label: "Used",
+    label: "On a section",
     color: tokens.tertiary,
-    help: "Linked to a section",
+    help: "Shows a run's water level",
   },
   {
     key: "fetched",
-    label: "Fetched",
+    label: "Tracked",
     color: tokens.primary,
-    help: "Polled, not linked yet",
+    help: "We collect its data, but no section uses it yet",
   },
   {
     key: "available",
-    label: "Available",
+    label: "Untracked",
     color: tokens.outline,
-    help: "In the catalog, not fetched yet",
+    help: "A known station we don't collect yet - can be added",
   },
 ];
 
 const stateMeta = (state: GaugeMapState) =>
   STATES.find((s) => s.key === state) ?? STATES[2];
 
-/** A read-only coverage map of every gauge, clustered and colored by state:
+interface ClusterInfo {
+  id: number;
+  lng: number;
+  lat: number;
+  total: number;
+  counts: Record<GaugeMapState, number>;
+}
+
+/** A read-only coverage map of every gauge. Points are colored by state -
  * used (linked to a section), fetched (polled but unlinked) or available (a
- * catalog station not yet fetched). Legend rows toggle a state on and off,
- * which re-clusters so the color signal survives clustering. */
+ * catalog station not yet fetched) - and clusters render as donut charts that
+ * carry the mix of those state colors. Legend rows toggle a state on and off,
+ * which re-clusters so the colors always reflect what is shown. */
 export default function GaugeCatalogMap() {
   const mapRef = useRef<MapRef>(null);
   const { data: points, isLoading, isError } = useGaugeMap();
   const [hidden, setHidden] = useState<Set<GaugeMapState>>(new Set());
   const [selected, setSelected] = useState<GaugePointProperties | null>(null);
+  const [clusters, setClusters] = useState<ClusterInfo[]>([]);
+  // Signature of the last cluster set, so frequent render events only trigger a
+  // React update when the clusters actually changed.
+  const lastSig = useRef("");
 
   const counts = useMemo(() => {
     const c: Record<GaugeMapState, number> = {
@@ -84,6 +97,48 @@ export default function GaugeCatalogMap() {
     [points, hidden],
   );
 
+  // Re-read the clusters MapLibre generated for the current viewport, with the
+  // per-state tallies from `clusterProperties`, and drive the donut markers.
+  const refreshClusters = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    // Skip until the source has (re)clustered for the current view, so we read
+    // fresh clusters mid-zoom rather than stale ones.
+    if (!map.isSourceLoaded(SOURCE_ID)) return;
+    const feats = map.querySourceFeatures(SOURCE_ID, {
+      filter: ["has", "point_count"],
+    });
+    const seen = new Set<number>();
+    const next: ClusterInfo[] = [];
+    for (const f of feats) {
+      const p = f.properties as Record<string, number>;
+      if (seen.has(p.cluster_id)) continue;
+      seen.add(p.cluster_id);
+      const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
+      next.push({
+        id: p.cluster_id,
+        lng,
+        lat,
+        total: p.point_count,
+        counts: {
+          used: p.used ?? 0,
+          fetched: p.fetched ?? 0,
+          available: p.available ?? 0,
+        },
+      });
+    }
+    next.sort((a, b) => a.id - b.id);
+    const sig = next
+      .map(
+        (c) =>
+          `${c.id}:${c.total}:${c.counts.used}.${c.counts.fetched}.${c.counts.available}`,
+      )
+      .join("|");
+    if (sig === lastSig.current) return;
+    lastSig.current = sig;
+    setClusters(next);
+  }, []);
+
   const toggle = (state: GaugeMapState) =>
     setHidden((prev) => {
       const next = new Set(prev);
@@ -92,26 +147,18 @@ export default function GaugeCatalogMap() {
       return next;
     });
 
-  const handleClick = async (e: MapLayerMouseEvent) => {
+  const zoomToCluster = async (id: number, lng: number, lat: number) => {
+    const source = mapRef.current?.getSource(SOURCE_ID) as
+      | GeoJSONSource
+      | undefined;
+    if (!source) return;
+    const zoom = await source.getClusterExpansionZoom(id);
+    mapRef.current?.easeTo({ center: [lng, lat], zoom, duration: 500 });
+  };
+
+  const handleClick = (e: MapLayerMouseEvent) => {
     const feature = e.features?.[0];
-    if (!feature) {
-      setSelected(null);
-      return;
-    }
-    // A cluster bubble: zoom to where it breaks apart.
-    if (feature.properties?.cluster) {
-      const source = mapRef.current?.getSource(SOURCE_ID) as
-        | GeoJSONSource
-        | undefined;
-      if (!source) return;
-      const zoom = await source.getClusterExpansionZoom(
-        feature.properties.cluster_id as number,
-      );
-      const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
-      mapRef.current?.easeTo({ center: [lng, lat], zoom, duration: 500 });
-      return;
-    }
-    setSelected(feature.properties as GaugePointProperties);
+    setSelected(feature ? (feature.properties as GaugePointProperties) : null);
   };
 
   return (
@@ -121,8 +168,11 @@ export default function GaugeCatalogMap() {
         initialViewState={{ longitude: 11, latitude: 47, zoom: 5 }}
         style={{ width: "100%", height: "100%" }}
         mapStyle={LIBERTY_STYLE}
-        interactiveLayerIds={[CLUSTER_LAYER, POINT_LAYER]}
+        interactiveLayerIds={[POINT_LAYER]}
         onClick={handleClick}
+        onLoad={refreshClusters}
+        onRender={refreshClusters}
+        onIdle={refreshClusters}
       >
         <NavigationControl position="top-right" />
         <Source
@@ -130,40 +180,19 @@ export default function GaugeCatalogMap() {
           type="geojson"
           data={data}
           cluster
-          clusterRadius={50}
-          clusterMaxZoom={12}
+          clusterRadius={42}
+          clusterMaxZoom={8}
+          clusterProperties={{
+            used: ["+", ["case", ["==", ["get", "state"], "used"], 1, 0]],
+            fetched: ["+", ["case", ["==", ["get", "state"], "fetched"], 1, 0]],
+            available: [
+              "+",
+              ["case", ["==", ["get", "state"], "available"], 1, 0],
+            ],
+          }}
         >
-          <Layer
-            id={CLUSTER_LAYER}
-            type="circle"
-            filter={["has", "point_count"]}
-            paint={{
-              "circle-color": tokens.outlineVariant,
-              "circle-opacity": 0.9,
-              "circle-radius": [
-                "step",
-                ["get", "point_count"],
-                14,
-                100,
-                18,
-                1000,
-                24,
-              ],
-              "circle-stroke-width": 1,
-              "circle-stroke-color": tokens.background,
-            }}
-          />
-          <Layer
-            id="gauge-cluster-count"
-            type="symbol"
-            filter={["has", "point_count"]}
-            layout={{
-              "text-field": ["get", "point_count_abbreviated"],
-              "text-font": ["Noto Sans Regular"],
-              "text-size": 12,
-            }}
-            paint={{ "text-color": tokens.onSurface }}
-          />
+          {/* Unclustered points, colored by state. Also keeps the source loaded
+              so querySourceFeatures can read the clusters for the donuts. */}
           <Layer
             id={POINT_LAYER}
             type="circle"
@@ -191,7 +220,80 @@ export default function GaugeCatalogMap() {
               "circle-stroke-color": tokens.background,
             }}
           />
+          {/* Gauge names, once zoomed in. Collision detection hides overlaps
+              so dense areas stay legible. */}
+          <Layer
+            id="gauge-labels"
+            type="symbol"
+            filter={["!", ["has", "point_count"]]}
+            minzoom={9}
+            layout={{
+              // River as the headline, then "(provider · name)" behind it for
+              // context. Falls back to the name, then "provider id", and never
+              // repeats a value that is already the headline.
+              "text-field": [
+                "concat",
+                [
+                  "case",
+                  ["!=", ["get", "river"], ""],
+                  ["get", "river"],
+                  ["!=", ["get", "name"], ""],
+                  ["get", "name"],
+                  ["concat", ["get", "provider"], " ", ["get", "station_id"]],
+                ],
+                [
+                  "case",
+                  [
+                    "all",
+                    ["!=", ["get", "river"], ""],
+                    ["!=", ["get", "name"], ""],
+                  ],
+                  [
+                    "concat",
+                    " (",
+                    ["get", "provider"],
+                    " · ",
+                    ["get", "name"],
+                    ")",
+                  ],
+                  [
+                    "any",
+                    ["!=", ["get", "river"], ""],
+                    ["!=", ["get", "name"], ""],
+                  ],
+                  ["concat", " (", ["get", "provider"], ")"],
+                  "",
+                ],
+              ],
+              "text-font": ["Noto Sans Regular"],
+              "text-size": 11,
+              "text-offset": [0, 0.9],
+              "text-anchor": "top",
+              "text-allow-overlap": false,
+              "text-optional": true,
+            }}
+            paint={{
+              "text-color": tokens.white,
+              "text-halo-color": tokens.mapLabelHalo,
+              "text-halo-width": 1.5,
+            }}
+          />
         </Source>
+
+        {clusters.map((c) => (
+          <Marker
+            key={c.id}
+            longitude={c.lng}
+            latitude={c.lat}
+            anchor="center"
+            onClick={(e) => {
+              e.originalEvent.stopPropagation();
+              zoomToCluster(c.id, c.lng, c.lat);
+            }}
+          >
+            <DonutCluster counts={c.counts} total={c.total} />
+          </Marker>
+        ))}
       </MapGL>
 
       {/* Legend + per-state filter (bottom-left, mirrors LabelModeToggle). */}
@@ -201,7 +303,7 @@ export default function GaugeCatalogMap() {
           bottom: 14,
           left: 10,
           zIndex: 10,
-          minWidth: 168,
+          width: 210,
           border: "1px solid",
           borderColor: "divider",
           bgcolor: "background.paper",
@@ -209,7 +311,7 @@ export default function GaugeCatalogMap() {
         }}
       >
         <Typography sx={{ ...labelSx, display: "block", px: 1.25, pt: 0.75 }}>
-          Coverage
+          Gauges
         </Typography>
         {STATES.map((s) => {
           const off = hidden.has(s.key);
@@ -217,15 +319,16 @@ export default function GaugeCatalogMap() {
             <ButtonBase
               key={s.key}
               onClick={() => toggle(s.key)}
-              title={`${s.help} - click to ${off ? "show" : "hide"}`}
+              title={`Click to ${off ? "show" : "hide"}`}
               sx={{
                 display: "flex",
-                alignItems: "center",
+                alignItems: "flex-start",
                 gap: 1,
                 width: "100%",
                 px: 1.25,
                 py: 0.6,
-                opacity: off ? 0.4 : 1,
+                textAlign: "left",
+                opacity: off ? 0.45 : 1,
               }}
             >
               <Box
@@ -235,14 +338,33 @@ export default function GaugeCatalogMap() {
                   borderRadius: "50%",
                   bgcolor: s.color,
                   flexShrink: 0,
+                  mt: 0.35,
                 }}
               />
-              <Typography variant="caption" sx={{ flex: 1, textAlign: "left" }}>
-                {s.label}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {counts[s.key].toLocaleString()}
-              </Typography>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ flex: 1, fontWeight: 600 }}
+                  >
+                    {s.label}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {counts[s.key].toLocaleString()}
+                  </Typography>
+                </Box>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    display: "block",
+                    fontSize: "0.62rem",
+                    lineHeight: 1.25,
+                  }}
+                >
+                  {s.help}
+                </Typography>
+              </Box>
             </ButtonBase>
           );
         })}
@@ -326,7 +448,7 @@ export default function GaugeCatalogMap() {
               color="text.secondary"
               sx={{ display: "block", mt: 0.5 }}
             >
-              Not yet fetched - link it to a section to start collecting data.
+              We don't collect this station yet - link it to a section to start.
             </Typography>
           )}
         </Box>
@@ -375,5 +497,118 @@ export default function GaugeCatalogMap() {
         </Box>
       )}
     </Box>
+  );
+}
+
+/** Abbreviate a cluster total the way MapLibre's point_count_abbreviated does. */
+function abbrev(n: number): string {
+  if (n >= 10000) return `${Math.round(n / 1000)}k`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+
+/** SVG donut-arc path for a slice from `start` to `end` (both fractions of the
+ * whole), centered at the origin, between inner radius `r0` and outer `r`. */
+function donutSegment(
+  start: number,
+  end: number,
+  r: number,
+  r0: number,
+): string {
+  const a0 = 2 * Math.PI * start - Math.PI / 2;
+  const a1 = 2 * Math.PI * (end - 1e-6) - Math.PI / 2;
+  const x0 = Math.cos(a0);
+  const y0 = Math.sin(a0);
+  const x1 = Math.cos(a1);
+  const y1 = Math.sin(a1);
+  const large = end - start > 0.5 ? 1 : 0;
+  return [
+    "M",
+    r0 * x0,
+    r0 * y0,
+    "L",
+    r * x0,
+    r * y0,
+    "A",
+    r,
+    r,
+    0,
+    large,
+    1,
+    r * x1,
+    r * y1,
+    "L",
+    r0 * x1,
+    r0 * y1,
+    "A",
+    r0,
+    r0,
+    0,
+    large,
+    0,
+    r0 * x0,
+    r0 * y0,
+    "Z",
+  ].join(" ");
+}
+
+/** A cluster rendered as a donut: one slice per state, sized by its share, with
+ * the total in the center. A single-state cluster becomes a solid ring. */
+function DonutCluster({
+  counts,
+  total,
+}: {
+  counts: Record<GaugeMapState, number>;
+  total: number;
+}) {
+  const r = total >= 1000 ? 26 : total >= 100 ? 22 : total >= 30 ? 18 : 15;
+  const r0 = Math.round(r * 0.62);
+  const w = r * 2;
+  const segments = STATES.map((s) => ({
+    key: s.key,
+    color: s.color,
+    value: counts[s.key],
+  })).filter((s) => s.value > 0);
+
+  let cum = 0;
+  const slices = segments.map((s) => {
+    const start = cum / total;
+    cum += s.value;
+    return { key: s.key, color: s.color, start, end: cum / total };
+  });
+
+  return (
+    <svg
+      width={w}
+      height={w}
+      viewBox={`0 0 ${w} ${w}`}
+      style={{ display: "block", cursor: "pointer" }}
+      aria-label={`${total} gauges`}
+    >
+      <title>{`${total} gauges`}</title>
+      <g transform={`translate(${r}, ${r})`}>
+        {slices.length === 1 ? (
+          <circle r={r} fill={slices[0].color} />
+        ) : (
+          slices.map((s) => (
+            <path
+              key={s.key}
+              d={donutSegment(s.start, s.end, r, r0)}
+              fill={s.color}
+            />
+          ))
+        )}
+        <circle r={r0} fill={tokens.background} />
+        <text
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={total >= 1000 ? 10 : 11}
+          fontWeight={600}
+          fill={tokens.onSurface}
+        >
+          {abbrev(total)}
+        </text>
+      </g>
+    </svg>
   );
 }
