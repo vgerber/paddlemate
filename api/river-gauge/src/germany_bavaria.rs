@@ -157,6 +157,25 @@ fn rebuild_map(stations: &HashMap<String, StationData>) -> HashMap<String, Stati
         .collect()
 }
 
+/// Pegelnummer -> WGS84, scraped once from the HND stammdaten UTM coordinates
+/// (pegel.json has none). Ids not listed get no coordinates.
+const STATION_COORDS: &str = include_str!("../data/germany_bavaria_coords.csv");
+
+/// Parse the embedded coordinate table into a Pegelnummer -> (lat, lon) map.
+fn coord_lookup() -> HashMap<&'static str, (f64, f64)> {
+    STATION_COORDS
+        .lines()
+        .filter(|l| !l.is_empty() && !l.starts_with('#'))
+        .filter_map(|l| {
+            let mut it = l.split(',');
+            let id = it.next()?;
+            let lat = it.next()?.trim().parse().ok()?;
+            let lon = it.next()?.trim().parse().ok()?;
+            Some((id, (lat, lon)))
+        })
+        .collect()
+}
+
 impl GaugeReader for GermanyBavariaReader {
     fn provider_key(&self) -> &'static str {
         "by"
@@ -165,6 +184,7 @@ impl GaugeReader for GermanyBavariaReader {
     fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<crate::StationInfo>>> {
         Box::pin(async move {
             let snapshot = self.get_snapshot().await?;
+            let coords = coord_lookup();
             let mut stations: Vec<StationInfo> = snapshot
                 .into_iter()
                 .map(|(id, data)| {
@@ -175,12 +195,15 @@ impl GaugeReader for GermanyBavariaReader {
                     if data.flow_m3s.is_some() {
                         params.push("q".to_owned());
                     }
+                    let (latitude, longitude) = coords
+                        .get(id.as_str())
+                        .map_or((None, None), |&(lat, lon)| (Some(lat), Some(lon)));
                     StationInfo {
                         station_id: id,
                         name: None,
                         river: data.river,
-                        latitude: None,
-                        longitude: None,
+                        latitude,
+                        longitude,
                         params,
                     }
                 })

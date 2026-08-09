@@ -25,6 +25,9 @@ use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
 /// Supported parameters:
 ///   `1000` — Vannstand / Stage (m)
 ///   `1001` — Avrenning / Discharge (m³/s)
+///   `1003` - Vanntemperatur / Water temperature (°C)
+///
+/// `list_stations` reads the full catalog from `/Stations`, keeping stage/discharge gauges.
 pub struct NorwayNveReader {
     api_key: Option<String>,
 }
@@ -52,6 +55,33 @@ struct Series {
 struct Observation {
     time: String,
     value: Option<f64>,
+}
+
+/// NVE `/Stations` catalog endpoint, used by `list_stations`.
+const STATIONS_URL: &str = "https://hydapi.nve.no/api/v1/Stations";
+
+#[derive(Deserialize)]
+struct StationsResponse {
+    #[serde(default)]
+    data: Vec<ApiStation>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ApiStation {
+    station_id: String,
+    station_name: Option<String>,
+    river_name: Option<String>,
+    latitude: Option<f64>,
+    longitude: Option<f64>,
+    #[serde(default)]
+    series_list: Vec<ApiSeries>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ApiSeries {
+    parameter: u32,
 }
 
 impl Default for NorwayNveReader {
@@ -116,6 +146,29 @@ impl NorwayNveReader {
                 anyhow::anyhow!("NveReader: JSON parse error: {e} — body: {preview:?}")
             })
     }
+
+    /// Fetch the full NVE station catalog from `/Stations`.
+    async fn fetch_station_list(&self, api_key: &str) -> anyhow::Result<Vec<ApiStation>> {
+        let client = reqwest::Client::new();
+        let resp = client
+            .get(STATIONS_URL)
+            .headers(self.build_headers(api_key)?)
+            .send()
+            .await
+            .map_err(|e| anyhow::anyhow!("NveReader: HTTP error fetching stations: {e}"))?
+            .error_for_status()
+            .map_err(|e| anyhow::anyhow!("NveReader: server error fetching stations: {e}"))?;
+        let body = resp
+            .text()
+            .await
+            .map_err(|e| anyhow::anyhow!("NveReader: failed to read stations body: {e}"))?;
+        serde_json::from_str::<StationsResponse>(&body)
+            .map(|r| r.data)
+            .map_err(|e| {
+                let preview = body.chars().take(200).collect::<String>();
+                anyhow::anyhow!("NveReader: stations JSON parse error: {e} - body: {preview:?}")
+            })
+    }
 }
 
 impl GaugeReader for NorwayNveReader {
@@ -133,265 +186,49 @@ impl GaugeReader for NorwayNveReader {
     }
 
     fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<crate::StationInfo>>> {
-        Box::pin(async {
-            Ok(vec![
-                StationInfo {
-                    station_id: "2.32.0".to_owned(),
-                    name: Some("Atnasjø".to_owned()),
-                    river: Some("Atna".to_owned()),
-                    latitude: Some(61.851898),
-                    longitude: Some(10.2221),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "2.129.0".to_owned(),
-                    name: Some("Dølplass".to_owned()),
-                    river: Some("Folla".to_owned()),
-                    latitude: Some(62.1922),
-                    longitude: Some(10.4511),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "2.265.0".to_owned(),
-                    name: Some("Unsetåa".to_owned()),
-                    river: Some("Rena".to_owned()),
-                    latitude: Some(61.946098),
-                    longitude: Some(11.0835),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "2.267.0".to_owned(),
-                    name: Some("Mistra bru".to_owned()),
-                    river: Some("Mistra".to_owned()),
-                    latitude: Some(61.711102),
-                    longitude: Some(11.2419),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "2.268.0".to_owned(),
-                    name: Some("Akslen".to_owned()),
-                    river: Some("Bøvri".to_owned()),
-                    latitude: Some(61.799599),
-                    longitude: Some(8.4472),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "2.284.0".to_owned(),
-                    name: Some("Sælatunga".to_owned()),
-                    river: Some("Finna".to_owned()),
-                    latitude: Some(61.884399),
-                    longitude: Some(9.0621),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "2.290.0".to_owned(),
-                    name: Some("Brustuen".to_owned()),
-                    river: Some("Bøvri".to_owned()),
-                    latitude: Some(61.7262),
-                    longitude: Some(8.296),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "2.291.0".to_owned(),
-                    name: Some("Tora".to_owned()),
-                    river: Some("Tora".to_owned()),
-                    latitude: Some(62.007702),
-                    longitude: Some(7.8664),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "2.303.0".to_owned(),
-                    name: Some("Dombås".to_owned()),
-                    river: Some("Jora".to_owned()),
-                    latitude: Some(62.087101),
-                    longitude: Some(9.1018),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "2.439.0".to_owned(),
-                    name: Some("Kvarstadseter".to_owned()),
-                    river: Some("Åsta".to_owned()),
-                    latitude: Some(61.178501),
-                    longitude: Some(10.8933),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "2.479.0".to_owned(),
-                    name: Some("Li bru".to_owned()),
-                    river: Some("Atna".to_owned()),
-                    latitude: Some(62.009998),
-                    longitude: Some(10.0003),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "2.578.0".to_owned(),
-                    name: Some("Søndre Imssjøen".to_owned()),
-                    river: Some("Imsa".to_owned()),
-                    latitude: Some(61.547901),
-                    longitude: Some(10.6618),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "2.595.0".to_owned(),
-                    name: Some("Faukstad".to_owned()),
-                    river: Some("Sjoa".to_owned()),
-                    latitude: Some(61.709599),
-                    longitude: Some(9.4252),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "12.70.0".to_owned(),
-                    name: Some("Etna".to_owned()),
-                    river: Some("Randselva".to_owned()),
-                    latitude: Some(60.9519),
-                    longitude: Some(9.6262),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "12.209.0".to_owned(),
-                    name: Some("Urula".to_owned()),
-                    river: Some("Urula".to_owned()),
-                    latitude: Some(60.558102),
-                    longitude: Some(9.8757),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "12.215.0".to_owned(),
-                    name: Some("Storeskar".to_owned()),
-                    river: Some("Hemsil".to_owned()),
-                    latitude: Some(60.891701),
-                    longitude: Some(8.3328),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "15.21.0".to_owned(),
-                    name: Some("Jondalselv".to_owned()),
-                    river: Some("Jondalselva".to_owned()),
-                    latitude: Some(59.707298),
-                    longitude: Some(9.5548),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "15.79.0".to_owned(),
-                    name: Some("Ossjøen".to_owned()),
-                    river: Some("Numedalslågen".to_owned()),
-                    latitude: Some(60.382099),
-                    longitude: Some(8.2639),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "16.128.0".to_owned(),
-                    name: Some("Austbygdåi".to_owned()),
-                    river: Some("Austbygdåi".to_owned()),
-                    latitude: Some(59.9953),
-                    longitude: Some(8.8277),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "16.155.0".to_owned(),
-                    name: Some("Sønnlandsvatn".to_owned()),
-                    river: Some("Skogsåi".to_owned()),
-                    latitude: Some(59.703899),
-                    longitude: Some(8.8588),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "62.10.0".to_owned(),
-                    name: Some("Myrkdalsvatn".to_owned()),
-                    river: Some("Vossovassdraget".to_owned()),
-                    latitude: Some(60.799198),
-                    longitude: Some(6.5016),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "100.1.0".to_owned(),
-                    name: Some("Valldøla v/Alstad".to_owned()),
-                    river: Some("Valldøla".to_owned()),
-                    latitude: Some(62.329399),
-                    longitude: Some(7.4832),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "103.1.0".to_owned(),
-                    name: Some("Ulvåa v/Storhølen".to_owned()),
-                    river: Some("Ulvåa".to_owned()),
-                    latitude: Some(62.280499),
-                    longitude: Some(8.1178),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "103.3.0".to_owned(),
-                    name: Some("Rauma v/Stuguflåten".to_owned()),
-                    river: Some("Rauma".to_owned()),
-                    latitude: Some(62.2766),
-                    longitude: Some(8.1531),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "109.9.0".to_owned(),
-                    name: Some("Driva v/Risefoss".to_owned()),
-                    river: Some("Driva".to_owned()),
-                    latitude: Some(62.511398),
-                    longitude: Some(9.5926),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "109.20.0".to_owned(),
-                    name: Some("Driva v/Grensehølen".to_owned()),
-                    river: Some("Driva".to_owned()),
-                    latitude: Some(62.572102),
-                    longitude: Some(9.159),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "122.14.0".to_owned(),
-                    name: Some("Lillebudal bru".to_owned()),
-                    river: Some("Bua".to_owned()),
-                    latitude: Some(62.823399),
-                    longitude: Some(10.5486),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "122.17.0".to_owned(),
-                    name: Some("Hugdal bru".to_owned()),
-                    river: Some("Sokna".to_owned()),
-                    latitude: Some(62.994099),
-                    longitude: Some(10.2464),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "123.31.0".to_owned(),
-                    name: Some("Kjeldstad i Garbergelva".to_owned()),
-                    river: Some("Garbergselva".to_owned()),
-                    latitude: Some(63.266201),
-                    longitude: Some(11.1311),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "124.2.0".to_owned(),
-                    name: Some("Høggås bru".to_owned()),
-                    river: Some("Forra".to_owned()),
-                    latitude: Some(63.492901),
-                    longitude: Some(11.3583),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "151.15.0".to_owned(),
-                    name: Some("Nervoll".to_owned()),
-                    river: Some("Vefsna".to_owned()),
-                    latitude: Some(65.437599),
-                    longitude: Some(13.986),
-                    params: vec!["1001".to_owned()],
-                },
-                StationInfo {
-                    station_id: "311.4.0".to_owned(),
-                    name: Some("Femundsenden (Femunden)".to_owned()),
-                    river: Some("Trysilelva".to_owned()),
-                    latitude: Some(61.919998),
-                    longitude: Some(11.94),
-                    params: vec!["1001".to_owned()],
-                },
-            ])
+        Box::pin(async move {
+            let Some(api_key) = self.api_key.as_deref() else {
+                tracing::warn!("NveReader: NVE_API_KEY is not set; list_stations returns empty");
+                return Ok(Vec::new());
+            };
+
+            // Parameters we support, in display order: stage, discharge, temperature.
+            const SUPPORTED: [u32; 3] = [1000, 1001, 1003];
+
+            let stations = self.fetch_station_list(api_key).await?;
+            let out = stations
+                .into_iter()
+                .filter_map(|s| {
+                    let params: Vec<String> = SUPPORTED
+                        .iter()
+                        .filter(|p| s.series_list.iter().any(|ser| ser.parameter == **p))
+                        .map(|p| p.to_string())
+                        .collect();
+                    // Keep only real water gauges - those exposing stage or discharge.
+                    if !params.iter().any(|p| p == "1000" || p == "1001") {
+                        return None;
+                    }
+                    // Drop coords outside the Nordic region (some foreign
+                    // stations report bad coordinates).
+                    let (latitude, longitude) = match (s.latitude, s.longitude) {
+                        (Some(lat), Some(lon))
+                            if (55.0..=82.0).contains(&lat) && (-12.0..=40.0).contains(&lon) =>
+                        {
+                            (Some(lat), Some(lon))
+                        }
+                        _ => (None, None),
+                    };
+                    Some(StationInfo {
+                        station_id: s.station_id,
+                        name: s.station_name,
+                        river: s.river_name,
+                        latitude,
+                        longitude,
+                        params,
+                    })
+                })
+                .collect();
+            Ok(out)
         })
     }
 

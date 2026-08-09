@@ -59,6 +59,12 @@ const OGD_CACHE_TTL_SECS: i64 = 300;
 #[derive(Deserialize, Clone)]
 struct StationEntry {
     number: String,
+    /// Human-readable station name (present in the data.json snapshot).
+    #[serde(default)]
+    name: Option<String>,
+    /// Station coordinates as `[latitude, longitude]` (present in data.json).
+    #[serde(default)]
+    latlng: Option<Vec<f64>>,
     #[serde(default)]
     values: serde_json::Value,
 }
@@ -220,6 +226,53 @@ impl AustriaTirolReader {
         });
         Ok(result)
     }
+
+    /// Derive the supported river-gauge param keys a station exposes, in display
+    /// order (W, Q, WT), by inspecting the `values` object of a snapshot entry.
+    /// A key is present when the snapshot carries a (non-null) sub-object for it.
+    fn gauge_params(values: &serde_json::Value) -> Vec<String> {
+        ["W", "Q", "WT"]
+            .iter()
+            .filter(|key| values.get(**key).is_some_and(|v| !v.is_null()))
+            .map(|key| key.to_string())
+            .collect()
+    }
+
+    /// Fetch the OGD CSV once and build a map of station number -> river name
+    /// (the `Gewässer` column). Used to enrich `list_stations`; the snapshot
+    /// JSON itself carries no river name.
+    ///
+    /// The CSV is ISO-8859-1 encoded and served without a charset, so decode it
+    /// byte-wise (each byte maps directly to the matching Unicode code point) to
+    /// preserve umlauts in river names.
+    async fn fetch_station_rivers(&self) -> anyhow::Result<HashMap<String, String>> {
+        let bytes = reqwest::get(OGD_CSV_URL)
+            .await
+            .map_err(|e| anyhow::anyhow!("TirolReader: OGD CSV request failed: {e}"))?
+            .bytes()
+            .await
+            .map_err(|e| anyhow::anyhow!("TirolReader: OGD CSV read failed: {e}"))?;
+        let text: String = bytes.iter().map(|&b| b as char).collect();
+
+        let mut rivers: HashMap<String, String> = HashMap::new();
+        // Columns: Stationsname;Stationsnummer;Gewässer;Parameter;timestamp;value;...
+        for line in text.lines().skip(1) {
+            let mut cols = line.split(';');
+            let _name = cols.next();
+            let number = match cols.next() {
+                Some(s) if !s.is_empty() => s,
+                _ => continue,
+            };
+            let river = match cols.next() {
+                Some(s) if !s.is_empty() => s,
+                _ => continue,
+            };
+            rivers
+                .entry(number.to_string())
+                .or_insert_with(|| river.to_string());
+        }
+        Ok(rivers)
+    }
 }
 
 impl GaugeReader for AustriaTirolReader {
@@ -231,282 +284,82 @@ impl GaugeReader for AustriaTirolReader {
         Some(chrono::Duration::hours(24))
     }
 
+    /// Discover the full HD Tirol catalog live and return every real river gauge
+    /// (stations exposing water level and/or discharge).
+    ///
+    /// The `data.json` snapshot returns the whole station catalog (~580 entries)
+    /// regardless of the `parameter` query, including non-gauge stations such as
+    /// groundwater, precipitation, air temperature and snow. Each station's
+    /// `values` object names the measured quantities, so a station is kept only
+    /// when it carries a `W` (water level) or `Q` (discharge) series. River names
+    /// are enriched from the OGD CSV where available (the snapshot has none).
     fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<crate::StationInfo>>> {
-        Box::pin(async {
-            Ok(vec![
-                StationInfo {
-                    station_id: "201038".to_owned(),
-                    name: Some("Grießau".to_owned()),
-                    river: Some("Lech".to_owned()),
-                    latitude: Some(47.298),
-                    longitude: Some(10.4631),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201053".to_owned(),
-                    name: Some("Vorderhornbach (Brücke)".to_owned()),
-                    river: Some("Hornbach".to_owned()),
-                    latitude: Some(47.368599),
-                    longitude: Some(10.538),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201095".to_owned(),
-                    name: Some("Scharnitz (Weidach)".to_owned()),
-                    river: Some("Isar".to_owned()),
-                    latitude: Some(47.389599),
-                    longitude: Some(11.264),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201293".to_owned(),
-                    name: Some("Landeck Perjen".to_owned()),
-                    river: Some("Inn".to_owned()),
-                    latitude: Some(47.146999),
-                    longitude: Some(10.5714),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201376".to_owned(),
-                    name: Some("Obergurgl".to_owned()),
-                    river: Some("Gurgler Ache".to_owned()),
-                    latitude: Some(46.8689),
-                    longitude: Some(11.0222),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201392".to_owned(),
-                    name: Some("Huben".to_owned()),
-                    river: Some("Ötztaler Ache".to_owned()),
-                    latitude: Some(47.04378),
-                    longitude: Some(10.971798),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201434".to_owned(),
-                    name: Some("Tumpen".to_owned()),
-                    river: Some("Ötztaler Ache".to_owned()),
-                    latitude: Some(47.163101),
-                    longitude: Some(10.9105),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201459".to_owned(),
-                    name: Some("Magerbach".to_owned()),
-                    river: Some("Inn".to_owned()),
-                    latitude: Some(47.2593),
-                    longitude: Some(10.8759),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201566".to_owned(),
-                    name: Some("Steinach am Brenner".to_owned()),
-                    river: Some("Gschnitzbach".to_owned()),
-                    latitude: Some(47.092899),
-                    longitude: Some(11.4651),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201574".to_owned(),
-                    name: Some("Puig (Matrei am Brenner)".to_owned()),
-                    river: Some("Sill".to_owned()),
-                    latitude: Some(47.113098),
-                    longitude: Some(11.4524),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201624".to_owned(),
-                    name: Some("Innsbruck Reichenau".to_owned()),
-                    river: Some("Sill".to_owned()),
-                    latitude: Some(47.2729),
-                    longitude: Some(11.4115),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201822".to_owned(),
-                    name: Some("Mariathal".to_owned()),
-                    river: Some("Brandenberger Ache".to_owned()),
-                    latitude: Some(47.4543),
-                    longitude: Some(11.865),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201848".to_owned(),
-                    name: Some("Hörbrunn".to_owned()),
-                    river: Some("Kelchsauer Ache".to_owned()),
-                    latitude: Some(47.420601),
-                    longitude: Some(12.1397),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201897".to_owned(),
-                    name: Some("Kaiserwerk".to_owned()),
-                    river: Some("Weissache".to_owned()),
-                    latitude: Some(47.542198),
-                    longitude: Some(12.1777),
-                    params: vec!["Q".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201913".to_owned(),
-                    name: Some("Kitzbühel (Bahnhofsbrücke)".to_owned()),
-                    river: Some("Kitzbüheler Ache".to_owned()),
-                    latitude: Some(47.454899),
-                    longitude: Some(12.3894),
-                    params: vec!["Q".to_owned()],
-                },
-                StationInfo {
-                    station_id: "201947".to_owned(),
-                    name: Some("Almdorf".to_owned()),
-                    river: Some("Fieberbrunner Ache".to_owned()),
-                    latitude: Some(47.5196),
-                    longitude: Some(12.4412),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "202036".to_owned(),
-                    name: Some("Landeck Bruggen".to_owned()),
-                    river: Some("Sanna".to_owned()),
-                    latitude: Some(47.143398),
-                    longitude: Some(10.5628),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "202127".to_owned(),
-                    name: Some("Leutasch (Klamm)".to_owned()),
-                    river: Some("Leutascher Ache".to_owned()),
-                    latitude: Some(47.3634),
-                    longitude: Some(11.1126),
-                    params: vec!["Q".to_owned()],
-                },
-                StationInfo {
-                    station_id: "202218".to_owned(),
-                    name: Some("Unterwindau".to_owned()),
-                    river: Some("Windauer Ache".to_owned()),
-                    latitude: Some(47.4342),
-                    longitude: Some(12.176),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "202226".to_owned(),
-                    name: Some("Stanzach".to_owned()),
-                    river: Some("Namlosbach".to_owned()),
-                    latitude: Some(47.383499),
-                    longitude: Some(10.5631),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "202283".to_owned(),
-                    name: Some("Krössbach".to_owned()),
-                    river: Some("Ruetz".to_owned()),
-                    latitude: Some(47.080299),
-                    longitude: Some(11.2661),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "202523".to_owned(),
-                    name: Some("Arnbach".to_owned()),
-                    river: Some("Drau".to_owned()),
-                    latitude: Some(46.7411),
-                    longitude: Some(12.3726),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "202564".to_owned(),
-                    name: Some("St Anton am Arlberg-Salzhütte".to_owned()),
-                    river: Some("Rosanna".to_owned()),
-                    latitude: Some(47.096401),
-                    longitude: Some(10.2129),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "202622".to_owned(),
-                    name: Some("Kirchberg in Tirol".to_owned()),
-                    river: Some("Aschauer Ache".to_owned()),
-                    latitude: Some(47.446499),
-                    longitude: Some(12.3143),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "202754".to_owned(),
-                    name: Some("Heinfels".to_owned()),
-                    river: Some("Villgratenbach".to_owned()),
-                    latitude: Some(46.7542),
-                    longitude: Some(12.4359),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "212043".to_owned(),
-                    name: Some("Hinterbichl".to_owned()),
-                    river: Some("Isel".to_owned()),
-                    latitude: Some(47.015301),
-                    longitude: Some(12.337),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "212084".to_owned(),
-                    name: Some("Prossegg".to_owned()),
-                    river: Some("Tauernbach".to_owned()),
-                    latitude: Some(47.014999),
-                    longitude: Some(12.5304),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "212100".to_owned(),
-                    name: Some("Hopfgarten in Defereggen-Zwenewald".to_owned()),
-                    river: Some("Schwarzach".to_owned()),
-                    latitude: Some(46.917599),
-                    longitude: Some(12.5115),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "212142".to_owned(),
-                    name: Some("Staniska".to_owned()),
-                    river: Some("Kalserbach".to_owned()),
-                    latitude: Some(46.953999),
-                    longitude: Some(12.6159),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "230706".to_owned(),
-                    name: Some("In der Au".to_owned()),
-                    river: Some("Melach".to_owned()),
-                    latitude: Some(47.225201),
-                    longitude: Some(11.2327),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "231092".to_owned(),
-                    name: Some("Lienz Falkensteinsteg".to_owned()),
-                    river: Some("Drau".to_owned()),
-                    latitude: Some(46.817902),
-                    longitude: Some(12.7596),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "297005".to_owned(),
-                    name: Some("Wasserfassung Wenns".to_owned()),
-                    river: Some("Pitze".to_owned()),
-                    latitude: Some(47.158298),
-                    longitude: Some(10.7374),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "297069".to_owned(),
-                    name: Some("Kundl".to_owned()),
-                    river: Some("Wildschönauer Ache".to_owned()),
-                    latitude: Some(47.4669),
-                    longitude: Some(11.9886),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "297087".to_owned(),
-                    name: Some("Ischgl Platt".to_owned()),
-                    river: Some("Trisanna".to_owned()),
-                    latitude: Some(47.028301),
-                    longitude: Some(10.3145),
-                    params: vec!["W".to_owned()],
-                },
-            ])
+        Box::pin(async move {
+            // The water-level snapshot is the full station catalog. Union it with
+            // the discharge snapshot so discharge-only stations are still covered
+            // if the provider ever starts filtering the catalog per parameter.
+            let mut entries = self.get_stations("W").await?;
+            match self.get_stations("Q").await {
+                Ok(mut q) => entries.append(&mut q),
+                Err(e) => {
+                    tracing::warn!(
+                        "TirolReader: discharge snapshot unavailable for list_stations: {e}"
+                    );
+                }
+            }
+
+            // Best-effort river lookup; stations absent from the CSV keep river = None.
+            let rivers = self.fetch_station_rivers().await.unwrap_or_else(|e| {
+                tracing::warn!("TirolReader: river lookup unavailable for list_stations: {e}");
+                HashMap::new()
+            });
+
+            // Union entries by station number, keeping only real river gauges.
+            let mut by_number: HashMap<String, StationInfo> = HashMap::new();
+            for entry in entries {
+                let params = Self::gauge_params(&entry.values);
+                if !params.iter().any(|p| p == "W" || p == "Q") {
+                    continue;
+                }
+                match by_number.get_mut(&entry.number) {
+                    Some(existing) => {
+                        for p in params {
+                            if !existing.params.contains(&p) {
+                                existing.params.push(p);
+                            }
+                        }
+                        if existing.name.is_none() {
+                            existing.name = entry.name;
+                        }
+                        if existing.latitude.is_none() {
+                            if let Some([lat, lon]) = entry.latlng.as_deref() {
+                                existing.latitude = Some(*lat);
+                                existing.longitude = Some(*lon);
+                            }
+                        }
+                    }
+                    None => {
+                        let (latitude, longitude) = match entry.latlng.as_deref() {
+                            Some([lat, lon]) => (Some(*lat), Some(*lon)),
+                            _ => (None, None),
+                        };
+                        let river = rivers.get(&entry.number).cloned();
+                        by_number.insert(
+                            entry.number.clone(),
+                            StationInfo {
+                                station_id: entry.number,
+                                name: entry.name,
+                                river,
+                                latitude,
+                                longitude,
+                                params,
+                            },
+                        );
+                    }
+                }
+            }
+
+            Ok(by_number.into_values().collect())
         })
     }
 

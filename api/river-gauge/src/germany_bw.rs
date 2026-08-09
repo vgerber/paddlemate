@@ -123,6 +123,99 @@ fn parse_bw_value(s: &str) -> Option<f64> {
     s.replace(',', ".").parse().ok()
 }
 
+/// Scan the numeric fields of a station row for the WGS84 longitude/latitude
+/// pair. Each row carries several coordinate systems (Gauss-Krueger, UTM,
+/// WGS84); we pick the first adjacent pair that falls inside the geographic
+/// bounds of Baden-Wuerttemberg and its neighbours. Rows without valid
+/// coordinates (some carry placeholder values) yield None.
+fn extract_coords(tokens: &[&str]) -> (Option<f64>, Option<f64>) {
+    for tok in tokens {
+        let nums: Vec<Option<f64>> = tok
+            .split(',')
+            .map(|p| p.trim().parse::<f64>().ok())
+            .collect();
+        for pair in nums.windows(2) {
+            if let (Some(lon), Some(lat)) = (pair[0], pair[1]) {
+                if (5.5..11.0).contains(&lon) && (45.0..52.0).contains(&lat) {
+                    return (Some(lat), Some(lon));
+                }
+            }
+        }
+    }
+    (None, None)
+}
+
+/// Parse the JS snapshot into the full station catalog.
+///
+/// Reuses the same row layout as `parse_snapshot`:
+///   `['NNNNN','name','river',FG,'W','W_dim','W_ts','Q','Q_dim','Q_ts',...,coords,...]`
+///
+/// A station is included only when it exposes a water level (non-empty W_dim,
+/// e.g. `cm`/`m`/`muM`) or a discharge (non-empty Q_dim, e.g. `m3/s`). The
+/// 5-digit snapshot id maps to the 4-digit `station_id` used in `source_id`
+/// by stripping its leading zero, matching the `fetch_all` lookup convention.
+fn parse_station_catalog(js: &str) -> Vec<StationInfo> {
+    let mut stations = Vec::new();
+
+    for segment in js.split("['") {
+        let id: &str = match segment.find('\'') {
+            Some(5) => &segment[..5],
+            _ => continue,
+        };
+        if !id.chars().all(|c| c.is_ascii_digit()) {
+            continue;
+        }
+        // All snapshot ids are 5 digits with a leading zero; the fetch path
+        // reconstructs the snapshot key as "0{station_id}", so strip one zero.
+        let Some(local_id) = id.strip_prefix('0') else {
+            continue;
+        };
+
+        let rest = &segment[6..]; // skip the closing quote after the 5-digit id
+        let tokens: Vec<&str> = rest.split('\'').collect();
+        if tokens.len() < 14 {
+            continue;
+        }
+
+        // token[7] = water level dimension, token[13] = discharge dimension.
+        let has_w = !tokens[7].trim().is_empty();
+        let has_q = !tokens[13].trim().is_empty();
+        if !has_w && !has_q {
+            continue;
+        }
+
+        let mut params = Vec::new();
+        if has_w {
+            params.push("W".to_owned());
+        }
+        if has_q {
+            params.push("Q".to_owned());
+        }
+
+        let to_opt = |s: &str| {
+            let t = s.trim();
+            if t.is_empty() {
+                None
+            } else {
+                Some(t.to_owned())
+            }
+        };
+
+        let (latitude, longitude) = extract_coords(&tokens);
+
+        stations.push(StationInfo {
+            station_id: local_id.to_owned(),
+            name: to_opt(tokens[1]),
+            river: to_opt(tokens[3]),
+            latitude,
+            longitude,
+            params,
+        });
+    }
+
+    stations
+}
+
 impl GermanyBadenWuerttembergReader {
     async fn get_snapshot(
         &self,
@@ -153,129 +246,18 @@ impl GaugeReader for GermanyBadenWuerttembergReader {
     }
 
     fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<crate::StationInfo>>> {
-        Box::pin(async {
-            Ok(vec![
-                StationInfo {
-                    station_id: "0170".to_owned(),
-                    name: Some("Schönmünzach".to_owned()),
-                    river: Some("Schönmünz".to_owned()),
-                    latitude: Some(48.6068),
-                    longitude: Some(8.3637),
-                    params: vec!["Q".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0246".to_owned(),
-                    name: Some("Forbach".to_owned()),
-                    river: Some("Murg".to_owned()),
-                    latitude: Some(48.615101),
-                    longitude: Some(8.3641),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "9082".to_owned(),
-                    name: Some("Zwirkenberg".to_owned()),
-                    river: Some("Obere Argen".to_owned()),
-                    latitude: Some(47.646599),
-                    longitude: Some(9.9691),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0001".to_owned(),
-                    name: Some("Eberfingen".to_owned()),
-                    river: Some("Wutach".to_owned()),
-                    latitude: Some(47.720699),
-                    longitude: Some(8.4311),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0004".to_owned(),
-                    name: Some("Kirchen-Hausen".to_owned()),
-                    river: Some("Donau".to_owned()),
-                    latitude: Some(47.925499),
-                    longitude: Some(8.6796),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0072".to_owned(),
-                    name: Some("Ewattingen".to_owned()),
-                    river: Some("Wutach".to_owned()),
-                    latitude: Some(47.848301),
-                    longitude: Some(8.4502),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0074".to_owned(),
-                    name: Some("Zell".to_owned()),
-                    river: Some("Wiese".to_owned()),
-                    latitude: Some(47.699501),
-                    longitude: Some(7.8455),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0112".to_owned(),
-                    name: Some("Baden-Baden".to_owned()),
-                    river: Some("Oos".to_owned()),
-                    latitude: Some(48.7743),
-                    longitude: Some(8.2201),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0114".to_owned(),
-                    name: Some("Kappelrodeck".to_owned()),
-                    river: Some("Acher".to_owned()),
-                    latitude: Some(48.5844),
-                    longitude: Some(8.1259),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0170".to_owned(),
-                    name: Some("Schönmünzach (cm)".to_owned()),
-                    river: Some("Schönmünz".to_owned()),
-                    latitude: Some(48.6068),
-                    longitude: Some(8.3637),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0189".to_owned(),
-                    name: Some("Simonswald".to_owned()),
-                    river: Some("Wilde Gutach".to_owned()),
-                    latitude: Some(48.111801),
-                    longitude: Some(8.0336),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0206".to_owned(),
-                    name: Some("St. Blasien".to_owned()),
-                    river: Some("Hauensteiner Alb".to_owned()),
-                    latitude: Some(47.756901),
-                    longitude: Some(8.1447),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0212".to_owned(),
-                    name: Some("Beutelsau".to_owned()),
-                    river: Some("Untere Argen".to_owned()),
-                    latitude: Some(47.7047),
-                    longitude: Some(9.8187),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0213".to_owned(),
-                    name: Some("Gießen".to_owned()),
-                    river: Some("Argen".to_owned()),
-                    latitude: Some(47.627998),
-                    longitude: Some(9.5961),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "0300".to_owned(),
-                    name: Some("Gutach".to_owned()),
-                    river: Some("Elz".to_owned()),
-                    latitude: Some(48.119099),
-                    longitude: Some(7.9888),
-                    params: vec!["W".to_owned()],
-                },
-            ])
+        Box::pin(async move {
+            // Discover the whole Baden-Wuerttemberg catalog live from the same
+            // snapshot the readings path consumes, keeping every station that
+            // exposes a water level or a discharge.
+            let js = reqwest::get(SNAPSHOT_URL)
+                .await
+                .map_err(|e| anyhow::anyhow!("BwReader: HTTP error fetching snapshot: {e}"))?
+                .text()
+                .await
+                .map_err(|e| anyhow::anyhow!("BwReader: failed to read snapshot body: {e}"))?;
+
+            Ok(parse_station_catalog(&js))
         })
     }
 
@@ -363,5 +345,28 @@ mod tests {
         let (_, w2, q2) = snap.get("00300").unwrap();
         assert_eq!(w2, &Some(49.0));
         assert_eq!(q2, &Some(4.69));
+    }
+
+    #[test]
+    fn parse_station_catalog_maps_params_and_ids() {
+        let js = r#"// header
+['00001','Eberfingen','Wutach',3,'15','cm','14.05.2026 09:30 MESZ','--','','--',0,'loc',1,1,0,0,0,0,3477315.045,5461690.674,8.4311,47.7207,0,0],
+['00300','Gutach','Elz',3,'49','cm','14.05.2026 09:30 MESZ','4.69','m³/s','14.05.2026 09:30 MESZ',0,'loc',1,1,0,0,0,0,3477315.045,5461690.674,7.9888,48.1191,0,0],
+['00999','Rainfall-Only','Somewhere',3,'--','','--','--','','--',0,'loc',1,1,0,0,0,0,0,0,0.0,0.0,0,0],
+"#;
+        let cat = parse_station_catalog(js);
+        assert_eq!(cat.len(), 2, "rainfall-only station must be excluded");
+
+        let w = &cat[0];
+        assert_eq!(w.station_id, "0001");
+        assert_eq!(w.name.as_deref(), Some("Eberfingen"));
+        assert_eq!(w.river.as_deref(), Some("Wutach"));
+        assert_eq!(w.params, vec!["W".to_owned()]);
+        assert_eq!(w.latitude, Some(47.7207));
+        assert_eq!(w.longitude, Some(8.4311));
+
+        let both = &cat[1];
+        assert_eq!(both.station_id, "0300");
+        assert_eq!(both.params, vec!["W".to_owned(), "Q".to_owned()]);
     }
 }

@@ -1006,12 +1006,8 @@ pub async fn list_waterway_gauges(
 /// stations; a catalog row already present as a real gauge is suppressed so a
 /// station is never plotted twice. Read-only, one shot - the client clusters.
 pub async fn list_gauge_map(pool: &PgPool) -> Result<Vec<GaugeMapPoint>, sqlx::Error> {
-    // Real gauges are collapsed by station: some providers (rivermap) store one
-    // gauge row per parameter, keyed `<station>:W` / `<station>:Q`, so a station
-    // measuring both is two rows. Grouping by (provider, station-before-colon)
-    // yields one point per station with its parameters merged - unlike grouping
-    // by coordinate, this never merges two distinct stations that share a point.
-    // Providers without a ':' suffix keep one row per station unchanged.
+    // Collapse real gauges by station (rivermap stores one row per parameter,
+    // e.g. `<station>:W` / `<station>:Q`), merging params into one point.
     let rows = sqlx::query(
         "SELECT g.provider,
                 split_part(g.source_id, ':', 1) AS station_id,

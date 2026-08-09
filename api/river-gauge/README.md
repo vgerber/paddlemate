@@ -22,20 +22,20 @@ Official pages:
 
 | Key        | Region                      | Stations | Historical data                | `list_stations` |
 | ---------- | --------------------------- | -------- | ------------------------------ | --------------- |
-| `tirol`    | Tyrol, AT                   | 218      | Snapshot only                  | —               |
-| `ehyd`     | AT federal (NO/SB/ST/OÖ/KT) | ~34      | Snapshot only                  | —               |
-| `vbg`      | Vorarlberg, AT              | 14       | Snapshot only                  | ✅              |
-| `by`       | Bavaria, DE                 | 40       | Snapshot only                  | —               |
-| `bw`       | Baden-Württemberg, DE       | 15       | Snapshot only                  | —               |
-| `po`       | Germany federal waterways   | 785      | 30 days                        | ✅              |
-| `sx`       | Saxony, DE                  | 7        | 5 days (RSS)                   | —               |
-| `bafu`     | Switzerland federal         | ~87      | 32 days                        | —               |
-| `hubeau`   | France                      | ~133     | 31 days                        | —               |
-| `nve`      | Norway                      | 32       | Years (requires `NVE_API_KEY`) | —               |
+| `tirol`    | Tyrol, AT                   | 144 (live)   | Snapshot only                  | ✅              |
+| `ehyd`     | AT federal (NO/SB/ST/OÖ/KT) | 164 (live)   | Snapshot only                  | ✅              |
+| `vbg`      | Vorarlberg, AT              | 14           | Snapshot only                  | ✅              |
+| `by`       | Bavaria, DE                 | 40           | Snapshot only                  | —               |
+| `bw`       | Baden-Württemberg, DE       | 320 (live)   | Snapshot only                  | ✅              |
+| `po`       | Germany federal waterways   | 785          | 30 days                        | ✅              |
+| `sx`       | Saxony, DE                  | 194 (live)   | 5 days (RSS)                   | ✅              |
+| `bafu`     | Switzerland federal         | 185 (live)   | 32 days                        | ✅              |
+| `hubeau`   | France                      | ~4150 (live) | 31 days                        | ✅              |
+| `nve`      | Norway                      | ~1300 (live) | Years (requires `NVE_API_KEY`) | ✅              |
 | `rivermap` | Rivermap API (v2)           | dynamic  | 6h per call (window-chunked)   | ✅              |
-| `rz`       | Italy (riverzone.eu)        | 204      | Snapshot only                  | —               |
-| `pl`       | Poland                      | 9        | Snapshot only                  | —               |
-| `cz`       | Czech Republic              | 26       | 7 days                         | —               |
+| `rz`       | Italy (riverzone.eu)        | 204          | Snapshot only                  | —               |
+| `pl`       | Poland                      | 890 (live)   | Snapshot only                  | ✅              |
+| `cz`       | Czech Republic              | 563 (live)   | 7 days                         | ✅              |
 
 ## Usage
 

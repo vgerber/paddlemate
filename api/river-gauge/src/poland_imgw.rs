@@ -25,6 +25,43 @@ pub struct PolandImgwReader;
 
 const BASE_URL: &str = "https://danepubliczne.imgw.pl/api/data/hydro/id";
 
+/// Full hydrological catalog endpoint, used by `list_stations`.
+///
+/// Returns every IMGW hydro station in a single response, each with station
+/// id, name, river, coordinates, and the latest water level / discharge
+/// readings. (The `hydro2` variant currently returns an empty body, so this
+/// classic endpoint is the reliable source of the full catalog.)
+const CATALOG_URL: &str = "https://danepubliczne.imgw.pl/api/data/hydro";
+
+/// One station entry from the full catalog endpoint.
+///
+/// Coordinates and readings arrive as strings, so they are parsed lazily.
+#[derive(Deserialize)]
+struct CatalogStation {
+    id_stacji: String,
+    #[serde(rename = "stacja")]
+    name: Option<String>,
+    #[serde(rename = "rzeka")]
+    river: Option<String>,
+    lat: Option<String>,
+    lon: Option<String>,
+    #[serde(rename = "stan_wody")]
+    level_cm: Option<String>,
+    #[serde(rename = "przeplyw")]
+    flow: Option<String>,
+}
+
+/// Parse a coordinate string (e.g. `"51.5253"`) into an `f64`, treating
+/// empty or unparseable values as absent.
+fn parse_coord(s: &Option<String>) -> Option<f64> {
+    s.as_deref()
+        .map(str::trim)
+        .filter(|v| !v.is_empty())
+        .and_then(|v| v.replace(',', ".").parse::<f64>().ok())
+        // IMGW uses "0" for a missing coordinate; treat zero as absent.
+        .filter(|v| v.abs() > 0.001)
+}
+
 #[derive(Deserialize)]
 struct Snapshot {
     #[serde(rename = "stan_wody")]
@@ -51,82 +88,59 @@ impl GaugeReader for PolandImgwReader {
         "pl"
     }
 
+    /// Discover the whole IMGW hydro catalog live from `/api/data/hydro`.
+    ///
+    /// Every station that currently exposes a water level (`W`) or discharge
+    /// (`Q`) reading is returned. IMGW provides coordinates for its stations,
+    /// so latitude/longitude are populated when present.
     fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<crate::StationInfo>>> {
         Box::pin(async {
-            Ok(vec![
-                StationInfo {
-                    station_id: "149200080".to_owned(),
-                    name: Some("Mszana Dolana".to_owned()),
-                    river: Some("Mszanka".to_owned()),
-                    latitude: Some(49.674301),
-                    longitude: Some(20.0804),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "149200100".to_owned(),
-                    name: Some("Lysa Polana".to_owned()),
-                    river: Some("Bialka".to_owned()),
-                    latitude: Some(49.263599),
-                    longitude: Some(20.115),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "149200110".to_owned(),
-                    name: Some("Trybsz 2".to_owned()),
-                    river: Some("Bialka".to_owned()),
-                    latitude: Some(49.417801),
-                    longitude: Some(20.1175),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "149200120".to_owned(),
-                    name: Some("Niedzica".to_owned()),
-                    river: Some("Niedziczanka".to_owned()),
-                    latitude: Some(49.411301),
-                    longitude: Some(20.302299),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "149200150".to_owned(),
-                    name: Some("Tylmanowa".to_owned()),
-                    river: Some("Ochotnica".to_owned()),
-                    latitude: Some(49.5172),
-                    longitude: Some(20.3869),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "150150030".to_owned(),
-                    name: Some("Jakuszyce".to_owned()),
-                    river: Some("Kamienna".to_owned()),
-                    latitude: Some(50.822701),
-                    longitude: Some(15.4397),
-                    params: vec!["Q".to_owned()],
-                },
-                StationInfo {
-                    station_id: "150150050".to_owned(),
-                    name: Some("Piechowice".to_owned()),
-                    river: Some("Kamiena".to_owned()),
-                    latitude: Some(50.850101),
-                    longitude: Some(15.5732),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "150150190".to_owned(),
-                    name: Some("Podgorzyn".to_owned()),
-                    river: Some("Podgorna".to_owned()),
-                    latitude: Some(50.820301),
-                    longitude: Some(15.6832),
-                    params: vec!["W".to_owned()],
-                },
-                StationInfo {
-                    station_id: "150160110".to_owned(),
-                    name: Some("Szalejów Dolny".to_owned()),
-                    river: Some("Bystrzyca Dusznicka".to_owned()),
-                    latitude: Some(50.419701),
-                    longitude: Some(16.6047),
-                    params: vec!["Q".to_owned()],
-                },
-            ])
+            let body = reqwest::get(CATALOG_URL)
+                .await
+                .map_err(|e| anyhow::anyhow!("PolandImgwReader: HTTP error fetching catalog: {e}"))?
+                .error_for_status()
+                .map_err(|e| {
+                    anyhow::anyhow!("PolandImgwReader: server error fetching catalog: {e}")
+                })?
+                .text()
+                .await
+                .map_err(|e| {
+                    anyhow::anyhow!("PolandImgwReader: failed to read catalog body: {e}")
+                })?;
+
+            let stations: Vec<CatalogStation> =
+                serde_json::from_str(&body).map_err(|e| {
+                    let preview = body.chars().take(200).collect::<String>();
+                    anyhow::anyhow!("PolandImgwReader: catalog JSON parse error: {e} - body: {preview:?}")
+                })?;
+
+            let out = stations
+                .into_iter()
+                .filter_map(|s| {
+                    // A field is treated as supported only when it carries a
+                    // non-empty reading in the snapshot. Order: water level, discharge.
+                    let mut params = Vec::new();
+                    if s.level_cm.as_deref().is_some_and(|v| !v.trim().is_empty()) {
+                        params.push("W".to_owned());
+                    }
+                    if s.flow.as_deref().is_some_and(|v| !v.trim().is_empty()) {
+                        params.push("Q".to_owned());
+                    }
+                    // Keep only real water gauges - those exposing level or discharge.
+                    if params.is_empty() {
+                        return None;
+                    }
+                    Some(StationInfo {
+                        station_id: s.id_stacji,
+                        name: s.name,
+                        river: s.river,
+                        latitude: parse_coord(&s.lat),
+                        longitude: parse_coord(&s.lon),
+                        params,
+                    })
+                })
+                .collect();
+            Ok(out)
         })
     }
 
