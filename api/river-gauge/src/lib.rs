@@ -17,6 +17,11 @@
 // ✅ czech_chmi           "cz"      26 gauges   Czech CHMI HTML table
 // ✅ usa_usgs             "usgs"    ~18k gauges USGS Water Data OGC API
 // ✅ canada_wsc           "wsc"     ~2.6k gauges ECCC/WSC MSC GeoMet OGC API
+// ✅ england_ea           "ea"      ~4.5k gauges EA flood-monitoring API
+// ✅ scotland_sepa        "sepa"    ~400 gauges  SEPA KiWIS API
+// ✅ wales_nrw            "nrw"     ~270 gauges  NRW rivers-and-seas JSON (no coords yet)
+// ✅ ireland_opw          "opw"     ~460 gauges  OPW waterlevel.ie GeoJSON
+// ✅ ireland_riverspy     "riverspy" 812 gauges  riverspy.net (OPW+EPA+ESB, has flow)
 // ❌ rdbrmc                         51 gauges   Dead provider (rdbrmc.com closed 2024)
 // ❌ anu                             6 gauges   Graubuenden cantonal (no public API)
 // ❌ be                              3 gauges   Bern cantonal (no public API)
@@ -28,18 +33,23 @@ mod austria_tirol;
 mod austria_vorarlberg;
 mod canada_wsc;
 mod czech_chmi;
+mod england_ea;
 mod france_hubeau;
 mod germany_bavaria;
 mod germany_bw;
 mod germany_pegelonline;
 mod germany_saxony;
+mod ireland_opw;
+mod ireland_riverspy;
 mod italy_riverzone;
 pub mod license;
 mod norway_nve;
 mod poland_imgw;
 mod rivermap;
+mod scotland_sepa;
 mod switzerland_bafu;
 mod usa_usgs;
+mod wales_nrw;
 
 use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc, time::Instant};
 
@@ -142,6 +152,11 @@ pub fn build_registry() -> Vec<Arc<dyn GaugeReader>> {
         Arc::new(germany_saxony::GermanySaxonyReader),
         Arc::new(usa_usgs::UsaUsgsReader::default()),
         Arc::new(canada_wsc::CanadaWscReader),
+        Arc::new(england_ea::EnglandEaReader),
+        Arc::new(scotland_sepa::ScotlandSepaReader),
+        Arc::new(wales_nrw::WalesNrwReader),
+        Arc::new(ireland_opw::IrelandOpwReader),
+        Arc::new(ireland_riverspy::IrelandRiverspyReader),
         Arc::new(rivermap::RivermapReader::default()),
     ]
 }

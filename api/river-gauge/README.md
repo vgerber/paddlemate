@@ -1,8 +1,9 @@
 # river-gauge
 
 A multi-provider hydrological gauge reader for Rust. Fetches water level and
-discharge time-series data from 14 regional APIs across Europe (Austria,
-Switzerland, France, Germany, Norway, Italy, Poland, Czech Republic, Rivermap).
+discharge time-series data from regional APIs across Europe (Austria,
+Switzerland, France, Germany, Norway, Italy, Poland, Czech Republic, England,
+Scotland, Wales, Ireland, Rivermap) and North America (USA, Canada).
 
 Official pages:
 
@@ -12,6 +13,7 @@ Official pages:
 ## Outline
 
 - [Providers](#providers)
+- [Authentication & rate limits](#authentication--rate-limits)
 - [Usage](#usage)
 - [Source ID format](#source-id-format)
 - [TODO](#todo)
@@ -36,6 +38,45 @@ Official pages:
 | `rz`       | Italy (riverzone.eu)        | 204          | Snapshot only                  | —               |
 | `pl`       | Poland                      | 890 (live)   | Snapshot only                  | ✅              |
 | `cz`       | Czech Republic              | 563 (live)   | 7 days                         | ✅              |
+| `usgs`     | USA (USGS)                  | ~16.5k (live)| Decades (30-day cold-start cap)| ✅              |
+| `wsc`      | Canada (ECCC/WSC)           | 2,627        | 30 days                        | ✅              |
+| `ea`       | England (EA)                | 4,451 (live) | ~28 days                       | ✅              |
+| `sepa`     | Scotland (SEPA)             | 394 (live)   | Years                          | ✅              |
+| `nrw`      | Wales (NRW)                 | 266 (live)   | ~1 year (no coords yet)        | ✅              |
+| `opw`      | Ireland (OPW)               | 459 (live)   | ~5 weeks                       | ✅              |
+| `riverspy` | Ireland (riverspy.net)      | 812 (live)   | Snapshot only                  | ✅              |
+
+## Authentication & rate limits
+
+Most providers are open, unauthenticated snapshot/REST endpoints with no
+documented quota; the table below calls out the ones that need a key or have
+a real (documented or observed) limit. Where it says "no documented limit",
+that means the source doesn't publish one, not that hammering it is fine -
+readers cache snapshot responses and only poll linked gauges.
+
+| Provider   | Key required | Env var            | Sign up                                                              | Rate limit / notes                                                                                                                                     |
+| ---------- | ------------ | ------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tirol`    | No           | —                   | —                                                                       | No documented limit. Snapshot regenerated ~1/min; reader caches for `CACHE_TTL_SECS`, so a poll cycle costs one request.                                    |
+| `ehyd`     | No           | —                   | —                                                                       | No documented limit. Snapshot-based; reader caches.                                                                                                         |
+| `vbg`      | No           | —                   | —                                                                       | No documented limit. One WFS request returns every station.                                                                                                 |
+| `by`       | No           | —                   | —                                                                       | No documented limit. Snapshot updates ~15 min; reader caches.                                                                                                |
+| `bw`       | No           | —                   | —                                                                       | No documented limit. JS snapshot updates ~15-30 min; reader caches.                                                                                          |
+| `po`       | No           | —                   | —                                                                       | No documented limit. Data under [DL-DE→Zero-2.0](https://www.govdata.de/dl-de/zero-2-0) (public-domain-equivalent) licence.                                 |
+| `sx`       | No           | —                   | —                                                                       | No documented limit. RSS feed, ~15 min resolution, ~5 days retained.                                                                                         |
+| `bafu`     | No           | —                   | —                                                                       | The existenz.ch wrapper asks for a 5-minute refresh interval, appending `&app={name}` for stats, and "please don't abuse the APIs"; non-commercial fair use. |
+| `hubeau`   | No           | —                   | —                                                                       | No enforced quota found; docs cite a historical ~10 calls/s server capacity, not a hard limit. Support: assistance.brgm.fr.                                  |
+| `nve`      | **Yes**      | `NVE_API_KEY`       | [hydapi.nve.no](https://hydapi.nve.no)                                | Required. Without it, `list_stations` returns empty and polling is skipped (logged as a warning).                                                            |
+| `rivermap` | **Yes**      | `RIVERMAP_API_KEY`  | Contact Rivermap for a key                                            | Per-endpoint leaky-bucket limits are documented - see [Rivermap auth and rate-limit notes](#rivermap-auth-and-rate-limit-notes) below.                       |
+| `rz`       | No           | —                   | —                                                                       | No documented limit found.                                                                                                                                    |
+| `pl`       | No           | —                   | —                                                                       | No documented limit found.                                                                                                                                    |
+| `cz`       | No           | —                   | —                                                                       | No documented limit found (HTML scrape; no official API).                                                                                                     |
+| `usgs`     | Optional     | `USGS_API_KEY`      | [api.waterdata.usgs.gov/signup](https://api.waterdata.usgs.gov/signup) | ~100 req/hour unauthenticated, ~1,000/hour with a free key. The whole-catalog `list_stations` join (~16k stations, ~40 batched requests) can exceed the unauthenticated cap on its own - get a key for reliable syncs. |
+| `wsc`      | No           | —                   | —                                                                       | No documented limit found. `hydrometric-realtime` rejects multi-station queries, so `fetch_all` is one request per station.                                  |
+| `ea`       | No           | —                   | —                                                                       | No enforced limit observed; docs ask for one bulk `data/readings?latest` poll per 15 min rather than per-station crawling (this reader still does per-measure requests, bounded by linked gauges). OGL v3, attribute EA.                       |
+| `sepa`     | No (optional)| —                   | Email hydrometry-requests@sepa.org.uk for a key                        | Anonymous access is capped at 5,000 credits/day (a data pull costs ~1 credit/1,000 values); register for a higher quota if polling heavily. OGL v3, attribute SEPA.                                                                              |
+| `nrw`      | No           | —                   | [api-portal.naturalresources.wales](https://api-portal.naturalresources.wales/) (optional, for the documented-but-latest-only official API instead) | No documented limit on the no-auth endpoints used here; they are undocumented internal endpoints of NRW's own public website (more "may change" risk than a published API). OGL, attribute NRW.  |
+| `opw`      | No           | —                   | —                                                                       | No documented limit found. **CC-BY 4.0** - attribute "Contains Irish Public Sector Information licensed under CC BY 4.0 (source http://waterlevel.ie - provided by the Office of Public Works.)".                                               |
+| `riverspy` | No           | —                   | —                                                                       | No documented limit found; unofficial third-party aggregator with no site-wide licence - attribute the original agency (`OPW`/`EPA`/`ESB`) per gauge, not riverspy.                                                                              |
 
 ## Usage
 
@@ -297,6 +338,13 @@ or `Q` (discharge). Provider-specific conventions:
 | `rz`       | Riverzone UUID                                                     | `W`, `Q`                           |
 | `pl`       | IMGW station number, e.g. `149200080`                              | `W`, `Q`                           |
 | `cz`       | CHMI sequence ID, e.g. `20070907`                                  | `H`, `Q`                           |
+| `usgs`     | USGS site id, e.g. `USGS-01646500`                                 | `W` (gage height), `Q` (discharge) |
+| `wsc`      | WSC station number, e.g. `05BB001`                                 | `W`, `Q`                           |
+| `ea`       | EA stationReference, e.g. `1029TH`                                 | `W`, `Q`                           |
+| `sepa`     | SEPA station_no, e.g. `15018`                                      | `W`, `Q`                           |
+| `nrw`      | NRW numeric station id, e.g. `4078`                                | `W` only (no flow in this network) |
+| `opw`      | OPW 5-digit station code, e.g. `01041`                             | `W` only                           |
+| `riverspy` | riverspy gauge code, e.g. `00008`                                  | `W`, `Q` (4 ESB dam-release gauges)|
 
 ## TODO
 
@@ -307,7 +355,7 @@ covered by any reader:
 
 | Country        | `rz.*` stations | Notes                                             |
 | -------------- | --------------- | ------------------------------------------------- |
-| UK             | 101             | Scottish/English rivers; no public UUID mapping   |
+| UK             | 101             | Covered directly by `ea`/`sepa`/`nrw` now; these `rz.*` rows are redundant, UUIDs not worth resolving |
 | France         | 85              | Overlap with `hubeau`; UUIDs need resolving       |
 | Slovakia       | 29              | No dedicated reader                               |
 | Switzerland    | 28              | Overlap with `bafu`; UUIDs need resolving         |
@@ -324,15 +372,20 @@ Options to extend coverage:
 
 - Resolve UUIDs in `import_gauges.py` for countries that overlap with existing
   readers (FR, CH, AT, CZ, DE) so the `rz` reader can serve them.
-- Implement dedicated readers for UK, SK, SI, ES, BA, ME, GR where there is a
-  suitable public API.
+- Implement dedicated readers for SK, SI, ES, BA, ME, GR where there is a
+  suitable public API (UK/Ireland now covered by `ea`/`sepa`/`nrw`/`opw`/`riverspy`).
+- `nrw` ships without coordinates - NRW's no-auth endpoints only expose
+  British National Grid easting/northing, not WGS84; a verified OSGB36 datum
+  transform (or pulling coordinates from the official, key-gated
+  `StationData` API instead) would close this gap.
 
 ## Environment variables
 
-| Variable           | Provider   | Description                                                  |
-| ------------------ | ---------- | ------------------------------------------------------------ |
-| `NVE_API_KEY`      | `nve`      | Required. Register at [hydapi.nve.no](https://hydapi.nve.no) |
-| `RIVERMAP_API_KEY` | `rivermap` | Required. Rivermap API key sent via `X-Key` header           |
+| Variable           | Provider   | Description                                                                          |
+| ------------------ | ---------- | ------------------------------------------------------------------------------------- |
+| `NVE_API_KEY`      | `nve`      | Required. Register at [hydapi.nve.no](https://hydapi.nve.no)                          |
+| `RIVERMAP_API_KEY` | `rivermap` | Required. Rivermap API key sent via `X-Key` header                                    |
+| `USGS_API_KEY`     | `usgs`     | Optional. Free signup at [api.waterdata.usgs.gov/signup](https://api.waterdata.usgs.gov/signup); raises the rate limit from ~100 to ~1,000 req/hour |
 
 ## Trait reference
 
