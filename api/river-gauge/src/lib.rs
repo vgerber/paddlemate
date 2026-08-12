@@ -1,32 +1,32 @@
 // Provider coverage checklist
-// ──────────────────────────────────────────────────────────────
-// ✅ austria_tirol        "tirol"   218 gauges  Tirol eGovernment API
-// ✅ austria_ehyd         "ehyd"    ~34 gauges  Austrian federal eHYD portal
-//                                               (NO, Salzburg, Steiermark, OO,
-//                                                Karnten 4/6)
-// ✅ austria_vorarlberg   "vbg"     14 gauges   Vorarlberg GeoServer WFS
-// ✅ germany_bavaria      "by"      40 gauges   BLfU HND Bayern snapshot
-// ✅ germany_bw           "bw"      12+3 gauges BW HVZ snapshot JS (bw + bw-x)
-// ✅ germany_pegelonline  "po"      785 gauges  PEGELONLINE WSV REST API
-// ✅ germany_saxony       "sx"       7 gauges   Saxony HWIMS RSS feed (LfULG)
-// ✅ switzerland_bafu     "bafu"    ~87 gauges  BAFU via existenz.ch
-// ✅ france_hubeau        "hubeau"  ~133 gauges Hub'Eau v2 API
-// ✅ norway_nve           "nve"     32 gauges   NVE HydAPI (needs NVE_API_KEY)
-// ✅ italy_riverzone      "rz"      204 gauges  Riverzone HTML snapshot (IT only)
-// ✅ poland_imgw          "pl"       9 gauges   Poland IMGW-PIB snapshot API
-// ✅ czech_chmi           "cz"      26 gauges   Czech CHMI HTML table
-// ✅ usa_usgs             "usgs"    ~18k gauges USGS Water Data OGC API
-// ✅ canada_wsc           "wsc"     ~2.6k gauges ECCC/WSC MSC GeoMet OGC API
-// ✅ england_ea           "ea"      ~4.5k gauges EA flood-monitoring API
-// ✅ scotland_sepa        "sepa"    ~400 gauges  SEPA KiWIS API
-// ✅ wales_nrw            "nrw"     ~270 gauges  NRW rivers-and-seas JSON (no coords yet)
-// ✅ ireland_opw          "opw"     ~460 gauges  OPW waterlevel.ie GeoJSON
-// ✅ ireland_riverspy     "riverspy" 812 gauges  riverspy.net (OPW+EPA+ESB, has flow)
-// ❌ rdbrmc                         51 gauges   Dead provider (rdbrmc.com closed 2024)
-// ❌ anu                             6 gauges   Graubuenden cantonal (no public API)
-// ❌ be                              3 gauges   Bern cantonal (no public API)
-// -  synthetic/visual               36 gauges  Not real gauges, skip
-// ──────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
+// ✅ austria_tirol          "tirol"     218 gauges    Tirol eGovernment API
+// ✅ austria_ehyd           "ehyd"      ~34 gauges    Austrian federal eHYD portal
+//                                                     (NO, Salzburg, Steiermark, OO,
+//                                                      Karnten 4/6)
+// ✅ austria_vorarlberg     "vbg"       14 gauges     Vorarlberg GeoServer WFS
+// ✅ germany_bavaria        "by"        40 gauges     BLfU HND Bayern snapshot
+// ✅ germany_bw             "bw"        12+3 gauges   BW HVZ snapshot JS (bw + bw-x)
+// ✅ germany_pegelonline    "po"        785 gauges    PEGELONLINE WSV REST API
+// ✅ germany_saxony         "sx"        7 gauges      Saxony HWIMS RSS feed (LfULG)
+// ✅ switzerland_bafu       "bafu"      ~87 gauges    BAFU via existenz.ch
+// ✅ france_hubeau          "hubeau"    ~133 gauges   Hub'Eau v2 API
+// ✅ norway_nve             "nve"       32 gauges     NVE HydAPI (needs NVE_API_KEY)
+// ✅ italy_riverzone        "rz"        204 gauges    Riverzone HTML snapshot (IT only)
+// ✅ poland_imgw            "pl"        9 gauges      Poland IMGW-PIB snapshot API
+// ✅ czech_chmi             "cz"        26 gauges     Czech CHMI HTML table
+// ✅ usa_usgs               "usgs"      ~18k gauges   USGS Water Data OGC API
+// ✅ canada_wsc             "wsc"       ~2.6k gauges  ECCC/WSC MSC GeoMet OGC API
+// ✅ england_ea             "ea"        ~4.5k gauges  EA flood-monitoring API
+// ✅ scotland_sepa          "sepa"      ~400 gauges   SEPA KiWIS API
+// ✅ wales_nrw              "nrw"       ~270 gauges   NRW rivers-and-seas JSON (no coords yet)
+// ✅ ireland_opw            "opw"       ~460 gauges   OPW waterlevel.ie GeoJSON
+// ✅ ireland_riverspy       "riverspy"  812 gauges    riverspy.net (OPW+EPA+ESB, has flow)
+// ❌ rdbrmc                             51 gauges     Dead provider (rdbrmc.com closed 2024)
+// ❌ anu                                 6 gauges     Graubuenden cantonal (no public API)
+// ❌ be                                  3 gauges     Bern cantonal (no public API)
+// -  synthetic/visual                   36 gauges    Not real gauges, skip
+// ────────────────────────────────────────────────────────────────────────────
 
 mod austria_ehyd;
 mod austria_tirol;

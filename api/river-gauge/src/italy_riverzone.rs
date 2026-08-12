@@ -127,17 +127,17 @@ impl ItalyRiverzoneReader {
 
         let html = reqwest::get(PAGE_URL)
             .await
-            .map_err(|e| anyhow::anyhow!("RiverzoneReader: HTTP error: {e}"))?
+            .map_err(|e| anyhow::anyhow!("ItalyRiverzoneReader: HTTP error: {e}"))?
             .text()
             .await
-            .map_err(|e| anyhow::anyhow!("RiverzoneReader: failed to read body: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("ItalyRiverzoneReader: failed to read body: {e}"))?;
 
         let json_str = extract_json(&html).ok_or_else(|| {
-            anyhow::anyhow!("RiverzoneReader: could not find 'var data = ...' in page")
+            anyhow::anyhow!("ItalyRiverzoneReader: could not find 'var data = ...' in page")
         })?;
 
         let page: PageData = serde_json::from_str(json_str)
-            .map_err(|e| anyhow::anyhow!("RiverzoneReader: JSON parse error: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("ItalyRiverzoneReader: JSON parse error: {e}"))?;
 
         let mut stations: HashMap<String, StationReadings> = HashMap::new();
         for (uuid, raw) in page.stations {
@@ -196,7 +196,7 @@ impl GaugeReader for ItalyRiverzoneReader {
                     req.source_id.rsplit_once(':').map_or_else(
                         || {
                             tracing::warn!(
-                                "RiverzoneReader: ignoring malformed source_id '{}' (expected '{{uuid}}:{{W|Q}}')",
+                                "ItalyRiverzoneReader: ignoring malformed source_id '{}' (expected '{{uuid}}:{{W|Q}}')",
                                 req.source_id
                             );
                             None
@@ -213,7 +213,7 @@ impl GaugeReader for ItalyRiverzoneReader {
             let stations = match self.get_snapshot().await {
                 Ok(s) => s,
                 Err(err) => {
-                    tracing::error!("RiverzoneReader: failed to fetch snapshot: {err}");
+                    tracing::error!("ItalyRiverzoneReader: failed to fetch snapshot: {err}");
                     return Ok(HashMap::new());
                 }
             };
@@ -230,7 +230,7 @@ impl GaugeReader for ItalyRiverzoneReader {
                     "Q" => &station.m3s,
                     other => {
                         tracing::warn!(
-                            "RiverzoneReader: unknown unit '{}' in source_id '{}'",
+                            "ItalyRiverzoneReader: unknown unit '{}' in source_id '{}'",
                             other,
                             req.source_id
                         );

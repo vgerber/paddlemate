@@ -334,7 +334,7 @@ impl GaugeReader for AustriaEhydReader {
         Box::pin(async move {
             // Ensure snapshot is loaded so hzbnr_map is populated.
             if let Err(e) = self.load_snapshot().await {
-                tracing::error!("eHYD snapshot load failed: {e}");
+                tracing::error!("AustriaEhydReader: snapshot load failed: {e}");
             }
 
             let hzbnr_lookup = {
@@ -360,7 +360,10 @@ impl GaugeReader for AustriaEhydReader {
                         }
                     }
                     Err(e) => {
-                        tracing::warn!("eHYD pegelBgis failed for {}: {e}", req.source_id);
+                        tracing::warn!(
+                            "AustriaEhydReader: pegelBgis failed for {}: {e}",
+                            req.source_id
+                        );
                     }
                 }
             }

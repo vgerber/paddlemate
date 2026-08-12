@@ -99,7 +99,7 @@ impl NorwayNveReader {
         headers.insert(
             "X-API-Key",
             HeaderValue::from_str(api_key)
-                .map_err(|e| anyhow::anyhow!("NveReader: invalid API key characters: {e}"))?,
+                .map_err(|e| anyhow::anyhow!("NorwayNveReader: invalid API key characters: {e}"))?,
         );
         Ok(headers)
     }
@@ -130,20 +130,20 @@ impl NorwayNveReader {
             .headers(self.build_headers(api_key)?)
             .send()
             .await
-            .map_err(|e| anyhow::anyhow!("NveReader: HTTP error: {e}"))?
+            .map_err(|e| anyhow::anyhow!("NorwayNveReader: HTTP error: {e}"))?
             .error_for_status()
-            .map_err(|e| anyhow::anyhow!("NveReader: server error: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("NorwayNveReader: server error: {e}"))?;
 
         let body = resp
             .text()
             .await
-            .map_err(|e| anyhow::anyhow!("NveReader: failed to read response body: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("NorwayNveReader: failed to read response body: {e}"))?;
 
         serde_json::from_str::<ApiResponse>(&body)
             .map(|r| r.data)
             .map_err(|e| {
                 let preview = body.chars().take(200).collect::<String>();
-                anyhow::anyhow!("NveReader: JSON parse error: {e} — body: {preview:?}")
+                anyhow::anyhow!("NorwayNveReader: JSON parse error: {e} — body: {preview:?}")
             })
     }
 
@@ -155,18 +155,18 @@ impl NorwayNveReader {
             .headers(self.build_headers(api_key)?)
             .send()
             .await
-            .map_err(|e| anyhow::anyhow!("NveReader: HTTP error fetching stations: {e}"))?
+            .map_err(|e| anyhow::anyhow!("NorwayNveReader: HTTP error fetching stations: {e}"))?
             .error_for_status()
-            .map_err(|e| anyhow::anyhow!("NveReader: server error fetching stations: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("NorwayNveReader: server error fetching stations: {e}"))?;
         let body = resp
             .text()
             .await
-            .map_err(|e| anyhow::anyhow!("NveReader: failed to read stations body: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("NorwayNveReader: failed to read stations body: {e}"))?;
         serde_json::from_str::<StationsResponse>(&body)
             .map(|r| r.data)
             .map_err(|e| {
                 let preview = body.chars().take(200).collect::<String>();
-                anyhow::anyhow!("NveReader: stations JSON parse error: {e} - body: {preview:?}")
+                anyhow::anyhow!("NorwayNveReader: stations JSON parse error: {e} - body: {preview:?}")
             })
     }
 }
@@ -188,7 +188,7 @@ impl GaugeReader for NorwayNveReader {
     fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<crate::StationInfo>>> {
         Box::pin(async move {
             let Some(api_key) = self.api_key.as_deref() else {
-                tracing::warn!("NveReader: NVE_API_KEY is not set; list_stations returns empty");
+                tracing::warn!("NorwayNveReader: NVE_API_KEY is not set; list_stations returns empty");
                 return Ok(Vec::new());
             };
 
@@ -240,7 +240,7 @@ impl GaugeReader for NorwayNveReader {
             let api_key = match &self.api_key {
                 Some(k) => k.as_str(),
                 None => {
-                    tracing::warn!("NVE_API_KEY is not set; skipping NVE gauge polling");
+                    tracing::warn!("NorwayNveReader: NVE_API_KEY is not set; skipping polling");
                     return Ok(HashMap::new());
                 }
             };
@@ -254,7 +254,7 @@ impl GaugeReader for NorwayNveReader {
                         Some((station_id, parameter)) => Some((station_id, parameter, req)),
                         None => {
                             tracing::warn!(
-                                "NveReader: ignoring malformed source_id '{}' (expected '{{station_id}}:{{parameter}}')",
+                                "NorwayNveReader: ignoring malformed source_id '{}' (expected '{{station_id}}:{{parameter}}')",
                                 req.source_id
                             );
                             None
@@ -294,7 +294,7 @@ impl GaugeReader for NorwayNveReader {
                     {
                         Ok(mut s) => all_series.append(&mut s),
                         Err(err) => {
-                            tracing::error!("NveReader: fetch failed for parameter {param}: {err}");
+                            tracing::error!("NorwayNveReader: fetch failed for parameter {param}: {err}");
                         }
                     }
                 }
@@ -324,7 +324,7 @@ impl GaugeReader for NorwayNveReader {
                         Ok(t) => t,
                         Err(_) => {
                             tracing::warn!(
-                                "NveReader: unparseable timestamp '{}' for station {}",
+                                "NorwayNveReader: unparseable timestamp '{}' for station {}",
                                 obs.time,
                                 station_id
                             );

@@ -135,10 +135,10 @@ impl GaugeReader for AustriaVorarlbergReader {
         Box::pin(async move {
             let resp = reqwest::get(WFS_URL)
                 .await
-                .map_err(|e| anyhow::anyhow!("VorarlbergReader: list_stations HTTP error: {e}"))?
+                .map_err(|e| anyhow::anyhow!("AustriaVorarlbergReader: list_stations HTTP error: {e}"))?
                 .json::<FeatureCollection>()
                 .await
-                .map_err(|e| anyhow::anyhow!("VorarlbergReader: list_stations JSON error: {e}"))?;
+                .map_err(|e| anyhow::anyhow!("AustriaVorarlbergReader: list_stations JSON error: {e}"))?;
 
             Ok(resp
                 .features

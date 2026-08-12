@@ -112,10 +112,10 @@ impl AustriaTirolReader {
         let url = Self::snapshot_url(param_key);
         let stations: Vec<StationEntry> = reqwest::get(&url)
             .await
-            .map_err(|e| anyhow::anyhow!("TirolReader: HTTP error fetching {url}: {e}"))?
+            .map_err(|e| anyhow::anyhow!("AustriaTirolReader: HTTP error fetching {url}: {e}"))?
             .json()
             .await
-            .map_err(|e| anyhow::anyhow!("TirolReader: JSON parse error: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("AustriaTirolReader: JSON parse error: {e}"))?;
 
         {
             let mut cache = self.cache.lock().await;
@@ -150,7 +150,7 @@ impl AustriaTirolReader {
             "Q" => serde_json::from_value(station.values["Q"]["15m.Cmd.HD"].clone()).ok()?,
             "WT" => serde_json::from_value(station.values["WT"]["15m.Cmd.HD"].clone()).ok()?,
             other => {
-                tracing::warn!("TirolReader: unknown param_key '{}'", other);
+                tracing::warn!("AustriaTirolReader: unknown param_key '{}'", other);
                 return None;
             }
         };
@@ -175,10 +175,10 @@ impl AustriaTirolReader {
 
         let text = reqwest::get(OGD_CSV_URL)
             .await
-            .map_err(|e| anyhow::anyhow!("TirolReader: OGD CSV request failed: {e}"))?
+            .map_err(|e| anyhow::anyhow!("AustriaTirolReader: OGD CSV request failed: {e}"))?
             .text()
             .await
-            .map_err(|e| anyhow::anyhow!("TirolReader: OGD CSV read failed: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("AustriaTirolReader: OGD CSV read failed: {e}"))?;
 
         let mut data: HashMap<String, Vec<(DateTime<Utc>, f64)>> = HashMap::new();
 
@@ -248,10 +248,10 @@ impl AustriaTirolReader {
     async fn fetch_station_rivers(&self) -> anyhow::Result<HashMap<String, String>> {
         let bytes = reqwest::get(OGD_CSV_URL)
             .await
-            .map_err(|e| anyhow::anyhow!("TirolReader: OGD CSV request failed: {e}"))?
+            .map_err(|e| anyhow::anyhow!("AustriaTirolReader: OGD CSV request failed: {e}"))?
             .bytes()
             .await
-            .map_err(|e| anyhow::anyhow!("TirolReader: OGD CSV read failed: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("AustriaTirolReader: OGD CSV read failed: {e}"))?;
         let text: String = bytes.iter().map(|&b| b as char).collect();
 
         let mut rivers: HashMap<String, String> = HashMap::new();
@@ -303,14 +303,14 @@ impl GaugeReader for AustriaTirolReader {
                 Ok(mut q) => entries.append(&mut q),
                 Err(e) => {
                     tracing::warn!(
-                        "TirolReader: discharge snapshot unavailable for list_stations: {e}"
+                        "AustriaTirolReader: discharge snapshot unavailable for list_stations: {e}"
                     );
                 }
             }
 
             // Best-effort river lookup; stations absent from the CSV keep river = None.
             let rivers = self.fetch_station_rivers().await.unwrap_or_else(|e| {
-                tracing::warn!("TirolReader: river lookup unavailable for list_stations: {e}");
+                tracing::warn!("AustriaTirolReader: river lookup unavailable for list_stations: {e}");
                 HashMap::new()
             });
 
@@ -376,7 +376,7 @@ impl GaugeReader for AustriaTirolReader {
                         Some((num, param)) => Some((num, param, req)),
                         None => {
                             tracing::warn!(
-                                "TirolReader: ignoring malformed source_id '{}' (expected '{{number}}:{{param}}')",
+                                "AustriaTirolReader: ignoring malformed source_id '{}' (expected '{{number}}:{{param}}')",
                                 req.source_id
                             );
                             None
@@ -429,7 +429,7 @@ impl GaugeReader for AustriaTirolReader {
                     }
                     Err(err) => {
                         tracing::error!(
-                            "TirolReader: OGD CSV fetch failed: {err}; falling back to snapshot"
+                            "AustriaTirolReader: OGD CSV fetch failed: {err}; falling back to snapshot"
                         );
                         if let Ok(stations) = self.get_stations("W").await {
                             for (station, _, req) in &w_reqs {
@@ -455,7 +455,7 @@ impl GaugeReader for AustriaTirolReader {
                         }
                         Err(err) => {
                             tracing::error!(
-                                "TirolReader: snapshot fetch failed for '{param_key}': {err}"
+                                "AustriaTirolReader: snapshot fetch failed for '{param_key}': {err}"
                             );
                         }
                     }

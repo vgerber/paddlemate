@@ -92,7 +92,7 @@ where
         serde_json::Value::String(s) => Ok(s),
         serde_json::Value::Number(n) => Ok(n.to_string()),
         other => Err(serde::de::Error::custom(format!(
-            "BafuReader: unexpected id value: {other}"
+            "SwitzerlandBafuReader: unexpected id value: {other}"
         ))),
     }
 }
@@ -109,10 +109,10 @@ impl SwitzerlandBafuReader {
         );
         let resp: ApiResponse = reqwest::get(&url)
             .await
-            .map_err(|e| anyhow::anyhow!("BafuReader: HTTP error fetching latest: {e}"))?
+            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: HTTP error fetching latest: {e}"))?
             .json()
             .await
-            .map_err(|e| anyhow::anyhow!("BafuReader: JSON parse error for latest: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: JSON parse error for latest: {e}"))?;
         Ok(resp.payload)
     }
 
@@ -131,10 +131,10 @@ impl SwitzerlandBafuReader {
         );
         let resp: ApiResponse = reqwest::get(&url)
             .await
-            .map_err(|e| anyhow::anyhow!("BafuReader: HTTP error fetching daterange: {e}"))?
+            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: HTTP error fetching daterange: {e}"))?
             .json()
             .await
-            .map_err(|e| anyhow::anyhow!("BafuReader: JSON parse error for daterange: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: JSON parse error for daterange: {e}"))?;
         Ok(resp.payload)
     }
 
@@ -143,10 +143,10 @@ impl SwitzerlandBafuReader {
         let url = format!("{BASE_URL}/locations?app=paddlemate");
         let resp: LocationsResponse = reqwest::get(&url)
             .await
-            .map_err(|e| anyhow::anyhow!("BafuReader: HTTP error fetching locations: {e}"))?
+            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: HTTP error fetching locations: {e}"))?
             .json()
             .await
-            .map_err(|e| anyhow::anyhow!("BafuReader: JSON parse error for locations: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: JSON parse error for locations: {e}"))?;
         Ok(resp.payload.into_values().map(|e| e.details).collect())
     }
 
@@ -158,10 +158,10 @@ impl SwitzerlandBafuReader {
         let url = format!("{BASE_URL}/latest?app=paddlemate");
         let resp: ApiResponse = reqwest::get(&url)
             .await
-            .map_err(|e| anyhow::anyhow!("BafuReader: HTTP error fetching latest catalog: {e}"))?
+            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: HTTP error fetching latest catalog: {e}"))?
             .json()
             .await
-            .map_err(|e| anyhow::anyhow!("BafuReader: JSON parse error for latest catalog: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: JSON parse error for latest catalog: {e}"))?;
 
         let mut by_loc: HashMap<String, HashSet<String>> = HashMap::new();
         for entry in resp.payload {
@@ -229,7 +229,7 @@ impl GaugeReader for SwitzerlandBafuReader {
                         Some((station_id, param)) => Some((station_id, param, req)),
                         None => {
                             tracing::warn!(
-                                "BafuReader: ignoring malformed source_id '{}' (expected '{{station_id}}:{{param}}')",
+                                "SwitzerlandBafuReader: ignoring malformed source_id '{}' (expected '{{station_id}}:{{param}}')",
                                 req.source_id
                             );
                             None
@@ -261,17 +261,10 @@ impl GaugeReader for SwitzerlandBafuReader {
             let entries = match entries {
                 Ok(e) => e,
                 Err(err) => {
-                    tracing::error!("BafuReader: fetch failed: {err}");
+                    tracing::error!("SwitzerlandBafuReader: fetch failed: {err}");
                     return Ok(HashMap::new());
                 }
             };
-
-            // Build a lookup: (loc, par) -> (DateTime, f64)
-            let mut by_key: HashMap<(&str, &str), (DateTime<Utc>, f64)> = HashMap::new();
-            for entry in &entries {
-                let ts = DateTime::from_timestamp(entry.timestamp, 0).unwrap_or(now);
-                by_key.insert((entry.loc.as_str(), entry.par.as_str()), (ts, entry.val));
-            }
 
             // Distribute readings to the matching source_id, filtered by window.
             let mut results: HashMap<String, Vec<(DateTime<Utc>, f64)>> = HashMap::new();
@@ -298,10 +291,6 @@ impl GaugeReader for SwitzerlandBafuReader {
                         .extend(matching);
                 }
             }
-
-            // For latest-endpoint calls by_key has exactly one point per (loc, par).
-            // The above loop already handles that case (one point that either passes or not).
-            let _ = by_key; // unused in the unified path — kept for clarity
 
             Ok(results)
         })

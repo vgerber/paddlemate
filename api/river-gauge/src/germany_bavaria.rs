@@ -109,10 +109,10 @@ impl GermanyBavariaReader {
 
         let resp: SnapshotResponse = reqwest::get(SNAPSHOT_URL)
             .await
-            .map_err(|e| anyhow::anyhow!("BlfuReader: HTTP error: {e}"))?
+            .map_err(|e| anyhow::anyhow!("GermanyBavariaReader: HTTP error: {e}"))?
             .json()
             .await
-            .map_err(|e| anyhow::anyhow!("BlfuReader: JSON parse error: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("GermanyBavariaReader: JSON parse error: {e}"))?;
 
         let mut stations: HashMap<String, StationData> = HashMap::new();
         for (id, entry) in &resp.pointer {
@@ -226,7 +226,7 @@ impl GaugeReader for GermanyBavariaReader {
                         Some((station_id, param)) => Some((station_id, param, req)),
                         None => {
                             tracing::warn!(
-                                "BlfuReader: ignoring malformed source_id '{}' (expected '{{station_id}}:{{param}}')",
+                                "GermanyBavariaReader: ignoring malformed source_id '{}' (expected '{{station_id}}:{{param}}')",
                                 req.source_id
                             );
                             None
@@ -243,7 +243,7 @@ impl GaugeReader for GermanyBavariaReader {
             let stations = match self.get_snapshot().await {
                 Ok(s) => s,
                 Err(err) => {
-                    tracing::error!("BlfuReader: failed to fetch snapshot: {err}");
+                    tracing::error!("GermanyBavariaReader: failed to fetch snapshot: {err}");
                     return Ok(HashMap::new());
                 }
             };
@@ -262,7 +262,7 @@ impl GaugeReader for GermanyBavariaReader {
                     "q" => data.flow_m3s,
                     other => {
                         tracing::warn!(
-                            "BlfuReader: unknown param '{}' for station {}",
+                            "GermanyBavariaReader: unknown param '{}' for station {}",
                             other,
                             station_id
                         );

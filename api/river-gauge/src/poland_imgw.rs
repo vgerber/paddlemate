@@ -154,20 +154,16 @@ impl GaugeReader for PolandImgwReader {
             // Collect unique station IDs and map each request source_id to its parts.
             let mut station_map: HashMap<&str, Vec<(&str, &str)>> = HashMap::new();
             for req in requests {
-                if let Some((station_id, param)) = req
-                    .source_id
-                    .splitn(2, ':')
-                    .collect::<Vec<_>>()
-                    .as_slice()
-                    .split_first()
-                    .and_then(|(a, b)| b.first().map(|p| (*a, *p)))
-                {
-                    station_map
-                        .entry(station_id)
-                        .or_default()
-                        .push((param, &req.source_id));
-                } else {
-                    tracing::warn!("PolandImgwReader: malformed source_id '{}'", req.source_id);
+                match req.source_id.split_once(':') {
+                    Some((station_id, param)) => {
+                        station_map
+                            .entry(station_id)
+                            .or_default()
+                            .push((param, &req.source_id));
+                    }
+                    None => {
+                        tracing::warn!("PolandImgwReader: malformed source_id '{}'", req.source_id);
+                    }
                 }
             }
 

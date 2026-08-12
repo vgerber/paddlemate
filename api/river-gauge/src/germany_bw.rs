@@ -6,6 +6,10 @@ use tokio::sync::Mutex;
 
 use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
 
+/// One station's latest line from the snapshot: when it was measured, the water
+/// level in cm and the discharge in m3/s. Either value can be absent.
+type Snapshot = HashMap<String, (DateTime<Utc>, Option<f64>, Option<f64>)>;
+
 /// Reader for Baden-Wuerttemberg hydrological data (HVZ Baden-Wuerttemberg).
 ///
 /// Source: https://www.hvz.baden-wuerttemberg.de/
@@ -26,10 +30,6 @@ use crate::{BoxFuture, FetchRequest, GaugeReader, StationInfo};
 ///
 /// Only the most recent reading is returned. The value is included only when
 /// its timestamp falls within the requested window.
-/// One station's latest line from the snapshot: when it was measured, the water
-/// level in cm and the discharge in m3/s. Either value can be absent.
-type Snapshot = HashMap<String, (DateTime<Utc>, Option<f64>, Option<f64>)>;
-
 pub struct GermanyBadenWuerttembergReader {
     cache: Mutex<Option<(std::time::Instant, Snapshot)>>,
 }
@@ -229,10 +229,10 @@ impl GermanyBadenWuerttembergReader {
 
         let js = reqwest::get(SNAPSHOT_URL)
             .await
-            .map_err(|e| anyhow::anyhow!("BwReader: HTTP error fetching snapshot: {e}"))?
+            .map_err(|e| anyhow::anyhow!("GermanyBadenWuerttembergReader: HTTP error fetching snapshot: {e}"))?
             .text()
             .await
-            .map_err(|e| anyhow::anyhow!("BwReader: failed to read snapshot body: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("GermanyBadenWuerttembergReader: failed to read snapshot body: {e}"))?;
 
         let data = parse_snapshot(&js);
         *cache = Some((std::time::Instant::now(), data.clone()));
@@ -252,10 +252,10 @@ impl GaugeReader for GermanyBadenWuerttembergReader {
             // exposes a water level or a discharge.
             let js = reqwest::get(SNAPSHOT_URL)
                 .await
-                .map_err(|e| anyhow::anyhow!("BwReader: HTTP error fetching snapshot: {e}"))?
+                .map_err(|e| anyhow::anyhow!("GermanyBadenWuerttembergReader: HTTP error fetching snapshot: {e}"))?
                 .text()
                 .await
-                .map_err(|e| anyhow::anyhow!("BwReader: failed to read snapshot body: {e}"))?;
+                .map_err(|e| anyhow::anyhow!("GermanyBadenWuerttembergReader: failed to read snapshot body: {e}"))?;
 
             Ok(parse_station_catalog(&js))
         })
@@ -272,7 +272,7 @@ impl GaugeReader for GermanyBadenWuerttembergReader {
             for req in requests {
                 let parts: Vec<&str> = req.source_id.splitn(2, ':').collect();
                 if parts.len() != 2 {
-                    tracing::warn!("BwReader: malformed source_id '{}'", req.source_id);
+                    tracing::warn!("GermanyBadenWuerttembergReader: malformed source_id '{}'", req.source_id);
                     continue;
                 }
                 let (local_id, param) = (parts[0], parts[1]);
@@ -291,7 +291,7 @@ impl GaugeReader for GermanyBadenWuerttembergReader {
                     "W" => *w_opt,
                     "Q" => *q_opt,
                     other => {
-                        tracing::warn!("BwReader: unknown param '{other}'");
+                        tracing::warn!("GermanyBadenWuerttembergReader: unknown param '{other}'");
                         continue;
                     }
                 };

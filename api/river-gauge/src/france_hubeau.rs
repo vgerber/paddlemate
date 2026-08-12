@@ -93,11 +93,11 @@ impl FranceHubeauReader {
         );
         let resp: ApiResponse = reqwest::get(&url)
             .await
-            .map_err(|e| anyhow::anyhow!("HubeauReader: HTTP error for grandeur {grandeur}: {e}"))?
+            .map_err(|e| anyhow::anyhow!("FranceHubeauReader: HTTP error for grandeur {grandeur}: {e}"))?
             .json()
             .await
             .map_err(|e| {
-                anyhow::anyhow!("HubeauReader: JSON parse error for grandeur {grandeur}: {e}")
+                anyhow::anyhow!("FranceHubeauReader: JSON parse error for grandeur {grandeur}: {e}")
             })?;
         Ok(resp.data)
     }
@@ -114,13 +114,13 @@ impl FranceHubeauReader {
         for _ in 0..MAX_STATION_PAGES {
             let page: StationsResponse = reqwest::get(&url)
                 .await
-                .map_err(|e| anyhow::anyhow!("HubeauReader: HTTP error listing stations: {e}"))?
+                .map_err(|e| anyhow::anyhow!("FranceHubeauReader: HTTP error listing stations: {e}"))?
                 .error_for_status()
-                .map_err(|e| anyhow::anyhow!("HubeauReader: server error listing stations: {e}"))?
+                .map_err(|e| anyhow::anyhow!("FranceHubeauReader: server error listing stations: {e}"))?
                 .json()
                 .await
                 .map_err(|e| {
-                    anyhow::anyhow!("HubeauReader: JSON parse error listing stations: {e}")
+                    anyhow::anyhow!("FranceHubeauReader: JSON parse error listing stations: {e}")
                 })?;
 
             stations.extend(page.data);
@@ -132,7 +132,7 @@ impl FranceHubeauReader {
         }
 
         tracing::warn!(
-            "HubeauReader: stopped listing stations after {MAX_STATION_PAGES} pages; \
+            "FranceHubeauReader: stopped listing stations after {MAX_STATION_PAGES} pages; \
              returning {} collected so far",
             stations.len()
         );
@@ -185,7 +185,7 @@ impl GaugeReader for FranceHubeauReader {
                         Some((station_id, grandeur)) => Some((station_id, grandeur, req)),
                         None => {
                             tracing::warn!(
-                                "HubeauReader: ignoring malformed source_id '{}' (expected '{{station_id}}:{{grandeur}}')",
+                                "FranceHubeauReader: ignoring malformed source_id '{}' (expected '{{station_id}}:{{grandeur}}')",
                                 req.source_id
                             );
                             None
@@ -214,7 +214,7 @@ impl GaugeReader for FranceHubeauReader {
                     Ok(mut batch) => entries.append(&mut batch),
                     Err(err) => {
                         tracing::error!(
-                            "HubeauReader: failed to fetch grandeur '{grandeur}': {err}"
+                            "FranceHubeauReader: failed to fetch grandeur '{grandeur}': {err}"
                         );
                     }
                 }
@@ -231,7 +231,7 @@ impl GaugeReader for FranceHubeauReader {
                         Ok(t) => t,
                         Err(_) => {
                             tracing::warn!(
-                                "HubeauReader: unparseable date '{}' for station {}",
+                                "FranceHubeauReader: unparseable date '{}' for station {}",
                                 entry.date_obs,
                                 station_id
                             );
