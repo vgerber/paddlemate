@@ -6,7 +6,8 @@ use std::time::Duration as StdDuration;
 use chrono::{Duration, Utc};
 use river_gauge::{build_registry, FetchRequest};
 
-const LIST_TIMEOUT: StdDuration = StdDuration::from_secs(30);
+// USGS lists ~16k stations via a name-lookup join, taking well over a minute.
+const LIST_TIMEOUT: StdDuration = StdDuration::from_secs(150);
 const FETCH_TIMEOUT: StdDuration = StdDuration::from_secs(30);
 /// How many stations to try before giving up on finding a live reading.
 const MAX_TRIES: usize = 15;

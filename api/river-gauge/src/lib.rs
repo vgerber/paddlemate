@@ -15,6 +15,8 @@
 // ✅ italy_riverzone      "rz"      204 gauges  Riverzone HTML snapshot (IT only)
 // ✅ poland_imgw          "pl"       9 gauges   Poland IMGW-PIB snapshot API
 // ✅ czech_chmi           "cz"      26 gauges   Czech CHMI HTML table
+// ✅ usa_usgs             "usgs"    ~18k gauges USGS Water Data OGC API
+// ✅ canada_wsc           "wsc"     ~2.6k gauges ECCC/WSC MSC GeoMet OGC API
 // ❌ rdbrmc                         51 gauges   Dead provider (rdbrmc.com closed 2024)
 // ❌ anu                             6 gauges   Graubuenden cantonal (no public API)
 // ❌ be                              3 gauges   Bern cantonal (no public API)
@@ -24,6 +26,7 @@
 mod austria_ehyd;
 mod austria_tirol;
 mod austria_vorarlberg;
+mod canada_wsc;
 mod czech_chmi;
 mod france_hubeau;
 mod germany_bavaria;
@@ -36,6 +39,7 @@ mod norway_nve;
 mod poland_imgw;
 mod rivermap;
 mod switzerland_bafu;
+mod usa_usgs;
 
 use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc, time::Instant};
 
@@ -136,6 +140,8 @@ pub fn build_registry() -> Vec<Arc<dyn GaugeReader>> {
         Arc::new(germany_bw::GermanyBadenWuerttembergReader::default()),
         Arc::new(germany_pegelonline::GermanyPegelonlineReader),
         Arc::new(germany_saxony::GermanySaxonyReader),
+        Arc::new(usa_usgs::UsaUsgsReader::default()),
+        Arc::new(canada_wsc::CanadaWscReader),
         Arc::new(rivermap::RivermapReader::default()),
     ]
 }
