@@ -13,6 +13,11 @@
   },
   "cSpell.words": ["Rivermap"],
 
+  // Cargo.toml lives in api/, not the repo root; pin it explicitly so
+  // rust-analyzer doesn't fall back to analyzing .rs files with no project
+  // context (which looks like errors on every line).
+  "rust-analyzer.linkedProjects": ["api/Cargo.toml"],
+
   // Use the project-local Biome binary
   "biome.lsp.bin": "./frontend/node_modules/@biomejs/biome/bin/biome",
 

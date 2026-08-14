@@ -103,9 +103,10 @@ export default function GaugeCatalogMap() {
   const refreshClusters = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
-    // Skip until the source has (re)clustered for the current view, so we read
-    // fresh clusters mid-zoom rather than stale ones.
-    if (!map.isSourceLoaded(SOURCE_ID)) return;
+    // Skip until the source exists (early render events fire before it is
+    // added) and has (re)clustered for the current view, so we read fresh
+    // clusters mid-zoom rather than stale ones.
+    if (!map.getSource(SOURCE_ID) || !map.isSourceLoaded(SOURCE_ID)) return;
     const feats = map.querySourceFeatures(SOURCE_ID, {
       filter: ["has", "point_count"],
     });

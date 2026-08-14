@@ -31,7 +31,10 @@
 mod austria_ehyd;
 mod austria_tirol;
 mod austria_vorarlberg;
+mod australia_bom;
+mod bosnia_vodaba;
 mod canada_wsc;
+mod croatia_hv;
 mod czech_chmi;
 mod england_ea;
 mod france_hubeau;
@@ -39,14 +42,17 @@ mod germany_bavaria;
 mod germany_bw;
 mod germany_pegelonline;
 mod germany_saxony;
+mod greece_openhi;
 mod ireland_opw;
 mod ireland_riverspy;
 mod italy_riverzone;
 pub mod license;
+mod newzealand_hilltop;
 mod norway_nve;
 mod poland_imgw;
 mod rivermap;
 mod scotland_sepa;
+mod slovenia_arso;
 mod switzerland_bafu;
 mod usa_usgs;
 mod wales_nrw;
@@ -157,6 +163,12 @@ pub fn build_registry() -> Vec<Arc<dyn GaugeReader>> {
         Arc::new(wales_nrw::WalesNrwReader),
         Arc::new(ireland_opw::IrelandOpwReader),
         Arc::new(ireland_riverspy::IrelandRiverspyReader),
+        Arc::new(slovenia_arso::SloveniaArsoReader::default()),
+        Arc::new(croatia_hv::CroatiaHvReader::default()),
+        Arc::new(bosnia_vodaba::BosniaVodabaReader::default()),
+        Arc::new(greece_openhi::GreeceOpenhiReader::default()),
+        Arc::new(australia_bom::AustraliaBomReader::default()),
+        Arc::new(newzealand_hilltop::NewZealandHilltopReader::default()),
         Arc::new(rivermap::RivermapReader::default()),
     ]
 }
