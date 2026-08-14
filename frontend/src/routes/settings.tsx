@@ -25,6 +25,7 @@ import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
 import ToolsList from "@/components/ToolsList";
 import { type ApiToken, type ApiTokenCreated } from "@/lib/api";
+import { ACCOUNT_CONSOLE_URL } from "@/lib/auth";
 import {
   useApiTokens,
   useCreateApiToken,
@@ -131,6 +132,16 @@ function ProfilePanel() {
         </Typography>
       </Stack>
       <Divider />
+      <Button
+        variant="outlined"
+        component="a"
+        href={ACCOUNT_CONSOLE_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        fullWidth
+      >
+        Account Settings
+      </Button>
       <Button variant="outlined" color="error" onClick={logout} fullWidth>
         Sign Out
       </Button>

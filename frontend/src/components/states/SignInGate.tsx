@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { useSession } from "@/lib/hooks/useSession";
@@ -12,7 +13,7 @@ export default function SignInGate({
   icon: ReactNode;
   title: string;
 }) {
-  const { login } = useSession();
+  const { login, signup } = useSession();
   return (
     <Box
       sx={{
@@ -31,6 +32,15 @@ export default function SignInGate({
       <Button variant="contained" color="secondary" onClick={login}>
         Sign In
       </Button>
+      <Link
+        component="button"
+        type="button"
+        variant="body2"
+        color="text.secondary"
+        onClick={signup}
+      >
+        New here? Create an account
+      </Link>
     </Box>
   );
 }

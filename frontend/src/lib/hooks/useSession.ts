@@ -1,9 +1,11 @@
 import type { User } from "oidc-client-ts";
 import { useCallback, useEffect, useState } from "react";
+import { showErrorSnackbar } from "@/components/AppSnackbar";
 import {
   logout as authLogout,
   getUserManager,
   initiateLogin,
+  initiateSignup,
   userToProfile,
 } from "../auth";
 
@@ -20,6 +22,7 @@ export interface Session {
 
 interface UseSessionReturn extends Session {
   login: () => Promise<void>;
+  signup: () => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<boolean>;
 }
@@ -119,7 +122,19 @@ export function useSession(): UseSessionReturn {
   }, []);
 
   const login = useCallback(async () => {
-    await initiateLogin();
+    try {
+      await initiateLogin();
+    } catch {
+      showErrorSnackbar("Couldn't reach the sign-in service. Try again.");
+    }
+  }, []);
+
+  const signup = useCallback(async () => {
+    try {
+      await initiateSignup();
+    } catch {
+      showErrorSnackbar("Couldn't reach the sign-up service. Try again.");
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -147,9 +162,10 @@ export function useSession(): UseSessionReturn {
     isLoading,
     accessToken,
     login,
+    signup,
     logout,
     refresh,
   };
 }
 
-export { initiateLogin } from "../auth";
+export { initiateLogin, initiateSignup } from "../auth";

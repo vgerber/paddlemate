@@ -88,7 +88,8 @@ function Layout() {
   // Subscribing here re-renders every localized name in the app when the
   // display language changes; no component below memoizes its render.
   useLanguage();
-  const { isAuthenticated, isLoading, user, login, logout } = useSession();
+  const { isAuthenticated, isLoading, user, login, signup, logout } =
+    useSession();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // Full-bleed map pages: the main world map and the gauge coverage map.
   const isMapPage = pathname === "/" || pathname === "/tools/gauge-catalog";
@@ -134,15 +135,26 @@ function Layout() {
             (isAuthenticated ? (
               <UserMenu username={user?.username ?? ""} logout={logout} />
             ) : (
-              <Button
-                variant="contained"
-                color="secondary"
-                size="small"
-                onClick={login}
-                sx={{ fontSize: "0.6875rem" }}
-              >
-                Sign In
-              </Button>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Button
+                  variant="text"
+                  color="secondary"
+                  size="small"
+                  onClick={signup}
+                  sx={{ fontSize: "0.6875rem" }}
+                >
+                  Sign Up
+                </Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  size="small"
+                  onClick={login}
+                  sx={{ fontSize: "0.6875rem" }}
+                >
+                  Sign In
+                </Button>
+              </Box>
             ))}
         </Toolbar>
       </AppBar>
