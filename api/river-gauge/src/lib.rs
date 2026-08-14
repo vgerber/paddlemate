@@ -22,10 +22,63 @@
 // ✅ wales_nrw              "nrw"       ~270 gauges   NRW rivers-and-seas JSON (no coords yet)
 // ✅ ireland_opw            "opw"       ~460 gauges   OPW waterlevel.ie GeoJSON
 // ✅ ireland_riverspy       "riverspy"  812 gauges    riverspy.net (OPW+EPA+ESB, has flow)
+// ✅ slovenia_arso          "arso"      163 gauges    ARSO XML snapshot
+// ✅ croatia_hv             "hv"        342 gauges    Croatian HV feed
+// ✅ bosnia_vodaba          "vodaba"    230 gauges    Bosnia Vodaba feed
+// ✅ greece_openhi          "openhi"    22 gauges     Greece OpenHi feed
+// ✅ australia_bom          "bom"       7,613 gauges  Australia BOM feed
+// ✅ newzealand_hilltop     "hilltop"   1,023 gauges  NZ Hilltop WML feed
+// ✅ brazil_ana             "ana"       4,311 gauges  ANA HidroWeb ASMX telemetry
+//                                                     (legacy service, live through
+//                                                      2026-06-30 per ANA docs)
+// ✅ srilanka_mevinu        "lk"        40 gauges     Sri Lanka mevinu.com ArcGIS proxy
+// ✅ nepal_dhm              "np"        203 gauges    Nepal DHM river-watch snapshot
+//                                                     (no coords yet; unit unconfirmed)
 // ❌ rdbrmc                             51 gauges     Dead provider (rdbrmc.com closed 2024)
 // ❌ anu                                 6 gauges     Graubuenden cantonal (no public API)
 // ❌ be                                  3 gauges     Bern cantonal (no public API)
 // -  synthetic/visual                   36 gauges    Not real gauges, skip
+//
+// Researched and left out for now - see doc/fetching-gauge-data.md for the
+// full recipes, gotchas and what would need to happen to unblock each one:
+// ❌ chile (DGA)         station list ready; readings flow de-risked (see doc)
+//                        but not yet implemented/verified end to end
+// ❌ argentina (INA)     station list ready; readings endpoint's exact param
+//                        shape not yet cracked (returns "missing timeStart")
+// ❌ colombia (IDEAM)    station list ready (HTTP-only host); readings
+//                        endpoint not yet located
+// ❌ peru/ecuador/bolivia  no confirmed working endpoint (Peru/Ecuador have
+//                        leads; Bolivia is a dead end - PDF bulletins only)
+// ❌ mexico (CONAGUA)    weekly/annual batch data only, no near-real-time API
+// ❌ central america     no usable public API found (Costa Rica: 1 hydro
+//                        station total; Panama/Guatemala/Honduras/Nicaragua:
+//                        no exposed data; El Salvador: promising but bot-
+//                        blocked, worth a manual follow-up)
+// ❌ uruguay (DINAGUA)   open portal but stale annual data (2017-2019)
+// ❌ paraguay (DINAC)    live auto-updating page exists, backing JSON/AJAX
+//                        call not yet found - best lead of the excluded set
+// ❌ venezuela           nothing usable found
+// ❌ india (CWC)         only batch/historical open data found (CKAN, through
+//                        2025); no confirmed live feed outside a gated dashboard
+// ❌ bhutan, georgia, armenia, kyrgyzstan, tajikistan  no public API found
+// ❌ kazakhstan (Kazhydromet)  real 377-station network exists behind an
+//                        R Shiny dashboard on a currently-unreachable port
+// ❌ turkey (DSI)        real flood-warning telemetry network (TEUS) exists;
+//                        public dashboard unreachable from this environment,
+//                        worth a retest from elsewhere
+// ❌ vietnam/laos/thailand (Mekong River Commission)  real 58-station
+//                        telemetry network confirmed; portal is a JS SPA,
+//                        needs a browser network trace to find the API
+// ❌ philippines (PAGASA)  real 10-min telemetry network confirmed; same JS
+//                        SPA blocker as the Mekong countries
+// ❌ indonesia            no national hydrological API found (BMKG covers
+//                        weather/quakes only)
+// ❌ china                no public API found; documented as a known,
+//                        unsolved open-data gap (see doc for the citation)
+// ❌ south korea (WAMIS)  real API exists and takes a free registered key,
+//                        same pattern as NVE_API_KEY/USGS_API_KEY; station-
+//                        list endpoint unconfirmed and the host was
+//                        unreachable from this environment - retest first
 // ────────────────────────────────────────────────────────────────────────────
 
 mod austria_ehyd;
@@ -33,6 +86,7 @@ mod austria_tirol;
 mod austria_vorarlberg;
 mod australia_bom;
 mod bosnia_vodaba;
+mod brazil_ana;
 mod canada_wsc;
 mod croatia_hv;
 mod czech_chmi;
@@ -47,12 +101,14 @@ mod ireland_opw;
 mod ireland_riverspy;
 mod italy_riverzone;
 pub mod license;
+mod nepal_dhm;
 mod newzealand_hilltop;
 mod norway_nve;
 mod poland_imgw;
 mod rivermap;
 mod scotland_sepa;
 mod slovenia_arso;
+mod srilanka_mevinu;
 mod switzerland_bafu;
 mod usa_usgs;
 mod wales_nrw;
@@ -169,6 +225,9 @@ pub fn build_registry() -> Vec<Arc<dyn GaugeReader>> {
         Arc::new(greece_openhi::GreeceOpenhiReader::default()),
         Arc::new(australia_bom::AustraliaBomReader::default()),
         Arc::new(newzealand_hilltop::NewZealandHilltopReader::default()),
+        Arc::new(brazil_ana::BrazilAnaReader),
+        Arc::new(srilanka_mevinu::SriLankaMevinuReader::default()),
+        Arc::new(nepal_dhm::NepalDhmReader::default()),
         Arc::new(rivermap::RivermapReader::default()),
     ]
 }

@@ -3,7 +3,9 @@
 A multi-provider hydrological gauge reader for Rust. Fetches water level and
 discharge time-series data from regional APIs across Europe (Austria,
 Switzerland, France, Germany, Norway, Italy, Poland, Czech Republic, England,
-Scotland, Wales, Ireland, Rivermap) and North America (USA, Canada).
+Scotland, Wales, Ireland, Slovenia, Croatia, Bosnia, Greece, Rivermap), North
+America (USA, Canada), South America (Brazil), Oceania (Australia, New
+Zealand) and Asia (Sri Lanka, Nepal).
 
 Official pages:
 
@@ -45,6 +47,15 @@ Official pages:
 | `nrw`      | Wales (NRW)                 | 266 (live)   | ~1 year (no coords yet)        | ✅              |
 | `opw`      | Ireland (OPW)               | 459 (live)   | ~5 weeks                       | ✅              |
 | `riverspy` | Ireland (riverspy.net)      | 812 (live)   | Snapshot only                  | ✅              |
+| `arso`     | Slovenia                    | 163 (live)   | Snapshot only                  | ✅              |
+| `hv`       | Croatia                     | 342 (live)   | Snapshot only                  | ✅              |
+| `vodaba`   | Bosnia (AVP Sava)           | 230 (live)   | ~1 week                        | ✅              |
+| `openhi`   | Greece (OpenHi.net)         | 22 (live)    | 1 year                         | ✅              |
+| `bom`      | Australia (BOM)             | 7,613 (live) | 180 days (daily-batch updates) | ✅              |
+| `hilltop`  | New Zealand (6 councils)    | 1,023 (live) | 30 days                        | ✅              |
+| `ana`      | Brazil (ANA)                | 4,311 (live) | 45+ days (verified lower bound)| ✅              |
+| `lk`       | Sri Lanka (mevinu.com)      | 40 (live)    | Snapshot only                  | ✅              |
+| `np`       | Nepal (DHM)                 | 203 (live)   | Snapshot only (no coords yet)  | ✅              |
 
 ## Authentication & rate limits
 
@@ -77,6 +88,15 @@ readers cache snapshot responses and only poll linked gauges.
 | `nrw`      | No           | —                   | [api-portal.naturalresources.wales](https://api-portal.naturalresources.wales/) (optional, for the documented-but-latest-only official API instead) | No documented limit on the no-auth endpoints used here; they are undocumented internal endpoints of NRW's own public website (more "may change" risk than a published API). OGL, attribute NRW.  |
 | `opw`      | No           | —                   | —                                                                       | No documented limit found. **CC-BY 4.0** - attribute "Contains Irish Public Sector Information licensed under CC BY 4.0 (source http://waterlevel.ie - provided by the Office of Public Works.)".                                               |
 | `riverspy` | No           | —                   | —                                                                       | No documented limit found; unofficial third-party aggregator with no site-wide licence - attribute the original agency (`OPW`/`EPA`/`ESB`) per gauge, not riverspy.                                                                              |
+| `arso`     | No           | —                   | —                                                                       | No documented limit. XML snapshot refreshed every 30 min; reader caches. Attribute ARSO (Slovenian Environment Agency).                                                                                                                            |
+| `hv`       | No           | —                   | —                                                                       | No documented limit. JSON snapshot refreshed ~hourly; reader caches. No explicit licence - attribute Hrvatske vode.                                                                                                                                |
+| `vodaba`   | No           | —                   | —                                                                       | No documented limit; static pre-rendered JSON export (not a live API), regenerated continuously. No explicit licence - attribute AVP Sava, Sarajevo.                                                                                              |
+| `openhi`   | No           | —                   | —                                                                       | No documented limit found. **CC-BY-SA 4.0** - attribute OpenHi.net / the station owner.                                                                                                                                                            |
+| `bom`      | No           | —                   | —                                                                       | No documented limit found, but bom.gov.au rejects some non-browser/datacenter-IP clients - reader pins a browser User-Agent. **CC-BY 4.0 Australia** - attribute the Bureau of Meteorology.                                                       |
+| `hilltop`  | No           | —                   | —                                                                       | No documented limit across the 6 independent council servers; one council failing only drops its own stations. Mostly **CC-BY 4.0** - attribute each council individually.                                                                        |
+| `ana`      | No           | —                   | —                                                                       | No documented limit found. Legacy ASMX service, documented to stay live through 2026-06-30 (ANA is migrating to a newer, email-gated REST API). Federal open data - attribute ANA.                                                                |
+| `lk`       | No           | —                   | —                                                                       | No documented limit found. Third-party aggregator (ArcGIS-shaped feed) - no stated licence; attribute Sri Lanka's Irrigation Department plus the aggregator.                                                                                       |
+| `np`       | No           | —                   | —                                                                       | No documented limit found. No stated licence - attribute Nepal's Department of Hydrology and Meteorology (DHM).                                                                                                                                    |
 
 ## Usage
 
@@ -345,6 +365,15 @@ or `Q` (discharge). Provider-specific conventions:
 | `nrw`      | NRW numeric station id, e.g. `4078`                                | `W` only (no flow in this network) |
 | `opw`      | OPW 5-digit station code, e.g. `01041`                             | `W` only                           |
 | `riverspy` | riverspy gauge code, e.g. `00008`                                  | `W`, `Q` (4 ESB dam-release gauges)|
+| `arso`     | ARSO `sifra`, e.g. `1060`                                          | `W`, `Q`                           |
+| `hv`       | Hrvatske vode `Sifra`, e.g. `3121` (or `SLxxxx` for shared Slovenian stations) | `W`, `Q`                |
+| `vodaba`   | `{site_no}/{station_no}`, e.g. `4/4130`                            | `W` only advertised                |
+| `openhi`   | OpenHi station id, e.g. `1486`                                     | `W-{group_id}-{ts_id}`, `Q-{group_id}-{ts_id}` |
+| `bom`      | BOM station number, e.g. `403213`                                  | `W`, `Q`                           |
+| `hilltop`  | `{council_key}/{site name}`, e.g. `wcrc/Buller Rv @ Te Kuha WCRC`  | `W`, `Q`                           |
+| `ana`      | ANA `Codigo`, e.g. `57735000`                                      | `W` (level, cm), `Q` (flow, m³/s)  |
+| `lk`       | Gauge name, e.g. `Deraniyagala`                                    | `W` only (no flow field)           |
+| `np`       | DHM numeric station id, e.g. `4903`                                | `W` only (unit unconfirmed)        |
 
 ## TODO
 
@@ -362,18 +391,19 @@ covered by any reader:
 | Austria        | 27              | Overlap with `tirol`/`ehyd`; UUIDs need resolving |
 | Czech Republic | 27              | Overlap with `cz`; UUIDs need resolving           |
 | Spain          | 26              | No dedicated reader                               |
-| Slovenia       | 17              | No dedicated reader                               |
-| Bosnia         | 8               | No dedicated reader                               |
+| Slovenia       | 17              | Overlap with `arso`; UUIDs need resolving         |
+| Bosnia         | 8               | Overlap with `vodaba`; UUIDs need resolving       |
 | Montenegro     | 8               | No dedicated reader                               |
 | Germany        | 9               | Overlap with `by`/`bw`/`po`/`sx`                  |
-| Greece         | 7               | No dedicated reader                               |
+| Greece         | 7               | Overlap with `openhi`; UUIDs need resolving       |
 
 Options to extend coverage:
 
 - Resolve UUIDs in `import_gauges.py` for countries that overlap with existing
   readers (FR, CH, AT, CZ, DE) so the `rz` reader can serve them.
-- Implement dedicated readers for SK, SI, ES, BA, ME, GR where there is a
-  suitable public API (UK/Ireland now covered by `ea`/`sepa`/`nrw`/`opw`/`riverspy`).
+- Implement dedicated readers for SK, ES, ME where there is a suitable
+  public API (UK/Ireland now covered by `ea`/`sepa`/`nrw`/`opw`/`riverspy`;
+  SI/BA/GR now covered by `arso`/`vodaba`/`openhi`).
 - `nrw` ships without coordinates - NRW's no-auth endpoints only expose
   British National Grid easting/northing, not WGS84; a verified OSGB36 datum
   transform (or pulling coordinates from the official, key-gated
