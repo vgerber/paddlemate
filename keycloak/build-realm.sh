@@ -18,7 +18,7 @@ jq -n \
     realm: "paddle",
     enabled: true,
     sslRequired: "none",
-    registrationAllowed: false,
+    registrationAllowed: true,
     loginWithEmailAllowed: true,
     accessTokenLifespan: 1800,
     ssoSessionIdleTimeout: 7200,
