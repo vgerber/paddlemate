@@ -923,7 +923,8 @@ pub async fn search_catalog_rivers(
         WHERE river IS NOT NULL AND river <> ''
           AND ($1::text IS NULL OR river ILIKE '%' || $1 || '%')
         GROUP BY river, country
-        ORDER BY COUNT(*) DESC, river
+        ORDER BY ($1::text IS NOT NULL AND LOWER(river) = LOWER($1)) DESC,
+                 COUNT(*) DESC, river
         LIMIT $2
         "#,
         q,

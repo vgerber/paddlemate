@@ -1,6 +1,9 @@
-import { Marker } from "react-map-gl/maplibre";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { useState } from "react";
+import { Marker, Popup } from "react-map-gl/maplibre";
 import type { components } from "@/lib/api/schema";
-import { theme } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme";
 
 type WaterLevel = components["schemas"]["WaterLevel"];
 
@@ -13,6 +16,14 @@ export interface GaugePin {
   name: string;
   /** Null for catalog-only stations without readings (neutral color). */
   level: WaterLevel | null;
+  /** Emphasized pin (e.g. the matched river's own gauges in suggest mode). */
+  highlighted?: boolean;
+  /** When set, clicking opens an info popup instead of calling onClick. */
+  info?: {
+    river?: string | null;
+    provider: string;
+    params: string[];
+  };
 }
 
 interface GaugeMarkersProps {
@@ -26,10 +37,18 @@ export default function GaugeMarkers({
   selectedId,
   onClick,
 }: GaugeMarkersProps) {
+  const [popupPin, setPopupPin] = useState<GaugePin | null>(null);
+
   return (
     <>
       {pins.map((pin) => {
         const isSelected = selectedId === pin.id;
+        const emphasized = isSelected || pin.highlighted;
+        const color = pin.level
+          ? LEVEL_COLORS[pin.level]
+          : pin.highlighted
+            ? theme.tokens.primary
+            : theme.tokens.outline;
         return (
           <Marker
             key={pin.id}
@@ -40,14 +59,16 @@ export default function GaugeMarkers({
             <button
               type="button"
               title={pin.name}
-              onClick={() => onClick?.(pin)}
+              onClick={() =>
+                pin.info
+                  ? setPopupPin((prev) => (prev?.id === pin.id ? null : pin))
+                  : onClick?.(pin)
+              }
               style={{
-                width: isSelected ? 18 : 14,
-                height: isSelected ? 18 : 14,
+                width: emphasized ? 18 : 14,
+                height: emphasized ? 18 : 14,
                 borderRadius: "50%",
-                background: pin.level
-                  ? LEVEL_COLORS[pin.level]
-                  : theme.tokens.outline,
+                background: color,
                 border: isSelected
                   ? `3px solid ${theme.tokens.white}`
                   : `2px solid ${theme.tokens.background}`,
@@ -62,6 +83,38 @@ export default function GaugeMarkers({
           </Marker>
         );
       })}
+
+      {popupPin?.info && (
+        <Popup
+          longitude={popupPin.lon}
+          latitude={popupPin.lat}
+          anchor="bottom"
+          offset={12}
+          closeButton={false}
+          onClose={() => setPopupPin(null)}
+        >
+          <Box sx={{ minWidth: 140 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {popupPin.name}
+            </Typography>
+            {popupPin.info.river && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block" }}
+              >
+                {popupPin.info.river}
+              </Typography>
+            )}
+            <Typography sx={{ ...labelSx, display: "block", mt: 0.5 }}>
+              {popupPin.info.provider}
+              {popupPin.info.params.length > 0
+                ? ` · ${popupPin.info.params.join(", ")}`
+                : ""}
+            </Typography>
+          </Box>
+        </Popup>
+      )}
     </>
   );
 }

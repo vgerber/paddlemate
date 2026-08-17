@@ -60,7 +60,6 @@ export default function SidebarContent({
     suggestMode,
     setSuggestMode,
     closeSuggest,
-    setSectionPreviewCoords,
     featureVertices,
     setFeatureVertices,
     featureGeomType,
@@ -77,7 +76,6 @@ export default function SidebarContent({
     featureProposals,
     suggestWaterwayName,
     setSuggestWaterwayName,
-    mapBounds,
     setFocusBounds,
     setSuggestGaugePins,
   } = state;
@@ -86,8 +84,6 @@ export default function SidebarContent({
     return (
       <SuggestWaterwayPanel
         initialName={suggestWaterwayName}
-        mapBounds={mapBounds}
-        onPreviewCoordsChange={setSectionPreviewCoords}
         onFocusBounds={setFocusBounds}
         onGaugePinsChange={setSuggestGaugePins}
         onClose={closeSuggest}

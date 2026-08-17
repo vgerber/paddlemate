@@ -9,6 +9,22 @@
   font-family: "Space Grotesk", sans-serif;
 }
 
+/* MapLibre popups follow the dark theme (tokens.surface / tokens.background) */
+.maplibregl-popup-content {
+  background: #1e2022;
+  color: inherit;
+  border: 1px solid rgba(138, 146, 149, 0.4);
+  border-radius: 0;
+  padding: 10px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: #1e2022;
+}
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: #1e2022;
+}
+
 /* Suppress browser tap highlight and focus outline on recharts SVG elements */
 .recharts-wrapper,
 .recharts-wrapper svg,
