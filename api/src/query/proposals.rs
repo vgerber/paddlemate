@@ -134,7 +134,7 @@ async fn snapshot_entity(
 
         "water_section" => {
             let row = sqlx::query(
-                r#"SELECT id, waterway_id, name, description, region, country,
+                r#"SELECT id, waterway_id, name, description, regions, country,
                           river_km_start, river_km_end,
                           ST_AsGeoJSON(location) AS location_geojson
                    FROM water_sections WHERE id = $1"#,
@@ -153,7 +153,7 @@ async fn snapshot_entity(
                     "waterway_id": r.get::<i64, _>("waterway_id"),
                     "name": r.get::<String, _>("name"),
                     "description": r.get::<Option<String>, _>("description"),
-                    "region": r.get::<Option<String>, _>("region"),
+                    "regions": r.get::<Vec<String>, _>("regions"),
                     "country": r.get::<Option<String>, _>("country"),
                     "river_km_start": r.get::<Option<f64>, _>("river_km_start"),
                     "river_km_end": r.get::<Option<f64>, _>("river_km_end"),
@@ -500,11 +500,21 @@ async fn apply_proposal(
                             .map_err(|e| sqlx::Error::Decode(e.into()))?,
                     )
                 };
+                // Accept both the regions array and the legacy single-region
+                // field, so proposals stored before the migration still apply.
+                let regions: Option<Vec<String>> = data["regions"]
+                    .as_array()
+                    .map(|a| {
+                        a.iter()
+                            .filter_map(|v| v.as_str().map(str::to_owned))
+                            .collect()
+                    })
+                    .or_else(|| data["region"].as_str().map(|r| vec![r.to_owned()]));
                 sqlx::query(
                     r#"UPDATE water_sections
                        SET name        = COALESCE($1, name),
                            description = COALESCE($2, description),
-                           region      = COALESCE($3, region),
+                           regions     = COALESCE($3, regions),
                            country     = COALESCE($4, country),
                            location    = COALESCE(ST_GeomFromGeoJSON($5), location),
                            updated_at  = NOW()
@@ -512,7 +522,7 @@ async fn apply_proposal(
                 )
                 .bind(data["name"].as_str())
                 .bind(data["description"].as_str())
-                .bind(data["region"].as_str())
+                .bind(regions)
                 .bind(data["country"].as_str())
                 .bind(location.as_deref())
                 .bind(id)
@@ -559,7 +569,7 @@ async fn apply_proposal(
                                 }
                             };
                         let series_id =
-                            crate::query::features::resolve_range_series(&mut **tx, &body).await?;
+                            crate::query::features::resolve_range_series(tx, &body).await?;
                         gauges::upsert_feature_water_range_partial(
                             &mut **tx,
                             id,
@@ -582,7 +592,10 @@ async fn apply_proposal(
                     );
                     DEFAULT_LANG_CODE.to_string()
                 });
-                if let Some(name) = data["name"].as_str().map(str::trim).filter(|s| !s.is_empty())
+                if let Some(name) = data["name"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
                 {
                     features::upsert_name(&mut **tx, id, &lang, name).await?;
                 }

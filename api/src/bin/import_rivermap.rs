@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs, path::PathBuf};
 
 use anyhow::Context;
 use river_gauge::{
-    license, RivermapReadingsRange, RivermapSectionBundle, RivermapSource, RivermapStation,
+    RivermapReadingsRange, RivermapSectionBundle, RivermapSource, RivermapStation, license,
 };
 use serde::Deserialize;
 use serde_json::Value;
@@ -52,11 +52,13 @@ async fn main() -> anyhow::Result<()> {
                 let list = args
                     .next()
                     .ok_or_else(|| anyhow::anyhow!("--only requires a comma separated list"))?;
-                let steps: Vec<String> =
-                    list.split(',').map(|s| s.trim().to_lowercase()).collect();
+                let steps: Vec<String> = list.split(',').map(|s| s.trim().to_lowercase()).collect();
                 for step in &steps {
                     if !STEPS.contains(&step.as_str()) {
-                        anyhow::bail!("unknown step '{step}', expected one of {}", STEPS.join(", "));
+                        anyhow::bail!(
+                            "unknown step '{step}', expected one of {}",
+                            STEPS.join(", ")
+                        );
                     }
                 }
                 only = Some(steps);
@@ -435,7 +437,11 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
             .and_then(|v| v.as_str())
             .map(|s| &s[..s.len().min(2)]);
 
-        let region = obj.get("regionName").and_then(|v| v.as_str());
+        let regions: Vec<String> = obj
+            .get("regionName")
+            .and_then(|v| v.as_str())
+            .map(|r| vec![r.to_owned()])
+            .unwrap_or_default();
 
         // Collect access-point coordinates from the section fields.
         let put_in = obj.get("putInLatLng").and_then(|v| v.as_array());
@@ -484,10 +490,10 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
         // $5 = geometry for INSERT (always valid, may be degenerate).
         // $6 = geometry for UPDATE (NULL when take_out absent → COALESCE keeps stored value).
         let section_id: i64 = sqlx::query_scalar(
-            "INSERT INTO water_sections (waterway_id, name, region, country, location, created_by)
+            "INSERT INTO water_sections (waterway_id, name, regions, country, location, created_by)
              VALUES ($1, $2, $3, $4, ST_GeomFromEWKT($5), 'rivermap-import')
              ON CONFLICT (waterway_id, name) DO UPDATE
-             SET region     = EXCLUDED.region,
+             SET regions    = EXCLUDED.regions,
                  country    = EXCLUDED.country,
                  location   = COALESCE(ST_GeomFromEWKT($6), water_sections.location),
                  updated_at = NOW()
@@ -495,7 +501,7 @@ async fn import_sections(pool: &PgPool, bundle: &RivermapSectionBundle) -> anyho
         )
         .bind(waterway_id)
         .bind(&section_name)
-        .bind(region)
+        .bind(&regions)
         .bind(country_code)
         .bind(&insert_line_wkt)
         .bind(real_line_wkt.as_deref())

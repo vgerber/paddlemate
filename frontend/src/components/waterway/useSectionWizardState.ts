@@ -10,6 +10,7 @@ import {
 import type { SectionFeatureDraft } from "@/components/waterway/SuggestFeatureForm";
 import { toPseudoFeature } from "@/components/waterway/section-details/utils";
 import type { Feature, SectionWithFeatures } from "@/lib/api";
+import { deriveRegions } from "@/lib/deriveRegions";
 import { downstreamDot, lineCoords } from "@/lib/geo";
 import { useRiverSnap } from "@/lib/hooks/useRiverSnap";
 import type { BoundingBox, Coordinate } from "@/lib/riverSnap";
@@ -94,6 +95,34 @@ export function useSectionWizardState(
           : null,
     [lineSource, snap.snappedCoords, putIn, takeOut],
   );
+
+  // Prefill the regions field from OSM once a section line exists (valley,
+  // district, state - most specific first). Only fills an empty field, so a
+  // hand-edited list is never overwritten; re-picking the line re-derives
+  // only while the field is still untouched.
+  const namingRef = useRef(naming);
+  namingRef.current = naming;
+  useEffect(() => {
+    if (!hasLocation || !finalCoords || namingRef.current.regions.trim()) {
+      return;
+    }
+    const controller = new AbortController();
+    deriveRegions(finalCoords, controller.signal)
+      .then((regions) => {
+        if (
+          controller.signal.aborted ||
+          regions.length === 0 ||
+          namingRef.current.regions.trim()
+        ) {
+          return;
+        }
+        setNaming((prev) => ({ ...prev, regions: regions.join(", ") }));
+      })
+      .catch(() => {
+        // Best-effort prefill - the user can always type regions by hand.
+      });
+    return () => controller.abort();
+  }, [hasLocation, finalCoords]);
 
   const orderWrong =
     hasLocation &&

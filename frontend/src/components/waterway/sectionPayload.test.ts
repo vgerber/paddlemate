@@ -7,7 +7,7 @@ const naming = (overrides: Partial<SectionNamingValue> = {}) => ({
   langCode: "en",
   name: "  Lower Test  ",
   description: "",
-  region: " Tyrol ",
+  regions: " Ötztal , Tirol ,",
   country: "",
   translations: [],
   ...overrides,
@@ -35,7 +35,7 @@ describe("buildSectionPayload", () => {
   test("trims naming fields and nulls the empty ones", () => {
     const body = buildSectionPayload(naming(), LINE, []);
     expect(body.name).toBe("Lower Test");
-    expect(body.region).toBe("Tyrol");
+    expect(body.regions).toEqual(["Ötztal", "Tirol"]);
     expect(body.country).toBeNull();
     expect(body.description).toBeNull();
     expect(body.location).toEqual({ type: "LineString", coordinates: LINE });

@@ -13,6 +13,7 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
+        geometry::Geometry,
         path_params::WaterwayPath,
         proposal::Proposal,
         water_section::SectionWithFeatures,
@@ -101,7 +102,7 @@ pub async fn get_waterway(
     let (sections_result, features_result, names_result, descriptions_result) = tokio::join!(
         sqlx::query!(
             r#"
-            SELECT id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at
+            SELECT id, waterway_id, name, description, regions, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at
             FROM water_sections WHERE waterway_id = $1 ORDER BY river_km_start NULLS LAST, name
             "#,
             waterway_id
@@ -119,25 +120,37 @@ pub async fn get_waterway(
         descriptions_result,
     ) {
         (Ok(records), Ok(mut features_map), Ok(mut names_map), Ok(mut descriptions_map)) => {
-            let sections: Vec<SectionWithFeatures> = records
+            let sections: Result<Vec<SectionWithFeatures>, sqlx::Error> = records
                 .into_iter()
-                .map(|s| SectionWithFeatures {
-                    id: s.id,
-                    waterway_id: s.waterway_id,
-                    name: s.name,
-                    description: s.description,
-                    region: s.region,
-                    country: s.country,
-                    features: features_map.remove(&s.id).unwrap_or_default(),
-                    names: names_map.remove(&s.id).unwrap_or_default(),
-                    descriptions: descriptions_map.remove(&s.id).unwrap_or_default(),
-                    location: serde_json::from_str(&s.location.expect("location NOT NULL"))
-                        .expect("valid GeoJSON"),
-                    created_by: s.created_by,
-                    created_at: s.created_at,
-                    updated_at: s.updated_at,
+                .map(|s| {
+                    Ok(SectionWithFeatures {
+                        id: s.id,
+                        waterway_id: s.waterway_id,
+                        name: s.name,
+                        description: s.description,
+                        regions: s.regions,
+                        country: s.country,
+                        features: features_map.remove(&s.id).unwrap_or_default(),
+                        names: names_map.remove(&s.id).unwrap_or_default(),
+                        descriptions: descriptions_map.remove(&s.id).unwrap_or_default(),
+                        location: Geometry::from_db(s.location)?,
+                        created_by: s.created_by,
+                        created_at: s.created_at,
+                        updated_at: s.updated_at,
+                    })
                 })
                 .collect();
+            let sections = match sections {
+                Ok(sections) => sections,
+                Err(err) => {
+                    tracing::error!(
+                        "Invalid section geometry for waterway {}: {}",
+                        waterway_id,
+                        err
+                    );
+                    return ApiError::internal().into_response();
+                }
+            };
             Json(WaterwayWithSections {
                 id: waterway.id,
                 waterway_type: waterway.waterway_type,

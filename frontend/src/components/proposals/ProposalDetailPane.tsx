@@ -78,7 +78,12 @@ export default function ProposalDetailPane({
   if (typeof data.description === "string" && data.description) {
     detailRows.push(["Description", data.description]);
   }
-  const regionCountry = [data.region, data.country]
+  // `regions` array on current proposals; single `region` on ones stored
+  // before the regions migration.
+  const regionNames = Array.isArray(data.regions)
+    ? data.regions.filter((v): v is string => typeof v === "string")
+    : [data.region];
+  const regionCountry = [...regionNames, data.country]
     .filter((v) => typeof v === "string" && v)
     .join(", ");
   if (regionCountry) detailRows.push(["Region", regionCountry]);

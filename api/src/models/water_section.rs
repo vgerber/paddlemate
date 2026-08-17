@@ -34,8 +34,9 @@ pub struct Section {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub region: Option<String>,
+    /// Region names, most specific first (valley, district, state, range).
+    #[serde(default)]
+    pub regions: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub country: Option<String>,
     /// GeoJSON LineString geometry
@@ -54,8 +55,9 @@ pub struct SectionWithFeatures {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub region: Option<String>,
+    /// Region names, most specific first (valley, district, state, range).
+    #[serde(default)]
+    pub regions: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub country: Option<String>,
     /// GeoJSON LineString geometry
@@ -90,6 +92,12 @@ pub struct SectionTranslationBody {
 pub struct CreateSectionBody {
     pub name: String,
     pub description: Option<String>,
+    /// Region names, most specific first (valley, district, state, range).
+    #[serde(default)]
+    pub regions: Vec<String>,
+    /// Legacy single-region field, still accepted so proposals stored before
+    /// the regions array keep applying. Folded into `regions` on use.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub region: Option<String>,
     pub country: Option<String>,
     /// GeoJSON LineString geometry
@@ -120,7 +128,23 @@ impl CreateSectionBody {
 pub struct UpdateSectionBody {
     pub name: Option<String>,
     pub description: Option<String>,
-    pub region: Option<String>,
+    /// Region names, most specific first; `None` keeps the current list.
+    pub regions: Option<Vec<String>>,
     pub country: Option<String>,
     pub location: Option<Geometry>,
+}
+
+impl CreateSectionBody {
+    /// The effective region list: the array, or the legacy single field.
+    pub fn effective_regions(&self) -> Vec<String> {
+        if !self.regions.is_empty() {
+            return self.regions.clone();
+        }
+        self.region
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(|s| vec![s.to_owned()])
+            .unwrap_or_default()
+    }
 }

@@ -60,7 +60,10 @@ export function buildSectionPayload(
 
   return {
     name: naming.name.trim(),
-    region: naming.region.trim() || null,
+    regions: naming.regions
+      .split(",")
+      .map((r) => r.trim())
+      .filter(Boolean),
     country: naming.country.trim() || null,
     description: naming.description.trim() || null,
     location: { type: "LineString", coordinates },

@@ -55,7 +55,7 @@ pub async fn get_section(
                 waterway_id: section.waterway_id,
                 name: section.name,
                 description: section.description,
-                region: section.region,
+                regions: section.regions,
                 country: section.country,
                 location: section.location,
                 features,

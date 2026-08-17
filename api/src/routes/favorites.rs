@@ -43,8 +43,8 @@ pub struct FavoriteSectionResponse {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub region: Option<String>,
+    /// Region names, most specific first (valley, district, state, range).
+    pub regions: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub country: Option<String>,
     /// GeoJSON LineString geometry
@@ -89,9 +89,9 @@ async fn list_favorites(
             waterway_name: meta.waterway_name,
             name: meta.name,
             description: meta.description,
-            region: meta.region,
+            regions: meta.regions,
             country: meta.country,
-            location: serde_json::from_str(&meta.location).expect("valid GeoJSON"),
+            location: meta.location,
             features: section_features,
             created_at: meta.created_at,
             updated_at: meta.updated_at,

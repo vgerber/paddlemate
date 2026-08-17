@@ -127,7 +127,7 @@ find your river? Add it").
 | Table | Notes |
 | ----- | ----- |
 | `waterways` | `name` UNIQUE; `waterway_type` currently only `river` |
-| `water_sections` | PostGIS LineString `location`, country/region, `river_km_start/end`; name UNIQUE per waterway |
+| `water_sections` | PostGIS LineString `location`, country, `regions` TEXT[] (valley, district, state - most specific first, derived from OSM), `river_km_start/end`; name UNIQUE per waterway |
 | `features` | Point/LineString/Polygon `location`, `feature_type` enum (13 values, `api/src/models/feature.rs`), free-shape JSONB `metadata` |
 | `feature_water_ranges` | feature × gauge series → `range_low/medium/high` cutoffs |
 | `gauges` → `gauge_series` → `gauge_readings` | station → measurement type (level/discharge) → time series |
@@ -142,4 +142,10 @@ find your river? Add it").
 - The map falls back to the section line's endpoints when no `put_in` /
   `take_out` features exist (`frontend/src/components/map/mapLayers.ts`).
 - Section water status endpoint: `.../sections/{id}/water-status`.
+- Section regions come from OSM: the suggest-section wizard prefills them
+  client-side once the line is picked (`frontend/src/lib/deriveRegions.ts`),
+  and `cargo run --bin derive_section_regions` backfills sections whose list
+  is empty (hand-edited lists are never overwritten). Valleys are OSM lines,
+  not polygons, so both use proximity (2 km) for valley names and area
+  containment for districts/states/mountain ranges.
 - Full ER diagram: [api/README.md](../api/README.md).

@@ -22,6 +22,7 @@ export function toPseudoSection(input: {
     name: input.name,
     waterway_id: 0,
     description: null,
+    regions: [],
     location: input.location,
     features: [],
     names: [],

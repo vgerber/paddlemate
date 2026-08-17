@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use sqlx::PgPool;
 
 use crate::models::{
+    geometry::Geometry,
     lang::debug_assert_normalized,
     water_section::{
         CreateSectionBody, Section, SectionDescription, SectionId, SectionName, UpdateSectionBody,
@@ -11,7 +12,7 @@ use crate::models::{
 };
 use crate::query::features;
 
-const SECTION_COLS: &str = "id, waterway_id, name, description, region, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at";
+const SECTION_COLS: &str = "id, waterway_id, name, description, regions, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at";
 
 fn row_to_section(row: &sqlx::postgres::PgRow) -> Result<Section, sqlx::Error> {
     use sqlx::Row;
@@ -21,10 +22,9 @@ fn row_to_section(row: &sqlx::postgres::PgRow) -> Result<Section, sqlx::Error> {
         waterway_id: row.try_get("waterway_id")?,
         name: row.try_get("name")?,
         description: row.try_get("description")?,
-        region: row.try_get("region")?,
+        regions: row.try_get("regions")?,
         country: row.try_get("country")?,
-        location: serde_json::from_str(&location.expect("location NOT NULL"))
-            .expect("valid GeoJSON"),
+        location: Geometry::from_db(location)?,
         created_by: row.try_get("created_by")?,
         created_at: row.try_get("created_at")?,
         updated_at: row.try_get("updated_at")?,
@@ -61,7 +61,7 @@ pub async fn update_section(
         "UPDATE water_sections
          SET name        = COALESCE($1, name),
              description = COALESCE($2, description),
-             region      = COALESCE($3, region),
+             regions     = COALESCE($3, regions),
              country     = COALESCE($4, country),
              location    = COALESCE(ST_GeomFromGeoJSON($5), location),
              updated_at  = NOW()
@@ -70,7 +70,7 @@ pub async fn update_section(
     ))
     .bind(&body.name)
     .bind(&body.description)
-    .bind(&body.region)
+    .bind(&body.regions)
     .bind(&body.country)
     .bind(location_json.as_deref())
     .bind(section_id)
@@ -106,14 +106,14 @@ pub async fn create_section_bundle(
     let location_json =
         serde_json::to_string(&body.location).map_err(|e| sqlx::Error::Decode(e.into()))?;
     let row = sqlx::query(&format!(
-        "INSERT INTO water_sections (waterway_id, name, description, region, country, location, created_by)
+        "INSERT INTO water_sections (waterway_id, name, description, regions, country, location, created_by)
          VALUES ($1, $2, $3, $4, $5, ST_GeomFromGeoJSON($6), $7)
          RETURNING {SECTION_COLS}"
     ))
     .bind(waterway_id)
     .bind(&body.name)
     .bind(&body.description)
-    .bind(&body.region)
+    .bind(body.effective_regions())
     .bind(&body.country)
     .bind(&location_json)
     .bind(created_by)

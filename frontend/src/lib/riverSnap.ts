@@ -73,7 +73,7 @@ interface OverpassNode {
   lat: number;
 }
 
-interface OverpassElement {
+export interface OverpassElement {
   type: string;
   tags?: Record<string, string>;
   geometry?: OverpassNode[];
@@ -132,7 +132,7 @@ function enqueueOverpass<T>(
   return run;
 }
 
-async function runOverpass(
+export async function runOverpass(
   query: string,
   signal?: AbortSignal,
 ): Promise<OverpassElement[]> {

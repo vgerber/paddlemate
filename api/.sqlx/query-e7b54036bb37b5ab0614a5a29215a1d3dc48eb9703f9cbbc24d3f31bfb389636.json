@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            ws.id,\n            ws.waterway_id,\n            w.name AS waterway_name,\n            ws.name,\n            ws.description,\n            ws.region,\n            ws.country,\n            ST_AsGeoJSON(ws.location) AS location,\n            ws.created_at,\n            ws.updated_at\n        FROM user_section_favorites usf\n        JOIN water_sections ws ON ws.id = usf.section_id\n        JOIN waterways w ON w.id = ws.waterway_id\n        WHERE usf.user_id = $1\n        ORDER BY usf.created_at DESC\n        ",
+  "query": "\n        SELECT\n            ws.id,\n            ws.waterway_id,\n            w.name AS waterway_name,\n            ws.name,\n            ws.description,\n            ws.regions,\n            ws.country,\n            ST_AsGeoJSON(ws.location) AS location,\n            ws.created_at,\n            ws.updated_at\n        FROM user_section_favorites usf\n        JOIN water_sections ws ON ws.id = usf.section_id\n        JOIN waterways w ON w.id = ws.waterway_id\n        WHERE usf.user_id = $1\n        ORDER BY usf.created_at DESC\n        ",
   "describe": {
     "columns": [
       {
@@ -30,8 +30,8 @@
       },
       {
         "ordinal": 5,
-        "name": "region",
-        "type_info": "Varchar"
+        "name": "regions",
+        "type_info": "TextArray"
       },
       {
         "ordinal": 6,
@@ -65,12 +65,12 @@
       false,
       false,
       true,
-      true,
+      false,
       true,
       null,
       false,
       false
     ]
   },
-  "hash": "a58862a05a7ba207de1dc302fa9067605a4fd67279152e94460406a7938490a6"
+  "hash": "e7b54036bb37b5ab0614a5a29215a1d3dc48eb9703f9cbbc24d3f31bfb389636"
 }

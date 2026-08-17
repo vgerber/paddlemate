@@ -56,8 +56,9 @@ export default function SectionListItem({
         secondary={
           matchedFeature
             ? `Rapid: ${matchedFeature}`
-            : [section.region, section.country].filter(Boolean).join(", ") ||
-              undefined
+            : [...(section.regions ?? []), section.country]
+                .filter(Boolean)
+                .join(", ") || undefined
         }
         slotProps={{
           primary: { variant: "body2" },

@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 
-use crate::models::{water_section::SectionId, waterway::WaterwayId};
+use crate::models::{geometry::Geometry, water_section::SectionId, waterway::WaterwayId};
 
 pub struct SectionFavoriteMeta {
     pub id: SectionId,
@@ -9,10 +9,9 @@ pub struct SectionFavoriteMeta {
     pub waterway_name: String,
     pub name: String,
     pub description: Option<String>,
-    pub region: Option<String>,
+    pub regions: Vec<String>,
     pub country: Option<String>,
-    /// Raw GeoJSON string from ST_AsGeoJSON
-    pub location: String,
+    pub location: Geometry,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -29,7 +28,7 @@ pub async fn list_section_favorites(
             w.name AS waterway_name,
             ws.name,
             ws.description,
-            ws.region,
+            ws.regions,
             ws.country,
             ST_AsGeoJSON(ws.location) AS location,
             ws.created_at,
@@ -43,23 +42,23 @@ pub async fn list_section_favorites(
         user_id
     )
     .fetch_all(pool)
-    .await
-    .map(|rows| {
-        rows.into_iter()
-            .map(|r| SectionFavoriteMeta {
-                id: r.id,
-                waterway_id: r.waterway_id,
-                waterway_name: r.waterway_name,
-                name: r.name,
-                description: r.description,
-                region: r.region,
-                country: r.country,
-                location: r.location.expect("location is NOT NULL"),
-                created_at: r.created_at,
-                updated_at: r.updated_at,
-            })
-            .collect()
+    .await?
+    .into_iter()
+    .map(|r| {
+        Ok(SectionFavoriteMeta {
+            id: r.id,
+            waterway_id: r.waterway_id,
+            waterway_name: r.waterway_name,
+            name: r.name,
+            description: r.description,
+            regions: r.regions,
+            country: r.country,
+            location: Geometry::from_db(r.location)?,
+            created_at: r.created_at,
+            updated_at: r.updated_at,
+        })
     })
+    .collect()
 }
 
 pub async fn add_section_favorite(
