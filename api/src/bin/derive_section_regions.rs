@@ -157,11 +157,16 @@ async fn main() -> anyhow::Result<()> {
         .user_agent("paddlemate-region-backfill")
         .build()?;
 
+    // The single-element check makes --refresh-imported resumable: the
+    // import wrote exactly one coarse regionName, while derived lists are
+    // multi-entry, so already-refreshed rows are skipped on a rerun.
     let sections = sqlx::query!(
         r#"SELECT id, name, ST_AsGeoJSON(location) AS "location!"
            FROM water_sections
            WHERE regions = '{}'
-              OR ($1 AND created_by = 'rivermap-import')
+              OR ($1
+                  AND created_by = 'rivermap-import'
+                  AND cardinality(regions) <= 1)
            ORDER BY id"#,
         refresh_imported
     )
