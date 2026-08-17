@@ -104,8 +104,7 @@ pub async fn insert_feature(
         feature_type: r.feature_type,
         metadata: r.metadata,
         created_by: r.created_by,
-        location: serde_json::from_str::<Geometry>(&r.location.expect("location NOT NULL"))
-            .expect("valid GeoJSON"),
+        location: Geometry::from_db(r.location)?,
         names: vec![],
         descriptions: vec![],
         created_at: r.created_at,
@@ -229,8 +228,7 @@ pub async fn update_feature(
         feature_type: r.feature_type,
         metadata: r.metadata,
         created_by: r.created_by,
-        location: serde_json::from_str::<Geometry>(&r.location.expect("location NOT NULL"))
-            .expect("valid GeoJSON"),
+        location: Geometry::from_db(r.location)?,
         names: names?,
         descriptions: descriptions?,
         created_at: r.created_at,
@@ -410,24 +408,23 @@ pub async fn fetch_features_for_section(
     .fetch_all(pool)
     .await?;
 
-    Ok(records
+    records
         .into_iter()
-        .map(|f| Feature {
-            id: f.id,
-            section_id: f.section_id,
-            feature_type: f.feature_type,
-            metadata: f.metadata,
-            created_by: f.created_by,
-            location: f
-                .location
-                .and_then(|g| serde_json::from_str::<Geometry>(&g).ok())
-                .expect("valid GeoJSON"),
-            names: serde_json::from_value(f.names).unwrap_or_default(),
-            descriptions: serde_json::from_value(f.descriptions).unwrap_or_default(),
-            created_at: f.created_at,
-            updated_at: f.updated_at,
+        .map(|f| {
+            Ok(Feature {
+                id: f.id,
+                section_id: f.section_id,
+                feature_type: f.feature_type,
+                metadata: f.metadata,
+                created_by: f.created_by,
+                location: Geometry::from_db(f.location)?,
+                names: serde_json::from_value(f.names).unwrap_or_default(),
+                descriptions: serde_json::from_value(f.descriptions).unwrap_or_default(),
+                created_at: f.created_at,
+                updated_at: f.updated_at,
+            })
         })
-        .collect())
+        .collect()
 }
 
 pub async fn fetch_features_for_waterway(
@@ -477,10 +474,7 @@ pub async fn fetch_features_for_waterway(
             feature_type: f.feature_type,
             metadata: f.metadata,
             created_by: f.created_by,
-            location: f
-                .location
-                .and_then(|g| serde_json::from_str::<Geometry>(&g).ok())
-                .expect("valid GeoJSON"),
+            location: Geometry::from_db(f.location)?,
             names: serde_json::from_value(f.names).unwrap_or_default(),
             descriptions: serde_json::from_value(f.descriptions).unwrap_or_default(),
             created_at: f.created_at,
