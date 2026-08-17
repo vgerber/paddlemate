@@ -34,6 +34,9 @@ COPY --from=builder /app/target/release/import_rivermap /usr/local/bin/import_ri
 # Operational tool: syncs the multi-provider gauge discovery catalog from each
 # reader's live list_stations(). Run on a schedule: docker exec sync_gauge_catalog.
 COPY --from=builder /app/target/release/sync_gauge_catalog /usr/local/bin/sync_gauge_catalog
+# Operational tool: backfills section regions from OSM for sections whose
+# regions array is empty. Run after imports: docker exec derive_section_regions.
+COPY --from=builder /app/target/release/derive_section_regions /usr/local/bin/derive_section_regions
 
 ENV PORT=3000
 EXPOSE 3000
