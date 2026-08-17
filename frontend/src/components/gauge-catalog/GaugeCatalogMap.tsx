@@ -100,12 +100,12 @@ export default function GaugeCatalogMap() {
 
   // Re-read the clusters MapLibre generated for the current viewport, with the
   // per-state tallies from `clusterProperties`, and drive the donut markers.
+  // Only called on load/idle (gesture settled), never mid-pan/zoom -
+  // querySourceFeatures is too expensive to run on every render frame.
   const refreshClusters = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
-    // Skip until the source exists (early render events fire before it is
-    // added) and has (re)clustered for the current view, so we read fresh
-    // clusters mid-zoom rather than stale ones.
+    // Skip until the source exists and has (re)clustered for the current view.
     if (!map.getSource(SOURCE_ID) || !map.isSourceLoaded(SOURCE_ID)) return;
     const feats = map.querySourceFeatures(SOURCE_ID, {
       filter: ["has", "point_count"],
@@ -173,7 +173,6 @@ export default function GaugeCatalogMap() {
         interactiveLayerIds={[POINT_LAYER]}
         onClick={handleClick}
         onLoad={refreshClusters}
-        onRender={refreshClusters}
         onIdle={refreshClusters}
       >
         <NavigationControl position="top-right" />
