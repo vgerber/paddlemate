@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, name, ST_AsGeoJSON(location) AS \"location!\"\n           FROM water_sections\n           WHERE regions = '{}'\n           ORDER BY id",
+  "query": "SELECT id, name, ST_AsGeoJSON(location) AS \"location!\"\n           FROM water_sections\n           WHERE regions = '{}'\n              OR ($1 AND created_by = 'rivermap-import')\n           ORDER BY id",
   "describe": {
     "columns": [
       {
@@ -20,7 +20,9 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Bool"
+      ]
     },
     "nullable": [
       false,
@@ -28,5 +30,5 @@
       null
     ]
   },
-  "hash": "ec354edf5f431a1f686982209af41754f1bd491e93c5c35d3bc5dafe8b0338c7"
+  "hash": "d5f0be3ec2c199d1e4faccd42d2c4650074fc3bb90801bebcf7f357fb0572131"
 }

@@ -14,6 +14,10 @@
 //! Respects Overpass fair use: one request per second. Run manually or after
 //! an import; only sections with an empty regions array are touched, so
 //! hand-edited lists are never overwritten. Idempotent.
+//!
+//! `--refresh-imported` additionally re-derives rivermap-imported sections
+//! whose regions came from the import's coarse regionName (country-level),
+//! replacing them with the OSM-derived list.
 
 use std::time::Duration;
 
@@ -145,6 +149,8 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
     dotenvy::dotenv().ok();
 
+    let refresh_imported = std::env::args().any(|a| a == "--refresh-imported");
+
     let database_url = std::env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
     let pool = PgPool::connect(&database_url).await?;
     let client = reqwest::Client::builder()
@@ -155,11 +161,13 @@ async fn main() -> anyhow::Result<()> {
         r#"SELECT id, name, ST_AsGeoJSON(location) AS "location!"
            FROM water_sections
            WHERE regions = '{}'
-           ORDER BY id"#
+              OR ($1 AND created_by = 'rivermap-import')
+           ORDER BY id"#,
+        refresh_imported
     )
     .fetch_all(&pool)
     .await?;
-    println!("{} sections without regions", sections.len());
+    println!("{} sections to derive", sections.len());
 
     let mut updated = 0u32;
     for section in sections {
