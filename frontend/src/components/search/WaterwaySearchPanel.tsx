@@ -1,4 +1,7 @@
+import AddIcon from "@mui/icons-material/Add";
+import StarIcon from "@mui/icons-material/Star";
 import Box from "@mui/material/Box";
+import Fab from "@mui/material/Fab";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -6,6 +9,7 @@ import type { FavoriteSection, SectionWithFeatures } from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
 import { useWaterways } from "@/lib/hooks/useWaterways";
 import { readRecentWaterways } from "@/lib/recentWaterways";
+import ListGroupHeader from "./ListGroupHeader";
 import ListViewToggle, { type ListView } from "./ListViewToggle";
 import RecentRiverList from "./RecentRiverList";
 import RiverList from "./RiverList";
@@ -126,7 +130,14 @@ export default function WaterwaySearchPanel({
   );
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        position: "relative",
+      }}
+    >
       <SearchFiltersHeader
         filters={searchFilters}
         total={total}
@@ -168,18 +179,36 @@ export default function WaterwaySearchPanel({
           ) : favorites.length > 0 || recentRivers.length > 0 ? (
             <>
               {favorites.length > 0 && (
-                <SectionList
-                  sections={favoriteSections}
-                  selectedSectionId={selectedSectionId}
-                  waterwayNames={Object.fromEntries(
-                    favorites.map((f) => [f.waterway_id, f.waterway_name]),
-                  )}
-                  onSectionClick={onSectionClick}
-                  favoritedIds={favoritedIds}
-                  onToggleFavorite={onToggleFavorite}
-                />
+                <>
+                  <ListGroupHeader
+                    icon={<StarIcon sx={{ fontSize: 14 }} />}
+                    label="Starred sections"
+                  />
+                  <SectionList
+                    sections={favoriteSections}
+                    selectedSectionId={selectedSectionId}
+                    waterwayNames={Object.fromEntries(
+                      favorites.map((f) => [f.waterway_id, f.waterway_name]),
+                    )}
+                    onSectionClick={onSectionClick}
+                    favoritedIds={favoritedIds}
+                    onToggleFavorite={onToggleFavorite}
+                  />
+                </>
               )}
-              <RecentRiverList rivers={recentRivers} onSelect={onSelect} />
+              <Box
+                sx={
+                  favorites.length > 0 && recentRivers.length > 0
+                    ? {
+                        mt: 1.5,
+                        borderTop: "1px solid",
+                        borderColor: "divider",
+                      }
+                    : undefined
+                }
+              >
+                <RecentRiverList rivers={recentRivers} onSelect={onSelect} />
+              </Box>
             </>
           ) : (
             <Typography
@@ -216,6 +245,20 @@ export default function WaterwaySearchPanel({
           />
         )}
       </Box>
+
+      {/* Always-visible entry point for proposing a river; prefills the
+          suggest panel with the current search text. */}
+      {onProposeRiver && (
+        <Fab
+          color="secondary"
+          aria-label="New river"
+          title="New river"
+          onClick={() => onProposeRiver(mode === "name" ? searchName : "")}
+          sx={{ position: "absolute", bottom: 16, right: 16 }}
+        >
+          <AddIcon />
+        </Fab>
+      )}
     </Box>
   );
 }

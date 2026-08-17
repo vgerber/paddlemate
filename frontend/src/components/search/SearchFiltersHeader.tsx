@@ -1,13 +1,17 @@
+import FilterListIcon from "@mui/icons-material/FilterList";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SearchIcon from "@mui/icons-material/Search";
+import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
+import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import { useState } from "react";
 import type { AreaCircle } from "@/lib/geo";
 import AreaControls from "./AreaControls";
 import DifficultySelect from "./DifficultySelect";
@@ -26,7 +30,9 @@ interface SearchFiltersHeaderProps {
   onRadiusPreview?: (radiusKm: number) => void;
 }
 
-/** Panel header: title row, name/area mode toggle and the filter inputs. */
+/** Panel header: title row, name/area mode toggle and the search input.
+ * Optional filters (country, difficulty) stay collapsed behind the filter
+ * button; a badge dot marks active filters while they are hidden. */
 export default function SearchFiltersHeader({
   filters,
   total,
@@ -40,18 +46,24 @@ export default function SearchFiltersHeader({
   onRadiusPreview,
 }: SearchFiltersHeaderProps) {
   const { mode, name, country, minDiff, maxDiff } = filters;
+  const hasActiveFilters =
+    country.trim() !== "" || minDiff !== "" || maxDiff !== "";
+  // Open on mount when a filter is already set (e.g. seeded from the URL),
+  // so active filters are never invisible-but-effective on first paint.
+  const [filtersOpen, setFiltersOpen] = useState(hasActiveFilters);
+
   return (
     <Box
       sx={{
         px: 2,
-        pt: 2,
-        pb: 1.5,
+        pt: 1.5,
+        pb: 1,
         borderBottom: "1px solid",
         borderColor: "divider",
         flexShrink: 0,
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
         <Typography
           variant="subtitle2"
           sx={{ color: "text.secondary", letterSpacing: "0.12em" }}
@@ -70,11 +82,26 @@ export default function SearchFiltersHeader({
             {total} results
           </Typography>
         )}
+        <IconButton
+          size="small"
+          onClick={() => setFiltersOpen((v) => !v)}
+          aria-label={filtersOpen ? "Hide filters" : "Show filters"}
+          title={filtersOpen ? "Hide filters" : "Show filters"}
+          sx={{ ml: isLoading ? "auto" : 0 }}
+        >
+          <Badge
+            color="primary"
+            variant="dot"
+            invisible={!hasActiveFilters || filtersOpen}
+          >
+            <FilterListIcon fontSize="small" />
+          </Badge>
+        </IconButton>
         {onClose && (
           <IconButton
             size="small"
             onClick={onClose}
-            sx={{ ml: "auto", display: { xs: "flex", md: "none" } }}
+            sx={{ display: { xs: "flex", md: "none" } }}
             aria-label="Close search panel"
           >
             <KeyboardArrowDownIcon fontSize="small" />
@@ -94,7 +121,7 @@ export default function SearchFiltersHeader({
           }
         }}
         sx={{
-          mb: 1.5,
+          mb: 1,
           width: "100%",
           "& .MuiToggleButton-root": {
             flex: 1,
@@ -111,73 +138,65 @@ export default function SearchFiltersHeader({
         </ToggleButton>
       </ToggleButtonGroup>
 
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        {mode === "name" ? (
-          <>
+      {mode === "name" ? (
+        <TextField
+          fullWidth
+          placeholder="Search rivers or sections…"
+          value={name}
+          onChange={(e) => filters.setName(e.target.value)}
+          size="small"
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon
+                    fontSize="small"
+                    sx={{ color: "text.disabled" }}
+                  />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+      ) : (
+        <AreaControls
+          areaCircle={areaCircle ?? null}
+          locked={areaLocked ?? false}
+          onLockedChange={(v) => onAreaLockedChange?.(v)}
+          onRadiusChange={(r) =>
+            areaCircle && onAreaCircleChange?.({ ...areaCircle, radiusKm: r })
+          }
+          onRadiusPreview={onRadiusPreview}
+        />
+      )}
+
+      <Collapse in={filtersOpen}>
+        <Box sx={{ display: "flex", gap: 1, pt: 1 }}>
+          {mode === "name" && (
             <TextField
-              fullWidth
-              placeholder="Search rivers or sections…"
-              value={name}
-              onChange={(e) => filters.setName(e.target.value)}
+              label="Country"
+              placeholder="AT"
+              value={country}
+              onChange={(e) => filters.setCountry(e.target.value)}
               size="small"
               slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon
-                        fontSize="small"
-                        sx={{ color: "text.disabled" }}
-                      />
-                    </InputAdornment>
-                  ),
+                inputLabel: { shrink: true },
+                htmlInput: {
+                  maxLength: 2,
+                  style: { textTransform: "uppercase" },
                 },
               }}
+              sx={{ flex: 1, minWidth: 0 }}
             />
-            <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-              <TextField
-                label="Country"
-                placeholder="AT"
-                value={country}
-                onChange={(e) => filters.setCountry(e.target.value)}
-                size="small"
-                slotProps={{
-                  inputLabel: { shrink: true },
-                  htmlInput: {
-                    maxLength: 2,
-                    style: { textTransform: "uppercase" },
-                  },
-                }}
-                sx={{ flex: 1, minWidth: 0 }}
-              />
-              <DifficultySelect
-                minDiff={minDiff}
-                maxDiff={maxDiff}
-                onMinChange={filters.setMinDiff}
-                onMaxChange={filters.setMaxDiff}
-              />
-            </Box>
-          </>
-        ) : (
-          <>
-            <AreaControls
-              areaCircle={areaCircle ?? null}
-              locked={areaLocked ?? false}
-              onLockedChange={(v) => onAreaLockedChange?.(v)}
-              onRadiusChange={(r) =>
-                areaCircle &&
-                onAreaCircleChange?.({ ...areaCircle, radiusKm: r })
-              }
-              onRadiusPreview={onRadiusPreview}
-            />
-            <DifficultySelect
-              minDiff={minDiff}
-              maxDiff={maxDiff}
-              onMinChange={filters.setMinDiff}
-              onMaxChange={filters.setMaxDiff}
-            />
-          </>
-        )}
-      </Box>
+          )}
+          <DifficultySelect
+            minDiff={minDiff}
+            maxDiff={maxDiff}
+            onMinChange={filters.setMinDiff}
+            onMaxChange={filters.setMaxDiff}
+          />
+        </Box>
+      </Collapse>
     </Box>
   );
 }

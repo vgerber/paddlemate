@@ -1,7 +1,7 @@
 import HistoryIcon from "@mui/icons-material/History";
 import List from "@mui/material/List";
-import Typography from "@mui/material/Typography";
 import type { RecentWaterway } from "@/lib/recentWaterways";
+import ListGroupHeader from "./ListGroupHeader";
 import RiverRow from "./RiverRow";
 
 interface RecentRiverListProps {
@@ -19,21 +19,10 @@ export default function RecentRiverList({
 
   return (
     <>
-      <Typography
-        variant="overline"
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          color: "text.secondary",
-          lineHeight: 1,
-          px: 1,
-          pt: 1,
-          pb: 0.5,
-        }}
-      >
-        <HistoryIcon sx={{ fontSize: 14 }} /> Recent rivers
-      </Typography>
+      <ListGroupHeader
+        icon={<HistoryIcon sx={{ fontSize: 14 }} />}
+        label="Recent rivers"
+      />
       <List dense disablePadding>
         {rivers.map((river) => (
           <RiverRow
