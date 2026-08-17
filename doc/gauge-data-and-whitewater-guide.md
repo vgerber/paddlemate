@@ -10,9 +10,10 @@ live whitewater.guide GraphQL API, their open-source repos, and our own
 - Our gauge coverage is strong across Central Europe and actually **ahead of
   whitewater.guide** there (they have no France/Germany/Czech/Poland feeds).
   We've since also built UK/Ireland, USA/Canada, Australia/New Zealand, the
-  Balkans/Slovenia/Greece, Brazil, Sri Lanka and Nepal (see §2.1) - the gap
-  against `gorge`'s source list is now mostly closed except **Sweden
-  (SMHI)/Finland** and **Spain**. See [fetching-gauge-data.md](fetching-gauge-data.md)
+  Balkans/Slovenia/Greece, Brazil, Sri Lanka, Nepal, Sweden (SMHI) and
+  Catalonia (ACA) (see §2.1) - the gap against `gorge`'s source list is now
+  mostly closed except **Finland** and the non-Catalan Spanish basins
+  (blocked, see §2.3). See [fetching-gauge-data.md](fetching-gauge-data.md)
   for the much larger, separately-researched Americas/Asia expansion beyond
   what `gorge` itself covers.
 - whitewater.guide's **section content is not a free dataset**. The code is
@@ -30,8 +31,8 @@ live whitewater.guide GraphQL API, their open-source repos, and our own
 This list has grown substantially since 2026-08-09 and is no longer
 maintained here - see [`api/river-gauge/README.md`](../api/river-gauge/README.md#providers)
 for the current, authoritative provider table (region, station counts,
-history depth). As of 2026-08-15 it covers 30 providers across Europe, North
-America, South America, Oceania and Asia, materializing 44,500+ gauge_catalog
+history depth). As of 2026-08-15 it covers 32 providers across Europe, North
+America, South America, Oceania and Asia, materializing 48,700+ gauge_catalog
 rows.
 
 ### 2.2 whitewater.guide's sources (gorge)
@@ -40,13 +41,13 @@ whitewater.guide harvests gauges with its open-source `gorge` service; each
 folder in `scripts/` is one source. Their documented table plus the extra
 folders in the tree, updated 2026-08-15 against our current provider list:
 
-- **Overlap with us:** Norway, Switzerland, Tirol, Riverzone, UK (England/
-  Wales/Scotland), Ireland, USA, Canada, New Zealand.
+- **Overlap with us:** Norway, Sweden (SMHI), Switzerland, Tirol, Riverzone,
+  UK (England/Wales/Scotland), Ireland, USA, Canada, New Zealand, Catalonia.
 - **They lack (we win Central Europe + the Balkans):** France, all of
   Germany, Czech, Poland, Austria national + Vorarlberg, Slovenia, Croatia,
   Bosnia, Greece.
-- **They have that we lack:** see next section - now just Scandinavia
-  (Sweden/Finland) and Spain from `gorge`'s own list.
+- **They have that we lack:** see next section - now just Finland and the
+  non-Catalan Spanish sources from `gorge`'s own list.
 
 ### 2.3 Providers we still need (prioritised, updated 2026-08-15)
 
@@ -56,9 +57,8 @@ table (UK/Ireland/USA/Canada/New Zealand - see §2.2). What's left from
 
 | Priority | gorge source | Region | Why |
 |---|---|---|---|
-| High | `smhi` | Sweden | Completes Scandinavia (we have Norway) |
-| Med | `finland` | Finland | Scandinavia |
-| Med | `galicia` / `galicia2` / `catalunya` / `cantabria` | Spain, N. Portugal, Asturias | Iberian whitewater |
+| Med | `finland` | Finland | Completes Scandinavia (we have Norway + Sweden); not yet researched |
+| Med | `galicia` / `galicia2` / `cantabria` | NW Spain, Asturias | Researched 2026-08-15 (see fetching-gauge-data.md): Galicia blocked on an emailed MeteoGalicia auth code, Miño-Sil implementable but scrape-heavy, Cantabria now behind a login wall. `catalunya` is built (`aca`). |
 | Low | `uscdec`, `usnws` | USA (California / NWS) | Redundant with our `usgs` reader for most purposes |
 | Low | `georgia` | Georgia (Caucasus) | Researched 2026-08-15 (see fetching-gauge-data.md) - dead end, no public API found |
 | Low | `chile`, `ecuador`, `futa` | South America | Chile researched in depth 2026-08-15 (recipe de-risked, one endpoint short of implementable); Ecuador has an unconfirmed lead; `futa` (Futaleufu-specific) not separately investigated |
@@ -67,13 +67,13 @@ table (UK/Ireland/USA/Canada/New Zealand - see §2.2). What's left from
 Beyond `gorge`'s own source list, [fetching-gauge-data.md](fetching-gauge-data.md)
 covers a much larger, independently-researched sweep of the Americas and
 Asia (20+ additional countries) that `gorge` doesn't touch at all - Brazil,
-Sri Lanka and Nepal are now implemented from that research; Argentina,
-Colombia, Peru, Ecuador and others have documented, unimplemented leads.
+Sri Lanka, Nepal, Sweden and Catalonia are now implemented from that
+research; Argentina, Colombia, Peru, Ecuador and others have documented,
+unimplemented leads.
 
-Recommended next build order: **SMHI** (Sweden) first - adjacent to our
-existing Norway coverage, official open REST API, self-contained like our
-other readers. After that, Chile (per the de-risked recipe) is the next
-clearest win.
+Recommended next build order: **Chile** (per the de-risked recipe) is the
+next clearest win, then Finland (unresearched) or the Ebro basin
+(Pyrenean whitewater, needs a browser trace).
 
 ## 3. whitewater.guide section data
 
@@ -160,12 +160,12 @@ Separate the two kinds of data in a section:
 
 ## 5. Concrete next steps
 
-1. **Gauges:** the UK/Ireland cluster from the original plan is now built
-   (`ea`, `sepa`, `nrw`, `opw`, `riverspy`). Next up per §2.3: `smhi`
-   (Sweden), then the Spain cluster (`galicia`/`catalunya`/`cantabria`), then
-   Chile (recipe de-risked in fetching-gauge-data.md, one endpoint short of
-   implementable). Ask for a per-source API scoping note when ready to
-   implement.
+1. **Gauges:** the UK/Ireland cluster, SMHI (Sweden) and ACA (Catalonia)
+   are now built. Next up per §2.3: Chile (recipe de-risked in
+   fetching-gauge-data.md, one endpoint short of implementable), then
+   Finland or the remaining Spanish basins (Galicia needs an emailed
+   MeteoGalicia auth code; Ebro needs a browser trace). Ask for a
+   per-source API scoping note when ready to implement.
 2. **whitewater.guide:** treat as a coverage map only for now. If content reuse
    is ever wanted, get explicit permission from the maintainers or restrict to
    the CC0 subset, and reconcile the NC/share-alike terms with paddlemate's own

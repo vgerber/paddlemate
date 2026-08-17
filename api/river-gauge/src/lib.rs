@@ -34,6 +34,8 @@
 // ✅ srilanka_mevinu        "lk"        40 gauges     Sri Lanka mevinu.com ArcGIS proxy
 // ✅ nepal_dhm              "np"        203 gauges    Nepal DHM river-watch snapshot
 //                                                     (no coords yet; unit unconfirmed)
+// ✅ sweden_smhi            "smhi"      ~300 gauges   SMHI hydroobs open data (Q only)
+// ✅ spain_aca              "aca"       ~84 gauges    Catalonia ACA Sentilo snapshot
 // ❌ rdbrmc                             51 gauges     Dead provider (rdbrmc.com closed 2024)
 // ❌ anu                                 6 gauges     Graubuenden cantonal (no public API)
 // ❌ be                                  3 gauges     Bern cantonal (no public API)
@@ -43,6 +45,14 @@
 // full recipes, gotchas and what would need to happen to unblock each one:
 // ❌ chile (DGA)         station list ready; readings flow de-risked (see doc)
 //                        but not yet implemented/verified end to end
+// ❌ spain galicia (MeteoGalicia)  clean JSON API with level+flow, but needs
+//                        an auth code requested by email from MeteoGalicia
+// ❌ spain mino-sil (CH Mino-Sil SAIH)  live HTML tables, implementable but
+//                        needs cookie/session dance + UTM zone 29 conversion
+// ❌ spain cantabria (CH Cantabrico)  former public pages now behind a login
+//                        wall; needs a browser trace of the new SAIH app
+// ❌ spain ebro (CH Ebro / saihebro.com)  Pyrenean whitewater basin; site is
+//                        live but data sits behind a JS app, endpoint unknown
 // ❌ argentina (INA)     station list ready; readings endpoint's exact param
 //                        shape not yet cracked (returns "missing timeStart")
 // ❌ colombia (IDEAM)    station list ready (HTTP-only host); readings
@@ -81,10 +91,10 @@
 //                        unreachable from this environment - retest first
 // ────────────────────────────────────────────────────────────────────────────
 
+mod australia_bom;
 mod austria_ehyd;
 mod austria_tirol;
 mod austria_vorarlberg;
-mod australia_bom;
 mod bosnia_vodaba;
 mod brazil_ana;
 mod canada_wsc;
@@ -108,7 +118,9 @@ mod poland_imgw;
 mod rivermap;
 mod scotland_sepa;
 mod slovenia_arso;
+mod spain_aca;
 mod srilanka_mevinu;
+mod sweden_smhi;
 mod switzerland_bafu;
 mod usa_usgs;
 mod wales_nrw;
@@ -221,13 +233,15 @@ pub fn build_registry() -> Vec<Arc<dyn GaugeReader>> {
         Arc::new(ireland_riverspy::IrelandRiverspyReader),
         Arc::new(slovenia_arso::SloveniaArsoReader::default()),
         Arc::new(croatia_hv::CroatiaHvReader::default()),
-        Arc::new(bosnia_vodaba::BosniaVodabaReader::default()),
-        Arc::new(greece_openhi::GreeceOpenhiReader::default()),
+        Arc::new(bosnia_vodaba::BosniaVodabaReader),
+        Arc::new(greece_openhi::GreeceOpenhiReader),
         Arc::new(australia_bom::AustraliaBomReader::default()),
         Arc::new(newzealand_hilltop::NewZealandHilltopReader::default()),
         Arc::new(brazil_ana::BrazilAnaReader),
         Arc::new(srilanka_mevinu::SriLankaMevinuReader::default()),
         Arc::new(nepal_dhm::NepalDhmReader::default()),
+        Arc::new(sweden_smhi::SwedenSmhiReader),
+        Arc::new(spain_aca::SpainAcaReader::default()),
         Arc::new(rivermap::RivermapReader::default()),
     ]
 }

@@ -2,10 +2,10 @@
 
 A multi-provider hydrological gauge reader for Rust. Fetches water level and
 discharge time-series data from regional APIs across Europe (Austria,
-Switzerland, France, Germany, Norway, Italy, Poland, Czech Republic, England,
-Scotland, Wales, Ireland, Slovenia, Croatia, Bosnia, Greece, Rivermap), North
-America (USA, Canada), South America (Brazil), Oceania (Australia, New
-Zealand) and Asia (Sri Lanka, Nepal).
+Switzerland, France, Germany, Norway, Sweden, Italy, Spain/Catalonia, Poland,
+Czech Republic, England, Scotland, Wales, Ireland, Slovenia, Croatia, Bosnia,
+Greece, Rivermap), North America (USA, Canada), South America (Brazil),
+Oceania (Australia, New Zealand) and Asia (Sri Lanka, Nepal).
 
 Official pages:
 
@@ -56,6 +56,8 @@ Official pages:
 | `ana`      | Brazil (ANA)                | 4,311 (live) | 45+ days (verified lower bound)| ✅              |
 | `lk`       | Sri Lanka (mevinu.com)      | 40 (live)    | Snapshot only                  | ✅              |
 | `np`       | Nepal (DHM)                 | 203 (live)   | Snapshot only (no coords yet)  | ✅              |
+| `smhi`     | Sweden (SMHI)               | ~300 (live)  | ~1 day (`latest-day` period)   | ✅              |
+| `aca`      | Catalonia, ES (ACA)         | ~84 (live)   | Snapshot only                  | ✅              |
 
 ## Authentication & rate limits
 
@@ -97,6 +99,8 @@ readers cache snapshot responses and only poll linked gauges.
 | `ana`      | No           | —                   | —                                                                       | No documented limit found. Legacy ASMX service, documented to stay live through 2026-06-30 (ANA is migrating to a newer, email-gated REST API). Federal open data - attribute ANA.                                                                |
 | `lk`       | No           | —                   | —                                                                       | No documented limit found. Third-party aggregator (ArcGIS-shaped feed) - no stated licence; attribute Sri Lanka's Irrigation Department plus the aggregator.                                                                                       |
 | `np`       | No           | —                   | —                                                                       | No documented limit found. No stated licence - attribute Nepal's Department of Hydrology and Meteorology (DHM).                                                                                                                                    |
+| `smhi`     | No           | —                   | —                                                                       | No documented limit; responses are server-cached for 10 min, so polling faster returns nothing new. **CC-BY 4.0** - attribute "Källa: SMHI".                                                                                                        |
+| `aca`      | No           | —                   | —                                                                       | No documented limit found. Sentilo REST API, 15-min cadence; reader caches. Open data - attribute ACA (Agencia Catalana de l'Aigua) / Generalitat de Catalunya.                                                                                     |
 
 ## Usage
 
@@ -374,6 +378,8 @@ or `Q` (discharge). Provider-specific conventions:
 | `ana`      | ANA `Codigo`, e.g. `57735000`                                      | `W` (level, cm), `Q` (flow, m³/s)  |
 | `lk`       | Gauge name, e.g. `Deraniyagala`                                    | `W` only (no flow field)           |
 | `np`       | DHM numeric station id, e.g. `4903`                                | `W` only (unit unconfirmed)        |
+| `smhi`     | SMHI station key, e.g. `2357`                                      | `Q` only (level covers ~10 stations, not exposed) |
+| `aca`      | Sentilo component id, e.g. `080060-001`                            | `W` (level, cm), `Q` (flow, m³/s)  |
 
 ## TODO
 
@@ -390,7 +396,7 @@ covered by any reader:
 | Switzerland    | 28              | Overlap with `bafu`; UUIDs need resolving         |
 | Austria        | 27              | Overlap with `tirol`/`ehyd`; UUIDs need resolving |
 | Czech Republic | 27              | Overlap with `cz`; UUIDs need resolving           |
-| Spain          | 26              | No dedicated reader                               |
+| Spain          | 26              | Catalonia covered by `aca`; other basins have no reader (see doc/fetching-gauge-data.md) |
 | Slovenia       | 17              | Overlap with `arso`; UUIDs need resolving         |
 | Bosnia         | 8               | Overlap with `vodaba`; UUIDs need resolving       |
 | Montenegro     | 8               | No dedicated reader                               |
@@ -401,9 +407,10 @@ Options to extend coverage:
 
 - Resolve UUIDs in `import_gauges.py` for countries that overlap with existing
   readers (FR, CH, AT, CZ, DE) so the `rz` reader can serve them.
-- Implement dedicated readers for SK, ES, ME where there is a suitable
+- Implement dedicated readers for SK and ME where there is a suitable
   public API (UK/Ireland now covered by `ea`/`sepa`/`nrw`/`opw`/`riverspy`;
-  SI/BA/GR now covered by `arso`/`vodaba`/`openhi`).
+  SI/BA/GR now covered by `arso`/`vodaba`/`openhi`; Catalonia by `aca` -
+  the remaining Spanish basins are blocked per doc/fetching-gauge-data.md).
 - `nrw` ships without coordinates - NRW's no-auth endpoints only expose
   British National Grid easting/northing, not WGS84; a verified OSGB36 datum
   transform (or pulling coordinates from the official, key-gated

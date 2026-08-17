@@ -7,10 +7,12 @@ Colombia, Peru, Ecuador, Bolivia, Mexico, Central America, Uruguay, Paraguay,
 Venezuela researched/verified live 2026-08-15 (batch 1). India, Bhutan,
 Georgia, Armenia, Turkey, Kyrgyzstan, Tajikistan, Kazakhstan, Vietnam, Laos,
 Thailand, Philippines, Indonesia, China, South Korea, Sri Lanka, Nepal
-researched/verified live 2026-08-15 (batch 2, Asia). This is a fetch
-reference, not a code plan - `brazil_ana.rs`, `srilanka_mevinu.rs` and
-`nepal_dhm.rs` are the only ones of these two batches actually implemented;
-see `lib.rs`'s checklist for the full **why** behind everything excluded.
+researched/verified live 2026-08-15 (batch 2, Asia). Sweden and the four
+Spanish sources researched/verified live 2026-08-15 (batch 3, Europe). This
+is a fetch reference, not a code plan - `brazil_ana.rs`,
+`srilanka_mevinu.rs`, `nepal_dhm.rs`, `sweden_smhi.rs` and `spain_aca.rs`
+are the only ones of these batches actually implemented; see `lib.rs`'s
+checklist for the full **why** behind everything excluded.
 
 Chile and Japan are unofficial scrapes (no published API) - throttle and
 cache, only fetch stations you actually use. USA and Canada are clean,
@@ -19,8 +21,8 @@ Pakistan sits in between: a real JSON API, but undocumented and only covers
 main-stem barrages, not the northern whitewater rivers. Brazil (ANA) turned
 out to be just as clean as USA/Canada - implemented, see below.
 
-This doc doesn't cover Europe - for the remaining European gaps (Sweden,
-Finland, Spain) and the whitewater.guide coverage/licensing analysis, see
+For the whitewater.guide coverage/licensing analysis and the remaining
+European gaps (now just Finland plus the blocked Spanish basins below), see
 [gauge-data-and-whitewater-guide.md](gauge-data-and-whitewater-guide.md).
 
 ---
@@ -890,6 +892,113 @@ Narayanghat.
 
 ---
 
+## Sweden - SMHI hydroobs - implemented
+
+Open data, no auth, CC BY 4.0 (attribute "Källa: SMHI"). Implemented as
+[`sweden_smhi.rs`](../api/river-gauge/src/sweden_smhi.rs), provider key
+`smhi`. Effectively a **discharge-only** network: parameter 2 (Vattenföring,
+15-min, m³/s) has 720 stations / ~300 active; parameter 3 (water level)
+covers only ~10 externally-owned stations reporting absolute elevation and
+is not exposed.
+
+```
+GET https://opendata-download-hydroobs.smhi.se/api/version/1.0/parameter/2.json
+GET https://opendata-download-hydroobs.smhi.se/api/version/1.0/parameter/2/station/{id}/period/latest-day/data.json
+```
+
+- Catalog fields: `key` (station id), `name`, `active`, `latitude`/
+  `longitude` (WGS84), `catchmentName` (main river basin - the closest thing
+  to a river name; there is no per-station river field).
+- Readings: `value[]` of `{date, value, quality}` - `date` is epoch **ms
+  UTC** (start of the time step), `value` nullable m³/s, `quality` `G`/`Y`/
+  `O` (approved/rough/unchecked; recent data is all `O`, ignored by us).
+- Periods per station vary; `latest-hour`, `latest-day` and
+  `corrected-archive` (CSV, decades) are common. The bulk
+  `station-set/all/period/latest-hour` endpoint exists but only covers the
+  last hour and only stations that reported within it - too short to bridge
+  a missed poll, hence per-station `latest-day` calls.
+- Responses are server-cached 10 minutes (`cache-control: max-age=600`) -
+  polling faster returns nothing new. 404 means "no data in period" as well
+  as "unknown station"; treat as empty, not an error.
+
+## Spain - four sources, one implemented (ACA Catalonia)
+
+Researched via whitewater.guide's `gorge` harvesters (`galicia`, `galicia2`,
+`catalunya`, `cantabria`), all verified live 2026-08-15.
+
+### Catalonia - ACA Sentilo API - implemented
+
+Implemented as [`spain_aca.rs`](../api/river-gauge/src/spain_aca.rs),
+provider key `aca`. Cleanest of the four: open JSON, no auth.
+
+```
+GET https://aplicacions.aca.gencat.cat/sdim2/apirest/catalog?componentType=aforament
+GET https://aplicacions.aca.gencat.cat/sdim2/apirest/data/AFORAMENT-EST
+```
+
+- Catalog: 175 sensors under `providers[0].sensors[]`; type `0019` = river
+  level (**cm**), `0014` = discharge (**m³/s**), `0035` = l/s canal
+  outflows (skipped, as is anything described "canal"). A component
+  (station, e.g. `080060-001`) groups one sensor per parameter; ~84 river
+  stations. `location` is WGS84 `"lat lon"` in one space-separated string;
+  river name in `componentAdditionalInfo.Riu`.
+- Data: latest observation per sensor in one call - `value` is a **string**
+  (`"0.221"`), `time` is epoch ms and **verified true UTC** (newest
+  observations matched the fetch time to within 5 minutes; the CET
+  `timeZone` label in the catalog does not apply to the epoch field).
+  15-minute cadence. Snapshot only - no history endpoint found.
+
+### Galicia - MeteoGalicia aforos - blocked on an auth code
+
+`https://servizos.meteogalicia.gal/mgafos/json/estadoActual.action?cod={CODE}`
+returns station metadata + latest level (cm) and flow (m³/s) with WGS84
+coords in one call - the nicest data shape of the four. Trivial reader once
+a code is obtained.
+
+**Getting the code** (per MeteoGalicia's official service doc,
+`meteo-estaticos.xunta.gal/datosred/infoweb/aforos/json/JSON_Aforos_Estado_Actual_es.pdf`):
+the service is public and free; email a request to
+**administracion-web.meteogalicia@xunta.gal**. The key is tied to the
+requesting email address, is personal (don't publish it - ship it as an
+env var like `NVE_API_KEY`), and goes into every request as the `cod`
+parameter. The same address handles cancellation.
+
+Endpoints once keyed (both take `cod`, station fields include `idEstacion`,
+`estacion`, `concello`, `provincia`, `lat`/`lon` WGS84, `dataUTC`,
+`valorNivel` (cm), `valorCaudal` (m³/s, -9999 = missing)):
+
+```
+GET https://servizos.meteogalicia.gal/mgafos/json/estadoActual.action?cod={CODE}          (all stations)
+GET https://servizos.meteogalicia.gal/mgafos/json/estadoActual.action?cod={CODE}&idEst=141125,140555   (specific)
+GET https://servizos.meteogalicia.gal/mgafos/json/listaEstacionsl.action?cod={CODE}       (station list)
+```
+
+### Miño-Sil (Galicia/Castilla y León border rivers) - implementable scrape
+
+`https://saih.chminosil.es/index.php?url=/datos/resumen_excel` is a live
+HTML table (level m, comma decimals, `dd/mm/yyyy HH:MM` Europe/Madrid).
+Coordinates require a per-station ficha page behind a PHPSESSID cookie
+dance and come as **UTM ETRS89 zone 29N**, needing conversion to WGS84.
+Level only. Doable, but the most effort-per-station of the live options.
+
+### Cantabria - CH Cantábrico - dead (login wall)
+
+The formerly-public `chcmovil` tabla-resumen pages now 302 to a Liferay
+login. `saih.chcantabrico.es` serves only an error stub. The whitewater
+rivers of Asturias/Cantabria (Sella, Cares, Deva) currently have no
+scrapeable public endpoint; would need a browser trace of whatever the new
+SAIH app is.
+
+### Ebro basin - lead for the Pyrenees
+
+`saihebro.com` is live and covers Pyrenean whitewater (Gállego, Ésera,
+Ara), but the data pages are a JS app with no obvious JSON endpoint in the
+HTML - needs a browser network trace. The old national MAPAMA SAIH web
+service (`sig.mapama.gob.es`) is gone; there is no unified national API,
+so Spain stays per-confederation.
+
+---
+
 ## At a glance
 
 | | Chile DGA | Japan MLIT | USA USGS | Canada ECCC | Pakistan FFD | Brazil ANA | Sri Lanka mevinu | Nepal DHM |
@@ -903,16 +1012,22 @@ Narayanghat.
 | License | DGA/MOP open data | CC-BY 4.0 compatible | US public domain | Open Government Licence - Canada | none documented (unofficial API) | Federal open data (attribute ANA) | none documented (third-party aggregator) | none documented (attribute DHM) |
 | Overall | medium-hard, now implementable | medium | **easy** | **easy** | medium; real but partial whitewater relevance (Kunhar yes, Swat catalogued-but-dark) | **easy - implemented** | **easy - implemented** | **easy - implemented**, two open gaps (coords, unit) |
 
+Sweden (SMHI) and Catalonia (ACA) are implemented - see their sections
+above; the table omits them since both are straightforward JSON APIs with
+no gotchas beyond what's noted there.
+
 Argentina, Colombia, Peru, Ecuador, Bolivia, Mexico, Central America,
 Uruguay, Paraguay, Venezuela, India, Bhutan, Georgia, Armenia, Turkey,
 Kyrgyzstan, Tajikistan, Kazakhstan, Vietnam, Laos, Thailand, Philippines,
-Indonesia, China and South Korea were also researched 2026-08-15 - see the
-sections above for what's confirmed, what's a dead end, and what just needs
-a follow-up pass. The concrete unblocking steps identified across both
-batches: Argentina's `datos` endpoint param shape, Colombia's readings
-endpoint, Paraguay's backing AJAX call, Chile's SNIA-native station-list
-endpoint, Nepal's map/coordinate endpoint, Turkey's dashboard reachability,
-Kazakhstan's Shiny-app reachability, South Korea's WAMIS reachability plus
-its station-list endpoint, and a browser network trace for the Mekong River
-Commission (Vietnam/Laos/Thailand) and PAGASA (Philippines) - both of which
-have real, confirmed telemetry hidden behind a JS frontend.
+Indonesia, China, South Korea and the non-Catalan Spanish basins were also
+researched 2026-08-15 - see the sections above for what's confirmed, what's
+a dead end, and what just needs a follow-up pass. The concrete unblocking
+steps identified across the batches: Argentina's `datos` endpoint param
+shape, Colombia's readings endpoint, Paraguay's backing AJAX call, Chile's
+SNIA-native station-list endpoint, Nepal's map/coordinate endpoint,
+Turkey's dashboard reachability, Kazakhstan's Shiny-app reachability, South
+Korea's WAMIS reachability plus its station-list endpoint, an emailed
+MeteoGalicia auth code for Galicia, and a browser network trace for the
+Mekong River Commission (Vietnam/Laos/Thailand), PAGASA (Philippines),
+CH Cantábrico and the Ebro SAIH - all of which have real, confirmed
+telemetry hidden behind a JS frontend or login.
