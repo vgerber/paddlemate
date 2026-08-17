@@ -310,7 +310,9 @@ impl GaugeReader for AustriaTirolReader {
 
             // Best-effort river lookup; stations absent from the CSV keep river = None.
             let rivers = self.fetch_station_rivers().await.unwrap_or_else(|e| {
-                tracing::warn!("AustriaTirolReader: river lookup unavailable for list_stations: {e}");
+                tracing::warn!(
+                    "AustriaTirolReader: river lookup unavailable for list_stations: {e}"
+                );
                 HashMap::new()
             });
 

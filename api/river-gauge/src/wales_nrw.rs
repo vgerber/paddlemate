@@ -156,7 +156,9 @@ impl GaugeReader for WalesNrwReader {
                     Ok(r) if r.status().is_success() => match r.json().await {
                         Ok(v) => v,
                         Err(e) => {
-                            tracing::warn!("WalesNrwReader: JSON parse error for {station_id}: {e}");
+                            tracing::warn!(
+                                "WalesNrwReader: JSON parse error for {station_id}: {e}"
+                            );
                             continue;
                         }
                     },

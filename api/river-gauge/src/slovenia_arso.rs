@@ -216,7 +216,10 @@ impl GaugeReader for SloveniaArsoReader {
 
             for req in requests {
                 let Some((station_id, param)) = req.source_id.rsplit_once(':') else {
-                    tracing::warn!("SloveniaArsoReader: malformed source_id '{}'", req.source_id);
+                    tracing::warn!(
+                        "SloveniaArsoReader: malformed source_id '{}'",
+                        req.source_id
+                    );
                     continue;
                 };
                 let Some(station) = by_id.get(station_id) else {
@@ -333,15 +336,28 @@ mod tests {
     async fn live_smoke() {
         let reader = SloveniaArsoReader::default();
         let stations = reader.list_stations().await.expect("list_stations");
-        let n_w = stations.iter().filter(|s| s.params.iter().any(|p| p == "W")).count();
-        let n_q = stations.iter().filter(|s| s.params.iter().any(|p| p == "Q")).count();
-        println!("ARSO: {} stations ({n_w} with W, {n_q} with Q)", stations.len());
+        let n_w = stations
+            .iter()
+            .filter(|s| s.params.iter().any(|p| p == "W"))
+            .count();
+        let n_q = stations
+            .iter()
+            .filter(|s| s.params.iter().any(|p| p == "Q"))
+            .count();
+        println!(
+            "ARSO: {} stations ({n_w} with W, {n_q} with Q)",
+            stations.len()
+        );
         assert!(stations.len() > 100, "expected >100 stations");
         assert!(stations.iter().all(|s| !s.params.is_empty()));
         let sample = &stations[0];
         println!(
             "sample: {} {:?} / {:?} @ ({:?}, {:?}) params={:?}",
-            sample.station_id, sample.river, sample.name, sample.latitude, sample.longitude,
+            sample.station_id,
+            sample.river,
+            sample.name,
+            sample.latitude,
+            sample.longitude,
             sample.params
         );
 
@@ -359,8 +375,11 @@ mod tests {
             .collect();
         let readings = reader.fetch_all(&requests).await.expect("fetch_all");
         let total: usize = readings.values().map(Vec::len).sum();
-        println!("ARSO: {} source_ids requested, {} with readings, {total} readings",
-            requests.len(), readings.len());
+        println!(
+            "ARSO: {} source_ids requested, {} with readings, {total} readings",
+            requests.len(),
+            readings.len()
+        );
         assert!(!readings.is_empty());
         if let Some((id, series)) = readings.iter().next() {
             println!("sample reading {id}: {:?}", series.first());

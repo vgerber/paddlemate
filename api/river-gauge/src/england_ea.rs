@@ -307,7 +307,11 @@ impl GaugeReader for EnglandEaReader {
                         if ts <= req.from || ts > req.to {
                             continue;
                         }
-                        let value = if param == "W" { r.value * M_TO_CM } else { r.value };
+                        let value = if param == "W" {
+                            r.value * M_TO_CM
+                        } else {
+                            r.value
+                        };
                         series.push((ts, value));
                     }
                     series.sort_by_key(|(ts, _)| *ts);

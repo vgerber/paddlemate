@@ -126,7 +126,14 @@ struct HilltopMeasurement {
 /// Difference" or "Specific Flow").
 fn measurement_rank(param: &str, name: &str) -> Option<u8> {
     let n = name.trim().to_ascii_lowercase();
-    const EXCLUDE: &[&str] = &["difference", "check", "gauging", "specific", "rating", "deviation"];
+    const EXCLUDE: &[&str] = &[
+        "difference",
+        "check",
+        "gauging",
+        "specific",
+        "rating",
+        "deviation",
+    ];
     if EXCLUDE.iter().any(|x| n.contains(x)) {
         return None;
     }
@@ -396,9 +403,7 @@ impl GaugeReader for NewZealandHilltopReader {
                         Ok(b) => b,
                         Err(e) => {
                             // One council failing must not break the others.
-                            tracing::warn!(
-                                "NewZealandHilltopReader: SiteList {key}/{filter}: {e}"
-                            );
+                            tracing::warn!("NewZealandHilltopReader: SiteList {key}/{filter}: {e}");
                             continue;
                         }
                     };
@@ -420,7 +425,10 @@ impl GaugeReader for NewZealandHilltopReader {
                             .entry(format!("{key}/{}", site.name))
                             .or_insert_with(|| Accum {
                                 lat: site.latitude.as_deref().and_then(|v| v.trim().parse().ok()),
-                                lon: site.longitude.as_deref().and_then(|v| v.trim().parse().ok()),
+                                lon: site
+                                    .longitude
+                                    .as_deref()
+                                    .and_then(|v| v.trim().parse().ok()),
                                 params: Vec::new(),
                             });
                         if !entry.params.iter().any(|p| p == param) {
@@ -488,8 +496,7 @@ impl GaugeReader for NewZealandHilltopReader {
                     continue;
                 };
 
-                let Some(measurements) = self.measurements_for(station_id, base, site).await
-                else {
+                let Some(measurements) = self.measurements_for(station_id, base, site).await else {
                     continue;
                 };
                 let Some(chosen) = pick_measurement(&measurements, param) else {
@@ -534,7 +541,9 @@ impl GaugeReader for NewZealandHilltopReader {
                     );
                     continue;
                 }
-                let Some(measurement) = doc.measurement else { continue };
+                let Some(measurement) = doc.measurement else {
+                    continue;
+                };
 
                 // Units from the GetData response win; fall back to the
                 // MeasurementList units.
@@ -558,7 +567,9 @@ impl GaugeReader for NewZealandHilltopReader {
                         continue;
                     };
                     let Some(ts) = parse_nz_time(t) else { continue };
-                    let Ok(value) = v.trim().parse::<f64>() else { continue };
+                    let Ok(value) = v.trim().parse::<f64>() else {
+                        continue;
+                    };
                     if ts <= req.from || ts > req.to {
                         continue;
                     }
@@ -693,7 +704,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore]
+    #[ignore = "live network access"]
     async fn live_smoke() {
         let reader = NewZealandHilltopReader::default();
         let stations = reader.list_stations().await.unwrap();

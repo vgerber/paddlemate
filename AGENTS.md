@@ -205,6 +205,8 @@ A new layer group joins one of these or becomes a new sibling.
   a token. Map-marker legibility shadows are the documented exception.
 - No `borderRadius` - the theme is square (`shape.borderRadius: 0`); adding
   scale values is dead code and string values violate the design language.
+  The one exception is `borderRadius: "50%"` to draw a circular dot or
+  marker - circles are part of the design language, rounded corners are not.
 - Small uppercase labels spread `labelSx` and override size/color, instead
   of re-declaring the five-property block.
 

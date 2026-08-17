@@ -89,7 +89,8 @@ impl GaugeReader for CanadaWscReader {
 
     fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<StationInfo>>> {
         Box::pin(async move {
-            let url = format!("{STATIONS_URL}?f=json&STATUS_EN=Active&REAL_TIME=1&limit={PAGE_LIMIT}");
+            let url =
+                format!("{STATIONS_URL}?f=json&STATUS_EN=Active&REAL_TIME=1&limit={PAGE_LIMIT}");
             let resp: StationsResponse = reqwest::get(&url)
                 .await
                 .map_err(|e| anyhow::anyhow!("CanadaWscReader: HTTP error: {e}"))?

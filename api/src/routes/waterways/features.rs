@@ -186,7 +186,11 @@ pub async fn update_feature(
             }
         };
 
-        let name = body.name.as_deref().map(str::trim).filter(|s| !s.is_empty());
+        let name = body
+            .name
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
         if let Some(name) = name {
             if let Err(err) =
                 features::upsert_name(&app.pg_pool, feature_id, &lang_code, name).await
@@ -219,14 +223,15 @@ pub async fn update_feature(
                     return ApiError::internal().into_response();
                 }
             };
-            let series_id =
-                match crate::query::features::resolve_range_series(&mut conn, range).await {
-                    Ok(id) => id,
-                    Err(err) => {
-                        tracing::error!("Error resolving gauge for feature {}: {}", feature_id, err);
-                        return ApiError::internal().into_response();
-                    }
-                };
+            let series_id = match crate::query::features::resolve_range_series(&mut conn, range)
+                .await
+            {
+                Ok(id) => id,
+                Err(err) => {
+                    tracing::error!("Error resolving gauge for feature {}: {}", feature_id, err);
+                    return ApiError::internal().into_response();
+                }
+            };
             if let Err(err) = gauges::upsert_feature_water_range_partial(
                 &mut *conn,
                 feature_id,

@@ -150,7 +150,10 @@ impl GaugeReader for ScotlandSepaReader {
             let mut path_to_source: HashMap<String, &str> = HashMap::new();
             for req in requests {
                 let Some((station_id, param)) = req.source_id.rsplit_once(':') else {
-                    tracing::warn!("ScotlandSepaReader: malformed source_id '{}'", req.source_id);
+                    tracing::warn!(
+                        "ScotlandSepaReader: malformed source_id '{}'",
+                        req.source_id
+                    );
                     continue;
                 };
                 let Some(code) = kiwis_code(param) else {
@@ -200,9 +203,10 @@ impl GaugeReader for ScotlandSepaReader {
             };
 
             for block in blocks {
-                let (Some(station_no), Some(param_code)) =
-                    (block.station_no.as_deref(), block.stationparameter_no.as_deref())
-                else {
+                let (Some(station_no), Some(param_code)) = (
+                    block.station_no.as_deref(),
+                    block.stationparameter_no.as_deref(),
+                ) else {
                     continue;
                 };
                 let path = format!("1/{station_no}/{param_code}/15m.Cmd");

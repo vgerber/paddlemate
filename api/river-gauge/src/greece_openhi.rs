@@ -108,7 +108,11 @@ fn variable_id(v: &serde_json::Value) -> Option<i64> {
 /// `Etc/GMT-2` is UTC+2). These zones have no DST, so a fixed offset is exact.
 fn parse_etc_gmt_offset(tz: &str) -> Option<FixedOffset> {
     let rest = tz.strip_prefix("Etc/GMT")?;
-    let hours: i32 = if rest.is_empty() { 0 } else { rest.parse().ok()? };
+    let hours: i32 = if rest.is_empty() {
+        0
+    } else {
+        rest.parse().ok()?
+    };
     FixedOffset::east_opt(-hours * 3600)
 }
 
@@ -178,19 +182,34 @@ fn select_groups(groups: &[TsGroup]) -> Vec<(&TsGroup, &'static str)> {
     let relevant: Vec<(&TsGroup, &'static str)> = groups
         .iter()
         .filter(|g| !g.hidden)
-        .filter(|g| !g.name.as_deref().unwrap_or("").to_lowercase().contains("old"))
+        .filter(|g| {
+            !g.name
+                .as_deref()
+                .unwrap_or("")
+                .to_lowercase()
+                .contains("old")
+        })
         .filter_map(|g| group_kind(g).map(|kind| (g, kind)))
         .collect();
 
     let has_mean = relevant.iter().any(|(g, kind)| {
-        *kind == "W" && g.name.as_deref().unwrap_or("").to_lowercase().contains("mean")
+        *kind == "W"
+            && g.name
+                .as_deref()
+                .unwrap_or("")
+                .to_lowercase()
+                .contains("mean")
     });
     relevant
         .into_iter()
         .filter(|(g, kind)| {
             !(has_mean
                 && *kind == "W"
-                && g.name.as_deref().unwrap_or("").to_lowercase().contains("max"))
+                && g.name
+                    .as_deref()
+                    .unwrap_or("")
+                    .to_lowercase()
+                    .contains("max"))
         })
         .collect()
 }
@@ -207,10 +226,9 @@ impl GaugeReader for GreeceOpenhiReader {
 
     fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<StationInfo>>> {
         Box::pin(async move {
-            let stations: Vec<ApiStation> =
-                get_all_pages(format!("{BASE_URL}/stations/")).await.map_err(|e| {
-                    anyhow::anyhow!("GreeceOpenhiReader: failed to list stations: {e}")
-                })?;
+            let stations: Vec<ApiStation> = get_all_pages(format!("{BASE_URL}/stations/"))
+                .await
+                .map_err(|e| anyhow::anyhow!("GreeceOpenhiReader: failed to list stations: {e}"))?;
 
             let stale_cutoff = Utc::now() - chrono::Duration::days(STALE_AFTER_DAYS);
             let mut out = Vec::new();
@@ -299,7 +317,10 @@ impl GaugeReader for GreeceOpenhiReader {
 
             for req in requests {
                 let Some((station_id, param)) = req.source_id.rsplit_once(':') else {
-                    tracing::warn!("GreeceOpenhiReader: malformed source_id '{}'", req.source_id);
+                    tracing::warn!(
+                        "GreeceOpenhiReader: malformed source_id '{}'",
+                        req.source_id
+                    );
                     continue;
                 };
                 // Param carries the routing ids: "{W|Q}-{group_id}-{ts_id}".
@@ -456,7 +477,10 @@ mod tests {
     #[test]
     fn variable_id_handles_bare_and_object_forms() {
         assert_eq!(variable_id(&serde_json::json!(14)), Some(14));
-        assert_eq!(variable_id(&serde_json::json!({"id": 2, "descr": "Discharge"})), Some(2));
+        assert_eq!(
+            variable_id(&serde_json::json!({"id": 2, "descr": "Discharge"})),
+            Some(2)
+        );
         assert_eq!(variable_id(&serde_json::json!("x")), None);
     }
 
@@ -485,8 +509,10 @@ mod tests {
                 {"id":521,"variable":1,"name":"Rainfall","hidden":false,"unit_of_measurement":9}]"#,
         )
         .unwrap();
-        let selected: Vec<(i64, &str)> =
-            select_groups(&groups).iter().map(|(g, k)| (g.id, *k)).collect();
+        let selected: Vec<(i64, &str)> = select_groups(&groups)
+            .iter()
+            .map(|(g, k)| (g.id, *k))
+            .collect();
         assert_eq!(selected, vec![(1226, "W"), (886, "Q")]);
     }
 }

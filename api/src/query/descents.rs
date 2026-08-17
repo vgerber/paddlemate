@@ -100,7 +100,7 @@ async fn load_sections(
                 note: r.try_get("note")?,
                 section_name: r.try_get("section_name")?,
                 waterway_name: r.try_get("waterway_name")?,
-            waterway_id: r.try_get("waterway_id")?,
+                waterway_id: r.try_get("waterway_id")?,
                 location: r
                     .try_get::<Option<String>, _>("section_location")?
                     .and_then(|g| serde_json::from_str(&g).ok()),

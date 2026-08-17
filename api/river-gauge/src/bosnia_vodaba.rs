@@ -69,7 +69,11 @@ fn parse_wiski_timestamp(raw: &str) -> Option<DateTime<Utc>> {
     if let Ok(ts) = DateTime::parse_from_rfc3339(raw) {
         return Some(ts.with_timezone(&Utc));
     }
-    for fmt in ["%Y-%m-%dT%H:%M:%S%.f", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"] {
+    for fmt in [
+        "%Y-%m-%dT%H:%M:%S%.f",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+    ] {
         if let Ok(naive) = NaiveDateTime::parse_from_str(raw, fmt) {
             return naive
                 .and_local_timezone(Sarajevo)
@@ -106,7 +110,9 @@ fn discharge_factor(unit: Option<&str>) -> f64 {
         Some("m³/s") | Some("m3/s") | None => 1.0,
         Some("l/s") => 0.001,
         Some(other) => {
-            tracing::warn!("BosniaVodabaReader: unexpected discharge unit '{other}', assuming m³/s");
+            tracing::warn!(
+                "BosniaVodabaReader: unexpected discharge unit '{other}', assuming m³/s"
+            );
             1.0
         }
     }
@@ -148,9 +154,7 @@ impl GaugeReader for BosniaVodabaReader {
 
             Ok(catalog
                 .into_iter()
-                .filter(|s| {
-                    valid_path_component(&s.site_no) && valid_path_component(&s.station_no)
-                })
+                .filter(|s| valid_path_component(&s.site_no) && valid_path_component(&s.station_no))
                 .map(|s| StationInfo {
                     station_id: format!("{}/{}", s.site_no, s.station_no),
                     name: non_empty(s.station_name),
@@ -174,7 +178,10 @@ impl GaugeReader for BosniaVodabaReader {
 
             for req in requests {
                 let Some((station_id, param)) = req.source_id.rsplit_once(':') else {
-                    tracing::warn!("BosniaVodabaReader: malformed source_id '{}'", req.source_id);
+                    tracing::warn!(
+                        "BosniaVodabaReader: malformed source_id '{}'",
+                        req.source_id
+                    );
                     continue;
                 };
                 let path_param = match param {

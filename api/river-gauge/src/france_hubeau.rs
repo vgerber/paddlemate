@@ -93,7 +93,9 @@ impl FranceHubeauReader {
         );
         let resp: ApiResponse = reqwest::get(&url)
             .await
-            .map_err(|e| anyhow::anyhow!("FranceHubeauReader: HTTP error for grandeur {grandeur}: {e}"))?
+            .map_err(|e| {
+                anyhow::anyhow!("FranceHubeauReader: HTTP error for grandeur {grandeur}: {e}")
+            })?
             .json()
             .await
             .map_err(|e| {
@@ -114,9 +116,13 @@ impl FranceHubeauReader {
         for _ in 0..MAX_STATION_PAGES {
             let page: StationsResponse = reqwest::get(&url)
                 .await
-                .map_err(|e| anyhow::anyhow!("FranceHubeauReader: HTTP error listing stations: {e}"))?
+                .map_err(|e| {
+                    anyhow::anyhow!("FranceHubeauReader: HTTP error listing stations: {e}")
+                })?
                 .error_for_status()
-                .map_err(|e| anyhow::anyhow!("FranceHubeauReader: server error listing stations: {e}"))?
+                .map_err(|e| {
+                    anyhow::anyhow!("FranceHubeauReader: server error listing stations: {e}")
+                })?
                 .json()
                 .await
                 .map_err(|e| {

@@ -143,7 +143,10 @@ impl GaugeReader for IrelandRiverspyReader {
 
             for req in requests {
                 let Some((station_id, param)) = req.source_id.rsplit_once(':') else {
-                    tracing::warn!("IrelandRiverspyReader: malformed source_id '{}'", req.source_id);
+                    tracing::warn!(
+                        "IrelandRiverspyReader: malformed source_id '{}'",
+                        req.source_id
+                    );
                     continue;
                 };
                 let Some(gauge) = by_code.get(station_id) else {
@@ -163,7 +166,10 @@ impl GaugeReader for IrelandRiverspyReader {
                 if ts <= req.from || ts > req.to {
                     continue;
                 }
-                results.entry(req.source_id.clone()).or_default().push((ts, value));
+                results
+                    .entry(req.source_id.clone())
+                    .or_default()
+                    .push((ts, value));
             }
 
             Ok(results)

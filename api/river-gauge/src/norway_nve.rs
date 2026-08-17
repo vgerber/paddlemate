@@ -166,7 +166,9 @@ impl NorwayNveReader {
             .map(|r| r.data)
             .map_err(|e| {
                 let preview = body.chars().take(200).collect::<String>();
-                anyhow::anyhow!("NorwayNveReader: stations JSON parse error: {e} - body: {preview:?}")
+                anyhow::anyhow!(
+                    "NorwayNveReader: stations JSON parse error: {e} - body: {preview:?}"
+                )
             })
     }
 }
@@ -188,7 +190,9 @@ impl GaugeReader for NorwayNveReader {
     fn list_stations<'a>(&'a self) -> BoxFuture<'a, anyhow::Result<Vec<crate::StationInfo>>> {
         Box::pin(async move {
             let Some(api_key) = self.api_key.as_deref() else {
-                tracing::warn!("NorwayNveReader: NVE_API_KEY is not set; list_stations returns empty");
+                tracing::warn!(
+                    "NorwayNveReader: NVE_API_KEY is not set; list_stations returns empty"
+                );
                 return Ok(Vec::new());
             };
 
@@ -294,7 +298,9 @@ impl GaugeReader for NorwayNveReader {
                     {
                         Ok(mut s) => all_series.append(&mut s),
                         Err(err) => {
-                            tracing::error!("NorwayNveReader: fetch failed for parameter {param}: {err}");
+                            tracing::error!(
+                                "NorwayNveReader: fetch failed for parameter {param}: {err}"
+                            );
                         }
                     }
                 }

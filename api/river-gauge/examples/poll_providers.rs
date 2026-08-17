@@ -4,7 +4,7 @@
 use std::time::Duration as StdDuration;
 
 use chrono::{Duration, Utc};
-use river_gauge::{build_registry, FetchRequest};
+use river_gauge::{FetchRequest, build_registry};
 
 // USGS lists ~16k stations via a name-lookup join, taking well over a minute.
 const LIST_TIMEOUT: StdDuration = StdDuration::from_secs(150);
@@ -55,18 +55,18 @@ async fn main() -> anyhow::Result<()> {
             if requests.is_empty() {
                 continue;
             }
-            let fetched = match tokio::time::timeout(FETCH_TIMEOUT, reader.fetch_all(&requests)).await
-            {
-                Ok(Ok(map)) => map,
-                Ok(Err(e)) => {
-                    println!("{key:<10} fetch error: {e}");
-                    break;
-                }
-                Err(_) => {
-                    println!("{key:<10} fetch timed out");
-                    break;
-                }
-            };
+            let fetched =
+                match tokio::time::timeout(FETCH_TIMEOUT, reader.fetch_all(&requests)).await {
+                    Ok(Ok(map)) => map,
+                    Ok(Err(e)) => {
+                        println!("{key:<10} fetch error: {e}");
+                        break;
+                    }
+                    Err(_) => {
+                        println!("{key:<10} fetch timed out");
+                        break;
+                    }
+                };
             if let Some((source_id, series)) = fetched.iter().find(|(_, v)| !v.is_empty()) {
                 let (ts, value) = *series.last().unwrap();
                 reading = Some((station.clone(), source_id.clone(), ts, value));

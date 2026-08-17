@@ -81,11 +81,14 @@ fn coord_lookup() -> HashMap<&'static str, (f64, f64)> {
 /// 94 stations with known LHP coordinates, ~0.04 km mean / 0.78 km max error.
 /// Fallback for stations `STATION_COORDS` does not cover.
 fn percent_to_latlon(left: f64, top: f64) -> (f64, f64) {
-    let lat = 51.736_540 + 0.001_027_484_29 * left - 0.016_241_082_1 * top
+    let lat = 51.736_540 + 0.001_027_484_29 * left
+        - 0.016_241_082_1 * top
         - 5.352_851_7e-6 * left * left
         - 4.986_047_15e-7 * top * top
         - 2.998_322_1e-7 * left * top;
-    let lon = 11.582_895_7 + 0.036_352_040_1 * left + 0.001_224_341_99 * top
+    let lon = 11.582_895_7
+        + 0.036_352_040_1 * left
+        + 0.001_224_341_99 * top
         + 7.502_350_73e-7 * left * left
         - 6.161_906_77e-7 * top * top
         - 1.251_329_86e-5 * left * top;

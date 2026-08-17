@@ -108,11 +108,12 @@ impl GaugeReader for PolandImgwReader {
                     anyhow::anyhow!("PolandImgwReader: failed to read catalog body: {e}")
                 })?;
 
-            let stations: Vec<CatalogStation> =
-                serde_json::from_str(&body).map_err(|e| {
-                    let preview = body.chars().take(200).collect::<String>();
-                    anyhow::anyhow!("PolandImgwReader: catalog JSON parse error: {e} - body: {preview:?}")
-                })?;
+            let stations: Vec<CatalogStation> = serde_json::from_str(&body).map_err(|e| {
+                let preview = body.chars().take(200).collect::<String>();
+                anyhow::anyhow!(
+                    "PolandImgwReader: catalog JSON parse error: {e} - body: {preview:?}"
+                )
+            })?;
 
             let out = stations
                 .into_iter()

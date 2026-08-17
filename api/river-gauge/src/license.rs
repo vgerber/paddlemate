@@ -23,16 +23,16 @@ pub struct License {
 /// Patterns are matched case-insensitively against the whole terms string.
 const KNOWN: &[(&[&str], &str, &str)] = &[
     (
-        &["cc by-nc-nd 3.0", "cc-by-nc-nd 3.0", "do not use commercially"],
+        &[
+            "cc by-nc-nd 3.0",
+            "cc-by-nc-nd 3.0",
+            "do not use commercially",
+        ],
         "CC BY-NC-ND 3.0 CZ",
         "https://creativecommons.org/licenses/by-nc-nd/3.0/cz/",
     ),
     (
-        &[
-            "cc by-sa 4.0",
-            "cc-by-sa 4.0",
-            "attribution-sharealike 4.0",
-        ],
+        &["cc by-sa 4.0", "cc-by-sa 4.0", "attribution-sharealike 4.0"],
         "CC BY-SA 4.0",
         "https://creativecommons.org/licenses/by-sa/4.0/",
     ),
@@ -219,16 +219,26 @@ mod tests {
     #[test]
     fn reversed_markdown_is_the_common_form() {
         assert_eq!(
-            named("Data is not validated and is released by the authority under (IODL 2.0)[https://www.dati.gov.it/content/italian-open-data-license-v20], a license compatible with CC-BY-SA and ODbL."),
-            ("IODL 2.0".into(), "https://www.dati.gov.it/content/italian-open-data-license-v20".into())
+            named(
+                "Data is not validated and is released by the authority under (IODL 2.0)[https://www.dati.gov.it/content/italian-open-data-license-v20], a license compatible with CC-BY-SA and ODbL."
+            ),
+            (
+                "IODL 2.0".into(),
+                "https://www.dati.gov.it/content/italian-open-data-license-v20".into()
+            )
         );
     }
 
     #[test]
     fn standard_markdown_also_parses() {
         assert_eq!(
-            named("Data is released by the authority under [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/deed.de)"),
-            ("CC BY 4.0".into(), "https://creativecommons.org/licenses/by/4.0/".into())
+            named(
+                "Data is released by the authority under [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/deed.de)"
+            ),
+            (
+                "CC BY 4.0".into(),
+                "https://creativecommons.org/licenses/by/4.0/".into()
+            )
         );
     }
 
@@ -243,7 +253,8 @@ mod tests {
     fn stray_whitespace_inside_the_url_is_trimmed() {
         // The only source that does this also names its license, so drop the
         // name to force the link path.
-        let l = parse_license("released under the terms at (this link)[ https://example.org/terms ]");
+        let l =
+            parse_license("released under the terms at (this link)[ https://example.org/terms ]");
         assert_eq!(l.url.as_deref(), Some("https://example.org/terms"));
     }
 
@@ -253,14 +264,22 @@ mod tests {
             "Data is released by the authority under the license found at (this link)[https://danepubliczne.imgw.pl/regulations]",
         );
         assert_eq!(l.name, None);
-        assert_eq!(l.url.as_deref(), Some("https://danepubliczne.imgw.pl/regulations"));
+        assert_eq!(
+            l.url.as_deref(),
+            Some("https://danepubliczne.imgw.pl/regulations")
+        );
     }
 
     #[test]
     fn nested_parens_in_a_label_survive() {
         assert_eq!(
-            named("licensed under a (Creative Commons CCZero 1.0 License (cc-zero))[https://opendefinition.org/licenses/cc-zero/]"),
-            ("CC0 1.0".into(), "https://creativecommons.org/publicdomain/zero/1.0/".into())
+            named(
+                "licensed under a (Creative Commons CCZero 1.0 License (cc-zero))[https://opendefinition.org/licenses/cc-zero/]"
+            ),
+            (
+                "CC0 1.0".into(),
+                "https://creativecommons.org/publicdomain/zero/1.0/".into()
+            )
         );
     }
 
@@ -268,15 +287,26 @@ mod tests {
     fn a_named_license_beats_an_unrelated_dataset_link() {
         // Trentino names CC BY 4.0 in prose but links its dataset page.
         assert_eq!(
-            named("released by the authority under Creative Commons Attribution 4.0.\r\nMore info [here](https://dati.trentino.it/dataset/rilevamento-sensori-idrometrici-livello)"),
-            ("CC BY 4.0".into(), "https://creativecommons.org/licenses/by/4.0/".into())
+            named(
+                "released by the authority under Creative Commons Attribution 4.0.\r\nMore info [here](https://dati.trentino.it/dataset/rilevamento-sensori-idrometrici-livello)"
+            ),
+            (
+                "CC BY 4.0".into(),
+                "https://creativecommons.org/licenses/by/4.0/".into()
+            )
         );
     }
 
     #[test]
     fn share_alike_is_not_mistaken_for_plain_attribution() {
-        assert_eq!(named("under (CC BY-SA 4.0)[https://creativecommons.org/licenses/by-sa/4.0/].").0, "CC BY-SA 4.0");
-        assert_eq!(named("Attribution-ShareAlike 4.0 International license").0, "CC BY-SA 4.0");
+        assert_eq!(
+            named("under (CC BY-SA 4.0)[https://creativecommons.org/licenses/by-sa/4.0/].").0,
+            "CC BY-SA 4.0"
+        );
+        assert_eq!(
+            named("Attribution-ShareAlike 4.0 International license").0,
+            "CC BY-SA 4.0"
+        );
     }
 
     #[test]
@@ -298,7 +328,6 @@ mod tests {
             "Licence Ouverte 2.0"
         );
     }
-
 
     /// Every distinct licensing string Rivermap actually ships (August 2026),
     /// pinned to its reviewed classification. Editing the license table must
@@ -351,7 +380,10 @@ mod tests {
         let l = parse_license("released under the modello 2.0 framework");
         assert_eq!(l, License::default());
         // The real French string still matches.
-        assert_eq!(named("released under (LO 2.0)[https://www.etalab.gouv.fr/x]").0, "Licence Ouverte 2.0");
+        assert_eq!(
+            named("released under (LO 2.0)[https://www.etalab.gouv.fr/x]").0,
+            "Licence Ouverte 2.0"
+        );
     }
 
     #[test]

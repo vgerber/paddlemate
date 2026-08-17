@@ -363,8 +363,7 @@ impl GaugeReader for UsaUsgsReader {
                 };
                 let series = results.entry(req.source_id.clone()).or_default();
                 for entry in &entries {
-                    if entry.monitoring_location_id != *station_id || entry.parameter_code != code
-                    {
+                    if entry.monitoring_location_id != *station_id || entry.parameter_code != code {
                         continue;
                     }
                     let Ok(ts) = DateTime::parse_from_rfc3339(&entry.time) else {

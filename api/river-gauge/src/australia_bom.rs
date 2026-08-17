@@ -159,8 +159,7 @@ fn cell(row: &[Option<String>], idx: usize) -> Option<&str> {
 
 impl AustraliaBomReader {
     async fn get_table(&self, url: &str) -> anyhow::Result<KiwisTable> {
-        Ok(self
-            .client
+        self.client
             .get(url)
             .send()
             .await
@@ -169,7 +168,7 @@ impl AustraliaBomReader {
             .map_err(|e| anyhow::anyhow!("AustraliaBomReader: server error: {e}"))?
             .json()
             .await
-            .map_err(|e| anyhow::anyhow!("AustraliaBomReader: JSON parse error: {e}"))?)
+            .map_err(|e| anyhow::anyhow!("AustraliaBomReader: JSON parse error: {e}"))
     }
 
     /// Make sure the series cache holds an entry for every station in
@@ -206,7 +205,13 @@ impl AustraliaBomReader {
             }
             let Some(idx) = header_indices(
                 &table,
-                &["station_no", "ts_id", "ts_name", "parametertype_name", "ts_unitsymbol"],
+                &[
+                    "station_no",
+                    "ts_id",
+                    "ts_name",
+                    "parametertype_name",
+                    "ts_unitsymbol",
+                ],
             ) else {
                 tracing::warn!("AustraliaBomReader: unexpected getTimeseriesList header");
                 continue;
@@ -224,11 +229,16 @@ impl AustraliaBomReader {
                     continue;
                 };
                 let Some(param) = our_param(pt) else { continue };
-                let Some(rank) = series_rank(ts_name) else { continue };
+                let Some(rank) = series_rank(ts_name) else {
+                    continue;
+                };
                 let Some(factor) = cell(row, idx[4]).and_then(|u| unit_factor(param, u)) else {
                     continue;
                 };
-                let series = BomSeries { ts_id: ts_id.to_owned(), factor };
+                let series = BomSeries {
+                    ts_id: ts_id.to_owned(),
+                    factor,
+                };
                 match best.entry((station.to_owned(), param)) {
                     std::collections::hash_map::Entry::Occupied(mut e) => {
                         if rank < e.get().0 {
@@ -241,7 +251,10 @@ impl AustraliaBomReader {
                 }
             }
             for ((station, param), (_, series)) in best {
-                cache.entry(station).or_default().insert(param.to_owned(), series);
+                cache
+                    .entry(station)
+                    .or_default()
+                    .insert(param.to_owned(), series);
             }
         }
     }
@@ -285,12 +298,19 @@ impl GaugeReader for AustraliaBomReader {
                 let table = self.get_table(&url).await?;
                 let Some(idx) = header_indices(
                     &table,
-                    &["station_no", "station_name", "station_latitude", "station_longitude"],
+                    &[
+                        "station_no",
+                        "station_name",
+                        "station_latitude",
+                        "station_longitude",
+                    ],
                 ) else {
                     anyhow::bail!("AustraliaBomReader: unexpected getStationList header");
                 };
                 for row in table.iter().skip(1) {
-                    let Some(station_no) = cell(row, idx[0]) else { continue };
+                    let Some(station_no) = cell(row, idx[0]) else {
+                        continue;
+                    };
                     let entry = stations
                         .entry(station_no.to_owned())
                         .or_insert_with(|| Accum {
@@ -329,7 +349,10 @@ impl GaugeReader for AustraliaBomReader {
             let mut wanted: Vec<(&FetchRequest, &str, &str)> = Vec::new();
             for req in requests {
                 let Some((station_id, param)) = req.source_id.rsplit_once(':') else {
-                    tracing::warn!("AustraliaBomReader: malformed source_id '{}'", req.source_id);
+                    tracing::warn!(
+                        "AustraliaBomReader: malformed source_id '{}'",
+                        req.source_id
+                    );
                     continue;
                 };
                 if kiwis_parametertype(param).is_none() {
@@ -393,10 +416,8 @@ impl GaugeReader for AustraliaBomReader {
                 };
 
                 for block in blocks {
-                    let Some((req, factor)) = block
-                        .ts_id
-                        .as_deref()
-                        .and_then(|id| by_ts_id.get(id))
+                    let Some((req, factor)) =
+                        block.ts_id.as_deref().and_then(|id| by_ts_id.get(id))
                     else {
                         continue;
                     };
@@ -472,7 +493,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore]
+    #[ignore = "live network access"]
     async fn live_smoke() {
         let reader = AustraliaBomReader::default();
         let stations = reader.list_stations().await.unwrap();
@@ -495,7 +516,12 @@ mod tests {
         ];
         let res = reader.fetch_all(&reqs).await.unwrap();
         for (k, v) in &res {
-            println!("{k}: {} readings, first={:?} last={:?}", v.len(), v.first(), v.last());
+            println!(
+                "{k}: {} readings, first={:?} last={:?}",
+                v.len(),
+                v.first(),
+                v.last()
+            );
         }
         // Second fetch should reuse the cache.
         let res2 = reader.fetch_all(&reqs).await.unwrap();
@@ -516,6 +542,9 @@ mod tests {
         assert_eq!(blocks[0].data.len(), 3);
         assert_eq!(blocks[0].data[2].1, None);
         let ts = DateTime::parse_from_rfc3339(&blocks[0].data[0].0).unwrap();
-        assert_eq!(ts.with_timezone(&Utc).to_rfc3339(), "2026-08-12T23:45:00+00:00");
+        assert_eq!(
+            ts.with_timezone(&Utc).to_rfc3339(),
+            "2026-08-12T23:45:00+00:00"
+        );
     }
 }

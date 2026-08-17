@@ -172,18 +172,23 @@ fn parse_station_list(html: &str) -> Vec<StationInfo> {
 
 /// Circle-marker center from a `coords="x,y,radius"` attribute.
 fn marker_pixel(coords: &str) -> Option<(f64, f64)> {
-    let mut it = coords.split(',').filter_map(|s| s.trim().parse::<f64>().ok());
+    let mut it = coords
+        .split(',')
+        .filter_map(|s| s.trim().parse::<f64>().ok());
     Some((it.next()?, it.next()?))
 }
 
 /// CHMI overview pixel to WGS84. Quadratic fit (Krovak projection) against 25
 /// known stations, ~0.4 km error.
 fn pixel_to_latlon(x: f64, y: f64) -> (f64, f64) {
-    let lat = 0.000_253_535 * x - 0.006_505_092 * y - 4.007_128e-7 * x * x
+    let lat = 0.000_253_535 * x
+        - 0.006_505_092 * y
+        - 4.007_128e-7 * x * x
         - 2.032_302e-8 * y * y
         - 5.502_892e-8 * x * y
         + 51.357_249_915;
-    let lon = 0.010_426_414 * x + 0.000_419_534 * y - 5.427_827e-8 * x * x
+    let lon = 0.010_426_414 * x + 0.000_419_534 * y
+        - 5.427_827e-8 * x * x
         - 3.580_455e-8 * y * y
         - 1.289_827e-6 * x * y
         + 11.803_308_092;

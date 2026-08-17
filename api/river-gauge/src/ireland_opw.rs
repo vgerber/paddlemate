@@ -119,7 +119,8 @@ impl GaugeReader for IrelandOpwReader {
                     continue;
                 }
 
-                let url = format!("https://waterlevel.ie/data/month/{station_id}_{PRIMARY_SENSOR}.csv");
+                let url =
+                    format!("https://waterlevel.ie/data/month/{station_id}_{PRIMARY_SENSOR}.csv");
                 let body = match reqwest::get(&url).await {
                     Ok(r) if r.status().is_success() => match r.text().await {
                         Ok(t) => t,

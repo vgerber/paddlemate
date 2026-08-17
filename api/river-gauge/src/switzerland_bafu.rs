@@ -112,7 +112,9 @@ impl SwitzerlandBafuReader {
             .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: HTTP error fetching latest: {e}"))?
             .json()
             .await
-            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: JSON parse error for latest: {e}"))?;
+            .map_err(|e| {
+                anyhow::anyhow!("SwitzerlandBafuReader: JSON parse error for latest: {e}")
+            })?;
         Ok(resp.payload)
     }
 
@@ -131,10 +133,14 @@ impl SwitzerlandBafuReader {
         );
         let resp: ApiResponse = reqwest::get(&url)
             .await
-            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: HTTP error fetching daterange: {e}"))?
+            .map_err(|e| {
+                anyhow::anyhow!("SwitzerlandBafuReader: HTTP error fetching daterange: {e}")
+            })?
             .json()
             .await
-            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: JSON parse error for daterange: {e}"))?;
+            .map_err(|e| {
+                anyhow::anyhow!("SwitzerlandBafuReader: JSON parse error for daterange: {e}")
+            })?;
         Ok(resp.payload)
     }
 
@@ -143,10 +149,14 @@ impl SwitzerlandBafuReader {
         let url = format!("{BASE_URL}/locations?app=paddlemate");
         let resp: LocationsResponse = reqwest::get(&url)
             .await
-            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: HTTP error fetching locations: {e}"))?
+            .map_err(|e| {
+                anyhow::anyhow!("SwitzerlandBafuReader: HTTP error fetching locations: {e}")
+            })?
             .json()
             .await
-            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: JSON parse error for locations: {e}"))?;
+            .map_err(|e| {
+                anyhow::anyhow!("SwitzerlandBafuReader: JSON parse error for locations: {e}")
+            })?;
         Ok(resp.payload.into_values().map(|e| e.details).collect())
     }
 
@@ -158,10 +168,14 @@ impl SwitzerlandBafuReader {
         let url = format!("{BASE_URL}/latest?app=paddlemate");
         let resp: ApiResponse = reqwest::get(&url)
             .await
-            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: HTTP error fetching latest catalog: {e}"))?
+            .map_err(|e| {
+                anyhow::anyhow!("SwitzerlandBafuReader: HTTP error fetching latest catalog: {e}")
+            })?
             .json()
             .await
-            .map_err(|e| anyhow::anyhow!("SwitzerlandBafuReader: JSON parse error for latest catalog: {e}"))?;
+            .map_err(|e| {
+                anyhow::anyhow!("SwitzerlandBafuReader: JSON parse error for latest catalog: {e}")
+            })?;
 
         let mut by_loc: HashMap<String, HashSet<String>> = HashMap::new();
         for entry in resp.payload {

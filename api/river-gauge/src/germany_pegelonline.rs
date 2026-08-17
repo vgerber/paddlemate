@@ -73,10 +73,14 @@ impl GaugeReader for GermanyPegelonlineReader {
             let url = format!("{BASE_URL}.json?includeTimeseries=true");
             let stations: Vec<PoStation> = reqwest::get(&url)
                 .await
-                .map_err(|e| anyhow::anyhow!("GermanyPegelonlineReader: list_stations HTTP error: {e}"))?
+                .map_err(|e| {
+                    anyhow::anyhow!("GermanyPegelonlineReader: list_stations HTTP error: {e}")
+                })?
                 .json()
                 .await
-                .map_err(|e| anyhow::anyhow!("GermanyPegelonlineReader: list_stations JSON error: {e}"))?;
+                .map_err(|e| {
+                    anyhow::anyhow!("GermanyPegelonlineReader: list_stations JSON error: {e}")
+                })?;
 
             Ok(stations
                 .into_iter()

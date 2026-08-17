@@ -91,17 +91,15 @@ fn spawn_provider_loop(
                 .unwrap_or(900);
 
             {
-                    // Build one FetchRequest per source_id, using the earliest
-                    // `from` across all series that share that source_id.
-                    // source_id -> (earliest_from, [series_ids])
-                    let mut source_map: HashMap<String, (DateTime<Utc>, Vec<i64>)> = HashMap::new();
+                // Build one FetchRequest per source_id, using the earliest
+                // `from` across all series that share that source_id.
+                // source_id -> (earliest_from, [series_ids])
+                let mut source_map: HashMap<String, (DateTime<Utc>, Vec<i64>)> = HashMap::new();
 
-                    for gauge in &gauges {
-                        let gauge_data = match crate::query::gauges::fetch_gauge_with_series(
-                            &pool_clone,
-                            gauge.id,
-                        )
-                        .await
+                for gauge in &gauges {
+                    let gauge_data =
+                        match crate::query::gauges::fetch_gauge_with_series(&pool_clone, gauge.id)
+                            .await
                         {
                             Ok(Some(g)) => g,
                             Ok(None) => {
@@ -114,93 +112,92 @@ fn spawn_provider_loop(
                             }
                         };
 
-                        for s in &gauge_data.series {
-                            // Use the series-level source_id when available;
-                            // fall back to gauge.source_id for backwards compat.
-                            let sid = s
-                                .source_id
-                                .as_deref()
-                                .filter(|s| !s.is_empty())
-                                .unwrap_or(&gauge.source_id)
-                                .to_string();
+                    for s in &gauge_data.series {
+                        // Use the series-level source_id when available;
+                        // fall back to gauge.source_id for backwards compat.
+                        let sid = s
+                            .source_id
+                            .as_deref()
+                            .filter(|s| !s.is_empty())
+                            .unwrap_or(&gauge.source_id)
+                            .to_string();
 
-                            let from =
-                                match crate::query::gauges::fetch_latest_reading(&pool_clone, s.id)
-                                    .await
-                                {
-                                    Ok(Some(r)) => r.measured_at,
-                                    _ => {
-                                        // On cold start use the provider's history window so that
-                                        // history-capable providers (PEGELONLINE, BAFU, Hub'Eau,
-                                        // NVE…) pre-fill data. Cap at 30 days to avoid massive
-                                        // requests for providers like NVE that support 10 years.
-                                        let max_history = chrono::Duration::days(30);
-                                        let cold_start_window = reader
-                                            .history_depth()
-                                            .map(|d| d.min(max_history))
-                                            .unwrap_or_else(|| {
-                                                chrono::Duration::seconds(fetch_interval as i64 * 2)
-                                            });
-                                        Utc::now() - cold_start_window
-                                    }
-                                };
+                        let from =
+                            match crate::query::gauges::fetch_latest_reading(&pool_clone, s.id)
+                                .await
+                            {
+                                Ok(Some(r)) => r.measured_at,
+                                _ => {
+                                    // On cold start use the provider's history window so that
+                                    // history-capable providers (PEGELONLINE, BAFU, Hub'Eau,
+                                    // NVE…) pre-fill data. Cap at 30 days to avoid massive
+                                    // requests for providers like NVE that support 10 years.
+                                    let max_history = chrono::Duration::days(30);
+                                    let cold_start_window = reader
+                                        .history_depth()
+                                        .map(|d| d.min(max_history))
+                                        .unwrap_or_else(|| {
+                                            chrono::Duration::seconds(fetch_interval as i64 * 2)
+                                        });
+                                    Utc::now() - cold_start_window
+                                }
+                            };
 
-                            let entry = source_map.entry(sid).or_insert((from, vec![]));
-                            if from < entry.0 {
-                                entry.0 = from;
-                            }
-                            entry.1.push(s.id);
+                        let entry = source_map.entry(sid).or_insert((from, vec![]));
+                        if from < entry.0 {
+                            entry.0 = from;
                         }
+                        entry.1.push(s.id);
                     }
+                }
 
-                    if !source_map.is_empty() {
-                        let to = Utc::now();
-                        let requests: Vec<FetchRequest> = source_map
-                            .iter()
-                            .map(|(sid, (from, _))| FetchRequest {
-                                source_id: sid.clone(),
-                                from: *from,
-                                to,
-                            })
-                            .collect();
+                if !source_map.is_empty() {
+                    let to = Utc::now();
+                    let requests: Vec<FetchRequest> = source_map
+                        .iter()
+                        .map(|(sid, (from, _))| FetchRequest {
+                            source_id: sid.clone(),
+                            from: *from,
+                            to,
+                        })
+                        .collect();
 
-                        match reader.fetch_all(&requests).await {
-                            Ok(results) => {
-                                let total_readings: usize = results.values().map(|r| r.len()).sum();
-                                tracing::info!(
-                                    provider = %provider,
-                                    sources = results.len(),
-                                    readings = total_readings,
-                                    "fetch complete"
-                                );
-                                for (source_id, readings) in results {
-                                    if let Some((_, series_ids)) = source_map.get(&source_id) {
-                                        for &series_id in series_ids {
-                                            if let Err(err) =
-                                                crate::query::gauges::insert_readings_batch(
-                                                    &pool_clone,
-                                                    series_id,
-                                                    &readings,
-                                                )
-                                                .await
-                                            {
-                                                tracing::error!(
-                                                    "Error inserting readings for series {series_id}: {err}"
-                                                );
-                                            }
+                    match reader.fetch_all(&requests).await {
+                        Ok(results) => {
+                            let total_readings: usize = results.values().map(|r| r.len()).sum();
+                            tracing::info!(
+                                provider = %provider,
+                                sources = results.len(),
+                                readings = total_readings,
+                                "fetch complete"
+                            );
+                            for (source_id, readings) in results {
+                                if let Some((_, series_ids)) = source_map.get(&source_id) {
+                                    for &series_id in series_ids {
+                                        if let Err(err) =
+                                            crate::query::gauges::insert_readings_batch(
+                                                &pool_clone,
+                                                series_id,
+                                                &readings,
+                                            )
+                                            .await
+                                        {
+                                            tracing::error!(
+                                                "Error inserting readings for series {series_id}: {err}"
+                                            );
                                         }
                                     }
                                 }
                             }
-                            Err(err) => {
-                                tracing::error!(
-                                    provider = %provider,
-                                    "fetch failed: {err}"
-                                );
-                            }
+                        }
+                        Err(err) => {
+                            tracing::error!(
+                                provider = %provider,
+                                "fetch failed: {err}"
+                            );
                         }
                     }
-
+                }
             }
 
             // Sleep until the next cycle, but wake early if a gauge is linked.
