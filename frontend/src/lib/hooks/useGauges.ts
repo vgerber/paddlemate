@@ -15,6 +15,10 @@ export const gaugeKeys = {
   ) => [...gaugeKeys.all, "catalog", q, lat, lon, radiusKm] as const,
   waterway: (waterwayId: number) =>
     [...gaugeKeys.all, "waterway", waterwayId] as const,
+  catalogRivers: (q: string) =>
+    [...gaugeKeys.all, "catalog-rivers", q] as const,
+  catalogRiverGauges: (river: string) =>
+    [...gaugeKeys.all, "catalog-river-gauges", river] as const,
   map: () => [...gaugeKeys.all, "map"] as const,
 };
 
@@ -24,6 +28,31 @@ export function useGaugeMap() {
   return useQuery({
     queryKey: gaugeKeys.map(),
     queryFn: () => gaugesApi.map(),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** Distinct river names from the gauge catalog matching `q` - suggests
+ * gauge-backed rivers while typing a new river's name. Pass a debounced
+ * value; disabled until the query is at least two characters. */
+export function useCatalogRivers(q: string, limit = 6) {
+  const trimmed = q.trim();
+  return useQuery({
+    queryKey: gaugeKeys.catalogRivers(trimmed),
+    queryFn: () => gaugesApi.catalogRivers({ q: trimmed, limit }),
+    enabled: trimmed.length >= 2,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** All catalog stations of one river (exact name, case-insensitive) - lists
+ * a gauge-backed river's gauges in the suggest-river panel. */
+export function useCatalogRiverGauges(river: string | null) {
+  return useQuery({
+    queryKey: gaugeKeys.catalogRiverGauges(river ?? ""),
+    queryFn: () =>
+      gaugesApi.catalogSearch({ river: river as string, limit: 50 }),
+    enabled: !!river,
     staleTime: 5 * 60 * 1000,
   });
 }

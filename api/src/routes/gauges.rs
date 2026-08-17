@@ -15,8 +15,9 @@ use crate::{
     layers::auth::AuthToken,
     models::{
         gauge::{
-            BackfillRequest, CreateGaugeRequest, CreateSeriesRequest, Gauge, GaugeMapPoint,
-            GaugeOption, GaugeReading, GaugeWithSeries, UpdateGaugeRequest, UpdateSeriesRequest,
+            BackfillRequest, CatalogRiver, CreateGaugeRequest, CreateSeriesRequest, Gauge,
+            GaugeMapPoint, GaugeOption, GaugeReading, GaugeWithSeries, UpdateGaugeRequest,
+            UpdateSeriesRequest,
         },
         path_params::{GaugePath, GaugeSeriesPath},
     },
@@ -83,10 +84,12 @@ doc_fn!(search_gauges_docs, op =>
 
 /// Catalog search: existing real gauges plus not-yet-fetched catalog stations
 /// across every provider. `radius_km` bounds the spatial match when a point is
-/// given.
+/// given. `river` filters catalog stations to one river (exact name,
+/// case-insensitive) and skips the real-gauge union.
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct CatalogSearchQuery {
     pub q: Option<String>,
+    pub river: Option<String>,
     pub lat: Option<f64>,
     pub lon: Option<f64>,
     pub radius_km: Option<f64>,
@@ -99,9 +102,15 @@ pub async fn search_gauge_catalog(
 ) -> impl IntoApiResponse {
     let limit = query.limit.unwrap_or(20).clamp(1, 50);
     let q = query.q.as_deref().map(str::trim).filter(|s| !s.is_empty());
+    let river = query
+        .river
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
     match gauges::search_gauge_catalog(
         &app.pg_pool,
         q,
+        river,
         query.lat,
         query.lon,
         query.radius_km,
@@ -120,6 +129,35 @@ pub async fn search_gauge_catalog(
 doc_fn!(search_gauge_catalog_docs, op =>
     op.description("The gauge catalog: all available gauges (real + catalog stations), filterable by name and/or proximity")
         .response::<200, Json<Vec<GaugeOption>>>()
+        .tag("Gauges")
+);
+
+/// Distinct river names in the gauge catalog, for suggesting gauge-backed
+/// rivers while a user types a new river's name.
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct CatalogRiversQuery {
+    pub q: Option<String>,
+    pub limit: Option<i64>,
+}
+
+pub async fn search_catalog_rivers(
+    State(app): State<AppState>,
+    Query(query): Query<CatalogRiversQuery>,
+) -> impl IntoApiResponse {
+    let limit = query.limit.unwrap_or(10).clamp(1, 50);
+    let q = query.q.as_deref().map(str::trim).filter(|s| !s.is_empty());
+    match gauges::search_catalog_rivers(&app.pg_pool, q, limit).await {
+        Ok(list) => Json(list).into_response(),
+        Err(err) => {
+            tracing::error!("Error searching catalog rivers: {}", err);
+            ApiError::internal().into_response()
+        }
+    }
+}
+
+doc_fn!(search_catalog_rivers_docs, op =>
+    op.description("Distinct river names from the gauge catalog matching a query, with station counts")
+        .response::<200, Json<Vec<CatalogRiver>>>()
         .tag("Gauges")
 );
 
@@ -516,6 +554,10 @@ pub fn gauges_routes(state: AppState) -> aide::axum::ApiRouter {
         .api_route(
             "/catalog",
             get_with(search_gauge_catalog, search_gauge_catalog_docs),
+        )
+        .api_route(
+            "/catalog/rivers",
+            get_with(search_catalog_rivers, search_catalog_rivers_docs),
         )
         .api_route("/map", get_with(list_gauge_map, list_gauge_map_docs))
         .api_route(

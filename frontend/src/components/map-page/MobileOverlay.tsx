@@ -45,8 +45,27 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
           overflow: "hidden",
           borderTop: suggestMode ? "1px solid" : "none",
           borderColor: "divider",
+          boxShadow: suggestMode ? "0 -8px 16px rgba(0,0,0,0.35)" : "none",
         }}
       >
+        {/* Sheet-style top edge in suggest mode: a fixed handle strip the
+            content scrolls beneath, instead of a hard cut against the map. */}
+        {suggestMode && (
+          <Box
+            sx={{
+              flexShrink: 0,
+              display: "flex",
+              justifyContent: "center",
+              pt: 1,
+              pb: 0.75,
+              borderBottom: "1px solid",
+              borderColor: "divider",
+              bgcolor: "background.paper",
+            }}
+          >
+            <Box sx={{ width: 36, height: 3, bgcolor: "divider" }} />
+          </Box>
+        )}
         <Box
           sx={{
             flex: 1,

@@ -659,6 +659,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/waterways/gauges/catalog/rivers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Distinct river names from the gauge catalog matching a query, with station counts */
+        get: operations["search_catalog_rivers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/waterways/gauges/map": {
         parameters: {
             query?: never;
@@ -969,9 +986,38 @@ export interface components {
             unit?: string | null;
         };
         /**
+         * @description A distinct river name from the gauge catalog with its station count and
+         *      the bounding box of its stations (for focusing the map on the river).
+         *      Suggests gauge-backed rivers when a user proposes a new river.
+         */
+        CatalogRiver: {
+            country?: string | null;
+            /** Format: int64 */
+            gauge_count: number;
+            /** Format: double */
+            max_lat?: number | null;
+            /** Format: double */
+            max_lon?: number | null;
+            /** Format: double */
+            min_lat?: number | null;
+            /** Format: double */
+            min_lon?: number | null;
+            river: string;
+        };
+        /**
+         * @description Distinct river names in the gauge catalog, for suggesting gauge-backed
+         *      rivers while a user types a new river's name.
+         */
+        CatalogRiversQuery: {
+            /** Format: int64 */
+            limit?: number | null;
+            q?: string | null;
+        };
+        /**
          * @description Catalog search: existing real gauges plus not-yet-fetched catalog stations
          *      across every provider. `radius_km` bounds the spatial match when a point is
-         *      given.
+         *      given. `river` filters catalog stations to one river (exact name,
+         *      case-insensitive) and skips the real-gauge union.
          */
         CatalogSearchQuery: {
             /** Format: double */
@@ -983,6 +1029,7 @@ export interface components {
             q?: string | null;
             /** Format: double */
             radius_km?: number | null;
+            river?: string | null;
         };
         Comment: {
             author_id: string;
@@ -1080,7 +1127,16 @@ export interface components {
             /** @description GeoJSON LineString geometry */
             location: components["schemas"]["Geometry"];
             name: string;
+            /**
+             * @description Legacy single-region field, still accepted so proposals stored before
+             *      the regions array keep applying. Folded into `regions` on use.
+             */
             region?: string | null;
+            /**
+             * @description Region names, most specific first (valley, district, state, range).
+             * @default []
+             */
+            regions: string[];
             /**
              * @description Localized names/descriptions created together with the section
              * @default []
@@ -1204,7 +1260,8 @@ export interface components {
             /** @description GeoJSON LineString geometry */
             location: components["schemas"]["Geometry"];
             name: string;
-            region?: string | null;
+            /** @description Region names, most specific first (valley, district, state, range). */
+            regions: string[];
             /** Format: date-time */
             updated_at: string;
             /** Format: int64 */
@@ -1741,7 +1798,11 @@ export interface components {
             /** @description GeoJSON LineString geometry */
             location: components["schemas"]["Geometry"];
             name: string;
-            region?: string | null;
+            /**
+             * @description Region names, most specific first (valley, district, state, range).
+             * @default []
+             */
+            regions: string[];
             /** Format: date-time */
             updated_at: string;
             /** Format: int64 */
@@ -1862,7 +1923,11 @@ export interface components {
              * @default []
              */
             names: components["schemas"]["SectionName"][];
-            region?: string | null;
+            /**
+             * @description Region names, most specific first (valley, district, state, range).
+             * @default []
+             */
+            regions: string[];
             /** Format: date-time */
             updated_at: string;
             /** Format: int64 */
@@ -1913,7 +1978,8 @@ export interface components {
             country?: string | null;
             location?: components["schemas"]["Geometry"] | null;
             name?: string | null;
-            region?: string | null;
+            /** @description Region names, most specific first; `None` keeps the current list. */
+            regions?: string[] | null;
         };
         UpdateSeriesRequest: {
             label?: string | null;
@@ -2151,11 +2217,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-08-08T18:23:22.800352374Z",
-                     *         "expires_at": "2026-11-06T18:23:22.800354734Z",
+                     *         "created_at": "2026-08-16T18:05:26.242883047Z",
+                     *         "expires_at": "2026-11-14T18:05:26.242885167Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-08-08T18:23:22.800356274Z",
+                     *         "last_used_at": "2026-08-16T18:05:26.242896657Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -2186,8 +2252,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-08-08T18:23:22.800523594Z",
-                     *       "expires_at": "2026-11-06T18:23:22.800524044Z",
+                     *       "created_at": "2026-08-16T18:05:26.243108988Z",
+                     *       "expires_at": "2026-11-14T18:05:26.243109418Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -4499,6 +4565,7 @@ export interface operations {
                 lon?: number | null;
                 q?: string | null;
                 radius_km?: number | null;
+                river?: string | null;
             };
             header?: never;
             path?: never;
@@ -4512,6 +4579,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GaugeOption"][];
+                };
+            };
+        };
+    };
+    search_catalog_rivers: {
+        parameters: {
+            query?: {
+                limit?: number | null;
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRiver"][];
                 };
             };
         };

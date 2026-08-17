@@ -11,7 +11,8 @@ export interface GaugePin {
   lat: number;
   lon: number;
   name: string;
-  level: WaterLevel;
+  /** Null for catalog-only stations without readings (neutral color). */
+  level: WaterLevel | null;
 }
 
 interface GaugeMarkersProps {
@@ -44,7 +45,9 @@ export default function GaugeMarkers({
                 width: isSelected ? 18 : 14,
                 height: isSelected ? 18 : 14,
                 borderRadius: "50%",
-                background: LEVEL_COLORS[pin.level],
+                background: pin.level
+                  ? LEVEL_COLORS[pin.level]
+                  : theme.tokens.outline,
                 border: isSelected
                   ? `3px solid ${theme.tokens.white}`
                   : `2px solid ${theme.tokens.background}`,

@@ -305,7 +305,8 @@ impl FeatureWaterRangeBody {
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum GaugeOption {
     Gauge {
-        gauge: GaugeWithSeries,
+        // Boxed to keep the enum small next to the Catalog variant.
+        gauge: Box<GaugeWithSeries>,
     },
     Catalog {
         provider: String,
@@ -317,6 +318,20 @@ pub enum GaugeOption {
         lon: Option<f64>,
         params: Vec<String>,
     },
+}
+
+/// A distinct river name from the gauge catalog with its station count and
+/// the bounding box of its stations (for focusing the map on the river).
+/// Suggests gauge-backed rivers when a user proposes a new river.
+#[derive(Debug, Clone, Serialize, JsonSchema)]
+pub struct CatalogRiver {
+    pub river: String,
+    pub country: Option<String>,
+    pub gauge_count: i64,
+    pub min_lat: Option<f64>,
+    pub min_lon: Option<f64>,
+    pub max_lat: Option<f64>,
+    pub max_lon: Option<f64>,
 }
 
 /// One gauge as a point on the coverage map, classified by how it is used.

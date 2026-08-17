@@ -30,6 +30,7 @@ export type GaugeReading = components["schemas"]["GaugeReading"];
 export type GaugeWithSeries = components["schemas"]["GaugeWithSeries"];
 export type GaugeSource = components["schemas"]["GaugeSource"];
 export type GaugeOption = components["schemas"]["GaugeOption"];
+export type CatalogRiver = components["schemas"]["CatalogRiver"];
 export type CatalogGaugeRef = components["schemas"]["CatalogGaugeRef"];
 export type GaugeMapPoint = components["schemas"]["GaugeMapPoint"];
 export type GaugeMapState = components["schemas"]["GaugeMapState"];
@@ -200,6 +201,8 @@ export const gaugesApi = {
    * across every provider), filtered by name and/or proximity. */
   catalogSearch: async (params: {
     q?: string;
+    /** Exact river name (case-insensitive): only that river's catalog stations. */
+    river?: string;
     lat?: number;
     lon?: number;
     radius_km?: number;
@@ -208,6 +211,15 @@ export const gaugesApi = {
     const { data } = await client.GET("/api/v1/waterways/gauges/catalog", {
       params: { query: params },
     });
+    return assertData(data);
+  },
+  /** Distinct river names from the gauge catalog matching a query, with
+   * station counts - used to suggest gauge-backed rivers. */
+  catalogRivers: async (params: { q?: string; limit?: number }) => {
+    const { data } = await client.GET(
+      "/api/v1/waterways/gauges/catalog/rivers",
+      { params: { query: params } },
+    );
     return assertData(data);
   },
   /** Every gauge as a coverage-map point (used / fetched / available). */

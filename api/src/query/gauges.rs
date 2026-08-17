@@ -2,9 +2,9 @@ use chrono::{DateTime, Utc};
 use sqlx::{PgPool, Row, postgres::PgRow};
 
 use crate::models::gauge::{
-    CatalogGaugeRef, FeatureWaterRange, Gauge, GaugeId, GaugeMapPoint, GaugeMapState, GaugeOption,
-    GaugeReading, GaugeSeries, GaugeSource, GaugeWithSeries, MeasurementType, SectionWaterStatus,
-    SeriesId, WaterLevel, WaterRangeWithStatus,
+    CatalogGaugeRef, CatalogRiver, FeatureWaterRange, Gauge, GaugeId, GaugeMapPoint, GaugeMapState,
+    GaugeOption, GaugeReading, GaugeSeries, GaugeSource, GaugeWithSeries, MeasurementType,
+    SectionWaterStatus, SeriesId, WaterLevel, WaterRangeWithStatus,
 };
 use river_gauge::StationInfo;
 
@@ -833,21 +833,31 @@ pub async fn upsert_catalog_stations(
 
 /// Search the catalog for the picker: existing real gauges (via `search_gauges`)
 /// plus catalog-only stations, nearest-first. Catalog rows already backed by a
-/// real gauge are suppressed so a station never appears twice.
+/// real gauge are suppressed so a station never appears twice. With `river`
+/// set, only catalog stations of that river (exact name, case-insensitive)
+/// are returned - the real-gauge union is skipped since gauges carry no
+/// river column.
 pub async fn search_gauge_catalog(
     pool: &PgPool,
     q: Option<&str>,
+    river: Option<&str>,
     lat: Option<f64>,
     lon: Option<f64>,
     radius_km: Option<f64>,
     limit: i64,
 ) -> Result<Vec<GaugeOption>, sqlx::Error> {
     // Real gauges first (already fetched), reusing the existing search.
-    let mut options: Vec<GaugeOption> = search_gauges(pool, q, lat, lon, limit)
-        .await?
-        .into_iter()
-        .map(|gauge| GaugeOption::Gauge { gauge })
-        .collect();
+    let mut options: Vec<GaugeOption> = if river.is_none() {
+        search_gauges(pool, q, lat, lon, limit)
+            .await?
+            .into_iter()
+            .map(|gauge| GaugeOption::Gauge {
+                gauge: Box::new(gauge),
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
 
     // Catalog-only stations. Spatial radius when a point is given, else name.
     let has_point = lat.is_some() && lon.is_some();
@@ -865,6 +875,7 @@ pub async fn search_gauge_catalog(
                 OR (geom IS NOT NULL
                     AND ST_DWithin(geom::geography,
                                    ST_SetSRID(ST_MakePoint($3, $2), 4326)::geography, $4)))
+           AND ($6::text IS NULL OR river ILIKE $6)
            AND NOT EXISTS (
                 SELECT 1 FROM gauges g
                 WHERE g.provider = c.provider AND g.source_id = c.station_id)
@@ -877,6 +888,7 @@ pub async fn search_gauge_catalog(
         .bind(lon)
         .bind(radius_m)
         .bind(limit)
+        .bind(river)
         .fetch_all(pool)
         .await?;
     for row in &rows {
@@ -892,6 +904,33 @@ pub async fn search_gauge_catalog(
         });
     }
     Ok(options)
+}
+
+/// Distinct river names from the gauge catalog matching `q`, stations-richest
+/// first. Suggests gauge-backed rivers when a user proposes a new river.
+pub async fn search_catalog_rivers(
+    pool: &PgPool,
+    q: Option<&str>,
+    limit: i64,
+) -> Result<Vec<CatalogRiver>, sqlx::Error> {
+    sqlx::query_as!(
+        CatalogRiver,
+        r#"
+        SELECT river AS "river!", country, COUNT(*) AS "gauge_count!",
+               MIN(lat) AS min_lat, MIN(lon) AS min_lon,
+               MAX(lat) AS max_lat, MAX(lon) AS max_lon
+        FROM gauge_catalog
+        WHERE river IS NOT NULL AND river <> ''
+          AND ($1::text IS NULL OR river ILIKE '%' || $1 || '%')
+        GROUP BY river, country
+        ORDER BY COUNT(*) DESC, river
+        LIMIT $2
+        "#,
+        q,
+        limit
+    )
+    .fetch_all(pool)
+    .await
 }
 
 /// Resolve a catalog station reference to a `gauge_series.id`, creating the
@@ -923,7 +962,10 @@ pub async fn resolve_or_create_series_for_ref(
 
     // Upsert the series. Its source_id (`station:param`) is what the poller
     // fetches; measurement_type is unique per gauge.
-    let unit = r.unit.as_deref().unwrap_or_else(|| default_unit(r.measurement_type));
+    let unit = r
+        .unit
+        .as_deref()
+        .unwrap_or_else(|| default_unit(r.measurement_type));
     let series_source_id = format!("{}:{}", r.station_id, r.param);
     let series_row = sqlx::query(
         "INSERT INTO gauge_series (gauge_id, measurement_type, unit, label, source_id)

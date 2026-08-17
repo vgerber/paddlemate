@@ -78,6 +78,8 @@ export default function SidebarContent({
     suggestWaterwayName,
     setSuggestWaterwayName,
     mapBounds,
+    setFocusBounds,
+    setSuggestGaugePins,
   } = state;
 
   if (suggestMode === "waterway") {
@@ -86,6 +88,8 @@ export default function SidebarContent({
         initialName={suggestWaterwayName}
         mapBounds={mapBounds}
         onPreviewCoordsChange={setSectionPreviewCoords}
+        onFocusBounds={setFocusBounds}
+        onGaugePinsChange={setSuggestGaugePins}
         onClose={closeSuggest}
       />
     );

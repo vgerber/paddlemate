@@ -42,6 +42,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     sections,
     filteredSearchSections,
     suggestMode,
+    suggestGaugePins,
     handleSectionClick,
     gaugePins,
     selectedGaugeId,
@@ -63,6 +64,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     featurePickingActive,
     handleMapPick,
     focusedPoint,
+    focusBounds,
     isAreaMode,
     isMobile,
     isAreaSearchLoading,
@@ -155,9 +157,15 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           features={mapFeatures}
           selectedSectionId={selectedSectionId}
           onSectionClick={suggestMode ? undefined : handleSectionClick}
-          gaugePins={gaugePins}
+          gaugePins={
+            suggestMode === "waterway" && suggestGaugePins.length > 0
+              ? suggestGaugePins
+              : gaugePins
+          }
           selectedGaugePinId={selectedGaugeId}
-          onGaugeClick={handleGaugeClick}
+          onGaugeClick={
+            suggestMode === "waterway" ? undefined : handleGaugeClick
+          }
           areaCircle={visibleAreaCircle}
           areaLocked={areaLocked}
           onAreaCircleChange={
@@ -169,6 +177,14 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             selectedWaterwayId != null ? sectionLevels : searchSectionLevels
           }
           focusedPoint={focusedPoint}
+          focusBounds={focusBounds}
+          // The mobile suggest overlay covers the canvas from 45% down
+          // (MobileOverlay); pad focus moves so targets stay visible above it.
+          focusPaddingBottom={
+            isMobile && suggestMode != null
+              ? Math.round(window.innerHeight * 0.55)
+              : 0
+          }
           proposedFeatures={proposedFeatures}
           onBoundsChange={setMapBounds}
           drawing={{

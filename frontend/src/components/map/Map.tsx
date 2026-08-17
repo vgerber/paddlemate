@@ -84,6 +84,11 @@ interface WaterwayMapProps {
   onAreaCircleChange?: (circle: AreaCircle | null) => void;
   /** [lng, lat] to fly to and highlight; set by clicking a feature in the panel. */
   focusedPoint?: [number, number] | null;
+  /** [[minLon, minLat], [maxLon, maxLat]] box to fit (e.g. a river's gauges). */
+  focusBounds?: [[number, number], [number, number]] | null;
+  /** Extra bottom padding (px) for focus moves when an overlay covers the
+   * lower part of the canvas (mobile suggest panel). */
+  focusPaddingBottom?: number;
   /** Reports the current viewport bounds (on load and after each move). */
   onBoundsChange?: (bounds: {
     south: number;
@@ -114,6 +119,8 @@ export default function WaterwayMap({
   areaLocked,
   onAreaCircleChange,
   focusedPoint,
+  focusBounds,
+  focusPaddingBottom,
   onBoundsChange,
   picking = NO_PICKING,
   drawing = NO_DRAWING,
@@ -151,6 +158,8 @@ export default function WaterwayMap({
     areaLocked,
     selectedSectionId,
     focusedPoint,
+    focusBounds,
+    focusPaddingBottom,
   });
 
   const {

@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT river AS \"river!\", country, COUNT(*) AS \"gauge_count!\",\n               MIN(lat) AS min_lat, MIN(lon) AS min_lon,\n               MAX(lat) AS max_lat, MAX(lon) AS max_lon\n        FROM gauge_catalog\n        WHERE river IS NOT NULL AND river <> ''\n          AND ($1::text IS NULL OR river ILIKE '%' || $1 || '%')\n        GROUP BY river, country\n        ORDER BY COUNT(*) DESC, river\n        LIMIT $2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "river!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "country",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "gauge_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "min_lat",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "min_lon",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "max_lat",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 6,
+        "name": "max_lon",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "e040fbf8a3f514e3147d8445a2baff2808518caa6bf51d83d9996b8ab1fcac27"
+}

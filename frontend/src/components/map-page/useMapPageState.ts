@@ -88,6 +88,14 @@ export function useMapPageState(search: RouteSearch) {
   const [focusedPoint, setFocusedPoint] = useState<[number, number] | null>(
     null,
   );
+  // Bounding box the camera should fit (e.g. a gauge-backed river's stations
+  // in the suggest-river panel): [[minLon, minLat], [maxLon, maxLat]].
+  const [focusBounds, setFocusBounds] = useState<
+    [[number, number], [number, number]] | null
+  >(null);
+  // Catalog stations of the river being suggested, shown as neutral map pins
+  // while the suggest-river panel is open.
+  const [suggestGaugePins, setSuggestGaugePins] = useState<GaugePin[]>([]);
   // Feature highlighted in the section's feature timeline; the chart panel
   // brings this feature's water ranges to the front.
   const [selectedFeatureId, setSelectedFeatureId] = useState<number | null>(
@@ -157,6 +165,15 @@ export function useMapPageState(search: RouteSearch) {
   useEffect(() => {
     setFocusedPoint(null);
   }, [selectedSectionId]);
+
+  // The river-focus box and station pins only make sense inside the
+  // suggest-river panel; clear them when the panel closes.
+  useEffect(() => {
+    if (suggestMode !== "waterway") {
+      setFocusBounds(null);
+      setSuggestGaugePins([]);
+    }
+  }, [suggestMode]);
 
   // When suggest mode opens, always bring the overlay back (map-view hides it)
   useEffect(() => {
@@ -393,6 +410,10 @@ export function useMapPageState(search: RouteSearch) {
     setMapBounds,
     focusedPoint,
     setFocusedPoint,
+    focusBounds,
+    setFocusBounds,
+    suggestGaugePins,
+    setSuggestGaugePins,
     selectedFeatureId,
     setSelectedFeatureId,
     showProposedFeatures,

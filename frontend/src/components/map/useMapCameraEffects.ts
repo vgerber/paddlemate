@@ -14,6 +14,10 @@ interface UseMapCameraEffectsParams {
   areaLocked?: boolean;
   selectedSectionId?: number | null;
   focusedPoint?: [number, number] | null;
+  focusBounds?: [[number, number], [number, number]] | null;
+  /** Extra bottom padding (px) for focus moves when an overlay covers the
+   * lower part of the canvas (mobile suggest panel). */
+  focusPaddingBottom?: number;
 }
 
 export function useMapCameraEffects({
@@ -26,6 +30,8 @@ export function useMapCameraEffects({
   areaLocked,
   selectedSectionId,
   focusedPoint,
+  focusBounds,
+  focusPaddingBottom = 0,
 }: UseMapCameraEffectsParams) {
   const handleMapLoad = useCallback(() => {
     setMapLoaded(true);
@@ -111,6 +117,25 @@ export function useMapCameraEffects({
       duration: 600,
     });
   }, [focusedPoint, mapLoaded, mapRef]);
+
+  // Fit a requested bounding box (e.g. a gauge-backed river's stations).
+  // maxZoom keeps a single-station box from zooming in to street level.
+  // The extra bottom padding keeps the target inside the visible strip when
+  // an overlay covers the lower part of the canvas.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || !focusBounds) return;
+    map.fitBounds(focusBounds, {
+      padding: {
+        top: 60,
+        left: 60,
+        right: 60,
+        bottom: 60 + focusPaddingBottom,
+      },
+      duration: 800,
+      maxZoom: 11,
+    });
+  }, [focusBounds, mapLoaded, mapRef, focusPaddingBottom]);
 
   return { handleMapLoad };
 }
