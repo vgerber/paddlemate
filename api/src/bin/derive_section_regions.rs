@@ -25,9 +25,18 @@ use anyhow::Context;
 use serde::Deserialize;
 use sqlx::PgPool;
 
-const OVERPASS_URL: &str = "https://overpass-api.de/api/interpreter";
+/// Tried in order per request; the main instance rejects or drops requests
+/// under load, the mirrors usually have a free slot.
+const OVERPASS_URLS: [&str; 3] = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+];
 const VALLEY_RADIUS_M: u32 = 2_000;
 const REQUEST_GAP: Duration = Duration::from_secs(1);
+/// Abort the run after this many consecutive sections with zero successful
+/// requests - the network is down, not the data.
+const MAX_CONSECUTIVE_FAILURES: u32 = 15;
 
 #[derive(Deserialize)]
 struct OverpassResponse {
@@ -153,8 +162,12 @@ async fn main() -> anyhow::Result<()> {
 
     let database_url = std::env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
     let pool = PgPool::connect(&database_url).await?;
+    // Bind to IPv4: the production container resolves the Overpass hosts to
+    // IPv6 first but has no IPv6 route, so every request dies on connect.
     let client = reqwest::Client::builder()
         .user_agent("paddlemate-region-backfill")
+        .local_address(std::net::IpAddr::from([0, 0, 0, 0]))
+        .timeout(Duration::from_secs(40))
         .build()?;
 
     // The single-element check makes --refresh-imported resumable: the
@@ -175,6 +188,7 @@ async fn main() -> anyhow::Result<()> {
     println!("{} sections to derive", sections.len());
 
     let mut updated = 0u32;
+    let mut consecutive_failures = 0u32;
     for section in sections {
         let location: serde_json::Value = match serde_json::from_str(&section.location) {
             Ok(v) => v,
@@ -192,25 +206,39 @@ async fn main() -> anyhow::Result<()> {
         let mut samples = vec![];
         for (lat, lon) in &points {
             tokio::time::sleep(REQUEST_GAP).await;
-            let resp = client
-                .post(OVERPASS_URL)
-                .body(overpass_query(*lat, *lon))
-                .send()
-                .await;
-            match resp {
-                Ok(resp) => match resp.error_for_status() {
-                    Ok(resp) => match resp.json::<OverpassResponse>().await {
-                        Ok(parsed) => samples.push(classify(parsed)),
-                        Err(err) => eprintln!("  #{}: parse error: {err}", section.id),
+            // Try each endpoint until one answers for this point.
+            for url in OVERPASS_URLS {
+                let resp = client
+                    .post(url)
+                    .body(overpass_query(*lat, *lon))
+                    .send()
+                    .await;
+                match resp {
+                    Ok(resp) => match resp.error_for_status() {
+                        Ok(resp) => match resp.json::<OverpassResponse>().await {
+                            Ok(parsed) => {
+                                samples.push(classify(parsed));
+                                break;
+                            }
+                            Err(err) => eprintln!("  #{}: parse error: {err}", section.id),
+                        },
+                        Err(err) => eprintln!("  #{}: server error ({url}): {err}", section.id),
                     },
-                    Err(err) => eprintln!("  #{}: server error: {err}", section.id),
-                },
-                Err(err) => eprintln!("  #{}: request failed: {err}", section.id),
+                    Err(err) => eprintln!("  #{}: request failed ({url}): {err}", section.id),
+                }
             }
         }
         if samples.is_empty() {
+            consecutive_failures += 1;
+            if consecutive_failures >= MAX_CONSECUTIVE_FAILURES {
+                anyhow::bail!(
+                    "aborting after {MAX_CONSECUTIVE_FAILURES} consecutive sections with \
+                     no successful request - network problem, {updated} updated so far"
+                );
+            }
             continue;
         }
+        consecutive_failures = 0;
 
         let regions = merge_regions(&samples);
         if regions.is_empty() {
