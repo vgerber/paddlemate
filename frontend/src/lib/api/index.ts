@@ -167,6 +167,18 @@ export const featuresApi = {
   },
 };
 
+export const osmGeometryApi = {
+  /** Cached OSM elements of a waterway; throws ApiError 404 when nothing is
+   * cached (the caller falls back to a live Overpass query). */
+  get: async (waterwayId: number, kind?: "centerline" | "bank") => {
+    const { data } = await client.GET(
+      "/api/v1/waterways/{waterway_id}/osm-geometry",
+      { params: { path: { waterway_id: waterwayId }, query: { kind } } },
+    );
+    return assertData(data);
+  },
+};
+
 export const waterStatusApi = {
   getForSection: async (
     waterwayId: number,

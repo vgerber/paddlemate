@@ -1,6 +1,7 @@
 mod comments;
 mod crud;
 mod features;
+mod osm_geometry;
 mod sections;
 mod water_ranges;
 mod water_status;
@@ -47,6 +48,17 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
         .api_route(
             "/{waterway_id}/gauges",
             get_with(crud::list_waterway_gauges, crud::list_waterway_gauges_docs),
+        )
+        .api_route(
+            "/{waterway_id}/osm-geometry",
+            get_with(
+                osm_geometry::get_osm_geometry,
+                osm_geometry::get_osm_geometry_docs,
+            )
+            .delete_with(
+                osm_geometry::delete_osm_geometry,
+                osm_geometry::delete_osm_geometry_docs,
+            ),
         )
         // Section CRUD
         .api_route(

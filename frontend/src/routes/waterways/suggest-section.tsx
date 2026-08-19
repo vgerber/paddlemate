@@ -41,7 +41,11 @@ function SuggestSectionPage() {
   const { data: waterway } = useWaterway(waterwayId ?? null);
   const sections = waterway?.sections ?? [];
 
-  const wizard = useSectionWizardState(waterway?.name ?? "", sections);
+  const wizard = useSectionWizardState(
+    waterway?.name ?? "",
+    sections,
+    waterwayId,
+  );
   const { step, putIn, takeOut, finalCoords, featurePickActive } = wizard;
 
   const createSection = useCreateSection(waterwayId ?? 0);

@@ -37,6 +37,10 @@ COPY --from=builder /app/target/release/sync_gauge_catalog /usr/local/bin/sync_g
 # Operational tool: backfills section regions from OSM for sections whose
 # regions array is empty. Run after imports: docker exec derive_section_regions.
 COPY --from=builder /app/target/release/derive_section_regions /usr/local/bin/derive_section_regions
+# Operational tool: fills the waterway OSM geometry cache (centerline way
+# fragments) so river snapping skips Overpass. Run after imports:
+# docker exec fetch_osm_geometry.
+COPY --from=builder /app/target/release/fetch_osm_geometry /usr/local/bin/fetch_osm_geometry
 
 ENV PORT=3000
 EXPOSE 3000

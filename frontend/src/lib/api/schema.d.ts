@@ -321,6 +321,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/waterways/{waterway_id}/osm-geometry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Cached OSM elements of a waterway (centerline way fragments, later bank areas). 404 when nothing is cached - the client should fall back to a live Overpass query. */
+        get: operations["get_osm_geometry"];
+        put?: never;
+        post?: never;
+        /** @description Invalidate a waterway's cached OSM geometry (admin only); the next backfill run re-fetches it */
+        delete: operations["delete_osm_geometry"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/waterways/{waterway_id}/sections": {
         parameters: {
             query?: never;
@@ -1655,6 +1673,21 @@ export interface components {
         MatchSource: "waterway" | "section" | "section_name" | "feature_name";
         /** @enum {string} */
         MeasurementType: "water_level" | "discharge" | "temperature";
+        /** @description One cached OSM element of a waterway. */
+        OsmElement: {
+            geometry: components["schemas"]["Geometry"];
+            kind: components["schemas"]["OsmElementKind"];
+            /** Format: int64 */
+            osm_id: number;
+            /** @description OSM element type: "way" or "relation". */
+            osm_type: string;
+        };
+        /** @description What an OSM element represents for a waterway. */
+        OsmElementKind: "centerline" | "bank";
+        OsmGeometryQuery: {
+            /** @description Element kind filter: "centerline" or "bank". Omitted = all kinds. */
+            kind?: string | null;
+        };
         PaginatedResponse_for_Descent: {
             items: components["schemas"]["Descent"][];
             /** Format: int64 */
@@ -2173,6 +2206,17 @@ export interface components {
             updated_at: string;
             waterway_type: components["schemas"]["WaterwayType"];
         };
+        /** @description The cached OSM geometry document of a waterway. */
+        WaterwayOsmGeometry: {
+            elements: components["schemas"]["OsmElement"][];
+            /**
+             * Format: date-time
+             * @description Newest fetch timestamp among the returned elements.
+             */
+            fetched_at: string;
+            /** Format: int64 */
+            waterway_id: number;
+        };
         WaterwayPath: {
             /** Format: int64 */
             waterway_id: number;
@@ -2217,11 +2261,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-08-16T18:05:26.242883047Z",
-                     *         "expires_at": "2026-11-14T18:05:26.242885167Z",
+                     *         "created_at": "2026-08-19T19:13:54.944249886Z",
+                     *         "expires_at": "2026-11-17T19:13:54.944252286Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-08-16T18:05:26.242896657Z",
+                     *         "last_used_at": "2026-08-19T19:13:54.944263346Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -2252,8 +2296,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-08-16T18:05:26.243108988Z",
-                     *       "expires_at": "2026-11-14T18:05:26.243109418Z",
+                     *       "created_at": "2026-08-19T19:13:54.944459836Z",
+                     *       "expires_at": "2026-11-17T19:13:54.944460216Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -3175,6 +3219,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GaugeWithSeries"][];
+                };
+            };
+        };
+    };
+    get_osm_geometry: {
+        parameters: {
+            query?: {
+                /** @description Element kind filter: "centerline" or "bank". Omitted = all kinds. */
+                kind?: string | null;
+            };
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The cached OSM geometry document of a waterway. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaterwayOsmGeometry"];
+                };
+            };
+            /** @description Nothing cached */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_osm_geometry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cache dropped */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

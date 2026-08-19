@@ -133,6 +133,7 @@ find your river? Add it").
 | `gauges` → `gauge_series` → `gauge_readings` | station → measurement type (level/discharge) → time series |
 | `descents`, `descent_sections` | a log entry and the sections it covers (one descent can span several) |
 | `proposals`, `proposal_votes` | community edit queue |
+| `waterway_osm_elements` | cached OSM elements per waterway (centerline way fragments today, bank polygons later); serves `GET .../waterways/{id}/osm-geometry` so river snapping skips live Overpass |
 
 ### Conventions
 
@@ -148,4 +149,10 @@ find your river? Add it").
   is empty (hand-edited lists are never overwritten). Valleys are OSM lines,
   not polygons, so both use proximity (2 km) for valley names and area
   containment for districts/states/mountain ranges.
+- River centerlines for snapping are cached server-side:
+  `cargo run --bin fetch_osm_geometry` stores each waterway's OSM way
+  fragments (query bounded by its sections' bbox), and the wizard seeds its
+  snap cache from `GET .../waterways/{id}/osm-geometry` - live Overpass runs
+  only for rivers not cached yet. `DELETE` on the endpoint (admin)
+  invalidates one river.
 - Full ER diagram: [api/README.md](../api/README.md).

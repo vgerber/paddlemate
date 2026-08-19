@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { osmGeometryApi } from "@/lib/api";
 import {
   type BoundingBox,
   type Coordinate,
@@ -112,6 +113,7 @@ export function useRiverSnap(
   putIn: GeoPoint | null,
   takeOut: GeoPoint | null,
   viewBounds?: BoundingBox | null,
+  waterwayId?: number | null,
 ): {
   status: RiverSnapStatus;
   snappedCoords: Coordinate[] | null;
@@ -139,6 +141,53 @@ export function useRiverSnap(
     networkCache.current = null;
     setRetryToken((token) => token + 1);
   }, []);
+
+  // Seed the named-river cache from the server's OSM geometry cache: one
+  // fast API call replaces the (slow, rate-limited) Overpass lookup for
+  // every river the backfill has covered. A 404 means not cached - the
+  // live Overpass paths below handle the river as before.
+  const serverCacheTriedFor = useRef<number | null>(null);
+  useEffect(() => {
+    if (waterwayId == null || !waterwayName) return;
+    if (serverCacheTriedFor.current === waterwayId) return;
+    serverCacheTriedFor.current = waterwayId;
+    let cancelled = false;
+    (async () => {
+      try {
+        const doc = await osmGeometryApi.get(waterwayId, "centerline");
+        const ways: Coordinate[][] = doc.elements.flatMap((e) =>
+          e.geometry.type === "LineString"
+            ? [e.geometry.coordinates as Coordinate[]]
+            : [],
+        );
+        if (cancelled || ways.length === 0) return;
+        // The cached fragments cover the river's whole known course; a
+        // generous bbox keeps the effects below treating it as a hit.
+        const points = ways.flat();
+        const pad = 0.5;
+        const entry: NamedRiverCache = {
+          waterwayName,
+          boundingBox: {
+            south: Math.min(...points.map((c) => c[1])) - pad,
+            north: Math.max(...points.map((c) => c[1])) + pad,
+            west: Math.min(...points.map((c) => c[0])) - pad,
+            east: Math.max(...points.map((c) => c[0])) + pad,
+          },
+          ways,
+        };
+        namedRiverCache.current = entry;
+        stitchedFrom.current = entry;
+        const stitched = stitchWays(ways);
+        setRiver(stitched);
+        setRiverLookup(stitched ? "found" : "not-found");
+      } catch {
+        // Not cached (404) or unreachable - live Overpass takes over.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [waterwayId, waterwayName]);
 
   // River-course preview: look up the river for the current map view
   // while the user hasn't picked both points yet

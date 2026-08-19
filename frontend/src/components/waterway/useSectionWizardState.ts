@@ -22,6 +22,7 @@ export const WIZARD_STEPS = ["Naming", "Section", "Features"] as const;
 export function useSectionWizardState(
   waterwayName: string,
   sections: SectionWithFeatures[],
+  waterwayId?: number | null,
 ) {
   const [step, setStep] = useState(0);
 
@@ -35,7 +36,13 @@ export function useSectionWizardState(
   );
   const [lineSource, setLineSource] = useState<"snap" | "straight">("snap");
   const [mapBounds, setMapBounds] = useState<BoundingBox | null>(null);
-  const snap = useRiverSnap(waterwayName, putIn, takeOut, mapBounds);
+  const snap = useRiverSnap(
+    waterwayName,
+    putIn,
+    takeOut,
+    mapBounds,
+    waterwayId,
+  );
 
   // Step 3: features (drafted with the shared feature form, drawn on the map)
   const [draftFeatures, setDraftFeatures] = useState<SectionFeatureDraft[]>([]);
