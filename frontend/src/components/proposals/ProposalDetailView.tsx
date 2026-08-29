@@ -11,7 +11,7 @@ import {
   proposalTitle,
   STATUS_COLOR,
 } from "@/lib/proposals";
-import { fonts, labelSx } from "@/lib/theme";
+import { fonts, labelSx, theme } from "@/lib/theme";
 
 /** The whole proposal: what it is, the change itself with its map, and the
  * review controls. Fills the pane beside the list on desktop. */
@@ -29,7 +29,7 @@ export default function ProposalDetailView({
     | undefined;
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
       <Box
         sx={{
           display: "flex",
@@ -37,14 +37,14 @@ export default function ProposalDetailView({
           gap: 1,
           pb: 1.5,
           borderBottom: "1px solid",
-          borderColor: "divider",
+          borderColor: `${theme.tokens.outlineVariant}55`,
         }}
       >
         <Box sx={{ minWidth: 0 }}>
           <Typography
             sx={{
               fontFamily: fonts.label,
-              fontWeight: 700,
+              fontWeight: 600,
               fontSize: "1rem",
               textTransform:
                 proposal.entity_type === "feature" ? "capitalize" : "none",

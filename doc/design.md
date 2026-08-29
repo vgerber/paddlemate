@@ -35,6 +35,15 @@ sparingly and always carries meaning.
 - Inline alerts are inset notes, not banners: square, compact, dark ground
   with a tinted border and a colored icon carrying the severity. The filled
   variant is reserved for the global error snackbar.
+- Long lists separate rows with a dimmed rule (the divider token at ~33%
+  alpha), not a full-strength one - a rule between every row reads as a
+  grid. Two panes side by side separate by surface level (the list on
+  `surfaceLow`, the detail on `surface`) rather than a hard border.
+- Do not repeat what a filter already says: a row in a list filtered to
+  "pending" carries no pending badge. Secondary counts (votes, totals)
+  drop out entirely when they are zero.
+- Filters beyond the primary tabs collapse behind a filter icon with a
+  badge dot, so the list is what a screen lands on.
 - List group headings are overline typography in disabled color; type and
   status markers are small outlined uppercase chips.
 

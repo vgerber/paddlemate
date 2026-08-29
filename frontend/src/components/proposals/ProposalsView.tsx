@@ -1,11 +1,16 @@
+import FilterListIcon from "@mui/icons-material/FilterList";
 import HowToVoteOutlinedIcon from "@mui/icons-material/HowToVoteOutlined";
+import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
+import Collapse from "@mui/material/Collapse";
+import IconButton from "@mui/material/IconButton";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useState } from "react";
 import ProposalDetailView from "@/components/proposals/ProposalDetailView";
 import ProposalRow from "@/components/proposals/ProposalRow";
 import EmptyState from "@/components/states/EmptyState";
@@ -73,6 +78,8 @@ export default function ProposalsView({
   adminMode,
 }: ProposalsViewProps) {
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+  const hasActiveFilters = entityType != null || operation != null;
+  const [filtersOpen, setFiltersOpen] = useState(hasActiveFilters);
   const { data: proposals, isLoading } = useProposals({
     status,
     entity_type: entityType,
@@ -101,6 +108,21 @@ export default function ProposalsView({
             {proposals?.length ?? 0} results
           </Typography>
         )}
+        <IconButton
+          size="small"
+          onClick={() => setFiltersOpen((v) => !v)}
+          aria-label={filtersOpen ? "Hide filters" : "Show filters"}
+          title={filtersOpen ? "Hide filters" : "Show filters"}
+          sx={{ ml: isLoading ? "auto" : 0 }}
+        >
+          <Badge
+            color="primary"
+            variant="dot"
+            invisible={!hasActiveFilters || filtersOpen}
+          >
+            <FilterListIcon fontSize="small" />
+          </Badge>
+        </IconButton>
       </Box>
 
       {/* Status tabs */}
@@ -119,50 +141,52 @@ export default function ProposalsView({
         ))}
       </Tabs>
 
-      {/* Filters */}
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 1,
-          px: 2,
-          py: 1.5,
-        }}
-      >
-        <ToggleButtonGroup
-          value={entityType ?? ""}
-          exclusive
-          size="small"
-          onChange={(_, v) => {
-            if (v !== null) onEntityTypeChange(v || undefined);
+      {/* Filters - collapsed by default so the list is what you land on */}
+      <Collapse in={filtersOpen}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+            px: 2,
+            py: 1.5,
           }}
-          sx={toggleGroupSx}
         >
-          {ENTITY_TABS.map((t) => (
-            <ToggleButton key={t.label} value={t.value}>
-              {t.label}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-
-        {onOperationChange && (
           <ToggleButtonGroup
-            value={operation ?? ""}
+            value={entityType ?? ""}
             exclusive
             size="small"
             onChange={(_, v) => {
-              if (v !== null) onOperationChange(v || undefined);
+              if (v !== null) onEntityTypeChange(v || undefined);
             }}
             sx={toggleGroupSx}
           >
-            {OPERATION_TABS.map((t) => (
+            {ENTITY_TABS.map((t) => (
               <ToggleButton key={t.label} value={t.value}>
                 {t.label}
               </ToggleButton>
             ))}
           </ToggleButtonGroup>
-        )}
-      </Box>
+
+          {onOperationChange && (
+            <ToggleButtonGroup
+              value={operation ?? ""}
+              exclusive
+              size="small"
+              onChange={(_, v) => {
+                if (v !== null) onOperationChange(v || undefined);
+              }}
+              sx={toggleGroupSx}
+            >
+              {OPERATION_TABS.map((t) => (
+                <ToggleButton key={t.label} value={t.value}>
+                  {t.label}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          )}
+        </Box>
+      </Collapse>
 
       {/* List */}
       {isLoading ? (
@@ -184,6 +208,7 @@ export default function ProposalsView({
                 key={p.id}
                 proposal={p}
                 selected={p.id === selectedId}
+                showStatus={p.status !== status}
                 onSelect={() => onSelect?.(p.id)}
               />
             ) : (
@@ -215,26 +240,29 @@ export default function ProposalsView({
       <Box
         sx={{
           overflowY: "auto",
+          bgcolor: theme.tokens.surfaceLow,
           borderRight: "1px solid",
-          borderColor: "divider",
+          borderColor: `${theme.tokens.outlineVariant}55`,
         }}
       >
         {list}
       </Box>
-      <Box sx={{ overflowY: "auto", px: 3, py: 2 }}>
-        {selected ? (
-          <ProposalDetailView proposal={selected} adminMode={adminMode} />
-        ) : (
-          <EmptyState
-            icon={
-              <HowToVoteOutlinedIcon
-                sx={{ fontSize: 56, color: "text.disabled" }}
-              />
-            }
-            title="Select a proposal to review it."
-            py={10}
-          />
-        )}
+      <Box sx={{ overflowY: "auto", px: 4, py: 3 }}>
+        <Box sx={{ maxWidth: 880 }}>
+          {selected ? (
+            <ProposalDetailView proposal={selected} adminMode={adminMode} />
+          ) : (
+            <EmptyState
+              icon={
+                <HowToVoteOutlinedIcon
+                  sx={{ fontSize: 56, color: "text.disabled" }}
+                />
+              }
+              title="Select a proposal to review it."
+              py={10}
+            />
+          )}
+        </Box>
       </Box>
     </Box>
   );
