@@ -136,8 +136,8 @@ find your river? Add it").
 | `gauges` → `gauge_series` → `gauge_readings` | station → measurement type (level/discharge) → time series |
 | `descents`, `descent_sections` | a log entry and the sections it covers (one descent can span several) |
 | `proposals`, `proposal_votes` | community edit queue |
-| `comments` | free-form comments keyed by `(entity_type, entity_id)` - rivers, sections and features |
-| `images` | photo metadata keyed the same way (rivers today); the bytes are files under `MEDIA_DIR`, addressed by `storage_key` |
+| `comments` | notes keyed by `(entity_type, entity_id)` - rivers, sections and features - with a `category` and a moderation `status` |
+| `media` | photos, videos and linked write-ups keyed the same way (rivers today); an uploaded photo is a file under `MEDIA_DIR` addressed by `storage_key`, a video or blog is just an `external_url` |
 | `waterway_osm_elements` | cached OSM elements per waterway (centerline way fragments today, bank polygons later); serves `GET .../waterways/{id}/geometry` so river snapping skips live Overpass |
 
 ### Conventions
@@ -174,13 +174,42 @@ find your river? Add it").
   backfills; `DELETE` on the endpoint (admin) invalidates one river.
   Confluence routing uses `GET /geo/river-segments?line=&radius_m=` (a live
   server-side lookup for river segments around a corridor, not cached).
-- Photos of a river are uploaded to `POST /waterways/{id}/images` as
-  multipart (`file`, optional `caption`). The API decodes and re-encodes
-  every upload, which strips EXIF (phone photos carry GPS), caps the long
-  edge at 1600px and writes a 400px thumbnail beside it; decoding is also
-  the validation, so a file that is not really an image is rejected
-  whatever its `Content-Type` claimed. Files are served from `/media/{key}`
-  with immutable cache headers, and the uploader or an admin can delete
-  one. Because the bytes live outside Postgres, `pg_dump` is no longer a
-  complete backup - `MEDIA_DIR` needs its own.
+### Notes and media
+
+A comment is a **note with a category**, following the vocabulary
+[Riverzone](https://api.riverzone.eu/doc/v2/) uses for the same job: a tree
+across the channel (`danger_temporary`) is not a trip report (`info`), and
+the two must not read alike. The set is `urgent`, `danger_temporary`,
+`danger_cleared`, `danger_permanent`, `calibration`, `difficulty`,
+`current_conditions`, `regulations`, `logistics`, `info`.
+
+Notes also carry a moderation `status`: `ok`, `merged`, `outdated`, `spam`.
+`merged` is the useful one - an editor folded the note into curated data (a
+feature, a description), so it can leave the thread without being deleted.
+`spam` is filtered from every response; the others are returned so a client
+can fold them away. Only an admin can set it, via
+`PUT .../comments/{id}/status`.
+
+One media list covers uploads and links, as whitewater.guide's does:
+`kind` is `photo`, `video` or `blog`. A photo is a file we store; a video
+or blog is somebody else's URL. Items carry `copyright`, `license_name` and
+`license_url` - the same duty we already take for gauge sources - plus a
+`weight` for gallery order.
+
+`POST /waterways/{id}/media` takes multipart: `kind`, then either a `file`
+(photo) or a `url` (video, blog), with optional `caption`, `copyright`,
+`license_name`, `license_url` and `weight`. An uploaded photo is decoded and
+re-encoded, which strips EXIF (phone photos carry GPS), caps the long edge
+at 1600px and writes a 400px thumbnail beside it; decoding is also the
+validation, so a file that is not really an image is rejected whatever its
+`Content-Type` claimed. Files are served from `/media/{key}` with immutable
+cache headers.
+
+Photos can be posted **inside a note**: upload first, then create the
+comment with the resulting ids in `media_ids` (whitewater.guide's two-step,
+applied to notes). A note only adopts media the caller uploaded and nobody
+has claimed. Deleting the note deletes those files with it.
+
+Because the bytes live outside Postgres, `pg_dump` is no longer a complete
+backup - `MEDIA_DIR` needs its own.
 - Full ER diagram: [api/README.md](../api/README.md).

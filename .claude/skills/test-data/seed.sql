@@ -309,6 +309,22 @@ SELECT p.id, u.id, p.vote
 FROM (VALUES (9701, 1::smallint), (9703, 1::smallint), (9704, -1::smallint)) AS p(id, vote),
 LATERAL (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
 
+
+-- Notes on the river, one per category worth seeing in a thread: a hazard
+-- to lead with, a cleared one, conditions, logistics, and a merged note
+-- that a client should fold away.
+INSERT INTO comments (id, entity_type, entity_id, body, category, status, author_id, created_at)
+SELECT v.id, v.entity_type, v.entity_id, v.body, v.category, v.status, u.id, v.created_at
+FROM (VALUES
+  (9901, 'waterway', 9001, 'Tree across the channel just below the road bridge, river left is clear.', 'danger_temporary', 'ok', NOW() - INTERVAL '6 hours'),
+  (9902, 'waterway', 9001, 'The strainer at the S-bend was cut out last weekend.', 'danger_cleared', 'ok', NOW() - INTERVAL '2 days'),
+  (9903, 'waterway', 9001, 'Ran it at 85 cm, felt like a solid III+ rather than III.', 'difficulty', 'ok', NOW() - INTERVAL '3 days'),
+  (9904, 'waterway', 9001, 'Parking at the take-out is now paid, 4 EUR a day.', 'logistics', 'ok', NOW() - INTERVAL '5 days'),
+  (9905, 'waterway', 9001, 'New siphon on river right, marked it on the map.', 'danger_permanent', 'merged', NOW() - INTERVAL '9 days'),
+  (9906, 'water_section', 9102, 'Portage the weir on the left, the ramp on the right is undercut.', 'danger_permanent', 'ok', NOW() - INTERVAL '1 day')
+) AS v(id, entity_type, entity_id, body, category, status, created_at)
+CROSS JOIN (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
+
 -- The explicit 9xxx ids above bypass the id sequences. Bump them past the
 -- fixture range so rows created through the app get higher ids - otherwise
 -- they sort before the fixture rows (breaking "first range wins" defaults)
@@ -317,7 +333,7 @@ SELECT setval(pg_get_serial_sequence(t, 'id'), 10000, true)
 FROM unnest(ARRAY[
   'waterways', 'water_sections', 'features', 'feature_names',
   'section_names', 'gauges', 'gauge_series', 'feature_water_ranges',
-  'descents', 'proposals'
+  'descents', 'proposals', 'comments', 'media'
 ]) AS t;
 
 COMMIT;

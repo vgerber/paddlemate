@@ -5,7 +5,7 @@ pub mod features;
 pub mod follows;
 pub mod gauges;
 pub mod groups;
-pub mod images;
+pub mod media;
 pub mod osm_geometry;
 pub mod proposals;
 pub mod sections;

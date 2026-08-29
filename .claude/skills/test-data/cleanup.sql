@@ -2,6 +2,8 @@
 -- section_names and feature_names need no explicit delete: both cascade from
 -- their parent section and feature.
 BEGIN;
+-- media rows referencing a fixture comment cascade with it
+DELETE FROM comments WHERE id BETWEEN 9900 AND 9999;
 DELETE FROM proposal_votes WHERE proposal_id BETWEEN 9700 AND 9799;
 DELETE FROM proposals WHERE id BETWEEN 9700 AND 9799;
 DELETE FROM descents WHERE id BETWEEN 9200 AND 9299;

@@ -39,6 +39,7 @@ Remove only: run just `cleanup.sql`.
 | Gauge "Test Gauge" + series | 9301 / 9401, 9402 | water_level in cm; 9401 has a week of 2-hourly sinusoidal readings (55-115, latest ~85), 9402 has none |
 | Water ranges | 9601-9608 | thresholds around the ~85 cm reading so the section list shows every chip variant (see below); section defaults sit on the whitewater features; 9607/9608 sit on the Lower Test rapid/hole (same series as the 9601 default) so selecting them in the timeline swaps the chart thresholds |
 | Descents | 9201-9204 | see below; all owned by the first user |
+| Notes (comments) | 9901-9906 | one per interesting category on Test River, plus a section note and a `merged` one a client should fold away |
 | Proposals | 9701-9709 | one per review case, placed so the review map has context (see below) |
 | API token `pm_testtoken123` | name `test-data` | for authed curl: `-H "X-Api-Key: pm_testtoken123"` |
 

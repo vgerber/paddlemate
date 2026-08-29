@@ -2,7 +2,7 @@ mod comments;
 mod crud;
 mod features;
 mod geometry;
-mod images;
+mod media;
 mod sections;
 mod water_ranges;
 mod water_status;
@@ -63,21 +63,15 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
         )
         // Section CRUD
         .api_route(
-            "/{waterway_id}/images",
-            get_with(
-                images::list_waterway_images,
-                images::list_waterway_images_docs,
-            )
-            .post_with(
-                images::upload_waterway_image,
-                images::upload_waterway_image_docs,
-            ),
+            "/{waterway_id}/media",
+            get_with(media::list_waterway_media, media::list_waterway_media_docs)
+                .post_with(media::add_waterway_media, media::add_waterway_media_docs),
         )
         .api_route(
-            "/{waterway_id}/images/{image_id}",
+            "/{waterway_id}/media/{media_id}",
             delete_with(
-                images::delete_waterway_image,
-                images::delete_waterway_image_docs,
+                media::delete_waterway_media,
+                media::delete_waterway_media_docs,
             ),
         )
         .api_route(
@@ -89,6 +83,13 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
             .post_with(
                 comments::create_waterway_comment,
                 comments::create_waterway_comment_docs,
+            ),
+        )
+        .api_route(
+            "/{waterway_id}/comments/{comment_id}/status",
+            put_with(
+                comments::moderate_waterway_comment,
+                comments::moderate_waterway_comment_docs,
             ),
         )
         .api_route(

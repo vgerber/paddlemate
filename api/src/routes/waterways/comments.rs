@@ -13,13 +13,16 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
-        comment::{Comment, CommentId, CreateCommentRequest, UpdateCommentRequest},
+        comment::{
+            Comment, CommentCategory, CommentId, CreateCommentRequest, ModerateCommentRequest,
+            UpdateCommentRequest,
+        },
         path_params::{
             FeatureCommentPath, FeaturePath, SectionCommentPath, SectionPath, WaterwayCommentPath,
             WaterwayPath,
         },
     },
-    query::comments,
+    query::{comments, media},
     state::AppState,
 };
 
@@ -58,11 +61,27 @@ pub async fn create_waterway_comment(
         "waterway",
         waterway_id,
         &body.body,
+        body.category.unwrap_or(CommentCategory::Info),
         token.user_id(),
     )
     .await
     {
-        Ok(comment) => (StatusCode::CREATED, Json(comment)).into_response(),
+        Ok(mut comment) => {
+            if let Err(err) = media::attach_media_to_comment(
+                &app.pg_pool,
+                comment.id,
+                &body.media_ids,
+                token.user_id(),
+            )
+            .await
+            {
+                tracing::error!("Error attaching media to comment {}: {}", comment.id, err);
+            }
+            comment.media = media::list_media_for_comments(&app.pg_pool, &[comment.id])
+                .await
+                .unwrap_or_default();
+            (StatusCode::CREATED, Json(comment)).into_response()
+        }
         Err(err) => {
             tracing::error!("Error creating comment on river {}: {}", waterway_id, err);
             ApiError::internal().into_response()
@@ -89,7 +108,15 @@ pub async fn update_waterway_comment(
         None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
-    match comments::update_comment(&app.pg_pool, comment_id, &body.body, token.user_id()).await {
+    match comments::update_comment(
+        &app.pg_pool,
+        comment_id,
+        &body.body,
+        body.category,
+        token.user_id(),
+    )
+    .await
+    {
         Ok(Some(comment)) => Json(comment).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
@@ -118,6 +145,11 @@ pub async fn delete_waterway_comment(
         None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
+    // Read the keys before the rows cascade away with the note.
+    let keys = media::storage_keys_for_comment(&app.pg_pool, comment_id)
+        .await
+        .unwrap_or_default();
+
     match comments::delete_comment(
         &app.pg_pool,
         comment_id,
@@ -126,7 +158,12 @@ pub async fn delete_waterway_comment(
     )
     .await
     {
-        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(true) => {
+            for key in keys {
+                crate::media::delete_image(&key).await;
+            }
+            StatusCode::NO_CONTENT.into_response()
+        }
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
             tracing::error!("Error deleting comment {}: {}", comment_id, err);
@@ -139,6 +176,39 @@ doc_fn!(delete_waterway_comment_docs, op =>
     op.description("Delete a river comment (author or admin)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Comment not found"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Comments")
+);
+
+pub async fn moderate_waterway_comment(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path(WaterwayCommentPath { comment_id, .. }): Path<WaterwayCommentPath>,
+    Json(body): Json<ModerateCommentRequest>,
+) -> impl IntoApiResponse {
+    let Some(Extension(token)) = auth else {
+        return ApiError::unauthorized("Authentication required").into_response();
+    };
+    if !token.is_server_admin() {
+        return ApiError::forbidden("Admin access required").into_response();
+    }
+
+    match comments::moderate_comment(&app.pg_pool, comment_id, body.status).await {
+        Ok(Some(comment)) => Json(comment).into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
+        Err(err) => {
+            tracing::error!("Error moderating comment {}: {}", comment_id, err);
+            ApiError::internal().into_response()
+        }
+    }
+}
+
+doc_fn!(moderate_waterway_comment_docs, op =>
+    op.description("Set a river note's status (admin). 'merged' means the note was folded into curated data and can drop out of the thread; 'spam' hides it from everyone.")
+        .response::<200, Json<Comment>>()
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Forbidden"))
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Comment not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Comments")
@@ -180,6 +250,7 @@ pub async fn create_section_comment(
         "water_section",
         section_id,
         &body.body,
+        body.category.unwrap_or(CommentCategory::Info),
         token.user_id(),
     )
     .await
@@ -212,7 +283,15 @@ pub async fn update_section_comment(
         None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
-    match comments::update_comment(&app.pg_pool, comment_id, &body.body, token.user_id()).await {
+    match comments::update_comment(
+        &app.pg_pool,
+        comment_id,
+        &body.body,
+        body.category,
+        token.user_id(),
+    )
+    .await
+    {
         Ok(Some(comment)) => Json(comment).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
@@ -305,6 +384,7 @@ pub async fn create_feature_comment(
         "feature",
         feature_id,
         &body.body,
+        body.category.unwrap_or(CommentCategory::Info),
         token.user_id(),
     )
     .await
@@ -337,7 +417,15 @@ pub async fn update_feature_comment(
         None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
-    match comments::update_comment(&app.pg_pool, comment_id, &body.body, token.user_id()).await {
+    match comments::update_comment(
+        &app.pg_pool,
+        comment_id,
+        &body.body,
+        body.category,
+        token.user_id(),
+    )
+    .await
+    {
         Ok(Some(comment)) => Json(comment).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
