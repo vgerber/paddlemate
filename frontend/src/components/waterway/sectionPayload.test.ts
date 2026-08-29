@@ -7,11 +7,11 @@ const naming = (overrides: Partial<SectionNamingValue> = {}) => ({
   langCode: "en",
   name: "  Lower Test  ",
   description: "",
-  regions: " Ötztal , Tirol ,",
-  country: "",
   translations: [],
   ...overrides,
 });
+
+const REGION = { regions: " Ötztal , Tirol ,", country: "" };
 
 const LINE: [number, number][] = [
   [11, 47],
@@ -33,7 +33,7 @@ const draft = (overrides: Partial<SectionFeatureDraft> = {}) =>
 
 describe("buildSectionPayload", () => {
   test("trims naming fields and nulls the empty ones", () => {
-    const body = buildSectionPayload(naming(), LINE, []);
+    const body = buildSectionPayload(naming(), REGION, LINE, []);
     expect(body.name).toBe("Lower Test");
     expect(body.regions).toEqual(["Ötztal", "Tirol"]);
     expect(body.country).toBeNull();
@@ -44,6 +44,7 @@ describe("buildSectionPayload", () => {
   test("stores the primary naming as a tagged translation too", () => {
     const body = buildSectionPayload(
       naming({ description: " main desc " }),
+      REGION,
       LINE,
       [],
     );
@@ -62,6 +63,7 @@ describe("buildSectionPayload", () => {
           { id: "t2", langCode: "fr", name: "  ", description: "" },
         ],
       }),
+      REGION,
       LINE,
       [],
     );
@@ -74,7 +76,7 @@ describe("buildSectionPayload", () => {
   });
 
   test("full-section features get the final line, others keep their geometry", () => {
-    const body = buildSectionPayload(naming(), LINE, [
+    const body = buildSectionPayload(naming(), REGION, LINE, [
       draft(),
       draft({ feature_type: "whitewater", used_section_line: true }),
     ]);
@@ -91,6 +93,7 @@ describe("buildSectionPayload", () => {
   test("picked put-in and take-out become features at their points", () => {
     const body = buildSectionPayload(
       naming(),
+      REGION,
       LINE,
       [],
       { lat: 47.0, lon: 11.0 },
@@ -112,6 +115,7 @@ describe("buildSectionPayload", () => {
   test("does not duplicate an access point the user already drafted", () => {
     const body = buildSectionPayload(
       naming(),
+      REGION,
       LINE,
       [draft({ feature_type: "put_in" })],
       { lat: 47.0, lon: 11.0 },

@@ -73,6 +73,7 @@ function SuggestSectionPage() {
     createSection.mutate(
       buildSectionPayload(
         wizard.naming,
+        wizard.regionInfo,
         coordinates,
         wizard.draftFeatures,
         putIn,
@@ -204,6 +205,12 @@ function SuggestSectionPage() {
 
           {step === 2 && (
             <SectionFeaturesStep
+              regionCountry={{
+                regions: wizard.regionInfo.regions,
+                country: wizard.regionInfo.country,
+                loading: wizard.regionLookup === "loading",
+                onChange: wizard.setRegionInfo,
+              }}
               finalCoords={finalCoords}
               nearPoint={
                 finalCoords

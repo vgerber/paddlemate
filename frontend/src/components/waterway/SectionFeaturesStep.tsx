@@ -1,5 +1,7 @@
 import CheckIcon from "@mui/icons-material/Check";
 import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import TextField from "@mui/material/TextField";
 import { useMemo, useRef, useState } from "react";
 import { PUT_IN_COLOR, TAKE_OUT_COLOR } from "@/components/map/LocationPin";
 import NumberBadge from "@/components/NumberBadge";
@@ -27,6 +29,13 @@ interface SectionFeaturesStepProps {
   /** Map-driven geometry drawing state, owned by the wizard page. */
   geometry: GeometryPicking;
   defaultLangCode: string;
+  /** Regions/country derived from OSM for the line, editable here. */
+  regionCountry: {
+    regions: string;
+    country: string;
+    loading: boolean;
+    onChange: (patch: { regions?: string; country?: string }) => void;
+  };
 }
 
 /** Features step of the suggest-section wizard: the section's fixed
@@ -41,6 +50,7 @@ export default function SectionFeaturesStep({
   onRemoveDraft,
   geometry,
   defaultLangCode,
+  regionCountry,
 }: SectionFeaturesStepProps) {
   const submitRef = useRef<(() => void) | null>(null);
   const [canAdd, setCanAdd] = useState(false);
@@ -66,6 +76,35 @@ export default function SectionFeaturesStep({
 
   return (
     <>
+      {/* Region and country, derived from OSM for the picked line - shown
+          here so they can be checked and adjusted before submitting */}
+      <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
+        <TextField
+          label="Regions"
+          value={regionCountry.regions}
+          onChange={(e) => regionCountry.onChange({ regions: e.target.value })}
+          helperText={
+            regionCountry.loading
+              ? "Looking up regions from OpenStreetMap…"
+              : "From OpenStreetMap - comma-separated, most specific first"
+          }
+          fullWidth
+          slotProps={{
+            input: {
+              endAdornment: regionCountry.loading ? (
+                <CircularProgress size={16} />
+              ) : undefined,
+            },
+          }}
+        />
+        <TextField
+          label="Country"
+          value={regionCountry.country}
+          onChange={(e) => regionCountry.onChange({ country: e.target.value })}
+          sx={{ maxWidth: 110 }}
+        />
+      </Box>
+
       {/* Fixed entries: the section's own endpoints (derived from the line,
           not submitted as separate features) */}
       {finalCoords &&

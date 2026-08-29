@@ -3,44 +3,30 @@
  * OpenStreetMap.
  *
  * Design decision: OpenStreetMap is the single source of truth for river
- * geometry - we never store river courses ourselves. Geometry is fetched
- * live from Overpass in the browser, so every user spends their own
- * per-IP quota instead of funneling through one server IP. A section only
- * keeps the snapped line it was authored with, as a snapshot.
+ * geometry - we never store river courses as our own data, only the snapped
+ * line a section was authored with, as a snapshot. All OSM way geometry
+ * arrives through the API (`waterwayGeometryApi`, `riverSegmentsApi`),
+ * which caches it
+ * server-side and talks to Overpass itself - the browser never queries
+ * Overpass.
  *
  * How the snapping works:
  *
- * 1. Fetch every OSM way whose name matches the section's waterway from the
- *    Overpass API (`fetchOsmRiverWays`). OSM stores a river as many short
- *    way fragments in arbitrary order.
+ * 1. The API delivers the waterway's OSM way fragments (many short pieces
+ *    in arbitrary order).
  * 2. Stitch those fragments into one continuous polyline (`stitchWays`):
  *    grow chains where fragment endpoints touch exactly, bridge gaps of up
  *    to ~50 m (splits at weirs or renamed pieces), and keep the longest
- *    resulting chain - mirroring the linemerge + longest-line selection in
- *    scripts/enrich_geometry.py.
+ *    resulting chain.
  * 3. Project the put-in and take-out onto that polyline and cut out the part
  *    between them (`snapSection`).
  *
  * When a point lies on a *different* river - the take-out downstream of a
  * confluence, e.g. Ötztaler Ache → Inn - the named river can never reach it.
- * For that case `routeSection` builds a graph from all river ways in the
- * area (fetched with `fetchOsmNetworkAroundLine` in a corridor along the
- * named river's course) and finds the shortest path through the river
- * network from put-in to take-out.
+ * For that case `routeSection` builds a graph from all river ways in a
+ * corridor along the course (fetched via `riverSegmentsApi`) and finds the
+ * shortest path through the river network from put-in to take-out.
  */
-
-/**
- * Public Overpass instances, tried in order - the main instance rate-limits
- * aggressively (406/429/504), so a failed request falls through to a mirror.
- */
-const OVERPASS_ENDPOINTS = [
-  "https://overpass-api.de/api/interpreter",
-  "https://overpass.private.coffee/api/interpreter",
-  "https://overpass.kumi.systems/api/interpreter",
-];
-
-/** Per-attempt fetch timeout so a hung mirror doesn't block the rotation. */
-const OVERPASS_TIMEOUT_MS = 40_000;
 
 /** Rough conversion at mid latitudes; fine for the distances involved here. */
 const METERS_PER_DEGREE = 111_320;
@@ -67,187 +53,6 @@ export interface BoundingBox {
   north: number;
   east: number;
 }
-
-interface OverpassNode {
-  lon: number;
-  lat: number;
-}
-
-export interface OverpassElement {
-  type: string;
-  tags?: Record<string, string>;
-  geometry?: OverpassNode[];
-}
-
-interface OverpassResponse {
-  elements: OverpassElement[];
-}
-
-// ---------------------------------------------------------------------------
-// Overpass API
-// ---------------------------------------------------------------------------
-
-/** Pause between retry attempts within a round. */
-const RETRY_GAP_MS = 2_000;
-
-/** Pause before the second retry round - the per-IP rate limiter frees a
- * slot after ~20 s. */
-const RATE_LIMIT_COOLDOWN_MS = 20_000;
-
-/** Minimum gap between our requests, to stay clear of the per-IP slot limit. */
-const REQUEST_GAP_MS = 2_000;
-
-function sleep(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
-let overpassQueue: Promise<unknown> = Promise.resolve();
-let lastRequestFinishedAt = 0;
-
-/**
- * Run `task` after all previously queued Overpass work, with a minimum gap
- * between requests. The public instances allow only ~2 slots per IP - and an
- * aborted fetch still occupies its slot server-side, so requests must never
- * run in parallel. Tasks whose `signal` was aborted while still queued are
- * skipped entirely (nothing is sent).
- */
-function enqueueOverpass<T>(
-  task: () => Promise<T>,
-  signal?: AbortSignal,
-): Promise<T> {
-  const run = overpassQueue.then(async () => {
-    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-    const gap = lastRequestFinishedAt + REQUEST_GAP_MS - Date.now();
-    if (gap > 0) await sleep(gap);
-    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-    try {
-      return await task();
-    } finally {
-      lastRequestFinishedAt = Date.now();
-    }
-  });
-  // Keep the queue alive when a task fails - the failure is still
-  // propagated to the caller through `run`.
-  overpassQueue = run.catch(() => undefined);
-  return run;
-}
-
-export async function runOverpass(
-  query: string,
-  signal?: AbortSignal,
-): Promise<OverpassElement[]> {
-  return enqueueOverpass(async () => {
-    let lastError: unknown = null;
-    // Two rounds over the endpoints - the main instance often rejects a
-    // request (406/429/504); a slot usually frees up within ~20 s.
-    for (let round = 0; round < 2; round++) {
-      for (const url of OVERPASS_ENDPOINTS) {
-        const isFirstOfRound = url === OVERPASS_ENDPOINTS[0];
-        if (round > 0 && isFirstOfRound) {
-          await sleep(RATE_LIMIT_COOLDOWN_MS);
-        } else if (round > 0 || !isFirstOfRound) {
-          await sleep(RETRY_GAP_MS);
-        }
-        if (signal?.aborted) throw lastError ?? new Error("aborted");
-        const timeout = AbortSignal.timeout(OVERPASS_TIMEOUT_MS);
-        try {
-          const response = await fetch(url, {
-            method: "POST",
-            body: new URLSearchParams({ data: query }),
-            // Identify the app (OSM usage policy). Browsers ignore this and
-            // send their own UA; overpass-api.de rejects some default UAs.
-            headers: { "User-Agent": "paddlemate/1.0 (river snapping)" },
-            signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
-          });
-          if (!response.ok) {
-            throw new Error(`Overpass HTTP ${response.status}`);
-          }
-          const data = (await response.json()) as OverpassResponse;
-          return data.elements;
-        } catch (error) {
-          if (signal?.aborted) throw error;
-          lastError = error;
-        }
-      }
-    }
-    throw lastError;
-  }, signal);
-}
-
-function elementsToWays(elements: OverpassElement[]): Coordinate[][] {
-  return elements
-    .filter(
-      (element) => element.type === "way" && Array.isArray(element.geometry),
-    )
-    .map((element) =>
-      (element.geometry ?? []).map((node): Coordinate => [node.lon, node.lat]),
-    )
-    .filter((way) => way.length >= 2);
-}
-
-function escapeOverpassRegex(name: string): string {
-  return name.replace(/[()+.\\]/g, (character) => `\\${character}`);
-}
-
-/**
- * Fetch the raw (unstitched) OSM way fragments of the river or stream named
- * `name` within `boundingBox`.
- */
-export async function fetchOsmRiverWays(
-  name: string,
-  boundingBox: BoundingBox,
-  signal?: AbortSignal,
-): Promise<Coordinate[][]> {
-  const safeName = escapeOverpassRegex(name);
-  const { south, west, north, east } = boundingBox;
-  const query = `[out:json][timeout:30];
-(
-  way["waterway"~"river|stream"]["name"~"${safeName}",i](${south},${west},${north},${east});
-  way["waterway"~"river|stream"]["name:de"~"${safeName}",i](${south},${west},${north},${east});
-);
-out geom;`;
-  return elementsToWays(await runOverpass(query, signal));
-}
-
-/**
- * Fetch the river named `name` within `boundingBox` and stitch it into a
- * single polyline. Returns `null` if no ways were found or they could not
- * be stitched.
- */
-export async function fetchOsmRiver(
-  name: string,
-  boundingBox: BoundingBox,
-  signal?: AbortSignal,
-): Promise<Coordinate[] | null> {
-  return stitchWays(await fetchOsmRiverWays(name, boundingBox, signal));
-}
-
-/**
- * Fetch all `waterway=river` ways within `radiusMeters` of the polyline
- * `line` - the raw material for routing across confluences with
- * `routeSection`. A corridor along the (known) river course is far cheaper
- * than a bounding rectangle, which times out on Overpass (504) for long
- * sections. Canals are excluded so shortest-path routing cannot shortcut
- * through them; streams are excluded to keep the payload small (the named
- * fetch already covers a source river tagged as a stream).
- */
-export async function fetchOsmNetworkAroundLine(
-  line: Coordinate[],
-  radiusMeters: number,
-  signal?: AbortSignal,
-): Promise<Coordinate[][]> {
-  const lineString = line
-    .map(([longitude, latitude]) => `${latitude},${longitude}`)
-    .join(",");
-  const query = `[out:json][timeout:30];
-way["waterway"="river"](around:${Math.round(radiusMeters)},${lineString});
-out geom qt;`;
-  return elementsToWays(await runOverpass(query, signal));
-}
-
-// ---------------------------------------------------------------------------
-// Geometry helpers
-// ---------------------------------------------------------------------------
 
 /** Approximate distance in meters between two coordinates. */
 export function distanceInMeters(a: Coordinate, b: Coordinate): number {

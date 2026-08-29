@@ -265,6 +265,7 @@ code. Component rendering is not tested; the UI is verified by running it.
 | `RUN_MIGRATIONS` | `true` | Set to `false` to apply migrations as a separate step instead of on boot |
 | `CORS_ALLOWED_ORIGINS` | any origin | Comma separated allowlist; set it in production |
 | `RATE_LIMIT_PER_SECOND` | `20` | Per-caller budget, burst is five times this; `0` disables |
+| `OVERPASS_URLS` | public instances | Comma-separated Overpass endpoints tried in order; production puts the self-hosted instance (`deploy/overpass/`) first |
 | `SEARCH_WORD_SIMILARITY_THRESHOLD` | `0.5` | How close a misspelling must be to still match a name |
 
 ### Search

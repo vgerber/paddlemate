@@ -166,6 +166,8 @@ pub async fn review_proposal(
         Ok(Some(p)) => {
             // Approval may have created + activated a gauge; wake the poller.
             app.gauge_wake.notify_waiters();
+            // A new section may need its regions derived.
+            app.region_wake.notify_waiters();
             Json(p).into_response()
         }
         Ok(None) => ApiError::not_found("Not found").into_response(),

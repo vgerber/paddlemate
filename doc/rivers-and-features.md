@@ -133,7 +133,7 @@ find your river? Add it").
 | `gauges` → `gauge_series` → `gauge_readings` | station → measurement type (level/discharge) → time series |
 | `descents`, `descent_sections` | a log entry and the sections it covers (one descent can span several) |
 | `proposals`, `proposal_votes` | community edit queue |
-| `waterway_osm_elements` | cached OSM elements per waterway (centerline way fragments today, bank polygons later); serves `GET .../waterways/{id}/osm-geometry` so river snapping skips live Overpass |
+| `waterway_osm_elements` | cached OSM elements per waterway (centerline way fragments today, bank polygons later); serves `GET .../waterways/{id}/geometry` so river snapping skips live Overpass |
 
 ### Conventions
 
@@ -143,16 +143,30 @@ find your river? Add it").
 - The map falls back to the section line's endpoints when no `put_in` /
   `take_out` features exist (`frontend/src/components/map/mapLayers.ts`).
 - Section water status endpoint: `.../sections/{id}/water-status`.
-- Section regions come from OSM: the suggest-section wizard prefills them
-  client-side once the line is picked (`frontend/src/lib/deriveRegions.ts`),
-  and `cargo run --bin derive_section_regions` backfills sections whose list
-  is empty (hand-edited lists are never overwritten). Valleys are OSM lines,
-  not polygons, so both use proximity (2 km) for valley names and area
-  containment for districts/states/mountain ranges.
-- River centerlines for snapping are cached server-side:
-  `cargo run --bin fetch_osm_geometry` stores each waterway's OSM way
-  fragments (query bounded by its sections' bbox), and the wizard seeds its
-  snap cache from `GET .../waterways/{id}/osm-geometry` - live Overpass runs
-  only for rivers not cached yet. `DELETE` on the endpoint (admin)
-  invalidates one river.
+- Section regions and country come from OSM: the wizard's last step fetches
+  a suggestion (`GET /geo/regions?line=`, which returns valley, district,
+  state, range and country entries most specific first) into editable fields, and a
+  background worker in the API (`api/src/regions.rs`, woken after a section
+  create or proposal approval, newest sections first) fills both wherever
+  they are still empty. Hand-edited values are never overwritten.
+  `cargo run --bin derive_section_regions` remains for bulk backfills.
+  Valleys are OSM lines, not polygons, so derivation uses proximity (2 km)
+  for valley names and area containment for districts/states/mountain ranges
+  and the country (admin_level 2 ISO code); with several sample points a
+  valley needs at least two of them to agree, so side gorges near a single
+  point don't flood the list.
+- The browser never queries Overpass; all OSM geometry goes through the
+  API. The API itself prefers the self-hosted rivers-only Overpass instance
+  (`deploy/overpass/` - the OSM planet filtered to waterways, river areas,
+  admin boundaries, valleys and mountain regions, served by
+  `wiktorn/overpass-api` on the NAS), configured via `OVERPASS_URLS`; the
+  public instances remain fallbacks. River centerlines are cached server-side per waterway:
+  `GET .../waterways/{id}/geometry` fills a miss on demand with one
+  server-side Overpass fetch (serialized, mirror fallbacks, IPv4-bound) -
+  bounded by the sections' bbox, or by the request's `bbox` param for a
+  waterway without sections - and extends the cache when a requested area
+  falls outside what is stored. `cargo run --bin fetch_osm_geometry` bulk
+  backfills; `DELETE` on the endpoint (admin) invalidates one river.
+  Confluence routing uses `GET /geo/river-segments?line=&radius_m=` (a live
+  server-side lookup for river segments around a corridor, not cached).
 - Full ER diagram: [api/README.md](../api/README.md).

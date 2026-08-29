@@ -122,6 +122,7 @@ pub async fn create_section(
                 Ok(()) => {
                     // A feature's range may have created + activated a gauge.
                     app.gauge_wake.notify_waiters();
+                    app.region_wake.notify_waiters();
                     (StatusCode::CREATED, Json(section)).into_response()
                 }
                 Err(err) => {

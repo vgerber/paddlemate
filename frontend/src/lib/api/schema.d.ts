@@ -321,19 +321,19 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/waterways/{waterway_id}/osm-geometry": {
+    "/api/v1/waterways/{waterway_id}/geometry": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** @description Cached OSM elements of a waterway (centerline way fragments, later bank areas). 404 when nothing is cached - the client should fall back to a live Overpass query. */
-        get: operations["get_osm_geometry"];
+        /** @description Cached OSM elements of a waterway (centerline way fragments, later bank areas). A centerline miss is filled on demand with one server-side Overpass fetch when the waterway has sections; 404 when nothing could be cached - the client should fall back to a live Overpass query. */
+        get: operations["get_waterway_geometry"];
         put?: never;
         post?: never;
         /** @description Invalidate a waterway's cached OSM geometry (admin only); the next backfill run re-fetches it */
-        delete: operations["delete_osm_geometry"];
+        delete: operations["delete_waterway_geometry"];
         options?: never;
         head?: never;
         patch?: never;
@@ -851,6 +851,40 @@ export interface paths {
         head?: never;
         /** @description Partially update a descent (owner only) */
         patch: operations["patch_descent"];
+        trace?: never;
+    };
+    "/api/v1/geo/regions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Regions containing the given line - valley, district, state, mountain range and country, most specific first. Best effort: an empty list means nothing was found or the upstream OSM service was unreachable. */
+        get: operations["list_regions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/geo/river-segments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description River line segments within a radius of the given corridor line, for routing a section across confluences. 404 when the upstream OSM service is unreachable. */
+        get: operations["list_river_segments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/proposals": {
@@ -1684,10 +1718,6 @@ export interface components {
         };
         /** @description What an OSM element represents for a waterway. */
         OsmElementKind: "centerline" | "bank";
-        OsmGeometryQuery: {
-            /** @description Element kind filter: "centerline" or "bank". Omitted = all kinds. */
-            kind?: string | null;
-        };
         PaginatedResponse_for_Descent: {
             items: components["schemas"]["Descent"][];
             /** Format: int64 */
@@ -1810,6 +1840,23 @@ export interface components {
             /** Format: date-time */
             to?: string | null;
         };
+        /** @description One named region a section lies in. */
+        Region: {
+            kind: components["schemas"]["RegionKind"];
+            name: string;
+        };
+        /**
+         * @description How specific a region name is. Ordered most specific first, which is also
+         *      the order regions are returned and stored in.
+         */
+        RegionKind: "valley" | "district" | "state" | "range" | "country";
+        RegionQuery: {
+            /**
+             * @description The line to look up, as "lon,lat;lon,lat;..." (start, middle and end
+             *      of a section are enough).
+             */
+            line: string;
+        };
         /** @description Request body for approving or rejecting a proposal */
         ReviewRequest: {
             review_note?: string | null;
@@ -1818,6 +1865,15 @@ export interface components {
         RevokeTokenPath: {
             /** Format: int64 */
             token_id: number;
+        };
+        RiverSegmentQuery: {
+            /** @description Corridor polyline as "lon,lat;lon,lat;...". */
+            line: string;
+            /**
+             * Format: double
+             * @description Corridor radius in meters (100 - 20000, default 5000).
+             */
+            radius_m?: number | null;
         };
         Section: {
             description?: string | null;
@@ -2177,6 +2233,16 @@ export interface components {
              */
             radius_km?: number | null;
         };
+        WaterwayGeometryQuery: {
+            /**
+             * @description "south,west,north,east" area of interest. Bounds the on-demand fetch
+             *      for a waterway without sections, and extends the cache when the area
+             *      falls outside what is cached.
+             */
+            bbox?: string | null;
+            /** @description Element kind filter: "centerline" or "bank". Omitted = all kinds. */
+            kind?: string | null;
+        };
         /** @description A waterway as returned by search, carrying what matched the query. */
         WaterwayListItem: {
             description?: string | null;
@@ -2261,11 +2327,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-08-19T19:13:54.944249886Z",
-                     *         "expires_at": "2026-11-17T19:13:54.944252286Z",
+                     *         "created_at": "2026-08-29T05:45:45.905124829Z",
+                     *         "expires_at": "2026-11-27T05:45:45.905127569Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-08-19T19:13:54.944263346Z",
+                     *         "last_used_at": "2026-08-29T05:45:45.905132289Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -2296,8 +2362,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-08-19T19:13:54.944459836Z",
-                     *       "expires_at": "2026-11-17T19:13:54.944460216Z",
+                     *       "created_at": "2026-08-29T05:45:45.905346048Z",
+                     *       "expires_at": "2026-11-27T05:45:45.905346438Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -3223,9 +3289,15 @@ export interface operations {
             };
         };
     };
-    get_osm_geometry: {
+    get_waterway_geometry: {
         parameters: {
             query?: {
+                /**
+                 * @description "south,west,north,east" area of interest. Bounds the on-demand fetch
+                 *      for a waterway without sections, and extends the cache when the area
+                 *      falls outside what is cached.
+                 */
+                bbox?: string | null;
                 /** @description Element kind filter: "centerline" or "bank". Omitted = all kinds. */
                 kind?: string | null;
             };
@@ -3257,7 +3329,7 @@ export interface operations {
             };
         };
     };
-    delete_osm_geometry: {
+    delete_waterway_geometry: {
         parameters: {
             query?: never;
             header?: never;
@@ -5321,6 +5393,82 @@ export interface operations {
                 };
             };
             /** @description Not found or not the owner */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_regions: {
+        parameters: {
+            query: {
+                /**
+                 * @description The line to look up, as "lon,lat;lon,lat;..." (start, middle and end
+                 *      of a section are enough).
+                 */
+                line: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Region"][];
+                };
+            };
+            /** @description Bad line */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_river_segments: {
+        parameters: {
+            query: {
+                /** @description Corridor polyline as "lon,lat;lon,lat;...". */
+                line: string;
+                /** @description Corridor radius in meters (100 - 20000, default 5000). */
+                radius_m?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Geometry"][];
+                };
+            };
+            /** @description Bad line or radius */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Lookup unavailable */
             404: {
                 headers: {
                     [name: string]: unknown;

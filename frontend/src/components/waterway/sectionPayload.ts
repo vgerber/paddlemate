@@ -19,6 +19,7 @@ interface Point {
  * wizard. */
 export function buildSectionPayload(
   naming: SectionNamingValue,
+  regionInfo: { regions: string; country: string },
   coordinates: [number, number][],
   draftFeatures: SectionFeatureDraft[],
   putIn?: Point | null,
@@ -60,11 +61,13 @@ export function buildSectionPayload(
 
   return {
     name: naming.name.trim(),
-    regions: naming.regions
+    // Derived from OSM on the features step; empty values are filled by
+    // the server's region worker after creation
+    regions: regionInfo.regions
       .split(",")
       .map((r) => r.trim())
       .filter(Boolean),
-    country: naming.country.trim() || null,
+    country: regionInfo.country.trim() || null,
     description: naming.description.trim() || null,
     location: { type: "LineString", coordinates },
     // The primary entry is stored as a tagged localization too - the

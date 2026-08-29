@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE water_sections\n             SET regions = $1,\n                 country = COALESCE(NULLIF(country, ''), $2),\n                 updated_at = NOW()\n             WHERE id = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a069546a5284e7547fc76f0b203765bde4a15f1d4868f34625fe42f002351b58"
+}

@@ -9,8 +9,7 @@ import {
 } from "@/components/waterway/SectionNamingForm";
 import type { SectionFeatureDraft } from "@/components/waterway/SuggestFeatureForm";
 import { toPseudoFeature } from "@/components/waterway/section-details/utils";
-import type { Feature, SectionWithFeatures } from "@/lib/api";
-import { deriveRegions } from "@/lib/deriveRegions";
+import { type Feature, regionsApi, type SectionWithFeatures } from "@/lib/api";
 import { downstreamDot, lineCoords } from "@/lib/geo";
 import { useRiverSnap } from "@/lib/hooks/useRiverSnap";
 import type { BoundingBox, Coordinate } from "@/lib/riverSnap";
@@ -88,6 +87,22 @@ export function useSectionWizardState(
   const hasLocation = putIn != null && takeOut != null;
   const snapActive = lineSource === "snap" && snap.status === "done";
 
+  // Region and country, derived server-side from the section line once the
+  // features step is reached, shown there as editable fields. A hand-edited
+  // value is never overwritten by a late lookup.
+  const [regionInfo, setRegionInfoState] = useState({
+    regions: "",
+    country: "",
+  });
+  const [regionLookup, setRegionLookup] = useState<
+    "idle" | "loading" | "done" | "failed"
+  >("idle");
+  const regionTouched = useRef(false);
+  const setRegionInfo = (patch: Partial<typeof regionInfo>) => {
+    regionTouched.current = true;
+    setRegionInfoState((prev) => ({ ...prev, ...patch }));
+  };
+
   const finalCoords: Coordinate[] | null = useMemo(
     () =>
       lineSource === "snap" &&
@@ -103,33 +118,42 @@ export function useSectionWizardState(
     [lineSource, snap.snappedCoords, putIn, takeOut],
   );
 
-  // Prefill the regions field from OSM once a section line exists (valley,
-  // district, state - most specific first). Only fills an empty field, so a
-  // hand-edited list is never overwritten; re-picking the line re-derives
-  // only while the field is still untouched.
-  const namingRef = useRef(naming);
-  namingRef.current = naming;
+  // Derive once per line when the features step is reached - three sample
+  // points (start, middle, end) are all the server needs.
+  const derivedForCoords = useRef<Coordinate[] | null>(null);
   useEffect(() => {
-    if (!hasLocation || !finalCoords || namingRef.current.regions.trim()) {
-      return;
-    }
+    if (step !== 2 || !finalCoords || finalCoords.length < 2) return;
+    if (derivedForCoords.current === finalCoords) return;
+    derivedForCoords.current = finalCoords;
+    const samples = [
+      finalCoords[0],
+      finalCoords[Math.floor(finalCoords.length / 2)],
+      finalCoords[finalCoords.length - 1],
+    ];
     const controller = new AbortController();
-    deriveRegions(finalCoords, controller.signal)
+    setRegionLookup("loading");
+    regionsApi
+      .list(samples, controller.signal)
       .then((regions) => {
-        if (
-          controller.signal.aborted ||
-          regions.length === 0 ||
-          namingRef.current.regions.trim()
-        ) {
-          return;
-        }
-        setNaming((prev) => ({ ...prev, regions: regions.join(", ") }));
+        if (controller.signal.aborted) return;
+        setRegionLookup("done");
+        if (regionTouched.current) return;
+        // The country comes back as the trailing entry; the rest are the
+        // region names, most specific first.
+        setRegionInfoState({
+          regions: regions
+            .filter((region) => region.kind !== "country")
+            .map((region) => region.name)
+            .join(", "),
+          country:
+            regions.find((region) => region.kind === "country")?.name ?? "",
+        });
       })
       .catch(() => {
-        // Best-effort prefill - the user can always type regions by hand.
+        if (!controller.signal.aborted) setRegionLookup("failed");
       });
     return () => controller.abort();
-  }, [hasLocation, finalCoords]);
+  }, [step, finalCoords]);
 
   const orderWrong =
     hasLocation &&
@@ -200,5 +224,8 @@ export function useSectionWizardState(
     orderWrong,
     draftFeaturePseudos,
     canProceed,
+    regionInfo,
+    setRegionInfo,
+    regionLookup,
   };
 }

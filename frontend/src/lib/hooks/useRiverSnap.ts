@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { osmGeometryApi } from "@/lib/api";
+import { riverSegmentsApi, waterwayGeometryApi } from "@/lib/api";
 import {
   type BoundingBox,
   type Coordinate,
   distanceInMeters,
   distanceToLineInMeters,
-  fetchOsmNetworkAroundLine,
-  fetchOsmRiverWays,
   nearestPointOnLine,
   routeSection,
   snapSection,
@@ -42,13 +40,13 @@ const MAX_PREVIEW_SPAN_DEGREES = 2;
 type GeoPoint = { lat: number; lon: number };
 
 interface NamedRiverCache {
-  waterwayName: string;
+  waterwayId: number;
   boundingBox: BoundingBox;
   ways: Coordinate[][];
 }
 
 interface RiverNetworkCache {
-  waterwayName: string;
+  waterwayId: number;
   /** Corridor the network was fetched for: `radiusMeters` around `line`. */
   line: Coordinate[];
   radiusMeters: number;
@@ -57,8 +55,7 @@ interface RiverNetworkCache {
 
 /**
  * Bounding box around both points, padded by half the larger span (the river
- * can bow far out of the raw point box) but at least ~5 km. Name-filtered
- * Overpass queries stay cheap even for large boxes.
+ * can bow far out of the raw point box) but at least ~5 km.
  */
 function paddedBoundingBox(a: GeoPoint, b: GeoPoint): BoundingBox {
   const latitudeSpan = Math.abs(a.lat - b.lat);
@@ -96,6 +93,40 @@ function boundingBoxContainsBox(
   );
 }
 
+/** The union of a bounding box and the envelope of the given ways. */
+function boxCoveringWays(box: BoundingBox, ways: Coordinate[][]): BoundingBox {
+  let { south, north, west, east } = box;
+  for (const way of ways) {
+    for (const [lon, lat] of way) {
+      if (lat < south) south = lat;
+      if (lat > north) north = lat;
+      if (lon < west) west = lon;
+      if (lon > east) east = lon;
+    }
+  }
+  return { south, north, west, east };
+}
+
+/** The waterway's OSM way fragments from the API (server cache with
+ * read-through fill; the browser never queries Overpass). */
+async function fetchRiverWays(
+  waterwayId: number,
+  bbox?: BoundingBox,
+  signal?: AbortSignal,
+): Promise<Coordinate[][]> {
+  const doc = await waterwayGeometryApi.get(
+    waterwayId,
+    "centerline",
+    bbox,
+    signal,
+  );
+  return doc.elements.flatMap((element) =>
+    element.geometry.type === "LineString"
+      ? [element.geometry.coordinates as Coordinate[]]
+      : [],
+  );
+}
+
 /**
  * Snaps a put-in/take-out pair to the OSM riverbed of the given waterway.
  *
@@ -105,8 +136,9 @@ function boundingBoxContainsBox(
  * fetches the named river and extracts the part between the points; stage 2,
  * when a point lies off the named river (take-out downstream of a
  * confluence, e.g. Ötztaler Ache → Inn), fetches the rivers connecting it
- * and routes through the combined network. Overpass responses are cached
- * while the points stay inside the fetched region.
+ * and routes through the combined network. All geometry comes from the API's
+ * server-side OSM cache; responses are cached in the hook while the points
+ * stay inside the fetched region.
  */
 export function useRiverSnap(
   waterwayName: string,
@@ -142,31 +174,23 @@ export function useRiverSnap(
     setRetryToken((token) => token + 1);
   }, []);
 
-  // Seed the named-river cache from the server's OSM geometry cache: one
-  // fast API call replaces the (slow, rate-limited) Overpass lookup for
-  // every river the backfill has covered. A 404 means not cached - the
-  // live Overpass paths below handle the river as before.
-  const serverCacheTriedFor = useRef<number | null>(null);
+  // Seed the named-river cache once per waterway: without a bbox the server
+  // returns (or fills) the whole known course, so the preview and the snap
+  // usually never need another fetch.
+  const seededFor = useRef<number | null>(null);
   useEffect(() => {
-    if (waterwayId == null || !waterwayName) return;
-    if (serverCacheTriedFor.current === waterwayId) return;
-    serverCacheTriedFor.current = waterwayId;
+    if (waterwayId == null) return;
+    if (seededFor.current === waterwayId) return;
+    seededFor.current = waterwayId;
     let cancelled = false;
     (async () => {
       try {
-        const doc = await osmGeometryApi.get(waterwayId, "centerline");
-        const ways: Coordinate[][] = doc.elements.flatMap((e) =>
-          e.geometry.type === "LineString"
-            ? [e.geometry.coordinates as Coordinate[]]
-            : [],
-        );
+        const ways = await fetchRiverWays(waterwayId);
         if (cancelled || ways.length === 0) return;
-        // The cached fragments cover the river's whole known course; a
-        // generous bbox keeps the effects below treating it as a hit.
         const points = ways.flat();
         const pad = 0.5;
         const entry: NamedRiverCache = {
-          waterwayName,
+          waterwayId,
           boundingBox: {
             south: Math.min(...points.map((c) => c[1])) - pad,
             north: Math.max(...points.map((c) => c[1])) + pad,
@@ -181,19 +205,20 @@ export function useRiverSnap(
         setRiver(stitched);
         setRiverLookup(stitched ? "found" : "not-found");
       } catch {
-        // Not cached (404) or unreachable - live Overpass takes over.
+        // Not cacheable yet (no sections, no OSM match) - the bbox-scoped
+        // lookups below handle it.
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [waterwayId, waterwayName]);
+  }, [waterwayId]);
 
   // River-course preview: look up the river for the current map view
   // while the user hasn't picked both points yet
   // biome-ignore lint/correctness/useExhaustiveDependencies: retryToken re-triggers the lookup after the caches were cleared
   useEffect(() => {
-    if (!waterwayName) {
+    if (!waterwayName || waterwayId == null) {
       setRiver(null);
       setRiverLookup("idle");
       return;
@@ -204,7 +229,7 @@ export function useRiverSnap(
     const cached = namedRiverCache.current;
     if (
       cached &&
-      cached.waterwayName === waterwayName &&
+      cached.waterwayId === waterwayId &&
       boundingBoxContainsBox(cached.boundingBox, viewBounds)
     ) {
       if (stitchedFrom.current !== cached) {
@@ -232,8 +257,7 @@ export function useRiverSnap(
     // Debounce so panning doesn't fire a request per move
     const timer = setTimeout(async () => {
       setRiverLookup("searching");
-      // Fetch well beyond the viewport so panning keeps hitting the cache -
-      // Overpass allows very few requests per IP, so every saved one counts
+      // Fetch well beyond the viewport so panning keeps hitting the cache
       const padding = viewSpan;
       const fetchBox: BoundingBox = {
         south: viewBounds.south - padding,
@@ -242,12 +266,16 @@ export function useRiverSnap(
         east: viewBounds.east + padding,
       };
       try {
-        const ways = await fetchOsmRiverWays(
-          waterwayName,
+        const ways = await fetchRiverWays(
+          waterwayId,
           fetchBox,
           controller.signal,
         );
-        const entry = { waterwayName, boundingBox: fetchBox, ways };
+        const entry = {
+          waterwayId,
+          boundingBox: boxCoveringWays(fetchBox, ways),
+          ways,
+        };
         namedRiverCache.current = entry;
         stitchedFrom.current = entry;
         const stitched = stitchWays(ways);
@@ -262,12 +290,12 @@ export function useRiverSnap(
       clearTimeout(timer);
       controller.abort();
     };
-  }, [waterwayName, viewBounds, putIn, takeOut, retryToken]);
+  }, [waterwayName, waterwayId, viewBounds, putIn, takeOut, retryToken]);
 
   // Snap pipeline: runs once both points are picked
   // biome-ignore lint/correctness/useExhaustiveDependencies: retryToken re-triggers the fetch after the caches were cleared
   useEffect(() => {
-    if (!putIn || !takeOut || !waterwayName) {
+    if (!putIn || !takeOut || !waterwayName || waterwayId == null) {
       setStatus("idle");
       setSnappedCoords(null);
       setCrossedConfluence(false);
@@ -279,13 +307,14 @@ export function useRiverSnap(
     const controller = new AbortController();
 
     async function run() {
+      if (waterwayId == null) return;
       setStatus("searching");
 
       // Stage 1: named river
       const cachedNamed = namedRiverCache.current;
       let named =
         cachedNamed &&
-        cachedNamed.waterwayName === waterwayName &&
+        cachedNamed.waterwayId === waterwayId &&
         boundingBoxContains(cachedNamed.boundingBox, currentPutIn) &&
         boundingBoxContains(cachedNamed.boundingBox, currentTakeOut)
           ? cachedNamed
@@ -294,12 +323,16 @@ export function useRiverSnap(
       if (!named) {
         const boundingBox = paddedBoundingBox(currentPutIn, currentTakeOut);
         try {
-          const ways = await fetchOsmRiverWays(
-            waterwayName,
+          const ways = await fetchRiverWays(
+            waterwayId,
             boundingBox,
             controller.signal,
           );
-          named = { waterwayName, boundingBox, ways };
+          named = {
+            waterwayId,
+            boundingBox: boxCoveringWays(boundingBox, ways),
+            ways,
+          };
           namedRiverCache.current = named;
         } catch {
           if (!controller.signal.aborted) {
@@ -340,8 +373,7 @@ export function useRiverSnap(
         // The named river itself is already part of the routing graph, so
         // the corridor only needs to cover the connectors between it and
         // the off-river points (or the straight line between the points
-        // when the named river wasn't found at all). Keeping the corridor
-        // short keeps the Overpass query fast.
+        // when the named river wasn't found at all).
         const corridor: Coordinate[] = namedRiver
           ? [
               putInCoordinate,
@@ -351,7 +383,7 @@ export function useRiverSnap(
             ]
           : [putInCoordinate, takeOutCoordinate];
         // Wide enough for the connecting river to bow off the straight
-        // connector, narrow enough to keep Overpass fast
+        // connector, narrow enough to keep the Overpass query fast
         const connectorMeters = namedRiver
           ? Math.max(
               distanceToLineInMeters(namedRiver, putInCoordinate),
@@ -366,7 +398,7 @@ export function useRiverSnap(
         const cachedNetwork = networkCache.current;
         let network =
           cachedNetwork &&
-          cachedNetwork.waterwayName === waterwayName &&
+          cachedNetwork.waterwayId === waterwayId &&
           distanceToLineInMeters(cachedNetwork.line, putInCoordinate) <=
             cachedNetwork.radiusMeters - 1000 &&
           distanceToLineInMeters(cachedNetwork.line, takeOutCoordinate) <=
@@ -376,12 +408,17 @@ export function useRiverSnap(
 
         if (!network) {
           try {
-            const ways = await fetchOsmNetworkAroundLine(
+            const segments = await riverSegmentsApi.list(
               corridor,
               radiusMeters,
               controller.signal,
             );
-            network = { waterwayName, line: corridor, radiusMeters, ways };
+            const ways = segments.flatMap((geometry) =>
+              geometry.type === "LineString"
+                ? [geometry.coordinates as Coordinate[]]
+                : [],
+            );
+            network = { waterwayId, line: corridor, radiusMeters, ways };
             networkCache.current = network;
           } catch {
             network = null;
@@ -416,7 +453,7 @@ export function useRiverSnap(
 
     run();
     return () => controller.abort();
-  }, [putIn, takeOut, waterwayName, retryToken]);
+  }, [putIn, takeOut, waterwayName, waterwayId, retryToken]);
 
   return {
     status,

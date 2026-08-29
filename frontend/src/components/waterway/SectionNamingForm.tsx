@@ -21,21 +21,17 @@ export interface SectionNamingValue {
   langCode: string;
   name: string;
   description: string;
-  /** Comma-separated region names, most specific first (valley, district,
-   * state). Prefilled from OSM once the section line is picked. */
-  regions: string;
-  country: string;
   translations: SectionTranslationDraft[];
 }
 
-/** Fresh naming state; the primary language defaults to the reader's. */
+/** Fresh naming state; the primary language defaults to the reader's.
+ * Regions and country are not asked for - the server derives them from the
+ * section line after submission. */
 export function createInitialNaming(): SectionNamingValue {
   return {
     langCode: preferredLanguage(),
     name: "",
     description: "",
-    regions: "",
-    country: "",
     translations: [],
   };
 }
@@ -92,22 +88,6 @@ export default function SectionNamingForm({
           onChange={(e) => onChange({ ...value, name: e.target.value })}
           required
           fullWidth
-        />
-      </Box>
-
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <TextField
-          label="Regions"
-          value={value.regions}
-          onChange={(e) => onChange({ ...value, regions: e.target.value })}
-          helperText="Comma-separated, most specific first - filled from OpenStreetMap after picking the line"
-          fullWidth
-        />
-        <TextField
-          label="Country"
-          value={value.country}
-          onChange={(e) => onChange({ ...value, country: e.target.value })}
-          sx={{ maxWidth: 110 }}
         />
       </Box>
 

@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT w.name,\n                  MIN(ST_YMin(ws.location::geometry)) AS \"south\",\n                  MIN(ST_XMin(ws.location::geometry)) AS \"west\",\n                  MAX(ST_YMax(ws.location::geometry)) AS \"north\",\n                  MAX(ST_XMax(ws.location::geometry)) AS \"east\"\n           FROM waterways w\n           LEFT JOIN water_sections ws ON ws.waterway_id = w.id\n           WHERE w.id = $1\n           GROUP BY w.id, w.name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "south",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 2,
+        "name": "west",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "north",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "east",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "df282b2361514cb610c1f27d245171acb621e443ff8389db2d0843ad9b93e659"
+}

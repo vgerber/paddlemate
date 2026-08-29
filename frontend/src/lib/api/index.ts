@@ -167,14 +167,62 @@ export const featuresApi = {
   },
 };
 
-export const osmGeometryApi = {
-  /** Cached OSM elements of a waterway; throws ApiError 404 when nothing is
-   * cached (the caller falls back to a live Overpass query). */
-  get: async (waterwayId: number, kind?: "centerline" | "bank") => {
+/** Line parameter format shared by the geographic lookups. */
+const lineParam = (line: [number, number][]) =>
+  line.map(([lon, lat]) => `${lon},${lat}`).join(";");
+
+export const waterwayGeometryApi = {
+  /** A waterway's cached river geometry; a centerline miss is fetched
+   * server-side (bounded by the sections bbox or the given area). Throws
+   * ApiError 404 when nothing could be cached. */
+  get: async (
+    waterwayId: number,
+    kind?: "centerline" | "bank",
+    bbox?: { south: number; west: number; north: number; east: number },
+    signal?: AbortSignal,
+  ) => {
     const { data } = await client.GET(
-      "/api/v1/waterways/{waterway_id}/osm-geometry",
-      { params: { path: { waterway_id: waterwayId }, query: { kind } } },
+      "/api/v1/waterways/{waterway_id}/geometry",
+      {
+        params: {
+          path: { waterway_id: waterwayId },
+          query: {
+            kind,
+            bbox: bbox
+              ? `${bbox.south},${bbox.west},${bbox.north},${bbox.east}`
+              : undefined,
+          },
+        },
+        signal,
+      },
     );
+    return assertData(data);
+  },
+};
+
+export const riverSegmentsApi = {
+  /** River segments around a corridor, for routing across confluences. */
+  list: async (
+    line: [number, number][],
+    radiusM: number,
+    signal?: AbortSignal,
+  ) => {
+    const { data } = await client.GET("/api/v1/geo/river-segments", {
+      params: { query: { line: lineParam(line), radius_m: radiusM } },
+      signal,
+    });
+    return assertData(data);
+  },
+};
+
+export const regionsApi = {
+  /** Regions containing a line - valley, district, state, range, country,
+   * most specific first. */
+  list: async (line: [number, number][], signal?: AbortSignal) => {
+    const { data } = await client.GET("/api/v1/geo/regions", {
+      params: { query: { line: lineParam(line) } },
+      signal,
+    });
     return assertData(data);
   },
 };

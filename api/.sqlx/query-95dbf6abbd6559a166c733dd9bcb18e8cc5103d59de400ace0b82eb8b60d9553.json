@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE water_sections\n             SET regions = CASE WHEN regions = '{}' THEN $1 ELSE regions END,\n                 country = COALESCE(NULLIF(country, ''), $2),\n                 updated_at = NOW()\n             WHERE id = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "95dbf6abbd6559a166c733dd9bcb18e8cc5103d59de400ace0b82eb8b60d9553"
+}

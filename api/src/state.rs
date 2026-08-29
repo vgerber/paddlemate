@@ -25,4 +25,7 @@ pub struct AppState {
     /// Signalled after a gauge is linked so the poll supervisor reconciles at
     /// once instead of waiting for its next tick.
     pub gauge_wake: Arc<tokio::sync::Notify>,
+    /// Signalled after a section is created so the region worker derives its
+    /// regions at once instead of waiting for its next cycle.
+    pub region_wake: Arc<tokio::sync::Notify>,
 }

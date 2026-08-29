@@ -63,6 +63,64 @@ pub async fn delete_elements(pool: &PgPool, waterway_id: i64) -> Result<u64, sql
     Ok(result.rows_affected())
 }
 
+/// Bounding box (south, west, north, east) of a waterway's cached elements
+/// of one kind, or None when nothing is cached.
+pub async fn cached_envelope(
+    pool: &PgPool,
+    waterway_id: i64,
+    kind: OsmElementKind,
+) -> Result<Option<(f64, f64, f64, f64)>, sqlx::Error> {
+    let row = sqlx::query(
+        "SELECT ST_YMin(e.box) AS south, ST_XMin(e.box) AS west,
+                ST_YMax(e.box) AS north, ST_XMax(e.box) AS east
+         FROM (SELECT ST_Extent(geom) AS box
+               FROM waterway_osm_elements
+               WHERE waterway_id = $1 AND kind = $2) e
+         WHERE e.box IS NOT NULL",
+    )
+    .bind(waterway_id)
+    .bind(kind.as_str())
+    .fetch_optional(pool)
+    .await?;
+    match row {
+        None => Ok(None),
+        Some(row) => Ok(Some((
+            row.try_get("south")?,
+            row.try_get("west")?,
+            row.try_get("north")?,
+            row.try_get("east")?,
+        ))),
+    }
+}
+
+/// Upsert elements into a waterway's cache without dropping existing rows -
+/// used to extend coverage when a request falls outside the cached area.
+pub async fn merge_elements(
+    pool: &PgPool,
+    waterway_id: i64,
+    kind: OsmElementKind,
+    elements: &[(String, i64, Geometry)],
+) -> Result<(), sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    for (osm_type, osm_id, geometry) in elements {
+        let geojson = serde_json::to_string(geometry).map_err(|e| sqlx::Error::Decode(e.into()))?;
+        sqlx::query(
+            "INSERT INTO waterway_osm_elements (waterway_id, osm_type, osm_id, kind, geom)
+             VALUES ($1, $2, $3, $4, ST_SetSRID(ST_GeomFromGeoJSON($5), 4326))
+             ON CONFLICT (waterway_id, osm_type, osm_id) DO UPDATE
+             SET kind = EXCLUDED.kind, geom = EXCLUDED.geom, fetched_at = NOW()",
+        )
+        .bind(waterway_id)
+        .bind(osm_type)
+        .bind(osm_id)
+        .bind(kind.as_str())
+        .bind(&geojson)
+        .execute(&mut *tx)
+        .await?;
+    }
+    tx.commit().await
+}
+
 /// Replace a waterway's cached elements of one kind with a fresh fetch.
 /// Used only by the fetch_osm_geometry bin; runs in one transaction so a
 /// reader never sees a half-written cache.

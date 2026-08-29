@@ -9,6 +9,7 @@ pub mod lang;
 pub mod osm_geometry;
 pub mod path_params;
 pub mod proposal;
+pub mod region;
 pub mod user;
 pub mod water_section;
 pub mod waterway;

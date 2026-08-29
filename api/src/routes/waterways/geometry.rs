@@ -16,20 +16,45 @@ use crate::{
         osm_geometry::{OsmElementKind, WaterwayOsmGeometry},
         path_params::WaterwayPath,
     },
+    overpass,
     query::osm_geometry,
     state::AppState,
 };
 
 #[derive(Debug, Deserialize, JsonSchema)]
-pub struct OsmGeometryQuery {
+pub struct WaterwayGeometryQuery {
     /// Element kind filter: "centerline" or "bank". Omitted = all kinds.
     pub kind: Option<String>,
+    /// "south,west,north,east" area of interest. Bounds the on-demand fetch
+    /// for a waterway without sections, and extends the cache when the area
+    /// falls outside what is cached.
+    pub bbox: Option<String>,
 }
 
-pub async fn get_osm_geometry(
+fn parse_bbox(raw: &str) -> Option<(f64, f64, f64, f64)> {
+    let parts: Vec<f64> = raw
+        .split(',')
+        .map(|p| p.trim().parse().ok())
+        .collect::<Option<_>>()?;
+    match parts[..] {
+        [south, west, north, east]
+            if south < north
+                && west < east
+                && (-90.0..=90.0).contains(&south)
+                && (-90.0..=90.0).contains(&north)
+                && (-180.0..=180.0).contains(&west)
+                && (-180.0..=180.0).contains(&east) =>
+        {
+            Some((south, west, north, east))
+        }
+        _ => None,
+    }
+}
+
+pub async fn get_waterway_geometry(
     State(app): State<AppState>,
     Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
-    Query(query): Query<OsmGeometryQuery>,
+    Query(query): Query<WaterwayGeometryQuery>,
 ) -> impl IntoApiResponse {
     let kind = match query.kind.as_deref() {
         None => None,
@@ -42,6 +67,32 @@ pub async fn get_osm_geometry(
             }
         },
     };
+    let bbox = match query.bbox.as_deref() {
+        None => None,
+        Some(raw) => match parse_bbox(raw) {
+            Some(bbox) => Some(bbox),
+            None => {
+                return ApiError::validation("bbox must be 'south,west,north,east'")
+                    .with_target("bbox")
+                    .into_response();
+            }
+        },
+    };
+
+    // Read-through: a centerline miss (or a bbox outside the cached area)
+    // triggers one server-side Overpass fetch, bounded by the waterway's
+    // sections bbox or the requested area, so the client never queries
+    // Overpass itself. Covered requests return from the fast path.
+    if kind != Some(OsmElementKind::Bank) {
+        if let Err(err) = overpass::fill_centerline(&app.pg_pool, waterway_id, bbox).await {
+            tracing::warn!(
+                "On-demand OSM fetch failed for waterway {}: {}",
+                waterway_id,
+                err
+            );
+        }
+    }
+
     match osm_geometry::fetch_elements(&app.pg_pool, waterway_id, kind).await {
         Ok(Some(doc)) => Json(doc).into_response(),
         Ok(None) => ApiError::not_found("No cached OSM geometry").into_response(),
@@ -52,14 +103,14 @@ pub async fn get_osm_geometry(
     }
 }
 
-doc_fn!(get_osm_geometry_docs, op =>
-    op.description("Cached OSM elements of a waterway (centerline way fragments, later bank areas). 404 when nothing is cached - the client should fall back to a live Overpass query.")
+doc_fn!(get_waterway_geometry_docs, op =>
+    op.description("Cached OSM elements of a waterway (centerline way fragments, later bank areas). A centerline miss is filled on demand with one server-side Overpass fetch when the waterway has sections; 404 when nothing could be cached - the client should fall back to a live Overpass query.")
         .response::<200, Json<WaterwayOsmGeometry>>()
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Nothing cached"))
         .tag("Waterways")
 );
 
-pub async fn delete_osm_geometry(
+pub async fn delete_waterway_geometry(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
@@ -79,7 +130,7 @@ pub async fn delete_osm_geometry(
     }
 }
 
-doc_fn!(delete_osm_geometry_docs, op =>
+doc_fn!(delete_waterway_geometry_docs, op =>
     op.description("Invalidate a waterway's cached OSM geometry (admin only); the next backfill run re-fetches it")
         .response_with::<204, (), _>(|res| res.description("Cache dropped"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))

@@ -17,7 +17,9 @@ macro_rules! doc_fn {
 pub mod error;
 pub mod layers;
 pub mod models;
+pub mod overpass;
 pub mod query;
 pub mod readers;
+pub mod regions;
 pub mod routes;
 pub mod state;

@@ -28,6 +28,7 @@ use paddlemate_api::{
         favorites::favorites_routes,
         follows::follows_routes,
         gauges::gauges_routes,
+        geo::geo_routes,
         groups::group_routes,
         proposals::proposals_routes,
         tokens::tokens_routes,
@@ -204,6 +205,7 @@ async fn main() {
         admin_token_cache: Arc::new(tokio::sync::RwLock::new(None)),
         username_cache,
         gauge_wake: Arc::new(tokio::sync::Notify::new()),
+        region_wake: Arc::new(tokio::sync::Notify::new()),
     };
 
     let keycloak_auth_instance = Arc::new(KeycloakAuthInstance::new(
@@ -232,6 +234,7 @@ async fn main() {
                 .nest_api_service("/gauges", gauges_routes(state.clone())),
         )
         .nest_api_service("/descents", descents_routes(state.clone()))
+        .nest_api_service("/geo", geo_routes(state.clone()))
         .nest_api_service("/proposals", proposals_routes(state.clone()))
         .layer(middleware::from_fn_with_state(
             state.clone(),
@@ -244,6 +247,8 @@ async fn main() {
     } else {
         tracing::info!("Gauge readers disabled (DISABLE_GAUGE_READERS=true)");
     }
+
+    paddlemate_api::regions::run_worker(db.clone(), state.region_wake.clone());
 
     let api_v1 = ApiRouter::new()
         .merge(protected)
