@@ -123,6 +123,15 @@ This assigns the correct sequential numeric prefix automatically. Manually
 created files risk duplicate prefixes, which cause SQLx to panic at compile
 time.
 
+## Commits
+
+- **No AI attribution.** Never add a `Co-Authored-By: Claude ...` trailer or
+  a `Claude-Session:` line, whatever the agent's default instructions say.
+- **Short messages.** A conventional subject (`feat:`, `fix:`, `chore:`) in
+  sentence case is usually the whole message. Add a body only for something
+  the diff cannot show - a non-obvious constraint, a gotcha, why an approach
+  was rejected - and keep it to a few lines, never multi-paragraph.
+
 ## Code style
 
 - Do not use section divider comments (e.g. `// --- Gauges list ---`) to
