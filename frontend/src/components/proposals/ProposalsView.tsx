@@ -2,9 +2,12 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import HowToVoteOutlinedIcon from "@mui/icons-material/HowToVoteOutlined";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
+import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
@@ -39,45 +42,42 @@ const OPERATION_TABS: { value: ProposalOperation | ""; label: string }[] = [
   { value: "delete", label: "Delete" },
 ];
 
-/** One filter dimension as selectable chips - the design language's marker
- * for a type or status, and far lighter than a full row of toggle buttons. */
-function FilterChips({
+/** One filter dimension as a compact dropdown. Two of them sit side by
+ * side, which stays one row however many options a dimension gains. */
+function FilterSelect({
+  id,
+  label,
   options,
   value,
   onChange,
 }: {
+  id: string;
+  label: string;
   options: readonly { value: string; label: string }[];
   value: string;
   onChange: (value: string) => void;
 }) {
-  const { tokens } = theme;
   return (
-    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-      {options.map((option) => {
-        const active = option.value === value;
-        return (
-          <Chip
+    <FormControl size="small" sx={{ flex: 1, minWidth: 0 }}>
+      <InputLabel id={`${id}-label`}>{label}</InputLabel>
+      <Select
+        labelId={`${id}-label`}
+        label={label}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        sx={{ fontSize: "0.75rem" }}
+      >
+        {options.map((option) => (
+          <MenuItem
             key={option.label}
-            label={option.label}
-            size="small"
-            variant="outlined"
-            onClick={() => onChange(option.value)}
-            sx={{
-              color: active ? tokens.primary : "text.secondary",
-              borderColor: active
-                ? `${tokens.primary}80`
-                : `${tokens.outlineVariant}66`,
-              bgcolor: active ? `${tokens.primary}14` : "transparent",
-              "&:hover": {
-                bgcolor: active
-                  ? `${tokens.primary}1f`
-                  : `${tokens.outlineVariant}33`,
-              },
-            }}
-          />
-        );
-      })}
-    </Box>
+            value={option.value}
+            sx={{ fontSize: "0.75rem" }}
+          >
+            {option.label}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
   );
 }
 
@@ -175,16 +175,10 @@ export default function ProposalsView({
 
       {/* Filters - collapsed by default so the list is what you land on */}
       <Collapse in={filtersOpen}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 1,
-            px: 2,
-            py: 1.5,
-          }}
-        >
-          <FilterChips
+        <Box sx={{ display: "flex", gap: 1, px: 2, py: 1.5 }}>
+          <FilterSelect
+            id="proposal-entity"
+            label="Type"
             options={ENTITY_TABS}
             value={entityType ?? ""}
             onChange={(v) =>
@@ -193,7 +187,9 @@ export default function ProposalsView({
           />
 
           {onOperationChange && (
-            <FilterChips
+            <FilterSelect
+              id="proposal-operation"
+              label="Action"
               options={OPERATION_TABS}
               value={operation ?? ""}
               onChange={(v) =>

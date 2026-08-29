@@ -44,8 +44,9 @@ sparingly and always carries meaning.
   drop out entirely when they are zero.
 - Filters beyond the primary tabs collapse behind a filter icon with a
   badge dot, so the list is what a screen lands on. The options themselves
-  are selectable chips, not a toggle-button row - a row of bordered
-  buttons per dimension reads as a keypad.
+  are compact dropdowns side by side, one per dimension - a row of
+  bordered buttons per dimension reads as a keypad, and dropdowns stay one
+  row however many options a dimension gains.
 - A choice between two states is a bordered toggle group with its count
   inside the button, never loose icon buttons with numbers between them.
   A decision that commits something (approve, reject) is a labelled button
