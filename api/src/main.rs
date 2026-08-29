@@ -249,6 +249,7 @@ async fn main() {
     }
 
     paddlemate_api::regions::run_worker(db.clone(), state.region_wake.clone());
+    paddlemate_api::media::run_sweeper(db.clone());
 
     let api_v1 = ApiRouter::new()
         .merge(protected)

@@ -9,11 +9,13 @@ const MEDIA_COLS: &str = "id, entity_type, entity_id, kind, storage_key, externa
 
 fn row_to_media(row: &PgRow) -> Media {
     let kind = MediaKind::parse(&row.get::<String, _>("kind")).unwrap_or(MediaKind::Photo);
+    let entity_type = MediaEntityType::parse(&row.get::<String, _>("entity_type"))
+        .unwrap_or(MediaEntityType::Waterway);
     let storage_key: Option<String> = row.get("storage_key");
     let external_url: Option<String> = row.get("external_url");
     Media {
         id: row.get("id"),
-        entity_type: MediaEntityType::Waterway,
+        entity_type,
         entity_id: row.get("entity_id"),
         kind,
         url: match (&storage_key, &external_url) {
@@ -38,19 +40,24 @@ fn row_to_media(row: &PgRow) -> Media {
     }
 }
 
-/// A river's gallery: items added directly, newest first within a weight.
+/// A river's gallery. `include_from_notes` adds the photos posted inside
+/// notes, which are otherwise shown only in the thread they belong to -
+/// the gallery is curated, a note is somebody's field report.
 pub async fn list_media(
     db: &PgPool,
     entity_type: MediaEntityType,
     entity_id: i64,
+    include_from_notes: bool,
 ) -> Result<Vec<Media>, sqlx::Error> {
     let rows = sqlx::query(&format!(
         "SELECT {MEDIA_COLS} FROM media
          WHERE entity_type = $1 AND entity_id = $2
+           AND ($3 OR comment_id IS NULL)
          ORDER BY weight, created_at DESC"
     ))
     .bind(entity_type.as_str())
     .bind(entity_id)
+    .bind(include_from_notes)
     .fetch_all(db)
     .await?;
     Ok(rows.iter().map(row_to_media).collect())
@@ -123,6 +130,8 @@ pub async fn insert_media(db: &PgPool, new: NewMedia<'_>) -> Result<Media, sqlx:
 pub async fn attach_media_to_comment(
     db: &PgPool,
     comment_id: i64,
+    entity_type: MediaEntityType,
+    entity_id: i64,
     media_ids: &[i64],
     user_id: &str,
 ) -> Result<(), sqlx::Error> {
@@ -130,14 +139,19 @@ pub async fn attach_media_to_comment(
         return Ok(());
     }
     for (position, id) in media_ids.iter().enumerate() {
+        // Unclaimed, the caller's own, and about the same river: a note
+        // cannot adopt someone else's photo, or one taken on another river.
         sqlx::query(
             "UPDATE media SET comment_id = $1, weight = $2
-             WHERE id = $3 AND uploaded_by = $4 AND comment_id IS NULL",
+             WHERE id = $3 AND uploaded_by = $4 AND comment_id IS NULL
+               AND entity_type = $5 AND entity_id = $6",
         )
         .bind(comment_id)
         .bind(position as i32)
         .bind(id)
         .bind(user_id)
+        .bind(entity_type.as_str())
+        .bind(entity_id)
         .execute(db)
         .await?;
     }

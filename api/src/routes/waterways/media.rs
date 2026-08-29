@@ -34,11 +34,26 @@ impl<S: Send + Sync> FromRequest<S> for MediaUpload {
 
 impl aide::OperationInput for MediaUpload {}
 
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+pub struct MediaQuery {
+    /// Include photos posted inside notes, which are otherwise shown only
+    /// in their own thread.
+    pub include_from_notes: Option<bool>,
+}
+
 pub async fn list_waterway_media(
     State(app): State<AppState>,
     Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
+    axum::extract::Query(query): axum::extract::Query<MediaQuery>,
 ) -> impl IntoApiResponse {
-    match media_query::list_media(&app.pg_pool, MediaEntityType::Waterway, waterway_id).await {
+    match media_query::list_media(
+        &app.pg_pool,
+        MediaEntityType::Waterway,
+        waterway_id,
+        query.include_from_notes.unwrap_or(false),
+    )
+    .await
+    {
         Ok(list) => Json(list).into_response(),
         Err(err) => {
             tracing::error!("Error listing media for river {}: {}", waterway_id, err);
@@ -48,7 +63,7 @@ pub async fn list_waterway_media(
 }
 
 doc_fn!(list_waterway_media_docs, op =>
-    op.description("Photos, videos and linked write-ups for a river, in gallery order")
+    op.description("Photos, videos and linked write-ups for a river, in gallery order. Photos posted inside a note stay in that thread unless include_from_notes=true.")
         .response::<200, Json<Vec<Media>>>()
         .tag("Media")
 );

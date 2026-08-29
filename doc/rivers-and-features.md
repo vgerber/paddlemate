@@ -207,8 +207,26 @@ cache headers.
 
 Photos can be posted **inside a note**: upload first, then create the
 comment with the resulting ids in `media_ids` (whitewater.guide's two-step,
-applied to notes). A note only adopts media the caller uploaded and nobody
-has claimed. Deleting the note deletes those files with it.
+applied to notes). A note only adopts media the caller uploaded, that
+nobody has claimed, and that belongs to the same river. Deleting the note
+deletes those files with it.
+
+The gallery is curated and a note is somebody's field report, so
+`GET .../media` returns only items added straight to the river;
+`?include_from_notes=true` adds the ones posted in notes.
+
+Two things keep the pieces from drifting apart, because `comments` and
+`media` are keyed by `(entity_type, entity_id)` and no foreign key can
+express that:
+
+- **Delete triggers** on `waterways`, `water_sections` and `features`
+  remove the notes and media attached to a row as it goes, whatever deleted
+  it - the admin endpoint, a proposal approval, or a hand-written statement.
+- **A daily sweeper** (`media::sweep_orphans`) deletes files under
+  `MEDIA_DIR` that no row points at. The database is the source of truth
+  and the filesystem is reconciled to it, which also covers a crash between
+  writing a file and inserting its row. Files younger than 15 minutes are
+  left alone so an upload in flight is never swept out from under itself.
 
 Because the bytes live outside Postgres, `pg_dump` is no longer a complete
 backup - `MEDIA_DIR` needs its own.

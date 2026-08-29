@@ -5,7 +5,7 @@
 //! small and the store can move behind `storage_key` later.
 
 use std::io::Cursor;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use image::ImageFormat;
 
@@ -108,13 +108,72 @@ pub async fn delete_image(storage_key: &str) {
     }
 }
 
-/// Reject keys that could escape the media directory.
-pub fn is_safe_key(key: &str) -> bool {
-    !key.is_empty()
-        && !key.contains("..")
-        && !key.contains('/')
-        && !key.contains('\\')
-        && Path::new(key).file_name().is_some_and(|name| name == key)
+/// Delete files under MEDIA_DIR that no row points at any more.
+///
+/// The database is the source of truth and the filesystem is reconciled to
+/// it, which covers every way the two can drift: a delete trigger that only
+/// knows about rows, a crash between writing a file and inserting its row,
+/// or a row removed by hand. Files younger than `MIN_ORPHAN_AGE` are left
+/// alone so an upload in flight is never swept out from under itself.
+pub async fn sweep_orphans(pool: &sqlx::PgPool) -> anyhow::Result<usize> {
+    /// An upload writes its files before inserting the row; anything newer
+    /// than this may simply not have got there yet.
+    const MIN_ORPHAN_AGE: std::time::Duration = std::time::Duration::from_secs(15 * 60);
+
+    let known: std::collections::HashSet<String> = sqlx::query_scalar::<_, String>(
+        "SELECT storage_key FROM media WHERE storage_key IS NOT NULL",
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .flat_map(|key| [thumb_key(&key), key])
+    .collect();
+
+    let dir = media_dir();
+    let mut entries = match tokio::fs::read_dir(&dir).await {
+        Ok(entries) => entries,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(0),
+        Err(err) => return Err(err.into()),
+    };
+
+    let mut removed = 0;
+    while let Some(entry) = entries.next_entry().await? {
+        let name = entry.file_name().to_string_lossy().to_string();
+        if known.contains(&name) {
+            continue;
+        }
+        let too_young = entry
+            .metadata()
+            .await
+            .ok()
+            .and_then(|meta| meta.modified().ok())
+            .and_then(|modified| modified.elapsed().ok())
+            .is_some_and(|age| age < MIN_ORPHAN_AGE);
+        if too_young {
+            continue;
+        }
+        if let Err(err) = tokio::fs::remove_file(entry.path()).await {
+            tracing::warn!("Could not sweep orphaned media file {name}: {err}");
+        } else {
+            removed += 1;
+        }
+    }
+    if removed > 0 {
+        tracing::info!("Swept {removed} orphaned media file(s)");
+    }
+    Ok(removed)
+}
+
+/// Run the sweep on start and daily after that.
+pub fn run_sweeper(pool: sqlx::PgPool) {
+    tokio::spawn(async move {
+        loop {
+            if let Err(err) = sweep_orphans(&pool).await {
+                tracing::error!("Media sweep failed: {err}");
+            }
+            tokio::time::sleep(std::time::Duration::from_secs(24 * 60 * 60)).await;
+        }
+    });
 }
 
 #[cfg(test)]
@@ -125,14 +184,6 @@ mod tests {
     fn thumb_key_sits_beside_the_original() {
         assert_eq!(thumb_key("abc.jpg"), "abc.thumb.jpg");
         assert_eq!(thumb_key("noext"), "noext.thumb");
-    }
-
-    #[test]
-    fn rejects_keys_that_escape_the_directory() {
-        assert!(is_safe_key("abc.jpg"));
-        assert!(!is_safe_key("../secrets"));
-        assert!(!is_safe_key("nested/abc.jpg"));
-        assert!(!is_safe_key(""));
     }
 
     #[tokio::test]

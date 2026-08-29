@@ -19,6 +19,13 @@ impl MediaEntityType {
             MediaEntityType::Waterway => "waterway",
         }
     }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        match s {
+            "waterway" => Some(MediaEntityType::Waterway),
+            _ => None,
+        }
+    }
 }
 
 /// One gallery covers uploads and links, as whitewater.guide's does: a photo

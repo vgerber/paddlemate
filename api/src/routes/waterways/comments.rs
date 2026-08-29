@@ -17,6 +17,7 @@ use crate::{
             Comment, CommentCategory, CommentId, CreateCommentRequest, ModerateCommentRequest,
             UpdateCommentRequest,
         },
+        media_item::MediaEntityType,
         path_params::{
             FeatureCommentPath, FeaturePath, SectionCommentPath, SectionPath, WaterwayCommentPath,
             WaterwayPath,
@@ -70,6 +71,8 @@ pub async fn create_waterway_comment(
             if let Err(err) = media::attach_media_to_comment(
                 &app.pg_pool,
                 comment.id,
+                MediaEntityType::Waterway,
+                waterway_id,
                 &body.media_ids,
                 token.user_id(),
             )
