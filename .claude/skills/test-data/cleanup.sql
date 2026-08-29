@@ -2,6 +2,8 @@
 -- section_names and feature_names need no explicit delete: both cascade from
 -- their parent section and feature.
 BEGIN;
+DELETE FROM proposal_votes WHERE proposal_id BETWEEN 9700 AND 9799;
+DELETE FROM proposals WHERE id BETWEEN 9700 AND 9799;
 DELETE FROM descents WHERE id BETWEEN 9200 AND 9299;
 DELETE FROM feature_water_ranges WHERE id BETWEEN 9600 AND 9699;
 DELETE FROM gauge_readings WHERE series_id BETWEEN 9400 AND 9499;

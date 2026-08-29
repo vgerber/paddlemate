@@ -39,7 +39,26 @@ Remove only: run just `cleanup.sql`.
 | Gauge "Test Gauge" + series | 9301 / 9401, 9402 | water_level in cm; 9401 has a week of 2-hourly sinusoidal readings (55-115, latest ~85), 9402 has none |
 | Water ranges | 9601-9608 | thresholds around the ~85 cm reading so the section list shows every chip variant (see below); section defaults sit on the whitewater features; 9607/9608 sit on the Lower Test rapid/hole (same series as the 9601 default) so selecting them in the timeline swaps the chart thresholds |
 | Descents | 9201-9204 | see below; all owned by the first user |
+| Proposals | 9701-9709 | one per review case, placed so the review map has context (see below) |
 | API token `pm_testtoken123` | name `test-data` | for authed curl: `-H "X-Api-Key: pm_testtoken123"` |
+
+Proposals (on `/proposals`, newest first; the review pane draws each one
+against what already exists, so the geometry is spread along the river
+rather than stacked on one point):
+
+- 9701 feature create "Mittelschwall" - a rapid in the gap between Slot
+  Machine and Big Hole on Lower Test: the fits-fine case
+- 9702 feature create "Grosses Loch" - a hole ~5 m from the existing Big
+  Hole (9525) under another name: the duplicate the map should expose
+- 9703 section create "Gorge Test" - continues below the last section
+- 9704 section create "Middle Run" - overlaps Low Water Test: the
+  duplicate-stretch case
+- 9705 section update on Upper Test (9101) - proves the stored line is left
+  out of the context so it is not drawn under the proposed one
+- 9706 feature update on the weir (9526) - same rule for features
+- 9707 river create "Proposed Test Creek" - no geometry, the no-context case
+- 9708 approved / 9709 rejected - so the status tabs are not empty
+- Votes on 9701 (+1), 9703 (+1), 9704 (-1) so the list shows tallies
 
 Descents (times relative to NOW at seed time):
 
@@ -62,6 +81,8 @@ Section chip variants in the list view:
 
 ## Using it
 
+- Proposals entry point: `/proposals` (desktop shows the list beside the
+  full proposal; `?selected=9702` opens the duplicate case directly).
 - Map entry points: `/?waterway=9001` (section list with paddle-count
   badges), `/?waterway=9001&section=9102` (chart with descent bands, Logs tab).
 - Frontend against the local API: `cd frontend && VITE_API_URL=http://localhost:3000 bun run dev`

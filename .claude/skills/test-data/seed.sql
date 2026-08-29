@@ -213,6 +213,102 @@ INSERT INTO feature_names (id, feature_id, lang_code, name) VALUES
 INSERT INTO api_tokens (user_id, name, token_hash)
 SELECT id, 'test-data', 'ffd2e7ff161f619163861f2870c0fdf91508ae8851743d855d2661aa13738ec8' FROM users LIMIT 1;
 
+
+-- Proposals, for reviewing on /proposals. Each one is placed so the review
+-- map has something to judge it against: a feature lands on Lower Test
+-- (9102) between that section's six existing features, a section lands on
+-- Test River (9001) among its seven. Coordinates are spread along the
+-- river rather than stacked on one point, so "does this fit / is this a
+-- duplicate" is actually visible.
+INSERT INTO proposals (id, entity_type, entity_id, operation, proposed_data, original_data, status, submitted_by, review_note, created_at)
+SELECT v.id, v.entity_type, v.entity_id, v.operation, v.proposed_data,
+       v.original_data, v.status, u.id, v.review_note, v.created_at
+FROM (VALUES
+  -- Feature in a clear gap between Slot Machine (9524) and Big Hole (9525)
+  (9701, 'feature', NULL::bigint, 'create', jsonb_build_object(
+     'waterway_id', 9001, 'section_id', 9102,
+     'feature_type', 'rapid', 'metadata', jsonb_build_object('difficulty', 'III'),
+     'name', 'Mittelschwall', 'description', 'Clean read-and-run wave train.',
+     'lang_code', 'en', 'water_ranges', '[]'::jsonb,
+     'location', jsonb_build_object('type', 'LineString',
+       'coordinates', jsonb_build_array(jsonb_build_array(11.0145, 47.0145), jsonb_build_array(11.0148, 47.0148)))
+   ), NULL::jsonb, 'pending', NULL, NOW() - INTERVAL '2 hours'),
+
+  -- Same spot as the existing hole 9525, under another name: the duplicate
+  -- the review map is meant to expose
+  (9702, 'feature', NULL, 'create', jsonb_build_object(
+     'waterway_id', 9001, 'section_id', 9102,
+     'feature_type', 'hole', 'metadata', '{}'::jsonb,
+     'name', 'Grosses Loch', 'description', 'Sticky hole river left.',
+     'lang_code', 'en', 'water_ranges', '[]'::jsonb,
+     'location', jsonb_build_object('type', 'Point',
+       'coordinates', jsonb_build_array(11.01305, 47.01305))
+   ), NULL, 'pending', NULL, NOW() - INTERVAL '5 hours'),
+
+  -- Section continuing past Silent Gauge Test (9107), the clean case
+  (9703, 'water_section', NULL, 'create', jsonb_build_object(
+     'waterway_id', 9001, 'name', 'Gorge Test',
+     'description', 'Continues below the last section.',
+     'regions', jsonb_build_array('Test Valley', 'Test State'),
+     'country', 'AT', 'translations', '[]'::jsonb, 'features', '[]'::jsonb,
+     'location', jsonb_build_object('type', 'LineString',
+       'coordinates', jsonb_build_array(jsonb_build_array(11.07, 47.07), jsonb_build_array(11.085, 47.085)))
+   ), NULL, 'pending', NULL, NOW() - INTERVAL '1 day'),
+
+  -- Section overlapping Low Water Test (9104): the duplicate stretch case
+  (9704, 'water_section', NULL, 'create', jsonb_build_object(
+     'waterway_id', 9001, 'name', 'Middle Run',
+     'description', 'Overlaps an existing stretch.',
+     'regions', jsonb_build_array('Test Valley'), 'country', 'AT',
+     'translations', '[]'::jsonb, 'features', '[]'::jsonb,
+     'location', jsonb_build_object('type', 'LineString',
+       'coordinates', jsonb_build_array(jsonb_build_array(11.032, 47.032), jsonb_build_array(11.045, 47.045)))
+   ), NULL, 'pending', NULL, NOW() - INTERVAL '2 days'),
+
+  -- Update: the stored version must not be drawn under the proposed one
+  (9705, 'water_section', 9101, 'update', jsonb_build_object(
+     'waterway_id', 9001, 'name', 'Upper Test Gorge',
+     'regions', jsonb_build_array('Test Valley', 'Test State'), 'country', 'AT',
+     'location', jsonb_build_object('type', 'LineString',
+       'coordinates', jsonb_build_array(jsonb_build_array(11.0 , 47.0), jsonb_build_array(11.008, 47.012)))
+   ), jsonb_build_object('name', 'Upper Test', 'country', NULL,
+     'regions', '[]'::jsonb), 'pending', NULL, NOW() - INTERVAL '3 days'),
+
+  -- Feature update, same rule for the feature being changed
+  (9706, 'feature', 9526, 'update', jsonb_build_object(
+     'waterway_id', 9001, 'section_id', 9102, 'feature_type', 'weir',
+     'metadata', jsonb_build_object('difficulty', 'IV'),
+     'name', 'Altes Wehr (portage right)'
+   ), jsonb_build_object('feature_type', 'weir', 'name', 'Altes Wehr',
+     'metadata', '{}'::jsonb), 'pending', NULL, NOW() - INTERVAL '4 days'),
+
+  -- A river has no geometry to compare - the no-context case
+  (9707, 'waterway', NULL, 'create', jsonb_build_object(
+     'name', 'Proposed Test Creek', 'description', 'A river nobody added yet.'
+   ), NULL, 'pending', NULL, NOW() - INTERVAL '6 days'),
+
+  -- Non-pending rows so the status tabs are not empty
+  (9708, 'feature', NULL, 'create', jsonb_build_object(
+     'waterway_id', 9001, 'section_id', 9102, 'feature_type', 'siphon',
+     'metadata', '{}'::jsonb, 'name', 'Approved Siphon', 'lang_code', 'en',
+     'location', jsonb_build_object('type', 'Point',
+       'coordinates', jsonb_build_array(11.0165, 47.0165))
+   ), NULL, 'approved', 'Matches the scout report.', NOW() - INTERVAL '8 days'),
+  (9709, 'water_section', NULL, 'create', jsonb_build_object(
+     'waterway_id', 9001, 'name', 'Rejected Duplicate',
+     'regions', '[]'::jsonb, 'translations', '[]'::jsonb, 'features', '[]'::jsonb,
+     'location', jsonb_build_object('type', 'LineString',
+       'coordinates', jsonb_build_array(jsonb_build_array(11.011, 47.011), jsonb_build_array(11.019, 47.019)))
+   ), NULL, 'rejected', 'Already covered by Lower Test.', NOW() - INTERVAL '9 days')
+) AS v(id, entity_type, entity_id, operation, proposed_data, original_data, status, review_note, created_at)
+CROSS JOIN (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
+
+-- Votes, so the list shows tallies rather than a column of zeroes.
+INSERT INTO proposal_votes (proposal_id, user_id, vote)
+SELECT p.id, u.id, p.vote
+FROM (VALUES (9701, 1::smallint), (9703, 1::smallint), (9704, -1::smallint)) AS p(id, vote),
+LATERAL (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
+
 -- The explicit 9xxx ids above bypass the id sequences. Bump them past the
 -- fixture range so rows created through the app get higher ids - otherwise
 -- they sort before the fixture rows (breaking "first range wins" defaults)
@@ -221,7 +317,7 @@ SELECT setval(pg_get_serial_sequence(t, 'id'), 10000, true)
 FROM unnest(ARRAY[
   'waterways', 'water_sections', 'features', 'feature_names',
   'section_names', 'gauges', 'gauge_series', 'feature_water_ranges',
-  'descents'
+  'descents', 'proposals'
 ]) AS t;
 
 COMMIT;
