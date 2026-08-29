@@ -44,6 +44,11 @@ sparingly and always carries meaning.
   drop out entirely when they are zero.
 - Filters beyond the primary tabs collapse behind a filter icon with a
   badge dot, so the list is what a screen lands on.
+- A choice between two states is a bordered toggle group with its count
+  inside the button, never loose icon buttons with numbers between them.
+  A decision that commits something (approve, reject) is a labelled button
+  in its own row, separated by a dimmed rule - not another bare icon in a
+  row of metadata.
 - List group headings are overline typography in disabled color; type and
   status markers are small outlined uppercase chips.
 
