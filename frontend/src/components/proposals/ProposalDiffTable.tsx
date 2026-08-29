@@ -47,11 +47,11 @@ export default function ProposalDiffTable({
           <Typography variant="caption">{humanize(key)}</Typography>
           <Typography
             variant="caption"
-            sx={{ textDecoration: "line-through", color: "error.main" }}
+            sx={{ textDecoration: "line-through", color: "text.disabled" }}
           >
             {shortValue(key, from)}
           </Typography>
-          <Typography variant="caption" sx={{ color: "success.main" }}>
+          <Typography variant="caption" sx={{ color: "text.primary" }}>
             {shortValue(key, to)}
           </Typography>
         </Fragment>

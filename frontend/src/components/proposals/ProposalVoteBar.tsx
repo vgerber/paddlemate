@@ -16,6 +16,17 @@ import { fonts, labelSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
+/** The page's control scale - MUI's small button runs bigger and bolder
+ * than everything else here. */
+const decisionButtonSx = {
+  px: 1.5,
+  py: 0.375,
+  fontSize: "0.7rem",
+  fontWeight: 600,
+  letterSpacing: "0.08em",
+  "& .MuiButton-startIcon": { mr: 0.5 },
+} as const;
+
 /** Who submitted it and when, the reader's vote, and - for an admin on a
  * pending proposal - the decision. Owns the vote mutations; review
  * confirmation stays with the parent. */
@@ -74,13 +85,13 @@ export default function ProposalVoteBar({
               onChange={(_, next) => handleVote(next as 1 | -1 | null)}
               sx={{
                 "& .MuiToggleButton-root": {
-                  px: 1,
-                  py: 0.25,
+                  px: 1.25,
+                  py: 0.5,
                   gap: 0.5,
                   fontFamily: fonts.mono,
-                  fontSize: "0.7rem",
+                  fontSize: "0.75rem",
                   color: "text.secondary",
-                  borderColor: `${tokens.outlineVariant}99`,
+                  borderColor: `${tokens.outlineVariant}66`,
                 },
               }}
             >
@@ -90,8 +101,8 @@ export default function ProposalVoteBar({
                 sx={{
                   "&.Mui-selected": {
                     color: tokens.secondary,
-                    bgcolor: `${tokens.secondary}1f`,
-                    "&:hover": { bgcolor: `${tokens.secondary}2b` },
+                    bgcolor: `${tokens.secondary}14`,
+                    "&:hover": { bgcolor: `${tokens.secondary}1f` },
                   },
                 }}
               >
@@ -104,8 +115,8 @@ export default function ProposalVoteBar({
                 sx={{
                   "&.Mui-selected": {
                     color: tokens.error,
-                    bgcolor: `${tokens.error}1f`,
-                    "&:hover": { bgcolor: `${tokens.error}2b` },
+                    bgcolor: `${tokens.error}14`,
+                    "&:hover": { bgcolor: `${tokens.error}1f` },
                   },
                 }}
               >
@@ -122,18 +133,27 @@ export default function ProposalVoteBar({
           <Button
             size="small"
             variant="outlined"
-            color="error"
-            startIcon={<CloseOutlinedIcon fontSize="small" />}
+            startIcon={<CloseOutlinedIcon sx={{ fontSize: 14 }} />}
             onClick={() => onReview("rejected")}
+            sx={{
+              ...decisionButtonSx,
+              color: "text.secondary",
+              borderColor: `${tokens.outlineVariant}66`,
+            }}
           >
             Reject
           </Button>
           <Button
             size="small"
-            variant="contained"
-            color="secondary"
-            startIcon={<CheckOutlinedIcon fontSize="small" />}
+            variant="outlined"
+            startIcon={<CheckOutlinedIcon sx={{ fontSize: 14 }} />}
             onClick={() => onReview("approved")}
+            sx={{
+              ...decisionButtonSx,
+              color: tokens.tertiary,
+              borderColor: `${tokens.tertiary}66`,
+              "&:hover": { borderColor: tokens.tertiary },
+            }}
           >
             Approve
           </Button>

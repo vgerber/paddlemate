@@ -45,7 +45,7 @@ export default function ProposalDetailView({
             sx={{
               fontFamily: fonts.label,
               fontWeight: 600,
-              fontSize: "1rem",
+              fontSize: "0.9rem",
               textTransform:
                 proposal.entity_type === "feature" ? "capitalize" : "none",
             }}
@@ -63,7 +63,14 @@ export default function ProposalDetailView({
           size="small"
           variant="outlined"
           color={STATUS_COLOR[proposal.status]}
-          sx={{ ml: "auto", flexShrink: 0 }}
+          sx={{
+            ml: "auto",
+            flexShrink: 0,
+            height: 20,
+            fontSize: "0.62rem",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+          }}
         />
       </Box>
 
