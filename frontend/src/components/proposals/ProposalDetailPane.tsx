@@ -9,6 +9,8 @@ import {
 } from "@/components/waterway/section-details/utils";
 import type { Feature, FeatureType, Proposal } from "@/lib/api";
 import { distanceAlongLineM, representativePoint } from "@/lib/geo";
+import { useWaterway } from "@/lib/hooks/useWaterways";
+import { localizedName } from "@/lib/localization";
 import { labelSx } from "@/lib/theme";
 
 interface BundledFeatureData {
@@ -90,6 +92,46 @@ export default function ProposalDetailPane({
 
   const focus = location ? representativePoint(location) : null;
 
+  // What already exists around the change, so a reviewer can see whether it
+  // fits and is not a duplicate: a feature is shown on its section next to
+  // that section's other features, a section among the river's others.
+  const contextWaterwayId =
+    typeof data.waterway_id === "number" ? data.waterway_id : null;
+  const contextSectionId =
+    typeof data.section_id === "number" ? data.section_id : undefined;
+  const { data: waterway } = useWaterway(contextWaterwayId);
+
+  const isFeatureProposal = proposal.entity_type === "feature";
+  const parentSection = waterway?.sections?.find(
+    (section) => section.id === contextSectionId,
+  );
+
+  // The section being changed is drawn from the proposal itself, so leave
+  // its stored version out to avoid two lines on top of each other.
+  const contextSections = isFeatureProposal
+    ? parentSection
+      ? [parentSection]
+      : []
+    : (waterway?.sections ?? []).filter(
+        (section) => section.id !== proposal.entity_id,
+      );
+
+  // Likewise for the feature under review: its current version would sit
+  // under the proposed one.
+  const existingFeatures = isFeatureProposal
+    ? (parentSection?.features ?? []).filter(
+        (feature) => feature.id !== proposal.entity_id,
+      )
+    : [];
+
+  const contextLine =
+    isFeatureProposal && parentSection?.location.type === "LineString"
+      ? (parentSection.location.coordinates as [number, number][])
+      : undefined;
+  const contextTotalM = contextLine
+    ? distanceAlongLineM(contextLine[contextLine.length - 1], contextLine)
+    : undefined;
+
   const original = proposal.original_data as
     | Record<string, unknown>
     | null
@@ -103,7 +145,9 @@ export default function ProposalDetailPane({
       )}
 
       {/* Map */}
-      {(sectionLine || pseudoFeatures.length > 0) && (
+      {(sectionLine ||
+        pseudoFeatures.length > 0 ||
+        contextSections.length > 0) && (
         <Box
           sx={{
             // Grows with the desktop pane instead of staying phone-sized.
@@ -115,6 +159,10 @@ export default function ProposalDetailPane({
         >
           <WaterwayMap
             chrome={{ cooperativeGestures: true }}
+            sections={contextSections.length > 0 ? contextSections : undefined}
+            features={
+              existingFeatures.length > 0 ? existingFeatures : undefined
+            }
             drawing={{ sectionPreviewCoords: sectionLine }}
             proposedFeatures={
               pseudoFeatures.length > 0 ? pseudoFeatures : undefined
@@ -208,6 +256,55 @@ export default function ProposalDetailPane({
               }
               totalM={totalM}
             />
+          ))}
+        </Box>
+      )}
+
+      {/* What is already there, to check the change fits and is not a
+          duplicate of something under a different name */}
+      {existingFeatures.length > 0 && (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Typography sx={paneLabelSx}>
+            Already on {parentSection?.name ?? "this section"}
+          </Typography>
+          {existingFeatures.map((feature) => (
+            <FeatureRow
+              key={feature.id}
+              featureType={feature.feature_type}
+              name={localizedName("", feature.names)}
+              difficulty={
+                (feature.metadata as Record<string, unknown> | null)
+                  ?.difficulty as string | undefined
+              }
+              locationType={
+                feature.location.type as "Point" | "LineString" | "Polygon"
+              }
+              extent={contextLine ? computeExtent(feature, contextLine) : null}
+              totalM={contextTotalM}
+            />
+          ))}
+        </Box>
+      )}
+
+      {!isFeatureProposal && contextSections.length > 0 && (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <Typography sx={paneLabelSx}>
+            Other sections on {waterway?.name ?? "this river"}
+          </Typography>
+          {contextSections.map((section) => (
+            <Typography key={section.id} variant="body2">
+              {section.name}
+              {section.regions.length > 0 && (
+                <Typography
+                  component="span"
+                  variant="caption"
+                  color="text.disabled"
+                  sx={{ ml: 1 }}
+                >
+                  {section.regions.join(", ")}
+                </Typography>
+              )}
+            </Typography>
           ))}
         </Box>
       )}

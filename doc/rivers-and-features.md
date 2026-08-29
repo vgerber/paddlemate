@@ -116,7 +116,10 @@ Standing decisions on attribution, so they are not re-litigated:
 
 All community edits — new rivers, sections, features, translations — go
 through **proposals**: submitted, reviewed and voted on before they are
-applied. Admins can edit directly; the same endpoints turn a non-admin request
+applied. A proposal is reviewed against what already exists: a proposed
+feature is drawn on its section alongside that section's other features,
+and a proposed section alongside the river's other sections, so a reviewer
+can see that it fits and is not a duplicate under another name. Admins can edit directly; the same endpoints turn a non-admin request
 into a pending proposal where that flow exists (e.g. new rivers via "Can't
 find your river? Add it").
 
