@@ -23,13 +23,15 @@ export const Route = createFileRoute("/proposals/")({
       typeof search.operation === "string"
         ? (search.operation as ProposalOperation)
         : undefined,
+    // Which proposal the desktop detail pane shows; keeps it linkable.
+    selected: search.selected != null ? Number(search.selected) : undefined,
   }),
   component: ProposalsPage,
 });
 
 function ProposalsPage() {
   const navigate = useNavigate({ from: "/proposals/" });
-  const { status, entity_type, operation } = Route.useSearch();
+  const { status, entity_type, operation, selected } = Route.useSearch();
   // Review tools are shown inline for admins - there is no separate admin page.
   const { isAdmin } = useSession();
 
@@ -37,6 +39,10 @@ function ProposalsPage() {
     <ProposalsView
       adminMode={isAdmin}
       status={status}
+      selectedId={selected}
+      onSelect={(id) =>
+        navigate({ search: (prev) => ({ ...prev, selected: id }) })
+      }
       entityType={entity_type}
       operation={operation}
       onStatusChange={(s) =>

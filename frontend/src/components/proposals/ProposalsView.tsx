@@ -5,6 +5,9 @@ import Tabs from "@mui/material/Tabs";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import ProposalDetailView from "@/components/proposals/ProposalDetailView";
+import ProposalRow from "@/components/proposals/ProposalRow";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import ProposalCard from "@/components/waterway/ProposalCard";
@@ -14,6 +17,7 @@ import type {
   ProposalStatus,
 } from "@/lib/api";
 import { useProposals } from "@/lib/hooks/useProposals";
+import { theme } from "@/lib/theme";
 
 const STATUS_TABS = ["pending", "approved", "rejected"] as const;
 
@@ -42,6 +46,9 @@ const toggleGroupSx = {
 
 interface ProposalsViewProps {
   status: ProposalStatus;
+  /** Proposal shown in the desktop detail pane. */
+  selectedId?: number;
+  onSelect?: (id: number | undefined) => void;
   entityType?: ProposalEntityType;
   operation?: ProposalOperation;
   onStatusChange: (status: ProposalStatus) => void;
@@ -56,6 +63,8 @@ interface ProposalsViewProps {
  * Admins additionally get review controls on each card (adminMode). */
 export default function ProposalsView({
   status,
+  selectedId,
+  onSelect,
   entityType,
   operation,
   onStatusChange,
@@ -63,14 +72,17 @@ export default function ProposalsView({
   onOperationChange,
   adminMode,
 }: ProposalsViewProps) {
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const { data: proposals, isLoading } = useProposals({
     status,
     entity_type: entityType,
     operation,
   });
 
-  return (
-    <Box sx={{ maxWidth: 720, mx: "auto" }}>
+  const selected = proposals?.find((p) => p.id === selectedId);
+
+  const list = (
+    <>
       {/* Header */}
       <Box
         sx={{ display: "flex", alignItems: "baseline", gap: 1, px: 2, pt: 2 }}
@@ -166,11 +178,64 @@ export default function ProposalsView({
         />
       ) : (
         <Box sx={{ borderTop: "1px solid", borderColor: "divider" }}>
-          {proposals.map((p) => (
-            <ProposalCard key={p.id} proposal={p} adminMode={adminMode} />
-          ))}
+          {proposals.map((p) =>
+            isDesktop ? (
+              <ProposalRow
+                key={p.id}
+                proposal={p}
+                selected={p.id === selectedId}
+                onSelect={() => onSelect?.(p.id)}
+              />
+            ) : (
+              <ProposalCard key={p.id} proposal={p} adminMode={adminMode} />
+            ),
+          )}
         </Box>
       )}
+    </>
+  );
+
+  if (!isDesktop) {
+    return <Box sx={{ maxWidth: 720, mx: "auto" }}>{list}</Box>;
+  }
+
+  // Desktop: a scannable list beside the full proposal, so reviewing a
+  // queue never costs a navigation round-trip.
+  return (
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: {
+          md: "380px minmax(0, 1fr)",
+          lg: "420px minmax(0, 1fr)",
+        },
+        height: "calc(100vh - 48px)",
+      }}
+    >
+      <Box
+        sx={{
+          overflowY: "auto",
+          borderRight: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        {list}
+      </Box>
+      <Box sx={{ overflowY: "auto", px: 3, py: 2 }}>
+        {selected ? (
+          <ProposalDetailView proposal={selected} adminMode={adminMode} />
+        ) : (
+          <EmptyState
+            icon={
+              <HowToVoteOutlinedIcon
+                sx={{ fontSize: 56, color: "text.disabled" }}
+              />
+            }
+            title="Select a proposal to review it."
+            py={10}
+          />
+        )}
+      </Box>
     </Box>
   );
 }

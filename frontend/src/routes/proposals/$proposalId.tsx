@@ -29,6 +29,7 @@ function ProposalDetailPage() {
           status: "pending",
           entity_type: undefined,
           operation: undefined,
+          selected: undefined,
         },
       });
     }

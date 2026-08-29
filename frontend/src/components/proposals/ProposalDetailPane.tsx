@@ -106,7 +106,8 @@ export default function ProposalDetailPane({
       {(sectionLine || pseudoFeatures.length > 0) && (
         <Box
           sx={{
-            height: 380,
+            // Grows with the desktop pane instead of staying phone-sized.
+            height: { xs: 380, md: "clamp(380px, 45vh, 560px)" },
             border: "1px solid",
             borderColor: "divider",
             position: "relative",

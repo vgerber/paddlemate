@@ -10,6 +10,7 @@ export const Route = createFileRoute("/admin/proposals/")({
         status: "pending",
         entity_type: undefined,
         operation: undefined,
+        selected: undefined,
       },
     });
   },
