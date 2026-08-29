@@ -331,11 +331,7 @@ export default function SuggestFeatureForm({
         disabled={submitting}
       />
 
-      {submitError && (
-        <Alert severity="error" sx={{ py: 0.25, fontSize: "0.75rem" }}>
-          {submitError}
-        </Alert>
-      )}
+      {submitError && <Alert severity="error">{submitError}</Alert>}
     </Box>
   );
 }

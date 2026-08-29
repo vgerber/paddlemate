@@ -25,7 +25,16 @@ sparingly and always carries meaning.
   has a single purpose, the FAB performs it directly; menus only where several
   actions genuinely share the spot.
 - Empty states are an icon and one line of text - the FAB is the call to
-  action, so they carry no buttons.
+  action, so they carry no buttons. A finished flow ends the same way: the
+  terminal screen is an icon and one line, and the bottom bar carries the
+  way out, never an inline filled button.
+- Multi-step forms are built from labelled blocks (`FormSection`): overline
+  heading, one hint line saying what the block is for, and an optional
+  action in the heading. A block's own action lives in its heading so it
+  never competes with the bottom bar's primary action.
+- Inline alerts are inset notes, not banners: square, compact, dark ground
+  with a tinted border and a colored icon carrying the severity. The filled
+  variant is reserved for the global error snackbar.
 - List group headings are overline typography in disabled color; type and
   status markers are small outlined uppercase chips.
 

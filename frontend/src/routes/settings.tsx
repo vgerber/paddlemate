@@ -16,7 +16,6 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -34,7 +33,6 @@ import {
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { useSession } from "@/lib/hooks/useSession";
 import { useLanguagePreference } from "@/lib/languagePreference";
-import { theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
@@ -43,9 +41,6 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const [tab, setTab] = useState(0);
   const { isAuthenticated, isLoading } = useSession();
-  // Desktop reaches proposals via the top nav - the tab is mobile-only
-  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
-  const effectiveTab = isDesktop ? 0 : tab;
 
   if (isLoading) {
     return <LoadingBox size={40} pt={8} />;
@@ -65,8 +60,8 @@ function SettingsPage() {
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: "auto" }}>
-      {!isDesktop && (
+    <Box sx={{ maxWidth: { xs: 800, md: 1100 }, mx: "auto" }}>
+      {
         <Tabs
           value={tab}
           onChange={(_, v) => setTab(v)}
@@ -84,10 +79,10 @@ function SettingsPage() {
             label="Tools"
           />
         </Tabs>
-      )}
+      }
       <Box sx={{ px: 2, py: 3 }}>
-        {effectiveTab === 0 && <ProfilePanel />}
-        {effectiveTab === 1 && <ToolsList />}
+        {tab === 0 && <ProfilePanel />}
+        {tab === 1 && <ToolsList />}
       </Box>
     </Box>
   );
@@ -98,64 +93,74 @@ function ProfilePanel() {
   const [language, setLanguage] = useLanguagePreference();
 
   return (
-    <Stack spacing={3}>
-      <Stack spacing={2}>
-        <TextField
-          label="Username"
-          value={user?.username ?? ""}
-          slotProps={{ input: { readOnly: true } }}
-          size="small"
+    <Box
+      sx={{
+        display: "grid",
+        // Account details and tokens sit side by side on desktop instead of
+        // pushing the tokens table below the fold.
+        gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+        gap: { xs: 3, md: 5 },
+        alignItems: "start",
+      }}
+    >
+      <Stack spacing={3}>
+        <Stack spacing={2}>
+          <TextField
+            label="Username"
+            value={user?.username ?? ""}
+            slotProps={{ input: { readOnly: true } }}
+            size="small"
+            fullWidth
+          />
+          <TextField
+            label="User ID"
+            value={user?.id ?? ""}
+            slotProps={{ input: { readOnly: true } }}
+            size="small"
+            fullWidth
+          />
+        </Stack>
+        <Divider />
+        <Stack spacing={1}>
+          <Typography variant="overline" sx={{ lineHeight: 1 }}>
+            Display language
+          </Typography>
+          <LanguagePicker
+            value={language}
+            onChange={setLanguage}
+            size="small"
+            label="Language"
+          />
+          <Typography variant="caption" color="text.secondary">
+            Which translation of river, section and rapid names is shown. The
+            app interface stays in English.
+          </Typography>
+        </Stack>
+        <Divider />
+        <Button
+          variant="outlined"
+          component="a"
+          href={ACCOUNT_CONSOLE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           fullWidth
-        />
-        <TextField
-          label="User ID"
-          value={user?.id ?? ""}
-          slotProps={{ input: { readOnly: true } }}
-          size="small"
-          fullWidth
-        />
-      </Stack>
-      <Divider />
-      <Stack spacing={1}>
-        <Typography variant="overline" sx={{ lineHeight: 1 }}>
-          Display language
-        </Typography>
-        <LanguagePicker
-          value={language}
-          onChange={setLanguage}
-          size="small"
-          label="Language"
-        />
-        <Typography variant="caption" color="text.secondary">
-          Which translation of river, section and rapid names is shown. The app
-          interface stays in English.
+        >
+          Account Settings
+        </Button>
+        <Button variant="outlined" color="error" onClick={logout} fullWidth>
+          Sign Out
+        </Button>
+        <Divider sx={{ display: { md: "none" } }} />
+        <Typography
+          variant="caption"
+          color="text.disabled"
+          sx={{ textAlign: "center" }}
+        >
+          v{__COMMIT_HASH__}
         </Typography>
       </Stack>
-      <Divider />
-      <Button
-        variant="outlined"
-        component="a"
-        href={ACCOUNT_CONSOLE_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        fullWidth
-      >
-        Account Settings
-      </Button>
-      <Button variant="outlined" color="error" onClick={logout} fullWidth>
-        Sign Out
-      </Button>
-      <Divider />
       <TokensPanel />
-      <Divider />
-      <Typography
-        variant="caption"
-        color="text.disabled"
-        sx={{ textAlign: "center" }}
-      >
-        v{__COMMIT_HASH__}
-      </Typography>
-    </Stack>
+    </Box>
   );
 }
 

@@ -10,6 +10,7 @@ import type { Feature } from "@/lib/api";
 import { distanceAlongLineM } from "@/lib/geo";
 import type { Coordinate } from "@/lib/riverSnap";
 import FeatureRow from "./FeatureRow";
+import FormSection from "./FormSection";
 import type { GeometryPicking } from "./GeometryPicker";
 import SuggestFeatureForm, {
   type SectionFeatureDraft,
@@ -76,93 +77,100 @@ export default function SectionFeaturesStep({
 
   return (
     <>
-      {/* Region and country, derived from OSM for the picked line - shown
-          here so they can be checked and adjusted before submitting */}
-      <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
-        <TextField
-          label="Regions"
-          value={regionCountry.regions}
-          onChange={(e) => regionCountry.onChange({ regions: e.target.value })}
-          helperText={
-            regionCountry.loading
-              ? "Looking up regions from OpenStreetMap…"
-              : "From OpenStreetMap - comma-separated, most specific first"
-          }
-          fullWidth
-          slotProps={{
-            input: {
-              endAdornment: regionCountry.loading ? (
-                <CircularProgress size={16} />
-              ) : undefined,
-            },
-          }}
-        />
-        <TextField
-          label="Country"
-          value={regionCountry.country}
-          onChange={(e) => regionCountry.onChange({ country: e.target.value })}
-          sx={{ maxWidth: 110 }}
-        />
-      </Box>
+      <FormSection
+        label="Where it is"
+        hint="Looked up from OpenStreetMap for your line - correct it if it looks wrong."
+      >
+        <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
+          <TextField
+            label="Regions"
+            size="small"
+            value={regionCountry.regions}
+            onChange={(e) =>
+              regionCountry.onChange({ regions: e.target.value })
+            }
+            helperText="Comma-separated, most specific first"
+            fullWidth
+            slotProps={{
+              input: {
+                endAdornment: regionCountry.loading ? (
+                  <CircularProgress size={16} />
+                ) : undefined,
+              },
+            }}
+          />
+          <TextField
+            label="Country"
+            size="small"
+            value={regionCountry.country}
+            onChange={(e) =>
+              regionCountry.onChange({ country: e.target.value })
+            }
+            sx={{ maxWidth: 110 }}
+          />
+        </Box>
+      </FormSection>
 
-      {/* Fixed entries: the section's own endpoints (derived from the line,
-          not submitted as separate features) */}
-      {finalCoords &&
-        (
-          [
-            { num: 1, label: "put in", color: PUT_IN_COLOR, km: 0 },
-            {
-              num: 2,
-              label: "take out",
-              color: TAKE_OUT_COLOR,
-              km: totalM ?? 0,
-            },
-          ] as const
-        ).map((endpoint) => (
-          <Box key={endpoint.label} sx={{ opacity: 0.8 }}>
-            <FeatureRow
-              featureType={endpoint.label}
-              locationType="Point"
-              extent={{
-                distM: endpoint.km,
-                startM: endpoint.km,
-                endM: endpoint.km,
-                isZone: false,
-              }}
-              leading={
-                <NumberBadge num={endpoint.num} color={endpoint.color} />
-              }
-              // Spacer where removable rows show the ✕
-              trailing={<Box sx={{ width: 34, flexShrink: 0 }} />}
-            />
-          </Box>
-        ))}
-
-      {draftFeatures.map((feature, index) => (
-        <FeatureRow
-          key={`${feature.feature_type}-${index}`}
-          featureType={feature.feature_type}
-          name={feature.name}
-          difficulty={feature.metadata.difficulty as string | undefined}
-          gaugeName={feature.gauge_name}
-          locationType={feature.location.type}
-          extent={draftExtents[index]}
-          totalM={totalM}
-          onRemove={() => onRemoveDraft(index)}
-        />
-      ))}
-
-      <SuggestFeatureForm
-        sectionLine={
-          finalCoords?.map(([lng, lat]) => ({ lng, lat })) ?? undefined
+      <FormSection
+        label="On this section"
+        hint={
+          draftFeatures.length > 0
+            ? `${draftFeatures.length} feature${draftFeatures.length === 1 ? "" : "s"} added, plus the access points.`
+            : "The access points come from your line; rapids and hazards are optional."
         }
-        nearPoint={nearPoint}
-        geometry={geometry}
-        onDraft={onAddDraft}
-        defaultLangCode={defaultLangCode}
-        submitRef={submitRef}
-        onCanSubmitChange={setCanAdd}
-        headerAction={
+      >
+        {/* Fixed entries: the section's own endpoints (derived from the line,
+            not submitted as separate features) */}
+        {finalCoords &&
+          (
+            [
+              { num: 1, label: "put in", color: PUT_IN_COLOR, km: 0 },
+              {
+                num: 2,
+                label: "take out",
+                color: TAKE_OUT_COLOR,
+                km: totalM ?? 0,
+              },
+            ] as const
+          ).map((endpoint) => (
+            <Box key={endpoint.label} sx={{ opacity: 0.8 }}>
+              <FeatureRow
+                featureType={endpoint.label}
+                locationType="Point"
+                extent={{
+                  distM: endpoint.km,
+                  startM: endpoint.km,
+                  endM: endpoint.km,
+                  isZone: false,
+                }}
+                leading={
+                  <NumberBadge num={endpoint.num} color={endpoint.color} />
+                }
+                // Spacer where removable rows show the fixed remove control
+                trailing={<Box sx={{ width: 34, flexShrink: 0 }} />}
+              />
+            </Box>
+          ))}
+
+        {draftFeatures.map((feature, index) => (
+          <FeatureRow
+            key={`${feature.feature_type}-${index}`}
+            featureType={feature.feature_type}
+            name={feature.name}
+            difficulty={feature.metadata.difficulty as string | undefined}
+            gaugeName={feature.gauge_name}
+            locationType={feature.location.type}
+            extent={draftExtents[index]}
+            totalM={totalM}
+            onRemove={() => onRemoveDraft(index)}
+          />
+        ))}
+      </FormSection>
+
+      <FormSection
+        label="Add a feature"
+        hint="Optional - a rapid, weir or hazard worth knowing about."
+        action={
           <RoundActionButton
             onClick={() => submitRef.current?.()}
             disabled={!canAdd}
@@ -171,7 +179,19 @@ export default function SectionFeaturesStep({
             <CheckIcon fontSize="small" />
           </RoundActionButton>
         }
-      />
+      >
+        <SuggestFeatureForm
+          sectionLine={
+            finalCoords?.map(([lng, lat]) => ({ lng, lat })) ?? undefined
+          }
+          nearPoint={nearPoint}
+          geometry={geometry}
+          onDraft={onAddDraft}
+          defaultLangCode={defaultLangCode}
+          submitRef={submitRef}
+          onCanSubmitChange={setCanAdd}
+        />
+      </FormSection>
     </>
   );
 }

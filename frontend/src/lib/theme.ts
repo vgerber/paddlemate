@@ -450,9 +450,47 @@ export const theme = createTheme({
       },
     },
 
+    // Inline alerts read as an inset note, not a pastel banner: square,
+    // compact, dark ground, with the severity carried by the icon and a
+    // tinted border. Layout lives on the root so the filled variant (the
+    // global error snackbar) keeps its solid background.
     MuiAlert: {
       styleOverrides: {
-        root: { borderRadius: 0 },
+        root: {
+          borderRadius: 0,
+          padding: "6px 10px",
+          fontSize: "0.75rem",
+          lineHeight: 1.5,
+          alignItems: "center",
+        },
+        icon: {
+          padding: 0,
+          marginRight: 8,
+          fontSize: "1rem",
+          opacity: 1,
+        },
+        message: { padding: 0, minWidth: 0 },
+        action: { padding: 0, marginRight: 0, alignItems: "center" },
+        standard: {
+          backgroundColor: tokens.surfaceLow,
+          color: tokens.onSurface,
+          "&.MuiAlert-colorError": {
+            border: `1px solid ${tokens.error}59`,
+            "& .MuiAlert-icon": { color: tokens.error },
+          },
+          "&.MuiAlert-colorWarning": {
+            border: `1px solid ${tokens.levelColors.medium}59`,
+            "& .MuiAlert-icon": { color: tokens.levelColors.medium },
+          },
+          "&.MuiAlert-colorSuccess": {
+            border: `1px solid ${tokens.secondary}59`,
+            "& .MuiAlert-icon": { color: tokens.secondary },
+          },
+          "&.MuiAlert-colorInfo": {
+            border: `1px solid ${tokens.primary}59`,
+            "& .MuiAlert-icon": { color: tokens.primary },
+          },
+        },
       },
     },
 

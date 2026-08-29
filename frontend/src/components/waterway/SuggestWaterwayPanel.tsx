@@ -1,5 +1,6 @@
 import CenterFocusStrongIcon from "@mui/icons-material/CenterFocusStrong";
 import CheckIcon from "@mui/icons-material/Check";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import WaterIcon from "@mui/icons-material/Water";
 import Alert from "@mui/material/Alert";
@@ -15,6 +16,9 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
 import type { GaugePin } from "@/components/map/GaugeMarkers";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
+import EmptyState from "@/components/states/EmptyState";
+import SignInGate from "@/components/states/SignInGate";
+import FormSection from "@/components/waterway/FormSection";
 import type { CatalogRiver } from "@/lib/api";
 import { ApiError, apiErrorMessage } from "@/lib/api/client";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
@@ -74,7 +78,7 @@ export default function SuggestWaterwayPanel({
   onFocusBounds,
   onGaugePinsChange,
 }: SuggestWaterwayPanelProps) {
-  const { isAuthenticated, login } = useSession();
+  const { isAuthenticated } = useSession();
 
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState("");
@@ -247,38 +251,32 @@ export default function SuggestWaterwayPanel({
         }}
       >
         {!isAuthenticated ? (
-          <Box sx={{ textAlign: "center", py: 3 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Sign in to suggest a new river.
-            </Typography>
-            <Button variant="contained" size="small" onClick={login}>
-              Sign in
-            </Button>
-          </Box>
+          <SignInGate icon={null} title="Sign in to suggest a river" pt={3} />
         ) : submitted ? (
-          <Box sx={{ textAlign: "center", py: 3 }}>
-            <Alert severity="success" sx={{ mb: 2, textAlign: "left" }}>
-              Thanks! Your river was submitted and is pending review. It will
-              appear in search once an admin approves it.
-            </Alert>
-            <Button variant="contained" size="small" onClick={onClose}>
-              Done
-            </Button>
-          </Box>
+          <EmptyState
+            icon={
+              <CheckCircleOutlineIcon
+                sx={{ fontSize: 40, color: "text.disabled" }}
+              />
+            }
+            title="River submitted"
+            caption="It appears in search once an admin approves it."
+          />
         ) : (
           <>
-            <Typography variant="caption" color="text.secondary">
-              Suggest a river that's missing from PaddleMate. After approval you
-              can add sections to it.
-            </Typography>
-            <TextField
-              label="Name"
-              size="small"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              fullWidth
-            />
+            <FormSection
+              label="River name"
+              hint="Missing from PaddleMate? Name it - after approval you can add sections."
+            >
+              <TextField
+                label="Name"
+                size="small"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                fullWidth
+              />
+            </FormSection>
 
             {exactGaugeMatch && riverGauges.length > 0 && (
               <Box
@@ -368,10 +366,10 @@ export default function SuggestWaterwayPanel({
             )}
 
             {suggestionChips.length > 0 && (
-              <Box>
-                <Typography sx={{ ...labelSx, display: "block", mb: 0.5 }}>
-                  Similar rivers with gauges
-                </Typography>
+              <FormSection
+                label="Similar rivers with gauges"
+                hint="Pick one to use its exact name."
+              >
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
                   {suggestionChips.map((r) => (
                     <Chip
@@ -383,38 +381,39 @@ export default function SuggestWaterwayPanel({
                     />
                   ))}
                 </Box>
-              </Box>
+              </FormSection>
             )}
 
-            <TextField
+            <FormSection
               label="Description"
-              size="small"
-              multiline
-              rows={2}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              fullWidth
-            />
+              hint="Optional - what makes this river worth paddling."
+            >
+              <TextField
+                label="Description"
+                size="small"
+                multiline
+                rows={2}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                fullWidth
+              />
+            </FormSection>
 
-            {submitError && (
-              <Alert severity="error" sx={{ py: 0.25, fontSize: "0.75rem" }}>
-                {submitError}
-              </Alert>
-            )}
+            {submitError && <Alert severity="error">{submitError}</Alert>}
           </>
         )}
       </Box>
       <PanelBottomBar
         leftIcon={<CloseIcon />}
         onLeftClick={onClose}
-        leftLabel="Cancel"
-        title="New river"
-        subtitle="Suggest a missing river"
+        leftLabel={submitted ? "Close" : "Cancel"}
+        title={submitted ? "River submitted" : "New river"}
+        subtitle={submitted ? "Pending review" : "Suggest a missing river"}
         action={
           <RoundActionButton
-            onClick={handleSubmit}
-            disabled={!canSubmit || !isAuthenticated}
-            ariaLabel="Submit"
+            onClick={submitted ? onClose : handleSubmit}
+            disabled={!submitted && (!canSubmit || !isAuthenticated)}
+            ariaLabel={submitted ? "Done" : "Submit"}
           >
             <CheckIcon fontSize="small" />
           </RoundActionButton>

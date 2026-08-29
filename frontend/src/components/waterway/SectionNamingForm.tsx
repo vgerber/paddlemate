@@ -3,8 +3,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
 import LanguagePicker from "@/components/LanguagePicker";
+import FormSection from "@/components/waterway/FormSection";
 import { preferredLanguage } from "@/lib/languagePreference";
 import { languageOptions } from "@/lib/languages";
 
@@ -76,37 +76,40 @@ export default function SectionNamingForm({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <LanguagePicker
-          value={value.langCode}
-          onChange={(langCode) => onChange({ ...value, langCode })}
-          exclude={value.translations.map((t) => t.langCode)}
-        />
+      <FormSection
+        label="Name this section"
+        hint="How paddlers refer to this stretch - shown in search and on the map."
+      >
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <LanguagePicker
+            value={value.langCode}
+            onChange={(langCode) => onChange({ ...value, langCode })}
+            exclude={value.translations.map((t) => t.langCode)}
+          />
+          <TextField
+            label="Name"
+            value={value.name}
+            onChange={(e) => onChange({ ...value, name: e.target.value })}
+            required
+            fullWidth
+          />
+        </Box>
+
         <TextField
-          label="Name"
-          value={value.name}
-          onChange={(e) => onChange({ ...value, name: e.target.value })}
-          required
+          label="Description"
+          multiline
+          minRows={3}
+          value={value.description}
+          onChange={(e) => onChange({ ...value, description: e.target.value })}
           fullWidth
         />
-      </Box>
-
-      <TextField
-        label="Description"
-        multiline
-        minRows={3}
-        value={value.description}
-        onChange={(e) => onChange({ ...value, description: e.target.value })}
-        fullWidth
-      />
+      </FormSection>
 
       {
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Typography variant="overline" sx={{ lineHeight: 1 }}>
-              Translations (optional)
-            </Typography>
-            <Box sx={{ flex: 1 }} />
+        <FormSection
+          label="Translations"
+          hint="Optional - the name in other languages."
+          action={
             <IconButton
               aria-label="Add translation"
               onClick={() =>
@@ -126,8 +129,8 @@ export default function SectionNamingForm({
             >
               <AddIcon fontSize="small" />
             </IconButton>
-          </Box>
-
+          }
+        >
           {value.translations.map((translation, index) => (
             <Box
               key={translation.id}
@@ -177,7 +180,7 @@ export default function SectionNamingForm({
               />
             </Box>
           ))}
-        </Box>
+        </FormSection>
       }
     </Box>
   );

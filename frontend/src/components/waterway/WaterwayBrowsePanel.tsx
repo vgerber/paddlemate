@@ -89,57 +89,63 @@ export default function WaterwayBrowsePanel({
   const selectedSection = sections.find((s) => s.id === selectedSectionId);
   const inFeatures = selectedSectionId != null && selectedSection != null;
 
-  const actionButton = onMobileMapToggle ? (
-    <>
-      {inFeatures && featureTimeline?.onToggleProposed && (
-        <IconButton
-          size="small"
-          onClick={featureTimeline.onToggleProposed}
-          aria-label={
-            featureTimeline.showProposed
-              ? "Hide proposed features"
-              : "Show proposed features"
-          }
-          color={featureTimeline.showProposed ? "primary" : undefined}
-        >
-          <PendingActionsIcon fontSize="small" />
-        </IconButton>
-      )}
-      <IconButton
-        size="small"
-        onClick={onMobileMapToggle}
-        aria-label={mobileMapActive ? "Back to detail" : "View on map"}
-        color={mobileMapActive ? "primary" : undefined}
-      >
-        <MapIcon fontSize="small" />
-      </IconButton>
-    </>
-  ) : inFeatures && onToggleFavorite ? (
-    <IconButton
-      size="small"
-      onClick={() => onToggleFavorite(selectedSection.id)}
-      aria-label={
-        favoritedIds?.has(selectedSection.id)
-          ? "Remove from favorites"
-          : "Add to favorites"
-      }
-    >
-      {favoritedIds?.has(selectedSection.id) ? (
-        <StarIcon fontSize="small" sx={{ color: theme.tokens.tertiary }} />
-      ) : (
-        <StarBorderIcon fontSize="small" />
-      )}
-    </IconButton>
-  ) : undefined;
+  const showProposedToggle = inFeatures && featureTimeline?.onToggleProposed;
+  const showFavoriteToggle = inFeatures && onToggleFavorite != null;
+  const actionButton =
+    showProposedToggle || showFavoriteToggle || onMobileMapToggle ? (
+      <>
+        {showProposedToggle && (
+          <IconButton
+            size="small"
+            onClick={featureTimeline.onToggleProposed}
+            aria-label={
+              featureTimeline.showProposed
+                ? "Hide proposed features"
+                : "Show proposed features"
+            }
+            color={featureTimeline.showProposed ? "primary" : undefined}
+          >
+            <PendingActionsIcon fontSize="small" />
+          </IconButton>
+        )}
+        {showFavoriteToggle && (
+          <IconButton
+            size="small"
+            onClick={() => onToggleFavorite(selectedSection.id)}
+            aria-label={
+              favoritedIds?.has(selectedSection.id)
+                ? "Remove from favorites"
+                : "Add to favorites"
+            }
+          >
+            {favoritedIds?.has(selectedSection.id) ? (
+              <StarIcon
+                fontSize="small"
+                sx={{ color: theme.tokens.tertiary }}
+              />
+            ) : (
+              <StarBorderIcon fontSize="small" />
+            )}
+          </IconButton>
+        )}
+        {onMobileMapToggle && (
+          <IconButton
+            size="small"
+            onClick={onMobileMapToggle}
+            aria-label={mobileMapActive ? "Back to detail" : "View on map"}
+            color={mobileMapActive ? "primary" : undefined}
+          >
+            <MapIcon fontSize="small" />
+          </IconButton>
+        )}
+      </>
+    ) : undefined;
 
   const showNewSectionFab =
     isAuthenticated &&
     tab === "sections" &&
     !inFeatures &&
     selectedSectionId == null;
-
-  const showLogDescentFab =
-    isAuthenticated && inFeatures && sectionDetailTab === "logs";
 
   const headerTabs = inFeatures
     ? {
@@ -190,10 +196,10 @@ export default function WaterwayBrowsePanel({
             flex: 1,
             overflowY: "auto",
             p: 1,
-            // Leave room so a floating button never covers the last row -
-            // the panel's own FABs, or the mobile speed dial in the
-            // section features view (its km labels are right-aligned).
-            pb: showNewSectionFab || showLogDescentFab || inFeatures ? 9 : 1,
+            // Leave room so a floating button never covers the last row.
+            // Desktop docks its actions in the row below the list, so only
+            // the panel's own FAB and the mobile speed dial need it.
+            pb: showNewSectionFab ? 9 : inFeatures ? { xs: 9, md: 1 } : 1,
           }}
         >
           {isLoading ? (
@@ -240,45 +246,42 @@ export default function WaterwayBrowsePanel({
             <AddIcon />
           </Fab>
         )}
-
-        {showLogDescentFab && (
-          <Fab
-            color="primary"
-            aria-label="Log descent"
-            title="Log descent"
-            onClick={() =>
-              navigate({
-                to: "/logs/new",
-                search: {
-                  waterwayId,
-                  sectionId: selectedSectionId,
-                  startTime: undefined,
-                },
-              })
-            }
-            sx={{ position: "absolute", bottom: 16, right: 16 }}
-          >
-            <AddIcon />
-          </Fab>
-        )}
       </Box>
 
-      {/* "New feature" is desktop-only here (mobile uses the speed dial). */}
-      {isAuthenticated &&
-        tab === "sections" &&
-        !inFeatures &&
-        selectedSectionId != null && (
-          <Box
-            sx={{
-              px: 1.5,
-              py: 1,
-              display: { xs: "none", md: "flex" },
-              gap: 1,
-              flexShrink: 0,
-              borderTop: "1px solid",
-              borderColor: "divider",
-            }}
-          >
+      {/* Desktop counterpart of the mobile speed dial: a docked row, so it
+          never floats over the last list row. */}
+      {isAuthenticated && inFeatures && (
+        <Box
+          sx={{
+            px: 1.5,
+            py: 1,
+            display: { xs: "none", md: "flex" },
+            gap: 1,
+            flexShrink: 0,
+            borderTop: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          {sectionDetailTab === "logs" ? (
+            <Button
+              size="small"
+              startIcon={<AddIcon />}
+              variant="outlined"
+              fullWidth
+              onClick={() =>
+                navigate({
+                  to: "/logs/new",
+                  search: {
+                    waterwayId,
+                    sectionId: selectedSectionId,
+                    startTime: undefined,
+                  },
+                })
+              }
+            >
+              Log descent
+            </Button>
+          ) : (
             <Button
               size="small"
               startIcon={<AddIcon />}
@@ -288,8 +291,9 @@ export default function WaterwayBrowsePanel({
             >
               New feature
             </Button>
-          </Box>
-        )}
+          )}
+        </Box>
+      )}
     </>
   );
 }

@@ -125,10 +125,7 @@ export default function ProposalCard({
           fullWidth
         />
         {review.isError && (
-          <Alert
-            severity="error"
-            sx={{ mt: 1.5, py: 0.25, fontSize: "0.75rem" }}
-          >
+          <Alert severity="error" sx={{ mt: 1.5 }}>
             {apiErrorMessage(review.error, "Review failed. Please try again.")}
           </Alert>
         )}

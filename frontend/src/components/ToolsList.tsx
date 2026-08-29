@@ -40,7 +40,18 @@ export default function ToolsList() {
   };
 
   return (
-    <List disablePadding sx={{ border: "1px solid", borderColor: "divider" }}>
+    // Rows on mobile, a card grid on desktop - two tools in one stacked
+    // column wasted the whole width of the page.
+    <List
+      disablePadding
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" },
+        gap: { md: 2 },
+        border: { xs: "1px solid", md: "none" },
+        borderColor: "divider",
+      }}
+    >
       {TOOLS.map((tool, i) => {
         const count = counts[tool.to];
         return (
@@ -48,11 +59,18 @@ export default function ToolsList() {
             key={tool.to}
             component={Link}
             to={tool.to}
-            sx={
-              i > 0
-                ? { borderTop: "1px solid", borderColor: "divider" }
-                : undefined
-            }
+            sx={{
+              ...(i > 0
+                ? {
+                    borderTop: { xs: "1px solid", md: "none" },
+                    borderColor: "divider",
+                  }
+                : {}),
+              border: { md: "1px solid" },
+              borderColor: { md: "divider" },
+              alignItems: { md: "flex-start" },
+              p: { md: 2 },
+            }}
           >
             <ListItemIcon sx={{ minWidth: 40 }}>{tool.icon}</ListItemIcon>
             <ListItemText primary={tool.title} secondary={tool.description} />

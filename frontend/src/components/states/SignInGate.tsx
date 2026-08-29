@@ -5,13 +5,16 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { useSession } from "@/lib/hooks/useSession";
 
-/** Full-page sign-in prompt: disabled icon, one line, sign-in button. */
+/** Sign-in prompt: disabled icon, one line, sign-in button. `pt` shrinks it
+ * for use inside a panel rather than a full page. */
 export default function SignInGate({
   icon,
   title,
+  pt = 10,
 }: {
   icon: ReactNode;
   title: string;
+  pt?: number;
 }) {
   const { login, signup } = useSession();
   return (
@@ -21,7 +24,7 @@ export default function SignInGate({
         flexDirection: "column",
         alignItems: "center",
         gap: 2,
-        pt: 10,
+        pt,
         px: 2,
       }}
     >

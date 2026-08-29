@@ -45,7 +45,9 @@ export default function ChartPanelShell({
       sx={{
         borderTop: "1px solid",
         borderColor: "divider",
-        height: 260,
+        // Mobile keeps the compact band; desktop lets the chart grow
+        // with the viewport instead of staying phone-sized.
+        height: { xs: 260, md: "clamp(260px, 30vh, 420px)" },
         display: "flex",
         flexDirection: "column",
         flexShrink: 0,

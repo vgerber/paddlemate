@@ -135,9 +135,7 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
             ))}
           </Box>
           {thresholdError ? (
-            <Alert severity="warning" sx={{ py: 0.25, fontSize: "0.75rem" }}>
-              {thresholdError}
-            </Alert>
+            <Alert severity="warning">{thresholdError}</Alert>
           ) : (
             selected.catalog && (
               <Typography

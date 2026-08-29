@@ -6,11 +6,11 @@ import IconButton from "@mui/material/IconButton";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
 import LocationPin, {
   PUT_IN_COLOR,
   TAKE_OUT_COLOR,
 } from "@/components/map/LocationPin";
+import FormSection from "@/components/waterway/FormSection";
 import type { useRiverSnap } from "@/lib/hooks/useRiverSnap";
 
 type RiverSnap = ReturnType<typeof useRiverSnap>;
@@ -47,110 +47,106 @@ export default function SectionLineStep({
   const snapInProgress =
     snap.status === "searching" || snap.status === "routing";
 
+  const lookupHint =
+    snap.riverLookup === "searching"
+      ? `Searching for ${waterwayName ?? "the river"} on OpenStreetMap…`
+      : snap.riverLookup === "found"
+        ? "The river course is highlighted - tap the map to set each point on it."
+        : snap.riverLookup === "not-found"
+          ? `Couldn't find ${waterwayName ?? "the river"} in this view - pan or zoom to it, or pick your points anyway.`
+          : snap.riverLookup === "zoomed-out"
+            ? "Zoom in to preview the river course."
+            : "Tap the map to set where you get on and off the water.";
+
   return (
     <>
-      {!hasLocation && (
-        <>
-          {snap.riverLookup === "searching" && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <CircularProgress size={14} />
-              <Typography variant="caption" color="text.secondary">
-                Searching for {waterwayName ?? "the river"} on OpenStreetMap…
-              </Typography>
+      <FormSection
+        label="Put-in and take-out"
+        hint={
+          snap.riverLookup === "searching" ? (
+            <Box
+              component="span"
+              sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}
+            >
+              <CircularProgress size={12} />
+              {lookupHint}
             </Box>
-          )}
-          {snap.riverLookup === "found" && (
-            <Typography variant="caption" color="text.secondary">
-              River course highlighted on the map - pick your points on it.
-            </Typography>
-          )}
-          {snap.riverLookup === "not-found" && (
-            <Typography variant="caption" color="text.secondary">
-              Couldn't find {waterwayName ?? "the river"} in this map view - pan
-              or zoom to it, or pick your points anyway.
-            </Typography>
-          )}
-          {snap.riverLookup === "zoomed-out" && (
-            <Typography variant="caption" color="text.secondary">
-              Zoom in to preview the river course.
-            </Typography>
-          )}
-        </>
-      )}
-
-      <Box sx={{ display: "flex", gap: 1.5 }}>
-        <LocationPin
-          num={1}
-          color={PUT_IN_COLOR}
-          title="PUT-IN"
-          coords={putIn}
-          onClear={onClearPutIn}
-        />
-        <LocationPin
-          num={2}
-          color={TAKE_OUT_COLOR}
-          title="TAKE-OUT"
-          coords={takeOut}
-          onClear={onClearTakeOut}
-        />
-      </Box>
+          ) : (
+            lookupHint
+          )
+        }
+      >
+        <Box sx={{ display: "flex", gap: 1.5 }}>
+          <LocationPin
+            num={1}
+            color={PUT_IN_COLOR}
+            title="PUT-IN"
+            coords={putIn}
+            onClear={onClearPutIn}
+          />
+          <LocationPin
+            num={2}
+            color={TAKE_OUT_COLOR}
+            title="TAKE-OUT"
+            coords={takeOut}
+            onClear={onClearTakeOut}
+          />
+        </Box>
+      </FormSection>
 
       {hasLocation && (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          {snap.status === "failed" && (
-            <Alert severity="warning" sx={{ py: 0.25, fontSize: "0.75rem" }}>
-              Couldn't match this river on OpenStreetMap - a straight line
-              between your points will be used.
-            </Alert>
-          )}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <ToggleButtonGroup
-              value={snapActive ? "snap" : "straight"}
-              exclusive
-              size="small"
-              onChange={(_, v) => {
-                if (v) onLineSourceChange(v);
-              }}
-              sx={{
-                flex: 1,
-                "& .MuiToggleButton-root": {
-                  flex: 1,
-                  py: { xs: 1.25, md: 0.5 },
-                  fontSize: { xs: "0.75rem", md: "0.7rem" },
-                },
-              }}
-            >
-              <ToggleButton value="snap" disabled={snap.status !== "done"}>
-                {snapInProgress && (
-                  <CircularProgress
-                    size={12}
-                    color="inherit"
-                    sx={{ mr: 0.75 }}
-                  />
-                )}
-                Snapped course
-              </ToggleButton>
-              <ToggleButton value="straight">Straight line</ToggleButton>
-            </ToggleButtonGroup>
+        <FormSection
+          label="Section line"
+          hint="How the line between your points is drawn."
+          action={
             <Tooltip title="Retry OSM matching">
               <span>
                 <IconButton
                   size="small"
                   onClick={snap.retry}
                   disabled={snapInProgress}
-                  sx={{ p: { xs: 1.25, md: 0.625 } }}
                 >
                   <ReplayIcon fontSize="small" />
                 </IconButton>
               </span>
             </Tooltip>
-          </Box>
+          }
+        >
+          {snap.status === "failed" && (
+            <Alert severity="warning">
+              Couldn't match this river on OpenStreetMap - a straight line
+              between your points will be used.
+            </Alert>
+          )}
+          <ToggleButtonGroup
+            value={snapActive ? "snap" : "straight"}
+            exclusive
+            size="small"
+            onChange={(_, v) => {
+              if (v) onLineSourceChange(v);
+            }}
+            sx={{
+              "& .MuiToggleButton-root": {
+                flex: 1,
+                py: { xs: 1.25, md: 0.5 },
+                fontSize: { xs: "0.75rem", md: "0.7rem" },
+              },
+            }}
+          >
+            <ToggleButton value="snap" disabled={snap.status !== "done"}>
+              {snapInProgress && (
+                <CircularProgress size={12} color="inherit" sx={{ mr: 0.75 }} />
+              )}
+              Snapped course
+            </ToggleButton>
+            <ToggleButton value="straight">Straight line</ToggleButton>
+          </ToggleButtonGroup>
           {orderWrong && (
-            <Alert severity="warning" sx={{ py: 0.25, fontSize: "0.75rem" }}>
+            <Alert severity="warning">
               Put-in appears to be downstream of take-out - check the order.
             </Alert>
           )}
-        </Box>
+        </FormSection>
       )}
     </>
   );
