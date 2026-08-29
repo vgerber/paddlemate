@@ -1,5 +1,5 @@
 import type { User } from "oidc-client-ts";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { showErrorSnackbar } from "@/components/AppSnackbar";
 import {
   logout as authLogout,
@@ -41,48 +41,76 @@ function userToSession(
   };
 }
 
+/** Give up after this many failed renewals in a row. Without a cap, an
+ * expiry event that keeps re-firing (a provider handing back an
+ * already-expired token, or an unreachable one) retries forever, and every
+ * attempt toggles the loading state - which the app chrome shows as a
+ * blinking sign-in button. */
+const MAX_RENEW_ATTEMPTS = 3;
+
 export function useSession(): UseSessionReturn {
   // undefined = still initialising, null = not authenticated, User = authenticated
   const [oidcUser, setOidcUser] = useState<User | null | undefined>(undefined);
   // true while a silent renewal is in-flight so we show a spinner instead of a login prompt
   const [isRenewing, setIsRenewing] = useState(false);
+  // One renewal at a time; overlapping attempts fight over the refresh token.
+  const renewInFlight = useRef(false);
+  const failedRenewals = useRef(0);
 
   useEffect(() => {
+    /** Renew once, treating "succeeded but still expired" as a failure so a
+     * provider that hands back a stale token cannot drive a retry loop. */
+    const renew = async () => {
+      if (renewInFlight.current) return;
+      if (failedRenewals.current >= MAX_RENEW_ATTEMPTS) {
+        setOidcUser(null);
+        return;
+      }
+      renewInFlight.current = true;
+      setIsRenewing(true);
+      try {
+        const user = await getUserManager().signinSilent({
+          forceIframeAuth: false,
+        });
+        if (user && !user.expired) {
+          failedRenewals.current = 0;
+          setOidcUser(user);
+        } else {
+          failedRenewals.current += 1;
+          setOidcUser(null);
+        }
+      } catch {
+        failedRenewals.current += 1;
+        setOidcUser(null);
+      } finally {
+        renewInFlight.current = false;
+        setIsRenewing(false);
+      }
+    };
+
     // If the stored token is already expired, renew silently before leaving
     // the loading state so the login prompt never flashes.
     getUserManager()
       .getUser()
       .then(async (user) => {
         if (user?.expired) {
-          setIsRenewing(true);
-          try {
-            await getUserManager().signinSilent({ forceIframeAuth: false });
-          } catch {
-            setOidcUser(null);
-          } finally {
-            setIsRenewing(false);
-          }
+          await renew();
         } else {
           setOidcUser(user);
         }
       });
 
-    const onLoaded = (user: User) => setOidcUser(user);
+    const onLoaded = (user: User) => {
+      failedRenewals.current = 0;
+      setOidcUser(user);
+    };
     const onUnloaded = () => setOidcUser(null);
     const onRenewError = () => {
+      failedRenewals.current += 1;
       getUserManager().getUser().then(setOidcUser);
     };
 
-    const onTokenExpired = async () => {
-      try {
-        setIsRenewing(true);
-        await getUserManager().signinSilent({ forceIframeAuth: false });
-      } catch {
-        getUserManager().getUser().then(setOidcUser);
-      } finally {
-        setIsRenewing(false);
-      }
-    };
+    const onTokenExpired = renew;
 
     // Mobile PWA: when the app resumes from background the access token may
     // have already expired because JS timers were paused. Re-check on focus.
@@ -94,14 +122,9 @@ export function useSession(): UseSessionReturn {
         user.expired ||
         (user.expires_in !== undefined && user.expires_in < 60)
       ) {
-        try {
-          setIsRenewing(true);
-          await getUserManager().signinSilent({ forceIframeAuth: false });
-        } catch {
-          getUserManager().getUser().then(setOidcUser);
-        } finally {
-          setIsRenewing(false);
-        }
+        // A fresh foreground is a fresh chance, even after earlier failures.
+        failedRenewals.current = 0;
+        await renew();
       }
     };
 
@@ -146,13 +169,17 @@ export function useSession(): UseSessionReturn {
       const user = await getUserManager().signinSilent({
         forceIframeAuth: false,
       });
+      if (user && !user.expired) failedRenewals.current = 0;
       return !!user;
     } catch {
       return false;
     }
   }, []);
 
-  const isLoading = oidcUser === undefined || isRenewing;
+  // A renewal only counts as loading while a session might still be valid.
+  // Once we know we are signed out, keep the sign-in chrome on screen -
+  // hiding it per attempt is what made the buttons blink.
+  const isLoading = oidcUser === undefined || (isRenewing && oidcUser !== null);
   const { user, accessToken, isAdmin } = userToSession(oidcUser ?? null);
 
   return {
