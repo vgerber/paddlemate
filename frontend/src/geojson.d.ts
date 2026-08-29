@@ -4,6 +4,7 @@
 import type * as geojson from "geojson";
 
 declare global {
+  // biome-ignore lint/style/noNamespace: ambient bridge for a UMD global, not code organisation
   namespace GeoJSON {
     type Point = geojson.Point;
     type Feature = geojson.Feature;
