@@ -2,13 +2,14 @@ mod comments;
 mod crud;
 mod features;
 mod geometry;
+mod images;
 mod sections;
 mod water_ranges;
 mod water_status;
 
 use aide::axum::{
     ApiRouter,
-    routing::{get_with, post_with, put_with},
+    routing::{delete_with, get_with, post_with, put_with},
 };
 use axum::Extension;
 
@@ -61,6 +62,46 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
             ),
         )
         // Section CRUD
+        .api_route(
+            "/{waterway_id}/images",
+            get_with(
+                images::list_waterway_images,
+                images::list_waterway_images_docs,
+            )
+            .post_with(
+                images::upload_waterway_image,
+                images::upload_waterway_image_docs,
+            ),
+        )
+        .api_route(
+            "/{waterway_id}/images/{image_id}",
+            delete_with(
+                images::delete_waterway_image,
+                images::delete_waterway_image_docs,
+            ),
+        )
+        .api_route(
+            "/{waterway_id}/comments",
+            get_with(
+                comments::list_waterway_comments,
+                comments::list_waterway_comments_docs,
+            )
+            .post_with(
+                comments::create_waterway_comment,
+                comments::create_waterway_comment_docs,
+            ),
+        )
+        .api_route(
+            "/{waterway_id}/comments/{comment_id}",
+            put_with(
+                comments::update_waterway_comment,
+                comments::update_waterway_comment_docs,
+            )
+            .delete_with(
+                comments::delete_waterway_comment,
+                comments::delete_waterway_comment_docs,
+            ),
+        )
         .api_route(
             "/{waterway_id}/sections",
             get_with(sections::list_sections, sections::list_sections_docs)

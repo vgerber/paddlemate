@@ -5,6 +5,7 @@ use crate::models::comment::{Comment, CommentEntityType, CommentId};
 fn parse_entity_type(s: &str) -> CommentEntityType {
     match s {
         "feature" => CommentEntityType::Feature,
+        "waterway" => CommentEntityType::Waterway,
         _ => CommentEntityType::WaterSection,
     }
 }

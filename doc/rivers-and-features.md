@@ -136,6 +136,8 @@ find your river? Add it").
 | `gauges` → `gauge_series` → `gauge_readings` | station → measurement type (level/discharge) → time series |
 | `descents`, `descent_sections` | a log entry and the sections it covers (one descent can span several) |
 | `proposals`, `proposal_votes` | community edit queue |
+| `comments` | free-form comments keyed by `(entity_type, entity_id)` - rivers, sections and features |
+| `images` | photo metadata keyed the same way (rivers today); the bytes are files under `MEDIA_DIR`, addressed by `storage_key` |
 | `waterway_osm_elements` | cached OSM elements per waterway (centerline way fragments today, bank polygons later); serves `GET .../waterways/{id}/geometry` so river snapping skips live Overpass |
 
 ### Conventions
@@ -172,4 +174,13 @@ find your river? Add it").
   backfills; `DELETE` on the endpoint (admin) invalidates one river.
   Confluence routing uses `GET /geo/river-segments?line=&radius_m=` (a live
   server-side lookup for river segments around a corridor, not cached).
+- Photos of a river are uploaded to `POST /waterways/{id}/images` as
+  multipart (`file`, optional `caption`). The API decodes and re-encodes
+  every upload, which strips EXIF (phone photos carry GPS), caps the long
+  edge at 1600px and writes a 400px thumbnail beside it; decoding is also
+  the validation, so a file that is not really an image is rejected
+  whatever its `Content-Type` claimed. Files are served from `/media/{key}`
+  with immutable cache headers, and the uploader or an admin can delete
+  one. Because the bytes live outside Postgres, `pg_dump` is no longer a
+  complete backup - `MEDIA_DIR` needs its own.
 - Full ER diagram: [api/README.md](../api/README.md).

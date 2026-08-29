@@ -38,6 +38,18 @@ pub struct SectionLocalePath {
 }
 
 #[derive(Deserialize, JsonSchema)]
+pub struct WaterwayImagePath {
+    pub waterway_id: WaterwayId,
+    pub image_id: i64,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct WaterwayCommentPath {
+    pub waterway_id: WaterwayId,
+    pub comment_id: CommentId,
+}
+
+#[derive(Deserialize, JsonSchema)]
 pub struct SectionCommentPath {
     pub waterway_id: WaterwayId,
     pub section_id: SectionId,

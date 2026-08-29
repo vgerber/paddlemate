@@ -8,3 +8,5 @@ enrich*.jsonl
 deploy/
 .claude/*
 !.claude/skills
+# Uploaded media in local development (MEDIA_DIR)
+api/media/

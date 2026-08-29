@@ -14,11 +14,135 @@ use crate::{
     layers::auth::AuthToken,
     models::{
         comment::{Comment, CommentId, CreateCommentRequest, UpdateCommentRequest},
-        path_params::{FeatureCommentPath, FeaturePath, SectionCommentPath, SectionPath},
+        path_params::{
+            FeatureCommentPath, FeaturePath, SectionCommentPath, SectionPath, WaterwayCommentPath,
+            WaterwayPath,
+        },
     },
     query::comments,
     state::AppState,
 };
+
+pub async fn list_waterway_comments(
+    State(app): State<AppState>,
+    Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
+) -> impl IntoApiResponse {
+    match comments::list_comments(&app.pg_pool, "waterway", waterway_id).await {
+        Ok(list) => Json(list).into_response(),
+        Err(err) => {
+            tracing::error!("Error listing comments for river {}: {}", waterway_id, err);
+            ApiError::internal().into_response()
+        }
+    }
+}
+
+doc_fn!(list_waterway_comments_docs, op =>
+    op.description("List comments on a river")
+        .response::<200, Json<Vec<Comment>>>()
+        .tag("Comments")
+);
+
+pub async fn create_waterway_comment(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
+    Json(body): Json<CreateCommentRequest>,
+) -> impl IntoApiResponse {
+    let Extension(token) = match auth {
+        Some(a) => a,
+        None => return ApiError::unauthorized("Authentication required").into_response(),
+    };
+
+    match comments::insert_comment(
+        &app.pg_pool,
+        "waterway",
+        waterway_id,
+        &body.body,
+        token.user_id(),
+    )
+    .await
+    {
+        Ok(comment) => (StatusCode::CREATED, Json(comment)).into_response(),
+        Err(err) => {
+            tracing::error!("Error creating comment on river {}: {}", waterway_id, err);
+            ApiError::internal().into_response()
+        }
+    }
+}
+
+doc_fn!(create_waterway_comment_docs, op =>
+    op.description("Add a comment to a river")
+        .response_with::<201, Json<Comment>, _>(|res| res.description("Comment created"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Comments")
+);
+
+pub async fn update_waterway_comment(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path(WaterwayCommentPath { comment_id, .. }): Path<WaterwayCommentPath>,
+    Json(body): Json<UpdateCommentRequest>,
+) -> impl IntoApiResponse {
+    let Extension(token) = match auth {
+        Some(a) => a,
+        None => return ApiError::unauthorized("Authentication required").into_response(),
+    };
+
+    match comments::update_comment(&app.pg_pool, comment_id, &body.body, token.user_id()).await {
+        Ok(Some(comment)) => Json(comment).into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
+        Err(err) => {
+            tracing::error!("Error updating comment {}: {}", comment_id, err);
+            ApiError::internal().into_response()
+        }
+    }
+}
+
+doc_fn!(update_waterway_comment_docs, op =>
+    op.description("Update a river comment (author only)")
+        .response::<200, Json<Comment>>()
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Comment not found or not your comment"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Comments")
+);
+
+pub async fn delete_waterway_comment(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path(WaterwayCommentPath { comment_id, .. }): Path<WaterwayCommentPath>,
+) -> impl IntoApiResponse {
+    let Extension(token) = match auth {
+        Some(a) => a,
+        None => return ApiError::unauthorized("Authentication required").into_response(),
+    };
+
+    match comments::delete_comment(
+        &app.pg_pool,
+        comment_id,
+        token.user_id(),
+        token.is_server_admin(),
+    )
+    .await
+    {
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => ApiError::not_found("Not found").into_response(),
+        Err(err) => {
+            tracing::error!("Error deleting comment {}: {}", comment_id, err);
+            ApiError::internal().into_response()
+        }
+    }
+}
+
+doc_fn!(delete_waterway_comment_docs, op =>
+    op.description("Delete a river comment (author or admin)")
+        .response_with::<204, (), _>(|res| res.description("Deleted"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Comment not found"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Comments")
+);
 
 pub async fn list_section_comments(
     State(app): State<AppState>,

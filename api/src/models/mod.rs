@@ -5,6 +5,7 @@ pub mod feature;
 pub mod gauge;
 pub mod geometry;
 pub mod group;
+pub mod image;
 pub mod lang;
 pub mod osm_geometry;
 pub mod path_params;

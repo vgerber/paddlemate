@@ -9,6 +9,7 @@ pub type CommentId = i64;
 pub enum CommentEntityType {
     WaterSection,
     Feature,
+    Waterway,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

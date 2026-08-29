@@ -304,10 +304,26 @@ async fn main() {
         })
     });
 
+    // Uploaded photos, served straight off disk. Keys are random and a
+    // stored file never changes, so they can be cached hard.
+    let media_dir = paddlemate_api::media::media_dir();
+    std::fs::create_dir_all(&media_dir).ok();
+    tracing::info!("Serving media from {}", media_dir.display());
+    let media = axum::Router::new()
+        .nest_service(
+            "/media",
+            tower_http::services::ServeDir::new(media_dir).precompressed_gzip(),
+        )
+        .layer(tower_http::set_header::SetResponseHeaderLayer::overriding(
+            axum::http::header::CACHE_CONTROL,
+            HeaderValue::from_static("public, max-age=31536000, immutable"),
+        ));
+
     let routed = ApiRouter::new()
         .nest_api_service(&base_url, api_v1)
         .finish_api_with(&mut api, api_docs)
-        .layer(Extension(Arc::new(api)));
+        .layer(Extension(Arc::new(api)))
+        .merge(media);
 
     // Applied inside CORS on purpose: a rejected request still needs the CORS
     // headers, or the browser reports a cross-origin failure rather than the
