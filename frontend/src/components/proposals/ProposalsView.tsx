@@ -2,12 +2,11 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import HowToVoteOutlinedIcon from "@mui/icons-material/HowToVoteOutlined";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useState } from "react";
@@ -40,14 +39,47 @@ const OPERATION_TABS: { value: ProposalOperation | ""; label: string }[] = [
   { value: "delete", label: "Delete" },
 ];
 
-const toggleGroupSx = {
-  width: "100%",
-  "& .MuiToggleButton-root": {
-    flex: 1,
-    py: 0.5,
-    fontSize: "0.75rem",
-  },
-} as const;
+/** One filter dimension as selectable chips - the design language's marker
+ * for a type or status, and far lighter than a full row of toggle buttons. */
+function FilterChips({
+  options,
+  value,
+  onChange,
+}: {
+  options: readonly { value: string; label: string }[];
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const { tokens } = theme;
+  return (
+    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+      {options.map((option) => {
+        const active = option.value === value;
+        return (
+          <Chip
+            key={option.label}
+            label={option.label}
+            size="small"
+            variant="outlined"
+            onClick={() => onChange(option.value)}
+            sx={{
+              color: active ? tokens.primary : "text.secondary",
+              borderColor: active
+                ? `${tokens.primary}80`
+                : `${tokens.outlineVariant}66`,
+              bgcolor: active ? `${tokens.primary}14` : "transparent",
+              "&:hover": {
+                bgcolor: active
+                  ? `${tokens.primary}1f`
+                  : `${tokens.outlineVariant}33`,
+              },
+            }}
+          />
+        );
+      })}
+    </Box>
+  );
+}
 
 interface ProposalsViewProps {
   status: ProposalStatus;
@@ -152,38 +184,22 @@ export default function ProposalsView({
             py: 1.5,
           }}
         >
-          <ToggleButtonGroup
+          <FilterChips
+            options={ENTITY_TABS}
             value={entityType ?? ""}
-            exclusive
-            size="small"
-            onChange={(_, v) => {
-              if (v !== null) onEntityTypeChange(v || undefined);
-            }}
-            sx={toggleGroupSx}
-          >
-            {ENTITY_TABS.map((t) => (
-              <ToggleButton key={t.label} value={t.value}>
-                {t.label}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
+            onChange={(v) =>
+              onEntityTypeChange((v || undefined) as ProposalEntityType)
+            }
+          />
 
           {onOperationChange && (
-            <ToggleButtonGroup
+            <FilterChips
+              options={OPERATION_TABS}
               value={operation ?? ""}
-              exclusive
-              size="small"
-              onChange={(_, v) => {
-                if (v !== null) onOperationChange(v || undefined);
-              }}
-              sx={toggleGroupSx}
-            >
-              {OPERATION_TABS.map((t) => (
-                <ToggleButton key={t.label} value={t.value}>
-                  {t.label}
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
+              onChange={(v) =>
+                onOperationChange((v || undefined) as ProposalOperation)
+              }
+            />
           )}
         </Box>
       </Collapse>

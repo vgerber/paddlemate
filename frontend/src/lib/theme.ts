@@ -520,6 +520,9 @@ export const theme = createTheme({
     MuiBadge: {
       styleOverrides: {
         badge: { borderRadius: 0 },
+        // A dot is a dot - circles are part of the language, square ones
+        // read as a stray block next to the icon.
+        dot: { borderRadius: "50%" },
       },
     },
   },

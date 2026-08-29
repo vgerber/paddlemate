@@ -43,7 +43,9 @@ sparingly and always carries meaning.
   "pending" carries no pending badge. Secondary counts (votes, totals)
   drop out entirely when they are zero.
 - Filters beyond the primary tabs collapse behind a filter icon with a
-  badge dot, so the list is what a screen lands on.
+  badge dot, so the list is what a screen lands on. The options themselves
+  are selectable chips, not a toggle-button row - a row of bordered
+  buttons per dimension reads as a keypad.
 - A choice between two states is a bordered toggle group with its count
   inside the button, never loose icon buttons with numbers between them.
   A decision that commits something (approve, reject) is a labelled button
