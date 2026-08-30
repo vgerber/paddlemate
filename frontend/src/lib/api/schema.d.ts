@@ -339,6 +339,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/waterways/{waterway_id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Photos, videos and linked write-ups for a river, in gallery order. Photos posted inside a note stay in that thread unless include_from_notes=true. */
+        get: operations["list_waterway_media"];
+        put?: never;
+        /** @description Add a photo, video or write-up to a river. Multipart: 'kind' (photo, default / video / blog), a 'file' part for a photo (jpeg, png or webp, 8 MB max) or a 'url' for a video or blog, plus optional 'caption', 'copyright', 'license_name', 'license_url' and 'weight'. An uploaded photo is re-encoded, which strips EXIF and caps it at 1600px. */
+        post: operations["add_waterway_media"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/media/{media_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Delete a river photo, video or write-up (uploader or admin) */
+        delete: operations["delete_waterway_media"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Notes on a river. include_sections=true adds the notes on its sections, for one overview of everything reported on the water. */
+        get: operations["list_waterway_comments"];
+        put?: never;
+        /** @description Add a comment to a river */
+        post: operations["create_waterway_comment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/comments/{comment_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Set a river note's status (admin). 'merged' means the note was folded into curated data and can drop out of the thread; 'spam' hides it from everyone. */
+        put: operations["moderate_waterway_comment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/comments/{comment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Update a river comment (author only) */
+        put: operations["update_waterway_comment"];
+        post?: never;
+        /** @description Delete a river comment (author or admin) */
+        delete: operations["delete_waterway_comment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/waterways/{waterway_id}/sections": {
         parameters: {
             query?: never;
@@ -495,6 +583,24 @@ export interface paths {
         post: operations["upsert_feature_description"];
         /** @description Delete a localized description for a feature */
         delete: operations["delete_feature_description"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Photos, videos and linked write-ups for a section, in gallery order */
+        get: operations["list_section_media"];
+        put?: never;
+        /** @description Add a photo, video or write-up to a section. Same multipart form as the river endpoint. */
+        post: operations["add_section_media"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1085,7 +1191,13 @@ export interface components {
         };
         Comment: {
             author_id: string;
+            /**
+             * @description Display name for `author_id`, resolved at read time. Falls back to
+             *      the id when the directory cannot be reached.
+             */
+            author_name?: string | null;
             body: string;
+            category: components["schemas"]["CommentCategory"];
             /** Format: date-time */
             created_at: string;
             /** Format: int64 */
@@ -1093,13 +1205,54 @@ export interface components {
             entity_type: components["schemas"]["CommentEntityType"];
             /** Format: int64 */
             id: number;
+            /** @description The point the note is about, when the author placed one. */
+            location?: components["schemas"]["Geometry"] | null;
+            /** @description Media posted with this note, in gallery order. */
+            media?: components["schemas"]["Media"][];
+            status: components["schemas"]["CommentStatus"];
             /** Format: date-time */
             updated_at: string;
         };
+        /**
+         * @description What kind of note this is. A tree across the channel and a trip report
+         *      are different things and must not read alike; the set follows Riverzone's
+         *      note categories, the reference for this kind of field report.
+         */
+        CommentCategory: "urgent" | "danger_temporary" | "danger_cleared" | "danger_permanent" | "calibration" | "difficulty" | "current_conditions" | "regulations" | "logistics" | "info";
         /** @enum {string} */
-        CommentEntityType: "water_section" | "feature";
+        CommentEntityType: "water_section" | "feature" | "waterway";
+        CommentQuery: {
+            /**
+             * @description Include the notes on this river's sections, for an overview of
+             *      everything reported on the water.
+             */
+            include_sections?: boolean | null;
+        };
+        /**
+         * @description Where a note stands. `Merged` means an editor folded it into curated
+         *      data (a feature, a description), so it can drop out of the thread
+         *      without being deleted.
+         * @enum {string}
+         */
+        CommentStatus: "ok" | "merged" | "outdated" | "spam";
         CreateCommentRequest: {
             body: string;
+            /**
+             * @description Defaults to `info` when the client says nothing.
+             * @default null
+             */
+            category: components["schemas"]["CommentCategory"] | null;
+            /**
+             * @description GeoJSON Point the note is about, e.g. where the hazard sits.
+             * @default null
+             */
+            location: components["schemas"]["Geometry"] | null;
+            /**
+             * @description Ids of already-uploaded media to attach, in the order given. Upload
+             *      first, then post the note that shows them.
+             * @default []
+             */
+            media_ids: number[];
         };
         CreateDescentRequest: {
             /** Format: date-time */
@@ -1707,6 +1860,71 @@ export interface components {
         MatchSource: "waterway" | "section" | "section_name" | "feature_name";
         /** @enum {string} */
         MeasurementType: "water_level" | "discharge" | "temperature";
+        /**
+         * @description A stored photo or a linked video/write-up. For a photo the bytes live
+         *      under MEDIA_DIR and `url`/`thumbnail_url` point at them; for a link they
+         *      carry the external address.
+         */
+        Media: {
+            /** Format: int64 */
+            byte_size?: number | null;
+            caption?: string | null;
+            /**
+             * Format: int64
+             * @description Set when the item was posted inside a note.
+             */
+            comment_id?: number | null;
+            /** @description Who took the photo, when that is not the uploader. */
+            copyright?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            entity_id: number;
+            entity_type: components["schemas"]["MediaEntityType"];
+            /** Format: int32 */
+            height?: number | null;
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["MediaKind"];
+            license_name?: string | null;
+            license_url?: string | null;
+            mime_type?: string | null;
+            /** @description Only photos have one. */
+            thumbnail_url?: string | null;
+            uploaded_by: string;
+            url: string;
+            /**
+             * Format: int32
+             * @description Gallery order, lowest first.
+             */
+            weight: number;
+            /** Format: int32 */
+            width?: number | null;
+        };
+        /**
+         * @description What a media item is attached to. Only rivers for now; the column is
+         *      shaped like `comments` so sections and features can join by widening the
+         *      check.
+         * @enum {string}
+         */
+        MediaEntityType: "waterway" | "water_section";
+        /**
+         * @description One gallery covers uploads and links, as whitewater.guide's does: a photo
+         *      is a file we store, a video or blog is somebody else's URL.
+         * @enum {string}
+         */
+        MediaKind: "photo" | "video" | "blog";
+        MediaQuery: {
+            /**
+             * @description Include photos posted inside notes, which are otherwise shown only
+             *      in their own thread.
+             */
+            include_from_notes?: boolean | null;
+        };
+        /** @description Moderation of a note: admins only. */
+        ModerateCommentRequest: {
+            status: components["schemas"]["CommentStatus"];
+        };
         /** @description One cached OSM element of a waterway. */
         OsmElement: {
             geometry: components["schemas"]["Geometry"];
@@ -2027,6 +2245,8 @@ export interface components {
         };
         UpdateCommentRequest: {
             body: string;
+            /** @default null */
+            category: components["schemas"]["CommentCategory"] | null;
         };
         UpdateFeatureBody: {
             /** @description New description in `lang_code`; omit to leave descriptions unchanged */
@@ -2188,6 +2408,12 @@ export interface components {
             updated_at: string;
             waterway_type: components["schemas"]["WaterwayType"];
         };
+        WaterwayCommentPath: {
+            /** Format: int64 */
+            comment_id: number;
+            /** Format: int64 */
+            waterway_id: number;
+        };
         /** @description Query parameters of the waterway search. */
         WaterwayFilters: {
             /** @description Filter by ISO 3166-1 alpha-2 country code (e.g. "AT", "FR"). */
@@ -2272,6 +2498,12 @@ export interface components {
             updated_at: string;
             waterway_type: components["schemas"]["WaterwayType"];
         };
+        WaterwayMediaPath: {
+            /** Format: int64 */
+            media_id: number;
+            /** Format: int64 */
+            waterway_id: number;
+        };
         /** @description The cached OSM geometry document of a waterway. */
         WaterwayOsmGeometry: {
             elements: components["schemas"]["OsmElement"][];
@@ -2327,11 +2559,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-08-29T05:45:45.905124829Z",
-                     *         "expires_at": "2026-11-27T05:45:45.905127569Z",
+                     *         "created_at": "2026-08-29T16:04:30.960079014Z",
+                     *         "expires_at": "2026-11-27T16:04:30.960081294Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-08-29T05:45:45.905132289Z",
+                     *         "last_used_at": "2026-08-29T16:04:30.960095124Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -2362,8 +2594,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-08-29T05:45:45.905346048Z",
-                     *       "expires_at": "2026-11-27T05:45:45.905346438Z",
+                     *       "created_at": "2026-08-29T16:04:30.960281264Z",
+                     *       "expires_at": "2026-11-27T16:04:30.960281614Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -3367,6 +3599,311 @@ export interface operations {
             };
         };
     };
+    list_waterway_media: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Include photos posted inside notes, which are otherwise shown only
+                 *      in their own thread.
+                 */
+                include_from_notes?: boolean | null;
+            };
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Media"][];
+                };
+            };
+        };
+    };
+    add_waterway_media: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Media added */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Media"];
+                };
+            };
+            /** @description Not a readable image, too large, or a bad url */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_waterway_media: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Media not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_waterway_comments: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Include the notes on this river's sections, for an overview of
+                 *      everything reported on the water.
+                 */
+                include_sections?: boolean | null;
+            };
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"][];
+                };
+            };
+        };
+    };
+    create_waterway_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCommentRequest"];
+            };
+        };
+        responses: {
+            /** @description Comment created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    moderate_waterway_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        /** @description Moderation of a note: admins only. */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModerateCommentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Comment not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_waterway_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCommentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Comment not found or not your comment */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_waterway_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Comment not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_sections: {
         parameters: {
             query?: never;
@@ -4175,6 +4712,75 @@ export interface operations {
             };
             /** @description Description not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_section_media: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Include photos posted inside notes, which are otherwise shown only
+                 *      in their own thread.
+                 */
+                include_from_notes?: boolean | null;
+            };
+            header?: never;
+            path: {
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Media"][];
+                };
+            };
+        };
+    };
+    add_section_media: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Media added */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Media"];
+                };
+            };
+            /** @description Not a readable image, too large, or a bad url */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

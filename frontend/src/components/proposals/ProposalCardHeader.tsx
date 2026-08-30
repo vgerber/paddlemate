@@ -41,7 +41,7 @@ export default function ProposalCardHeader({
         </Typography>
         <Typography
           sx={{
-            fontSize: "0.6rem",
+            fontSize: "0.625rem",
             textTransform: "uppercase",
             letterSpacing: "0.08em",
             fontFamily: fonts.label,
@@ -70,7 +70,7 @@ export default function ProposalCardHeader({
 
       <Typography
         sx={{
-          fontSize: "0.68rem",
+          fontSize: "0.6875rem",
           color: "text.disabled",
           fontFamily: fonts.label,
           letterSpacing: "0.04em",

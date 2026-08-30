@@ -126,7 +126,7 @@ export default function FeatureRow({
           <Typography
             sx={{
               fontFamily: fonts.mono,
-              fontSize: "0.65rem",
+              fontSize: "0.6875rem",
               color: "text.disabled",
             }}
           >

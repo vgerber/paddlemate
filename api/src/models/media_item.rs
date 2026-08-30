@@ -11,18 +11,21 @@ pub type MediaId = i64;
 #[serde(rename_all = "snake_case")]
 pub enum MediaEntityType {
     Waterway,
+    WaterSection,
 }
 
 impl MediaEntityType {
     pub fn as_str(&self) -> &'static str {
         match self {
             MediaEntityType::Waterway => "waterway",
+            MediaEntityType::WaterSection => "water_section",
         }
     }
 
     pub fn parse(s: &str) -> Option<Self> {
         match s {
             "waterway" => Some(MediaEntityType::Waterway),
+            "water_section" => Some(MediaEntityType::WaterSection),
             _ => None,
         }
     }

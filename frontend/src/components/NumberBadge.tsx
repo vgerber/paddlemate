@@ -22,7 +22,7 @@ export default function NumberBadge({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: "0.65rem",
+        fontSize: "0.6875rem",
         fontWeight: 700,
         flexShrink: 0,
       }}

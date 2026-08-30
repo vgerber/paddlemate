@@ -156,6 +156,18 @@ export default function SidebarContent({
 
   return (
     <WaterwayBrowsePanel
+      noteMapPin={{
+        placing: state.notePinPlacing,
+        pin: state.notePin,
+        onTogglePlacing: () => state.setNotePinPlacing(!state.notePinPlacing),
+        onClearPin: () => {
+          state.setNotePin(null);
+          state.setNotePinPlacing(false);
+        },
+        onFocus: (lngLat) => state.setFocusedPoint(lngLat),
+        selectedNoteId: state.selectedNoteId,
+        onSelectNote: state.setSelectedNoteId,
+      }}
       waterwayId={selectedWaterwayId}
       selectedSectionId={selectedSectionId}
       selectedGaugeId={selectedGaugeId}

@@ -10,6 +10,7 @@ export default function MapCharts({ state }: { state: MapPageState }) {
   const {
     selectedWaterwayId,
     selectedSectionId,
+    detailTab,
     sectionDetailTab,
     sections,
     selectedGaugeId,
@@ -18,8 +19,14 @@ export default function MapCharts({ state }: { state: MapPageState }) {
     selectedFeatureId,
   } = state;
 
-  // The logs tab replaces the chart with the log list - give it the space.
-  if (selectedSectionId != null && sectionDetailTab === "logs") return null;
+  // The logs and notes tabs replace the chart with their list - give them
+  // the space.
+  if (
+    selectedSectionId != null &&
+    (sectionDetailTab === "logs" || sectionDetailTab === "notes")
+  )
+    return null;
+  if (selectedSectionId == null && detailTab === "notes") return null;
 
   if (selectedGaugeId != null && selectedGaugeRanges.length > 0) {
     return (

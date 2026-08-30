@@ -73,7 +73,7 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
           })
         }
         sx={{
-          fontSize: "0.7rem",
+          fontSize: "0.75rem",
           fontFamily: fonts.label,
           fontWeight: 600,
           letterSpacing: "0.06em",
@@ -89,7 +89,7 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
       </Typography>
       <Typography
         sx={{
-          fontSize: "0.85rem",
+          fontSize: "0.8125rem",
           fontFamily: fonts.label,
           fontWeight: 700,
           letterSpacing: "0.04em",
@@ -105,7 +105,7 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
           variant="contained"
           color="secondary"
           sx={{
-            fontSize: "0.65rem",
+            fontSize: "0.6875rem",
             fontWeight: 700,
             letterSpacing: "0.08em",
           }}
@@ -123,7 +123,7 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
         <Button
           size="small"
           sx={{
-            fontSize: "0.65rem",
+            fontSize: "0.6875rem",
             color: "text.secondary",
             letterSpacing: "0.06em",
           }}

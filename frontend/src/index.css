@@ -4,6 +4,13 @@
   display: contents;
 }
 
+/* Full-viewport app: rubber-band overscroll would drag the whole page and
+   reveal the map behind fixed overlays. */
+html,
+body {
+  overscroll-behavior: none;
+}
+
 /* Ensure MapLibre GL canvas fills its container */
 .maplibregl-map {
   font-family: "Space Grotesk", sans-serif;

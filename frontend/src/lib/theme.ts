@@ -30,10 +30,11 @@ const tokens = {
   primaryContainer: "#004b5b",
   onPrimaryContainer: "#75bbd1",
 
-  // Secondary - muted green
-  secondary: "#b0ceb8",
-  secondaryContainer: "#354f3e",
-  onSecondaryContainer: "#a2bfaa",
+  // Success - muted green (exposed as palette.success; palette.secondary
+  // is the lime CTA, an entirely different color - see the palette block)
+  success: "#b0ceb8",
+  successContainer: "#354f3e",
+  onSuccessContainer: "#a2bfaa",
 
   // Tertiary - lime/yellow-green, used for CTA buttons, active states, selection
   tertiary: "#c2cf47",
@@ -54,34 +55,39 @@ const tokens = {
   white: "#ffffff",
   // Text on tertiary (CTA) surfaces
   onTertiary: "#1a1d00",
-  // Text on secondary (success) surfaces - dark green, M3 onSecondary
-  onSecondary: "#1c3524",
+  // Text on success surfaces - dark green, M3 onSecondary
+  onSuccess: "#1c3524",
 
-  // Water levels
-  waterEmpty: {
-    label: "E",
-    color: "rgba(255,255,255,0.35)",
-    bgcolor: "transparent",
-    border: "rgba(255,255,255,0.18)",
-  },
-  waterLow: { label: "L", color: "#81c784", bgcolor: "rgba(129,199,132,0.15)" },
-  waterMedium: {
-    label: "M",
-    color: "#ffb74d",
-    bgcolor: "rgba(255,183,77,0.15)",
-  },
-  waterHigh: {
-    label: "H",
-    color: "#e57373",
-    bgcolor: "rgba(229,115,115,0.15)",
-  },
-
-  // Water level status markers (gauge pins, section endpoints, level dots)
-  levelColors: {
-    empty: "#9eaab0",
-    low: "#4caf50",
-    medium: "#ff9800",
-    high: "#f44336",
+  // Water levels: one entry per level. `marker` is the saturated hue for
+  // map geometry; `text`/`bg` are the readable pair for chips and labels -
+  // the marker hues fail AA as small text on dark surfaces, so labels must
+  // never borrow them.
+  levels: {
+    empty: {
+      label: "E",
+      marker: "#9eaab0",
+      text: "rgba(255,255,255,0.35)",
+      bg: "transparent",
+      border: "rgba(255,255,255,0.18)",
+    },
+    low: {
+      label: "L",
+      marker: "#4caf50",
+      text: "#81c784",
+      bg: "rgba(129,199,132,0.15)",
+    },
+    medium: {
+      label: "M",
+      marker: "#ff9800",
+      text: "#ffb74d",
+      bg: "rgba(255,183,77,0.15)",
+    },
+    high: {
+      label: "H",
+      marker: "#f44336",
+      text: "#e57373",
+      bg: "rgba(229,115,115,0.15)",
+    },
   },
 
   // Feature markers on the map (Okabe-Ito palette - colorblind safe)
@@ -109,7 +115,9 @@ const tokens = {
   // Map rendering
   mapSectionLine: "#29b6f6",
   mapSectionLineCasing: "#0a1a2e",
-  mapSelectedLine: "#ff9800",
+  // Selection is lime everywhere (action.selected, list rows) - the old
+  // orange collided with the medium water level. Value = tertiaryFixed.
+  mapSelectedLine: "#dfec60",
   mapAreaCircle: "#1976d2",
   mapLabelHalo: "rgb(21, 37, 52)",
 
@@ -149,13 +157,13 @@ export const theme = createTheme({
     // Amber for pending/incomplete states, aligned with the medium water
     // level so the app has one orange, not MUI's stock one.
     warning: {
-      main: tokens.levelColors.medium,
+      main: tokens.levels.medium.marker,
     },
     success: {
-      main: tokens.secondary,
-      dark: tokens.secondaryContainer,
+      main: tokens.success,
+      dark: tokens.successContainer,
       // Light-on-light was illegible on contained success buttons
-      contrastText: tokens.onSecondary,
+      contrastText: tokens.onSuccess,
     },
     background: {
       default: tokens.background,
@@ -475,20 +483,42 @@ export const theme = createTheme({
           backgroundColor: tokens.surfaceLow,
           color: tokens.onSurface,
           "&.MuiAlert-colorError": {
-            border: `1px solid ${tokens.error}59`,
+            border: `1px solid ${tokens.error}55`,
             "& .MuiAlert-icon": { color: tokens.error },
           },
           "&.MuiAlert-colorWarning": {
-            border: `1px solid ${tokens.levelColors.medium}59`,
-            "& .MuiAlert-icon": { color: tokens.levelColors.medium },
+            border: `1px solid ${tokens.levels.medium.marker}55`,
+            "& .MuiAlert-icon": { color: tokens.levels.medium.marker },
           },
           "&.MuiAlert-colorSuccess": {
-            border: `1px solid ${tokens.secondary}59`,
-            "& .MuiAlert-icon": { color: tokens.secondary },
+            border: `1px solid ${tokens.success}55`,
+            "& .MuiAlert-icon": { color: tokens.success },
           },
           "&.MuiAlert-colorInfo": {
-            border: `1px solid ${tokens.primary}59`,
+            border: `1px solid ${tokens.primary}55`,
             "& .MuiAlert-icon": { color: tokens.primary },
+          },
+        },
+        // In dark mode MUI fills with palette[color].dark but takes the text
+        // colour from palette[color].main - for us a dark red ground under
+        // near-black text. Each pairing is set here instead.
+        filled: {
+          "& .MuiAlert-action .MuiIconButton-root": { color: "inherit" },
+          "&.MuiAlert-colorError": {
+            backgroundColor: tokens.errorContainer,
+            color: tokens.white,
+          },
+          "&.MuiAlert-colorWarning": {
+            backgroundColor: tokens.levels.medium.marker,
+            color: tokens.background,
+          },
+          "&.MuiAlert-colorSuccess": {
+            backgroundColor: tokens.successContainer,
+            color: tokens.onSurface,
+          },
+          "&.MuiAlert-colorInfo": {
+            backgroundColor: tokens.primaryContainer,
+            color: tokens.onSurface,
           },
         },
       },
@@ -528,12 +558,24 @@ export const theme = createTheme({
   },
 });
 
+/** The only alpha suffixes to append to a token (\`\${token}\${alphas.x}\`):
+ * tint for row washes, wash for selected grounds, hover on top of them,
+ * hairline for rules, border for control outlines, scrim over imagery. */
+export const alphas = {
+  tint: "0d",
+  wash: "14",
+  hover: "1f",
+  hairline: "55",
+  border: "99",
+  scrim: "cc",
+} as const;
+
 /** The app's standard small uppercase label. Spread into sx and override
  * size or color where a variant is needed. */
 export const labelSx = {
   fontFamily: fonts.label,
   textTransform: "uppercase",
   letterSpacing: "0.08em",
-  fontSize: "0.62rem",
+  fontSize: "0.625rem",
   color: "text.secondary",
 } as const;

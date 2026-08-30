@@ -359,7 +359,7 @@ export default function GaugeCatalogMap() {
                   color="text.secondary"
                   sx={{
                     display: "block",
-                    fontSize: "0.62rem",
+                    fontSize: "0.625rem",
                     lineHeight: 1.25,
                   }}
                 >

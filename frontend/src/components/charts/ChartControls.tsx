@@ -13,7 +13,7 @@ import { theme } from "@/lib/theme";
 
 const toggleGroupSx = {
   flexShrink: 0,
-  "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" },
+  "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.75rem" },
 } as const;
 
 interface ChartControlsProps {

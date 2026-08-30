@@ -20,9 +20,9 @@ function PickButton({
       type="button"
       onClick={onClick}
       style={{
-        background: active ? activeColor : `${tokens.background}e0`,
+        background: active ? activeColor : `${tokens.background}cc`,
         color: "white",
-        border: `1px solid ${active ? `${activeColor}e6` : `${tokens.primary}59`}`,
+        border: `1px solid ${active ? `${activeColor}cc` : `${tokens.primary}55`}`,
         padding: "4px 10px",
         fontSize: 11,
         fontFamily: fonts.label,

@@ -25,6 +25,7 @@ import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
+import CommentThread from "./CommentThread";
 import GaugesList from "./GaugesList";
 import type { DetailTab, SectionDetailTab, SuggestMode } from "./types";
 import WaterwayDetailHeader from "./WaterwayDetailHeader";
@@ -43,6 +44,8 @@ interface WaterwayBrowsePanelProps {
   onSectionDeselect: () => void;
   onGaugeSelect?: (id: number) => void;
   onSuggestModeChange: (mode: SuggestMode) => void;
+  /** Map-page only: note composer's map pin (see CommentThread). */
+  noteMapPin?: React.ComponentProps<typeof CommentThread>["mapPin"];
   favoritedIds?: Set<number>;
   onToggleFavorite?: (id: number) => void;
   onMobileMapToggle?: () => void;
@@ -74,6 +77,7 @@ export default function WaterwayBrowsePanel({
   onSectionDeselect,
   onGaugeSelect,
   onSuggestModeChange,
+  noteMapPin,
   favoritedIds,
   onToggleFavorite,
   onMobileMapToggle,
@@ -155,6 +159,7 @@ export default function WaterwayBrowsePanel({
         options: [
           { value: "features", label: "Features" },
           { value: "logs", label: "Logs" },
+          { value: "notes", label: "Notes" },
         ],
       }
     : {
@@ -163,6 +168,7 @@ export default function WaterwayBrowsePanel({
         options: [
           { value: "sections", label: "Sections" },
           { value: "gauges", label: "Gauges" },
+          { value: "notes", label: "Notes" },
         ],
       };
 
@@ -195,11 +201,20 @@ export default function WaterwayBrowsePanel({
           sx={{
             flex: 1,
             overflowY: "auto",
+            // Overscroll at the list edge must not chain into a document
+            // bounce - that drags the fixed overlay and shows the map
+            // behind it (the body-level rule alone does not stop chaining
+            // that starts inside a scroller).
+            overscrollBehavior: "contain",
             p: 1,
             // Leave room so a floating button never covers the last row.
             // Desktop docks its actions in the row below the list, so only
             // the panel's own FAB and the mobile speed dial need it.
-            pb: showNewSectionFab ? 9 : inFeatures ? { xs: 9, md: 1 } : 1,
+            pb: showNewSectionFab
+              ? 9
+              : inFeatures && sectionDetailTab !== "notes"
+                ? { xs: 9, md: 1 }
+                : 1,
           }}
         >
           {isLoading ? (
@@ -207,6 +222,12 @@ export default function WaterwayBrowsePanel({
           ) : inFeatures ? (
             sectionDetailTab === "logs" ? (
               <SectionLogsList sectionId={selectedSection.id} />
+            ) : sectionDetailTab === "notes" ? (
+              <CommentThread
+                waterwayId={waterwayId}
+                sectionId={selectedSection.id}
+                mapPin={noteMapPin}
+              />
             ) : (
               <FeatureTimeline
                 section={selectedSection}
@@ -225,6 +246,12 @@ export default function WaterwayBrowsePanel({
               selectedSectionId={selectedSectionId}
               onSectionClick={onSectionClick}
               descentCounts={descentCounts}
+            />
+          ) : tab === "notes" ? (
+            <CommentThread
+              waterwayId={waterwayId}
+              sections={sections}
+              mapPin={noteMapPin}
             />
           ) : (
             <GaugesList
@@ -250,7 +277,7 @@ export default function WaterwayBrowsePanel({
 
       {/* Desktop counterpart of the mobile speed dial: a docked row, so it
           never floats over the last list row. */}
-      {isAuthenticated && inFeatures && (
+      {isAuthenticated && inFeatures && sectionDetailTab !== "notes" && (
         <Box
           sx={{
             px: 1.5,

@@ -40,9 +40,24 @@ pub fn thumb_key(storage_key: &str) -> String {
     }
 }
 
-/// Public path for a stored key, as served by the media route.
+/// Public path for a stored key. It shares the API's first path segment so
+/// it travels with the API in every deployment: whatever routes `/api` to
+/// this service - the dev proxy, nginx - routes the files too. A bare
+/// `/media` would resolve against the frontend's origin and come back as
+/// the SPA's index.html.
+pub fn media_base() -> String {
+    let base = std::env::var("BASE_URL").unwrap_or_else(|_| "/api/v1".to_string());
+    // Beside the versioned API, not inside it: the API router claims every
+    // path under its own prefix, so a route nested there is never reached.
+    // Sharing the first segment is what makes an /api proxy carry it.
+    match base.trim_start_matches('/').split('/').next() {
+        Some(prefix) if !prefix.is_empty() => format!("/{prefix}/media"),
+        _ => "/media".to_string(),
+    }
+}
+
 pub fn url_for(storage_key: &str) -> String {
-    format!("/media/{storage_key}")
+    format!("{}/{storage_key}", media_base())
 }
 
 /// Decode `bytes`, re-encode a display copy and a thumbnail, and write both
@@ -189,5 +204,21 @@ mod tests {
     #[tokio::test]
     async fn rejects_bytes_that_are_not_an_image() {
         assert!(store_image(b"definitely not a picture").await.is_err());
+    }
+}
+
+#[cfg(test)]
+mod base_tests {
+    use super::*;
+
+    #[test]
+    fn media_sits_beside_the_versioned_api() {
+        // Serial: these tests share the process environment.
+        unsafe { std::env::set_var("BASE_URL", "/api/v1") };
+        assert_eq!(media_base(), "/api/media");
+        unsafe { std::env::set_var("BASE_URL", "/v2") };
+        assert_eq!(media_base(), "/v2/media");
+        unsafe { std::env::remove_var("BASE_URL") };
+        assert_eq!(media_base(), "/api/media");
     }
 }

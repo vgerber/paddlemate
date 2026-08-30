@@ -3,7 +3,12 @@ import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
-export const LEVEL_COLORS: Record<string, string> = tokens.levelColors;
+export const LEVEL_COLORS: Record<string, string> = {
+  empty: tokens.levels.empty.marker,
+  low: tokens.levels.low.marker,
+  medium: tokens.levels.medium.marker,
+  high: tokens.levels.high.marker,
+};
 
 const makePutInSvg = (color: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="${color}" stroke="${tokens.background}" stroke-width="1.5"/><g transform="translate(4, 4) scale(0.833)"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z" fill="white"/></g></svg>`;

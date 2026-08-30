@@ -312,7 +312,7 @@ async fn main() {
     tracing::info!("Serving media from {}", media_dir.display());
     let media = axum::Router::new()
         .nest_service(
-            "/media",
+            &paddlemate_api::media::media_base(),
             tower_http::services::ServeDir::new(media_dir).precompressed_gzip(),
         )
         .layer(tower_http::set_header::SetResponseHeaderLayer::overriding(

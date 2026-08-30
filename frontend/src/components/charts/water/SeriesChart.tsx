@@ -94,7 +94,7 @@ function thresholdLines(
   );
   return [
     r.range_low != null &&
-      line("low", r.range_low, tokens.secondary, `L ${r.range_low}`),
+      line("low", r.range_low, tokens.success, `L ${r.range_low}`),
     r.range_medium != null &&
       line("medium", r.range_medium, tokens.tertiary, `M ${r.range_medium}`),
     r.range_high != null &&
@@ -354,9 +354,9 @@ export default function SeriesChart({
               x1={s.x1}
               x2={s.x2}
               ifOverflow="hidden"
-              fill={tokens.secondary}
+              fill={tokens.success}
               fillOpacity={0.15}
-              stroke={tokens.secondary}
+              stroke={tokens.success}
               strokeOpacity={0.35}
             />
           ))}
@@ -424,7 +424,7 @@ export default function SeriesChart({
                     {`${Number(value).toFixed(1)} ${series.unit}`}
                   </div>
                   {span && (
-                    <div style={{ color: tokens.secondary, marginTop: 2 }}>
+                    <div style={{ color: tokens.success, marginTop: 2 }}>
                       {span.name}
                     </div>
                   )}
@@ -462,7 +462,7 @@ export default function SeriesChart({
         >
           <Typography
             sx={{
-              fontSize: "0.7rem",
+              fontSize: "0.75rem",
               fontWeight: 600,
               color: "text.primary",
               lineHeight: 1.2,
@@ -473,7 +473,7 @@ export default function SeriesChart({
           <Typography
             sx={{
               fontFamily: fonts.label,
-              fontSize: "0.55rem",
+              fontSize: "0.625rem",
               letterSpacing: "0.08em",
               textTransform: "uppercase",
               color: "text.secondary",

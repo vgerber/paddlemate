@@ -69,7 +69,7 @@ export default function LocationPin({
           sx={{
             fontFamily: fonts.mono,
             color: "text.secondary",
-            fontSize: "0.7rem",
+            fontSize: "0.75rem",
           }}
         >
           {coords.lat.toFixed(5)}, {coords.lon.toFixed(5)}

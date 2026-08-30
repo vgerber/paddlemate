@@ -179,6 +179,11 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
         )
         // Section comments
         .api_route(
+            "/{waterway_id}/sections/{section_id}/media",
+            get_with(media::list_section_media, media::list_section_media_docs)
+                .post_with(media::add_section_media, media::add_section_media_docs),
+        )
+        .api_route(
             "/{waterway_id}/sections/{section_id}/comments",
             get_with(
                 comments::list_section_comments,

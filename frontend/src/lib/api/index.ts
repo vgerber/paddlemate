@@ -1,4 +1,4 @@
-import { ApiError, client } from "./client";
+import { ApiError, client, postForm } from "./client";
 import type { components, operations } from "./schema.d.ts";
 
 export type Waterway = components["schemas"]["Waterway"];
@@ -10,6 +10,10 @@ export type Feature = components["schemas"]["Feature"];
 export type FeatureName = components["schemas"]["FeatureName"];
 export type FeatureDescription = components["schemas"]["FeatureDescription"];
 export type Comment = components["schemas"]["Comment"];
+export type CommentCategory = components["schemas"]["CommentCategory"];
+export type CommentStatus = components["schemas"]["CommentStatus"];
+export type Media = components["schemas"]["Media"];
+export type MediaKind = components["schemas"]["MediaKind"];
 export type Proposal = components["schemas"]["Proposal"];
 export type ProposalEntityType = components["schemas"]["ProposalEntityType"];
 export type ProposalOperation = components["schemas"]["ProposalOperation"];
@@ -164,6 +168,176 @@ export const featuresApi = {
         },
       },
     );
+  },
+};
+
+export const commentsApi = {
+  /** Notes on the river; `includeSections` folds in its sections' notes. */
+  list: async (
+    waterwayId: number,
+    includeSections = false,
+    signal?: AbortSignal,
+  ) => {
+    const { data } = await client.GET(
+      "/api/v1/waterways/{waterway_id}/comments",
+      {
+        params: {
+          path: { waterway_id: waterwayId },
+          query: { include_sections: includeSections },
+        },
+        signal,
+      },
+    );
+    return assertData(data);
+  },
+  listForSection: async (
+    waterwayId: number,
+    sectionId: number,
+    signal?: AbortSignal,
+  ) => {
+    const { data } = await client.GET(
+      "/api/v1/waterways/{waterway_id}/sections/{section_id}/comments",
+      {
+        params: { path: { waterway_id: waterwayId, section_id: sectionId } },
+        signal,
+      },
+    );
+    return assertData(data);
+  },
+  createForSection: async (
+    waterwayId: number,
+    sectionId: number,
+    input: {
+      body: string;
+      category?: CommentCategory;
+      mediaIds?: number[];
+      location?: [number, number] | null;
+    },
+  ) => {
+    const { data } = await client.POST(
+      "/api/v1/waterways/{waterway_id}/sections/{section_id}/comments",
+      {
+        params: { path: { waterway_id: waterwayId, section_id: sectionId } },
+        body: {
+          body: input.body,
+          category: input.category ?? null,
+          media_ids: input.mediaIds ?? [],
+          location: input.location
+            ? { type: "Point", coordinates: input.location }
+            : null,
+        },
+      },
+    );
+    return assertData(data);
+  },
+  create: async (
+    waterwayId: number,
+    input: {
+      body: string;
+      category?: CommentCategory;
+      mediaIds?: number[];
+      location?: [number, number] | null;
+    },
+  ) => {
+    const { data } = await client.POST(
+      "/api/v1/waterways/{waterway_id}/comments",
+      {
+        params: { path: { waterway_id: waterwayId } },
+        body: {
+          body: input.body,
+          category: input.category ?? null,
+          media_ids: input.mediaIds ?? [],
+          location: input.location
+            ? { type: "Point", coordinates: input.location }
+            : null,
+        },
+      },
+    );
+    return assertData(data);
+  },
+  update: async (
+    waterwayId: number,
+    commentId: number,
+    input: { body: string; category?: CommentCategory },
+  ) => {
+    const { data } = await client.PUT(
+      "/api/v1/waterways/{waterway_id}/comments/{comment_id}",
+      {
+        params: { path: { waterway_id: waterwayId, comment_id: commentId } },
+        body: { body: input.body, category: input.category ?? null },
+      },
+    );
+    return assertData(data);
+  },
+  remove: async (waterwayId: number, commentId: number) => {
+    await client.DELETE(
+      "/api/v1/waterways/{waterway_id}/comments/{comment_id}",
+      {
+        params: { path: { waterway_id: waterwayId, comment_id: commentId } },
+      },
+    );
+  },
+  /** Admin: fold a note into curated data, retire it, or hide it. */
+  moderate: async (
+    waterwayId: number,
+    commentId: number,
+    status: CommentStatus,
+  ) => {
+    const { data } = await client.PUT(
+      "/api/v1/waterways/{waterway_id}/comments/{comment_id}/status",
+      {
+        params: { path: { waterway_id: waterwayId, comment_id: commentId } },
+        body: { status },
+      },
+    );
+    return assertData(data);
+  },
+};
+
+export const mediaApi = {
+  list: async (
+    waterwayId: number,
+    includeFromNotes = false,
+    signal?: AbortSignal,
+  ) => {
+    const { data } = await client.GET("/api/v1/waterways/{waterway_id}/media", {
+      params: {
+        path: { waterway_id: waterwayId },
+        query: { include_from_notes: includeFromNotes },
+      },
+      signal,
+    });
+    return assertData(data);
+  },
+  /** Multipart, so this one bypasses the typed client. `sectionId` scopes
+   * the upload to a section instead of the river. */
+  upload: async (
+    waterwayId: number,
+    sectionId: number | null,
+    form: {
+      file?: File;
+      kind?: MediaKind;
+      url?: string;
+      caption?: string;
+      copyright?: string;
+    },
+  ): Promise<Media> => {
+    const data = new FormData();
+    if (form.file) data.append("file", form.file);
+    if (form.kind) data.append("kind", form.kind);
+    if (form.url) data.append("url", form.url);
+    if (form.caption) data.append("caption", form.caption);
+    if (form.copyright) data.append("copyright", form.copyright);
+    const path =
+      sectionId == null
+        ? `/api/v1/waterways/${waterwayId}/media`
+        : `/api/v1/waterways/${waterwayId}/sections/${sectionId}/media`;
+    return postForm<Media>(path, data);
+  },
+  remove: async (waterwayId: number, mediaId: number) => {
+    await client.DELETE("/api/v1/waterways/{waterway_id}/media/{media_id}", {
+      params: { path: { waterway_id: waterwayId, media_id: mediaId } },
+    });
   },
 };
 

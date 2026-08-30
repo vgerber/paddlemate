@@ -76,7 +76,7 @@ export default function SectionList({
                 fontWeight: 700,
                 color: "text.secondary",
                 textTransform: "uppercase",
-                fontSize: "0.65rem",
+                fontSize: "0.6875rem",
                 letterSpacing: "0.05em",
                 whiteSpace: "nowrap",
               }}

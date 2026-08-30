@@ -45,19 +45,19 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
       label: "Low",
       value: picker.rangeLow,
       onChange: picker.setRangeLow,
-      color: tokens.waterLow.color,
+      color: tokens.levels.low.text,
     },
     {
       label: "Medium",
       value: picker.rangeMedium,
       onChange: picker.setRangeMedium,
-      color: tokens.waterMedium.color,
+      color: tokens.levels.medium.text,
     },
     {
       label: "High",
       value: picker.rangeHigh,
       onChange: picker.setRangeHigh,
-      color: tokens.waterHigh.color,
+      color: tokens.levels.high.text,
     },
   ];
 

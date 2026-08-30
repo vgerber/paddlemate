@@ -58,7 +58,7 @@ function RiverItem({
           color="primary"
           size="small"
           variant="outlined"
-          sx={{ flexShrink: 0, fontSize: "0.65rem" }}
+          sx={{ flexShrink: 0, fontSize: "0.6875rem" }}
         />
       }
     />
@@ -101,7 +101,7 @@ function PendingRiverItems({
             color="warning"
             size="small"
             variant="outlined"
-            sx={{ flexShrink: 0, fontSize: "0.65rem" }}
+            sx={{ flexShrink: 0, fontSize: "0.6875rem" }}
           />
         </ListItem>
       ))}

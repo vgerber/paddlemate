@@ -21,7 +21,7 @@ const { tokens } = theme;
 const decisionButtonSx = {
   px: 1.5,
   py: 0.375,
-  fontSize: "0.7rem",
+  fontSize: "0.75rem",
   fontWeight: 600,
   letterSpacing: "0.08em",
   "& .MuiButton-startIcon": { mr: 0.5 },
@@ -91,7 +91,7 @@ export default function ProposalVoteBar({
                   fontFamily: fonts.mono,
                   fontSize: "0.75rem",
                   color: "text.secondary",
-                  borderColor: `${tokens.outlineVariant}66`,
+                  borderColor: `${tokens.outlineVariant}55`,
                 },
               }}
             >
@@ -100,9 +100,9 @@ export default function ProposalVoteBar({
                 aria-label="Upvote proposal"
                 sx={{
                   "&.Mui-selected": {
-                    color: tokens.secondary,
-                    bgcolor: `${tokens.secondary}14`,
-                    "&:hover": { bgcolor: `${tokens.secondary}1f` },
+                    color: tokens.success,
+                    bgcolor: `${tokens.success}14`,
+                    "&:hover": { bgcolor: `${tokens.success}1f` },
                   },
                 }}
               >
@@ -138,7 +138,7 @@ export default function ProposalVoteBar({
             sx={{
               ...decisionButtonSx,
               color: "text.secondary",
-              borderColor: `${tokens.outlineVariant}66`,
+              borderColor: `${tokens.outlineVariant}55`,
             }}
           >
             Reject
@@ -151,7 +151,7 @@ export default function ProposalVoteBar({
             sx={{
               ...decisionButtonSx,
               color: tokens.tertiary,
-              borderColor: `${tokens.tertiary}66`,
+              borderColor: `${tokens.tertiary}55`,
               "&:hover": { borderColor: tokens.tertiary },
             }}
           >

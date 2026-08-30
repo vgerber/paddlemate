@@ -34,7 +34,7 @@ import { fonts } from "@/lib/theme";
 
 const navLinkSx = {
   fontFamily: fonts.label,
-  fontSize: "0.7rem",
+  fontSize: "0.75rem",
   fontWeight: 600,
   letterSpacing: "0.1em",
   color: "text.secondary",
@@ -95,7 +95,18 @@ function Layout() {
   const isMapPage = pathname === "/" || pathname === "/tools/gauge-catalog";
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        // 100vh includes the area behind the mobile URL bar, leaving the
+        // body scrollable by that difference - which drags the whole app
+        // (bottom nav included) over the map. dvh tracks the visible
+        // viewport; vh stays as the fallback for older browsers.
+        minHeight: "100vh",
+        "@supports (min-height: 100dvh)": { minHeight: "100dvh" },
+      }}
+    >
       <AppBar position="fixed" sx={{ display: { xs: "none", md: "flex" } }}>
         <Toolbar variant="dense">
           <Typography

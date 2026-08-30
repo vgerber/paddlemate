@@ -44,7 +44,7 @@ export default function ListViewToggle({
             flex: 1,
             py: 0.25,
             px: 1,
-            fontSize: "0.7rem",
+            fontSize: "0.75rem",
           },
         }}
       >

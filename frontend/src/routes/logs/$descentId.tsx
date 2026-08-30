@@ -100,7 +100,7 @@ function LogDetailPage() {
           <ArrowBackIcon fontSize="small" />
         </IconButton>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography noWrap sx={{ fontWeight: 700, fontSize: "0.95rem" }}>
+          <Typography noWrap sx={{ fontWeight: 700, fontSize: "0.9rem" }}>
             {title}
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
@@ -119,7 +119,7 @@ function LogDetailPage() {
               {VISIBILITY_ICONS[descent.visibility.type]}
               <Typography
                 sx={{
-                  fontSize: "0.6rem",
+                  fontSize: "0.625rem",
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
                   fontFamily: fonts.label,

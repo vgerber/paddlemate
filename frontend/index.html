@@ -5,7 +5,12 @@
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon.svg" sizes="any" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- No viewport-fit=cover: mobile Firefox reports a bottom safe-area
+         inset under cover without actually drawing the page beneath the
+         gesture bar, so the env() paddings turn into dead space. Without
+         cover every inset is 0 and the browser manages the unsafe areas.
+         (Trade-off: Chrome 15+ edge-to-edge paints its own chin there.) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0c0e10" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

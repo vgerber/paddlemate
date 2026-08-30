@@ -36,7 +36,7 @@ export default function ProposalDiffTable({
             fontFamily: fonts.label,
             textTransform: "uppercase",
             letterSpacing: "0.08em",
-            fontSize: "0.62rem",
+            fontSize: "0.625rem",
           }}
         >
           {h}

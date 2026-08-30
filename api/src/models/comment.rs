@@ -115,6 +115,11 @@ pub struct Comment {
     pub category: CommentCategory,
     pub status: CommentStatus,
     pub author_id: String,
+    /// Display name for `author_id`, resolved at read time. Falls back to
+    /// the id when the directory cannot be reached.
+    pub author_name: Option<String>,
+    /// The point the note is about, when the author placed one.
+    pub location: Option<crate::models::geometry::Geometry>,
     /// Media posted with this note, in gallery order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub media: Vec<crate::models::media_item::Media>,
@@ -132,6 +137,9 @@ pub struct CreateCommentRequest {
     /// first, then post the note that shows them.
     #[serde(default)]
     pub media_ids: Vec<i64>,
+    /// GeoJSON Point the note is about, e.g. where the hazard sits.
+    #[serde(default)]
+    pub location: Option<crate::models::geometry::Geometry>,
 }
 
 #[derive(Debug, Clone, Deserialize, JsonSchema)]

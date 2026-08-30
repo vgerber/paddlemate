@@ -96,3 +96,21 @@ client.use({
     return response;
   },
 });
+
+/** Multipart POST. The typed client cannot express a file upload, so this
+ * is the one path that builds its own request - it still carries the bearer
+ * token and reports failures as the same ApiError everything else does. */
+export async function postForm<T>(path: string, form: FormData): Promise<T> {
+  const user = await activeUser();
+  const headers = new Headers();
+  if (user?.access_token) {
+    headers.set("Authorization", `Bearer ${user.access_token}`);
+  }
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    body: form,
+    headers,
+  });
+  if (!response.ok) throw await toApiError(response);
+  return (await response.json()) as T;
+}

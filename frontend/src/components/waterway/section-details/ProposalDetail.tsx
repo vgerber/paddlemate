@@ -52,8 +52,7 @@ function ProposalActions({ proposal }: { proposal: Proposal }) {
               handleVote(1);
             }}
             sx={{
-              color:
-                proposal.user_vote === 1 ? tokens.secondary : tokens.outline,
+              color: proposal.user_vote === 1 ? tokens.success : tokens.outline,
             }}
           >
             <ThumbUpOutlinedIcon fontSize="small" />

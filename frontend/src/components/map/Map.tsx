@@ -19,6 +19,7 @@ import MapNumberMarker from "./MapNumberMarker";
 import { addMapImages } from "./mapIcons";
 import { buildSectionsGeoJSON } from "./mapLayers";
 import { LIBERTY_STYLE, SATELLITE_STYLE } from "./mapStyles";
+import NoteMarkers, { type NotePin } from "./NoteMarkers";
 import PickModeButtons from "./PickModeButtons";
 import SectionLayers from "./SectionLayers";
 import { useMapCameraEffects } from "./useMapCameraEffects";
@@ -27,6 +28,17 @@ import { useMapSources } from "./useMapSources";
 
 export type { AreaCircle } from "@/lib/geo";
 export type { GaugePin } from "./GaugeMarkers";
+export type { NotePin } from "./NoteMarkers";
+
+export interface PointPin {
+  id: string;
+  lon: number;
+  lat: number;
+  color: string;
+  title?: string;
+  /** Larger with a halo - the pin currently being placed. */
+  emphasis?: boolean;
+}
 
 const { tokens } = theme;
 
@@ -77,6 +89,13 @@ interface WaterwayMapProps {
   /** Pending proposals to show as ghost markers on the map. */
   proposedFeatures?: Feature[];
   gaugePins?: GaugePin[];
+  /** Small dot markers (the note composer's draft pin). */
+  pointPins?: PointPin[];
+  /** Pinned notes, as speech-bubble badges with a text popup. */
+  notePins?: NotePin[];
+  selectedNoteId?: number | null;
+  onNoteSelect?: (id: number | null) => void;
+  onNoteOpenThread?: (id: number) => void;
   selectedGaugePinId?: number | null;
   onGaugeClick?: (pin: GaugePin) => void;
   areaCircle?: AreaCircle | null;
@@ -113,6 +132,11 @@ export default function WaterwayMap({
   sectionLevels,
   proposedFeatures,
   gaugePins,
+  pointPins,
+  notePins,
+  selectedNoteId,
+  onNoteSelect,
+  onNoteOpenThread,
   selectedGaugePinId,
   onGaugeClick,
   areaCircle,
@@ -305,6 +329,38 @@ export default function WaterwayMap({
           showNames={showFeatureNames}
         />
 
+        {(pointPins ?? []).map((pin) => (
+          <Marker
+            key={pin.id}
+            longitude={pin.lon}
+            latitude={pin.lat}
+            anchor="center"
+          >
+            <div
+              title={pin.title}
+              style={{
+                width: pin.emphasis ? 14 : 10,
+                height: pin.emphasis ? 14 : 10,
+                borderRadius: "50%",
+                background: pin.color,
+                border: `2px solid ${theme.tokens.surfaceLowest}`,
+                boxShadow: pin.emphasis
+                  ? `0 0 0 3px ${pin.color}55`
+                  : "0 1px 2px rgba(0,0,0,0.5)",
+              }}
+            />
+          </Marker>
+        ))}
+
+        {notePins && notePins.length > 0 && (
+          <NoteMarkers
+            pins={notePins}
+            selectedId={selectedNoteId ?? null}
+            onSelect={(id) => onNoteSelect?.(id)}
+            onOpenThread={onNoteOpenThread}
+          />
+        )}
+
         <GaugeMarkers
           pins={gaugePins ?? []}
           selectedId={selectedGaugePinId}
@@ -405,7 +461,7 @@ export default function WaterwayMap({
                 borderRadius: "50%",
                 background: tokens.primary,
                 border: "2px solid rgba(255,255,255,0.9)",
-                boxShadow: `0 0 0 3px ${tokens.primary}59, 0 0 10px ${tokens.primary}80`,
+                boxShadow: `0 0 0 3px ${tokens.primary}55, 0 0 10px ${tokens.primary}99`,
                 pointerEvents: "none",
               }}
             />

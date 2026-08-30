@@ -136,7 +136,7 @@ export default function WaterChart({
                   "& .MuiToggleButton-root": {
                     py: 0.25,
                     px: 1,
-                    fontSize: "0.7rem",
+                    fontSize: "0.75rem",
                   },
                 }}
               >
@@ -163,7 +163,7 @@ export default function WaterChart({
                 "& .MuiToggleButton-root": {
                   py: 0.25,
                   px: 1,
-                  fontSize: "0.7rem",
+                  fontSize: "0.75rem",
                 },
               }}
             >

@@ -67,7 +67,7 @@ export default function ProposalDetailView({
             ml: "auto",
             flexShrink: 0,
             height: 20,
-            fontSize: "0.62rem",
+            fontSize: "0.625rem",
             letterSpacing: "0.08em",
             textTransform: "uppercase",
           }}
@@ -75,7 +75,7 @@ export default function ProposalDetailView({
       </Box>
 
       {proposal.operation === "delete" && (
-        <Typography sx={{ fontSize: "0.8rem", color: "text.secondary" }}>
+        <Typography sx={{ fontSize: "0.8125rem", color: "text.secondary" }}>
           Deletion request
           {original ? `: "${(original.name as string | undefined) ?? ""}"` : ""}
         </Typography>

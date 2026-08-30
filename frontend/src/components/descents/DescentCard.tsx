@@ -98,7 +98,7 @@ export default function DescentCard({
           {VISIBILITY_ICONS[descent.visibility.type]}
           <Typography
             sx={{
-              fontSize: "0.6rem",
+              fontSize: "0.625rem",
               textTransform: "uppercase",
               letterSpacing: "0.08em",
               fontFamily: fonts.label,
@@ -113,7 +113,7 @@ export default function DescentCard({
       {showAuthor && descent.username && (
         <Typography
           sx={{
-            fontSize: "0.68rem",
+            fontSize: "0.6875rem",
             color: "text.disabled",
             fontFamily: fonts.label,
             letterSpacing: "0.04em",
@@ -135,12 +135,12 @@ export default function DescentCard({
         >
           {sectionNames.length > 0 &&
             (descent.name || waterwayNames.length > 0) && (
-              <Typography sx={{ fontSize: "0.7rem", color: "text.secondary" }}>
+              <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
                 {sectionNames.join(", ")}
               </Typography>
             )}
           {descent.put_in_label && (
-            <Typography sx={{ fontSize: "0.7rem", color: "text.secondary" }}>
+            <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
               {descent.put_in_label}
             </Typography>
           )}
@@ -192,7 +192,7 @@ export default function DescentCard({
               size="small"
               variant={level === "empty" ? "outlined" : "filled"}
               sx={{
-                fontSize: "0.6rem",
+                fontSize: "0.625rem",
                 height: 18,
                 color: cfg.color,
                 bgcolor: cfg.bgcolor,
@@ -205,7 +205,7 @@ export default function DescentCard({
           <Typography
             sx={{
               fontFamily: fonts.label,
-              fontSize: "0.72rem",
+              fontSize: "0.75rem",
               color: "primary.main",
             }}
           >
@@ -215,7 +215,7 @@ export default function DescentCard({
         <Typography
           sx={{
             fontFamily: fonts.label,
-            fontSize: "0.68rem",
+            fontSize: "0.6875rem",
             color: titleIsDate ? "primary.main" : "text.disabled",
           }}
         >
@@ -225,7 +225,7 @@ export default function DescentCard({
           <Typography
             sx={{
               fontFamily: fonts.label,
-              fontSize: "0.68rem",
+              fontSize: "0.6875rem",
               color: "text.disabled",
             }}
           >
@@ -235,7 +235,7 @@ export default function DescentCard({
         <Typography
           sx={{
             fontFamily: fonts.label,
-            fontSize: "0.68rem",
+            fontSize: "0.6875rem",
             color: "text.disabled",
             ml: "auto",
           }}

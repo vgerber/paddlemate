@@ -27,12 +27,44 @@ use crate::{
     state::AppState,
 };
 
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+pub struct CommentQuery {
+    /// Include the notes on this river's sections, for an overview of
+    /// everything reported on the water.
+    pub include_sections: Option<bool>,
+}
+
+/// The note's point as GeoJSON for storage, or an error when the body
+/// carries something that is not a Point.
+fn location_geojson(
+    location: &Option<crate::models::geometry::Geometry>,
+) -> Result<Option<String>, ApiError> {
+    match location {
+        None => Ok(None),
+        Some(geometry @ crate::models::geometry::Geometry::Point { .. }) => {
+            Ok(Some(serde_json::to_string(geometry).map_err(|_| {
+                ApiError::validation("Unreadable location").with_target("location")
+            })?))
+        }
+        Some(_) => Err(ApiError::validation("location must be a Point").with_target("location")),
+    }
+}
+
 pub async fn list_waterway_comments(
     State(app): State<AppState>,
     Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
+    axum::extract::Query(query): axum::extract::Query<CommentQuery>,
 ) -> impl IntoApiResponse {
-    match comments::list_comments(&app.pg_pool, "waterway", waterway_id).await {
-        Ok(list) => Json(list).into_response(),
+    let listed = if query.include_sections.unwrap_or(false) {
+        comments::list_river_comments(&app.pg_pool, waterway_id).await
+    } else {
+        comments::list_comments(&app.pg_pool, "waterway", waterway_id).await
+    };
+    match listed {
+        Ok(mut list) => {
+            comments::resolve_author_names(&app, &mut list).await;
+            Json(list).into_response()
+        }
         Err(err) => {
             tracing::error!("Error listing comments for river {}: {}", waterway_id, err);
             ApiError::internal().into_response()
@@ -41,7 +73,7 @@ pub async fn list_waterway_comments(
 }
 
 doc_fn!(list_waterway_comments_docs, op =>
-    op.description("List comments on a river")
+    op.description("Notes on a river. include_sections=true adds the notes on its sections, for one overview of everything reported on the water.")
         .response::<200, Json<Vec<Comment>>>()
         .tag("Comments")
 );
@@ -56,6 +88,10 @@ pub async fn create_waterway_comment(
         Some(a) => a,
         None => return ApiError::unauthorized("Authentication required").into_response(),
     };
+    let location = match location_geojson(&body.location) {
+        Ok(location) => location,
+        Err(err) => return err.into_response(),
+    };
 
     match comments::insert_comment(
         &app.pg_pool,
@@ -64,10 +100,14 @@ pub async fn create_waterway_comment(
         &body.body,
         body.category.unwrap_or(CommentCategory::Info),
         token.user_id(),
+        location.as_deref(),
     )
     .await
     {
         Ok(mut comment) => {
+            comment.author_name = crate::query::users::get_username(&app, token.user_id())
+                .await
+                .ok();
             if let Err(err) = media::attach_media_to_comment(
                 &app.pg_pool,
                 comment.id,
@@ -222,7 +262,10 @@ pub async fn list_section_comments(
     Path((_waterway_id, section_id)): Path<(i64, i64)>,
 ) -> impl IntoApiResponse {
     match comments::list_comments(&app.pg_pool, "water_section", section_id).await {
-        Ok(list) => Json(list).into_response(),
+        Ok(mut list) => {
+            comments::resolve_author_names(&app, &mut list).await;
+            Json(list).into_response()
+        }
         Err(err) => {
             tracing::error!("Error listing comments for section {}: {}", section_id, err);
             ApiError::internal().into_response()
@@ -247,6 +290,10 @@ pub async fn create_section_comment(
         Some(a) => a,
         None => return ApiError::unauthorized("Authentication required").into_response(),
     };
+    let location = match location_geojson(&body.location) {
+        Ok(location) => location,
+        Err(err) => return err.into_response(),
+    };
 
     match comments::insert_comment(
         &app.pg_pool,
@@ -255,10 +302,31 @@ pub async fn create_section_comment(
         &body.body,
         body.category.unwrap_or(CommentCategory::Info),
         token.user_id(),
+        location.as_deref(),
     )
     .await
     {
-        Ok(comment) => (StatusCode::CREATED, Json(comment)).into_response(),
+        Ok(mut comment) => {
+            comment.author_name = crate::query::users::get_username(&app, token.user_id())
+                .await
+                .ok();
+            if let Err(err) = media::attach_media_to_comment(
+                &app.pg_pool,
+                comment.id,
+                MediaEntityType::WaterSection,
+                section_id,
+                &body.media_ids,
+                token.user_id(),
+            )
+            .await
+            {
+                tracing::error!("Error attaching media to comment {}: {}", comment.id, err);
+            }
+            comment.media = media::list_media_for_comments(&app.pg_pool, &[comment.id])
+                .await
+                .unwrap_or_default();
+            (StatusCode::CREATED, Json(comment)).into_response()
+        }
         Err(err) => {
             tracing::error!("Error creating comment on section {}: {}", section_id, err);
             ApiError::internal().into_response()
@@ -356,7 +424,10 @@ pub async fn list_feature_comments(
     Path((_waterway_id, _section_id, feature_id)): Path<(i64, i64, i64)>,
 ) -> impl IntoApiResponse {
     match comments::list_comments(&app.pg_pool, "feature", feature_id).await {
-        Ok(list) => Json(list).into_response(),
+        Ok(mut list) => {
+            comments::resolve_author_names(&app, &mut list).await;
+            Json(list).into_response()
+        }
         Err(err) => {
             tracing::error!("Error listing comments for feature {}: {}", feature_id, err);
             ApiError::internal().into_response()
@@ -381,6 +452,10 @@ pub async fn create_feature_comment(
         Some(a) => a,
         None => return ApiError::unauthorized("Authentication required").into_response(),
     };
+    let location = match location_geojson(&body.location) {
+        Ok(location) => location,
+        Err(err) => return err.into_response(),
+    };
 
     match comments::insert_comment(
         &app.pg_pool,
@@ -389,6 +464,7 @@ pub async fn create_feature_comment(
         &body.body,
         body.category.unwrap_or(CommentCategory::Info),
         token.user_id(),
+        location.as_deref(),
     )
     .await
     {

@@ -6,7 +6,7 @@ use crate::models::comment::{
 use crate::query::media::list_media_for_comments;
 
 const COMMENT_COLS: &str = "id, entity_type, entity_id, body, category, status, author_id, \
-                            created_at, updated_at";
+                            ST_AsGeoJSON(location) AS location, created_at, updated_at";
 
 fn parse_entity_type(s: &str) -> CommentEntityType {
     match s {
@@ -26,10 +26,34 @@ fn row_to_comment(row: &PgRow) -> Comment {
             .unwrap_or(CommentCategory::Info),
         status: CommentStatus::parse(&row.get::<String, _>("status")).unwrap_or(CommentStatus::Ok),
         author_id: row.get("author_id"),
+        author_name: None,
+        location: row
+            .get::<Option<String>, _>("location")
+            .and_then(|raw| serde_json::from_str(&raw).ok()),
         media: vec![],
         created_at: row.get("created_at"),
         updated_at: row.get("updated_at"),
     }
+}
+
+/// Every note on a river and on its sections, oldest first - the overview
+/// a river page shows before you narrow to one section.
+pub async fn list_river_comments(
+    db: &PgPool,
+    waterway_id: i64,
+) -> Result<Vec<Comment>, sqlx::Error> {
+    let rows = sqlx::query(&format!(
+        "SELECT {COMMENT_COLS} FROM comments
+         WHERE status <> 'spam'
+           AND ((entity_type = 'waterway' AND entity_id = $1)
+                OR (entity_type = 'water_section'
+                    AND entity_id IN (SELECT id FROM water_sections WHERE waterway_id = $1)))
+         ORDER BY created_at"
+    ))
+    .bind(waterway_id)
+    .fetch_all(db)
+    .await?;
+    with_media(db, rows.iter().map(row_to_comment).collect()).await
 }
 
 pub async fn list_comments(
@@ -49,7 +73,11 @@ pub async fn list_comments(
     .fetch_all(db)
     .await?;
 
-    let mut comments: Vec<Comment> = rows.iter().map(row_to_comment).collect();
+    with_media(db, rows.iter().map(row_to_comment).collect()).await
+}
+
+/// Hang each note's photos on it, in one extra query for the whole thread.
+async fn with_media(db: &PgPool, mut comments: Vec<Comment>) -> Result<Vec<Comment>, sqlx::Error> {
     let ids: Vec<i64> = comments.iter().map(|comment| comment.id).collect();
     for item in list_media_for_comments(db, &ids).await? {
         if let Some(comment) = comments
@@ -69,10 +97,13 @@ pub async fn insert_comment(
     body: &str,
     category: CommentCategory,
     author_id: &str,
+    location_geojson: Option<&str>,
 ) -> Result<Comment, sqlx::Error> {
     let row = sqlx::query(&format!(
-        "INSERT INTO comments (entity_type, entity_id, body, category, author_id)
-             VALUES ($1, $2, $3, $4, $5)
+        "INSERT INTO comments (entity_type, entity_id, body, category, author_id, location)
+             VALUES ($1, $2, $3, $4, $5,
+                     CASE WHEN $6::text IS NULL THEN NULL
+                          ELSE ST_SetSRID(ST_GeomFromGeoJSON($6), 4326) END)
              RETURNING {COMMENT_COLS}"
     ))
     .bind(entity_type)
@@ -80,6 +111,7 @@ pub async fn insert_comment(
     .bind(body)
     .bind(category.as_str())
     .bind(author_id)
+    .bind(location_geojson)
     .fetch_one(db)
     .await?;
 
@@ -146,4 +178,26 @@ pub async fn moderate_comment(
     .fetch_optional(db)
     .await?;
     Ok(row.as_ref().map(row_to_comment))
+}
+
+/// Fill in display names for a thread's authors. Cached per user, so a
+/// thread by three people costs at most three directory lookups, and a
+/// failure just leaves the id in place.
+pub async fn resolve_author_names(app: &crate::state::AppState, comments: &mut [Comment]) {
+    let mut ids: Vec<String> = comments
+        .iter()
+        .map(|comment| comment.author_id.clone())
+        .collect();
+    ids.sort();
+    ids.dedup();
+
+    let mut names = std::collections::HashMap::new();
+    for id in ids {
+        if let Ok(name) = crate::query::users::get_username(app, &id).await {
+            names.insert(id, name);
+        }
+    }
+    for comment in comments {
+        comment.author_name = names.get(&comment.author_id).cloned();
+    }
 }

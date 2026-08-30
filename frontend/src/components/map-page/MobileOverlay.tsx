@@ -26,8 +26,13 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
   } = state;
 
   const closeOverlay = () => setIsMobilePanelOpen(false);
-  // The chart is hidden on the section Logs tab to give the list more space.
-  const chartsHidden = selectedSectionId != null && sectionDetailTab === "logs";
+  // Mirrors MapCharts: no chart on the section Logs and Notes tabs.
+  const chartsHidden =
+    selectedSectionId != null &&
+    (sectionDetailTab === "logs" || sectionDetailTab === "notes");
+  // Sheet mode: the map above must stay reachable - suggest flows, and
+  // placing a note pin.
+  const sheet = Boolean(suggestMode) || state.notePinPlacing;
 
   return (
     <Slide direction="up" in={isMobilePanelOpen}>
@@ -35,22 +40,22 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
         sx={{
           display: { xs: "flex", md: "none" },
           position: "fixed",
-          top: suggestMode ? "45%" : 0,
-          bottom: suggestMode ? 0 : "calc(56px + env(safe-area-inset-bottom))",
+          top: sheet ? "45%" : 0,
+          bottom: sheet ? 0 : "calc(56px + env(safe-area-inset-bottom))",
           left: 0,
           right: 0,
-          zIndex: suggestMode ? 1350 : 1200,
+          zIndex: sheet ? 1350 : 1200,
           flexDirection: "column",
           bgcolor: "background.default",
           overflow: "hidden",
-          borderTop: suggestMode ? "1px solid" : "none",
+          borderTop: sheet ? "1px solid" : "none",
           borderColor: "divider",
-          boxShadow: suggestMode ? "0 -8px 16px rgba(0,0,0,0.35)" : "none",
+          boxShadow: sheet ? "0 -8px 16px rgba(0,0,0,0.35)" : "none",
         }}
       >
         {/* Sheet-style top edge in suggest mode: a fixed handle strip the
             content scrolls beneath, instead of a hard cut against the map. */}
-        {suggestMode && (
+        {sheet && (
           <Box
             sx={{
               flexShrink: 0,

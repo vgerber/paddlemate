@@ -129,7 +129,7 @@ export default function SectionLineStep({
               "& .MuiToggleButton-root": {
                 flex: 1,
                 py: { xs: 1.25, md: 0.5 },
-                fontSize: { xs: "0.75rem", md: "0.7rem" },
+                fontSize: { xs: "0.75rem", md: "0.75rem" },
               },
             }}
           >

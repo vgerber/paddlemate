@@ -59,7 +59,7 @@ export default function StepDetails({ form, onChange }: StepProps) {
               key={days}
               size="small"
               variant="outlined"
-              sx={{ fontSize: "0.65rem", px: 1 }}
+              sx={{ fontSize: "0.6875rem", px: 1 }}
               onClick={() => {
                 const d = new Date();
                 d.setDate(d.getDate() + days);
@@ -72,7 +72,7 @@ export default function StepDetails({ form, onChange }: StepProps) {
           {form.visible_from && (
             <Button
               size="small"
-              sx={{ fontSize: "0.65rem", px: 1, ml: "auto" }}
+              sx={{ fontSize: "0.6875rem", px: 1, ml: "auto" }}
               onClick={() => onChange({ visible_from: "" })}
             >
               Clear

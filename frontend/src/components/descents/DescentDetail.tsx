@@ -21,14 +21,14 @@ const formatDateWithWeekday = (iso: string) =>
 
 const factLabelSx = {
   ...labelSx,
-  fontSize: "0.6rem",
+  fontSize: "0.625rem",
   letterSpacing: "0.1em",
   color: "text.disabled",
 } as const;
 
 const valueSx = {
   fontFamily: fonts.label,
-  fontSize: "0.8rem",
+  fontSize: "0.8125rem",
 } as const;
 
 function Fact({
@@ -211,7 +211,7 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
                     sx={{
                       ...valueSx,
                       color: "text.disabled",
-                      fontSize: "0.7rem",
+                      fontSize: "0.75rem",
                     }}
                   >
                     {index + 1}
@@ -221,7 +221,7 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
                   </Typography>
                   {s.waterway_name && (
                     <Typography
-                      sx={{ fontSize: "0.7rem", color: "text.secondary" }}
+                      sx={{ fontSize: "0.75rem", color: "text.secondary" }}
                     >
                       {s.waterway_name}
                     </Typography>
@@ -271,7 +271,7 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
                                   : cfg.label
                               }
                               sx={{
-                                fontSize: "0.65rem",
+                                fontSize: "0.6875rem",
                                 height: 20,
                                 minWidth: 32,
                                 color: cfg.color,
@@ -282,7 +282,7 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
                             />
                             <Typography
                               sx={{
-                                fontSize: "0.7rem",
+                                fontSize: "0.75rem",
                                 color: "text.disabled",
                               }}
                             >

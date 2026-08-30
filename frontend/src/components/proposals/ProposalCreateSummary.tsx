@@ -48,7 +48,7 @@ export default function ProposalCreateSummary({
           .map(([k, v]) => (
             <Typography
               key={k}
-              sx={{ fontSize: "0.7rem", color: "text.secondary" }}
+              sx={{ fontSize: "0.75rem", color: "text.secondary" }}
             >
               <Box
                 component="span"
@@ -57,7 +57,7 @@ export default function ProposalCreateSummary({
                   fontFamily: fonts.label,
                   textTransform: "uppercase",
                   letterSpacing: "0.06em",
-                  fontSize: "0.6rem",
+                  fontSize: "0.625rem",
                   mr: 0.5,
                 }}
               >

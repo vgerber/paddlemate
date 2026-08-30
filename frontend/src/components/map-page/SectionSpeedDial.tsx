@@ -52,6 +52,9 @@ export default function SectionSpeedDial({ state, sx }: Props) {
     return null;
   }
 
+  // The notes tab composes in place; a floating add would mean features.
+  if (sectionDetailTab === "notes") return null;
+
   // The logs tab exists to add a log; the button goes straight to the form
   // instead of opening the action menu.
   if (sectionDetailTab === "logs") {

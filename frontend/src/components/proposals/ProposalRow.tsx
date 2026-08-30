@@ -51,7 +51,7 @@ export default function ProposalRow({
           sx={{
             fontFamily: fonts.label,
             fontWeight: 600,
-            fontSize: "0.8rem",
+            fontSize: "0.8125rem",
             flex: 1,
             minWidth: 0,
             textTransform:
@@ -65,7 +65,7 @@ export default function ProposalRow({
           <Typography
             sx={{
               ...labelSx,
-              fontSize: "0.55rem",
+              fontSize: "0.625rem",
               color: `${STATUS_COLOR[proposal.status]}.main`,
               flexShrink: 0,
             }}
@@ -84,7 +84,7 @@ export default function ProposalRow({
           color: "text.secondary",
         }}
       >
-        <Typography sx={{ ...labelSx, fontSize: "0.55rem" }}>
+        <Typography sx={{ ...labelSx, fontSize: "0.625rem" }}>
           {OP_LABEL[proposal.operation] ?? proposal.operation} ·{" "}
           {ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type}
         </Typography>

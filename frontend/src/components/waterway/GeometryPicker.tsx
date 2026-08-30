@@ -227,7 +227,7 @@ export default function GeometryPicker({
 
                             bgcolor: "action.selected",
                             color: "text.disabled",
-                            fontSize: "0.8rem",
+                            fontSize: "0.8125rem",
                             cursor: disabled ? "default" : "pointer",
                             flexShrink: 0,
                             "&:hover": disabled

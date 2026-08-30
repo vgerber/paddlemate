@@ -13,7 +13,7 @@ use crate::{
     media::{self, MAX_UPLOAD_BYTES},
     models::{
         media_item::{Media, MediaDetails, MediaEntityType, MediaKind},
-        path_params::{WaterwayMediaPath, WaterwayPath},
+        path_params::{SectionPath, WaterwayMediaPath, WaterwayPath},
     },
     query::media::{self as media_query, NewMedia},
     state::AppState,
@@ -123,8 +123,20 @@ pub async fn add_waterway_media(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
-    MediaUpload(mut multipart): MediaUpload,
+    MediaUpload(multipart): MediaUpload,
 ) -> impl IntoApiResponse {
+    store_upload(app, auth, MediaEntityType::Waterway, waterway_id, multipart).await
+}
+
+/// Read the form, store what it carries and record the row. Shared so a
+/// section upload cannot drift from a river one.
+async fn store_upload(
+    app: AppState,
+    auth: Option<Extension<AuthToken>>,
+    entity_type: MediaEntityType,
+    entity_id: i64,
+    mut multipart: Multipart,
+) -> axum::response::Response {
     let Some(Extension(token)) = auth else {
         return ApiError::unauthorized("Authentication required").into_response();
     };
@@ -180,8 +192,8 @@ pub async fn add_waterway_media(
     };
 
     let new = NewMedia {
-        entity_type: MediaEntityType::Waterway,
-        entity_id: waterway_id,
+        entity_type,
+        entity_id,
         kind,
         storage_key: stored.as_ref().map(|s| s.storage_key.as_str()),
         external_url: stored.is_none().then_some(form.url.as_deref()).flatten(),
@@ -201,7 +213,7 @@ pub async fn add_waterway_media(
             if let Some(stored) = &stored {
                 media::delete_image(&stored.storage_key).await;
             }
-            tracing::error!("Error storing media for river {}: {}", waterway_id, err);
+            tracing::error!("Error storing media for {entity_id}: {err}");
             ApiError::internal().into_response()
         }
     }
@@ -209,6 +221,60 @@ pub async fn add_waterway_media(
 
 doc_fn!(add_waterway_media_docs, op =>
     op.description("Add a photo, video or write-up to a river. Multipart: 'kind' (photo, default / video / blog), a 'file' part for a photo (jpeg, png or webp, 8 MB max) or a 'url' for a video or blog, plus optional 'caption', 'copyright', 'license_name', 'license_url' and 'weight'. An uploaded photo is re-encoded, which strips EXIF and caps it at 1600px.")
+        .response_with::<201, Json<Media>, _>(|res| res.description("Media added"))
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Not a readable image, too large, or a bad url"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Media")
+);
+
+pub async fn list_section_media(
+    State(app): State<AppState>,
+    Path(SectionPath { section_id, .. }): Path<SectionPath>,
+    axum::extract::Query(query): axum::extract::Query<MediaQuery>,
+) -> impl IntoApiResponse {
+    match media_query::list_media(
+        &app.pg_pool,
+        MediaEntityType::WaterSection,
+        section_id,
+        query.include_from_notes.unwrap_or(false),
+    )
+    .await
+    {
+        Ok(list) => Json(list).into_response(),
+        Err(err) => {
+            tracing::error!("Error listing media for section {}: {}", section_id, err);
+            ApiError::internal().into_response()
+        }
+    }
+}
+
+doc_fn!(list_section_media_docs, op =>
+    op.input::<Path<SectionPath>>()
+        .description("Photos, videos and linked write-ups for a section, in gallery order")
+        .response::<200, Json<Vec<Media>>>()
+        .tag("Media")
+);
+
+pub async fn add_section_media(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path(SectionPath { section_id, .. }): Path<SectionPath>,
+    MediaUpload(multipart): MediaUpload,
+) -> impl IntoApiResponse {
+    store_upload(
+        app,
+        auth,
+        MediaEntityType::WaterSection,
+        section_id,
+        multipart,
+    )
+    .await
+}
+
+doc_fn!(add_section_media_docs, op =>
+    op.input::<Path<SectionPath>>()
+        .description("Add a photo, video or write-up to a section. Same multipart form as the river endpoint.")
         .response_with::<201, Json<Media>, _>(|res| res.description("Media added"))
         .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Not a readable image, too large, or a bad url"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))

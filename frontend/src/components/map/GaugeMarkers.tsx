@@ -7,7 +7,12 @@ import { labelSx, theme } from "@/lib/theme";
 
 type WaterLevel = components["schemas"]["WaterLevel"];
 
-const LEVEL_COLORS: Record<WaterLevel, string> = theme.tokens.levelColors;
+const LEVEL_COLORS: Record<WaterLevel, string> = {
+  empty: theme.tokens.levels.empty.marker,
+  low: theme.tokens.levels.low.marker,
+  medium: theme.tokens.levels.medium.marker,
+  high: theme.tokens.levels.high.marker,
+};
 
 export interface GaugePin {
   id: number;

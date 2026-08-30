@@ -30,7 +30,7 @@ export default function WaterLevelChip({
       <Chip
         label="–"
         size="small"
-        sx={{ ml: 0.5, opacity: 0.4, fontSize: "0.65rem", minWidth: 32 }}
+        sx={{ ml: 0.5, opacity: 0.4, fontSize: "0.6875rem", minWidth: 32 }}
       />
     );
   }
@@ -49,7 +49,7 @@ export default function WaterLevelChip({
         label={reading}
         size="small"
         variant="outlined"
-        sx={{ ml: 0.5, fontSize: "0.65rem", color: "text.secondary" }}
+        sx={{ ml: 0.5, fontSize: "0.6875rem", color: "text.secondary" }}
       />
     );
   }
@@ -67,7 +67,7 @@ export default function WaterLevelChip({
         sx={{
           ml: 0.5,
           opacity: 0.5,
-          fontSize: "0.65rem",
+          fontSize: "0.6875rem",
           minWidth: 32,
           color: "text.secondary",
         }}
@@ -91,7 +91,7 @@ export default function WaterLevelChip({
       variant={computedLevel === "empty" ? "outlined" : "filled"}
       sx={{
         ml: 0.5,
-        fontSize: "0.65rem",
+        fontSize: "0.6875rem",
         fontWeight: 400,
         color: cfg.color,
         bgcolor: cfg.bgcolor,

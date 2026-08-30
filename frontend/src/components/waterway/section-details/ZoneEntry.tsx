@@ -46,7 +46,7 @@ export function ZoneEntry({
   const isActive = activeId === item.feature.id;
   const isProposal = !!item.proposal;
 
-  const zoneColor = isProposal ? tokens.onSurfaceVariant : tokens.secondary;
+  const zoneColor = isProposal ? tokens.onSurfaceVariant : tokens.success;
 
   return (
     <Box
@@ -69,8 +69,8 @@ export function ZoneEntry({
           cursor: onItemClick ? "pointer" : "default",
           background: isActive
             ? isProposal
-              ? `${tokens.onSurfaceVariant}0a`
-              : `${tokens.secondary}0d`
+              ? `${tokens.onSurfaceVariant}0d`
+              : `${tokens.success}0d`
             : "transparent",
           width: "100%",
           textAlign: "left",
@@ -153,7 +153,7 @@ export function ZoneEntry({
             <Typography
               sx={{
                 fontFamily: fonts.label,
-                fontSize: "0.62rem",
+                fontSize: "0.625rem",
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
                 color: tokens.outline,

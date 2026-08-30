@@ -313,8 +313,9 @@ LATERAL (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
 -- Notes on the river, one per category worth seeing in a thread: a hazard
 -- to lead with, a cleared one, conditions, logistics, and a merged note
 -- that a client should fold away.
-INSERT INTO comments (id, entity_type, entity_id, body, category, status, author_id, created_at)
-SELECT v.id, v.entity_type, v.entity_id, v.body, v.category, v.status, u.id, v.created_at
+INSERT INTO comments (id, entity_type, entity_id, body, category, status, author_id, created_at, location)
+SELECT v.id, v.entity_type, v.entity_id, v.body, v.category, v.status, u.id, v.created_at,
+       CASE WHEN v.id = 9901 THEN ST_SetSRID(ST_MakePoint(11.0135, 47.0135), 4326) END
 FROM (VALUES
   (9901, 'waterway', 9001, 'Tree across the channel just below the road bridge, river left is clear.', 'danger_temporary', 'ok', NOW() - INTERVAL '6 hours'),
   (9902, 'waterway', 9001, 'The strainer at the S-bend was cut out last weekend.', 'danger_cleared', 'ok', NOW() - INTERVAL '2 days'),

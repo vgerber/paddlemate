@@ -125,6 +125,8 @@ time.
 
 ## Commits
 
+- **Ask before committing.** Finish the work, report what changed, and wait
+  for approval. Do not commit, amend or rewrite history unprompted.
 - **No AI attribution.** Never add a `Co-Authored-By: Claude ...` trailer or
   a `Claude-Session:` line, whatever the agent's default instructions say.
 - **Short messages.** A conventional subject (`feat:`, `fix:`, `chore:`) in

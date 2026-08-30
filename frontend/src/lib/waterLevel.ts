@@ -14,12 +14,27 @@ export function maxLevel(levels: WaterLevel[]): WaterLevel {
   }, "empty");
 }
 
-/** Chip styling per level, from the theme's water tokens. */
+/** Chip styling per level: the readable text/bg pair from the theme's
+ * level tokens (the marker hues are for map geometry, not text). */
+function chip(level: {
+  label: string;
+  text: string;
+  bg: string;
+  border?: string;
+}) {
+  return {
+    label: level.label,
+    color: level.text,
+    bgcolor: level.bg,
+    ...(level.border ? { border: level.border } : {}),
+  };
+}
+
 export const levelConfig = {
-  empty: theme.tokens.waterEmpty,
-  low: theme.tokens.waterLow,
-  medium: theme.tokens.waterMedium,
-  high: theme.tokens.waterHigh,
+  empty: chip(theme.tokens.levels.empty),
+  low: chip(theme.tokens.levels.low),
+  medium: chip(theme.tokens.levels.medium),
+  high: chip(theme.tokens.levels.high),
 } satisfies Record<
   WaterLevel,
   { label: string; color: string; bgcolor: string; border?: string }

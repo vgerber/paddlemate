@@ -116,7 +116,7 @@ export default function SectionListItem({
             size="small"
             variant="outlined"
             sx={{
-              fontSize: "0.6rem",
+              fontSize: "0.625rem",
               height: 16,
               borderColor: "rgba(0,0,0,0.2)",
               color: "text.secondary",

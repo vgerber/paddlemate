@@ -59,7 +59,7 @@ export function CoordsInfo({ coords, actions, onEdit, onDelete }: Props) {
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
-        sx={{ color: tokens.secondary }}
+        sx={{ color: tokens.success }}
       >
         <OpenInNewIcon fontSize="small" />
       </IconButton>
@@ -71,7 +71,7 @@ export function CoordsInfo({ coords, actions, onEdit, onDelete }: Props) {
           e.stopPropagation();
           setMenuAnchor(e.currentTarget);
         }}
-        sx={{ color: tokens.secondary }}
+        sx={{ color: tokens.success }}
       >
         <MoreVertIcon fontSize="small" />
       </IconButton>

@@ -8,15 +8,18 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { useMemo } from "react";
-import WaterwayMap from "@/components/map/Map";
+import { useEffect, useMemo } from "react";
+import WaterwayMap, { type NotePin, type PointPin } from "@/components/map/Map";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import AreaControls from "@/components/search/AreaControls";
 import {
   proposalToPseudoFeature,
   spansWholeSection,
 } from "@/components/waterway/section-details/utils";
-import { lineCoords } from "@/lib/geo";
+import { categoryColor, categoryLabel } from "@/lib/comments";
+import { timeAgo } from "@/lib/format";
+import { lineCoords, pointCoords } from "@/lib/geo";
+import { useWaterwayComments } from "@/lib/hooks/useComments";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
 import MapCharts from "./MapCharts";
@@ -73,9 +76,125 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     showProposedFeatures,
     featureProposals,
     setMapBounds,
+    detailTab,
+    sectionDetailTab,
+    notePin,
+    setNotePin,
+    notePinPlacing,
+    setNotePinPlacing,
+    selectedNoteId,
+    setSelectedNoteId,
+    setDetailTab,
+    setSectionDetailTab,
+    setSelectedSectionId,
+    exitMapView,
   } = state;
 
-  const LEVEL_COLORS: Record<string, string> = theme.tokens.levelColors;
+  // A notes tab is in view: the river overview or one section's thread.
+  const notesActive =
+    selectedWaterwayId != null &&
+    (selectedSectionId == null
+      ? detailTab === "notes"
+      : sectionDetailTab === "notes");
+
+  // Note markers are on the map whenever a river is open, not only on the
+  // notes tab - a pinned hazard is map content, and clicking one is how the
+  // notes tab opens. The river overview feeds them (cache shared with the
+  // thread); in section view only other sections' notes are dropped.
+  const showNoteMarkers = selectedWaterwayId != null && suggestMode == null;
+  const riverNotes = useWaterwayComments(
+    showNoteMarkers ? (selectedWaterwayId ?? null) : null,
+    true,
+  );
+  const noteComments = (riverNotes.data ?? []).filter(
+    (comment) =>
+      selectedSectionId == null ||
+      comment.entity_type === "waterway" ||
+      comment.entity_id === selectedSectionId,
+  );
+
+  /** Open the thread a note lives in, with the note selected. */
+  const openNoteInThread = (id: number) => {
+    setSelectedNoteId(id);
+    const note = riverNotes.data?.find((comment) => comment.id === id);
+    if (
+      selectedSectionId != null &&
+      note?.entity_type === "water_section" &&
+      note.entity_id === selectedSectionId
+    ) {
+      setSectionDetailTab("notes");
+    } else if (selectedSectionId != null) {
+      // The note belongs to the river or another section - the overview is
+      // where it can actually be read and highlighted.
+      setSelectedSectionId(undefined);
+      setDetailTab("notes");
+    } else {
+      setDetailTab("notes");
+    }
+    // On mobile the panel is hidden while browsing the map; bring it back.
+    exitMapView();
+  };
+
+  /** Marker click. Mobile only opens the popup - the full-height panel
+   * would cover the map and the popup with it; the popup's own "Open in
+   * notes" does the navigating. Desktop shows panel and map side by side,
+   * so it can do both at once. */
+  const handleNoteMarkerSelect = (id: number | null) => {
+    if (isMobile || id == null) {
+      setSelectedNoteId(id);
+      return;
+    }
+    openNoteInThread(id);
+  };
+
+  const notePins: NotePin[] = showNoteMarkers
+    ? noteComments.flatMap((comment) => {
+        const coords = comment.location ? pointCoords(comment.location) : null;
+        if (!coords) return [];
+        return [
+          {
+            id: comment.id,
+            lon: coords[0],
+            lat: coords[1],
+            color:
+              categoryColor(comment.category) ?? theme.tokens.onSurfaceVariant,
+            categoryLabel: categoryLabel(comment.category),
+            body: comment.body,
+            author: comment.author_name ?? undefined,
+            age: timeAgo(comment.created_at),
+          },
+        ];
+      })
+    : [];
+  const draftPin: PointPin[] =
+    notesActive && notePin
+      ? [
+          {
+            id: "note-draft",
+            lon: notePin[0],
+            lat: notePin[1],
+            color: theme.tokens.tertiary,
+            title: "New note location",
+            emphasis: true,
+          },
+        ]
+      : [];
+
+  // Leaving the notes tab abandons any half-placed pin.
+  useEffect(() => {
+    if (!notesActive) {
+      setNotePinPlacing(false);
+      setNotePin(null);
+      setSelectedNoteId(null);
+    }
+  }, [notesActive, setNotePinPlacing, setNotePin, setSelectedNoteId]);
+
+  const LEVEL_COLORS: Record<string, string> = {
+    empty: theme.tokens.levels.empty.marker,
+    low: theme.tokens.levels.low.marker,
+    medium: theme.tokens.levels.medium.marker,
+    high: theme.tokens.levels.high.marker,
+  };
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId);
   const sectionName = selectedSection
@@ -178,21 +297,33 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           }
           focusedPoint={focusedPoint}
           focusBounds={focusBounds}
-          // The mobile suggest overlay covers the canvas from 45% down
-          // (MobileOverlay); pad focus moves so targets stay visible above it.
+          // The mobile sheet (suggest mode, note-pin placing) covers the
+          // canvas from 45% down; pad focus moves so targets stay above it.
           focusPaddingBottom={
-            isMobile && suggestMode != null
+            isMobile && (suggestMode != null || notePinPlacing)
               ? Math.round(window.innerHeight * 0.55)
               : 0
           }
           proposedFeatures={proposedFeatures}
+          pointPins={draftPin.length > 0 ? draftPin : undefined}
+          notePins={notePins.length > 0 ? notePins : undefined}
+          selectedNoteId={selectedNoteId}
+          onNoteSelect={handleNoteMarkerSelect}
+          onNoteOpenThread={isMobile ? openNoteInThread : undefined}
           onBoundsChange={setMapBounds}
           drawing={{
             sectionPreviewCoords: sectionPreviewCoords ?? undefined,
             featureVertices,
             featureGeomType,
-            placingFeature: featurePickingActive,
-            onMapClick: featurePickingActive ? handleMapPick : undefined,
+            placingFeature: featurePickingActive || notePinPlacing,
+            onMapClick: featurePickingActive
+              ? handleMapPick
+              : notePinPlacing
+                ? (lng, lat) => {
+                    setNotePin([lng, lat]);
+                    setNotePinPlacing(false);
+                  }
+                : undefined,
           }}
           chrome={{
             waterwayNames,

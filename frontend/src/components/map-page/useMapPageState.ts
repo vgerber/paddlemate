@@ -85,6 +85,12 @@ export function useMapPageState(search: RouteSearch) {
   const [suggestMode, setSuggestMode] = useState<SuggestMode | null>(null);
   // Name prefill for the "suggest new river" panel (from the search field)
   const [suggestWaterwayName, setSuggestWaterwayName] = useState("");
+  // Note composer's map pin: placing routes the next map click here, the
+  // draft pin rides along until the note is posted.
+  const [notePinPlacing, setNotePinPlacing] = useState(false);
+  const [notePin, setNotePin] = useState<[number, number] | null>(null);
+  // Selection shared between the thread and the map's note markers.
+  const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
   const [focusedPoint, setFocusedPoint] = useState<[number, number] | null>(
     null,
   );
@@ -410,6 +416,12 @@ export function useMapPageState(search: RouteSearch) {
     setMapBounds,
     focusedPoint,
     setFocusedPoint,
+    notePinPlacing,
+    setNotePinPlacing,
+    notePin,
+    setNotePin,
+    selectedNoteId,
+    setSelectedNoteId,
     focusBounds,
     setFocusBounds,
     suggestGaugePins,
@@ -424,6 +436,7 @@ export function useMapPageState(search: RouteSearch) {
     setIsMobilePanelOpen,
     isMobileMapView,
     toggleMobileMapView,
+    exitMapView,
     previewRadius,
     setPreviewRadius,
     isSearchPanelLoading,

@@ -60,8 +60,9 @@ sparingly and always carries meaning.
 - **Cyan** (`primary`) - interactive elements, key data values, selected
   states.
 - **Lime** (`tertiary`) - the one primary call to action of a flow.
-- **Signal colors** (green / orange / red) are reserved for water levels and
-  never used decoratively.
+- **Signal colors** (green / orange / red) are reserved for meaning - water
+  levels, and note categories (hazard / cleared / urgent) - never used
+  decoratively.
 - **Map feature markers** use the Okabe-Ito colorblind-safe palette.
 - **Hover keeps the element's color** and raises brightness slightly; it never
   switches to a darker token.
@@ -70,3 +71,21 @@ sparingly and always carries meaning.
 - No hex values in components: all color comes from the tokens in
   `frontend/src/lib/theme.ts`, component-wide rules from the theme's
   `styleOverrides` in the same file.
+- Transparency uses the six named alpha steps from `alphas` in the theme
+  (`tint 5%`, `wash 8%`, `hover 12%`, `hairline 33%`, `border 60%`,
+  `scrim 80%`) - no ad-hoc suffixes.
+- Selection is lime everywhere: `action.selected` in lists, the lime
+  selected line on the map. Orange belongs to the medium water level and
+  must never mark selection.
+- Water levels are token *pairs*: `levels.<x>.marker` for map geometry,
+  `levels.<x>.text`/`bg` for chips and labels - the marker hues fail AA as
+  small text on dark surfaces.
+- `palette.secondary` is the lime CTA; the success green lives in
+  `tokens.success` / `palette.success`. Do not mix them up.
+
+## Type scale
+
+Below `body1`, exactly five sizes exist: `0.625rem` (micro labels and metadata, `labelSx`),
+`0.6875rem` (chips, `subtitle2`), `0.75rem` (dense controls),
+`0.8125rem` (`body2`), `0.9rem` (compact titles). New UI picks the nearest
+step instead of inventing a value.
