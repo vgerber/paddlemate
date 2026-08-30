@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import SectionListItem from "@/components/waterway/SectionListItem";
 import type { SectionWithFeatures } from "@/lib/api";
 import { matchedFeatureName } from "@/lib/sectionMatch";
+import ListGroupHeader from "./ListGroupHeader";
 
 interface SectionListProps {
   sections: SectionWithFeatures[];
@@ -60,31 +61,9 @@ export default function SectionList({
     <List dense disablePadding>
       {grouped.map(({ waterwayId, sections: group }) => (
         <Box key={waterwayId}>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              px: 1,
-              pt: 1.5,
-              pb: 0.5,
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{
-                fontWeight: 700,
-                color: "text.secondary",
-                textTransform: "uppercase",
-                fontSize: "0.6875rem",
-                letterSpacing: "0.05em",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {waterwayNames?.[waterwayId] ?? `River #${waterwayId}`}
-            </Typography>
-            <Box sx={{ flex: 1, height: "1px", bgcolor: "divider" }} />
-          </Box>
+          <ListGroupHeader
+            label={waterwayNames?.[waterwayId] ?? `River #${waterwayId}`}
+          />
           {group.map((section) => (
             <SectionListItem
               key={section.id}
