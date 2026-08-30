@@ -1,10 +1,7 @@
 use std::sync::Arc;
 
 use aide::{
-    axum::{
-        ApiRouter, IntoApiResponse,
-        routing::{get, get_with},
-    },
+    axum::{ApiRouter, IntoApiResponse, routing::get},
     openapi::OpenApi,
     transform::TransformOpenApi,
 };
@@ -23,16 +20,8 @@ use paddlemate_api::{
     error::ApiError,
     layers::auth::{api_token_auth, api_token_auth_optional},
     routes::{
-        descents::descents_routes,
-        docs::docs_routes,
-        favorites::favorites_routes,
-        follows::follows_routes,
-        gauges::gauges_routes,
-        geo::geo_routes,
-        groups::group_routes,
-        proposals::proposals_routes,
-        tokens::tokens_routes,
-        users::{list_users, list_users_docs},
+        descents::descents_routes, docs::docs_routes, gauges::gauges_routes, geo::geo_routes,
+        groups::group_routes, proposals::proposals_routes, users::users_routes,
         waterways::waterways_routes,
     },
     state::{AppState, KeycloakState},
@@ -217,11 +206,8 @@ async fn main() {
     ));
 
     let protected = ApiRouter::new()
-        .nest_api_service("/tokens", tokens_routes(state.clone()))
+        .nest_api_service("/users", users_routes(state.clone()))
         .nest_api_service("/groups", group_routes(state.clone()))
-        .nest_api_service("/favorites", favorites_routes(state.clone()))
-        .nest_api_service("/follows", follows_routes(state.clone()))
-        .api_route("/users", get_with(list_users, list_users_docs))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth,

@@ -576,22 +576,26 @@ export const proposalsApi = {
   },
 };
 
+/** The signed-in caller, as the API addresses them. Whose data a request is
+ * about stays in the path; the token decides whether it is allowed. */
+const ME = "me";
+
 export const tokensApi = {
   list: async (): Promise<ApiToken[]> => {
-    const { data } = await client.GET("/api/v1/tokens");
+    const { data } = await client.GET("/api/v1/users/me/tokens");
     return assertData(data);
   },
   create: async (
     name: string,
     expiresAt?: string,
   ): Promise<ApiTokenCreated> => {
-    const { data } = await client.POST("/api/v1/tokens", {
+    const { data } = await client.POST("/api/v1/users/me/tokens", {
       body: { name, expires_at: expiresAt ?? null },
     });
     return assertData(data);
   },
   revoke: async (tokenId: number): Promise<void> => {
-    await client.DELETE("/api/v1/tokens/{token_id}", {
+    await client.DELETE("/api/v1/users/me/tokens/{token_id}", {
       params: { path: { token_id: tokenId } },
     });
   },
@@ -599,51 +603,65 @@ export const tokensApi = {
 
 export const favoritesApi = {
   listSections: async (): Promise<FavoriteSection[]> => {
-    const { data } = await client.GET("/api/v1/favorites/sections");
+    const { data } = await client.GET(
+      "/api/v1/users/{user_id}/favorites/sections",
+      { params: { path: { user_id: ME } } },
+    );
     return assertData(data);
   },
   addSection: async (sectionId: number): Promise<void> => {
-    await client.POST("/api/v1/favorites/sections/{section_id}", {
-      params: { path: { section_id: sectionId } },
-    });
+    await client.PUT(
+      "/api/v1/users/{user_id}/favorites/sections/{section_id}",
+      {
+        params: { path: { user_id: ME, section_id: sectionId } },
+      },
+    );
   },
   removeSection: async (sectionId: number): Promise<void> => {
-    await client.DELETE("/api/v1/favorites/sections/{section_id}", {
-      params: { path: { section_id: sectionId } },
-    });
+    await client.DELETE(
+      "/api/v1/users/{user_id}/favorites/sections/{section_id}",
+      { params: { path: { user_id: ME, section_id: sectionId } } },
+    );
   },
 };
 
 export const followsApi = {
   listAll: async (): Promise<UserWithFollowStatus[]> => {
-    const { data } = await client.GET("/api/v1/follows/users");
+    const { data } = await client.GET("/api/v1/users");
     return assertData(data);
   },
   listFollowing: async (): Promise<User[]> => {
-    const { data } = await client.GET("/api/v1/follows/users/following");
+    const { data } = await client.GET("/api/v1/users/{user_id}/following", {
+      params: { path: { user_id: ME } },
+    });
     return assertData(data);
   },
   listFollowers: async (): Promise<User[]> => {
-    const { data } = await client.GET("/api/v1/follows/users/followers");
+    const { data } = await client.GET("/api/v1/users/{user_id}/followers", {
+      params: { path: { user_id: ME } },
+    });
     return assertData(data);
   },
   listPendingRequests: async (): Promise<User[]> => {
-    const { data } = await client.GET("/api/v1/follows/users/pending");
+    const { data } = await client.GET("/api/v1/users/{user_id}/followers", {
+      params: { path: { user_id: ME }, query: { status: "pending" } },
+    });
     return assertData(data);
   },
   follow: async (userId: string): Promise<void> => {
-    await client.POST("/api/v1/follows/users/{user_id}", {
-      params: { path: { user_id: userId } },
+    await client.PUT("/api/v1/users/{user_id}/following/{target_id}", {
+      params: { path: { user_id: ME, target_id: userId } },
     });
   },
   unfollow: async (userId: string): Promise<void> => {
-    await client.DELETE("/api/v1/follows/users/{user_id}", {
-      params: { path: { user_id: userId } },
+    await client.DELETE("/api/v1/users/{user_id}/following/{target_id}", {
+      params: { path: { user_id: ME, target_id: userId } },
     });
   },
   acceptRequest: async (userId: string): Promise<void> => {
-    await client.PATCH("/api/v1/follows/users/{user_id}/accept", {
-      params: { path: { user_id: userId } },
+    await client.PATCH("/api/v1/users/{user_id}/followers/{follower_id}", {
+      params: { path: { user_id: ME, follower_id: userId } },
+      body: { status: "accepted" },
     });
   },
 };

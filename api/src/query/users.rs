@@ -1,9 +1,6 @@
 use axum::http::StatusCode;
 
-use crate::{
-    models::user::User,
-    state::{AdminToken, AppState},
-};
+use crate::state::{AdminToken, AppState};
 
 pub async fn get_admin_token(app: &AppState) -> Result<String, StatusCode> {
     {
@@ -168,20 +165,4 @@ pub async fn upsert_user(
     .await?;
 
     Ok(())
-}
-
-pub async fn list_users(pool: &sqlx::PgPool) -> Result<Vec<User>, sqlx::Error> {
-    sqlx::query!("SELECT id, username, created_at, updated_at FROM users ORDER BY username")
-        .fetch_all(pool)
-        .await
-        .map(|rows| {
-            rows.into_iter()
-                .map(|r| User {
-                    id: r.id,
-                    username: r.username,
-                    created_at: r.created_at,
-                    updated_at: r.updated_at,
-                })
-                .collect()
-        })
 }

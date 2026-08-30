@@ -584,6 +584,9 @@ pub async fn get_descent_for_viewer(
 pub struct ListFilters<'a> {
     /// "owned" | "visible" (default "visible")
     pub scope: Option<&'a str>,
+    /// Narrows to one author. Composed on top of the visibility rules, so
+    /// it can only ever hide rows the viewer was already allowed to see.
+    pub user_id: Option<&'a str>,
     pub visibility: Option<&'a str>,
     pub from: Option<DateTime<Utc>>,
     pub to: Option<DateTime<Utc>>,
@@ -624,6 +627,7 @@ pub async fn list_descents_for_viewer(
                    SELECT 1 FROM descent_sections ds \
                    WHERE ds.descent_id = descents.id AND ds.section_id = $5 \
                )) \
+               AND ($8::text IS NULL OR descents.user_id = $8) \
              ORDER BY descents.start_time DESC \
              LIMIT $6 OFFSET $7"
         ))
@@ -634,6 +638,7 @@ pub async fn list_descents_for_viewer(
         .bind(filters.section_id)
         .bind(filters.per_page)
         .bind(offset)
+        .bind(filters.user_id)
         .fetch_all(pool)
         .await?
     } else if filters.scope == Some("following") {
@@ -676,6 +681,7 @@ pub async fn list_descents_for_viewer(
                    SELECT 1 FROM descent_sections ds \
                    WHERE ds.descent_id = descents.id AND ds.section_id = $5 \
                )) \
+               AND ($8::text IS NULL OR descents.user_id = $8) \
              ORDER BY descents.start_time DESC \
              LIMIT $6 OFFSET $7"
         ))
@@ -686,6 +692,7 @@ pub async fn list_descents_for_viewer(
         .bind(filters.section_id)
         .bind(filters.per_page)
         .bind(offset)
+        .bind(filters.user_id)
         .fetch_all(pool)
         .await?
     } else if let Some(vid) = viewer_id {
@@ -713,6 +720,7 @@ pub async fn list_descents_for_viewer(
                    SELECT 1 FROM descent_sections ds \
                    WHERE ds.descent_id = descents.id AND ds.section_id = $5 \
                )) \
+               AND ($8::text IS NULL OR descents.user_id = $8) \
              ORDER BY descents.start_time DESC \
              LIMIT $6 OFFSET $7"
         ))
@@ -723,6 +731,7 @@ pub async fn list_descents_for_viewer(
         .bind(filters.section_id)
         .bind(filters.per_page)
         .bind(offset)
+        .bind(filters.user_id)
         .fetch_all(pool)
         .await?
     } else {
@@ -738,6 +747,7 @@ pub async fn list_descents_for_viewer(
                    SELECT 1 FROM descent_sections ds \
                    WHERE ds.descent_id = descents.id AND ds.section_id = $3 \
                )) \
+               AND ($6::text IS NULL OR descents.user_id = $6) \
              ORDER BY descents.start_time DESC \
              LIMIT $4 OFFSET $5"
         ))
@@ -746,6 +756,7 @@ pub async fn list_descents_for_viewer(
         .bind(filters.section_id)
         .bind(filters.per_page)
         .bind(offset)
+        .bind(filters.user_id)
         .fetch_all(pool)
         .await?
     };

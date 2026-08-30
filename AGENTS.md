@@ -261,6 +261,21 @@ code. Component rendering is not tested; the UI is verified by running it.
   in paths, standard status codes, ISO 8601 UTC timestamps. Two deliberate
   deviations: JSON stays snake_case, and paging uses
   `page`/`per_page`/`total`/`total_pages` rather than `$top`/`$skip`.
+- Anything owned by or about a user hangs off `/users`, never its own root
+  collection. A collection that could describe somebody else takes the id in
+  the path for **all** its methods (`/users/{user_id}/followers`), with `me`
+  as the alias for the caller, so opening it up for profile views is an
+  authorization change in `resolve_self` rather than a new route. Writes
+  there stay the caller's own (403 otherwise). Data that can never describe
+  another user says `me` outright - API tokens are credentials, so
+  `/users/me/tokens` has no id form at all.
+- Only data that exists *as* a user's possession or relationship moves under
+  `/users` (follows, stars, tokens - no standalone id, no detail route). A
+  first-class record that merely has an owner (a descent, a proposal) keeps
+  its own collection and takes the owner as a filter instead
+  (`/descents?user_id=`), so one listing owns pagination and every other
+  filter. Such a filter narrows on top of the visibility rules, never
+  around them.
 - Every failure returns the envelope from `models`/`error.rs`:
   `{"error": {"code", "message", "target"}}`. Build one with `ApiError` and
   never return a bare status or a plain string.

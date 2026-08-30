@@ -108,6 +108,7 @@ pub async fn list_descents(
         from: q.from,
         to: q.to,
         section_id: q.section_id,
+        user_id: q.user_id.as_deref(),
         page,
         per_page,
     };
@@ -123,7 +124,7 @@ pub async fn list_descents(
 
 doc_fn!(list_descents_docs, op =>
     op.input::<Query<ListDescentsQuery>>()
-        .description("List descents visible to the current viewer")
+        .description("List descents visible to the current viewer. user_id narrows to one paddler's logs, within what the viewer may see.")
         .response::<200, Json<PaginatedResponse<Descent>>>()
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized (scope=owned requires auth)"))
         .tag("Descents")

@@ -1,11 +1,8 @@
 pub mod descents;
 pub mod docs;
-pub mod favorites;
-pub mod follows;
 pub mod gauges;
 pub mod geo;
 pub mod groups;
 pub mod proposals;
-pub mod tokens;
 pub mod users;
 pub mod waterways;

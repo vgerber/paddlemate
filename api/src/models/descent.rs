@@ -171,6 +171,9 @@ pub struct ListDescentsQuery {
     pub to: Option<DateTime<Utc>>,
     /// Only return descents that include this water section.
     pub section_id: Option<i64>,
+    /// Only return descents logged by this user. Visibility still applies,
+    /// so another paddler's private descents stay hidden.
+    pub user_id: Option<String>,
     pub page: Option<i64>,
     pub per_page: Option<i64>,
 }

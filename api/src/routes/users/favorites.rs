@@ -1,7 +1,4 @@
-use aide::axum::{
-    ApiRouter, IntoApiResponse,
-    routing::{get_with, post_with},
-};
+use aide::axum::IntoApiResponse;
 use axum::{
     Extension, Json,
     extract::{Path, State},
@@ -12,6 +9,7 @@ use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use super::{UserPath, resolve_self};
 use crate::{
     doc_fn,
     error::{ApiError, ErrorResponse},
@@ -22,17 +20,6 @@ use crate::{
     query::{favorites, features},
     state::AppState,
 };
-
-pub fn favorites_routes(state: AppState) -> ApiRouter {
-    ApiRouter::new()
-        .api_route("/sections", get_with(list_favorites, list_favorites_docs))
-        .api_route(
-            "/sections/{section_id}",
-            post_with(add_favorite, add_favorite_docs)
-                .delete_with(remove_favorite, remove_favorite_docs),
-        )
-        .with_state(state)
-}
 
 /// A favorited section, including its parent waterway name and full feature list.
 #[derive(Debug, Clone, Serialize, JsonSchema)]
@@ -55,15 +42,21 @@ pub struct FavoriteSectionResponse {
 }
 
 #[derive(Deserialize, JsonSchema)]
-struct SectionFavoritePath {
+pub struct SectionFavoritePath {
+    /// Whose starred sections are edited; only "me" (or the caller's own id).
+    user_id: String,
     section_id: SectionId,
 }
 
-async fn list_favorites(
+pub async fn list_favorites(
     State(app): State<AppState>,
     Extension(token): Extension<AuthToken>,
+    Path(path): Path<UserPath>,
 ) -> impl IntoApiResponse {
-    let user_id = token.user_id();
+    let user_id = match resolve_self(&path.user_id, token.user_id()) {
+        Ok(id) => id,
+        Err(response) => return response,
+    };
 
     let metas = match favorites::list_section_favorites(&app.pg_pool, user_id).await {
         Ok(rows) => rows,
@@ -102,18 +95,22 @@ async fn list_favorites(
 }
 
 doc_fn!(list_favorites_docs, op =>
-    op.description("List all sections the authenticated user has starred.")
+    op.description("List the sections a user has starred. Only \"me\" is readable.")
         .response::<200, Json<Vec<FavoriteSectionResponse>>>()
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Not permitted"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Favorites")
 );
 
-async fn add_favorite(
+pub async fn add_favorite(
     State(app): State<AppState>,
     Extension(token): Extension<AuthToken>,
     Path(path): Path<SectionFavoritePath>,
 ) -> impl IntoApiResponse {
-    let user_id = token.user_id();
+    let user_id = match resolve_self(&path.user_id, token.user_id()) {
+        Ok(id) => id,
+        Err(response) => return response,
+    };
 
     match favorites::add_section_favorite(&app.pg_pool, user_id, path.section_id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
@@ -129,19 +126,23 @@ async fn add_favorite(
 }
 
 doc_fn!(add_favorite_docs, op =>
-    op.description("Star a section.")
+    op.description("Star a section. Only the caller's own list is writable.")
         .response_with::<204, (), _>(|res| res.description("Starred successfully"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Not permitted"))
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Section not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Favorites")
 );
 
-async fn remove_favorite(
+pub async fn remove_favorite(
     State(app): State<AppState>,
     Extension(token): Extension<AuthToken>,
     Path(path): Path<SectionFavoritePath>,
 ) -> impl IntoApiResponse {
-    let user_id = token.user_id();
+    let user_id = match resolve_self(&path.user_id, token.user_id()) {
+        Ok(id) => id,
+        Err(response) => return response,
+    };
 
     match favorites::remove_section_favorite(&app.pg_pool, user_id, path.section_id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
@@ -153,8 +154,9 @@ async fn remove_favorite(
 }
 
 doc_fn!(remove_favorite_docs, op =>
-    op.description("Unstar a section.")
+    op.description("Unstar a section. Only the caller's own list is writable.")
         .response_with::<204, (), _>(|res| res.description("Unstarred successfully"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Not permitted"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Favorites")
 );

@@ -1,7 +1,4 @@
-use aide::axum::{
-    ApiRouter, IntoApiResponse,
-    routing::{delete_with, get_with},
-};
+use aide::axum::IntoApiResponse;
 use axum::{
     Extension, Json,
     extract::{Path, State},
@@ -21,18 +18,8 @@ use crate::{
     state::AppState,
 };
 
-pub fn tokens_routes(state: AppState) -> ApiRouter {
-    ApiRouter::new()
-        .api_route(
-            "/",
-            get_with(list_tokens, list_tokens_docs).post_with(create_token, create_token_docs),
-        )
-        .api_route("/{token_id}", delete_with(revoke_token, revoke_token_docs))
-        .with_state(state)
-}
-
 #[derive(Deserialize, JsonSchema)]
-struct CreateTokenBody {
+pub struct CreateTokenBody {
     name: String,
     expires_in_days: Option<i64>,
 }
@@ -48,7 +35,7 @@ struct ApiTokenCreated {
     pub expires_at: Option<DateTime<Utc>>,
 }
 
-async fn create_token(
+pub async fn create_token(
     State(app): State<AppState>,
     Extension(token): Extension<AuthToken>,
     Json(body): Json<CreateTokenBody>,
@@ -110,7 +97,7 @@ doc_fn!(create_token_docs, op =>
         .tag("API Tokens")
 );
 
-async fn list_tokens(
+pub async fn list_tokens(
     State(app): State<AppState>,
     Extension(token): Extension<AuthToken>,
 ) -> impl IntoApiResponse {
@@ -173,11 +160,11 @@ doc_fn!(list_tokens_docs, op =>
 );
 
 #[derive(Deserialize, JsonSchema)]
-struct RevokeTokenPath {
+pub struct RevokeTokenPath {
     token_id: ApiTokenId,
 }
 
-async fn revoke_token(
+pub async fn revoke_token(
     State(app): State<AppState>,
     Extension(token): Extension<AuthToken>,
     Path(path): Path<RevokeTokenPath>,

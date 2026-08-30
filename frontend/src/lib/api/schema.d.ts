@@ -4,7 +4,128 @@
  */
 
 export interface paths {
-    "/api/v1/tokens": {
+    "/api/v1/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List all users with the caller's follow status for each. */
+        get: operations["list_users"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}/followers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List a user's followers (accepted follows). With status=pending, the incoming follow requests waiting on them. Only "me" is readable. */
+        get: operations["list_followers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}/followers/{follower_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Answer a pending follow request by setting its status to "accepted". Only the caller's own requests are writable. */
+        patch: operations["update_follower"];
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}/following": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List the users someone follows (accepted follows only). Only "me" is readable. */
+        get: operations["list_following"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}/following/{target_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Follow a user, or resend a pending request. Repeating the call changes nothing. Only the caller's own list is writable. */
+        put: operations["follow_user"];
+        post?: never;
+        /** @description Unfollow a user, or withdraw a pending follow request. Only the caller's own list is writable. */
+        delete: operations["delete_follow"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}/favorites/sections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List the sections a user has starred. Only "me" is readable. */
+        get: operations["list_favorites"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}/favorites/sections/{section_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Star a section. Only the caller's own list is writable. */
+        put: operations["add_favorite"];
+        post?: never;
+        /** @description Unstar a section. Only the caller's own list is writable. */
+        delete: operations["remove_favorite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/tokens": {
         parameters: {
             query?: never;
             header?: never;
@@ -22,7 +143,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/tokens/{token_id}": {
+    "/api/v1/users/me/tokens/{token_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -107,161 +228,6 @@ export interface paths {
         post?: never;
         /** @description Remove a member or leave a group (owner/admin for others; any member for self) */
         delete: operations["remove_member"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/favorites/sections": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description List all sections the authenticated user has starred. */
-        get: operations["list_favorites"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/favorites/sections/{section_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Star a section. */
-        post: operations["add_favorite"];
-        /** @description Unstar a section. */
-        delete: operations["remove_favorite"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/follows/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description List all users with follow status for the authenticated user. */
-        get: operations["list_users"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/follows/users/pending": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description List users who have sent a pending follow request to the authenticated user. */
-        get: operations["list_pending"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/follows/users/following": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description List users the authenticated user is following (accepted follows only). */
-        get: operations["list_following"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/follows/users/followers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description List users who follow the authenticated user (accepted follows only). */
-        get: operations["list_followers"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/follows/users/{user_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Send a follow request to a user. */
-        post: operations["follow_user"];
-        /** @description Remove a follow or reject/cancel a pending follow request. */
-        delete: operations["delete_follow"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/follows/users/{user_id}/accept": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** @description Accept a pending follow request from a user. */
-        patch: operations["accept_follow_request"];
-        trace?: never;
-    };
-    "/api/v1/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description List all registered users (server admin only) */
-        get: operations["list_users"];
-        put?: never;
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -929,7 +895,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description List descents visible to the current viewer */
+        /** @description List descents visible to the current viewer. user_id narrows to one paddler's logs, within what the viewer may see. */
         get: operations["list_descents"];
         put?: never;
         /** @description Log a new descent */
@@ -1591,6 +1557,24 @@ export interface components {
             /** Format: int64 */
             waterway_id: number;
         };
+        /** @enum {string} */
+        FollowStatus: "accepted" | "pending";
+        FollowerPath: {
+            /** @description The user whose follow request is being answered. */
+            follower_id: string;
+            /** @description Whose followers are edited; only "me" (or the caller's own id). */
+            user_id: string;
+        };
+        FollowersQuery: {
+            /** @description "pending" lists incoming follow requests instead of accepted followers. */
+            status?: components["schemas"]["FollowStatus"] | null;
+        };
+        FollowingPath: {
+            /** @description The user to follow or unfollow. */
+            target_id: string;
+            /** @description Whose following list is edited; only "me" (or the caller's own id). */
+            user_id: string;
+        };
         Gauge: {
             active: boolean;
             /** Format: date-time */
@@ -1837,6 +1821,11 @@ export interface components {
              * @description Only return descents whose start_time is on or before this timestamp.
              */
             to?: string | null;
+            /**
+             * @description Only return descents logged by this user. Visibility still applies,
+             *      so another paddler's private descents stay hidden.
+             */
+            user_id?: string | null;
             /** @description Narrow results by visibility: "private", "shared", or "public". */
             visibility?: string | null;
         };
@@ -2141,6 +2130,8 @@ export interface components {
         SectionFavoritePath: {
             /** Format: int64 */
             section_id: number;
+            /** @description Whose starred sections are edited; only "me" (or the caller's own id). */
+            user_id: string;
         };
         /** @description A section together with the language of one of its translations. */
         SectionLocalePath: {
@@ -2264,6 +2255,10 @@ export interface components {
              */
             water_ranges: components["schemas"]["FeatureWaterRangeBody"][];
         };
+        UpdateFollowerBody: {
+            /** @description Only "accepted" is supported. Reject a request by deleting the follow. */
+            status: components["schemas"]["FollowStatus"];
+        };
         UpdateGaugeRequest: {
             active: boolean;
             data_source_id?: string | null;
@@ -2327,7 +2322,8 @@ export interface components {
             updated_at: string;
             username: string;
         };
-        UserFollowPath: {
+        /** @description Addresses a user's own sub-collection; "me" for the caller. */
+        UserPath: {
             user_id: string;
         };
         /** @description A user with the viewer's outgoing follow status and whether they have a pending request to the viewer. */
@@ -2542,6 +2538,325 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_users: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserWithFollowStatusResponse"][];
+                };
+            };
+        };
+    };
+    list_followers: {
+        parameters: {
+            query?: {
+                /** @description "pending" lists incoming follow requests instead of accepted followers. */
+                status?: components["schemas"]["FollowStatus"] | null;
+            };
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"][];
+                };
+            };
+            /** @description Not permitted */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_follower: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The user whose follow request is being answered. */
+                follower_id: string;
+                /** @description Whose followers are edited; only "me" (or the caller's own id). */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateFollowerBody"];
+            };
+        };
+        responses: {
+            /** @description Request accepted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported status */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not permitted */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No pending request found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_following: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"][];
+                };
+            };
+            /** @description Not permitted */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    follow_user: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The user to follow or unfollow. */
+                target_id: string;
+                /** @description Whose following list is edited; only "me" (or the caller's own id). */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Follow request sent */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Cannot follow yourself */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not permitted */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description User not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_follow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The user to follow or unfollow. */
+                target_id: string;
+                /** @description Whose following list is edited; only "me" (or the caller's own id). */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed successfully */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not permitted */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_favorites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FavoriteSectionResponse"][];
+                };
+            };
+            /** @description Not permitted */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_favorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section_id: number;
+                /** @description Whose starred sections are edited; only "me" (or the caller's own id). */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Starred successfully */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not permitted */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Section not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    remove_favorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section_id: number;
+                /** @description Whose starred sections are edited; only "me" (or the caller's own id). */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Unstarred successfully */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not permitted */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_tokens: {
         parameters: {
             query?: never;
@@ -2559,11 +2874,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-08-29T16:04:30.960079014Z",
-                     *         "expires_at": "2026-11-27T16:04:30.960081294Z",
+                     *         "created_at": "2026-08-30T14:10:54.528901304Z",
+                     *         "expires_at": "2026-11-28T14:10:54.528903804Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-08-29T16:04:30.960095124Z",
+                     *         "last_used_at": "2026-08-30T14:10:54.528913384Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -2594,8 +2909,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-08-29T16:04:30.960281264Z",
-                     *       "expires_at": "2026-11-27T16:04:30.960281614Z",
+                     *       "created_at": "2026-08-30T14:10:54.529031134Z",
+                     *       "expires_at": "2026-11-28T14:10:54.529031464Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -3002,274 +3317,6 @@ export interface operations {
             };
             /** @description Not found */
             404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    list_favorites: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FavoriteSectionResponse"][];
-                };
-            };
-        };
-    };
-    add_favorite: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                section_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Starred successfully */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Section not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    remove_favorite: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                section_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Unstarred successfully */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    list_users: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserWithFollowStatusResponse"][];
-                };
-            };
-        };
-    };
-    list_pending: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["User"][];
-                };
-            };
-        };
-    };
-    list_following: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["User"][];
-                };
-            };
-        };
-    };
-    list_followers: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["User"][];
-                };
-            };
-        };
-    };
-    follow_user: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Follow request sent */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Cannot follow yourself */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description User not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    delete_follow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Removed successfully */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    accept_follow_request: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Request accepted */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description No pending request found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    list_users: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["User"][];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5809,6 +5856,11 @@ export interface operations {
                 section_id?: number | null;
                 /** @description Only return descents whose start_time is on or before this timestamp. */
                 to?: string | null;
+                /**
+                 * @description Only return descents logged by this user. Visibility still applies,
+                 *      so another paddler's private descents stay hidden.
+                 */
+                user_id?: string | null;
                 /** @description Narrow results by visibility: "private", "shared", or "public". */
                 visibility?: string | null;
             };
