@@ -7,6 +7,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import type { WaterwayListItem } from "@/lib/api";
+import ListGroupHeader from "./ListGroupHeader";
 import RiverRow from "./RiverRow";
 
 interface PendingRiver {
@@ -166,13 +167,7 @@ export default function RiverList({
         {/* Approximate matches are grouped rather than assumed to come last,
             so the divider stays correct whatever order the API returns. */}
         {waterways.some((w) => w.fuzzy) && (
-          <Typography
-            variant="overline"
-            color="text.disabled"
-            sx={{ display: "block", px: 1, pt: 1, lineHeight: 1.6 }}
-          >
-            Similar names
-          </Typography>
+          <ListGroupHeader label="Similar names" />
         )}
         {waterways
           .filter((w) => w.fuzzy)
