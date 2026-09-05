@@ -2,6 +2,7 @@ import AddIcon from "@mui/icons-material/Add";
 import AddLocationAltIcon from "@mui/icons-material/AddLocationAlt";
 import CloseIcon from "@mui/icons-material/Close";
 import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
+import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
@@ -24,8 +25,9 @@ interface Props {
 
 /**
  * Speed Dial with section-specific actions (favorite, start/log descent,
- * add feature). Shared between MobileOverlay (detail view) and MapPane
- * (map view).
+ * add feature, proposed features). Shared between MobileOverlay (detail
+ * view) and MapPane (map view), and the only place these actions live - the
+ * detail header used to repeat the favourite and proposed toggles.
  */
 export default function SectionSpeedDial({ state, sx }: Props) {
   const {
@@ -37,6 +39,8 @@ export default function SectionSpeedDial({ state, sx }: Props) {
     favoritedIds,
     toggleFavorite,
     sections,
+    showProposedFeatures,
+    toggleShowProposedFeatures,
   } = state;
 
   const { isAuthenticated } = useSession();
@@ -104,6 +108,25 @@ export default function SectionSpeedDial({ state, sx }: Props) {
         title={isFavorited ? "Remove favorite" : "Add favorite"}
         onClick={() => toggleFavorite?.(selectedSectionId)}
       />
+      {sectionDetailTab === "features" && (
+        <SpeedDialAction
+          icon={
+            <PendingActionsIcon
+              sx={
+                showProposedFeatures
+                  ? { color: theme.tokens.primary }
+                  : undefined
+              }
+            />
+          }
+          title={
+            showProposedFeatures
+              ? "Hide proposed features"
+              : "Show proposed features"
+          }
+          onClick={toggleShowProposedFeatures}
+        />
+      )}
       {isAuthenticated && !standingDescent && (
         <SpeedDialAction
           icon={<PlayArrowIcon />}

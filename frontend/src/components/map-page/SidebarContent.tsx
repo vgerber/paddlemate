@@ -170,6 +170,8 @@ export default function SidebarContent({
       }}
       waterwayId={selectedWaterwayId}
       selectedSectionId={selectedSectionId}
+      favoritedIds={favoritedIds}
+      onToggleFavorite={toggleFavorite}
       selectedGaugeId={selectedGaugeId}
       gaugeRanges={gaugeRanges}
       tab={detailTab}
@@ -191,8 +193,6 @@ export default function SidebarContent({
           setSuggestMode(mode);
         }
       }}
-      favoritedIds={favoritedIds}
-      onToggleFavorite={toggleFavorite}
       onMobileMapToggle={onMobileMapToggle}
       mobileMapActive={mobileMapActive}
       featureTimeline={{

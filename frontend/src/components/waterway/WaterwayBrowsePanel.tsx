@@ -33,6 +33,8 @@ import WaterwayDetailHeader from "./WaterwayDetailHeader";
 interface WaterwayBrowsePanelProps {
   waterwayId: number;
   selectedSectionId?: number;
+  favoritedIds?: Set<number>;
+  onToggleFavorite?: (id: number) => void;
   selectedGaugeId?: number | null;
   gaugeRanges?: WaterRangeWithStatus[];
   tab: DetailTab;
@@ -46,8 +48,6 @@ interface WaterwayBrowsePanelProps {
   onSuggestModeChange: (mode: SuggestMode) => void;
   /** Map-page only: note composer's map pin (see CommentThread). */
   noteMapPin?: React.ComponentProps<typeof CommentThread>["mapPin"];
-  favoritedIds?: Set<number>;
-  onToggleFavorite?: (id: number) => void;
   onMobileMapToggle?: () => void;
   mobileMapActive?: boolean;
   /** Everything the section feature timeline needs - passed through as one
@@ -66,6 +66,8 @@ interface WaterwayBrowsePanelProps {
 export default function WaterwayBrowsePanel({
   waterwayId,
   selectedSectionId,
+  favoritedIds,
+  onToggleFavorite,
   selectedGaugeId,
   gaugeRanges = [],
   tab,
@@ -78,8 +80,6 @@ export default function WaterwayBrowsePanel({
   onGaugeSelect,
   onSuggestModeChange,
   noteMapPin,
-  favoritedIds,
-  onToggleFavorite,
   onMobileMapToggle,
   mobileMapActive,
   featureTimeline,
@@ -95,12 +95,17 @@ export default function WaterwayBrowsePanel({
 
   const showProposedToggle = inFeatures && featureTimeline?.onToggleProposed;
   const showFavoriteToggle = inFeatures && onToggleFavorite != null;
+  // Desktop only: on a phone these two are on the section speed dial, and
+  // having them in both places gave the same action two homes. There is no
+  // speed dial on desktop, so the header is where they live there.
+  const desktopOnly = { display: { xs: "none", md: "inline-flex" } } as const;
   const actionButton =
     showProposedToggle || showFavoriteToggle || onMobileMapToggle ? (
       <>
         {showProposedToggle && (
           <IconButton
             size="small"
+            sx={desktopOnly}
             onClick={featureTimeline.onToggleProposed}
             aria-label={
               featureTimeline.showProposed
@@ -115,6 +120,7 @@ export default function WaterwayBrowsePanel({
         {showFavoriteToggle && (
           <IconButton
             size="small"
+            sx={desktopOnly}
             onClick={() => onToggleFavorite(selectedSection.id)}
             aria-label={
               favoritedIds?.has(selectedSection.id)
