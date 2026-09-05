@@ -24,10 +24,16 @@ case.
   starting with the term, then names containing it, then approximate matches.
 - Approximate matches appear under a **Similar names** divider, so a typo
   correction is never mistaken for an exact hit.
-- When a river matched through something other than its own name, the row says
-  why — e.g. `Rapid: Wellerbrücke - Riesenschlucht` or `DE name: Teufelsstrom`.
+- Under each name is where it is — country, then the most telling regions it
+  lies in, e.g. `AT · Bezirk Imst · Ötztal`. A river name on its own rarely
+  says which of the world's rivers it is. Sections read the same way, so both
+  tabs answer "where" the same.
+- When a river matched through something other than its own name, the row also
+  says why — e.g. `Rapid: Wellerbrücke - Riesenschlucht` or
+  `DE name: Teufelsstrom`.
 - The **Sections** tab lists the sections that matched; if a river matched by
-  its own name, all of its sections are shown.
+  its own name, all of its sections are shown. A section that matched through
+  a rapid names it beneath its location rather than in place of it.
 
 Search starts at 2 characters. Typo tolerance starts at 4, so very short terms
 only match exactly.
@@ -123,7 +129,10 @@ The normalization exists three times and must agree:
 exact (0), prefix (1), substring (2), fuzzy (3) — then by source specificity
 (waterway > section > translation > rapid), then trigram similarity. Rows carry
 `matched_name`, `matched_source`, `matched_lang`, `matched_section_name` and
-`fuzzy` for the frontend. Fuzzy matching engages at `FUZZY_MIN_CHARS = 4`; the
+`fuzzy` for the frontend. Each row also carries `place`: the country of its
+sections plus up to two region names, picked most specific first (a valley
+identifies a river, the state it is in barely narrows anything) but returned
+least specific first so the client can print them as an address. Fuzzy matching engages at `FUZZY_MIN_CHARS = 4`; the
 similarity cutoff is set per database connection in `api/src/main.rs`.
 
 ### Indexes, and the one rule

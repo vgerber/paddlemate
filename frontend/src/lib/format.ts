@@ -56,3 +56,15 @@ export function humanize(key: string): string {
 export function formatReading(value: number, unit: string): string {
   return `${Number(value.toFixed(1))} ${unit}`;
 }
+
+/** A section's location as an address, least specific first, matching the
+ * `place` the river search returns. `regions` is stored most specific first,
+ * so the two that identify a section best are the first two - printed the
+ * other way round, after the country. */
+export function sectionPlace(
+  country: string | null | undefined,
+  regions: string[] | null | undefined,
+): string[] {
+  const narrowest = (regions ?? []).slice(0, 2).reverse();
+  return [country, ...narrowest].filter((part): part is string => !!part);
+}

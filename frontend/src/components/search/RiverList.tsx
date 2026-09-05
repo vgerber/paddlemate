@@ -51,6 +51,7 @@ function RiverItem({
   return (
     <RiverRow
       name={waterway.name}
+      place={waterway.place}
       secondary={matchReason(waterway)}
       onClick={() => onSelect(waterway.id)}
       trailing={

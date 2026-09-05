@@ -86,6 +86,10 @@ pub struct WaterwayListItem {
     /// True when the row matched only approximately, i.e. the query was
     /// probably misspelled.
     pub fuzzy: bool,
+    /// Where the river is, least specific first - country code, then the
+    /// regions its sections lie in, so a name on its own says which of the
+    /// world's rivers it is. Empty for a river with no located sections.
+    pub place: Vec<String>,
 }
 
 /// Query parameters of the waterway search.

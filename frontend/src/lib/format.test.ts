@@ -5,6 +5,7 @@ import {
   formatReading,
   formatTime,
   humanize,
+  sectionPlace,
   timeAgo,
 } from "./format";
 
@@ -85,5 +86,21 @@ describe("formatReading", () => {
     expect(formatReading(85.44, "cm")).toBe("85.4 cm");
     expect(formatReading(85.0, "cm")).toBe("85 cm");
     expect(formatReading(85.06, "m3/s")).toBe("85.1 m3/s");
+  });
+});
+
+describe("sectionPlace", () => {
+  test("reads country first, then the regions that narrow it", () => {
+    expect(sectionPlace("AT", ["Ötztal", "Bezirk Imst", "Tirol"])).toEqual([
+      "AT",
+      "Bezirk Imst",
+      "Ötztal",
+    ]);
+  });
+
+  test("drops what is missing", () => {
+    expect(sectionPlace(null, ["Ötztal"])).toEqual(["Ötztal"]);
+    expect(sectionPlace("DE", [])).toEqual(["DE"]);
+    expect(sectionPlace(undefined, undefined)).toEqual([]);
   });
 });

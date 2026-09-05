@@ -32,6 +32,7 @@ struct SearchRow {
     matched_section_id: Option<i64>,
     matched_section_name: Option<String>,
     fuzzy: Option<bool>,
+    place: Option<Vec<String>>,
     total_count: Option<i64>,
 }
 
@@ -50,6 +51,7 @@ impl From<SearchRow> for WaterwayListItem {
             matched_section_id: r.matched_section_id,
             matched_section_name: r.matched_section_name,
             fuzzy: r.fuzzy.unwrap_or(false),
+            place: r.place.unwrap_or_default(),
         }
     }
 }

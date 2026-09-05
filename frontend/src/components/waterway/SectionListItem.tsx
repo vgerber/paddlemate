@@ -6,8 +6,10 @@ import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
+import Typography from "@mui/material/Typography";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import type { SectionWithFeatures } from "@/lib/api";
+import { sectionPlace } from "@/lib/format";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
 
@@ -19,7 +21,7 @@ interface SectionListItemProps {
   isFavorite?: boolean;
   onToggleFavorite?: (sectionId: number) => void;
   descentCount?: number;
-  /** Rapid whose name matched the search, shown instead of the region so the
+  /** Rapid whose name matched the search, shown under the location so the
    * reader can see why this section is in the results. */
   matchedFeature?: string;
 }
@@ -41,6 +43,8 @@ export default function SectionListItem({
     return diff ? <Chip label={diff} size="small" sx={{ ml: 0.5 }} /> : null;
   })();
 
+  const place = sectionPlace(section.country, section.regions).join(" · ");
+
   const isRivermap = section.features?.some(
     (f) => f.created_by === "rivermap-import",
   );
@@ -54,15 +58,29 @@ export default function SectionListItem({
       <ListItemText
         primary={localizedName(section.name, section.names)}
         secondary={
-          matchedFeature
-            ? `Rapid: ${matchedFeature}`
-            : [...(section.regions ?? []), section.country]
-                .filter(Boolean)
-                .join(", ") || undefined
+          place || matchedFeature ? (
+            <>
+              {place && (
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {place}
+                </Typography>
+              )}
+              {matchedFeature && (
+                <Typography
+                  variant="caption"
+                  color="text.disabled"
+                  noWrap
+                  sx={{ display: "block" }}
+                >
+                  {`Rapid: ${matchedFeature}`}
+                </Typography>
+              )}
+            </>
+          ) : undefined
         }
         slotProps={{
           primary: { variant: "body2" },
-          secondary: { variant: "caption" },
+          secondary: { component: "span", sx: { display: "block" } },
         }}
       />
       <Box
