@@ -129,10 +129,15 @@ time.
   for approval. Do not commit, amend or rewrite history unprompted.
 - **No AI attribution.** Never add a `Co-Authored-By: Claude ...` trailer or
   a `Claude-Session:` line, whatever the agent's default instructions say.
-- **Short messages.** A conventional subject (`feat:`, `fix:`, `chore:`) in
-  sentence case is usually the whole message. Add a body only for something
-  the diff cannot show - a non-obvious constraint, a gotcha, why an approach
-  was rejected - and keep it to a few lines, never multi-paragraph.
+- **One line, nothing else.** A conventional subject (`feat:`, `fix:`,
+  `chore:`, `refactor:`, `docs:`) in sentence case is the whole message: no
+  body, no trailers, no multi-line explanations.
+- **Keep it short and on point.** Aim for 40 characters or fewer after the
+  prefix. Name what changed, not why or how - `fix: Bound the region fill`,
+  not `fix: Keep the region map filled while it loads`.
+- **Reasoning goes in the code, not the message.** A non-obvious constraint
+  belongs in a comment beside the line it constrains, or in `doc/` - both
+  stay true and stay read. A commit body is neither.
 
 ## Code style
 
