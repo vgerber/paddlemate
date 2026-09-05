@@ -122,9 +122,13 @@ export default function SearchFiltersHeader({
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
+        {/* The title takes the slack so the buttons sit at the right edge.
+            The count carried that job through an ml:auto, but it is hidden
+            on a phone - where the tabs below give the counts - and a hidden
+            element pushes nothing. */}
         <Typography
           variant="subtitle2"
-          sx={{ color: "text.secondary", letterSpacing: "0.12em" }}
+          sx={{ color: "text.secondary", letterSpacing: "0.12em", flex: 1 }}
         >
           RIVERS
         </Typography>
@@ -133,7 +137,6 @@ export default function SearchFiltersHeader({
             variant="caption"
             sx={{
               color: "text.disabled",
-              ml: "auto",
               display: { xs: "none", md: "block" },
             }}
           >
@@ -145,7 +148,6 @@ export default function SearchFiltersHeader({
           onClick={() => setFiltersOpen((v) => !v)}
           aria-label={filtersOpen ? "Hide filters" : "Show filters"}
           title={filtersOpen ? "Hide filters" : "Show filters"}
-          sx={{ ml: isLoading ? "auto" : 0 }}
         >
           <Badge
             color="primary"

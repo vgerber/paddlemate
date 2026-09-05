@@ -26,7 +26,7 @@ export type RouteSearch = {
   lat?: number;
   lon?: number;
   radius?: number;
-  panel?: "1";
+  panel?: true;
   min_diff?: number;
   max_diff?: number;
   mode?: "area" | "region";

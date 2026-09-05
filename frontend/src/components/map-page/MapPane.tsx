@@ -348,6 +348,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
               isMobile && (showModeStrip || isMobileMapView) ? 60 : 0,
             controlsAnchor:
               isMobile && suggestMode === "feature" ? "top" : undefined,
+            attributionPosition: isMobile ? "top-left" : "bottom-right",
           }}
         />
 
@@ -363,7 +364,9 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
               borderTop: "1px solid",
               borderColor: "divider",
               px: 2,
-              py: 0.5,
+              // Room for the results badge, which anchors above the button
+              // and poked out over the map at a tighter padding.
+              py: 1,
               display: "flex",
               alignItems: "center",
               gap: 2,

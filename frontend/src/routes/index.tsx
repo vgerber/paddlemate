@@ -20,7 +20,13 @@ export const Route = createFileRoute("/")({
       search.mode === "area" || search.mode === "region"
         ? (search.mode as "area" | "region")
         : undefined,
-    panel: search.panel === "1" ? ("1" as const) : undefined,
+    // Search params are JSON-serialized, so a string would come back
+    // quoted ("1") and a hand-written ?panel=1 would parse as a number.
+    // A boolean round-trips as ?panel=true either way.
+    panel:
+      search.panel === true || search.panel === "1" || search.panel === 1
+        ? (true as const)
+        : undefined,
     lat: search.lat != null ? Number(search.lat) : undefined,
     lon: search.lon != null ? Number(search.lon) : undefined,
     radius: search.radius != null ? Number(search.radius) : undefined,

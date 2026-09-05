@@ -7,7 +7,7 @@ import { theme } from "@/lib/theme";
  * button walks back through overlay history) plus the map-view toggle that
  * hides the overlay while keeping the selection. */
 export function useMobilePanelState(
-  panel: "1" | undefined,
+  panel: true | undefined,
   selectedWaterwayId: number | undefined,
 ) {
   const navigate = useNavigate({ from: "/" });
@@ -22,12 +22,12 @@ export function useMobilePanelState(
     [],
   );
 
-  // URL-driven: FAB -> /?panel=1 -> /?panel=1&waterway=123 -> back -> back
+  // URL-driven: FAB -> /?panel=true -> /?panel=true&waterway=123 -> back
   const setIsMobilePanelOpen = useCallback(
     (open: boolean) => {
       if (open) {
         setIsMobileMapViewRaw(false); // overlay must be visible when opening
-        navigate({ search: (prev) => ({ ...prev, panel: "1" }) });
+        navigate({ search: (prev) => ({ ...prev, panel: true }) });
       } else {
         navigate({
           search: (prev) => ({
@@ -43,7 +43,7 @@ export function useMobilePanelState(
   );
   const isMobilePanelOpen =
     isMobile &&
-    (panel === "1" || selectedWaterwayId != null) &&
+    (panel === true || selectedWaterwayId != null) &&
     !isMobileMapView;
 
   /** Bring the overlay back without touching the URL (e.g. suggest mode). */

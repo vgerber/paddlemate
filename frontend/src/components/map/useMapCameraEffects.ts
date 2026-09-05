@@ -41,6 +41,14 @@ export function useMapCameraEffects({
     setMapLoaded(true);
     const map = mapRef.current?.getMap();
     addMapImages(map);
+    // MapLibre opens the compact attribution on load and only closes it when
+    // the info button is tapped, which on a phone leaves a bar across the
+    // top of the map for good. Start it collapsed instead; the button is
+    // still there and still opens it.
+    map
+      ?.getContainer()
+      .querySelector(".maplibregl-ctrl-attrib")
+      ?.classList.remove("maplibregl-compact-show");
   }, [setMapLoaded, mapRef, addMapImages]);
 
   // Re-add custom images whenever the style is swapped (e.g. satellite toggle)

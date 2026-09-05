@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import MapGL, {
+  AttributionControl,
   Layer,
   type MapRef,
   Marker,
@@ -87,6 +88,10 @@ export interface MapChrome {
   /** For maps embedded in scrollable pages: page scroll passes over the map;
    * zooming needs Ctrl/Cmd+scroll (or two fingers on touch). */
   cooperativeGestures?: boolean;
+  /** Corner for the attribution. The bottom of a phone screen belongs to the
+   * label toggle, the results strip and the filter button, all of which sat
+   * on top of it - move it to a free corner there. */
+  attributionPosition?: "top-left" | "bottom-right";
 }
 
 interface WaterwayMapProps {
@@ -186,6 +191,7 @@ export default function WaterwayMap({
     onLabelModeChange,
     controlsBottomOffset = 0,
     controlsAnchor,
+    attributionPosition = "bottom-right",
     cooperativeGestures,
   } = chrome;
   const mapRef = useRef<MapRef>(null);
@@ -302,6 +308,9 @@ export default function WaterwayMap({
       />
       <MapGL
         ref={mapRef}
+        // Rendered as a child instead, so it can be compact and placed in a
+        // corner nothing else is using.
+        attributionControl={false}
         cooperativeGestures={cooperativeGestures}
         initialViewState={{ longitude: 13, latitude: 47, zoom: 5 }}
         style={{ width: "100%", height: "100%" }}
@@ -320,6 +329,7 @@ export default function WaterwayMap({
         ]}
       >
         <NavigationControl position="top-right" />
+        <AttributionControl compact position={attributionPosition} />
 
         <RegionBrowseLayer
           outlines={regionChoices}
