@@ -41,6 +41,11 @@ COPY --from=builder /app/target/release/derive_section_regions /usr/local/bin/de
 # fragments) so river snapping skips Overpass. Run after imports:
 # docker exec fetch_osm_geometry.
 COPY --from=builder /app/target/release/fetch_osm_geometry /usr/local/bin/fetch_osm_geometry
+# Operational tool: imports the boundary of every region a section names, so
+# the region filter can offer them by name without waiting for someone to
+# browse that ground. Run after derive_section_regions:
+# docker exec import_region_outlines.
+COPY --from=builder /app/target/release/import_region_outlines /usr/local/bin/import_region_outlines
 
 ENV PORT=3000
 EXPOSE 3000
