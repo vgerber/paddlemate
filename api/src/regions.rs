@@ -445,6 +445,12 @@ pub async fn store_outline(
 /// outlines and the answer is to zoom in.
 pub const BROWSE_LIMIT: i64 = 120;
 
+/// Most tiles one request will fetch. A viewport at the state tier can be
+/// two dozen tiles short, and fetching their union as one box means asking
+/// OSM for every boundary in a continent. The client polls while anything is
+/// still missing, so the rest arrive on the next round instead.
+const MAX_TILES_PER_FILL: usize = 4;
+
 /// Tiles a fill is working on right now. Panning over uncovered ground asks
 /// for overlapping viewports in quick succession, and assembling a district
 /// boundary takes seconds - without this they would all fetch the same
@@ -470,17 +476,29 @@ pub async fn ensure_browse_fill(
         if work.iter().any(|(done, _)| *done == tier) {
             continue;
         }
-        let missing = missing_tiles(pool, tier.as_str(), &tiles_for_bbox(tier, bbox)).await?;
+        let mut missing = missing_tiles(pool, tier.as_str(), &tiles_for_bbox(tier, bbox)).await?;
         if missing.is_empty() {
             continue;
         }
         pending = true;
+        // Nearest the middle of the screen first, so what the eye is on
+        // fills before the corners.
+        let (south, west, north, east) = bbox;
+        let size = tier.tile_deg();
+        let (cx, cy) = ((west + east) / 2.0 / size, (south + north) / 2.0 / size);
+        missing.sort_by(|a, b| {
+            let d = |(x, y): &(i32, i32)| {
+                (f64::from(*x) - cx).powi(2) + (f64::from(*y) - cy).powi(2)
+            };
+            d(a).total_cmp(&d(b))
+        });
         let claimed: Vec<(i32, i32)> = {
             let mut filling = FILLING.lock().expect("fill set is not poisoned");
             missing
                 .iter()
                 .copied()
                 .filter(|(x, y)| filling.insert((tier, *x, *y)))
+                .take(MAX_TILES_PER_FILL)
                 .collect()
         };
         if !claimed.is_empty() {
@@ -526,23 +544,29 @@ async fn fill_tiles(
     tier: BrowseTier,
     tiles: &[(i32, i32)],
 ) -> anyhow::Result<()> {
-    let Some(bbox) = tiles_bbox(tier, tiles) else {
-        return Ok(());
-    };
-
-    let _guard = FETCH_LOCK.lock().await;
-    let response = run_query(client(), &browse_query(tier, bbox)).await?;
-    let found = collect_browse(response);
-    for region in &found {
-        store_outline(pool, &region.name, region.country.as_deref(), &region.source).await?;
+    // One query per tile rather than one over their union: the union of even
+    // a few state tiles spans a continent, and a tile that is fetched is
+    // marked straight away, so a long run keeps its progress.
+    for tile in tiles {
+        let Some(bbox) = tiles_bbox(tier, std::slice::from_ref(tile)) else {
+            continue;
+        };
+        let found = {
+            let _guard = FETCH_LOCK.lock().await;
+            collect_browse(run_query(client(), &browse_query(tier, bbox)).await?)
+        };
+        for region in &found {
+            store_outline(pool, &region.name, region.country.as_deref(), &region.source).await?;
+        }
+        mark_tiles(pool, tier.as_str(), std::slice::from_ref(tile)).await?;
+        tracing::info!(
+            "Stored {} {} region(s) for tile {},{}",
+            found.len(),
+            tier.as_str(),
+            tile.0,
+            tile.1
+        );
     }
-    mark_tiles(pool, tier.as_str(), tiles).await?;
-    tracing::info!(
-        "Stored {} {} region(s) over {} tile(s)",
-        found.len(),
-        tier.as_str(),
-        tiles.len()
-    );
     Ok(())
 }
 

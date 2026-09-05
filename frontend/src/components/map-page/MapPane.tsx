@@ -54,6 +54,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     regionOutline,
     regionChoices,
     countryBorders,
+    regionsLoading,
     selectRegion,
     setAreaCircle,
     previewRadius,
@@ -375,13 +376,22 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
               {showRegionStrip ? (
-                <Typography variant="body2" color="text.secondary" noWrap>
-                  {regionOutline
-                    ? [regionOutline.country, regionOutline.name]
-                        .filter(Boolean)
-                        .join(" · ")
-                    : "Tap a region on the map to search in it"}
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {/* A viewport the server has not seen takes ten seconds to
+                      fetch from OSM; without this the map just sits empty. */}
+                  {regionsLoading && !regionOutline && (
+                    <CircularProgress size={12} color="inherit" />
+                  )}
+                  <Typography variant="body2" color="text.secondary" noWrap>
+                    {regionOutline
+                      ? [regionOutline.country, regionOutline.name]
+                          .filter(Boolean)
+                          .join(" · ")
+                      : regionsLoading
+                        ? "Finding the regions here…"
+                        : "Tap a region on the map to search in it"}
+                  </Typography>
+                </Box>
               ) : areaCircle ? (
                 <AreaControls
                   areaCircle={areaCircle}

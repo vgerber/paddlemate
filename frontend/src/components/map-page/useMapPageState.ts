@@ -222,7 +222,7 @@ export function useMapPageState(search: RouteSearch) {
   // In region mode the map doubles as the picker: every region in view is
   // drawn and clickable, so a region can be found by looking rather than by
   // knowing its name.
-  const { data: regionsInView } = useRegionsInView(
+  const regionsInView = useRegionsInView(
     mode === "region" && mapBounds
       ? [mapBounds.south, mapBounds.west, mapBounds.north, mapBounds.east]
       : undefined,
@@ -417,8 +417,9 @@ export function useMapPageState(search: RouteSearch) {
     isRegionMode: mode === "region",
     areaCircle,
     regionOutline,
-    regionChoices: regionsInView?.regions,
-    countryBorders: regionsInView?.countries,
+    regionChoices: regionsInView.regions,
+    countryBorders: regionsInView.countries,
+    regionsLoading: regionsInView.loading,
     selectRegion,
     // Navigation helpers
     setSelectedWaterwayId,
