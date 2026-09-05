@@ -28,9 +28,8 @@ import { buildSectionsGeoJSON } from "./mapLayers";
 import { LIBERTY_STYLE, SATELLITE_STYLE } from "./mapStyles";
 import NoteMarkers, { type NotePin } from "./NoteMarkers";
 import PickModeButtons from "./PickModeButtons";
-import RegionBrowseLayer from "./RegionBrowseLayer";
 import RegionChoicePopup from "./RegionChoicePopup";
-import RegionOutlineLayer from "./RegionOutlineLayer";
+import RegionLayers from "./RegionLayers";
 import SectionLayers from "./SectionLayers";
 import { useMapCameraEffects } from "./useMapCameraEffects";
 import { useMapClickHandler } from "./useMapClickHandler";
@@ -94,34 +93,8 @@ export interface MapChrome {
   attributionPosition?: "top-left" | "bottom-right";
 }
 
-interface WaterwayMapProps {
-  sections?: SectionWithFeatures[];
-  features?: Feature[];
-  selectedSectionId?: number | null;
-  onSectionClick?: (id: number) => void;
-  sectionLevels?: Record<number, string>;
-  /** Pending proposals to show as ghost markers on the map. */
-  proposedFeatures?: Feature[];
-  gaugePins?: GaugePin[];
-  /** Small dot markers (the note composer's draft pin). */
-  pointPins?: PointPin[];
-  /** Pinned notes, as speech-bubble badges with a text popup. */
-  notePins?: NotePin[];
-  selectedNoteId?: number | null;
-  onNoteSelect?: (id: number | null) => void;
-  onNoteOpenThread?: (id: number) => void;
-  selectedGaugePinId?: number | null;
-  onGaugeClick?: (pin: GaugePin) => void;
-  areaCircle?: AreaCircle | null;
-  areaLocked?: boolean;
-  onAreaCircleChange?: (circle: AreaCircle | null) => void;
-  /** Boundary of the region being searched in, drawn as the search area. */
-  regionOutline?: RegionOutline | null;
-  /** Regions in the viewport to pick from, drawn behind everything else. */
-  regionChoices?: RegionOutline[] | null;
-  /** Country borders in the viewport, drawn over everything else. */
-  countryBorders?: CountryBorder[] | null;
-  onRegionSelect?: (regionId: number) => void;
+/** Where the map looks, and where it reports it is looking. */
+export interface MapCamera {
   /** [lng, lat] to fly to and highlight; set by clicking a feature in the panel. */
   focusedPoint?: [number, number] | null;
   /** [[minLon, minLat], [maxLon, maxLat]] box to fit (e.g. a river's gauges). */
@@ -136,11 +109,64 @@ interface WaterwayMapProps {
     north: number;
     east: number;
   }) => void;
+}
+
+/** Notes pinned to the water, and which one is open. */
+export interface MapNotes {
+  pins?: NotePin[];
+  selectedId?: number | null;
+  onSelect?: (id: number | null) => void;
+  onOpenThread?: (id: number) => void;
+}
+
+/** Gauge markers, and which one is selected. */
+export interface MapGauges {
+  pins?: GaugePin[];
+  selectedId?: number | null;
+  onClick?: (pin: GaugePin) => void;
+}
+
+/** The area-search circle. Omitting onChange makes it read-only. */
+export interface MapArea {
+  circle?: AreaCircle | null;
+  locked?: boolean;
+  onChange?: (circle: AreaCircle | null) => void;
+}
+
+/** Region browsing: the regions on offer, the one picked, and the country
+ * borders drawn over them. */
+export interface MapRegions {
+  choices?: RegionOutline[] | null;
+  picked?: RegionOutline | null;
+  borders?: CountryBorder[] | null;
+  onSelect?: (regionId: number) => void;
+}
+
+interface WaterwayMapProps {
+  sections?: SectionWithFeatures[];
+  features?: Feature[];
+  selectedSectionId?: number | null;
+  onSectionClick?: (id: number) => void;
+  sectionLevels?: Record<number, string>;
+  /** Pending proposals to show as ghost markers on the map. */
+  proposedFeatures?: Feature[];
+  /** Small dot markers (the note composer's draft pin). */
+  pointPins?: PointPin[];
+  camera?: MapCamera;
+  notes?: MapNotes;
+  gauges?: MapGauges;
+  area?: MapArea;
+  regions?: MapRegions;
   picking?: MapPicking;
   drawing?: MapDrawing;
   chrome?: MapChrome;
 }
 
+const NO_CAMERA: MapCamera = {};
+const NO_NOTES: MapNotes = {};
+const NO_GAUGES: MapGauges = {};
+const NO_AREA: MapArea = {};
+const NO_REGIONS: MapRegions = {};
 const NO_PICKING: MapPicking = {};
 const NO_DRAWING: MapDrawing = {};
 const NO_CHROME: MapChrome = {};
@@ -152,31 +178,42 @@ export default function WaterwayMap({
   onSectionClick,
   sectionLevels,
   proposedFeatures,
-  gaugePins,
   pointPins,
-  notePins,
-  selectedNoteId,
-  onNoteSelect,
-  onNoteOpenThread,
-  selectedGaugePinId,
-  onGaugeClick,
-  areaCircle,
-  areaLocked,
-  onAreaCircleChange,
-  regionOutline,
-  regionChoices,
-  countryBorders,
-  onRegionSelect,
-  focusedPoint,
-  focusBounds,
-  focusPaddingBottom,
-  onBoundsChange,
+  notes = NO_NOTES,
+  gauges = NO_GAUGES,
+  area = NO_AREA,
+  regions = NO_REGIONS,
+  camera = NO_CAMERA,
   picking = NO_PICKING,
   drawing = NO_DRAWING,
   chrome = NO_CHROME,
 }: WaterwayMapProps) {
   const { putIn, takeOut, onPickPutIn, onPickTakeOut, selectedSectionIds } =
     picking;
+  const {
+    pins: notePins,
+    selectedId: selectedNoteId,
+    onSelect: onNoteSelect,
+    onOpenThread: onNoteOpenThread,
+  } = notes;
+  const {
+    pins: gaugePins,
+    selectedId: selectedGaugePinId,
+    onClick: onGaugeClick,
+  } = gauges;
+  const {
+    circle: areaCircle,
+    locked: areaLocked,
+    onChange: onAreaCircleChange,
+  } = area;
+  const {
+    choices: regionChoices,
+    picked: regionOutline,
+    borders: countryBorders,
+    onSelect: onRegionSelect,
+  } = regions;
+  const { focusedPoint, focusBounds, focusPaddingBottom, onBoundsChange } =
+    camera;
   const {
     featureVertices,
     featureGeomType,
@@ -226,6 +263,9 @@ export default function WaterwayMap({
     proposedLinesGeoJSON,
     proposedLineEndpointsGeoJSON,
     proposedLineLabelsGeoJSON,
+    regionChoicesGeoJSON,
+    pickedRegionGeoJSON,
+    countryBordersGeoJSON,
   } = useMapSources({
     sections,
     features,
@@ -233,6 +273,9 @@ export default function WaterwayMap({
     labelMode,
     waterwayNames,
     sectionLevels,
+    regionChoices,
+    pickedRegion: regionOutline,
+    countryBorders,
   });
 
   const { pickMode, togglePickMode, handleClick, regionMenu, closeRegionMenu } =
@@ -331,12 +374,10 @@ export default function WaterwayMap({
         <NavigationControl position="top-right" />
         <AttributionControl compact position={attributionPosition} />
 
-        <RegionBrowseLayer
-          outlines={regionChoices}
-          selectedId={regionOutline?.id}
+        <RegionLayers
+          choices={regionChoicesGeoJSON}
+          picked={pickedRegionGeoJSON}
         />
-
-        <RegionOutlineLayer outline={regionOutline} />
 
         {regionMenu && onRegionSelect && (
           <RegionChoicePopup
@@ -384,7 +425,7 @@ export default function WaterwayMap({
 
         {/* Last of the map layers: a border stays legible over the rivers
             and regions it separates, not under them. */}
-        <CountryBorderLayer borders={countryBorders} />
+        <CountryBorderLayer borders={countryBordersGeoJSON} />
 
         {(pointPins ?? []).map((pin) => (
           <Marker

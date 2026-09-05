@@ -1,14 +1,22 @@
 import { useMemo } from "react";
-import type { Feature, SectionWithFeatures } from "@/lib/api";
+import type {
+  CountryBorder,
+  Feature,
+  RegionOutline,
+  SectionWithFeatures,
+} from "@/lib/api";
 import { useLanguage } from "@/lib/languagePreference";
 import {
+  buildCountryBordersGeoJSON,
   buildLineFeatureEndpointsGeoJSON,
   buildLineFeatureLabelsGeoJSON,
   buildLineFeaturesGeoJSON,
+  buildPickedRegionGeoJSON,
   buildPointFeaturesGeoJSON,
   buildProposedLineFeaturesGeoJSON,
   buildProposedPointFeaturesGeoJSON,
   buildPutInTakeOutConnectorsGeoJSON,
+  buildRegionChoicesGeoJSON,
   buildSectionEndpointsGeoJSON,
   buildSectionLabelsGeoJSON,
   buildSectionsGeoJSON,
@@ -21,6 +29,9 @@ interface UseMapSourcesInput {
   labelMode: "section" | "river";
   waterwayNames?: Record<number, string>;
   sectionLevels?: Record<number, string>;
+  regionChoices?: RegionOutline[] | null;
+  pickedRegion?: RegionOutline | null;
+  countryBorders?: CountryBorder[] | null;
 }
 
 /**
@@ -36,6 +47,9 @@ export function useMapSources({
   labelMode,
   waterwayNames,
   sectionLevels,
+  regionChoices,
+  pickedRegion,
+  countryBorders,
 }: UseMapSourcesInput) {
   const language = useLanguage();
 
@@ -94,6 +108,19 @@ export function useMapSources({
     [proposedFeatures, language],
   );
 
+  const regionChoicesGeoJSON = useMemo(
+    () => buildRegionChoicesGeoJSON(regionChoices, pickedRegion?.id),
+    [regionChoices, pickedRegion?.id],
+  );
+  const pickedRegionGeoJSON = useMemo(
+    () => buildPickedRegionGeoJSON(pickedRegion),
+    [pickedRegion],
+  );
+  const countryBordersGeoJSON = useMemo(
+    () => buildCountryBordersGeoJSON(countryBorders),
+    [countryBorders],
+  );
+
   return {
     sectionsGeoJSON,
     sectionLabelsGeoJSON,
@@ -107,5 +134,8 @@ export function useMapSources({
     proposedLinesGeoJSON,
     proposedLineEndpointsGeoJSON,
     proposedLineLabelsGeoJSON,
+    regionChoicesGeoJSON,
+    pickedRegionGeoJSON,
+    countryBordersGeoJSON,
   };
 }

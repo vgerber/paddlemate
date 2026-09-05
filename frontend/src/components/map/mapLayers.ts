@@ -1,4 +1,9 @@
-import type { Feature, SectionWithFeatures } from "@/lib/api";
+import type {
+  CountryBorder,
+  Feature,
+  RegionOutline,
+  SectionWithFeatures,
+} from "@/lib/api";
 import { humanize } from "@/lib/format";
 import { lineCoords, pointCoords, representativePoint } from "@/lib/geo";
 import { localizedName } from "@/lib/localization";
@@ -389,6 +394,71 @@ export function buildProposedLineFeaturesGeoJSON(
         color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
       },
       geometry,
+    })),
+  };
+}
+
+/** Regions offered in the browse layer, coloured so that ones overlapping
+ * each other differ. The server hands out `palette_index`; a viewport busy
+ * enough to run past the palette wraps and repeats a hue.
+ *
+ * The region already picked is left out - buildPickedRegionGeoJSON draws
+ * that one, and keeps drawing it after a pan takes it out of view. */
+export function buildRegionChoicesGeoJSON(
+  outlines: RegionOutline[] | null | undefined,
+  pickedId: number | null | undefined,
+): GeoJSON.FeatureCollection {
+  const palette = theme.tokens.mapRegionPalette;
+  return {
+    type: "FeatureCollection",
+    features: (outlines ?? [])
+      .filter((region) => region.id !== pickedId)
+      .map((region) => ({
+        type: "Feature",
+        id: region.id,
+        properties: {
+          id: region.id,
+          color: palette[region.palette_index % palette.length],
+          // Panning across a border is easy to miss when every label is
+          // just a valley name.
+          label: region.country
+            ? `${region.country} \u00b7 ${region.name}`
+            : region.name,
+        },
+        geometry: region.geometry as GeoJSON.Geometry,
+      })),
+  };
+}
+
+/** The region being searched in, drawn on its own so it survives a pan that
+ * takes it out of the viewport the choices came from. */
+export function buildPickedRegionGeoJSON(
+  outline: RegionOutline | null | undefined,
+): GeoJSON.FeatureCollection {
+  return {
+    type: "FeatureCollection",
+    features: outline
+      ? [
+          {
+            type: "Feature",
+            properties: {},
+            geometry: outline.geometry as GeoJSON.Geometry,
+          },
+        ]
+      : [],
+  };
+}
+
+/** Country borders, already clipped to the viewport by the server. */
+export function buildCountryBordersGeoJSON(
+  borders: CountryBorder[] | null | undefined,
+): GeoJSON.FeatureCollection {
+  return {
+    type: "FeatureCollection",
+    features: (borders ?? []).map((border) => ({
+      type: "Feature",
+      properties: { country: border.country },
+      geometry: border.geometry as GeoJSON.Geometry,
     })),
   };
 }

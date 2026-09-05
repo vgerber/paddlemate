@@ -158,7 +158,7 @@ export default function ProposalDetailPane({
             proposedFeatures={
               pseudoFeatures.length > 0 ? pseudoFeatures : undefined
             }
-            focusedPoint={focus}
+            camera={{ focusedPoint: focus }}
           />
         </Box>
       )}

@@ -288,45 +288,52 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           features={mapFeatures}
           selectedSectionId={selectedSectionId}
           onSectionClick={suggestMode ? undefined : handleSectionClick}
-          gaugePins={
-            suggestMode === "waterway" && suggestGaugePins.length > 0
-              ? suggestGaugePins
-              : gaugePins
-          }
-          selectedGaugePinId={selectedGaugeId}
-          onGaugeClick={
-            suggestMode === "waterway" ? undefined : handleGaugeClick
-          }
-          areaCircle={visibleAreaCircle}
-          regionOutline={selectedWaterwayId != null ? null : regionOutline}
-          regionChoices={selectedWaterwayId != null ? null : regionChoices}
-          countryBorders={countryBorders}
-          onRegionSelect={selectedWaterwayId != null ? undefined : selectRegion}
-          areaLocked={areaLocked}
-          onAreaCircleChange={
-            isAreaMode && selectedWaterwayId == null && !areaLocked
-              ? setAreaCircle
-              : undefined
-          }
+          gauges={{
+            pins:
+              suggestMode === "waterway" && suggestGaugePins.length > 0
+                ? suggestGaugePins
+                : gaugePins,
+            selectedId: selectedGaugeId,
+            onClick: suggestMode === "waterway" ? undefined : handleGaugeClick,
+          }}
+          area={{
+            circle: visibleAreaCircle,
+            locked: areaLocked,
+            onChange:
+              isAreaMode && selectedWaterwayId == null && !areaLocked
+                ? setAreaCircle
+                : undefined,
+          }}
+          regions={{
+            // A selected river takes the map over; the regions it was found
+            // through would only be clutter behind it.
+            choices: selectedWaterwayId != null ? null : regionChoices,
+            picked: selectedWaterwayId != null ? null : regionOutline,
+            borders: countryBorders,
+            onSelect: selectedWaterwayId != null ? undefined : selectRegion,
+          }}
           sectionLevels={
             selectedWaterwayId != null ? sectionLevels : searchSectionLevels
           }
-          focusedPoint={focusedPoint}
-          focusBounds={focusBounds}
-          // The mobile sheet (suggest mode, note-pin placing) covers the
-          // canvas from 45% down; pad focus moves so targets stay above it.
-          focusPaddingBottom={
-            isMobile && (suggestMode != null || notePinPlacing)
-              ? Math.round(window.innerHeight * 0.55)
-              : 0
-          }
+          camera={{
+            focusedPoint,
+            focusBounds,
+            // The mobile sheet (suggest mode, note-pin placing) covers the
+            // canvas from 45% down; pad focus moves so targets stay above it.
+            focusPaddingBottom:
+              isMobile && (suggestMode != null || notePinPlacing)
+                ? Math.round(window.innerHeight * 0.55)
+                : 0,
+            onBoundsChange: setMapBounds,
+          }}
           proposedFeatures={proposedFeatures}
           pointPins={draftPin.length > 0 ? draftPin : undefined}
-          notePins={notePins.length > 0 ? notePins : undefined}
-          selectedNoteId={selectedNoteId}
-          onNoteSelect={handleNoteMarkerSelect}
-          onNoteOpenThread={isMobile ? openNoteInThread : undefined}
-          onBoundsChange={setMapBounds}
+          notes={{
+            pins: notePins.length > 0 ? notePins : undefined,
+            selectedId: selectedNoteId,
+            onSelect: handleNoteMarkerSelect,
+            onOpenThread: isMobile ? openNoteInThread : undefined,
+          }}
           drawing={{
             sectionPreviewCoords: sectionPreviewCoords ?? undefined,
             featureVertices,

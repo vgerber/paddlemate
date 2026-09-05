@@ -87,15 +87,9 @@ export function useWaterwaySearchFilters(
   // The URL carries the id only; the outline query is what names it, and the
   // map needs it anyway - one request serves the picker and the boundary.
   const { data: regionOutline } = useRegionOutline(regionId);
-  const region: Region | null = regionOutline
-    ? {
-        id: regionOutline.id,
-        name: regionOutline.name,
-        kind: regionOutline.kind,
-        country: regionOutline.country,
-        bbox: regionOutline.bbox,
-      }
-    : null;
+  // An outline is a region with its geometry attached, so it stands in for
+  // one directly; copying the fields across only risked missing a new one.
+  const region: Region | null = regionOutline ?? null;
 
   const debouncedName = useDebouncedValue(name);
   const debouncedCountry = useDebouncedValue(country.toUpperCase());

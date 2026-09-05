@@ -165,7 +165,7 @@ function SuggestSectionPage() {
             >
               <WaterwayMap
                 sections={sections}
-                onBoundsChange={wizard.setMapBounds}
+                camera={{ onBoundsChange: wizard.setMapBounds }}
                 proposedFeatures={
                   onFeaturesStep && wizard.draftFeaturePseudos.length > 0
                     ? wizard.draftFeaturePseudos
