@@ -46,6 +46,11 @@ export type FavoriteSection = components["schemas"]["FavoriteSectionResponse"];
 export type UserWithFollowStatus =
   components["schemas"]["UserWithFollowStatusResponse"];
 export type User = components["schemas"]["User"];
+export type Region = components["schemas"]["Region"];
+export type RegionKind = components["schemas"]["RegionKind"];
+export type RegionOutline = components["schemas"]["RegionOutline"];
+export type CountryBorder = components["schemas"]["CountryBorder"];
+export type RegionOutlineList = components["schemas"]["RegionOutlineList"];
 
 export type WaterwayFilters = NonNullable<
   operations["list_waterways"]["parameters"]["query"]
@@ -391,10 +396,39 @@ export const riverSegmentsApi = {
 
 export const regionsApi = {
   /** Regions containing a line - valley, district, state, range, country,
-   * most specific first. */
+   * most specific first. Derived from OSM, so ids and outlines are absent. */
   list: async (line: [number, number][], signal?: AbortSignal) => {
     const { data } = await client.GET("/api/v1/geo/regions", {
       params: { query: { line: lineParam(line) } },
+      signal,
+    });
+    return assertData(data);
+  },
+  /** Imported regions matching a name, for the region filter's picker. */
+  search: async (q: string, signal?: AbortSignal) => {
+    const { data } = await client.GET("/api/v1/geo/regions", {
+      params: { query: { q } },
+      signal,
+    });
+    return assertData(data);
+  },
+  /** Every region in a viewport, for drawing region mode on the map. The
+   * server fetches ground it has not seen from OSM in the background, so a
+   * list that comes back `filling` is not the whole picture yet. */
+  inView: async (
+    bbox: [number, number, number, number],
+    signal?: AbortSignal,
+  ) => {
+    const { data } = await client.GET("/api/v1/geo/region-outlines", {
+      params: { query: { bbox: bbox.join(",") } },
+      signal,
+    });
+    return assertData(data);
+  },
+  /** One region with its boundary, for drawing on the map. */
+  outline: async (regionId: number, signal?: AbortSignal) => {
+    const { data } = await client.GET("/api/v1/geo/regions/{region_id}", {
+      params: { path: { region_id: regionId } },
       signal,
     });
     return assertData(data);

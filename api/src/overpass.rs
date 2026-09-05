@@ -56,8 +56,17 @@ pub struct Element {
     pub id: i64,
     #[serde(default)]
     pub geometry: Vec<Node>,
+    /// Member ways of a relation, present when it was fetched with `out geom`.
+    #[serde(default)]
+    pub members: Vec<Member>,
     #[serde(default)]
     pub tags: std::collections::HashMap<String, String>,
+}
+
+#[derive(Deserialize)]
+pub struct Member {
+    #[serde(default)]
+    pub geometry: Vec<Node>,
 }
 
 #[derive(Deserialize)]
@@ -75,6 +84,11 @@ pub fn escape_overpass_regex(name: &str) -> String {
             _ => vec![c],
         })
         .collect()
+}
+
+/// Escape a value used inside an exact Overpass tag filter ("name"="X").
+pub fn escape_overpass_literal(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
 /// The wizard's centerline query: river/stream ways matching the name

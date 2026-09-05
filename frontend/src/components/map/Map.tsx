@@ -7,10 +7,16 @@ import MapGL, {
   Source,
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { Feature, SectionWithFeatures } from "@/lib/api";
+import type {
+  CountryBorder,
+  Feature,
+  RegionOutline,
+  SectionWithFeatures,
+} from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
 import { circleGeoJSON } from "@/lib/geo";
 import { theme } from "@/lib/theme";
+import CountryBorderLayer from "./CountryBorderLayer";
 import DraftLayers, { FeatureDraftLayer } from "./DraftLayers";
 import FeatureGeoJSONLayers from "./FeatureGeoJSONLayers";
 import GaugeMarkers, { type GaugePin } from "./GaugeMarkers";
@@ -21,6 +27,9 @@ import { buildSectionsGeoJSON } from "./mapLayers";
 import { LIBERTY_STYLE, SATELLITE_STYLE } from "./mapStyles";
 import NoteMarkers, { type NotePin } from "./NoteMarkers";
 import PickModeButtons from "./PickModeButtons";
+import RegionBrowseLayer from "./RegionBrowseLayer";
+import RegionChoicePopup from "./RegionChoicePopup";
+import RegionOutlineLayer from "./RegionOutlineLayer";
 import SectionLayers from "./SectionLayers";
 import { useMapCameraEffects } from "./useMapCameraEffects";
 import { useMapClickHandler } from "./useMapClickHandler";
@@ -101,6 +110,13 @@ interface WaterwayMapProps {
   areaCircle?: AreaCircle | null;
   areaLocked?: boolean;
   onAreaCircleChange?: (circle: AreaCircle | null) => void;
+  /** Boundary of the region being searched in, drawn as the search area. */
+  regionOutline?: RegionOutline | null;
+  /** Regions in the viewport to pick from, drawn behind everything else. */
+  regionChoices?: RegionOutline[] | null;
+  /** Country borders in the viewport, drawn over everything else. */
+  countryBorders?: CountryBorder[] | null;
+  onRegionSelect?: (regionId: number) => void;
   /** [lng, lat] to fly to and highlight; set by clicking a feature in the panel. */
   focusedPoint?: [number, number] | null;
   /** [[minLon, minLat], [maxLon, maxLat]] box to fit (e.g. a river's gauges). */
@@ -142,6 +158,10 @@ export default function WaterwayMap({
   areaCircle,
   areaLocked,
   onAreaCircleChange,
+  regionOutline,
+  regionChoices,
+  countryBorders,
+  onRegionSelect,
   focusedPoint,
   focusBounds,
   focusPaddingBottom,
@@ -182,6 +202,7 @@ export default function WaterwayMap({
     areaLocked,
     selectedSectionId,
     focusedPoint,
+    regionFocused: regionOutline != null,
     focusBounds,
     focusPaddingBottom,
   });
@@ -208,16 +229,18 @@ export default function WaterwayMap({
     sectionLevels,
   });
 
-  const { pickMode, togglePickMode, handleClick } = useMapClickHandler({
-    onPickPutIn,
-    onPickTakeOut,
-    areaCircle,
-    onAreaCircleChange,
-    placingFeature,
-    onMapClick,
-    onSectionToggle: picking.onSectionToggle,
-    onSectionClick,
-  });
+  const { pickMode, togglePickMode, handleClick, regionMenu, closeRegionMenu } =
+    useMapClickHandler({
+      onPickPutIn,
+      onPickTakeOut,
+      areaCircle,
+      onAreaCircleChange,
+      placingFeature,
+      onMapClick,
+      onSectionToggle: picking.onSectionToggle,
+      onSectionClick,
+      onRegionSelect,
+    });
 
   // Selected-sections overlay for picker mode, memoized like the rest.
   const pickerSelectionGeoJSON = useMemo(
@@ -293,9 +316,29 @@ export default function WaterwayMap({
           "sections-line",
           "sections-line-casing",
           "sections-line-hitbox",
+          "region-browse-fill",
         ]}
       >
         <NavigationControl position="top-right" />
+
+        <RegionBrowseLayer
+          outlines={regionChoices}
+          selectedId={regionOutline?.id}
+        />
+
+        <RegionOutlineLayer outline={regionOutline} />
+
+        {regionMenu && onRegionSelect && (
+          <RegionChoicePopup
+            at={regionMenu.at}
+            choices={regionMenu.options}
+            onPick={(regionId) => {
+              onRegionSelect(regionId);
+              closeRegionMenu();
+            }}
+            onClose={closeRegionMenu}
+          />
+        )}
 
         <SectionLayers
           sections={sectionsGeoJSON}
@@ -328,6 +371,10 @@ export default function WaterwayMap({
           points={proposedPointsGeoJSON}
           showNames={showFeatureNames}
         />
+
+        {/* Last of the map layers: a border stays legible over the rivers
+            and regions it separates, not under them. */}
+        <CountryBorderLayer borders={countryBorders} />
 
         {(pointPins ?? []).map((pin) => (
           <Marker

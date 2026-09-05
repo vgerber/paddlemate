@@ -51,6 +51,10 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     selectedGaugeId,
     handleGaugeClick,
     areaCircle,
+    regionOutline,
+    regionChoices,
+    countryBorders,
+    selectRegion,
     setAreaCircle,
     previewRadius,
     setPreviewRadius,
@@ -69,6 +73,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     focusedPoint,
     focusBounds,
     isAreaMode,
+    isRegionMode,
     isMobile,
     isAreaSearchLoading,
     isMobileMapView,
@@ -217,7 +222,13 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     [selectedWaterwayId, isAreaMode, previewRadius, areaCircle],
   );
 
+  // Area and region are both searched by touching the map, so on a phone -
+  // where the panel covers it - the mode keeps a strip of its own: what is
+  // picked, and the way back to the results.
   const showAreaStrip = isMobile && isAreaMode && selectedWaterwayId == null;
+  const showRegionStrip =
+    isMobile && isRegionMode && selectedWaterwayId == null;
+  const showModeStrip = showAreaStrip || showRegionStrip;
 
   // Line features spanning (nearly) the whole section (e.g. the whitewater
   // zone) would just redraw the section line - keep them in the timeline
@@ -286,6 +297,10 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             suggestMode === "waterway" ? undefined : handleGaugeClick
           }
           areaCircle={visibleAreaCircle}
+          regionOutline={selectedWaterwayId != null ? null : regionOutline}
+          regionChoices={selectedWaterwayId != null ? null : regionChoices}
+          countryBorders={countryBorders}
+          onRegionSelect={selectedWaterwayId != null ? undefined : selectRegion}
           areaLocked={areaLocked}
           onAreaCircleChange={
             isAreaMode && selectedWaterwayId == null && !areaLocked
@@ -330,14 +345,14 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             labelMode,
             onLabelModeChange: setLabelMode,
             controlsBottomOffset:
-              isMobile && (showAreaStrip || isMobileMapView) ? 60 : 0,
+              isMobile && (showModeStrip || isMobileMapView) ? 60 : 0,
             controlsAnchor:
               isMobile && suggestMode === "feature" ? "top" : undefined,
           }}
         />
 
-        {/* Area strip - mobile, area mode, no waterway selected */}
-        {showAreaStrip ? (
+        {/* Mode strip - mobile, map-driven mode, no waterway selected */}
+        {showModeStrip ? (
           <Box
             sx={{
               position: "absolute",
@@ -356,7 +371,15 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             }}
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              {areaCircle ? (
+              {showRegionStrip ? (
+                <Typography variant="body2" color="text.secondary" noWrap>
+                  {regionOutline
+                    ? [regionOutline.country, regionOutline.name]
+                        .filter(Boolean)
+                        .join(" · ")
+                    : "Tap a region on the map to search in it"}
+                </Typography>
+              ) : areaCircle ? (
                 <AreaControls
                   areaCircle={areaCircle}
                   locked={areaLocked}

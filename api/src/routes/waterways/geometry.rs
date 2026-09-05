@@ -18,6 +18,7 @@ use crate::{
     },
     overpass,
     query::osm_geometry,
+    routes::geo::params::parse_bbox,
     state::AppState,
 };
 
@@ -29,26 +30,6 @@ pub struct WaterwayGeometryQuery {
     /// for a waterway without sections, and extends the cache when the area
     /// falls outside what is cached.
     pub bbox: Option<String>,
-}
-
-fn parse_bbox(raw: &str) -> Option<(f64, f64, f64, f64)> {
-    let parts: Vec<f64> = raw
-        .split(',')
-        .map(|p| p.trim().parse().ok())
-        .collect::<Option<_>>()?;
-    match parts[..] {
-        [south, west, north, east]
-            if south < north
-                && west < east
-                && (-90.0..=90.0).contains(&south)
-                && (-90.0..=90.0).contains(&north)
-                && (-180.0..=180.0).contains(&west)
-                && (-180.0..=180.0).contains(&east) =>
-        {
-            Some((south, west, north, east))
-        }
-        _ => None,
-    }
 }
 
 pub async fn get_waterway_geometry(

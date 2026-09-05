@@ -9,7 +9,10 @@ water levels, and a shared logbook.
   satellite layer, and put-in/take-out markers colored by live water status.
 - **Search** — find rivers by name, section, translation or rapid name;
   accent-, digraph- and typo-tolerant, with an explanation of why each result
-  matched. Area search by map point and radius; filters for country and grade.
+  matched. Area search by map point and radius; region search that turns the
+  map into the picker - every valley, district, state and mountain range in
+  view is outlined and clickable, filled from OpenStreetMap as you go;
+  filters for country and grade.
 - **Sections & features** — named paddleable stretches with typed features:
   rapids, hazards, structures, portages, access points, play spots.
 - **Water levels** — live gauge readings from public hydrological services;

@@ -2,6 +2,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SearchIcon from "@mui/icons-material/Search";
+import TerrainIcon from "@mui/icons-material/Terrain";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
@@ -15,14 +16,70 @@ import { useState } from "react";
 import type { AreaCircle } from "@/lib/geo";
 import AreaControls from "./AreaControls";
 import DifficultySelect from "./DifficultySelect";
+import RegionSelect from "./RegionSelect";
 import type { WaterwaySearchFilters } from "./useWaterwaySearchFilters";
+
+/** The input the active mode searches with: a name field, the area circle's
+ * radius controls, or the region picker. */
+function SearchInput({
+  filters,
+  areaCircle,
+  areaLocked,
+  onAreaCircleChange,
+  onAreaLockedChange,
+  onRadiusPreview,
+}: {
+  filters: WaterwaySearchFilters;
+  areaCircle: AreaCircle | null;
+  areaLocked: boolean;
+  onAreaCircleChange?: (circle: AreaCircle | null) => void;
+  onAreaLockedChange?: (locked: boolean) => void;
+  onRadiusPreview?: (radiusKm: number) => void;
+}) {
+  if (filters.mode === "region") {
+    return (
+      <RegionSelect region={filters.region} onChange={filters.setRegion} />
+    );
+  }
+  if (filters.mode === "area") {
+    return (
+      <AreaControls
+        areaCircle={areaCircle}
+        locked={areaLocked}
+        onLockedChange={(v) => onAreaLockedChange?.(v)}
+        onRadiusChange={(r) =>
+          areaCircle && onAreaCircleChange?.({ ...areaCircle, radiusKm: r })
+        }
+        onRadiusPreview={onRadiusPreview}
+      />
+    );
+  }
+  return (
+    <TextField
+      fullWidth
+      placeholder="Search rivers or sections…"
+      value={filters.name}
+      onChange={(e) => filters.setName(e.target.value)}
+      size="small"
+      slotProps={{
+        input: {
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" sx={{ color: "text.disabled" }} />
+            </InputAdornment>
+          ),
+        },
+      }}
+    />
+  );
+}
 
 interface SearchFiltersHeaderProps {
   filters: WaterwaySearchFilters;
   total: number;
   isLoading: boolean;
   onClose?: () => void;
-  onAreaModeActivate?: () => void;
+  onMapModeActivate?: () => void;
   areaCircle?: AreaCircle | null;
   areaLocked?: boolean;
   onAreaCircleChange?: (circle: AreaCircle | null) => void;
@@ -30,7 +87,8 @@ interface SearchFiltersHeaderProps {
   onRadiusPreview?: (radiusKm: number) => void;
 }
 
-/** Panel header: title row, name/area mode toggle and the search input.
+/** Panel header: title row, name/area/region mode toggle and the search
+ * input of the active mode.
  * Optional filters (country, difficulty) stay collapsed behind the filter
  * button; a badge dot marks active filters while they are hidden. */
 export default function SearchFiltersHeader({
@@ -38,14 +96,14 @@ export default function SearchFiltersHeader({
   total,
   isLoading,
   onClose,
-  onAreaModeActivate,
+  onMapModeActivate,
   areaCircle,
   areaLocked,
   onAreaCircleChange,
   onAreaLockedChange,
   onRadiusPreview,
 }: SearchFiltersHeaderProps) {
-  const { mode, name, country, minDiff, maxDiff } = filters;
+  const { mode, country, minDiff, maxDiff } = filters;
   const hasActiveFilters =
     country.trim() !== "" || minDiff !== "" || maxDiff !== "";
   // Open on mount when a filter is already set (e.g. seeded from the URL),
@@ -117,7 +175,9 @@ export default function SearchFiltersHeader({
         onChange={(_, v) => {
           if (v) {
             filters.setMode(v);
-            if (v === "area") onAreaModeActivate?.();
+            // Area and region are both picked on the map, so on mobile
+            // the panel gets out of the way when either is chosen.
+            if (v !== "name") onMapModeActivate?.();
           }
         }}
         sx={{
@@ -136,39 +196,19 @@ export default function SearchFiltersHeader({
         <ToggleButton value="area">
           <RadioButtonUncheckedIcon sx={{ fontSize: 14, mr: 0.5 }} /> Area
         </ToggleButton>
+        <ToggleButton value="region">
+          <TerrainIcon sx={{ fontSize: 14, mr: 0.5 }} /> Region
+        </ToggleButton>
       </ToggleButtonGroup>
 
-      {mode === "name" ? (
-        <TextField
-          fullWidth
-          placeholder="Search rivers or sections…"
-          value={name}
-          onChange={(e) => filters.setName(e.target.value)}
-          size="small"
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon
-                    fontSize="small"
-                    sx={{ color: "text.disabled" }}
-                  />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-      ) : (
-        <AreaControls
-          areaCircle={areaCircle ?? null}
-          locked={areaLocked ?? false}
-          onLockedChange={(v) => onAreaLockedChange?.(v)}
-          onRadiusChange={(r) =>
-            areaCircle && onAreaCircleChange?.({ ...areaCircle, radiusKm: r })
-          }
-          onRadiusPreview={onRadiusPreview}
-        />
-      )}
+      <SearchInput
+        filters={filters}
+        areaCircle={areaCircle ?? null}
+        areaLocked={areaLocked ?? false}
+        onAreaCircleChange={onAreaCircleChange}
+        onAreaLockedChange={onAreaLockedChange}
+        onRadiusPreview={onRadiusPreview}
+      />
 
       <Collapse in={filtersOpen}>
         <Box sx={{ display: "flex", gap: 1, pt: 1 }}>

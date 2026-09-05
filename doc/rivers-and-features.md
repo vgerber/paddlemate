@@ -139,6 +139,8 @@ find your river? Add it").
 | `comments` | notes keyed by `(entity_type, entity_id)` - rivers, sections and features - with a `category` and a moderation `status` |
 | `media` | photos, videos and linked write-ups keyed the same way (rivers today); an uploaded photo is a file under `MEDIA_DIR` addressed by `storage_key`, a video or blog is just an `external_url` |
 | `waterway_osm_elements` | cached OSM elements per waterway (centerline way fragments today, bank polygons later); serves `GET .../waterways/{id}/geometry` so river snapping skips live Overpass |
+| `regions` | region boundaries imported from OSM, keyed by `(name, kind)`; backs the map's region search and browse layer. Countries are stored here too, but only so the other regions can be placed in one - they are never offered as a region to search in |
+| `region_tiles` | which viewport tiles the region browse layer has already fetched from OSM, per zoom tier, so panning re-asks for nothing |
 
 ### Conventions
 
@@ -160,6 +162,61 @@ find your river? Add it").
   and the country (admin_level 2 ISO code); with several sample points a
   valley needs at least two of them to agree, so side gorges near a single
   point don't flood the list.
+- Region *boundaries* live in `regions` and are filled two ways, both
+  storing the same rows. Member ways are simplified to ~55 m and then
+  assembled by PostGIS (`ST_BuildArea`) into an area for
+  districts/states/ranges; a valley never closes into a ring, so it stays a
+  line and matches sections within `match_radius_m` (2 km) instead of by
+  containment. Simplifying before assembly rather than after is what keeps
+  the cost down - noding a district boundary at full OSM resolution takes
+  seconds.
+  - `cargo run --bin import_region_outlines` walks the distinct region names
+    already on sections, one Overpass request per name (`--refresh`
+    re-fetches names already stored). The lookup starts on a section
+    carrying the name and uses `is_in` plus `pivot` to get back the very way
+    or relation the name was derived from, so no name can resolve to a
+    same-named region elsewhere.
+  - The browse layer fills itself. `GET /geo/region-outlines?bbox=` answers
+    with the regions overlapping a viewport and fetches whatever ground it
+    has not seen before from OSM in the background, keyed by the tiles in
+    `region_tiles`. One kind per tier, chosen by the viewport width
+    (`BrowseTier` in `api/src/regions.rs`): states above 4°, mountain ranges
+    down to 1.5°, districts to 0.8°, valleys below that, nothing above 12°.
+    Two kinds at once would stack a range over the districts it contains and
+    leave neither readable. The response's `filling` flag says a fetch is
+    still running and the client should ask again - assembling a district
+    boundary takes seconds, so the request never waits for it.
+  - Each outline carries a `palette_index`, a small number chosen so that no
+    two regions overlapping on screen share one (Welsh-Powell greedy over
+    the `ST_Intersects` graph of the drawn geometry). The client maps it to
+    a colour. Four colours paint any map of countries, but these regions
+    overlap rather than tile the plane - a valley corridor crosses a dozen
+    others - so a busy alpine viewport needs six to eight, and the client
+    repeats its palette past that.
+- The browse response also carries `countries`: each country border clipped
+  to the viewport and simplified to about a pixel, drawn over every other
+  layer. Clipping is what makes it affordable - a whole country boundary is
+  hundreds of kilobytes, the part crossing a viewport is under one - and the
+  boundary line is clipped rather than the polygon, so the edge of the screen
+  never looks like a border.
+- Only a state carries an ISO country code in its own OSM tags, so every
+  other region gets its country from geometry. Each fill also fetches the
+  country boundaries covering it (`BrowseTier::Countries`, an 8° grid,
+  requiring `ISO3166-1` so OSM's country-*border* relations are left out),
+  then places every country-less region under that tile by
+  `ST_Contains(country, ST_PointOnSurface(region))`. Fetching a country once
+  therefore also fixes regions stored before it.
+- The map's region search picks a region by name (`GET /geo/regions?q=`) or
+  by clicking one in the browse layer, draws it (`GET /geo/regions/{id}`)
+  and filters rivers by it (`GET /waterways?region_id=`), so a river
+  reaching into the region is found whether or not its sections carry the
+  name. Both endpoints return a valley as a corridor along its line rather
+  than the bare line, which would be invisible under the river it follows.
+  The drawn corridor (`DRAWN_VALLEY_RADIUS_M`, 800 m, flat ends) is
+  deliberately narrower than the `match_radius_m` the filter allows: the
+  tolerance has to be generous because OSM often traces one side of a valley
+  rather than its axis, but drawing 2 km with round ends turned the median
+  valley - a 2 km line - into a circle larger than the valley itself.
 - The browser never queries Overpass; all OSM geometry goes through the
   API. The API itself prefers the self-hosted rivers-only Overpass instance
   (`deploy/overpass/` - the OSM planet filtered to waterways, river areas,

@@ -12,6 +12,7 @@ import { useFavorites } from "@/lib/hooks/useFavorites";
 import { useFilteredSections } from "@/lib/hooks/useFilteredSections";
 import { useGaugeData } from "@/lib/hooks/useGaugeData";
 import { proposalKeys } from "@/lib/hooks/useProposals";
+import { useRegionOutline, useRegionsInView } from "@/lib/hooks/useRegions";
 import { useSearchResultSections } from "@/lib/hooks/useSearchResultSections";
 import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
 import { useWaterway } from "@/lib/hooks/useWaterways";
@@ -28,7 +29,8 @@ export type RouteSearch = {
   panel?: "1";
   min_diff?: number;
   max_diff?: number;
-  mode?: "area";
+  mode?: "area" | "region";
+  region?: number;
 };
 
 export function useMapPageState(search: RouteSearch) {
@@ -42,6 +44,7 @@ export function useMapPageState(search: RouteSearch) {
     min_diff,
     max_diff,
     mode,
+    region,
   } = search;
 
   const navigate = useNavigate({ from: "/" });
@@ -200,6 +203,38 @@ export function useMapPageState(search: RouteSearch) {
   );
 
   const isAreaMode = mode === "area";
+
+  // The region searched in: its boundary is drawn on the map, and the camera
+  // frames it once when it is picked.
+  const { data: regionOutline } = useRegionOutline(
+    mode === "region" ? region : undefined,
+  );
+  const regionBbox = regionOutline?.bbox;
+  useEffect(() => {
+    if (!regionBbox) return;
+    const [west, south, east, north] = regionBbox;
+    setFocusBounds([
+      [west, south],
+      [east, north],
+    ]);
+  }, [regionBbox]);
+
+  // In region mode the map doubles as the picker: every region in view is
+  // drawn and clickable, so a region can be found by looking rather than by
+  // knowing its name.
+  const { data: regionsInView } = useRegionsInView(
+    mode === "region" && mapBounds
+      ? [mapBounds.south, mapBounds.west, mapBounds.north, mapBounds.east]
+      : undefined,
+  );
+  const selectRegion = useCallback(
+    (regionId: number) =>
+      navigate({
+        search: (prev) => ({ ...prev, mode: "region", region: regionId }),
+        replace: true,
+      }),
+    [navigate],
+  );
 
   const setAreaCircle = useCallback(
     (circle: AreaCircle | null) => {
@@ -379,7 +414,12 @@ export function useMapPageState(search: RouteSearch) {
     selectedWaterwayId,
     selectedSectionId,
     isAreaMode,
+    isRegionMode: mode === "region",
     areaCircle,
+    regionOutline,
+    regionChoices: regionsInView?.regions,
+    countryBorders: regionsInView?.countries,
+    selectRegion,
     // Navigation helpers
     setSelectedWaterwayId,
     setSelectedSectionId,

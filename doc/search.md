@@ -32,6 +32,48 @@ case.
 Search starts at 2 characters. Typo tolerance starts at 4, so very short terms
 only match exactly.
 
+## Searching by place
+
+The panel's mode switch offers two ways to search without typing a name:
+
+- **Area** — click the map to drop a centre, then set a radius. Rivers with a
+  section inside the circle are listed.
+- **Region** — switch to region mode and the map becomes the picker: every
+  valley, district, state and mountain range in view is outlined and
+  labelled, and clicking one lists the rivers reaching into it. You see one
+  kind at a time, following the zoom - states when you are looking at a
+  country, then mountain ranges, then districts, then valleys once you are
+  down at river level. Neighbouring regions are drawn in different colours,
+  the way an atlas colours countries, so you can see where one ends even
+  where they overlap. Clicking ground that several regions share lists them
+  and lets you say which you meant, each in the colour it is drawn in. The
+  one you picked is highlighted, the rest stay faint.
+  Searching by name works too, and tolerates the same misspellings as river
+  names, so `otztal` finds `Ötztal`. Every region is labelled with its
+  country first, on the map and in the picker, so a list of valley names
+  still tells you where you are.
+
+Country borders stay drawn over everything else at every zoom, so the map
+always says which country you are looking at - solid, where the regions on
+offer are dashed.
+
+On a phone the panel covers the map, so choosing **Area** or **Region** steps
+it aside and leaves a strip along the bottom: what is picked so far, and the
+button back to the results.
+
+Region membership is geometric, not by label: a river inside the Ötztal is
+found whether or not its sections happen to carry that region name. A valley
+has no outline in OpenStreetMap - it is a line along the valley floor - so
+the map draws a corridor along that line. The filter is more forgiving than
+the corridor looks, because OSM often traces one side of a valley rather
+than its middle, so a river can count as being in a valley while sitting a
+little outside the shape drawn for it.
+
+You are not limited to regions somebody has already used. The first time the
+map shows a stretch of ground, its regions are fetched from OpenStreetMap in
+the background and kept, so they appear a moment later and instantly on every
+later visit.
+
 ## Configuration
 
 | Variable | Default | Meaning |

@@ -932,8 +932,42 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Regions containing the given line - valley, district, state, mountain range and country, most specific first. Best effort: an empty list means nothing was found or the upstream OSM service was unreachable. */
+        /** @description Regions, either containing a line or matching a name. With `line`, valley, district, state, mountain range and country are derived from OSM, most specific first - best effort, an empty list means nothing was found or the upstream OSM service was unreachable. Otherwise the imported region outlines are searched, and each result carries an id and a bounding box. */
         get: operations["list_regions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/geo/regions/{region_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One imported region with the area it covers. Administrative regions and mountain ranges give their boundary; a valley is a line in OSM, so it gives a corridor along that line. Simplified for drawing, not survey accurate - the region filter allows a wider tolerance around a valley than the drawn corridor shows, because OSM often traces one side of a valley rather than its axis. */
+        get: operations["get_region"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/geo/region-outlines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Regions overlapping a viewport, with their boundaries, for drawing region mode on the map. Which kinds come back depends on how much ground the viewport covers: states at country zoom, districts and mountain ranges in between, valleys at river zoom. Ground the server has not seen before is fetched from OSM in the background, which takes seconds for a boundary the size of a district - `filling` says that is happening and the request should be repeated shortly for the rest. An empty region list with `filling` false means the map is zoomed too far out to draw regions; the country borders still come back, clipped to the viewport, so the map can always say which country you are looking at. */
+        get: operations["list_region_outlines"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1087,6 +1121,10 @@ export interface components {
             /** Format: date-time */
             to: string;
         };
+        BrowseQuery: {
+            /** @description Viewport to draw regions for, as "south,west,north,east". */
+            bbox: string;
+        };
         /**
          * @description Water-range thresholds submitted together with a new feature (create
          *      endpoints and proposals); thresholds are optional individually.
@@ -1201,6 +1239,17 @@ export interface components {
          * @enum {string}
          */
         CommentStatus: "ok" | "merged" | "outdated" | "spam";
+        /**
+         * @description A country's border where it crosses the viewport, for keeping your
+         *      bearings while browsing regions.
+         */
+        CountryBorder: {
+            /** @description ISO 3166-1 alpha-2 code. */
+            country: string;
+            /** @description The boundary line, clipped to the viewport and simplified for it. */
+            geometry: components["schemas"]["Geometry"];
+            name: string;
+        };
         CreateCommentRequest: {
             body: string;
             /**
@@ -2047,8 +2096,18 @@ export interface components {
             /** Format: date-time */
             to?: string | null;
         };
-        /** @description One named region a section lies in. */
+        /**
+         * @description One named region a section lies in. `id`, `country` and `bbox` are filled
+         *      for regions whose outline has been imported; regions derived live from OSM
+         *      for a line carry the name and kind only.
+         */
         Region: {
+            /** @description Outline bounding box as [west, south, east, north]. */
+            bbox?: number[] | null;
+            /** @description ISO 3166-1 alpha-2 code of the country the region lies in. */
+            country?: string | null;
+            /** Format: int64 */
+            id?: number | null;
             kind: components["schemas"]["RegionKind"];
             name: string;
         };
@@ -2057,12 +2116,61 @@ export interface components {
          *      the order regions are returned and stored in.
          */
         RegionKind: "valley" | "district" | "state" | "range" | "country";
-        RegionQuery: {
+        /** @description An imported region with its boundary, for drawing on the map. */
+        RegionOutline: {
+            /** @description Outline bounding box as [west, south, east, north]. */
+            bbox: number[];
+            country?: string | null;
             /**
-             * @description The line to look up, as "lon,lat;lon,lat;..." (start, middle and end
-             *      of a section are enough).
+             * @description Simplified boundary: an area for administrative regions and mountain
+             *      ranges, a line for valleys.
              */
-            line: string;
+            geometry: components["schemas"]["Geometry"];
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["RegionKind"];
+            name: string;
+            /**
+             * Format: int32
+             * @description Index into whatever palette the client draws with, chosen so that no
+             *      two regions overlapping each other get the same one. Zero when the
+             *      region was fetched on its own, with nothing to be told apart from.
+             */
+            palette_index: number;
+        };
+        /** @description A viewport's worth of regions for the browse layer. */
+        RegionOutlineList: {
+            /**
+             * @description Country borders crossing the viewport, drawn over everything else.
+             *      Present at every zoom, including one too wide to draw regions at.
+             */
+            countries: components["schemas"]["CountryBorder"][];
+            /**
+             * @description True while ground in the viewport is still being fetched from OSM.
+             *      Ask again shortly for the regions that are not in yet.
+             */
+            filling: boolean;
+            regions: components["schemas"]["RegionOutline"][];
+        };
+        RegionPath: {
+            /** Format: int64 */
+            region_id: number;
+        };
+        RegionQuery: {
+            /** @description Restrict the search to one ISO 3166-1 alpha-2 country code. */
+            country?: string | null;
+            /** @description Restrict the search to one kind of region. */
+            kind?: components["schemas"]["RegionKind"] | null;
+            /**
+             * @description Line to look up, as "lon,lat;lon,lat;..." (start, middle and end of a
+             *      section are enough). Derives the containing regions from OSM.
+             */
+            line?: string | null;
+            /**
+             * @description Name fragment to search the imported region outlines for. Diacritics
+             *      and common misspellings match too.
+             */
+            q?: string | null;
         };
         /** @description Request body for approving or rejecting a proposal */
         ReviewRequest: {
@@ -2454,6 +2562,12 @@ export interface components {
              * @description Radius in km - returns waterways with at least one section within this distance.
              */
             radius_km?: number | null;
+            /**
+             * Format: int64
+             * @description Region to filter by - returns waterways with at least one section
+             *      inside the region's imported outline.
+             */
+            region_id?: number | null;
         };
         WaterwayGeometryQuery: {
             /**
@@ -2490,6 +2604,12 @@ export interface components {
             matched_section_name?: string | null;
             matched_source?: components["schemas"]["MatchSource"] | null;
             name: string;
+            /**
+             * @description Where the river is, least specific first - country code, then the
+             *      regions its sections lie in, so a name on its own says which of the
+             *      world's rivers it is. Empty for a river with no located sections.
+             */
+            place: string[];
             /** Format: date-time */
             updated_at: string;
             waterway_type: components["schemas"]["WaterwayType"];
@@ -2874,11 +2994,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-08-30T14:10:54.528901304Z",
-                     *         "expires_at": "2026-11-28T14:10:54.528903804Z",
+                     *         "created_at": "2026-09-05T10:05:23.852519529Z",
+                     *         "expires_at": "2026-12-04T10:05:23.852521239Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-08-30T14:10:54.528913384Z",
+                     *         "last_used_at": "2026-09-05T10:05:23.852530689Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -2909,8 +3029,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-08-30T14:10:54.529031134Z",
-                     *       "expires_at": "2026-11-28T14:10:54.529031464Z",
+                     *       "created_at": "2026-09-05T10:05:23.852639469Z",
+                     *       "expires_at": "2026-12-04T10:05:23.852639839Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -3350,6 +3470,11 @@ export interface operations {
                 per_page?: number | null;
                 /** @description Radius in km - returns waterways with at least one section within this distance. */
                 radius_km?: number | null;
+                /**
+                 * @description Region to filter by - returns waterways with at least one section
+                 *      inside the region's imported outline.
+                 */
+                region_id?: number | null;
             };
             header?: never;
             path?: never;
@@ -6063,12 +6188,21 @@ export interface operations {
     };
     list_regions: {
         parameters: {
-            query: {
+            query?: {
+                /** @description Restrict the search to one ISO 3166-1 alpha-2 country code. */
+                country?: string | null;
+                /** @description Restrict the search to one kind of region. */
+                kind?: components["schemas"]["RegionKind"] | null;
                 /**
-                 * @description The line to look up, as "lon,lat;lon,lat;..." (start, middle and end
-                 *      of a section are enough).
+                 * @description Line to look up, as "lon,lat;lon,lat;..." (start, middle and end of a
+                 *      section are enough). Derives the containing regions from OSM.
                  */
-                line: string;
+                line?: string | null;
+                /**
+                 * @description Name fragment to search the imported region outlines for. Diacritics
+                 *      and common misspellings match too.
+                 */
+                q?: string | null;
             };
             header?: never;
             path?: never;
@@ -6085,6 +6219,69 @@ export interface operations {
                 };
             };
             /** @description Bad line */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_region: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                region_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description An imported region with its boundary, for drawing on the map. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegionOutline"];
+                };
+            };
+            /** @description Unknown region */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_region_outlines: {
+        parameters: {
+            query: {
+                /** @description Viewport to draw regions for, as "south,west,north,east". */
+                bbox: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A viewport's worth of regions for the browse layer. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegionOutlineList"];
+                };
+            };
+            /** @description Bad bbox */
             400: {
                 headers: {
                     [name: string]: unknown;

@@ -14,6 +14,9 @@ interface UseMapCameraEffectsParams {
   areaLocked?: boolean;
   selectedSectionId?: number | null;
   focusedPoint?: [number, number] | null;
+  /** A region is the search area, so the camera belongs to it rather than to
+   * the rivers found inside it. */
+  regionFocused?: boolean;
   focusBounds?: [[number, number], [number, number]] | null;
   /** Extra bottom padding (px) for focus moves when an overlay covers the
    * lower part of the canvas (mobile suggest panel). */
@@ -30,6 +33,7 @@ export function useMapCameraEffects({
   areaLocked,
   selectedSectionId,
   focusedPoint,
+  regionFocused,
   focusBounds,
   focusPaddingBottom = 0,
 }: UseMapCameraEffectsParams) {
@@ -50,9 +54,11 @@ export function useMapCameraEffects({
     };
   }, [mapLoaded, mapRef, addMapImages]);
 
-  // Fit bounds to all sections (skip entirely if in area search mode)
+  // Fit bounds to all sections. Area and region searches frame the search
+  // area instead - the rivers found in a region sit somewhere inside it, and
+  // zooming to them would hide the region the user just picked.
   useEffect(() => {
-    if (areaCircle) return;
+    if (areaCircle || regionFocused) return;
     const map = mapRef.current;
     if (!map || !mapLoaded || !sections?.length || areaLocked) return;
     const coords: number[][] = [];
@@ -70,7 +76,7 @@ export function useMapCameraEffects({
       ],
       { padding: 60, duration: 800 },
     );
-  }, [sections, mapLoaded, areaLocked, areaCircle, mapRef]);
+  }, [sections, mapLoaded, areaLocked, areaCircle, regionFocused, mapRef]);
 
   // Fit bounds to area circle (area search mode)
   useEffect(() => {

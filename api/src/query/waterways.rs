@@ -115,11 +115,29 @@ pub async fn search(
         qb.push(" ORDER BY n.waterway_id, tier, source_rank, score DESC) ");
         // The section is joined so a rapid match can say which section it is
         // in - the rapid name alone does not locate it for the reader.
+        //
+        // `place` is the river's address. It keeps the country and then the
+        // most specific regions it can - a valley identifies a river, the
+        // state it is in barely narrows anything - but reads them back out
+        // least specific first, so it comes out "AT, Bezirk Imst, Oetztal".
         qb.push(
             "SELECT w.id, w.waterway_type, w.name, w.description, w.created_at, w.updated_at, \
              b.matched_name, b.source AS matched_source, b.lang_code AS matched_lang, \
              b.section_id AS matched_section_id, matched_section.name AS matched_section_name, \
              (b.tier = 3) AS fuzzy, \
+             (SELECT array_agg(part ORDER BY rank, hits DESC, part) FROM ( \
+                 SELECT part, min(rank) AS rank, count(*) AS hits FROM ( \
+                     SELECT ws.country AS part, 0 AS rank FROM water_sections ws \
+                     WHERE ws.waterway_id = w.id AND ws.country IS NOT NULL \
+                     UNION ALL \
+                     SELECT n.name, COALESCE(( \
+                         SELECT min(array_position(ARRAY['state', 'range', 'district', 'valley'], r.kind)) \
+                         FROM regions r WHERE r.name = n.name), 9) \
+                     FROM water_sections ws CROSS JOIN unnest(ws.regions) AS n(name) \
+                     WHERE ws.waterway_id = w.id \
+                 ) parts GROUP BY part \
+                 ORDER BY (min(rank) = 0) DESC, min(rank) DESC, count(*) DESC, part LIMIT 3 \
+             ) top) AS place, \
              COUNT(*) OVER () AS total_count \
              FROM waterways w JOIN best b ON b.waterway_id = w.id \
              LEFT JOIN water_sections matched_section ON matched_section.id = b.section_id WHERE 1=1",
@@ -130,7 +148,21 @@ pub async fn search(
              NULL::text AS matched_name, NULL::text AS matched_source, \
              NULL::varchar AS matched_lang, NULL::bigint AS matched_section_id, \
              NULL::varchar AS matched_section_name, \
-             false AS fuzzy, COUNT(*) OVER () AS total_count \
+             false AS fuzzy, \
+             (SELECT array_agg(part ORDER BY rank, hits DESC, part) FROM ( \
+                 SELECT part, min(rank) AS rank, count(*) AS hits FROM ( \
+                     SELECT ws.country AS part, 0 AS rank FROM water_sections ws \
+                     WHERE ws.waterway_id = w.id AND ws.country IS NOT NULL \
+                     UNION ALL \
+                     SELECT n.name, COALESCE(( \
+                         SELECT min(array_position(ARRAY['state', 'range', 'district', 'valley'], r.kind)) \
+                         FROM regions r WHERE r.name = n.name), 9) \
+                     FROM water_sections ws CROSS JOIN unnest(ws.regions) AS n(name) \
+                     WHERE ws.waterway_id = w.id \
+                 ) parts GROUP BY part \
+                 ORDER BY (min(rank) = 0) DESC, min(rank) DESC, count(*) DESC, part LIMIT 3 \
+             ) top) AS place, \
+             COUNT(*) OVER () AS total_count \
              FROM waterways w WHERE 1=1",
         );
     }
@@ -200,6 +232,17 @@ fn push_filters(qb: &mut QueryBuilder<'_, sqlx::Postgres>, filters: &WaterwayFil
         qb.push("), 4326)::geography, ");
         qb.push_bind(radius_km * 1000.0);
         qb.push("))");
+    }
+
+    if let Some(region_id) = filters.region_id {
+        // match_radius_m is zero for areas, so this is containment there and
+        // a corridor around the line for valleys.
+        qb.push(" AND EXISTS (SELECT 1 FROM water_sections ws3 JOIN regions r ON r.id = ");
+        qb.push_bind(region_id);
+        qb.push(
+            " WHERE ws3.waterway_id = w.id
+            AND ST_DWithin(ws3.location::geography, r.geom::geography, r.match_radius_m))",
+        );
     }
 }
 

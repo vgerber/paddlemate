@@ -110,6 +110,9 @@ pub struct WaterwayFilters {
     pub lon: Option<f64>,
     /// Radius in km - returns waterways with at least one section within this distance.
     pub radius_km: Option<f64>,
+    /// Region to filter by - returns waterways with at least one section
+    /// inside the region's imported outline.
+    pub region_id: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

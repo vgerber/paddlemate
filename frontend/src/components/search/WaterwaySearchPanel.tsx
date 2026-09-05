@@ -35,7 +35,7 @@ interface WaterwaySearchPanelProps {
   favorites?: FavoriteSection[];
   favoritedIds?: Set<number>;
   onToggleFavorite?: (id: number) => void;
-  onAreaModeActivate?: () => void;
+  onMapModeActivate?: () => void;
   onClose?: () => void;
   onRadiusPreview?: (radiusKm: number) => void;
   onLoadingChange?: (loading: boolean) => void;
@@ -58,7 +58,7 @@ export default function WaterwaySearchPanel({
   favorites = [],
   favoritedIds,
   onToggleFavorite,
-  onAreaModeActivate,
+  onMapModeActivate,
   onClose,
   onRadiusPreview,
   onLoadingChange,
@@ -115,9 +115,9 @@ export default function WaterwaySearchPanel({
     onLoadingChange?.(isLoading);
   }, [isLoading, onLoadingChange]);
 
-  // In area mode, auto-fetch all pages so the map shows all results
+  // Area and region searches draw every hit on the map, so pull all pages
   useEffect(() => {
-    if (mode === "area" && hasNextPage && !isFetchingNextPage) {
+    if (mode !== "name" && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [mode, hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -143,7 +143,7 @@ export default function WaterwaySearchPanel({
         total={total}
         isLoading={isLoading}
         onClose={onClose}
-        onAreaModeActivate={onAreaModeActivate}
+        onMapModeActivate={onMapModeActivate}
         areaCircle={areaCircle}
         areaLocked={areaLocked}
         onAreaCircleChange={onAreaCircleChange}
@@ -168,13 +168,15 @@ export default function WaterwaySearchPanel({
           </Typography>
         )}
         {!hasFilters ? (
-          mode === "area" ? (
+          mode !== "name" ? (
             <Typography
               variant="body2"
               color="text.disabled"
               sx={{ textAlign: "center", py: 4, fontStyle: "italic" }}
             >
-              Click on the map to set the search center.
+              {mode === "area"
+                ? "Click on the map to set the search center."
+                : "Click a region on the map, or search one by name."}
             </Typography>
           ) : favorites.length > 0 || recentRivers.length > 0 ? (
             <>

@@ -120,6 +120,24 @@ const tokens = {
   mapSelectedLine: "#dfec60",
   mapAreaCircle: "#1976d2",
   mapLabelHalo: "rgb(21, 37, 52)",
+  // Country borders on the region browse map. Drawn over everything with a
+  // pale casing under a dark line, so the border reads on the light base map
+  // and on satellite imagery alike.
+  mapCountryBorder: "#101418",
+  mapCountryBorderCasing: "#f2f4f6",
+
+  // Region browse layer. Neighbouring regions take different entries so the
+  // eye can tell where one ends, the way an atlas colours countries. Okabe
+  // and Ito hues like featureColors, minus the yellow (too close to the
+  // selection lime) - six is what a busy alpine viewport needs.
+  mapRegionPalette: [
+    "#0072B2",
+    "#D55E00",
+    "#009E73",
+    "#CC79A7",
+    "#E69F00",
+    "#56B4E9",
+  ],
 
   // Charts
   chartSeries: "#1a8ca0",

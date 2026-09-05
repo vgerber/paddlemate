@@ -8,6 +8,7 @@ pub mod groups;
 pub mod media;
 pub mod osm_geometry;
 pub mod proposals;
+pub mod regions;
 pub mod sections;
 pub mod tokens;
 pub mod users;

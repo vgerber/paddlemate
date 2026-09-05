@@ -25,6 +25,28 @@ pub fn parse_line(raw: &str) -> Result<Vec<(f64, f64)>, ApiError> {
     }
 }
 
+/// Parse a "south,west,north,east" bbox parameter, rejecting inverted or
+/// out-of-range bounds.
+pub fn parse_bbox(raw: &str) -> Option<(f64, f64, f64, f64)> {
+    let parts: Vec<f64> = raw
+        .split(',')
+        .map(|p| p.trim().parse().ok())
+        .collect::<Option<_>>()?;
+    match parts[..] {
+        [south, west, north, east]
+            if south < north
+                && west < east
+                && (-90.0..=90.0).contains(&south)
+                && (-90.0..=90.0).contains(&north)
+                && (-180.0..=180.0).contains(&west)
+                && (-180.0..=180.0).contains(&east) =>
+        {
+            Some((south, west, north, east))
+        }
+        _ => None,
+    }
+}
+
 /// Build a GeoJSON LineString from parsed coordinate pairs.
 pub fn line_string(points: &[(f64, f64)]) -> serde_json::Value {
     let coordinates: Vec<serde_json::Value> = points

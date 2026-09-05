@@ -3,7 +3,7 @@
 //! they group under /geo instead of standing beside the domain collections
 //! (waterways, gauges, descents).
 
-mod params;
+pub(crate) mod params;
 mod regions;
 mod river_segments;
 
@@ -14,6 +14,10 @@ use crate::state::AppState;
 pub fn geo_routes(state: AppState) -> ApiRouter {
     ApiRouter::new()
         .nest_api_service("/regions", regions::regions_routes(state.clone()))
+        .nest_api_service(
+            "/region-outlines",
+            regions::region_outlines_routes(state.clone()),
+        )
         .nest_api_service(
             "/river-segments",
             river_segments::river_segments_routes(state),
