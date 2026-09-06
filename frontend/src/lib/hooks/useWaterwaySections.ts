@@ -3,12 +3,10 @@ import { useMemo } from "react";
 import { waterwaysApi } from "@/lib/api";
 import { waterwayKeys } from "./useWaterways";
 
-/** Detail fan-out for search results: fetch each result waterway to get its
- * sections and name. Disabled while a waterway is selected. */
-export function useSearchResultSections(
-  waterwayIds: number[],
-  enabled: boolean,
-) {
+/** Fetch whole waterways to get their sections with names, place, features
+ * and geometry - the shape `SectionListItem` renders. Used by the map search
+ * results and by a trip's watch list, which both hold only section ids. */
+export function useWaterwaySections(waterwayIds: number[], enabled: boolean) {
   const details = useQueries({
     queries: enabled
       ? waterwayIds.map((id) => ({

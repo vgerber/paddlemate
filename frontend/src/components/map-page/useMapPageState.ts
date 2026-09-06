@@ -13,8 +13,8 @@ import { useFilteredSections } from "@/lib/hooks/useFilteredSections";
 import { useGaugeData } from "@/lib/hooks/useGaugeData";
 import { proposalKeys } from "@/lib/hooks/useProposals";
 import { useRegionOutline, useRegionsInView } from "@/lib/hooks/useRegions";
-import { useSearchResultSections } from "@/lib/hooks/useSearchResultSections";
 import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
+import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { pushRecentWaterway } from "@/lib/recentWaterways";
 import { useFeaturePicker } from "./useFeaturePicker";
@@ -298,7 +298,7 @@ export function useMapPageState(search: RouteSearch) {
     }
   }, [selectedWaterwayId, selectedWaterwayName]);
 
-  const searchResults = useSearchResultSections(
+  const searchResults = useWaterwaySections(
     searchWaterwayIds,
     selectedWaterwayId == null,
   );
