@@ -168,6 +168,37 @@ Shared UI: `ConfirmDialog` (every confirmation - never `window.confirm`),
 `charts/ChartPanelShell`. Do not hand-roll a spinner box, confirm dialog or
 sign-in gate.
 
+A screen is assembled from these, not from raw MUI - they are what make a new
+feature look like the product rather than like MUI:
+
+| Piece | Use it for |
+|---|---|
+| `PanelHeader` | every detail panel: back arrow, bold title, grey subtitle, action icons right, and the segmented tab bar when it has views |
+| `Fact` (`factLabelSx`, `valueSx`) | a labelled value in a detail header - overline label, value beneath |
+| `FormSection` | every block of a form: overline heading, one hint line, its own action in the heading |
+| `PanelBottomBar` + `RoundActionButton` | a form's chrome: cancel left, title and status as subtitle, one round action right |
+| `VisibilityPicker` | the private/shared/public choice and its audience |
+| `SectionAdder` + `SectionDraftList` | picking an ordered list of sections |
+| `DescentCard` | a descent in any list (`flush` where the list owns the rule and ground) |
+| `RowMenu` | everything a list row can do - one overflow control with named actions, never a row of bare icons |
+| `TimelineRail` | the dot-and-connector rail of a timeline entry (`hollow` for something not yet real) |
+
+Before writing a new list row, header, form block or dialog, read
+[doc/design.md](doc/design.md) and copy the nearest existing screen. Rows are
+`ListItemButton` separated by a dimmed rule, not bordered cards; page-level
+lists open with an overline label and a count; a tab's primary action is the
+FAB, not a button above the list; a row's actions are one `RowMenu`, not a
+line of icons.
+
+**Desktop is not a wide phone.** A list-plus-detail screen splits into two
+panes rather than centring one 720px column in an empty window: a grid of
+`380px minmax(0, 1fr)` (`420px` from `lg`) at `calc(100vh - 48px)`, the list
+on `surfaceLow` with a hairline right border, the detail capped at 880px, and
+the open item held in a search param so it stays linkable. `ProposalsView` and
+`routes/trips/index.tsx` are the two worked examples; the same detail
+component renders as the mobile overlay, so both sizes show the same thing in
+the same order.
+
 `WaterwayMap` takes its optional behaviour as three grouped objects rather
 than loose props: `picking` (put-in/take-out and section selection),
 `drawing` (feature vertices, preview and highlight lines) and `chrome`
