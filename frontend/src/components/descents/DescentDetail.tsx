@@ -3,6 +3,7 @@ import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
+import Fact, { factLabelSx, valueSx } from "@/components/Fact";
 import WaterwayMap from "@/components/map/Map";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { toPseudoSection, uniqueSnapshotsBySeries } from "@/lib/descents";
@@ -13,47 +14,10 @@ import {
   formatTime,
 } from "@/lib/format";
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
-import { fonts, labelSx } from "@/lib/theme";
 import { levelConfig } from "@/lib/waterLevel";
 
 const formatDateWithWeekday = (iso: string) =>
   formatDate(iso, { weekday: true });
-
-const factLabelSx = {
-  ...labelSx,
-  fontSize: "0.625rem",
-  letterSpacing: "0.1em",
-  color: "text.disabled",
-} as const;
-
-const valueSx = {
-  fontFamily: fonts.label,
-  fontSize: "0.8125rem",
-} as const;
-
-function Fact({
-  label,
-  value,
-  caption,
-}: {
-  label: string;
-  value: string;
-  caption?: string;
-}) {
-  return (
-    <Box>
-      <Typography sx={factLabelSx}>{label}</Typography>
-      <Typography sx={valueSx}>{value}</Typography>
-      {caption && (
-        <Typography
-          sx={{ ...factLabelSx, textTransform: "none", letterSpacing: 0 }}
-        >
-          {caption}
-        </Typography>
-      )}
-    </Box>
-  );
-}
 
 /** Full trip view for one descent: facts, route map, the sections in paddled
  * order with their notes and the water levels captured when it was logged. */
