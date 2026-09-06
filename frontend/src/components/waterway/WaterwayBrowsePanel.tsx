@@ -10,6 +10,7 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
+import PanelHeader from "@/components/PanelHeader";
 import LoadingBox from "@/components/states/LoadingBox";
 import SectionListItem from "@/components/waterway/SectionListItem";
 import SectionLogsList from "@/components/waterway/SectionLogsList";
@@ -28,7 +29,6 @@ import { theme } from "@/lib/theme";
 import CommentThread from "./CommentThread";
 import GaugesList from "./GaugesList";
 import type { DetailTab, SectionDetailTab, SuggestMode } from "./types";
-import WaterwayDetailHeader from "./WaterwayDetailHeader";
 
 interface WaterwayBrowsePanelProps {
   waterwayId: number;
@@ -180,7 +180,7 @@ export default function WaterwayBrowsePanel({
 
   return (
     <>
-      <WaterwayDetailHeader
+      <PanelHeader
         title={
           inFeatures
             ? localizedName(selectedSection.name, selectedSection.names)
