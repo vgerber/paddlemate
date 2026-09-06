@@ -48,6 +48,42 @@ export function timeAgo(iso: string): string {
 }
 
 /** snake_case enum key to a human label: "put_in" -> "put in". */
+/**
+ * A clock time from the API, trimmed to the hour and minute: "19:30". The
+ * value carries no zone - it is local to wherever the trip is - so it is
+ * sliced rather than put through a Date, which would shift it to the reader.
+ */
+export function clockTime(time: string): string {
+  return time.slice(0, 5);
+}
+
+/** "Thu, 03 Sept 2026 · 19:30", dropping the time until somebody sets one. */
+export function dateAndTime(date: string, time?: string | null): string {
+  const day = formatDate(date, { weekday: true });
+  return time ? `${day} · ${clockTime(time)}` : day;
+}
+
+/**
+ * A trip's span: "01 - 08 Jun 2026", collapsing the parts both ends share.
+ * An open-ended trip reads "from 01 Jun 2026".
+ */
+export function dateRange(start: string, end?: string | null): string {
+  if (!end) return `from ${formatDate(start)}`;
+  if (start === end) return formatDate(start);
+
+  const a = new Date(start);
+  const b = new Date(end);
+  const sameYear = a.getFullYear() === b.getFullYear();
+  const sameMonth = sameYear && a.getMonth() === b.getMonth();
+
+  const head = sameMonth
+    ? a.toLocaleDateString("en-GB", { day: "2-digit" })
+    : sameYear
+      ? a.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
+      : formatDate(start);
+  return `${head} - ${formatDate(end)}`;
+}
+
 export function humanize(key: string): string {
   return key.replace(/_/g, " ");
 }

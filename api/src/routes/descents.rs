@@ -3,7 +3,7 @@ use axum::{
     Extension, Json,
     extract::{Path, Query, State},
     http::StatusCode,
-    response::IntoResponse,
+    response::{IntoResponse, Response},
 };
 
 use crate::{
@@ -11,13 +11,12 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
-        descent::{
-            CreateDescentRequest, Descent, ListDescentsQuery, PatchDescentRequest, Visibility,
-        },
+        descent::{CreateDescentRequest, Descent, ListDescentsQuery, PatchDescentRequest},
         path_params::DescentPath,
+        visibility::Visibility,
         waterway::PaginatedResponse,
     },
-    query::descents,
+    query::{descents, trips},
     state::AppState,
 };
 
@@ -87,6 +86,20 @@ fn constraint_message(name: &str) -> &'static str {
     }
 }
 
+/// Linking a log to a trip is a claim on that trip, so the caller must be in
+/// it. Unlinking (`trip_id: null`) needs no check beyond owning the descent.
+async fn trip_link_error(app: &AppState, trip_id: Option<i64>, user_id: &str) -> Option<Response> {
+    let trip_id = trip_id?;
+    match trips::member_role(&app.pg_pool, trip_id, user_id).await {
+        Ok(Some(_)) => None,
+        Ok(None) => Some(ApiError::forbidden("Not a member of that trip").into_response()),
+        Err(err) => {
+            tracing::error!("Error checking trip {} membership: {}", trip_id, err);
+            Some(ApiError::internal().into_response())
+        }
+    }
+}
+
 pub async fn list_descents(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
@@ -109,6 +122,7 @@ pub async fn list_descents(
         to: q.to,
         section_id: q.section_id,
         user_id: q.user_id.as_deref(),
+        trip_id: q.trip_id,
         page,
         per_page,
     };
@@ -124,7 +138,7 @@ pub async fn list_descents(
 
 doc_fn!(list_descents_docs, op =>
     op.input::<Query<ListDescentsQuery>>()
-        .description("List descents visible to the current viewer. user_id narrows to one paddler's logs, within what the viewer may see.")
+        .description("List descents visible to the current viewer. user_id narrows to one paddler's logs, within what the viewer may see. trip_id narrows to one trip, and a member of it sees every log in that trip, private ones included.")
         .response::<200, Json<PaginatedResponse<Descent>>>()
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized (scope=owned requires auth)"))
         .tag("Descents")
@@ -171,6 +185,10 @@ pub async fn create_descent(
             return ApiError::validation("shared visibility requires at least one user or group")
                 .into_response();
         }
+    }
+
+    if let Some(res) = trip_link_error(&app, body.trip_id, token.user_id()).await {
+        return res;
     }
 
     match descents::create_descent(&app.pg_pool, token.user_id(), &body).await {
@@ -273,6 +291,10 @@ pub async fn patch_descent(
         if end < start {
             return ApiError::validation("end_time must be on or after start_time").into_response();
         }
+    }
+
+    if let Some(res) = trip_link_error(&app, body.trip_id.flatten(), token.user_id()).await {
+        return res;
     }
 
     match descents::patch_descent(&app.pg_pool, descent_id, token.user_id(), &body).await {

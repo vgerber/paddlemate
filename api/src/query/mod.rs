@@ -11,6 +11,7 @@ pub mod proposals;
 pub mod regions;
 pub mod sections;
 pub mod tokens;
+pub mod trips;
 pub mod users;
 pub mod waterways;
 

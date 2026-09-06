@@ -1,6 +1,7 @@
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
+import LuggageOutlinedIcon from "@mui/icons-material/LuggageOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import AppBar from "@mui/material/AppBar";
 import BottomNavigation from "@mui/material/BottomNavigation";
@@ -137,6 +138,9 @@ function Layout() {
             <Box component={Link} to="/logs" sx={navLinkSx}>
               LOGS
             </Box>
+            <Box component={Link} to="/trips" sx={navLinkSx}>
+              TRIPS
+            </Box>
             <Box component={Link} to="/tools" sx={navLinkSx}>
               TOOLS
             </Box>
@@ -202,17 +206,19 @@ function BottomNav() {
       ? 0
       : pathname.startsWith("/logs")
         ? 1
-        : pathname.startsWith("/settings") ||
-            pathname.startsWith("/proposals") ||
-            pathname.startsWith("/tools")
+        : pathname.startsWith("/trips")
           ? 2
-          : false;
+          : pathname.startsWith("/settings") ||
+              pathname.startsWith("/proposals") ||
+              pathname.startsWith("/tools")
+            ? 3
+            : false;
 
   return (
     <BottomNavigation
       value={activeTab}
       onChange={(_, val: number) => {
-        const routes = ["/", "/logs", "/settings"] as const;
+        const routes = ["/", "/logs", "/trips", "/settings"] as const;
         navigate({ to: routes[val] });
       }}
       sx={{
@@ -235,6 +241,7 @@ function BottomNav() {
         label="Logs"
         icon={<DirectionsBoatOutlinedIcon />}
       />
+      <BottomNavigationAction label="Trips" icon={<LuggageOutlinedIcon />} />
       <BottomNavigationAction
         label="Profile"
         icon={<AccountCircleOutlinedIcon />}

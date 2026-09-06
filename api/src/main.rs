@@ -21,7 +21,8 @@ use paddlemate_api::{
     layers::auth::{api_token_auth, api_token_auth_optional},
     routes::{
         descents::descents_routes, docs::docs_routes, gauges::gauges_routes, geo::geo_routes,
-        groups::group_routes, proposals::proposals_routes, users::users_routes,
+        groups::group_routes, proposals::proposals_routes, trips::trips_routes,
+        users::users_routes,
         waterways::waterways_routes,
     },
     state::{AppState, KeycloakState},
@@ -222,6 +223,7 @@ async fn main() {
         .nest_api_service("/descents", descents_routes(state.clone()))
         .nest_api_service("/geo", geo_routes(state.clone()))
         .nest_api_service("/proposals", proposals_routes(state.clone()))
+        .nest_api_service("/trips", trips_routes(state.clone()))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth_optional,

@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "biome check .",
     "preview": "vite preview",
-    "generate:api": "openapi-typescript http://localhost:3000/api/v1/docs/openapi.json -o src/lib/api/schema.d.ts"
+    "generate:api": "openapi-typescript http://localhost:3000/api/v1/docs/openapi.json --default-non-nullable false -o src/lib/api/schema.d.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

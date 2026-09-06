@@ -4,33 +4,10 @@ use serde::{Deserialize, Serialize};
 
 use super::gauge::SectionWaterSnapshot;
 use super::geometry::Geometry;
+use super::trip::TripId;
+use super::visibility::Visibility;
 
 pub type DescentId = i64;
-
-/// Visibility mode for a descent.
-/// For `shared`, the audience (users and groups) is embedded directly.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(tag = "type", rename_all = "snake_case")]
-pub enum Visibility {
-    Private,
-    Public,
-    Shared {
-        #[serde(default)]
-        users: Vec<String>,
-        #[serde(default)]
-        groups: Vec<i64>,
-    },
-}
-
-impl Visibility {
-    pub fn scope_str(&self) -> &'static str {
-        match self {
-            Visibility::Private => "private",
-            Visibility::Public => "public",
-            Visibility::Shared { .. } => "shared",
-        }
-    }
-}
 
 /// An ordered section that is part of a descent.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -86,6 +63,9 @@ pub struct Descent {
     pub visibility: Visibility,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub visible_from: Option<DateTime<Utc>>,
+    /// Trip this log is credited to. A descent belongs to at most one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trip_id: Option<TripId>,
     pub sections: Vec<DescentSection>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -115,6 +95,8 @@ pub struct CreateDescentRequest {
     pub take_out_label: Option<String>,
     pub visibility: Visibility,
     pub visible_from: Option<DateTime<Utc>>,
+    /// Credit the log to a trip. The caller must be a member of it.
+    pub trip_id: Option<TripId>,
     pub sections: Vec<DescentSectionInput>,
 }
 
@@ -129,10 +111,10 @@ pub struct PatchDescentRequest {
     pub start_time: Option<DateTime<Utc>>,
     pub end_time: Option<DateTime<Utc>>,
     /// Omit to leave unchanged; send null to clear.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "super::patch::nullable")]
     pub name: Option<Option<String>>,
     /// Omit to leave unchanged; send null to clear.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "super::patch::nullable")]
     pub note: Option<Option<String>>,
     pub put_in_feature_id: Option<i64>,
     pub put_in_lat: Option<f64>,
@@ -144,8 +126,12 @@ pub struct PatchDescentRequest {
     pub take_out_label: Option<String>,
     pub visibility: Option<Visibility>,
     /// Omit to leave unchanged; send null to clear.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "super::patch::nullable")]
     pub visible_from: Option<Option<DateTime<Utc>>>,
+    /// Omit to leave unchanged; send null to unlink from its trip. Linking
+    /// requires membership of the target trip.
+    #[serde(default, deserialize_with = "super::patch::nullable")]
+    pub trip_id: Option<Option<TripId>>,
     /// When provided, replaces the full ordered section list.
     pub sections: Option<Vec<DescentSectionInput>>,
 }
@@ -174,6 +160,9 @@ pub struct ListDescentsQuery {
     /// Only return descents logged by this user. Visibility still applies,
     /// so another paddler's private descents stay hidden.
     pub user_id: Option<String>,
+    /// Only return descents credited to this trip. A member of it sees every
+    /// log in the trip, private ones included.
+    pub trip_id: Option<TripId>,
     pub page: Option<i64>,
     pub per_page: Option<i64>,
 }

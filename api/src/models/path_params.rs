@@ -1,7 +1,12 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use super::{comment::CommentId, water_section::SectionId, waterway::WaterwayId};
+use super::{
+    comment::CommentId,
+    trip::{TripId, TripStayId},
+    water_section::SectionId,
+    waterway::WaterwayId,
+};
 
 #[derive(Deserialize, JsonSchema)]
 pub struct WaterwayPath {
@@ -97,4 +102,21 @@ pub struct FeatureWaterRangePath {
     pub section_id: SectionId,
     pub feature_id: i64,
     pub range_id: i64,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct TripPath {
+    pub trip_id: TripId,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct TripMemberPath {
+    pub trip_id: TripId,
+    pub user_id: String,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct TripStayPath {
+    pub trip_id: TripId,
+    pub stay_id: TripStayId,
 }

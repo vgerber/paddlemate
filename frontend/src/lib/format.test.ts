@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
+  clockTime,
+  dateAndTime,
+  dateRange,
   durationLabel,
   formatDate,
   formatReading,
@@ -102,5 +105,53 @@ describe("sectionPlace", () => {
     expect(sectionPlace(null, ["Ötztal"])).toEqual(["Ötztal"]);
     expect(sectionPlace("DE", [])).toEqual(["DE"]);
     expect(sectionPlace(undefined, undefined)).toEqual([]);
+  });
+});
+
+describe("dateRange", () => {
+  test("collapses a span inside one month", () => {
+    expect(dateRange("2026-06-01", "2026-06-08")).toBe("01 - 08 Jun 2026");
+  });
+
+  test("keeps both months inside one year", () => {
+    expect(dateRange("2026-06-28", "2026-07-03")).toBe("28 Jun - 03 Jul 2026");
+  });
+
+  test("spells out both ends across years", () => {
+    expect(dateRange("2026-12-28", "2027-01-03")).toBe(
+      "28 Dec 2026 - 03 Jan 2027",
+    );
+  });
+
+  test("collapses a single day", () => {
+    expect(dateRange("2026-06-01", "2026-06-01")).toBe("01 Jun 2026");
+  });
+
+  test("reads open-ended without an end", () => {
+    expect(dateRange("2026-06-01")).toBe("from 01 Jun 2026");
+    expect(dateRange("2026-06-01", null)).toBe("from 01 Jun 2026");
+  });
+});
+
+describe("clockTime", () => {
+  test("trims seconds off an API time", () => {
+    expect(clockTime("19:30:00")).toBe("19:30");
+  });
+
+  test("leaves an already short time alone", () => {
+    expect(clockTime("08:15")).toBe("08:15");
+  });
+});
+
+describe("dateAndTime", () => {
+  test("appends the hour when there is one", () => {
+    expect(dateAndTime("2026-09-03", "19:30:00")).toBe(
+      "Thu, 03 Sept 2026 · 19:30",
+    );
+  });
+
+  test("is just the day until somebody sets a time", () => {
+    expect(dateAndTime("2026-09-03")).toBe("Thu, 03 Sept 2026");
+    expect(dateAndTime("2026-09-03", null)).toBe("Thu, 03 Sept 2026");
   });
 });

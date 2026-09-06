@@ -6,9 +6,10 @@ use sqlx::{PgPool, Row, postgres::PgRow};
 use crate::models::{
     descent::{
         CreateDescentRequest, Descent, DescentId, DescentSection, PatchDescentRequest,
-        SectionDescentCount, Visibility,
+        SectionDescentCount,
     },
     gauge::{SectionWaterSnapshot, WaterLevel, WaterRangeWithStatus},
+    visibility::Visibility,
     waterway::PaginatedResponse,
 };
 
@@ -51,6 +52,7 @@ fn row_to_descent(row: &PgRow) -> Result<Descent, sqlx::Error> {
         take_out_label: row.try_get("take_out_label")?,
         visibility,
         visible_from: row.try_get("visible_from")?,
+        trip_id: row.try_get("trip_id")?,
         sections: vec![],
         created_at: row.try_get("created_at")?,
         updated_at: row.try_get("updated_at")?,
@@ -60,7 +62,7 @@ fn row_to_descent(row: &PgRow) -> Result<Descent, sqlx::Error> {
 const DESCENT_COLS: &str = "id, user_id, name, start_time, end_time, note, \
     put_in_feature_id, put_in_lat, put_in_lon, put_in_label, \
     take_out_feature_id, take_out_lat, take_out_lon, take_out_label, \
-    visibility_scope::text AS visibility_scope, visible_from, created_at, updated_at";
+    visibility_scope::text AS visibility_scope, visible_from, trip_id, created_at, updated_at";
 
 /// Column list for list queries that JOIN the users table for username attribution.
 const DESCENT_LIST_COLS: &str = concat!(
@@ -69,7 +71,7 @@ const DESCENT_LIST_COLS: &str = concat!(
     "descents.put_in_label, descents.take_out_feature_id, descents.take_out_lat, ",
     "descents.take_out_lon, descents.take_out_label, ",
     "descents.visibility_scope::text AS visibility_scope, descents.visible_from, ",
-    "descents.created_at, descents.updated_at, u.username"
+    "descents.trip_id, descents.created_at, descents.updated_at, u.username"
 );
 
 async fn load_sections(
@@ -457,8 +459,8 @@ pub async fn create_descent(
             (user_id, name, start_time, end_time, note, \
              put_in_feature_id, put_in_lat, put_in_lon, put_in_label, \
              take_out_feature_id, take_out_lat, take_out_lon, take_out_label, \
-             visibility_scope, visible_from) \
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::visibility_scope, $15) \
+             visibility_scope, visible_from, trip_id) \
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::visibility_scope, $15, $16) \
          RETURNING {DESCENT_COLS}"
     ))
     .bind(user_id)
@@ -476,6 +478,7 @@ pub async fn create_descent(
     .bind(req.take_out_label.as_deref())
     .bind(visibility_str)
     .bind(req.visible_from)
+    .bind(req.trip_id)
     .fetch_one(&mut *tx)
     .await?;
 
@@ -591,6 +594,9 @@ pub struct ListFilters<'a> {
     pub from: Option<DateTime<Utc>>,
     pub to: Option<DateTime<Utc>>,
     pub section_id: Option<i64>,
+    /// Narrows to one trip. A member of that trip sees every log in it, so
+    /// this is also what unlocks the visibility override below.
+    pub trip_id: Option<i64>,
     pub page: i64,
     pub per_page: i64,
 }
@@ -628,6 +634,7 @@ pub async fn list_descents_for_viewer(
                    WHERE ds.descent_id = descents.id AND ds.section_id = $5 \
                )) \
                AND ($8::text IS NULL OR descents.user_id = $8) \
+               AND ($9::bigint IS NULL OR descents.trip_id = $9) \
              ORDER BY descents.start_time DESC \
              LIMIT $6 OFFSET $7"
         ))
@@ -639,6 +646,7 @@ pub async fn list_descents_for_viewer(
         .bind(filters.per_page)
         .bind(offset)
         .bind(filters.user_id)
+        .bind(filters.trip_id)
         .fetch_all(pool)
         .await?
     } else if filters.scope == Some("following") {
@@ -682,6 +690,7 @@ pub async fn list_descents_for_viewer(
                    WHERE ds.descent_id = descents.id AND ds.section_id = $5 \
                )) \
                AND ($8::text IS NULL OR descents.user_id = $8) \
+               AND ($9::bigint IS NULL OR descents.trip_id = $9) \
              ORDER BY descents.start_time DESC \
              LIMIT $6 OFFSET $7"
         ))
@@ -693,6 +702,7 @@ pub async fn list_descents_for_viewer(
         .bind(filters.per_page)
         .bind(offset)
         .bind(filters.user_id)
+        .bind(filters.trip_id)
         .fetch_all(pool)
         .await?
     } else if let Some(vid) = viewer_id {
@@ -712,6 +722,10 @@ pub async fn list_descents_for_viewer(
                      JOIN group_members gm ON gm.group_id = dvg.group_id \
                      WHERE dvg.descent_id = descents.id AND gm.user_id = $1 \
                  )) \
+                 OR ($9::bigint IS NOT NULL AND descents.trip_id = $9 AND EXISTS ( \
+                     SELECT 1 FROM trip_members tm \
+                     WHERE tm.trip_id = $9 AND tm.user_id = $1 \
+                 )) \
              ) \
                AND ($2::text IS NULL OR descents.visibility_scope::text = $2) \
                AND ($3::timestamptz IS NULL OR descents.start_time >= $3) \
@@ -721,6 +735,7 @@ pub async fn list_descents_for_viewer(
                    WHERE ds.descent_id = descents.id AND ds.section_id = $5 \
                )) \
                AND ($8::text IS NULL OR descents.user_id = $8) \
+               AND ($9::bigint IS NULL OR descents.trip_id = $9) \
              ORDER BY descents.start_time DESC \
              LIMIT $6 OFFSET $7"
         ))
@@ -732,6 +747,7 @@ pub async fn list_descents_for_viewer(
         .bind(filters.per_page)
         .bind(offset)
         .bind(filters.user_id)
+        .bind(filters.trip_id)
         .fetch_all(pool)
         .await?
     } else {
@@ -748,6 +764,7 @@ pub async fn list_descents_for_viewer(
                    WHERE ds.descent_id = descents.id AND ds.section_id = $3 \
                )) \
                AND ($6::text IS NULL OR descents.user_id = $6) \
+               AND ($7::bigint IS NULL OR descents.trip_id = $7) \
              ORDER BY descents.start_time DESC \
              LIMIT $4 OFFSET $5"
         ))
@@ -757,6 +774,7 @@ pub async fn list_descents_for_viewer(
         .bind(filters.per_page)
         .bind(offset)
         .bind(filters.user_id)
+        .bind(filters.trip_id)
         .fetch_all(pool)
         .await?
     };
@@ -894,6 +912,7 @@ pub async fn patch_descent(
              take_out_lat        = CASE WHEN $17::boolean THEN $19::float8 ELSE take_out_lat END, \
              take_out_lon        = CASE WHEN $17::boolean THEN $20::float8 ELSE take_out_lon END, \
              take_out_label      = CASE WHEN $17::boolean THEN $21::text ELSE take_out_label END, \
+             trip_id             = CASE WHEN $22::boolean THEN $23::bigint ELSE trip_id END, \
              updated_at          = NOW() \
          WHERE id = $1 AND user_id = $2 \
          RETURNING {DESCENT_COLS}"
@@ -919,6 +938,8 @@ pub async fn patch_descent(
     .bind(patch.take_out_lat)
     .bind(patch.take_out_lon)
     .bind(patch.take_out_label.as_deref())
+    .bind(patch.trip_id.is_some())
+    .bind(patch.trip_id.flatten())
     .fetch_optional(&mut *tx)
     .await?;
 

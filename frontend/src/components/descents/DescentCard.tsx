@@ -13,7 +13,7 @@ import {
   formatTime,
   timeAgo,
 } from "@/lib/format";
-import { fonts } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 import { levelConfig, maxLevel } from "@/lib/waterLevel";
 
 export const VISIBILITY_ICONS = {
@@ -26,12 +26,16 @@ interface DescentCardProps {
   descent: Descent;
   onClick?: () => void;
   showAuthor?: boolean;
+  /** The list supplies the rule and the side padding - used where a row
+   * carries its own actions beside the card. */
+  flush?: boolean;
 }
 
 export default function DescentCard({
   descent,
   onClick,
   showAuthor,
+  flush,
 }: DescentCardProps) {
   const waterwayNames = [
     ...new Set(
@@ -61,10 +65,14 @@ export default function DescentCard({
     <Box
       onClick={onClick}
       sx={{
-        p: 2,
-        bgcolor: "background.paper",
-        borderBottom: "1px solid",
-        borderColor: "divider",
+        px: flush ? 0 : 2,
+        py: flush ? 1.5 : 2,
+        // Flush rows sit inside a list that owns the ground and the rule.
+        bgcolor: flush ? "transparent" : "background.paper",
+        borderBottom: flush ? "none" : "1px solid",
+        // A full-strength rule between every row reads as a grid; these only
+        // need to separate.
+        borderColor: `${theme.tokens.outlineVariant}55`,
         cursor: onClick ? "pointer" : "default",
         "&:hover": onClick ? { bgcolor: "action.hover" } : undefined,
         display: "flex",

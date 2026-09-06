@@ -26,8 +26,11 @@ const STEPS = ["When", "Sections", "Details"];
 
 interface Props {
   descent?: Descent;
+  /** Seed a new log from somebody else's, keeping their sections and times. */
+  copyFrom?: Descent;
   initialSection?: { section: SectionWithFeatures; waterwayId: number };
   initialStartTime?: string;
+  initialTripId?: number;
   onSave: (id: number) => void;
   onCancel: () => void;
 }
@@ -38,21 +41,27 @@ interface Props {
  */
 export default function DescentForm({
   descent,
+  copyFrom,
   initialSection,
   initialStartTime,
+  initialTripId,
   onSave,
   onCancel,
 }: Props) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<LogForm>(() => {
     if (descent) return initFromDescent(descent);
+    // A copy keeps the original's sections and times but is owned - and
+    // published - by whoever copies it.
+    if (copyFrom) return initFromDescent(copyFrom);
     const base = initialStartTime
       ? { ...defaultForm(), start_time: toDatetimeLocal(initialStartTime) }
       : defaultForm();
+    const seeded = initialTripId ? { ...base, trip_id: initialTripId } : base;
     if (initialSection) {
-      return { ...base, sections: [makeDraft(initialSection.section, 1)] };
+      return { ...seeded, sections: [makeDraft(initialSection.section, 1)] };
     }
-    return base;
+    return seeded;
   });
 
   const createDescent = useCreateDescent();

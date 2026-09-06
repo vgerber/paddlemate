@@ -588,6 +588,14 @@ export const alphas = {
   scrim: "cc",
 } as const;
 
+/** Height of a full-screen panel: the window less the desktop app bar, or
+ * less the mobile bottom nav and its safe area. A panel that pins a bottom
+ * bar needs a bounded height to size its scroller against. */
+export const PANEL_HEIGHT = {
+  xs: "calc(100dvh - 56px - env(safe-area-inset-bottom))",
+  md: "calc(100vh - 48px)",
+} as const;
+
 /** The app's standard small uppercase label. Spread into sx and override
  * size or color where a variant is needed. */
 export const labelSx = {

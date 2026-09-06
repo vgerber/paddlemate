@@ -46,6 +46,27 @@ export type FavoriteSection = components["schemas"]["FavoriteSectionResponse"];
 export type UserWithFollowStatus =
   components["schemas"]["UserWithFollowStatusResponse"];
 export type User = components["schemas"]["User"];
+export type Trip = components["schemas"]["Trip"];
+export type TripMember = components["schemas"]["TripMember"];
+export type TripMemberRole = components["schemas"]["TripMemberRole"];
+export type TripStay = components["schemas"]["TripStay"];
+export type TripStayKind = components["schemas"]["TripStayKind"];
+export type TripSection = components["schemas"]["TripSection"];
+export type TripSectionInput = components["schemas"]["TripSectionInput"];
+export type TripSectionStatus = components["schemas"]["TripSectionStatus"];
+export type CreateTripRequest = components["schemas"]["CreateTripRequest"];
+export type CreateTripStayRequest =
+  components["schemas"]["CreateTripStayRequest"];
+export type PatchTripRequest = components["schemas"]["PatchTripRequest"];
+export type PatchTripStayRequest =
+  components["schemas"]["PatchTripStayRequest"];
+export type PatchTripMemberRequest =
+  components["schemas"]["PatchTripMemberRequest"];
+export type PaginatedTrips =
+  components["schemas"]["PaginatedResponse_for_Trip"];
+export type TripFilters = NonNullable<
+  operations["list_trips"]["parameters"]["query"]
+>;
 export type Region = components["schemas"]["Region"];
 export type RegionKind = components["schemas"]["RegionKind"];
 export type RegionOutline = components["schemas"]["RegionOutline"];
@@ -568,6 +589,120 @@ export const descentsApi = {
   remove: async (id: number) => {
     await client.DELETE("/api/v1/descents/{descent_id}", {
       params: { path: { descent_id: id } },
+    });
+  },
+};
+
+export const tripsApi = {
+  list: async (filters: TripFilters = {}) => {
+    const { data } = await client.GET("/api/v1/trips", {
+      params: { query: filters },
+    });
+    return assertData(data);
+  },
+  get: async (id: number) => {
+    const { data } = await client.GET("/api/v1/trips/{trip_id}", {
+      params: { path: { trip_id: id } },
+    });
+    return assertData(data);
+  },
+  create: async (body: CreateTripRequest) => {
+    const { data } = await client.POST("/api/v1/trips", { body });
+    return assertData(data);
+  },
+  update: async (id: number, body: PatchTripRequest) => {
+    const { data } = await client.PATCH("/api/v1/trips/{trip_id}", {
+      params: { path: { trip_id: id } },
+      body,
+    });
+    return assertData(data);
+  },
+  remove: async (id: number) => {
+    await client.DELETE("/api/v1/trips/{trip_id}", {
+      params: { path: { trip_id: id } },
+    });
+  },
+  members: async (id: number) => {
+    const { data } = await client.GET("/api/v1/trips/{trip_id}/members", {
+      params: { path: { trip_id: id } },
+    });
+    return assertData(data);
+  },
+  join: async (id: number) => {
+    const { data } = await client.POST("/api/v1/trips/{trip_id}/members", {
+      params: { path: { trip_id: id } },
+    });
+    return assertData(data);
+  },
+  updateMember: async (
+    id: number,
+    userId: string,
+    body: PatchTripMemberRequest,
+  ) => {
+    const { data } = await client.PATCH(
+      "/api/v1/trips/{trip_id}/members/{user_id}",
+      { params: { path: { trip_id: id, user_id: userId } }, body },
+    );
+    return assertData(data);
+  },
+  removeMember: async (id: number, userId: string) => {
+    await client.DELETE("/api/v1/trips/{trip_id}/members/{user_id}", {
+      params: { path: { trip_id: id, user_id: userId } },
+    });
+  },
+  stays: async (id: number) => {
+    const { data } = await client.GET("/api/v1/trips/{trip_id}/stays", {
+      params: { path: { trip_id: id } },
+    });
+    return assertData(data);
+  },
+  createStay: async (id: number, body: CreateTripStayRequest) => {
+    const { data } = await client.POST("/api/v1/trips/{trip_id}/stays", {
+      params: { path: { trip_id: id } },
+      body,
+    });
+    return assertData(data);
+  },
+  updateStay: async (
+    id: number,
+    stayId: number,
+    body: PatchTripStayRequest,
+  ) => {
+    const { data } = await client.PATCH(
+      "/api/v1/trips/{trip_id}/stays/{stay_id}",
+      { params: { path: { trip_id: id, stay_id: stayId } }, body },
+    );
+    return assertData(data);
+  },
+  removeStay: async (id: number, stayId: number) => {
+    await client.DELETE("/api/v1/trips/{trip_id}/stays/{stay_id}", {
+      params: { path: { trip_id: id, stay_id: stayId } },
+    });
+  },
+  replaceStaySections: async (
+    id: number,
+    stayId: number,
+    sections: TripSectionInput[],
+  ) => {
+    const { data } = await client.PUT(
+      "/api/v1/trips/{trip_id}/stays/{stay_id}/sections",
+      {
+        params: { path: { trip_id: id, stay_id: stayId } },
+        body: { sections },
+      },
+    );
+    return assertData(data);
+  },
+  replaceAudienceUsers: async (id: number, users: string[]) => {
+    await client.PUT("/api/v1/trips/{trip_id}/audiences/users", {
+      params: { path: { trip_id: id } },
+      body: { users },
+    });
+  },
+  replaceAudienceGroups: async (id: number, groups: number[]) => {
+    await client.PUT("/api/v1/trips/{trip_id}/audiences/groups", {
+      params: { path: { trip_id: id } },
+      body: { groups },
     });
   },
 };

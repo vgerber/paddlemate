@@ -1,11 +1,8 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import Typography from "@mui/material/Typography";
+import VisibilityPicker from "@/components/VisibilityPicker";
 import { type StepProps, toDatetimeLocal } from "./model";
-import SharedVisibilityFields from "./SharedVisibilityFields";
 
 /** Step 3: title, note, visibility, and delayed publishing. */
 export default function StepDetails({ form, onChange }: StepProps) {
@@ -28,25 +25,20 @@ export default function StepDetails({ form, onChange }: StepProps) {
         fullWidth
       />
 
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        <Typography variant="overline" sx={{ lineHeight: 1 }}>
-          Visibility
-        </Typography>
-        <ToggleButtonGroup
-          exclusive
-          value={form.visibility_type}
-          onChange={(_, v) => v && onChange({ visibility_type: v })}
-          size="small"
-        >
-          <ToggleButton value="private">Private</ToggleButton>
-          <ToggleButton value="shared">Shared</ToggleButton>
-          <ToggleButton value="public">Public</ToggleButton>
-        </ToggleButtonGroup>
-      </Box>
-
-      {form.visibility_type === "shared" && (
-        <SharedVisibilityFields form={form} onChange={onChange} />
-      )}
+      <VisibilityPicker
+        value={{
+          type: form.visibility_type,
+          groups: form.shared_groups,
+          users: form.shared_users,
+        }}
+        onChange={(patch) =>
+          onChange({
+            ...(patch.type !== undefined && { visibility_type: patch.type }),
+            ...(patch.groups !== undefined && { shared_groups: patch.groups }),
+            ...(patch.users !== undefined && { shared_users: patch.users }),
+          })
+        }
+      />
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
