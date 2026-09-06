@@ -104,6 +104,86 @@
       ]
     },
     {
+      "id": "9a1c0d4e-2b73-4f8a-9c15-6d2e8b7a4013",
+      "username": "mara",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "mara@example.test",
+      "firstName": "Mara",
+      "lastName": "Lindqvist",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "paddle",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-paddle"
+      ]
+    },
+    {
+      "id": "c4f27a86-5d19-4e62-b8a3-1f7c9e05d284",
+      "username": "tobi",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "tobi@example.test",
+      "firstName": "Tobias",
+      "lastName": "Reiner",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "paddle",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-paddle"
+      ]
+    },
+    {
+      "id": "e83b5c17-9f42-4a0d-8e6b-3c15d7208af9",
+      "username": "aoife",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "aoife@example.test",
+      "firstName": "Aoife",
+      "lastName": "Byrne",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "paddle",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-paddle"
+      ]
+    },
+    {
+      "id": "7d64e920-8a31-4c5f-b27e-05f3a9c61d48",
+      "username": "jonas",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "jonas@example.test",
+      "firstName": "Jonas",
+      "lastName": "Weber",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "paddle",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-paddle"
+      ]
+    },
+    {
       "username": "service-account-paddlemate-api",
       "enabled": true,
       "serviceAccountClientId": "paddlemate-api",

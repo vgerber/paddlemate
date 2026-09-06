@@ -1,8 +1,47 @@
 -- Paddlemate test fixture. All ids in the 9xxx range so cleanup.sql can
 -- remove everything without touching real data.
--- Requires at least one row in users (log in once via Keycloak first).
+--
+-- The five paddlers below carry the same subjects as the local Keycloak realm
+-- (keycloak/build-realm.sh), so signing in as any of them lands on exactly
+-- this data. Change an id in one place and change it in the other.
+
+\set vincent '5a5e307b-bd29-4f61-a9e3-b29df4cb1744'
+\set mara    '9a1c0d4e-2b73-4f8a-9c15-6d2e8b7a4013'
+\set tobi    'c4f27a86-5d19-4e62-b8a3-1f7c9e05d284'
+\set aoife   'e83b5c17-9f42-4a0d-8e6b-3c15d7208af9'
+\set jonas   '7d64e920-8a31-4c5f-b27e-05f3a9c61d48'
 
 BEGIN;
+
+-- Vincent is the admin you normally sign in as; the rest are the mates he
+-- shares a club, a trip and his logs with. Ownership is spread across them so
+-- "mine" and "someone else's" are different things in every list.
+INSERT INTO users (id, username) VALUES
+  (:'vincent', 'vincent'),
+  (:'mara',    'mara'),
+  (:'tobi',    'tobi'),
+  (:'aoife',   'aoife'),
+  (:'jonas',   'jonas')
+ON CONFLICT (id) DO UPDATE SET username = EXCLUDED.username;
+
+-- The club the shared logs and the trip are visible to.
+INSERT INTO groups (id, name, description, created_by)
+VALUES (9001, 'Innsbruck Paddlers', 'The regular Tuesday crew.', :'vincent');
+
+INSERT INTO group_members (group_id, user_id, role, added_by) VALUES
+  (9001, :'vincent', 'owner',  :'vincent'),
+  (9001, :'mara',    'admin',  :'vincent'),
+  (9001, :'tobi',    'member', :'vincent'),
+  (9001, :'aoife',   'member', :'mara'),
+  (9001, :'jonas',   'member', :'mara');
+
+-- A follow graph with one request still pending, so the social tab and the
+-- follow-request path both have something to show.
+INSERT INTO user_follows (follower_id, following_id, status) VALUES
+  (:'vincent', :'mara',    'accepted'),
+  (:'mara',    :'vincent', 'accepted'),
+  (:'tobi',    :'vincent', 'accepted'),
+  (:'aoife',   :'vincent', 'pending');
 
 -- Waterway with three sections. Each section has put_in and take_out
 -- features at the ends of its line, like a normal entry.
@@ -35,7 +74,7 @@ FROM (VALUES
   (9571, 9107, 'put_in',   'POINT(11.06 47.06)'),
   (9572, 9107, 'take_out', 'POINT(11.07 47.07)')
 ) AS v(id, section_id, feature_type, wkt)
-CROSS JOIN (SELECT id FROM users LIMIT 1) u;
+CROSS JOIN (SELECT :'vincent'::varchar AS id) u;
 
 -- Whitewater features with a difficulty label (shown as a chip in the
 -- section list), matching the shape the rivermap import produces. The zone
@@ -48,7 +87,7 @@ FROM (VALUES
   (9543, 9104, '{"difficulty": "II", "length_km": 1.5}',    'LINESTRING(11.03 47.03, 11.04 47.04)'),
   (9553, 9105, '{"difficulty": "IV-V", "length_km": 1.5}',  'LINESTRING(11.04 47.04, 11.05 47.05)')
 ) AS v(id, section_id, meta, wkt)
-CROSS JOIN (SELECT id FROM users LIMIT 1) u;
+CROSS JOIN (SELECT :'vincent'::varchar AS id) u;
 
 -- A feature-rich section: Lower Test (9102) gets a run of rapids, hazards
 -- and infrastructure between put-in and take-out, for testing the feature
@@ -63,7 +102,7 @@ FROM (VALUES
   (9528, 9102, 'portage',  '{}',                     'LINESTRING(11.0155 47.0155, 11.017 47.017)'),
   (9529, 9102, 'bridge',   '{}',                     'POINT(11.018 47.018)')
 ) AS v(id, section_id, feature_type, meta, wkt)
-CROSS JOIN (SELECT id FROM users LIMIT 1) u;
+CROSS JOIN (SELECT :'vincent'::varchar AS id) u;
 
 -- Gauge with a week of sinusoidal water-level readings, calibrated on the
 -- put_in of Lower Test (9102) so that section shows a chart and water status.
@@ -114,25 +153,40 @@ INSERT INTO feature_water_ranges (id, feature_id, series_id, range_low, range_me
   (9607, 9524, 9401, 70, 90, 110),
   (9608, 9525, 9401, 50, 70, 90);
 
--- Descents owned by the first user, exercising visibility, multi-section
--- membership, and band widths in the chart (short runs + a 36h trip).
+-- Descents spread across the crew, exercising every visibility branch,
+-- multi-section membership, and band widths in the chart (short runs + a 36h
+-- trip). Vincent owns two of them, so "mine" and "someone else's" both have
+-- content in every list.
 INSERT INTO descents (id, user_id, start_time, end_time, visibility_scope, name,
                       put_in_lat, put_in_lon, take_out_lat, take_out_lon)
-SELECT v.id, u.id, NOW() - v.start_ago::interval, NOW() - v.start_ago::interval + v.duration::interval,
+SELECT v.id, v.user_id, NOW() - v.start_ago::interval,
+       NOW() - v.start_ago::interval + v.duration::interval,
        v.scope::visibility_scope, v.name, v.pi_lat, v.pi_lon, v.to_lat, v.to_lon
 FROM (VALUES
-  (9201, '2 days', '2 hours',  'public',  'Public multi-section run', 47.0,  11.0,  47.02, 11.02),
-  (9202, '1 day',  '1 hour',   'private', 'Private upper run',        47.0,  11.0,  47.01, 11.01),
-  (9203, '3 days', '1 hour',   'public',  'Public lower-only run',    47.01, 11.01, 47.02, 11.02),
-  (9204, '6 days', '36 hours', 'public',  'Long weekend trip',        47.01, 11.01, 47.02, 11.02)
-) AS v(id, start_ago, duration, scope, name, pi_lat, pi_lon, to_lat, to_lon)
-CROSS JOIN (SELECT id FROM users LIMIT 1) u;
+  (9201, :'vincent', '2 days', '2 hours',  'public',  'Public multi-section run', 47.0,  11.0,  47.02, 11.02),
+  (9202, :'vincent', '1 day',  '1 hour',   'private', 'Private upper run',        47.0,  11.0,  47.01, 11.01),
+  (9203, :'mara',    '3 days', '1 hour',   'public',  'Public lower-only run',    47.01, 11.01, 47.02, 11.02),
+  (9204, :'tobi',    '6 days', '36 hours', 'public',  'Long weekend trip',        47.01, 11.01, 47.02, 11.02),
+  -- Shared with the club: visible to every group member, nobody else
+  (9205, :'aoife',   '4 days', '90 minutes', 'shared', 'Club evening lap',        47.03, 11.03, 47.04, 11.04),
+  -- Shared with one named paddler: the user-audience branch
+  (9206, :'jonas',   '5 days', '2 hours',  'shared',  'Scout, shared with Vincent', 47.04, 11.04, 47.05, 11.05),
+  -- Somebody else's private log: invisible in the feed, but visible inside
+  -- the trip it belongs to, which is the rule worth being able to check
+  (9207, :'mara',    '2 days', '3 hours',  'private', 'Maras private scout',      47.01, 11.01, 47.02, 11.02)
+) AS v(id, user_id, start_ago, duration, scope, name, pi_lat, pi_lon, to_lat, to_lon);
+
+INSERT INTO descent_visible_groups (descent_id, group_id) VALUES (9205, 9001);
+INSERT INTO descent_visible_users (descent_id, user_id) VALUES (9206, :'vincent');
 
 INSERT INTO descent_sections (descent_id, section_id, sort_order) VALUES
   (9201, 9101, 1), (9201, 9102, 2),
   (9202, 9101, 1),
   (9203, 9102, 1),
-  (9204, 9102, 1);
+  (9204, 9102, 1),
+  (9205, 9104, 1),
+  (9206, 9105, 1),
+  (9207, 9102, 1);
 
 -- Water levels captured when the descent was logged, shown on the log detail
 -- page. One per descent section that has a calibrated gauge (9102).
@@ -196,7 +250,7 @@ FROM (VALUES
   (9593, 9145, 'put_in',     'POINT(14.3 48.8)'),
   (9594, 9145, 'take_out',   'POINT(14.31 48.81)')
 ) AS v(id, section_id, feature_type, wkt)
-CROSS JOIN (SELECT id FROM users LIMIT 1) u;
+CROSS JOIN (SELECT :'vincent'::varchar AS id) u;
 
 -- Rapid names, the search source that has no untagged fallback column.
 INSERT INTO feature_names (id, feature_id, lang_code, name) VALUES
@@ -209,9 +263,19 @@ INSERT INTO feature_names (id, feature_id, lang_code, name) VALUES
   (9811, 9525, 'en', 'Big Hole'),
   (9812, 9526, 'de', 'Altes Wehr');
 
+-- A second river paddled on a day that already has one, so the trip timeline
+-- has something to group: that day lists both rivers, each with its sections.
+INSERT INTO descents (id, user_id, start_time, end_time, visibility_scope, name,
+                      put_in_lat, put_in_lon, take_out_lat, take_out_lon)
+VALUES (9208, :'vincent', NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days' + INTERVAL '2 hours',
+        'public', 'Wellerbruecke lap', 47.2, 10.9, 47.21, 10.91);
+
+INSERT INTO descent_sections (descent_id, section_id, sort_order) VALUES (9208, 9111, 1);
+
+
 -- API token "pm_testtoken123" for the first user (sha256 of the plain token).
 INSERT INTO api_tokens (user_id, name, token_hash)
-SELECT id, 'test-data', 'ffd2e7ff161f619163861f2870c0fdf91508ae8851743d855d2661aa13738ec8' FROM users LIMIT 1;
+VALUES (:'vincent', 'test-data', 'ffd2e7ff161f619163861f2870c0fdf91508ae8851743d855d2661aa13738ec8');
 
 
 -- Proposals, for reviewing on /proposals. Each one is placed so the review
@@ -301,7 +365,7 @@ FROM (VALUES
        'coordinates', jsonb_build_array(jsonb_build_array(11.011, 47.011), jsonb_build_array(11.019, 47.019)))
    ), NULL, 'rejected', 'Already covered by Lower Test.', NOW() - INTERVAL '9 days')
 ) AS v(id, entity_type, entity_id, operation, proposed_data, original_data, status, review_note, created_at)
-CROSS JOIN (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
+CROSS JOIN (SELECT :'vincent'::varchar AS id) u;
 
 -- Votes, so the list shows tallies rather than a column of zeroes.
 INSERT INTO proposal_votes (proposal_id, user_id, vote)
@@ -324,7 +388,75 @@ FROM (VALUES
   (9905, 'waterway', 9001, 'New siphon on river right, marked it on the map.', 'danger_permanent', 'merged', NOW() - INTERVAL '9 days'),
   (9906, 'water_section', 9102, 'Portage the weir on the left, the ramp on the right is undercut.', 'danger_permanent', 'ok', NOW() - INTERVAL '1 day')
 ) AS v(id, entity_type, entity_id, body, category, status, created_at)
-CROSS JOIN (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
+CROSS JOIN (SELECT :'vincent'::varchar AS id) u;
+
+-- Two trips. The Oetztal week straddles today, so the day timeline has days
+-- behind it (solid) and days ahead (planned), and its dates are relative so
+-- that stays true whenever the fixture is seeded.
+--
+-- It is shared with the club rather than with its members alone: Jonas is in
+-- the group but not on the trip, so signing in as him is how you check the
+-- "can see it, has not joined" state and the open-join button.
+INSERT INTO trips (id, name, description, start_date, end_date,
+                   visibility_scope, created_by)
+VALUES
+  (9001, 'Oetztal week', 'Levels permitting - Wellerbruecke if it drops.',
+   (NOW() - INTERVAL '3 days')::date, (NOW() + INTERVAL '3 days')::date,
+   'shared', :'vincent'),
+  -- Mara's own trip: invisible to everyone else, so "Mine" and "Discover"
+  -- differ depending on who is signed in.
+  (9002, 'Soca spring', 'Scouting week, small crew.',
+   (NOW() + INTERVAL '40 days')::date, (NOW() + INTERVAL '47 days')::date,
+   'private', :'mara');
+
+INSERT INTO trip_visible_groups (trip_id, group_id) VALUES (9001, 9001);
+
+INSERT INTO trip_members (trip_id, user_id, role) VALUES
+  (9001, :'vincent', 'admin'),
+  (9001, :'mara',    'admin'),
+  (9001, :'tobi',    'member'),
+  (9001, :'aoife',   'member'),
+  (9002, :'mara',    'admin'),
+  (9002, :'tobi',    'member');
+
+-- Attendance settles before the itinerary does: Vincent drives out a day
+-- early (the timeline's Day -1), Tobias joins late, Aoife has not said yet.
+-- Mara knows the day but not yet the hour she gets away, which is the normal
+-- half-settled state and the one the UI has to read well.
+INSERT INTO trip_member_attendance
+  (trip_id, user_id, arrival, arrival_time, departure, departure_time) VALUES
+  (9001, :'vincent', (NOW() - INTERVAL '4 days')::date, '19:30',
+                     (NOW() + INTERVAL '3 days')::date, '11:00'),
+  (9001, :'mara',    (NOW() - INTERVAL '3 days')::date, '08:15',
+                     (NOW() + INTERVAL '3 days')::date, NULL),
+  (9001, :'tobi',    (NOW() - INTERVAL '1 day')::date,  '22:45',
+                     (NOW() + INTERVAL '2 days')::date, '16:00');
+
+-- The base moves mid-trip, and the third one is still a placeholder with no
+-- dates - the state a stay sits in while somebody is still ringing around.
+INSERT INTO trip_stays (id, trip_id, kind, name, description, location, arrival, departure, created_by) VALUES
+  (9011, 9001, 'camp', 'Camping Oetztal Arena', 'Cheap, loud, right by the get-out.',
+   ST_SetSRID(ST_MakePoint(10.9, 47.2), 4326),
+   (NOW() - INTERVAL '3 days')::date, (NOW())::date, :'vincent'),
+  (9012, 9001, 'hotel', 'Gasthof Post', 'Drying room, which decides it.',
+   ST_SetSRID(ST_MakePoint(10.92, 47.22), 4326),
+   (NOW())::date, (NOW() + INTERVAL '3 days')::date, :'mara'),
+  (9013, 9001, 'other', 'Somewhere in the Pitztal', NULL, NULL, NULL, NULL, :'tobi'),
+  (9021, 9002, 'camp', 'Kamp Korita', NULL, NULL, NULL, NULL, :'mara');
+
+-- The same section is watched from both bases: two places a few kilometres
+-- apart reach the same water, and each keeps its own list.
+INSERT INTO trip_sections (id, stay_id, section_id, sort_order, status) VALUES
+  (9031, 9011, 9101, 1, 'done'),
+  (9032, 9011, 9102, 2, 'done'),
+  (9033, 9011, 9105, 3, 'optional'),
+  (9034, 9012, 9102, 1, 'planned'),
+  (9035, 9012, 9104, 2, 'planned');
+
+-- Logs credited to the trip, including one private one of Mara's: inside the
+-- trip every member sees it, in the public listing nobody but Mara does.
+UPDATE descents SET trip_id = 9001 WHERE id IN (9201, 9203, 9205, 9207, 9208);
+
 
 -- The explicit 9xxx ids above bypass the id sequences. Bump them past the
 -- fixture range so rows created through the app get higher ids - otherwise
@@ -334,7 +466,8 @@ SELECT setval(pg_get_serial_sequence(t, 'id'), 10000, true)
 FROM unnest(ARRAY[
   'waterways', 'water_sections', 'features', 'feature_names',
   'section_names', 'gauges', 'gauge_series', 'feature_water_ranges',
-  'descents', 'proposals', 'comments', 'media'
+  'descents', 'proposals', 'comments', 'media',
+  'groups', 'trips', 'trip_stays', 'trip_sections'
 ]) AS t;
 
 COMMIT;
