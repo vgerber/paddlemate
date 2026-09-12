@@ -2,10 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import {
   type CreateTripRequest,
+  type CreateTripStayCandidateRequest,
   type CreateTripStayRequest,
   descentsApi,
   type PatchTripMemberRequest,
   type PatchTripRequest,
+  type PatchTripStayCandidateRequest,
   type PatchTripStayRequest,
   type Trip,
   type TripFilters,
@@ -20,6 +22,7 @@ export const tripKeys = {
   lists: () => [...tripKeys.all, "list"] as const,
   list: (filters: TripFilters) => [...tripKeys.lists(), filters] as const,
   detail: (id: number) => [...tripKeys.all, id] as const,
+  candidates: (id: number) => [...tripKeys.detail(id), "candidates"] as const,
   members: (id: number) => [...tripKeys.detail(id), "members"] as const,
   stays: (id: number) => [...tripKeys.detail(id), "stays"] as const,
 };
@@ -30,10 +33,6 @@ export function useTrips(filters: TripFilters = {}, enabled = true) {
     queryFn: () => tripsApi.list(filters),
     enabled,
   });
-}
-
-export function useMyTrips(filters: Omit<TripFilters, "scope"> = {}) {
-  return useTrips({ ...filters, scope: "member" });
 }
 
 export function useTrip(id: number | null) {
@@ -94,11 +93,12 @@ export function useDeleteTrip() {
   });
 }
 
-export function useJoinTrip(id: number) {
+export function useAddTripMember(id: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => tripsApi.join(id),
+    mutationFn: (userId: string) => tripsApi.addMember(id, userId),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: tripKeys.members(id) });
       qc.invalidateQueries({ queryKey: tripKeys.detail(id) });
       qc.invalidateQueries({ queryKey: tripKeys.lists() });
     },
@@ -220,4 +220,69 @@ export function useTripTimeline(trip: Trip) {
     days,
     isLoading: members.isLoading || stays.isLoading || descents.isLoading,
   };
+}
+
+export function useTripCandidates(id: number | null, enabled = true) {
+  return useQuery({
+    queryKey: tripKeys.candidates(id ?? 0),
+    queryFn: () => tripsApi.candidates(id as number),
+    enabled: id !== null && enabled,
+  });
+}
+
+/** Everything that moves a candidate invalidates the same two lists: the
+ * candidates themselves, and the bases, because accepting one crosses over. */
+function useCandidateMutation<TArgs>(
+  id: number,
+  fn: (args: TArgs) => Promise<unknown>,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: tripKeys.candidates(id) });
+      qc.invalidateQueries({ queryKey: tripKeys.stays(id) });
+    },
+  });
+}
+
+export function useProposeCandidate(id: number) {
+  return useCandidateMutation(id, (body: CreateTripStayCandidateRequest) =>
+    tripsApi.proposeCandidate(id, body),
+  );
+}
+
+export function useVoteCandidate(id: number) {
+  return useCandidateMutation(
+    id,
+    ({ candidateId, vote }: { candidateId: number; vote: 1 | -1 | null }) =>
+      vote === null
+        ? tripsApi.unvoteCandidate(id, candidateId)
+        : tripsApi.voteCandidate(id, candidateId, vote),
+  );
+}
+
+export function usePatchCandidate(id: number) {
+  return useCandidateMutation(
+    id,
+    ({
+      candidateId,
+      body,
+    }: {
+      candidateId: number;
+      body: PatchTripStayCandidateRequest;
+    }) => tripsApi.patchCandidate(id, candidateId, body),
+  );
+}
+
+export function useAcceptCandidate(id: number) {
+  return useCandidateMutation(id, (candidateId: number) =>
+    tripsApi.acceptCandidate(id, candidateId),
+  );
+}
+
+export function useWithdrawCandidate(id: number) {
+  return useCandidateMutation(id, (candidateId: number) =>
+    tripsApi.withdrawCandidate(id, candidateId),
+  );
 }

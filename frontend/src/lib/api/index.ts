@@ -60,6 +60,11 @@ export type CreateTripStayRequest =
 export type PatchTripRequest = components["schemas"]["PatchTripRequest"];
 export type PatchTripStayRequest =
   components["schemas"]["PatchTripStayRequest"];
+export type TripStayCandidate = components["schemas"]["TripStayCandidate"];
+export type CreateTripStayCandidateRequest =
+  components["schemas"]["CreateTripStayCandidateRequest"];
+export type PatchTripStayCandidateRequest =
+  components["schemas"]["PatchTripStayCandidateRequest"];
 export type PatchTripMemberRequest =
   components["schemas"]["PatchTripMemberRequest"];
 export type PaginatedTrips =
@@ -628,9 +633,69 @@ export const tripsApi = {
     });
     return assertData(data);
   },
-  join: async (id: number) => {
+  candidates: async (id: number) => {
+    const { data } = await client.GET("/api/v1/trips/{trip_id}/candidates", {
+      params: { path: { trip_id: id } },
+    });
+    return assertData(data);
+  },
+  proposeCandidate: async (
+    id: number,
+    body: CreateTripStayCandidateRequest,
+  ) => {
+    const { data } = await client.POST("/api/v1/trips/{trip_id}/candidates", {
+      params: { path: { trip_id: id } },
+      body,
+    });
+    return assertData(data);
+  },
+  voteCandidate: async (id: number, candidateId: number, vote: 1 | -1) => {
+    const { data } = await client.POST(
+      "/api/v1/trips/{trip_id}/candidates/{candidate_id}/vote",
+      {
+        params: { path: { trip_id: id, candidate_id: candidateId } },
+        body: { vote },
+      },
+    );
+    return assertData(data);
+  },
+  unvoteCandidate: async (id: number, candidateId: number) => {
+    const { data } = await client.DELETE(
+      "/api/v1/trips/{trip_id}/candidates/{candidate_id}/vote",
+      { params: { path: { trip_id: id, candidate_id: candidateId } } },
+    );
+    return assertData(data);
+  },
+  patchCandidate: async (
+    id: number,
+    candidateId: number,
+    body: PatchTripStayCandidateRequest,
+  ) => {
+    const { data } = await client.PATCH(
+      "/api/v1/trips/{trip_id}/candidates/{candidate_id}",
+      { params: { path: { trip_id: id, candidate_id: candidateId } }, body },
+    );
+    return assertData(data);
+  },
+  acceptCandidate: async (id: number, candidateId: number) => {
+    const { data } = await client.PATCH(
+      "/api/v1/trips/{trip_id}/candidates/{candidate_id}",
+      {
+        params: { path: { trip_id: id, candidate_id: candidateId } },
+        body: { accepted: true },
+      },
+    );
+    return assertData(data);
+  },
+  withdrawCandidate: async (id: number, candidateId: number) => {
+    await client.DELETE("/api/v1/trips/{trip_id}/candidates/{candidate_id}", {
+      params: { path: { trip_id: id, candidate_id: candidateId } },
+    });
+  },
+  addMember: async (id: number, userId: string) => {
     const { data } = await client.POST("/api/v1/trips/{trip_id}/members", {
       params: { path: { trip_id: id } },
+      body: { user_id: userId },
     });
     return assertData(data);
   },
@@ -692,18 +757,6 @@ export const tripsApi = {
       },
     );
     return assertData(data);
-  },
-  replaceAudienceUsers: async (id: number, users: string[]) => {
-    await client.PUT("/api/v1/trips/{trip_id}/audiences/users", {
-      params: { path: { trip_id: id } },
-      body: { users },
-    });
-  },
-  replaceAudienceGroups: async (id: number, groups: number[]) => {
-    await client.PUT("/api/v1/trips/{trip_id}/audiences/groups", {
-      params: { path: { trip_id: id } },
-      body: { groups },
-    });
   },
 };
 

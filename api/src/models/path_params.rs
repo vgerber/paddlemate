@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 use super::{
     comment::CommentId,
-    trip::{TripId, TripStayId},
+    trip::{TripId, TripStayCandidateId, TripStayId},
     water_section::SectionId,
     waterway::WaterwayId,
 };
@@ -119,4 +119,11 @@ pub struct TripMemberPath {
 pub struct TripStayPath {
     pub trip_id: TripId,
     pub stay_id: TripStayId,
+}
+
+/// A trip and one of the bases somebody has put up for it.
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct TripCandidatePath {
+    pub trip_id: TripId,
+    pub candidate_id: TripStayCandidateId,
 }

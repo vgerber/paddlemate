@@ -1054,7 +1054,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description List trips visible to the current viewer. scope=member narrows to the caller's own trips. */
+        /** @description List the caller's trips. A trip is visible to its members only, so a signed-out caller gets an empty page. */
         get: operations["list_trips"];
         put?: never;
         /** @description Create a trip. The caller becomes its first admin, and the trip is created with its first stay so the watch list always hangs off somewhere. */
@@ -1084,35 +1084,57 @@ export interface paths {
         patch: operations["patch_trip"];
         trace?: never;
     };
-    "/api/v1/trips/{trip_id}/audiences/users": {
+    "/api/v1/trips/{trip_id}/candidates": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        /** @description Replace the users a shared trip is visible to. Admin only. */
-        put: operations["replace_audience_users"];
-        post?: never;
+        /** @description Bases put up for the trip, best supported first. */
+        get: operations["list_candidates"];
+        put?: never;
+        /** @description Put a base up for the group. Any member may; the proposer's own vote is counted for it. */
+        post: operations["propose_candidate"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/trips/{trip_id}/audiences/groups": {
+    "/api/v1/trips/{trip_id}/candidates/{candidate_id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        /** @description Replace the groups a shared trip is visible to. Admin only. */
-        put: operations["replace_audience_groups"];
+        /** @description One proposed base, with its votes. */
+        get: operations["get_candidate"];
+        put?: never;
         post?: never;
-        delete?: never;
+        /** @description Withdraw a proposed base. Your own, or anyone's if you are an admin. */
+        delete: operations["withdraw_candidate"];
+        options?: never;
+        head?: never;
+        /** @description Correct a proposed base, or accept it. Any member may edit the fields - a suggestion belongs to the trip, not to whoever typed it. Only an admin may send `accepted`, which turns it into a base. */
+        patch: operations["patch_candidate"];
+        trace?: never;
+    };
+    "/api/v1/trips/{trip_id}/candidates/{candidate_id}/vote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One proposed base, with its votes. */
+        get: operations["get_candidate"];
+        put?: never;
+        /** @description Vote for or against a proposed base: 1 or -1. Voting again replaces the vote. */
+        post: operations["vote_candidate"];
+        /** @description Take back your vote on a proposed base. */
+        delete: operations["unvote_candidate"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1128,8 +1150,8 @@ export interface paths {
         /** @description List the members of a trip, with the dates each can personally make. */
         get: operations["list_trip_members"];
         put?: never;
-        /** @description Join a trip. Open to anyone who may see it; the member is taken from the token. */
-        post: operations["join_trip"];
+        /** @description Add somebody to a trip. Admins only - a trip is invite-only. */
+        post: operations["add_trip_member"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1251,6 +1273,10 @@ export interface components {
         AddMemberBody: {
             /** @default member */
             role?: components["schemas"]["GroupMemberRole"];
+            user_id: string;
+        };
+        /** @description Who an admin is adding. A trip is invite-only, so this is the only way in. */
+        AddTripMemberRequest: {
             user_id: string;
         };
         ApiToken: {
@@ -1548,9 +1574,16 @@ export interface components {
             /** Format: date */
             start_date: string;
             stay: components["schemas"]["CreateTripStayRequest"];
-            visibility: components["schemas"]["Visibility"];
-            /** Format: date-time */
-            visible_from?: string | null;
+        };
+        CreateTripStayCandidateRequest: {
+            description?: string | null;
+            /** Format: date */
+            arrival?: string | null;
+            /** Format: date */
+            departure?: string | null;
+            kind: components["schemas"]["TripStayKind"];
+            location?: components["schemas"]["Geometry"] | null;
+            name: string;
         };
         /**
          * @description A trip is created with its first stay, so the watch list always hangs off
@@ -2109,11 +2142,6 @@ export interface components {
             /** Format: int64 */
             per_page?: number | null;
             /**
-             * @description Filter scope: "member" returns only trips the caller belongs to;
-             *      "visible" (default) returns every trip visible to the viewer.
-             */
-            scope?: string | null;
-            /**
              * Format: date
              * @description Only return trips that start on or before this date.
              */
@@ -2320,8 +2348,7 @@ export interface components {
         };
         /**
          * @description Partial update for a trip. Omitted fields are left unchanged; nullable
-         *      fields take `null` to clear. Patching `visibility` to `shared` replaces the
-         *      full audience inline, to `private` or `public` clears it.
+         *      fields take `null` to clear.
          */
         PatchTripRequest: {
             /**
@@ -2338,13 +2365,39 @@ export interface components {
             name?: string | null;
             /** Format: date */
             start_date?: string | null;
-            visibility?: components["schemas"]["Visibility"] | null;
+        };
+        /**
+         * @description Partial update for a proposed base. Any member may correct one - a
+         *      suggestion belongs to the trip, not to whoever typed it first - but only
+         *      an admin may set `accepted`, which turns it into a base.
+         */
+        PatchTripStayCandidateRequest: {
             /**
-             * Format: date-time
              * @description Omit to leave unchanged; send null to clear.
              * @default null
              */
-            visible_from?: string | null;
+            description?: string | null;
+            /** @description Admins only, and the one field that ends the candidate's life. */
+            accepted?: boolean | null;
+            /**
+             * Format: date
+             * @description Omit to leave unchanged; send null to clear.
+             * @default null
+             */
+            arrival?: string | null;
+            /**
+             * Format: date
+             * @description Omit to leave unchanged; send null to clear.
+             * @default null
+             */
+            departure?: string | null;
+            kind?: components["schemas"]["TripStayKind"] | null;
+            /**
+             * @description Omit to leave unchanged; send null to clear the location.
+             * @default null
+             */
+            location?: components["schemas"]["Geometry"] | null;
+            name?: string | null;
         };
         /**
          * @description Partial update for a stay. The base moves while the trip is already
@@ -2522,12 +2575,6 @@ export interface components {
              *      and common misspellings match too.
              */
             q?: string | null;
-        };
-        ReplaceAudienceGroupsRequest: {
-            groups: number[];
-        };
-        ReplaceAudienceUsersRequest: {
-            users: string[];
         };
         ReplaceTripSectionsRequest: {
             sections: components["schemas"]["TripSectionInput"][];
@@ -2730,9 +2777,27 @@ export interface components {
             updated_at: string;
             /** @description Role of the requesting user, absent when they are not a member. */
             viewer_role?: components["schemas"]["TripMemberRole"] | null;
-            visibility: components["schemas"]["Visibility"];
-            /** Format: date-time */
-            visible_from?: string | null;
+        };
+        /** @description A trip and one of the bases somebody has put up for it. */
+        TripCandidatePath: {
+            /** Format: int64 */
+            candidate_id: number;
+            /** Format: int64 */
+            trip_id: number;
+        };
+        /**
+         * @description One person's vote on a candidate. A trip is a handful of people, so the
+         *      names fit on screen - and "who wants this" is the useful half of a count
+         *      when you are deciding whether to argue about it.
+         */
+        TripCandidateVote: {
+            user_id: string;
+            username: string;
+            /**
+             * Format: int16
+             * @description 1 for, -1 against.
+             */
+            vote: number;
         };
         /**
          * @description A member of a trip, with the days - and, once they know them, the hours -
@@ -2827,8 +2892,45 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        /**
+         * @description A base somebody has put up for the group to consider. It carries the same
+         *      shape as a stay because accepting one is exactly turning it into a stay.
+         */
+        TripStayCandidate: {
+            description?: string | null;
+            /** Format: date */
+            arrival?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date */
+            departure?: string | null;
+            /** Format: int64 */
+            downvotes: number;
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["TripStayKind"];
+            /** @description GeoJSON Point, absent while the suggestion is still just a name. */
+            location?: components["schemas"]["Geometry"] | null;
+            name: string;
+            proposed_by: string;
+            proposed_by_username: string;
+            /** Format: int64 */
+            trip_id: number;
+            /** Format: int64 */
+            upvotes: number;
+            /**
+             * Format: int16
+             * @description How the caller voted, absent when they have not.
+             */
+            viewer_vote?: number | null;
+            /**
+             * @description Everyone who has voted, so the row can name them rather than only
+             *      count them.
+             */
+            voters: components["schemas"]["TripCandidateVote"][];
+        };
         /** @enum {string} */
-        TripStayKind: "camp" | "hotel" | "bivouac" | "other";
+        TripStayKind: "camp" | "hotel" | "bivouac" | "holiday_home" | "other";
         TripStayPath: {
             /** Format: int64 */
             stay_id: number;
@@ -3487,11 +3589,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-09-06T11:47:46.220499357Z",
-                     *         "expires_at": "2026-12-05T11:47:46.220501507Z",
+                     *         "created_at": "2026-09-12T12:22:15.894694721Z",
+                     *         "expires_at": "2026-12-11T12:22:15.894696721Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-09-06T11:47:46.220511507Z",
+                     *         "last_used_at": "2026-09-12T12:22:15.894709271Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -3522,8 +3624,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-09-06T11:47:46.220623757Z",
-                     *       "expires_at": "2026-12-05T11:47:46.220624117Z",
+                     *       "created_at": "2026-09-12T12:22:15.894819231Z",
+                     *       "expires_at": "2026-12-11T12:22:15.894819541Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -7095,11 +7197,6 @@ export interface operations {
                 from?: string | null;
                 page?: number | null;
                 per_page?: number | null;
-                /**
-                 * @description Filter scope: "member" returns only trips the caller belongs to;
-                 *      "visible" (default) returns every trip visible to the viewer.
-                 */
-                scope?: string | null;
                 /** @description Only return trips that start on or before this date. */
                 to?: string | null;
             };
@@ -7115,15 +7212,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedResponse_for_Trip"];
-                };
-            };
-            /** @description Unauthorized (scope=member requires auth) */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -7253,8 +7341,7 @@ export interface operations {
         };
         /**
          * @description Partial update for a trip. Omitted fields are left unchanged; nullable
-         *      fields take `null` to clear. Patching `visibility` to `shared` replaces the
-         *      full audience inline, to `private` or `public` clears it.
+         *      fields take `null` to clear.
          */
         requestBody: {
             content: {
@@ -7303,7 +7390,7 @@ export interface operations {
             };
         };
     };
-    replace_audience_users: {
+    list_candidates: {
         parameters: {
             query?: never;
             header?: never;
@@ -7312,18 +7399,15 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReplaceAudienceUsersRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Audience replaced */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TripStayCandidate"][];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -7334,8 +7418,8 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Admin role required */
-            403: {
+            /** @description Not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -7345,7 +7429,7 @@ export interface operations {
             };
         };
     };
-    replace_audience_groups: {
+    propose_candidate: {
         parameters: {
             query?: never;
             header?: never;
@@ -7356,19 +7440,21 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReplaceAudienceGroupsRequest"];
+                "application/json": components["schemas"]["CreateTripStayCandidateRequest"];
             };
         };
         responses: {
-            /** @description Audience replaced */
-            204: {
+            /** @description Proposed */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TripStayCandidate"];
+                };
             };
-            /** @description Unauthorized */
-            401: {
+            /** @description Invalid */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -7376,8 +7462,263 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_candidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidate_id: number;
+                trip_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /**
+             * @description A base somebody has put up for the group to consider. It carries the same
+             *      shape as a stay because accepting one is exactly turning it into a stay.
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripStayCandidate"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    withdraw_candidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidate_id: number;
+                trip_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Withdrawn */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not yours */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patch_candidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidate_id: number;
+                trip_id: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * @description Partial update for a proposed base. Any member may correct one - a
+         *      suggestion belongs to the trip, not to whoever typed it first - but only
+         *      an admin may set `accepted`, which turns it into a base.
+         */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchTripStayCandidateRequest"];
+            };
+        };
+        responses: {
+            /**
+             * @description A base somebody has put up for the group to consider. It carries the same
+             *      shape as a stay because accepting one is exactly turning it into a stay.
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripStayCandidate"];
+                };
+            };
+            /** @description Accepted, and now a base */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripStay"];
+                };
+            };
             /** @description Admin role required */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_candidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidate_id: number;
+                trip_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /**
+             * @description A base somebody has put up for the group to consider. It carries the same
+             *      shape as a stay because accepting one is exactly turning it into a stay.
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripStayCandidate"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    vote_candidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidate_id: number;
+                trip_id: number;
+            };
+            cookie?: never;
+        };
+        /** @description Request body for voting on a proposal */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoteRequest"];
+            };
+        };
+        responses: {
+            /**
+             * @description A base somebody has put up for the group to consider. It carries the same
+             *      shape as a stay because accepting one is exactly turning it into a stay.
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripStayCandidate"];
+                };
+            };
+            /** @description Invalid vote */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unvote_candidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidate_id: number;
+                trip_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /**
+             * @description A base somebody has put up for the group to consider. It carries the same
+             *      shape as a stay because accepting one is exactly turning it into a stay.
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripStayCandidate"];
+                };
+            };
+            /** @description Not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -7417,7 +7758,7 @@ export interface operations {
             };
         };
     };
-    join_trip: {
+    add_trip_member: {
         parameters: {
             query?: never;
             header?: never;
@@ -7426,15 +7767,29 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        /** @description Who an admin is adding. A trip is invite-only, so this is the only way in. */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddTripMemberRequest"];
+            };
+        };
         responses: {
-            /** @description Joined */
+            /** @description Added */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["TripMember"];
+                };
+            };
+            /** @description Unknown user */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Unauthorized */
@@ -7446,7 +7801,16 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Not found or not visible */
+            /** @description Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
             404: {
                 headers: {
                     [name: string]: unknown;
