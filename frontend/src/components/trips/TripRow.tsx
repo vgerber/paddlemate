@@ -3,7 +3,6 @@ import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
-import { VISIBILITY_ICONS } from "@/components/descents/DescentCard";
 import type { Trip } from "@/lib/api";
 import { dateRange } from "@/lib/format";
 import { fonts, labelSx, theme } from "@/lib/theme";
@@ -78,18 +77,6 @@ export default function TripRow({
             {trip.descent_count}
           </Count>
         )}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.5,
-            ml: "auto",
-            flexShrink: 0,
-          }}
-        >
-          {VISIBILITY_ICONS[trip.visibility.type]}
-          <Typography sx={labelSx}>{trip.visibility.type}</Typography>
-        </Box>
       </Box>
 
       {trip.description && (

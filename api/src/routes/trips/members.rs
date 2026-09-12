@@ -12,19 +12,21 @@ use crate::{
     layers::auth::AuthToken,
     models::{
         path_params::{TripMemberPath, TripPath},
-        trip::{PatchTripMemberRequest, TripMember, TripMemberRole},
+        trip::{AddTripMemberRequest, PatchTripMemberRequest, TripMember, TripMemberRole},
     },
     query::trips,
     state::AppState,
 };
 
-use super::{constraint_message, require_admin};
+use super::access::{caller, require_admin, require_member};
+use super::constraint_message;
 
 pub fn member_routes(state: AppState) -> ApiRouter {
     ApiRouter::new()
         .api_route(
             "/",
-            get_with(list_trip_members, list_trip_members_docs).post_with(join_trip, join_trip_docs),
+            get_with(list_trip_members, list_trip_members_docs)
+                .post_with(add_trip_member, add_trip_member_docs),
         )
         .api_route(
             "/{user_id}",
@@ -40,15 +42,12 @@ pub async fn list_trip_members(
     auth: Option<Extension<AuthToken>>,
     Path(TripPath { trip_id }): Path<TripPath>,
 ) -> impl IntoApiResponse {
-    let viewer_id = auth.as_ref().map(|Extension(t)| t.user_id().to_string());
-
-    match trips::can_view(&app.pg_pool, trip_id, viewer_id.as_deref()).await {
-        Ok(true) => {}
-        Ok(false) => return ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            tracing::error!("Error checking trip {} visibility: {}", trip_id, err);
-            return ApiError::internal().into_response();
-        }
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
+    };
+    if let Some(res) = require_member(&app, trip_id, &caller_id).await {
+        return res;
     }
 
     match trips::list_members(&app.pg_pool, trip_id).await {
@@ -73,15 +72,12 @@ pub async fn get_trip_member(
     auth: Option<Extension<AuthToken>>,
     Path(TripMemberPath { trip_id, user_id }): Path<TripMemberPath>,
 ) -> impl IntoApiResponse {
-    let viewer_id = auth.as_ref().map(|Extension(t)| t.user_id().to_string());
-
-    match trips::can_view(&app.pg_pool, trip_id, viewer_id.as_deref()).await {
-        Ok(true) => {}
-        Ok(false) => return ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            tracing::error!("Error checking trip {} visibility: {}", trip_id, err);
-            return ApiError::internal().into_response();
-        }
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
+    };
+    if let Some(res) = require_member(&app, trip_id, &caller_id).await {
+        return res;
     }
 
     match trips::get_member(&app.pg_pool, trip_id, &user_id).await {
@@ -104,41 +100,47 @@ doc_fn!(get_trip_member_docs, op =>
 
 /// Open join: seeing the trip is the only requirement, so there is no body and
 /// the member is taken from the token.
-pub async fn join_trip(
+/// Adding a member is an admin action: a trip is invite-only, so nobody
+/// puts themselves in one.
+pub async fn add_trip_member(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path(TripPath { trip_id }): Path<TripPath>,
+    Json(body): Json<AddTripMemberRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    // `caller_id`, not `user_id`: members routes already carry a `user_id`
+    // in the path, and the two are not the same person.
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
     };
 
-    match trips::can_view(&app.pg_pool, trip_id, Some(token.user_id())).await {
-        Ok(true) => {}
-        Ok(false) => return ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            tracing::error!("Error checking trip {} visibility: {}", trip_id, err);
-            return ApiError::internal().into_response();
-        }
+    if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
+        return res;
     }
 
-    match trips::join_trip(&app.pg_pool, trip_id, token.user_id()).await {
+    match trips::add_member(&app.pg_pool, trip_id, &body.user_id).await {
         Ok(Some(member)) => (StatusCode::CREATED, Json(member)).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
+        Err(err) if constraint_message(&err).is_some() => {
+            ApiError::validation(constraint_message(&err).unwrap_or("Invalid member")).into_response()
+        }
         Err(err) => {
-            tracing::error!("Error joining trip {}: {}", trip_id, err);
+            tracing::error!("Error adding member to trip {}: {}", trip_id, err);
             ApiError::internal().into_response()
         }
     }
 }
 
-doc_fn!(join_trip_docs, op =>
+doc_fn!(add_trip_member_docs, op =>
     op.input::<Path<TripPath>>()
-        .description("Join a trip. Open to anyone who may see it; the member is taken from the token.")
-        .response_with::<201, Json<TripMember>, _>(|res| res.description("Joined"))
+        .input::<Json<AddTripMemberRequest>>()
+        .description("Add somebody to a trip. Admins only - a trip is invite-only.")
+        .response_with::<201, Json<TripMember>, _>(|res| res.description("Added"))
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Unknown user"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
-        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found or not visible"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Admin role required"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Trips")
 );
@@ -149,15 +151,17 @@ pub async fn patch_trip_member(
     Path(TripMemberPath { trip_id, user_id }): Path<TripMemberPath>,
     Json(body): Json<PatchTripMemberRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    // `caller_id`, not `user_id`: members routes already carry a `user_id`
+    // in the path, and the two are not the same person.
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
     };
-    let is_self = token.user_id() == user_id;
+    let is_self = caller_id == user_id;
 
     // Attendance is the member's own record; role is an admin decision.
     if !is_self || body.role.is_some() {
-        if let Some(res) = require_admin(&app, trip_id, token.user_id()).await {
+        if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
             return res;
         }
     }
@@ -209,14 +213,16 @@ pub async fn remove_trip_member(
     auth: Option<Extension<AuthToken>>,
     Path(TripMemberPath { trip_id, user_id }): Path<TripMemberPath>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    // `caller_id`, not `user_id`: members routes already carry a `user_id`
+    // in the path, and the two are not the same person.
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
     };
 
     // Leaving is always your own to do; removing somebody else is an admin act.
-    if token.user_id() != user_id {
-        if let Some(res) = require_admin(&app, trip_id, token.user_id()).await {
+    if caller_id != user_id {
+        if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
             return res;
         }
     }

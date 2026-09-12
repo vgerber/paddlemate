@@ -7,7 +7,6 @@ import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
-import VisibilityPicker from "@/components/VisibilityPicker";
 import FormSection from "@/components/waterway/FormSection";
 import type { Trip, TripStayKind } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
@@ -155,36 +154,6 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
             />
           </FormSection>
         )}
-
-        <FormSection
-          label="Who can see it"
-          hint="Members always can. This is about everybody else."
-        >
-          <VisibilityPicker
-            value={{
-              type: form.visibility_type,
-              groups: form.shared_groups,
-              users: form.shared_users,
-            }}
-            onChange={(p) =>
-              patch({
-                ...(p.type !== undefined && { visibility_type: p.type }),
-                ...(p.groups !== undefined && { shared_groups: p.groups }),
-                ...(p.users !== undefined && { shared_users: p.users }),
-              })
-            }
-            privateHint="Only trip members can see it."
-          />
-          <TextField
-            size="small"
-            label="Publish after (optional)"
-            type="datetime-local"
-            value={form.visible_from}
-            onChange={(e) => patch({ visible_from: e.target.value })}
-            fullWidth
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-        </FormSection>
 
         {saveError && <Alert severity="error">{saveError}</Alert>}
       </Box>

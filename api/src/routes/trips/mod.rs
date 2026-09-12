@@ -1,15 +1,19 @@
+mod access;
+mod candidates;
 mod members;
 mod stays;
 
+use access::{caller, require_admin};
+
 use aide::axum::{
     ApiRouter, IntoApiResponse,
-    routing::{get_with, put_with},
+    routing::get_with,
 };
 use axum::{
     Extension, Json,
     extract::{Path, Query, State},
     http::StatusCode,
-    response::{IntoResponse, Response},
+    response::IntoResponse,
 };
 
 use crate::{
@@ -19,10 +23,8 @@ use crate::{
     models::{
         path_params::TripPath,
         trip::{
-            CreateTripRequest, ListTripsQuery, PatchTripRequest, ReplaceAudienceGroupsRequest,
-            ReplaceAudienceUsersRequest, Trip, TripId, TripMemberRole,
+            CreateTripRequest, ListTripsQuery, PatchTripRequest, Trip,
         },
-        visibility::Visibility,
         waterway::PaginatedResponse,
     },
     query::trips,
@@ -41,50 +43,13 @@ pub fn trips_routes(state: AppState) -> ApiRouter {
                 .patch_with(patch_trip, patch_trip_docs)
                 .delete_with(delete_trip, delete_trip_docs),
         )
-        .api_route(
-            "/{trip_id}/audiences/users",
-            put_with(replace_audience_users, replace_audience_users_docs),
-        )
-        .api_route(
-            "/{trip_id}/audiences/groups",
-            put_with(replace_audience_groups, replace_audience_groups_docs),
+        .nest_api_service(
+            "/{trip_id}/candidates",
+            candidates::candidate_routes(state.clone()),
         )
         .nest_api_service("/{trip_id}/members", members::member_routes(state.clone()))
         .nest_api_service("/{trip_id}/stays", stays::stay_routes(state.clone()))
         .with_state(state)
-}
-
-/// Every write below the trip is an admin action, so they all start here.
-/// Returns the error response to send, or None when the caller may proceed.
-pub(super) async fn require_admin(
-    app: &AppState,
-    trip_id: TripId,
-    user_id: &str,
-) -> Option<Response> {
-    match trips::member_role(&app.pg_pool, trip_id, user_id).await {
-        Ok(Some(TripMemberRole::Admin)) => None,
-        Ok(Some(TripMemberRole::Member)) => {
-            Some(ApiError::forbidden("Admin role required").into_response())
-        }
-        Ok(None) => Some(ApiError::not_found("Not found").into_response()),
-        Err(err) => {
-            tracing::error!("Error checking trip {} role: {}", trip_id, err);
-            Some(ApiError::internal().into_response())
-        }
-    }
-}
-
-fn audience_error(visibility: &Visibility) -> Option<Response> {
-    let Visibility::Shared { users, groups } = visibility else {
-        return None;
-    };
-    if users.is_empty() && groups.is_empty() {
-        return Some(
-            ApiError::validation("shared visibility requires at least one user or group")
-                .into_response(),
-        );
-    }
-    None
 }
 
 pub async fn list_trips(
@@ -94,12 +59,7 @@ pub async fn list_trips(
 ) -> impl IntoApiResponse {
     let viewer_id = auth.as_ref().map(|Extension(t)| t.user_id().to_string());
 
-    if q.scope.as_deref() == Some("member") && viewer_id.is_none() {
-        return ApiError::unauthorized("Authentication required").into_response();
-    }
-
     let filters = trips::ListFilters {
-        scope: q.scope,
         from: q.from,
         to: q.to,
         page: q.page.unwrap_or(1).max(1),
@@ -117,9 +77,8 @@ pub async fn list_trips(
 
 doc_fn!(list_trips_docs, op =>
     op.input::<Query<ListTripsQuery>>()
-        .description("List trips visible to the current viewer. scope=member narrows to the caller's own trips.")
+        .description("List the caller's trips. A trip is visible to its members only, so a signed-out caller gets an empty page.")
         .response::<200, Json<PaginatedResponse<Trip>>>()
-        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized (scope=member requires auth)"))
         .tag("Trips")
 );
 
@@ -128,14 +87,13 @@ pub async fn create_trip(
     auth: Option<Extension<AuthToken>>,
     Json(body): Json<CreateTripRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    // `caller_id`, not `user_id`: members routes already carry a `user_id`
+    // in the path, and the two are not the same person.
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
     };
 
-    if let Some(res) = audience_error(&body.visibility) {
-        return res;
-    }
     if let Some(end) = body.end_date {
         if end < body.start_date {
             return ApiError::validation("end_date must be on or after start_date").into_response();
@@ -145,7 +103,7 @@ pub async fn create_trip(
         return res;
     }
 
-    match trips::create_trip(&app.pg_pool, token.user_id(), &body).await {
+    match trips::create_trip(&app.pg_pool, &caller_id, &body).await {
         Ok(trip) => (StatusCode::CREATED, Json(trip)).into_response(),
         Err(err) => {
             tracing::error!("Error creating trip: {}", err);
@@ -194,20 +152,17 @@ pub async fn patch_trip(
     Path(TripPath { trip_id }): Path<TripPath>,
     Json(body): Json<PatchTripRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    // `caller_id`, not `user_id`: members routes already carry a `user_id`
+    // in the path, and the two are not the same person.
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
     };
-    if let Some(res) = require_admin(&app, trip_id, token.user_id()).await {
+    if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
         return res;
     }
-    if let Some(vis) = &body.visibility {
-        if let Some(res) = audience_error(vis) {
-            return res;
-        }
-    }
 
-    match trips::patch_trip(&app.pg_pool, trip_id, token.user_id(), &body).await {
+    match trips::patch_trip(&app.pg_pool, trip_id, &caller_id, &body).await {
         Ok(Some(trip)) => Json(trip).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(ref err) if constraint_message(err).is_some() => {
@@ -261,11 +216,13 @@ pub async fn delete_trip(
     auth: Option<Extension<AuthToken>>,
     Path(TripPath { trip_id }): Path<TripPath>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    // `caller_id`, not `user_id`: members routes already carry a `user_id`
+    // in the path, and the two are not the same person.
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
     };
-    if let Some(res) = require_admin(&app, trip_id, token.user_id()).await {
+    if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
         return res;
     }
 
@@ -289,68 +246,3 @@ doc_fn!(delete_trip_docs, op =>
         .tag("Trips")
 );
 
-pub async fn replace_audience_users(
-    State(app): State<AppState>,
-    auth: Option<Extension<AuthToken>>,
-    Path(TripPath { trip_id }): Path<TripPath>,
-    Json(body): Json<ReplaceAudienceUsersRequest>,
-) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
-    };
-    if let Some(res) = require_admin(&app, trip_id, token.user_id()).await {
-        return res;
-    }
-
-    match trips::replace_visible_users(&app.pg_pool, trip_id, &body.users).await {
-        Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(err) => {
-            tracing::error!("Error setting trip {} user audience: {}", trip_id, err);
-            ApiError::internal().into_response()
-        }
-    }
-}
-
-doc_fn!(replace_audience_users_docs, op =>
-    op.input::<Path<TripPath>>()
-        .description("Replace the users a shared trip is visible to. Admin only.")
-        .response_with::<204, (), _>(|res| res.description("Audience replaced"))
-        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
-        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Admin role required"))
-        .security_requirement_multi(["Bearer", "ApiKey"])
-        .tag("Trips")
-);
-
-pub async fn replace_audience_groups(
-    State(app): State<AppState>,
-    auth: Option<Extension<AuthToken>>,
-    Path(TripPath { trip_id }): Path<TripPath>,
-    Json(body): Json<ReplaceAudienceGroupsRequest>,
-) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
-    };
-    if let Some(res) = require_admin(&app, trip_id, token.user_id()).await {
-        return res;
-    }
-
-    match trips::replace_visible_groups(&app.pg_pool, trip_id, &body.groups).await {
-        Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(err) => {
-            tracing::error!("Error setting trip {} group audience: {}", trip_id, err);
-            ApiError::internal().into_response()
-        }
-    }
-}
-
-doc_fn!(replace_audience_groups_docs, op =>
-    op.input::<Path<TripPath>>()
-        .description("Replace the groups a shared trip is visible to. Admin only.")
-        .response_with::<204, (), _>(|res| res.description("Audience replaced"))
-        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
-        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Admin role required"))
-        .security_requirement_multi(["Bearer", "ApiKey"])
-        .tag("Trips")
-);
