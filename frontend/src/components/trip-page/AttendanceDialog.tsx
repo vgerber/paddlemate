@@ -1,13 +1,14 @@
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useState } from "react";
+import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import FormSection from "@/components/waterway/FormSection";
 import type { TripMember } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
@@ -95,7 +96,6 @@ export default function AttendanceDialog({
       maxWidth="xs"
       fullScreen={fullScreen}
     >
-      <DialogTitle>Your dates</DialogTitle>
       <DialogContent
         sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 1 }}
       >
@@ -155,19 +155,27 @@ export default function AttendanceDialog({
 
         {saveError && <Alert severity="error">{saveError}</Alert>}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={patchMember.isPending}>
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handleSave}
-          disabled={invalid || patchMember.isPending}
-        >
-          Save
-        </Button>
-      </DialogActions>
+      <PanelBottomBar
+        leftIcon={<CloseIcon />}
+        onLeftClick={onClose}
+        leftLabel="Close"
+        leftDisabled={patchMember.isPending}
+        title="Your dates"
+        subtitle={problem ?? "Save your dates"}
+        action={
+          <RoundActionButton
+            onClick={handleSave}
+            disabled={invalid || patchMember.isPending}
+            ariaLabel="Save your dates"
+          >
+            {patchMember.isPending ? (
+              <CircularProgress size={22} />
+            ) : (
+              <CheckIcon />
+            )}
+          </RoundActionButton>
+        }
+      />
     </Dialog>
   );
 }

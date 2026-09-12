@@ -1,15 +1,4 @@
-import AddIcon from "@mui/icons-material/Add";
-import CloseIcon from "@mui/icons-material/Close";
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import Box from "@mui/material/Box";
-import Fab from "@mui/material/Fab";
-import SpeedDial from "@mui/material/SpeedDial";
-import SpeedDialAction from "@mui/material/SpeedDialAction";
-import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -21,15 +10,17 @@ import { useSession } from "@/lib/hooks/useSession";
 import {
   useDeleteTrip,
   useDeleteTripStay,
-  useJoinTrip,
   useLinkDescentToTrip,
   useTripMembers,
 } from "@/lib/hooks/useTrips";
+import AddMemberDialog from "./AddMemberDialog";
 import AttendanceDialog from "./AttendanceDialog";
-import DayDialog from "./DayDialog";
+import type { DayActions } from "./DayDetail";
+import DayPickerDialog from "./DayPickerDialog";
 import LinkDescentDialog from "./LinkDescentDialog";
 import StayDialog from "./StayDialog";
 import StaySectionsDialog from "./StaySectionsDialog";
+import TripFab from "./TripFab";
 import TripLogs from "./TripLogs";
 import TripMembers from "./TripMembers";
 import TripStays from "./TripStays";
@@ -50,6 +41,9 @@ interface Props {
   onEditingChange: (editing: boolean) => void;
   /** Leaving the trip: back on mobile, deselect in the desktop two-pane. */
   onClose: () => void;
+  /** Rendered beside the trips list, which already names the trip and holds
+   * the way back - so the panel drops its own title and back arrow. */
+  embedded?: boolean;
   onDeleted: () => void;
 }
 
@@ -67,6 +61,7 @@ export default function TripDetail({
   onEditingChange,
   onClose,
   onDeleted,
+  embedded = false,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSession();
@@ -74,10 +69,11 @@ export default function TripDetail({
   const deleteTrip = useDeleteTrip();
   const deleteStay = useDeleteTripStay(trip.id);
   const linkDescent = useLinkDescentToTrip(trip.id);
-  const joinTrip = useJoinTrip(trip.id);
 
   const [tab, setTab] = useState<TripTab>("plan");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [addingMember, setAddingMember] = useState(false);
+  const [proposing, setProposing] = useState(false);
   const [linking, setLinking] = useState(false);
   // "new" adds a base; a date adds one starting that day; a stay edits it.
   const [stayEditor, setStayEditor] = useState<
@@ -92,8 +88,9 @@ export default function TripDetail({
     preset?: { arrival?: string; departure?: string };
   } | null>(null);
   const [confirmUnlink, setConfirmUnlink] = useState<Descent | null>(null);
-  // A string opens that day; "new" asks which day to add to.
-  const [dayEditor, setDayEditor] = useState<string | "new" | null>(null);
+  // The day expanded in the plan, and the calendar that picks a new one.
+  const [openDay, setOpenDay] = useState<string | null>(null);
+  const [pickingDay, setPickingDay] = useState(false);
 
   const isMember = trip.viewer_role != null;
   const isAdmin = trip.viewer_role === "admin";
@@ -129,6 +126,17 @@ export default function TripDetail({
       search: { tripId: trip.id, copyDescentId: descent.id },
     });
 
+  const dayActions: DayActions = {
+    self,
+    viewerId,
+    canEdit: isMember,
+    onEditStay: setStayEditor,
+    onEditAttendance: (member, preset) => setAttendanceFor({ member, preset }),
+    onOpenLog: openLog,
+    onAddStay: (date) => setStayEditor({ arrival: date }),
+    onNewLog: () => newLog(),
+  };
+
   const stayActions = {
     onEditStay: setStayEditor,
     onEditWatchList: setWatchListFor,
@@ -138,9 +146,11 @@ export default function TripDetail({
   return (
     <>
       <PanelHeader
-        title={trip.name}
-        subtitle={dateRange(trip.start_date, trip.end_date)}
-        onBack={onClose}
+        title={embedded ? undefined : trip.name}
+        subtitle={
+          embedded ? undefined : dateRange(trip.start_date, trip.end_date)
+        }
+        onBack={embedded ? undefined : onClose}
         tabs={{
           value: tab,
           onChange: setTab,
@@ -168,7 +178,11 @@ export default function TripDetail({
         {tab === "plan" && (
           <TripTimeline
             trip={trip}
-            onOpenDay={(day) => isMember && setDayEditor(day.date)}
+            openDay={openDay}
+            onToggleDay={(date) =>
+              setOpenDay((current) => (current === date ? null : date))
+            }
+            actions={dayActions}
           />
         )}
         {tab === "bases" && (
@@ -176,6 +190,7 @@ export default function TripDetail({
             tripId={trip.id}
             isMember={isMember}
             isAdmin={isAdmin}
+            viewerId={viewerId}
             onLogSection={newLog}
             {...stayActions}
           />
@@ -204,12 +219,11 @@ export default function TripDetail({
         tab={tab}
         isMember={isMember}
         isAdmin={isAdmin}
-        canJoin={!!user && !isMember}
-        joining={joinTrip.isPending}
         hasSelf={self !== null}
-        onJoin={() => joinTrip.mutate()}
-        onAddDay={() => setDayEditor("new")}
+        onAddMember={() => setAddingMember(true)}
+        onAddDay={() => setPickingDay(true)}
         onAddStay={() => setStayEditor("new")}
+        onProposeStay={() => setProposing(true)}
         onEditAttendance={() => self && setAttendanceFor({ member: self })}
         onLinkLog={() => setLinking(true)}
         onNewLog={() => newLog()}
@@ -217,22 +231,15 @@ export default function TripDetail({
         onDelete={() => setConfirmDelete(true)}
       />
 
-      {dayEditor && (
-        <DayDialog
+      {pickingDay && (
+        <DayPickerDialog
           trip={trip}
-          date={dayEditor === "new" ? null : dayEditor}
-          actions={{
-            self,
-            viewerId,
-            onEditStay: setStayEditor,
-            onEditAttendance: (member, preset) =>
-              setAttendanceFor({ member, preset }),
-            onOpenLog: openLog,
-            onAddStay: (date) => setStayEditor({ arrival: date }),
-            onNewLog: () => newLog(),
-          }}
           open
-          onClose={() => setDayEditor(null)}
+          onSelect={(date) => {
+            setPickingDay(false);
+            setOpenDay(date);
+          }}
+          onClose={() => setPickingDay(false)}
         />
       )}
       {stayEditor && (
@@ -265,6 +272,22 @@ export default function TripDetail({
           preset={attendanceFor.preset}
           open
           onClose={() => setAttendanceFor(null)}
+        />
+      )}
+      {proposing && (
+        <StayDialog
+          tripId={trip.id}
+          propose
+          open
+          onClose={() => setProposing(false)}
+        />
+      )}
+      {addingMember && (
+        <AddMemberDialog
+          tripId={trip.id}
+          memberIds={(members ?? []).map((m) => m.user_id)}
+          open
+          onClose={() => setAddingMember(false)}
         />
       )}
       {linking && (
@@ -315,154 +338,5 @@ export default function TripDetail({
         onCancel={() => setConfirmDelete(false)}
       />
     </>
-  );
-}
-
-/** Clears the mobile bottom nav; on desktop the pane runs to the window. */
-export const fabSx = {
-  position: "fixed" as const,
-  bottom: {
-    xs: "calc(56px + env(safe-area-inset-bottom) + 16px)",
-    md: 24,
-  },
-  right: { xs: 16, md: 24 },
-};
-
-/**
- * One screen, one primary action. Each tab has an obvious thing to do, so the
- * FAB does it directly; only where several actions genuinely share the spot
- * does it open a menu.
- */
-function TripFab({
-  tab,
-  isMember,
-  isAdmin,
-  canJoin,
-  joining,
-  hasSelf,
-  onJoin,
-  onAddDay,
-  onAddStay,
-  onEditAttendance,
-  onLinkLog,
-  onNewLog,
-  onEdit,
-  onDelete,
-}: {
-  tab: TripTab;
-  isMember: boolean;
-  isAdmin: boolean;
-  canJoin: boolean;
-  joining: boolean;
-  hasSelf: boolean;
-  onJoin: () => void;
-  onAddDay: () => void;
-  onAddStay: () => void;
-  onEditAttendance: () => void;
-  onLinkLog: () => void;
-  onNewLog: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  // Seeing a trip you have not joined, the only thing to do is join it.
-  if (canJoin) {
-    return (
-      <Fab
-        variant="extended"
-        color="secondary"
-        onClick={onJoin}
-        disabled={joining}
-        aria-label="Join this trip"
-        sx={fabSx}
-      >
-        <AddIcon sx={{ mr: 1 }} />
-        Join trip
-      </Fab>
-    );
-  }
-
-  if (tab === "plan" && isMember) {
-    return (
-      <Fab
-        color="secondary"
-        onClick={onAddDay}
-        aria-label="Add a day"
-        sx={fabSx}
-      >
-        <AddIcon />
-      </Fab>
-    );
-  }
-
-  if (tab === "bases" && isMember) {
-    return (
-      <Fab
-        color="secondary"
-        onClick={onAddStay}
-        aria-label="Add base"
-        sx={fabSx}
-      >
-        <AddIcon />
-      </Fab>
-    );
-  }
-
-  if (tab === "members" && isMember && hasSelf) {
-    return (
-      <Fab
-        color="secondary"
-        onClick={onEditAttendance}
-        aria-label="Set your dates"
-        sx={fabSx}
-      >
-        <EditCalendarOutlinedIcon />
-      </Fab>
-    );
-  }
-
-  if (tab === "logs" && isMember) {
-    return (
-      <SpeedDial
-        ariaLabel="Log actions"
-        icon={<SpeedDialIcon openIcon={<CloseIcon />} />}
-        // The action corner is one colour across the panel's tabs; a dial
-        // that defaulted to cyan turned it into a per-tab change.
-        FabProps={{ color: "secondary" }}
-        sx={fabSx}
-      >
-        <SpeedDialAction
-          icon={<AddIcon />}
-          slotProps={{ tooltip: { title: "Log a descent" } }}
-          onClick={onNewLog}
-        />
-        <SpeedDialAction
-          icon={<LinkOutlinedIcon />}
-          slotProps={{ tooltip: { title: "Link an existing log" } }}
-          onClick={onLinkLog}
-        />
-      </SpeedDial>
-    );
-  }
-
-  if (!isAdmin) return null;
-
-  return (
-    <SpeedDial
-      ariaLabel="Trip actions"
-      icon={<SpeedDialIcon icon={<MoreVertIcon />} openIcon={<CloseIcon />} />}
-      FabProps={{ color: "secondary" }}
-      sx={fabSx}
-    >
-      <SpeedDialAction
-        icon={<EditOutlinedIcon />}
-        slotProps={{ tooltip: { title: "Edit trip" } }}
-        onClick={onEdit}
-      />
-      <SpeedDialAction
-        icon={<DeleteOutlinedIcon />}
-        slotProps={{ tooltip: { title: "Delete trip" } }}
-        onClick={onDelete}
-      />
-    </SpeedDial>
   );
 }

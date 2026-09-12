@@ -3,34 +3,24 @@ import LuggageOutlinedIcon from "@mui/icons-material/LuggageOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Fab from "@mui/material/Fab";
-import Tab from "@mui/material/Tab";
-import Tabs from "@mui/material/Tabs";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
-import TripDetail, { fabSx } from "@/components/trip-page/TripDetail";
+import TripDetail from "@/components/trip-page/TripDetail";
+import { fabSx } from "@/components/trip-page/TripFab";
 import TripForm from "@/components/trips/TripForm";
 import TripRow from "@/components/trips/TripRow";
-import type { TripFilters } from "@/lib/api";
 import { useSession } from "@/lib/hooks/useSession";
 import { useTrip, useTrips } from "@/lib/hooks/useTrips";
 import { theme } from "@/lib/theme";
 
-const TABS = [
-  { value: "mine", label: "Mine" },
-  { value: "discover", label: "Discover" },
-] as const;
-
-type TripTab = (typeof TABS)[number]["value"];
-
 export const Route = createFileRoute("/trips/")({
-  // All optional, so linking to /trips never has to name a scope.
+  // All optional, so /trips is always a valid link.
   validateSearch: (
     search: Record<string, unknown>,
-  ): { scope?: TripTab; selected?: number; edit?: boolean; new?: boolean } => ({
-    scope: search.scope === "discover" ? "discover" : undefined,
+  ): { selected?: number; edit?: boolean; new?: boolean } => ({
     // Which trip the desktop detail pane shows; keeps it linkable.
     selected: search.selected != null ? Number(search.selected) : undefined,
     edit: search.edit === true || search.edit === "true" ? true : undefined,
@@ -41,12 +31,12 @@ export const Route = createFileRoute("/trips/")({
 
 function TripsPage() {
   const navigate = useNavigate({ from: "/trips/" });
-  const { scope = "mine", selected, edit, new: creating } = Route.useSearch();
+  const { selected, edit, new: creating } = Route.useSearch();
   const { isAuthenticated, isLoading: sessionLoading } = useSession();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
 
-  const filters: TripFilters = scope === "mine" ? { scope: "member" } : {};
-  const { data, isLoading } = useTrips(filters, isAuthenticated);
+  // A trip is invite-only, so the listing is simply the caller's trips.
+  const { data, isLoading } = useTrips({}, isAuthenticated);
   const { data: selectedTrip } = useTrip(isDesktop ? (selected ?? null) : null);
   const trips = data?.items ?? [];
 
@@ -76,25 +66,6 @@ function TripsPage() {
 
   const list = (
     <>
-      <Tabs
-        value={scope}
-        onChange={(_, v: TripTab) =>
-          navigate({
-            search: (prev) => ({
-              ...prev,
-              scope: v === "mine" ? undefined : v,
-              selected: undefined,
-            }),
-          })
-        }
-        variant="fullWidth"
-        sx={{ borderBottom: "1px solid", borderColor: "divider" }}
-      >
-        {TABS.map((t) => (
-          <Tab key={t.value} value={t.value} label={t.label} />
-        ))}
-      </Tabs>
-
       {isLoading ? (
         <LoadingBox size={40} pt={6} />
       ) : trips.length === 0 ? (
@@ -104,9 +75,7 @@ function TripsPage() {
               sx={{ fontSize: 48, color: "text.disabled" }}
             />
           }
-          title={
-            scope === "mine" ? "No trips yet." : "No trips shared with you yet."
-          }
+          title="No trips yet."
           py={8}
         />
       ) : (
@@ -191,7 +160,15 @@ function TripsPage() {
           </Button>
         </Box>
       </Box>
-      <Box sx={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+          px: 2,
+          pt: 1.5,
+        }}
+      >
         {creating ? (
           <Box
             sx={{
@@ -229,6 +206,7 @@ function TripsPage() {
           >
             <TripDetail
               trip={selectedTrip}
+              embedded
               editing={edit === true}
               onEditingChange={(v) =>
                 navigate({

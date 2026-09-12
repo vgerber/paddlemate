@@ -1,11 +1,10 @@
+import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import DescentCard from "@/components/descents/DescentCard";
+import PanelBottomBar from "@/components/PanelBottomBar";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import { useMyDescents } from "@/lib/hooks/useDescents";
@@ -34,7 +33,6 @@ export default function LinkDescentDialog({ tripId, open, onClose }: Props) {
       maxWidth="sm"
       fullScreen={fullScreen}
     >
-      <DialogTitle>Link a log</DialogTitle>
       <DialogContent sx={{ px: 0 }}>
         {isLoading ? (
           <LoadingBox size={40} pt={4} />
@@ -55,9 +53,14 @@ export default function LinkDescentDialog({ tripId, open, onClose }: Props) {
           </Box>
         )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
-      </DialogActions>
+      <PanelBottomBar
+        leftIcon={<CloseIcon />}
+        onLeftClick={onClose}
+        leftLabel="Close"
+        title="Link a log"
+        subtitle="Pick one to credit to the trip"
+        action={null}
+      />
     </Dialog>
   );
 }

@@ -1,19 +1,26 @@
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
-import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useState } from "react";
+import MarkdownField from "@/components/MarkdownField";
+import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import { STAY_KINDS } from "@/components/trips/stayKinds";
 import FormSection from "@/components/waterway/FormSection";
-import type { TripStay, TripStayKind } from "@/lib/api";
+import type { TripStay, TripStayCandidate, TripStayKind } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { pointCoords } from "@/lib/geo";
-import { useCreateTripStay, usePatchTripStay } from "@/lib/hooks/useTrips";
+import {
+  useCreateTripStay,
+  usePatchCandidate,
+  usePatchTripStay,
+  useProposeCandidate,
+} from "@/lib/hooks/useTrips";
 import { theme } from "@/lib/theme";
 import StayLocationPicker, { type StayPoint } from "./StayLocationPicker";
 
@@ -22,6 +29,12 @@ interface Props {
   stay?: TripStay;
   /** Day to start on, when the base is added from a day on the timeline. */
   presetArrival?: string;
+  /** Put the base up for the group instead of adding it. Same form either
+   * way - a candidate is a base nobody has agreed to yet. */
+  propose?: boolean;
+  /** Correct a suggestion somebody already put up. Any member may: it belongs
+   * to the trip rather than to whoever typed it first. */
+  candidate?: TripStayCandidate;
   open: boolean;
   onClose: () => void;
 }
@@ -35,15 +48,18 @@ interface StayForm {
   departure: string;
 }
 
-function initForm(stay?: TripStay, presetArrival?: string): StayForm {
-  const coords = stay?.location ? pointCoords(stay.location) : null;
+function initForm(
+  from?: TripStay | TripStayCandidate,
+  presetArrival?: string,
+): StayForm {
+  const coords = from?.location ? pointCoords(from.location) : null;
   return {
-    kind: stay?.kind ?? "camp",
-    name: stay?.name ?? "",
-    description: stay?.description ?? "",
+    kind: from?.kind ?? "camp",
+    name: from?.name ?? "",
+    description: from?.description ?? "",
     point: coords ? { lat: coords[1], lon: coords[0] } : null,
-    arrival: stay?.arrival ?? presetArrival ?? "",
-    departure: stay?.departure ?? "",
+    arrival: from?.arrival ?? presetArrival ?? "",
+    departure: from?.departure ?? "",
   };
 }
 
@@ -63,18 +79,26 @@ export default function StayDialog({
   tripId,
   stay,
   presetArrival,
+  propose = false,
+  candidate,
   open,
   onClose,
 }: Props) {
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [form, setForm] = useState<StayForm>(() =>
-    initForm(stay, presetArrival),
+    initForm(candidate ?? stay, presetArrival),
   );
   const [saveError, setSaveError] = useState<string | null>(null);
   const createStay = useCreateTripStay(tripId);
   const patchStay = usePatchTripStay(tripId);
 
-  const isBusy = createStay.isPending || patchStay.isPending;
+  const proposeCandidate = useProposeCandidate(tripId);
+  const patchCandidate = usePatchCandidate(tripId);
+  const isBusy =
+    createStay.isPending ||
+    patchStay.isPending ||
+    proposeCandidate.isPending ||
+    patchCandidate.isPending;
   const problem = formError(form);
 
   function patch(update: Partial<StayForm>) {
@@ -92,8 +116,31 @@ export default function StayDialog({
       arrival: form.arrival || null,
       departure: form.departure || null,
     };
+    // A candidate carries its location as GeoJSON where a stay takes lat/lon,
+    // so the same form produces two shapes.
+    const asCandidate = {
+      kind: form.kind,
+      name: form.name.trim(),
+      description: form.description || null,
+      location: form.point
+        ? {
+            type: "Point" as const,
+            coordinates: [form.point.lon, form.point.lat],
+          }
+        : null,
+      arrival: form.arrival || null,
+      departure: form.departure || null,
+    };
+
     try {
-      if (stay) await patchStay.mutateAsync({ stayId: stay.id, body });
+      if (candidate) {
+        await patchCandidate.mutateAsync({
+          candidateId: candidate.id,
+          body: asCandidate,
+        });
+      } else if (propose) {
+        await proposeCandidate.mutateAsync(asCandidate);
+      } else if (stay) await patchStay.mutateAsync({ stayId: stay.id, body });
       else await createStay.mutateAsync(body);
       onClose();
     } catch (err) {
@@ -109,7 +156,6 @@ export default function StayDialog({
       maxWidth="sm"
       fullScreen={fullScreen}
     >
-      <DialogTitle>{stay ? "Edit base" : "Add a base"}</DialogTitle>
       <DialogContent
         sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 1 }}
       >
@@ -137,13 +183,12 @@ export default function StayDialog({
             fullWidth
             autoFocus
           />
-          <TextField
+          <MarkdownField
             label="Notes"
             value={form.description}
-            onChange={(e) => patch({ description: e.target.value })}
-            multiline
-            minRows={2}
-            fullWidth
+            onChange={(description) => patch({ description })}
+            placeholder="Drying room, price, the booking link - whatever the group needs to decide."
+            minRows={3}
           />
         </FormSection>
 
@@ -182,19 +227,40 @@ export default function StayDialog({
 
         {saveError && <Alert severity="error">{saveError}</Alert>}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isBusy}>
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handleSave}
-          disabled={isBusy || problem !== null}
-        >
-          {problem ?? (stay ? "Save" : "Add")}
-        </Button>
-      </DialogActions>
+      <PanelBottomBar
+        leftIcon={<CloseIcon />}
+        onLeftClick={onClose}
+        leftLabel="Close"
+        leftDisabled={isBusy}
+        title={
+          candidate
+            ? "Edit the suggestion"
+            : propose
+              ? "Propose a base"
+              : stay
+                ? "Edit base"
+                : "Add a base"
+        }
+        subtitle={
+          problem ??
+          (candidate
+            ? "Its votes stay as they are"
+            : propose
+              ? "The group votes on it"
+              : stay
+                ? "Save changes"
+                : "Add the base")
+        }
+        action={
+          <RoundActionButton
+            onClick={handleSave}
+            disabled={isBusy || problem !== null}
+            ariaLabel="Save base"
+          >
+            {isBusy ? <CircularProgress size={22} /> : <CheckIcon />}
+          </RoundActionButton>
+        }
+      />
     </Dialog>
   );
 }

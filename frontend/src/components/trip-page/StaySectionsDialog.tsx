@@ -1,16 +1,17 @@
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useState } from "react";
 import type { SectionDraft } from "@/components/descents/descent-form/model";
 import { makeDraft } from "@/components/descents/descent-form/model";
 import SectionDraftList from "@/components/descents/descent-form/SectionDraftList";
+import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import SectionAdder from "@/components/search/SectionAdder";
 import type { SectionWithFeatures, TripStay } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
@@ -87,7 +88,6 @@ export default function StaySectionsDialog({
       maxWidth="sm"
       fullScreen={fullScreen}
     >
-      <DialogTitle>Watch list</DialogTitle>
       <DialogContent
         sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}
       >
@@ -106,19 +106,27 @@ export default function StaySectionsDialog({
         </Box>
         {saveError && <Alert severity="error">{saveError}</Alert>}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={replaceSections.isPending}>
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handleSave}
-          disabled={replaceSections.isPending}
-        >
-          Save
-        </Button>
-      </DialogActions>
+      <PanelBottomBar
+        leftIcon={<CloseIcon />}
+        onLeftClick={onClose}
+        leftLabel="Close"
+        leftDisabled={replaceSections.isPending}
+        title="Watch list"
+        subtitle={`${drafts.length} ${drafts.length === 1 ? "section" : "sections"}`}
+        action={
+          <RoundActionButton
+            onClick={handleSave}
+            disabled={replaceSections.isPending}
+            ariaLabel="Save the watch list"
+          >
+            {replaceSections.isPending ? (
+              <CircularProgress size={22} />
+            ) : (
+              <CheckIcon />
+            )}
+          </RoundActionButton>
+        }
+      />
     </Dialog>
   );
 }
