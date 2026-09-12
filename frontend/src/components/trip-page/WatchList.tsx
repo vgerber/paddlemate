@@ -73,6 +73,7 @@ export default function WatchList({ sections, onSelect }: Props) {
             key={tripSection.id}
             section={section}
             waterwayId={section.waterway_id}
+            riverName={tripSection.waterway_name ?? undefined}
             selected={false}
             onClick={() => onSelect(section.id, section.waterway_id)}
           />
