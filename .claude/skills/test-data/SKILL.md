@@ -110,22 +110,60 @@ Descents (times relative to NOW at seed time), spread across the crew so
   9201/9207 on the Test River, so the trip timeline has two rivers to group
   on one day
 
+Rivers around the trip - 9008 Inn, 9009 Sanna, 9010 Pitze, and more of the
+Oetztaler Ache - carry their **real courses**, taken from OpenStreetMap
+(`waterway=river`, matched by name) and thinned to 30 points apiece. The
+lengths are therefore true: Imster Schlucht really is ~9 km, Wellerbruecke
+~3 km. That is what makes the bases map honest - the hotel really is 100 m
+from the Weller Bridge and 7.6 km from Imster Schlucht, so the ring drawn
+round it means something. Each run has a difficulty, which is what puts a
+chip on every watch list row.
+
+Test River stays synthetic and stays **off the watch lists**: it is what the
+gauge, calibration and search fixtures need, and parking it on a list dragged
+every ring 24 km into the wrong valley. Every real demo run borrows its
+calibrated series, with thresholds chosen against the gauge's 85 cm so the
+levels come out **deliberately spread** - empty, low, medium and high all
+appear. The watch dots on a collapsed base are only worth looking at if they
+are not all one colour.
+
 Trips:
 
-- 9001 "Oetztal week" - `shared` with the club, straddles today so the day
+- 9001 "Oetztal week" - straddles today so the day
   timeline has days behind it (solid dots) and ahead of it (hollow). Members:
   Vincent + Mara (admins), Tobias, Aoife. Vincent arrives a day early (19:30),
   which is the timeline's **Day -1**; Mara knows the day she leaves but not
-  the hour, which is the half-settled state the UI has to read well. Three bases - camp, then hotel, then one
-  still an undated placeholder - with watch lists on the first two, the same
-  section (Lower Test) on both. Logs 9201, 9203, 9205 and 9207 are credited
-  to it.
-- 9002 "Soca spring" - Mara's own `private` trip, so "Mine" and "Discover"
-  differ depending on who is signed in, and Vincent cannot see it at all.
+  the hour, which is the half-settled state the UI has to read well.
 
-Jonas is the interesting case: in the club, so he *sees* the Oetztal week and
-gets the join button, but as a non-member Mara's private log stays hidden
-from him.
+  **Four bases**, one of each interesting shape and each in its **own
+  valley**: 1 the camp in the Oetztal (Laengenfeld), 2 the hotel in the
+  Inntal (Landeck), 3 a `holiday_home` in the Pitztal (Wenns), 4 an undated
+  placeholder with no location at all, notionally in the Stubai. The placed
+  three are 14-30 km apart. Two bases in one valley made the bases map a
+  single blob with overlapping rings and proved nothing. The three placed ones each carry a watch list
+  and so each draw a ring on the bases map, in three different colours; the
+  placeholder draws nothing, which is the case worth checking. Each base
+  watches its own valley first, so the rings cover different ground: about
+  14 km at the camp (the Oetztaler Ache top to bottom), 11 km at the hotel
+  (the Sanna out of the door, the Inn both ways) and 5 km at the house. The
+  bases are numbered 1-4 in the list and the same numbers ride on the map
+  markers, so a ring can be named without relying on its colour. Imster
+  Schlucht is on two lists at once, watched from either side of the Inn.
+  Logs 9201,
+  9203, 9205 and 9207 are credited to the trip.
+- 9002 "Soca spring" - Mara and Tobias only, so Vincent cannot see it at all
+  and the two users' trip lists differ.
+
+The Oetztal week also ships an **argument in progress**: two bases up for a
+vote. "Haus Wildspitze" has three votes for and none against and sits 1.2 km
+from Tumpen; "Camping Aufenfeld" is split one-one and is 70 km from anything
+on the watch lists, which is what its own description admits. So the vote bar
+has both a clear case and a contested one without anybody clicking, and the
+distance line has a good number and a damning one.
+
+Jonas is the interesting case: in the club but on neither trip, so he is how
+you check that a trip is invisible to anyone who was not added to it - a trip
+is invite-only, and club membership grants nothing.
 
 Empty Test (9103) intentionally has no descents (empty-state testing).
 
