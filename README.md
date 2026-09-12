@@ -21,9 +21,10 @@ water levels, and a shared logbook.
 - **Logs** — record a descent across one or more sections; counts per section,
   a log list in the section view, and your descents shaded into the gauge
   chart at the level you paddled.
-- **Trips** — plan a paddling week together: a shared list of bases that moves
-  with the group, the sections watched from each, who is coming and when, and
-  every member's logs from the trip in one place, private ones included.
+- **Trips** — plan a paddling week together, private to the people invited to
+  it: a shared list of bases that moves with the group, the sections watched
+  from each, who is coming and when, and every member's logs from the trip in
+  one place, private ones included.
 - **Languages** — section and rapid names in any language, with a per-device
   display language applied live, map labels included.
 - **Community** — proposals with review and voting for non-admin edits,

@@ -56,6 +56,11 @@ Run the API:
 cd api && cargo run
 ```
 
+To bring up the whole local stack instead - Postgres, Keycloak, the API, Vite
+and headless Chrome - use the `dev-services` skill, which has the startup
+order (Keycloak before the API, or every request 401s) and the checks that
+prove it actually came up.
+
 ### TypeScript (frontend/)
 
 The frontend uses **Biome** for linting/formatting and `tsc` for
@@ -197,7 +202,8 @@ on `surfaceLow` with a hairline right border, the detail capped at 880px, and
 the open item held in a search param so it stays linkable. `ProposalsView` and
 `routes/trips/index.tsx` are the two worked examples; the same detail
 component renders as the mobile overlay, so both sizes show the same thing in
-the same order.
+the same order - except its header, which the pane drops because the list
+beside it already names the open item and carries the way back.
 
 `WaterwayMap` takes its optional behaviour as three grouped objects rather
 than loose props: `picking` (put-in/take-out and section selection),
@@ -208,8 +214,9 @@ it belongs to; only data and always-on callbacks stay top-level.
 The map's layer JSX lives in per-concern components, not in `Map.tsx`:
 `SectionLayers`, `FeatureGeoJSONLayers` (one implementation for confirmed
 and proposed features, switched by the `proposed` flag), `DraftLayers` /
-`FeatureDraftLayer`, `PickModeButtons`, `MapNumberMarker`, with click
-dispatch in `useMapClickHandler` and the GeoJSON memos in `useMapSources`.
+`FeatureDraftLayer`, `PickModeButtons`, `MapNumberMarker`, `RangeRingLayers`
+(named places with the ground they reach), with click dispatch in
+`useMapClickHandler` and the GeoJSON memos in `useMapSources`.
 A new layer group joins one of these or becomes a new sibling.
 
 ### Query layer
@@ -293,6 +300,15 @@ code. Component rendering is not tested; the UI is verified by running it.
   additions without breaking existing code.
 - Routes should not contain implementation details - they define the API
   contract. Keep the implementation in the query layer or service layer.
+- **The query layer mirrors the route layout.** A feature whose routes are
+  split into `routes/<x>/{mod,a,b}.rs` splits its queries the same way, into
+  `query/<x>/{mod,a,b}.rs`, with `mod.rs` re-exporting so call sites stay
+  `x::do_thing`. Trips are the worked example. A new table under a feature is
+  a new pair of files, not another few hundred lines in an existing one.
+- **One gate per question, in one file.** A feature's permission checks live
+  together (`routes/trips/access.rs`), not one copy per route module. Two
+  helpers that answer the same question in different files will drift; the
+  status codes they return are part of the contract, so they have to agree.
 - Follow the Microsoft REST API guidelines: plural noun collections, no verbs
   in paths, standard status codes, ISO 8601 UTC timestamps. Two deliberate
   deviations: JSON stays snake_case, and paging uses

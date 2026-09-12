@@ -17,7 +17,11 @@ sparingly and always carries meaning.
 - Detail content lives in a panel: a bordered side panel on desktop, a
   full-screen overlay on mobile. Panels open with one header pattern - back
   arrow, bold title, grey subtitle, action icons right - followed by a
-  full-width tab bar when the panel has views.
+  full-width tab bar when the panel has views. The exception is a detail pane
+  rendered beside the list it was picked from: the list already names the
+  open item and is the way back, so the pane drops the title row and opens on
+  its tab bar. It also keeps a gutter from the list's border rather than
+  sitting hard against it.
 - Multi-step forms have no top header. Their chrome is a fixed bottom bar:
   cancel/back on the left, title with step progress as subtitle, one round
   primary-action button on the right.
