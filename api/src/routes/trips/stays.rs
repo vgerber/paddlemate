@@ -25,7 +25,8 @@ use crate::{
     state::AppState,
 };
 
-use super::{constraint_message, require_admin};
+use super::access::{caller, require_admin, require_member};
+use super::constraint_message;
 
 pub fn stay_routes(state: AppState) -> ApiRouter {
     ApiRouter::new()
@@ -70,33 +71,17 @@ pub(super) fn stay_input_error(
     None
 }
 
-/// Any member may shape the itinerary: the base moves while the trip runs, and
-/// whoever finds the next camp should be able to record it.
-async fn require_member(app: &AppState, trip_id: i64, user_id: &str) -> Option<Response> {
-    match trips::member_role(&app.pg_pool, trip_id, user_id).await {
-        Ok(Some(_)) => None,
-        Ok(None) => Some(ApiError::not_found("Not found").into_response()),
-        Err(err) => {
-            tracing::error!("Error checking trip {} membership: {}", trip_id, err);
-            Some(ApiError::internal().into_response())
-        }
-    }
-}
-
 pub async fn list_stays(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path(TripPath { trip_id }): Path<TripPath>,
 ) -> impl IntoApiResponse {
-    let viewer_id = auth.as_ref().map(|Extension(t)| t.user_id().to_string());
-
-    match trips::can_view(&app.pg_pool, trip_id, viewer_id.as_deref()).await {
-        Ok(true) => {}
-        Ok(false) => return ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            tracing::error!("Error checking trip {} visibility: {}", trip_id, err);
-            return ApiError::internal().into_response();
-        }
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
+    };
+    if let Some(res) = require_member(&app, trip_id, &caller_id).await {
+        return res;
     }
 
     match trips::list_stays(&app.pg_pool, trip_id).await {
@@ -121,15 +106,12 @@ pub async fn get_stay(
     auth: Option<Extension<AuthToken>>,
     Path(TripStayPath { trip_id, stay_id }): Path<TripStayPath>,
 ) -> impl IntoApiResponse {
-    let viewer_id = auth.as_ref().map(|Extension(t)| t.user_id().to_string());
-
-    match trips::can_view(&app.pg_pool, trip_id, viewer_id.as_deref()).await {
-        Ok(true) => {}
-        Ok(false) => return ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            tracing::error!("Error checking trip {} visibility: {}", trip_id, err);
-            return ApiError::internal().into_response();
-        }
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
+    };
+    if let Some(res) = require_member(&app, trip_id, &caller_id).await {
+        return res;
     }
 
     match trips::list_stays(&app.pg_pool, trip_id).await {
@@ -158,18 +140,20 @@ pub async fn create_stay(
     Path(TripPath { trip_id }): Path<TripPath>,
     Json(body): Json<CreateTripStayRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    // `caller_id`, not `user_id`: members routes already carry a `user_id`
+    // in the path, and the two are not the same person.
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
     };
-    if let Some(res) = require_member(&app, trip_id, token.user_id()).await {
+    if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
     }
     if let Some(res) = stay_input_error(body.lat, body.lon, body.arrival, body.departure) {
         return res;
     }
 
-    match trips::create_stay(&app.pg_pool, trip_id, token.user_id(), &body).await {
+    match trips::create_stay(&app.pg_pool, trip_id, &caller_id, &body).await {
         Ok(stay) => (StatusCode::CREATED, Json(stay)).into_response(),
         Err(err) => {
             tracing::error!("Error creating trip {} stay: {}", trip_id, err);
@@ -195,11 +179,13 @@ pub async fn patch_stay(
     Path(TripStayPath { trip_id, stay_id }): Path<TripStayPath>,
     Json(body): Json<PatchTripStayRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    // `caller_id`, not `user_id`: members routes already carry a `user_id`
+    // in the path, and the two are not the same person.
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
     };
-    if let Some(res) = require_member(&app, trip_id, token.user_id()).await {
+    if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
     }
     if body.lat.is_some() != body.lon.is_some() {
@@ -235,11 +221,13 @@ pub async fn delete_stay(
     auth: Option<Extension<AuthToken>>,
     Path(TripStayPath { trip_id, stay_id }): Path<TripStayPath>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    // `caller_id`, not `user_id`: members routes already carry a `user_id`
+    // in the path, and the two are not the same person.
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
     };
-    if let Some(res) = require_admin(&app, trip_id, token.user_id()).await {
+    if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
         return res;
     }
 
@@ -283,11 +271,13 @@ pub async fn replace_sections(
     Path(TripStayPath { trip_id, stay_id }): Path<TripStayPath>,
     Json(body): Json<ReplaceTripSectionsRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    // `caller_id`, not `user_id`: members routes already carry a `user_id`
+    // in the path, and the two are not the same person.
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(res) => return res,
     };
-    if let Some(res) = require_member(&app, trip_id, token.user_id()).await {
+    if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
     }
 
