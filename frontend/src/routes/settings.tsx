@@ -7,10 +7,8 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
-import CircularProgress from "@mui/material/CircularProgress";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
@@ -20,9 +18,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import LanguagePicker from "@/components/LanguagePicker";
+import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
 import ToolsList from "@/components/ToolsList";
+import FormSection from "@/components/waterway/FormSection";
 import { type ApiToken, type ApiTokenCreated } from "@/lib/api";
 import { ACCOUNT_CONSOLE_URL } from "@/lib/auth";
 import {
@@ -33,6 +33,7 @@ import {
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { useSession } from "@/lib/hooks/useSession";
 import { useLanguagePreference } from "@/lib/languagePreference";
+import { theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
@@ -121,21 +122,17 @@ function ProfilePanel() {
           />
         </Stack>
         <Divider />
-        <Stack spacing={1}>
-          <Typography variant="overline" sx={{ lineHeight: 1 }}>
-            Display language
-          </Typography>
+        <FormSection
+          label="Display language"
+          hint="Which translation of river, section and rapid names is shown. The app interface stays in English."
+        >
           <LanguagePicker
             value={language}
             onChange={setLanguage}
             size="small"
             label="Language"
           />
-          <Typography variant="caption" color="text.secondary">
-            Which translation of river, section and rapid names is shown. The
-            app interface stays in English.
-          </Typography>
-        </Stack>
+        </FormSection>
         <Divider />
         <Button
           variant="outlined"
@@ -187,33 +184,31 @@ function TokensPanel() {
 
   return (
     <Stack spacing={3}>
-      <Typography variant="h6">Access Tokens</Typography>
-
-      {/* Create form */}
-      <Paper variant="outlined" sx={{ p: 2 }}>
+      <FormSection
+        label="Access tokens"
+        hint="For scripts and the API. A token is shown once, when you make it."
+        action={
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={!name.trim() || create.isPending}
+            onClick={handleCreate}
+          >
+            Create
+          </Button>
+        }
+      >
         <Stack spacing={2}>
-          <Typography variant="subtitle2" color="text.secondary">
-            New token
-          </Typography>
-          <Stack direction="row" spacing={1}>
-            <TextField
-              label="Token name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              size="small"
-              sx={{ flex: 1 }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && name.trim()) handleCreate();
-              }}
-            />
-            <Button
-              variant="contained"
-              disabled={!name.trim() || create.isPending}
-              onClick={handleCreate}
-            >
-              Create
-            </Button>
-          </Stack>
+          <TextField
+            label="Token name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            size="small"
+            fullWidth
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && name.trim()) handleCreate();
+            }}
+          />
           {create.isError && (
             <Alert severity="error">
               {(create.error as Error)?.message ?? "Failed to create token"}
@@ -250,18 +245,14 @@ function TokensPanel() {
             </Alert>
           )}
         </Stack>
-      </Paper>
+      </FormSection>
 
-      {/* Token list */}
-      <Divider />
       {isLoading ? (
-        <CircularProgress size={24} />
+        <LoadingBox size={28} pt={2} />
       ) : tokens?.length === 0 ? (
-        <Typography color="text.secondary" variant="body2">
-          No tokens yet.
-        </Typography>
+        <EmptyState title="No tokens yet." py={4} />
       ) : (
-        <Stack spacing={1}>
+        <Stack>
           {tokens?.map((token) => (
             <TokenRow
               key={token.id}
@@ -309,7 +300,15 @@ function TokenRow({
     : "never";
 
   return (
-    <Paper variant="outlined" sx={{ px: 2, py: 1.5 }}>
+    <Box
+      sx={{
+        py: 1.5,
+        borderBottom: "1px solid",
+        // A full-strength rule between every row reads as a grid; these only
+        // need to separate.
+        borderColor: `${theme.tokens.outlineVariant}55`,
+      }}
+    >
       <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
         <Stack sx={{ flex: 1 }} spacing={0.25}>
           <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
@@ -346,6 +345,6 @@ function TokenRow({
           <DeleteOutlineIcon fontSize="small" />
         </IconButton>
       </Stack>
-    </Paper>
+    </Box>
   );
 }
