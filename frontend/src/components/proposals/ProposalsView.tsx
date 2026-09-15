@@ -10,9 +10,9 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
-import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useState } from "react";
+import ListPaneHeader from "@/components/ListPaneHeader";
 import ProposalDetailView from "@/components/proposals/ProposalDetailView";
 import ProposalRow from "@/components/proposals/ProposalRow";
 import EmptyState from "@/components/states/EmptyState";
@@ -122,40 +122,26 @@ export default function ProposalsView({
 
   const list = (
     <>
-      {/* Header */}
-      <Box
-        sx={{ display: "flex", alignItems: "baseline", gap: 1, px: 2, pt: 2 }}
-      >
-        <Typography
-          variant="subtitle2"
-          sx={{ color: "text.secondary", letterSpacing: "0.12em" }}
-        >
-          PROPOSALS
-        </Typography>
-        {!isLoading && (
-          <Typography
-            variant="caption"
-            sx={{ color: "text.disabled", ml: "auto" }}
+      <ListPaneHeader
+        count={proposals?.length ?? 0}
+        loading={isLoading}
+        actions={
+          <IconButton
+            size="small"
+            onClick={() => setFiltersOpen((v) => !v)}
+            aria-label={filtersOpen ? "Hide filters" : "Show filters"}
+            title={filtersOpen ? "Hide filters" : "Show filters"}
           >
-            {proposals?.length ?? 0} results
-          </Typography>
-        )}
-        <IconButton
-          size="small"
-          onClick={() => setFiltersOpen((v) => !v)}
-          aria-label={filtersOpen ? "Hide filters" : "Show filters"}
-          title={filtersOpen ? "Hide filters" : "Show filters"}
-          sx={{ ml: isLoading ? "auto" : 0 }}
-        >
-          <Badge
-            color="primary"
-            variant="dot"
-            invisible={!hasActiveFilters || filtersOpen}
-          >
-            <FilterListIcon fontSize="small" />
-          </Badge>
-        </IconButton>
-      </Box>
+            <Badge
+              color="primary"
+              variant="dot"
+              invisible={!hasActiveFilters || filtersOpen}
+            >
+              <FilterListIcon fontSize="small" />
+            </Badge>
+          </IconButton>
+        }
+      />
 
       {/* Status tabs */}
       <Tabs

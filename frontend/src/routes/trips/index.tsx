@@ -5,6 +5,7 @@ import Button from "@mui/material/Button";
 import Fab from "@mui/material/Fab";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import ListPaneHeader from "@/components/ListPaneHeader";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
@@ -132,6 +133,7 @@ function TripsPage() {
           borderColor: `${theme.tokens.outlineVariant}55`,
         }}
       >
+        <ListPaneHeader count={trips.length} loading={isLoading} />
         <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
         {/* Docked, so it never floats over the last trip in the list. */}
         <Box
