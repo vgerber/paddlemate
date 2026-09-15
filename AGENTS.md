@@ -179,6 +179,7 @@ feature look like the product rather than like MUI:
 | Piece | Use it for |
 |---|---|
 | `PanelHeader` | every detail panel: back arrow, bold title, grey subtitle, action icons right, and the segmented tab bar when it has views |
+| `ListPaneHeader` | the opening line of every list pane: uppercase collection label, the count on the right, the list's own controls after it |
 | `Fact` (`factLabelSx`, `valueSx`) | a labelled value in a detail header - overline label, value beneath |
 | `FormSection` | every block of a form: overline heading, one hint line, its own action in the heading |
 | `PanelBottomBar` + `RoundActionButton` | a form's chrome: cancel left, title and status as subtitle, one round action right |
@@ -197,13 +198,22 @@ line of icons.
 
 **Desktop is not a wide phone.** A list-plus-detail screen splits into two
 panes rather than centring one 720px column in an empty window: a grid of
-`380px minmax(0, 1fr)` (`420px` from `lg`) at `calc(100vh - 48px)`, the list
+`320px minmax(0, 1fr)` (`420px` from `lg`) at `calc(100vh - 48px)`, the list
 on `surfaceLow` with a hairline right border, the detail capped at 880px, and
-the open item held in a search param so it stays linkable. `ProposalsView` and
-`routes/trips/index.tsx` are the two worked examples; the same detail
-component renders as the mobile overlay, so both sizes show the same thing in
-the same order - except its header, which the pane drops because the list
-beside it already names the open item and carries the way back.
+the open item held in a search param so it stays linkable. `ProposalsView`,
+`routes/trips/index.tsx` and `routes/logs.tsx` are the worked examples; the
+same detail component renders as the mobile overlay, so both sizes show the
+same thing in the same order - except its header, which the pane drops
+because the list beside it already names the open item and carries the way
+back. Where the detail already owns an address (`/logs/$descentId`), the
+child route renders into the pane instead and the search param is not
+needed - the point is a linkable open item, not the mechanism.
+
+The split starts at `md`, which the theme moves down to **768** from MUI's
+900: `md` is the app's one phone-versus-desktop switch, so it belongs where
+the two panes first fit rather than where a stock breakpoint happens to sit.
+Anything keyed on `md` moves with it, which is the point - one switch, not a
+per-screen judgement.
 
 `WaterwayMap` takes its optional behaviour as three grouped objects rather
 than loose props: `picking` (put-in/take-out and section selection),
