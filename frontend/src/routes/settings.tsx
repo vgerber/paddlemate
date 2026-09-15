@@ -17,6 +17,7 @@ import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import Fact from "@/components/Fact";
 import LanguagePicker from "@/components/LanguagePicker";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -33,7 +34,7 @@ import {
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { useSession } from "@/lib/hooks/useSession";
 import { useLanguagePreference } from "@/lib/languagePreference";
-import { theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
@@ -61,13 +62,25 @@ function SettingsPage() {
   }
 
   return (
-    <Box sx={{ maxWidth: { xs: 800, md: 1100 }, mx: "auto" }}>
+    <Box>
       {
         <Tabs
           value={tab}
           onChange={(_, v) => setTab(v)}
           variant="fullWidth"
-          sx={{ borderBottom: "1px solid", borderColor: "divider" }}
+          sx={{
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            // Two tabs stretched across a desktop window are 700px wide
+            // each; past the phone they take their natural width.
+            "& .MuiTabs-flexContainer": {
+              justifyContent: { xs: "stretch", md: "flex-start" },
+            },
+            "& .MuiTab-root": {
+              flex: { xs: 1, md: "0 0 auto" },
+              minWidth: { md: 180 },
+            },
+          }}
         >
           <Tab
             icon={<AccountCircleOutlinedIcon fontSize="small" />}
@@ -81,7 +94,7 @@ function SettingsPage() {
           />
         </Tabs>
       }
-      <Box sx={{ px: 2, py: 3 }}>
+      <Box sx={{ px: { xs: 2, md: 4 }, py: 3 }}>
         {tab === 0 && <ProfilePanel />}
         {tab === 1 && <ToolsList />}
       </Box>
@@ -99,60 +112,64 @@ function ProfilePanel() {
         display: "grid",
         // Account details and tokens sit side by side on desktop instead of
         // pushing the tokens table below the fold.
-        gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-        gap: { xs: 3, md: 5 },
+        // Tokens are the only part that grows, so they take the wider
+        // column rather than splitting the window down the middle.
+        gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1fr) minmax(0, 1fr)" },
+        gap: { xs: 3, md: 6 },
         alignItems: "start",
       }}
     >
       <Stack spacing={3}>
-        <Stack spacing={2}>
-          <TextField
-            label="Username"
-            value={user?.username ?? ""}
-            slotProps={{ input: { readOnly: true } }}
-            size="small"
-            fullWidth
-          />
-          <TextField
-            label="User ID"
-            value={user?.id ?? ""}
-            slotProps={{ input: { readOnly: true } }}
-            size="small"
-            fullWidth
-          />
-        </Stack>
+        {/* Read-only facts, not fields: a disabled input stretched across a
+            desktop column only looks like something you may edit. */}
+        <FormSection label="Account">
+          {/* gap, not Stack spacing: a wrapped item would keep the left
+              margin and sit indented under the first. */}
+          <Box
+            sx={{ display: "flex", flexWrap: "wrap", columnGap: 5, rowGap: 2 }}
+          >
+            <Fact label="Username" value={user?.username ?? "-"} />
+            <Fact
+              label="User ID"
+              value={
+                <Box component="span" sx={{ fontFamily: fonts.mono }}>
+                  {user?.id ?? "-"}
+                </Box>
+              }
+            />
+          </Box>
+        </FormSection>
         <Divider />
         <FormSection
           label="Display language"
           hint="Which translation of river, section and rapid names is shown. The app interface stays in English."
         >
-          <LanguagePicker
-            value={language}
-            onChange={setLanguage}
-            size="small"
-            label="Language"
-          />
+          <Box sx={{ maxWidth: 320 }}>
+            <LanguagePicker
+              value={language}
+              onChange={setLanguage}
+              size="small"
+              label="Language"
+            />
+          </Box>
         </FormSection>
         <Divider />
-        <Button
-          variant="outlined"
-          component="a"
-          href={ACCOUNT_CONSOLE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          fullWidth
-        >
-          Account Settings
-        </Button>
-        <Button variant="outlined" color="error" onClick={logout} fullWidth>
-          Sign Out
-        </Button>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+          <Button
+            variant="outlined"
+            component="a"
+            href={ACCOUNT_CONSOLE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Account Settings
+          </Button>
+          <Button variant="outlined" color="error" onClick={logout}>
+            Sign Out
+          </Button>
+        </Stack>
         <Divider sx={{ display: { md: "none" } }} />
-        <Typography
-          variant="caption"
-          color="text.disabled"
-          sx={{ textAlign: "center" }}
-        >
+        <Typography variant="caption" color="text.disabled">
           v{__COMMIT_HASH__}
         </Typography>
       </Stack>
@@ -183,7 +200,9 @@ function TokensPanel() {
   const { copied: tokenCopied, copy: copyToken } = useCopyToClipboard();
 
   return (
-    <Stack spacing={3}>
+    // Capped: a create button or a revoke icon flung to the far side of a
+    // desktop column is a long way from the thing it acts on.
+    <Stack spacing={3} sx={{ maxWidth: 640 }}>
       <FormSection
         label="Access tokens"
         hint="For scripts and the API. A token is shown once, when you make it."
@@ -204,7 +223,7 @@ function TokensPanel() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             size="small"
-            fullWidth
+            sx={{ maxWidth: 360 }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && name.trim()) handleCreate();
             }}
