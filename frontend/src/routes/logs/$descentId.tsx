@@ -9,6 +9,7 @@ import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -18,7 +19,7 @@ import DescentForm from "@/components/descents/DescentForm";
 import LoadingBox from "@/components/states/LoadingBox";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
-import { fonts } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/logs/$descentId")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -32,6 +33,9 @@ function LogDetailPage() {
   const { descentId } = Route.useParams();
   const { edit } = Route.useSearch();
   const { user } = useSession();
+  // From md up this renders in the logs pane, where the list beside it
+  // already names the log and carries the way back.
+  const embedded = useMediaQuery(theme.breakpoints.up("md"));
   const { data: descent, isLoading } = useDescent(Number(descentId));
   const deleteDescent = useDeleteDescent();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -60,11 +64,18 @@ function LogDetailPage() {
 
   const isOwner = user != null && user.id === descent.user_id;
 
+  const shellSx = embedded
+    ? { maxWidth: 880, px: 2, py: 2 }
+    : { maxWidth: 720, mx: "auto", px: 2, py: 2 };
+  // The edit form carries a bottom bar, which needs a floor to sit on.
+  const formShellSx = embedded ? { ...shellSx, height: "100%" } : shellSx;
+
   if (edit && isOwner) {
     return (
-      <Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: 2 }}>
+      <Box sx={formShellSx}>
         <DescentForm
           descent={descent}
+          embedded={embedded}
           onSave={() => setEdit(false)}
           onCancel={() => setEdit(false)}
         />
@@ -90,15 +101,17 @@ function LogDetailPage() {
     .join(" · ");
 
   return (
-    <Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: 2 }}>
+    <Box sx={shellSx}>
       <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
-        <IconButton
-          size="small"
-          onClick={() => history.back()}
-          aria-label="Back"
-        >
-          <ArrowBackIcon fontSize="small" />
-        </IconButton>
+        {!embedded && (
+          <IconButton
+            size="small"
+            onClick={() => history.back()}
+            aria-label="Back"
+          >
+            <ArrowBackIcon fontSize="small" />
+          </IconButton>
+        )}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography noWrap sx={{ fontWeight: 700, fontSize: "0.9rem" }}>
             {title}

@@ -29,6 +29,8 @@ interface DescentCardProps {
   /** The list supplies the rule and the side padding - used where a row
    * carries its own actions beside the card. */
   flush?: boolean;
+  /** Marks the row the desktop detail pane is showing. */
+  selected?: boolean;
 }
 
 export default function DescentCard({
@@ -36,6 +38,7 @@ export default function DescentCard({
   onClick,
   showAuthor,
   flush,
+  selected,
 }: DescentCardProps) {
   const waterwayNames = [
     ...new Set(
@@ -68,7 +71,11 @@ export default function DescentCard({
         px: flush ? 0 : 2,
         py: flush ? 1.5 : 2,
         // Flush rows sit inside a list that owns the ground and the rule.
-        bgcolor: flush ? "transparent" : "background.paper",
+        bgcolor: selected
+          ? "action.selected"
+          : flush
+            ? "transparent"
+            : "background.paper",
         borderBottom: flush ? "none" : "1px solid",
         // A full-strength rule between every row reads as a grid; these only
         // need to separate.
