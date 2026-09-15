@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import { theme } from "@/lib/theme";
 import SidebarContent from "./SidebarContent";
 import type { MapPageState } from "./useMapPageState";
 
@@ -16,8 +17,10 @@ export default function DesktopSidebar({ state }: DesktopSidebarProps) {
         display: { xs: "none", md: "flex" },
         flexDirection: "column",
         overflow: "hidden",
+        // The same ground and hairline as every other list pane.
+        bgcolor: theme.tokens.surfaceLow,
         borderRight: "1px solid",
-        borderColor: "divider",
+        borderColor: `${theme.tokens.outlineVariant}55`,
         flexShrink: 0,
       }}
     >
