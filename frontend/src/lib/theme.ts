@@ -153,6 +153,13 @@ export const fonts = {
 
 export const theme = createTheme({
   tokens,
+  // `md` is the one switch between the phone layout and the two-pane desktop
+  // one, so it sits where the split first fits rather than at MUI's 900:
+  // a 320px list plus a readable detail beside it. Tablet portrait and a
+  // half-screen laptop window both land above it. The rest are MUI's.
+  breakpoints: {
+    values: { xs: 0, sm: 600, md: 768, lg: 1200, xl: 1536 },
+  },
   palette: {
     mode: "dark",
     primary: {

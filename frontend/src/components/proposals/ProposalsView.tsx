@@ -243,7 +243,7 @@ export default function ProposalsView({
       sx={{
         display: "grid",
         gridTemplateColumns: {
-          md: "380px minmax(0, 1fr)",
+          md: "320px minmax(0, 1fr)",
           lg: "420px minmax(0, 1fr)",
         },
         height: "calc(100vh - 48px)",
