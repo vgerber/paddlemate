@@ -97,7 +97,10 @@ function TripsPage() {
   if (!isDesktop) {
     return (
       <>
-        <Box sx={{ maxWidth: 720, mx: "auto" }}>{list}</Box>
+        {/* No header above it on a phone, so the list brings its own top
+            gap - the rows' 16px inset, so the first one is not pinned to
+            the edge of the screen. */}
+        <Box sx={{ maxWidth: 720, mx: "auto", pt: 2 }}>{list}</Box>
         <Fab
           color="secondary"
           onClick={() => navigate({ to: "/trips/new" })}
