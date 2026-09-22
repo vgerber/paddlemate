@@ -9,12 +9,14 @@ import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
+import ListItemButton from "@mui/material/ListItemButton";
 import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { createFileRoute } from "@tanstack/react-router";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import Fact from "@/components/Fact";
@@ -36,13 +38,33 @@ import { useSession } from "@/lib/hooks/useSession";
 import { useLanguagePreference } from "@/lib/languagePreference";
 import { fonts, theme } from "@/lib/theme";
 
+/** The groups the desktop sidebar lists. Adding one is a row here plus a
+ * case in `GroupContent`. */
+const GROUPS = [
+  { id: "account", label: "Account", hint: "Who you are signed in as" },
+  { id: "language", label: "Display language", hint: "Which names are shown" },
+  { id: "tokens", label: "Access tokens", hint: "For scripts and the API" },
+] as const;
+
+type GroupId = (typeof GROUPS)[number]["id"];
+
+const isGroupId = (v: unknown): v is GroupId => GROUPS.some((g) => g.id === v);
+
 export const Route = createFileRoute("/settings")({
+  validateSearch: (search: Record<string, unknown>): { group?: GroupId } => ({
+    // Which group the desktop pane shows; keeps it linkable.
+    group: isGroupId(search.group) ? search.group : undefined,
+  }),
   component: SettingsPage,
 });
 
 function SettingsPage() {
   const [tab, setTab] = useState(0);
   const { isAuthenticated, isLoading } = useSession();
+  const navigate = useNavigate({ from: "/settings" });
+  const { group } = Route.useSearch();
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+  const openGroup: GroupId = group ?? "account";
 
   if (isLoading) {
     return <LoadingBox size={40} pt={8} />;
@@ -61,26 +83,17 @@ function SettingsPage() {
     );
   }
 
-  return (
-    <Box>
-      {
+  // A phone reaches the tools through here, because its bottom bar has no
+  // room for them; on a desktop they are already a nav item, so settings is
+  // settings and the groups become the list beside them.
+  if (!isDesktop) {
+    return (
+      <Box>
         <Tabs
           value={tab}
           onChange={(_, v) => setTab(v)}
           variant="fullWidth"
-          sx={{
-            borderBottom: "1px solid",
-            borderColor: "divider",
-            // Two tabs stretched across a desktop window are 700px wide
-            // each; past the phone they take their natural width.
-            "& .MuiTabs-flexContainer": {
-              justifyContent: { xs: "stretch", md: "flex-start" },
-            },
-            "& .MuiTab-root": {
-              flex: { xs: 1, md: "0 0 auto" },
-              minWidth: { md: 180 },
-            },
-          }}
+          sx={{ borderBottom: "1px solid", borderColor: "divider" }}
         >
           <Tab
             icon={<AccountCircleOutlinedIcon fontSize="small" />}
@@ -93,88 +106,172 @@ function SettingsPage() {
             label="Tools"
           />
         </Tabs>
-      }
-      <Box sx={{ px: { xs: 2, md: 4 }, py: 3 }}>
-        {tab === 0 && <ProfilePanel />}
-        {tab === 1 && <ToolsList />}
+        <Box sx={{ px: 2, py: 3 }}>
+          {tab === 0 && <ProfilePanel />}
+          {tab === 1 && <ToolsList />}
+        </Box>
       </Box>
-    </Box>
-  );
-}
-
-function ProfilePanel() {
-  const { user, logout } = useSession();
-  const [language, setLanguage] = useLanguagePreference();
+    );
+  }
 
   return (
     <Box
       sx={{
         display: "grid",
-        // Account details and tokens sit side by side on desktop instead of
-        // pushing the tokens table below the fold.
-        // Tokens are the only part that grows, so they take the wider
-        // column rather than splitting the window down the middle.
-        gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1fr) minmax(0, 1fr)" },
-        gap: { xs: 3, md: 6 },
-        alignItems: "start",
+        gridTemplateColumns: {
+          md: "320px minmax(0, 1fr)",
+          lg: "420px minmax(0, 1fr)",
+        },
+        height: "calc(100vh - 48px)",
       }}
     >
-      <Stack spacing={3}>
-        {/* Read-only facts, not fields: a disabled input stretched across a
-            desktop column only looks like something you may edit. */}
-        <FormSection label="Account">
-          {/* gap, not Stack spacing: a wrapped item would keep the left
-              margin and sit indented under the first. */}
-          <Box
-            sx={{ display: "flex", flexWrap: "wrap", columnGap: 5, rowGap: 2 }}
-          >
-            <Fact label="Username" value={user?.username ?? "-"} />
-            <Fact
-              label="User ID"
-              value={
-                <Box component="span" sx={{ fontFamily: fonts.mono }}>
-                  {user?.id ?? "-"}
-                </Box>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+          bgcolor: theme.tokens.surfaceLow,
+          borderRight: "1px solid",
+          borderColor: `${theme.tokens.outlineVariant}55`,
+        }}
+      >
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+          {GROUPS.map((g) => (
+            <ListItemButton
+              key={g.id}
+              selected={g.id === openGroup}
+              onClick={() =>
+                navigate({ search: (prev) => ({ ...prev, group: g.id }) })
               }
-            />
-          </Box>
-        </FormSection>
-        <Divider />
-        <FormSection
-          label="Display language"
-          hint="Which translation of river, section and rapid names is shown. The app interface stays in English."
+              sx={{
+                display: "block",
+                borderBottom: "1px solid",
+                borderColor: `${theme.tokens.outlineVariant}55`,
+                py: 1.25,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: fonts.label,
+                  fontWeight: 600,
+                  fontSize: "0.8125rem",
+                }}
+              >
+                {g.label}
+              </Typography>
+              <Typography variant="caption" color="text.disabled">
+                {g.hint}
+              </Typography>
+            </ListItemButton>
+          ))}
+        </Box>
+        {/* Docked, the way every other list pane carries its own footer. */}
+        <Box
+          sx={{
+            px: 2,
+            py: 1,
+            flexShrink: 0,
+            borderTop: "1px solid",
+            borderColor: "divider",
+          }}
         >
-          <Box sx={{ maxWidth: 320 }}>
-            <LanguagePicker
-              value={language}
-              onChange={setLanguage}
-              size="small"
-              label="Language"
-            />
-          </Box>
-        </FormSection>
-        <Divider />
-        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-          <Button
-            variant="outlined"
-            component="a"
-            href={ACCOUNT_CONSOLE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Account Settings
-          </Button>
-          <Button variant="outlined" color="error" onClick={logout}>
-            Sign Out
-          </Button>
-        </Stack>
-        <Divider sx={{ display: { md: "none" } }} />
-        <Typography variant="caption" color="text.disabled">
-          v{__COMMIT_HASH__}
-        </Typography>
-      </Stack>
-      <TokensPanel />
+          <Typography variant="caption" color="text.disabled">
+            v{__COMMIT_HASH__}
+          </Typography>
+        </Box>
+      </Box>
+      <Box sx={{ minHeight: 0, overflowY: "auto", px: 4, py: 3 }}>
+        <Box sx={{ maxWidth: 640 }}>
+          <GroupContent group={openGroup} />
+        </Box>
+      </Box>
     </Box>
+  );
+}
+
+/** One settings group's content. The mobile tab stacks all of them instead. */
+function GroupContent({ group }: { group: GroupId }) {
+  if (group === "language") return <LanguageSection />;
+  if (group === "tokens") return <TokensPanel />;
+  return <AccountSection />;
+}
+
+/** Every group stacked, for the phone tab that has no sidebar to pick from. */
+function ProfilePanel() {
+  return (
+    <Stack spacing={3}>
+      <AccountSection />
+      <Divider />
+      <LanguageSection />
+      <Divider />
+      <TokensPanel />
+      <Divider />
+      <Typography variant="caption" color="text.disabled">
+        v{__COMMIT_HASH__}
+      </Typography>
+    </Stack>
+  );
+}
+
+function AccountSection() {
+  const { user, logout } = useSession();
+
+  return (
+    <Stack spacing={3}>
+      {/* Read-only facts, not fields: a disabled input stretched across a
+          desktop column only looks like something you may edit. */}
+      <FormSection label="Account">
+        {/* gap, not Stack spacing: a wrapped item would keep the left
+            margin and sit indented under the first. */}
+        <Box
+          sx={{ display: "flex", flexWrap: "wrap", columnGap: 5, rowGap: 2 }}
+        >
+          <Fact label="Username" value={user?.username ?? "-"} />
+          <Fact
+            label="User ID"
+            value={
+              <Box component="span" sx={{ fontFamily: fonts.mono }}>
+                {user?.id ?? "-"}
+              </Box>
+            }
+          />
+        </Box>
+      </FormSection>
+      <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+        <Button
+          variant="outlined"
+          component="a"
+          href={ACCOUNT_CONSOLE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Account Settings
+        </Button>
+        <Button variant="outlined" color="error" onClick={logout}>
+          Sign Out
+        </Button>
+      </Stack>
+    </Stack>
+  );
+}
+
+function LanguageSection() {
+  const [language, setLanguage] = useLanguagePreference();
+
+  return (
+    <FormSection
+      label="Display language"
+      hint="Which translation of river, section and rapid names is shown. The app interface stays in English."
+    >
+      <Box sx={{ maxWidth: 320 }}>
+        <LanguagePicker
+          value={language}
+          onChange={setLanguage}
+          size="small"
+          label="Language"
+        />
+      </Box>
+    </FormSection>
   );
 }
 
