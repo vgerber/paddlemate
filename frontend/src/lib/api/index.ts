@@ -598,6 +598,13 @@ export const descentsApi = {
   },
 };
 
+/** The `If-Match` for an edit: the item's `updated_at`, quoted, exactly as the
+ * API's ETag carries it. Without a version the write goes through regardless;
+ * with one, a change somebody made meanwhile answers 412 instead of being
+ * silently overwritten. */
+const ifMatch = (version?: string) =>
+  version ? { "If-Match": JSON.stringify(version) } : undefined;
+
 export const tripsApi = {
   list: async (filters: TripFilters = {}) => {
     const { data } = await client.GET("/api/v1/trips", {
@@ -615,10 +622,11 @@ export const tripsApi = {
     const { data } = await client.POST("/api/v1/trips", { body });
     return assertData(data);
   },
-  update: async (id: number, body: PatchTripRequest) => {
+  update: async (id: number, body: PatchTripRequest, version?: string) => {
     const { data } = await client.PATCH("/api/v1/trips/{trip_id}", {
       params: { path: { trip_id: id } },
       body,
+      headers: ifMatch(version),
     });
     return assertData(data);
   },
@@ -670,19 +678,31 @@ export const tripsApi = {
     id: number,
     candidateId: number,
     body: PatchTripStayCandidateRequest,
+    version?: string,
   ) => {
     const { data } = await client.PATCH(
       "/api/v1/trips/{trip_id}/candidates/{candidate_id}",
-      { params: { path: { trip_id: id, candidate_id: candidateId } }, body },
+      {
+        params: { path: { trip_id: id, candidate_id: candidateId } },
+        body,
+        headers: ifMatch(version),
+      },
     );
     return assertData(data);
   },
-  acceptCandidate: async (id: number, candidateId: number) => {
+  /** With a version, only the version the admin was looking at is accepted -
+   * not one somebody reworded while they were deciding. */
+  acceptCandidate: async (
+    id: number,
+    candidateId: number,
+    version?: string,
+  ) => {
     const { data } = await client.PATCH(
       "/api/v1/trips/{trip_id}/candidates/{candidate_id}",
       {
         params: { path: { trip_id: id, candidate_id: candidateId } },
         body: { accepted: true },
+        headers: ifMatch(version),
       },
     );
     return assertData(data);
@@ -732,10 +752,15 @@ export const tripsApi = {
     id: number,
     stayId: number,
     body: PatchTripStayRequest,
+    version?: string,
   ) => {
     const { data } = await client.PATCH(
       "/api/v1/trips/{trip_id}/stays/{stay_id}",
-      { params: { path: { trip_id: id, stay_id: stayId } }, body },
+      {
+        params: { path: { trip_id: id, stay_id: stayId } },
+        body,
+        headers: ifMatch(version),
+      },
     );
     return assertData(data);
   },

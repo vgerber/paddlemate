@@ -12,8 +12,10 @@ import {
   type Trip,
   type TripFilters,
   type TripSectionInput,
+  type TripStayCandidate,
   tripsApi,
 } from "@/lib/api";
+import { ApiError } from "@/lib/api/client";
 import { buildTimeline, type TripDay } from "@/lib/tripTimeline";
 import { descentKeys, useDescents } from "./useDescents";
 
@@ -69,14 +71,31 @@ export function useCreateTrip() {
   });
 }
 
+/** A 412: somebody changed the thing since it was loaded. The edit is
+ * refused rather than overwriting theirs, so fetch their version - the
+ * dialog stays open, and the next save works from what is really there. */
+function isStale(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 412;
+}
+
 export function usePatchTrip(id: number) {
   const qc = useQueryClient();
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: tripKeys.detail(id) });
+    qc.invalidateQueries({ queryKey: tripKeys.lists() });
+  };
   return useMutation({
-    mutationFn: (body: PatchTripRequest) => tripsApi.update(id, body),
+    mutationFn: ({
+      body,
+      version,
+    }: {
+      body: PatchTripRequest;
+      version?: string;
+    }) => tripsApi.update(id, body, version),
     meta: { errorHandledLocally: true },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: tripKeys.detail(id) });
-      qc.invalidateQueries({ queryKey: tripKeys.lists() });
+    onSuccess: refresh,
+    onError: (err) => {
+      if (isStale(err)) refresh();
     },
   });
 }
@@ -145,12 +164,17 @@ export function usePatchTripStay(id: number) {
     mutationFn: ({
       stayId,
       body,
+      version,
     }: {
       stayId: number;
       body: PatchTripStayRequest;
-    }) => tripsApi.updateStay(id, stayId, body),
+      version?: string;
+    }) => tripsApi.updateStay(id, stayId, body, version),
     meta: { errorHandledLocally: true },
     onSuccess: () => qc.invalidateQueries({ queryKey: tripKeys.stays(id) }),
+    onError: (err) => {
+      if (isStale(err)) qc.invalidateQueries({ queryKey: tripKeys.stays(id) });
+    },
   });
 }
 
@@ -243,6 +267,10 @@ function useCandidateMutation<TArgs>(
       qc.invalidateQueries({ queryKey: tripKeys.candidates(id) });
       qc.invalidateQueries({ queryKey: tripKeys.stays(id) });
     },
+    onError: (err) => {
+      if (isStale(err))
+        qc.invalidateQueries({ queryKey: tripKeys.candidates(id) });
+    },
   });
 }
 
@@ -268,16 +296,20 @@ export function usePatchCandidate(id: number) {
     ({
       candidateId,
       body,
+      version,
     }: {
       candidateId: number;
       body: PatchTripStayCandidateRequest;
-    }) => tripsApi.patchCandidate(id, candidateId, body),
+      version?: string;
+    }) => tripsApi.patchCandidate(id, candidateId, body, version),
   );
 }
 
+/** Takes the candidate as it was shown, so what is accepted is what the
+ * admin read and confirmed. */
 export function useAcceptCandidate(id: number) {
-  return useCandidateMutation(id, (candidateId: number) =>
-    tripsApi.acceptCandidate(id, candidateId),
+  return useCandidateMutation(id, (candidate: TripStayCandidate) =>
+    tripsApi.acceptCandidate(id, candidate.id, candidate.updated_at),
   );
 }
 

@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import FormSection from "@/components/waterway/FormSection";
 import type { Trip, TripStayKind } from "@/lib/api";
@@ -36,7 +36,15 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
   const [form, setForm] = useState<TripFormState>(() =>
     trip ? initFromTrip(trip) : defaultTripForm(),
   );
+  // Taken with the form, not read live: see StayDialog.
+  const [version] = useState(() => trip?.updated_at);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // The error renders below the form, out of sight of the save button that
+  // caused it - bring it into view, or a refused save looks like no save.
+  const errorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (saveError) errorRef.current?.scrollIntoView({ block: "nearest" });
+  }, [saveError]);
 
   const createTrip = useCreateTrip();
   const patchTrip = usePatchTrip(trip?.id ?? 0);
@@ -51,7 +59,10 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
     setSaveError(null);
     try {
       const result = trip
-        ? await patchTrip.mutateAsync(buildPatchPayload(form))
+        ? await patchTrip.mutateAsync({
+            body: buildPatchPayload(form),
+            version,
+          })
         : await createTrip.mutateAsync(buildCreatePayload(form));
       onSave(result.id);
     } catch (err) {
@@ -155,7 +166,11 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
           </FormSection>
         )}
 
-        {saveError && <Alert severity="error">{saveError}</Alert>}
+        {saveError && (
+          <Alert ref={errorRef} severity="error">
+            {saveError}
+          </Alert>
+        )}
       </Box>
 
       <PanelBottomBar

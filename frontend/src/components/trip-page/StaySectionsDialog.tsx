@@ -67,11 +67,10 @@ export default function StaySectionsDialog({
     try {
       await replaceSections.mutateAsync({
         stayId: stay.id,
-        sections: drafts.map((d, i) => ({
+        // Order is position, so the list is sent as it stands.
+        sections: drafts.map((d) => ({
           section_id: d.section_id,
-          sort_order: i + 1,
           note: d.note || null,
-          status: null,
         })),
       });
       onClose();

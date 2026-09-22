@@ -1054,7 +1054,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description List the caller's trips. A trip is visible to its members only, so a signed-out caller gets an empty page. */
+        /** @description List the caller's trips. A trip is visible to its members only. */
         get: operations["list_trips"];
         put?: never;
         /** @description Create a trip. The caller becomes its first admin, and the trip is created with its first stay so the watch list always hangs off somewhere. */
@@ -1072,7 +1072,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Get a trip by ID */
+        /** @description Get a trip by ID. The `ETag` is its `updated_at`, for `If-Match` on the next edit. */
         get: operations["get_trip"];
         put?: never;
         post?: never;
@@ -1080,7 +1080,7 @@ export interface paths {
         delete: operations["delete_trip"];
         options?: never;
         head?: never;
-        /** @description Update a trip. Admin only. Patching visibility to shared replaces the audience inline. */
+        /** @description Update a trip. Admin only. Send the trip's `updated_at` as `If-Match` (quoted, as in the ETag) to refuse with 412 if someone else changed it first. */
         patch: operations["patch_trip"];
         trace?: never;
     };
@@ -1117,7 +1117,7 @@ export interface paths {
         delete: operations["withdraw_candidate"];
         options?: never;
         head?: never;
-        /** @description Correct a proposed base, or accept it. Any member may edit the fields - a suggestion belongs to the trip, not to whoever typed it. Only an admin may send `accepted`, which turns it into a base. */
+        /** @description Correct a proposed base, or accept it. Any member may edit the fields - a suggestion belongs to the trip, not to whoever typed it. Only an admin may send `accepted`, which turns it into a base. Send the candidate's `updated_at` as `If-Match` (quoted, as in the ETag) to refuse with 412 if it changed first - for an accept, that means accepting only the version you read. */
         patch: operations["patch_candidate"];
         trace?: never;
     };
@@ -1128,8 +1128,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description One proposed base, with its votes. */
-        get: operations["get_candidate"];
+        get?: never;
         put?: never;
         /** @description Vote for or against a proposed base: 1 or -1. Voting again replaces the vote. */
         post: operations["vote_candidate"];
@@ -1210,7 +1209,7 @@ export interface paths {
         delete: operations["delete_stay"];
         options?: never;
         head?: never;
-        /** @description Update a stay. Any member may edit it, since the base moves while the trip runs. */
+        /** @description Update a stay. Any member may edit it, since the base moves while the trip runs. Send the stay's `updated_at` as `If-Match` (quoted, as in the ETag) to refuse with 412 if someone else changed it first. */
         patch: operations["patch_stay"];
         trace?: never;
     };
@@ -1222,7 +1221,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** @description Replace the ordered sections watched from a stay. The same section may be watched from several stays. */
+        /** @description Replace the sections watched from a stay, in order: a section's position is its place in the list. Runs that stay on the list keep their id, status and note; leaving `status` or `note` out keeps what the entry had. The same section may be watched from several stays. */
         put: operations["replace_sections"];
         post?: never;
         delete?: never;
@@ -2857,12 +2856,20 @@ export interface components {
             waterway_id?: number | null;
             waterway_name?: string | null;
         };
+        /**
+         * @description One run on a watch list. Its position is its place in the list, so there
+         *      is no order to get wrong; status and note left out keep what the entry
+         *      already had.
+         */
         TripSectionInput: {
+            /**
+             * @description Omitted keeps the note, `null` clears it.
+             * @default null
+             */
             note?: string | null;
             /** Format: int64 */
             section_id: number;
-            /** Format: int32 */
-            sort_order: number;
+            /** @default null */
             status?: components["schemas"]["TripSectionStatus"] | null;
         };
         /** @enum {string} */
@@ -2916,6 +2923,11 @@ export interface components {
             proposed_by_username: string;
             /** Format: int64 */
             trip_id: number;
+            /**
+             * Format: date-time
+             * @description The version to send back as `If-Match` when editing it.
+             */
+            updated_at: string;
             /** Format: int64 */
             upvotes: number;
             /**
@@ -3589,11 +3601,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-09-12T12:22:15.894694721Z",
-                     *         "expires_at": "2026-12-11T12:22:15.894696721Z",
+                     *         "created_at": "2026-09-22T20:22:20.687750570Z",
+                     *         "expires_at": "2026-12-21T20:22:20.687752500Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-09-12T12:22:15.894709271Z",
+                     *         "last_used_at": "2026-09-22T20:22:20.687764830Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -3624,8 +3636,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-09-12T12:22:15.894819231Z",
-                     *       "expires_at": "2026-12-11T12:22:15.894819541Z",
+                     *       "created_at": "2026-09-22T20:22:20.687878990Z",
+                     *       "expires_at": "2026-12-21T20:22:20.687879360Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -7214,6 +7226,15 @@ export interface operations {
                     "application/json": components["schemas"]["PaginatedResponse_for_Trip"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
     };
     create_trip: {
@@ -7279,6 +7300,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Trip"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Not found or not visible */
@@ -7361,6 +7391,15 @@ export interface operations {
                     "application/json": components["schemas"]["Trip"];
                 };
             };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Unauthorized */
             401: {
                 headers: {
@@ -7381,6 +7420,15 @@ export interface operations {
             };
             /** @description Not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Changed since the If-Match version */
+            412: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -7589,6 +7637,15 @@ export interface operations {
                     "application/json": components["schemas"]["TripStay"];
                 };
             };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Admin role required */
             403: {
                 headers: {
@@ -7607,34 +7664,8 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-        };
-    };
-    get_candidate: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                candidate_id: number;
-                trip_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /**
-             * @description A base somebody has put up for the group to consider. It carries the same
-             *      shape as a stay because accepting one is exactly turning it into a stay.
-             */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TripStayCandidate"];
-                };
-            };
-            /** @description Not found */
-            404: {
+            /** @description Changed since the If-Match version */
+            412: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -8194,6 +8225,15 @@ export interface operations {
             };
             /** @description Not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Changed since the If-Match version */
+            412: {
                 headers: {
                     [name: string]: unknown;
                 };

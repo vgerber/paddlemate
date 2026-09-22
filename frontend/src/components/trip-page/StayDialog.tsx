@@ -7,7 +7,7 @@ import DialogContent from "@mui/material/DialogContent";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MarkdownField from "@/components/MarkdownField";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import { STAY_KINDS } from "@/components/trips/stayKinds";
@@ -88,7 +88,17 @@ export default function StayDialog({
   const [form, setForm] = useState<StayForm>(() =>
     initForm(candidate ?? stay, presetArrival),
   );
+  // The version the form was filled from, taken with it and never refreshed:
+  // after a refetch the props carry somebody else's newer version, and saving
+  // this form against that would overwrite their edit after all.
+  const [version] = useState(() => (candidate ?? stay)?.updated_at);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // The error renders below the form, out of sight of the save button that
+  // caused it - bring it into view, or a refused save looks like no save.
+  const errorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (saveError) errorRef.current?.scrollIntoView({ block: "nearest" });
+  }, [saveError]);
   const createStay = useCreateTripStay(tripId);
   const patchStay = usePatchTripStay(tripId);
 
@@ -137,10 +147,16 @@ export default function StayDialog({
         await patchCandidate.mutateAsync({
           candidateId: candidate.id,
           body: asCandidate,
+          version,
         });
       } else if (propose) {
         await proposeCandidate.mutateAsync(asCandidate);
-      } else if (stay) await patchStay.mutateAsync({ stayId: stay.id, body });
+      } else if (stay)
+        await patchStay.mutateAsync({
+          stayId: stay.id,
+          body,
+          version,
+        });
       else await createStay.mutateAsync(body);
       onClose();
     } catch (err) {
@@ -225,7 +241,11 @@ export default function StayDialog({
           />
         </FormSection>
 
-        {saveError && <Alert severity="error">{saveError}</Alert>}
+        {saveError && (
+          <Alert ref={errorRef} severity="error">
+            {saveError}
+          </Alert>
+        )}
       </DialogContent>
       <PanelBottomBar
         leftIcon={<CloseIcon />}

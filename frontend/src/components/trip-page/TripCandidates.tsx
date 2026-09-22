@@ -106,7 +106,7 @@ export default function TripCandidates({
         pendingLabel="Adding…"
         pending={accept.isPending}
         onConfirm={async () => {
-          if (confirming) await accept.mutateAsync(confirming.id);
+          if (confirming) await accept.mutateAsync(confirming);
           setConfirming(null);
         }}
         onCancel={() => setConfirming(null)}
