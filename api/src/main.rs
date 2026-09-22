@@ -27,7 +27,7 @@ use paddlemate_api::{
     },
     state::{AppState, KeycloakState},
 };
-use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HeaderName};
+use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ETAG, HeaderName, IF_MATCH};
 use sqlx::postgres::PgPoolOptions;
 use std::time::Duration;
 use tower_governor::{
@@ -332,7 +332,12 @@ async fn main() {
                     CONTENT_TYPE,
                     ACCEPT,
                     HeaderName::from_static("x-api-key"),
-                ]),
+                    // Versioned edits: without it a browser's preflight for a
+                    // PATCH carrying If-Match fails before the API sees it.
+                    IF_MATCH,
+                ])
+                // So a browser client can read an item's version back.
+                .expose_headers([ETAG]),
         )
         .layer(
             TraceLayer::new_for_http()

@@ -73,6 +73,16 @@ impl ApiError {
         Self::new(StatusCode::CONFLICT, "conflict", message)
     }
 
+    /// An `If-Match` precondition failed: the thing changed since the caller
+    /// read it, and writing anyway would silently undo somebody's edit.
+    pub fn precondition_failed(message: impl Into<String>) -> Self {
+        Self::new(
+            StatusCode::PRECONDITION_FAILED,
+            "precondition_failed",
+            message,
+        )
+    }
+
     pub fn too_many_requests(message: impl Into<String>) -> Self {
         Self::new(StatusCode::TOO_MANY_REQUESTS, "too_many_requests", message)
     }

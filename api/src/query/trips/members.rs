@@ -4,7 +4,11 @@ use sqlx::{PgPool, Row, postgres::PgRow};
 
 use crate::models::trip::*;
 
-const MEMBER_SELECT: &str = "SELECT tm.trip_id, tm.user_id, u.username, tm.role::text AS role, \
+use super::{Outcome, lock_trip};
+
+const LAST_ADMIN: &str = "A trip must keep at least one admin";
+
+const MEMBER_SELECT: &str = "SELECT tm.trip_id, tm.user_id, u.username, tm.role, \
      a.arrival, a.arrival_time, a.departure, a.departure_time, tm.created_at \
      FROM trip_members tm \
      JOIN users u ON u.id = tm.user_id \
@@ -16,10 +20,7 @@ fn row_to_member(row: &PgRow) -> Result<TripMember, sqlx::Error> {
         trip_id: row.try_get("trip_id")?,
         user_id: row.try_get("user_id")?,
         username: row.try_get("username")?,
-        role: match row.try_get::<String, _>("role")?.as_str() {
-            "admin" => TripMemberRole::Admin,
-            _ => TripMemberRole::Member,
-        },
+        role: row.try_get("role")?,
         arrival: row.try_get("arrival")?,
         arrival_time: row.try_get("arrival_time")?,
         departure: row.try_get("departure")?,
@@ -45,15 +46,16 @@ pub async fn get_member(
     trip_id: TripId,
     user_id: &str,
 ) -> Result<Option<TripMember>, sqlx::Error> {
-    let row = sqlx::query(&format!("{MEMBER_SELECT} WHERE tm.trip_id = $1 AND tm.user_id = $2"))
-        .bind(trip_id)
-        .bind(user_id)
-        .fetch_optional(pool)
-        .await?;
+    let row = sqlx::query(&format!(
+        "{MEMBER_SELECT} WHERE tm.trip_id = $1 AND tm.user_id = $2"
+    ))
+    .bind(trip_id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
     row.as_ref().map(row_to_member).transpose()
 }
 
-/// Open join: anyone who may see the trip may join it as a member.
 /// Adds somebody to a trip. Idempotent: adding an existing member is not an
 /// error, the caller gets the membership either way.
 pub async fn add_member(
@@ -73,25 +75,55 @@ pub async fn add_member(
     get_member(pool, trip_id, user_id).await
 }
 
-pub async fn admin_count(pool: &PgPool, trip_id: TripId) -> Result<i64, sqlx::Error> {
-    let row = sqlx::query("SELECT COUNT(*) AS n FROM trip_members WHERE trip_id = $1 AND role = 'admin'")
-        .bind(trip_id)
-        .fetch_one(pool)
-        .await?;
-    row.try_get("n")
+/// Counts admins and reads the target's role inside the locked transaction,
+/// so the "at least one admin" check and the write it guards cannot be split
+/// by another admin leaving at the same moment.
+async fn target_role(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    trip_id: TripId,
+    user_id: &str,
+) -> Result<Option<(TripMemberRole, i64)>, sqlx::Error> {
+    let row = sqlx::query(
+        "SELECT tm.role, \
+                (SELECT COUNT(*) FROM trip_members a \
+                  WHERE a.trip_id = $1 AND a.role = 'admin') AS admins \
+           FROM trip_members tm WHERE tm.trip_id = $1 AND tm.user_id = $2",
+    )
+    .bind(trip_id)
+    .bind(user_id)
+    .fetch_optional(&mut **tx)
+    .await?;
+    row.map(|r| Ok((r.try_get("role")?, r.try_get("admins")?)))
+        .transpose()
 }
 
+/// Leaving, or being removed. Their attendance and their votes go with the
+/// membership (the schema cascades both), their logs are unlinked from the
+/// trip, and the last admin cannot go.
 pub async fn remove_member(
     pool: &PgPool,
     trip_id: TripId,
     user_id: &str,
-) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM trip_members WHERE trip_id = $1 AND user_id = $2")
+) -> Result<Outcome<()>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    if !lock_trip(&mut tx, trip_id).await? {
+        return Ok(Outcome::NotFound);
+    }
+    match target_role(&mut tx, trip_id, user_id).await? {
+        None => return Ok(Outcome::NotFound),
+        Some((TripMemberRole::Admin, admins)) if admins <= 1 => {
+            return Ok(Outcome::Refused(LAST_ADMIN));
+        }
+        Some(_) => {}
+    }
+
+    sqlx::query("DELETE FROM trip_members WHERE trip_id = $1 AND user_id = $2")
         .bind(trip_id)
         .bind(user_id)
-        .execute(pool)
+        .execute(&mut *tx)
         .await?;
-    Ok(result.rows_affected() > 0)
+    tx.commit().await?;
+    Ok(Outcome::Done(()))
 }
 
 pub async fn patch_member(
@@ -99,25 +131,28 @@ pub async fn patch_member(
     trip_id: TripId,
     user_id: &str,
     req: &PatchTripMemberRequest,
-) -> Result<Option<TripMember>, sqlx::Error> {
+) -> Result<Outcome<TripMember>, sqlx::Error> {
     let mut tx = pool.begin().await?;
+    if !lock_trip(&mut tx, trip_id).await? {
+        return Ok(Outcome::NotFound);
+    }
+    let Some((current, admins)) = target_role(&mut tx, trip_id, user_id).await? else {
+        return Ok(Outcome::NotFound);
+    };
 
     if let Some(role) = &req.role {
-        let updated = sqlx::query(
-            "UPDATE trip_members SET role = $3::trip_member_role, updated_at = NOW() \
-             WHERE trip_id = $1 AND user_id = $2 RETURNING user_id",
+        if current == TripMemberRole::Admin && *role == TripMemberRole::Member && admins <= 1 {
+            return Ok(Outcome::Refused(LAST_ADMIN));
+        }
+        sqlx::query(
+            "UPDATE trip_members SET role = $3, updated_at = NOW() \
+             WHERE trip_id = $1 AND user_id = $2",
         )
         .bind(trip_id)
         .bind(user_id)
-        .bind(match role {
-            TripMemberRole::Admin => "admin",
-            TripMemberRole::Member => "member",
-        })
-        .fetch_optional(&mut *tx)
+        .bind(role)
+        .execute(&mut *tx)
         .await?;
-        if updated.is_none() {
-            return Ok(None);
-        }
     }
 
     let touches_attendance = req.arrival.is_some()
@@ -152,5 +187,8 @@ pub async fn patch_member(
     }
 
     tx.commit().await?;
-    get_member(pool, trip_id, user_id).await
+    Ok(match get_member(pool, trip_id, user_id).await? {
+        Some(m) => Outcome::Done(m),
+        None => Outcome::NotFound,
+    })
 }

@@ -5,7 +5,7 @@ use aide::axum::{
 use axum::{
     Extension, Json,
     extract::{Path, State},
-    http::StatusCode,
+    http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
 };
 use chrono::NaiveDate;
@@ -26,7 +26,7 @@ use crate::{
 };
 
 use super::access::{caller, require_admin, require_member};
-use super::constraint_message;
+use super::respond::{failure, if_match, outcome, with_etag};
 
 pub fn stay_routes(state: AppState) -> ApiRouter {
     ApiRouter::new()
@@ -78,7 +78,7 @@ pub async fn list_stays(
 ) -> impl IntoApiResponse {
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
     };
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
@@ -86,10 +86,7 @@ pub async fn list_stays(
 
     match trips::list_stays(&app.pg_pool, trip_id).await {
         Ok(stays) => Json(stays).into_response(),
-        Err(err) => {
-            tracing::error!("Error listing trip {} stays: {}", trip_id, err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => failure(&format!("listing trip {trip_id} stays"), err),
     }
 }
 
@@ -108,7 +105,7 @@ pub async fn get_stay(
 ) -> impl IntoApiResponse {
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
     };
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
@@ -116,13 +113,10 @@ pub async fn get_stay(
 
     match trips::list_stays(&app.pg_pool, trip_id).await {
         Ok(stays) => match stays.into_iter().find(|s| s.id == stay_id) {
-            Some(stay) => Json(stay).into_response(),
+            Some(stay) => with_etag(StatusCode::OK, &stay, stay.updated_at),
             None => ApiError::not_found("Not found").into_response(),
         },
-        Err(err) => {
-            tracing::error!("Error fetching trip {} stay {}: {}", trip_id, stay_id, err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => failure(&format!("fetching trip {trip_id} stay {stay_id}"), err),
     }
 }
 
@@ -144,7 +138,7 @@ pub async fn create_stay(
     // in the path, and the two are not the same person.
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
     };
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
@@ -154,11 +148,8 @@ pub async fn create_stay(
     }
 
     match trips::create_stay(&app.pg_pool, trip_id, &caller_id, &body).await {
-        Ok(stay) => (StatusCode::CREATED, Json(stay)).into_response(),
-        Err(err) => {
-            tracing::error!("Error creating trip {} stay: {}", trip_id, err);
-            ApiError::internal().into_response()
-        }
+        Ok(stay) => with_etag(StatusCode::CREATED, &stay, stay.updated_at),
+        Err(err) => failure(&format!("creating trip {trip_id} stay"), err),
     }
 }
 
@@ -177,13 +168,14 @@ pub async fn patch_stay(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path(TripStayPath { trip_id, stay_id }): Path<TripStayPath>,
+    headers: HeaderMap,
     Json(body): Json<PatchTripStayRequest>,
 ) -> impl IntoApiResponse {
     // `caller_id`, not `user_id`: members routes already carry a `user_id`
     // in the path, and the two are not the same person.
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
     };
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
@@ -191,25 +183,25 @@ pub async fn patch_stay(
     if body.lat.is_some() != body.lon.is_some() {
         return ApiError::validation("location needs both lat and lon, or neither").into_response();
     }
+    let expected = match if_match(&headers) {
+        Ok(v) => v,
+        Err(err) => return err.into_response(),
+    };
 
-    match trips::patch_stay(&app.pg_pool, trip_id, stay_id, &body).await {
-        Ok(Some(stay)) => Json(stay).into_response(),
-        Ok(None) => ApiError::not_found("Not found").into_response(),
-        Err(ref err) if constraint_message(err).is_some() => {
-            ApiError::validation(constraint_message(err).unwrap()).into_response()
-        }
-        Err(err) => {
-            tracing::error!("Error patching trip {} stay {}: {}", trip_id, stay_id, err);
-            ApiError::internal().into_response()
-        }
+    match trips::patch_stay(&app.pg_pool, trip_id, stay_id, expected, &body).await {
+        Ok(result) => outcome(result, |stay| {
+            with_etag(StatusCode::OK, &stay, stay.updated_at)
+        }),
+        Err(err) => failure(&format!("patching trip {trip_id} stay {stay_id}"), err),
     }
 }
 
 doc_fn!(patch_stay_docs, op =>
     op.input::<Path<TripStayPath>>()
-        .description("Update a stay. Any member may edit it, since the base moves while the trip runs.")
+        .description("Update a stay. Any member may edit it, since the base moves while the trip runs. Send the stay's `updated_at` as `If-Match` (quoted, as in the ETag) to refuse with 412 if someone else changed it first.")
         .response::<200, Json<TripStay>>()
         .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Validation error"))
+        .response_with::<412, Json<ErrorResponse>, _>(|res| res.description("Changed since the If-Match version"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
@@ -225,32 +217,16 @@ pub async fn delete_stay(
     // in the path, and the two are not the same person.
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
     };
     if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
         return res;
     }
 
-    // A trip always has somewhere to hang its watch list, the way it always
-    // keeps an admin.
-    match trips::stay_count(&app.pg_pool, trip_id).await {
-        Ok(1) => {
-            return ApiError::validation("A trip must keep at least one stay").into_response();
-        }
-        Err(err) => {
-            tracing::error!("Error counting trip {} stays: {}", trip_id, err);
-            return ApiError::internal().into_response();
-        }
-        _ => {}
-    }
-
+    // The last-stay rule lives with the delete, under the trip lock.
     match trips::delete_stay(&app.pg_pool, trip_id, stay_id).await {
-        Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            tracing::error!("Error deleting trip {} stay {}: {}", trip_id, stay_id, err);
-            ApiError::internal().into_response()
-        }
+        Ok(result) => outcome(result, |()| StatusCode::NO_CONTENT.into_response()),
+        Err(err) => failure(&format!("deleting trip {trip_id} stay {stay_id}"), err),
     }
 }
 
@@ -275,34 +251,33 @@ pub async fn replace_sections(
     // in the path, and the two are not the same person.
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
     };
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
     }
 
+    // Position is list order, so a run listed twice has no single place.
+    let mut seen = std::collections::HashSet::new();
+    if let Some(dup) = body.sections.iter().find(|s| !seen.insert(s.section_id)) {
+        return ApiError::validation(format!("Section {} is listed twice", dup.section_id))
+            .with_target("sections")
+            .into_response();
+    }
+
     match trips::replace_stay_sections(&app.pg_pool, trip_id, stay_id, &body.sections).await {
         Ok(Some(sections)) => Json(sections).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
-        Err(ref err) if crate::query::is_unique_violation(err) => {
-            ApiError::validation("A section can appear once per stay, with one position")
-                .into_response()
-        }
-        Err(err) => {
-            tracing::error!(
-                "Error replacing trip {} stay {} sections: {}",
-                trip_id,
-                stay_id,
-                err
-            );
-            ApiError::internal().into_response()
-        }
+        Err(err) => failure(
+            &format!("replacing trip {trip_id} stay {stay_id} sections"),
+            err,
+        ),
     }
 }
 
 doc_fn!(replace_sections_docs, op =>
     op.input::<Path<TripStayPath>>()
-        .description("Replace the ordered sections watched from a stay. The same section may be watched from several stays.")
+        .description("Replace the sections watched from a stay, in order: a section's position is its place in the list. Runs that stay on the list keep their id, status and note; leaving `status` or `note` out keeps what the entry had. The same section may be watched from several stays.")
         .response::<200, Json<Vec<TripSection>>>()
         .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Validation error"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))

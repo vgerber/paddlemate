@@ -8,16 +8,16 @@
 use axum::{Extension, response::IntoResponse, response::Response};
 
 use crate::{
-    error::ApiError, layers::auth::AuthToken, models::trip::TripId,
-    models::trip::TripMemberRole, query::trips, state::AppState,
+    error::ApiError, layers::auth::AuthToken, models::trip::TripId, models::trip::TripMemberRole,
+    query::trips, state::AppState,
 };
 
-/// The caller, or the response to send instead. Every handler opens with this,
+/// The caller, or the error to answer instead. Every handler opens with this,
 /// so the unauthenticated case reads the same way in all of them.
-pub(super) fn caller(auth: Option<Extension<AuthToken>>) -> Result<String, Response> {
+pub(super) fn caller(auth: Option<Extension<AuthToken>>) -> Result<String, ApiError> {
     match auth {
         Some(Extension(token)) => Ok(token.user_id().to_string()),
-        None => Err(ApiError::unauthorized("Authentication required").into_response()),
+        None => Err(ApiError::unauthorized("Authentication required")),
     }
 }
 
@@ -32,10 +32,9 @@ pub(super) async fn require_member(
     match trips::member_role(&app.pg_pool, trip_id, user_id).await {
         Ok(Some(_)) => None,
         Ok(None) => Some(ApiError::not_found("Not found").into_response()),
-        Err(err) => {
-            tracing::error!("Error checking trip {} membership: {}", trip_id, err);
-            Some(ApiError::internal().into_response())
-        }
+        Err(err) => Some(
+            ApiError::from_db(&format!("checking trip {trip_id} membership"), err).into_response(),
+        ),
     }
 }
 
@@ -54,8 +53,7 @@ pub(super) async fn require_admin(
         }
         Ok(None) => Some(ApiError::not_found("Not found").into_response()),
         Err(err) => {
-            tracing::error!("Error checking trip {} role: {}", trip_id, err);
-            Some(ApiError::internal().into_response())
+            Some(ApiError::from_db(&format!("checking trip {trip_id} role"), err).into_response())
         }
     }
 }

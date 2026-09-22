@@ -1,9 +1,12 @@
-use aide::axum::{ApiRouter, IntoApiResponse, routing::{get_with, post_with}};
+use aide::axum::{
+    ApiRouter, IntoApiResponse,
+    routing::{get_with, post_with},
+};
 use axum::{
     Extension, Json,
     extract::{Path, State},
-    http::StatusCode,
-    response::IntoResponse,
+    http::{HeaderMap, StatusCode},
+    response::{IntoResponse, Response},
 };
 
 use crate::{
@@ -11,6 +14,7 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
+        geometry::Geometry,
         path_params::{TripCandidatePath, TripPath},
         proposal::VoteRequest,
         trip::{
@@ -23,8 +27,32 @@ use crate::{
 };
 
 use super::access::{caller, require_admin, require_member};
-use super::constraint_message;
+use super::respond::{failure, if_match, outcome, with_etag};
 
+/// A base is a place, so its location is a point - anything else would only
+/// fail later, in the column, as an internal error.
+fn location_error(location: Option<&Geometry>) -> Option<Response> {
+    match location {
+        None | Some(Geometry::Point { .. }) => None,
+        Some(_) => Some(
+            ApiError::validation("A base's location must be a Point")
+                .with_target("location")
+                .into_response(),
+        ),
+    }
+}
+
+/// The candidate as it now stands, for the vote routes' answer.
+async fn current(app: &AppState, trip_id: i64, candidate_id: i64, caller_id: &str) -> Response {
+    match trips::get_candidate(&app.pg_pool, trip_id, candidate_id, caller_id).await {
+        Ok(Some(c)) => with_etag(StatusCode::OK, &c, c.updated_at),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
+        Err(err) => failure(&format!("loading candidate {candidate_id}"), err),
+    }
+}
+
+// Every handler passes the path's trip to the query, which filters on it:
+// a candidate id is only ever looked up inside the trip it was reached by.
 pub fn candidate_routes(state: AppState) -> ApiRouter {
     ApiRouter::new()
         .api_route(
@@ -53,22 +81,17 @@ pub async fn list_candidates(
     auth: Option<Extension<AuthToken>>,
     Path(TripPath { trip_id }): Path<TripPath>,
 ) -> impl IntoApiResponse {
-    // `caller_id`, not `user_id`: members routes already carry a `user_id`
-    // in the path, and the two are not the same person.
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
     };
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
     }
 
     match trips::list_candidates(&app.pg_pool, trip_id, &caller_id).await {
-        Ok(items) => Json(items).into_response(),
-        Err(err) => {
-            tracing::error!("Error listing candidates for trip {}: {}", trip_id, err);
-            ApiError::internal().into_response()
-        }
+        Ok(list) => Json(list).into_response(),
+        Err(err) => failure(&format!("listing candidates for trip {trip_id}"), err),
     }
 }
 
@@ -90,24 +113,15 @@ pub async fn get_candidate(
         candidate_id,
     }): Path<TripCandidatePath>,
 ) -> impl IntoApiResponse {
-    // `caller_id`, not `user_id`: members routes already carry a `user_id`
-    // in the path, and the two are not the same person.
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
     };
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
     }
 
-    match trips::get_candidate(&app.pg_pool, candidate_id, &caller_id).await {
-        Ok(Some(c)) if c.trip_id == trip_id => Json(c).into_response(),
-        Ok(_) => ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            tracing::error!("Error loading candidate {}: {}", candidate_id, err);
-            ApiError::internal().into_response()
-        }
-    }
+    current(&app, trip_id, candidate_id, &caller_id).await
 }
 
 doc_fn!(get_candidate_docs, op =>
@@ -125,11 +139,9 @@ pub async fn propose_candidate(
     Path(TripPath { trip_id }): Path<TripPath>,
     Json(body): Json<CreateTripStayCandidateRequest>,
 ) -> impl IntoApiResponse {
-    // `caller_id`, not `user_id`: members routes already carry a `user_id`
-    // in the path, and the two are not the same person.
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
     };
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
@@ -138,16 +150,14 @@ pub async fn propose_candidate(
         return ApiError::validation("A base needs a name").into_response();
     }
 
+    if let Some(res) = location_error(body.location.as_ref()) {
+        return res;
+    }
+
     match trips::create_candidate(&app.pg_pool, trip_id, &caller_id, &body).await {
-        Ok(Some(c)) => (StatusCode::CREATED, Json(c)).into_response(),
-        Ok(None) => ApiError::internal().into_response(),
-        Err(err) => match constraint_message(&err) {
-            Some(msg) => ApiError::validation(msg).into_response(),
-            None => {
-                tracing::error!("Error proposing a base for trip {}: {}", trip_id, err);
-                ApiError::internal().into_response()
-            }
-        },
+        Ok(Some(c)) => with_etag(StatusCode::CREATED, &c, c.updated_at),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
+        Err(err) => failure(&format!("proposing a base for trip {trip_id}"), err),
     }
 }
 
@@ -171,11 +181,9 @@ pub async fn vote_candidate(
     }): Path<TripCandidatePath>,
     Json(body): Json<VoteRequest>,
 ) -> impl IntoApiResponse {
-    // `caller_id`, not `user_id`: members routes already carry a `user_id`
-    // in the path, and the two are not the same person.
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
     };
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
@@ -184,19 +192,12 @@ pub async fn vote_candidate(
         return ApiError::validation("Vote must be 1 or -1").into_response();
     }
 
-    match trips::cast_vote(&app.pg_pool, candidate_id, &caller_id, body.vote).await {
-        Ok(()) => match trips::get_candidate(&app.pg_pool, candidate_id, &caller_id).await {
-            Ok(Some(c)) => Json(c).into_response(),
-            Ok(None) => ApiError::not_found("Not found").into_response(),
-            Err(err) => {
-                tracing::error!("Error reloading candidate {}: {}", candidate_id, err);
-                ApiError::internal().into_response()
-            }
-        },
-        Err(err) => {
-            tracing::error!("Error voting on candidate {}: {}", candidate_id, err);
-            ApiError::internal().into_response()
-        }
+    // cast_vote only matches a candidate of this trip, so an id from another
+    // trip is a 404 here rather than a vote there.
+    match trips::cast_vote(&app.pg_pool, trip_id, candidate_id, &caller_id, body.vote).await {
+        Ok(true) => current(&app, trip_id, candidate_id, &caller_id).await,
+        Ok(false) => ApiError::not_found("Not found").into_response(),
+        Err(err) => failure(&format!("voting on candidate {candidate_id}"), err),
     }
 }
 
@@ -219,29 +220,17 @@ pub async fn unvote_candidate(
         candidate_id,
     }): Path<TripCandidatePath>,
 ) -> impl IntoApiResponse {
-    // `caller_id`, not `user_id`: members routes already carry a `user_id`
-    // in the path, and the two are not the same person.
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
     };
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
     }
 
-    match trips::clear_vote(&app.pg_pool, candidate_id, &caller_id).await {
-        Ok(()) => match trips::get_candidate(&app.pg_pool, candidate_id, &caller_id).await {
-            Ok(Some(c)) => Json(c).into_response(),
-            Ok(None) => ApiError::not_found("Not found").into_response(),
-            Err(err) => {
-                tracing::error!("Error reloading candidate {}: {}", candidate_id, err);
-                ApiError::internal().into_response()
-            }
-        },
-        Err(err) => {
-            tracing::error!("Error clearing vote on candidate {}: {}", candidate_id, err);
-            ApiError::internal().into_response()
-        }
+    match trips::clear_vote(&app.pg_pool, trip_id, candidate_id, &caller_id).await {
+        Ok(()) => current(&app, trip_id, candidate_id, &caller_id).await,
+        Err(err) => failure(&format!("clearing a vote on candidate {candidate_id}"), err),
     }
 }
 
@@ -264,13 +253,17 @@ pub async fn patch_candidate(
         trip_id,
         candidate_id,
     }): Path<TripCandidatePath>,
+    headers: HeaderMap,
     Json(body): Json<PatchTripStayCandidateRequest>,
 ) -> impl IntoApiResponse {
-    // `caller_id`, not `user_id`: members routes already carry a `user_id`
-    // in the path, and the two are not the same person.
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
+    };
+
+    let expected = match if_match(&headers) {
+        Ok(v) => v,
+        Err(err) => return err.into_response(),
     };
 
     if body.accepted == Some(true) {
@@ -279,13 +272,19 @@ pub async fn patch_candidate(
         if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
             return res;
         }
-        return match trips::accept_candidate(&app.pg_pool, candidate_id, &caller_id).await {
-            Ok(Some(stay)) => (StatusCode::CREATED, Json(stay)).into_response(),
-            Ok(None) => ApiError::not_found("Not found").into_response(),
-            Err(err) => {
-                tracing::error!("Error accepting candidate {}: {}", candidate_id, err);
-                ApiError::internal().into_response()
-            }
+        return match trips::accept_candidate(
+            &app.pg_pool,
+            trip_id,
+            candidate_id,
+            &caller_id,
+            expected,
+        )
+        .await
+        {
+            Ok(result) => outcome(result, |stay| {
+                with_etag(StatusCode::CREATED, &stay, stay.updated_at)
+            }),
+            Err(err) => failure(&format!("accepting candidate {candidate_id}"), err),
         };
     }
 
@@ -297,25 +296,32 @@ pub async fn patch_candidate(
     if body.name.as_ref().is_some_and(|n| n.trim().is_empty()) {
         return ApiError::validation("A base needs a name").into_response();
     }
+    if let Some(res) = location_error(body.location.as_ref().and_then(|l| l.as_ref())) {
+        return res;
+    }
 
-    match trips::update_candidate(&app.pg_pool, candidate_id, &caller_id, &body).await {
-        Ok(Some(c)) if c.trip_id == trip_id => Json(c).into_response(),
-        Ok(_) => ApiError::not_found("Not found").into_response(),
-        Err(err) => match constraint_message(&err) {
-            Some(msg) => ApiError::validation(msg).into_response(),
-            None => {
-                tracing::error!("Error updating candidate {}: {}", candidate_id, err);
-                ApiError::internal().into_response()
-            }
-        },
+    match trips::update_candidate(
+        &app.pg_pool,
+        trip_id,
+        candidate_id,
+        &caller_id,
+        expected,
+        &body,
+    )
+    .await
+    {
+        Ok(result) => outcome(result, |c| with_etag(StatusCode::OK, &c, c.updated_at)),
+        Err(err) => failure(&format!("editing candidate {candidate_id}"), err),
     }
 }
 
 doc_fn!(patch_candidate_docs, op =>
     op.input::<Path<TripCandidatePath>>()
         .input::<Json<PatchTripStayCandidateRequest>>()
-        .description("Correct a proposed base, or accept it. Any member may edit the fields - a suggestion belongs to the trip, not to whoever typed it. Only an admin may send `accepted`, which turns it into a base.")
+        .description("Correct a proposed base, or accept it. Any member may edit the fields - a suggestion belongs to the trip, not to whoever typed it. Only an admin may send `accepted`, which turns it into a base. Send the candidate's `updated_at` as `If-Match` (quoted, as in the ETag) to refuse with 412 if it changed first - for an accept, that means accepting only the version you read.")
         .response::<200, Json<TripStayCandidate>>()
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Validation error"))
+        .response_with::<412, Json<ErrorResponse>, _>(|res| res.description("Changed since the If-Match version"))
         .response_with::<201, Json<TripStay>, _>(|res| res.description("Accepted, and now a base"))
         .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Admin role required"))
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found"))
@@ -331,24 +337,19 @@ pub async fn withdraw_candidate(
         candidate_id,
     }): Path<TripCandidatePath>,
 ) -> impl IntoApiResponse {
-    // `caller_id`, not `user_id`: members routes already carry a `user_id`
-    // in the path, and the two are not the same person.
     let caller_id = match caller(auth) {
         Ok(id) => id,
-        Err(res) => return res,
+        Err(err) => return err.into_response(),
     };
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
     }
 
     // Your own suggestion is yours to take back; anybody else's is an admin's.
-    let own = match trips::get_candidate(&app.pg_pool, candidate_id, &caller_id).await {
-        Ok(Some(c)) if c.trip_id == trip_id => c.proposed_by == caller_id,
-        Ok(_) => return ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            tracing::error!("Error loading candidate {}: {}", candidate_id, err);
-            return ApiError::internal().into_response();
-        }
+    let own = match trips::get_candidate(&app.pg_pool, trip_id, candidate_id, &caller_id).await {
+        Ok(Some(c)) => c.proposed_by == caller_id,
+        Ok(None) => return ApiError::not_found("Not found").into_response(),
+        Err(err) => return failure(&format!("loading candidate {candidate_id}"), err),
     };
     if !own {
         if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
@@ -356,13 +357,10 @@ pub async fn withdraw_candidate(
         }
     }
 
-    match trips::delete_candidate(&app.pg_pool, candidate_id).await {
+    match trips::delete_candidate(&app.pg_pool, trip_id, candidate_id).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            tracing::error!("Error withdrawing candidate {}: {}", candidate_id, err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => failure(&format!("withdrawing candidate {candidate_id}"), err),
     }
 }
 

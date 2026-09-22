@@ -129,12 +129,17 @@ pub struct TripSection {
     pub location: Option<Geometry>,
 }
 
+/// One run on a watch list. Its position is its place in the list, so there
+/// is no order to get wrong; status and note left out keep what the entry
+/// already had.
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
 pub struct TripSectionInput {
     pub section_id: SectionId,
-    pub sort_order: i32,
+    #[serde(default)]
     pub status: Option<TripSectionStatus>,
-    pub note: Option<String>,
+    /// Omitted keeps the note, `null` clears it.
+    #[serde(default, deserialize_with = "super::patch::nullable")]
+    pub note: Option<Option<String>>,
 }
 
 /// A trip is created with its first stay, so the watch list always hangs off
@@ -264,6 +269,8 @@ pub struct TripStayCandidate {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub viewer_vote: Option<i16>,
     pub created_at: DateTime<Utc>,
+    /// The version to send back as `If-Match` when editing it.
+    pub updated_at: DateTime<Utc>,
 }
 
 /// Partial update for a proposed base. Any member may correct one - a
@@ -304,7 +311,6 @@ pub struct CreateTripStayCandidateRequest {
 pub struct AddTripMemberRequest {
     pub user_id: UserId,
 }
-
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]
 pub struct ListTripsQuery {

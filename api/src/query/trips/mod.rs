@@ -15,15 +15,47 @@ use stays::insert_stay;
 
 use sqlx::{PgPool, Row, postgres::PgRow};
 
+use chrono::{DateTime, Utc};
+
 use crate::models::{
     trip::{CreateTripRequest, PatchTripRequest, Trip, TripId, TripMemberRole},
     waterway::PaginatedResponse,
 };
 
+/// What a guarded or versioned write came to. Routes map each arm to one
+/// status, so every trips endpoint answers the same situation the same way.
+#[derive(Debug)]
+pub enum Outcome<T> {
+    Done(T),
+    NotFound,
+    /// The row changed since the caller read it: their `If-Match` is stale.
+    Stale,
+    /// Refused to break a rule the trip depends on - its last admin, its
+    /// last base. Carries the sentence to show.
+    Refused(&'static str),
+}
+
+/// Serialises the writes that guard a trip-wide rule ("at least one admin",
+/// "at least one base"): each takes this lock before counting, so two of them
+/// can no longer both pass the check and both land. NO KEY UPDATE, so
+/// ordinary inserts that only reference the trip are not held up.
+pub(super) async fn lock_trip(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    trip_id: TripId,
+) -> Result<bool, sqlx::Error> {
+    let row = sqlx::query("SELECT 1 FROM trips WHERE id = $1 FOR NO KEY UPDATE")
+        .bind(trip_id)
+        .fetch_optional(&mut **tx)
+        .await?;
+    Ok(row.is_some())
+}
+
 /// A trip is visible to the people in it, and to nobody else. `viewer` is
 /// the placeholder holding their id, so one predicate serves every query.
 fn member_clause(viewer: &str) -> String {
-    format!("EXISTS (SELECT 1 FROM trip_members tm WHERE tm.trip_id = trips.id AND tm.user_id = {viewer})")
+    format!(
+        "EXISTS (SELECT 1 FROM trip_members tm WHERE tm.trip_id = trips.id AND tm.user_id = {viewer})"
+    )
 }
 
 /// Counts ride along as subqueries so a listing stays one round trip. The
@@ -34,17 +66,15 @@ fn trip_cols(viewer: &str) -> String {
          trips.created_by, trips.created_at, trips.updated_at, \
          (SELECT COUNT(*) FROM trip_members tm WHERE tm.trip_id = trips.id) AS member_count, \
          (SELECT COUNT(*) FROM descents d WHERE d.trip_id = trips.id) AS descent_count, \
-         (SELECT tm.role::text FROM trip_members tm \
+         (SELECT tm.role FROM trip_members tm \
           WHERE tm.trip_id = trips.id AND tm.user_id = {viewer}) AS viewer_role"
     )
 }
 
 fn row_to_trip(row: &PgRow) -> Result<Trip, sqlx::Error> {
-    let viewer_role = match row.try_get::<Option<String>, _>("viewer_role")?.as_deref() {
-        Some("admin") => Some(TripMemberRole::Admin),
-        Some(_) => Some(TripMemberRole::Member),
-        None => None,
-    };
+    // Decoded as the enum, not matched from text: a role this build does not
+    // know must fail rather than quietly read as `member`.
+    let viewer_role: Option<TripMemberRole> = row.try_get("viewer_role")?;
     Ok(Trip {
         id: row.try_get("id")?,
         name: row.try_get("name")?,
@@ -65,18 +95,12 @@ pub async fn member_role(
     trip_id: TripId,
     user_id: &str,
 ) -> Result<Option<TripMemberRole>, sqlx::Error> {
-    let row = sqlx::query("SELECT role::text AS role FROM trip_members WHERE trip_id = $1 AND user_id = $2")
+    let row = sqlx::query("SELECT role FROM trip_members WHERE trip_id = $1 AND user_id = $2")
         .bind(trip_id)
         .bind(user_id)
         .fetch_optional(pool)
         .await?;
-    Ok(match row {
-        None => None,
-        Some(r) => match r.try_get::<String, _>("role")?.as_str() {
-            "admin" => Some(TripMemberRole::Admin),
-            _ => Some(TripMemberRole::Member),
-        },
-    })
+    row.map(|r| r.try_get("role")).transpose()
 }
 
 pub async fn create_trip(
@@ -92,7 +116,7 @@ pub async fn create_trip(
          RETURNING id, name, description, start_date, end_date, created_by, \
                    created_at, updated_at, \
                    0::bigint AS member_count, 0::bigint AS descent_count, \
-                   NULL::text AS viewer_role",
+                   NULL::trip_member_role AS viewer_role",
     )
     .bind(&req.name)
     .bind(req.description.as_deref())
@@ -125,11 +149,8 @@ pub async fn create_trip(
 pub async fn get_trip_for_viewer(
     pool: &PgPool,
     trip_id: TripId,
-    viewer_id: Option<&str>,
+    vid: &str,
 ) -> Result<Option<Trip>, sqlx::Error> {
-    let Some(vid) = viewer_id else {
-        return Ok(None);
-    };
     let row = sqlx::query(&format!(
         "SELECT {} FROM trips WHERE trips.id = $1 AND {}",
         trip_cols("$2"),
@@ -155,22 +176,10 @@ pub struct ListFilters {
 
 pub async fn list_trips_for_viewer(
     pool: &PgPool,
-    viewer_id: Option<&str>,
+    vid: &str,
     filters: ListFilters,
 ) -> Result<PaginatedResponse<Trip>, sqlx::Error> {
     let offset = filters.page.saturating_sub(1) * filters.per_page;
-    let empty = PaginatedResponse {
-        items: vec![],
-        total: 0,
-        page: filters.page,
-        per_page: filters.per_page,
-        total_pages: 0,
-    };
-
-    // A trip belongs to the people in it, so a signed-out caller has no list.
-    let Some(vid) = viewer_id else {
-        return Ok(empty);
-    };
 
     let rows = sqlx::query(&format!(
         "SELECT {}, COUNT(*) OVER() AS total_count FROM trips \
@@ -222,10 +231,9 @@ pub async fn patch_trip(
     pool: &PgPool,
     trip_id: TripId,
     actor_id: &str,
+    expected: Option<DateTime<Utc>>,
     req: &PatchTripRequest,
-) -> Result<Option<Trip>, sqlx::Error> {
-    let mut tx = pool.begin().await?;
-
+) -> Result<Outcome<Trip>, sqlx::Error> {
     let row = sqlx::query(
         "UPDATE trips SET \
              name         = COALESCE($2, name), \
@@ -233,7 +241,8 @@ pub async fn patch_trip(
              start_date   = COALESCE($5, start_date), \
              end_date     = CASE WHEN $6 THEN $7 ELSE end_date END, \
              updated_at   = NOW() \
-         WHERE id = $1 RETURNING id",
+         WHERE id = $1 AND ($8::timestamptz IS NULL OR updated_at = $8) \
+         RETURNING id",
     )
     .bind(trip_id)
     .bind(req.name.as_deref())
@@ -242,17 +251,45 @@ pub async fn patch_trip(
     .bind(req.start_date)
     .bind(req.end_date.is_some())
     .bind(req.end_date.flatten())
-    .fetch_optional(&mut *tx)
+    .bind(expected)
+    .fetch_optional(pool)
     .await?;
 
     if row.is_none() {
-        return Ok(None);
+        return missed(pool, "trips", "id = $1", &[trip_id], expected).await;
     }
+    Ok(match get_trip_for_viewer(pool, trip_id, actor_id).await? {
+        Some(trip) => Outcome::Done(trip),
+        None => Outcome::NotFound,
+    })
+}
 
-
-    tx.commit().await?;
-
-    get_trip_for_viewer(pool, trip_id, Some(actor_id)).await
+/// Why a versioned UPDATE touched nothing: the row is gone, or it is there
+/// but at another version. Only worth asking when a version was given.
+/// `key` is a fixed predicate over `$1..$n`, bound from `ids` in order - it
+/// must scope by trip as the UPDATE did, or another trip's row would read as
+/// "stale" and give its existence away.
+pub(super) async fn missed<T>(
+    pool: &PgPool,
+    table: &'static str,
+    key: &'static str,
+    ids: &[i64],
+    expected: Option<DateTime<Utc>>,
+) -> Result<Outcome<T>, sqlx::Error> {
+    if expected.is_none() {
+        return Ok(Outcome::NotFound);
+    }
+    let sql = format!("SELECT 1 FROM {table} WHERE {key}");
+    let mut q = sqlx::query(&sql);
+    for id in ids {
+        q = q.bind(*id);
+    }
+    let exists = q.fetch_optional(pool).await?;
+    Ok(if exists.is_some() {
+        Outcome::Stale
+    } else {
+        Outcome::NotFound
+    })
 }
 
 pub async fn delete_trip(pool: &PgPool, trip_id: TripId) -> Result<bool, sqlx::Error> {
