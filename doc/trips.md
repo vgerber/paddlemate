@@ -207,7 +207,8 @@ across five concerns.
 It lives in `access.rs` and nowhere else, because the answers have to be
 identical everywhere:
 
-- `caller` turns the optional token into a user id, or the 401 to send.
+- `caller` turns the optional token into a user id, or the 401 to send. Every
+  trips route needs one, the listing included.
 - `require_member` gates anything that reads or shapes a trip. A non-member
   gets **404, not 403** - the existence of somebody's private trip is itself
   private.
@@ -227,6 +228,19 @@ Which gate each route uses:
 | admins only | editing and deleting the trip; adding and removing members; roles; deleting a base; accepting a candidate |
 | the person themselves | their own attendance; leaving the trip; withdrawing their own suggestion |
 
+"The person themselves" still means a *member*: editing your own row starts
+with `require_member` like everything else. It used to skip the gate and lean
+on the attendance table's foreign key to refuse outsiders, which held only as
+long as every per-member field lived in that one table.
+
+How a result becomes a response lives beside it, in `respond.rs`, for the same
+reason: a missing thing is 404, a stale version 412, a refused rule or a bad
+input 400, anything else an opaque 500. Queries return an `Outcome`
+(`Done`, `NotFound`, `Stale`, `Refused`), and `outcome()` is the only place
+the arms become statuses. `failure()` turns the constraints a client can trip
+- dates, an unknown section or user, a duplicate entry - into the 400 naming
+the rule.
+
 ### Tables
 
 | Migration | Adds |
@@ -235,6 +249,7 @@ Which gate each route uses:
 | [`00041_trip_stay_holiday_home.sql`](../api/migrations/00041_trip_stay_holiday_home.sql) | `holiday_home` on `trip_stay_kind` |
 | [`00042_trips_are_invite_only.sql`](../api/migrations/00042_trips_are_invite_only.sql) | drops visibility: the scope columns and the audience tables |
 | [`00043_trip_stay_candidates.sql`](../api/migrations/00043_trip_stay_candidates.sql) | candidates and their votes |
+| [`00044_trips_integrity.sql`](../api/migrations/00044_trips_integrity.sql) | moves rules into the schema: votes and trip logs hang off the membership, watched sections cascade, positions check at commit, candidates carry `updated_at` |
 
 | Table | Holds |
 |---|---|
@@ -242,10 +257,10 @@ Which gate each route uses:
 | `trip_members` | `(trip_id, user_id)` with role `admin` or `member` |
 | `trip_member_attendance` | per-member `arrival`/`departure` days plus optional `arrival_time`/`departure_time`, keyed on the membership |
 | `trip_stays` | a base: `kind`, `name`, optional `location` point and dates |
-| `trip_sections` | a run watched from one stay, with `sort_order`, `status` and a note |
+| `trip_sections` | a run watched from one stay, with `sort_order`, `status` and a note; `section_id` cascades |
 | `trip_stay_candidates` | a base somebody has put up: same shape as a stay, because accepting one copies it across |
-| `trip_stay_candidate_votes` | one row per member per candidate, `+1`/`-1`, same shape as `proposal_votes` |
-| `descents.trip_id` | nullable FK, `ON DELETE SET NULL` |
+| `trip_stay_candidate_votes` | one row per member per candidate, `+1`/`-1`, same shape as `proposal_votes`; keyed on `(trip_id, user_id)` into `trip_members` |
+| `descents.trip_id` | nullable; `(trip_id, user_id)` references `trip_members` with `ON DELETE SET NULL (trip_id)` |
 
 There is no `user_id` on `trips`: ownership is a `trip_members` row with role
 `admin`, so it can be transferred or shared without touching the trip. And
@@ -258,9 +273,36 @@ sort_order)` - per stay, not per trip. Trip-level queries join through
 `trip_stays`, and a stay never moves between trips, so the table needs no
 `trip_id` of its own.
 
-The two "at least one" invariants (one admin, one stay) are enforced in the
-route layer on delete, where a check constraint cannot see the rest of the
-table.
+The two "at least one" invariants (one admin, one stay) cannot be check
+constraints, since they are about the rest of the table. They are checked in
+the query that does the write, inside one transaction that first takes
+`FOR NO KEY UPDATE` on the trip row. Without the lock two admins could each
+pass the count and each leave, and a trip with no admin has no way back
+through the API. `NO KEY` so inserts that merely reference the trip - a stay,
+a member - are not held up by it.
+
+Rules that *can* be structural are, so no code path can forget them:
+
+- **A vote hangs off the membership.** `trip_stay_candidate_votes` carries the
+  trip and references `trip_members (trip_id, user_id)` with `CASCADE`, and its
+  candidate through `(candidate_id, trip_id)`. Only a member can vote, and
+  leaving takes your votes with you.
+- **A trip log hangs off the membership too.** `descents (trip_id, user_id)`
+  references `trip_members` with `ON DELETE SET NULL (trip_id)`: a log can only
+  be linked to a trip its owner is on, and leaving unlinks it while keeping
+  the log. The visibility override below lets members see each other's
+  private trip logs, so without this a private log stayed readable by a trip
+  its owner had walked away from.
+- **A watched section is a plan, not a record.** `trip_sections.section_id`
+  cascades, so deleting a run from the map drops it off the watch lists
+  rather than a private list nobody else can see blocking the deletion.
+  (`descent_sections` still restricts: a log is a record.)
+- **Positions are checked at commit.** `(stay_id, sort_order)` is
+  `DEFERRABLE`, so a reorder can move entries past each other in one
+  transaction.
+
+Enums decode through `sqlx::Type`, never by matching text with a fallback: an
+unknown role must fail loudly, not quietly read as `member`.
 
 Attendance times are `TIME`, not `TIMESTAMPTZ`: "19:30 at the campsite" must
 read the same for everyone, and a zoned value would shift it to whoever is
@@ -271,7 +313,7 @@ leaving on one day means the clock has to run forwards too
 (`chk_trip_attendance_same_day`). Arrival and departure are otherwise
 independently nullable - every constraint on the pair is written to pass when
 either side is `NULL`, so recording an arrival never obliges a departure.
-`constraint_message` in the route layer maps each of those to the sentence for
+`constraint_message` in `respond.rs` maps each of those to the sentence for
 the rule that was broken, rather than one blanket "bad dates".
 
 `trip_stay_candidates.location` is `GEOMETRY`, matching `trip_stays.location`,
@@ -290,7 +332,7 @@ All under `/trips`, documented in the OpenAPI at `/api/v1/docs`.
 | `GET` `PATCH` `DELETE` | `/trips/{trip_id}/members/{user_id}` | role is admin only, attendance is the member's own, and leaving is always your own to do |
 | `GET` `POST` | `/trips/{trip_id}/stays` | any member may add a base |
 | `GET` `PATCH` `DELETE` | `/trips/{trip_id}/stays/{stay_id}` | members edit, admins delete |
-| `PUT` | `/trips/{trip_id}/stays/{stay_id}/sections` | replaces the ordered watch list |
+| `PUT` | `/trips/{trip_id}/stays/{stay_id}/sections` | replaces the watch list; position is list order, and an entry that stays keeps its id, status and note |
 | `GET` `POST` | `/trips/{trip_id}/candidates` | `POST` puts a base up; any member may, and their own vote is counted for it |
 | `GET` `PATCH` `DELETE` | `/trips/{trip_id}/candidates/{candidate_id}` | `PATCH` edits the fields (any member) or, with `{accepted:true}`, turns it into a base (admins); `DELETE` withdraws it (yours, or any as an admin) |
 | `POST` `DELETE` | `/trips/{trip_id}/candidates/{candidate_id}/vote` | `{vote: 1 \| -1}`; `DELETE` takes the vote back |
@@ -303,6 +345,36 @@ checks they own the descent.
 
 Reading a trip's logs is `GET /descents?trip_id=`, so one listing keeps paging
 and every other filter.
+
+Every route needs a signed-in caller (401 otherwise, the listing included),
+and every path below `/trips/{trip_id}` is looked up *inside* that trip - the
+query filters on both ids. Candidate ids are sequential, and the candidate
+queries once took the id alone: a member of one trip could rename and accept
+another trip's candidate through their own trip's URL. Scope a child by its
+parent in the SQL, not in a check the handler might skip.
+
+#### Versioned edits
+
+A trip, a stay and a candidate are edited by several people, so their
+`PATCH` takes an optional `If-Match`. The tag is the item's `updated_at`,
+quoted, exactly as the JSON carries it - which is also what the `ETag` header
+says. Because the version is already in the body, a client holding an item
+from a *list* can send it too, without a GET per item.
+
+| Request | Result |
+|---|---|
+| no `If-Match` (or `*`) | written, as before |
+| the current version | written, new `ETag` in the response |
+| an older version | **412**, nothing written |
+| not a timestamp | 400 |
+
+Accepting a candidate honours it as well: with a version, only the version the
+admin read is accepted, not one somebody reworded while they decided. The CORS
+layer allows `If-Match` and exposes `ETag` - without the first, a browser's
+preflight for a versioned `PATCH` fails before the API sees it.
+
+Attendance and roles are not versioned: attendance is each member's own row,
+and role changes go through the trip lock.
 
 ### Why candidates are their own tables
 
@@ -435,6 +507,25 @@ Pure logic, tested without a browser:
 Shared pieces this feature added to the app, not to itself: `PanelHeader`,
 `Fact`, `RowMenu`, `TimelineRail`, `SectionAdder`, `VisibilityPicker`,
 `MarkdownText`/`MarkdownField`, and the map's `RangeRingLayers`.
+
+The edit dialogs (`TripForm`, `StayDialog`, and the accept confirm in
+`TripCandidates`) send `If-Match` with the version the form was filled from.
+They take it with the form, once, rather than reading the live prop: on a 412
+the hooks refetch, and a form saved against the refreshed version would
+overwrite the other person's change after all. So a refused save stays
+refused until the dialog is reopened on what is really there, and the error
+is scrolled into view beside the save button.
+
+### Tests
+
+[`api/tests/trips.rs`](../api/tests/trips.rs) drives the real routers behind
+the real API-key layer, each test on a fresh database built from the
+migrations. It pins what used to hold only by convention: the 404/403 split,
+signed-out 401s, self-edits needing membership, the last admin and last base
+(each also raced), votes and private logs leaving with a member, candidates
+unreachable through another trip, bad input answering 400, a reorder keeping
+its rows, and a stale `If-Match` answering 412. Each race test fails when the
+trip lock is removed, which is how it is known to test anything.
 
 #### Patterns worth keeping
 

@@ -179,7 +179,7 @@ feature look like the product rather than like MUI:
 | Piece | Use it for |
 |---|---|
 | `PanelHeader` | every detail panel: back arrow, bold title, grey subtitle, action icons right, and the segmented tab bar when it has views |
-| `ListPaneHeader` | the opening line of every list pane: uppercase collection label, the count on the right, the list's own controls after it |
+| `ListPaneHeader` | the opening line of every list pane: the count, and the list's own controls at the right edge - no title, the nav already names the list |
 | `Fact` (`factLabelSx`, `valueSx`) | a labelled value in a detail header - overline label, value beneath |
 | `FormSection` | every block of a form: overline heading, one hint line, its own action in the heading |
 | `PanelBottomBar` + `RoundActionButton` | a form's chrome: cancel left, title and status as subtitle, one round action right |
@@ -315,6 +315,18 @@ code. Component rendering is not tested; the UI is verified by running it.
   `query/<x>/{mod,a,b}.rs`, with `mod.rs` re-exporting so call sites stay
   `x::do_thing`. Trips are the worked example. A new table under a feature is
   a new pair of files, not another few hundred lines in an existing one.
+- **A child is looked up inside its parent.** Anything reached through a
+  parent's path (`/trips/{trip_id}/candidates/{candidate_id}`) is queried by
+  both ids in the SQL. Ids are sequential, so a query on the child id alone
+  lets a caller reach another parent's children through their own URL - and a
+  check in the handler after the query does not undo a write that already
+  happened.
+- **A rule about other rows is checked under a lock.** "At least one admin"
+  cannot be a check constraint, so count and write in one transaction that
+  first locks the parent row (`FOR NO KEY UPDATE`). Two requests can each pass
+  a lock-free count and both land. Where the rule can be structural instead -
+  a vote or a linked log hanging off a membership through a composite foreign
+  key - make it structural, so no code path can forget it.
 - **One gate per question, in one file.** A feature's permission checks live
   together (`routes/trips/access.rs`), not one copy per route module. Two
   helpers that answer the same question in different files will drift; the
