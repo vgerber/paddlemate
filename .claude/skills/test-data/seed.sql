@@ -588,14 +588,15 @@ VALUES
    ST_SetSRID(ST_MakePoint(11.8600, 47.2400), 4326),
    NULL, NULL, :'tobi');
 
-INSERT INTO trip_stay_candidate_votes (candidate_id, user_id, vote) VALUES
+-- trip_id rides along because a vote hangs off the voter's membership.
+INSERT INTO trip_stay_candidate_votes (candidate_id, trip_id, user_id, vote) VALUES
   -- Three for the house, nobody against.
-  (9051, :'mara', 1),
-  (9051, :'vincent', 1),
-  (9051, :'tobi', 1),
+  (9051, 9001, :'mara', 1),
+  (9051, 9001, :'vincent', 1),
+  (9051, 9001, :'tobi', 1),
   -- Split on the campsite, which is the state worth looking at.
-  (9052, :'tobi', 1),
-  (9052, :'vincent', -1);
+  (9052, 9001, :'tobi', 1),
+  (9052, 9001, :'vincent', -1);
 
 
 -- Logs credited to the trip, including one private one of Mara's: inside the
