@@ -2,7 +2,6 @@ import AddIcon from "@mui/icons-material/Add";
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Fab from "@mui/material/Fab";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
@@ -15,6 +14,7 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { useState } from "react";
+import DockedAction from "@/components/DockedAction";
 import ListPaneHeader from "@/components/ListPaneHeader";
 import MyLogsPanel from "@/components/logs-page/MyLogsPanel";
 import SocialPanel from "@/components/logs-page/SocialPanel";
@@ -175,30 +175,7 @@ function LogsDesktop({
             flush
           />
         </Box>
-        {/* Docked, so it never floats over the last log in the list. */}
-        {tab === 0 && (
-          <Box
-            sx={{
-              px: 1.5,
-              py: 1,
-              display: "flex",
-              gap: 1,
-              flexShrink: 0,
-              borderTop: "1px solid",
-              borderColor: "divider",
-            }}
-          >
-            <Button
-              size="small"
-              startIcon={<AddIcon />}
-              variant="outlined"
-              fullWidth
-              onClick={onNew}
-            >
-              Log descent
-            </Button>
-          </Box>
-        )}
+        {tab === 0 && <DockedAction label="Log descent" onClick={onNew} />}
       </Box>
       <Box sx={{ minHeight: 0, overflowY: "auto" }}>
         {hasChild ? (

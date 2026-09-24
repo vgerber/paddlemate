@@ -180,6 +180,7 @@ feature look like the product rather than like MUI:
 |---|---|
 | `PanelHeader` | every detail panel: back arrow, bold title, grey subtitle, action icons right, and the segmented tab bar when it has views |
 | `ListPaneHeader` | the opening line of every list pane: the count, and the list's own controls at the right edge - no title, the nav already names the list |
+| `DockedAction` | a pane's primary action on desktop: one filled full-width button docked at the foot of the pane, below the list; phones keep the FAB |
 | `Fact` (`factLabelSx`, `valueSx`) | a labelled value in a detail header - overline label, value beneath |
 | `FormSection` | every block of a form: overline heading, one hint line, its own action in the heading |
 | `PanelBottomBar` + `RoundActionButton` | a form's chrome: cancel left, title and status as subtitle, one round action right |
@@ -193,7 +194,8 @@ Before writing a new list row, header, form block or dialog, read
 [doc/design.md](doc/design.md) and copy the nearest existing screen. Rows are
 `ListItemButton` separated by a dimmed rule, not bordered cards; page-level
 lists open with an overline label and a count; a tab's primary action is the
-FAB, not a button above the list; a row's actions are one `RowMenu`, not a
+FAB on a phone and a `DockedAction` at the foot of the pane on a desktop,
+never a button above the list; a row's actions are one `RowMenu`, not a
 line of icons.
 
 **Desktop is not a wide phone.** A list-plus-detail screen splits into two

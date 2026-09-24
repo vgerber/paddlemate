@@ -1,10 +1,10 @@
 import AddIcon from "@mui/icons-material/Add";
 import LuggageOutlinedIcon from "@mui/icons-material/LuggageOutlined";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Fab from "@mui/material/Fab";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import DockedAction from "@/components/DockedAction";
 import ListPaneHeader from "@/components/ListPaneHeader";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -138,32 +138,14 @@ function TripsPage() {
       >
         <ListPaneHeader count={trips.length} loading={isLoading} />
         <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
-        {/* Docked, so it never floats over the last trip in the list. */}
-        <Box
-          sx={{
-            px: 1.5,
-            py: 1,
-            display: "flex",
-            gap: 1,
-            flexShrink: 0,
-            borderTop: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Button
-            size="small"
-            startIcon={<AddIcon />}
-            variant="outlined"
-            fullWidth
-            onClick={() =>
-              navigate({
-                search: (prev) => ({ ...prev, new: true, selected: undefined }),
-              })
-            }
-          >
-            New trip
-          </Button>
-        </Box>
+        <DockedAction
+          label="New trip"
+          onClick={() =>
+            navigate({
+              search: (prev) => ({ ...prev, new: true, selected: undefined }),
+            })
+          }
+        />
       </Box>
       <Box
         sx={{

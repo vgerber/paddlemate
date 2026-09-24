@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
+import DockedAction from "@/components/DockedAction";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { FavoriteSection, SectionWithFeatures } from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
@@ -249,17 +250,29 @@ export default function WaterwaySearchPanel({
       </Box>
 
       {/* Always-visible entry point for proposing a river; prefills the
-          suggest panel with the current search text. */}
+          suggest panel with the current search text. A FAB on a phone, the
+          docked button every pane has on a desktop. */}
       {onProposeRiver && (
-        <Fab
-          color="secondary"
-          aria-label="New river"
-          title="New river"
-          onClick={() => onProposeRiver(mode === "name" ? searchName : "")}
-          sx={{ position: "absolute", bottom: 16, right: 16 }}
-        >
-          <AddIcon />
-        </Fab>
+        <>
+          <Fab
+            color="secondary"
+            aria-label="New river"
+            title="New river"
+            onClick={() => onProposeRiver(mode === "name" ? searchName : "")}
+            sx={{
+              position: "absolute",
+              bottom: 16,
+              right: 16,
+              display: { xs: "flex", md: "none" },
+            }}
+          >
+            <AddIcon />
+          </Fab>
+          <DockedAction
+            label="New river"
+            onClick={() => onProposeRiver(mode === "name" ? searchName : "")}
+          />
+        </>
       )}
     </Box>
   );
