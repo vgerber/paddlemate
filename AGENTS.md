@@ -137,6 +137,10 @@ time.
 - **One line, nothing else.** A conventional subject (`feat:`, `fix:`,
   `chore:`, `refactor:`, `docs:`) in sentence case is the whole message: no
   body, no trailers, no multi-line explanations.
+- **`feat:` is for value the user did not have.** A new capability is a
+  feature. Making existing screens consistent, restyling, moving a control
+  or tightening behaviour is a `fix:` - or a `refactor:` when nothing
+  visible changes.
 - **Keep it short and on point.** Aim for 40 characters or fewer after the
   prefix. Name what changed, not why or how - `fix: Bound the region fill`,
   not `fix: Keep the region map filled while it loads`.
