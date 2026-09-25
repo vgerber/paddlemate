@@ -10,7 +10,7 @@ import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import TimelineRail from "@/components/TimelineRail";
 import type { Trip } from "@/lib/api";
-import { formatDate } from "@/lib/format";
+import { formatDate, todayIso } from "@/lib/format";
 import { useTripTimeline } from "@/lib/hooks/useTrips";
 import { fonts, theme } from "@/lib/theme";
 import {
@@ -63,7 +63,7 @@ export default function TripTimeline({
     );
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   return (
     <Stack direction="column">

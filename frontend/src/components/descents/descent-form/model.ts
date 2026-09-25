@@ -117,6 +117,22 @@ export function initFromDescent(d: Descent): LogForm {
   };
 }
 
+/** A mate's log as the start of your own. It keeps what describes the run -
+ * times, sections, put-in and take-out, name, trip - and nothing that was
+ * theirs to decide: who could see it, and their note. The copy starts as
+ * private as any new log, so copying a public log never publishes yours. */
+export function copyFromDescent(d: Descent): LogForm {
+  const fresh = defaultForm();
+  return {
+    ...initFromDescent(d),
+    note: fresh.note,
+    visibility_type: fresh.visibility_type,
+    shared_groups: fresh.shared_groups,
+    shared_users: fresh.shared_users,
+    visible_from: fresh.visible_from,
+  };
+}
+
 export function makeDraft(
   section: SectionWithFeatures,
   sortOrder: number,

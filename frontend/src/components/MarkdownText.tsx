@@ -7,7 +7,8 @@ import remarkGfm from "remark-gfm";
  * Somebody's text, formatted. Markdown only - `react-markdown` escapes raw
  * HTML rather than rendering it, and we deliberately do not add `rehype-raw`,
  * so a description cannot smuggle markup into the page. Link hrefs go through
- * its default transform, which drops `javascript:`.
+ * its default transform, which drops `javascript:`, and images render as
+ * links rather than loading on sight.
  *
  * Styled to the app rather than to a document: the same body size as the text
  * around it, tight spacing, and no headings large enough to compete with the
@@ -35,6 +36,21 @@ export default function MarkdownText({ children }: { children: string }) {
             {children}
           </Link>
         ),
+        // An image would load from wherever its author pointed it the
+        // moment anyone opened the trip - a tracking pixel for every
+        // member's address. It shows as a link instead, opened by choice.
+        img: ({ src, alt }) =>
+          typeof src === "string" ? (
+            <Link
+              href={src}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              sx={{ wordBreak: "break-word" }}
+            >
+              {alt || "Image"}
+            </Link>
+          ) : null,
         ul: ({ children }) => (
           <Typography
             component="ul"

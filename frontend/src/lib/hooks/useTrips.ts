@@ -17,7 +17,7 @@ import {
 } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { buildTimeline, type TripDay } from "@/lib/tripTimeline";
-import { descentKeys, useDescents } from "./useDescents";
+import { descentKeys, useTripDescents } from "./useDescents";
 
 export const tripKeys = {
   all: ["trips"] as const,
@@ -145,6 +145,9 @@ export function useRemoveTripMember(id: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: tripKeys.detail(id) });
       qc.invalidateQueries({ queryKey: tripKeys.lists() });
+      // Leaving unlinks that person's logs from the trip, so every cached
+      // log list that showed them under it is out of date.
+      qc.invalidateQueries({ queryKey: descentKeys.lists() });
     },
   });
 }
@@ -226,7 +229,7 @@ export function useLinkDescentToTrip(tripId: number) {
 export function useTripTimeline(trip: Trip) {
   const members = useTripMembers(trip.id);
   const stays = useTripStays(trip.id);
-  const descents = useDescents({ trip_id: trip.id });
+  const descents = useTripDescents(trip.id);
 
   const days: TripDay[] = useMemo(
     () =>
@@ -235,7 +238,7 @@ export function useTripTimeline(trip: Trip) {
         endDate: trip.end_date,
         members: members.data ?? [],
         stays: stays.data ?? [],
-        descents: descents.data?.items ?? [],
+        descents: descents.data ?? [],
       }),
     [trip.start_date, trip.end_date, members.data, stays.data, descents.data],
   );

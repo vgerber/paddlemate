@@ -20,6 +20,7 @@ export const descentKeys = {
     [...descentKeys.lists(), "infinite", filters] as const,
   sectionCounts: (waterwayId: number) =>
     [...descentKeys.lists(), "section-counts", waterwayId] as const,
+  trip: (tripId: number) => [...descentKeys.lists(), "trip", tripId] as const,
   detail: (id: number) => [...descentKeys.all, id] as const,
 };
 
@@ -28,6 +29,28 @@ export function useDescents(filters: DescentFilters = {}, enabled = true) {
     queryKey: descentKeys.list(filters),
     queryFn: () => descentsApi.list(filters),
     enabled,
+  });
+}
+
+/** Every log credited to a trip, not just the first page: the Logs tab and
+ * the timeline both need the whole trip, and a week of four paddlers is
+ * already past one page. Trips are small, so walking the pages is cheap. */
+export function useTripDescents(tripId: number) {
+  return useQuery({
+    queryKey: descentKeys.trip(tripId),
+    queryFn: async () => {
+      const first = await descentsApi.list({ trip_id: tripId, per_page: 100 });
+      const items = [...first.items];
+      for (let page = 2; page <= first.total_pages; page++) {
+        const next = await descentsApi.list({
+          trip_id: tripId,
+          per_page: 100,
+          page,
+        });
+        items.push(...next.items);
+      }
+      return items;
+    },
   });
 }
 

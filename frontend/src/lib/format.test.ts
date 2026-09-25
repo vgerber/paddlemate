@@ -10,17 +10,19 @@ import {
   humanize,
   sectionPlace,
   timeAgo,
+  todayIso,
 } from "./format";
 
 describe("formatDate", () => {
-  // Noon UTC keeps the calendar day stable in every timezone the tests
-  // might run in.
+  // A bare calendar day is the same day in every timezone. An instant is
+  // not - noon UTC is already tomorrow in UTC+13 - so the format tests use
+  // days.
   test("formats day month year", () => {
-    expect(formatDate("2026-01-05T12:00:00Z")).toBe("05 Jan 2026");
+    expect(formatDate("2026-01-05")).toBe("05 Jan 2026");
   });
 
   test("prepends the weekday when asked", () => {
-    expect(formatDate("2026-01-05T12:00:00Z", { weekday: true })).toBe(
+    expect(formatDate("2026-01-05", { weekday: true })).toBe(
       "Mon, 05 Jan 2026",
     );
   });
@@ -153,5 +155,21 @@ describe("dateAndTime", () => {
   test("is just the day until somebody sets a time", () => {
     expect(dateAndTime("2026-09-03")).toBe("Thu, 03 Sept 2026");
     expect(dateAndTime("2026-09-03", null)).toBe("Thu, 03 Sept 2026");
+  });
+});
+
+describe("todayIso", () => {
+  test("is the local calendar day, not the UTC one", () => {
+    // 00:30 local on the 2nd: in any zone east of UTC the UTC date is still
+    // the 1st, which is what toISOString would have said.
+    expect(todayIso(new Date(2026, 8, 2, 0, 30))).toBe("2026-09-02");
+  });
+});
+
+describe("calendar days", () => {
+  test("a bare date is that day wherever the viewer is", () => {
+    // Built from local parts, so this holds in every timezone the suite runs
+    // in - run it with TZ=America/New_York to see it bite.
+    expect(formatDate("2026-06-01")).toBe("01 Jun 2026");
   });
 });

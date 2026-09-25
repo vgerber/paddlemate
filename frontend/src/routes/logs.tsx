@@ -93,7 +93,7 @@ function LogsPage() {
       onNew={onNew}
       selectedId={selectedId}
       hasChild={hasChild}
-      logCount={myDescents?.items.length}
+      logCount={myDescents?.total}
     />
   );
 }

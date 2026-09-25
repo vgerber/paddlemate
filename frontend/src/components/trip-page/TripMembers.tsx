@@ -6,6 +6,7 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { factLabelSx } from "@/components/Fact";
@@ -40,6 +41,7 @@ export default function TripMembers({
   const { data: members, isLoading } = useTripMembers(tripId);
   const patchMember = usePatchTripMember(tripId);
   const removeMember = useRemoveTripMember(tripId);
+  const navigate = useNavigate();
   const [confirmRemove, setConfirmRemove] = useState<TripMember | null>(null);
 
   if (isLoading) return <LoadingBox size={40} pt={6} />;
@@ -66,15 +68,27 @@ export default function TripMembers({
         open={confirmRemove !== null}
         title={leaving ? "Leave trip?" : "Remove member?"}
         body={
+          // Matches what the schema does: a log hangs off its owner's
+          // membership, so it leaves the trip with them.
           leaving
-            ? "Your logs stay linked to the trip."
-            : `${confirmRemove?.username} loses access to the trip.`
+            ? "Your logs stay in your logbook but are no longer part of this trip."
+            : `${confirmRemove?.username} loses access to the trip, and their logs leave it with them.`
         }
         confirmLabel={leaving ? "Leave" : "Remove"}
+        pendingLabel={leaving ? "Leaving…" : "Removing…"}
+        pending={removeMember.isPending}
         color="error"
         onConfirm={() => {
-          if (confirmRemove) removeMember.mutate(confirmRemove.user_id);
-          setConfirmRemove(null);
+          if (!confirmRemove) return;
+          // Stays open until the server agrees: a refused leave (the last
+          // admin) must not look like it went through.
+          removeMember.mutate(confirmRemove.user_id, {
+            onSuccess: () => {
+              setConfirmRemove(null);
+              // A trip you left is one you can no longer open.
+              if (leaving) navigate({ to: "/trips" });
+            },
+          });
         }}
         onCancel={() => setConfirmRemove(null)}
       />

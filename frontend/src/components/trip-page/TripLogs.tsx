@@ -7,7 +7,7 @@ import RowMenu from "@/components/RowMenu";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { Descent } from "@/lib/api";
-import { useDescents } from "@/lib/hooks/useDescents";
+import { useTripDescents } from "@/lib/hooks/useDescents";
 import { theme } from "@/lib/theme";
 
 interface Props {
@@ -32,11 +32,11 @@ export default function TripLogs({
   onCopy,
   onUnlink,
 }: Props) {
-  const { data, isLoading } = useDescents({ trip_id: tripId });
+  const { data, isLoading } = useTripDescents(tripId);
 
   if (isLoading) return <LoadingBox size={40} pt={6} />;
 
-  const descents = data?.items ?? [];
+  const descents = data ?? [];
 
   if (descents.length === 0) {
     return (

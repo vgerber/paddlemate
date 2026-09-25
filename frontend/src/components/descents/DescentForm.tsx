@@ -12,6 +12,7 @@ import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
 import {
   buildPayload,
+  copyFromDescent,
   defaultForm,
   initFromDescent,
   type LogForm,
@@ -55,9 +56,7 @@ export default function DescentForm({
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<LogForm>(() => {
     if (descent) return initFromDescent(descent);
-    // A copy keeps the original's sections and times but is owned - and
-    // published - by whoever copies it.
-    if (copyFrom) return initFromDescent(copyFrom);
+    if (copyFrom) return copyFromDescent(copyFrom);
     const base = initialStartTime
       ? { ...defaultForm(), start_time: toDatetimeLocal(initialStartTime) }
       : defaultForm();

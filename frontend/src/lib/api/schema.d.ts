@@ -2415,23 +2415,11 @@ export interface components {
              */
             arrival?: string | null;
             /**
-             * Format: partial-time
-             * @description Omit to leave unchanged; send null to clear. Needs a day to sit on.
-             * @default null
-             */
-            arrival_time?: string | null;
-            /**
              * Format: date
              * @description Omit to leave unchanged; send null to clear.
              * @default null
              */
             departure?: string | null;
-            /**
-             * Format: partial-time
-             * @description Omit to leave unchanged; send null to clear. Needs a day to sit on.
-             * @default null
-             */
-            departure_time?: string | null;
             kind?: components["schemas"]["TripStayKind"] | null;
             /**
              * Format: double
@@ -3601,11 +3589,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-09-22T20:22:20.687750570Z",
-                     *         "expires_at": "2026-12-21T20:22:20.687752500Z",
+                     *         "created_at": "2026-09-25T19:07:44.939141081Z",
+                     *         "expires_at": "2026-12-24T19:07:44.939142821Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-09-22T20:22:20.687764830Z",
+                     *         "last_used_at": "2026-09-25T19:07:44.939157561Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -3636,8 +3624,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-09-22T20:22:20.687878990Z",
-                     *       "expires_at": "2026-12-21T20:22:20.687879360Z",
+                     *       "created_at": "2026-09-25T19:07:44.939268941Z",
+                     *       "expires_at": "2026-12-24T19:07:44.939269341Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
