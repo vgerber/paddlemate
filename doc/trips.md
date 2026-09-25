@@ -92,8 +92,8 @@ right now**. That answers the question you would open a base to ask - is
 anything here running? - without opening it. Opening one shows the watch list
 in full.
 
-Bases are added, edited and removed as the trip moves, by any member. Dates
-are optional. The notes take **Markdown**, so a base can carry the booking
+Any member adds and edits bases as the trip moves; removing one is up to an
+admin, and a trip always keeps at least one. Dates are optional. The notes take **Markdown**, so a base can carry the booking
 link, the price and what is actually good about it rather than one flat line;
 the editor has buttons for bold, italic, link and list plus a preview, so
 nobody needs to know the syntax. The location is **placed on a map** with the
@@ -170,15 +170,21 @@ Two rules are worth knowing:
 
 - **Members copy, they do not share.** When a mate has logged a run you were
   on, copying it opens the log form pre-filled from theirs and saves a new
-  descent owned by you, with the same trip. So one run down the Oetz by four
-  people is four logs. That is what makes "who was on this" readable, but it
-  means the trip's log count counts logs, not runs.
+  descent owned by you, with the same trip. The copy takes the run - times,
+  sections, put-in and take-out, name - but not their note or who they
+  shared it with: it starts private, like any new log. So one run down the
+  Oetz by four people is four logs. That is what makes "who was on this"
+  readable, but it means the trip's log count counts logs, not runs.
 - **A log's visibility governs the public list, not the trip.** In the trip
   view a member sees every member's logs, private ones included - inside a
   trip the group has already agreed to share. Visibility is what decides
   whether a log shows up in the general `/descents` listing and the social
   feed, and there the normal rules hold: ask for a trip's logs as a member and
-  you get all of them, ask generally and a private log stays private.
+  you get all of them, ask generally and a private log stays private. A trip
+  log listed for you also opens for you. Which trip a log belongs to is as
+  private as the trip: anyone else reading a public log does not see it.
+- **A log leaves with its owner.** Leaving a trip, or being removed from it,
+  takes your logs out of it; they stay in your own logbook.
 
 ---
 
@@ -458,8 +464,18 @@ OR ($trip_id IS NOT NULL
 
 Scoping it to the filter is the point. As a free-standing branch it would leak
 a private log into the *global* feed for anyone who happens to share a trip
-with its author, which is exactly what visibility exists to prevent. The bare
-detail route `GET /descents/{id}` keeps the normal rules too.
+with its author, which is exactly what visibility exists to prevent.
+
+`get_descent_for_viewer` - the detail route `GET /descents/{id}` - carries the
+matching branch: a log credited to a trip opens for that trip's members. A
+single log cannot leak into a feed, and without it a log shown in the trip's
+list would answer "not found" when opened. Both rely on the owner still being
+a member, which the schema guarantees (a log's trip link hangs off the
+owner's membership).
+
+`hide_foreign_trips` then clears `trip_id` on every log returned to a viewer
+who is not on that trip, in the list and the detail alike: a public log is
+readable by anyone, but which private trip it belongs to is not.
 
 ### Frontend
 
