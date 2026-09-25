@@ -27,6 +27,7 @@ use crate::{
 };
 
 use super::access::{caller, require_admin, require_member};
+use super::name_error;
 use super::respond::{failure, if_match, outcome, with_etag};
 
 /// A base is a place, so its location is a point - anything else would only
@@ -146,8 +147,8 @@ pub async fn propose_candidate(
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
     }
-    if body.name.trim().is_empty() {
-        return ApiError::validation("A base needs a name").into_response();
+    if let Some(res) = name_error("name", &body.name) {
+        return res;
     }
 
     if let Some(res) = location_error(body.location.as_ref()) {
@@ -293,8 +294,8 @@ pub async fn patch_candidate(
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
     }
-    if body.name.as_ref().is_some_and(|n| n.trim().is_empty()) {
-        return ApiError::validation("A base needs a name").into_response();
+    if let Some(res) = body.name.as_deref().and_then(|n| name_error("name", n)) {
+        return res;
     }
     if let Some(res) = location_error(body.location.as_ref().and_then(|l| l.as_ref())) {
         return res;

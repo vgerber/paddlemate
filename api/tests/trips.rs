@@ -617,3 +617,185 @@ async fn a_stale_edit_is_refused_not_applied(pool: PgPool) {
         StatusCode::BAD_REQUEST
     );
 }
+
+/// A private log of a member's, linked to the trip. Returns its id.
+async fn trip_log(pool: &PgPool, owner: &str, trip_id: i64, visibility: &str) -> i64 {
+    sqlx::query_scalar(
+        "INSERT INTO descents (user_id, start_time, end_time, visibility_scope, name, \
+                              put_in_lat, put_in_lon, take_out_lat, take_out_lon, trip_id) \
+         VALUES ($1, NOW(), NOW() + INTERVAL '1 hour', $3::visibility_scope, 'Run', \
+                 47.0, 11.0, 47.1, 11.1, $2) RETURNING id",
+    )
+    .bind(owner)
+    .bind(trip_id)
+    .bind(visibility)
+    .fetch_one(pool)
+    .await
+    .unwrap()
+}
+
+/// A log listed in the trip must also open for the trip: it used to answer
+/// "not found", and copying it opened an empty form.
+#[sqlx::test(migrations = "./migrations")]
+async fn a_trip_log_opens_for_the_trip_and_nobody_else(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    let bob = user(&pool, "bob").await;
+    user(&pool, "eve").await;
+    let (trip_id, _) = trip(&app, &pool, "ann", &["bob"]).await;
+    let log = trip_log(&pool, &bob, trip_id, "private").await;
+    let uri = format!("/descents/{log}");
+
+    let r = get(&app, &uri, "ann").await;
+    assert_eq!(r.status, StatusCode::OK, "a trip member opens it");
+    assert_eq!(r.body["trip_id"], trip_id);
+    assert_eq!(get(&app, &uri, "eve").await.status, StatusCode::NOT_FOUND);
+}
+
+/// Which trip a log belongs to is as private as the trip itself.
+#[sqlx::test(migrations = "./migrations")]
+async fn a_public_log_does_not_reveal_its_trip(pool: PgPool) {
+    let app = app(pool.clone());
+    let ann = user(&pool, "ann").await;
+    user(&pool, "eve").await;
+    let (trip_id, _) = trip(&app, &pool, "ann", &[]).await;
+    let log = trip_log(&pool, &ann, trip_id, "public").await;
+
+    let r = get(&app, &format!("/descents/{log}"), "eve").await;
+    assert_eq!(r.status, StatusCode::OK);
+    assert!(r.body["trip_id"].is_null(), "an outsider sees no trip id");
+    let r = get(&app, "/descents", "eve").await;
+    let listed = r.body["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|d| d["id"] == log)
+        .unwrap();
+    assert!(listed["trip_id"].is_null(), "nor in the list");
+    let r = call(
+        &app,
+        Method::GET,
+        &format!("/descents/{log}"),
+        None,
+        None,
+        None,
+    )
+    .await;
+    assert!(r.body["trip_id"].is_null(), "nor signed out");
+
+    let r = get(&app, &format!("/descents/{log}"), "ann").await;
+    assert_eq!(
+        r.body["trip_id"], trip_id,
+        "the owner, on the trip, still does"
+    );
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn names_must_say_something_and_fit(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    let (trip_id, stay_id) = trip(&app, &pool, "ann", &[]).await;
+    let long = "x".repeat(256);
+
+    let cases = [
+        (
+            Method::POST,
+            "/trips".to_string(),
+            json!({ "name": "  ", "start_date": "2026-09-09", "stay": { "kind": "camp", "name": "a" } }),
+        ),
+        (
+            Method::POST,
+            "/trips".to_string(),
+            json!({ "name": long, "start_date": "2026-09-09", "stay": { "kind": "camp", "name": "a" } }),
+        ),
+        (
+            Method::POST,
+            "/trips".to_string(),
+            json!({ "name": "ok", "start_date": "2026-09-09", "stay": { "kind": "camp", "name": "" } }),
+        ),
+        (
+            Method::PATCH,
+            format!("/trips/{trip_id}"),
+            json!({ "name": long }),
+        ),
+        (
+            Method::POST,
+            format!("/trips/{trip_id}/stays"),
+            json!({ "kind": "camp", "name": " " }),
+        ),
+        (
+            Method::PATCH,
+            format!("/trips/{trip_id}/stays/{stay_id}"),
+            json!({ "name": long }),
+        ),
+        (
+            Method::POST,
+            format!("/trips/{trip_id}/candidates"),
+            json!({ "kind": "camp", "name": long }),
+        ),
+    ];
+    for (method, uri, body) in cases {
+        let r = send(&app, method.clone(), &uri, "ann", body).await;
+        assert_eq!(
+            r.status,
+            StatusCode::BAD_REQUEST,
+            "{method} {uri}: {}",
+            r.body
+        );
+    }
+    // Exactly at the limit is fine: the column holds 255 characters.
+    let r = send(
+        &app,
+        Method::PATCH,
+        &format!("/trips/{trip_id}"),
+        "ann",
+        json!({ "name": "y".repeat(255) }),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+}
+
+/// `{"lat": 47.1, "lon": null}` is half a point. It used to pass the check
+/// and quietly clear the location.
+#[sqlx::test(migrations = "./migrations")]
+async fn half_a_location_is_refused(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    let (trip_id, stay_id) = trip(&app, &pool, "ann", &[]).await;
+    let uri = format!("/trips/{trip_id}/stays/{stay_id}");
+
+    let r = send(
+        &app,
+        Method::PATCH,
+        &uri,
+        "ann",
+        json!({ "lat": 47.1, "lon": 11.1 }),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+    let r = send(
+        &app,
+        Method::PATCH,
+        &uri,
+        "ann",
+        json!({ "lat": 47.2, "lon": null }),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::BAD_REQUEST);
+    assert!(
+        get(&app, &uri, "ann").await.body["location"].is_object(),
+        "the point survives"
+    );
+
+    // Clearing both halves together is how a location is removed.
+    let r = send(
+        &app,
+        Method::PATCH,
+        &uri,
+        "ann",
+        json!({ "lat": null, "lon": null }),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::OK);
+    assert!(r.body["location"].is_null());
+}

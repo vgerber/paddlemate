@@ -72,6 +72,13 @@ pub(super) fn outcome<T>(result: Outcome<T>, done: impl FnOnce(T) -> Response) -
 /// A database failure: a constraint the client broke becomes the 400 naming
 /// the rule, anything else the opaque 500 with its cause logged.
 pub(super) fn failure(context: &str, err: sqlx::Error) -> Response {
+    // 22001: a value longer than its column. The names are checked up front;
+    // this keeps any field that is not from turning into a 500.
+    if let sqlx::Error::Database(db) = &err {
+        if db.code().as_deref() == Some("22001") {
+            return ApiError::validation("A value is too long").into_response();
+        }
+    }
     match constraint_message(&err) {
         Some(message) => ApiError::validation(message).into_response(),
         None => ApiError::from_db(context, err).into_response(),

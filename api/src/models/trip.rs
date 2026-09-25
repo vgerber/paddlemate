@@ -196,15 +196,9 @@ pub struct PatchTripStayRequest {
     /// Omit to leave unchanged; send null to clear.
     #[serde(default, deserialize_with = "super::patch::nullable")]
     pub arrival: Option<Option<NaiveDate>>,
-    /// Omit to leave unchanged; send null to clear. Needs a day to sit on.
-    #[serde(default, deserialize_with = "super::patch::nullable")]
-    pub arrival_time: Option<Option<NaiveTime>>,
     /// Omit to leave unchanged; send null to clear.
     #[serde(default, deserialize_with = "super::patch::nullable")]
     pub departure: Option<Option<NaiveDate>>,
-    /// Omit to leave unchanged; send null to clear. Needs a day to sit on.
-    #[serde(default, deserialize_with = "super::patch::nullable")]
-    pub departure_time: Option<Option<NaiveTime>>,
 }
 
 /// Role is admin-only; arrival and departure are the member's own record.

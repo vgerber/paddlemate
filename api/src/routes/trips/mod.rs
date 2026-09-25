@@ -28,6 +28,24 @@ use crate::{
     state::AppState,
 };
 
+/// Every name here is what a list shows, so it has to say something - and it
+/// has to fit its `VARCHAR(255)` column, or it fails there as a 500.
+pub(super) fn name_error(target: &str, name: &str) -> Option<axum::response::Response> {
+    let name = name.trim();
+    let message = if name.is_empty() {
+        format!("{target} cannot be blank")
+    } else if name.chars().count() > 255 {
+        format!("{target} must be 255 characters or fewer")
+    } else {
+        return None;
+    };
+    Some(
+        ApiError::validation(message)
+            .with_target(target)
+            .into_response(),
+    )
+}
+
 pub fn trips_routes(state: AppState) -> ApiRouter {
     ApiRouter::new()
         .api_route(
@@ -91,6 +109,11 @@ pub async fn create_trip(
         Err(err) => return err.into_response(),
     };
 
+    for (target, name) in [("name", &body.name), ("stay.name", &body.stay.name)] {
+        if let Some(res) = name_error(target, name) {
+            return res;
+        }
+    }
     if let Some(end) = body.end_date {
         if end < body.start_date {
             return ApiError::validation("end_date must be on or after start_date").into_response();
@@ -163,6 +186,9 @@ pub async fn patch_trip(
         return res;
     }
 
+    if let Some(res) = body.name.as_deref().and_then(|n| name_error("name", n)) {
+        return res;
+    }
     let expected = match if_match(&headers) {
         Ok(v) => v,
         Err(err) => return err.into_response(),

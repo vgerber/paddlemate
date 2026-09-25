@@ -538,6 +538,9 @@ pub async fn create_descent(
     enrich_descent(pool, descent).await
 }
 
+/// A log is also open to the people on the trip it is credited to - the same
+/// rule the trip's log list follows, so a log listed there opens. Its owner
+/// is always on that trip: the link hangs off their membership.
 pub async fn get_descent_for_viewer(
     pool: &PgPool,
     descent_id: DescentId,
@@ -559,6 +562,10 @@ pub async fn get_descent_for_viewer(
                      JOIN group_members gm ON gm.group_id = dvg.group_id \
                      WHERE dvg.descent_id = descents.id AND gm.user_id = $2 \
                  )) \
+                 OR (descents.trip_id IS NOT NULL AND EXISTS ( \
+                     SELECT 1 FROM trip_members tm \
+                     WHERE tm.trip_id = descents.trip_id AND tm.user_id = $2 \
+                 )) \
              )"
         ))
         .bind(descent_id)
@@ -578,10 +585,38 @@ pub async fn get_descent_for_viewer(
         .await?
     };
 
-    match row {
-        None => Ok(None),
-        Some(r) => Ok(Some(enrich_descent(pool, row_to_descent(&r)?).await?)),
+    let Some(r) = row else { return Ok(None) };
+    let mut descent = [enrich_descent(pool, row_to_descent(&r)?).await?];
+    hide_foreign_trips(pool, viewer_id, &mut descent).await?;
+    let [descent] = descent;
+    Ok(Some(descent))
+}
+
+/// Which trip a log is credited to is as private as the trip: a public log
+/// is readable by anyone, but only the trip's members learn its `trip_id`.
+async fn hide_foreign_trips(
+    pool: &PgPool,
+    viewer_id: Option<&str>,
+    descents: &mut [Descent],
+) -> Result<(), sqlx::Error> {
+    if descents.iter().all(|d| d.trip_id.is_none()) {
+        return Ok(());
     }
+    let mine: std::collections::HashSet<i64> = match viewer_id {
+        Some(vid) => sqlx::query_scalar("SELECT trip_id FROM trip_members WHERE user_id = $1")
+            .bind(vid)
+            .fetch_all(pool)
+            .await?
+            .into_iter()
+            .collect(),
+        None => Default::default(),
+    };
+    for d in descents {
+        if d.trip_id.is_some_and(|t| !mine.contains(&t)) {
+            d.trip_id = None;
+        }
+    }
+    Ok(())
 }
 
 pub struct ListFilters<'a> {
@@ -802,6 +837,8 @@ pub async fn list_descents_for_viewer(
             *groups = groups_map.remove(&d.id).unwrap_or_default();
         }
     }
+
+    hide_foreign_trips(pool, viewer_id, &mut descents).await?;
 
     let total_pages = (total + filters.per_page - 1) / filters.per_page;
     Ok(PaginatedResponse {

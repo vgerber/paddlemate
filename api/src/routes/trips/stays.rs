@@ -26,6 +26,7 @@ use crate::{
 };
 
 use super::access::{caller, require_admin, require_member};
+use super::name_error;
 use super::respond::{failure, if_match, outcome, with_etag};
 
 pub fn stay_routes(state: AppState) -> ApiRouter {
@@ -143,6 +144,9 @@ pub async fn create_stay(
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
     }
+    if let Some(res) = name_error("name", &body.name) {
+        return res;
+    }
     if let Some(res) = stay_input_error(body.lat, body.lon, body.arrival, body.departure) {
         return res;
     }
@@ -180,7 +184,13 @@ pub async fn patch_stay(
     if let Some(res) = require_member(&app, trip_id, &caller_id).await {
         return res;
     }
-    if body.lat.is_some() != body.lon.is_some() {
+    if let Some(res) = body.name.as_deref().and_then(|n| name_error("name", n)) {
+        return res;
+    }
+    // Both keys or neither, and when given, both set or both cleared:
+    // `{"lat": 47.1, "lon": null}` is half a point, not a way to clear one.
+    let half = |v: Option<Option<f64>>| v.map(|inner| inner.is_some());
+    if half(body.lat) != half(body.lon) {
         return ApiError::validation("location needs both lat and lon, or neither").into_response();
     }
     let expected = match if_match(&headers) {
