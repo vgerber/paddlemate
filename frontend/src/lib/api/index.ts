@@ -61,6 +61,9 @@ export type PatchTripRequest = components["schemas"]["PatchTripRequest"];
 export type PatchTripStayRequest =
   components["schemas"]["PatchTripStayRequest"];
 export type TripStayCandidate = components["schemas"]["TripStayCandidate"];
+export type TripInvite = components["schemas"]["TripInvite"];
+export type TripInviteCreated = components["schemas"]["TripInviteCreated"];
+export type TripInvitePreview = components["schemas"]["TripInvitePreview"];
 export type CreateTripStayCandidateRequest =
   components["schemas"]["CreateTripStayCandidateRequest"];
 export type PatchTripStayCandidateRequest =
@@ -711,6 +714,39 @@ export const tripsApi = {
     await client.DELETE("/api/v1/trips/{trip_id}/candidates/{candidate_id}", {
       params: { path: { trip_id: id, candidate_id: candidateId } },
     });
+  },
+  invites: async (id: number) => {
+    const { data } = await client.GET("/api/v1/trips/{trip_id}/invites", {
+      params: { path: { trip_id: id } },
+    });
+    return assertData(data);
+  },
+  createInvite: async (id: number) => {
+    const { data } = await client.POST("/api/v1/trips/{trip_id}/invites", {
+      params: { path: { trip_id: id } },
+      body: {},
+    });
+    return assertData(data);
+  },
+  deleteInvite: async (id: number, inviteId: number) => {
+    await client.DELETE("/api/v1/trips/{trip_id}/invites/{invite_id}", {
+      params: { path: { trip_id: id, invite_id: inviteId } },
+    });
+  },
+  /** Works signed out: the person opening a link usually has no account. */
+  invitePreview: async (token: string) => {
+    const { data } = await client.GET("/api/v1/trips/invites/{token}", {
+      params: { path: { token } },
+    });
+    return assertData(data);
+  },
+  /** The caller joins themselves; the link is the permission. */
+  joinByInvite: async (id: number, token: string) => {
+    const { data } = await client.POST("/api/v1/trips/{trip_id}/members", {
+      params: { path: { trip_id: id } },
+      body: { invite: token },
+    });
+    return assertData(data);
   },
   addMember: async (id: number, userId: string) => {
     const { data } = await client.POST("/api/v1/trips/{trip_id}/members", {

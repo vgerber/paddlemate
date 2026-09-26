@@ -2,7 +2,8 @@ use sha2::{Digest, Sha256};
 
 pub const API_TOKEN_PREFIX: &str = "pm_";
 
-fn generate_token() -> String {
+/// 256 random bits as hex: the secret in an API token or an invite link.
+pub fn generate_token() -> String {
     use std::fmt::Write;
     let mut bytes = [0u8; 32];
     getrandom::fill(&mut bytes).expect("Failed to generate random bytes");

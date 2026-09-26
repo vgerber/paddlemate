@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 use super::{
     comment::CommentId,
-    trip::{TripId, TripStayCandidateId, TripStayId},
+    trip::{TripId, TripInviteId, TripStayCandidateId, TripStayId},
     water_section::SectionId,
     waterway::WaterwayId,
 };
@@ -126,4 +126,17 @@ pub struct TripStayPath {
 pub struct TripCandidatePath {
     pub trip_id: TripId,
     pub candidate_id: TripStayCandidateId,
+}
+
+/// A trip and one of its invite links, as its admins manage them.
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct TripInvitePath {
+    pub trip_id: TripId,
+    pub invite_id: TripInviteId,
+}
+
+/// An invite link as its recipient holds it: the token alone.
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct InviteTokenPath {
+    pub token: String,
 }

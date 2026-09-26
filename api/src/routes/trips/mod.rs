@@ -1,5 +1,6 @@
 mod access;
 mod candidates;
+mod invites;
 mod members;
 mod respond;
 mod stays;
@@ -58,10 +59,13 @@ pub fn trips_routes(state: AppState) -> ApiRouter {
                 .patch_with(patch_trip, patch_trip_docs)
                 .delete_with(delete_trip, delete_trip_docs),
         )
+        // A static segment, so it is matched before `/{trip_id}`.
+        .nest_api_service("/invites", invites::preview_routes(state.clone()))
         .nest_api_service(
             "/{trip_id}/candidates",
             candidates::candidate_routes(state.clone()),
         )
+        .nest_api_service("/{trip_id}/invites", invites::invite_routes(state.clone()))
         .nest_api_service("/{trip_id}/members", members::member_routes(state.clone()))
         .nest_api_service("/{trip_id}/stays", stays::stay_routes(state.clone()))
         .with_state(state)

@@ -4,10 +4,12 @@
 //! layout.
 
 pub mod candidates;
+pub mod invites;
 pub mod members;
 pub mod stays;
 
 pub use candidates::*;
+pub use invites::*;
 pub use members::*;
 pub use stays::*;
 

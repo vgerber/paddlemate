@@ -25,6 +25,11 @@ export const tripKeys = {
   list: (filters: TripFilters) => [...tripKeys.lists(), filters] as const,
   detail: (id: number) => [...tripKeys.all, id] as const,
   candidates: (id: number) => [...tripKeys.detail(id), "candidates"] as const,
+  invites: (id: number) => [...tripKeys.detail(id), "invites"] as const,
+  /** Keyed by token, not trip: the person opening a link does not know the
+   * trip yet, and may not be allowed to. */
+  invitePreview: (token: string) =>
+    [...tripKeys.all, "invite-preview", token] as const,
   members: (id: number) => [...tripKeys.detail(id), "members"] as const,
   stays: (id: number) => [...tripKeys.detail(id), "stays"] as const,
 };
@@ -320,4 +325,53 @@ export function useWithdrawCandidate(id: number) {
   return useCandidateMutation(id, (candidateId: number) =>
     tripsApi.withdrawCandidate(id, candidateId),
   );
+}
+
+export function useTripInvites(id: number, enabled = true) {
+  return useQuery({
+    queryKey: tripKeys.invites(id),
+    queryFn: () => tripsApi.invites(id),
+    enabled,
+  });
+}
+
+export function useCreateTripInvite(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => tripsApi.createInvite(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: tripKeys.invites(id) }),
+  });
+}
+
+export function useDeleteTripInvite(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (inviteId: number) => tripsApi.deleteInvite(id, inviteId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: tripKeys.invites(id) }),
+  });
+}
+
+/** `enabled` waits for the session: asked signed out, a member would be
+ * told they are not on the trip yet. */
+export function useInvitePreview(token: string, enabled = true) {
+  return useQuery({
+    queryKey: tripKeys.invitePreview(token),
+    queryFn: () => tripsApi.invitePreview(token),
+    enabled,
+    // A dead link is a 404 that will not change on a retry.
+    retry: false,
+  });
+}
+
+export function useJoinByInvite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tripId, token }: { tripId: number; token: string }) =>
+      tripsApi.joinByInvite(tripId, token),
+    meta: { errorHandledLocally: true },
+    onSuccess: (_member, { token }) => {
+      qc.invalidateQueries({ queryKey: tripKeys.lists() });
+      qc.invalidateQueries({ queryKey: tripKeys.invitePreview(token) });
+    },
+  });
 }

@@ -9,6 +9,7 @@ use super::water_section::SectionId;
 pub type TripId = i64;
 pub type TripStayId = i64;
 pub type TripStayCandidateId = i64;
+pub type TripInviteId = i64;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
@@ -300,10 +301,57 @@ pub struct CreateTripStayCandidateRequest {
     pub departure: Option<NaiveDate>,
 }
 
-/// Who an admin is adding. A trip is invite-only, so this is the only way in.
+/// Who joins. An admin names somebody already on Paddlemate (`user_id`);
+/// anyone holding a live invite link joins themselves (`invite`). Exactly one
+/// of the two - the permission follows the field.
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct AddTripMemberRequest {
-    pub user_id: UserId,
+    pub user_id: Option<UserId>,
+    /// The token from an invite link.
+    pub invite: Option<String>,
+}
+
+/// A link an admin made to let people join. The token is never listed - only
+/// its hash is kept - so this says who made it, when it stops working, and
+/// how many joined through it.
+#[derive(Debug, Clone, Serialize, JsonSchema)]
+pub struct TripInvite {
+    pub id: TripInviteId,
+    pub trip_id: TripId,
+    pub created_by: UserId,
+    pub created_by_username: String,
+    pub created_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+    pub uses: i32,
+}
+
+/// A new link, and the only time its token is shown.
+#[derive(Debug, Clone, Serialize, JsonSchema)]
+pub struct TripInviteCreated {
+    #[serde(flatten)]
+    pub invite: TripInvite,
+    pub token: String,
+}
+
+#[derive(Debug, Default, Deserialize, JsonSchema)]
+pub struct CreateTripInviteRequest {
+    /// Days until the link stops working, 1 to 30. Defaults to 14.
+    pub expires_in_days: Option<i64>,
+}
+
+/// What a link shows before anybody joins: enough to recognise the trip and
+/// who sent it, and nothing of its plan, its bases or its people.
+#[derive(Debug, Clone, Serialize, JsonSchema)]
+pub struct TripInvitePreview {
+    pub trip_id: TripId,
+    pub name: String,
+    pub start_date: NaiveDate,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub end_date: Option<NaiveDate>,
+    pub invited_by: String,
+    pub expires_at: DateTime<Utc>,
+    /// Whether the caller is on the trip already; false when signed out.
+    pub viewer_is_member: bool,
 }
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]

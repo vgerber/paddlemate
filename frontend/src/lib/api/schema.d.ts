@@ -1084,6 +1084,23 @@ export interface paths {
         patch: operations["patch_trip"];
         trace?: never;
     };
+    "/api/v1/trips/invites/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description What an invite link leads to: the trip's name and dates and who sent it - nothing of its plan or people. Works signed out. An unknown, expired or withdrawn link is a 404, one answer for all three. Join with `POST /trips/{trip_id}/members` and `{"invite": token}`. */
+        get: operations["preview_invite"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/trips/{trip_id}/candidates": {
         parameters: {
             query?: never;
@@ -1139,6 +1156,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/trips/{trip_id}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The trip's invite links that still work. Admins only. Tokens are never listed - only their hash is kept. */
+        get: operations["list_invites"];
+        put?: never;
+        /** @description Make an invite link. Admins only. The response carries the token - the only time it is shown; the link is `/invite/{token}` on the web app. It works for any number of people until it expires or is withdrawn. */
+        post: operations["create_invite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trips/{trip_id}/invites/{invite_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Withdraw an invite link, so nobody else can join through it. Admins only. Nobody who already joined is removed. */
+        delete: operations["delete_invite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/trips/{trip_id}/members": {
         parameters: {
             query?: never;
@@ -1149,7 +1201,7 @@ export interface paths {
         /** @description List the members of a trip, with the dates each can personally make. */
         get: operations["list_trip_members"];
         put?: never;
-        /** @description Add somebody to a trip. Admins only - a trip is invite-only. */
+        /** @description Add somebody to a trip. With `user_id`, an admin adds that person. With `invite`, the caller joins themselves through an invite link for this trip. Exactly one of the two. */
         post: operations["add_trip_member"];
         delete?: never;
         options?: never;
@@ -1274,9 +1326,15 @@ export interface components {
             role?: components["schemas"]["GroupMemberRole"];
             user_id: string;
         };
-        /** @description Who an admin is adding. A trip is invite-only, so this is the only way in. */
+        /**
+         * @description Who joins. An admin names somebody already on Paddlemate (`user_id`);
+         *      anyone holding a live invite link joins themselves (`invite`). Exactly one
+         *      of the two - the permission follows the field.
+         */
         AddTripMemberRequest: {
-            user_id: string;
+            /** @description The token from an invite link. */
+            invite?: string | null;
+            user_id?: string | null;
         };
         ApiToken: {
             /** Format: date-time */
@@ -1564,6 +1622,13 @@ export interface components {
             /** Format: int64 */
             expires_in_days?: number | null;
             name: string;
+        };
+        CreateTripInviteRequest: {
+            /**
+             * Format: int64
+             * @description Days until the link stops working, 1 to 30. Defaults to 14.
+             */
+            expires_in_days?: number | null;
         };
         CreateTripRequest: {
             description?: string | null;
@@ -2077,6 +2142,10 @@ export interface components {
             name: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        /** @description An invite link as its recipient holds it: the token alone. */
+        InviteTokenPath: {
+            token: string;
         };
         ListDescentsQuery: {
             /**
@@ -2785,6 +2854,66 @@ export interface components {
              * @description 1 for, -1 against.
              */
             vote: number;
+        };
+        /**
+         * @description A link an admin made to let people join. The token is never listed - only
+         *      its hash is kept - so this says who made it, when it stops working, and
+         *      how many joined through it.
+         */
+        TripInvite: {
+            /** Format: date-time */
+            created_at: string;
+            created_by: string;
+            created_by_username: string;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            trip_id: number;
+            /** Format: int32 */
+            uses: number;
+        };
+        /** @description A new link, and the only time its token is shown. */
+        TripInviteCreated: {
+            /** Format: date-time */
+            created_at: string;
+            created_by: string;
+            created_by_username: string;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: int64 */
+            id: number;
+            token: string;
+            /** Format: int64 */
+            trip_id: number;
+            /** Format: int32 */
+            uses: number;
+        };
+        /** @description A trip and one of its invite links, as its admins manage them. */
+        TripInvitePath: {
+            /** Format: int64 */
+            invite_id: number;
+            /** Format: int64 */
+            trip_id: number;
+        };
+        /**
+         * @description What a link shows before anybody joins: enough to recognise the trip and
+         *      who sent it, and nothing of its plan, its bases or its people.
+         */
+        TripInvitePreview: {
+            /** Format: date */
+            end_date?: string | null;
+            /** Format: date-time */
+            expires_at: string;
+            invited_by: string;
+            name: string;
+            /** Format: date */
+            start_date: string;
+            /** Format: int64 */
+            trip_id: number;
+            /** @description Whether the caller is on the trip already; false when signed out. */
+            viewer_is_member: boolean;
         };
         /**
          * @description A member of a trip, with the days - and, once they know them, the hours -
@@ -3589,11 +3718,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-09-25T19:07:44.939141081Z",
-                     *         "expires_at": "2026-12-24T19:07:44.939142821Z",
+                     *         "created_at": "2026-09-25T20:25:21.010871440Z",
+                     *         "expires_at": "2026-12-24T20:25:21.010873610Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-09-25T19:07:44.939157561Z",
+                     *         "last_used_at": "2026-09-25T20:25:21.010881700Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -3624,8 +3753,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-09-25T19:07:44.939268941Z",
-                     *       "expires_at": "2026-12-24T19:07:44.939269341Z",
+                     *       "created_at": "2026-09-25T20:25:21.010997030Z",
+                     *       "expires_at": "2026-12-24T20:25:21.010997380Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -7426,6 +7555,40 @@ export interface operations {
             };
         };
     };
+    preview_invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /**
+             * @description What a link shows before anybody joins: enough to recognise the trip and
+             *      who sent it, and nothing of its plan, its bases or its people.
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripInvitePreview"];
+                };
+            };
+            /** @description Unknown, expired or withdrawn */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_candidates: {
         parameters: {
             query?: never;
@@ -7747,6 +7910,164 @@ export interface operations {
             };
         };
     };
+    list_invites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                trip_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripInvite"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                trip_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTripInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripInviteCreated"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite_id: number;
+                trip_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Withdrawn */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_trip_members: {
         parameters: {
             query?: never;
@@ -7786,14 +8107,18 @@ export interface operations {
             };
             cookie?: never;
         };
-        /** @description Who an admin is adding. A trip is invite-only, so this is the only way in. */
+        /**
+         * @description Who joins. An admin names somebody already on Paddlemate (`user_id`);
+         *      anyone holding a live invite link joins themselves (`invite`). Exactly one
+         *      of the two - the permission follows the field.
+         */
         requestBody: {
             content: {
                 "application/json": components["schemas"]["AddTripMemberRequest"];
             };
         };
         responses: {
-            /** @description Added */
+            /** @description Added, or already a member */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -7802,7 +8127,7 @@ export interface operations {
                     "application/json": components["schemas"]["TripMember"];
                 };
             };
-            /** @description Unknown user */
+            /** @description Unknown user, or neither/both fields */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -7820,7 +8145,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Admin role required */
+            /** @description Admin role required to add somebody else */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7829,7 +8154,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Not found */
+            /** @description Not found, or the invite is not live for this trip */
             404: {
                 headers: {
                     [name: string]: unknown;

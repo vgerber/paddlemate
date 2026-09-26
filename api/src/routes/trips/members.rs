@@ -94,8 +94,10 @@ doc_fn!(get_trip_member_docs, op =>
         .tag("Trips")
 );
 
-/// Adding a member is an admin action: a trip is invite-only, so nobody
-/// puts themselves in one.
+/// Two ways onto a trip, and the body says which. An admin adds somebody by
+/// `user_id`. Anyone signed in who holds a live invite link joins
+/// *themselves* with `invite` - the link is the permission, so there is no
+/// membership to check, only the token, and it must belong to this trip.
 pub async fn add_trip_member(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
@@ -107,26 +109,40 @@ pub async fn add_trip_member(
         Err(err) => return err.into_response(),
     };
 
-    if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
-        return res;
-    }
-
-    match trips::add_member(&app.pg_pool, trip_id, &body.user_id).await {
-        Ok(Some(member)) => (StatusCode::CREATED, Json(member)).into_response(),
-        Ok(None) => ApiError::not_found("Not found").into_response(),
-        Err(err) => failure(&format!("adding a member to trip {trip_id}"), err),
+    match (body.user_id.as_deref(), body.invite.as_deref()) {
+        (Some(user_id), None) => {
+            if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
+                return res;
+            }
+            match trips::add_member(&app.pg_pool, trip_id, user_id).await {
+                Ok(Some(member)) => (StatusCode::CREATED, Json(member)).into_response(),
+                Ok(None) => ApiError::not_found("Not found").into_response(),
+                Err(err) => failure(&format!("adding a member to trip {trip_id}"), err),
+            }
+        }
+        // An unknown, expired or withdrawn link, or one for another trip, is
+        // the same 404 as a trip that does not exist.
+        (None, Some(invite)) => {
+            match trips::join_by_invite(&app.pg_pool, trip_id, invite, &caller_id).await {
+                Ok(result) => outcome(result, |member| {
+                    (StatusCode::CREATED, Json(member)).into_response()
+                }),
+                Err(err) => failure(&format!("joining trip {trip_id} by invite"), err),
+            }
+        }
+        _ => ApiError::validation("Send either user_id or invite").into_response(),
     }
 }
 
 doc_fn!(add_trip_member_docs, op =>
     op.input::<Path<TripPath>>()
         .input::<Json<AddTripMemberRequest>>()
-        .description("Add somebody to a trip. Admins only - a trip is invite-only.")
-        .response_with::<201, Json<TripMember>, _>(|res| res.description("Added"))
-        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Unknown user"))
+        .description("Add somebody to a trip. With `user_id`, an admin adds that person. With `invite`, the caller joins themselves through an invite link for this trip. Exactly one of the two.")
+        .response_with::<201, Json<TripMember>, _>(|res| res.description("Added, or already a member"))
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Unknown user, or neither/both fields"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
-        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Admin role required"))
-        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Admin role required to add somebody else"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found, or the invite is not live for this trip"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Trips")
 );

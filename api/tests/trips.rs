@@ -799,3 +799,206 @@ async fn half_a_location_is_refused(pool: PgPool) {
     assert_eq!(r.status, StatusCode::OK);
     assert!(r.body["location"].is_null());
 }
+
+async fn invite(app: &Router, trip_id: i64, admin: &str) -> (i64, String) {
+    let r = send(
+        app,
+        Method::POST,
+        &format!("/trips/{trip_id}/invites"),
+        admin,
+        json!({}),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);
+    (
+        r.body["id"].as_i64().unwrap(),
+        r.body["token"].as_str().unwrap().to_string(),
+    )
+}
+
+/// The whole point: somebody who is on no trip, holding the link, joins -
+/// and seeing it first needs no account.
+#[sqlx::test(migrations = "./migrations")]
+async fn an_invite_link_lets_a_newcomer_join(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    user(&pool, "eve").await;
+    let (trip_id, _) = trip(&app, &pool, "ann", &[]).await;
+    let (_, token) = invite(&app, trip_id, "ann").await;
+    let preview = format!("/trips/invites/{token}");
+
+    let r = call(&app, Method::GET, &preview, None, None, None).await;
+    assert_eq!(r.status, StatusCode::OK, "readable signed out");
+    assert_eq!(r.body["name"], "Test week");
+    assert_eq!(r.body["invited_by"], "ann");
+    assert_eq!(r.body["trip_id"], trip_id);
+    assert_eq!(r.body["viewer_is_member"], false);
+
+    let join = format!("/trips/{trip_id}/members");
+    let r = send(&app, Method::POST, &join, "eve", json!({ "invite": token })).await;
+    assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);
+    assert_eq!(r.body["user_id"], "user-eve");
+    assert_eq!(
+        r.body["role"], "member",
+        "a link makes members, never admins"
+    );
+    assert_eq!(
+        get(&app, &format!("/trips/{trip_id}"), "eve").await.status,
+        StatusCode::OK
+    );
+
+    // Joining again is harmless and is not another use.
+    let r = send(&app, Method::POST, &join, "eve", json!({ "invite": token })).await;
+    assert_eq!(r.status, StatusCode::CREATED);
+    let r = get(&app, &format!("/trips/{trip_id}/invites"), "ann").await;
+    assert_eq!(r.body[0]["uses"], 1);
+    assert!(
+        r.body[0].get("token").is_none(),
+        "a listed link never carries its token"
+    );
+    assert_eq!(
+        get(&app, &preview, "eve").await.body["viewer_is_member"],
+        true
+    );
+
+    let stored: String = sqlx::query_scalar("SELECT token_hash FROM trip_invites")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_ne!(stored, token, "only a hash of the token is kept");
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn an_invite_opens_its_own_trip_and_only_admins_make_one(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    user(&pool, "bob").await;
+    user(&pool, "eve").await;
+    let (theirs, _) = trip(&app, &pool, "ann", &["bob"]).await;
+    let (other, _) = trip(&app, &pool, "eve", &[]).await;
+    let (_, token) = invite(&app, theirs, "ann").await;
+
+    // A member who is not an admin cannot make or see links; an outsider
+    // cannot even tell the trip exists.
+    let r = send(
+        &app,
+        Method::POST,
+        &format!("/trips/{theirs}/invites"),
+        "bob",
+        json!({}),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::FORBIDDEN);
+    assert_eq!(
+        get(&app, &format!("/trips/{theirs}/invites"), "eve")
+            .await
+            .status,
+        StatusCode::NOT_FOUND
+    );
+
+    // A link for one trip is no key to another, and a made-up one is nothing.
+    let r = send(
+        &app,
+        Method::POST,
+        &format!("/trips/{other}/members"),
+        "bob",
+        json!({ "invite": token }),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
+    let r = send(
+        &app,
+        Method::POST,
+        &format!("/trips/{theirs}/members"),
+        "eve",
+        json!({ "invite": "0".repeat(64) }),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
+    let r = call(
+        &app,
+        Method::GET,
+        "/trips/invites/nonsense",
+        None,
+        None,
+        None,
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
+
+    // Exactly one way in per request.
+    for body in [json!({}), json!({ "user_id": "user-eve", "invite": token })] {
+        let r = send(
+            &app,
+            Method::POST,
+            &format!("/trips/{theirs}/members"),
+            "ann",
+            body,
+        )
+        .await;
+        assert_eq!(r.status, StatusCode::BAD_REQUEST);
+    }
+    for days in [0, 31] {
+        let r = send(
+            &app,
+            Method::POST,
+            &format!("/trips/{theirs}/invites"),
+            "ann",
+            json!({ "expires_in_days": days }),
+        )
+        .await;
+        assert_eq!(r.status, StatusCode::BAD_REQUEST, "{days} days");
+    }
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn a_withdrawn_or_expired_link_is_dead(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    user(&pool, "eve").await;
+    let (trip_id, _) = trip(&app, &pool, "ann", &[]).await;
+    let join = format!("/trips/{trip_id}/members");
+
+    let (id, withdrawn) = invite(&app, trip_id, "ann").await;
+    let r = call(
+        &app,
+        Method::DELETE,
+        &format!("/trips/{trip_id}/invites/{id}"),
+        Some("ann"),
+        None,
+        None,
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NO_CONTENT);
+
+    let (id, expired) = invite(&app, trip_id, "ann").await;
+    sqlx::query(
+        "UPDATE trip_invites SET created_at = NOW() - INTERVAL '2 days', \
+                                 expires_at = NOW() - INTERVAL '1 day' WHERE id = $1",
+    )
+    .bind(id)
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    for token in [withdrawn, expired] {
+        let r = call(
+            &app,
+            Method::GET,
+            &format!("/trips/invites/{token}"),
+            None,
+            None,
+            None,
+        )
+        .await;
+        assert_eq!(r.status, StatusCode::NOT_FOUND);
+        let r = send(&app, Method::POST, &join, "eve", json!({ "invite": token })).await;
+        assert_eq!(r.status, StatusCode::NOT_FOUND);
+    }
+    let r = get(&app, &format!("/trips/{trip_id}/invites"), "ann").await;
+    assert_eq!(
+        r.body.as_array().unwrap().len(),
+        0,
+        "neither is listed as working"
+    );
+}
