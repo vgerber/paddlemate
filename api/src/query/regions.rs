@@ -236,10 +236,7 @@ pub async fn in_bbox(
 /// Pairs of regions that overlap on screen, as drawn. A valley is drawn as
 /// the corridor around its line, so two valleys whose lines never touch can
 /// still share ground.
-async fn overlapping_pairs(
-    pool: &PgPool,
-    ids: &[i64],
-) -> Result<Vec<(i64, i64)>, sqlx::Error> {
+async fn overlapping_pairs(pool: &PgPool, ids: &[i64]) -> Result<Vec<(i64, i64)>, sqlx::Error> {
     if ids.len() < 2 {
         return Ok(vec![]);
     }
@@ -278,7 +275,12 @@ fn palette_indexes(ids: &[i64], overlaps: &[(i64, i64)]) -> HashMap<i64, i32> {
     let mut order = ids.to_vec();
     // Most crowded first, then by id so the same viewport always colours the
     // same way and panning back does not reshuffle the map.
-    order.sort_by_key(|id| (std::cmp::Reverse(neighbours.get(id).map_or(0, Vec::len)), *id));
+    order.sort_by_key(|id| {
+        (
+            std::cmp::Reverse(neighbours.get(id).map_or(0, Vec::len)),
+            *id,
+        )
+    });
 
     let mut chosen: HashMap<i64, i32> = HashMap::new();
     for id in order {
@@ -288,7 +290,9 @@ fn palette_indexes(ids: &[i64], overlaps: &[(i64, i64)]) -> HashMap<i64, i32> {
             .flatten()
             .filter_map(|other| chosen.get(other).copied())
             .collect();
-        let index = (0..).find(|i| !taken.contains(i)).expect("range is endless");
+        let index = (0..)
+            .find(|i| !taken.contains(i))
+            .expect("range is endless");
         chosen.insert(id, index);
     }
     chosen
@@ -496,6 +500,9 @@ mod tests {
     #[test]
     fn regions_that_never_meet_all_take_the_first_index() {
         let indexes = palette_indexes(&[7, 8, 9], &[]);
-        assert_eq!(indexes.values().copied().collect::<HashSet<_>>(), [0].into());
+        assert_eq!(
+            indexes.values().copied().collect::<HashSet<_>>(),
+            [0].into()
+        );
     }
 }

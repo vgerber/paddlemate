@@ -61,7 +61,7 @@ pub async fn list_followers(
 ) -> impl IntoApiResponse {
     let user_id = match resolve_self(&path.user_id, token.user_id()) {
         Ok(id) => id,
-        Err(response) => return response,
+        Err(err) => return err.into_response(),
     };
 
     let followers = if query.status == Some(FollowStatus::Pending) {
@@ -96,7 +96,7 @@ pub async fn list_following(
 ) -> impl IntoApiResponse {
     let user_id = match resolve_self(&path.user_id, token.user_id()) {
         Ok(id) => id,
-        Err(response) => return response,
+        Err(err) => return err.into_response(),
     };
 
     match follows::list_following(&app.pg_pool, user_id).await {
@@ -123,7 +123,7 @@ pub async fn follow_user(
 ) -> impl IntoApiResponse {
     let user_id = match resolve_self(&path.user_id, token.user_id()) {
         Ok(id) => id,
-        Err(response) => return response,
+        Err(err) => return err.into_response(),
     };
 
     if user_id == path.target_id {
@@ -160,7 +160,7 @@ pub async fn delete_follow(
 ) -> impl IntoApiResponse {
     let user_id = match resolve_self(&path.user_id, token.user_id()) {
         Ok(id) => id,
-        Err(response) => return response,
+        Err(err) => return err.into_response(),
     };
 
     // The query clears the pair in either direction, so this also cancels
@@ -190,7 +190,7 @@ pub async fn update_follower(
 ) -> impl IntoApiResponse {
     let user_id = match resolve_self(&path.user_id, token.user_id()) {
         Ok(id) => id,
-        Err(response) => return response,
+        Err(err) => return err.into_response(),
     };
 
     if body.status != FollowStatus::Accepted {

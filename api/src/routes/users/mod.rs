@@ -9,7 +9,7 @@ use aide::axum::{
 use axum::{
     Extension, Json,
     extract::State,
-    response::{IntoResponse, Response},
+    response::IntoResponse,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -72,11 +72,11 @@ pub fn users_routes(state: AppState) -> ApiRouter {
 /// Resolves the user id in a path, where "me" names the caller. Another
 /// user's data stays closed for now; the id is in the path so opening it
 /// up for profile views is a change here rather than a new route.
-fn resolve_self<'a>(path_id: &str, viewer: &'a str) -> Result<&'a str, Response> {
+fn resolve_self<'a>(path_id: &str, viewer: &'a str) -> Result<&'a str, ApiError> {
     if path_id == "me" || path_id == viewer {
         Ok(viewer)
     } else {
-        Err(ApiError::forbidden("Not permitted").into_response())
+        Err(ApiError::forbidden("Not permitted"))
     }
 }
 

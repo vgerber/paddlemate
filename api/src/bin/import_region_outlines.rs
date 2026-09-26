@@ -70,13 +70,8 @@ async fn main() -> anyhow::Result<()> {
             println!("  {}: no matching boundary in OSM", region.name);
             continue;
         };
-        let stored = store_outline(
-            &pool,
-            &region.name,
-            region.country.as_deref(),
-            &outline,
-        )
-        .await?;
+        let stored =
+            store_outline(&pool, &region.name, region.country.as_deref(), &outline).await?;
         match stored {
             Some(id) => {
                 println!(
