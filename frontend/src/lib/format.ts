@@ -1,19 +1,15 @@
 /** Shared display formatting for dates, durations, readings and enum keys. */
 
+import { format, isSameMonth, isSameYear, parseISO } from "date-fns";
+
 /** A calendar day ("2026-09-01") is a day, not an instant: `new Date` reads
- * it as UTC midnight, which is still the 31st anywhere west of UTC. Timestamps
- * keep their instant. */
-function toDate(iso: string): Date {
-  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  return day
-    ? new Date(Number(day[1]), Number(day[2]) - 1, Number(day[3]))
-    : new Date(iso);
-}
+ * it as UTC midnight, which is still the 31st anywhere west of UTC.
+ * `parseISO` reads it as local midnight; timestamps keep their instant. */
+const toDate = parseISO;
 
 /** Today as a calendar day in the viewer's own timezone, "2026-09-01". */
 export function todayIso(now: Date = new Date()): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  return format(now, "yyyy-MM-dd");
 }
 
 export function formatDate(
@@ -89,8 +85,8 @@ export function dateRange(start: string, end?: string | null): string {
 
   const a = toDate(start);
   const b = toDate(end);
-  const sameYear = a.getFullYear() === b.getFullYear();
-  const sameMonth = sameYear && a.getMonth() === b.getMonth();
+  const sameYear = isSameYear(a, b);
+  const sameMonth = isSameMonth(a, b);
 
   const head = sameMonth
     ? a.toLocaleDateString("en-GB", { day: "2-digit" })

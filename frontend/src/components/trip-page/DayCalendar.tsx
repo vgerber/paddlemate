@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import { addMonths, format, parseISO, startOfMonth } from "date-fns";
 import { useMemo, useState } from "react";
 import { factLabelSx } from "@/components/Fact";
 import { fonts, theme } from "@/lib/theme";
@@ -24,14 +25,6 @@ interface Props {
   onSelect: (date: string) => void;
 }
 
-function monthLabel(year: number, month: number): string {
-  return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString("en-GB", {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
-
 /**
  * A month at a time, with the days that already have something on them
  * marked. Picking a day is picking a date, so it shows the shape of the
@@ -46,25 +39,17 @@ export default function DayCalendar({
   onSelect,
 }: Props) {
   const anchor = selected ?? from;
-  const [cursor, setCursor] = useState(() => ({
-    year: Number(anchor.slice(0, 4)),
-    month: Number(anchor.slice(5, 7)),
-  }));
+  // The first of the month on show.
+  const [cursor, setCursor] = useState(() => startOfMonth(parseISO(anchor)));
 
   const weeks = useMemo(
-    () => monthGrid(cursor.year, cursor.month),
-    [cursor.year, cursor.month],
+    () => monthGrid(cursor.getFullYear(), cursor.getMonth() + 1),
+    [cursor],
   );
 
-  const step = (delta: number) =>
-    setCursor(({ year, month }) => {
-      const next = month + delta;
-      if (next < 1) return { year: year - 1, month: 12 };
-      if (next > 12) return { year: year + 1, month: 1 };
-      return { year, month: next };
-    });
+  const step = (delta: number) => setCursor((c) => addMonths(c, delta));
 
-  const monthPrefix = `${cursor.year}-${String(cursor.month).padStart(2, "0")}`;
+  const monthPrefix = format(cursor, "yyyy-MM");
 
   return (
     // A month is only ever seven columns wide; letting it stretch to a
@@ -87,7 +72,7 @@ export default function DayCalendar({
             textAlign: "center",
           }}
         >
-          {monthLabel(cursor.year, cursor.month)}
+          {format(cursor, "MMMM yyyy")}
         </Typography>
         <IconButton
           size="small"

@@ -3,6 +3,7 @@ import type { Descent, TripMember, TripStay } from "@/lib/api";
 import {
   buildTimeline,
   dayNumber,
+  eachDay,
   monthGrid,
   paddledByRiver,
 } from "./tripTimeline";
@@ -64,6 +65,28 @@ describe("dayNumber", () => {
 
   test("reads the day out of a timestamp", () => {
     expect(dayNumber("2026-06-02T08:00:00Z", START)).toBe(2);
+  });
+
+  test("a run just after midnight is on that day, not the UTC one", () => {
+    // 00:30 local on the 2nd is still the 1st in UTC anywhere east of it.
+    const halfPastMidnight = new Date(2026, 5, 2, 0, 30).toISOString();
+    expect(dayNumber(halfPastMidnight, START)).toBe(2);
+  });
+});
+
+describe("eachDay", () => {
+  test("steps across a clock change without skipping or repeating", () => {
+    // Europe moves its clocks back on 25 Oct 2026.
+    expect(eachDay("2026-10-24", "2026-10-27")).toEqual([
+      "2026-10-24",
+      "2026-10-25",
+      "2026-10-26",
+      "2026-10-27",
+    ]);
+  });
+
+  test("is empty when the end comes first", () => {
+    expect(eachDay("2026-06-02", "2026-06-01")).toEqual([]);
   });
 });
 

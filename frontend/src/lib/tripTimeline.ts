@@ -1,3 +1,10 @@
+import {
+  addDays,
+  differenceInCalendarDays,
+  format,
+  parseISO,
+  startOfWeek,
+} from "date-fns";
 import type { Descent, TripMember, TripStay } from "@/lib/api";
 
 export type TripEvent =
@@ -23,33 +30,32 @@ const EVENT_ORDER: Record<TripEvent["kind"], number> = {
   leaves: 3,
 };
 
-function toDay(iso: string): string {
-  return iso.slice(0, 10);
+/** A calendar day, "2026-09-01". */
+function day(date: Date): string {
+  return format(date, "yyyy-MM-dd");
 }
 
-const DAY_MS = 86_400_000;
+/** The calendar day of a date or a timestamp, in the viewer's timezone: a run
+ * that started at 00:30 in the Alps is on that day, not on the one before,
+ * which its UTC date says. */
+function toDay(iso: string): string {
+  return day(parseISO(iso));
+}
 
 /** A trip nobody would plan. Guards against a typo in an end date turning the
  * timeline into a decade of rest days. */
 const MAX_TIMELINE_DAYS = 366;
 
-function shiftDay(date: string, days: number): string {
-  return new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY_MS)
-    .toISOString()
-    .slice(0, 10);
-}
-
 /** Every date from `from` to `to` inclusive, as YYYY-MM-DD. */
 export function eachDay(from: string, to: string): string[] {
-  const days: string[] = [];
-  for (
-    let day = from;
-    day <= to && days.length < MAX_TIMELINE_DAYS;
-    day = shiftDay(day, 1)
-  ) {
-    days.push(day);
-  }
-  return days;
+  const start = parseISO(from);
+  const count = Math.min(
+    differenceInCalendarDays(parseISO(to), start) + 1,
+    MAX_TIMELINE_DAYS,
+  );
+  return Array.from({ length: Math.max(count, 0) }, (_, i) =>
+    day(addDays(start, i)),
+  );
 }
 
 /**
@@ -58,10 +64,10 @@ export function eachDay(from: string, to: string): string[] {
  * from the first, the way years do around zero.
  */
 export function dayNumber(date: string, start: string): number {
-  const ms =
-    Date.parse(`${toDay(date)}T00:00:00Z`) -
-    Date.parse(`${toDay(start)}T00:00:00Z`);
-  const offset = Math.round(ms / DAY_MS);
+  const offset = differenceInCalendarDays(
+    parseISO(toDay(date)),
+    parseISO(toDay(start)),
+  );
   return offset >= 0 ? offset + 1 : offset;
 }
 
@@ -133,18 +139,10 @@ export function buildTimeline({
  * months so the grid is always the same shape. `month` is 1-12.
  */
 export function monthGrid(year: number, month: number): string[][] {
-  const firstOfMonth = new Date(Date.UTC(year, month - 1, 1))
-    .toISOString()
-    .slice(0, 10);
-  // getUTCDay is Sunday-first; shift so Monday starts the week.
-  const weekday = (new Date(`${firstOfMonth}T00:00:00Z`).getUTCDay() + 6) % 7;
-  const start = shiftDay(firstOfMonth, -weekday);
-
-  const weeks: string[][] = [];
-  for (let w = 0; w < 6; w++) {
-    weeks.push(Array.from({ length: 7 }, (_, d) => shiftDay(start, w * 7 + d)));
-  }
-  return weeks;
+  const start = startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 });
+  return Array.from({ length: 6 }, (_, w) =>
+    Array.from({ length: 7 }, (_, d) => day(addDays(start, w * 7 + d))),
+  );
 }
 
 /** A section somebody ran that day, and everybody who ran it. */
