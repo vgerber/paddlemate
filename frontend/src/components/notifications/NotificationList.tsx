@@ -13,7 +13,6 @@ import {
   useNotifications,
   useRefreshNotifications,
 } from "@/lib/hooks/useNotifications";
-import { describeEvent } from "@/lib/notifications";
 import { fonts, theme } from "@/lib/theme";
 
 /** What changed on the caller's trips, newest first. Opening it marks
@@ -113,7 +112,7 @@ function NotificationRow({
             fontWeight: event.unread ? 600 : 400,
           }}
         >
-          {describeEvent(event)}
+          {event.text}
         </Typography>
         <Typography
           variant="caption"

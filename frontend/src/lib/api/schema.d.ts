@@ -167,7 +167,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Server-sent events for the caller's trips. `event: trip_event` carries a `LiveEvent` (what changed, on which trip); `event: resync` means events were missed and everything should be refetched; `event: connected` opens the stream. Only trips the caller is on, checked per event. Authenticate with a bearer token (use fetch, not EventSource, to send it). */
+        /** @description Server-sent events for the caller's trips. `event: trip_event` carries a `LiveEvent` (what changed, on which trip); `event: resync` means events were missed and everything should be refetched; `event: connected` opens the stream. Only trips the caller is on, re-checked whenever membership changes. The stream ends after 15 minutes or when the token expires, whichever is first: reconnect with a fresh token. At most 10 streams per user; 429 beyond. */
         get: operations["stream_events"];
         put?: never;
         post?: never;
@@ -222,7 +222,7 @@ export interface paths {
         /** @description The devices the caller allowed notifications on. */
         get: operations["list_push_subscriptions"];
         put?: never;
-        /** @description Allows push on this device: send the browser's `PushSubscription.toJSON()`. The same browser subscribing again replaces its entry, also when it now belongs to another user. 409 when this server does not send push. */
+        /** @description Allows push on this device: send the browser's `PushSubscription.toJSON()`. The endpoint must be a known push service (FCM, Mozilla, Apple, Windows). The same browser subscribing again replaces its entry, also when it now belongs to another user. A user keeps at most 10 devices; the oldest makes way. 409 when this server does not send push. */
         post: operations["create_push_subscription"];
         delete?: never;
         options?: never;
@@ -3042,6 +3042,11 @@ export interface components {
             id: number;
             kind: components["schemas"]["TripEventKind"];
             summary: components["schemas"]["EventSummary"];
+            /**
+             * @description The change in one line, e.g. "mara proposed Haus Wildspitze" - the same
+             *      words a push says, so clients show this rather than composing their own.
+             */
+            text: string;
             /** Format: int64 */
             trip_id: number;
             trip_name: string;
@@ -3918,11 +3923,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-09-26T07:14:18.254987356Z",
-                     *         "expires_at": "2026-12-25T07:14:18.254990526Z",
+                     *         "created_at": "2026-09-26T16:38:25.575132732Z",
+                     *         "expires_at": "2026-12-25T16:38:25.575135032Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-09-26T07:14:18.255001356Z",
+                     *         "last_used_at": "2026-09-26T16:38:25.575140062Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -3953,8 +3958,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-09-26T07:14:18.255122175Z",
-                     *       "expires_at": "2026-12-25T07:14:18.255122535Z",
+                     *       "created_at": "2026-09-26T16:38:25.575257572Z",
+                     *       "expires_at": "2026-12-25T16:38:25.575258002Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -4032,6 +4037,15 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Too many streams open */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

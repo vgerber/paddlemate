@@ -1060,6 +1060,9 @@ async fn a_change_reaches_everyone_else_on_the_trip(pool: PgPool) {
     add_stay(&app, trip_id, "ann", "Base two").await;
 
     assert_eq!(bell(&app, "bob").await, ["stay_added", "member_joined"]);
+    let r = get(&app, "/users/me/notifications", "bob").await;
+    assert_eq!(r.body["items"][0]["text"], "ann added Base two");
+    assert_eq!(r.body["items"][1]["text"], "ann added bob");
     assert!(
         bell(&app, "ann").await.is_empty(),
         "nobody hears about their own change"

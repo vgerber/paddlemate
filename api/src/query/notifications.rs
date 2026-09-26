@@ -7,7 +7,7 @@ use chrono::{DateTime, Utc};
 use sqlx::{PgPool, Row, postgres::PgRow, types::Json};
 
 use crate::models::{
-    notification::{EventSummary, LiveEvent, TripEvent, TripEventId, TripEventKind},
+    notification::{EventSummary, LiveEvent, TripEvent, TripEventId, TripEventKind, describe},
     trip::TripId,
     waterway::PaginatedResponse,
 };
@@ -94,14 +94,22 @@ const VISIBLE: &str = "FROM trip_events e \
        AND e.kind = ANY($2)";
 
 fn row_to_event(row: &PgRow) -> Result<TripEvent, sqlx::Error> {
+    let kind = row.try_get("kind")?;
+    let actor_username: Option<String> = row.try_get("actor_username")?;
+    let summary = row.try_get::<Json<EventSummary>, _>("summary")?.0;
     Ok(TripEvent {
         id: row.try_get("id")?,
         trip_id: row.try_get("trip_id")?,
         trip_name: row.try_get("trip_name")?,
         actor_id: row.try_get("actor_id")?,
-        actor_username: row.try_get("actor_username")?,
-        kind: row.try_get("kind")?,
-        summary: row.try_get::<Json<EventSummary>, _>("summary")?.0,
+        text: describe(
+            kind,
+            actor_username.as_deref().unwrap_or("Someone"),
+            &summary,
+        ),
+        actor_username,
+        kind,
+        summary,
         created_at: row.try_get("created_at")?,
         unread: row.try_get("unread")?,
     })

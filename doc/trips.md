@@ -464,6 +464,9 @@ was then, so "mara removed Gasthof Post" still reads after the row is gone.
 
 `TripEventKind::in_inbox` and `pushes` in
 [`models/notification.rs`](../api/src/models/notification.rs) are the table.
+The sentence for a change ("mara proposed Haus Wildspitze") is written once,
+by `describe` in the same file: a push says it, and the bell's list carries it
+as each entry's `text`, so the app shows it rather than composing its own.
 
 How an event travels:
 
@@ -652,7 +655,7 @@ Pure logic, tested without a browser:
 | `lib/tripTimeline.ts` | `dayNumber`, `buildTimeline`, `eachDay`, `monthGrid`, `paddledByRiver` |
 | `lib/tripRange.ts` | `baseRanges`, `rangeBounds`, `nearestWatched`, and the per-base colour and number |
 | `lib/hooks/useTrips.ts` | the `tripKeys` factory, every trip query and every mutation |
-| `lib/notifications.ts` | `describeEvent` (the bell's sentence) and `parseSse` |
+| `lib/notifications.ts` | `parseSse` |
 | `lib/hooks/useNotifications.ts` | `notificationKeys`, `useLiveTripEvents` (the stream, what each event invalidates, reconnect with backoff), push subscribe and unsubscribe |
 
 Shared pieces this feature added to the app, not to itself: `PanelHeader`,
