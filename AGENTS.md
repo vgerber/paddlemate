@@ -128,6 +128,25 @@ This assigns the correct sequential numeric prefix automatically. Manually
 created files risk duplicate prefixes, which cause SQLx to panic at compile
 time.
 
+## Security and hardening
+
+A feature is not done until it has had a security and hardening pass, and the
+report says what the pass found. Go through every new route, table and
+background task and ask:
+
+| Question | Typical fix |
+|---|---|
+| Who may call this, and is the check in the SQL? | parent-scoped queries, one gate per question |
+| What bounds every input? | length, count, range and format checks, 400 on failure; clamp paging |
+| What can one user make the server hold or repeat? | per-user caps on rows and open connections, bounded concurrency |
+| Does the server call out to a URL a client supplied? | a host allowlist, never "any https URL"; timeouts on every outbound call |
+| How long does a credential or connection outlive its check? | long-lived streams end with the token and are re-authorised |
+| Does data grow without bound? | a retention rule and the index it needs |
+| What survives sign-out on a shared device? | undo per-device state (push, caches) on sign-out |
+
+Each guard gets a test, and the test is checked by removing the guard and
+watching it fail.
+
 ## Commits
 
 - **Ask before committing.** Finish the work, report what changed, and wait
