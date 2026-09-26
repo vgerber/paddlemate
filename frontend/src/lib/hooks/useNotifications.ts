@@ -4,10 +4,10 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { EventSourceParserStream } from "eventsource-parser/stream";
 import { useCallback, useEffect } from "react";
 import { type LiveEvent, notificationsApi } from "@/lib/api";
 import { rawRequest } from "@/lib/api/client";
-import { parseSse } from "@/lib/notifications";
 import { descentKeys } from "./useDescents";
 import { tripKeys } from "./useTrips";
 
@@ -87,24 +87,22 @@ export function useLiveTripEvents(enabled: boolean) {
       headers.set("Accept", "text/event-stream");
       const res = await fetch(url, { headers, signal: abort.signal });
       if (!res.ok || !res.body) throw new Error(`stream: ${res.status}`);
-      const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
-      let buffer = "";
+      const reader = res.body
+        .pipeThrough(new TextDecoderStream())
+        .pipeThrough(new EventSourceParserStream())
+        .getReader();
       for (;;) {
-        const { value, done } = await reader.read();
+        const { value: m, done } = await reader.read();
         if (done) return;
-        const { messages, rest } = parseSse(buffer + value);
-        buffer = rest;
-        for (const m of messages) {
-          if (m.event === "connected") {
-            retry = RETRY_MIN_MS;
-            // A reopened stream missed whatever happened while it was down.
-            if (opened) refreshEverything(qc);
-            opened = true;
-          } else if (m.event === "trip_event") {
-            refreshTrip(qc, JSON.parse(m.data) as LiveEvent);
-          } else if (m.event === "resync") {
-            refreshEverything(qc);
-          }
+        if (m.event === "connected") {
+          retry = RETRY_MIN_MS;
+          // A reopened stream missed whatever happened while it was down.
+          if (opened) refreshEverything(qc);
+          opened = true;
+        } else if (m.event === "trip_event") {
+          refreshTrip(qc, JSON.parse(m.data) as LiveEvent);
+        } else if (m.event === "resync") {
+          refreshEverything(qc);
         }
       }
     };

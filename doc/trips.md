@@ -655,7 +655,6 @@ Pure logic, tested without a browser:
 | `lib/tripTimeline.ts` | `dayNumber`, `buildTimeline`, `eachDay`, `monthGrid`, `paddledByRiver` |
 | `lib/tripRange.ts` | `baseRanges`, `rangeBounds`, `nearestWatched`, and the per-base colour and number |
 | `lib/hooks/useTrips.ts` | the `tripKeys` factory, every trip query and every mutation |
-| `lib/notifications.ts` | `parseSse` |
 | `lib/hooks/useNotifications.ts` | `notificationKeys`, `useLiveTripEvents` (the stream, what each event invalidates, reconnect with backoff), push subscribe and unsubscribe |
 
 Shared pieces this feature added to the app, not to itself: `PanelHeader`,
