@@ -1,7 +1,7 @@
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { localizedName } from "@/lib/localization";
+import { toVisibility, type VisibilityType } from "@/lib/visibility";
 
-export type VisibilityType = "private" | "public" | "shared";
 export type TimingMode = "single" | "multi";
 export type SectionLocation = { type: "LineString"; coordinates: number[][] };
 
@@ -31,6 +31,8 @@ export interface LogForm {
   shared_groups: number[];
   shared_users: string[];
   visible_from: string;
+  /** Trip this log is credited to. A descent belongs to at most one. */
+  trip_id: number | null;
 }
 
 /** Props shared by every wizard step. */
@@ -79,6 +81,7 @@ export function defaultForm(): LogForm {
     shared_groups: [],
     shared_users: [],
     visible_from: "",
+    trip_id: null,
   };
 }
 
@@ -107,9 +110,26 @@ export function initFromDescent(d: Descent): LogForm {
     name: d.name ?? "",
     note: d.note ?? "",
     visibility_type: vis.type,
-    shared_groups: vis.type === "shared" ? vis.groups : [],
-    shared_users: vis.type === "shared" ? vis.users : [],
+    shared_groups: vis.type === "shared" ? (vis.groups ?? []) : [],
+    shared_users: vis.type === "shared" ? (vis.users ?? []) : [],
     visible_from: d.visible_from ? toDatetimeLocal(d.visible_from) : "",
+    trip_id: d.trip_id ?? null,
+  };
+}
+
+/** A mate's log as the start of your own. It keeps what describes the run -
+ * times, sections, put-in and take-out, name, trip - and nothing that was
+ * theirs to decide: who could see it, and their note. The copy starts as
+ * private as any new log, so copying a public log never publishes yours. */
+export function copyFromDescent(d: Descent): LogForm {
+  const fresh = defaultForm();
+  return {
+    ...initFromDescent(d),
+    note: fresh.note,
+    visibility_type: fresh.visibility_type,
+    shared_groups: fresh.shared_groups,
+    shared_users: fresh.shared_users,
+    visible_from: fresh.visible_from,
   };
 }
 
@@ -131,16 +151,11 @@ export function makeDraft(
 }
 
 export function buildPayload(form: LogForm) {
-  const visibility =
-    form.visibility_type === "shared"
-      ? {
-          type: "shared" as const,
-          groups: form.shared_groups,
-          users: form.shared_users,
-        }
-      : form.visibility_type === "public"
-        ? { type: "public" as const }
-        : { type: "private" as const };
+  const visibility = toVisibility(
+    form.visibility_type,
+    form.shared_groups,
+    form.shared_users,
+  );
 
   return {
     start_time: new Date(form.start_time).toISOString(),
@@ -159,6 +174,7 @@ export function buildPayload(form: LogForm) {
     visible_from: form.visible_from
       ? new Date(form.visible_from).toISOString()
       : null,
+    trip_id: form.trip_id,
     sections: form.sections.map((s, i) => ({
       section_id: s.section_id,
       sort_order: i + 1,

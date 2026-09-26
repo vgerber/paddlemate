@@ -10,8 +10,15 @@ import { useMyDescents } from "@/lib/hooks/useDescents";
 /** The signed-in user's own descents, grouped by month. */
 export default function MyLogsPanel({
   onOpen,
+  selectedId,
+  flush,
 }: {
   onOpen: (id: number) => void;
+  /** The log the desktop detail pane is showing. */
+  selectedId?: number;
+  /** In the desktop list pane the column itself is the list, so the months
+   * lose their boxes and the rows sit on the pane's own ground. */
+  flush?: boolean;
 }) {
   const { data, isLoading } = useMyDescents({});
   const descents = data?.items ?? [];
@@ -55,7 +62,7 @@ export default function MyLogsPanel({
           <Typography
             variant="caption"
             sx={{
-              px: 0,
+              px: flush ? 2 : 0,
               pb: 1,
               display: "block",
               color: "text.secondary",
@@ -66,11 +73,17 @@ export default function MyLogsPanel({
           >
             {label}
           </Typography>
-          <Box sx={{ border: "1px solid", borderColor: "divider" }}>
+          <Box
+            sx={{
+              border: flush ? "none" : "1px solid",
+              borderColor: "divider",
+            }}
+          >
             {items.map((d) => (
               <DescentCard
                 key={d.id}
                 descent={d}
+                selected={d.id === selectedId}
                 onClick={() => onOpen(d.id)}
               />
             ))}

@@ -21,6 +21,13 @@ water levels, and a shared logbook.
 - **Logs** — record a descent across one or more sections; counts per section,
   a log list in the section view, and your descents shaded into the gauge
   chart at the level you paddled.
+- **Trips** — plan a paddling week together, private to the people invited to
+  it: a shared list of bases that moves with the group, the sections watched
+  from each, who is coming and when, and every member's logs from the trip in
+  one place, private ones included. Friends join through an invite link, even
+  before they have an account. Open trips update live as others change them, a
+  bell collects what changed while you were away, and a phone can get a push
+  when the plan changes.
 - **Languages** — section and rapid names in any language, with a per-device
   display language applied live, map labels included.
 - **Community** — proposals with review and voting for non-admin edits,
@@ -38,6 +45,7 @@ water levels, and a shared logbook.
 | [Rivers, sections and features](doc/rivers-and-features.md) | The core data hierarchy, feature types, water levels and gauges |
 | [Fetching gauge data](doc/fetching-gauge-data.md) | Fetch recipes for gauge networks outside our provider set - endpoints, fields, units, gotchas, per country |
 | [Gauge providers and whitewater.guide](doc/gauge-data-and-whitewater-guide.md) | Coverage vs. whitewater.guide's `gorge` sources, and whether their section data/content can be reused |
+| [Trips](doc/trips.md) | Planning a trip together: bases, watch lists, membership and invite links, and how logs are credited |
 | [Search](doc/search.md) | What you can type, how results rank, normalization and the REINDEX rule |
 | [Translations](doc/translations.md) | Display language, translation endpoints, language codes end to end |
 | [API](api/README.md) | Database schema, authentication, Keycloak setup |

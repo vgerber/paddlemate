@@ -7,6 +7,9 @@ import { connect } from "./cdp";
 const APP = "http://localhost:5173";
 const USER = process.env.KC_USER ?? "vincent";
 const PASS = process.env.KC_PASS ?? "paddle";
+// The page to sign in from; sign-in returns there. `/invite/<token>` checks
+// that an invite link survives signing in.
+const START = process.env.E2E_START ?? "/";
 
 const p = await connect();
 
@@ -17,10 +20,10 @@ await p.send("Network.enable");
 await p.send("Network.clearBrowserCookies");
 await p.goto(`${APP}/`, 5000);
 await p.evaluate("localStorage.clear(); sessionStorage.clear(); true");
-await p.goto(`${APP}/`, 6000);
+await p.goto(`${APP}${START}`, 6000);
 
 const clicked = await p.clickText("button, a", "sign in");
-if (!clicked) throw new Error("no sign-in control found on the map page");
+if (!clicked) throw new Error(`no sign-in control found on ${START}`);
 await p.sleep(4000);
 
 const onKeycloak = String(await p.url()).includes("localhost:8080");

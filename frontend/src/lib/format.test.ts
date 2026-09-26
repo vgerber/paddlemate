@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
+  clockTime,
+  dateAndTime,
+  dateRange,
   durationLabel,
   formatDate,
   formatReading,
@@ -7,17 +10,19 @@ import {
   humanize,
   sectionPlace,
   timeAgo,
+  todayIso,
 } from "./format";
 
 describe("formatDate", () => {
-  // Noon UTC keeps the calendar day stable in every timezone the tests
-  // might run in.
+  // A bare calendar day is the same day in every timezone. An instant is
+  // not - noon UTC is already tomorrow in UTC+13 - so the format tests use
+  // days.
   test("formats day month year", () => {
-    expect(formatDate("2026-01-05T12:00:00Z")).toBe("05 Jan 2026");
+    expect(formatDate("2026-01-05")).toBe("05 Jan 2026");
   });
 
   test("prepends the weekday when asked", () => {
-    expect(formatDate("2026-01-05T12:00:00Z", { weekday: true })).toBe(
+    expect(formatDate("2026-01-05", { weekday: true })).toBe(
       "Mon, 05 Jan 2026",
     );
   });
@@ -102,5 +107,69 @@ describe("sectionPlace", () => {
     expect(sectionPlace(null, ["Ötztal"])).toEqual(["Ötztal"]);
     expect(sectionPlace("DE", [])).toEqual(["DE"]);
     expect(sectionPlace(undefined, undefined)).toEqual([]);
+  });
+});
+
+describe("dateRange", () => {
+  test("collapses a span inside one month", () => {
+    expect(dateRange("2026-06-01", "2026-06-08")).toBe("01 - 08 Jun 2026");
+  });
+
+  test("keeps both months inside one year", () => {
+    expect(dateRange("2026-06-28", "2026-07-03")).toBe("28 Jun - 03 Jul 2026");
+  });
+
+  test("spells out both ends across years", () => {
+    expect(dateRange("2026-12-28", "2027-01-03")).toBe(
+      "28 Dec 2026 - 03 Jan 2027",
+    );
+  });
+
+  test("collapses a single day", () => {
+    expect(dateRange("2026-06-01", "2026-06-01")).toBe("01 Jun 2026");
+  });
+
+  test("reads open-ended without an end", () => {
+    expect(dateRange("2026-06-01")).toBe("from 01 Jun 2026");
+    expect(dateRange("2026-06-01", null)).toBe("from 01 Jun 2026");
+  });
+});
+
+describe("clockTime", () => {
+  test("trims seconds off an API time", () => {
+    expect(clockTime("19:30:00")).toBe("19:30");
+  });
+
+  test("leaves an already short time alone", () => {
+    expect(clockTime("08:15")).toBe("08:15");
+  });
+});
+
+describe("dateAndTime", () => {
+  test("appends the hour when there is one", () => {
+    expect(dateAndTime("2026-09-03", "19:30:00")).toBe(
+      "Thu, 03 Sept 2026 · 19:30",
+    );
+  });
+
+  test("is just the day until somebody sets a time", () => {
+    expect(dateAndTime("2026-09-03")).toBe("Thu, 03 Sept 2026");
+    expect(dateAndTime("2026-09-03", null)).toBe("Thu, 03 Sept 2026");
+  });
+});
+
+describe("todayIso", () => {
+  test("is the local calendar day, not the UTC one", () => {
+    // 00:30 local on the 2nd: in any zone east of UTC the UTC date is still
+    // the 1st, which is what toISOString would have said.
+    expect(todayIso(new Date(2026, 8, 2, 0, 30))).toBe("2026-09-02");
+  });
+});
+
+describe("calendar days", () => {
+  test("a bare date is that day wherever the viewer is", () => {
+    // Built from local parts, so this holds in every timezone the suite runs
+    // in - run it with TZ=America/New_York to see it bite.
+    expect(formatDate("2026-06-01")).toBe("01 Jun 2026");
   });
 });

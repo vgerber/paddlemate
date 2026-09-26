@@ -46,6 +46,45 @@ export type FavoriteSection = components["schemas"]["FavoriteSectionResponse"];
 export type UserWithFollowStatus =
   components["schemas"]["UserWithFollowStatusResponse"];
 export type User = components["schemas"]["User"];
+export type Trip = components["schemas"]["Trip"];
+export type TripMember = components["schemas"]["TripMember"];
+export type TripMemberRole = components["schemas"]["TripMemberRole"];
+export type TripStay = components["schemas"]["TripStay"];
+export type TripStayKind = components["schemas"]["TripStayKind"];
+export type TripSection = components["schemas"]["TripSection"];
+export type TripSectionInput = components["schemas"]["TripSectionInput"];
+export type TripSectionStatus = components["schemas"]["TripSectionStatus"];
+export type CreateTripRequest = components["schemas"]["CreateTripRequest"];
+export type CreateTripStayRequest =
+  components["schemas"]["CreateTripStayRequest"];
+export type PatchTripRequest = components["schemas"]["PatchTripRequest"];
+export type PatchTripStayRequest =
+  components["schemas"]["PatchTripStayRequest"];
+export type TripStayCandidate = components["schemas"]["TripStayCandidate"];
+export type TripInvite = components["schemas"]["TripInvite"];
+export type TripInviteCreated = components["schemas"]["TripInviteCreated"];
+export type TripInvitePreview = components["schemas"]["TripInvitePreview"];
+export type CreateTripStayCandidateRequest =
+  components["schemas"]["CreateTripStayCandidateRequest"];
+export type PatchTripStayCandidateRequest =
+  components["schemas"]["PatchTripStayCandidateRequest"];
+export type PatchTripMemberRequest =
+  components["schemas"]["PatchTripMemberRequest"];
+export type PaginatedTrips =
+  components["schemas"]["PaginatedResponse_for_Trip"];
+export type TripFilters = NonNullable<
+  operations["list_trips"]["parameters"]["query"]
+>;
+export type TripEvent = components["schemas"]["TripEvent"];
+export type TripEventKind = components["schemas"]["TripEventKind"];
+export type EventSummary = components["schemas"]["EventSummary"];
+export type LiveEvent = components["schemas"]["LiveEvent"];
+export type NotificationState = components["schemas"]["NotificationState"];
+export type PaginatedTripEvents =
+  components["schemas"]["PaginatedResponse_for_TripEvent"];
+export type PushSubscriptionEntry = components["schemas"]["PushSubscription"];
+export type CreatePushSubscriptionRequest =
+  components["schemas"]["CreatePushSubscriptionRequest"];
 export type Region = components["schemas"]["Region"];
 export type RegionKind = components["schemas"]["RegionKind"];
 export type RegionOutline = components["schemas"]["RegionOutline"];
@@ -572,6 +611,226 @@ export const descentsApi = {
   },
 };
 
+/** The `If-Match` for an edit: the item's `updated_at`, quoted, exactly as the
+ * API's ETag carries it. Without a version the write goes through regardless;
+ * with one, a change somebody made meanwhile answers 412 instead of being
+ * silently overwritten. */
+const ifMatch = (version?: string) =>
+  version ? { "If-Match": JSON.stringify(version) } : undefined;
+
+export const tripsApi = {
+  list: async (filters: TripFilters = {}) => {
+    const { data } = await client.GET("/api/v1/trips", {
+      params: { query: filters },
+    });
+    return assertData(data);
+  },
+  get: async (id: number) => {
+    const { data } = await client.GET("/api/v1/trips/{trip_id}", {
+      params: { path: { trip_id: id } },
+    });
+    return assertData(data);
+  },
+  create: async (body: CreateTripRequest) => {
+    const { data } = await client.POST("/api/v1/trips", { body });
+    return assertData(data);
+  },
+  update: async (id: number, body: PatchTripRequest, version?: string) => {
+    const { data } = await client.PATCH("/api/v1/trips/{trip_id}", {
+      params: { path: { trip_id: id } },
+      body,
+      headers: ifMatch(version),
+    });
+    return assertData(data);
+  },
+  remove: async (id: number) => {
+    await client.DELETE("/api/v1/trips/{trip_id}", {
+      params: { path: { trip_id: id } },
+    });
+  },
+  members: async (id: number) => {
+    const { data } = await client.GET("/api/v1/trips/{trip_id}/members", {
+      params: { path: { trip_id: id } },
+    });
+    return assertData(data);
+  },
+  candidates: async (id: number) => {
+    const { data } = await client.GET("/api/v1/trips/{trip_id}/candidates", {
+      params: { path: { trip_id: id } },
+    });
+    return assertData(data);
+  },
+  proposeCandidate: async (
+    id: number,
+    body: CreateTripStayCandidateRequest,
+  ) => {
+    const { data } = await client.POST("/api/v1/trips/{trip_id}/candidates", {
+      params: { path: { trip_id: id } },
+      body,
+    });
+    return assertData(data);
+  },
+  voteCandidate: async (id: number, candidateId: number, vote: 1 | -1) => {
+    const { data } = await client.POST(
+      "/api/v1/trips/{trip_id}/candidates/{candidate_id}/vote",
+      {
+        params: { path: { trip_id: id, candidate_id: candidateId } },
+        body: { vote },
+      },
+    );
+    return assertData(data);
+  },
+  unvoteCandidate: async (id: number, candidateId: number) => {
+    const { data } = await client.DELETE(
+      "/api/v1/trips/{trip_id}/candidates/{candidate_id}/vote",
+      { params: { path: { trip_id: id, candidate_id: candidateId } } },
+    );
+    return assertData(data);
+  },
+  patchCandidate: async (
+    id: number,
+    candidateId: number,
+    body: PatchTripStayCandidateRequest,
+    version?: string,
+  ) => {
+    const { data } = await client.PATCH(
+      "/api/v1/trips/{trip_id}/candidates/{candidate_id}",
+      {
+        params: { path: { trip_id: id, candidate_id: candidateId } },
+        body,
+        headers: ifMatch(version),
+      },
+    );
+    return assertData(data);
+  },
+  /** With a version, only the version the admin was looking at is accepted -
+   * not one somebody reworded while they were deciding. */
+  acceptCandidate: async (
+    id: number,
+    candidateId: number,
+    version?: string,
+  ) => {
+    const { data } = await client.PATCH(
+      "/api/v1/trips/{trip_id}/candidates/{candidate_id}",
+      {
+        params: { path: { trip_id: id, candidate_id: candidateId } },
+        body: { accepted: true },
+        headers: ifMatch(version),
+      },
+    );
+    return assertData(data);
+  },
+  withdrawCandidate: async (id: number, candidateId: number) => {
+    await client.DELETE("/api/v1/trips/{trip_id}/candidates/{candidate_id}", {
+      params: { path: { trip_id: id, candidate_id: candidateId } },
+    });
+  },
+  invites: async (id: number) => {
+    const { data } = await client.GET("/api/v1/trips/{trip_id}/invites", {
+      params: { path: { trip_id: id } },
+    });
+    return assertData(data);
+  },
+  createInvite: async (id: number) => {
+    const { data } = await client.POST("/api/v1/trips/{trip_id}/invites", {
+      params: { path: { trip_id: id } },
+      body: {},
+    });
+    return assertData(data);
+  },
+  deleteInvite: async (id: number, inviteId: number) => {
+    await client.DELETE("/api/v1/trips/{trip_id}/invites/{invite_id}", {
+      params: { path: { trip_id: id, invite_id: inviteId } },
+    });
+  },
+  /** Works signed out: the person opening a link usually has no account. */
+  invitePreview: async (token: string) => {
+    const { data } = await client.GET("/api/v1/trips/invites/{token}", {
+      params: { path: { token } },
+    });
+    return assertData(data);
+  },
+  /** The caller joins themselves; the link is the permission. */
+  joinByInvite: async (id: number, token: string) => {
+    const { data } = await client.POST("/api/v1/trips/{trip_id}/members", {
+      params: { path: { trip_id: id } },
+      body: { invite: token },
+    });
+    return assertData(data);
+  },
+  addMember: async (id: number, userId: string) => {
+    const { data } = await client.POST("/api/v1/trips/{trip_id}/members", {
+      params: { path: { trip_id: id } },
+      body: { user_id: userId },
+    });
+    return assertData(data);
+  },
+  updateMember: async (
+    id: number,
+    userId: string,
+    body: PatchTripMemberRequest,
+  ) => {
+    const { data } = await client.PATCH(
+      "/api/v1/trips/{trip_id}/members/{user_id}",
+      { params: { path: { trip_id: id, user_id: userId } }, body },
+    );
+    return assertData(data);
+  },
+  removeMember: async (id: number, userId: string) => {
+    await client.DELETE("/api/v1/trips/{trip_id}/members/{user_id}", {
+      params: { path: { trip_id: id, user_id: userId } },
+    });
+  },
+  stays: async (id: number) => {
+    const { data } = await client.GET("/api/v1/trips/{trip_id}/stays", {
+      params: { path: { trip_id: id } },
+    });
+    return assertData(data);
+  },
+  createStay: async (id: number, body: CreateTripStayRequest) => {
+    const { data } = await client.POST("/api/v1/trips/{trip_id}/stays", {
+      params: { path: { trip_id: id } },
+      body,
+    });
+    return assertData(data);
+  },
+  updateStay: async (
+    id: number,
+    stayId: number,
+    body: PatchTripStayRequest,
+    version?: string,
+  ) => {
+    const { data } = await client.PATCH(
+      "/api/v1/trips/{trip_id}/stays/{stay_id}",
+      {
+        params: { path: { trip_id: id, stay_id: stayId } },
+        body,
+        headers: ifMatch(version),
+      },
+    );
+    return assertData(data);
+  },
+  removeStay: async (id: number, stayId: number) => {
+    await client.DELETE("/api/v1/trips/{trip_id}/stays/{stay_id}", {
+      params: { path: { trip_id: id, stay_id: stayId } },
+    });
+  },
+  replaceStaySections: async (
+    id: number,
+    stayId: number,
+    sections: TripSectionInput[],
+  ) => {
+    const { data } = await client.PUT(
+      "/api/v1/trips/{trip_id}/stays/{stay_id}/sections",
+      {
+        params: { path: { trip_id: id, stay_id: stayId } },
+        body: { sections },
+      },
+    );
+    return assertData(data);
+  },
+};
+
 export const proposalsApi = {
   list: async (filters: ProposalFilters = {}) => {
     const { data } = await client.GET("/api/v1/proposals", {
@@ -697,5 +956,42 @@ export const followsApi = {
       params: { path: { user_id: ME, follower_id: userId } },
       body: { status: "accepted" },
     });
+  },
+};
+
+export const notificationsApi = {
+  list: async (page = 1): Promise<PaginatedTripEvents> => {
+    const { data } = await client.GET("/api/v1/users/me/notifications", {
+      params: { query: { page } },
+    });
+    return assertData(data);
+  },
+  state: async (): Promise<NotificationState> => {
+    const { data } = await client.GET("/api/v1/users/me/notification-state");
+    return assertData(data);
+  },
+  markRead: async (readUntil: string): Promise<NotificationState> => {
+    const { data } = await client.PUT("/api/v1/users/me/notification-state", {
+      body: { read_until: readUntil },
+    });
+    return assertData(data);
+  },
+  pushSubscriptions: async (): Promise<PushSubscriptionEntry[]> => {
+    const { data } = await client.GET("/api/v1/users/me/push-subscriptions");
+    return assertData(data);
+  },
+  subscribePush: async (
+    body: CreatePushSubscriptionRequest,
+  ): Promise<PushSubscriptionEntry> => {
+    const { data } = await client.POST("/api/v1/users/me/push-subscriptions", {
+      body,
+    });
+    return assertData(data);
+  },
+  unsubscribePush: async (subscriptionId: number): Promise<void> => {
+    await client.DELETE(
+      "/api/v1/users/me/push-subscriptions/{subscription_id}",
+      { params: { path: { subscription_id: subscriptionId } } },
+    );
   },
 };

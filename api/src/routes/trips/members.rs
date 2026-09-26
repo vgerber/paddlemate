@@ -1,0 +1,310 @@
+use aide::axum::{ApiRouter, IntoApiResponse, routing::get_with};
+use axum::{
+    Extension, Json,
+    extract::{Path, State},
+    http::StatusCode,
+    response::IntoResponse,
+};
+
+use crate::{
+    doc_fn,
+    error::{ApiError, ErrorResponse},
+    layers::auth::AuthToken,
+    models::{
+        notification::{EventSummary, TripEventKind},
+        path_params::{TripMemberPath, TripPath},
+        trip::{AddTripMemberRequest, PatchTripMemberRequest, TripMember},
+    },
+    notify,
+    query::trips::{self, Outcome},
+    state::AppState,
+};
+
+use super::access::{caller, require_admin, require_member};
+use super::respond::{failure, outcome};
+
+// Handlers here call the authenticated user `caller_id`: the path already
+// carries a `user_id`, and the two are not the same person.
+pub fn member_routes(state: AppState) -> ApiRouter {
+    ApiRouter::new()
+        .api_route(
+            "/",
+            get_with(list_trip_members, list_trip_members_docs)
+                .post_with(add_trip_member, add_trip_member_docs),
+        )
+        .api_route(
+            "/{user_id}",
+            get_with(get_trip_member, get_trip_member_docs)
+                .patch_with(patch_trip_member, patch_trip_member_docs)
+                .delete_with(remove_trip_member, remove_trip_member_docs),
+        )
+        .with_state(state)
+}
+
+pub async fn list_trip_members(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path(TripPath { trip_id }): Path<TripPath>,
+) -> impl IntoApiResponse {
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(err) => return err.into_response(),
+    };
+    if let Some(res) = require_member(&app, trip_id, &caller_id).await {
+        return res;
+    }
+
+    match trips::list_members(&app.pg_pool, trip_id).await {
+        Ok(members) => Json(members).into_response(),
+        Err(err) => failure(&format!("listing trip {trip_id} members"), err),
+    }
+}
+
+doc_fn!(list_trip_members_docs, op =>
+    op.input::<Path<TripPath>>()
+        .description("List the members of a trip, with the dates each can personally make.")
+        .response::<200, Json<Vec<TripMember>>>()
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found or not visible"))
+        .tag("Trips")
+);
+
+pub async fn get_trip_member(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path(TripMemberPath { trip_id, user_id }): Path<TripMemberPath>,
+) -> impl IntoApiResponse {
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(err) => return err.into_response(),
+    };
+    if let Some(res) = require_member(&app, trip_id, &caller_id).await {
+        return res;
+    }
+
+    match trips::get_member(&app.pg_pool, trip_id, &user_id).await {
+        Ok(Some(member)) => Json(member).into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
+        Err(err) => failure(&format!("fetching trip {trip_id} member"), err),
+    }
+}
+
+doc_fn!(get_trip_member_docs, op =>
+    op.input::<Path<TripMemberPath>>()
+        .description("Get one member of a trip")
+        .response::<200, Json<TripMember>>()
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found or not visible"))
+        .tag("Trips")
+);
+
+/// Two ways onto a trip, and the body says which. An admin adds somebody by
+/// `user_id`. Anyone signed in who holds a live invite link joins
+/// *themselves* with `invite` - the link is the permission, so there is no
+/// membership to check, only the token, and it must belong to this trip.
+pub async fn add_trip_member(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path(TripPath { trip_id }): Path<TripPath>,
+    Json(body): Json<AddTripMemberRequest>,
+) -> impl IntoApiResponse {
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(err) => return err.into_response(),
+    };
+
+    match (body.user_id.as_deref(), body.invite.as_deref()) {
+        (Some(user_id), None) => {
+            if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
+                return res;
+            }
+            match trips::add_member(&app.pg_pool, trip_id, user_id).await {
+                Ok(Some((member, added))) => {
+                    if added {
+                        let about = EventSummary::about(&member.username);
+                        notify::record(
+                            &app,
+                            trip_id,
+                            &caller_id,
+                            TripEventKind::MemberJoined,
+                            about,
+                        )
+                        .await;
+                    }
+                    (StatusCode::CREATED, Json(member)).into_response()
+                }
+                Ok(None) => ApiError::not_found("Not found").into_response(),
+                Err(err) => failure(&format!("adding a member to trip {trip_id}"), err),
+            }
+        }
+        // An unknown, expired or withdrawn link, or one for another trip, is
+        // the same 404 as a trip that does not exist.
+        (None, Some(invite)) => {
+            match trips::join_by_invite(&app.pg_pool, trip_id, invite, &caller_id).await {
+                Ok(result) => {
+                    if let Outcome::Done((_, true)) = &result {
+                        let joined = EventSummary::default();
+                        notify::record(
+                            &app,
+                            trip_id,
+                            &caller_id,
+                            TripEventKind::MemberJoined,
+                            joined,
+                        )
+                        .await;
+                    }
+                    outcome(result, |(member, _)| {
+                        (StatusCode::CREATED, Json(member)).into_response()
+                    })
+                }
+                Err(err) => failure(&format!("joining trip {trip_id} by invite"), err),
+            }
+        }
+        _ => ApiError::validation("Send either user_id or invite").into_response(),
+    }
+}
+
+doc_fn!(add_trip_member_docs, op =>
+    op.input::<Path<TripPath>>()
+        .input::<Json<AddTripMemberRequest>>()
+        .description("Add somebody to a trip. With `user_id`, an admin adds that person. With `invite`, the caller joins themselves through an invite link for this trip. Exactly one of the two.")
+        .response_with::<201, Json<TripMember>, _>(|res| res.description("Added, or already a member"))
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Unknown user, or neither/both fields"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Admin role required to add somebody else"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found, or the invite is not live for this trip"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Trips")
+);
+
+pub async fn patch_trip_member(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path(TripMemberPath { trip_id, user_id }): Path<TripMemberPath>,
+    Json(body): Json<PatchTripMemberRequest>,
+) -> impl IntoApiResponse {
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(err) => return err.into_response(),
+    };
+    // Everything below needs the caller on the trip - editing even your own
+    // row. Without this the composite FK on attendance was the only guard,
+    // and a future per-member field outside that table would have none.
+    if let Some(res) = require_member(&app, trip_id, &caller_id).await {
+        return res;
+    }
+
+    // Attendance is the member's own record; role is an admin decision.
+    if caller_id != user_id || body.role.is_some() {
+        if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
+            return res;
+        }
+    }
+
+    // The last-admin rule is checked inside the write, under the trip lock.
+    match trips::patch_member(&app.pg_pool, trip_id, &user_id, &body).await {
+        Ok(result) => {
+            // Only when somebody's dates or hours moved: a role change is an
+            // admin matter, not news for the group.
+            let dates_moved = body.arrival.is_some()
+                || body.arrival_time.is_some()
+                || body.departure.is_some()
+                || body.departure_time.is_some();
+            if let (true, Outcome::Done(m)) = (dates_moved, &result) {
+                let when = EventSummary {
+                    arrival: m.arrival,
+                    arrival_time: m.arrival_time,
+                    departure: m.departure,
+                    departure_time: m.departure_time,
+                    ..Default::default()
+                };
+                // Told as the member's own news, whoever typed it in.
+                let actor = if caller_id == user_id {
+                    &caller_id
+                } else {
+                    &m.user_id
+                };
+                notify::record(&app, trip_id, actor, TripEventKind::AttendanceChanged, when).await;
+            }
+            outcome(result, |member| Json(member).into_response())
+        }
+        Err(err) => failure(&format!("patching trip {trip_id} member"), err),
+    }
+}
+
+doc_fn!(patch_trip_member_docs, op =>
+    op.input::<Path<TripMemberPath>>()
+        .description("Update a member. Role is admin only; arrival and departure are the member's own record.")
+        .response::<200, Json<TripMember>>()
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Validation error"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Admin role required"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Not found"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Trips")
+);
+
+pub async fn remove_trip_member(
+    State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
+    Path(TripMemberPath { trip_id, user_id }): Path<TripMemberPath>,
+) -> impl IntoApiResponse {
+    let caller_id = match caller(auth) {
+        Ok(id) => id,
+        Err(err) => return err.into_response(),
+    };
+
+    if let Some(res) = require_member(&app, trip_id, &caller_id).await {
+        return res;
+    }
+    // Leaving is always your own to do; removing somebody else is an admin act.
+    if caller_id != user_id {
+        if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
+            return res;
+        }
+    }
+
+    // The last-admin rule is checked inside the delete, under the trip lock.
+    // The name first: after the removal it is no longer on the trip to read.
+    let leaving = trips::get_member(&app.pg_pool, trip_id, &user_id)
+        .await
+        .ok()
+        .flatten();
+    match trips::remove_member(&app.pg_pool, trip_id, &user_id).await {
+        Ok(result) => {
+            if let Outcome::Done(()) = &result {
+                if caller_id == user_id {
+                    notify::record(
+                        &app,
+                        trip_id,
+                        &caller_id,
+                        TripEventKind::MemberLeft,
+                        EventSummary::default(),
+                    )
+                    .await;
+                } else if let Some(m) = &leaving {
+                    let about = EventSummary::about(&m.username);
+                    notify::record(
+                        &app,
+                        trip_id,
+                        &caller_id,
+                        TripEventKind::MemberRemoved,
+                        about,
+                    )
+                    .await;
+                }
+            }
+            outcome(result, |()| StatusCode::NO_CONTENT.into_response())
+        }
+        Err(err) => failure(&format!("removing trip {trip_id} member"), err),
+    }
+}
+
+doc_fn!(remove_trip_member_docs, op =>
+    op.input::<Path<TripMemberPath>>()
+        .description("Remove a member, or leave the trip yourself. The last admin cannot be removed.")
+        .response_with::<204, (), _>(|res| res.description("Removed"))
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Would leave the trip without an admin"))
+        .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Admin role required"))
+        .security_requirement_multi(["Bearer", "ApiKey"])
+        .tag("Trips")
+);

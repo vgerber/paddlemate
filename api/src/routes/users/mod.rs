@@ -1,16 +1,13 @@
 mod favorites;
 mod follows;
+mod notifications;
 mod tokens;
 
 use aide::axum::{
     ApiRouter, IntoApiResponse,
     routing::{delete_with, get_with, patch_with, put_with},
 };
-use axum::{
-    Extension, Json,
-    extract::State,
-    response::{IntoResponse, Response},
-};
+use axum::{Extension, Json, extract::State, response::IntoResponse};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -66,17 +63,61 @@ pub fn users_routes(state: AppState) -> ApiRouter {
             "/me/tokens/{token_id}",
             delete_with(tokens::revoke_token, tokens::revoke_token_docs),
         )
+        // Notifications never describe another user, so they say "me".
+        .api_route(
+            "/me/events",
+            get_with(
+                notifications::stream_events,
+                notifications::stream_events_docs,
+            ),
+        )
+        .api_route(
+            "/me/notifications",
+            get_with(
+                notifications::list_notifications,
+                notifications::list_notifications_docs,
+            ),
+        )
+        .api_route(
+            "/me/notification-state",
+            get_with(
+                notifications::get_notification_state,
+                notifications::get_notification_state_docs,
+            )
+            .put_with(
+                notifications::put_notification_state,
+                notifications::put_notification_state_docs,
+            ),
+        )
+        .api_route(
+            "/me/push-subscriptions",
+            get_with(
+                notifications::list_push_subscriptions,
+                notifications::list_push_subscriptions_docs,
+            )
+            .post_with(
+                notifications::create_push_subscription,
+                notifications::create_push_subscription_docs,
+            ),
+        )
+        .api_route(
+            "/me/push-subscriptions/{subscription_id}",
+            delete_with(
+                notifications::delete_push_subscription,
+                notifications::delete_push_subscription_docs,
+            ),
+        )
         .with_state(state)
 }
 
 /// Resolves the user id in a path, where "me" names the caller. Another
 /// user's data stays closed for now; the id is in the path so opening it
 /// up for profile views is a change here rather than a new route.
-fn resolve_self<'a>(path_id: &str, viewer: &'a str) -> Result<&'a str, Response> {
+fn resolve_self<'a>(path_id: &str, viewer: &'a str) -> Result<&'a str, ApiError> {
     if path_id == "me" || path_id == viewer {
         Ok(viewer)
     } else {
-        Err(ApiError::forbidden("Not permitted").into_response())
+        Err(ApiError::forbidden("Not permitted"))
     }
 }
 

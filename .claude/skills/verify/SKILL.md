@@ -73,9 +73,12 @@ already exists, or to roll out an edit to `paddlemate-*-client.json`:
 ./keycloak/setup-keycloak.sh https://auth.example.com https://app.example.com
 ```
 
-The realm ships a user `vincent` / `paddle` whose subject **equals the
-fixture owner id**, so a signed-in session sees the seeded descents,
-favourites and proposals, and carries `server_admin` for the review controls.
+The realm ships five users, all with the password `paddle`, whose subjects
+**equal the fixture's user ids**, so a signed-in session sees the seeded
+descents, favourites, proposals and trips: `vincent` (carries `server_admin`
+for the review controls), `mara`, `tobi`, `aoife` and `jonas`. Signing in as
+one of the others is how you check what a non-admin, non-owner sees -
+`login.ts` takes `KC_USER`. See the `test-data` skill for who is who.
 
 Point both sides at it (neither file needs editing - process env wins over
 `.env`, and `frontend/.env.development.local` already has the three

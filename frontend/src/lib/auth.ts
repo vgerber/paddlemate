@@ -7,6 +7,7 @@ import {
   UserManager,
   WebStorageStateStore,
 } from "oidc-client-ts";
+import { returnState } from "./returnTo";
 
 const AUTH_SERVER = import.meta.env.VITE_AUTH_SERVER;
 const REALM = import.meta.env.VITE_AUTH_REALM;
@@ -108,12 +109,18 @@ export function userToProfile(user: User): {
   };
 }
 
+// Both carry the current page through the identity provider, so the
+// callback can return there - see `lib/returnTo`.
 export async function initiateLogin(): Promise<void> {
-  await getUserManager().signinRedirect();
+  await getUserManager().signinRedirect({
+    state: returnState(window.location),
+  });
 }
 
 export async function initiateSignup(): Promise<void> {
-  await getSignupUserManager().signinRedirect();
+  await getSignupUserManager().signinRedirect({
+    state: returnState(window.location),
+  });
 }
 
 export async function logout(): Promise<void> {

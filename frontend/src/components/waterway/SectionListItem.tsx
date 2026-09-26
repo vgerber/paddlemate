@@ -24,6 +24,10 @@ interface SectionListItemProps {
   /** Rapid whose name matched the search, shown under the location so the
    * reader can see why this section is in the results. */
   matchedFeature?: string;
+  /** The river it belongs to. Worth showing where a list mixes rivers - a
+   * trip's watch list - and redundant inside one waterway's own section
+   * list, which is why it is the caller's call. */
+  riverName?: string;
 }
 
 export default function SectionListItem({
@@ -35,6 +39,7 @@ export default function SectionListItem({
   onToggleFavorite,
   descentCount,
   matchedFeature,
+  riverName,
 }: SectionListItemProps) {
   const difficultyChip = (() => {
     const ww = section.features?.find((f) => f.feature_type === "whitewater");
@@ -43,7 +48,11 @@ export default function SectionListItem({
     return diff ? <Chip label={diff} size="small" sx={{ ml: 0.5 }} /> : null;
   })();
 
-  const place = sectionPlace(section.country, section.regions).join(" · ");
+  // The river first: in a mixed list it is what tells two "Upper" runs apart,
+  // and it matters more than which district they are in.
+  const place = [riverName, ...sectionPlace(section.country, section.regions)]
+    .filter(Boolean)
+    .join(" · ");
 
   const isRivermap = section.features?.some(
     (f) => f.created_by === "rivermap-import",

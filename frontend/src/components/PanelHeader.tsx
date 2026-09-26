@@ -7,10 +7,12 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 
-interface WaterwayDetailHeaderProps<T extends string> {
-  title: string;
+interface PanelHeaderProps<T extends string> {
+  /** Omitted where the panel is already named beside it - a desktop detail
+   * pane next to the list it was picked from. The tab bar then stands alone. */
+  title?: string;
   subtitle?: string;
-  onBack: () => void;
+  onBack?: () => void;
   backIcon?: "arrow" | "close";
   actionButton?: ReactNode;
   tabs?: {
@@ -20,14 +22,17 @@ interface WaterwayDetailHeaderProps<T extends string> {
   };
 }
 
-export default function WaterwayDetailHeader<T extends string>({
+/** The app's one panel header: back arrow, bold title, grey subtitle, action
+ * icons right, and a full-width segmented tab bar when the panel has views.
+ * Without a title it is the tab bar alone, in the same chrome. */
+export default function PanelHeader<T extends string>({
   title,
   subtitle,
   onBack,
   backIcon = "arrow",
   actionButton,
   tabs,
-}: WaterwayDetailHeaderProps<T>) {
+}: PanelHeaderProps<T>) {
   return (
     <Box
       sx={{
@@ -39,37 +44,41 @@ export default function WaterwayDetailHeader<T extends string>({
         flexShrink: 0,
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          mb: tabs ? 0.75 : 0,
-        }}
-      >
-        <IconButton
-          size="small"
-          onClick={onBack}
-          aria-label={backIcon === "close" ? "Cancel" : "Back"}
+      {title && (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            mb: tabs ? 0.75 : 0,
+          }}
         >
-          {backIcon === "close" ? (
-            <CloseIcon fontSize="small" />
-          ) : (
-            <ArrowBackIcon fontSize="small" />
+          {onBack && (
+            <IconButton
+              size="small"
+              onClick={onBack}
+              aria-label={backIcon === "close" ? "Cancel" : "Back"}
+            >
+              {backIcon === "close" ? (
+                <CloseIcon fontSize="small" />
+              ) : (
+                <ArrowBackIcon fontSize="small" />
+              )}
+            </IconButton>
           )}
-        </IconButton>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700 }}>
-            {title}
-          </Typography>
-          {subtitle && (
-            <Typography variant="caption" color="text.secondary">
-              {subtitle}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700 }}>
+              {title}
             </Typography>
-          )}
+            {subtitle && (
+              <Typography variant="caption" color="text.secondary">
+                {subtitle}
+              </Typography>
+            )}
+          </Box>
+          {actionButton}
         </Box>
-        {actionButton}
-      </Box>
+      )}
 
       {tabs && (
         <ToggleButtonGroup

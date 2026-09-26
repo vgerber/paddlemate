@@ -1,17 +1,13 @@
-import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import LocationPin, {
   PUT_IN_COLOR,
   TAKE_OUT_COLOR,
 } from "@/components/map/LocationPin";
-import { type SectionWithFeatures, waterwaysApi } from "@/lib/api";
+import SectionAdder from "@/components/search/SectionAdder";
+import type { SectionWithFeatures } from "@/lib/api";
 import { toPseudoSection } from "@/lib/descents";
-import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
-import { useWaterway, waterwayKeys } from "@/lib/hooks/useWaterways";
-import { localizedName } from "@/lib/localization";
+import { useWaterway } from "@/lib/hooks/useWaterways";
 import {
   coordsFromStrings,
   makeDraft,
@@ -33,22 +29,9 @@ export default function StepSections({
   onChange,
   initialWaterwayId = null,
 }: Props) {
-  const [waterwayInput, setWaterwayInput] = useState("");
   const [selectedWaterwayId, setSelectedWaterwayId] = useState<number | null>(
     initialWaterwayId,
   );
-
-  // Shares the map page's cache keys, so a waterway browsed there loads
-  // instantly here (and vice versa). Debounced to one request per pause.
-  const debouncedInput = useDebouncedValue(waterwayInput, 300);
-  const searchFilters = { name: debouncedInput, per_page: 10 };
-  const { data: searchResults, isFetching: searching } = useQuery({
-    queryKey: waterwayKeys.lists(searchFilters),
-    queryFn: ({ signal }) => waterwaysApi.list(searchFilters, signal),
-    enabled: debouncedInput.trim().length >= 2,
-    staleTime: 60_000,
-  });
-
   const { data: selectedWaterway } = useWaterway(selectedWaterwayId);
 
   const mapSections = useMemo<SectionWithFeatures[]>(
@@ -56,7 +39,6 @@ export default function StepSections({
     [selectedWaterway],
   );
   const selectedIds = new Set(form.sections.map((s) => s.section_id));
-  const unaddedSections = mapSections.filter((s) => !selectedIds.has(s.id));
 
   // Auto-derive put-in/take-out from section geometry whenever sections change
   const sectionIds = form.sections.map((s) => s.section_id).join(",");
@@ -123,61 +105,30 @@ export default function StepSections({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <Autocomplete
-        options={searchResults?.items ?? []}
-        getOptionLabel={(opt) => opt.name}
-        inputValue={waterwayInput}
-        onInputChange={(_, v) => setWaterwayInput(v)}
-        onChange={(_, val) => setSelectedWaterwayId(val?.id ?? null)}
-        loading={searching}
-        noOptionsText={
-          waterwayInput.length < 2 ? "Type to search waterways" : "No results"
-        }
-        renderInput={(params) => (
-          <TextField {...params} label="Search waterway" />
-        )}
-      />
-
-      <SectionPickerMap
-        sections={sectionsForMap}
-        selectedIds={selectedIds}
-        putIn={coordsFromStrings(form.put_in_lat, form.put_in_lon)}
-        takeOut={coordsFromStrings(form.take_out_lat, form.take_out_lon)}
-        onSectionToggle={toggleSection}
-        onPickPutIn={(lat, lon) =>
-          onChange({ put_in_lat: lat.toFixed(6), put_in_lon: lon.toFixed(6) })
-        }
-        onPickTakeOut={(lat, lon) =>
-          onChange({
-            take_out_lat: lat.toFixed(6),
-            take_out_lon: lon.toFixed(6),
-          })
-        }
-      />
-
-      <Autocomplete
-        key={selectedWaterwayId ?? "none"}
-        options={unaddedSections}
-        getOptionLabel={(opt) => localizedName(opt.name, opt.names)}
-        value={null}
-        onChange={(_, val) => val && addSection(val)}
-        disabled={mapSections.length === 0}
-        noOptionsText={
-          mapSections.length === 0
-            ? "Search a waterway first"
-            : "All sections added"
-        }
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Add section"
-            size="small"
-            placeholder={
-              mapSections.length === 0 ? "Search a waterway first" : undefined
-            }
-          />
-        )}
-      />
+      <SectionAdder
+        waterwayId={selectedWaterwayId}
+        onWaterwayChange={setSelectedWaterwayId}
+        sections={mapSections}
+        addedIds={selectedIds}
+        onAdd={addSection}
+      >
+        <SectionPickerMap
+          sections={sectionsForMap}
+          selectedIds={selectedIds}
+          putIn={coordsFromStrings(form.put_in_lat, form.put_in_lon)}
+          takeOut={coordsFromStrings(form.take_out_lat, form.take_out_lon)}
+          onSectionToggle={toggleSection}
+          onPickPutIn={(lat, lon) =>
+            onChange({ put_in_lat: lat.toFixed(6), put_in_lon: lon.toFixed(6) })
+          }
+          onPickTakeOut={(lat, lon) =>
+            onChange({
+              take_out_lat: lat.toFixed(6),
+              take_out_lon: lon.toFixed(6),
+            })
+          }
+        />
+      </SectionAdder>
 
       <SectionDraftList
         sections={form.sections}

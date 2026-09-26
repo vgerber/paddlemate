@@ -55,7 +55,7 @@ pub async fn list_favorites(
 ) -> impl IntoApiResponse {
     let user_id = match resolve_self(&path.user_id, token.user_id()) {
         Ok(id) => id,
-        Err(response) => return response,
+        Err(err) => return err.into_response(),
     };
 
     let metas = match favorites::list_section_favorites(&app.pg_pool, user_id).await {
@@ -109,7 +109,7 @@ pub async fn add_favorite(
 ) -> impl IntoApiResponse {
     let user_id = match resolve_self(&path.user_id, token.user_id()) {
         Ok(id) => id,
-        Err(response) => return response,
+        Err(err) => return err.into_response(),
     };
 
     match favorites::add_section_favorite(&app.pg_pool, user_id, path.section_id).await {
@@ -141,7 +141,7 @@ pub async fn remove_favorite(
 ) -> impl IntoApiResponse {
     let user_id = match resolve_self(&path.user_id, token.user_id()) {
         Ok(id) => id,
-        Err(response) => return response,
+        Err(err) => return err.into_response(),
     };
 
     match favorites::remove_section_favorite(&app.pg_pool, user_id, path.section_id).await {

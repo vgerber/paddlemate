@@ -21,12 +21,12 @@ use paddlemate_api::{
     layers::auth::{api_token_auth, api_token_auth_optional},
     routes::{
         descents::descents_routes, docs::docs_routes, gauges::gauges_routes, geo::geo_routes,
-        groups::group_routes, proposals::proposals_routes, users::users_routes,
-        waterways::waterways_routes,
+        groups::group_routes, proposals::proposals_routes, trips::trips_routes,
+        users::users_routes, waterways::waterways_routes,
     },
     state::{AppState, KeycloakState},
 };
-use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HeaderName};
+use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ETAG, HeaderName, IF_MATCH};
 use sqlx::postgres::PgPoolOptions;
 use std::time::Duration;
 use tower_governor::{
@@ -195,7 +195,17 @@ async fn main() {
         username_cache,
         gauge_wake: Arc::new(tokio::sync::Notify::new()),
         region_wake: Arc::new(tokio::sync::Notify::new()),
+        live_events: tokio::sync::broadcast::channel(paddlemate_api::notify::LIVE_BUFFER).0,
+        push: paddlemate_api::notify::push_from_env(),
+        live_streams: Default::default(),
     };
+
+    // Trip changes reach open apps through this instance's live streams.
+    tokio::spawn(paddlemate_api::notify::run_listener(
+        db.clone(),
+        state.live_events.clone(),
+    ));
+    tokio::spawn(paddlemate_api::notify::run_pruner(db.clone()));
 
     let keycloak_auth_instance = Arc::new(KeycloakAuthInstance::new(
         KeycloakConfig::builder()
@@ -222,6 +232,7 @@ async fn main() {
         .nest_api_service("/descents", descents_routes(state.clone()))
         .nest_api_service("/geo", geo_routes(state.clone()))
         .nest_api_service("/proposals", proposals_routes(state.clone()))
+        .nest_api_service("/trips", trips_routes(state.clone()))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth_optional,
@@ -330,7 +341,12 @@ async fn main() {
                     CONTENT_TYPE,
                     ACCEPT,
                     HeaderName::from_static("x-api-key"),
-                ]),
+                    // Versioned edits: without it a browser's preflight for a
+                    // PATCH carrying If-Match fails before the API sees it.
+                    IF_MATCH,
+                ])
+                // So a browser client can read an item's version back.
+                .expose_headers([ETAG]),
         )
         .layer(
             TraceLayer::new_for_http()

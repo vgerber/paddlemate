@@ -18,6 +18,7 @@ pub mod error;
 pub mod layers;
 pub mod media;
 pub mod models;
+pub mod notify;
 pub mod overpass;
 pub mod query;
 pub mod readers;

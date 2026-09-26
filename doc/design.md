@@ -17,13 +17,20 @@ sparingly and always carries meaning.
 - Detail content lives in a panel: a bordered side panel on desktop, a
   full-screen overlay on mobile. Panels open with one header pattern - back
   arrow, bold title, grey subtitle, action icons right - followed by a
-  full-width tab bar when the panel has views.
+  full-width tab bar when the panel has views. The exception is a detail pane
+  rendered beside the list it was picked from: the list already names the
+  open item and is the way back, so the pane drops the title row and opens on
+  its tab bar. It also keeps a gutter from the list's border rather than
+  sitting hard against it.
 - Multi-step forms have no top header. Their chrome is a fixed bottom bar:
   cancel/back on the left, title with step progress as subtitle, one round
   primary-action button on the right.
 - One screen, one primary action, shown as a bottom-right FAB. If the screen
   has a single purpose, the FAB performs it directly; menus only where several
-  actions genuinely share the spot.
+  actions genuinely share the spot. Bottom-right of the *content*, not the
+  window: on a desktop a detail column stops at its cap, so the FAB sits in
+  that column's corner (`position: absolute` in a `relative` column), or it
+  ends up a screen-width away from the list it adds to.
 - Empty states are an icon and one line of text - the FAB is the call to
   action, so they carry no buttons. A finished flow ends the same way: the
   terminal screen is an icon and one line, and the bottom bar carries the

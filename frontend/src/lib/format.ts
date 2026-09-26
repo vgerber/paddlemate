@@ -1,10 +1,22 @@
 /** Shared display formatting for dates, durations, readings and enum keys. */
 
+import { format, isSameMonth, isSameYear, parseISO } from "date-fns";
+
+/** A calendar day ("2026-09-01") is a day, not an instant: `new Date` reads
+ * it as UTC midnight, which is still the 31st anywhere west of UTC.
+ * `parseISO` reads it as local midnight; timestamps keep their instant. */
+const toDate = parseISO;
+
+/** Today as a calendar day in the viewer's own timezone, "2026-09-01". */
+export function todayIso(now: Date = new Date()): string {
+  return format(now, "yyyy-MM-dd");
+}
+
 export function formatDate(
   iso: string,
   opts: { weekday?: boolean } = {},
 ): string {
-  return new Date(iso).toLocaleDateString("en-GB", {
+  return toDate(iso).toLocaleDateString("en-GB", {
     ...(opts.weekday ? { weekday: "short" as const } : {}),
     day: "2-digit",
     month: "short",
@@ -48,6 +60,42 @@ export function timeAgo(iso: string): string {
 }
 
 /** snake_case enum key to a human label: "put_in" -> "put in". */
+/**
+ * A clock time from the API, trimmed to the hour and minute: "19:30". The
+ * value carries no zone - it is local to wherever the trip is - so it is
+ * sliced rather than put through a Date, which would shift it to the reader.
+ */
+export function clockTime(time: string): string {
+  return time.slice(0, 5);
+}
+
+/** "Thu, 03 Sept 2026 · 19:30", dropping the time until somebody sets one. */
+export function dateAndTime(date: string, time?: string | null): string {
+  const day = formatDate(date, { weekday: true });
+  return time ? `${day} · ${clockTime(time)}` : day;
+}
+
+/**
+ * A trip's span: "01 - 08 Jun 2026", collapsing the parts both ends share.
+ * An open-ended trip reads "from 01 Jun 2026".
+ */
+export function dateRange(start: string, end?: string | null): string {
+  if (!end) return `from ${formatDate(start)}`;
+  if (start === end) return formatDate(start);
+
+  const a = toDate(start);
+  const b = toDate(end);
+  const sameYear = isSameYear(a, b);
+  const sameMonth = isSameMonth(a, b);
+
+  const head = sameMonth
+    ? a.toLocaleDateString("en-GB", { day: "2-digit" })
+    : sameYear
+      ? a.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
+      : formatDate(start);
+  return `${head} - ${formatDate(end)}`;
+}
+
 export function humanize(key: string): string {
   return key.replace(/_/g, " ");
 }

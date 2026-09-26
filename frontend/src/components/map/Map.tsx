@@ -28,6 +28,7 @@ import { buildSectionsGeoJSON } from "./mapLayers";
 import { LIBERTY_STYLE, SATELLITE_STYLE } from "./mapStyles";
 import NoteMarkers, { type NotePin } from "./NoteMarkers";
 import PickModeButtons from "./PickModeButtons";
+import RangeRingLayers, { type RangeRing } from "./RangeRingLayers";
 import RegionChoicePopup from "./RegionChoicePopup";
 import RegionLayers from "./RegionLayers";
 import SectionLayers from "./SectionLayers";
@@ -38,6 +39,7 @@ import { useMapSources } from "./useMapSources";
 export type { AreaCircle } from "@/lib/geo";
 export type { GaugePin } from "./GaugeMarkers";
 export type { NotePin } from "./NoteMarkers";
+export type { RangeRing } from "./RangeRingLayers";
 
 export interface PointPin {
   id: string;
@@ -152,6 +154,8 @@ interface WaterwayMapProps {
   proposedFeatures?: Feature[];
   /** Small dot markers (the note composer's draft pin). */
   pointPins?: PointPin[];
+  /** Named places with the ground they reach (a trip's bases). */
+  rings?: RangeRing[];
   camera?: MapCamera;
   notes?: MapNotes;
   gauges?: MapGauges;
@@ -179,6 +183,7 @@ export default function WaterwayMap({
   sectionLevels,
   proposedFeatures,
   pointPins,
+  rings,
   notes = NO_NOTES,
   gauges = NO_GAUGES,
   area = NO_AREA,
@@ -426,6 +431,8 @@ export default function WaterwayMap({
         {/* Last of the map layers: a border stays legible over the rivers
             and regions it separates, not under them. */}
         <CountryBorderLayer borders={countryBordersGeoJSON} />
+
+        {rings && rings.length > 0 && <RangeRingLayers rings={rings} />}
 
         {(pointPins ?? []).map((pin) => (
           <Marker

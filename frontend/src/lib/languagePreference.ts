@@ -25,7 +25,13 @@ function resolveInitial(): string {
   } catch {
     // Storage can be unavailable in private mode; fall through to the browser.
   }
-  const fromBrowser = (navigator.languages ?? [navigator.language])
+  // Outside a browser (the test runner) there may be no language at all.
+  const tags =
+    typeof navigator === "undefined"
+      ? []
+      : (navigator.languages ?? [navigator.language]);
+  const fromBrowser = tags
+    .filter((tag): tag is string => Boolean(tag))
     .map(baseCode)
     .find(isKnownLanguage);
   return fromBrowser ?? FALLBACK;

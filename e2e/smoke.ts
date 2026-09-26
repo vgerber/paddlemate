@@ -52,7 +52,9 @@ const owned = await p.evaluate(`(async () => {
   return { status: r.status, count: (body.items ?? body).length };
 })()`);
 check("API accepts the browser token", owned.status === 200, `status ${owned.status}`);
-check("owned scope returns the fixture descents", owned.count >= 4, `${owned.count}`);
+// The fixture spreads its logs across five paddlers; Vincent owns three of
+// them, and "owned" must return his and nobody else's.
+check("owned scope returns only this user's logs", owned.count === 3, `${owned.count}`);
 
 const logsText = await text();
 check(

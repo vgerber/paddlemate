@@ -4,7 +4,7 @@ import type { SectionFeatureDraft } from "./SuggestFeatureForm";
 
 type CreateSectionBody = components["schemas"]["CreateSectionBody"];
 
-type FeatureBody = CreateSectionBody["features"][number];
+type FeatureBody = NonNullable<CreateSectionBody["features"]>[number];
 
 /** Point on the map, as picked in the wizard. */
 interface Point {

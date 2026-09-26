@@ -11,8 +11,8 @@ import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import Typography from "@mui/material/Typography";
 import { useState } from "react";
+import ListPaneHeader from "@/components/ListPaneHeader";
 import type { AreaCircle } from "@/lib/geo";
 import AreaControls from "./AreaControls";
 import DifficultySelect from "./DifficultySelect";
@@ -121,53 +121,41 @@ export default function SearchFiltersHeader({
         flexShrink: 0,
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
-        {/* The title takes the slack so the buttons sit at the right edge.
-            The count carried that job through an ml:auto, but it is hidden
-            on a phone - where the tabs below give the counts - and a hidden
-            element pushes nothing. */}
-        <Typography
-          variant="subtitle2"
-          sx={{ color: "text.secondary", letterSpacing: "0.12em", flex: 1 }}
-        >
-          RIVERS
-        </Typography>
-        {!isLoading && (
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.disabled",
-              display: { xs: "none", md: "block" },
-            }}
-          >
-            {total} results
-          </Typography>
-        )}
-        <IconButton
-          size="small"
-          onClick={() => setFiltersOpen((v) => !v)}
-          aria-label={filtersOpen ? "Hide filters" : "Show filters"}
-          title={filtersOpen ? "Hide filters" : "Show filters"}
-        >
-          <Badge
-            color="primary"
-            variant="dot"
-            invisible={!hasActiveFilters || filtersOpen}
-          >
-            <FilterListIcon fontSize="small" />
-          </Badge>
-        </IconButton>
-        {onClose && (
-          <IconButton
-            size="small"
-            onClick={onClose}
-            sx={{ display: { xs: "flex", md: "none" } }}
-            aria-label="Close search panel"
-          >
-            <KeyboardArrowDownIcon fontSize="small" />
-          </IconButton>
-        )}
-      </Box>
+      <ListPaneHeader
+        count={total}
+        loading={isLoading}
+        // The tabs below carry the counts on a phone.
+        hideCountOnMobile
+        sx={{ px: 0, pt: 0, pb: 0, mb: 1 }}
+        actions={
+          <>
+            <IconButton
+              size="small"
+              onClick={() => setFiltersOpen((v) => !v)}
+              aria-label={filtersOpen ? "Hide filters" : "Show filters"}
+              title={filtersOpen ? "Hide filters" : "Show filters"}
+            >
+              <Badge
+                color="primary"
+                variant="dot"
+                invisible={!hasActiveFilters || filtersOpen}
+              >
+                <FilterListIcon fontSize="small" />
+              </Badge>
+            </IconButton>
+            {onClose && (
+              <IconButton
+                size="small"
+                onClick={onClose}
+                sx={{ display: { xs: "flex", md: "none" } }}
+                aria-label="Close search panel"
+              >
+                <KeyboardArrowDownIcon fontSize="small" />
+              </IconButton>
+            )}
+          </>
+        }
+      />
 
       {/* Mode toggle */}
       <ToggleButtonGroup

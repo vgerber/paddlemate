@@ -12,14 +12,18 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as LogsRouteImport } from './routes/logs'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TripsIndexRouteImport } from './routes/trips/index'
 import { Route as ToolsIndexRouteImport } from './routes/tools/index'
 import { Route as ProposalsIndexRouteImport } from './routes/proposals/index'
 import { Route as WaterwaysSuggestSectionRouteImport } from './routes/waterways/suggest-section'
 import { Route as WaterwaysWaterwayIdRouteImport } from './routes/waterways/$waterwayId'
+import { Route as TripsNewRouteImport } from './routes/trips/new'
+import { Route as TripsTripIdRouteImport } from './routes/trips/$tripId'
 import { Route as ToolsGaugeCatalogRouteImport } from './routes/tools/gauge-catalog'
 import { Route as ProposalsProposalIdRouteImport } from './routes/proposals/$proposalId'
 import { Route as LogsNewRouteImport } from './routes/logs/new'
 import { Route as LogsDescentIdRouteImport } from './routes/logs/$descentId'
+import { Route as InviteTokenRouteImport } from './routes/invite/$token'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AdminProposalsIndexRouteImport } from './routes/admin/proposals/index'
 
@@ -36,6 +40,11 @@ const LogsRoute = LogsRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TripsIndexRoute = TripsIndexRouteImport.update({
+  id: '/trips/',
+  path: '/trips/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ToolsIndexRoute = ToolsIndexRouteImport.update({
@@ -58,6 +67,16 @@ const WaterwaysWaterwayIdRoute = WaterwaysWaterwayIdRouteImport.update({
   path: '/waterways/$waterwayId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TripsNewRoute = TripsNewRouteImport.update({
+  id: '/trips/new',
+  path: '/trips/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TripsTripIdRoute = TripsTripIdRouteImport.update({
+  id: '/trips/$tripId',
+  path: '/trips/$tripId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ToolsGaugeCatalogRoute = ToolsGaugeCatalogRouteImport.update({
   id: '/tools/gauge-catalog',
   path: '/tools/gauge-catalog',
@@ -78,6 +97,11 @@ const LogsDescentIdRoute = LogsDescentIdRouteImport.update({
   path: '/$descentId',
   getParentRoute: () => LogsRoute,
 } as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -94,14 +118,18 @@ export interface FileRoutesByFullPath {
   '/logs': typeof LogsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/logs/$descentId': typeof LogsDescentIdRoute
   '/logs/new': typeof LogsNewRoute
   '/proposals/$proposalId': typeof ProposalsProposalIdRoute
   '/tools/gauge-catalog': typeof ToolsGaugeCatalogRoute
+  '/trips/$tripId': typeof TripsTripIdRoute
+  '/trips/new': typeof TripsNewRoute
   '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
   '/waterways/suggest-section': typeof WaterwaysSuggestSectionRoute
   '/proposals/': typeof ProposalsIndexRoute
   '/tools/': typeof ToolsIndexRoute
+  '/trips/': typeof TripsIndexRoute
   '/admin/proposals/': typeof AdminProposalsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -109,14 +137,18 @@ export interface FileRoutesByTo {
   '/logs': typeof LogsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/logs/$descentId': typeof LogsDescentIdRoute
   '/logs/new': typeof LogsNewRoute
   '/proposals/$proposalId': typeof ProposalsProposalIdRoute
   '/tools/gauge-catalog': typeof ToolsGaugeCatalogRoute
+  '/trips/$tripId': typeof TripsTripIdRoute
+  '/trips/new': typeof TripsNewRoute
   '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
   '/waterways/suggest-section': typeof WaterwaysSuggestSectionRoute
   '/proposals': typeof ProposalsIndexRoute
   '/tools': typeof ToolsIndexRoute
+  '/trips': typeof TripsIndexRoute
   '/admin/proposals': typeof AdminProposalsIndexRoute
 }
 export interface FileRoutesById {
@@ -125,14 +157,18 @@ export interface FileRoutesById {
   '/logs': typeof LogsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/logs/$descentId': typeof LogsDescentIdRoute
   '/logs/new': typeof LogsNewRoute
   '/proposals/$proposalId': typeof ProposalsProposalIdRoute
   '/tools/gauge-catalog': typeof ToolsGaugeCatalogRoute
+  '/trips/$tripId': typeof TripsTripIdRoute
+  '/trips/new': typeof TripsNewRoute
   '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
   '/waterways/suggest-section': typeof WaterwaysSuggestSectionRoute
   '/proposals/': typeof ProposalsIndexRoute
   '/tools/': typeof ToolsIndexRoute
+  '/trips/': typeof TripsIndexRoute
   '/admin/proposals/': typeof AdminProposalsIndexRoute
 }
 export interface FileRouteTypes {
@@ -142,14 +178,18 @@ export interface FileRouteTypes {
     | '/logs'
     | '/settings'
     | '/auth/callback'
+    | '/invite/$token'
     | '/logs/$descentId'
     | '/logs/new'
     | '/proposals/$proposalId'
     | '/tools/gauge-catalog'
+    | '/trips/$tripId'
+    | '/trips/new'
     | '/waterways/$waterwayId'
     | '/waterways/suggest-section'
     | '/proposals/'
     | '/tools/'
+    | '/trips/'
     | '/admin/proposals/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -157,14 +197,18 @@ export interface FileRouteTypes {
     | '/logs'
     | '/settings'
     | '/auth/callback'
+    | '/invite/$token'
     | '/logs/$descentId'
     | '/logs/new'
     | '/proposals/$proposalId'
     | '/tools/gauge-catalog'
+    | '/trips/$tripId'
+    | '/trips/new'
     | '/waterways/$waterwayId'
     | '/waterways/suggest-section'
     | '/proposals'
     | '/tools'
+    | '/trips'
     | '/admin/proposals'
   id:
     | '__root__'
@@ -172,14 +216,18 @@ export interface FileRouteTypes {
     | '/logs'
     | '/settings'
     | '/auth/callback'
+    | '/invite/$token'
     | '/logs/$descentId'
     | '/logs/new'
     | '/proposals/$proposalId'
     | '/tools/gauge-catalog'
+    | '/trips/$tripId'
+    | '/trips/new'
     | '/waterways/$waterwayId'
     | '/waterways/suggest-section'
     | '/proposals/'
     | '/tools/'
+    | '/trips/'
     | '/admin/proposals/'
   fileRoutesById: FileRoutesById
 }
@@ -188,12 +236,16 @@ export interface RootRouteChildren {
   LogsRoute: typeof LogsRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  InviteTokenRoute: typeof InviteTokenRoute
   ProposalsProposalIdRoute: typeof ProposalsProposalIdRoute
   ToolsGaugeCatalogRoute: typeof ToolsGaugeCatalogRoute
+  TripsTripIdRoute: typeof TripsTripIdRoute
+  TripsNewRoute: typeof TripsNewRoute
   WaterwaysWaterwayIdRoute: typeof WaterwaysWaterwayIdRoute
   WaterwaysSuggestSectionRoute: typeof WaterwaysSuggestSectionRoute
   ProposalsIndexRoute: typeof ProposalsIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
+  TripsIndexRoute: typeof TripsIndexRoute
   AdminProposalsIndexRoute: typeof AdminProposalsIndexRoute
 }
 
@@ -218,6 +270,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trips/': {
+      id: '/trips/'
+      path: '/trips'
+      fullPath: '/trips/'
+      preLoaderRoute: typeof TripsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools/': {
@@ -248,6 +307,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WaterwaysWaterwayIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trips/new': {
+      id: '/trips/new'
+      path: '/trips/new'
+      fullPath: '/trips/new'
+      preLoaderRoute: typeof TripsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trips/$tripId': {
+      id: '/trips/$tripId'
+      path: '/trips/$tripId'
+      fullPath: '/trips/$tripId'
+      preLoaderRoute: typeof TripsTripIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tools/gauge-catalog': {
       id: '/tools/gauge-catalog'
       path: '/tools/gauge-catalog'
@@ -275,6 +348,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/logs/$descentId'
       preLoaderRoute: typeof LogsDescentIdRouteImport
       parentRoute: typeof LogsRoute
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -310,12 +390,16 @@ const rootRouteChildren: RootRouteChildren = {
   LogsRoute: LogsRouteWithChildren,
   SettingsRoute: SettingsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  InviteTokenRoute: InviteTokenRoute,
   ProposalsProposalIdRoute: ProposalsProposalIdRoute,
   ToolsGaugeCatalogRoute: ToolsGaugeCatalogRoute,
+  TripsTripIdRoute: TripsTripIdRoute,
+  TripsNewRoute: TripsNewRoute,
   WaterwaysWaterwayIdRoute: WaterwaysWaterwayIdRoute,
   WaterwaysSuggestSectionRoute: WaterwaysSuggestSectionRoute,
   ProposalsIndexRoute: ProposalsIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
+  TripsIndexRoute: TripsIndexRoute,
   AdminProposalsIndexRoute: AdminProposalsIndexRoute,
 }
 export const routeTree = rootRouteImport

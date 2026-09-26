@@ -4,12 +4,13 @@ import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
+import DockedAction from "@/components/DockedAction";
+import PanelHeader from "@/components/PanelHeader";
 import LoadingBox from "@/components/states/LoadingBox";
 import SectionListItem from "@/components/waterway/SectionListItem";
 import SectionLogsList from "@/components/waterway/SectionLogsList";
@@ -28,7 +29,6 @@ import { theme } from "@/lib/theme";
 import CommentThread from "./CommentThread";
 import GaugesList from "./GaugesList";
 import type { DetailTab, SectionDetailTab, SuggestMode } from "./types";
-import WaterwayDetailHeader from "./WaterwayDetailHeader";
 
 interface WaterwayBrowsePanelProps {
   waterwayId: number;
@@ -180,7 +180,7 @@ export default function WaterwayBrowsePanel({
 
   return (
     <>
-      <WaterwayDetailHeader
+      <PanelHeader
         title={
           inFeatures
             ? localizedName(selectedSection.name, selectedSection.names)
@@ -216,9 +216,8 @@ export default function WaterwayBrowsePanel({
             // Leave room so a floating button never covers the last row.
             // Desktop docks its actions in the row below the list, so only
             // the panel's own FAB and the mobile speed dial need it.
-            pb: showNewSectionFab
-              ? 9
-              : inFeatures && sectionDetailTab !== "notes"
+            pb:
+              showNewSectionFab || (inFeatures && sectionDetailTab !== "notes")
                 ? { xs: 9, md: 1 }
                 : 1,
           }}
@@ -274,59 +273,50 @@ export default function WaterwayBrowsePanel({
             aria-label="New section"
             title="New section"
             onClick={() => onSuggestModeChange("section")}
-            sx={{ position: "absolute", bottom: 16, right: 16 }}
+            sx={{
+              position: "absolute",
+              bottom: 16,
+              right: 16,
+              display: { xs: "flex", md: "none" },
+            }}
           >
             <AddIcon />
           </Fab>
         )}
       </Box>
 
-      {/* Desktop counterpart of the mobile speed dial: a docked row, so it
-          never floats over the last list row. */}
-      {isAuthenticated && inFeatures && sectionDetailTab !== "notes" && (
-        <Box
-          sx={{
-            px: 1.5,
-            py: 1,
-            display: { xs: "none", md: "flex" },
-            gap: 1,
-            flexShrink: 0,
-            borderTop: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          {sectionDetailTab === "logs" ? (
-            <Button
-              size="small"
-              startIcon={<AddIcon />}
-              variant="outlined"
-              fullWidth
-              onClick={() =>
-                navigate({
-                  to: "/logs/new",
-                  search: {
-                    waterwayId,
-                    sectionId: selectedSectionId,
-                    startTime: undefined,
-                  },
-                })
-              }
-            >
-              Log descent
-            </Button>
-          ) : (
-            <Button
-              size="small"
-              startIcon={<AddIcon />}
-              variant="outlined"
-              fullWidth
-              onClick={() => onSuggestModeChange("feature")}
-            >
-              New feature
-            </Button>
-          )}
-        </Box>
+      {showNewSectionFab && (
+        <DockedAction
+          label="New section"
+          onClick={() => onSuggestModeChange("section")}
+        />
       )}
+
+      {/* Desktop counterpart of the mobile speed dial, docked like every
+          other pane's action. */}
+      {isAuthenticated &&
+        inFeatures &&
+        sectionDetailTab !== "notes" &&
+        (sectionDetailTab === "logs" ? (
+          <DockedAction
+            label="Log descent"
+            onClick={() =>
+              navigate({
+                to: "/logs/new",
+                search: {
+                  waterwayId,
+                  sectionId: selectedSectionId,
+                  startTime: undefined,
+                },
+              })
+            }
+          />
+        ) : (
+          <DockedAction
+            label="New feature"
+            onClick={() => onSuggestModeChange("feature")}
+          />
+        ))}
     </>
   );
 }

@@ -32,9 +32,7 @@ use crate::models::region::{Region, RegionKind};
 use crate::overpass::{
     Element, FETCH_LOCK, OverpassResponse, client, escape_overpass_literal, run_query,
 };
-use crate::query::regions::{
-    RegionImport, assign_countries, mark_tiles, missing_tiles, upsert,
-};
+use crate::query::regions::{RegionImport, assign_countries, mark_tiles, missing_tiles, upsert};
 
 const VALLEY_RADIUS_M: u32 = 2_000;
 pub const REQUEST_GAP: Duration = Duration::from_secs(1);
@@ -487,9 +485,8 @@ pub async fn ensure_browse_fill(
         let size = tier.tile_deg();
         let (cx, cy) = ((west + east) / 2.0 / size, (south + north) / 2.0 / size);
         missing.sort_by(|a, b| {
-            let d = |(x, y): &(i32, i32)| {
-                (f64::from(*x) - cx).powi(2) + (f64::from(*y) - cy).powi(2)
-            };
+            let d =
+                |(x, y): &(i32, i32)| (f64::from(*x) - cx).powi(2) + (f64::from(*y) - cy).powi(2);
             d(a).total_cmp(&d(b))
         });
         let claimed: Vec<(i32, i32)> = {
@@ -539,11 +536,7 @@ pub async fn ensure_browse_fill(
 /// Fetch the tier's regions for a set of tiles from OSM and store them.
 /// Tiles are marked even when they held nothing, so empty ground is asked
 /// for exactly once.
-async fn fill_tiles(
-    pool: &PgPool,
-    tier: BrowseTier,
-    tiles: &[(i32, i32)],
-) -> anyhow::Result<()> {
+async fn fill_tiles(pool: &PgPool, tier: BrowseTier, tiles: &[(i32, i32)]) -> anyhow::Result<()> {
     // One query per tile rather than one over their union: the union of even
     // a few state tiles spans a continent, and a tile that is fetched is
     // marked straight away, so a long run keeps its progress.
@@ -556,7 +549,13 @@ async fn fill_tiles(
             collect_browse(run_query(client(), &browse_query(tier, bbox)).await?)
         };
         for region in &found {
-            store_outline(pool, &region.name, region.country.as_deref(), &region.source).await?;
+            store_outline(
+                pool,
+                &region.name,
+                region.country.as_deref(),
+                &region.source,
+            )
+            .await?;
         }
         mark_tiles(pool, tier.as_str(), std::slice::from_ref(tile)).await?;
         tracing::info!(

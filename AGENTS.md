@@ -56,6 +56,11 @@ Run the API:
 cd api && cargo run
 ```
 
+To bring up the whole local stack instead - Postgres, Keycloak, the API, Vite
+and headless Chrome - use the `dev-services` skill, which has the startup
+order (Keycloak before the API, or every request 401s) and the checks that
+prove it actually came up.
+
 ### TypeScript (frontend/)
 
 The frontend uses **Biome** for linting/formatting and `tsc` for
@@ -123,6 +128,25 @@ This assigns the correct sequential numeric prefix automatically. Manually
 created files risk duplicate prefixes, which cause SQLx to panic at compile
 time.
 
+## Security and hardening
+
+A feature is not done until it has had a security and hardening pass, and the
+report says what the pass found. Go through every new route, table and
+background task and ask:
+
+| Question | Typical fix |
+|---|---|
+| Who may call this, and is the check in the SQL? | parent-scoped queries, one gate per question |
+| What bounds every input? | length, count, range and format checks, 400 on failure; clamp paging |
+| What can one user make the server hold or repeat? | per-user caps on rows and open connections, bounded concurrency |
+| Does the server call out to a URL a client supplied? | a host allowlist, never "any https URL"; timeouts on every outbound call |
+| How long does a credential or connection outlive its check? | long-lived streams end with the token and are re-authorised |
+| Does data grow without bound? | a retention rule and the index it needs |
+| What survives sign-out on a shared device? | undo per-device state (push, caches) on sign-out |
+
+Each guard gets a test, and the test is checked by removing the guard and
+watching it fail.
+
 ## Commits
 
 - **Ask before committing.** Finish the work, report what changed, and wait
@@ -132,6 +156,10 @@ time.
 - **One line, nothing else.** A conventional subject (`feat:`, `fix:`,
   `chore:`, `refactor:`, `docs:`) in sentence case is the whole message: no
   body, no trailers, no multi-line explanations.
+- **`feat:` is for value the user did not have.** A new capability is a
+  feature. Making existing screens consistent, restyling, moving a control
+  or tightening behaviour is a `fix:` - or a `refactor:` when nothing
+  visible changes.
 - **Keep it short and on point.** Aim for 40 characters or fewer after the
   prefix. Name what changed, not why or how - `fix: Bound the region fill`,
   not `fix: Keep the region map filled while it loads`.
@@ -143,6 +171,14 @@ time.
 
 - Do not use section divider comments (e.g. `// --- Gauges list ---`) to
   group code within a file; if a file needs sections, split it into modules.
+- **Reach for a library before writing one.** A standard format or protocol
+  (SSE, base64, URLs, web push) and calendar arithmetic come from a maintained
+  library, checked for recent releases before it is added. Hand-roll only when
+  the library would dwarf the need or cannot express the constraint, and say
+  which in a comment beside the code.
+- **Say a thing once.** Text or logic that both the API and the app need -
+  the sentence for a trip change, say - is produced on one side and sent, not
+  written twice to drift apart.
 
 ## Frontend code style (frontend/)
 
@@ -162,11 +198,61 @@ Component files are not util modules; cross-cutting helpers live in `lib/`:
 | `lib/geo.ts` | geometry math plus `lineCoords`/`pointCoords` narrowing |
 | `lib/mapSearch.ts` | `EMPTY_MAP_SEARCH` (the map route's full search shape) |
 
+Date arithmetic - parsing a day, stepping days, counting them, month grids -
+goes through `date-fns` (`parseISO`, `addDays`, `differenceInCalendarDays`),
+never millisecond math on `Date.parse`: that reads a calendar day as UTC and
+puts it on the day before anywhere west of Greenwich. Display strings stay on
+`toLocaleDateString` via `lib/format.ts`.
+
 Shared UI: `ConfirmDialog` (every confirmation - never `window.confirm`),
 `components/states/` (`LoadingBox`, `EmptyState`, `SignInGate`,
 `ErrorFallback`), `WaterLevelChip`, `search/RiverRow`,
 `charts/ChartPanelShell`. Do not hand-roll a spinner box, confirm dialog or
 sign-in gate.
+
+A screen is assembled from these, not from raw MUI - they are what make a new
+feature look like the product rather than like MUI:
+
+| Piece | Use it for |
+|---|---|
+| `PanelHeader` | every detail panel: back arrow, bold title, grey subtitle, action icons right, and the segmented tab bar when it has views |
+| `ListPaneHeader` | the opening line of every list pane: the count, and the list's own controls at the right edge - no title, the nav already names the list |
+| `DockedAction` | a pane's primary action on desktop: one filled full-width button docked at the foot of the pane, below the list; phones keep the FAB |
+| `Fact` (`factLabelSx`, `valueSx`) | a labelled value in a detail header - overline label, value beneath |
+| `FormSection` | every block of a form: overline heading, one hint line, its own action in the heading |
+| `PanelBottomBar` + `RoundActionButton` | a form's chrome: cancel left, title and status as subtitle, one round action right |
+| `VisibilityPicker` | the private/shared/public choice and its audience |
+| `SectionAdder` + `SectionDraftList` | picking an ordered list of sections |
+| `DescentCard` | a descent in any list (`flush` where the list owns the rule and ground) |
+| `RowMenu` | everything a list row can do - one overflow control with named actions, never a row of bare icons |
+| `TimelineRail` | the dot-and-connector rail of a timeline entry (`hollow` for something not yet real) |
+
+Before writing a new list row, header, form block or dialog, read
+[doc/design.md](doc/design.md) and copy the nearest existing screen. Rows are
+`ListItemButton` separated by a dimmed rule, not bordered cards; page-level
+lists open with an overline label and a count; a tab's primary action is the
+FAB on a phone and a `DockedAction` at the foot of the pane on a desktop,
+never a button above the list; a row's actions are one `RowMenu`, not a
+line of icons.
+
+**Desktop is not a wide phone.** A list-plus-detail screen splits into two
+panes rather than centring one 720px column in an empty window: a grid of
+`320px minmax(0, 1fr)` (`420px` from `lg`) at `calc(100vh - 48px)`, the list
+on `surfaceLow` with a hairline right border, the detail capped at 880px, and
+the open item held in a search param so it stays linkable. `ProposalsView`,
+`routes/trips/index.tsx` and `routes/logs.tsx` are the worked examples; the
+same detail component renders as the mobile overlay, so both sizes show the
+same thing in the same order - except its header, which the pane drops
+because the list beside it already names the open item and carries the way
+back. Where the detail already owns an address (`/logs/$descentId`), the
+child route renders into the pane instead and the search param is not
+needed - the point is a linkable open item, not the mechanism.
+
+The split starts at `md`, which the theme moves down to **768** from MUI's
+900: `md` is the app's one phone-versus-desktop switch, so it belongs where
+the two panes first fit rather than where a stock breakpoint happens to sit.
+Anything keyed on `md` moves with it, which is the point - one switch, not a
+per-screen judgement.
 
 `WaterwayMap` takes its optional behaviour as three grouped objects rather
 than loose props: `picking` (put-in/take-out and section selection),
@@ -177,8 +263,9 @@ it belongs to; only data and always-on callbacks stay top-level.
 The map's layer JSX lives in per-concern components, not in `Map.tsx`:
 `SectionLayers`, `FeatureGeoJSONLayers` (one implementation for confirmed
 and proposed features, switched by the `proposed` flag), `DraftLayers` /
-`FeatureDraftLayer`, `PickModeButtons`, `MapNumberMarker`, with click
-dispatch in `useMapClickHandler` and the GeoJSON memos in `useMapSources`.
+`FeatureDraftLayer`, `PickModeButtons`, `MapNumberMarker`, `RangeRingLayers`
+(named places with the ground they reach), with click dispatch in
+`useMapClickHandler` and the GeoJSON memos in `useMapSources`.
 A new layer group joins one of these or becomes a new sibling.
 
 ### Query layer
@@ -262,6 +349,27 @@ code. Component rendering is not tested; the UI is verified by running it.
   additions without breaking existing code.
 - Routes should not contain implementation details - they define the API
   contract. Keep the implementation in the query layer or service layer.
+- **The query layer mirrors the route layout.** A feature whose routes are
+  split into `routes/<x>/{mod,a,b}.rs` splits its queries the same way, into
+  `query/<x>/{mod,a,b}.rs`, with `mod.rs` re-exporting so call sites stay
+  `x::do_thing`. Trips are the worked example. A new table under a feature is
+  a new pair of files, not another few hundred lines in an existing one.
+- **A child is looked up inside its parent.** Anything reached through a
+  parent's path (`/trips/{trip_id}/candidates/{candidate_id}`) is queried by
+  both ids in the SQL. Ids are sequential, so a query on the child id alone
+  lets a caller reach another parent's children through their own URL - and a
+  check in the handler after the query does not undo a write that already
+  happened.
+- **A rule about other rows is checked under a lock.** "At least one admin"
+  cannot be a check constraint, so count and write in one transaction that
+  first locks the parent row (`FOR NO KEY UPDATE`). Two requests can each pass
+  a lock-free count and both land. Where the rule can be structural instead -
+  a vote or a linked log hanging off a membership through a composite foreign
+  key - make it structural, so no code path can forget it.
+- **One gate per question, in one file.** A feature's permission checks live
+  together (`routes/trips/access.rs`), not one copy per route module. Two
+  helpers that answer the same question in different files will drift; the
+  status codes they return are part of the contract, so they have to agree.
 - Follow the Microsoft REST API guidelines: plural noun collections, no verbs
   in paths, standard status codes, ISO 8601 UTC timestamps. Two deliberate
   deviations: JSON stays snake_case, and paging uses
@@ -299,6 +407,8 @@ code. Component rendering is not tested; the UI is verified by running it.
 | `MEDIA_DIR` | `media` | Where uploaded photos are written; production mounts a volume there. The directory is **not** covered by `pg_dump` - back it up separately |
 | `OVERPASS_URLS` | public instances | Comma-separated Overpass endpoints tried in order; production puts the self-hosted instance (`deploy/overpass/`) first |
 | `SEARCH_WORD_SIMILARITY_THRESHOLD` | `0.5` | How close a misspelling must be to still match a name |
+| `VAPID_PRIVATE_KEY` | unset | Raw P-256 private key, base64url, for web push; the public key is derived from it. Unset (or `VAPID_SUBJECT` unset) turns push off, nothing else |
+| `VAPID_SUBJECT` | unset | `mailto:` or `https:` contact that push services may reach about this server |
 
 ### Search
 
