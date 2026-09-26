@@ -171,6 +171,14 @@ watching it fail.
 
 - Do not use section divider comments (e.g. `// --- Gauges list ---`) to
   group code within a file; if a file needs sections, split it into modules.
+- **Reach for a library before writing one.** A standard format or protocol
+  (SSE, base64, URLs, web push) and calendar arithmetic come from a maintained
+  library, checked for recent releases before it is added. Hand-roll only when
+  the library would dwarf the need or cannot express the constraint, and say
+  which in a comment beside the code.
+- **Say a thing once.** Text or logic that both the API and the app need -
+  the sentence for a trip change, say - is produced on one side and sent, not
+  written twice to drift apart.
 
 ## Frontend code style (frontend/)
 
@@ -189,6 +197,12 @@ Component files are not util modules; cross-cutting helpers live in `lib/`:
 | `lib/descents.ts` | `uniqueSnapshotsBySeries`, `toPseudoSection` |
 | `lib/geo.ts` | geometry math plus `lineCoords`/`pointCoords` narrowing |
 | `lib/mapSearch.ts` | `EMPTY_MAP_SEARCH` (the map route's full search shape) |
+
+Date arithmetic - parsing a day, stepping days, counting them, month grids -
+goes through `date-fns` (`parseISO`, `addDays`, `differenceInCalendarDays`),
+never millisecond math on `Date.parse`: that reads a calendar day as UTC and
+puts it on the day before anywhere west of Greenwich. Display strings stay on
+`toLocaleDateString` via `lib/format.ts`.
 
 Shared UI: `ConfirmDialog` (every confirmation - never `window.confirm`),
 `components/states/` (`LoadingBox`, `EmptyState`, `SignInGate`,
