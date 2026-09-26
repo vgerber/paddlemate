@@ -136,6 +136,16 @@ earlier one was watching.
 Admins add the people who belong and manage roles and deletion; a trip always
 keeps at least one admin.
 
+**Invite links** bring in the friend who is not on Paddlemate yet. An admin
+makes a link from the Members tab ("Add member", then "New link") and shares it
+in the group chat. Whoever opens it sees the trip's name, its dates and who
+sent it - nothing of the plan or the people - signs in or creates an account,
+and comes straight back to the invite to join. One link works for the whole
+group until it expires (two weeks) or an admin withdraws it, and it always
+makes members, never admins. The link is shown once, when it is made: only a
+fingerprint of it is kept, so a lost link is replaced, not recovered. Somebody
+already on Paddlemate can still be added by name in the same dialog.
+
 Each member records the days they can personally make, separately from any
 base's dates, and an **hour** for each once they know it - so the group can see
 who to expect when, not just on which day. Yours is yours to set. Arriving and
@@ -256,6 +266,7 @@ the rule.
 | [`00042_trips_are_invite_only.sql`](../api/migrations/00042_trips_are_invite_only.sql) | drops visibility: the scope columns and the audience tables |
 | [`00043_trip_stay_candidates.sql`](../api/migrations/00043_trip_stay_candidates.sql) | candidates and their votes |
 | [`00044_trips_integrity.sql`](../api/migrations/00044_trips_integrity.sql) | moves rules into the schema: votes and trip logs hang off the membership, watched sections cascade, positions check at commit, candidates carry `updated_at` |
+| [`00045_trip_invites.sql`](../api/migrations/00045_trip_invites.sql) | invite links: a hashed token per link, its expiry and how often it was used |
 
 | Table | Holds |
 |---|---|
@@ -334,7 +345,10 @@ All under `/trips`, documented in the OpenAPI at `/api/v1/docs`.
 |---|---|---|
 | `GET` `POST` | `/trips` | the listing is the caller's trips; creating takes the first stay |
 | `GET` `PATCH` `DELETE` | `/trips/{trip_id}` | write is admin only |
-| `GET` `POST` | `/trips/{trip_id}/members` | `POST` adds somebody, admins only, `{user_id}` in the body |
+| `GET` `POST` | `/trips/{trip_id}/members` | `POST` with `{user_id}` adds somebody (admins); with `{invite}` the caller joins through a link. Exactly one of the two |
+| `GET` `POST` | `/trips/{trip_id}/invites` | the links that still work, and a new one; admins only. The token is in the `POST` response and nowhere else |
+| `DELETE` | `/trips/{trip_id}/invites/{invite_id}` | withdraws a link; admins only. Nobody who joined is removed |
+| `GET` | `/trips/invites/{token}` | what a link leads to - name, dates, who sent it. Works signed out; unknown, expired and withdrawn are one 404 |
 | `GET` `PATCH` `DELETE` | `/trips/{trip_id}/members/{user_id}` | role is admin only, attendance is the member's own, and leaving is always your own to do |
 | `GET` `POST` | `/trips/{trip_id}/stays` | any member may add a base |
 | `GET` `PATCH` `DELETE` | `/trips/{trip_id}/stays/{stay_id}` | members edit, admins delete |
@@ -358,6 +372,32 @@ query filters on both ids. Candidate ids are sequential, and the candidate
 queries once took the id alone: a member of one trip could rename and accept
 another trip's candidate through their own trip's URL. Scope a child by its
 parent in the SQL, not in a check the handler might skip.
+
+#### Invite links
+
+Joining through a link is `POST /trips/{trip_id}/members` with `{invite}`
+rather than a verb path of its own: adding a member is one endpoint, and the
+permission follows the field, as it does for accepting a candidate. With
+`user_id` the caller must be an admin; with `invite` there is no membership to
+check - the link *is* the permission - only the token, and it must be live and
+belong to *this* trip, or it is the same 404 as a trip that does not exist.
+
+| Rule | Where |
+|---|---|
+| The token is 256 random bits, stored as a SHA-256 hash, shown once | [`query/trips/invites.rs`](../api/src/query/trips/invites.rs), shared generator in `query/tokens.rs` |
+| A link opens only its own trip | the join looks it up by `trip_id` *and* hash |
+| Reusable until `expires_at` (14 days, 1-30 on request) or withdrawn | expired links are neither listed nor honoured; withdrawing deletes the row |
+| Joining again is harmless and not another use | `ON CONFLICT DO NOTHING`, `uses` counts only real joins |
+| A link makes members, never admins | the insert fixes the role |
+| The preview shows name, dates and inviter only, signed out included | `preview_invite` - the person holding the link has no account yet |
+
+Sign-in returns to the page it started from: `initiateLogin`/`initiateSignup`
+send the current path in the OIDC `state`, and the callback goes back there
+through `safeReturnTo` ([`lib/returnTo.ts`](../frontend/src/lib/returnTo.ts)),
+which accepts only a path on this site - `//host` and `/\host` both read as
+another site to a browser, and following them would make sign-in an open
+redirect. That is what brings a newcomer from an invite link through sign-up
+and back to "Join trip".
 
 #### Versioned edits
 
@@ -508,7 +548,9 @@ The trip itself:
 | `trip-page/StayLocationPicker.tsx` | placing a base on the map, over the trip's watched runs |
 | `trip-page/StaySectionsDialog.tsx` | editing a watch list |
 | `trip-page/AttendanceDialog.tsx` | the dates you can make, opened from a day or the members list |
-| `trip-page/AddMemberDialog.tsx` | the people picker behind the Members FAB |
+| `trip-page/AddMemberDialog.tsx` | behind the Members FAB: an invite link, or somebody already here by name |
+| `trip-page/InviteLinks.tsx` | making, copying, sharing and withdrawing links |
+| `routes/invite/$token.tsx` | where a link lands: what it leads to, sign-in or sign-up, join |
 | `trip-page/LinkDescentDialog.tsx` | crediting an existing log to the trip |
 | `trips/TripRow.tsx`, `trips/TripForm.tsx`, `trips/stayKinds.ts` | the list row, the create/edit form, and the kinds |
 
@@ -540,7 +582,9 @@ migrations. It pins what used to hold only by convention: the 404/403 split,
 signed-out 401s, self-edits needing membership, the last admin and last base
 (each also raced), votes and private logs leaving with a member, candidates
 unreachable through another trip, bad input answering 400, a reorder keeping
-its rows, and a stale `If-Match` answering 412. Each race test fails when the
+its rows, a stale `If-Match` answering 412, and invite links - a newcomer
+joining, a link opening only its own trip, and a withdrawn or expired one
+opening nothing. Each race test fails when the
 trip lock is removed, which is how it is known to test anything.
 
 #### Patterns worth keeping
