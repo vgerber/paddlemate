@@ -7,11 +7,7 @@ use aide::axum::{
     ApiRouter, IntoApiResponse,
     routing::{delete_with, get_with, patch_with, put_with},
 };
-use axum::{
-    Extension, Json,
-    extract::State,
-    response::IntoResponse,
-};
+use axum::{Extension, Json, extract::State, response::IntoResponse};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
