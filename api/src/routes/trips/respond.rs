@@ -21,6 +21,10 @@ const STALE: &str = "Changed by someone else since you opened it - reload and tr
 /// `updated_at` exactly as the JSON carries it, quoted, so a client that has
 /// the item - from a list as much as from a GET - already has its version.
 /// No header, or `*`, means "write regardless".
+///
+/// Parsed here rather than with the `headers` crate's `IfMatch`: the version
+/// is checked inside the SQL write, which needs the timestamp itself, and
+/// `IfMatch` only answers whether a tag matches.
 pub(super) fn if_match(headers: &HeaderMap) -> Result<Option<DateTime<Utc>>, ApiError> {
     let Some(raw) = headers.get(header::IF_MATCH) else {
         return Ok(None);

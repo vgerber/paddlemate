@@ -11,6 +11,9 @@ import { useRef, useState } from "react";
 import { factLabelSx } from "@/components/Fact";
 import MarkdownText from "@/components/MarkdownText";
 
+// Four toolbar buttons over a plain text field, written here: every markdown
+// editor library is many times this size for features nobody asked for.
+
 /** Wrap the selection, or drop a placeholder in when there is none. */
 function wrap(
   value: string,

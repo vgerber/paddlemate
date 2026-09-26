@@ -141,6 +141,8 @@ async function currentSubscription(): Promise<globalThis.PushSubscription | null
   return registration.pushManager.getSubscription();
 }
 
+/** A base64url key as bytes. `Uint8Array.fromBase64` does this, but iPhones
+ * before iOS 18.2 lack it, and push is most wanted on phones. */
 function keyBytes(base64url: string): Uint8Array<ArrayBuffer> {
   const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
   const raw = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, "="));
