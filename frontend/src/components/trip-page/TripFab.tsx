@@ -12,9 +12,12 @@ import SpeedDialAction from "@mui/material/SpeedDialAction";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import type { TripTab } from "./TripDetail";
 
-/** Clears the mobile bottom nav; on desktop the pane runs to the window. */
+/** On a phone, the screen's corner above the bottom nav. On a desktop, the
+ * corner of the trip's own column: the column stops at its cap, and a button
+ * pinned to the window's corner ended up a screen-width away from the list it
+ * adds to. Whatever holds the trip is `position: relative`. */
 export const fabSx = {
-  position: "fixed" as const,
+  position: { xs: "fixed", md: "absolute" } as const,
   bottom: {
     xs: "calc(56px + env(safe-area-inset-bottom) + 16px)",
     md: 24,

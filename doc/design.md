@@ -27,7 +27,10 @@ sparingly and always carries meaning.
   primary-action button on the right.
 - One screen, one primary action, shown as a bottom-right FAB. If the screen
   has a single purpose, the FAB performs it directly; menus only where several
-  actions genuinely share the spot.
+  actions genuinely share the spot. Bottom-right of the *content*, not the
+  window: on a desktop a detail column stops at its cap, so the FAB sits in
+  that column's corner (`position: absolute` in a `relative` column), or it
+  ends up a screen-width away from the list it adds to.
 - Empty states are an icon and one line of text - the FAB is the call to
   action, so they carry no buttons. A finished flow ends the same way: the
   terminal screen is an icon and one line, and the bottom bar carries the

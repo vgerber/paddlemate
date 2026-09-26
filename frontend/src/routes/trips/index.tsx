@@ -184,6 +184,7 @@ function TripsPage() {
         ) : selectedTrip ? (
           <Box
             sx={{
+              position: "relative",
               maxWidth: 880,
               flex: 1,
               minHeight: 0,

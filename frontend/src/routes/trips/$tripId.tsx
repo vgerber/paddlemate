@@ -36,6 +36,7 @@ function TripDetailPage() {
   return (
     <Box
       sx={{
+        position: "relative",
         maxWidth: 720,
         mx: "auto",
         height: PANEL_HEIGHT,
