@@ -48,6 +48,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Push handling lives in its own file; the rest is generated.
+        importScripts: ["push-sw.js"],
         runtimeCaching: [
           {
             urlPattern: /^\/api\//,

@@ -57,22 +57,27 @@ pub async fn get_member(
 }
 
 /// Adds somebody to a trip. Idempotent: adding an existing member is not an
-/// error, the caller gets the membership either way.
+/// error, the caller gets the membership either way - and learns whether they
+/// were new, so only a real join is announced.
 pub async fn add_member(
     pool: &PgPool,
     trip_id: TripId,
     user_id: &str,
-) -> Result<Option<TripMember>, sqlx::Error> {
-    sqlx::query(
+) -> Result<Option<(TripMember, bool)>, sqlx::Error> {
+    let added = sqlx::query(
         "INSERT INTO trip_members (trip_id, user_id, role) VALUES ($1, $2, 'member') \
          ON CONFLICT (trip_id, user_id) DO NOTHING",
     )
     .bind(trip_id)
     .bind(user_id)
     .execute(pool)
-    .await?;
+    .await?
+    .rows_affected()
+        > 0;
 
-    get_member(pool, trip_id, user_id).await
+    Ok(get_member(pool, trip_id, user_id)
+        .await?
+        .map(|m| (m, added)))
 }
 
 /// Counts admins and reads the target's role inside the locked transaction,

@@ -164,9 +164,9 @@ it, and nobody else does - not the public, not the rest of a club, not
 somebody who was sent the link. Nobody browses other people's trips, so there
 is no discovery and nothing to make public.
 
-Getting in is therefore something an **admin does for you**: on the Members
-tab they pick you from the list of people, and the trip appears in your trips
-the moment they do. There is no request, no approval and no joining yourself.
+Getting in is therefore something an **admin does for you**: they add you by
+name on the Members tab, or send you an invite link. There is no request to
+join and no approval queue - without a link from an admin there is no way in.
 Leaving is yours: your own row's menu has "Leave trip".
 
 ## Logs in a trip
@@ -195,6 +195,31 @@ Two rules are worth knowing:
   private as the trip: anyone else reading a public log does not see it.
 - **A log leaves with its owner.** Leaving a trip, or being removed from it,
   takes your logs out of it; they stay in your own logbook.
+
+## Staying in the loop
+
+Plans change by the hour on a paddling week, so the app keeps up on its own.
+
+- **Live.** A trip open on your screen updates the moment somebody else
+  changes it - a base added, a vote cast, someone's arrival moved. No reload.
+- **The bell.** The bell in the top bar (on a phone: the badge on Profile, and
+  its Inbox tab) lists what others changed on your trips while you were away:
+  "mara proposed Haus Wildspitze", "tobi arrives Tue, 22 Sept". Opening it
+  marks them read. Votes and small edits to a suggestion are left out - a week
+  of voting would bury everything else. You hear about a trip from the moment
+  you join it, and leaving it takes its history out of your bell.
+- **Push.** Turn on "Push notifications on this device" under Settings, and
+  the phone buzzes even with the app closed - but only for decisions and
+  plans: who joins or leaves, bases added, changed, removed, proposed or
+  decided, when people arrive or leave, and the trip's own dates. Votes,
+  watch-list edits and logs stay quiet. It is per device: each phone or
+  browser is switched on by itself, up to ten per account, and signing out
+  switches it off on that device. On an iPhone, add Paddlemate to the home
+  screen first; Safari only allows push for installed apps.
+- **How far back.** Changes are kept for half a year, and the bell reaches
+  that far.
+
+Your own changes never notify you.
 
 ---
 
@@ -267,6 +292,7 @@ the rule.
 | [`00043_trip_stay_candidates.sql`](../api/migrations/00043_trip_stay_candidates.sql) | candidates and their votes |
 | [`00044_trips_integrity.sql`](../api/migrations/00044_trips_integrity.sql) | moves rules into the schema: votes and trip logs hang off the membership, watched sections cascade, positions check at commit, candidates carry `updated_at` |
 | [`00045_trip_invites.sql`](../api/migrations/00045_trip_invites.sql) | invite links: a hashed token per link, its expiry and how often it was used |
+| [`00046_trip_events.sql`](../api/migrations/00046_trip_events.sql) | notifications: `trip_events` with its NOTIFY trigger, each user's read mark, push subscriptions |
 
 | Table | Holds |
 |---|---|
@@ -422,6 +448,68 @@ preflight for a versioned `PATCH` fails before the API sees it.
 Attendance and roles are not versioned: attendance is each member's own row,
 and role changes go through the trip lock.
 
+### Notifications
+
+A change is recorded as a `trip_events` row by the route that made it, after
+it succeeded ([`notify::record`](../api/src/notify/mod.rs)). Recording never
+fails the request: the change stands, and a lost event is logged. The row
+carries the actor and a small `summary` - the base's or person's name as it
+was then, so "mara removed Gasthof Post" still reads after the row is gone.
+
+| Kind | Live | Bell | Push |
+|---|---|---|---|
+| `candidate_voted`, `candidate_changed` | yes | no | no |
+| `watch_list_changed`, `log_linked` | yes | yes | no |
+| everything else | yes | yes | yes |
+
+`TripEventKind::in_inbox` and `pushes` in
+[`models/notification.rs`](../api/src/models/notification.rs) are the table.
+
+How an event travels:
+
+| Path | How |
+|---|---|
+| Live | the insert trigger `pg_notify`s the id; every API instance `LISTEN`s ([`run_listener`](../api/src/notify/mod.rs)) and fans it out on a `broadcast` channel to its open `GET /users/me/events` streams. Each stream holds the caller's trips and re-reads them whenever anyone's membership changes, so a removed member stops hearing at once without a query per event per stream. A stream that falls behind gets `resync` and refetches everything |
+| Bell | `GET /users/me/notifications` reads `trip_events` filtered to trips the caller is on now, since they joined, not their own; `notification_reads.read_until` is the read mark, moved by `PUT /users/me/notification-state` - forward only, never past now |
+| Push | the recording instance (not every instance, so one buzz) sends a VAPID-signed, `aes128gcm`-encrypted message to each other member's subscriptions ([`notify/push.rs`](../api/src/notify/push.rs)); a 404/410 from the push service deletes the subscription |
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/users/me/events` | `text/event-stream`: `connected`, `trip_event` (a `LiveEvent`), `resync`; a keep-alive comment every 20s. Needs the bearer header, so the app reads it with `fetch`, not `EventSource` |
+| `GET` | `/users/me/notifications` | the bell, newest first, paged, each with `unread` |
+| `GET` `PUT` | `/users/me/notification-state` | unread count, read mark, and the server's VAPID public key (absent when push is off) |
+| `GET` `POST` | `/users/me/push-subscriptions` | `POST` takes the browser's `PushSubscription.toJSON()`; the endpoint must be `https`. 409 when this server has no VAPID key |
+| `DELETE` | `/users/me/push-subscriptions/{subscription_id}` | one device off |
+
+What bounds it:
+
+| Guard | Why | Where |
+|---|---|---|
+| Push endpoints must be FCM, Mozilla, Apple or Windows push hosts, https, default port, no credentials | the server POSTs to the stored URL; "any https URL" let a caller aim it at the server's own network | `is_push_endpoint` in [`notify/push.rs`](../api/src/notify/push.rs) |
+| Push keys must be a 65-byte P-256 point and a 16-byte secret | anything else fails on every push, forever | `are_push_keys` |
+| 10 push devices per user, the oldest makes way, counted under a lock on the user | every change is sent to each one | `push_subscriptions::upsert` |
+| A send gives up after 10s, at most 8 in flight | a slow push service cannot pile up senders | `PushService::send` |
+| 10 live streams per user per instance, 429 beyond | each is a connection the server holds | `LiveStreams` in [`notify/mod.rs`](../api/src/notify/mod.rs) |
+| A stream ends after 15 minutes or when the token expires | a revoked API key or ended session stops listening; the app reconnects with a fresh token | `lifetime` in `routes/users/notifications.rs` |
+| Events older than 180 days are deleted daily | the table would grow forever | `run_pruner`, `trip_events_created_idx` |
+| A notification click opens only a page of this app | the payload's `url` is followed as given | [`public/push-sw.js`](../frontend/public/push-sw.js) |
+| Signing out removes this device's push subscription | a shared device must not keep showing the last person's trips | `forgetThisDevice` in `useNotifications.ts` |
+
+Operating it:
+
+- Push needs `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (see `AGENTS.md`).
+  Changing the key orphans every subscription: browsers subscribed to the old
+  one, and each device has to switch push off and on again.
+- The stream sends `X-Accel-Buffering: no`, which nginx honours; a proxy that
+  buffers anyway delays every live event until its buffer fills. Its idle
+  timeout must be above the 20s keep-alive.
+- Each instance's listener holds one database connection for good.
+- The frontend's push handler is
+  [`public/push-sw.js`](../frontend/public/push-sw.js), pulled into the
+  generated service worker by workbox `importScripts`. The dev server
+  registers no service worker, so push is tried on a build
+  (`vite build --mode development` and `vite preview`, port 4173).
+
 ### Why candidates are their own tables
 
 They are not rows in the site-wide `proposals`. Those propose edits to shared
@@ -551,6 +639,9 @@ The trip itself:
 | `trip-page/AddMemberDialog.tsx` | behind the Members FAB: an invite link, or somebody already here by name |
 | `trip-page/InviteLinks.tsx` | making, copying, sharing and withdrawing links |
 | `routes/invite/$token.tsx` | where a link lands: what it leads to, sign-in or sign-up, join |
+| `notifications/NotificationBell.tsx` | the top bar's bell and its popover; `UnreadBadge` for the phone's Profile tab |
+| `notifications/NotificationList.tsx` | the bell's list, also the phone's Inbox tab; opening it marks read |
+| `notifications/PushSettings.tsx` | the per-device push switch in Settings |
 | `trip-page/LinkDescentDialog.tsx` | crediting an existing log to the trip |
 | `trips/TripRow.tsx`, `trips/TripForm.tsx`, `trips/stayKinds.ts` | the list row, the create/edit form, and the kinds |
 
@@ -561,6 +652,8 @@ Pure logic, tested without a browser:
 | `lib/tripTimeline.ts` | `dayNumber`, `buildTimeline`, `eachDay`, `monthGrid`, `paddledByRiver` |
 | `lib/tripRange.ts` | `baseRanges`, `rangeBounds`, `nearestWatched`, and the per-base colour and number |
 | `lib/hooks/useTrips.ts` | the `tripKeys` factory, every trip query and every mutation |
+| `lib/notifications.ts` | `describeEvent` (the bell's sentence) and `parseSse` |
+| `lib/hooks/useNotifications.ts` | `notificationKeys`, `useLiveTripEvents` (the stream, what each event invalidates, reconnect with backoff), push subscribe and unsubscribe |
 
 Shared pieces this feature added to the app, not to itself: `PanelHeader`,
 `Fact`, `RowMenu`, `TimelineRail`, `SectionAdder`, `VisibilityPicker`,
@@ -584,7 +677,15 @@ signed-out 401s, self-edits needing membership, the last admin and last base
 unreachable through another trip, bad input answering 400, a reorder keeping
 its rows, a stale `If-Match` answering 412, and invite links - a newcomer
 joining, a link opening only its own trip, and a withdrawn or expired one
-opening nothing. Each race test fails when the
+opening nothing. Notifications: a change reaching everyone but its actor, the
+read mark only moving forward, votes staying out of the bell, the bell
+covering only your trips since you joined, a log announced once however often
+it is saved, the live stream telling members only and following membership as
+it changes, push endpoints limited to push services and ten devices, live
+streams capped per user, and an absurd page answering 200 rather than
+overflowing. Only that last test
+runs the NOTIFY listener: a listener holds a connection for good, and
+`sqlx::test` databases share one small pool. Each race test fails when the
 trip lock is removed, which is how it is known to test anything.
 
 #### Patterns worth keeping

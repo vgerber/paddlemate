@@ -21,10 +21,12 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
+        notification::{EventSummary, TripEventKind},
         path_params::TripPath,
         trip::{CreateTripRequest, ListTripsQuery, PatchTripRequest, Trip},
-        waterway::PaginatedResponse,
+        waterway::{PaginatedResponse, page_bounds},
     },
+    notify,
     query::trips,
     state::AppState,
 };
@@ -81,11 +83,12 @@ pub async fn list_trips(
         Err(err) => return err.into_response(),
     };
 
+    let (page, per_page) = page_bounds(q.page, q.per_page, 25);
     let filters = trips::ListFilters {
         from: q.from,
         to: q.to,
-        page: q.page.unwrap_or(1).max(1),
-        per_page: q.per_page.unwrap_or(25).clamp(1, 100),
+        page,
+        per_page,
     };
 
     match trips::list_trips_for_viewer(&app.pg_pool, &caller_id, filters).await {
@@ -199,9 +202,15 @@ pub async fn patch_trip(
     };
 
     match trips::patch_trip(&app.pg_pool, trip_id, &caller_id, expected, &body).await {
-        Ok(result) => outcome(result, |trip| {
-            with_etag(StatusCode::OK, &trip, trip.updated_at)
-        }),
+        Ok(result) => {
+            if let trips::Outcome::Done(trip) = &result {
+                let named = EventSummary::named(&trip.name);
+                notify::record(&app, trip_id, &caller_id, TripEventKind::TripChanged, named).await;
+            }
+            outcome(result, |trip| {
+                with_etag(StatusCode::OK, &trip, trip.updated_at)
+            })
+        }
         Err(err) => failure(&format!("patching trip {trip_id}"), err),
     }
 }

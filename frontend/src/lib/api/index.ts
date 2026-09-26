@@ -75,6 +75,16 @@ export type PaginatedTrips =
 export type TripFilters = NonNullable<
   operations["list_trips"]["parameters"]["query"]
 >;
+export type TripEvent = components["schemas"]["TripEvent"];
+export type TripEventKind = components["schemas"]["TripEventKind"];
+export type EventSummary = components["schemas"]["EventSummary"];
+export type LiveEvent = components["schemas"]["LiveEvent"];
+export type NotificationState = components["schemas"]["NotificationState"];
+export type PaginatedTripEvents =
+  components["schemas"]["PaginatedResponse_for_TripEvent"];
+export type PushSubscriptionEntry = components["schemas"]["PushSubscription"];
+export type CreatePushSubscriptionRequest =
+  components["schemas"]["CreatePushSubscriptionRequest"];
 export type Region = components["schemas"]["Region"];
 export type RegionKind = components["schemas"]["RegionKind"];
 export type RegionOutline = components["schemas"]["RegionOutline"];
@@ -946,5 +956,42 @@ export const followsApi = {
       params: { path: { user_id: ME, follower_id: userId } },
       body: { status: "accepted" },
     });
+  },
+};
+
+export const notificationsApi = {
+  list: async (page = 1): Promise<PaginatedTripEvents> => {
+    const { data } = await client.GET("/api/v1/users/me/notifications", {
+      params: { query: { page } },
+    });
+    return assertData(data);
+  },
+  state: async (): Promise<NotificationState> => {
+    const { data } = await client.GET("/api/v1/users/me/notification-state");
+    return assertData(data);
+  },
+  markRead: async (readUntil: string): Promise<NotificationState> => {
+    const { data } = await client.PUT("/api/v1/users/me/notification-state", {
+      body: { read_until: readUntil },
+    });
+    return assertData(data);
+  },
+  pushSubscriptions: async (): Promise<PushSubscriptionEntry[]> => {
+    const { data } = await client.GET("/api/v1/users/me/push-subscriptions");
+    return assertData(data);
+  },
+  subscribePush: async (
+    body: CreatePushSubscriptionRequest,
+  ): Promise<PushSubscriptionEntry> => {
+    const { data } = await client.POST("/api/v1/users/me/push-subscriptions", {
+      body,
+    });
+    return assertData(data);
+  },
+  unsubscribePush: async (subscriptionId: number): Promise<void> => {
+    await client.DELETE(
+      "/api/v1/users/me/push-subscriptions/{subscription_id}",
+      { params: { path: { subscription_id: subscriptionId } } },
+    );
   },
 };

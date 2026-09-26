@@ -393,6 +393,8 @@ code. Component rendering is not tested; the UI is verified by running it.
 | `MEDIA_DIR` | `media` | Where uploaded photos are written; production mounts a volume there. The directory is **not** covered by `pg_dump` - back it up separately |
 | `OVERPASS_URLS` | public instances | Comma-separated Overpass endpoints tried in order; production puts the self-hosted instance (`deploy/overpass/`) first |
 | `SEARCH_WORD_SIMILARITY_THRESHOLD` | `0.5` | How close a misspelling must be to still match a name |
+| `VAPID_PRIVATE_KEY` | unset | Raw P-256 private key, base64url, for web push; the public key is derived from it. Unset (or `VAPID_SUBJECT` unset) turns push off, nothing else |
+| `VAPID_SUBJECT` | unset | `mailto:` or `https:` contact that push services may reach about this server |
 
 ### Search
 

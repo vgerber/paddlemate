@@ -22,8 +22,7 @@ use paddlemate_api::{
     routes::{
         descents::descents_routes, docs::docs_routes, gauges::gauges_routes, geo::geo_routes,
         groups::group_routes, proposals::proposals_routes, trips::trips_routes,
-        users::users_routes,
-        waterways::waterways_routes,
+        users::users_routes, waterways::waterways_routes,
     },
     state::{AppState, KeycloakState},
 };
@@ -196,7 +195,17 @@ async fn main() {
         username_cache,
         gauge_wake: Arc::new(tokio::sync::Notify::new()),
         region_wake: Arc::new(tokio::sync::Notify::new()),
+        live_events: tokio::sync::broadcast::channel(paddlemate_api::notify::LIVE_BUFFER).0,
+        push: paddlemate_api::notify::push_from_env(),
+        live_streams: Default::default(),
     };
+
+    // Trip changes reach open apps through this instance's live streams.
+    tokio::spawn(paddlemate_api::notify::run_listener(
+        db.clone(),
+        state.live_events.clone(),
+    ));
+    tokio::spawn(paddlemate_api::notify::run_pruner(db.clone()));
 
     let keycloak_auth_instance = Arc::new(KeycloakAuthInstance::new(
         KeycloakConfig::builder()

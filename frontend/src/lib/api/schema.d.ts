@@ -160,6 +160,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/me/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Server-sent events for the caller's trips. `event: trip_event` carries a `LiveEvent` (what changed, on which trip); `event: resync` means events were missed and everything should be refetched; `event: connected` opens the stream. Only trips the caller is on, checked per event. Authenticate with a bearer token (use fetch, not EventSource, to send it). */
+        get: operations["stream_events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description What changed on the caller's trips while they were away, newest first: changes by others, on trips they are on now, since they joined each. `unread` marks what is newer than their read mark. Votes are left out - they only refresh live. */
+        get: operations["list_notifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/notification-state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The bell: how many unread changes, the caller's read mark, and the server's push key (absent when this server does not send push). */
+        get: operations["get_notification_state"];
+        /** @description Marks everything up to `read_until` read. The mark only moves forward and never past now. */
+        put: operations["put_notification_state"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/push-subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The devices the caller allowed notifications on. */
+        get: operations["list_push_subscriptions"];
+        put?: never;
+        /** @description Allows push on this device: send the browser's `PushSubscription.toJSON()`. The same browser subscribing again replaces its entry, also when it now belongs to another user. 409 when this server does not send push. */
+        post: operations["create_push_subscription"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/push-subscriptions/{subscription_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Stops push on one of the caller's devices. */
+        delete: operations["delete_push_subscription"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/groups": {
         parameters: {
             query?: never;
@@ -1582,6 +1669,11 @@ export interface components {
             description?: string | null;
             name: string;
         };
+        /** @description The browser's `PushSubscription.toJSON()`, as it comes. */
+        CreatePushSubscriptionRequest: {
+            endpoint: string;
+            keys: components["schemas"]["PushSubscriptionKeys"];
+        };
         /**
          * @description Payload for creating a section together with its localized texts and
          *      features - one reviewable unit for the proposal workflow.
@@ -1766,6 +1858,28 @@ export interface components {
          */
         ErrorResponse: {
             error: components["schemas"]["ErrorBody"];
+        };
+        /**
+         * @description What a change was about, named as it was when it happened: a removed base
+         *      keeps its name here after its row is gone. Only the fields that kind uses
+         *      are set.
+         */
+        EventSummary: {
+            /**
+             * Format: date
+             * @description For attendance: the dates and hours now set.
+             */
+            arrival?: string | null;
+            /** Format: partial-time */
+            arrival_time?: string | null;
+            /** Format: date */
+            departure?: string | null;
+            /** Format: partial-time */
+            departure_time?: string | null;
+            /** @description The thing changed: a base, a candidate, a log, the trip itself. */
+            name?: string | null;
+            /** @description Somebody other than the actor: who was added or removed. */
+            username?: string | null;
         };
         /** @description A favorited section, including its parent waterway name and full feature list. */
         FavoriteSectionResponse: {
@@ -2216,6 +2330,25 @@ export interface components {
             to?: string | null;
         };
         /**
+         * @description What the live stream carries: enough to know what to refresh, nothing to
+         *      render - the app refetches what it shows.
+         */
+        LiveEvent: {
+            actor_id?: string | null;
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["TripEventKind"];
+            /** Format: int64 */
+            trip_id: number;
+        };
+        MarkReadRequest: {
+            /**
+             * Format: date-time
+             * @description Everything up to and including this moment is read.
+             */
+            read_until: string;
+        };
+        /**
          * @description Which text a search hit came from, so a client can say why a river matched
          *      when the matching text is not the name it displays.
          * @enum {string}
@@ -2288,6 +2421,23 @@ export interface components {
         ModerateCommentRequest: {
             status: components["schemas"]["CommentStatus"];
         };
+        NotificationState: {
+            /**
+             * @description The server's VAPID key, for `PushManager.subscribe`. Absent when this
+             *      server does not send push.
+             */
+            push_public_key?: string | null;
+            /** Format: date-time */
+            read_until?: string | null;
+            /** Format: int64 */
+            unread_count: number;
+        };
+        NotificationsQuery: {
+            /** Format: int64 */
+            page?: number | null;
+            /** Format: int64 */
+            per_page?: number | null;
+        };
         /** @description One cached OSM element of a waterway. */
         OsmElement: {
             geometry: components["schemas"]["Geometry"];
@@ -2312,6 +2462,17 @@ export interface components {
         };
         PaginatedResponse_for_Trip: {
             items: components["schemas"]["Trip"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            per_page: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            total_pages: number;
+        };
+        PaginatedResponse_for_TripEvent: {
+            items: components["schemas"]["TripEvent"][];
             /** Format: int64 */
             page: number;
             /** Format: int64 */
@@ -2545,6 +2706,21 @@ export interface components {
         };
         /** @enum {string} */
         ProposalStatus: "pending" | "approved" | "rejected";
+        PushSubscription: {
+            /** Format: date-time */
+            created_at: string;
+            endpoint: string;
+            /** Format: int64 */
+            id: number;
+        };
+        PushSubscriptionKeys: {
+            auth: string;
+            p256dh: string;
+        };
+        PushSubscriptionPath: {
+            /** Format: int64 */
+            subscription_id: number;
+        };
         ReadingsQuery: {
             /** Format: date-time */
             from?: string | null;
@@ -2855,6 +3031,30 @@ export interface components {
              */
             vote: number;
         };
+        /** @description One change, as the bell lists it. */
+        TripEvent: {
+            /** @description Absent when the account that made the change is gone. */
+            actor_id?: string | null;
+            actor_username?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["TripEventKind"];
+            summary: components["schemas"]["EventSummary"];
+            /** Format: int64 */
+            trip_id: number;
+            trip_name: string;
+            /** @description Newer than the caller's read mark. */
+            unread: boolean;
+        };
+        /**
+         * @description What changed on a trip. The kind decides where a change is announced:
+         *      every kind refreshes open apps live, `in_inbox` puts it under the bell,
+         *      and `pushes` buzzes a phone.
+         * @enum {string}
+         */
+        TripEventKind: "trip_changed" | "member_joined" | "member_left" | "member_removed" | "attendance_changed" | "stay_added" | "stay_changed" | "stay_removed" | "watch_list_changed" | "candidate_proposed" | "candidate_changed" | "candidate_voted" | "candidate_accepted" | "candidate_withdrawn" | "log_linked";
         /**
          * @description A link an admin made to let people join. The token is never listed - only
          *      its hash is kept - so this says who made it, when it stops working, and
@@ -3718,11 +3918,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-09-25T20:25:21.010871440Z",
-                     *         "expires_at": "2026-12-24T20:25:21.010873610Z",
+                     *         "created_at": "2026-09-26T07:14:18.254987356Z",
+                     *         "expires_at": "2026-12-25T07:14:18.254990526Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-09-25T20:25:21.010881700Z",
+                     *         "last_used_at": "2026-09-26T07:14:18.255001356Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -3753,8 +3953,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-09-25T20:25:21.010997030Z",
-                     *       "expires_at": "2026-12-24T20:25:21.010997380Z",
+                     *       "created_at": "2026-09-26T07:14:18.255122175Z",
+                     *       "expires_at": "2026-12-25T07:14:18.255122535Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -3802,6 +4002,244 @@ export interface operations {
                 content?: never;
             };
             /** @description Token not found or already revoked */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    stream_events: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A text/event-stream of LiveEvent objects */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveEvent"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_notifications: {
+        parameters: {
+            query?: {
+                page?: number | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_for_TripEvent"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_notification_state: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationState"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    put_notification_state: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkReadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationState"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_push_subscriptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscription"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_push_subscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The browser's `PushSubscription.toJSON()`, as it comes. */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePushSubscriptionRequest"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscription"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Push is not configured */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_push_subscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subscription_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
             404: {
                 headers: {
                     [name: string]: unknown;

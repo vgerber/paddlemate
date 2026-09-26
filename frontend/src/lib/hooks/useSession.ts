@@ -8,6 +8,7 @@ import {
   initiateSignup,
   userToProfile,
 } from "../auth";
+import { forgetThisDevice } from "./useNotifications";
 
 export interface Session {
   user: {
@@ -161,6 +162,8 @@ export function useSession(): UseSessionReturn {
   }, []);
 
   const logout = useCallback(async () => {
+    // While the token still works: the server entry needs it.
+    await forgetThisDevice();
     await authLogout();
   }, []);
 

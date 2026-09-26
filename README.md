@@ -25,7 +25,9 @@ water levels, and a shared logbook.
   it: a shared list of bases that moves with the group, the sections watched
   from each, who is coming and when, and every member's logs from the trip in
   one place, private ones included. Friends join through an invite link, even
-  before they have an account.
+  before they have an account. Open trips update live as others change them, a
+  bell collects what changed while you were away, and a phone can get a push
+  when the plan changes.
 - **Languages** — section and rapid names in any language, with a per-device
   display language applied live, map labels included.
 - **Community** — proposals with review and voting for non-admin edits,

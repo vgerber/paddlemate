@@ -11,10 +11,12 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
+        notification::{EventSummary, TripEventKind},
         path_params::{TripMemberPath, TripPath},
         trip::{AddTripMemberRequest, PatchTripMemberRequest, TripMember},
     },
-    query::trips,
+    notify,
+    query::trips::{self, Outcome},
     state::AppState,
 };
 
@@ -115,7 +117,20 @@ pub async fn add_trip_member(
                 return res;
             }
             match trips::add_member(&app.pg_pool, trip_id, user_id).await {
-                Ok(Some(member)) => (StatusCode::CREATED, Json(member)).into_response(),
+                Ok(Some((member, added))) => {
+                    if added {
+                        let about = EventSummary::about(&member.username);
+                        notify::record(
+                            &app,
+                            trip_id,
+                            &caller_id,
+                            TripEventKind::MemberJoined,
+                            about,
+                        )
+                        .await;
+                    }
+                    (StatusCode::CREATED, Json(member)).into_response()
+                }
                 Ok(None) => ApiError::not_found("Not found").into_response(),
                 Err(err) => failure(&format!("adding a member to trip {trip_id}"), err),
             }
@@ -124,9 +139,22 @@ pub async fn add_trip_member(
         // the same 404 as a trip that does not exist.
         (None, Some(invite)) => {
             match trips::join_by_invite(&app.pg_pool, trip_id, invite, &caller_id).await {
-                Ok(result) => outcome(result, |member| {
-                    (StatusCode::CREATED, Json(member)).into_response()
-                }),
+                Ok(result) => {
+                    if let Outcome::Done((_, true)) = &result {
+                        let joined = EventSummary::default();
+                        notify::record(
+                            &app,
+                            trip_id,
+                            &caller_id,
+                            TripEventKind::MemberJoined,
+                            joined,
+                        )
+                        .await;
+                    }
+                    outcome(result, |(member, _)| {
+                        (StatusCode::CREATED, Json(member)).into_response()
+                    })
+                }
                 Err(err) => failure(&format!("joining trip {trip_id} by invite"), err),
             }
         }
@@ -173,7 +201,31 @@ pub async fn patch_trip_member(
 
     // The last-admin rule is checked inside the write, under the trip lock.
     match trips::patch_member(&app.pg_pool, trip_id, &user_id, &body).await {
-        Ok(result) => outcome(result, |member| Json(member).into_response()),
+        Ok(result) => {
+            // Only when somebody's dates or hours moved: a role change is an
+            // admin matter, not news for the group.
+            let dates_moved = body.arrival.is_some()
+                || body.arrival_time.is_some()
+                || body.departure.is_some()
+                || body.departure_time.is_some();
+            if let (true, Outcome::Done(m)) = (dates_moved, &result) {
+                let when = EventSummary {
+                    arrival: m.arrival,
+                    arrival_time: m.arrival_time,
+                    departure: m.departure,
+                    departure_time: m.departure_time,
+                    ..Default::default()
+                };
+                // Told as the member's own news, whoever typed it in.
+                let actor = if caller_id == user_id {
+                    &caller_id
+                } else {
+                    &m.user_id
+                };
+                notify::record(&app, trip_id, actor, TripEventKind::AttendanceChanged, when).await;
+            }
+            outcome(result, |member| Json(member).into_response())
+        }
         Err(err) => failure(&format!("patching trip {trip_id} member"), err),
     }
 }
@@ -211,8 +263,37 @@ pub async fn remove_trip_member(
     }
 
     // The last-admin rule is checked inside the delete, under the trip lock.
+    // The name first: after the removal it is no longer on the trip to read.
+    let leaving = trips::get_member(&app.pg_pool, trip_id, &user_id)
+        .await
+        .ok()
+        .flatten();
     match trips::remove_member(&app.pg_pool, trip_id, &user_id).await {
-        Ok(result) => outcome(result, |()| StatusCode::NO_CONTENT.into_response()),
+        Ok(result) => {
+            if let Outcome::Done(()) = &result {
+                if caller_id == user_id {
+                    notify::record(
+                        &app,
+                        trip_id,
+                        &caller_id,
+                        TripEventKind::MemberLeft,
+                        EventSummary::default(),
+                    )
+                    .await;
+                } else if let Some(m) = &leaving {
+                    let about = EventSummary::about(&m.username);
+                    notify::record(
+                        &app,
+                        trip_id,
+                        &caller_id,
+                        TripEventKind::MemberRemoved,
+                        about,
+                    )
+                    .await;
+                }
+            }
+            outcome(result, |()| StatusCode::NO_CONTENT.into_response())
+        }
         Err(err) => failure(&format!("removing trip {trip_id} member"), err),
     }
 }

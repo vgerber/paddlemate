@@ -117,7 +117,8 @@ pub async fn preview_invite(
     .transpose()
 }
 
-/// Joins `user_id` to the trip through a link. The link must be live and
+/// Joins `user_id` to the trip through a link, reporting whether they are
+/// new to it. The link must be live and
 /// belong to *this* trip - a token for one trip is no key to another. Joining
 /// again is not an error and does not count as another use.
 pub async fn join_by_invite(
@@ -125,7 +126,7 @@ pub async fn join_by_invite(
     trip_id: TripId,
     token: &str,
     user_id: &str,
-) -> Result<Outcome<TripMember>, sqlx::Error> {
+) -> Result<Outcome<(TripMember, bool)>, sqlx::Error> {
     let mut tx = pool.begin().await?;
 
     // Locked, so a withdrawal that lands mid-join either wins or waits.
@@ -162,7 +163,7 @@ pub async fn join_by_invite(
     tx.commit().await?;
 
     Ok(match get_member(pool, trip_id, user_id).await? {
-        Some(member) => Outcome::Done(member),
+        Some(member) => Outcome::Done((member, joined)),
         None => Outcome::NotFound,
     })
 }

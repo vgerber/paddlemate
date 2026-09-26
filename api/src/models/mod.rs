@@ -7,6 +7,7 @@ pub mod geometry;
 pub mod group;
 pub mod lang;
 pub mod media_item;
+pub mod notification;
 pub mod osm_geometry;
 pub mod patch;
 pub mod path_params;

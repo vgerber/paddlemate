@@ -15,6 +15,7 @@ use crate::{
     layers::auth::AuthToken,
     models::{
         geometry::Geometry,
+        notification::{EventSummary, TripEventKind},
         path_params::{TripCandidatePath, TripPath},
         proposal::VoteRequest,
         trip::{
@@ -22,7 +23,8 @@ use crate::{
             TripStayCandidate,
         },
     },
-    query::trips,
+    notify,
+    query::trips::{self, Outcome},
     state::AppState,
 };
 
@@ -41,6 +43,24 @@ fn location_error(location: Option<&Geometry>) -> Option<Response> {
                 .into_response(),
         ),
     }
+}
+
+/// After a vote is cast or taken back: open views refresh live, the bell
+/// stays quiet (see `TripEventKind::in_inbox`).
+async fn voted(app: &AppState, trip_id: i64, candidate_id: i64, caller_id: &str) -> Response {
+    if let Ok(Some(c)) = trips::get_candidate(&app.pg_pool, trip_id, candidate_id, caller_id).await
+    {
+        let named = EventSummary::named(&c.name);
+        notify::record(
+            app,
+            trip_id,
+            caller_id,
+            TripEventKind::CandidateVoted,
+            named,
+        )
+        .await;
+    }
+    current(app, trip_id, candidate_id, caller_id).await
 }
 
 /// The candidate as it now stands, for the vote routes' answer.
@@ -156,7 +176,18 @@ pub async fn propose_candidate(
     }
 
     match trips::create_candidate(&app.pg_pool, trip_id, &caller_id, &body).await {
-        Ok(Some(c)) => with_etag(StatusCode::CREATED, &c, c.updated_at),
+        Ok(Some(c)) => {
+            let named = EventSummary::named(&c.name);
+            notify::record(
+                &app,
+                trip_id,
+                &caller_id,
+                TripEventKind::CandidateProposed,
+                named,
+            )
+            .await;
+            with_etag(StatusCode::CREATED, &c, c.updated_at)
+        }
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => failure(&format!("proposing a base for trip {trip_id}"), err),
     }
@@ -196,7 +227,7 @@ pub async fn vote_candidate(
     // cast_vote only matches a candidate of this trip, so an id from another
     // trip is a 404 here rather than a vote there.
     match trips::cast_vote(&app.pg_pool, trip_id, candidate_id, &caller_id, body.vote).await {
-        Ok(true) => current(&app, trip_id, candidate_id, &caller_id).await,
+        Ok(true) => voted(&app, trip_id, candidate_id, &caller_id).await,
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => failure(&format!("voting on candidate {candidate_id}"), err),
     }
@@ -230,7 +261,7 @@ pub async fn unvote_candidate(
     }
 
     match trips::clear_vote(&app.pg_pool, trip_id, candidate_id, &caller_id).await {
-        Ok(()) => current(&app, trip_id, candidate_id, &caller_id).await,
+        Ok(()) => voted(&app, trip_id, candidate_id, &caller_id).await,
         Err(err) => failure(&format!("clearing a vote on candidate {candidate_id}"), err),
     }
 }
@@ -282,9 +313,22 @@ pub async fn patch_candidate(
         )
         .await
         {
-            Ok(result) => outcome(result, |stay| {
-                with_etag(StatusCode::CREATED, &stay, stay.updated_at)
-            }),
+            Ok(result) => {
+                if let Outcome::Done(stay) = &result {
+                    let named = EventSummary::named(&stay.name);
+                    notify::record(
+                        &app,
+                        trip_id,
+                        &caller_id,
+                        TripEventKind::CandidateAccepted,
+                        named,
+                    )
+                    .await;
+                }
+                outcome(result, |stay| {
+                    with_etag(StatusCode::CREATED, &stay, stay.updated_at)
+                })
+            }
             Err(err) => failure(&format!("accepting candidate {candidate_id}"), err),
         };
     }
@@ -311,7 +355,20 @@ pub async fn patch_candidate(
     )
     .await
     {
-        Ok(result) => outcome(result, |c| with_etag(StatusCode::OK, &c, c.updated_at)),
+        Ok(result) => {
+            if let Outcome::Done(c) = &result {
+                let named = EventSummary::named(&c.name);
+                notify::record(
+                    &app,
+                    trip_id,
+                    &caller_id,
+                    TripEventKind::CandidateChanged,
+                    named,
+                )
+                .await;
+            }
+            outcome(result, |c| with_etag(StatusCode::OK, &c, c.updated_at))
+        }
         Err(err) => failure(&format!("editing candidate {candidate_id}"), err),
     }
 }
@@ -347,11 +404,12 @@ pub async fn withdraw_candidate(
     }
 
     // Your own suggestion is yours to take back; anybody else's is an admin's.
-    let own = match trips::get_candidate(&app.pg_pool, trip_id, candidate_id, &caller_id).await {
-        Ok(Some(c)) => c.proposed_by == caller_id,
-        Ok(None) => return ApiError::not_found("Not found").into_response(),
-        Err(err) => return failure(&format!("loading candidate {candidate_id}"), err),
-    };
+    let (own, name) =
+        match trips::get_candidate(&app.pg_pool, trip_id, candidate_id, &caller_id).await {
+            Ok(Some(c)) => (c.proposed_by == caller_id, c.name),
+            Ok(None) => return ApiError::not_found("Not found").into_response(),
+            Err(err) => return failure(&format!("loading candidate {candidate_id}"), err),
+        };
     if !own {
         if let Some(res) = require_admin(&app, trip_id, &caller_id).await {
             return res;
@@ -359,7 +417,18 @@ pub async fn withdraw_candidate(
     }
 
     match trips::delete_candidate(&app.pg_pool, trip_id, candidate_id).await {
-        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(true) => {
+            let named = EventSummary::named(name);
+            notify::record(
+                &app,
+                trip_id,
+                &caller_id,
+                TripEventKind::CandidateWithdrawn,
+                named,
+            )
+            .await;
+            StatusCode::NO_CONTENT.into_response()
+        }
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => failure(&format!("withdrawing candidate {candidate_id}"), err),
     }

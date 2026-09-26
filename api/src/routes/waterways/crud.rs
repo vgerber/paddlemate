@@ -19,7 +19,7 @@ use crate::{
         water_section::SectionWithFeatures,
         waterway::{
             PaginatedResponse, Waterway, WaterwayFilters, WaterwayId, WaterwayListItem,
-            WaterwayType, WaterwayWithSections,
+            WaterwayType, WaterwayWithSections, page_bounds,
         },
     },
     query::{
@@ -33,8 +33,7 @@ pub async fn list_waterways(
     State(app): State<AppState>,
     Query(filters): Query<WaterwayFilters>,
 ) -> impl IntoApiResponse {
-    let page = filters.page.unwrap_or(1).max(1);
-    let per_page = filters.per_page.unwrap_or(20).clamp(1, 100);
+    let (page, per_page) = page_bounds(filters.page, filters.per_page, 20);
 
     match query_waterways::search(&app.pg_pool, &filters, page, per_page).await {
         Ok((items, total)) => Json(PaginatedResponse {

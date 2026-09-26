@@ -1,5 +1,6 @@
 mod favorites;
 mod follows;
+mod notifications;
 mod tokens;
 
 use aide::axum::{
@@ -65,6 +66,50 @@ pub fn users_routes(state: AppState) -> ApiRouter {
         .api_route(
             "/me/tokens/{token_id}",
             delete_with(tokens::revoke_token, tokens::revoke_token_docs),
+        )
+        // Notifications never describe another user, so they say "me".
+        .api_route(
+            "/me/events",
+            get_with(
+                notifications::stream_events,
+                notifications::stream_events_docs,
+            ),
+        )
+        .api_route(
+            "/me/notifications",
+            get_with(
+                notifications::list_notifications,
+                notifications::list_notifications_docs,
+            ),
+        )
+        .api_route(
+            "/me/notification-state",
+            get_with(
+                notifications::get_notification_state,
+                notifications::get_notification_state_docs,
+            )
+            .put_with(
+                notifications::put_notification_state,
+                notifications::put_notification_state_docs,
+            ),
+        )
+        .api_route(
+            "/me/push-subscriptions",
+            get_with(
+                notifications::list_push_subscriptions,
+                notifications::list_push_subscriptions_docs,
+            )
+            .post_with(
+                notifications::create_push_subscription,
+                notifications::create_push_subscription_docs,
+            ),
+        )
+        .api_route(
+            "/me/push-subscriptions/{subscription_id}",
+            delete_with(
+                notifications::delete_push_subscription,
+                notifications::delete_push_subscription_docs,
+            ),
         )
         .with_state(state)
 }

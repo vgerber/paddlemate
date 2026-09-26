@@ -119,6 +119,18 @@ pub struct WaterwayFilters {
     pub region_id: Option<i64>,
 }
 
+/// The last page any listing serves. Far past what a person pages to, and
+/// low enough that `(page - 1) * per_page` cannot overflow.
+pub const MAX_PAGE: i64 = 10_000;
+
+/// A listing's `page` and `per_page`, defaulted and bounded.
+pub fn page_bounds(page: Option<i64>, per_page: Option<i64>, default_per_page: i64) -> (i64, i64) {
+    (
+        page.unwrap_or(1).clamp(1, MAX_PAGE),
+        per_page.unwrap_or(default_per_page).clamp(1, 100),
+    )
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct PaginatedResponse<T: JsonSchema> {
     pub items: Vec<T>,

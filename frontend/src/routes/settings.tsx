@@ -3,6 +3,7 @@ import BuildOutlinedIcon from "@mui/icons-material/BuildOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import DoneIcon from "@mui/icons-material/Done";
+import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -21,6 +22,8 @@ import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import Fact from "@/components/Fact";
 import LanguagePicker from "@/components/LanguagePicker";
+import NotificationList from "@/components/notifications/NotificationList";
+import PushSettings from "@/components/notifications/PushSettings";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
@@ -43,6 +46,11 @@ import { fonts, theme } from "@/lib/theme";
 const GROUPS = [
   { id: "account", label: "Account", hint: "Who you are signed in as" },
   { id: "language", label: "Display language", hint: "Which names are shown" },
+  {
+    id: "notifications",
+    label: "Notifications",
+    hint: "Push when trip plans change",
+  },
   { id: "tokens", label: "Access tokens", hint: "For scripts and the API" },
 ] as const;
 
@@ -101,15 +109,24 @@ function SettingsPage() {
             label="Profile"
           />
           <Tab
+            icon={<NotificationsNoneOutlinedIcon fontSize="small" />}
+            iconPosition="start"
+            label="Inbox"
+          />
+          <Tab
             icon={<BuildOutlinedIcon fontSize="small" />}
             iconPosition="start"
             label="Tools"
           />
         </Tabs>
-        <Box sx={{ px: 2, py: 3 }}>
-          {tab === 0 && <ProfilePanel />}
-          {tab === 1 && <ToolsList />}
-        </Box>
+        {/* The inbox is a list, edge to edge like every other list. */}
+        {tab === 1 && <NotificationList />}
+        {tab !== 1 && (
+          <Box sx={{ px: 2, py: 3 }}>
+            {tab === 0 && <ProfilePanel />}
+            {tab === 2 && <ToolsList />}
+          </Box>
+        )}
       </Box>
     );
   }
@@ -193,6 +210,7 @@ function SettingsPage() {
 function GroupContent({ group }: { group: GroupId }) {
   if (group === "language") return <LanguageSection />;
   if (group === "tokens") return <TokensPanel />;
+  if (group === "notifications") return <PushSettings />;
   return <AccountSection />;
 }
 
@@ -203,6 +221,8 @@ function ProfilePanel() {
       <AccountSection />
       <Divider />
       <LanguageSection />
+      <Divider />
+      <PushSettings />
       <Divider />
       <TokensPanel />
       <Divider />

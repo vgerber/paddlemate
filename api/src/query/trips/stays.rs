@@ -196,14 +196,16 @@ pub async fn delete_stay(
     pool: &PgPool,
     trip_id: TripId,
     stay_id: TripStayId,
-) -> Result<Outcome<()>, sqlx::Error> {
+) -> Result<Outcome<String>, sqlx::Error> {
     let mut tx = pool.begin().await?;
     if !lock_trip(&mut tx, trip_id).await? {
         return Ok(Outcome::NotFound);
     }
 
     let row = sqlx::query(
-        "SELECT COUNT(*) AS n, bool_or(id = $2) AS present FROM trip_stays WHERE trip_id = $1",
+        "SELECT COUNT(*) AS n, bool_or(id = $2) AS present, \
+                max(name) FILTER (WHERE id = $2) AS name \
+           FROM trip_stays WHERE trip_id = $1",
     )
     .bind(trip_id)
     .bind(stay_id)
@@ -216,13 +218,31 @@ pub async fn delete_stay(
         return Ok(Outcome::Refused("A trip must keep at least one stay"));
     }
 
+    let name: String = row
+        .try_get::<Option<String>, _>("name")?
+        .unwrap_or_default();
+
     sqlx::query("DELETE FROM trip_stays WHERE trip_id = $1 AND id = $2")
         .bind(trip_id)
         .bind(stay_id)
         .execute(&mut *tx)
         .await?;
     tx.commit().await?;
-    Ok(Outcome::Done(()))
+    // The name, for the announcement: the row is gone after this.
+    Ok(Outcome::Done(name))
+}
+
+/// A base's name, to say which watch list changed.
+pub async fn stay_name(
+    pool: &PgPool,
+    trip_id: TripId,
+    stay_id: TripStayId,
+) -> Result<Option<String>, sqlx::Error> {
+    sqlx::query_scalar("SELECT name FROM trip_stays WHERE trip_id = $1 AND id = $2")
+        .bind(trip_id)
+        .bind(stay_id)
+        .fetch_optional(pool)
+        .await
 }
 
 /// Replaces the watch list, but edits it in place rather than rebuilding it:

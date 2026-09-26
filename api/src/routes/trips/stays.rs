@@ -15,13 +15,15 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
+        notification::{EventSummary, TripEventKind},
         path_params::{TripPath, TripStayPath},
         trip::{
             CreateTripStayRequest, PatchTripStayRequest, ReplaceTripSectionsRequest, TripSection,
             TripStay,
         },
     },
-    query::trips,
+    notify,
+    query::trips::{self, Outcome},
     state::AppState,
 };
 
@@ -152,7 +154,17 @@ pub async fn create_stay(
     }
 
     match trips::create_stay(&app.pg_pool, trip_id, &caller_id, &body).await {
-        Ok(stay) => with_etag(StatusCode::CREATED, &stay, stay.updated_at),
+        Ok(stay) => {
+            notify::record(
+                &app,
+                trip_id,
+                &caller_id,
+                TripEventKind::StayAdded,
+                EventSummary::named(&stay.name),
+            )
+            .await;
+            with_etag(StatusCode::CREATED, &stay, stay.updated_at)
+        }
         Err(err) => failure(&format!("creating trip {trip_id} stay"), err),
     }
 }
@@ -199,9 +211,21 @@ pub async fn patch_stay(
     };
 
     match trips::patch_stay(&app.pg_pool, trip_id, stay_id, expected, &body).await {
-        Ok(result) => outcome(result, |stay| {
-            with_etag(StatusCode::OK, &stay, stay.updated_at)
-        }),
+        Ok(result) => {
+            if let Outcome::Done(stay) = &result {
+                notify::record(
+                    &app,
+                    trip_id,
+                    &caller_id,
+                    TripEventKind::StayChanged,
+                    EventSummary::named(&stay.name),
+                )
+                .await;
+            }
+            outcome(result, |stay| {
+                with_etag(StatusCode::OK, &stay, stay.updated_at)
+            })
+        }
         Err(err) => failure(&format!("patching trip {trip_id} stay {stay_id}"), err),
     }
 }
@@ -235,7 +259,19 @@ pub async fn delete_stay(
 
     // The last-stay rule lives with the delete, under the trip lock.
     match trips::delete_stay(&app.pg_pool, trip_id, stay_id).await {
-        Ok(result) => outcome(result, |()| StatusCode::NO_CONTENT.into_response()),
+        Ok(result) => {
+            if let Outcome::Done(name) = &result {
+                notify::record(
+                    &app,
+                    trip_id,
+                    &caller_id,
+                    TripEventKind::StayRemoved,
+                    EventSummary::named(name),
+                )
+                .await;
+            }
+            outcome(result, |_| StatusCode::NO_CONTENT.into_response())
+        }
         Err(err) => failure(&format!("deleting trip {trip_id} stay {stay_id}"), err),
     }
 }
@@ -276,7 +312,24 @@ pub async fn replace_sections(
     }
 
     match trips::replace_stay_sections(&app.pg_pool, trip_id, stay_id, &body.sections).await {
-        Ok(Some(sections)) => Json(sections).into_response(),
+        Ok(Some(sections)) => {
+            let name = trips::stay_name(&app.pg_pool, trip_id, stay_id)
+                .await
+                .ok()
+                .flatten();
+            notify::record(
+                &app,
+                trip_id,
+                &caller_id,
+                TripEventKind::WatchListChanged,
+                EventSummary {
+                    name,
+                    ..Default::default()
+                },
+            )
+            .await;
+            Json(sections).into_response()
+        }
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => failure(
             &format!("replacing trip {trip_id} stay {stay_id} sections"),

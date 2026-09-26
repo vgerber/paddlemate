@@ -12,10 +12,12 @@ use crate::{
     layers::auth::AuthToken,
     models::{
         descent::{CreateDescentRequest, Descent, ListDescentsQuery, PatchDescentRequest},
+        notification::{EventSummary, TripEventKind},
         path_params::DescentPath,
         visibility::Visibility,
-        waterway::PaginatedResponse,
+        waterway::{PaginatedResponse, page_bounds},
     },
+    notify,
     query::{descents, trips},
     state::AppState,
 };
@@ -88,6 +90,22 @@ fn constraint_message(name: &str) -> &'static str {
 
 /// Linking a log to a trip is a claim on that trip, so the caller must be in
 /// it. Unlinking (`trip_id: null`) needs no check beyond owning the descent.
+/// Tells the trip a log was credited to it, named as people call the run:
+/// its own name, else the river, else the section.
+async fn announce_log(app: &AppState, d: &Descent, user_id: &str) {
+    let Some(trip_id) = d.trip_id else { return };
+    let name = d.name.clone().or_else(|| {
+        d.sections
+            .first()
+            .and_then(|s| s.waterway_name.clone().or_else(|| s.section_name.clone()))
+    });
+    let summary = EventSummary {
+        name,
+        ..Default::default()
+    };
+    notify::record(app, trip_id, user_id, TripEventKind::LogLinked, summary).await;
+}
+
 async fn trip_link_error(app: &AppState, trip_id: Option<i64>, user_id: &str) -> Option<Response> {
     let trip_id = trip_id?;
     match trips::member_role(&app.pg_pool, trip_id, user_id).await {
@@ -112,8 +130,7 @@ pub async fn list_descents(
         return ApiError::unauthorized("Authentication required").into_response();
     }
 
-    let page = q.page.unwrap_or(1).max(1);
-    let per_page = q.per_page.unwrap_or(25).clamp(1, 100);
+    let (page, per_page) = page_bounds(q.page, q.per_page, 25);
 
     let filters = descents::ListFilters {
         scope: q.scope.as_deref(),
@@ -192,7 +209,10 @@ pub async fn create_descent(
     }
 
     match descents::create_descent(&app.pg_pool, token.user_id(), &body).await {
-        Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
+        Ok(d) => {
+            announce_log(&app, &d, token.user_id()).await;
+            (StatusCode::CREATED, Json(d)).into_response()
+        }
         Err(ref err) if db_constraint_response(err).is_some() => {
             db_constraint_response(err).unwrap()
         }
@@ -297,8 +317,27 @@ pub async fn patch_descent(
         return res;
     }
 
+    // Where it was linked before, so re-sending the same trip on an ordinary
+    // edit is not announced as a new log every time.
+    let linked_before = match body.trip_id {
+        Some(Some(_)) => {
+            descents::get_descent_for_viewer(&app.pg_pool, descent_id, Some(token.user_id()))
+                .await
+                .ok()
+                .flatten()
+                .and_then(|d| d.trip_id)
+        }
+        _ => None,
+    };
+
     match descents::patch_descent(&app.pg_pool, descent_id, token.user_id(), &body).await {
-        Ok(Some(d)) => Json(d).into_response(),
+        Ok(Some(d)) => {
+            let linked_now = matches!(body.trip_id, Some(Some(_)));
+            if linked_now && d.trip_id != linked_before {
+                announce_log(&app, &d, token.user_id()).await;
+            }
+            Json(d).into_response()
+        }
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(ref err) if db_constraint_response(err).is_some() => {
             db_constraint_response(err).unwrap()

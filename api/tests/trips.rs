@@ -16,9 +16,9 @@ use axum::{
 };
 use moka::future::Cache;
 use paddlemate_api::{
-    layers::auth::api_token_auth_optional,
+    layers::auth::{api_token_auth, api_token_auth_optional},
     query::tokens::hash_token,
-    routes::{descents::descents_routes, trips::trips_routes},
+    routes::{descents::descents_routes, trips::trips_routes, users::users_routes},
     state::{AppState, KeycloakState},
 };
 use serde_json::{Value, json};
@@ -26,11 +26,8 @@ use sqlx::PgPool;
 use tokio::sync::{Notify, RwLock};
 use tower::ServiceExt;
 
-/// The trips and descents routers wired the way `main` wires them, minus
-/// Keycloak: requests authenticate with API keys, which the same optional
-/// layer accepts.
-fn app(pool: PgPool) -> Router {
-    let state = AppState {
+fn state(pool: PgPool) -> AppState {
+    AppState {
         pg_pool: pool,
         keycloak_config: KeycloakState {
             url: "http://keycloak.invalid".into(),
@@ -42,8 +39,28 @@ fn app(pool: PgPool) -> Router {
         username_cache: Cache::builder().max_capacity(100).build(),
         gauge_wake: Arc::new(Notify::new()),
         region_wake: Arc::new(Notify::new()),
-    };
+        live_events: tokio::sync::broadcast::channel(16).0,
+        push: None,
+        live_streams: Default::default(),
+    }
+}
+
+/// The trips and descents routers wired the way `main` wires them, minus
+/// Keycloak: requests authenticate with API keys, which the same optional
+/// layer accepts.
+fn app(pool: PgPool) -> Router {
+    router(state(pool))
+}
+
+fn router(state: AppState) -> Router {
     let mut api = OpenApi::default();
+    // `/users` needs a caller, the rest takes one if given - as in `main`.
+    let protected = ApiRouter::new()
+        .nest_api_service("/users", users_routes(state.clone()))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            api_token_auth,
+        ));
     ApiRouter::new()
         .nest_api_service("/trips", trips_routes(state.clone()))
         .nest_api_service("/descents", descents_routes(state.clone()))
@@ -51,6 +68,7 @@ fn app(pool: PgPool) -> Router {
             state,
             api_token_auth_optional,
         ))
+        .merge(protected)
         .finish_api(&mut api)
 }
 
@@ -1001,4 +1019,442 @@ async fn a_withdrawn_or_expired_link_is_dead(pool: PgPool) {
         0,
         "neither is listed as working"
     );
+}
+
+/// The kinds under `who`'s bell, newest first.
+async fn bell(app: &Router, who: &str) -> Vec<String> {
+    let r = get(app, "/users/me/notifications", who).await;
+    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+    r.body["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|e| e["kind"].as_str().unwrap().to_string())
+        .collect()
+}
+
+async fn unread(app: &Router, who: &str) -> i64 {
+    let r = get(app, "/users/me/notification-state", who).await;
+    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+    r.body["unread_count"].as_i64().unwrap()
+}
+
+async fn add_stay(app: &Router, trip_id: i64, who: &str, name: &str) {
+    let r = send(
+        app,
+        Method::POST,
+        &format!("/trips/{trip_id}/stays"),
+        who,
+        json!({ "kind": "camp", "name": name }),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn a_change_reaches_everyone_else_on_the_trip(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    user(&pool, "bob").await;
+    let (trip_id, _) = trip(&app, &pool, "ann", &["bob"]).await;
+    add_stay(&app, trip_id, "ann", "Base two").await;
+
+    assert_eq!(bell(&app, "bob").await, ["stay_added", "member_joined"]);
+    assert!(
+        bell(&app, "ann").await.is_empty(),
+        "nobody hears about their own change"
+    );
+    assert_eq!(unread(&app, "bob").await, 2);
+
+    let r = send(
+        &app,
+        Method::PUT,
+        "/users/me/notification-state",
+        "bob",
+        json!({ "read_until": chrono::Utc::now() }),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+    assert_eq!(r.body["unread_count"], 0);
+    assert_eq!(bell(&app, "bob").await.len(), 2, "read changes stay listed");
+
+    // Moving the mark back does not bring them back.
+    let r = send(
+        &app,
+        Method::PUT,
+        "/users/me/notification-state",
+        "bob",
+        json!({ "read_until": "2000-01-01T00:00:00Z" }),
+    )
+    .await;
+    assert_eq!(r.body["unread_count"], 0);
+}
+
+/// A week of voting would bury everything else: votes only refresh live.
+#[sqlx::test(migrations = "./migrations")]
+async fn votes_stay_out_of_the_bell(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    user(&pool, "bob").await;
+    let (trip_id, _) = trip(&app, &pool, "ann", &["bob"]).await;
+    let r = send(
+        &app,
+        Method::POST,
+        &format!("/trips/{trip_id}/candidates"),
+        "ann",
+        json!({ "kind": "camp", "name": "Riverside" }),
+    )
+    .await;
+    let candidate = r.body["id"].as_i64().unwrap();
+    let r = send(
+        &app,
+        Method::POST,
+        &format!("/trips/{trip_id}/candidates/{candidate}/vote"),
+        "bob",
+        json!({ "vote": 1 }),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+
+    let recorded: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM trip_events WHERE kind = 'candidate_voted'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(recorded, 1, "the vote is recorded for live refresh");
+    assert!(bell(&app, "ann").await.is_empty());
+}
+
+/// Joining does not hand you the trip's history, and leaving takes it away.
+#[sqlx::test(migrations = "./migrations")]
+async fn the_bell_covers_your_trips_since_you_joined(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    user(&pool, "eve").await;
+    let (trip_id, _) = trip(&app, &pool, "ann", &[]).await;
+    add_stay(&app, trip_id, "ann", "Before").await;
+    let (_, token) = invite(&app, trip_id, "ann").await;
+    let r = send(
+        &app,
+        Method::POST,
+        &format!("/trips/{trip_id}/members"),
+        "eve",
+        json!({ "invite": token }),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);
+    add_stay(&app, trip_id, "ann", "After").await;
+
+    let r = get(&app, "/users/me/notifications", "eve").await;
+    let names: Vec<_> = r.body["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|e| e["summary"]["name"].clone())
+        .collect();
+    assert_eq!(names, [json!("After")]);
+    assert_eq!(
+        bell(&app, "ann").await,
+        ["member_joined"],
+        "ann hears eve join"
+    );
+
+    let r = call(
+        &app,
+        Method::DELETE,
+        &format!("/trips/{trip_id}/members/user-eve"),
+        Some("eve"),
+        None,
+        None,
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NO_CONTENT);
+    assert!(bell(&app, "eve").await.is_empty());
+    assert_eq!(unread(&app, "eve").await, 0);
+}
+
+/// Saving a log again must not announce it again.
+#[sqlx::test(migrations = "./migrations")]
+async fn a_log_is_announced_once(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    user(&pool, "bob").await;
+    let (trip_id, _) = trip(&app, &pool, "ann", &["bob"]).await;
+    let log = trip_log(&pool, "user-bob", trip_id, "private").await;
+    sqlx::query("UPDATE descents SET trip_id = NULL WHERE id = $1")
+        .bind(log)
+        .execute(&pool)
+        .await
+        .unwrap();
+
+    let uri = format!("/descents/{log}");
+    for body in [
+        json!({ "trip_id": trip_id }),
+        json!({ "trip_id": trip_id, "name": "Renamed" }),
+        json!({ "name": "Again" }),
+    ] {
+        let r = send(&app, Method::PATCH, &uri, "bob", body).await;
+        assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+    }
+    let announced = bell(&app, "ann").await;
+    assert_eq!(
+        announced.iter().filter(|k| *k == "log_linked").count(),
+        1,
+        "{announced:?}"
+    );
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn push_is_refused_when_the_server_does_not_send_it(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    let r = send(
+        &app,
+        Method::POST,
+        "/users/me/push-subscriptions",
+        "ann",
+        json!({ "endpoint": "https://push.example/abc", "keys": { "p256dh": "k", "auth": "a" } }),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::CONFLICT, "{}", r.body);
+    let r = get(&app, "/users/me/notification-state", "ann").await;
+    assert!(r.body.get("push_public_key").is_none());
+}
+
+/// Waits until the live-events listener of this test's database is
+/// LISTENing, so a change made next is heard.
+async fn listening(pool: &PgPool) {
+    for _ in 0..100 {
+        let n: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pg_stat_activity \
+             WHERE datname = current_database() AND query LIKE 'LISTEN%'",
+        )
+        .fetch_one(pool)
+        .await
+        .unwrap();
+        if n > 0 {
+            return;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
+    panic!("the live-events listener never started");
+}
+
+/// Opens `who`'s live stream.
+async fn live(
+    app: &Router,
+    who: &str,
+) -> impl futures_util::Stream<Item = Result<axum::body::Bytes, axum::Error>> {
+    let req = Request::builder()
+        .uri("/users/me/events")
+        .header("X-Api-Key", format!("pm_{who}"))
+        .body(Body::empty())
+        .unwrap();
+    let res = app.clone().oneshot(req).await.unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    res.into_body().into_data_stream()
+}
+
+/// The stream's text until it mentions `until`, or everything said within
+/// a second.
+async fn read_until(
+    stream: &mut (impl futures_util::Stream<Item = Result<axum::body::Bytes, axum::Error>> + Unpin),
+    until: &str,
+) -> String {
+    use futures_util::StreamExt;
+    let mut text = String::new();
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(1);
+    while !text.contains(until) {
+        match tokio::time::timeout_at(deadline, stream.next()).await {
+            Ok(Some(Ok(chunk))) => text.push_str(&String::from_utf8_lossy(&chunk)),
+            _ => break,
+        }
+    }
+    text
+}
+
+/// Someone not on the trip hears nothing about it, even with a stream open.
+#[sqlx::test(migrations = "./migrations")]
+async fn the_live_stream_tells_members_only(pool: PgPool) {
+    // Only this test listens: a listener holds a connection for good, and
+    // the tests share one small pool of them.
+    let state = state(pool.clone());
+    tokio::spawn(paddlemate_api::notify::run_listener(
+        pool.clone(),
+        state.live_events.clone(),
+    ));
+    let app = router(state);
+    user(&pool, "ann").await;
+    user(&pool, "bob").await;
+    user(&pool, "eve").await;
+    let (trip_id, _) = trip(&app, &pool, "ann", &["bob"]).await;
+    listening(&pool).await;
+
+    let mut bob = Box::pin(live(&app, "bob").await);
+    let mut eve = Box::pin(live(&app, "eve").await);
+    assert!(
+        read_until(&mut bob, "event: connected")
+            .await
+            .contains("connected")
+    );
+    assert!(
+        read_until(&mut eve, "event: connected")
+            .await
+            .contains("connected")
+    );
+
+    add_stay(&app, trip_id, "ann", "Base two").await;
+
+    let heard = read_until(&mut bob, "stay_added").await;
+    assert!(heard.contains("event: trip_event"), "{heard}");
+    assert!(heard.contains(&format!("\"trip_id\":{trip_id}")), "{heard}");
+    let heard = read_until(&mut eve, "trip_event").await;
+    assert!(!heard.contains("trip_event"), "{heard}");
+
+    // Membership is re-read as it changes: eve added hears from then on,
+    // bob removed stops.
+    let r = send(
+        &app,
+        Method::POST,
+        &format!("/trips/{trip_id}/members"),
+        "ann",
+        json!({ "user_id": "user-eve" }),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);
+    let r = call(
+        &app,
+        Method::DELETE,
+        &format!("/trips/{trip_id}/members/user-bob"),
+        Some("ann"),
+        None,
+        None,
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NO_CONTENT);
+    add_stay(&app, trip_id, "ann", "Base three").await;
+
+    let heard = read_until(&mut eve, "stay_added").await;
+    assert!(
+        heard.contains("stay_added"),
+        "eve hears once added: {heard}"
+    );
+    let heard = read_until(&mut bob, "stay_added").await;
+    assert!(
+        !heard.contains("stay_added"),
+        "bob stops once removed: {heard}"
+    );
+}
+
+/// A key for tests only, so a test server can say it sends push.
+const TEST_VAPID_KEY: &str = "AAWRSCTDt-fpNqlPTL2amTYcdxF1XZ_qMiBU9jcfdHI";
+
+fn app_with_push(pool: PgPool) -> Router {
+    let mut state = state(pool);
+    state.push = paddlemate_api::notify::push::PushService::new(
+        TEST_VAPID_KEY,
+        "mailto:test@example.com".into(),
+    )
+    .map(Arc::new);
+    assert!(state.push.is_some());
+    router(state)
+}
+
+/// A browser subscription's JSON, with keys of the right shape.
+fn subscription(endpoint: &str) -> Value {
+    use base64::Engine;
+    let b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD;
+    json!({
+        "endpoint": endpoint,
+        "keys": { "p256dh": b64.encode([4u8; 65]), "auth": b64.encode([7u8; 16]) }
+    })
+}
+
+/// The server POSTs to whatever endpoint it stores, so only push services'
+/// URLs are taken, and one account holds a bounded number of them.
+#[sqlx::test(migrations = "./migrations")]
+async fn push_goes_only_to_push_services_and_only_so_many(pool: PgPool) {
+    let app = app_with_push(pool.clone());
+    user(&pool, "ann").await;
+    let subscribe = |body: Value| {
+        send(
+            &app,
+            Method::POST,
+            "/users/me/push-subscriptions",
+            "ann",
+            body,
+        )
+    };
+
+    for endpoint in [
+        "https://192.168.1.1/cgi-bin/reboot",
+        "https://localhost/x",
+        "http://fcm.googleapis.com/fcm/send/x",
+        "https://fcm.googleapis.com.attacker.example/x",
+    ] {
+        let r = subscribe(subscription(endpoint)).await;
+        assert_eq!(r.status, StatusCode::BAD_REQUEST, "{endpoint}: {}", r.body);
+    }
+    let mut bad_keys = subscription("https://fcm.googleapis.com/fcm/send/x");
+    bad_keys["keys"]["p256dh"] = json!("k");
+    assert_eq!(subscribe(bad_keys).await.status, StatusCode::BAD_REQUEST);
+
+    for i in 0..12 {
+        let r = subscribe(subscription(&format!(
+            "https://fcm.googleapis.com/fcm/send/{i}"
+        )))
+        .await;
+        assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);
+    }
+    let r = get(&app, "/users/me/push-subscriptions", "ann").await;
+    let endpoints: Vec<_> = r
+        .body
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| s["endpoint"].clone())
+        .collect();
+    assert_eq!(endpoints.len(), 10, "the oldest make way");
+    assert!(!endpoints.contains(&json!("https://fcm.googleapis.com/fcm/send/0")));
+    assert!(endpoints.contains(&json!("https://fcm.googleapis.com/fcm/send/11")));
+}
+
+/// Each open stream is a connection the server holds; one account holds a
+/// bounded number, and closing one frees its place.
+#[sqlx::test(migrations = "./migrations")]
+async fn live_streams_are_capped_per_user(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    user(&pool, "bob").await;
+    let mut open = vec![];
+    for _ in 0..paddlemate_api::notify::MAX_STREAMS_PER_USER {
+        open.push(live(&app, "ann").await);
+    }
+    // The status only: an accepted stream's body never ends.
+    let over = Request::builder()
+        .uri("/users/me/events")
+        .header("X-Api-Key", "pm_ann")
+        .body(Body::empty())
+        .unwrap();
+    let over = app.clone().oneshot(over).await.unwrap();
+    assert_eq!(over.status(), StatusCode::TOO_MANY_REQUESTS);
+    let _bob = live(&app, "bob").await;
+
+    drop(open.pop());
+    let _again = live(&app, "ann").await;
+}
+
+/// A page past any real list must not overflow into a server error.
+#[sqlx::test(migrations = "./migrations")]
+async fn absurd_pages_are_empty_not_errors(pool: PgPool) {
+    let app = app(pool.clone());
+    user(&pool, "ann").await;
+    for uri in [
+        "/users/me/notifications?page=9223372036854775807",
+        "/descents?page=9223372036854775807&per_page=100",
+        "/trips?page=9223372036854775807&per_page=100",
+    ] {
+        let r = get(&app, uri, "ann").await;
+        assert_eq!(r.status, StatusCode::OK, "{uri}: {}", r.body);
+    }
 }
