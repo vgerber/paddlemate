@@ -614,6 +614,13 @@ pub async fn delete_feature_water_range(
     Ok(result.rows_affected() > 0)
 }
 
+/// The least a reading may lag and still count as the present level. Most
+/// gauges come through an aggregator that republishes the authority's
+/// measurements with a delay: the newest is typically 20-60 minutes old when we
+/// fetch it, whatever our own polling interval. In production 94% of ranged
+/// series are within 3 hours and the next step up is a gauge silent for a day.
+const MIN_FRESHNESS_SECS: i32 = 3 * 60 * 60;
+
 /// Fetch water status for a section, using the latest available reading.
 pub async fn water_status_for_section(
     pool: &PgPool,
@@ -681,12 +688,11 @@ pub async fn water_status_for_section_at(
             FROM gauge_readings
             WHERE series_id = gs.id
               AND ($2::timestamptz IS NULL OR measured_at <= $2)
-              -- Stale = the gauge missed its last tick: no reading within
-              -- twice its own fetch interval (2x absorbs publish/fetch
-              -- jitter). Silent gauges must not keep reporting their last
-              -- value as the present level.
+              -- Stale = nothing within twice the gauge's fetch interval, or
+              -- the publishing delay ($3), whichever is longer. Silent gauges
+              -- must not keep reporting their last value as the present level.
               AND measured_at > COALESCE($2, NOW())
-                  - make_interval(secs => g.fetch_interval_secs * 2)
+                  - make_interval(secs => GREATEST(g.fetch_interval_secs * 2, $3))
             ORDER BY measured_at DESC
             LIMIT 1
         ) lr ON TRUE
@@ -696,6 +702,7 @@ pub async fn water_status_for_section_at(
     )
     .bind(section_id)
     .bind(at)
+    .bind(MIN_FRESHNESS_SECS)
     .fetch_all(pool)
     .await?;
 
