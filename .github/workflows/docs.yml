@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "api/**"
+      - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:
@@ -57,13 +58,15 @@ jobs:
           key: ${{ runner.os }}-cargo-docs-${{ hashFiles('api/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-docs-
 
+      # The query macros check against the committed .sqlx cache: the service
+      # database is still empty here, so checking against it fails every one.
       - name: Build API
         working-directory: api
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/paddlemate
+          SQLX_OFFLINE: "true"
         run: cargo build --release
 
-      - name: Run migrations & start API
+      - name: Start API
         working-directory: api
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/paddlemate
@@ -74,23 +77,24 @@ jobs:
           KEYCLOAK_CLIENT_SECRET: unused
           KEYCLOAK_TOKEN_URL: http://localhost:8080/realms/paddlemate/protocol/openid-connect/token
           PORT: "3000"
-          BASE_URL: ""
+        # The API migrates the empty database on boot. BASE_URL keeps its
+        # /api/v1 default: axum refuses to nest the API at the root, and the
+        # published paths then match the ones clients call.
         run: |
-          cargo sqlx migrate run
-          ./target/release/paddlemate_api &
+          ./target/release/paddlemate_api > api.log 2>&1 &
           echo "API_PID=$!" >> "$GITHUB_ENV"
 
       - name: Fetch openapi.json
         run: |
-          for i in $(seq 1 15); do
-            if curl -sf http://localhost:3000/docs/openapi.json -o openapi.json; then
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:3000/api/v1/docs/openapi.json -o openapi.json; then
               echo "Fetched openapi.json"
               break
             fi
             echo "Waiting for API... ($i)"
             sleep 2
           done
-          test -f openapi.json
+          test -f openapi.json || { cat api/api.log; exit 1; }
 
       - name: Stop API
         if: always()
