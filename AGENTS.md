@@ -147,6 +147,88 @@ background task and ask:
 Each guard gets a test, and the test is checked by removing the guard and
 watching it fail.
 
+## Agent workflow
+
+Large work runs as agents in worktrees (`.claude/worktrees/`), planned and
+merged by one lead. These rules keep agents small, off each other's files, and
+checked before anything reaches the user. Agents are started when the user
+asks for them or when an agreed plan calls for them.
+
+### Roles
+
+| Role | Does | Never |
+|---|---|---|
+| **Lead** (the main session) | Writes the plan, splits the work, owns the shared files, merges, runs the gate once per merge | Commits or deploys unless the user asks |
+| **Implementer** (own worktree) | One focused change | Edits shared files or creates migrations unless the plan gives it that |
+| **Explorer** | Read-only searching, reports what it found | Edits anything |
+| **Reviewer** | After a wave: runs the stack (see the `dev-services` skill), drives the flows, goes through the table in Security and hardening, reads the combined diff | Fixes what it finds; it reports |
+| **Design experts** | Draw pages in the scratchpad | Touch the repo |
+
+### Rules
+
+- **Plan first.** Large work starts with a plan in `doc/plans/` that fixes the
+  interfaces: route shapes, the query-layer file pairs, the shared `lib/`
+  modules. It is not reference documentation: delete it when the work has
+  landed. A plan carries an **Acceptance** section of measurable statements
+  (status codes, rows, a flow driven at 320px wide), next to the gates.
+- **Models.** Every agent runs on Sonnet. The one exception is the review
+  after a wave's agents have finished, which runs on Opus. The lead merges only
+  after it reports.
+- **Size.** One agent, one change, aimed at 30 minutes and about 200k tokens.
+  Larger work is split into sequential agents (find the cause, fix, harden),
+  not bundled into one.
+- **Hand back early.** At about 200k tokens of context or 45 minutes, whichever
+  comes first, an agent commits what is green, writes a handoff note and
+  stops. The note goes in `.claude/handoffs/<date>-<topic>.md`: done,
+  remaining steps, the current hypothesis with its evidence, dead ends. That
+  folder is git-ignored through `.claude/*`, and unlike `/tmp` it survives a
+  restart. The lead continues with a fresh agent from the note; an agent past
+  150k is never resumed.
+- **File overlap decides parallelism.** Agents run in parallel only on
+  separate files. A part that changes shared logic holds those files, and a
+  second part touching them waits for the first to merge.
+  - Shared files belong to the lead, once per wave: the README feature list,
+    the doc index, the shared modules in `frontend/src/lib/`. Agents add only
+    their own rows and documents.
+  - Two agents never edit the same document in one wave.
+  - Generated files are regenerated after the merge, never hand-merged: the
+    SQLx cache (`cargo sqlx prepare`) and the API client types
+    (`npm run generate:api`).
+- **Migrations.** One agent per wave creates migrations, with
+  `cargo sqlx migrate add` as in Migrations above, so prefixes cannot collide.
+  Agents share one local database; only the agent that owns the schema change
+  runs migrations against it.
+- **Gates.** While iterating, run the single test. Run the full gate once at
+  the end: `cargo check` and `cargo test` (plus `cargo sqlx prepare` after any
+  SQL change) in `api/`; `npx tsc -b --force`, `npx biome check src` and
+  `bun test` in `frontend/`. The lead tests the gate's exit code and merges
+  only on 0, running the gate once per merge, not the agent's list again. Never
+  pipe a gate through `grep` in a script that uses `set -e`: that hides a
+  failing gate.
+- **Acceptance, not just rules.** The reviewer checks the plan's Acceptance
+  statements by running the app, since component rendering is not tested. Each
+  guard from the security pass has a test that fails when the guard is removed.
+  Several guard removals may be checked in one batch, and each temporary change
+  must fail loudly if it does not apply (formatters reflow code), otherwise the
+  check proves nothing.
+- **Fixes in shared logic** name every other user of the changed value and test
+  each. A fix that adds an exception to a rule is flagged in the report; a
+  third exception to one rule means the rule is redesigned, not patched.
+- **Cuts are visible.** Anything cut from a plan is listed as a known
+  limitation, with a test that shows the symptom.
+- **Quiet tools.** Read files by line range, filter test and build output to
+  failures and totals, never print whole files or full logs.
+- **Short prompts and reports.** A prompt is the plan section, the rules that
+  apply and the files to start from. A report stays under 15 lines: commits,
+  gate results with numbers, deviations, decisions needed.
+- **Process safety.** Stop a process by its exact PID, never by a name pattern
+  (`pkill -f` matches the shell that runs it). Never touch the user's running
+  stack without asking. Scratch work goes in the scratchpad or a worktree.
+  Shell scripts use `set -e` and delete nothing outside the scratchpad or a
+  worktree they created. Agents never run DDL or DML against production.
+- **Commits** follow the rules below: only when the user asks, one line, no
+  attribution.
+
 ## Commits
 
 - **Ask before committing.** Finish the work, report what changed, and wait
