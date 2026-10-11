@@ -58,7 +58,7 @@ test.describe("closed card", () => {
     await expect(card(page).locator("[data-level]")).toHaveCount(0);
   });
 
-  test("the credit is one small grey line with teal links", async ({
+  test("the credit is one small grey line, links the same grey", async ({
     page,
   }) => {
     await openSection(page);
@@ -67,7 +67,7 @@ test.describe("closed card", () => {
     expect(await computed(credit, "font-size")).toBe("12px");
     expect(await computed(credit, "color")).toBe("rgb(88, 102, 109)");
     const link = credit.getByRole("link").first();
-    expect(await computed(link, "color")).toBe("rgb(14, 116, 144)");
+    expect(await computed(link, "color")).toBe("rgb(88, 102, 109)");
     const h = (await credit.boundingBox())?.height ?? 0;
     expect(h, "one line").toBeLessThanOrEqual(20);
   });
