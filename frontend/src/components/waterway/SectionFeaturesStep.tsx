@@ -1,21 +1,24 @@
-import CheckIcon from "@mui/icons-material/Check";
+import AddIcon from "@mui/icons-material/Add";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
 import { useMemo, useRef, useState } from "react";
 import { PUT_IN_COLOR, TAKE_OUT_COLOR } from "@/components/map/LocationPin";
-import NumberBadge from "@/components/NumberBadge";
-import { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Feature } from "@/lib/api";
 import { distanceAlongLineM } from "@/lib/geo";
 import type { Coordinate } from "@/lib/riverSnap";
+import { theme } from "@/lib/theme";
 import FeatureRow from "./FeatureRow";
 import FormSection from "./FormSection";
 import type { GeometryPicking } from "./geometryPicking";
+import SectionPointCard from "./SectionPointCard";
 import SuggestFeatureForm, {
   type SectionFeatureDraft,
 } from "./SuggestFeatureForm";
-import { computeExtent } from "./section-details/utils";
+import { computeExtent, fmtKm } from "./section-details/utils";
+
+const { tokens } = theme;
 
 interface SectionFeaturesStepProps {
   /** The section line the features belong to. */
@@ -55,6 +58,14 @@ export default function SectionFeaturesStep({
 }: SectionFeaturesStepProps) {
   const submitRef = useRef<(() => void) | null>(null);
   const [canAdd, setCanAdd] = useState(false);
+  const [adding, setAdding] = useState(false);
+
+  function closeForm() {
+    geometry.onStopPick();
+    geometry.onClearVertices();
+    setCanAdd(false);
+    setAdding(false);
+  }
 
   const totalM = useMemo(
     () =>
@@ -121,36 +132,22 @@ export default function SectionFeaturesStep({
       >
         {/* Fixed entries: the section's own endpoints (derived from the line,
             not submitted as separate features) */}
-        {finalCoords &&
-          (
-            [
-              { num: 1, label: "put in", color: PUT_IN_COLOR, km: 0 },
-              {
-                num: 2,
-                label: "take out",
-                color: TAKE_OUT_COLOR,
-                km: totalM ?? 0,
-              },
-            ] as const
-          ).map((endpoint) => (
-            <Box key={endpoint.label} sx={{ opacity: 0.8 }}>
-              <FeatureRow
-                featureType={endpoint.label}
-                locationType="Point"
-                extent={{
-                  distM: endpoint.km,
-                  startM: endpoint.km,
-                  endM: endpoint.km,
-                  isZone: false,
-                }}
-                leading={
-                  <NumberBadge num={endpoint.num} color={endpoint.color} />
-                }
-                // Spacer where removable rows show the fixed remove control
-                trailing={<Box sx={{ width: 34, flexShrink: 0 }} />}
-              />
-            </Box>
-          ))}
+        {finalCoords && (
+          <>
+            <SectionPointCard
+              num={1}
+              color={PUT_IN_COLOR}
+              name="Put-in"
+              detail={fmtKm(0)}
+            />
+            <SectionPointCard
+              num={2}
+              color={TAKE_OUT_COLOR}
+              name="Take-out"
+              detail={fmtKm(totalM ?? 0)}
+            />
+          </>
+        )}
 
         {draftFeatures.map((feature, index) => (
           <FeatureRow
@@ -170,27 +167,44 @@ export default function SectionFeaturesStep({
       <FormSection
         label="Add a feature"
         hint="Optional - a rapid, weir or hazard worth knowing about."
-        action={
-          <RoundActionButton
-            onClick={() => submitRef.current?.()}
-            disabled={!canAdd}
-            ariaLabel="Add feature"
-          >
-            <CheckIcon fontSize="small" />
-          </RoundActionButton>
-        }
       >
-        <SuggestFeatureForm
-          sectionLine={
-            finalCoords?.map(([lng, lat]) => ({ lng, lat })) ?? undefined
-          }
-          nearPoint={nearPoint}
-          geometry={geometry}
-          onDraft={onAddDraft}
-          defaultLangCode={defaultLangCode}
-          submitRef={submitRef}
-          onCanSubmitChange={setCanAdd}
-        />
+        {adding ? (
+          <>
+            <SuggestFeatureForm
+              sectionLine={
+                finalCoords?.map(([lng, lat]) => ({ lng, lat })) ?? undefined
+              }
+              nearPoint={nearPoint}
+              geometry={geometry}
+              onDraft={onAddDraft}
+              onSubmitted={closeForm}
+              defaultLangCode={defaultLangCode}
+              submitRef={submitRef}
+              onCanSubmitChange={setCanAdd}
+            />
+            <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+              <Button onClick={closeForm} sx={{ minHeight: tokens.touch.min }}>
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => submitRef.current?.()}
+                disabled={!canAdd}
+                sx={{ minHeight: tokens.touch.min }}
+              >
+                Add feature
+              </Button>
+            </Box>
+          </>
+        ) : (
+          <Button
+            startIcon={<AddIcon />}
+            onClick={() => setAdding(true)}
+            sx={{ minHeight: tokens.touch.min, alignSelf: "flex-start" }}
+          >
+            Add feature
+          </Button>
+        )}
       </FormSection>
     </>
   );
