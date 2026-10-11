@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import LoadingBox from "@/components/states/LoadingBox";
+import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
 import type { GaugeReading, WaterRangeWithStatus } from "@/lib/api";
 import { formatTime, humanize } from "@/lib/format";
 import { useGaugeReadings } from "@/lib/hooks/useGauges";
@@ -183,12 +183,13 @@ export default function SeriesChart({
 }: SeriesChartProps) {
   const { series, gauge } = range;
 
-  const { data: readings, isLoading } = useGaugeReadings(
-    gauge.id,
-    series.id,
-    from,
-    1000,
-  );
+  const {
+    data: readings,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useGaugeReadings(gauge.id, series.id, from, 1000);
 
   const chartData = useMemo(() => {
     if (!readings) return [];
@@ -322,7 +323,24 @@ export default function SeriesChart({
   const [winFrom, winTo] = domain ?? extent;
   const byDay = winTo - winFrom >= 2 * 24 * 3600 * 1000;
 
-  if (isLoading) return <LoadingBox size={20} py={6} />;
+  if (isError) return <ChartError error={error} onRetry={() => refetch()} />;
+  if (isLoading) return <ChartSkeleton />;
+  if (chartData.length === 0) {
+    return (
+      <Box
+        sx={{
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Typography variant="caption" color="textSecondary">
+          No readings in this time range.
+        </Typography>
+      </Box>
+    );
+  }
 
   const tickStyle = { fontSize: 11, fill: tokens.outline };
 
@@ -344,23 +362,6 @@ export default function SeriesChart({
         outline: "none",
       }}
     >
-      {chartData.length === 0 && (
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            pointerEvents: "none",
-            zIndex: 1,
-          }}
-        >
-          <Typography variant="caption" color="textSecondary">
-            No readings in this time range.
-          </Typography>
-        </Box>
-      )}
       {domain && (
         <IconButton
           aria-label="Reset zoom"

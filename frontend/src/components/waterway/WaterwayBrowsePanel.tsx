@@ -6,6 +6,7 @@ import PlayArrowOutlinedIcon from "@mui/icons-material/PlayArrowOutlined";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
@@ -27,6 +28,7 @@ import type {
   SectionWithFeatures,
   WaterRangeWithStatus,
 } from "@/lib/api";
+import { apiErrorMessage } from "@/lib/api/client";
 import { useSectionDescentCounts } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
@@ -119,7 +121,13 @@ export default function WaterwayBrowsePanel({
     sectionId: number | undefined;
     filter: EditsFilter;
   }>({ sectionId: undefined, filter: null });
-  const { data: waterway, isLoading } = useWaterway(waterwayId);
+  const {
+    data: waterway,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useWaterway(waterwayId);
   const { data: descentCounts } = useSectionDescentCounts(waterwayId);
   const { isAuthenticated } = useSession();
   const sections: SectionWithFeatures[] = waterway?.sections ?? [];
@@ -263,6 +271,23 @@ export default function WaterwayBrowsePanel({
           { value: "notes", label: "Notes" },
         ],
       };
+
+  if (isError && !waterway) {
+    return (
+      <>
+        <PanelHeader
+          title={selectedSectionId != null ? "Section" : "River"}
+          onBack={selectedSectionId != null ? onSectionDeselect : onBack}
+        />
+        <Box sx={{ px: 2, py: 3, textAlign: "center" }}>
+          <Typography variant="body2" color="textSecondary">
+            {apiErrorMessage(error, "The river could not be loaded.")}
+          </Typography>
+          <Button onClick={() => refetch()}>Retry</Button>
+        </Box>
+      </>
+    );
+  }
 
   return (
     <>
