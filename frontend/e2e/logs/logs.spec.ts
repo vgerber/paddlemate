@@ -114,7 +114,7 @@ test.describe("logs list", () => {
     page,
   }) => {
     await openLogs(page);
-    await expect(page.getByText(/^\d+ logs?$/).first()).toBeVisible();
+    await expect(page.getByText(/^\d+ results?$/).first()).toBeVisible();
     const month = page.getByTestId("log-month").first();
     expect(await computed(month, "text-transform")).toBe("none");
   });
@@ -240,12 +240,12 @@ test.describe("log descent", () => {
     await expectTouchTargets(targets(page));
   });
 
-  test("the chrome is the bottom bar with a round teal action", async ({
+  test("the chrome is the bottom bar with a rounded teal action", async ({
     page,
   }) => {
     await startNewLog(page);
     await expect(page.getByText("Step 1 of 3 · When")).toBeVisible();
-    expect(await computed(next(page), "border-top-left-radius")).toBe("50%");
+    expect(await computed(next(page), "border-top-left-radius")).toBe("16px");
     expect(await computed(next(page), "background-color")).toBe(TEAL);
     await next(page).click();
     await expect(page.getByText("Step 2 of 3 · Sections")).toBeVisible();

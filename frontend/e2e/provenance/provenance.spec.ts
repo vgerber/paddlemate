@@ -133,7 +133,7 @@ test.describe("history mount", () => {
   test("the section menu opens the real history", async ({ page }) => {
     await openHistory(page);
     const steps = page.getByTestId("history-step");
-    await expect(steps.first()).toContainText("Added");
+    await expect(steps.first()).toContainText("Imported from Rivermap");
     await expect(page.getByTestId("history-when").first()).toBeVisible();
   });
 

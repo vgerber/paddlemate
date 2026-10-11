@@ -130,17 +130,10 @@ test.describe("empty state", () => {
   test("is an icon in a soft teal tile and one line", async ({
     page,
   }, info) => {
-    await page.goto("/settings");
-    // The fixture user has no notifications: the phone has an Inbox tab, the
-    // desktop a bell.
-    if (info.project.name === "desktop") {
-      await page
-        .getByRole("banner")
-        .getByRole("button", { name: "Notifications" })
-        .click();
-    } else {
-      await page.getByRole("tab", { name: "Inbox" }).click();
-    }
+    // The reseeded fixture has an inbox, so the empty detail pane beside a
+    // desktop list is the one empty state left to look at.
+    test.skip(info.project.name !== "desktop", "empty panes are desktop");
+    await page.goto("/proposals");
     const empty = page.getByTestId("empty-state");
     await expect(empty).toBeVisible();
     const tile = empty.getByTestId("empty-state-tile");

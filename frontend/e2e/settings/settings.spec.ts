@@ -94,7 +94,7 @@ test.describe("settings layout", () => {
     await expect(input).toBeVisible();
     expect(await computed(input, "font-size")).toBe("16px");
     const field = input.locator(
-      "xpath=ancestor::div[contains(@class,'MuiOutlinedInput-root')]",
+      "xpath=ancestor::div[contains(@class,'MuiInputBase-root')]",
     );
     expect((await field.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   });
@@ -198,7 +198,9 @@ test.describe("signed out", () => {
   }) => {
     await page.goto("/settings");
     await expect(page.getByText("Sign in to access settings")).toBeVisible();
-    const signIn = page.getByRole("button", { name: "Sign in", exact: true });
+    const signIn = page
+      .getByRole("main")
+      .getByRole("button", { name: "Sign in", exact: true });
     await expect(signIn).toBeVisible();
     expect(await computed(signIn, "text-transform")).toBe("none");
     expect(await computed(signIn, "background-color")).toBe(

@@ -302,7 +302,7 @@ test.describe("notes", () => {
     expect(await computed(note, "background-color")).toBe("rgb(255, 255, 255)");
     expect(
       await computed(note.getByTestId("note-dot"), "background-color"),
-    ).toBe("rgb(255, 152, 0)");
+    ).toBe("rgb(143, 91, 0)");
     const meta = note.getByText(/ago|just now|\d+ ?[a-z]/i).last();
     expect(await computed(meta, "font-size")).toBe("12px");
     expect(await computed(meta, "color")).toBe("rgb(124, 138, 144)");

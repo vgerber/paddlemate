@@ -139,7 +139,7 @@ test.describe("name mode", () => {
     const field = nameField(page);
     expect(await computed(field, "font-size")).toBe("16px");
     const box = await field
-      .locator("xpath=ancestor::div[contains(@class,'MuiOutlinedInput-root')]")
+      .locator("xpath=ancestor::div[contains(@class,'MuiInputBase-root')]")
       .boundingBox();
     expect(box?.height).toBe(52);
     await expect(seen(page.getByRole("button", { name: "Clear" }))).toHaveCount(
