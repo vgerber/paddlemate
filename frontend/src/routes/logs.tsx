@@ -131,8 +131,6 @@ function LogsPage() {
     return (
       <Box
         sx={{
-          maxWidth: 720,
-          mx: "auto",
           minHeight: PANEL_HEIGHT,
           display: "flex",
           flexDirection: "column",

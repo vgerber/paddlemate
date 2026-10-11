@@ -214,7 +214,16 @@ test.describe("name mode", () => {
     await expect(seen(page.getByTestId("recent-river"))).toHaveCount(0);
   });
 
-  test("@small chips are 32px to look at, 44px to hit and teal when set", async ({
+  test("the name field is a magnifier and a placeholder, not a pinned label", async ({
+    page,
+  }) => {
+    await openSearch(page);
+    const field = nameField(page);
+    await expect(field).toHaveAttribute("placeholder", "Name");
+    await expect(seen(page.getByTestId("SearchIcon")).first()).toBeVisible();
+  });
+
+  test("@small chips are 44px white pills and teal when set", async ({
     page,
   }) => {
     await openSearch(page, "&q=Test");
@@ -224,7 +233,8 @@ test.describe("name mode", () => {
     await expect(country).toBeVisible();
     for (const c of [grade, country]) {
       const box = await c.boundingBox();
-      expect(box?.height).toBe(32);
+      expect(box?.height).toBe(44);
+      expect(await computed(c, "background-color")).toBe("rgb(255, 255, 255)");
       const hit = await c.evaluate((el) => {
         const after = getComputedStyle(el, "::after");
         return (

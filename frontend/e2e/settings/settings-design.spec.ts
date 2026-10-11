@@ -160,7 +160,7 @@ test.describe("inbox", () => {
     expect(await computed(caption, "color")).toBe(SECONDARY);
   });
 
-  test("rows: 14px text, quiet meta, a rule only between rows", async ({
+  test("rows: 14px text, quiet meta, each row a white card", async ({
     page,
   }) => {
     test.skip(isDesktop(page), "the inbox is a tab on a phone");
@@ -178,8 +178,11 @@ test.describe("inbox", () => {
     const meta = rows.first().locator("p").nth(1);
     expect(await computed(meta, "font-size")).toBe("13px");
     expect(await computed(meta, "color")).toBe(SECONDARY);
-    expect(await computed(rows.first(), "border-bottom-width")).toBe("1px");
-    expect(await computed(rows.nth(n - 1), "border-bottom-width")).toBe("0px");
+    expect(await computed(rows.first(), "background-color")).toBe(
+      "rgb(255, 255, 255)",
+    );
+    expect(await computed(rows.first(), "border-top-left-radius")).toBe("14px");
+    expect(await computed(rows.first(), "border-bottom-width")).toBe("0px");
     const weights = await rows.evaluateAll((els) =>
       els.map(
         (el) => getComputedStyle(el.querySelector("p") as Element).fontWeight,

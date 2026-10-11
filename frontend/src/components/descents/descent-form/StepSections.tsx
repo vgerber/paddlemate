@@ -1,25 +1,19 @@
 import Box from "@mui/material/Box";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect } from "react";
 import LocationPin, {
   PUT_IN_COLOR,
   TAKE_OUT_COLOR,
 } from "@/components/map/LocationPin";
 import SectionAdder from "@/components/search/SectionAdder";
-import type { SectionWithFeatures } from "@/lib/api";
-import { toPseudoSection } from "@/lib/descents";
-import { useWaterway } from "@/lib/hooks/useWaterways";
-import {
-  coordsFromStrings,
-  makeDraft,
-  type SectionDraft,
-  type SectionLocation,
-  type StepProps,
-} from "./model";
+import type { SectionLocation, StepProps } from "./model";
 import SectionDraftList from "./SectionDraftList";
 import SectionPickerMap from "./SectionPickerMap";
+import type { SectionPicking } from "./useSectionPicking";
 
 interface Props extends StepProps {
-  initialWaterwayId?: number | null;
+  picking: SectionPicking;
+  /** The map is drawn beside the steps instead of inside this one. */
+  mapBeside?: boolean;
 }
 
 /** Step 2: waterway search, section picking on the map, section order,
@@ -27,18 +21,18 @@ interface Props extends StepProps {
 export default function StepSections({
   form,
   onChange,
-  initialWaterwayId = null,
+  picking,
+  mapBeside,
 }: Props) {
-  const [selectedWaterwayId, setSelectedWaterwayId] = useState<number | null>(
-    initialWaterwayId,
-  );
-  const { data: selectedWaterway } = useWaterway(selectedWaterwayId);
-
-  const mapSections = useMemo<SectionWithFeatures[]>(
-    () => selectedWaterway?.sections ?? [],
-    [selectedWaterway],
-  );
-  const selectedIds = new Set(form.sections.map((s) => s.section_id));
+  const {
+    selectedWaterwayId,
+    setSelectedWaterwayId,
+    mapSections,
+    selectedIds,
+    addSection,
+    putIn,
+    takeOut,
+  } = picking;
 
   // Auto-derive put-in/take-out from section geometry whenever sections change
   const sectionIds = form.sections.map((s) => s.section_id).join(",");
@@ -61,50 +55,6 @@ export default function StepSections({
       take_out_lat: takeOutCoords[1].toFixed(6),
     });
   }, [sectionIds]);
-
-  function addSection(section: SectionWithFeatures) {
-    if (selectedIds.has(section.id)) return;
-    onChange({
-      sections: [
-        ...form.sections,
-        makeDraft(section, form.sections.length + 1),
-      ],
-    });
-  }
-
-  function toggleSection(section: SectionWithFeatures) {
-    if (selectedIds.has(section.id)) {
-      onChange({
-        sections: form.sections.filter((s) => s.section_id !== section.id),
-      });
-    } else {
-      addSection(section);
-    }
-  }
-
-  // Edited descents carry section geometry in the form itself; fall back to
-  // that when no waterway is loaded so the map still shows the route.
-  const formSectionsForMap = useMemo(
-    () =>
-      form.sections
-        .filter(
-          (s): s is SectionDraft & { location: SectionLocation } =>
-            !!s.location,
-        )
-        .map((s) =>
-          toPseudoSection({
-            id: s.section_id,
-            name: s.display_name,
-            location: s.location as SectionWithFeatures["location"],
-          }),
-        ),
-    [form.sections],
-  );
-  const sectionsForMap =
-    mapSections.length > 0 ? mapSections : formSectionsForMap;
-
-  const putIn = coordsFromStrings(form.put_in_lat, form.put_in_lon);
-  const takeOut = coordsFromStrings(form.take_out_lat, form.take_out_lon);
 
   return (
     <Box
@@ -132,25 +82,7 @@ export default function StepSections({
             gap: 2,
           }}
         >
-          <SectionPickerMap
-            sections={sectionsForMap}
-            selectedIds={selectedIds}
-            putIn={putIn}
-            takeOut={takeOut}
-            onSectionToggle={toggleSection}
-            onPickPutIn={(lat, lon) =>
-              onChange({
-                put_in_lat: lat.toFixed(6),
-                put_in_lon: lon.toFixed(6),
-              })
-            }
-            onPickTakeOut={(lat, lon) =>
-              onChange({
-                take_out_lat: lat.toFixed(6),
-                take_out_lon: lon.toFixed(6),
-              })
-            }
-          />
+          {!mapBeside && <SectionPickerMap picking={picking} />}
           <SectionDraftList
             sections={form.sections}
             onChange={(sections) => onChange({ sections })}

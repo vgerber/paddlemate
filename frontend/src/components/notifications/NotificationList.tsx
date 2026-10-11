@@ -21,7 +21,11 @@ import { alphas, fonts, theme } from "@/lib/theme";
  * list is opened again. */
 export default function NotificationList({
   onOpenTrip,
+  cards,
 }: {
+  /** Rows as cards on the ground, like the other phone lists; the popover
+   * keeps them flat on its own surface. */
+  cards?: boolean;
   /** Called after navigating to a trip, e.g. to close a popover. */
   onOpenTrip?: () => void;
 }) {
@@ -91,9 +95,14 @@ export default function NotificationList({
   };
 
   return (
-    <Box>
+    <Box sx={cards ? { display: "grid", gap: 1, p: 2 } : undefined}>
       {data.items.map((e) => (
-        <NotificationRow key={e.id} event={e} onClick={() => open(e)} />
+        <NotificationRow
+          key={e.id}
+          event={e}
+          card={cards}
+          onClick={() => open(e)}
+        />
       ))}
     </Box>
   );
@@ -101,9 +110,11 @@ export default function NotificationList({
 
 function NotificationRow({
   event,
+  card,
   onClick,
 }: {
   event: TripEvent;
+  card?: boolean;
   onClick: () => void;
 }) {
   return (
@@ -113,10 +124,19 @@ function NotificationRow({
         alignItems: "flex-start",
         gap: 1.25,
         py: 1.25,
-        "&:not(:last-of-type)": {
-          borderBottom: "1px solid",
-          borderColor: `${theme.tokens.outlineVariant}${alphas.hairline}`,
-        },
+        ...(card
+          ? {
+              bgcolor: theme.tokens.surface,
+              borderRadius: `${theme.tokens.radii.md}px`,
+              boxShadow: theme.tokens.elevation.e1,
+              px: 1.75,
+            }
+          : {
+              "&:not(:last-of-type)": {
+                borderBottom: "1px solid",
+                borderColor: `${theme.tokens.outlineVariant}${alphas.hairline}`,
+              },
+            }),
       }}
     >
       <Box
