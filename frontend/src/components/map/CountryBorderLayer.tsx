@@ -3,6 +3,12 @@ import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
+const labelPaint = {
+  "text-color": tokens.onSurfaceVariant,
+  "text-halo-color": tokens.mapLabelHalo,
+  "text-halo-width": 2,
+};
+
 /** Country borders, drawn over every other region so you always know which
  * country you are looking at: one solid line on a white casing. */
 export default function CountryBorderLayer({
@@ -39,11 +45,21 @@ export default function CountryBorderLayer({
           "text-font": ["Noto Sans Regular"],
           "text-offset": [0, -0.9],
         }}
-        paint={{
-          "text-color": tokens.onSurfaceVariant,
-          "text-halo-color": tokens.mapLabelHalo,
-          "text-halo-width": 2,
+        paint={labelPaint}
+      />
+      <Layer
+        id="country-border-neighbour-label"
+        type="symbol"
+        filter={["!=", ["get", "neighbour"], ""]}
+        layout={{
+          "symbol-placement": "line",
+          "symbol-spacing": 500,
+          "text-field": ["get", "neighbour"],
+          "text-size": 11,
+          "text-font": ["Noto Sans Regular"],
+          "text-offset": [0, 0.9],
         }}
+        paint={labelPaint}
       />
     </Source>
   );

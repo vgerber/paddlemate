@@ -1,8 +1,10 @@
 import type { components } from "@/lib/api/schema";
+import { proposalNoteValue } from "./proposalNote";
 import type { SectionNamingValue } from "./SectionNamingForm";
 import type { SectionFeatureDraft } from "./SuggestFeatureForm";
 
-type CreateSectionBody = components["schemas"]["CreateSectionBody"];
+type CreateSectionBody =
+  components["schemas"]["Proposable_for_CreateSectionBody"];
 
 type FeatureBody = NonNullable<CreateSectionBody["features"]>[number];
 
@@ -69,6 +71,7 @@ export function buildSectionPayload(
       .filter(Boolean),
     country: regionInfo.country.trim() || null,
     description: naming.description.trim() || null,
+    proposal_note: proposalNoteValue(naming.note),
     location: { type: "LineString", coordinates },
     // The primary entry is stored as a tagged localization too - the
     // plain columns are just the untagged fallback

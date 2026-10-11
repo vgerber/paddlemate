@@ -17,7 +17,7 @@ import type { RegionOutline } from "@/lib/api";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useRegionSearch } from "@/lib/hooks/useRegions";
 import { alphas, BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
-import { LEVELS, regionSubtitle } from "./regionGeometry";
+import { LEVELS, partOfChips, regionSubtitle } from "./regionGeometry";
 
 const { tokens } = theme;
 
@@ -155,7 +155,7 @@ function RegionSearchField({
             >
               <ListItemText
                 primary={r.name}
-                secondary={regionSubtitle(r.country, r.kind)}
+                secondary={regionSubtitle(r.country, r.kind, r.parents)}
               />
             </ListItemButton>
           ))}
@@ -194,6 +194,13 @@ export default function RegionSheet({
   const verb = useMapVerb();
   const [state, setState] = useState<"peek" | "open">("peek");
   const [rangesOpen, setRangesOpen] = useState(false);
+  // Only the search carries real parents; the picked outline is matched up
+  // by id, and the bounding-box guess in `parents` stands in until then.
+  const { data: found } = useRegionSearch(picked?.name ?? "");
+  const partOfRegions = partOfChips(
+    found?.find((r) => r.id === picked?.id)?.parents,
+    parents,
+  );
 
   return (
     <>
@@ -262,13 +269,13 @@ export default function RegionSheet({
             </ChipRow>
           )}
 
-          {picked && parents.length > 0 && (
+          {picked && partOfRegions.length > 0 && (
             <>
               <Typography variant="caption" color="textSecondary">
                 Part of
               </Typography>
               <ChipRow>
-                {parents.map((parent) => (
+                {partOfRegions.map((parent) => (
                   <RegionChip
                     key={parent.id}
                     label={parent.name}

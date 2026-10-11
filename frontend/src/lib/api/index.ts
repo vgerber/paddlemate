@@ -32,8 +32,10 @@ export type PaginatedResponse =
 /** A waterway in search results, carrying which text matched the query. */
 export type WaterwayListItem = components["schemas"]["WaterwayListItem"];
 export type MatchSource = components["schemas"]["MatchSource"];
-export type CreateFeatureInput = components["schemas"]["CreateFeatureBody"];
-export type UpdateFeatureInput = components["schemas"]["UpdateFeatureBody"];
+export type CreateFeatureInput =
+  components["schemas"]["Proposable_for_CreateFeatureBody"];
+export type UpdateFeatureInput =
+  components["schemas"]["Proposable_for_UpdateFeatureBody"];
 export type SectionWaterStatus = components["schemas"]["SectionWaterStatus"];
 export type WaterRangeWithStatus =
   components["schemas"]["WaterRangeWithStatus"];
@@ -93,6 +95,7 @@ export type PushSubscriptionEntry = components["schemas"]["PushSubscription"];
 export type CreatePushSubscriptionRequest =
   components["schemas"]["CreatePushSubscriptionRequest"];
 export type Region = components["schemas"]["Region"];
+export type RegionRef = components["schemas"]["RegionRef"];
 export type RegionKind = components["schemas"]["RegionKind"];
 export type RegionOutline = components["schemas"]["RegionOutline"];
 export type CountryBorder = components["schemas"]["CountryBorder"];
@@ -126,7 +129,9 @@ export const waterwaysApi = {
     });
     return assertData(data);
   },
-  create: async (body: components["schemas"]["CreateWaterwayBody"]) => {
+  create: async (
+    body: components["schemas"]["Proposable_for_CreateWaterwayBody"],
+  ) => {
     const { data } = await client.POST("/api/v1/waterways", { body });
     // 201 (admin, Waterway) or 202 (proposal); client throws ApiError on 409.
     return assertData(data);
@@ -160,7 +165,7 @@ export const sectionsApi = {
   },
   create: async (
     waterwayId: number,
-    body: components["schemas"]["CreateSectionBody"],
+    body: components["schemas"]["Proposable_for_CreateSectionBody"],
   ) => {
     const { data } = await client.POST(
       "/api/v1/waterways/{waterway_id}/sections",
