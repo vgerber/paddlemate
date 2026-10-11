@@ -337,6 +337,11 @@ test.describe("regions", () => {
 
   test("@small the choice card fits a 320px screen", async ({ page }) => {
     await openRegionMap(page);
+    // The peek sheet covers the foot of a 320px screen; look further south so
+    // the shared ground is above it.
+    await page.evaluate(() =>
+      window.__paddlemateMap?.jumpTo({ center: [10.9, 46.5], zoom: 7 }),
+    );
     await clickAt(page, SHARED_POINT);
     const card = page.getByTestId("region-choices");
     await expect(card).toBeVisible();
