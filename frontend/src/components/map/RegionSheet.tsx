@@ -1,13 +1,21 @@
+import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
+import Paper from "@mui/material/Paper";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { type ReactNode, useState } from "react";
 import BottomSheet from "@/components/BottomSheet";
 import ChipRow from "@/components/ChipRow";
+import { useMapVerb } from "@/components/waterway/useMapVerb";
 import type { RegionOutline } from "@/lib/api";
+import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
+import { useRegionSearch } from "@/lib/hooks/useRegions";
 import { alphas, BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
 import { LEVELS, regionSubtitle } from "./regionGeometry";
 
@@ -33,6 +41,8 @@ interface RegionSheetProps {
   onPick: (regionId: number) => void;
   /** The way back to the results, at the right edge of the peek. */
   action: ReactNode;
+  /** Drops the picked region and goes back to browsing. */
+  onClear?: () => void;
 }
 
 function RegionChip({
@@ -52,16 +62,121 @@ function RegionChip({
       aria-pressed={set}
       color={set ? "primary" : "default"}
       label={label}
-      sx={
-        set
-          ? {
-              bgcolor: `${tokens.primary}${alphas.wash}`,
-              borderColor: tokens.primary,
-              borderWidth: 1.5,
-            }
-          : undefined
-      }
+      sx={{
+        // 32px to look at, a 44px band to hit.
+        position: "relative",
+        "&::after": {
+          content: '""',
+          position: "absolute",
+          inset: `${-(tokens.touch.min - 32) / 2}px 0`,
+        },
+        ...(set && {
+          bgcolor: `${tokens.primary}${alphas.wash}`,
+          borderColor: tokens.primary,
+          borderWidth: 1.5,
+        }),
+      }}
     />
+  );
+}
+
+/** The floating field on the map: find a region by name instead of by
+ * looking for it. */
+function RegionSearchField({
+  level,
+  onPick,
+}: {
+  level: string | null;
+  onPick: (regionId: number) => void;
+}) {
+  const [text, setText] = useState("");
+  const term = useDebouncedValue(text, 300);
+  const { data } = useRegionSearch(term);
+  const found = (data ?? []).filter((r) => r.id != null).slice(0, 6);
+  const tier = LEVELS.find((l) => l.kind === level);
+  return (
+    <Box
+      sx={{
+        position: "fixed",
+        top: 12,
+        left: 12,
+        right: 12,
+        zIndex: 1100,
+        display: "grid",
+        gap: 1,
+        justifyItems: "start",
+      }}
+    >
+      <TextField
+        fullWidth
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Search regions..."
+        slotProps={{
+          htmlInput: { "aria-label": "Search regions", enterKeyHint: "search" },
+          input: {
+            endAdornment: text ? (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="Clear search"
+                  onClick={() => setText("")}
+                  sx={{ width: tokens.touch.min, height: tokens.touch.min }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ) : undefined,
+          },
+        }}
+        sx={{
+          bgcolor: tokens.surface,
+          borderRadius: `${tokens.radii.md}px`,
+          boxShadow: tokens.elevation.e2,
+          "& .MuiInputBase-root": {
+            minHeight: 48,
+            borderRadius: `${tokens.radii.md}px`,
+          },
+          "& .MuiInputBase-input": { fontSize: 16, py: 0, height: 48 },
+        }}
+      />
+      {found.length > 0 && (
+        <Paper
+          sx={{
+            width: "100%",
+            borderRadius: `${tokens.radii.md}px`,
+            boxShadow: tokens.elevation.e2,
+            overflow: "hidden",
+          }}
+        >
+          {found.map((r) => (
+            <ListItemButton
+              key={r.id}
+              onClick={() => {
+                if (r.id != null) onPick(r.id);
+                setText("");
+              }}
+              sx={{ minHeight: tokens.touch.min }}
+            >
+              <ListItemText
+                primary={r.name}
+                secondary={regionSubtitle(r.country, r.kind)}
+              />
+            </ListItemButton>
+          ))}
+        </Paper>
+      )}
+      {tier && (
+        <Chip
+          size="small"
+          label={tier.label}
+          sx={{
+            bgcolor: tokens.surface,
+            boxShadow: tokens.elevation.e1,
+            fontWeight: 600,
+          }}
+        />
+      )}
+    </Box>
   );
 }
 
@@ -78,98 +193,125 @@ export default function RegionSheet({
   hiddenRanges,
   onPick,
   action,
+  onClear,
 }: RegionSheetProps) {
+  const verb = useMapVerb();
   const [state, setState] = useState<"peek" | "open">("peek");
   const [rangesOpen, setRangesOpen] = useState(false);
 
   return (
-    <BottomSheet
-      state={state}
-      onStateChange={(next) => setState(next === "open" ? "open" : "peek")}
-      label="Regions"
-      peekHeight={PEEK_HEIGHT}
-    >
-      <Box sx={{ px: 2, pb: BOTTOM_NAV_SPACE }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            {picked ? (
-              <Typography variant="subtitle2" noWrap>
-                {[picked.country, picked.name].filter(Boolean).join(" · ")}
-              </Typography>
-            ) : (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                {/* A viewport the server has not seen takes ten seconds to
+    <>
+      {!picked && <RegionSearchField level={level} onPick={onPick} />}
+      <BottomSheet
+        state={state}
+        onStateChange={(next) => setState(next === "open" ? "open" : "peek")}
+        label="Regions"
+        peekHeight={PEEK_HEIGHT}
+      >
+        <Box sx={{ px: 2, pb: BOTTOM_NAV_SPACE }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              {picked ? (
+                <>
+                  <Typography
+                    noWrap
+                    sx={{
+                      color: tokens.primary,
+                      fontSize: 17,
+                      fontWeight: 700,
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {picked.name}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary" noWrap>
+                    {regionSubtitle(picked.country, picked.kind)}
+                  </Typography>
+                </>
+              ) : (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {/* A viewport the server has not seen takes ten seconds to
                     fetch from OSM; without this the map just sits empty. */}
-                {loading && <CircularProgress size={12} color="inherit" />}
-                <Typography variant="body2" color="textSecondary" noWrap>
-                  {loading
-                    ? "Finding the regions here…"
-                    : "Tap a region on the map to search in it"}
-                </Typography>
-              </Box>
+                  {loading && <CircularProgress size={12} color="inherit" />}
+                  <Typography variant="body2" color="textSecondary" noWrap>
+                    {loading
+                      ? "Finding the regions here…"
+                      : `${verb} a region on the map, or search one by name.`}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+            {picked && onClear && (
+              <IconButton
+                aria-label="Clear region"
+                onClick={onClear}
+                sx={{ width: tokens.touch.min, height: tokens.touch.min }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
             )}
+            {action}
           </Box>
-          {action}
-        </Box>
 
-        {!picked && (
-          <ChipRow>
-            {LEVELS.map(({ kind, label }) => (
-              <RegionChip
-                key={kind}
-                label={label}
-                set={level === kind}
-                onClick={() => onLevelChange(level === kind ? null : kind)}
-              />
-            ))}
-          </ChipRow>
-        )}
-
-        {picked && parents.length > 0 && (
-          <>
-            <Typography variant="caption" color="textSecondary">
-              Part of
-            </Typography>
+          {!picked && (
             <ChipRow>
-              {parents.map((parent) => (
+              {LEVELS.map(({ kind, label }) => (
                 <RegionChip
-                  key={parent.id}
-                  label={parent.name}
-                  onClick={() => onPick(parent.id)}
+                  key={kind}
+                  label={label}
+                  set={level === kind}
+                  onClick={() => onLevelChange(level === kind ? null : kind)}
                 />
               ))}
             </ChipRow>
-          </>
-        )}
+          )}
 
-        {hiddenRanges.length > 0 && (
-          <>
-            <ListItemButton
-              onClick={() => setRangesOpen((was) => !was)}
-              aria-expanded={rangesOpen}
-              sx={{ px: 0, minHeight: tokens.touch.min }}
-            >
-              <ListItemText
-                primary={`Mountain ranges in view (${hiddenRanges.length})`}
-                slotProps={{ primary: { variant: "subtitle2" } }}
-              />
-            </ListItemButton>
-            {rangesOpen &&
-              hiddenRanges.map((range) => (
-                <ListItemButton
-                  key={range.id}
-                  onClick={() => onPick(range.id)}
-                  sx={{ px: 0, minHeight: tokens.touch.min }}
-                >
-                  <ListItemText
-                    primary={range.name}
-                    secondary={regionSubtitle(range.country, range.kind)}
+          {picked && parents.length > 0 && (
+            <>
+              <Typography variant="caption" color="textSecondary">
+                Part of
+              </Typography>
+              <ChipRow>
+                {parents.map((parent) => (
+                  <RegionChip
+                    key={parent.id}
+                    label={parent.name}
+                    onClick={() => onPick(parent.id)}
                   />
-                </ListItemButton>
-              ))}
-          </>
-        )}
-      </Box>
-    </BottomSheet>
+                ))}
+              </ChipRow>
+            </>
+          )}
+
+          {hiddenRanges.length > 0 && (
+            <>
+              <ListItemButton
+                onClick={() => setRangesOpen((was) => !was)}
+                aria-expanded={rangesOpen}
+                sx={{ px: 0, minHeight: tokens.touch.min }}
+              >
+                <ListItemText
+                  primary={`Mountain ranges in view (${hiddenRanges.length})`}
+                  slotProps={{ primary: { variant: "subtitle2" } }}
+                />
+              </ListItemButton>
+              {rangesOpen &&
+                hiddenRanges.map((range) => (
+                  <ListItemButton
+                    key={range.id}
+                    onClick={() => onPick(range.id)}
+                    sx={{ px: 0, minHeight: tokens.touch.min }}
+                  >
+                    <ListItemText
+                      primary={range.name}
+                      secondary={regionSubtitle(range.country, range.kind)}
+                    />
+                  </ListItemButton>
+                ))}
+            </>
+          )}
+        </Box>
+      </BottomSheet>
+    </>
   );
 }
