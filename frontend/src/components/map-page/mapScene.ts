@@ -69,8 +69,6 @@ export interface MapSceneInput extends SceneState {
   draftPin: PointPin[];
   onNoteSelect: (id: number | null) => void;
   onOpenThread: ((id: number) => void) | undefined;
-  /** Px the map controls rise above the bottom edge on a canvas screen. */
-  controlsLift: number;
 }
 
 type Bounds = [[number, number], [number, number]];
@@ -219,7 +217,7 @@ export function buildMapScene(input: MapSceneInput): MapScene {
           ? showRegionStrip
             ? REGION_SHEET_CLEARANCE
             : 60
-          : input.controlsLift,
+          : 0,
       controlsAnchor: isMobile && suggestMode === "feature" ? "top" : undefined,
       attributionPosition: isMobile ? "top-left" : "bottom-right",
     },

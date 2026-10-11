@@ -177,17 +177,25 @@ test.describe("map page on the canvas", () => {
     await expect(page.getByTestId("chart-dock")).toHaveCount(0);
   });
 
-  // The map's own controls (layer toggle, satellite) sit at the bottom-left
-  // and the foundation cannot move them off the card yet.
-  test.fail(
-    "the layer toggle is clear of the detail card",
-    async ({ page }) => {
-      await open(page, { width: 1280, height: 800 });
+  test("the layer toggle and zoom keys sit in the free area, clear of the card", async ({
+    page,
+  }) => {
+    for (const width of [1280, 1440]) {
+      await open(page, { width, height: 800 });
       const toggle = await box(page.getByTestId("map-layer-toggle"));
       const c = await box(card(page));
       expect(toggle.x).toBeGreaterThanOrEqual(c.x + c.width);
-    },
-  );
+      const zoom = await box(page.locator(".maplibregl-ctrl-top-right"));
+      expect(zoom.x).toBeGreaterThanOrEqual(c.x + c.width);
+    }
+  });
+
+  test("the card shows one header, the panel's own", async ({ page }) => {
+    await open(page, { width: 1440, height: 800 });
+    await expect(
+      card(page).getByRole("heading", { name: "Search" }),
+    ).toHaveCount(1);
+  });
 });
 
 test.describe("map page on a phone", () => {

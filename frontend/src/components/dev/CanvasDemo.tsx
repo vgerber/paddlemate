@@ -8,7 +8,6 @@ import {
 import CanvasLayout from "@/components/canvas/CanvasLayout";
 import ChartDock from "@/components/canvas/ChartDock";
 import FloatingCard from "@/components/canvas/FloatingCard";
-import PanelHeader from "@/components/PanelHeader";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -67,7 +66,8 @@ export default function CanvasDemo() {
             side={side}
             kind={kind}
             screen="demo"
-            header={<PanelHeader title={title} subtitle="Canvas foundation" />}
+            title={title}
+            subtitle="Canvas foundation"
           >
             {key === "detail" && (
               <ChartDock>

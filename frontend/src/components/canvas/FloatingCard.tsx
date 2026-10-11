@@ -9,6 +9,7 @@ import {
   writeCardFrac,
 } from "@/lib/cardWidth";
 import { theme } from "@/lib/theme";
+import CardHeader from "./CardHeader";
 import { layout, useLayout } from "./canvasStore";
 import ResizeGrip from "./ResizeGrip";
 
@@ -20,8 +21,17 @@ interface FloatingCardProps {
   id: string;
   side: CardSide;
   kind: CardKind;
-  /** The card's title row; all that shows once the card is folded. */
-  header: ReactNode;
+  /** Names the card; all that shows once the card is folded. */
+  title: string;
+  subtitle?: string;
+  /** The screen's actions in the title row, right of the title. */
+  actions?: ReactNode;
+  /** Adds a close button to the title row. */
+  onClose?: () => void;
+  /** The content brings its own panel header (title, tabs, back arrow), so
+   * the card draws no title row of its own while open and the screen never
+   * shows two. The folded card still shows `title`. */
+  selfHeaded?: boolean;
   children: ReactNode;
   /** Names the screen whose remembered width this card uses. */
   screen?: string;
@@ -40,7 +50,11 @@ export default function FloatingCard({
   id,
   side,
   kind,
-  header,
+  title,
+  subtitle,
+  actions,
+  onClose,
+  selfHeaded = false,
   children,
   screen = "default",
   resizable = kind === "detail",
@@ -67,6 +81,7 @@ export default function FloatingCard({
   return (
     <Box
       component="section"
+      aria-label={title}
       data-testid={`canvas-card-${id}`}
       data-collapsed={collapsed || undefined}
       sx={{
@@ -99,13 +114,20 @@ export default function FloatingCard({
             "&:focus-visible": { outline: `2px solid ${tokens.primary}` },
           }}
         >
-          {header}
+          <CardHeader title={title} subtitle={subtitle} />
         </ButtonBase>
       ) : (
         <>
-          <Box sx={{ flexShrink: 0, minHeight: canvas.headerHeight }}>
-            {header}
-          </Box>
+          {!selfHeaded && (
+            <Box sx={{ flexShrink: 0, minHeight: canvas.headerHeight }}>
+              <CardHeader
+                title={title}
+                subtitle={subtitle}
+                actions={actions}
+                onClose={onClose}
+              />
+            </Box>
+          )}
           <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
             {children}
           </Box>

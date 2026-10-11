@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import type { ReactNode } from "react";
 import { theme } from "@/lib/theme";
+import type { MapPadding } from "./Map";
 
 const { tokens } = theme;
 
@@ -17,6 +18,8 @@ interface LabelModeToggleProps {
   onFeatureNamesChange?: (v: boolean) => void;
   bottomOffset?: number;
   anchor?: "top" | "bottom";
+  /** Free-area edges on a canvas screen; replaces the corner offsets. */
+  inset?: MapPadding;
 }
 
 /** A recessed track holding cells; the set ones are white pills. */
@@ -85,22 +88,27 @@ export default function LabelModeToggle({
   onFeatureNamesChange,
   bottomOffset = 0,
   anchor = "bottom",
+  inset,
 }: LabelModeToggleProps) {
   const edge = { xs: 10, md: 24 };
+  const place = inset
+    ? { bottom: inset.bottom + bottomOffset + 8, left: inset.left + 8 }
+    : null;
   return (
     <Box
       data-testid="map-layer-toggle"
       sx={{
         position: "absolute",
-        ...(anchor === "top"
-          ? { top: { xs: 14, md: 24 } }
-          : {
-              bottom: {
-                xs: 14 + bottomOffset,
-                md: 24 + bottomOffset,
-              },
-            }),
-        left: edge,
+        ...(place ??
+          (anchor === "top"
+            ? { top: { xs: 14, md: 24 }, left: edge }
+            : {
+                bottom: {
+                  xs: 14 + bottomOffset,
+                  md: 24 + bottomOffset,
+                },
+                left: edge,
+              })),
         zIndex: 10,
         display: "grid",
         gap: 1,

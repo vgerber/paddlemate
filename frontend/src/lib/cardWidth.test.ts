@@ -15,10 +15,11 @@ describe("cardWidth", () => {
     expect(cardWidth("detail", 900)).toBe(420);
   });
 
-  test("list is 20% within 300 to 380, side 30% within 420 to 600", () => {
+  test("list is 20% within 300 to 380, side 25% within 400 to 600", () => {
     expect(cardWidth("list", 1000)).toBe(300);
     expect(cardWidth("list", 1920)).toBe(380);
-    expect(cardWidth("side", 1280)).toBe(420);
+    expect(cardWidth("side", 1280)).toBe(400);
+    expect(cardWidth("side", 1920)).toBe(480);
     expect(cardWidth("side", 2400)).toBe(600);
   });
 

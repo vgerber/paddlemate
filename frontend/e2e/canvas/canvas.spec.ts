@@ -289,7 +289,18 @@ test.describe("canvas foundation", () => {
     expect(Math.round((await box(list)).width)).toBe(300);
   });
 
-  test("the expanded cards never cover more than 55%", async ({ page }) => {
+  test("the expanded cards cover at most 55%, 70% beside a list", async ({
+    page,
+  }) => {
+    for (const width of [1024, 1280, 1920]) {
+      await openDemo(page, { width, height: 800 }, "detail,side");
+      const open = page.locator(
+        '[data-testid^="canvas-card-"]:not([data-collapsed])',
+      );
+      let covered = 0;
+      for (const el of await open.all()) covered += (await box(el)).width;
+      expect(covered).toBeLessThanOrEqual(width * 0.55 + 1);
+    }
     for (const width of [1024, 1280, 1920]) {
       await openDemo(page, { width, height: 800 }, "detail,list,side");
       const open = page.locator(
@@ -297,7 +308,7 @@ test.describe("canvas foundation", () => {
       );
       let covered = 0;
       for (const el of await open.all()) covered += (await box(el)).width;
-      expect(covered).toBeLessThanOrEqual(width * 0.55 + 1);
+      expect(covered).toBeLessThanOrEqual(width * 0.7 + 1);
     }
   });
 

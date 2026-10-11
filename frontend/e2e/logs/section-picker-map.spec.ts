@@ -9,9 +9,9 @@ test("the section picker map of the log form has no layer chrome", async ({
   );
   await page.getByRole("button", { name: "Next" }).click();
   await expect(page.getByText("Step 2 of 3 · Sections")).toBeVisible();
-  // From md the form is in a canvas card, behind which the host map (with its
-  // own layer chrome) draws; only the form's map is under test.
-  const form = page.locator('main, [data-testid="canvas-card-log"]');
-  await expect(form.locator("canvas.maplibregl-canvas")).toBeVisible();
-  await expect(form.getByTestId("map-layer-toggle")).toHaveCount(0);
+  // The form leaves the canvas, so its picker map is the only map.
+  await expect(page.locator("canvas.maplibregl-canvas")).toBeVisible();
+  await expect(page.locator(".maplibregl-map")).toHaveCount(1);
+  await expect(page.getByTestId("canvas-host")).toHaveCount(0);
+  await expect(page.getByTestId("map-layer-toggle")).toHaveCount(0);
 });

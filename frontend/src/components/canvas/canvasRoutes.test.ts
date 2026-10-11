@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { isGeographyRoute } from "./canvasRoutes";
+import { isGeographyRoute, isLogFormRoute } from "./canvasRoutes";
 
 describe("isGeographyRoute", () => {
   test("the map, logs, trips and proposals have geography", () => {
@@ -27,6 +27,14 @@ describe("isGeographyRoute", () => {
     ]) {
       expect(isGeographyRoute(path), path).toBe(false);
     }
+  });
+
+  test("the log form keeps its own picker map, so the canvas steps aside", () => {
+    expect(isGeographyRoute("/logs/new")).toBe(false);
+    expect(isGeographyRoute("/logs/12", { edit: true })).toBe(false);
+    expect(isGeographyRoute("/logs/12", { edit: "true" })).toBe(false);
+    expect(isGeographyRoute("/logs/12", { edit: false })).toBe(true);
+    expect(isLogFormRoute("/logs")).toBe(false);
   });
 
   test("a prefix must end at a path segment", () => {

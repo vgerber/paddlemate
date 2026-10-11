@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { Descent } from "@/lib/api";
 import {
   buildLogsScene,
-  ghostSections,
+  logSections,
   logsSubject,
   routeCoords,
 } from "./logsScene";
@@ -74,17 +74,9 @@ describe("routeCoords", () => {
   });
 });
 
-describe("ghostSections", () => {
+describe("logSections", () => {
   test("lists each section once", () => {
-    expect(ghostSections([first, second]).map((s) => s.id)).toEqual([
-      11, 10, 20,
-    ]);
-  });
-
-  test("leaves out the open log's own sections", () => {
-    expect(ghostSections([first, second], first).map((s) => s.id)).toEqual([
-      20,
-    ]);
+    expect(logSections([first, second]).map((s) => s.id)).toEqual([11, 10, 20]);
   });
 });
 
@@ -115,17 +107,22 @@ describe("logsSubject", () => {
 });
 
 describe("buildLogsScene", () => {
-  test("draws the open log as the route and the rest as sections", () => {
+  test("highlights the open log's sections and ghosts the rest", () => {
     const scene = buildLogsScene(first, [first, second], 1);
-    expect(scene.drawing?.sectionPreviewCoords).toHaveLength(4);
-    expect(scene.sections?.map((s) => s.id)).toEqual([20]);
+    expect(scene.sections?.map((s) => s.id)).toEqual([11, 10, 20]);
+    expect(scene.drawing?.sectionStates).toEqual({
+      highlighted: [11, 10],
+      ghost: [20],
+    });
+    expect(scene.drawing?.sectionPreviewCoords).toBeUndefined();
     expect(scene.picking?.putIn).toEqual({ lat: 46.5, lon: 9.5 });
     expect(scene.picking?.takeOut).toEqual({ lat: 49, lon: 12 });
   });
 
   test("without an open log nothing is highlighted", () => {
     const scene = buildLogsScene(undefined, [first, second]);
-    expect(scene.drawing?.sectionPreviewCoords).toBeUndefined();
+    expect(scene.drawing?.sectionStates?.highlighted).toBeUndefined();
+    expect(scene.drawing?.sectionStates?.ghost).toEqual([11, 10, 20]);
     expect(scene.picking?.putIn).toBeNull();
   });
 });

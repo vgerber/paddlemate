@@ -35,6 +35,7 @@ import RegionChoicePopup from "./RegionChoicePopup";
 import RegionLayers from "./RegionLayers";
 import type { Bbox } from "./regionGeometry";
 import SectionLayers from "./SectionLayers";
+import { useControlInset } from "./useControlInset";
 import { useMapCameraEffects } from "./useMapCameraEffects";
 import { useMapClickHandler } from "./useMapClickHandler";
 import { useMapSources } from "./useMapSources";
@@ -85,8 +86,18 @@ export interface MapDrawing {
   placingFeature?: boolean;
   onMapClick?: (lng: number, lat: number) => void;
   sectionPreviewCoords?: [number, number][];
+  /** Sections drawn in a state other than the plain river line. */
+  sectionStates?: MapSectionStates;
   /** River course to highlight subtly (e.g. the OSM riverbed a section will snap to). */
   riverHighlightCoords?: [number, number][] | null;
+}
+
+/** Section ids drawn as the subject of a screen (teal) and as context only
+ * (dim, not clickable, no access-point marks). Every other section keeps the
+ * plain river line. Pass memoised arrays. */
+export interface MapSectionStates {
+  highlighted?: number[];
+  ghost?: number[];
 }
 
 /** Controls and labelling around the map surface, not the data on it. */
@@ -109,6 +120,10 @@ export interface MapChrome {
    * layer switcher, compass or access-point arrows. Defaults on for maps
    * embedded in a scrolling page or a wizard (`cooperativeGestures`). */
   minimal?: boolean;
+  /** Keeps the zoom, compass, layer toggle and attribution inside these
+   * edges (px in from each side of the map) instead of the map's own
+   * corners: the free area of a canvas screen, so no card covers them. */
+  inset?: MapPadding;
 }
 
 /** What the camera frames: refit when `key` changes, and again (unless it is
@@ -272,6 +287,7 @@ export default function WaterwayMap({
     placingFeature,
     onMapClick,
     sectionPreviewCoords,
+    sectionStates,
     riverHighlightCoords,
   } = drawing;
   const {
@@ -282,6 +298,7 @@ export default function WaterwayMap({
     controlsAnchor,
     attributionPosition = "bottom-right",
     cooperativeGestures,
+    inset,
   } = chrome;
   const minimal = chrome.minimal ?? !!cooperativeGestures;
   const mapRef = useRef<MapRef>(null);
@@ -290,6 +307,7 @@ export default function WaterwayMap({
   const [showFeatureNames, setShowFeatureNames] = useState(true);
   const [viewBounds, setViewBounds] = useState<Bbox | null>(null);
   const [litRegionId, setLitRegionId] = useState<number | null>(null);
+  useControlInset(mapRef, mapLoaded, inset);
   useMutedBaseMap(
     mapRef,
     mapLoaded,
@@ -423,6 +441,7 @@ export default function WaterwayMap({
           }
           bottomOffset={controlsBottomOffset}
           anchor={controlsAnchor}
+          inset={inset}
         />
       )}
       <MapGL
@@ -449,7 +468,7 @@ export default function WaterwayMap({
         ]}
       >
         <NavigationControl position="top-right" showCompass={false} />
-        {!minimal && <MapCompass />}
+        {!minimal && <MapCompass inset={inset} />}
         <AttributionControl compact position={attributionPosition} />
 
         <RegionLayers
@@ -483,6 +502,8 @@ export default function WaterwayMap({
           endpoints={minimal ? NO_ENDPOINTS : sectionEndpointsGeoJSON}
           connectors={connectorsGeoJSON}
           selectedSectionId={selectedSectionId}
+          highlighted={sectionStates?.highlighted}
+          ghost={sectionStates?.ghost}
         />
 
         <FeatureGeoJSONLayers

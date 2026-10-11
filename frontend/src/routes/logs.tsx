@@ -2,7 +2,6 @@ import AddIcon from "@mui/icons-material/Add";
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
-import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   createFileRoute,
@@ -11,9 +10,10 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { useCanvasScene } from "@/components/canvas/CanvasContext";
 import CanvasLayout from "@/components/canvas/CanvasLayout";
+import { isLogFormRoute } from "@/components/canvas/canvasRoutes";
 import FloatingCard from "@/components/canvas/FloatingCard";
 import DockedAction from "@/components/DockedAction";
 import ListPaneHeader from "@/components/ListPaneHeader";
@@ -26,7 +26,7 @@ import SignInGate from "@/components/states/SignInGate";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
 import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
-import { BOTTOM_NAV_SPACE, labelSx, PANEL_HEIGHT, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, PANEL_HEIGHT, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -47,6 +47,9 @@ function LogsPage() {
   // log already had its own address, and /logs/123 has to keep working.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const selectedId = Number(pathname.match(/^\/logs\/(\d+)/)?.[1]) || undefined;
+  const search = useRouterState({
+    select: (s) => s.location.search as Record<string, unknown>,
+  });
   const hasChild = childMatches.length > 0;
   // The same cached query the list panel reads, so the count costs no
   // extra request - it just has to be known one level up to be shown.
@@ -122,6 +125,24 @@ function LogsPage() {
     );
   }
 
+  // The log form has its own picker map, so the canvas map steps aside and
+  // the form takes the page.
+  if (isLogFormRoute(pathname, search)) {
+    return (
+      <Box
+        sx={{
+          maxWidth: 720,
+          mx: "auto",
+          minHeight: PANEL_HEIGHT,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Outlet />
+      </Box>
+    );
+  }
+
   // Desktop: the list and the open log float over the map, which draws the
   // open log (or all of them).
   return (
@@ -131,7 +152,8 @@ function LogsPage() {
         side="left"
         kind="list"
         screen="logs"
-        header={<CardTitle>Logs</CardTitle>}
+        title="Logs"
+        selfHeaded
       >
         <Box
           sx={{
@@ -153,11 +175,8 @@ function LogsPage() {
           side="right"
           kind="side"
           screen="logs"
-          header={
-            <CardTitle>
-              {pathname.startsWith("/logs/new") ? "New log" : "Log"}
-            </CardTitle>
-          }
+          title="Log"
+          selfHeaded
         >
           <Box
             sx={{
@@ -171,19 +190,6 @@ function LogsPage() {
         </FloatingCard>
       )}
     </CanvasLayout>
-  );
-}
-
-function CardTitle({ children }: { children: ReactNode }) {
-  return (
-    <Box sx={{ px: 2, minHeight: 56, display: "flex", alignItems: "center" }}>
-      <Typography
-        component="h2"
-        sx={{ ...labelSx, color: tokens.onSurfaceVariant }}
-      >
-        {children}
-      </Typography>
-    </Box>
   );
 }
 

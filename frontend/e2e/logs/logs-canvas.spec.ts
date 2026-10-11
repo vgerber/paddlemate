@@ -7,9 +7,7 @@ type MapLike = {
   isMoving(): boolean;
   loaded(): boolean;
   project(lngLat: [number, number]): { x: number; y: number };
-  getSource(id: string): {
-    serialize(): { data: { geometry?: { coordinates: unknown[] } } };
-  } | null;
+  getFilter(id: string): unknown;
 };
 
 const PUT_IN: [number, number] = [11.0, 47.0];
@@ -31,13 +29,15 @@ async function settle(page: Page) {
   });
 }
 
-/** Coordinates of the line the map draws for the open log. */
+/** How many sections the map draws highlighted (teal) for the open log. */
 function drawnRoute(page: Page) {
   return page.evaluate(() => {
     const map = (window as unknown as { __paddlemateMap?: MapLike })
       .__paddlemateMap;
-    const data = map?.getSource("section-preview")?.serialize().data;
-    return data?.geometry?.coordinates.length ?? 0;
+    const filter = map?.getFilter("sections-highlight-line") as
+      | [string, unknown, [string, number[]]]
+      | undefined;
+    return filter?.[2]?.[1]?.length ?? 0;
   });
 }
 
@@ -45,8 +45,8 @@ test.describe("logs on the canvas", () => {
   test.skip(({ isMobile }) => isMobile, "wide screens only");
 
   for (const [w, list, side] of [
-    [1440, 300, 432],
-    [1920, 384, 576],
+    [1440, 300, 400],
+    [1920, 384, 480],
   ]) {
     test(`list card ${list}px and log card ${side}px at ${w}`, async ({
       page,
@@ -129,7 +129,7 @@ test.describe("logs on the canvas", () => {
       .click();
     await expect(page).toHaveURL(/\/logs\/9202/);
     await expect(card(page, "log")).toContainText("Private upper run");
-    await expect.poll(() => drawnRoute(page)).toBeGreaterThan(1);
+    await expect.poll(() => drawnRoute(page)).toBeGreaterThan(0);
   });
 });
 

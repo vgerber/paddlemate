@@ -23,18 +23,13 @@ export function routeCoords(descent: Descent): Coord[] {
     .flatMap((s) => lineCoords(s.location) ?? []);
 }
 
-/** Each section once, as a plain map section; `skip` leaves out the open
- * log's own sections so they are not drawn twice. */
-export function ghostSections(
-  descents: Descent[],
-  skip?: Descent,
-): SectionWithFeatures[] {
-  const skipped = new Set(skip?.sections.map((s) => s.section_id));
+/** Each section of the given logs once, as a plain map section. */
+export function logSections(descents: Descent[]): SectionWithFeatures[] {
   const seen = new Set<number>();
   const out: SectionWithFeatures[] = [];
   for (const descent of descents) {
     for (const s of descent.sections) {
-      if (skipped.has(s.section_id) || seen.has(s.section_id)) continue;
+      if (seen.has(s.section_id)) continue;
       if (s.location?.type !== "LineString") continue;
       seen.add(s.section_id);
       out.push(
@@ -68,7 +63,7 @@ export function logsSubject(
     return bounds ? { key: `log:${open.id}`, bounds } : null;
   }
   if (openId != null) return null;
-  const all = ghostSections(descents).flatMap(
+  const all = logSections(descents).flatMap(
     (s) => lineCoords(s.location) ?? [],
   );
   const bounds = boundsOf(all);
@@ -76,17 +71,26 @@ export function logsSubject(
   return { key: `logs:${descents.map((d) => d.id).join(",")}`, bounds };
 }
 
-/** The logs map: the open log in teal with its put-in and take-out, every
- * other log as a pale line behind it. */
+/** The logs map: the open log's sections in teal with its put-in and
+ * take-out, every other logged section as a dim line behind them. Sections
+ * are drawn one by one, so a gap between two of them stays a gap. */
 export function buildLogsScene(
   open: Descent | undefined,
   descents: Descent[],
   openId?: number,
 ): MapScene {
-  const route = open ? routeCoords(open) : [];
+  const sections = logSections(open ? [open, ...descents] : descents);
+  const highlighted = open ? open.sections.map((s) => s.section_id) : [];
+  const mine = new Set(highlighted);
+  const ghost = sections.map((s) => s.id).filter((id) => !mine.has(id));
   return {
-    sections: ghostSections(descents, open),
-    drawing: { sectionPreviewCoords: route.length >= 2 ? route : undefined },
+    sections,
+    drawing: {
+      sectionStates: {
+        highlighted: highlighted.length > 0 ? highlighted : undefined,
+        ghost: ghost.length > 0 ? ghost : undefined,
+      },
+    },
     picking: {
       putIn:
         open?.put_in_lat != null && open.put_in_lon != null
