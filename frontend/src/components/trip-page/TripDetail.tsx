@@ -1,8 +1,11 @@
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import PanelHeader from "@/components/PanelHeader";
+import RowMenu from "@/components/RowMenu";
 import TripForm from "@/components/trips/TripForm";
 import type { Descent, Trip, TripMember, TripStay } from "@/lib/api";
 import { dateRange } from "@/lib/format";
@@ -42,9 +45,7 @@ interface Props {
   onEditingChange: (editing: boolean) => void;
   /** Leaving the trip: back on mobile, deselect in the desktop two-pane. */
   onClose: () => void;
-  /** Rendered beside the trips list, which names the open trip and holds the
-   * way back - so the panel drops its title and back arrow and keeps the
-   * tabs. */
+  /** Rendered in the canvas card, which brings no title row of its own. */
   embedded?: boolean;
   /** The canvas draws the bases behind the cards, so the Bases tab drops its
    * inline map. */
@@ -167,11 +168,29 @@ export default function TripDetail({
   return (
     <>
       <PanelHeader
-        title={embedded ? undefined : trip.name}
-        subtitle={
-          embedded ? undefined : dateRange(trip.start_date, trip.end_date)
+        title={trip.name}
+        subtitle={dateRange(trip.start_date, trip.end_date)}
+        onBack={onClose}
+        actionButton={
+          isAdmin ? (
+            <RowMenu
+              label="Trip actions"
+              actions={[
+                {
+                  label: "Edit trip",
+                  icon: <EditOutlinedIcon />,
+                  onClick: () => onEditingChange(true),
+                },
+                {
+                  label: "Delete trip",
+                  icon: <DeleteOutlinedIcon />,
+                  danger: true,
+                  onClick: () => setConfirmDelete(true),
+                },
+              ]}
+            />
+          ) : undefined
         }
-        onBack={embedded ? undefined : onClose}
         tabs={{
           value: tab,
           onChange: setTab,
@@ -195,6 +214,8 @@ export default function TripDetail({
               setOpenDay((current) => (current === date ? null : date))
             }
             actions={dayActions}
+            wide={canvasMap}
+            membersBelow={!membersCard}
           />
         ) : (
           <Box
@@ -268,8 +289,6 @@ export default function TripDetail({
         onEditAttendance={() => self && setAttendanceFor({ member: self })}
         onLinkLog={() => setLinking(true)}
         onNewLog={() => newLog()}
-        onEdit={() => onEditingChange(true)}
-        onDelete={() => setConfirmDelete(true)}
       />
 
       {pickingDay && (

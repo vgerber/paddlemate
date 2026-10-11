@@ -25,6 +25,13 @@ async function openPlan(page: Page) {
   await expect(dayCards(page).first()).toBeVisible();
 }
 
+/** The pinned week and its month are the phone's calendar; the desktop card
+ * has the row of day cells instead. */
+async function openPhonePlan(page: Page) {
+  test.skip(test.info().project.name === "desktop", "phone calendar");
+  await openPlan(page);
+}
+
 async function openList(page: Page) {
   await page.goto("/trips");
   await expect(page.getByTestId("trip-card").first()).toBeVisible();
@@ -59,17 +66,19 @@ test.describe("trip list", () => {
     const name = (await first.innerText()).split("\n")[0];
     await first.click();
     await expect(page).toHaveURL(/selected=/);
-    // The card header names the trip and closes it; there is no back arrow.
+    // The open trip is the one card: it names the trip, the list is gone,
+    // and the back arrow returns to it.
     const trip = page.getByTestId("canvas-card-trip");
     await expect(trip.getByRole("heading", { name })).toHaveCount(1);
-    await expect(page.getByRole("button", { name: "Back" })).toHaveCount(0);
     await expect(
       trip.getByRole("tab", { name: "Plan", exact: true }),
     ).toBeVisible();
-    await expect(page.getByTestId("trip-card").first()).toBeVisible();
-    await trip.getByRole("button", { name: "Close" }).click();
+    await expect(page.getByTestId("canvas-card-list")).toHaveCount(0);
+    await expect(trip.getByTestId("trip-week-day").first()).toBeVisible();
+    await trip.getByRole("button", { name: "Back" }).click();
     await expect(page).not.toHaveURL(/selected=/);
     await expect(trip).toHaveCount(0);
+    await expect(page.getByTestId("trip-card").first()).toBeVisible();
   });
 
   test("no sideways scroll @small", async ({ page }) => {
@@ -80,7 +89,7 @@ test.describe("trip list", () => {
 
 test.describe("trip plan", () => {
   test("week strip: seven days, 44px, today marked", async ({ page }) => {
-    await openPlan(page);
+    await openPhonePlan(page);
     const days = strip(page).getByTestId("week-day");
     await expect(days).toHaveCount(7);
     await expectTouchTargets(days);
@@ -91,7 +100,7 @@ test.describe("trip plan", () => {
   test("run marks: one dot per planned run, inside the cell, white when selected @small", async ({
     page,
   }) => {
-    await openPlan(page);
+    await openPhonePlan(page);
     const marks = (cell: Locator) => cell.getByTestId("run-mark");
     const cells = strip(page).getByTestId("week-day");
     const runDays = strip(page).locator("[data-runs]:not([data-runs='0'])");
@@ -146,7 +155,7 @@ test.describe("trip plan", () => {
   test("a day without runs has no marks, in the week and the month", async ({
     page,
   }) => {
-    await openPlan(page);
+    await openPhonePlan(page);
     await page.getByRole("button", { name: "Show the month" }).click();
     const today = monthGrid(page).locator("[data-today=true]");
     // Today in the fixture is a base change: something on it, but no run.
@@ -163,7 +172,7 @@ test.describe("trip plan", () => {
   });
 
   test("the handle sits clear of the day row", async ({ page }) => {
-    await openPlan(page);
+    await openPhonePlan(page);
     const cell = await strip(page)
       .getByTestId("week-day")
       .first()
@@ -178,7 +187,7 @@ test.describe("trip plan", () => {
   });
 
   test("strip stays pinned while the days scroll", async ({ page }) => {
-    await openPlan(page);
+    await openPhonePlan(page);
     const before = await strip(page).boundingBox();
     await scroller(page).evaluate((el) => {
       el.scrollTop = el.scrollHeight;
@@ -191,7 +200,7 @@ test.describe("trip plan", () => {
   test("tapping the handle opens the month, a day scrolls to it", async ({
     page,
   }) => {
-    await openPlan(page);
+    await openPhonePlan(page);
     await page.getByRole("button", { name: "Show the month" }).click();
     const grid = monthGrid(page);
     await expect(grid).toBeVisible();
@@ -212,7 +221,7 @@ test.describe("trip plan", () => {
   });
 
   test("pulling the handle down opens the month", async ({ page }) => {
-    await openPlan(page);
+    await openPhonePlan(page);
     const h = await page
       .getByRole("button", { name: "Show the month" })
       .boundingBox();
@@ -246,7 +255,7 @@ test.describe("trip plan", () => {
   });
 
   test("no sideways scroll, targets 44px @small", async ({ page }) => {
-    await openPlan(page);
+    await openPhonePlan(page);
     await expectNoHorizontalOverflow(page);
     await expectTouchTargets(strip(page).getByTestId("week-day"));
   });
@@ -532,7 +541,7 @@ test.describe("trip gaps", () => {
   test("today keeps its ring when it is also the current day", async ({
     page,
   }) => {
-    await openPlan(page);
+    await openPhonePlan(page);
     const today = strip(page).locator("[data-today=true]");
     await today.click();
     await expect(today).toHaveAttribute("data-current", "true");
@@ -541,7 +550,7 @@ test.describe("trip gaps", () => {
   });
 
   test("days outside the trip sit back", async ({ page }) => {
-    await openPlan(page);
+    await openPhonePlan(page);
     const first = strip(page).getByTestId("week-day").first();
     await expect(first.getByTestId("day-number")).toHaveCSS("opacity", "0.55");
   });
@@ -549,7 +558,7 @@ test.describe("trip gaps", () => {
   test("the open month dims the list and a tap on it closes the month", async ({
     page,
   }) => {
-    await openPlan(page);
+    await openPhonePlan(page);
     await page.getByRole("button", { name: "Show the month" }).click();
     const scrim = page.getByTestId("month-scrim").filter({ visible: true });
     await expect(scrim).toBeVisible();
@@ -646,8 +655,9 @@ test.describe("trip gaps", () => {
     await expect(page).toHaveURL(new RegExp(`/trips\\?selected=${TRIP}`));
     await expect(dayCards(page).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Add a day" })).toBeVisible();
-    // Only the admin's trip-actions dial floats; the add button is docked.
-    await expect(page.locator(".MuiFab-root:visible")).toHaveCount(1);
+    // Nothing floats over the card: the add button is docked and the trip's
+    // actions are in its header.
+    await expect(page.locator(".MuiFab-root:visible")).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Trip actions" }),
     ).toBeVisible();
@@ -711,16 +721,27 @@ async function openCanvas(page: Page, width: number) {
 test.describe("trips on the canvas", () => {
   test.skip(({ isMobile }) => isMobile, "wide screens only");
 
-  test("the list and the trip are cards over one map", async ({ page }) => {
+  test("an open trip is one card over the map, the list steps aside", async ({
+    page,
+  }) => {
     await openCanvas(page, 1440);
     await expect(page.locator(".maplibregl-map")).toHaveCount(1);
-    const list = await page.getByTestId("canvas-card-list").boundingBox();
+    await expect(page.getByTestId("canvas-card-list")).toHaveCount(0);
     const trip = await page.getByTestId("canvas-card-trip").boundingBox();
-    if (!list || !trip) throw new Error("no cards");
-    // List 20% (288 -> clamped to 300), trip card 25% (360 -> clamped to 400).
-    expect(Math.abs(list.width - 300)).toBeLessThanOrEqual(1);
+    if (!trip) throw new Error("no card");
+    // 25% of the window (360) clamped to 400.
     expect(Math.abs(trip.width - 400)).toBeLessThanOrEqual(1);
-    await expect(page.getByTestId("trip-card").first()).toBeVisible();
+    const week = page.getByTestId("trip-week");
+    await expect(week.getByTestId("trip-week-day")).toHaveCount(8);
+    await expect(
+      week.getByTestId("trip-week-day").filter({ hasText: "3 runs" }).first(),
+    ).toBeVisible();
+    await expect(page.getByTestId("trip-stays-summary")).toBeVisible();
+    await expect(page.getByTestId("trip-members-summary")).toBeVisible();
+    // The week fits the card without its own scroll.
+    expect(await week.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+      true,
+    );
   });
 
   test("every base sits inside the free map area", async ({ page }) => {
@@ -775,8 +796,9 @@ test.describe("trips on the canvas", () => {
     await expect(
       page.getByRole("tab", { name: "Members", exact: true }),
     ).toHaveCount(0);
-    // List, trip and members fit the 70% budget at 1600, so none folds.
-    for (const id of ["list", "trip", "members"]) {
+    // Trip and members fit the 70% budget at 1600, so neither folds.
+    await expect(page.getByTestId("canvas-card-list")).toHaveCount(0);
+    for (const id of ["trip", "members"]) {
       await expect(page.getByTestId(`canvas-card-${id}`)).not.toHaveAttribute(
         "data-collapsed",
       );
