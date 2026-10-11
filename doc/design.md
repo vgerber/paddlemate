@@ -41,7 +41,7 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   primary-action button on the right.
 - Fields are filled (the theme's default variant): the label sits inside the
   field at the top, the value beneath it, a 1px inset line that becomes a 2px
-  accent ring on focus. Dates use a picker field, not free text.
+  accent ring on focus. Dates and times use `PickerField` (`components/descents/descent-form/`): the app's own format on top of the browser's native picker, not free text.
 - One screen, one primary action: a bottom-right FAB on a phone, a full-width
   **docked** button at the foot of the list pane on desktop. Bottom-right of the
   *content*, not the window.
@@ -49,8 +49,9 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   action. A finished flow ends the same way.
 - Forms are built from labelled blocks (`FormSection`): a heading, one hint line
   saying what the block is for, and an optional action in the heading.
-- **Rows** are cards with the soft shadow, not bordered boxes; a selected card
-  gets a 2px teal ring. A row's actions are one overflow menu (`RowMenu`).
+- **Rows** are cards with the soft shadow, not bordered boxes. A selected trip,
+  proposal, gauge or settings card gets a 2px teal ring; a selected river row
+  (`cardRowSx`) takes a teal wash instead. A row's actions are one overflow menu (`RowMenu`).
 - **Filters** are chips under the search field: teal when set, one tap opens a
   sheet with the exact fields. The search screen has the header and tabs like
   every other screen (Name, Area, Region), results lead with Sections.
@@ -95,8 +96,14 @@ Components for each live in the matching folder under `frontend/src/components/`
   component-wide rules from the theme's `styleOverrides`.
 - Transparency uses the six named alpha steps from `alphas` (`tint 5%`,
   `wash 8%`, `hover 12%`, `hairline 33%`, `border 60%`, `scrim 80%`).
-- Text and its ground keep a readable contrast; chips and level pills use the
-  paired text/background tokens rather than a tint of the marker color.
+- Contrast floors, checked by [`contrast.test.ts`](../frontend/src/lib/contrast.test.ts)
+  against the tokens in `theme.ts`: text and its ground reach 4.5:1 (body and
+  secondary ink on every surface; teal, green and red text on the three light
+  grounds; chip text on its wash); marks and controls reach 3:1 on white or
+  the surface (level and feature markers, put-in and take-out, the teal focus
+  ring, the `outline` edge of an input at rest - the hairline `outlineVariant`
+  is decoration only). Chips and level pills use the paired text/background
+  tokens rather than a tint of the marker color.
 - The ground is `surfaceLow`, cards are `surface`, a quiet inset inside a card
   is `surfaceHigh`.
 
@@ -150,7 +157,8 @@ beside the name.
 The base map is light. Labels are ink on a white halo; region names are their
 own quiet type; the selected line and the picked region are teal; sections are
 a clear blue. Region boundaries are one thin grey line in one ink, each edge
-drawn once, with no per-region colors; ranges that hold two or more others in
+drawn once, with no per-region colors; names sit at the visual centre of each
+region; ranges that hold two or more others in
 view are not drawn; valleys are soft bands. The country is named once, at the
 border, and in the picker.
 
@@ -162,4 +170,5 @@ strings; a new word is agreed first.
 ## Planned
 
 Wide screens as "map as the canvas": the list and detail float over a map that
-fills the window. Not built; the layout above is what ships.
+fills the window. Not built; the layout above is what ships. The plan is in
+[plans/wide-canvas.md](plans/wide-canvas.md).

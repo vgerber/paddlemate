@@ -62,7 +62,7 @@ Area and Region are the two ways to search without typing a name:
   your click. Picking a region opens a sheet with its name, the kind of region, the rivers
 in it and, under "Part of", the larger regions it sits in; before a pick the
 sheet holds chips to limit the map to one kind of region. In region mode the
-base map's roads are muted. Each region has one name, set at its visual centre - the
+base map's roads fade to 40% and their names, shields and one-way arrows are hidden, until you leave region mode. Each region has one name, set at its visual centre - the
   point deepest inside its shape, not the middle of its bounding box. A
   valley has no outline, so it is a soft band along the valley floor. Clicking
   ground that several regions share lists them and lets you say which you
@@ -178,7 +178,8 @@ in `regionGeometry.test.ts`) and the layers in `RegionLayers.tsx` and
 | A range holding `MAX_NESTED_RANGES` (2) or more other ranges is not drawn; bounding boxes stand in until the API answers containment | `visibleRegions` |
 | A region under `MIN_VIEW_SHARE` (0.003) of the view area is not drawn | `visibleRegions` |
 | The picked region is never hidden by either rule, and has its own source so panning it out of the viewport does not remove it | `visibleRegions`, `RegionLayers` |
-| One label per region at the pole of inaccessibility of its biggest part, or the middle of its longest line; computed with the `polylabel` library, cached per geometry | `labelPoint` |
+| Road lines (not rail) fade to `MUTED_ROAD_OPACITY` (0.4), road names, shields and one-way arrows are hidden, only while region mode is on; restored after, reapplied after a style swap | `useMutedBaseMap.ts` |
+| One label per region at the pole of inaccessibility of its biggest part, or the middle of its longest line; computed with the `polylabel` library, cached per geometry; 12px `onSurfaceVariant` on a white halo, the picked one 13px bold teal | `labelPoint` |
 | Every boundary: 1px `onSurfaceVariant` line, fill at 4% opacity (not for valleys) | `region-browse-line`, `region-browse-fill` |
 | Valleys: a 14px blurred line band at 14% opacity, no outline | `region-valley-band` |
 | Picked region: `mapSelectedLine` fill at 12% and a 2.5px line, label in the same colour; a region whose row has focus in the choice card is lit the same way | `region-picked-*`, `region-lit-*` |
