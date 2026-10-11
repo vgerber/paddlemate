@@ -47,6 +47,7 @@ export default function StepRow({
   first,
   last,
   title,
+  lead,
   status,
   children,
   testId = "history-step",
@@ -55,6 +56,8 @@ export default function StepRow({
   first: boolean;
   last: boolean;
   title: string;
+  /** Above the title: the entry the step is about. */
+  lead?: ReactNode;
   status?: ProposalStatus;
   children: ReactNode;
   testId?: string;
@@ -72,6 +75,7 @@ export default function StepRow({
     >
       <HistoryRail kind={kind} first={first} last={last} />
       <Box sx={{ minWidth: 0, pt: 0.75, pb: 1.75 }}>
+        {lead}
         <Typography
           sx={{
             fontWeight: 500,

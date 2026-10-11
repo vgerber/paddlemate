@@ -1,28 +1,40 @@
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import PhotoOutlinedIcon from "@mui/icons-material/PhotoOutlined";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
 import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import ViewAgendaOutlinedIcon from "@mui/icons-material/ViewAgendaOutlined";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import ButtonBase from "@mui/material/ButtonBase";
+import IconButton from "@mui/material/IconButton";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { useState } from "react";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
-import type { GaugeSource, HistoryStep, WaterwaySources } from "@/lib/api";
+import type {
+  Feature,
+  GaugeSource,
+  HistoryStep,
+  SectionWithFeatures,
+  WaterwaySources,
+} from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { formatDate } from "@/lib/format";
 import { useWaterwayMedia } from "@/lib/hooks/useComments";
 import { useWaterwayGauges } from "@/lib/hooks/useGauges";
+import { useSession } from "@/lib/hooks/useSession";
 import { licenseLink } from "@/lib/license";
 import { alphas, fonts, labelSx, theme } from "@/lib/theme";
-import HistoryHost from "./HistoryHost";
+import EditsTimeline, {
+  type EditsFilter,
+  sectionEntries,
+} from "./EditsTimeline";
 import { smallSx } from "./StepRow";
 import { inOrder, ORIGIN_UNKNOWN, stepHeadline } from "./steps";
-import type { HistoryTarget } from "./types";
 import { useHistory, useSources } from "./useProvenance";
 
 const { tokens } = theme;
@@ -159,15 +171,16 @@ function originLine(first: HistoryStep | undefined): string {
 }
 
 function OriginRow({
-  target,
-  sectionId,
+  section,
   onOpen,
 }: {
-  target: HistoryTarget;
-  sectionId: number | undefined;
+  section: SectionWithFeatures;
   onOpen: () => void;
 }) {
-  const { data } = useHistory(target);
+  const { data } = useHistory({
+    waterwayId: section.waterway_id,
+    sectionId: section.id,
+  });
   const steps = inOrder(data?.items ?? []);
   const first = steps[0];
   const since = steps.length - 1;
@@ -179,7 +192,7 @@ function OriginRow({
   return (
     <SourceRow
       icon={<VerticalAlignBottomIcon fontSize="small" />}
-      kind={sectionId ? "Section" : "River"}
+      kind="Section"
       who={originLine(first)}
       meta={meta}
       onOpen={steps.length > 0 ? onOpen : undefined}
@@ -235,30 +248,124 @@ function GaugeRows({ sources }: { sources: GaugeSource[] }) {
   );
 }
 
-/** Where a section's data comes from, one row per kind of data: its own
- * origin (the row opens its history), the river line, the features, the
- * gauge credit and the photos. Without a `sectionId` it describes the river. */
-export default function SourcesTab({
-  waterwayId,
-  sectionId,
-  name,
-  subtitle,
+function FilterHeader({
+  section,
+  filter,
+  onBack,
+  onEdit,
 }: {
-  waterwayId: number;
-  /** The section the tab belongs to; omitted it describes the river. */
-  sectionId?: number;
-  /** What the history panel is titled; defaults to "Section" or "River". */
-  name?: string;
-  /** The line under the history panel's title. */
-  subtitle?: string;
+  section: SectionWithFeatures;
+  filter: NonNullable<EditsFilter>;
+  onBack: () => void;
+  onEdit?: (feature: Feature) => void;
 }) {
-  const sources = useSources(waterwayId);
+  const entry = sectionEntries(section).find(
+    (e) => e.kind === filter.kind && e.id === filter.id,
+  );
+  const feature =
+    filter.kind === "feature"
+      ? section.features.find((f) => f.id === filter.id)
+      : undefined;
+  return (
+    <Box
+      data-testid="edits-header"
+      sx={{
+        m: 1.5,
+        mb: 0,
+        pl: 0.5,
+        pr: 1.5,
+        display: "flex",
+        alignItems: "center",
+        gap: 0.5,
+        bgcolor: tokens.surface,
+        borderRadius: `${tokens.radii.md}px`,
+        boxShadow: tokens.elevation.e1,
+        minHeight: 64,
+      }}
+    >
+      <IconButton
+        aria-label="All edits"
+        onClick={onBack}
+        sx={{ width: tokens.touch.min, height: tokens.touch.min }}
+      >
+        <ArrowBackIcon fontSize="small" />
+      </IconButton>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography
+          sx={{
+            fontWeight: 600,
+            fontSize: "1rem",
+            lineHeight: "22px",
+            overflowWrap: "anywhere",
+          }}
+        >
+          {entry?.name}
+        </Typography>
+        <Typography sx={{ ...smallSx, color: "text.secondary" }}>
+          {entry?.label}
+        </Typography>
+      </Box>
+      {feature && onEdit && (
+        <Button
+          variant="outlined"
+          color="inherit"
+          startIcon={<EditOutlinedIcon fontSize="small" />}
+          onClick={() => onEdit(feature)}
+          sx={{ minHeight: tokens.touch.min, flexShrink: 0 }}
+        >
+          Edit feature
+        </Button>
+      )}
+    </Box>
+  );
+}
+
+/** Where a section's data comes from and every edit made to it. Unfiltered:
+ * one row per kind of data (the section's origin, the river line, the
+ * features, the gauge credit, the photos), then one timeline of the edits to
+ * the section and all its features. Filtered to one entry: that entry's
+ * history under a header with its edit action. */
+export default function SourcesTab({
+  section,
+  filter,
+  onFilterChange,
+  onEditFeature,
+}: {
+  section: SectionWithFeatures;
+  filter: EditsFilter;
+  onFilterChange: (filter: EditsFilter) => void;
+  /** Opens the feature's edit panel; omitted where the page offers none. */
+  onEditFeature?: (feature: Feature) => void;
+}) {
+  const waterwayId = section.waterway_id;
+  const sources = useSources(waterwayId, section.id);
   const gauges = useWaterwayGauges(waterwayId);
   const media = useWaterwayMedia(waterwayId);
-  const [open, setOpen] = useState(false);
-  const target: HistoryTarget =
-    sectionId == null ? { waterwayId } : { waterwayId, sectionId };
+  const { isAuthenticated } = useSession();
+  const timeline = (
+    <EditsTimeline
+      section={section}
+      filter={filter}
+      onOpenEntry={(entry) => {
+        if (entry.id != null)
+          onFilterChange({ kind: entry.kind, id: entry.id });
+      }}
+    />
+  );
 
+  if (filter) {
+    return (
+      <>
+        <FilterHeader
+          section={section}
+          filter={filter}
+          onBack={() => onFilterChange(null)}
+          onEdit={isAuthenticated ? onEditFeature : undefined}
+        />
+        {timeline}
+      </>
+    );
+  }
   if (sources.isLoading) return <LoadingBox size={28} py={4} />;
   if (sources.error) {
     return (
@@ -284,12 +391,7 @@ export default function SourcesTab({
     .join(", ");
 
   return (
-    <HistoryHost
-      target={open ? target : null}
-      name={name ?? (sectionId == null ? "River" : "Section")}
-      subtitle={subtitle}
-      onClose={() => setOpen(false)}
-    >
+    <>
       <Box
         data-testid="sources"
         sx={{
@@ -312,14 +414,11 @@ export default function SourcesTab({
             pb: 1,
           }}
         >
-          {sectionId == null
-            ? "Where this data comes from."
-            : "Where this section's data comes from."}
+          Where this section's data comes from.
         </Typography>
         <OriginRow
-          target={target}
-          sectionId={sectionId}
-          onOpen={() => setOpen(true)}
+          section={section}
+          onOpen={() => onFilterChange({ kind: "section", id: section.id })}
         />
         <SourceRow
           icon={<ShowChartIcon fontSize="small" />}
@@ -338,6 +437,7 @@ export default function SourcesTab({
           />
         )}
       </Box>
-    </HistoryHost>
+      {timeline}
+    </>
   );
 }

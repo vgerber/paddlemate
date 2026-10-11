@@ -6,10 +6,11 @@ import {
   gotoSection,
 } from "../support/fixture";
 
-// The History and Sources views on their real mounts: the Sources tab of a
-// section and the History entry of the feature menus. The mount tests
-// read the real API; the content tests serve a richer history than the
-// fixture has (an import, a proposal, a deletion) through route mocks.
+// Every edit of a section and its features in one place, the Sources tab:
+// the unfiltered timeline, and the same view narrowed to one entry by the
+// History entry of the feature menus. The mount tests read the real API;
+// the content tests serve a richer history than the fixture has (an import,
+// a proposal, a deletion) through route mocks.
 
 test.use({ hasTouch: true });
 
@@ -47,6 +48,7 @@ const history = {
       source: null,
       proposal_id: 45,
       reviewer: vincent,
+      proposal_note: "Name as on the bridge sign.",
       changes: [{ field: "name", before: "Altes Wehr", after: "Old weir" }],
     },
     {
@@ -152,21 +154,20 @@ async function serve(page: Page) {
   );
 }
 
-const isPhone = (page: Page) => (page.viewportSize()?.width ?? 0) < 768;
-
 /** The panel renders once per layout; only the visible one counts. */
 const vis = (page: Page, id: string) =>
   page.getByTestId(id).filter({ visible: true });
 
-const historyPanel = (page: Page) =>
-  page.getByTestId(isPhone(page) ? "history-panel" : "history-pane");
+const header = (page: Page) => vis(page, "edits-header");
 
-/** The section's history through its header menu, the way a reader opens it. */
+/** The section's history through its header menu, the way a reader opens it:
+ * the Sources tab, narrowed to the section. */
 async function openHistory(page: Page) {
   await gotoSection(page, "lower");
   const card = page.getByTestId("features-card").filter({ visible: true });
   await card.getByRole("button", { name: "Feature list actions" }).click();
   await page.getByRole("menuitem", { name: "History" }).click();
+  await expect(header(page)).toBeVisible();
 }
 
 async function openSources(page: Page) {
@@ -193,17 +194,23 @@ test.describe("history mount", () => {
     await expect(page.getByTestId("history-step").first()).toBeVisible();
   });
 
-  test("its own panel with a back arrow, on both layouts", async ({ page }) => {
+  test("it is the Sources tab with a header and a way back to all edits", async ({
+    page,
+  }) => {
     await openHistory(page);
     await expect(page.getByTestId("history-step").first()).toBeVisible();
-    const panel = historyPanel(page);
-    await expect(panel).toBeVisible();
-    await expect(panel.getByRole("button", { name: "Cancel" })).toHaveCount(0);
-    await panel.getByRole("button", { name: "Back" }).click();
-    await expect(panel).toHaveCount(0);
     await expect(
-      page.getByTestId("features-card").filter({ visible: true }),
-    ).toBeVisible();
+      page.getByRole("tab", { name: "Sources", exact: true }),
+    ).toHaveAttribute("aria-selected", "true");
+    await expect(header(page)).toContainText("Lower Test");
+    // No overlay of its own any more.
+    await expect(page.getByTestId("history-panel")).toHaveCount(0);
+    await expect(page.getByTestId("history-pane")).toHaveCount(0);
+    const back = header(page).getByRole("button", { name: "All edits" });
+    expect((await back.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await back.click();
+    await expect(header(page)).toHaveCount(0);
+    await expect(vis(page, "sources")).toBeVisible();
   });
 });
 
@@ -326,6 +333,16 @@ test.describe("history", () => {
     ).toHaveText("Name as on the sign.");
   });
 
+  test("the submitter's note sits under the accepted step", async ({
+    page,
+  }) => {
+    await serve(page);
+    await openHistory(page);
+    await expect(
+      page.getByTestId("history-step").nth(1).getByTestId("proposal-note"),
+    ).toHaveText("Name as on the bridge sign.");
+  });
+
   test("rejected proposals fold behind one row", async ({ page }) => {
     await serve(page);
     await openHistory(page);
@@ -429,7 +446,7 @@ test.describe("sources", () => {
     expect((await row.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(72);
     await row.getByRole("button").click();
     await expect(page.getByTestId("history-step").first()).toBeVisible();
-    await historyPanel(page).getByRole("button", { name: "Back" }).click();
+    await header(page).getByRole("button", { name: "All edits" }).click();
     await expect(vis(page, "sources")).toBeVisible();
   });
 
@@ -447,8 +464,8 @@ test.describe("sources", () => {
   });
 });
 
-test.describe("history container", () => {
-  test("a feature's history is titled by the feature, with type, section and km", async ({
+test.describe("history of a feature", () => {
+  test("it is titled by the feature, with its type, and offers Edit feature", async ({
     page,
   }) => {
     await gotoSection(page, "lower");
@@ -456,37 +473,84 @@ test.describe("history container", () => {
     await list.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
     await list.getByRole("button", { name: "More actions" }).first().click();
     await page.getByRole("menuitem", { name: "History" }).click();
-    const panel = historyPanel(page);
-    await expect(panel).toContainText("Altes Wehr");
-    await expect(panel).toContainText(/Weir · Lower Test, \d+\.\d km/);
+    await expect(header(page)).toContainText("Altes Wehr");
+    await expect(header(page)).toContainText("Weir");
+    const edit = header(page).getByRole("button", { name: "Edit feature" });
+    await expect(edit).toBeVisible();
+    expect((await edit.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // Only this feature's steps: none of them names another entry.
+    await expect(page.getByTestId("edit-entry")).toHaveCount(0);
   });
 
-  test("on a desktop it replaces the section view in the pane", async ({
-    page,
-  }, info) => {
-    test.skip(info.project.name !== "desktop", "desktop only");
+  test("the filter stays across tab switches", async ({ page }) => {
     await openHistory(page);
-    const pane = page.getByTestId("history-pane");
-    await expect(pane).toBeVisible();
-    const side = await page.getByTestId("side-panel").boundingBox();
-    const over = await pane.boundingBox();
-    if (!side || !over) throw new Error("no boxes");
-    expect(over.x).toBeCloseTo(side.x, 0);
-    expect(over.y).toBeCloseTo(side.y, 0);
-    expect(over.width).toBeCloseTo(side.width, 0);
-    expect(over.height).toBeCloseTo(side.height, 0);
-    // Nothing of the section shows through: its tabs are covered.
-    const top = await page.evaluate(
-      ({ x, y }) =>
-        document
-          .elementFromPoint(x, y)
-          ?.closest("[data-testid]")
-          ?.getAttribute("data-testid"),
-      { x: side.x + side.width / 2, y: side.y + 12 },
+    await page.getByRole("tab", { name: "Features", exact: true }).click();
+    await page.getByRole("tab", { name: "Sources", exact: true }).click();
+    await expect(header(page)).toBeVisible();
+    await header(page).getByRole("button", { name: "All edits" }).click();
+    await expect(vis(page, "sources")).toBeVisible();
+  });
+});
+
+test.describe("all edits", () => {
+  test("one timeline names the entry of every step and opens it", async ({
+    page,
+  }) => {
+    await openSources(page);
+    const steps = page.getByTestId("history-step");
+    await expect(steps.first()).toBeVisible();
+    const entries = page.getByTestId("edit-entry");
+    expect(await entries.count()).toBeGreaterThan(3);
+    await expect(entries.filter({ hasText: "Section" }).first()).toBeVisible();
+    await expect(
+      entries.filter({ hasText: "Altes Wehr" }).first(),
+    ).toContainText("Weir");
+    const target = entries.filter({ hasText: "Altes Wehr" }).first();
+    expect((await target.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(
+      44,
     );
-    expect(top).not.toBe("side-panel");
-    await pane.getByRole("button", { name: "Back" }).click();
-    await expect(pane).toHaveCount(0);
+    await target.click();
+    await expect(header(page)).toContainText("Altes Wehr");
+    await expect(page.getByTestId("edit-entry")).toHaveCount(0);
+  });
+
+  test("steps run oldest first across entries", async ({ page }) => {
+    await openSources(page);
+    await expect(page.getByTestId("history-step").first()).toBeVisible();
+    const dates = await page.getByTestId("history-when").allInnerTexts();
+    const times = dates.map((d) => Date.parse(d));
+    expect(times.length).toBeGreaterThan(3);
+    expect(times).toEqual([...times].sort((a, b) => a - b));
+  });
+
+  test("open proposals of the features sit last, hollow", async ({ page }) => {
+    await openSources(page);
+    const open = page.getByTestId("history-proposal").first();
+    await expect(open).toContainText("Pending");
+    await expect(open.getByTestId("edit-entry")).toBeVisible();
+    const last = page.getByTestId("history-dot").last();
+    await expect(last).toHaveAttribute("data-kind", "pending");
+  });
+
+  test("the sources are counted for the section only", async ({ page }) => {
+    const request = page.waitForRequest((r) =>
+      /\/waterways\/\d+\/sources\?/.test(r.url()),
+    );
+    await openSources(page);
+    expect((await request).url()).toContain("section_id=9102");
+  });
+
+  test("no sideways scroll @small", async ({ page }) => {
+    await openSources(page);
+    await expect(page.getByTestId("history-step").first()).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("no overlay on either layout", async ({ page }) => {
+    await openSources(page);
+    await expect(page.getByTestId("history-step").first()).toBeVisible();
+    await expect(page.getByTestId("history-panel")).toHaveCount(0);
+    await expect(page.getByTestId("history-pane")).toHaveCount(0);
   });
 });
 
@@ -500,8 +564,7 @@ test.describe("sources of a section", () => {
     const origin = card.getByRole("button").filter({ hasText: "Section" });
     await expect(origin.first()).toBeVisible();
     await origin.first().click();
-    const panel = historyPanel(page);
-    await expect(panel).toContainText("Lower Test");
-    await expect(panel.getByTestId("history-step").first()).toBeVisible();
+    await expect(header(page)).toContainText("Lower Test");
+    await expect(page.getByTestId("history-step").first()).toBeVisible();
   });
 });

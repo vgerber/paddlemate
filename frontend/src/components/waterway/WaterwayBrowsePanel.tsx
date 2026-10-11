@@ -14,7 +14,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import DockedAction from "@/components/DockedAction";
 import PanelHeader from "@/components/PanelHeader";
-import { HistorySlot } from "@/components/provenance/HistorySlot";
+import type { EditsFilter } from "@/components/provenance/EditsTimeline";
 import SourcesTab from "@/components/provenance/SourcesTab";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -114,7 +114,11 @@ export default function WaterwayBrowsePanel({
   featureTimeline,
 }: WaterwayBrowsePanelProps) {
   const navigate = useNavigate();
-  const [historySlot, setHistorySlot] = useState<HTMLElement | null>(null);
+  // The entry the Sources tab is narrowed to; a new section starts unfiltered.
+  const [editsFilter, setEditsFilter] = useState<{
+    sectionId: number | undefined;
+    filter: EditsFilter;
+  }>({ sectionId: undefined, filter: null });
   const { data: waterway, isLoading } = useWaterway(waterwayId);
   const { data: descentCounts } = useSectionDescentCounts(waterwayId);
   const { isAuthenticated } = useSession();
@@ -261,9 +265,8 @@ export default function WaterwayBrowsePanel({
       };
 
   return (
-    <HistorySlot.Provider value={historySlot}>
+    <>
       <Box
-        ref={setHistorySlot}
         sx={{
           position: "relative",
           flex: 1,
@@ -330,13 +333,16 @@ export default function WaterwayBrowsePanel({
                 <SectionLogsList sectionId={selectedSection.id} />
               ) : sectionDetailTab === "sources" ? (
                 <SourcesTab
-                  waterwayId={waterwayId}
-                  sectionId={selectedSection.id}
-                  name={localizedName(
-                    selectedSection.name,
-                    selectedSection.names,
-                  )}
-                  subtitle={waterway?.name}
+                  section={selectedSection}
+                  filter={
+                    editsFilter.sectionId === selectedSection.id
+                      ? editsFilter.filter
+                      : null
+                  }
+                  onFilterChange={(filter) =>
+                    setEditsFilter({ sectionId: selectedSection.id, filter })
+                  }
+                  onEditFeature={featureTimeline?.onEditFeature}
                 />
               ) : sectionDetailTab === "notes" ? (
                 <CommentThread
@@ -354,6 +360,10 @@ export default function WaterwayBrowsePanel({
                   activeFeatureId={featureTimeline?.activeFeatureId}
                   onActiveFeatureChange={featureTimeline?.onActiveFeatureChange}
                   onFoldedChange={featureTimeline?.onFoldedChange}
+                  onOpenHistory={(filter) => {
+                    setEditsFilter({ sectionId: selectedSection.id, filter });
+                    onSectionDetailTabChange("sources");
+                  }}
                 />
               )
             ) : tab === "sections" ? (
@@ -430,7 +440,7 @@ export default function WaterwayBrowsePanel({
             />
           ))}
       </Box>
-    </HistorySlot.Provider>
+    </>
   );
 }
 

@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { proposerName } from "@/components/proposals/status";
 import type { Proposal } from "@/lib/api";
@@ -17,10 +17,16 @@ import { useReviewEntryProposal } from "./useProvenance";
 
 const { tokens } = theme;
 
-export function ReviewNote({ note }: { note: string }) {
+export function ReviewNote({
+  note,
+  testId = "review-note",
+}: {
+  note: string;
+  testId?: string;
+}) {
   return (
     <Typography
-      data-testid="review-note"
+      data-testid={testId}
       sx={{
         ...smallSx,
         mt: 0.75,
@@ -109,7 +115,12 @@ function ReviewButtons({ proposal }: { proposal: Proposal }) {
 }
 
 function title(proposal: Proposal): string {
-  const what = proposal.operation === "delete" ? "deletion" : "change";
+  const what =
+    proposal.operation === "delete"
+      ? "deletion"
+      : proposal.operation === "create"
+        ? "feature"
+        : "change";
   return proposal.status === "rejected"
     ? `Rejected ${what}`
     : `Proposed ${what}`;
@@ -122,8 +133,10 @@ export default function ProposalStep({
   first,
   last,
   canReview,
+  lead,
 }: {
   proposal: Proposal;
+  lead?: ReactNode;
   first: boolean;
   last: boolean;
   canReview: boolean;
@@ -137,6 +150,7 @@ export default function ProposalStep({
       first={first}
       last={last}
       title={title(proposal)}
+      lead={lead}
       status={proposal.status}
     >
       <Byline

@@ -2390,6 +2390,8 @@ export interface components {
              * @description Set when the step is the outcome of a proposal
              */
             proposal_id?: number | null;
+            /** @description The submitter's note on an accepted proposal */
+            proposal_note?: string | null;
             reviewer?: components["schemas"]["HistoryUser"] | null;
             /** @description Set for an import */
             source?: components["schemas"]["HistorySource"] | null;
@@ -5148,7 +5150,10 @@ export interface operations {
     };
     get_waterway_sources: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Count only this section and its features */
+                section_id?: number | null;
+            };
             header?: never;
             path: {
                 waterway_id: number;
