@@ -1,6 +1,6 @@
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import SearchIcon from "@mui/icons-material/Search";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
@@ -299,10 +299,22 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
+        // Desktop: the map is a card set into the pane, not edge to edge.
+        p: { md: 1.5 },
       }}
     >
       {/* Map */}
-      <Box sx={{ flex: 1, minHeight: 0, position: "relative" }}>
+      <Box
+        data-testid="map-card"
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          position: "relative",
+          overflow: { md: "hidden" },
+          borderRadius: { md: `${theme.tokens.radii.lg}px` },
+          boxShadow: { md: theme.tokens.elevation.e1 },
+        }}
+      >
         {/* Descent banner - mobile only, floats over the map when overlay is closed */}
         <StandingDescentBanner
           sx={{
@@ -530,7 +542,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
                 aria-label="Open search panel"
                 onClick={onOpenMobilePanel}
               >
-                <FilterAltIcon />
+                <SearchIcon />
               </Fab>
             </Badge>
           </Box>

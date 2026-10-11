@@ -195,11 +195,27 @@ test.describe("suggest river", () => {
   async function openRiverForm(page: Page) {
     await page.goto("/?panel=1");
     await appReady(page);
-    await page
+    const docked = page
       .getByRole("button", { name: "New river" })
-      .filter({ visible: true })
-      .first()
-      .click();
+      .filter({ visible: true });
+    if (await docked.count()) {
+      await docked.first().click();
+    } else {
+      // A phone has no button over the results; it proposes a river from
+      // the empty Rivers list.
+      await page
+        .getByPlaceholder("Search rivers or sections…")
+        .filter({ visible: true })
+        .fill("zzzqqq");
+      await page
+        .locator("button.MuiTab-root", { hasText: /^Rivers \(/ })
+        .filter({ visible: true })
+        .click();
+      await page
+        .getByRole("button", { name: "Can't find your river? Add it" })
+        .filter({ visible: true })
+        .click();
+    }
     await expect(pane(page).getByLabel("Name").first()).toBeVisible();
   }
 
@@ -255,13 +271,12 @@ test.describe("suggest river", () => {
 test.describe("suggest feature", () => {
   async function openFeatureForm(page: Page) {
     await gotoSection(page, "lower");
-    const docked = page.getByRole("button", { name: "New feature" });
-    if (await docked.filter({ visible: true }).count()) {
-      await docked.filter({ visible: true }).first().click();
-    } else {
-      await page.getByRole("button", { name: "Section actions" }).click();
-      await page.getByRole("menuitem", { name: "Add feature" }).click();
-    }
+    // The round button on a phone, the docked one on a desktop.
+    await page
+      .getByRole("button", { name: "New feature" })
+      .filter({ visible: true })
+      .first()
+      .click();
     await expect(
       pane(page).getByRole("radiogroup", { name: "Feature type" }),
     ).toBeVisible();

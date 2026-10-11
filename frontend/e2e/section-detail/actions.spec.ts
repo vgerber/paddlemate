@@ -1,13 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { gotoSection } from "../support/fixture";
 
-// The round button of a section on a phone opens a menu that has to stay on
+// The header menu of a section opens a menu that has to stay on
 // screen however small the screen is.
 
 test("the section actions stay inside the screen @small", async ({
   page,
 }, info) => {
-  test.skip(info.project.name === "desktop", "the desktop docks its actions");
+  test.skip(info.project.name === "desktop", "the pointer menu is compact");
   await gotoSection(page, "lower");
   await page.getByRole("button", { name: "Section actions" }).click();
   const items = page.getByRole("menuitem");
@@ -30,7 +30,6 @@ test("the section actions stay inside the screen @small", async ({
     "Show proposed features",
     "Start descent",
     "Log descent",
-    "Add feature",
   ]);
   for (const b of boxes) {
     expect(b.top, `${b.label} top`).toBeGreaterThanOrEqual(0);

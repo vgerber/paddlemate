@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import type { Comment, Media } from "@/lib/api";
 import { categoryColor, categoryLabel } from "@/lib/comments";
-import { timeAgo } from "@/lib/format";
+import { humanize, timeAgo } from "@/lib/format";
 import { pointCoords } from "@/lib/geo";
 import { alphas, theme } from "@/lib/theme";
 
@@ -76,9 +76,8 @@ export default function CommentRow({
       sx={{
         mx: 1.5,
         my: 1,
-        pl: 2,
-        pr: 0.5,
-        py: 1.25,
+        px: "14px",
+        py: 1.5,
         bgcolor: selected ? `${tokens.primary}${alphas.wash}` : tokens.surface,
         borderRadius: `${tokens.radii.md}px`,
         boxShadow: tokens.elevation.e1,
@@ -116,23 +115,33 @@ export default function CommentRow({
           </Typography>
         )}
         {retired && (
-          <Typography sx={{ fontSize: "0.8125rem", color: tokens.outline }}>
-            {comment.status}
+          <Typography
+            sx={{
+              fontSize: "0.8125rem",
+              fontWeight: 500,
+              color: "text.secondary",
+            }}
+          >
+            {humanize(comment.status).replace(/^./, (c) => c.toUpperCase())}
           </Typography>
         )}
         <Box sx={{ flex: 1 }} />
-        <RowMenu actions={actions} />
+        {/* Pulled into the card's padding so the menu does not add height. */}
+        <Box sx={{ mr: -1.5, my: -0.5 }}>
+          <RowMenu actions={actions} />
+        </Box>
       </Box>
 
-      <Box sx={{ pr: 1.5 }}>
+      <Box>
         <Typography
-          variant="body2"
+          data-testid="note-body"
+          variant="body1"
           sx={{
             whiteSpace: "pre-wrap",
             // A pasted URL is one long word; let it break rather than
             // stretch the panel.
             overflowWrap: "anywhere",
-            lineHeight: 1.5,
+            lineHeight: 1.4,
           }}
         >
           {comment.body}

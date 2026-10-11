@@ -263,7 +263,7 @@ test.describe("features card", () => {
     await openFeatures(page);
     const icons = page
       .getByRole("button", {
-        name: /View on map|Show proposed features|Hide proposed features|favorites/,
+        name: /View on map|Section actions/,
       })
       .filter({ visible: true });
     expect(await icons.count()).toBeGreaterThan(0);

@@ -1,11 +1,11 @@
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import WaterLevelChip from "@/components/WaterLevelChip";
+import GradeTag from "@/components/waterway/GradeTag";
 import type { SectionWithFeatures } from "@/lib/api";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
@@ -89,7 +89,7 @@ export default function SearchSectionRow({
         >
           {riverName}
         </Typography>
-        {grade && <Chip label={grade} size="small" />}
+        {grade && <GradeTag grade={grade} />}
       </Box>
       {matchedFeature && (
         <Typography

@@ -154,7 +154,7 @@ test.describe("section rows", () => {
       const r = row(page, name);
       const rb = await box(r);
       const parts = await r
-        .locator("[data-level], .MuiChip-root")
+        .locator("[data-level], [data-testid=grade-tag]")
         .evaluateAll((els) =>
           els.map((el) => {
             const b = el.getBoundingClientRect();

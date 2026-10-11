@@ -1,20 +1,17 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Finger } from "../support/finger";
 import {
-  appReady,
   computed,
   expectNoHorizontalOverflow,
   gotoSection,
 } from "../support/fixture";
 
-// The History and Sources views on their real mounts: the Sources tab of the
-// river panel and the History entry of the feature menus. The mount tests
+// The History and Sources views on their real mounts: the Sources tab of a
+// section and the History entry of the feature menus. The mount tests
 // read the real API; the content tests serve a richer history than the
 // fixture has (an import, a proposal, a deletion) through route mocks.
 
 test.use({ hasTouch: true });
-
-const WW = 9001;
 
 const mara = { user_id: "u-mara", username: "mara" };
 const vincent = { user_id: "u-vincent", username: "vincent" };
@@ -124,8 +121,7 @@ async function openHistory(page: Page) {
 }
 
 async function openSources(page: Page) {
-  await page.goto(`/?waterway=${WW}`);
-  await appReady(page);
+  await gotoSection(page, "lower");
   await page.getByRole("tab", { name: "Sources", exact: true }).click();
 }
 
@@ -253,16 +249,14 @@ test.describe("history", () => {
 });
 
 test.describe("sources", () => {
-  test("the river panel has a Sources tab after Notes", async ({ page }) => {
-    await page.goto(`/?waterway=${WW}`);
-    await appReady(page);
+  test("the section panel has a Sources tab after Notes", async ({ page }) => {
+    await gotoSection(page, "lower");
     const tabs = page.getByRole("tab").filter({ visible: true });
-    await expect(tabs).toHaveText(["Sections", "Gauges", "Notes", "Sources"]);
+    await expect(tabs).toHaveText(["Features", "Logs", "Notes", "Sources"]);
   });
 
   test("a swipe from Notes reaches Sources", async ({ page }) => {
-    await page.goto(`/?waterway=${WW}`);
-    await appReady(page);
+    await gotoSection(page, "lower");
     await page.getByRole("tab", { name: "Notes", exact: true }).click();
     // From the tab bar, which carries the same gesture as the pane.
     const box = await page.getByRole("tablist").boundingBox();
