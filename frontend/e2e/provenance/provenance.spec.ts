@@ -410,7 +410,7 @@ test.describe("sources", () => {
     await openSources(page);
     const card = vis(page, "sources");
     await expect(card).toContainText("Sources");
-    await expect(card).toContainText("Where this data comes from.");
+    await expect(card).toContainText("Where this section's data comes from.");
     await expect(card.getByTestId("source-row").first()).toContainText(
       "Imported from Rivermap",
     );
@@ -444,5 +444,64 @@ test.describe("sources", () => {
         "text-transform",
       ),
     ).toBe("none");
+  });
+});
+
+test.describe("history container", () => {
+  test("a feature's history is titled by the feature, with type, section and km", async ({
+    page,
+  }) => {
+    await gotoSection(page, "lower");
+    const list = page.getByTestId("features-card").filter({ visible: true });
+    await list.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
+    await list.getByRole("button", { name: "More actions" }).first().click();
+    await page.getByRole("menuitem", { name: "History" }).click();
+    const panel = historyPanel(page);
+    await expect(panel).toContainText("Altes Wehr");
+    await expect(panel).toContainText(/Weir · Lower Test, \d+\.\d km/);
+  });
+
+  test("on a desktop it replaces the section view in the pane", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name !== "desktop", "desktop only");
+    await openHistory(page);
+    const pane = page.getByTestId("history-pane");
+    await expect(pane).toBeVisible();
+    const side = await page.getByTestId("side-panel").boundingBox();
+    const over = await pane.boundingBox();
+    if (!side || !over) throw new Error("no boxes");
+    expect(over.x).toBeCloseTo(side.x, 0);
+    expect(over.y).toBeCloseTo(side.y, 0);
+    expect(over.width).toBeCloseTo(side.width, 0);
+    expect(over.height).toBeCloseTo(side.height, 0);
+    // Nothing of the section shows through: its tabs are covered.
+    const top = await page.evaluate(
+      ({ x, y }) =>
+        document
+          .elementFromPoint(x, y)
+          ?.closest("[data-testid]")
+          ?.getAttribute("data-testid"),
+      { x: side.x + side.width / 2, y: side.y + 12 },
+    );
+    expect(top).not.toBe("side-panel");
+    await pane.getByRole("button", { name: "Back" }).click();
+    await expect(pane).toHaveCount(0);
+  });
+});
+
+test.describe("sources of a section", () => {
+  test("it reads as the section's and opens the section's history", async ({
+    page,
+  }) => {
+    await openSources(page);
+    const card = vis(page, "sources");
+    await expect(card).toContainText("Where this section's data comes from.");
+    const origin = card.getByRole("button").filter({ hasText: "Section" });
+    await expect(origin.first()).toBeVisible();
+    await origin.first().click();
+    const panel = historyPanel(page);
+    await expect(panel).toContainText("Lower Test");
+    await expect(panel.getByTestId("history-step").first()).toBeVisible();
   });
 });

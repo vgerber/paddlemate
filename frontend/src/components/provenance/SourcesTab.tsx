@@ -242,12 +242,15 @@ export default function SourcesTab({
   waterwayId,
   sectionId,
   name,
+  subtitle,
 }: {
   waterwayId: number;
   /** The section the tab belongs to; omitted it describes the river. */
   sectionId?: number;
   /** What the history panel is titled; defaults to "Section" or "River". */
   name?: string;
+  /** The line under the history panel's title. */
+  subtitle?: string;
 }) {
   const sources = useSources(waterwayId);
   const gauges = useWaterwayGauges(waterwayId);
@@ -284,6 +287,7 @@ export default function SourcesTab({
     <HistoryHost
       target={open ? target : null}
       name={name ?? (sectionId == null ? "River" : "Section")}
+      subtitle={subtitle}
       onClose={() => setOpen(false)}
     >
       <Box
