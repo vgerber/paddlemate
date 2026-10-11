@@ -101,7 +101,7 @@ export default function RegionSheet({
                 {/* A viewport the server has not seen takes ten seconds to
                     fetch from OSM; without this the map just sits empty. */}
                 {loading && <CircularProgress size={12} color="inherit" />}
-                <Typography variant="body2" color="text.secondary" noWrap>
+                <Typography variant="body2" color="textSecondary" noWrap>
                   {loading
                     ? "Finding the regions here…"
                     : "Tap a region on the map to search in it"}
@@ -127,7 +127,7 @@ export default function RegionSheet({
 
         {picked && parents.length > 0 && (
           <>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="textSecondary">
               Part of
             </Typography>
             <ChipRow>

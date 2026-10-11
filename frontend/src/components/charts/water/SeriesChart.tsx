@@ -348,7 +348,7 @@ export default function SeriesChart({
             zIndex: 1,
           }}
         >
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="textSecondary">
             No readings in this time range.
           </Typography>
         </Box>

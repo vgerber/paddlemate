@@ -70,7 +70,7 @@ export default function GaugesList({
                   "",
                 )}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="textSecondary">
                 {range.gauge.name}
               </Typography>
               <GaugeAttribution source={range.source} />

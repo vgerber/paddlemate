@@ -181,7 +181,7 @@ export default function MarkdownField({
           {value.trim() ? (
             <MarkdownText>{value}</MarkdownText>
           ) : (
-            <Typography variant="body2" color="text.disabled">
+            <Typography variant="body2" color="textDisabled">
               Nothing to preview yet.
             </Typography>
           )}

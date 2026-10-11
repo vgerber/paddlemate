@@ -50,7 +50,7 @@ export default function DayDetail({
     >
       <FormSection label="On this day">
         {day.events.length === 0 ? (
-          <Typography variant="body2" color="text.disabled">
+          <Typography variant="body2" color="textDisabled">
             Nothing on this day yet.
           </Typography>
         ) : (

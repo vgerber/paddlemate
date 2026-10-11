@@ -63,7 +63,7 @@ export default function SocialPanel() {
           {usersLoading ? (
             <CircularProgress size={20} />
           ) : filtered.length === 0 ? (
-            <Typography variant="body2" color="text.disabled">
+            <Typography variant="body2" color="textDisabled">
               No users found.
             </Typography>
           ) : (
@@ -116,7 +116,7 @@ export default function SocialPanel() {
           {pendingRequests.length > 0 && (
             <>
               <Stack spacing={1}>
-                <Typography variant="subtitle2" color="text.secondary">
+                <Typography variant="subtitle2" color="textSecondary">
                   Pending requests ({pendingRequests.length})
                 </Typography>
                 {pendingRequests.map((u) => (
@@ -157,11 +157,11 @@ export default function SocialPanel() {
 
           {/* Following */}
           <Stack spacing={1}>
-            <Typography variant="subtitle2" color="text.secondary">
+            <Typography variant="subtitle2" color="textSecondary">
               Following ({following.length})
             </Typography>
             {following.length === 0 ? (
-              <Typography variant="body2" color="text.disabled">
+              <Typography variant="body2" color="textDisabled">
                 Not following anyone yet.
               </Typography>
             ) : (
@@ -192,11 +192,11 @@ export default function SocialPanel() {
 
           {/* Followers */}
           <Stack spacing={1}>
-            <Typography variant="subtitle2" color="text.secondary">
+            <Typography variant="subtitle2" color="textSecondary">
               Followers ({followers.length})
             </Typography>
             {followers.length === 0 ? (
-              <Typography variant="body2" color="text.disabled">
+              <Typography variant="body2" color="textDisabled">
                 No followers yet.
               </Typography>
             ) : (

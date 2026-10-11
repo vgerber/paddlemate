@@ -445,7 +445,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
                   }}
                 />
               ) : (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="textSecondary">
                   Tap and drag on the map to draw a search area
                 </Typography>
               )}
@@ -502,7 +502,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
                   {sectionName ?? waterwayName ?? ""}
                 </Typography>
                 {sectionName && waterwayName && (
-                  <Typography variant="caption" color="text.secondary" noWrap>
+                  <Typography variant="caption" color="textSecondary" noWrap>
                     {waterwayName}
                   </Typography>
                 )}

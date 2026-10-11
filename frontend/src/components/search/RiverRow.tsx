@@ -53,14 +53,14 @@ export default function RiverRow({
           where || secondary ? (
             <>
               {where && (
-                <Typography variant="caption" color="text.secondary" noWrap>
+                <Typography variant="caption" color="textSecondary" noWrap>
                   {where}
                 </Typography>
               )}
               {secondary && (
                 <Typography
                   variant="caption"
-                  color="text.disabled"
+                  color="textDisabled"
                   noWrap
                   sx={{ display: "block" }}
                 >

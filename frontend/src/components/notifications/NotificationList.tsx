@@ -116,7 +116,7 @@ function NotificationRow({
         </Typography>
         <Typography
           variant="caption"
-          color="text.disabled"
+          color="textDisabled"
           noWrap
           sx={{ display: "block", fontFamily: fonts.label }}
         >

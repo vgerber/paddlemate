@@ -249,7 +249,7 @@ function FiltersBody({
           variant="body2"
           component="span"
           sx={{ display: "block", mb: 0.75, fontWeight: 600 }}
-          color="text.secondary"
+          color="textSecondary"
         >
           Water now
         </Typography>

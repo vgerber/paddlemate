@@ -93,7 +93,7 @@ export default function PanelBottomBar({
         </Typography>
         <Typography
           variant="body2"
-          color="text.secondary"
+          color="textSecondary"
           sx={{ display: "block" }}
         >
           {subtitle}

@@ -105,7 +105,7 @@ export default function GaugeMarkers({
             {popupPin.info.river && (
               <Typography
                 variant="caption"
-                color="text.secondary"
+                color="textSecondary"
                 sx={{ display: "block" }}
               >
                 {popupPin.info.river}

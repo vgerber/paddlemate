@@ -83,7 +83,7 @@ export default function SearchSectionRow({
       >
         <Typography
           variant="body2"
-          color="text.secondary"
+          color="textSecondary"
           noWrap
           sx={{ minWidth: 0 }}
         >
@@ -94,7 +94,7 @@ export default function SearchSectionRow({
       {matchedFeature && (
         <Typography
           variant="caption"
-          color="text.disabled"
+          color="textDisabled"
           noWrap
           sx={{ gridColumn: 1 }}
         >

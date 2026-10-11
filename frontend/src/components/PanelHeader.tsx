@@ -82,7 +82,7 @@ export default function PanelHeader<T extends string>({
               {title}
             </Typography>
             {subtitle && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="textSecondary">
                 {subtitle}
               </Typography>
             )}

@@ -56,7 +56,7 @@ function LogDetailPage() {
   if (!descent) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
-        <Typography variant="body2" color="text.disabled">
+        <Typography variant="body2" color="textDisabled">
           Log not found.
         </Typography>
       </Box>

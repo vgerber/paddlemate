@@ -54,7 +54,7 @@ export default function WaterChart({
 
   if (groups.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+      <Typography variant="body2" color="textSecondary" sx={{ p: 2 }}>
         No gauge data configured for this section.
       </Typography>
     );

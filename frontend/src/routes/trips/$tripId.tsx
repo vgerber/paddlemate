@@ -26,7 +26,7 @@ function TripDetailPage() {
   if (!trip) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
-        <Typography variant="body2" color="text.disabled">
+        <Typography variant="body2" color="textDisabled">
           Trip not found.
         </Typography>
       </Box>

@@ -184,7 +184,7 @@ export default function SuggestFeatureGeometry({
           )}
 
           {pickingActive && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="textSecondary">
               {verb} the map to place {isPoint ? "the point" : "each point"}.
             </Typography>
           )}

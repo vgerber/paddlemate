@@ -29,7 +29,7 @@ export default function SectionList({
   if (sections.length === 0) {
     return (
       <Typography
-        color="text.secondary"
+        color="textSecondary"
         variant="body2"
         sx={{ textAlign: "center", py: 4 }}
       >

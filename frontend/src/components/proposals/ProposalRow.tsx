@@ -87,7 +87,7 @@ export default function ProposalRow({
             <Typography variant="caption">{proposal.downvotes}</Typography>
           </Box>
         )}
-        <Typography variant="caption" color="text.disabled">
+        <Typography variant="caption" color="textDisabled">
           {timeAgo(proposal.created_at)}
         </Typography>
       </Box>

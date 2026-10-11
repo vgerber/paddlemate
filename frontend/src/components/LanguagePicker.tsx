@@ -68,7 +68,7 @@ export default function LanguagePicker({
             <Typography variant="body2" noWrap>
               {option.native}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="textSecondary">
               {option.code}
             </Typography>
           </Box>

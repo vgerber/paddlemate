@@ -63,7 +63,7 @@ export default function EmptyState({
         {title}
       </Typography>
       {caption && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="textSecondary">
           {caption}
         </Typography>
       )}

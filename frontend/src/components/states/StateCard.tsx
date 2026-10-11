@@ -46,7 +46,7 @@ export default function StateCard({
         {caption && (
           <Typography
             variant="body2"
-            color="text.secondary"
+            color="textSecondary"
             sx={{ wordBreak: "break-word" }}
           >
             {caption}

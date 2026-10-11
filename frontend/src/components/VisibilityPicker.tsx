@@ -71,7 +71,7 @@ export default function VisibilityPicker({
           ))}
         </ToggleButtonGroup>
         {privateHint && value.type === "private" && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="textSecondary">
             {privateHint}
           </Typography>
         )}

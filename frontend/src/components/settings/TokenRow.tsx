@@ -38,7 +38,7 @@ export default function TokenRow({
         <Typography sx={{ fontWeight: 600, wordBreak: "break-word" }}>
           {token.name}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" color="textSecondary">
           {token.is_active ? "Active" : "Expired"} · Last used: {lastUsed} ·
           Expires: {expires}
         </Typography>

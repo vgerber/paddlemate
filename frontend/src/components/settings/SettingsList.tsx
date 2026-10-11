@@ -44,7 +44,7 @@ export default function SettingsList({
             <Typography sx={{ fontWeight: 600, fontSize: "0.9375rem" }}>
               {g.label}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="textSecondary">
               {g.hint}
             </Typography>
           </Box>

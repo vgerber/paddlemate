@@ -135,7 +135,7 @@ export default function RiverList({
           </List>
         )}
         <Typography
-          color="text.secondary"
+          color="textSecondary"
           variant="body2"
           sx={{ textAlign: "center", py: pendingRivers.length > 0 ? 2 : 4 }}
         >

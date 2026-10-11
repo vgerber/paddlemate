@@ -90,7 +90,7 @@ export default function StaySectionsDialog({
       <DialogContent
         sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}
       >
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" color="textSecondary">
           Rivers the group is watching from {stay.name}.
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>

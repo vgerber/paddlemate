@@ -47,7 +47,7 @@ export default function SectionPickerMap({
             zIndex: 1,
           }}
         >
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="textSecondary">
             Search a waterway to see its sections
           </Typography>
         </Box>

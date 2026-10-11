@@ -206,7 +206,7 @@ export default function ProposalDetailPane({
                   <Typography variant="body2">{translation.name}</Typography>
                 )}
                 {translation.description && (
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" color="textSecondary">
                     {translation.description}
                   </Typography>
                 )}

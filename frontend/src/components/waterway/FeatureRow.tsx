@@ -98,14 +98,14 @@ export default function FeatureRow({
         )}
         <Typography sx={labelSx}>{sentence(humanize(featureType))}</Typography>
         {description && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="textSecondary">
             {description}
           </Typography>
         )}
         {gaugeName && (
           <Typography
             variant="caption"
-            color="text.secondary"
+            color="textSecondary"
             sx={{ display: "block" }}
           >
             Gauge · {gaugeName}
@@ -119,7 +119,7 @@ export default function FeatureRow({
           alignItems: "flex-end",
         }}
       >
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" color="textSecondary">
           {placement}
         </Typography>
         {extent && (

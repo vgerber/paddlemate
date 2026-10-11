@@ -312,7 +312,7 @@ export default function WaterwaySearchPanel({
             ) : (
               <Typography
                 variant="body2"
-                color="text.secondary"
+                color="textSecondary"
                 sx={{ textAlign: "center", py: 4 }}
               >
                 Type a name, country or difficulty to search
@@ -339,7 +339,7 @@ export default function WaterwaySearchPanel({
             <Typography
               role="status"
               variant="caption"
-              color="text.secondary"
+              color="textSecondary"
               sx={{ display: "block", px: 1, pt: 1 }}
             >
               {unknownShown === 1

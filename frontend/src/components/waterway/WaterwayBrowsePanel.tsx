@@ -392,7 +392,7 @@ function SectionsList({
 }: SectionsListProps) {
   if (sections.length === 0) {
     return (
-      <Typography color="text.secondary" variant="body2" sx={{ p: 1 }}>
+      <Typography color="textSecondary" variant="body2" sx={{ p: 1 }}>
         No sections found.
       </Typography>
     );

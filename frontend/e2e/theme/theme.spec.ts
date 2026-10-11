@@ -72,6 +72,23 @@ test.describe("theme tokens", () => {
     expect(colour.match(/\d+/g)?.slice(0, 3).join(",")).toBe("14,116,144");
   });
 
+  test("secondary text computes to ink2 on two screens", async ({ page }) => {
+    await page.goto("/tools");
+    const tool = page.getByText(
+      "Review and submit river and section proposals",
+    );
+    await expect(tool.first()).toBeVisible();
+    expect(await computed(tool, "color")).toBe("rgb(88, 102, 109)");
+
+    await page.goto("/settings");
+    const hint = page
+      .getByTestId("settings-list")
+      .locator(".MuiTypography-caption")
+      .first();
+    await expect(hint).toBeVisible();
+    expect(await computed(hint, "color")).toBe("rgb(88, 102, 109)");
+  });
+
   test("reduced motion collapses transitions", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");

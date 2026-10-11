@@ -68,7 +68,7 @@ export default function InviteLinks({ tripId }: { tripId: number }) {
             <Typography variant="body2">
               Works until {formatDate(invite.expires_at)}
             </Typography>
-            <Typography variant="caption" color="text.disabled">
+            <Typography variant="caption" color="textDisabled">
               By {invite.created_by_username} ·{" "}
               {invite.uses === 1 ? "1 joined" : `${invite.uses} joined`}
             </Typography>
@@ -169,7 +169,7 @@ function FreshLink({ invite }: { invite: TripInviteCreated }) {
           </IconButton>
         )}
       </Box>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" color="textSecondary">
         Copy it now - it is shown only once. Works until{" "}
         {formatDate(invite.expires_at)}.
       </Typography>

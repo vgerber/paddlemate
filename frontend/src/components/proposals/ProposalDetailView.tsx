@@ -61,7 +61,7 @@ export default function ProposalDetailView({
         <ProposalDetailPane proposal={proposal} />
 
         {proposal.review_note && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="textSecondary">
             Note: {proposal.review_note}
           </Typography>
         )}

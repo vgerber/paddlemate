@@ -134,7 +134,7 @@ export default function AreaControls({
           </span>
         </Tooltip>
       </Box>
-      <Typography variant="body2" color="text.secondary" sx={{ px: 0.25 }}>
+      <Typography variant="body2" color="textSecondary" sx={{ px: 0.25 }}>
         {verb} on the map to set the search center.
       </Typography>
     </Box>

@@ -160,7 +160,7 @@ export default function SectionLineStep({
         {lookupHint && (
           <Typography
             variant="body2"
-            color="text.secondary"
+            color="textSecondary"
             sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
           >
             {snap.riverLookup === "searching" && <CircularProgress size={12} />}

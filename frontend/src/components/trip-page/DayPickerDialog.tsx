@@ -34,7 +34,7 @@ export default function DayPickerDialog({
       <DialogContent>
         <Typography
           variant="caption"
-          color="text.secondary"
+          color="textSecondary"
           sx={{ display: "block", pb: 1 }}
         >
           A dot marks a day that already has something on it. Any day works,

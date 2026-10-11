@@ -354,13 +354,13 @@ export default function GaugeCatalogMap() {
                   >
                     {s.label}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" color="textSecondary">
                     {counts[s.key].toLocaleString()}
                   </Typography>
                 </Box>
                 <Typography
                   variant="caption"
-                  color="text.secondary"
+                  color="textSecondary"
                   sx={{
                     display: "block",
                     fontSize: "0.75rem",
@@ -452,7 +452,7 @@ export default function GaugeCatalogMap() {
                     </Typography>
                     <Typography
                       variant="caption"
-                      color="text.secondary"
+                      color="textSecondary"
                       sx={{ display: "block" }}
                     >
                       {m.provider} · {meta.label}

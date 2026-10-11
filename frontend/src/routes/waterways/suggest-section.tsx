@@ -99,7 +99,7 @@ function SuggestSectionPage() {
   if (waterwayId == null) {
     return (
       <Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: 3 }}>
-        <Typography color="text.secondary">No waterway selected.</Typography>
+        <Typography color="textSecondary">No waterway selected.</Typography>
       </Box>
     );
   }

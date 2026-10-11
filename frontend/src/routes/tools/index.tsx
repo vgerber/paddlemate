@@ -13,7 +13,7 @@ function ToolsPage() {
       <Typography variant="h6" sx={{ fontSize: "1.5rem", fontWeight: 700 }}>
         Tools
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+      <Typography variant="body2" color="textSecondary" sx={{ mb: 2.5 }}>
         Utilities for exploring and maintaining Paddlemate's data.
       </Typography>
       <ToolsList />

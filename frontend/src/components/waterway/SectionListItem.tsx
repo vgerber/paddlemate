@@ -110,7 +110,7 @@ export default function SectionListItem({
           {place && (
             <Typography
               variant="caption"
-              color="text.secondary"
+              color="textSecondary"
               noWrap
               sx={{ display: "block" }}
             >
@@ -120,7 +120,7 @@ export default function SectionListItem({
           {matchedFeature && (
             <Typography
               variant="caption"
-              color="text.disabled"
+              color="textDisabled"
               noWrap
               sx={{ display: "block" }}
             >

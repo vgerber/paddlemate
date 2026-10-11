@@ -34,7 +34,7 @@ export const Route = createFileRoute("/settings")({
 });
 
 const Version = () => (
-  <Typography variant="caption" color="text.disabled">
+  <Typography variant="caption" color="textDisabled">
     v{__COMMIT_HASH__}
   </Typography>
 );

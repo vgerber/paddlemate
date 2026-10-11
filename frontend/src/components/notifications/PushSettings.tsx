@@ -48,7 +48,7 @@ export default function PushSettings() {
           <Typography
             data-testid="push-hint"
             variant="body2"
-            color="text.secondary"
+            color="textSecondary"
           >
             Who joins or leaves, bases added, moved or decided, and when people
             arrive. Votes and edits only show under the bell.
@@ -66,7 +66,7 @@ export default function PushSettings() {
       <Typography
         data-testid="push-device-state"
         variant="body2"
-        color="text.secondary"
+        color="textSecondary"
       >
         {deviceState}
       </Typography>

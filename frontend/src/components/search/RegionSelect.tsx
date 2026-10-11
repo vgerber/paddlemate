@@ -40,7 +40,7 @@ export default function RegionSuggestions({
 
   if (!isListingRegions(query)) {
     return (
-      <Typography variant="body2" color="text.secondary" sx={{ px: 0.25 }}>
+      <Typography variant="body2" color="textSecondary" sx={{ px: 0.25 }}>
         Type a valley, district, state or range
       </Typography>
     );
@@ -53,7 +53,7 @@ export default function RegionSuggestions({
 
   if (groups.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary" sx={{ px: 0.25 }}>
+      <Typography variant="body2" color="textSecondary" sx={{ px: 0.25 }}>
         {isFetching ? "…" : "No regions found."}
       </Typography>
     );
@@ -89,7 +89,7 @@ export default function RegionSuggestions({
                   {region.name}
                 </Typography>
                 {region.country && (
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="textSecondary">
                     {region.country}
                   </Typography>
                 )}

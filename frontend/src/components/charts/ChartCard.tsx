@@ -198,7 +198,7 @@ export default function ChartCard({
             <Box sx={{ display: "flex", alignItems: "center", mr: -1.25 }}>
               <Typography
                 variant="body2"
-                color="text.secondary"
+                color="textSecondary"
                 sx={{ flex: 1, minWidth: 0 }}
               >
                 {charted.gauge.name}

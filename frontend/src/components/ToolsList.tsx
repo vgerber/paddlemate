@@ -92,14 +92,14 @@ export default function ToolsList() {
               <Typography sx={{ fontWeight: 700, fontSize: "1rem" }}>
                 {tool.title}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="textSecondary">
                 {tool.description}
               </Typography>
             </Box>
             {count != null && (
               <Typography
                 variant="body2"
-                color="text.secondary"
+                color="textSecondary"
                 sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
               >
                 {count.toLocaleString()}

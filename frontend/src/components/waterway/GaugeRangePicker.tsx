@@ -81,7 +81,7 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
               <Typography variant="body2" noWrap>
                 {option.label}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="textSecondary">
                 {option.provider}
                 {option.catalog ? " · not yet fetched" : ""}
               </Typography>
@@ -132,7 +132,7 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
             <Alert severity="warning">{thresholdError}</Alert>
           ) : (
             selected.catalog && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="textSecondary">
                 New gauge - it starts being fetched once the section is saved.
               </Typography>
             )
