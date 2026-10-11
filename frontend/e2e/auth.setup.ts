@@ -16,6 +16,15 @@ setup("sign in as the fixture admin", async ({ page, context }) => {
     .first()
     .click();
 
+  // Credentials only ever go to the local identity server. A worktree without
+  // frontend/.env.development.local falls back to the production one.
+  await page.waitForURL(
+    (url) =>
+      url.pathname.includes("/realms/") || url.protocol === "chrome-error:",
+  );
+  const host = new URL(page.url()).host;
+  expect(host, "sign-in must go to the local Keycloak").toBe("localhost:8080");
+
   await page.locator("#username").fill(USER);
   await page.locator("#password").fill(PASS);
   await page.locator("#kc-login").click();
