@@ -79,9 +79,96 @@ test.describe("trip plan", () => {
     await expect(days).toHaveCount(7);
     await expectTouchTargets(days);
     await expect(strip(page).locator("[data-today=true]")).toHaveCount(1);
+    await expect(strip(page).locator("[data-runs]").first()).toBeVisible();
+  });
+
+  test("run marks: one dot per planned run, inside the cell, white when selected @small", async ({
+    page,
+  }) => {
+    await openPlan(page);
+    const marks = (cell: Locator) => cell.getByTestId("run-mark");
+    const cells = strip(page).getByTestId("week-day");
+    const runDays = strip(page).locator("[data-runs]:not([data-runs='0'])");
+    await expect(runDays.first()).toBeVisible();
+
+    // Every cell draws exactly as many dots as it has runs, never more than 3.
+    for (const cell of await cells.all()) {
+      const runs = Number(await cell.getAttribute("data-runs"));
+      expect(runs).toBeLessThanOrEqual(3);
+      await expect(marks(cell)).toHaveCount(runs);
+    }
+
+    // The first day of the plan is selected and has a run: white dots,
+    // 5px, 3px apart, centred inside the day's disc.
+    const current = strip(page).locator("[data-current=true]");
+    const dots = marks(current);
+    const n = await dots.count();
+    expect(n).toBeGreaterThan(0);
+    const disc = await current.getByTestId("day-number").boundingBox();
+    const boxes = [];
+    for (let i = 0; i < n; i++) {
+      await expect(dots.nth(i)).toHaveCSS(
+        "background-color",
+        "rgb(255, 255, 255)",
+      );
+      const b = await dots.nth(i).boundingBox();
+      if (!b || !disc) throw new Error("no box");
+      expect(b.width).toBe(5);
+      expect(b.height).toBe(5);
+      expect(b.y).toBeGreaterThanOrEqual(disc.y);
+      expect(b.y + b.height).toBeLessThanOrEqual(disc.y + disc.height);
+      if (i > 0) expect(b.x - (boxes[i - 1].x + 5)).toBeCloseTo(3, 0);
+      boxes.push(b);
+    }
+    if (disc) {
+      const mid = (boxes[0].x + boxes[n - 1].x + 5) / 2;
+      expect(Math.abs(mid - (disc.x + disc.width / 2))).toBeLessThan(1);
+    }
+
+    // An unselected run day keeps grey dots.
+    const other = strip(page)
+      .locator("[data-current=false]:not([data-runs='0'])")
+      .first();
+    await expect(marks(other).first()).not.toHaveCSS(
+      "background-color",
+      "rgb(255, 255, 255)",
+    );
+
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("a day without runs has no marks, in the week and the month", async ({
+    page,
+  }) => {
+    await openPlan(page);
+    await page.getByRole("button", { name: "Show the month" }).click();
+    const today = monthGrid(page).locator("[data-today=true]");
+    // Today in the fixture is a base change: something on it, but no run.
+    await expect(today).toHaveAttribute("data-runs", "0");
+    await expect(today.getByTestId("run-mark")).toHaveCount(0);
     await expect(
-      strip(page).locator("[data-has-entries=true]").first(),
+      monthGrid(page).locator("[data-runs]:not([data-runs='0'])").first(),
     ).toBeVisible();
+    for (const cell of await monthGrid(page).getByTestId("week-day").all()) {
+      await expect(cell.getByTestId("run-mark")).toHaveCount(
+        Number(await cell.getAttribute("data-runs")),
+      );
+    }
+  });
+
+  test("the handle sits clear of the day row", async ({ page }) => {
+    await openPlan(page);
+    const cell = await strip(page)
+      .getByTestId("week-day")
+      .first()
+      .boundingBox();
+    const bar = await page
+      .getByRole("button", { name: "Show the month" })
+      .locator("div")
+      .first()
+      .boundingBox();
+    if (!cell || !bar) throw new Error("no box");
+    expect(bar.y - (cell.y + cell.height)).toBeGreaterThanOrEqual(12);
   });
 
   test("strip stays pinned while the days scroll", async ({ page }) => {

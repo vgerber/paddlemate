@@ -6,6 +6,8 @@ import {
   eachDay,
   monthGrid,
   paddledByRiver,
+  runCounts,
+  type TripDay,
 } from "./tripTimeline";
 
 const START = "2026-06-01";
@@ -269,5 +271,40 @@ describe("monthGrid", () => {
   test("handles a month that starts on a Monday without a blank week", () => {
     // 01 June 2026 is a Monday.
     expect(monthGrid(2026, 6)[0][0]).toBe("2026-06-01");
+  });
+});
+
+describe("runCounts", () => {
+  const S = (id: number): [number, string, number, string] => [id, "S", 1, "R"];
+  const day = (date: string, events: TripDay["events"]): TripDay => ({
+    day: 1,
+    date,
+    events,
+  });
+
+  test("counts distinct sections on days with runs only", () => {
+    const counts = runCounts([
+      day("2026-06-01", [paddle("a", [S(1), S(2)])]),
+      day("2026-06-02", [
+        { kind: "arrives", date: "2026-06-02", member: member("a") },
+      ]),
+      day("2026-06-03", []),
+      day("2026-06-04", [paddle("a", [S(1)]), paddle("b", [S(1)])]),
+    ]);
+    expect([...counts]).toEqual([
+      ["2026-06-01", 2],
+      ["2026-06-04", 1],
+    ]);
+  });
+
+  test("caps a day at three marks", () => {
+    const counts = runCounts([
+      day("2026-06-01", [paddle("a", [S(1), S(2), S(3), S(4), S(5)])]),
+    ]);
+    expect(counts.get("2026-06-01")).toBe(3);
+  });
+
+  test("a log without sections is not a run mark", () => {
+    expect(runCounts([day("2026-06-01", [paddle("a", [])])]).size).toBe(0);
   });
 });

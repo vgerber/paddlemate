@@ -7,8 +7,8 @@ import { MonthView } from "./PlanCalendar";
 interface Props {
   /** The day currently open, if any. */
   selected: string | null;
-  /** Days that already have something on them. */
-  inUse: Set<string>;
+  /** Planned runs per day, as the marks under the numbers. */
+  runs: Map<string, number>;
   /** The trip's own span, shaded so its days read as part of it. */
   from: string;
   to: string | null;
@@ -16,13 +16,13 @@ interface Props {
 }
 
 /**
- * A month at a time, with the days that already have something on them
+ * A month at a time, with the days that have runs
  * marked. It draws the plan's own month, so picking a day looks like the
  * calendar the day will open in.
  */
 export default function DayCalendar({
   selected,
-  inUse,
+  runs,
   from,
   to,
   onSelect,
@@ -43,7 +43,7 @@ export default function DayCalendar({
         current={selected}
         from={from}
         to={to}
-        withEntries={inUse}
+        runs={runs}
         planned={null}
         onPick={onSelect}
       />

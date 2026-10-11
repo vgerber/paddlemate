@@ -16,6 +16,7 @@ import { alphas, fonts, theme } from "@/lib/theme";
 import {
   type PaddledRiver,
   paddledByRiver,
+  runCounts,
   type TripDay,
 } from "@/lib/tripTimeline";
 import DayDetail, { type DayActions } from "./DayDetail";
@@ -64,10 +65,7 @@ export default function TripTimeline({
   const jumped = useRef(false);
 
   const planned = useMemo(() => new Set(days.map((d) => d.date)), [days]);
-  const withEntries = useMemo(
-    () => new Set(days.filter((d) => d.events.length > 0).map((d) => d.date)),
-    [days],
-  );
+  const runs = useMemo(() => runCounts(days), [days]);
   const shown = current ?? days[0]?.date ?? today;
 
   const jumpTo = useCallback((date: string) => {
@@ -149,7 +147,7 @@ export default function TripTimeline({
         from={trip.start_date}
         to={trip.end_date ?? null}
         planned={planned}
-        withEntries={withEntries}
+        runs={runs}
         open={monthOpen}
         onOpenChange={setMonthOpen}
         onPick={jumpTo}
