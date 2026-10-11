@@ -19,6 +19,8 @@ const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 const DISC = 36;
 const BAND_INSET = 4;
 const GRABBER = 16;
+const MARK = 5;
+const MARK_GAP = 3;
 
 interface Props {
   /** The day the reader is on; its week is the one shown. */
@@ -29,8 +31,8 @@ interface Props {
   to: string | null;
   /** Days that have a card in the list below, so can be jumped to. */
   planned: Set<string>;
-  /** Days with something on them. */
-  withEntries: Set<string>;
+  /** Runs per day, drawn as dots under the number. */
+  runs: Map<string, number>;
   /** The month is open; owned by the plan so it can dim the list behind it. */
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -45,7 +47,7 @@ export default function PlanCalendar({
   from,
   to,
   planned,
-  withEntries,
+  runs,
   open,
   onOpenChange,
   onPick,
@@ -81,7 +83,7 @@ export default function PlanCalendar({
     }
   };
 
-  const days = { today, current, from, to, withEntries, planned, onPick: pick };
+  const days = { today, current, from, to, runs, planned, onPick: pick };
 
   return (
     <Box
@@ -123,6 +125,7 @@ export default function PlanCalendar({
           position: "relative",
           width: "100%",
           height: GRABBER,
+          mt: 1,
           mb: 0.75,
           // The drag is ours: the browser must not take it as a scroll.
           touchAction: "none",
@@ -158,7 +161,7 @@ interface DayProps {
   /** The trip's own span, tinted. */
   from: string;
   to: string | null;
-  withEntries: Set<string>;
+  runs: Map<string, number>;
   /** Days that can be picked; null means every day. */
   planned: Set<string> | null;
   onPick: (date: string) => void;
@@ -237,7 +240,7 @@ function WeekdayHeader() {
 }
 
 /** The in-trip stretches of a row as [first, last] column pairs. */
-function runs(flags: boolean[]): [number, number][] {
+function stretches(flags: boolean[]): [number, number][] {
   const out: [number, number][] = [];
   flags.forEach((on, i) => {
     if (!on) return;
@@ -258,12 +261,14 @@ function WeekRow({
   current,
   from,
   to,
-  withEntries,
+  runs,
   planned,
   onPick,
 }: DayProps & { dates: string[]; dimmed?: (date: string) => boolean }) {
   const col = current === null ? -1 : dates.indexOf(current);
-  const bands = runs(dates.map((d) => d >= from && (to === null || d <= to)));
+  const bands = stretches(
+    dates.map((d) => d >= from && (to === null || d <= to)),
+  );
   return (
     <Box
       sx={{
@@ -324,7 +329,7 @@ function WeekRow({
           dim={dimmed?.(d) ?? false}
           today={d === today}
           current={d === current}
-          hasEntries={withEntries.has(d)}
+          runs={runs.get(d) ?? 0}
           enabled={planned === null || planned.has(d)}
           onPick={() => onPick(d)}
         />
@@ -338,7 +343,7 @@ function DayCell({
   dim,
   today,
   current,
-  hasEntries,
+  runs,
   enabled,
   onPick,
 }: {
@@ -346,7 +351,7 @@ function DayCell({
   dim: boolean;
   today: boolean;
   current: boolean;
-  hasEntries: boolean;
+  runs: number;
   enabled: boolean;
   onPick: () => void;
 }) {
@@ -357,7 +362,7 @@ function DayCell({
       data-date={date}
       data-today={today}
       data-current={current}
-      data-has-entries={hasEntries}
+      data-runs={runs}
       disabled={!enabled}
       aria-label={format(parseISO(date), "EEE, dd MMM")}
       aria-current={today ? "date" : undefined}
@@ -374,6 +379,8 @@ function DayCell({
       <Box
         data-testid="day-number"
         sx={{
+          position: "relative",
+          pb: runs > 0 ? "6px" : 0,
           width: DISC,
           height: DISC,
           borderRadius: "50%",
@@ -396,19 +403,34 @@ function DayCell({
         }}
       >
         {Number(date.slice(8, 10))}
+        {runs > 0 && (
+          <Box
+            data-testid="run-marks"
+            sx={{
+              position: "absolute",
+              bottom: 4,
+              left: 0,
+              right: 0,
+              display: "flex",
+              justifyContent: "center",
+              gap: `${MARK_GAP}px`,
+            }}
+          >
+            {Array.from({ length: runs }, (_, i) => (
+              <Box
+                key={i}
+                data-testid="run-mark"
+                sx={{
+                  width: MARK,
+                  height: MARK,
+                  borderRadius: "50%",
+                  bgcolor: current ? tokens.onPrimary : tokens.onSurfaceVariant,
+                }}
+              />
+            ))}
+          </Box>
+        )}
       </Box>
-      {hasEntries && (
-        <Box
-          sx={{
-            position: "absolute",
-            bottom: 2,
-            width: 4,
-            height: 4,
-            borderRadius: "50%",
-            bgcolor: current ? tokens.primary : tokens.onSurfaceVariant,
-          }}
-        />
-      )}
     </ButtonBase>
   );
 }

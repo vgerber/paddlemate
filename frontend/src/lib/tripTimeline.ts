@@ -221,3 +221,21 @@ export function paddledByRiver(events: TripEvent[]): {
   );
   return { rivers, unsectioned };
 }
+
+/** The most run marks a day cell can hold. */
+export const MAX_RUN_MARKS = 3;
+
+/** Runs per day, for the marks under the calendar's numbers: one per distinct
+ * section on the day, capped. Days without a run (arrivals, rest, bases) are
+ * left out. */
+export function runCounts(days: TripDay[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const day of days) {
+    const count = paddledByRiver(day.events).rivers.reduce(
+      (n, river) => n + river.sections.length,
+      0,
+    );
+    if (count > 0) out.set(day.date, Math.min(count, MAX_RUN_MARKS));
+  }
+  return out;
+}
