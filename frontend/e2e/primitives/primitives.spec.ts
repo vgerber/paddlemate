@@ -108,6 +108,14 @@ test.describe("underlined tabs", () => {
     await expect(tab(page, "Logs")).toHaveAttribute("aria-selected", "true");
   });
 
+  test("@small the back arrow is a touch target", async ({ page }) => {
+    await openSection(page);
+    await expectTouchTargets(
+      page.getByRole("button", { name: "Back" }).filter({ visible: true }),
+      44,
+    );
+  });
+
   test("@small the screen does not scroll sideways", async ({ page }) => {
     await openSection(page);
     await expectNoHorizontalOverflow(page);

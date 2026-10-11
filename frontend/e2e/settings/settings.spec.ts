@@ -87,7 +87,7 @@ test.describe("settings layout", () => {
       await expect(page.getByTestId("settings-detail")).toBeVisible();
       await expectTouchTargets(
         page.locator(
-          "[data-testid=settings-detail] button:not([aria-label=Back]):visible, [data-testid=push-row], [data-testid=settings-detail] a:visible",
+          "[data-testid=settings-detail] button:visible, [data-testid=push-row], [data-testid=settings-detail] a:visible",
         ),
       );
     }

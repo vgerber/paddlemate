@@ -4,7 +4,10 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { HTMLAttributes, ReactNode } from "react";
+import { theme } from "@/lib/theme";
 import UnderlineTabs from "./UnderlineTabs";
+
+const { tokens } = theme;
 
 interface PanelHeaderProps<T extends string> {
   /** Omitted where the panel is already named beside it - a desktop detail
@@ -59,8 +62,12 @@ export default function PanelHeader<T extends string>({
         >
           {onBack && (
             <IconButton
-              size="small"
               onClick={onBack}
+              sx={{
+                width: tokens.touch.min,
+                height: tokens.touch.min,
+                ml: -0.75,
+              }}
               aria-label={backIcon === "close" ? "Cancel" : "Back"}
             >
               {backIcon === "close" ? (
