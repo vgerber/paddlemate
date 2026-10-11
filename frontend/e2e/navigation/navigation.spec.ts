@@ -192,7 +192,7 @@ test.describe("phone bottom navigation", () => {
     await expect(current).toHaveAttribute("aria-current", "page");
     const pill = current.getByTestId("nav-pill");
     expect(await computed(pill, "color")).toBe(TEAL);
-    expect(await computed(pill, "background-color")).toBe("rgb(217, 237, 242)");
+    expect(await computed(pill, "background-color")).toBe("rgb(224, 242, 246)");
     expect(await computed(pill, "border-radius")).toBe("999px");
     const other = nav.getByRole("link", { name: "Trips" });
     await expect(other).not.toHaveAttribute("aria-current", "page");

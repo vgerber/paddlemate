@@ -33,7 +33,7 @@ const tokens = {
   primary: "#0e7490",
   onPrimary: "#ffffff",
   primaryDark: "#0b5d74",
-  primaryContainer: "#d9edf2",
+  primaryContainer: "#e0f2f6",
   onPrimaryContainer: "#0b5d74",
 
   // Success - the calm "low" green, also palette.success
@@ -46,7 +46,7 @@ const tokens = {
   // The keys stay so existing consumers keep resolving.
   tertiary: "#0e7490",
   tertiaryFixed: "#0e7490",
-  tertiaryContainer: "#d9edf2",
+  tertiaryContainer: "#e0f2f6",
   onTertiaryContainer: "#0b5d74",
   onTertiary: "#ffffff",
 
@@ -69,7 +69,7 @@ const tokens = {
   levels: {
     empty: {
       label: "E",
-      marker: "#9aa5ab",
+      marker: "#89969d",
       text: "#5b676e",
       bg: "transparent",
       border: "rgba(91,103,110,0.45)",
@@ -82,9 +82,9 @@ const tokens = {
     },
     medium: {
       label: "M",
-      marker: "#ff9800",
-      text: "#8f5b00",
-      bg: "rgba(143,91,0,0.15)",
+      marker: "#d57f00",
+      text: "#855400",
+      bg: "rgba(133,84,0,0.15)",
     },
     high: {
       label: "H",
@@ -101,13 +101,13 @@ const tokens = {
     hole: "#D55E00",
     siphon: "#D55E00",
     strainer: "#D55E00",
-    waterfall: "#56B4E9",
-    freestyle_spot: "#F0E442",
+    waterfall: "#1F9CE2",
+    freestyle_spot: "#A0960D",
     put_in: "#0072B2",
     take_out: "#D55E00",
-    portage: "#E69F00",
-    weir: "#E69F00",
-    dam: "#E69F00",
+    portage: "#C48800",
+    weir: "#C48800",
+    dam: "#C48800",
     obstacle: "#CC79A7",
     bridge: "#58666d",
   },
@@ -544,21 +544,23 @@ export const theme = createTheme({
     },
 
     // The calm field: the label always sits inside at the top, the value
-    // beneath it, a 1px inset line that becomes a 2px accent ring on focus.
+    // beneath it, a 1px inset outline that becomes a 2px accent ring on focus.
     MuiFilledInput: {
       defaultProps: { disableUnderline: true },
       styleOverrides: {
         root: {
           borderRadius: radii.sm + 2,
           backgroundColor: tokens.surface,
-          boxShadow: `inset 0 0 0 1px ${tokens.outlineVariant}`,
+          // The rest edge is the only boundary of the control: outline
+          // clears the 3:1 floor, outlineVariant (a hairline) does not.
+          boxShadow: `inset 0 0 0 1px ${tokens.outline}`,
           overflow: "hidden",
           // 16px: anything smaller makes iOS zoom the page on focus.
           fontSize: "1rem",
           transition: `box-shadow ${motion.fast}ms ${motion.easeOut}`,
           "&:hover": {
             backgroundColor: tokens.surface,
-            boxShadow: `inset 0 0 0 1px ${tokens.outline}`,
+            boxShadow: `inset 0 0 0 1px ${tokens.onSurfaceVariant}`,
           },
           "&.Mui-focused": {
             backgroundColor: tokens.surface,
@@ -592,10 +594,10 @@ export const theme = createTheme({
           backgroundColor: tokens.surface,
           fontSize: "1rem",
           "& .MuiOutlinedInput-notchedOutline": {
-            borderColor: tokens.outlineVariant,
+            borderColor: tokens.outline,
           },
           "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: tokens.outline,
+            borderColor: tokens.onSurfaceVariant,
           },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
             borderColor: tokens.primary,
