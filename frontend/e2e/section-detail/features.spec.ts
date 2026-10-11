@@ -232,6 +232,17 @@ test.describe("features card", () => {
     expect(x + width).toBeLessThanOrEqual(vw);
   });
 
+  test("the header's icons are 44px to hit", async ({ page }) => {
+    await openFeatures(page);
+    const icons = page
+      .getByRole("button", {
+        name: /View on map|Show proposed features|Hide proposed features|favorites/,
+      })
+      .filter({ visible: true });
+    expect(await icons.count()).toBeGreaterThan(0);
+    await expectTouchTargets(icons);
+  });
+
   test("the fold chevron is a labelled button", async ({ page }) => {
     await openFeatures(page);
     const fold: Locator = card(page).getByTestId("features-fold");

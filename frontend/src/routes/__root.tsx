@@ -42,6 +42,9 @@ import { alphas, BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
 const { tokens } = theme;
 
 const navLinkSx = {
+  display: "inline-flex",
+  alignItems: "center",
+  minHeight: tokens.touch.min,
   fontFamily: fonts.label,
   fontSize: "0.875rem",
   fontWeight: 600,
@@ -137,6 +140,9 @@ function Layout() {
             component={Link}
             to="/"
             sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              minHeight: tokens.touch.min,
               fontFamily: fonts.label,
               fontSize: "1.125rem",
               fontWeight: 700,

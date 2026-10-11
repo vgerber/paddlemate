@@ -70,6 +70,14 @@ interface WaterwayBrowsePanelProps {
   };
 }
 
+const { tokens } = theme;
+
+/** The header's icons are small to look at and 44px to hit. */
+const headerIconSx = {
+  width: tokens.touch.min,
+  height: tokens.touch.min,
+} as const;
+
 const SECTION_TABS: SectionDetailTab[] = ["features", "logs", "notes"];
 const RIVER_TABS: DetailTab[] = ["sections", "gauges", "notes", "sources"];
 
@@ -109,7 +117,10 @@ export default function WaterwayBrowsePanel({
   // Desktop only: on a phone these two are on the section speed dial, and
   // having them in both places gave the same action two homes. There is no
   // speed dial on desktop, so the header is where they live there.
-  const desktopOnly = { display: { xs: "none", md: "inline-flex" } } as const;
+  const desktopOnly = {
+    ...headerIconSx,
+    display: { xs: "none", md: "inline-flex" },
+  } as const;
   const actionButton =
     showProposedToggle || showFavoriteToggle || onMobileMapToggle ? (
       <>
@@ -152,6 +163,7 @@ export default function WaterwayBrowsePanel({
         {onMobileMapToggle && (
           <IconButton
             size="small"
+            sx={headerIconSx}
             onClick={onMobileMapToggle}
             aria-label={mobileMapActive ? "Back to detail" : "View on map"}
             color={mobileMapActive ? "primary" : undefined}
