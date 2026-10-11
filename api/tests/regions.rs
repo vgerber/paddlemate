@@ -76,6 +76,14 @@ async fn world(pool: &PgPool) {
     square(pool, "Imst", "district", "AT", [9.1, 46.1, 9.5, 46.5]).await;
     square(pool, "Otztal", "valley", "AT", [9.2, 46.2, 9.3, 46.3]).await;
     square(pool, "Alpen", "range", "AT", [9.0, 46.0, 9.9, 47.9]).await;
+    // Its bounding box covers the district's centre, the area itself does not.
+    sqlx::query(
+        "INSERT INTO regions (name, kind, country, geom) VALUES ('Sliver', 'state', 'AT',
+         ST_GeomFromText('POLYGON((9.6 46.0, 9.0 46.9, 9.6 46.9, 9.6 46.0))', 4326))",
+    )
+    .execute(pool)
+    .await
+    .unwrap();
 }
 
 #[sqlx::test]
