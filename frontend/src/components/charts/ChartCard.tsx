@@ -110,8 +110,8 @@ export default function ChartCard({
     <Box
       data-testid="chart-card"
       sx={{
-        // The pane around the cards already pads 8px, which makes 12.
-        mx: 0.5,
+        // The pane has no side padding; every list in it sets its own 12px.
+        mx: 1.5,
         mt: 1.5,
         flexShrink: 0,
         bgcolor: tokens.surface,
