@@ -6,12 +6,11 @@ import ProposalDetailPane from "@/components/proposals/ProposalDetailPane";
 import ProposalReviewControls from "@/components/proposals/ProposalReviewControls";
 import type { Proposal } from "@/lib/api";
 import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
-import { labelSx } from "@/lib/theme";
 import StatusChip from "./StatusChip";
 
 /** The whole proposal: what it is, the change itself with its map, and the
- * review controls. Fills the pane beside the list on a desktop; with
- * `onBack` it is a page of its own under the panel header. */
+ * review controls. Beside the list on a desktop it keeps its title and drops
+ * only the back arrow, which `onBack` adds on a phone. */
 export default function ProposalDetailView({
   proposal,
   adminMode,
@@ -30,29 +29,20 @@ export default function ProposalDetailView({
 
   return (
     <Box data-testid="proposal-detail">
-      {onBack ? (
-        <PanelHeader
-          title={proposalTitle(proposal)}
-          subtitle={kind}
-          onBack={onBack}
-          actionButton={<StatusChip status={proposal.status} />}
-        />
-      ) : (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, pb: 1.5 }}>
-          <Typography sx={{ ...labelSx, flex: 1, minWidth: 0 }} noWrap>
-            {kind}
-          </Typography>
-          <StatusChip status={proposal.status} />
-        </Box>
-      )}
+      <PanelHeader
+        title={proposalTitle(proposal)}
+        subtitle={kind}
+        onBack={onBack}
+        actionButton={<StatusChip status={proposal.status} />}
+      />
 
       <Box
         sx={{
           display: "flex",
           flexDirection: "column",
           gap: 2.5,
-          px: onBack ? 2 : 0,
-          py: onBack ? 2 : 0,
+          px: 2,
+          py: 2,
         }}
       >
         {proposal.operation === "delete" && (

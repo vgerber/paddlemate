@@ -3,10 +3,10 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
+import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
 import { durationLabel, formatDate, formatTime, timeAgo } from "@/lib/format";
 import { theme } from "@/lib/theme";
-import LevelPill from "./LevelPill";
 import { levelAtTime } from "./levelAtTime";
 
 const { tokens } = theme;

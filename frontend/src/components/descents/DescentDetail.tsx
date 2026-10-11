@@ -5,6 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import Fact, { valueSx } from "@/components/Fact";
 import WaterwayMap from "@/components/map/Map";
+import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { toPseudoSection, uniqueSnapshotsBySeries } from "@/lib/descents";
 import {
@@ -16,7 +17,6 @@ import {
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
 import { labelSx, theme } from "@/lib/theme";
 import { levelConfig } from "@/lib/waterLevel";
-import LevelPill from "./LevelPill";
 
 const { tokens } = theme;
 

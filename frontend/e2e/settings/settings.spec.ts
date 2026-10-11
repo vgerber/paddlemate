@@ -7,15 +7,9 @@ import {
 
 const isDesktop = (page: Page) => (page.viewportSize()?.width ?? 0) >= 768;
 
-/** The open section's title: a bold line in the desktop pane, the panel
- * header on a phone. */
+/** The open section's title, in the panel header of either layout. */
 const title = (page: Page, text: string) =>
-  isDesktop(page)
-    ? page.getByTestId("settings-title").filter({ hasText: text })
-    : page
-        .getByTestId("settings-detail")
-        .getByText(text, { exact: true })
-        .first();
+  page.getByTestId("settings-detail").getByText(text, { exact: true }).first();
 
 const GROUPS = [
   ["account", "Account"],
@@ -38,6 +32,10 @@ test.describe("settings layout", () => {
     }
     // The account opens by default and the detail sits right of the list.
     await expect(title(page, "Account")).toBeVisible();
+    // The pane keeps the title and drops only the back arrow.
+    await expect(
+      page.getByTestId("settings-detail").getByRole("button", { name: "Back" }),
+    ).toHaveCount(0);
     const l = await list.boundingBox();
     const d = await page.getByTestId("settings-detail").boundingBox();
     expect(d?.x ?? 0).toBeGreaterThanOrEqual((l?.x ?? 0) + (l?.width ?? 0) - 1);

@@ -6,7 +6,7 @@ import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Feature, WaterRangeWithStatus } from "@/lib/api";
 import { lineCoords } from "@/lib/geo";
 import { useWaterway } from "@/lib/hooks/useWaterways";
-import type { GeometryPicking } from "./GeometryPicker";
+import type { GeometryPicking } from "./geometryPicking";
 import SuggestFeatureForm from "./SuggestFeatureForm";
 
 interface SuggestFeaturePanelProps {

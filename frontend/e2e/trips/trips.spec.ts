@@ -52,9 +52,14 @@ test.describe("trip list", () => {
   test("desktop opens the trip beside the list", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop");
     await openList(page);
-    await expect(page.getByText(/\d+ results?/)).toBeVisible();
-    await page.getByTestId("trip-card").first().click();
+    await expect(page.getByText(/\d+ trips?/)).toBeVisible();
+    const first = page.getByTestId("trip-card").first();
+    const name = (await first.innerText()).split("\n")[0];
+    await first.click();
     await expect(page).toHaveURL(/selected=/);
+    // The pane keeps the trip's title and drops only the back arrow.
+    await expect(page.getByText(name, { exact: true })).toHaveCount(2);
+    await expect(page.getByRole("button", { name: "Back" })).toHaveCount(0);
     await expect(
       page.getByRole("tab", { name: "Plan", exact: true }),
     ).toBeVisible();
@@ -272,7 +277,7 @@ test.describe("bases and candidates", () => {
 
   test("logs tab opens with a count @small", async ({ page }) => {
     await openTab(page, "Logs");
-    await expect(page.getByText(/^\d+ results?$/).first()).toBeVisible();
+    await expect(page.getByText(/^\d+ logs?$/).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 });

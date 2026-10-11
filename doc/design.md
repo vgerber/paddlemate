@@ -21,7 +21,8 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   full-screen overlay on mobile. Panels open with one header pattern: back
   arrow, bold title, grey subtitle, action icons at the right, then **underlined
   tabs** when the panel has views. A detail pane rendered beside the list it was
-  picked from drops the title row, because the list already names the open item.
+  picked from keeps the title row and drops only the back arrow, because the
+  list beside it carries the way back.
 - **Tabs swipe.** The content under the tab bar follows the finger one to one
   and settles on the next tab; the underline stretches in step. The first and
   last tab resist and spring back. The screen edge (24px) stays free for the

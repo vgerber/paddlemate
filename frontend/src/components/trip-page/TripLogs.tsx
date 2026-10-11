@@ -55,7 +55,11 @@ export default function TripLogs({
 
   return (
     <Box>
-      <ListPaneHeader count={descents.length} sx={{ px: 0.5 }} />
+      <ListPaneHeader
+        count={descents.length}
+        noun={{ one: "log", other: "logs" }}
+        sx={{ px: 0.5 }}
+      />
       {descents.map((d) => (
         <Box
           key={d.id}

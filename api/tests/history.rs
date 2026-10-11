@@ -893,7 +893,7 @@ async fn the_backfill_gives_old_rows_a_first_step(pool: PgPool) {
         .execute(&pool)
         .await
         .unwrap();
-    let backfill = include_str!("../migrations/0048_entity_history_backfill.sql");
+    let backfill = include_str!("../migrations/00048_entity_history_backfill.sql");
     sqlx::raw_sql(backfill).execute(&pool).await.unwrap();
 
     let step = |kind: &'static str, id: i64| {

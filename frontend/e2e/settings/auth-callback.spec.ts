@@ -9,7 +9,7 @@ test.describe("sign-in callback", () => {
   }) => {
     await page.goto("/auth/callback?error=access_denied&state=x");
     await expect(page.getByText("Sign-in failed")).toBeVisible();
-    await expect(page.getByTestId("sign-in-card")).toBeVisible();
+    await expect(page.getByTestId("state-card")).toBeVisible();
     const home = page.getByRole("button", { name: "Go home" });
     await expect(home).toBeVisible();
     expect(await computed(home, "text-transform")).toBe("none");

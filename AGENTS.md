@@ -340,9 +340,9 @@ on `surfaceLow` with a hairline right border, the detail capped at 880px, and
 the open item held in a search param so it stays linkable. `ProposalsView`,
 `routes/trips/index.tsx` and `routes/logs.tsx` are the worked examples; the
 same detail component renders as the mobile overlay, so both sizes show the
-same thing in the same order - except its header, which the pane drops
-because the list beside it already names the open item and carries the way
-back. Where the detail already owns an address (`/logs/$descentId`), the
+same thing in the same order - except its back arrow, which the pane drops
+because the list beside it carries the way back; the pane keeps the item's
+title. Where the detail already owns an address (`/logs/$descentId`), the
 child route renders into the pane instead and the search param is not
 needed - the point is a linkable open item, not the mechanism.
 
