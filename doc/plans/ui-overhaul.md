@@ -191,20 +191,26 @@ width, touch targets at least 44px (`expectTouchTargets`), computed tokens
 driven with real touch events (`Input.dispatchTouchEvent` through a CDP
 session), not by calling the handlers.
 
-## Open decisions
+## Decisions
 
-- **Error color.** One expert proposes a berry error (`#8c2a5a`) so red is only
-  ever a high water level. The theme uses the old red for now; one token.
-- **Water now** is a new filter in the search design (Low, Medium, High from the
-  level class the app computes). It is in the design page; keep or drop.
-- **Ranges and districts** in region mode: keep (only those holding sections)
-  or drop (the paddler's view).
-- **Country on map labels.** The design drops "AT ·" in favour of AT and IT at
-  the border; the picker and sheet keep it.
-- **New words**, to be agreed before they ship: "Search" as a title, "Filters",
-  "Reset", "Part of", "Mountain ranges in view (n)", "Sources", "History",
-  "Falling", "Rising", "Steady", and "Tap" in place of "Click" on a phone.
-- **Camera token.** A three-zoom move in 360 ms is brisk; a longer camera token
-  may be wanted.
+Decided 2026-10-11: build the design page as proposed.
+
+- **Water now** is in: a filter chip and Low, Medium, High in the Filters
+  sheet, from the per-section level class.
+- **Country on map labels**: no "AT ·" prefix on the map; the ISO code sits on
+  either side of the country border. The "{n} regions here" rows and the
+  region sheet keep the country.
+- **New words** used by the design page are accepted: "Search", "Filters",
+  "Reset", "Water now", "Low", "Medium", "High", "Part of", "Mountain ranges in
+  view (n)", "Sources", "History". "Tap" replaces "Click" in hints on a phone.
+- **Region levels** stay: Valleys, Districts, Mountain ranges, States.
+- **Error color** stays the existing red; the design page does not change it.
 - **Dark mode** is WP13, after the features, because the hex-alpha suffix used
   in 38 places cannot take a CSS variable.
+
+Still open, not part of the design page: a longer camera token for moves of
+three zoom levels or more (WP14 decides with a real phone).
+
+Local setup the lead keeps: the local Keycloak's browser client accepts
+sign-ins from ports 5173 to 5179 and 4173 (added through the admin API on the
+running container; recreating the container drops 5174 to 5179 again).
