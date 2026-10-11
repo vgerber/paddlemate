@@ -1,19 +1,24 @@
-import ThumbDownOutlinedIcon from "@mui/icons-material/ThumbDownOutlined";
-import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import type { Proposal } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
 import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
-import { fonts, labelSx, theme } from "@/lib/theme";
-import StatusChip from "./StatusChip";
+import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
-/** One proposal as a card in the list: what changed, of what kind, how old,
- * where its votes stand and its state. On a desktop it opens beside the
- * list, on a phone as its own page. */
+const metaSx = {
+  fontSize: "0.8125rem",
+  lineHeight: "18px",
+  color: "text.secondary",
+  whiteSpace: "nowrap",
+} as const;
+
+/** One proposal as a card in the list: the title, then what it does and how
+ * its votes stand. The status is the tab the list is filtered by, so the row
+ * does not repeat it. On a desktop it opens beside the list, on a phone as
+ * its own page. */
 export default function ProposalRow({
   proposal,
   selected,
@@ -24,71 +29,59 @@ export default function ProposalRow({
   onSelect: () => void;
 }) {
   const hasVotes = proposal.upvotes > 0 || proposal.downvotes > 0;
+  const meta = [
+    hasVotes && `▲ ${proposal.upvotes} · ▼ ${proposal.downvotes}`,
+    timeAgo(proposal.created_at),
+  ].filter(Boolean);
   return (
     <ButtonBase
       data-testid="proposal-card"
       aria-current={selected ? "true" : undefined}
       onClick={onSelect}
       sx={{
-        display: "block",
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
         textAlign: "left",
-        width: "calc(100% - 24px)",
-        mx: 1.5,
-        my: 0.75,
-        px: 2,
+        width: "100%",
+        px: "14px",
         py: 1.5,
-        minHeight: tokens.touch.row,
+        minHeight: 64,
         borderRadius: `${tokens.radii.md}px`,
-        bgcolor: selected ? tokens.primaryContainer : tokens.surface,
-        boxShadow: tokens.elevation.e1,
+        bgcolor: tokens.surface,
+        // A selected card keeps its ground and gains a 2px ring.
+        boxShadow: selected
+          ? `inset 0 0 0 2px ${tokens.primary}, ${tokens.elevation.e1}`
+          : tokens.elevation.e1,
+        "&.Mui-focusVisible": {
+          outline: `2px solid ${tokens.primary}`,
+          outlineOffset: 2,
+        },
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Typography
-          noWrap
-          sx={{
-            fontFamily: fonts.label,
-            fontWeight: 600,
-            fontSize: "0.9375rem",
-            flex: 1,
-            minWidth: 0,
-          }}
-        >
-          {proposalTitle(proposal)}
-        </Typography>
-        <StatusChip status={proposal.status} />
-      </Box>
-      <Box
+      <Typography
+        noWrap
         sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          mt: 0.25,
-          color: "text.secondary",
+          fontFamily: fonts.label,
+          fontWeight: 600,
+          fontSize: "0.9375rem",
+          lineHeight: "20px",
+          flex: 1,
+          minWidth: 0,
         }}
       >
-        <Typography sx={labelSx}>
+        {proposalTitle(proposal)}
+      </Typography>
+      <Box sx={{ flexShrink: 0, textAlign: "right" }}>
+        <Typography sx={{ ...metaSx, fontWeight: 400 }}>
           {OP_LABEL[proposal.operation] ?? proposal.operation} ·{" "}
           {ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type}
         </Typography>
-        <Box sx={{ flex: 1 }} />
-        {hasVotes && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 0.25,
-              color: "text.disabled",
-            }}
-          >
-            <ThumbUpOutlinedIcon sx={{ fontSize: 12 }} />
-            <Typography variant="caption">{proposal.upvotes}</Typography>
-            <ThumbDownOutlinedIcon sx={{ fontSize: 12, ml: 0.5 }} />
-            <Typography variant="caption">{proposal.downvotes}</Typography>
-          </Box>
-        )}
-        <Typography variant="caption" color="textDisabled">
-          {timeAgo(proposal.created_at)}
+        <Typography
+          data-testid="proposal-meta"
+          sx={{ ...metaSx, fontWeight: 500 }}
+        >
+          {meta.join(" · ")}
         </Typography>
       </Box>
     </ButtonBase>

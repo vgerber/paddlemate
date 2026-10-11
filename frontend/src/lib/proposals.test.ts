@@ -3,6 +3,7 @@ import type { Proposal } from "./api";
 import {
   diffObjects,
   isDisplayable,
+  isEmptyValue,
   proposalTitle,
   shortValue,
 } from "./proposals";
@@ -44,8 +45,16 @@ describe("diffObjects", () => {
 });
 
 describe("shortValue", () => {
-  test("null is a dash", () => {
-    expect(shortValue("any", null)).toBe("-");
+  test("an empty value is none", () => {
+    expect(shortValue("any", null)).toBe("none");
+    expect(shortValue("regions", [])).toBe("none");
+  });
+
+  test("lists read as a comma list, never JSON", () => {
+    expect(shortValue("regions", ["Test Valley", "Test State"])).toBe(
+      "Test Valley, Test State",
+    );
+    expect(shortValue("x", { a: ["b", "c"] })).toBe("a b, c");
   });
 
   test("summarizes bundled features", () => {
@@ -115,5 +124,15 @@ describe("proposalTitle", () => {
 
   test("last resort is the entity label", () => {
     expect(proposalTitle(proposal({}))).toBe("Section");
+  });
+});
+
+describe("isEmptyValue", () => {
+  test("null, empty text, list and object are empty", () => {
+    for (const v of [null, undefined, "", [], {}]) {
+      expect(isEmptyValue(v)).toBe(true);
+    }
+    expect(isEmptyValue(["a"])).toBe(false);
+    expect(isEmptyValue(0)).toBe(false);
   });
 });

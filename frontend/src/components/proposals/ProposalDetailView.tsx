@@ -4,7 +4,8 @@ import PanelHeader from "@/components/PanelHeader";
 import ProposalCreateSummary from "@/components/proposals/ProposalCreateSummary";
 import ProposalDetailPane from "@/components/proposals/ProposalDetailPane";
 import ProposalReviewControls from "@/components/proposals/ProposalReviewControls";
-import type { Proposal } from "@/lib/api";
+import ProposalVoteBar from "@/components/proposals/ProposalVoteBar";
+import type { Proposal, ProposalStatus } from "@/lib/api";
 import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
 import StatusChip from "./StatusChip";
 
@@ -15,10 +16,15 @@ export default function ProposalDetailView({
   proposal,
   adminMode,
   onBack,
+  listStatus,
 }: {
   proposal: Proposal;
   adminMode?: boolean;
   onBack?: () => void;
+  /** The status tab the proposal was opened from; its chip would only
+   * repeat the tab, so it is drawn when this is absent (a deep link) or
+   * differs. */
+  listStatus?: ProposalStatus;
 }) {
   const proposed = proposal.proposed_data as Record<string, unknown>;
   const original = proposal.original_data as
@@ -33,7 +39,11 @@ export default function ProposalDetailView({
         title={proposalTitle(proposal)}
         subtitle={kind}
         onBack={onBack}
-        actionButton={<StatusChip status={proposal.status} />}
+        actionButton={
+          listStatus === proposal.status ? undefined : (
+            <StatusChip status={proposal.status} />
+          )
+        }
       />
 
       <Box
@@ -45,6 +55,8 @@ export default function ProposalDetailView({
           py: 2,
         }}
       >
+        <ProposalVoteBar proposal={proposal} />
+
         {proposal.operation === "delete" && (
           <Typography sx={{ fontSize: "0.8125rem", color: "text.secondary" }}>
             Deletion request
