@@ -24,7 +24,7 @@ import type {
   ProposalStatus,
 } from "@/lib/api";
 import { useProposals } from "@/lib/hooks/useProposals";
-import { theme } from "@/lib/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
 const STATUS_TABS = ["pending", "approved", "rejected"] as const;
 
@@ -232,7 +232,7 @@ export default function ProposalsView({
           md: "320px minmax(0, 1fr)",
           lg: "420px minmax(0, 1fr)",
         },
-        height: "calc(100vh - 48px)",
+        height: PANEL_HEIGHT,
       }}
     >
       <Box

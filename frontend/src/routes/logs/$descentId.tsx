@@ -19,7 +19,7 @@ import DescentForm from "@/components/descents/DescentForm";
 import LoadingBox from "@/components/states/LoadingBox";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
-import { fonts, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/logs/$descentId")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -155,7 +155,7 @@ function LogDetailPage() {
           sx={{
             position: "fixed",
             bottom: {
-              xs: "calc(56px + env(safe-area-inset-bottom) + 16px)",
+              xs: `calc(${BOTTOM_NAV_SPACE} + 16px)`,
               md: 24,
             },
             right: 16,

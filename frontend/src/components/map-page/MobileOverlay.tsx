@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Slide from "@mui/material/Slide";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import { durations } from "@/lib/motion";
-import { theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
 import MapCharts from "./MapCharts";
 import SectionSpeedDial from "./SectionSpeedDial";
 import SidebarContent from "./SidebarContent";
@@ -51,7 +51,7 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
           display: { xs: "flex", md: "none" },
           position: "fixed",
           top: sheet ? "45%" : 0,
-          bottom: sheet ? 0 : "calc(56px + env(safe-area-inset-bottom))",
+          bottom: sheet ? 0 : BOTTOM_NAV_SPACE,
           left: 0,
           right: 0,
           zIndex: sheet ? 1350 : 1200,

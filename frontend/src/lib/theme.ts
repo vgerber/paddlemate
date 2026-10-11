@@ -174,6 +174,10 @@ const tokens = {
 
   // Touch: every target is at least `min` px, list rows and tabs `row`.
   touch: { min: 44, row: 48 },
+
+  // Chrome: the desktop app bar and the phone bottom nav (before the safe
+  // area), the one place these heights are said.
+  chrome: { appBar: 56, bottomNav: 64 },
 } as const;
 
 /** Font stacks used across the app: one family, weights carry the hierarchy. */
@@ -734,9 +738,12 @@ export const alphas = {
  * less the mobile bottom nav and its safe area. A panel that pins a bottom
  * bar needs a bounded height to size its scroller against. */
 export const PANEL_HEIGHT = {
-  xs: "calc(100dvh - 56px - env(safe-area-inset-bottom))",
-  md: "calc(100vh - 48px)",
+  xs: `calc(100dvh - ${tokens.chrome.bottomNav}px - env(safe-area-inset-bottom))`,
+  md: `calc(100vh - ${tokens.chrome.appBar}px)`,
 } as const;
+
+/** Space the fixed bottom nav takes at the foot of the page. */
+export const BOTTOM_NAV_SPACE = `calc(${tokens.chrome.bottomNav}px + env(safe-area-inset-bottom))`;
 
 /** The app's standard small label: 12px, semibold, sentence case. Spread into
  * sx and override size or color where a variant is needed. */

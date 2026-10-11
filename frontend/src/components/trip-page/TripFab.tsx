@@ -10,6 +10,7 @@ import Fab from "@mui/material/Fab";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
+import { BOTTOM_NAV_SPACE } from "@/lib/theme";
 import type { TripTab } from "./TripDetail";
 
 /** On a phone, the screen's corner above the bottom nav. On a desktop, the
@@ -19,7 +20,7 @@ import type { TripTab } from "./TripDetail";
 export const fabSx = {
   position: { xs: "fixed", md: "absolute" } as const,
   bottom: {
-    xs: "calc(56px + env(safe-area-inset-bottom) + 16px)",
+    xs: `calc(${BOTTOM_NAV_SPACE} + 16px)`,
     md: 24,
   },
   right: { xs: 16, md: 24 },

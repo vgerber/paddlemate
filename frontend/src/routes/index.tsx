@@ -4,6 +4,7 @@ import DesktopSidebar from "@/components/map-page/DesktopSidebar";
 import MapPane from "@/components/map-page/MapPane";
 import MobileOverlay from "@/components/map-page/MobileOverlay";
 import { useMapPageState } from "@/components/map-page/useMapPageState";
+import { PANEL_HEIGHT } from "@/lib/theme";
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -44,10 +45,7 @@ function Home() {
       <Box
         sx={{
           display: "flex",
-          height: {
-            xs: "calc(100dvh - 56px - env(safe-area-inset-bottom))",
-            sm: "calc(100dvh - 48px)",
-          },
+          height: PANEL_HEIGHT,
           overflow: "hidden",
         }}
       >

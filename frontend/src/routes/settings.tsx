@@ -39,7 +39,7 @@ import {
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { useSession } from "@/lib/hooks/useSession";
 import { useLanguagePreference } from "@/lib/languagePreference";
-import { fonts, theme } from "@/lib/theme";
+import { fonts, PANEL_HEIGHT, theme } from "@/lib/theme";
 
 /** The groups the desktop sidebar lists. Adding one is a row here plus a
  * case in `GroupContent`. */
@@ -139,7 +139,7 @@ function SettingsPage() {
           md: "320px minmax(0, 1fr)",
           lg: "420px minmax(0, 1fr)",
         },
-        height: "calc(100vh - 48px)",
+        height: PANEL_HEIGHT,
       }}
     >
       <Box

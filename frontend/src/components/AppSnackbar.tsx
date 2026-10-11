@@ -1,7 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import { useEffect, useState } from "react";
-import { theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
 
 type Listener = (message: string) => void;
 
@@ -37,9 +37,9 @@ export default function AppSnackbar() {
       autoHideDuration={6000}
       onClose={() => setMessage(null)}
       anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      // Above the mobile bottom navigation (56px + safe area).
+      // Above the mobile bottom navigation plus 8px.
       sx={{
-        bottom: { xs: "calc(64px + env(safe-area-inset-bottom))", md: 24 },
+        bottom: { xs: `calc(${BOTTOM_NAV_SPACE} + 8px)`, md: 24 },
       }}
     >
       <Alert

@@ -23,7 +23,7 @@ import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
-import { theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, PANEL_HEIGHT, theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/logs")({
   component: LogsPage,
@@ -118,7 +118,7 @@ function LogsMobile({ tab, onTabChange, onOpen, onNew }: LogsViewProps) {
           onClick={onNew}
           sx={{
             position: "fixed",
-            bottom: "calc(56px + env(safe-area-inset-bottom) + 16px)",
+            bottom: `calc(${BOTTOM_NAV_SPACE} + 16px)`,
             right: 16,
           }}
         >
@@ -152,7 +152,7 @@ function LogsDesktop({
           md: "320px minmax(0, 1fr)",
           lg: "420px minmax(0, 1fr)",
         },
-        height: "calc(100vh - 48px)",
+        height: PANEL_HEIGHT,
       }}
     >
       <Box

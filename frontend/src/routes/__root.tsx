@@ -37,7 +37,7 @@ import {
 import { useSession } from "@/lib/hooks/useSession";
 import { useLanguage } from "@/lib/languagePreference";
 import { transition } from "@/lib/motion";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { alphas, BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -122,7 +122,16 @@ function Layout() {
       }}
     >
       <AppBar position="fixed" sx={{ display: { xs: "none", md: "flex" } }}>
-        <Toolbar variant="dense" sx={{ gap: 0.5 }}>
+        <Toolbar
+          sx={{
+            gap: 0.5,
+            // MUI's own sm-up min height would win over a plain value.
+            minHeight: {
+              xs: tokens.chrome.appBar,
+              sm: tokens.chrome.appBar,
+            },
+          }}
+        >
           <Typography
             variant="h6"
             component={Link}
@@ -193,12 +202,10 @@ function Layout() {
       <Box
         sx={{
           flex: 1,
-          mt: { xs: 0, md: "48px" },
+          mt: { xs: 0, md: `${tokens.chrome.appBar}px` },
           display: "flex",
           flexDirection: "column",
-          pb: isMapPage
-            ? 0
-            : { xs: "calc(56px + env(safe-area-inset-bottom))", md: 0 },
+          pb: isMapPage ? 0 : { xs: BOTTOM_NAV_SPACE, md: 0 },
         }}
       >
         <StandingDescentBanner
@@ -251,7 +258,8 @@ function BottomNav({ signedIn }: { signedIn: boolean }) {
         bottom: 0,
         left: 0,
         right: 0,
-        minHeight: 56,
+        height: tokens.chrome.bottomNav,
+        boxSizing: "content-box",
         pb: "env(safe-area-inset-bottom)",
         zIndex: 1300,
         bgcolor: tokens.surfaceLowest,

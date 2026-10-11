@@ -93,6 +93,20 @@ test.describe("desktop app bar", () => {
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeGreaterThan(1280 - 40);
   });
 
+  test("the app bar is 56px and a pane fills exactly the rest of the window", async ({
+    page,
+  }) => {
+    for (const path of ["/", "/trips"]) {
+      await page.goto(path);
+      const bar = await appBar(page).boundingBox();
+      expect(bar?.height).toBe(56);
+      const pane = await page.locator("main > *").first().boundingBox();
+      const vh = page.viewportSize()?.height ?? 0;
+      expect(pane?.y, `${path} pane top`).toBe(56);
+      expect(pane?.height, `${path} pane height`).toBe(vh - 56);
+    }
+  });
+
   test("there is no bottom nav", async ({ page }) => {
     await page.goto("/tools");
     await expect(bottomNav(page)).toBeHidden();
@@ -198,6 +212,18 @@ test.describe("phone bottom navigation", () => {
     await expect(nav).toBeVisible();
     expect(await computed(nav, "border-top-width")).toBe("0px");
     expect(await pageCss(page)).toContain("safe-area-inset-bottom");
+  });
+
+  test("the nav is 64px and the map pane ends exactly at its top", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await appReady(page);
+    const nav = await bottomNav(page).boundingBox();
+    expect(nav?.height).toBe(64);
+    const pane = await page.locator("main > *").first().boundingBox();
+    expect(pane?.y).toBe(0);
+    expect((pane?.y ?? 0) + (pane?.height ?? 0)).toBe(nav?.y);
   });
 
   test("there is no app bar", async ({ page }) => {

@@ -15,7 +15,7 @@ import TripForm from "@/components/trips/TripForm";
 import TripRow from "@/components/trips/TripRow";
 import { useSession } from "@/lib/hooks/useSession";
 import { useTrip, useTrips } from "@/lib/hooks/useTrips";
-import { theme } from "@/lib/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/trips/")({
   // All optional, so /trips is always a valid link.
@@ -123,7 +123,7 @@ function TripsPage() {
           md: "320px minmax(0, 1fr)",
           lg: "420px minmax(0, 1fr)",
         },
-        height: "calc(100vh - 48px)",
+        height: PANEL_HEIGHT,
       }}
     >
       <Box
