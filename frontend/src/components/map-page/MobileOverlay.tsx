@@ -1,10 +1,14 @@
 import Box from "@mui/material/Box";
 import Slide from "@mui/material/Slide";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
+import { durations } from "@/lib/motion";
+import { theme } from "@/lib/theme";
 import MapCharts from "./MapCharts";
 import SectionSpeedDial from "./SectionSpeedDial";
 import SidebarContent from "./SidebarContent";
 import type { MapPageState } from "./useMapPageState";
+
+const { tokens } = theme;
 
 interface MobileOverlayProps {
   state: MapPageState;
@@ -35,8 +39,14 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
   const sheet = Boolean(suggestMode) || state.notePinPlacing;
 
   return (
-    <Slide direction="up" in={isMobilePanelOpen}>
+    <Slide
+      direction="up"
+      in={isMobilePanelOpen}
+      easing={{ enter: tokens.motion.easeOut, exit: tokens.motion.easeIn }}
+      timeout={{ enter: durations.base, exit: durations.fast }}
+    >
       <Box
+        data-testid="mobile-overlay"
         sx={{
           display: { xs: "flex", md: "none" },
           position: "fixed",
@@ -48,9 +58,9 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
           flexDirection: "column",
           bgcolor: "background.default",
           overflow: "hidden",
-          borderTop: sheet ? "1px solid" : "none",
-          borderColor: "divider",
-          boxShadow: sheet ? "0 -8px 16px rgba(0,0,0,0.35)" : "none",
+          borderTopLeftRadius: sheet ? `${tokens.radii.xl}px` : 0,
+          borderTopRightRadius: sheet ? `${tokens.radii.xl}px` : 0,
+          boxShadow: sheet ? tokens.elevation.e2 : "none",
         }}
       >
         {/* Sheet-style top edge in suggest mode: a fixed handle strip the
@@ -63,12 +73,17 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
               justifyContent: "center",
               pt: 1,
               pb: 0.75,
-              borderBottom: "1px solid",
-              borderColor: "divider",
               bgcolor: "background.paper",
             }}
           >
-            <Box sx={{ width: 36, height: 3, bgcolor: "divider" }} />
+            <Box
+              sx={{
+                width: 36,
+                height: 4,
+                borderRadius: `${tokens.radii.pill}px`,
+                bgcolor: tokens.outlineVariant,
+              }}
+            />
           </Box>
         )}
         <Box

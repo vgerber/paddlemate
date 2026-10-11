@@ -6,7 +6,7 @@ import Popover from "@mui/material/Popover";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { useNotificationState } from "@/lib/hooks/useNotifications";
-import { labelSx, theme } from "@/lib/theme";
+
 import NotificationList from "./NotificationList";
 
 /** The desktop top bar's bell: the unread count, and the list beneath it. */
@@ -44,16 +44,8 @@ export default function NotificationBell() {
           },
         }}
       >
-        <Box
-          sx={{
-            px: 2,
-            py: 1.25,
-            borderBottom: "1px solid",
-            borderColor: "divider",
-            bgcolor: theme.tokens.surfaceLow,
-          }}
-        >
-          <Typography sx={{ ...labelSx, fontSize: "0.6875rem" }}>
+        <Box sx={{ px: 2, pt: 1.75, pb: 1.25 }}>
+          <Typography sx={{ fontWeight: 700, fontSize: "0.9375rem" }}>
             Trip changes
           </Typography>
         </Box>
@@ -74,6 +66,8 @@ export function UnreadBadge({
   count: number;
   children: React.ReactNode;
 }) {
+  // MUI keeps a zero badge in the DOM, where a screen reader would read it.
+  if (count <= 0) return <>{children}</>;
   return (
     <Badge
       badgeContent={count}
