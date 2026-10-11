@@ -5,7 +5,9 @@ import {
   type DrawableRegion,
   labelPoint,
   partOf,
+  partOfChips,
   rangesHiddenByNesting,
+  regionContext,
   regionSubtitle,
   visibleRegions,
 } from "./regionGeometry";
@@ -17,6 +19,46 @@ describe("regionSubtitle", () => {
 
   test("leaves out a missing country", () => {
     expect(regionSubtitle(null, "valley")).toBe("Valleys");
+  });
+});
+
+describe("regionContext", () => {
+  const parents = [
+    { id: 1, name: "Landeck", kind: "district" as const },
+    { id: 2, name: "Tirol", kind: "state" as const },
+    { id: 3, name: "Austria", kind: "country" as const },
+  ];
+
+  test("names the state and the country code", () => {
+    expect(regionContext("AT", parents)).toBe("Tirol, AT");
+  });
+
+  test("falls back to the most specific larger region", () => {
+    expect(regionContext("AT", parents.slice(0, 1))).toBe("Landeck, AT");
+  });
+
+  test("ignores a country parent and works without parents", () => {
+    expect(regionContext("AT", parents.slice(2))).toBe("AT");
+    expect(regionContext("AT", [])).toBe("AT");
+    expect(regionContext(null, undefined)).toBe("");
+  });
+
+  test("goes into the subtitle ahead of the level", () => {
+    expect(regionSubtitle("AT", "valley", parents)).toBe("Tirol, AT · Valleys");
+  });
+});
+
+describe("partOfChips", () => {
+  const guess = [{ id: 9, name: "Guessed" }];
+
+  test("uses the real parents when there are some", () => {
+    const parents = [{ id: 2, name: "Tirol", kind: "state" as const }];
+    expect(partOfChips(parents, guess)).toEqual([{ id: 2, name: "Tirol" }]);
+  });
+
+  test("falls back to the guess when parents is empty or missing", () => {
+    expect(partOfChips([], guess)).toEqual(guess);
+    expect(partOfChips(undefined, guess)).toEqual(guess);
   });
 });
 

@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
+import { regionContext } from "@/components/map/regionGeometry";
 import type { Region, RegionKind } from "@/lib/api";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useRegionSearch } from "@/lib/hooks/useRegions";
@@ -93,9 +94,9 @@ export default function RegionSuggestions({
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
                   {region.name}
                 </Typography>
-                {region.country && (
+                {regionContext(region.country, region.parents) && (
                   <Typography variant="body2" color="textSecondary">
-                    {region.country}
+                    {regionContext(region.country, region.parents)}
                   </Typography>
                 )}
               </ButtonBase>

@@ -95,6 +95,7 @@ export type PushSubscriptionEntry = components["schemas"]["PushSubscription"];
 export type CreatePushSubscriptionRequest =
   components["schemas"]["CreatePushSubscriptionRequest"];
 export type Region = components["schemas"]["Region"];
+export type RegionRef = components["schemas"]["RegionRef"];
 export type RegionKind = components["schemas"]["RegionKind"];
 export type RegionOutline = components["schemas"]["RegionOutline"];
 export type CountryBorder = components["schemas"]["CountryBorder"];
