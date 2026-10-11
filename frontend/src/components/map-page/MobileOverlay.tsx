@@ -3,6 +3,8 @@ import Slide from "@mui/material/Slide";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import { durations } from "@/lib/motion";
 import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
+import { modeSheetMode } from "./modeSheet";
+import SearchSheet from "./SearchSheet";
 import SectionSpeedDial from "./SectionSpeedDial";
 import SidebarContent from "./SidebarContent";
 import type { MapPageState } from "./useMapPageState";
@@ -25,6 +27,9 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
     toggleMobileMapView,
     suggestMode,
   } = state;
+
+  const sheetMode = modeSheetMode(state);
+  if (sheetMode) return <SearchSheet state={state} mode={sheetMode} />;
 
   const closeOverlay = () => setIsMobilePanelOpen(false);
   // Sheet mode: the map above must stay reachable - suggest flows, and

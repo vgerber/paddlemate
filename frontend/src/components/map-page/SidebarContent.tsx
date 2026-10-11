@@ -16,6 +16,8 @@ interface SidebarContentProps {
   onMobileMapToggle?: () => void;
   /** Mobile only: true when map view is active (icon shown as highlighted) */
   mobileMapActive?: boolean;
+  /** Phone: the search rests in the area/region peek sheet. */
+  sheet?: { onState: (state: "peek" | "open") => void };
 }
 
 /**
@@ -29,6 +31,7 @@ export default function SidebarContent({
   onClose,
   onMobileMapToggle,
   mobileMapActive,
+  sheet,
 }: SidebarContentProps) {
   const navigate = useNavigate();
   const {
@@ -80,6 +83,12 @@ export default function SidebarContent({
     setSuggestWaterwayName,
     setFocusBounds,
     setSuggestGaugePins,
+    regionOutline,
+    regionChoices,
+    regionsLoading,
+    regionLevel,
+    setRegionLevel,
+    selectRegion,
   } = state;
 
   if (suggestMode === "waterway") {
@@ -118,6 +127,15 @@ export default function SidebarContent({
         onLoadingChange={setIsSearchPanelLoading}
         onMapModeActivate={onMapModeActivate}
         onClose={onClose}
+        sheet={sheet}
+        regionBrowse={{
+          picked: regionOutline,
+          choices: regionChoices,
+          loading: regionsLoading && !regionOutline,
+          level: regionLevel,
+          onLevelChange: setRegionLevel,
+          onPick: selectRegion,
+        }}
       />
     );
   }

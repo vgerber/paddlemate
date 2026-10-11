@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { SectionWithFeatures } from "@/lib/api";
 import { buildMapScene, type MapSceneInput, sceneSubject } from "./mapScene";
+import { modeSheetClearance } from "./modeSheet";
 
 const section = (
   id: number,
@@ -131,12 +132,35 @@ describe("sceneSubject", () => {
     ]);
   });
 
-  test("a region search frames its own area, not the results", () => {
-    expect(
-      sceneSubject(
-        input({ regionOutline: { id: 1 } as MapSceneInput["regionOutline"] }),
-      ),
-    ).toBeNull();
+  test("a region search frames the picked region, not the results", () => {
+    const subject = sceneSubject(
+      input({
+        regionOutline: {
+          id: 1,
+          bbox: [10, 46, 12, 47],
+        } as MapSceneInput["regionOutline"],
+      }),
+    );
+    expect(subject?.key).toBe("region:1");
+    expect(subject?.bounds).toEqual([
+      [10, 46],
+      [12, 47],
+    ]);
+  });
+
+  test("an area search frames the circle and refits only on a new radius", () => {
+    const a = sceneSubject(
+      input({ visibleAreaCircle: { lat: 47, lon: 11, radiusKm: 10 } }),
+    );
+    const moved = sceneSubject(
+      input({ visibleAreaCircle: { lat: 47.2, lon: 11.3, radiusKm: 10 } }),
+    );
+    const wider = sceneSubject(
+      input({ visibleAreaCircle: { lat: 47, lon: 11, radiusKm: 30 } }),
+    );
+    expect(a?.key).toBe("area:10");
+    expect(moved?.key).toBe(a?.key);
+    expect(wider?.key).not.toBe(a?.key);
   });
 
   test("the key changes with the results", () => {
@@ -197,6 +221,15 @@ describe("buildMapScene", () => {
     const wide = buildMapScene(input());
     expect(wide.chrome?.controlsBottomOffset).toBe(0);
     expect(wide.chrome?.attributionPosition).toBe("bottom-right");
+  });
+
+  test("the area and region sheets lift the controls over their peek", () => {
+    const area = buildMapScene(input({ isMobile: true, isAreaMode: true }));
+    const region = buildMapScene(input({ isMobile: true, isRegionMode: true }));
+    expect(area.chrome?.controlsBottomOffset).toBe(modeSheetClearance("area"));
+    expect(region.chrome?.controlsBottomOffset).toBe(
+      modeSheetClearance("region"),
+    );
   });
 
   test("placing a note pin routes map clicks to the pin", () => {

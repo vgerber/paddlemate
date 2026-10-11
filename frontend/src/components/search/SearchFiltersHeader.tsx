@@ -19,7 +19,8 @@ import type { WaterLevel } from "@/lib/waterLevel";
 import AreaControls from "./AreaControls";
 import DifficultySelect from "./DifficultySelect";
 import { gradeSummary } from "./gradeSummary";
-import { RegionHint } from "./RegionSelect";
+import RegionBrowse, { type RegionBrowseProps } from "./RegionBrowse";
+import { isListingRegions, RegionHint } from "./RegionSelect";
 import type {
   SearchMode,
   WaterwaySearchFilters,
@@ -48,6 +49,8 @@ interface SearchFiltersHeaderProps {
     gestureProps: React.HTMLAttributes<HTMLElement>;
   };
   onClose?: () => void;
+  /** In the phone's peek sheet: the tabs only, the sheet's handle is the title. */
+  sheet?: boolean;
 }
 
 /** The panel header: the title and the underlined Name, Area and Region
@@ -56,6 +59,7 @@ export default function SearchFiltersHeader({
   filters,
   swipe,
   onClose,
+  sheet = false,
 }: SearchFiltersHeaderProps) {
   // The design sets the title at panel-title size, larger than the title
   // PanelHeader draws, so the title row is drawn here and PanelHeader keeps
@@ -76,7 +80,7 @@ export default function SearchFiltersHeader({
       <Box
         sx={{
           // The desktop card draws the title in its own header.
-          display: { xs: "flex", md: "none" },
+          display: sheet ? "none" : { xs: "flex", md: "none" },
           alignItems: "center",
           gap: 1,
           px: 2,
@@ -325,6 +329,8 @@ interface SearchControlsProps {
   onRadiusPreview?: (radiusKm: number) => void;
   /** Regions are being listed, so the facets step aside. */
   listingRegions: boolean;
+  /** The map's regions, for the level chips and "Part of". */
+  regionBrowse?: RegionBrowseProps;
 }
 
 /** What the active mode searches with - the name field, the radius, or the
@@ -339,6 +345,7 @@ export function SearchControls({
   onAreaLockedChange,
   onRadiusPreview,
   listingRegions,
+  regionBrowse,
 }: SearchControlsProps) {
   const { mode, country, minDiff, maxDiff, region } = filters;
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -383,7 +390,11 @@ export function SearchControls({
             onChange={filters.setRegionQuery}
             label="Search regions…"
           />
-          <RegionHint />
+          {regionBrowse && !isListingRegions(filters.regionQuery) ? (
+            <RegionBrowse {...regionBrowse} />
+          ) : (
+            <RegionHint />
+          )}
         </>
       )}
       {!listingRegions && (mode !== "region" || region) && (
