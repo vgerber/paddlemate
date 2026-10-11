@@ -7,6 +7,7 @@ import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useRegionSearch } from "@/lib/hooks/useRegions";
 import { theme } from "@/lib/theme";
 import ListGroupHeader from "./ListGroupHeader";
+import { flatRowSx } from "./RiverRow";
 
 const { tokens } = theme;
 
@@ -27,7 +28,7 @@ export function isListingRegions(query: string) {
 /** Under the region field, typed into or not. */
 export function RegionHint() {
   return (
-    <Typography variant="body2" color="textSecondary" sx={{ px: 0.25, pt: 1 }}>
+    <Typography variant="body2" color="textSecondary" sx={{ px: 0.25 }}>
       Type a valley, district, state or range
     </Typography>
   );
@@ -68,7 +69,7 @@ export default function RegionSuggestions({
       {groups.map((g) => (
         <Box key={g.kind} data-testid="region-group" data-label={g.label}>
           <ListGroupHeader label={g.label} />
-          <Box sx={{ display: "grid", gap: 1, pt: 0.5, pb: 1 }}>
+          <Box sx={{ display: "grid", gap: { xs: 1, md: 0 }, pt: 0.5, pb: 1 }}>
             {g.items.map((region) => (
               <ButtonBase
                 key={region.id}
@@ -89,6 +90,7 @@ export default function RegionSuggestions({
                   borderRadius: `${tokens.radii.md}px`,
                   bgcolor: tokens.surface,
                   boxShadow: tokens.elevation.e1,
+                  [theme.breakpoints.up("md")]: flatRowSx,
                 }}
               >
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>

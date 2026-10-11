@@ -1,13 +1,11 @@
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
-import SearchIcon from "@mui/icons-material/Search";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -63,13 +61,25 @@ export default function SearchFiltersHeader({
   // PanelHeader draws, so the title row is drawn here and PanelHeader keeps
   // the tab bar.
   return (
-    <Box sx={{ flexShrink: 0 }}>
+    <Box
+      sx={{
+        flexShrink: 0,
+        bgcolor: tokens.surface,
+        // One shadow under the title and the tabs together, on the grey
+        // ground of a phone; the desktop card is white already.
+        boxShadow: { xs: tokens.elevation.e1, md: "none" },
+        position: "relative",
+        zIndex: 1,
+        "& > *:last-child": { boxShadow: "none" },
+      }}
+    >
       <Box
         sx={{
-          display: "flex",
+          // The desktop card draws the title in its own header.
+          display: { xs: "flex", md: "none" },
           alignItems: "center",
           gap: 1,
-          px: 1.5,
+          px: 2,
           minHeight: 56,
         }}
       >
@@ -84,7 +94,7 @@ export default function SearchFiltersHeader({
               display: { xs: "flex", md: "none" },
               width: tokens.touch.min,
               height: tokens.touch.min,
-              mr: -0.75,
+              mr: -1.25,
               color: tokens.onSurfaceVariant,
             }}
           >
@@ -106,30 +116,25 @@ export default function SearchFiltersHeader({
   );
 }
 
-/** One field, 52px: the name search or the region search. */
+/** One filled field, label inside: the name search or the region search. */
 function SearchField({
   value,
   onChange,
-  placeholder,
+  label,
 }: {
   value: string;
   onChange: (value: string) => void;
-  placeholder: string;
+  label: string;
 }) {
   return (
     <TextField
       fullWidth
-      placeholder={placeholder}
+      label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       slotProps={{
         input: {
-          sx: { height: 52, pr: 0.5 },
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon sx={{ color: tokens.onSurfaceVariant }} />
-            </InputAdornment>
-          ),
+          sx: { pr: 0.5 },
           endAdornment: value ? (
             <IconButton
               aria-label="Clear"
@@ -318,14 +323,12 @@ interface SearchControlsProps {
   onAreaCircleChange?: (circle: AreaCircle | null) => void;
   onAreaLockedChange?: (locked: boolean) => void;
   onRadiusPreview?: (radiusKm: number) => void;
-  /** Phone only: leave the panel for the map behind it. */
-  onShowMap?: () => void;
   /** Regions are being listed, so the facets step aside. */
   listingRegions: boolean;
 }
 
-/** What the active mode searches with - the name field, the map card with
- * its radius, or the region field - and under it the chips that summarize the
+/** What the active mode searches with - the name field, the radius, or the
+ * region field - and under it the chips that summarize the
  * filters. A chip opens the Filters sheet. */
 export function SearchControls({
   filters,
@@ -335,7 +338,6 @@ export function SearchControls({
   onAreaCircleChange,
   onAreaLockedChange,
   onRadiusPreview,
-  onShowMap,
   listingRegions,
 }: SearchControlsProps) {
   const { mode, country, minDiff, maxDiff, region } = filters;
@@ -344,12 +346,23 @@ export function SearchControls({
   const open = () => setSheetOpen(true);
 
   return (
-    <Box sx={{ px: 2, pt: 1.5, pb: 0.5, flexShrink: 0 }}>
+    // Spacing: 16px gutter, 12px above the controls, 6px between the field
+    // and the chips (plus the chip row's own 6px), 6px below.
+    <Box
+      sx={{
+        px: 2,
+        pt: 1.5,
+        pb: 0.75,
+        flexShrink: 0,
+        display: "grid",
+        gap: 0.75,
+      }}
+    >
       {mode === "name" && (
         <SearchField
           value={filters.name}
           onChange={filters.setName}
-          placeholder="Name"
+          label="Name"
         />
       )}
       {mode === "area" && (
@@ -361,7 +374,6 @@ export function SearchControls({
             areaCircle && onAreaCircleChange?.({ ...areaCircle, radiusKm: r })
           }
           onRadiusPreview={onRadiusPreview}
-          onShowMap={onShowMap}
         />
       )}
       {mode === "region" && (
@@ -369,7 +381,7 @@ export function SearchControls({
           <SearchField
             value={filters.regionQuery}
             onChange={filters.setRegionQuery}
-            placeholder="Search regions…"
+            label="Search regions…"
           />
           <RegionHint />
         </>

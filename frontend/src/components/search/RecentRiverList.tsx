@@ -3,7 +3,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import type { RecentWaterway } from "@/lib/recentWaterways";
 import ListGroupHeader from "./ListGroupHeader";
-import { cardRowSx } from "./RiverRow";
+import { listRowSx } from "./RiverRow";
 
 interface RecentRiverListProps {
   rivers: RecentWaterway[];
@@ -27,7 +27,7 @@ export default function RecentRiverList({
             key={river.id}
             data-testid="recent-river"
             onClick={() => onSelect(river.id)}
-            sx={{ ...cardRowSx, mb: 0.75 }}
+            sx={listRowSx}
           >
             <ListItemText
               primary={river.name}

@@ -23,6 +23,31 @@ export const cardRowSx = {
   },
 } as const;
 
+/** A row of a list inside the desktop card, which is already a white
+ * surface: no card of its own, a dimmed rule under it, and the selected row
+ * wears the 2px teal ring. On a phone the list sits on the grey ground and
+ * keeps `cardRowSx`. */
+export const flatRowSx = {
+  bgcolor: "transparent",
+  borderRadius: 0,
+  boxShadow: "none",
+  mb: 0,
+  px: 2,
+  borderBottom: `1px solid ${tokens.outlineVariant}55`,
+  "&:hover": { bgcolor: tokens.surfaceLow },
+  "&.Mui-selected": {
+    bgcolor: "transparent",
+    boxShadow: `inset 0 0 0 2px ${tokens.primary}`,
+    "&:hover": { bgcolor: tokens.surfaceLow },
+  },
+} as const;
+
+export const listRowSx = {
+  ...cardRowSx,
+  mb: 0.75,
+  [theme.breakpoints.up("md")]: flatRowSx,
+} as const;
+
 /** One river row - shared by search results and the recent-rivers list so
  * both render identically by construction.
  *
@@ -46,7 +71,7 @@ export default function RiverRow({
 }) {
   const where = place?.length ? place.join(" · ") : undefined;
   return (
-    <ListItemButton onClick={onClick} sx={{ ...cardRowSx, mb: 0.75, gap: 1 }}>
+    <ListItemButton onClick={onClick} sx={{ ...listRowSx, gap: 1 }}>
       <ListItemText
         primary={name}
         secondary={
