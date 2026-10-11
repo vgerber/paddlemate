@@ -48,20 +48,28 @@ The panel's mode switch offers two ways to search without typing a name:
   valley, district, state and mountain range in view is outlined and
   labelled, and clicking one lists the rivers reaching into it. You see one
   kind at a time, following the zoom - states when you are looking at a
-  country, then mountain ranges, then districts, then valleys once you are
-  down at river level. Neighbouring regions are drawn in different colours,
-  the way an atlas colours countries, so you can see where one ends even
-  where they overlap. Clicking ground that several regions share lists them
-  and lets you say which you meant, each in the colour it is drawn in. The
-  one you picked is highlighted, the rest stay faint.
+  country, then mountain ranges and districts, then valleys once you are
+  down at river level. The map stays quiet so the picked region is the only
+  thing that stands out: every boundary is one thin grey line, so an edge two
+  regions share reads once, with a faint fill inside that only has to catch
+  your click. Each region has one name, set at its visual centre - the
+  point deepest inside its shape, not the middle of its bounding box. A
+  valley has no outline, so it is a soft band along the valley floor. Clicking
+  ground that several regions share lists them and lets you say which you
+  meant; each row names the country and the kind of region. The region you
+  picked is the only thing drawn in teal, with its name; the rest stay grey.
+  Two rules keep the map readable. A mountain range that holds two or more
+  other ranges is left out, since they already show the same ground. And a
+  region much smaller than the view (under about 0.3% of it) waits until you
+  zoom in, because it is a speck you could neither read nor hit.
   Searching by name works too, and tolerates the same misspellings as river
-  names, so `otztal` finds `Ötztal`. Every region is labelled with its
-  country first, on the map and in the picker, so a list of valley names
-  still tells you where you are.
+  names, so `otztal` finds `Ötztal`. The picker names each region's country
+  first, so a list of valley names still tells you where you are.
 
 Country borders stay drawn over everything else at every zoom, so the map
-always says which country you are looking at - solid, where the regions on
-offer are dashed.
+always says which country you are looking at. They are a dash-dot line over a
+white edge, so they are never taken for a region's solid grey line, and the
+country's code (`AT`, `DE`) is printed along the line.
 
 On a phone the panel covers the map, so choosing **Area** or **Region** steps
 it aside and leaves a strip along the bottom: what is picked so far, and the
@@ -148,3 +156,20 @@ results. Only long-lived databases are affected; a fresh database (CI, new dev
 checkout) rebuilds its indexes from the current function and looks healthy,
 which is why no runtime check can catch it. `api/tests/migration_rules.rs`
 enforces the rule in `cargo test`.
+
+### How the region map is drawn
+
+The rules live in `frontend/src/components/map/regionGeometry.ts` (pure, tested
+in `regionGeometry.test.ts`) and the layers in `RegionLayers.tsx` and
+`CountryBorderLayer.tsx`; `useMapSources.ts` ties them to the viewport.
+
+| Rule | Where |
+| ---- | ----- |
+| A range holding `MAX_NESTED_RANGES` (2) or more other ranges is not drawn; bounding boxes stand in until the API answers containment | `visibleRegions` |
+| A region under `MIN_VIEW_SHARE` (0.003) of the view area is not drawn | `visibleRegions` |
+| The picked region is never hidden by either rule, and has its own source so panning it out of the viewport does not remove it | `visibleRegions`, `RegionLayers` |
+| One label per region at the pole of inaccessibility of its biggest part, or the middle of its longest line; hand-rolled because the polygon is the only input | `labelPoint` |
+| Every boundary: 1px `onSurfaceVariant` line, fill at 4% opacity (not for valleys) | `region-browse-line`, `region-browse-fill` |
+| Valleys: a 14px blurred line band at 14% opacity, no outline | `region-valley-band` |
+| Picked region: `mapSelectedLine` fill at 12% and a 2.5px line, label in the same colour; a region whose row has focus in the choice card is lit the same way | `region-picked-*`, `region-lit-*` |
+| Country borders: dash-dot `mapCountryBorder` line over a white casing, `country` property as a line label | `CountryBorderLayer` |
