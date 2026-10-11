@@ -55,7 +55,7 @@ invent a rival.
 | `UnderlineTabs` | `components/UnderlineTabs.tsx` | the panel tab bar: value, items, 48px tabs, underline that can follow a drag |
 | `useSwipeTabs` | `lib/hooks/useSwipeTabs.ts` | horizontal swipe between tab panes: direction lock, 40% or flick to commit, edge resistance, 24px edge left free, reduced motion |
 | `BottomSheet` | `components/BottomSheet.tsx` | peek and open heights, drag between them, scrim, focus handling |
-| `FeatureTypeIcon` | `components/FeatureTypeIcon.tsx` | the 14 feature type icons on one grid, sizes 16 to 24 |
+| `FeatureTypeIcon` | `components/FeatureTypeIcon.tsx` | the 14 feature type icons on one grid, sizes 16 to 24; the drawings are [ui-overhaul/feature-icons.svg](ui-overhaul/feature-icons.svg) |
 | `ChipRow` | `components/ChipRow.tsx` | chips that are 32px to look at and 44px to hit, scrolling sideways with a fade |
 | Motion helpers | `lib/motion.ts` | the tokens as CSS strings, `prefersReducedMotion`, a transition helper |
 | Existing | `PanelHeader`, `ListPaneHeader`, `DockedAction`, `Fact`, `FormSection`, `PanelBottomBar`, `RowMenu`, `TimelineRail`, `ConfirmDialog`, `WaterLevelChip`, `components/states/*` | restyled to the calm design, same props |
@@ -102,6 +102,20 @@ uses bounding boxes, which is only an approximation. WP3 and WP6 share the
 | WP13 | Dark mode: tokens as CSS variables so the hex-alpha suffix becomes a helper; one switch for the system preference; the dark screens from the design page |
 | WP14 | Motion applied: the panel, fold, chart, sheet, calendar and tab transitions from the choreography page; feedback states; the flow along the selected section on the map under the battery policy; one per-app reduced-motion switch |
 | WP15 | The sweep: every screen at 320px and at 130% text, touch targets everywhere, keyboard and screen reader pass, then the Opus review |
+
+### Features list rules (for WP4)
+
+From the icons page. The strip above the list shows the run to scale with each
+feature's icon in a small white disc on the line; it never folds. Put in and
+take out always stand alone. Two features that would overlap step apart, the
+second below the line on a short stem (ranges are drawn above it). Three or
+more that would overlap merge into one group disc; if the group holds a
+hazard it shows that hazard's icon with the count as a badge, by danger:
+siphon, strainer, waterfall, dam, weir, hole; otherwise the count. Groups form
+from the space available, so a wider screen splits them. In the list, a point
+carries its icon on the rail; a range is a soft band whose icon tile carries a
+chevron badge, and the whole range row folds or opens it; a folded range lists
+what it hides by name. A portage band keeps a dashed rail.
 
 ### Map motion (for WP7 and WP14)
 

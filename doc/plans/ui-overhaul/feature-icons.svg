@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- The 14 feature type icons from the icons page: a 24px grid, 2px stroke,
+       round caps and joins, no fills, one colour (currentColor). -->
+  <symbol id="whitewater" viewBox="0 0 24 24"><path d="M3 7c1.5-1.5 3-1.5 4.5 0s3 1.5 4.5 0 3-1.5 4.5 0 3 1.5 4.5 0"/><path d="M3 12c1.5-1.5 3-1.5 4.5 0s3 1.5 4.5 0 3-1.5 4.5 0 3 1.5 4.5 0"/><path d="M3 17c1.5-1.5 3-1.5 4.5 0s3 1.5 4.5 0 3-1.5 4.5 0 3 1.5 4.5 0"/></symbol>
+  <symbol id="rapid" viewBox="0 0 24 24"><path d="M3 19h18"/><path d="M4 19c1-6 4.5-11 10-11 3 0 5 1.8 5 4.2 0 2-1.6 3.3-3.4 3.3-1.6 0-2.6-1-2.6-2.4"/></symbol>
+  <symbol id="freestyle_spot" viewBox="0 0 24 24"><path d="M3 13.5c3-2 6-3 9-3s6 1 9 3c-3 1.2-6 1.8-9 1.8s-6-.6-9-1.8z"/><path d="M3 19c1.5-1.2 3-1.2 4.5 0s3 1.2 4.5 0 3-1.2 4.5 0 3 1.2 4.5 0"/><path d="M12 7V4"/></symbol>
+  <symbol id="hole" viewBox="0 0 24 24"><path d="M18.5 12a6.5 6.5 0 1 1-2.2-4.9"/><path d="M17 3.5l.3 3.8-3.7.4"/></symbol>
+  <symbol id="siphon" viewBox="0 0 24 24"><path d="M4 11 8 5h8l4 6z"/><path d="M12 13v6"/><path d="M9 16.5l3 3 3-3"/></symbol>
+  <symbol id="strainer" viewBox="0 0 24 24"><path d="M12 21V10"/><path d="M12 14l-4-4M12 12l4.5-4.5M8 10V6.5M16.5 7.5H20"/><path d="M4 21h16"/></symbol>
+  <symbol id="weir" viewBox="0 0 24 24"><path d="M3 8h8v9h10"/><path d="M11 8c2.6 0 3.6 3.4 3.6 7"/></symbol>
+  <symbol id="dam" viewBox="0 0 24 24"><path d="M5 5h14v15H5z"/><path d="M5 10h14M5 15h14M12 5v5M9 10v5M15 10v5M12 15v5"/></symbol>
+  <symbol id="obstacle" viewBox="0 0 24 24"><path d="M5 17c-.4-4.6 2.6-9 7-9s7.4 4.4 7 9z"/><path d="M3 20h18"/></symbol>
+  <symbol id="bridge" viewBox="0 0 24 24"><path d="M2 8h20"/><path d="M5 8v9M19 8v9"/><path d="M5 17c0-4 3.1-6 7-6s7 2 7 6"/></symbol>
+  <symbol id="portage" viewBox="0 0 24 24"><path d="M7.5 10.5c-1.6 0-2.5-1.6-2.5-3.5S5.9 3.5 7.5 3.5 10 5.1 10 7s-.9 3.5-2.5 3.5z"/><path d="M6 13.5h3"/><path d="M16.5 20.5c-1.6 0-2.5-1.6-2.5-3.5s.9-3.5 2.5-3.5S19 15.1 19 17s-.9 3.5-2.5 3.5z"/><path d="M15 10.5h3"/></symbol>
+  <symbol id="put_in" viewBox="0 0 24 24"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5"/><path d="M4 19.5h16"/></symbol>
+  <symbol id="take_out" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M4 19.5h16"/></symbol>
+  <symbol id="waterfall" viewBox="0 0 24 24"><path d="M3 5h11"/><path d="M14 5v15M10.5 5v10M17.5 8v12"/><path d="M14 5c1.8 0 3.5 1.2 3.5 3"/></symbol>
+</svg>
