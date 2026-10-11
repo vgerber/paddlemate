@@ -292,19 +292,26 @@ test.describe("map page chrome", () => {
     await expect(fab.locator("svg[data-testid=SearchIcon]")).toHaveCount(1);
   });
 
-  test("the desktop map is a rounded card set 12px into its pane", async ({
+  test("the desktop map fills the window under the bar, the panel floats over it", async ({
     page,
   }, info) => {
     test.skip(info.project.name !== "desktop", "desktop only");
     await page.goto("/");
     await appReady(page);
-    const card = page.locator("[data-testid=map-card]");
+    const host = await box(page.getByTestId("canvas-host"));
+    expect(host.x).toBe(0);
+    expect(host.y).toBe(56);
+    expect(host.width).toBe(1280);
+    expect(Math.round(host.y + host.height)).toBe(800);
+    const card = page.getByTestId("canvas-card-detail");
     expect(await computed(card, "border-top-left-radius")).toBe("16px");
-    expect(await computed(card, "overflow")).toBe("hidden");
     expect(await computed(card, "box-shadow")).toContain("rgba(31, 43, 49");
     const panel = await box(page.locator("[data-testid=side-panel]"));
     const b = await box(card);
-    expect(Math.round(b.x - (panel.x + panel.width))).toBe(12);
+    expect(b.x).toBe(16);
+    expect(b.y).toBe(56 + 16);
+    expect(panel.x).toBeGreaterThanOrEqual(b.x);
+    expect(panel.x + panel.width).toBeLessThanOrEqual(b.x + b.width);
   });
 
   test("the attribution key is inset from the corner", async ({

@@ -1,9 +1,12 @@
 import Box from "@mui/material/Box";
 import { createFileRoute } from "@tanstack/react-router";
-import DesktopSidebar from "@/components/map-page/DesktopSidebar";
+import { useCanvasScene } from "@/components/canvas/CanvasContext";
+import CanvasLayout from "@/components/canvas/CanvasLayout";
+import MapDetailCard from "@/components/map-page/MapDetailCard";
 import MapPane from "@/components/map-page/MapPane";
 import MobileOverlay from "@/components/map-page/MobileOverlay";
 import { useMapPageState } from "@/components/map-page/useMapPageState";
+import { useMapScene } from "@/components/map-page/useMapScene";
 import { parseWaterLevels } from "@/components/search/waterParam";
 import { PANEL_HEIGHT } from "@/lib/theme";
 
@@ -41,6 +44,18 @@ export const Route = createFileRoute("/")({
 function Home() {
   const search = Route.useSearch();
   const state = useMapPageState(search);
+  const { scene, regionLevel, setRegionLevel } = useMapScene(state);
+  // From md the canvas host draws the scene behind the cards; on a phone the
+  // map pane below draws the same scene.
+  useCanvasScene(scene);
+
+  if (!state.isMobile) {
+    return (
+      <CanvasLayout>
+        <MapDetailCard state={state} />
+      </CanvasLayout>
+    );
+  }
 
   return (
     <>
@@ -51,9 +66,11 @@ function Home() {
           overflow: "hidden",
         }}
       >
-        <DesktopSidebar state={state} />
         <MapPane
           state={state}
+          scene={scene}
+          regionLevel={regionLevel}
+          onRegionLevelChange={setRegionLevel}
           onOpenMobilePanel={() => state.setIsMobilePanelOpen(true)}
         />
       </Box>

@@ -1,16 +1,52 @@
+import { useDockMode } from "@/components/canvas/CanvasContext";
+import ChartDock from "@/components/canvas/ChartDock";
 import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import { defaultRangeFeature } from "@/components/waterway/section-details/utils";
 import { localizedName } from "@/lib/localization";
 import type { MapPageState } from "./useMapPageState";
 
-/** Chart area below the map / overlay: the selected gauge's chart when one
- * is picked, else the selected section's chart, else nothing. */
+/** The chart of the map page: the selected gauge's when one is picked, else
+ * the selected section's, else nothing. On a wide screen from 1280 it docks
+ * along the bottom of the canvas; otherwise it sits where it is rendered. */
 export default function MapCharts({ state }: { state: MapPageState }) {
+  const dockMode = useDockMode();
+  const variant = !state.isMobile && dockMode === "dock" ? "dock" : "card";
+  const chart = <MapChart state={state} variant={variant} />;
+  if (!hasChart(state)) return null;
+  return state.isMobile ? chart : <ChartDock>{chart}</ChartDock>;
+}
+
+/** Whether the page has a chart to show; the dock is only kept for one. */
+export function hasChart(state: MapPageState): boolean {
   const {
     selectedWaterwayId,
     selectedSectionId,
     detailTab,
+    sectionDetailTab,
+    selectedGaugeId,
+    selectedGaugeRanges,
+  } = state;
+  // The logs, notes and sources tabs replace the chart with their list -
+  // give them the space.
+  if (selectedSectionId != null && sectionDetailTab !== "features") {
+    return false;
+  }
+  if (selectedSectionId == null && detailTab === "notes") return false;
+  if (selectedGaugeId != null && selectedGaugeRanges.length > 0) return true;
+  return selectedSectionId != null && selectedWaterwayId != null;
+}
+
+function MapChart({
+  state,
+  variant,
+}: {
+  state: MapPageState;
+  variant: "card" | "dock";
+}) {
+  const {
+    selectedWaterwayId,
+    selectedSectionId,
     sectionDetailTab,
     sections,
     selectedGaugeId,
@@ -25,16 +61,12 @@ export default function MapCharts({ state }: { state: MapPageState }) {
     selectedSectionId != null &&
     sectionDetailTab === "features";
 
-  // The logs, notes and sources tabs replace the chart with their list -
-  // give them the space.
-  if (selectedSectionId != null && sectionDetailTab !== "features") return null;
-  if (selectedSectionId == null && detailTab === "notes") return null;
-
   if (selectedGaugeId != null && selectedGaugeRanges.length > 0) {
     return (
       <GaugeChartPanel
         ranges={selectedGaugeRanges}
         tall={tall}
+        variant={variant}
         onClose={() => setSelectedGaugeId(null)}
       />
     );
@@ -53,6 +85,7 @@ export default function MapCharts({ state }: { state: MapPageState }) {
       waterwayId={selectedWaterwayId}
       sectionId={selectedSectionId}
       tall={tall}
+      variant={variant}
       selectedFeatureId={selectedFeatureId}
       selectedFeature={
         selectedFeature

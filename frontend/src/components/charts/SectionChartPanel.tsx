@@ -18,6 +18,8 @@ interface SectionChartPanelProps {
   preferredFeatureId?: number | null;
   /** Lets the chart grow taller (the features list is folded). */
   tall?: boolean;
+  /** "dock" when the canvas chart dock holds the card. */
+  variant?: "card" | "dock";
 }
 
 export default function SectionChartPanel({
@@ -27,6 +29,7 @@ export default function SectionChartPanel({
   selectedFeature,
   preferredFeatureId,
   tall,
+  variant,
 }: SectionChartPanelProps) {
   const { data: waterStatus, isLoading } = useWaterStatus(
     waterwayId,
@@ -49,6 +52,7 @@ export default function SectionChartPanel({
         onMeasurementTypeChange={setMeasurementType}
         preferredFeatureId={preferredFeatureId}
         tall={tall}
+        variant={variant}
         footer={<GaugeAttributions sources={ranges.map((r) => r.source)} />}
       >
         {(headroom) =>

@@ -8,6 +8,8 @@ interface GaugeChartPanelProps {
   ranges: WaterRangeWithStatus[];
   tall?: boolean;
   onClose: () => void;
+  /** "dock" when the canvas chart dock holds the card. */
+  variant?: "card" | "dock";
 }
 
 /** The chart card of one picked gauge; its options can close it. */
@@ -15,6 +17,7 @@ export default function GaugeChartPanel({
   ranges,
   tall,
   onClose,
+  variant,
 }: GaugeChartPanelProps) {
   const { timeRange, setTimeRange, measurementType, setMeasurementType } =
     useChartPanelState();
@@ -27,6 +30,7 @@ export default function GaugeChartPanel({
       measurementType={measurementType}
       onMeasurementTypeChange={setMeasurementType}
       tall={tall}
+      variant={variant}
       onDismiss={onClose}
       footer={<GaugeAttributions sources={ranges.map((r) => r.source)} />}
     >

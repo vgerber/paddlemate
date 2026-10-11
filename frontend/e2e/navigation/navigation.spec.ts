@@ -135,7 +135,7 @@ test.describe("desktop app bar", () => {
     await expect(card).toBeHidden();
   });
 
-  test("a section opens in the side panel beside the map, without a hard border", async ({
+  test("a section opens in the floating panel over the map, without a hard border", async ({
     page,
   }) => {
     await gotoSection(page, "lower");
@@ -147,7 +147,7 @@ test.describe("desktop app bar", () => {
       "rgb(238, 242, 243)",
     );
     const box = await panel.boundingBox();
-    expect(box?.x).toBe(0);
+    expect(box?.x).toBe(16);
     expect(box?.width).toBeGreaterThanOrEqual(400);
     await expect(
       panel.getByRole("button", { name: "Back" }).first(),
