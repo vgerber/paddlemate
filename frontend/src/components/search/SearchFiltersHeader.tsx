@@ -18,7 +18,8 @@ import type { AreaCircle } from "@/lib/geo";
 import { alphas, theme } from "@/lib/theme";
 import type { WaterLevel } from "@/lib/waterLevel";
 import AreaControls from "./AreaControls";
-import DifficultySelect, { gradeSummary } from "./DifficultySelect";
+import DifficultySelect from "./DifficultySelect";
+import { gradeSummary } from "./gradeSummary";
 import type {
   SearchMode,
   WaterwaySearchFilters,
