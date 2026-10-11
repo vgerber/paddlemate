@@ -1,8 +1,10 @@
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import StarIcon from "@mui/icons-material/Star";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
 import DockedAction from "@/components/DockedAction";
+import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import UnderlineTabs from "@/components/UnderlineTabs";
 import type { FavoriteSection, SectionWithFeatures } from "@/lib/api";
@@ -305,13 +307,11 @@ export default function WaterwaySearchPanel({
                 </Box>
               </>
             ) : (
-              <Typography
-                variant="body2"
-                color="textSecondary"
-                sx={{ textAlign: "center", py: 4 }}
-              >
-                Type a name, country or difficulty to search
-              </Typography>
+              <EmptyState
+                icon={<SearchOutlinedIcon />}
+                title="Type a name, country or difficulty to search"
+                py={4}
+              />
             ))}
           {showResults && listView === "rivers" && (
             <RiverList

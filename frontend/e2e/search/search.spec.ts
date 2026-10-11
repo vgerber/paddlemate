@@ -177,6 +177,21 @@ test.describe("name mode", () => {
     ).toHaveCount(0);
   });
 
+  test("without history the panel says how to start, in the empty-state tile", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await appReady(page);
+    await page.evaluate(() => localStorage.removeItem("pm.recent-waterways"));
+    await openSearch(page);
+    const empty = seen(page.getByTestId("empty-state"));
+    await expect(empty).toContainText(
+      "Type a name, country or difficulty to search",
+    );
+    await expect(seen(page.getByTestId("empty-state-tile"))).toBeVisible();
+    await expect(seen(page.getByTestId("recent-river"))).toHaveCount(0);
+  });
+
   test("@small chips are 32px to look at, 44px to hit and teal when set", async ({
     page,
   }) => {
