@@ -214,7 +214,8 @@ test.describe("proposal detail", () => {
       });
     });
     await page.goto(`/proposals/${FEATURE_CREATE}`);
-    await expect(page.getByTestId("proposal-status")).toHaveText("Pending");
+    // The route is opened from the Pending tab, so the chip would repeat it.
+    await expect(page.getByTestId("proposal-status")).toHaveCount(0);
     await expect(page.getByText("Proposed by jonas")).toBeVisible();
   });
 
@@ -411,15 +412,26 @@ test.describe("proposal votes and review bar", () => {
     const approve = page.getByRole("button", { name: "Approve" });
     await expect(approve).toBeVisible();
     await expect(page.locator("canvas.maplibregl-canvas")).toBeVisible();
-    const onTop = await approve.evaluate((el) => {
-      const r = el.getBoundingClientRect();
-      const hit = document.elementFromPoint(
-        r.x + r.width / 2,
-        r.y + r.height / 2,
+    // The map's Labels control must not be painted over the bar: at the
+    // bar's top edge the bar is what a finger hits, wherever the control is.
+    await expect(page.getByTestId("map-layer-toggle")).toBeVisible();
+    const overlap = await approve.evaluate((btn) => {
+      const bar = btn.parentElement as HTMLElement;
+      const control = document.querySelector(
+        '[data-testid="map-layer-toggle"]',
       );
-      return hit === el || el.contains(hit);
+      const b = bar.getBoundingClientRect();
+      const c = control?.getBoundingClientRect() ?? b;
+      const x0 = Math.max(b.left, c.left);
+      const x1 = Math.min(b.right, c.right);
+      const y0 = Math.max(b.top, c.top);
+      const y1 = Math.min(b.bottom, c.bottom);
+      if (!control || x1 <= x0 || y1 <= y0)
+        return { overlaps: false, barOnTop: true };
+      const hit = document.elementFromPoint((x0 + x1) / 2, (y0 + y1) / 2);
+      return { overlaps: true, barOnTop: !!hit && bar.contains(hit) };
     });
-    expect(onTop).toBe(true);
+    expect(overlap.barOnTop, "bar paints over the Labels control").toBe(true);
     await expectNoHorizontalOverflow(page);
   });
 

@@ -47,6 +47,7 @@ export default function SectionPickerMap({
           onPickPutIn,
           onPickTakeOut,
         }}
+        chrome={{ minimal: true }}
       />
     </Box>
   );
