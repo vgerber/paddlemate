@@ -12,7 +12,6 @@ import TripDetail from "@/components/trip-page/TripDetail";
 import TripMembersCard from "@/components/trip-page/TripMembersCard";
 import { useTripScene } from "@/components/trip-page/useTripScene";
 import type { Trip } from "@/lib/api";
-import { dateRange } from "@/lib/format";
 import { theme } from "@/lib/theme";
 import TripForm from "./TripForm";
 
@@ -59,29 +58,32 @@ export default function TripsCanvas({
 
   return (
     <CanvasLayout>
-      <FloatingCard
-        id="list"
-        side="left"
-        kind="list"
-        screen="trips"
-        title="Trips"
-        selfHeaded
-      >
-        <Box
-          sx={{
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            bgcolor: tokens.surfaceLow,
-          }}
+      {/* An open trip is the one card; its back arrow returns to the list. */}
+      {(creating || !trip) && (
+        <FloatingCard
+          id="list"
+          side="left"
+          kind="list"
+          screen="trips"
+          title="Trips"
+          selfHeaded
         >
-          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-            <ListPaneHeader count={count} loading={loading} />
-            {list}
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              bgcolor: tokens.surfaceLow,
+            }}
+          >
+            <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+              <ListPaneHeader count={count} loading={loading} />
+              {list}
+            </Box>
+            <DockedAction label="New trip" onClick={onNew} />
           </Box>
-          <DockedAction label="New trip" onClick={onNew} />
-        </Box>
-      </FloatingCard>
+        </FloatingCard>
+      )}
 
       {creating && (
         <FloatingCard
@@ -108,8 +110,7 @@ export default function TripsCanvas({
           kind="side"
           screen="trips"
           title={trip.name}
-          subtitle={dateRange(trip.start_date, trip.end_date)}
-          onClose={onClose}
+          selfHeaded
         >
           <Box
             data-testid="trip-panel"

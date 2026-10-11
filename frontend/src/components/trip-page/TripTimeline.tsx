@@ -29,6 +29,8 @@ import {
 } from "./eventLabels";
 import PlanCalendar from "./PlanCalendar";
 import { dayAtScroll } from "./planWeek";
+import { TripMembersSummary, TripStaysSummary } from "./TripSummary";
+import TripWeek from "./TripWeek";
 
 const { tokens } = theme;
 
@@ -48,12 +50,19 @@ export default function TripTimeline({
   openDay,
   onToggleDay,
   actions,
+  wide = false,
+  membersBelow = false,
 }: {
   trip: Trip;
   /** The day currently expanded, if any. */
   openDay: string | null;
   onToggleDay: (date: string) => void;
   actions: DayActions;
+  /** The desktop card: the days as a row of cells, with the stays above the
+   * list. */
+  wide?: boolean;
+  /** With `wide`, the members as initials under the list. */
+  membersBelow?: boolean;
 }) {
   const { days, isLoading } = useTripTimeline(trip);
   const today = todayIso();
@@ -141,17 +150,27 @@ export default function TripTimeline({
           }}
         />
       )}
-      <PlanCalendar
-        current={shown}
-        today={today}
-        from={trip.start_date}
-        to={trip.end_date ?? null}
-        planned={planned}
-        runs={runs}
-        open={monthOpen}
-        onOpenChange={setMonthOpen}
-        onPick={jumpTo}
-      />
+      {wide ? (
+        <TripWeek
+          dates={days.map((d) => d.date)}
+          runs={runs}
+          current={shown}
+          today={today}
+          onPick={jumpTo}
+        />
+      ) : (
+        <PlanCalendar
+          current={shown}
+          today={today}
+          from={trip.start_date}
+          to={trip.end_date ?? null}
+          planned={planned}
+          runs={runs}
+          open={monthOpen}
+          onOpenChange={setMonthOpen}
+          onPick={jumpTo}
+        />
+      )}
       <Box
         ref={scroller}
         data-testid="plan-scroll"
@@ -171,6 +190,7 @@ export default function TripTimeline({
           pb: { xs: 12, md: 1.5 },
         }}
       >
+        {wide && <TripStaysSummary tripId={trip.id} />}
         {days.map((day) => (
           <DayEntry
             key={day.date}
@@ -181,6 +201,7 @@ export default function TripTimeline({
             onToggle={() => onToggleDay(day.date)}
           />
         ))}
+        {wide && membersBelow && <TripMembersSummary tripId={trip.id} />}
       </Box>
     </Box>
   );

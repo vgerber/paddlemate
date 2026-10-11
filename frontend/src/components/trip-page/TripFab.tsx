@@ -1,10 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import Fab from "@mui/material/Fab";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
@@ -182,54 +179,6 @@ function PrimaryFab({
   return null;
 }
 
-/** Edit and delete sit apart from the tab's primary action, in the opposite
- * corner, so an admin reaches them on every tab. */
-function AdminDial({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <SpeedDial
-      ariaLabel="Trip actions"
-      icon={<SpeedDialIcon icon={<MoreVertIcon />} openIcon={<CloseIcon />} />}
-      FabProps={{ color: "default" }}
-      sx={{
-        ...fabSx,
-        // Docked actions own the pane's foot on a desktop, so the dial sits
-        // above them.
-        position: { xs: "fixed", md: "absolute" },
-        bottom: { xs: fabSx.bottom, md: 88 },
-        right: "auto",
-        left: { xs: 16, md: 24 },
-        display: "flex",
-      }}
-    >
-      <SpeedDialAction
-        icon={<EditOutlinedIcon />}
-        slotProps={{ tooltip: { title: "Edit trip", placement: "right" } }}
-        onClick={onEdit}
-      />
-      <SpeedDialAction
-        icon={<DeleteOutlinedIcon />}
-        slotProps={{ tooltip: { title: "Delete trip", placement: "right" } }}
-        onClick={onDelete}
-      />
-    </SpeedDial>
-  );
-}
-
-export default function TripFab({
-  onEdit,
-  onDelete,
-  ...actions
-}: Actions & { onEdit: () => void; onDelete: () => void }) {
-  return (
-    <>
-      <PrimaryFab {...actions} />
-      {actions.isAdmin && <AdminDial onEdit={onEdit} onDelete={onDelete} />}
-    </>
-  );
+export default function TripFab(actions: Actions) {
+  return <PrimaryFab {...actions} />;
 }
