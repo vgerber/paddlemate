@@ -232,9 +232,7 @@ test.describe("log descent", () => {
     await expectTouchTargets(targets(page));
   });
 
-  // Known limitation: the section search (SectionAdder) and the put-in pin's
-  // label field (LocationPin) are shared parts owned elsewhere and 40px tall.
-  test.fail("sections step reaches 44px (shared parts)", async ({ page }) => {
+  test("sections step reaches 44px", async ({ page }) => {
     await startNewLog(page);
     await next(page).click();
     await expectTouchTargets(targets(page));

@@ -23,6 +23,15 @@ export function isListingRegions(query: string) {
   return query.trim().length >= 2;
 }
 
+/** Under the region field, typed into or not. */
+export function RegionHint() {
+  return (
+    <Typography variant="body2" color="textSecondary" sx={{ px: 0.25, pt: 1 }}>
+      Type a valley, district, state or range
+    </Typography>
+  );
+}
+
 interface RegionSuggestionsProps {
   query: string;
   onPick: (region: Region) => void;
@@ -38,13 +47,7 @@ export default function RegionSuggestions({
   const debounced = useDebouncedValue(query);
   const { data: options = [], isFetching } = useRegionSearch(debounced);
 
-  if (!isListingRegions(query)) {
-    return (
-      <Typography variant="body2" color="textSecondary" sx={{ px: 0.25 }}>
-        Type a valley, district, state or range
-      </Typography>
-    );
-  }
+  if (!isListingRegions(query)) return null;
 
   const groups = GROUPS.map((g) => ({
     ...g,
@@ -74,6 +77,8 @@ export default function RegionSuggestions({
                 sx={{
                   display: "grid",
                   width: "100%",
+                  // ButtonBase centres its content; the rows read left.
+                  justifyContent: "stretch",
                   justifyItems: "start",
                   alignContent: "center",
                   minHeight: 56,

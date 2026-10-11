@@ -1,8 +1,9 @@
-import HistoryIcon from "@mui/icons-material/History";
 import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
 import type { RecentWaterway } from "@/lib/recentWaterways";
 import ListGroupHeader from "./ListGroupHeader";
-import RiverRow from "./RiverRow";
+import { cardRowSx } from "./RiverRow";
 
 interface RecentRiverListProps {
   rivers: RecentWaterway[];
@@ -10,7 +11,7 @@ interface RecentRiverListProps {
 }
 
 /** Recently opened rivers (from localStorage), shown in the search panel
- * when no search criteria are set. Rows mirror the RiverList style. */
+ * when no search criteria are set. Each is a card: the name, and what it is. */
 export default function RecentRiverList({
   rivers,
   onSelect,
@@ -19,17 +20,25 @@ export default function RecentRiverList({
 
   return (
     <>
-      <ListGroupHeader
-        icon={<HistoryIcon sx={{ fontSize: 14 }} />}
-        label="Recent rivers"
-      />
+      <ListGroupHeader label="Recent rivers" />
       <List dense disablePadding>
         {rivers.map((river) => (
-          <RiverRow
+          <ListItemButton
             key={river.id}
-            name={river.name}
+            data-testid="recent-river"
             onClick={() => onSelect(river.id)}
-          />
+            sx={{ ...cardRowSx, mb: 0.75 }}
+          >
+            <ListItemText
+              primary={river.name}
+              secondary="river"
+              sx={{ my: 0, minWidth: 0 }}
+              slotProps={{
+                primary: { variant: "body1", sx: { fontWeight: 500 } },
+                secondary: { variant: "body2", color: "textSecondary" },
+              }}
+            />
+          </ListItemButton>
         ))}
       </List>
     </>
