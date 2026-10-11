@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import PushSettings from "@/components/notifications/PushSettings";
 import PanelHeader from "@/components/PanelHeader";
 import { theme } from "@/lib/theme";
@@ -58,9 +59,27 @@ export default function SettingsDetail({
   }
 
   return (
-    <Box data-testid="settings-detail" sx={{ minHeight: 0, overflowY: "auto" }}>
-      <PanelHeader title={title} />
-      <Box sx={{ px: 4, py: 3 }}>{body}</Box>
+    <Box
+      data-testid="settings-detail"
+      sx={{ minHeight: 0, overflowY: "auto", px: 4, py: 3 }}
+    >
+      <Box
+        sx={{
+          maxWidth: 880,
+          p: 3,
+          bgcolor: tokens.surfaceLowest,
+          borderRadius: `${tokens.radii.lg}px`,
+          boxShadow: tokens.elevation.e1,
+        }}
+      >
+        <Typography
+          component="h2"
+          sx={{ fontSize: "1.125rem", fontWeight: 700, mb: 2 }}
+        >
+          {title}
+        </Typography>
+        {body}
+      </Box>
     </Box>
   );
 }

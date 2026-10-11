@@ -1,5 +1,5 @@
+import ListAltOutlinedIcon from "@mui/icons-material/ListAltOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
-import RuleOutlinedIcon from "@mui/icons-material/RuleOutlined";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
@@ -17,7 +17,7 @@ const TOOLS = [
     to: "/proposals",
     title: "Proposals",
     description: "Review and submit river and section proposals",
-    icon: <RuleOutlinedIcon />,
+    icon: <ListAltOutlinedIcon />,
   },
   {
     to: "/tools/gauge-catalog",
@@ -49,6 +49,7 @@ export default function ToolsList() {
           md: "repeat(2, minmax(0, 1fr))",
         },
         gap: 1.75,
+        maxWidth: 700,
       }}
     >
       {TOOLS.map((tool) => {
@@ -92,15 +93,21 @@ export default function ToolsList() {
               <Typography sx={{ fontWeight: 700, fontSize: "1rem" }}>
                 {tool.title}
               </Typography>
-              <Typography variant="body2" color="textSecondary">
+              <Typography
+                color="textSecondary"
+                sx={{ fontSize: "0.875rem", lineHeight: "19px" }}
+              >
                 {tool.description}
               </Typography>
             </Box>
             {count != null && (
               <Typography
-                variant="body2"
                 color="textSecondary"
-                sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
+                sx={{
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  fontVariantNumeric: "tabular-nums",
+                }}
               >
                 {count.toLocaleString()}
               </Typography>

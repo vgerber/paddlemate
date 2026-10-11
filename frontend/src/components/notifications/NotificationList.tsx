@@ -1,10 +1,11 @@
+import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import EmptyState from "@/components/states/EmptyState";
+import { StateTile } from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { TripEvent } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
@@ -13,7 +14,7 @@ import {
   useNotifications,
   useRefreshNotifications,
 } from "@/lib/hooks/useNotifications";
-import { fonts, theme } from "@/lib/theme";
+import { alphas, fonts, theme } from "@/lib/theme";
 
 /** What changed on the caller's trips, newest first. Opening it marks
  * everything shown read; the entries that were new keep their dot until the
@@ -47,11 +48,32 @@ export default function NotificationList({
   if (isLoading) return <LoadingBox size={28} pt={3} />;
   if (!data?.items.length) {
     return (
-      <EmptyState
-        title="Nothing new"
-        caption="Changes others make to your trips show up here."
-        py={4}
-      />
+      <Box
+        data-testid="empty-state"
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 0.75,
+          pt: 7.5,
+          pb: 4,
+          px: 2,
+          textAlign: "center",
+        }}
+      >
+        <StateTile>
+          <NotificationsNoneOutlinedIcon />
+        </StateTile>
+        <Typography sx={{ fontSize: "1rem", fontWeight: 600 }}>
+          Nothing new
+        </Typography>
+        <Typography
+          color="textSecondary"
+          sx={{ fontSize: "0.875rem", lineHeight: "20px" }}
+        >
+          Changes others make to your trips show up here.
+        </Typography>
+      </Box>
     );
   }
 
@@ -90,9 +112,11 @@ function NotificationRow({
       sx={{
         alignItems: "flex-start",
         gap: 1.25,
-        borderBottom: "1px solid",
-        borderColor: `${theme.tokens.outlineVariant}55`,
         py: 1.25,
+        "&:not(:last-of-type)": {
+          borderBottom: "1px solid",
+          borderColor: `${theme.tokens.outlineVariant}${alphas.hairline}`,
+        },
       }}
     >
       <Box
@@ -108,17 +132,22 @@ function NotificationRow({
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography
           sx={{
-            fontSize: "0.8125rem",
-            fontWeight: event.unread ? 600 : 400,
+            fontSize: "0.875rem",
+            lineHeight: "20px",
+            fontWeight: event.unread ? 600 : 500,
           }}
         >
           {event.text}
         </Typography>
         <Typography
-          variant="caption"
-          color="textDisabled"
+          color="textSecondary"
           noWrap
-          sx={{ display: "block", fontFamily: fonts.label }}
+          sx={{
+            display: "block",
+            fontFamily: fonts.label,
+            fontSize: "0.8125rem",
+            lineHeight: "18px",
+          }}
         >
           {event.trip_name} · {timeAgo(event.created_at)}
         </Typography>

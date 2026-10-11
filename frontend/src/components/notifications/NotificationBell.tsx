@@ -43,6 +43,9 @@ export default function NotificationBell() {
           paper: {
             sx: {
               width: 380,
+              mt: 1.5,
+              borderRadius: `${tokens.radii.lg}px`,
+              boxShadow: tokens.elevation.e2,
               maxHeight: "min(560px, calc(100vh - 64px))",
               display: "flex",
               flexDirection: "column",
