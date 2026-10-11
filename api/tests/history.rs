@@ -847,6 +847,67 @@ async fn sources_view_counts_sources_and_contributors(pool: PgPool) {
 }
 
 #[sqlx::test]
+async fn sources_view_can_be_scoped_to_one_section(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let s1 = make_section(&app, w, "Upper", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let s2 = make_section(&app, w, "Lower", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let other = make_waterway(&app, "Lech").await;
+    let foreign = make_section(&app, other, "Elsewhere", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    // One imported step on the first section, two on the second (by mara).
+    for (section, actor, times) in [(s1, None, 1), (s2, Some("mara-1"), 2)] {
+        for _ in 0..times {
+            sqlx::query(
+                "INSERT INTO entity_history (entity_kind, entity_id, waterway_id, section_id, kind, source_id, actor_id) \
+                 VALUES ('section', $1, $2, $1, 'imported', 'import:rivermap', $3)",
+            )
+            .bind(section)
+            .bind(w)
+            .bind(actor)
+            .execute(&pool)
+            .await
+            .unwrap();
+        }
+    }
+
+    let r = get(&app, &format!("/waterways/{w}/sources?section_id={s1}")).await;
+    assert_eq!(r.status, StatusCode::OK);
+    assert_eq!(r.body["sources"][0]["entries"], 1);
+    let names: Vec<&str> = r.body["contributors"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["user"]["username"].as_str().unwrap())
+        .collect();
+    assert_eq!(names, ["root"], "mara only touched the other section");
+
+    let r = get(&app, &format!("/waterways/{w}/sources?section_id={s2}")).await;
+    assert_eq!(r.body["sources"][0]["entries"], 2);
+    assert!(
+        r.body["contributors"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|c| c["user"]["username"] == "mara")
+    );
+
+    // The whole river still counts all three.
+    let r = get(&app, &format!("/waterways/{w}/sources")).await;
+    assert_eq!(r.body["sources"][0]["entries"], 3);
+
+    // A section of another river is not reachable through this one.
+    let r = get(&app, &format!("/waterways/{w}/sources?section_id={foreign}")).await;
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
+}
+
+#[sqlx::test]
 async fn the_backfill_gives_old_rows_a_first_step(pool: PgPool) {
     people(&pool).await;
     // Rows as they were before history existed.

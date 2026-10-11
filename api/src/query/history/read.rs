@@ -115,10 +115,14 @@ pub async fn list_steps(
 }
 
 /// Every source and contributor named by a river's history, including its
-/// sections' and features' (and those since deleted).
+/// sections' and features' (and those since deleted). With `section_id`
+/// only that section's own and its features' steps count; the section is
+/// matched together with the waterway, so another river's section finds
+/// nothing.
 pub async fn list_waterway_sources(
     pool: &PgPool,
     waterway_id: i64,
+    section_id: Option<i64>,
 ) -> Result<WaterwaySources, sqlx::Error> {
     let source_rows = sqlx::query(
         "SELECT s.id AS source_id, s.name AS source_name, \
@@ -126,26 +130,28 @@ pub async fn list_waterway_sources(
                 s.website AS source_website, s.license_name AS source_license_name, \
                 s.license_url AS source_license_url, count(*) AS entries \
          FROM entity_history h JOIN sources s ON s.id = h.source_id \
-         WHERE h.waterway_id = $1 \
+         WHERE h.waterway_id = $1 AND ($3::bigint IS NULL OR h.section_id = $3) \
          GROUP BY s.id \
          ORDER BY count(*) DESC, s.name \
          LIMIT $2",
     )
     .bind(waterway_id)
     .bind(MAX_LISTED)
+    .bind(section_id)
     .fetch_all(pool)
     .await?;
 
     let contributor_rows = sqlx::query(
         "SELECT u.id AS user_id, u.username, count(*) AS steps, max(h.at) AS last_at \
          FROM entity_history h JOIN users u ON u.id = h.actor_id \
-         WHERE h.waterway_id = $1 \
+         WHERE h.waterway_id = $1 AND ($3::bigint IS NULL OR h.section_id = $3) \
          GROUP BY u.id, u.username \
          ORDER BY count(*) DESC, max(h.at) DESC, u.username \
          LIMIT $2",
     )
     .bind(waterway_id)
     .bind(MAX_LISTED)
+    .bind(section_id)
     .fetch_all(pool)
     .await?;
 
