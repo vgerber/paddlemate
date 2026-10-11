@@ -78,7 +78,7 @@ export default function PanelHeader<T extends string>({
             </IconButton>
           )}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h3" component="div" noWrap>
+            <Typography variant="h3" noWrap>
               {title}
             </Typography>
             {subtitle && (
