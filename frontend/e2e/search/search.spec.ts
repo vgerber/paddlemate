@@ -1,0 +1,364 @@
+import { expect, type Locator, type Page, test } from "@playwright/test";
+import { Finger } from "../support/finger";
+import {
+  appReady,
+  computed,
+  expectNoHorizontalOverflow,
+  expectTouchTargets,
+} from "../support/fixture";
+
+// The search panel of the calm design: a header with Name, Area and Region
+// tabs, one field, chips for the filters, one Filters sheet, and the results.
+// "Test" matches the fixture river and a few more.
+
+const TEAL = "rgb(14, 116, 144)";
+
+async function openSearch(page: Page, query = "") {
+  await page.goto(`/?panel=1${query}`);
+  await appReady(page);
+  await expect(
+    page.getByRole("tab", { name: "Name", exact: true }),
+  ).toBeVisible();
+}
+
+/** The sidebar and the phone overlay both mount the panel; one is hidden. */
+const seen = (l: Locator) => l.filter({ visible: true });
+
+const modeTab = (page: Page, name: string) =>
+  seen(page.getByRole("tab", { name, exact: true }));
+const nameField = (page: Page) =>
+  seen(page.getByPlaceholder("Search rivers or sections…"));
+const chip = (page: Page, name: RegExp | string) =>
+  seen(page.locator(".MuiChip-root", { hasText: name }));
+const sheet = (page: Page) =>
+  seen(page.getByRole("dialog", { name: "Filters" }));
+
+/** The number inside "Label (n)" on a result tab. */
+async function tabCount(page: Page, label: string) {
+  const text = await seen(
+    // Not by role: a dialog hides the page behind it from the tree.
+    page.locator("button.MuiTab-root", {
+      hasText: new RegExp(`^${label} \\(`),
+    }),
+  ).textContent();
+  return Number(/\((\d+)\)/.exec(text ?? "")?.[1]);
+}
+
+/** The level classes of the section rows on show, sorted and without repeats. */
+async function rowLevels(page: Page) {
+  const levels = await seen(page.getByTestId("search-pane"))
+    .locator("[data-level]")
+    .evaluateAll((els) => els.map((e) => e.getAttribute("data-level") ?? ""));
+  return [...new Set(levels)].sort();
+}
+
+test.describe("header and tabs", () => {
+  test("@small the header names the screen and the tabs are underlined", async ({
+    page,
+  }) => {
+    await openSearch(page);
+    await expect(seen(page.getByText("Search", { exact: true }))).toBeVisible();
+    const tabs = seen(
+      page.locator("button.MuiTab-root", { hasText: /^(Name|Area|Region)$/ }),
+    );
+    await expect(tabs).toHaveCount(3);
+    const heights = await tabs.evaluateAll((els) =>
+      els.map((e) => e.getBoundingClientRect().height),
+    );
+    for (const h of heights) expect(h).toBeGreaterThanOrEqual(48);
+    expect(await computed(modeTab(page, "Name"), "color")).toBe(TEAL);
+    expect(await computed(modeTab(page, "Area"), "color")).not.toBe(TEAL);
+    expect(await computed(modeTab(page, "Name"), "text-transform")).toBe(
+      "none",
+    );
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("the tab chosen is the mode in the URL", async ({ page }) => {
+    await openSearch(page);
+    await modeTab(page, "Area").click();
+    await expect(page).toHaveURL(/mode=area/);
+    await modeTab(page, "Region").click();
+    await expect(page).toHaveURL(/mode=region/);
+    await modeTab(page, "Name").click();
+    await expect(page).not.toHaveURL(/mode=/);
+  });
+
+  test("typed text and filters stay when the mode changes", async ({
+    page,
+  }) => {
+    await openSearch(page);
+    await nameField(page).fill("Test");
+    await modeTab(page, "Area").click();
+    await modeTab(page, "Name").click();
+    await expect(nameField(page)).toHaveValue("Test");
+  });
+
+  test("a swipe on the pane moves between modes", async ({ page }, info) => {
+    test.skip(info.project.name === "desktop", "touch only");
+    await openSearch(page);
+    const field = await nameField(page).boundingBox();
+    if (!field) throw new Error("no field");
+    // Start below the field, on the pane, clear of the 24px edge.
+    const finger = await Finger.down(page, 300, field.y + field.height + 140);
+    await finger.moveBy(-220);
+    await finger.up();
+    await expect(page).toHaveURL(/mode=area/);
+    await expect(modeTab(page, "Area")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+});
+
+test.describe("name mode", () => {
+  test("@small the field is 16px and 52px, rounded, with a 44px clear button", async ({
+    page,
+  }) => {
+    await openSearch(page);
+    const field = nameField(page);
+    expect(await computed(field, "font-size")).toBe("16px");
+    const box = await field
+      .locator("xpath=ancestor::div[contains(@class,'MuiOutlinedInput-root')]")
+      .boundingBox();
+    expect(box?.height).toBe(52);
+    await expect(seen(page.getByRole("button", { name: "Clear" }))).toHaveCount(
+      0,
+    );
+    await field.fill("Test");
+    const clear = seen(page.getByRole("button", { name: "Clear" }));
+    await expect(clear).toBeVisible();
+    await expectTouchTargets(clear, 44);
+    await clear.click();
+    await expect(field).toHaveValue("");
+  });
+
+  test("before any input the recent rivers are offered", async ({ page }) => {
+    await page.goto("/");
+    await appReady(page);
+    await page.evaluate(() =>
+      localStorage.setItem(
+        "pm.recent-waterways",
+        JSON.stringify([{ id: 9001, name: "Test River" }]),
+      ),
+    );
+    await openSearch(page);
+    await expect(seen(page.getByText("Recent rivers"))).toBeVisible();
+  });
+
+  test("@small chips are 32px to look at, 44px to hit and teal when set", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Test");
+    const grade = chip(page, "Grade");
+    const country = chip(page, "Country");
+    await expect(grade).toBeVisible();
+    await expect(country).toBeVisible();
+    for (const c of [grade, country]) {
+      const box = await c.boundingBox();
+      expect(box?.height).toBe(32);
+      const hit = await c.evaluate((el) => {
+        const after = getComputedStyle(el, "::after");
+        return (
+          el.getBoundingClientRect().height - Number.parseFloat(after.top) * 2
+        );
+      });
+      expect(hit).toBeGreaterThanOrEqual(44);
+    }
+    expect(await computed(grade, "color")).not.toBe(TEAL);
+    await page.goto("/?panel=1&q=Test&min_diff=3&country=AT");
+    await appReady(page);
+    await expect(chip(page, /^Grade III/)).toBeVisible();
+    await expect(chip(page, /^AT/)).toBeVisible();
+    expect(await computed(chip(page, /^Grade III/), "color")).toBe(TEAL);
+    expect(await computed(chip(page, /^AT/), "color")).toBe(TEAL);
+    await expectNoHorizontalOverflow(page);
+  });
+});
+
+test.describe("filters sheet", () => {
+  test("@small a chip opens the sheet with the three fields and a result button", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Test");
+    await chip(page, "Grade").click();
+    await expect(sheet(page)).toBeVisible();
+    await expect(sheet(page).getByLabel("Min grade")).toBeVisible();
+    await expect(sheet(page).getByLabel("Max grade")).toBeVisible();
+    await expect(sheet(page).getByLabel("Country")).toBeVisible();
+    await expect(
+      sheet(page).getByRole("button", { name: "Reset" }),
+    ).toBeVisible();
+    const done = sheet(page).getByRole("button", { name: /^\d+ results?$/ });
+    await expect(done).toBeVisible();
+    expect((await done.boundingBox())?.height).toBe(52);
+    for (const label of ["Min grade", "Max grade", "Country"]) {
+      expect(await computed(sheet(page).getByLabel(label), "font-size")).toBe(
+        "16px",
+      );
+    }
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("Escape closes the sheet and focus returns to the chip", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Test");
+    await chip(page, "Grade").focus();
+    await page.keyboard.press("Enter");
+    await expect(sheet(page)).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(sheet(page)).toHaveCount(0);
+    await expect(chip(page, "Grade")).toBeFocused();
+  });
+
+  test("setting Min grade narrows the results and shows on the chip", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Test");
+    await expect(
+      seen(page.getByRole("tab", { name: /^Rivers \(/ })),
+    ).toBeVisible();
+    await expect.poll(() => tabCount(page, "Rivers")).toBeGreaterThan(0);
+    const before = await tabCount(page, "Rivers");
+    await chip(page, "Grade").click();
+    await sheet(page).getByLabel("Min grade").selectOption({ label: "VI" });
+    await expect(page).toHaveURL(/min_diff=6/);
+    await sheet(page)
+      .getByRole("button", { name: /^\d+ results?$/ })
+      .click();
+    await expect(sheet(page)).toHaveCount(0);
+    await expect(chip(page, /^Grade VI/)).toBeVisible();
+    await expect.poll(() => tabCount(page, "Rivers")).toBeLessThan(before);
+  });
+
+  test("Water now: three chips, several on, narrowing the sections", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Test");
+    await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
+    await expect(chip(page, "Water now")).toBeVisible();
+    expect(await computed(chip(page, "Water now"), "color")).not.toBe(TEAL);
+    await chip(page, "Water now").click();
+    const levels = ["Low", "Medium", "High"];
+    for (const name of levels) {
+      await expect(
+        seen(sheet(page).getByRole("button", { name, exact: true })),
+      ).toHaveAttribute("aria-pressed", "false");
+    }
+    const level = (name: string) =>
+      sheet(page).getByRole("button", { name, exact: true });
+    await level("High").click();
+    await expect.poll(() => rowLevels(page)).toEqual(["high"]);
+    await level("Low").click();
+    await expect.poll(() => rowLevels(page)).toEqual(["high", "low"]);
+    await expect(level("High")).toHaveAttribute("aria-pressed", "true");
+    await expect(level("Low")).toHaveAttribute("aria-pressed", "true");
+    await expect(level("Medium")).toHaveAttribute("aria-pressed", "false");
+    const done = sheet(page).getByRole("button", { name: /^\d+ results?$/ });
+    await expect
+      .poll(async () => {
+        const n = await tabCount(page, "Sections");
+        return (
+          (await done.textContent()) === `${n} result${n === 1 ? "" : "s"}`
+        );
+      })
+      .toBe(true);
+    await done.click();
+    expect(await computed(chip(page, "Water now"), "color")).toBe(TEAL);
+  });
+
+  test("Reset clears the filters", async ({ page }) => {
+    await openSearch(page, "&q=Test&min_diff=3&country=AT");
+    await chip(page, /^Grade III/).click();
+    await sheet(page).getByRole("button", { name: "Reset" }).click();
+    await expect(sheet(page).getByLabel("Min grade")).toHaveValue("");
+    await expect(sheet(page).getByLabel("Country")).toHaveValue("");
+    await page.keyboard.press("Escape");
+    await expect(chip(page, "Grade")).toBeVisible();
+    await expect(page).not.toHaveURL(/min_diff/);
+  });
+});
+
+test.describe("results", () => {
+  test("Sections come first, Rivers second", async ({ page }) => {
+    await openSearch(page, "&q=Test");
+    const tabs = seen(page.getByRole("tab", { name: /^(Sections|Rivers) \(/ }));
+    await expect(tabs).toHaveCount(2);
+    await expect(tabs.first()).toHaveText(/^Sections \(/);
+    await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
+    await expect(tabs.nth(1)).toHaveText(/^Rivers \(\d+\)$/);
+    await tabs.nth(1).click();
+    await expect(seen(page.getByText("Test River")).first()).toBeVisible();
+  });
+});
+
+test.describe("area mode", () => {
+  test("@small the slider and the hint sit under the map card", async ({
+    page,
+  }) => {
+    await openSearch(page, "&mode=area");
+    await expect(
+      seen(page.getByText("Click on the map to set the search center.")),
+    ).toBeVisible();
+    const slider = seen(page.getByRole("slider"));
+    await expect(slider).toBeVisible();
+    const thumb = seen(page.locator(".MuiSlider-thumb"));
+    const t = await thumb.boundingBox();
+    expect(t?.width).toBe(28);
+    expect(t?.height).toBe(28);
+    const root = await seen(page.locator(".MuiSlider-root")).boundingBox();
+    expect(root?.height).toBeGreaterThanOrEqual(44);
+    await expect(seen(page.getByTestId("area-map-card"))).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+});
+
+test.describe("region mode", () => {
+  test("@small the field, the hint and the grouped suggestions", async ({
+    page,
+  }) => {
+    await openSearch(page, "&mode=region");
+    const field = seen(page.getByPlaceholder("Search regions…"));
+    await expect(field).toBeVisible();
+    expect(await computed(field, "font-size")).toBe("16px");
+    await expect(
+      seen(page.getByText("Type a valley, district, state or range")),
+    ).toBeVisible();
+    // Facets step aside while regions are listed.
+    await field.fill("Wald");
+    const groups = seen(page.getByTestId("region-group"));
+    await expect(groups.first()).toBeVisible();
+    const heads = await groups.evaluateAll((els) =>
+      els.map((e) => e.getAttribute("data-label")),
+    );
+    expect(heads.slice(0, 3)).toEqual([
+      "Valleys",
+      "Districts",
+      "Mountain ranges",
+    ]);
+    await expect(chip(page, "Grade")).toHaveCount(0);
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("picking a region returns to the results with the region as a chip", async ({
+    page,
+  }) => {
+    await openSearch(page, "&mode=region");
+    await seen(page.getByPlaceholder("Search regions…")).fill("Wald");
+    const option = seen(page.getByTestId("region-option")).first();
+    const name = await option.getAttribute("data-name");
+    await option.click();
+    await expect(page).toHaveURL(/region=\d+/);
+    await expect(seen(page.getByTestId("region-group"))).toHaveCount(0);
+    await expect(chip(page, name ?? "")).toBeVisible();
+    await expect(chip(page, "Grade")).toBeVisible();
+    await expect(
+      seen(page.getByRole("tab", { name: /^Sections \(/ })),
+    ).toBeVisible();
+    // Typing again lists regions again, and the facets step aside again.
+    await seen(page.getByPlaceholder("Search regions…")).fill("Wald");
+    await expect(seen(page.getByTestId("region-group")).first()).toBeVisible();
+    await expect(chip(page, "Grade")).toHaveCount(0);
+  });
+});

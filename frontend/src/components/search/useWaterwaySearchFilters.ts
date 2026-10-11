@@ -4,6 +4,7 @@ import type { Region } from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useRegionOutline } from "@/lib/hooks/useRegions";
+import type { WaterLevel } from "@/lib/waterLevel";
 
 export type SearchMode = "name" | "area" | "region";
 
@@ -21,6 +22,14 @@ export interface WaterwaySearchFilters {
   /** Region searched in, resolved from the URL's region id. */
   region: Region | null;
   setRegion: (region: Region | null) => void;
+  /** Level classes a section may be at now; empty means any. The search
+   * endpoint has no level, so the panel filters the sections with it. */
+  water: WaterLevel[];
+  toggleWater: (level: WaterLevel) => void;
+  clearWater: () => void;
+  /** Text typed into the region field; regions are listed while it is set. */
+  regionQuery: string;
+  setRegionQuery: (query: string) => void;
   /** Debounced name, empty until it has at least 2 characters. */
   searchName: string;
   /** Query filters for useWaterways, or null when nothing should be fetched. */
@@ -80,6 +89,18 @@ export function useWaterwaySearchFilters(
     [navigate],
   );
 
+  const [regionQuery, setRegionQuery] = useState("");
+  const [water, setWater] = useState<WaterLevel[]>([]);
+  const toggleWater = useCallback(
+    (level: WaterLevel) =>
+      setWater((prev) =>
+        prev.includes(level)
+          ? prev.filter((l) => l !== level)
+          : [...prev, level],
+      ),
+    [],
+  );
+  const clearWater = useCallback(() => setWater([]), []);
   const [name, setName] = useState(urlSearch.q ?? "");
   const [country, setCountry] = useState(urlSearch.country ?? "");
   const [minDiff, setMinDiff] = useState<number | "">(urlSearch.min_diff ?? "");
@@ -167,6 +188,11 @@ export function useWaterwaySearchFilters(
     setMaxDiff,
     region,
     setRegion,
+    regionQuery,
+    setRegionQuery,
+    water,
+    toggleWater,
+    clearWater,
     searchName,
     filters,
   };
