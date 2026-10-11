@@ -378,11 +378,35 @@ test.describe("suggest river", () => {
     expect(bodies[0]).toEqual({
       name: "Wizard Spec Creek",
       description: "Spec only",
+      proposal_note: null,
     });
     const card = pane(page).getByTestId("river-submitted");
     await expect(card).toBeVisible();
     await expect(card).toContainText("River submitted");
     expect(await computed(card, "border-top-left-radius")).toBe("14px");
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("an optional note for reviewers is capped, counted and sent @small", async ({
+    page,
+  }) => {
+    const bodies = await captureWrite(page, "**/api/v1/waterways");
+    await openRiverForm(page);
+    await pane(page).getByLabel("Name").first().fill("Wizard Note Creek");
+    const note = pane(page).getByLabel("Note for reviewers");
+    await expect(note).toBeVisible();
+    await expect(pane(page)).toContainText("0 / 500");
+    await note.fill("x".repeat(520));
+    await expect(note).toHaveValue("x".repeat(500));
+    await expect(pane(page)).toContainText("500 / 500");
+    await note.fill("  Seen on the club map  ");
+    expect(await computed(note, "font-size")).toBe("16px");
+    await pane(page).getByRole("button", { name: "Submit" }).click();
+    await expect.poll(() => bodies.length).toBe(1);
+    expect(bodies[0]).toMatchObject({
+      name: "Wizard Note Creek",
+      proposal_note: "Seen on the club map",
+    });
     await expectNoHorizontalOverflow(page);
   });
 
