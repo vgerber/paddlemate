@@ -12,7 +12,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { type ReactNode, useState } from "react";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
-import { fonts, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -42,10 +42,9 @@ export function CoordsInfo({ coords, actions, onEdit, onDelete }: Props) {
       <Typography
         component="span"
         sx={{
-          fontFamily: fonts.mono,
+          fontVariantNumeric: "tabular-nums",
           fontSize: 13,
           color: tokens.outline,
-          letterSpacing: "0.03em",
           flexGrow: 1,
         }}
       >

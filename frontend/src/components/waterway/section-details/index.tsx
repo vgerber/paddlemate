@@ -1,20 +1,29 @@
-import Stack from "@mui/material/Stack";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import Box from "@mui/material/Box";
+import Collapse from "@mui/material/Collapse";
+import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import EmptyState from "@/components/states/EmptyState";
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
-import { lineCoords } from "@/lib/geo";
+import { distanceAlongLineM, lineCoords } from "@/lib/geo";
 import { useDeleteFeature } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
-import { fonts, theme } from "@/lib/theme";
-import { PointEntry } from "./PointEntry";
-import { featureName } from "./utils";
+import { css, durations } from "@/lib/motion";
+import { theme } from "@/lib/theme";
+import { FeatureStrip } from "./FeatureStrip";
+import { FeatureNode } from "./RangeBand";
+import { splitWholeRunGrades } from "./rows";
+import type { ComputedFeature } from "./types";
+import {
+  buildTree,
+  computeExtent,
+  featureName,
+  proposalToComputedFeature,
+} from "./utils";
 
 const { tokens } = theme;
-
-import type { ComputedFeature } from "./types";
-import { buildTree, computeExtent, proposalToComputedFeature } from "./utils";
-import { ZoneEntry } from "./ZoneEntry";
 
 interface Props {
   section: SectionWithFeatures;
@@ -31,6 +40,9 @@ interface Props {
    * selection. Falls back to internal state when omitted. */
   activeFeatureId?: number | null;
   onActiveFeatureChange?: (id: number | null) => void;
+  /** Called when the list folds or opens. The strip stays either way, so a
+   * parent can hand the freed height to something else. */
+  onFoldedChange?: (folded: boolean) => void;
 }
 
 export default function FeatureTimeline({
@@ -41,7 +53,12 @@ export default function FeatureTimeline({
   onEditFeature,
   activeFeatureId,
   onActiveFeatureChange,
+  onFoldedChange,
 }: Props) {
+  const [folded, setFolded] = useState(false);
+  useEffect(() => {
+    onFoldedChange?.(folded);
+  }, [folded, onFoldedChange]);
   const [internalActiveId, setInternalActiveId] = useState<number | null>(null);
   const activeId =
     activeFeatureId !== undefined ? activeFeatureId : internalActiveId;
@@ -51,17 +68,26 @@ export default function FeatureTimeline({
     [section.location],
   );
 
-  const tree = useMemo(() => {
+  const totalM = useMemo(() => {
+    if (sectionLine.length < 2) return 0;
+    return distanceAlongLineM(sectionLine[sectionLine.length - 1], sectionLine);
+  }, [sectionLine]);
+
+  const { approved, grades, tree } = useMemo(() => {
     const approved = section.features.map((f) => computeExtent(f, sectionLine));
+    const split = splitWholeRunGrades(approved, totalM);
     const proposed = showProposed
       ? proposals
           .map((p) => proposalToComputedFeature(p, sectionLine))
           .filter((cf): cf is ComputedFeature => cf !== null)
       : [];
-    const all = [...approved, ...proposed];
-    if (!all.length) return [];
-    return buildTree(all);
-  }, [section.features, proposals, showProposed, sectionLine]);
+    const all = [...split.rest, ...proposed];
+    return {
+      approved: split.rest,
+      grades: split.grades,
+      tree: all.length ? buildTree(all) : [],
+    };
+  }, [section.features, proposals, showProposed, sectionLine, totalM]);
 
   // Existing features with a pending delete proposal get a marker icon.
   const pendingDeleteIds = useMemo(
@@ -108,51 +134,99 @@ export default function FeatureTimeline({
       ? (cf: ComputedFeature) => onEditFeature(cf.feature)
       : undefined;
 
-  if (!tree.length) {
-    return (
-      <Typography
-        sx={{
-          fontFamily: fonts.body,
-          fontSize: 12,
-          color: tokens.outline,
-          p: "8px 4px",
-        }}
-      >
-        No features for this section.
-      </Typography>
-    );
+  const ctx = {
+    activeId,
+    onItemClick: handleItemClick,
+    onEditItem,
+    onDeleteItem,
+    pendingDeleteIds,
+  };
+
+  if (!section.features.length && !tree.length) {
+    return <EmptyState title="No features for this section." />;
   }
 
+  const count = section.features.length;
+  const longest = Math.max(
+    totalM,
+    ...approved.map((f) => f.endM),
+    ...grades.map((f) => f.endM),
+  );
+
   return (
-    <Stack direction="column" sx={{ p: 1 }}>
-      {tree.map((node, idx) =>
-        // A zone without nested features renders as a plain dot entry - the
-        // bracket only earns its two rows when it wraps something.
-        node.item.isZone && node.nested.length > 0 ? (
-          <ZoneEntry
-            key={node.item.feature.id}
-            item={node.item}
-            nested={node.nested}
-            isLast={idx === tree.length - 1}
-            activeId={activeId}
-            onItemClick={handleItemClick}
-            onEditItem={onEditItem}
-            onDeleteItem={onDeleteItem}
-            pendingDeleteIds={pendingDeleteIds}
+    <Box
+      data-testid="features-card"
+      sx={{
+        bgcolor: tokens.surface,
+        borderRadius: `${tokens.radii.md}px`,
+        boxShadow: tokens.elevation.e1,
+        m: 1.5,
+        pb: 1,
+        minWidth: 0,
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          pl: 2,
+          pr: 0.5,
+          minHeight: tokens.touch.min,
+        }}
+      >
+        <Typography
+          data-testid="features-count"
+          sx={{
+            flex: 1,
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            color: tokens.onSurfaceVariant,
+          }}
+        >
+          {count} {count === 1 ? "feature" : "features"}
+        </Typography>
+        <IconButton
+          data-testid="features-fold"
+          aria-expanded={!folded}
+          aria-label={folded ? "Show features" : "Fold features"}
+          onClick={() => setFolded((f) => !f)}
+          sx={{
+            width: tokens.touch.min,
+            height: tokens.touch.min,
+            color: tokens.onSurfaceVariant,
+          }}
+        >
+          <ExpandLessIcon
+            sx={{
+              transform: folded ? "rotate(180deg)" : "none",
+              transition: `transform ${css.fast} ${css.easeOut}`,
+            }}
           />
-        ) : (
-          <PointEntry
-            key={node.item.feature.id}
-            item={node.item}
-            isLast={idx === tree.length - 1}
-            isActive={activeId === node.item.feature.id}
-            onClick={() => handleItemClick(node.item)}
-            onEdit={onEditItem && (() => onEditItem(node.item))}
-            onDelete={onDeleteItem && (() => onDeleteItem(node.item))}
-            pendingDelete={pendingDeleteIds.has(node.item.feature.id)}
-          />
-        ),
-      )}
+        </IconButton>
+      </Box>
+
+      <Box sx={{ px: 2, pb: 1 }}>
+        <FeatureStrip
+          features={approved}
+          grade={grades.length ? featureName(grades[0].feature) : null}
+          totalM={longest}
+        />
+      </Box>
+
+      <Collapse in={!folded} timeout={durations.base} unmountOnExit>
+        <Box sx={{ px: 0.5 }}>
+          {tree.map((node, idx) => (
+            <FeatureNode
+              key={node.item.feature.id}
+              node={node}
+              ctx={ctx}
+              startsList={idx === 0}
+              endsList={idx === tree.length - 1}
+              dashed={false}
+            />
+          ))}
+        </Box>
+      </Collapse>
 
       <ConfirmDialog
         open={deleteTarget !== null}
@@ -165,6 +239,6 @@ export default function FeatureTimeline({
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
       />
-    </Stack>
+    </Box>
   );
 }

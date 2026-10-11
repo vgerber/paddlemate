@@ -1,20 +1,21 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
+import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef } from "react";
+import RowMenu, { type RowAction } from "@/components/RowMenu";
 import type { Comment, Media } from "@/lib/api";
 import { categoryColor, categoryLabel } from "@/lib/comments";
 import { timeAgo } from "@/lib/format";
 import { pointCoords } from "@/lib/geo";
-import { labelSx, theme } from "@/lib/theme";
+import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
-/** One note in a thread. The category leads and is the only thing allowed
- * colour, so a hazard stands out among trip reports; a note an editor has
- * folded into curated data or retired is dimmed rather than hidden. */
+/** One note in a thread, as a calm card. The category dot and label lead and
+ * are the only things allowed colour, so a hazard stands out among trip
+ * reports; a note an editor has folded into curated data or retired is
+ * dimmed rather than hidden. */
 export default function CommentRow({
   comment,
   source,
@@ -49,102 +50,84 @@ export default function CommentRow({
     }
   }, [selected]);
 
+  const actions: RowAction[] = [];
+  if (noteCoords && onFocusLocation) {
+    actions.push({
+      label: "Show on map",
+      icon: <PlaceOutlinedIcon fontSize="small" />,
+      onClick: () => onFocusLocation(noteCoords),
+    });
+  }
+  if (canDelete) {
+    actions.push({
+      label: "Delete note",
+      icon: <DeleteOutlineIcon fontSize="small" />,
+      danger: true,
+      onClick: onDelete,
+    });
+  }
+
   return (
     <Box
       ref={rowRef}
+      data-testid="note-card"
+      data-retired={retired || undefined}
       onClick={onSelect}
       sx={{
-        display: "flex",
-        gap: 1.25,
+        mx: 1.5,
+        my: 1,
+        pl: 2,
+        pr: 0.5,
         py: 1.25,
-        px: selected ? 1 : 0,
-        mx: selected ? -1 : 0,
-        borderBottom: "1px solid",
-        borderColor: `${tokens.outlineVariant}55`,
-        opacity: retired ? 0.5 : 1,
+        bgcolor: selected ? `${tokens.primary}${alphas.wash}` : tokens.surface,
+        borderRadius: `${tokens.radii.md}px`,
+        boxShadow: tokens.elevation.e1,
+        opacity: retired ? 0.55 : 1,
         cursor: onSelect ? "pointer" : "default",
-        bgcolor: selected ? `${tokens.primary}14` : "transparent",
       }}
     >
-      {/* A colour bar carries the category at a glance; neutral kinds get a
-          quiet one so the list still has a rhythm. */}
-      <Box
-        sx={{
-          width: 2,
-          flexShrink: 0,
-          bgcolor: color ?? `${tokens.outlineVariant}99`,
-        }}
-      />
-
-      <Box sx={{ minWidth: 0, flex: 1 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
         <Box
-          sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}
+          data-testid="note-dot"
+          sx={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            flexShrink: 0,
+            bgcolor: color ?? tokens.outline,
+          }}
+        />
+        <Typography
+          sx={{
+            fontSize: "0.8125rem",
+            fontWeight: 600,
+            color: color ?? tokens.onSurfaceVariant,
+            flexShrink: 0,
+          }}
         >
+          {categoryLabel(comment.category)}
+        </Typography>
+        {source && (
           <Typography
-            sx={{
-              ...labelSx,
-              color: color ?? "text.secondary",
-              flexShrink: 0,
-            }}
+            sx={{ fontSize: "0.8125rem", color: tokens.outline, minWidth: 0 }}
+            noWrap
           >
-            {categoryLabel(comment.category)}
+            {source}
           </Typography>
-          {source && (
-            <Typography
-              sx={{ ...labelSx, color: "text.disabled", minWidth: 0 }}
-              noWrap
-            >
-              {source}
-            </Typography>
-          )}
-          {retired && (
-            <Typography sx={{ ...labelSx, color: "text.disabled" }}>
-              {comment.status}
-            </Typography>
-          )}
-          <Box sx={{ flex: 1 }} />
-          {noteCoords && onFocusLocation && (
-            <IconButton
-              size="small"
-              aria-label="Show on map"
-              title="Show on map"
-              onClick={(event) => {
-                event.stopPropagation();
-                onFocusLocation(noteCoords);
-              }}
-              sx={{
-                p: { xs: 0.75, md: 0.5 },
-                color: "text.disabled",
-                "& .MuiSvgIcon-root": { fontSize: { xs: 18, md: 15 } },
-              }}
-            >
-              <LocationOnIcon />
-            </IconButton>
-          )}
-          {canDelete && (
-            <IconButton
-              size="small"
-              aria-label="Delete note"
-              onClick={(event) => {
-                event.stopPropagation();
-                onDelete();
-              }}
-              sx={{
-                p: { xs: 0.75, md: 0.5 },
-                mr: { xs: -0.5, md: 0 },
-                color: "text.disabled",
-                "& .MuiSvgIcon-root": { fontSize: { xs: 19, md: 16 } },
-              }}
-            >
-              <DeleteOutlineIcon />
-            </IconButton>
-          )}
-        </Box>
+        )}
+        {retired && (
+          <Typography sx={{ fontSize: "0.8125rem", color: tokens.outline }}>
+            {comment.status}
+          </Typography>
+        )}
+        <Box sx={{ flex: 1 }} />
+        <RowMenu actions={actions} />
+      </Box>
 
+      <Box sx={{ pr: 1.5 }}>
         <Typography
           variant="body2"
           sx={{
-            mt: 0.25,
             whiteSpace: "pre-wrap",
             // A pasted URL is one long word; let it break rather than
             // stretch the panel.
@@ -174,8 +157,8 @@ export default function CommentRow({
                   cursor: "zoom-in",
                   width: 72,
                   height: 72,
-                  border: "1px solid",
-                  borderColor: `${tokens.outlineVariant}55`,
+                  border: "none",
+                  borderRadius: `${tokens.radii.xs}px`,
                   backgroundImage: `url(${item.thumbnail_url ?? item.url})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
@@ -187,10 +170,9 @@ export default function CommentRow({
 
         <Typography
           sx={{
-            ...labelSx,
-            display: "block",
             mt: 0.75,
-            fontSize: "0.625rem",
+            fontSize: "0.75rem",
+            color: tokens.outline,
             overflowWrap: "anywhere",
           }}
         >
