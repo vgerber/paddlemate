@@ -1,10 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
-import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
-import Tab from "@mui/material/Tab";
-import Tabs from "@mui/material/Tabs";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   createFileRoute,
@@ -18,23 +15,30 @@ import DockedAction from "@/components/DockedAction";
 import ListPaneHeader from "@/components/ListPaneHeader";
 import MyLogsPanel from "@/components/logs-page/MyLogsPanel";
 import SocialPanel from "@/components/logs-page/SocialPanel";
+import PanelHeader from "@/components/PanelHeader";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
+import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import { BOTTOM_NAV_SPACE, PANEL_HEIGHT, theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 export const Route = createFileRoute("/logs")({
   component: LogsPage,
 });
+
+const TABS = ["mine", "social"] as const;
+type LogsTab = (typeof TABS)[number];
 
 function LogsPage() {
   const childMatches = useChildMatches();
   const { isAuthenticated, isLoading: sessionLoading } = useSession();
   const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState<LogsTab>("mine");
   // The open log comes from the child route rather than a search param: the
   // log already had its own address, and /logs/123 has to keep working.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -73,77 +77,46 @@ function LogsPage() {
     if (hasChild) return <Outlet />;
     return (
       <SignInGate
-        icon={
-          <DirectionsBoatOutlinedIcon
-            sx={{ fontSize: 56, color: "text.disabled" }}
-          />
-        }
+        icon={<DirectionsBoatOutlinedIcon />}
         title="Sign in to view your logs"
       />
     );
   }
 
-  return isMobile ? (
-    <LogsMobile tab={tab} onTabChange={setTab} onOpen={onOpen} onNew={onNew} />
-  ) : (
-    <LogsDesktop
+  const list = (
+    <LogsList
       tab={tab}
       onTabChange={setTab}
       onOpen={onOpen}
-      onNew={onNew}
       selectedId={selectedId}
-      hasChild={hasChild}
-      logCount={myDescents?.total}
+      count={myDescents?.total}
     />
   );
-}
 
-interface LogsViewProps {
-  tab: number;
-  onTabChange: (tab: number) => void;
-  onOpen: (id: number) => void;
-  onNew: () => void;
-}
-
-function LogsMobile({ tab, onTabChange, onOpen, onNew }: LogsViewProps) {
-  return (
-    <>
-      <Box sx={{ maxWidth: 720, mx: "auto" }}>
-        <LogsTabs tab={tab} onTabChange={onTabChange} />
-        <LogsTabContent tab={tab} onOpen={onOpen} />
+  if (isMobile) {
+    return (
+      <Box sx={{ minHeight: PANEL_HEIGHT, bgcolor: tokens.surfaceLow }}>
+        <Box sx={{ maxWidth: 720, mx: "auto" }}>{list}</Box>
+        {tab === "mine" && (
+          <Fab
+            color="secondary"
+            aria-label="Log descent"
+            onClick={onNew}
+            sx={{
+              position: "fixed",
+              bottom: `calc(${BOTTOM_NAV_SPACE} + 16px)`,
+              right: 16,
+            }}
+          >
+            <AddIcon />
+          </Fab>
+        )}
       </Box>
-      {tab === 0 && (
-        <Fab
-          color="secondary"
-          onClick={onNew}
-          sx={{
-            position: "fixed",
-            bottom: `calc(${BOTTOM_NAV_SPACE} + 16px)`,
-            right: 16,
-          }}
-        >
-          <AddIcon />
-        </Fab>
-      )}
-    </>
-  );
-}
+    );
+  }
 
-/** Desktop: the log list beside the open log, so moving between a week's
- * descents never costs a navigation round trip. */
-function LogsDesktop({
-  tab,
-  onTabChange,
-  onOpen,
-  onNew,
-  selectedId,
-  hasChild,
-  logCount,
-}: LogsViewProps & {
-  selectedId?: number;
-  hasChild: boolean;
-  logCount?: number;
-}) {
+  // Desktop: the log list beside the open log, so moving between a week's
+  // descents never costs a navigation round trip.
   return (
     <Box
       sx={{
@@ -153,99 +126,80 @@ function LogsDesktop({
           lg: "420px minmax(0, 1fr)",
         },
         height: PANEL_HEIGHT,
+        bgcolor: tokens.surfaceLow,
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
-          bgcolor: theme.tokens.surfaceLow,
-          borderRight: "1px solid",
-          borderColor: `${theme.tokens.outlineVariant}55`,
-        }}
-      >
-        <ListPaneHeader count={tab === 0 ? logCount : undefined} />
-        <LogsTabs tab={tab} onTabChange={onTabChange} />
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-          <LogsTabContent
-            tab={tab}
-            onOpen={onOpen}
-            selectedId={selectedId}
-            flush
-          />
-        </Box>
-        {tab === 0 && <DockedAction label="Log descent" onClick={onNew} />}
+      <Box sx={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
+        {tab === "mine" && <DockedAction label="Log descent" onClick={onNew} />}
       </Box>
-      <Box sx={{ minHeight: 0, overflowY: "auto" }}>
-        {hasChild ? (
-          <Outlet />
-        ) : (
-          <EmptyState
-            icon={
-              <DirectionsBoatOutlinedIcon
-                sx={{ fontSize: 48, color: "text.disabled" }}
-              />
-            }
-            title="Pick a log to open it."
-            py={10}
-          />
-        )}
+      <Box sx={{ minHeight: 0, overflowY: "auto", p: 1.5 }}>
+        <Box
+          sx={{
+            maxWidth: 880,
+            minHeight: "100%",
+            boxSizing: "border-box",
+            bgcolor: tokens.surface,
+            borderRadius: `${tokens.radii.md}px`,
+            boxShadow: tokens.elevation.e1,
+          }}
+        >
+          {hasChild ? (
+            <Outlet />
+          ) : (
+            <EmptyState
+              icon={<DirectionsBoatOutlinedIcon />}
+              title="Pick a log to open it."
+              py={10}
+            />
+          )}
+        </Box>
       </Box>
     </Box>
   );
 }
 
-function LogsTabs({
+function LogsList({
   tab,
   onTabChange,
-}: {
-  tab: number;
-  onTabChange: (tab: number) => void;
-}) {
-  return (
-    <Tabs
-      value={tab}
-      onChange={(_, v) => onTabChange(v)}
-      variant="fullWidth"
-      sx={{ borderBottom: "1px solid", borderColor: "divider" }}
-    >
-      <Tab
-        icon={<DirectionsBoatOutlinedIcon fontSize="small" />}
-        iconPosition="start"
-        label="My Logs"
-      />
-      <Tab
-        icon={<PeopleAltOutlinedIcon fontSize="small" />}
-        iconPosition="start"
-        label="Social"
-      />
-    </Tabs>
-  );
-}
-
-function LogsTabContent({
-  tab,
   onOpen,
   selectedId,
-  flush,
+  count,
 }: {
-  tab: number;
+  tab: LogsTab;
+  onTabChange: (tab: LogsTab) => void;
   onOpen: (id: number) => void;
   selectedId?: number;
-  flush?: boolean;
+  count?: number;
 }) {
+  const swipe = useSwipeTabs({
+    index: TABS.indexOf(tab),
+    count: TABS.length,
+    onIndexChange: (i) => onTabChange(TABS[i]),
+  });
   return (
-    <Box sx={{ px: flush ? 0 : 2, py: flush ? 2 : 3 }}>
-      {tab === 0 && (
-        <MyLogsPanel onOpen={onOpen} selectedId={selectedId} flush={flush} />
-      )}
-      {/* Social is follows, not logs, so it keeps its own padding. */}
-      {tab === 1 && (
-        <Box sx={{ px: flush ? 1.5 : 0 }}>
+    <>
+      <ListPaneHeader count={tab === "mine" ? count : undefined} />
+      <PanelHeader
+        tabs={{
+          value: tab,
+          onChange: onTabChange,
+          progress: swipe.progress,
+          dragging: swipe.dragging,
+          gesture: swipe.gestureProps,
+          options: [
+            { value: "mine", label: "My logs" },
+            { value: "social", label: "Social" },
+          ],
+        }}
+      />
+      <Box {...swipe.paneProps} sx={{ px: 1.5, py: 1.5 }}>
+        {tab === "mine" ? (
+          <MyLogsPanel onOpen={onOpen} selectedId={selectedId} />
+        ) : (
           <SocialPanel />
-        </Box>
-      )}
-    </Box>
+        )}
+      </Box>
+    </>
   );
 }

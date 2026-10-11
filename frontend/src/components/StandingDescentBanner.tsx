@@ -1,11 +1,14 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import ButtonBase from "@mui/material/ButtonBase";
 import type { SxProps } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
-import { fonts } from "@/lib/theme";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 function elapsed(startTime: string): string {
   const ms = Date.now() - new Date(startTime).getTime();
@@ -31,16 +34,22 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
 
   return (
     <Box
+      data-testid="standing-banner"
       sx={[
         {
-          bgcolor: "background.paper",
-          borderBottom: "1px solid",
-          borderColor: "divider",
+          bgcolor: tokens.surface,
+          borderRadius: `${tokens.radii.md}px`,
+          boxShadow: tokens.elevation.e2,
           display: "flex",
           alignItems: "center",
-          gap: 2,
-          px: 2,
-          py: 0.75,
+          flexWrap: "wrap",
+          columnGap: 1.5,
+          m: 1,
+          pl: 2,
+          pr: 1,
+          py: 0.5,
+          minHeight: 56,
+          boxSizing: "border-box",
         },
         ...(Array.isArray(sx) ? sx : [sx]),
       ]}
@@ -50,17 +59,11 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
           width: 8,
           height: 8,
           borderRadius: "50%",
-          bgcolor: "error.main",
+          bgcolor: tokens.primary,
           flexShrink: 0,
-          animation: "pulse 1.5s ease-in-out infinite",
-          "@keyframes pulse": {
-            "0%, 100%": { opacity: 1 },
-            "50%": { opacity: 0.25 },
-          },
         }}
       />
-      <Typography
-        component="button"
+      <ButtonBase
         onClick={() =>
           navigate({
             to: "/",
@@ -73,42 +76,43 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
           })
         }
         sx={{
-          fontSize: "0.75rem",
-          fontFamily: fonts.label,
+          flex: "1 1 96px",
+          minWidth: 0,
+          minHeight: tokens.touch.min,
+          justifyContent: "flex-start",
+          textAlign: "left",
+          font: "inherit",
+          fontSize: "0.9375rem",
           fontWeight: 600,
-          letterSpacing: "0.06em",
-          color: "text.secondary",
-          background: "none",
-          border: "none",
-          padding: 0,
-          cursor: "pointer",
-          "&:hover": { color: "text.primary" },
+          color: "text.primary",
         }}
       >
-        {current.sectionName}
-      </Typography>
+        <Box
+          component="span"
+          sx={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {current.sectionName}
+        </Box>
+      </ButtonBase>
       <Typography
         sx={{
-          fontSize: "0.8125rem",
-          fontFamily: fonts.label,
-          fontWeight: 700,
-          letterSpacing: "0.04em",
-          minWidth: 52,
-          color: "text.primary",
+          fontSize: "0.9375rem",
+          fontWeight: 600,
+          fontVariantNumeric: "tabular-nums",
+          color: "text.secondary",
         }}
       >
         {elapsed(current.startTime)}
       </Typography>
-      <Box sx={{ ml: "auto", display: "flex", gap: 1 }}>
+      <Box sx={{ display: "flex", gap: 0.5 }}>
         <Button
-          size="small"
           variant="contained"
-          color="secondary"
-          sx={{
-            fontSize: "0.6875rem",
-            fontWeight: 700,
-            letterSpacing: "0.08em",
-          }}
+          color="primary"
+          sx={{ minHeight: tokens.touch.min, textTransform: "none" }}
           onClick={() => {
             const { waterwayId, sectionId, startTime } = current;
             discard();
@@ -121,11 +125,10 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
           Finish
         </Button>
         <Button
-          size="small"
           sx={{
-            fontSize: "0.6875rem",
+            minHeight: tokens.touch.min,
             color: "text.secondary",
-            letterSpacing: "0.06em",
+            textTransform: "none",
           }}
           onClick={discard}
         >

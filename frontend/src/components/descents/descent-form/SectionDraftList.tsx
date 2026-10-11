@@ -2,17 +2,20 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { fonts } from "@/lib/theme";
+import RowMenu, { type RowAction } from "@/components/RowMenu";
+import { theme } from "@/lib/theme";
 import type { SectionDraft } from "./model";
+
+const { tokens } = theme;
 
 interface Props {
   sections: SectionDraft[];
   onChange: (sections: SectionDraft[]) => void;
 }
 
-/** Ordered list of picked sections with move up/down and remove controls. */
+/** The picked sections in paddled order, one card each with a single menu to
+ * move or remove it. */
 export default function SectionDraftList({ sections, onChange }: Props) {
   if (sections.length === 0) return null;
 
@@ -24,8 +27,37 @@ export default function SectionDraftList({ sections, onChange }: Props) {
     onChange(arr);
   }
 
+  function actions(i: number): RowAction[] {
+    return [
+      ...(i > 0
+        ? [
+            {
+              label: "Move up",
+              icon: <ArrowUpwardIcon />,
+              onClick: () => moveSection(i, -1),
+            },
+          ]
+        : []),
+      ...(i < sections.length - 1
+        ? [
+            {
+              label: "Move down",
+              icon: <ArrowDownwardIcon />,
+              onClick: () => moveSection(i, 1),
+            },
+          ]
+        : []),
+      {
+        label: "Remove",
+        icon: <DeleteOutlinedIcon />,
+        danger: true,
+        onClick: () => onChange(sections.filter((_, j) => j !== i)),
+      },
+    ];
+  }
+
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
       {sections.map((s, i) => (
         <Box
           key={s.key}
@@ -33,45 +65,28 @@ export default function SectionDraftList({ sections, onChange }: Props) {
             display: "flex",
             alignItems: "center",
             gap: 1,
-            px: 1,
-            py: 0.5,
-            border: "1px solid",
-            borderColor: "divider",
+            pl: 1.5,
+            pr: 0.5,
+            minHeight: 56,
+            bgcolor: tokens.surface,
+            borderRadius: `${tokens.radii.md}px`,
+            boxShadow: tokens.elevation.e1,
           }}
         >
           <Typography
-            variant="caption"
             sx={{
-              fontFamily: fonts.label,
-              color: "text.disabled",
-              minWidth: 20,
+              width: 20,
+              color: "text.secondary",
+              fontSize: "0.8125rem",
+              fontWeight: 600,
             }}
           >
             {i + 1}
           </Typography>
-          <Typography variant="body2" sx={{ flex: 1 }}>
+          <Typography sx={{ flex: 1, minWidth: 0, fontWeight: 600 }}>
             {s.display_name}
           </Typography>
-          <IconButton
-            size="small"
-            onClick={() => moveSection(i, -1)}
-            disabled={i === 0}
-          >
-            <ArrowUpwardIcon fontSize="inherit" />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => moveSection(i, 1)}
-            disabled={i === sections.length - 1}
-          >
-            <ArrowDownwardIcon fontSize="inherit" />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => onChange(sections.filter((_, j) => j !== i))}
-          >
-            <DeleteOutlinedIcon fontSize="inherit" />
-          </IconButton>
+          <RowMenu actions={actions(i)} />
         </Box>
       ))}
     </Box>

@@ -6,19 +6,16 @@ import DescentCard from "@/components/descents/DescentCard";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import { useMyDescents } from "@/lib/hooks/useDescents";
+import { labelSx } from "@/lib/theme";
 
 /** The signed-in user's own descents, grouped by month. */
 export default function MyLogsPanel({
   onOpen,
   selectedId,
-  flush,
 }: {
   onOpen: (id: number) => void;
   /** The log the desktop detail pane is showing. */
   selectedId?: number;
-  /** In the desktop list pane the column itself is the list, so the months
-   * lose their boxes and the rows sit on the pane's own ground. */
-  flush?: boolean;
 }) {
   const { data, isLoading } = useMyDescents({});
   const descents = data?.items ?? [];
@@ -44,11 +41,7 @@ export default function MyLogsPanel({
   if (descents.length === 0) {
     return (
       <EmptyState
-        icon={
-          <DirectionsBoatOutlinedIcon
-            sx={{ fontSize: 48, color: "text.disabled" }}
-          />
-        }
+        icon={<DirectionsBoatOutlinedIcon />}
         title="No descents logged yet."
         py={8}
       />
@@ -56,29 +49,22 @@ export default function MyLogsPanel({
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {groups.map(([label, items]) => (
         <Box key={label}>
           <Typography
-            variant="caption"
+            data-testid="log-month"
             sx={{
-              px: flush ? 2 : 0,
-              pb: 1,
-              display: "block",
+              ...labelSx,
+              fontSize: "0.8125rem",
+              px: 0.5,
+              pb: 0.75,
               color: "text.secondary",
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
             }}
           >
             {label}
           </Typography>
-          <Box
-            sx={{
-              border: flush ? "none" : "1px solid",
-              borderColor: "divider",
-            }}
-          >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {items.map((d) => (
               <DescentCard
                 key={d.id}

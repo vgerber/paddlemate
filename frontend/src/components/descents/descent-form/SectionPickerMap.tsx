@@ -2,6 +2,9 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import WaterwayMap from "@/components/map/Map";
 import type { SectionWithFeatures } from "@/lib/api";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 interface Props {
   sections: SectionWithFeatures[];
@@ -27,8 +30,8 @@ export default function SectionPickerMap({
     <Box
       sx={{
         height: 380,
-        border: "1px solid",
-        borderColor: "divider",
+        borderRadius: `${tokens.radii.md}px`,
+        overflow: "hidden",
         position: "relative",
       }}
     >
