@@ -16,7 +16,7 @@ import { useCreateFeature, useUpdateFeature } from "@/lib/hooks/useSections";
 import { preferredLanguage } from "@/lib/languagePreference";
 import FormSection from "./FormSection";
 import GaugeRangePicker from "./GaugeRangePicker";
-import { type GeometryPicking, minVerticesFor } from "./GeometryPicker";
+import { type GeometryPicking, minVerticesFor } from "./geometryPicking";
 import SuggestFeatureGeometry from "./SuggestFeatureGeometry";
 import SuggestFeatureTypeGrid from "./SuggestFeatureTypeGrid";
 

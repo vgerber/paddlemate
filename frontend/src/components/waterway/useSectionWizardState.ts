@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   GeometryPicking,
   GeomType,
-} from "@/components/waterway/GeometryPicker";
+} from "@/components/waterway/geometryPicking";
 import {
   createInitialNaming,
   type SectionNamingValue,

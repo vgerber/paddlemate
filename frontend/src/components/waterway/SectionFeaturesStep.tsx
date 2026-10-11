@@ -11,7 +11,7 @@ import { distanceAlongLineM } from "@/lib/geo";
 import type { Coordinate } from "@/lib/riverSnap";
 import FeatureRow from "./FeatureRow";
 import FormSection from "./FormSection";
-import type { GeometryPicking } from "./GeometryPicker";
+import type { GeometryPicking } from "./geometryPicking";
 import SuggestFeatureForm, {
   type SectionFeatureDraft,
 } from "./SuggestFeatureForm";

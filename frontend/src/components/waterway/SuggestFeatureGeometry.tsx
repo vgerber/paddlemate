@@ -13,7 +13,7 @@ import {
   type GeometryPicking,
   type GeomType,
   minVerticesFor,
-} from "./GeometryPicker";
+} from "./geometryPicking";
 import { useMapVerb } from "./useMapVerb";
 
 const { tokens } = theme;
