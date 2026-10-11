@@ -4,19 +4,16 @@ import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-import DockedAction from "@/components/DockedAction";
 import ListPaneHeader from "@/components/ListPaneHeader";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
-import TripDetail from "@/components/trip-page/TripDetail";
 import { fabSx } from "@/components/trip-page/TripFab";
-import TripForm from "@/components/trips/TripForm";
 import TripRow from "@/components/trips/TripRow";
+import TripsCanvas from "@/components/trips/TripsCanvas";
 import { useSession } from "@/lib/hooks/useSession";
 import { useTrip, useTrips } from "@/lib/hooks/useTrips";
-import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/trips/")({
   // All optional, so /trips is always a valid link.
@@ -114,145 +111,40 @@ function TripsPage() {
     );
   }
 
-  // Desktop: the trip list beside the open trip, so moving between a week's
-  // plan and the others never costs a navigation round trip.
-  return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          md: "320px minmax(0, 1fr)",
-          lg: "420px minmax(0, 1fr)",
-        },
-        height: PANEL_HEIGHT,
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
-          bgcolor: theme.tokens.surfaceLow,
-          borderRight: "1px solid",
-          borderColor: `${theme.tokens.outlineVariant}55`,
-        }}
-      >
-        <ListPaneHeader count={trips.length} loading={isLoading} />
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
-        <DockedAction
-          label="New trip"
-          onClick={() =>
-            navigate({
-              search: (prev) => ({ ...prev, new: true, selected: undefined }),
-            })
-          }
-        />
-      </Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
-          p: 1.5,
-        }}
-      >
-        {creating ? (
-          <DetailPanel>
-            <TripForm
-              embedded
-              onSave={(id) =>
-                navigate({
-                  search: (prev) => ({
-                    ...prev,
-                    new: undefined,
-                    selected: id,
-                  }),
-                })
-              }
-              onCancel={() =>
-                navigate({ search: (prev) => ({ ...prev, new: undefined }) })
-              }
-            />
-          </DetailPanel>
-        ) : selectedTrip ? (
-          <DetailPanel>
-            <TripDetail
-              trip={selectedTrip}
-              embedded
-              editing={edit === true}
-              onEditingChange={(v) =>
-                navigate({
-                  search: (prev) => ({ ...prev, edit: v || undefined }),
-                })
-              }
-              onClose={() =>
-                navigate({
-                  search: (prev) => ({
-                    ...prev,
-                    selected: undefined,
-                    edit: undefined,
-                  }),
-                })
-              }
-              onDeleted={() =>
-                navigate({
-                  search: (prev) => ({
-                    ...prev,
-                    selected: undefined,
-                    edit: undefined,
-                  }),
-                })
-              }
-            />
-          </DetailPanel>
-        ) : (
-          <EmptyState
-            icon={
-              <LuggageOutlinedIcon
-                sx={{ fontSize: 56, color: "text.disabled" }}
-              />
-            }
-            title="Pick a trip to open its plan."
-            py={10}
-          />
-        )}
-      </Box>
-    </Box>
-  );
-}
+  // Desktop: the trip list and the open trip float over the map, which
+  // draws the trip's bases and watch lists.
+  const closeTrip = () =>
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        selected: undefined,
+        edit: undefined,
+        new: undefined,
+      }),
+    });
 
-/** The open trip, or the form beside the list, as one white panel on the
- * ground like the log detail. The panel fills the pane; what is in it stops
- * at 880 and centres, so a wide window does not strand it on the left. */
-function DetailPanel({ children }: { children: ReactNode }) {
   return (
-    <Box
-      data-testid="trip-panel"
-      sx={{
-        position: "relative",
-        flex: 1,
-        minHeight: 0,
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        bgcolor: theme.tokens.surface,
-        borderRadius: `${theme.tokens.radii.md}px`,
-        boxShadow: theme.tokens.elevation.e1,
-      }}
-    >
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: 880,
-          mx: "auto",
-          flex: 1,
-          minHeight: 0,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {children}
-      </Box>
-    </Box>
+    <TripsCanvas
+      list={list}
+      count={trips.length}
+      loading={isLoading}
+      trip={selectedTrip ?? null}
+      creating={creating === true}
+      editing={edit === true}
+      onNew={() =>
+        navigate({
+          search: (prev) => ({ ...prev, new: true, selected: undefined }),
+        })
+      }
+      onEditingChange={(v) =>
+        navigate({ search: (prev) => ({ ...prev, edit: v || undefined }) })
+      }
+      onClose={closeTrip}
+      onSaved={(id) =>
+        navigate({
+          search: (prev) => ({ ...prev, new: undefined, selected: id }),
+        })
+      }
+    />
   );
 }

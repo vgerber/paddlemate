@@ -46,6 +46,11 @@ interface Props {
    * way back - so the panel drops its title and back arrow and keeps the
    * tabs. */
   embedded?: boolean;
+  /** The canvas draws the bases behind the cards, so the Bases tab drops its
+   * inline map. */
+  canvasMap?: boolean;
+  /** The members have a card of their own, so the Members tab goes. */
+  membersCard?: boolean;
   onDeleted: () => void;
 }
 
@@ -64,6 +69,8 @@ export default function TripDetail({
   onClose,
   onDeleted,
   embedded = false,
+  canvasMap = false,
+  membersCard = false,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSession();
@@ -72,7 +79,10 @@ export default function TripDetail({
   const deleteStay = useDeleteTripStay(trip.id);
   const linkDescent = useLinkDescentToTrip(trip.id);
 
-  const [tab, setTab] = useState<TripTab>("plan");
+  const [openTab, setTab] = useState<TripTab>("plan");
+  const tabs = membersCard ? TABS.filter((t) => t.value !== "members") : TABS;
+  // The members card appearing under an open Members tab falls back to Plan.
+  const tab = tabs.some((t) => t.value === openTab) ? openTab : "plan";
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [addingMember, setAddingMember] = useState(false);
   const [proposing, setProposing] = useState(false);
@@ -94,11 +104,11 @@ export default function TripDetail({
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [pickingDay, setPickingDay] = useState(false);
 
-  const tabIndex = TABS.findIndex((t) => t.value === tab);
+  const tabIndex = tabs.findIndex((t) => t.value === tab);
   const swipe = useSwipeTabs({
     index: tabIndex,
-    count: TABS.length,
-    onIndexChange: (i) => setTab(TABS[i].value),
+    count: tabs.length,
+    onIndexChange: (i) => setTab(tabs[i].value),
     enabled: !editing,
   });
 
@@ -165,7 +175,7 @@ export default function TripDetail({
         tabs={{
           value: tab,
           onChange: setTab,
-          options: TABS.map((t) => ({ value: t.value, label: t.label })),
+          options: tabs.map((t) => ({ value: t.value, label: t.label })),
           progress: swipe.progress,
           dragging: swipe.dragging,
           gesture: swipe.gestureProps,
@@ -206,6 +216,7 @@ export default function TripDetail({
                 isMember={isMember}
                 isAdmin={isAdmin}
                 viewerId={viewerId}
+                showMap={!canvasMap}
                 onLogSection={newLog}
                 {...stayActions}
               />

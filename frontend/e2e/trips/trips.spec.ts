@@ -51,19 +51,25 @@ test.describe("trip list", () => {
 
   test("desktop opens the trip beside the list", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop");
+    // Wide enough that the list and the trip card both stay open.
+    await page.setViewportSize({ width: 1440, height: 900 });
     await openList(page);
     await expect(page.getByText(/\d+ results?/)).toBeVisible();
     const first = page.getByTestId("trip-card").first();
     const name = (await first.innerText()).split("\n")[0];
     await first.click();
     await expect(page).toHaveURL(/selected=/);
-    // The pane keeps the trip's title and drops only the back arrow.
-    await expect(page.getByText(name, { exact: true })).toHaveCount(1);
+    // The card header names the trip and closes it; there is no back arrow.
+    const trip = page.getByTestId("canvas-card-trip");
+    await expect(trip.getByRole("heading", { name })).toHaveCount(1);
     await expect(page.getByRole("button", { name: "Back" })).toHaveCount(0);
     await expect(
-      page.getByRole("tab", { name: "Plan", exact: true }),
+      trip.getByRole("tab", { name: "Plan", exact: true }),
     ).toBeVisible();
     await expect(page.getByTestId("trip-card").first()).toBeVisible();
+    await trip.getByRole("button", { name: "Close" }).click();
+    await expect(page).not.toHaveURL(/selected=/);
+    await expect(trip).toHaveCount(0);
   });
 
   test("no sideways scroll @small", async ({ page }) => {
@@ -635,6 +641,7 @@ test.describe("trip gaps", () => {
     page,
   }, info) => {
     test.skip(info.project.name !== "desktop");
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`/trips/${TRIP}`);
     await expect(page).toHaveURL(new RegExp(`/trips\\?selected=${TRIP}`));
     await expect(dayCards(page).first()).toBeVisible();
@@ -644,9 +651,9 @@ test.describe("trip gaps", () => {
     await expect(
       page.getByRole("button", { name: "Trip actions" }),
     ).toBeVisible();
-    const panel = page.getByTestId("trip-panel");
-    await expect(panel).toHaveCSS("background-color", "rgb(255, 255, 255)");
-    await expect(panel).toHaveCSS("border-radius", "14px");
+    const card = page.getByTestId("canvas-card-trip");
+    await expect(card).toHaveCSS("background-color", "rgb(255, 255, 255)");
+    await expect(card).toHaveCSS("border-radius", "14px");
     await page.goto("/trips/new");
     await expect(page).toHaveURL(/\/trips\?new=true/);
     await expect(page.getByTestId("trip-card").first()).toBeVisible();
@@ -675,5 +682,122 @@ test.describe("trip actions", () => {
     await page.getByRole("menuitem", { name: "Edit trip" }).click();
     await expect(page).toHaveURL(/edit=true/);
     await expect(page.getByLabel("Trip name")).toBeVisible();
+  });
+});
+
+const PLACED: [number, number][] = [
+  [10.9555, 47.07],
+  [10.5688, 47.1412],
+  [10.7421, 47.1712],
+];
+
+type MapLike = {
+  isMoving(): boolean;
+  loaded(): boolean;
+  project(lngLat: [number, number]): { x: number; y: number };
+};
+
+async function openCanvas(page: Page, width: number) {
+  await page.setViewportSize({ width, height: 900 });
+  await page.goto(`/trips?selected=${TRIP}`);
+  await expect(page.getByTestId("canvas-card-trip")).toBeVisible();
+  await page.waitForFunction(() => {
+    const map = (window as unknown as { __paddlemateMap?: MapLike })
+      .__paddlemateMap;
+    return !!map && map.loaded() && !map.isMoving();
+  });
+}
+
+test.describe("trips on the canvas", () => {
+  test.skip(({ isMobile }) => isMobile, "wide screens only");
+
+  test("the list and the trip are cards over one map", async ({ page }) => {
+    await openCanvas(page, 1440);
+    await expect(page.locator(".maplibregl-map")).toHaveCount(1);
+    const list = await page.getByTestId("canvas-card-list").boundingBox();
+    const trip = await page.getByTestId("canvas-card-trip").boundingBox();
+    if (!list || !trip) throw new Error("no cards");
+    // List 20% (288 -> clamped to 300), trip card 30% (432).
+    expect(Math.abs(list.width - 300)).toBeLessThanOrEqual(1);
+    expect(Math.abs(trip.width - 432)).toBeLessThanOrEqual(1);
+    await expect(page.getByTestId("trip-card").first()).toBeVisible();
+  });
+
+  test("every base sits inside the free map area", async ({ page }) => {
+    await openCanvas(page, 1440);
+    await expect
+      .poll(
+        async () => {
+          const raw = await page
+            .getByTestId("canvas-host")
+            .getAttribute("data-free");
+          const [x, y, w, h] = (raw ?? "").split(",").map(Number);
+          const pts = await page.evaluate((places) => {
+            const map = (window as unknown as { __paddlemateMap?: MapLike })
+              .__paddlemateMap;
+            if (!map || map.isMoving()) return null;
+            return places.map((p) => map.project(p as [number, number]));
+          }, PLACED);
+          if (!pts) return "moving";
+          const slack = 2;
+          const outside = pts.filter(
+            (p) =>
+              p.x < x - slack ||
+              p.x > x + w + slack ||
+              p.y < y - slack ||
+              p.y > y + h + slack,
+          );
+          return outside.length === 0 ? "inside" : JSON.stringify(outside);
+        },
+        { timeout: 8000 },
+      )
+      .toBe("inside");
+  });
+
+  test("the Bases tab has no inline map on the canvas", async ({ page }) => {
+    await openCanvas(page, 1440);
+    await page.getByRole("tab", { name: "Bases", exact: true }).click();
+    await expect(page.getByTestId("stay-row").first()).toBeVisible();
+    await expect(page.locator(".maplibregl-map")).toHaveCount(1);
+    await expect(
+      page.getByTestId("canvas-card-trip").locator(".maplibregl-map"),
+    ).toHaveCount(0);
+  });
+
+  test("the members card appears at 1600 and not at 1599", async ({ page }) => {
+    await openCanvas(page, 1599);
+    await expect(page.getByTestId("canvas-card-members")).toHaveCount(0);
+    await expect(
+      page.getByRole("tab", { name: "Members", exact: true }),
+    ).toBeVisible();
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await expect(page.getByTestId("canvas-card-members")).toBeVisible();
+    await expect(
+      page.getByRole("tab", { name: "Members", exact: true }),
+    ).toHaveCount(0);
+    // The cards cannot all stay open: the members card folds first.
+    await expect(page.getByTestId("canvas-card-members")).toHaveAttribute(
+      "data-collapsed",
+      "true",
+    );
+    await page
+      .getByTestId("canvas-card-members")
+      .getByRole("button", { expanded: false })
+      .click();
+    await expect(page.getByTestId("trip-members-card")).toBeVisible();
+  });
+
+  test("a deep link to /trips/<id> lands in the cards", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`/trips/${TRIP}`);
+    await expect(page).toHaveURL(new RegExp(`/trips\\?selected=${TRIP}`));
+    await expect(page.getByTestId("canvas-card-trip")).toBeVisible();
+  });
+
+  test("the phone keeps its own screens, no canvas", async ({ page }) => {
+    await page.setViewportSize({ width: 412, height: 800 });
+    await page.goto(`/trips/${TRIP}`);
+    await expect(page.getByTestId("canvas-card-trip")).toHaveCount(0);
+    await expect(page.getByRole("tab", { name: "Members" })).toBeVisible();
   });
 });
