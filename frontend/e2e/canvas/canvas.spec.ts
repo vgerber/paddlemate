@@ -376,6 +376,8 @@ test.describe("canvas foundation on a phone", () => {
   test("no host and no map at 412", async ({ page }) => {
     await page.goto("/dev/canvas");
     await page.waitForLoadState("load");
+    // The host loads lazily, so give a wrongly mounted one time to appear.
+    await page.waitForTimeout(2000);
     await expect(page.getByTestId("canvas-host")).toHaveCount(0);
     await expect(page.locator(".maplibregl-map")).toHaveCount(0);
     await expect(page.locator('[data-testid^="canvas-card-"]')).toHaveCount(0);
