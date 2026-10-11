@@ -69,7 +69,7 @@ export function IconDisc({
         flexShrink: 0,
       }}
     >
-      <FeatureTypeIcon type={type} size={16} />
+      <FeatureTypeIcon type={type} size={18} />
     </Box>
   );
 }

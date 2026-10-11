@@ -147,9 +147,10 @@ const tokens = {
   chartSeries: "#0e7490",
   chartGrid: "rgba(31,43,49,0.08)",
 
-  // Corner radii in px: small chips and tags, buttons and inputs, cards,
-  // sheets and the FAB, dialogs, and the pill for chips and pills.
-  radii: { xs: 6, sm: 10, md: 14, lg: 16, xl: 20, pill: 999 },
+  // Corner radii in px: small chips and tags, buttons and inputs, range bands
+  // and selected rows, cards, sheets and the FAB, dialogs, and the pill for
+  // chips and pills.
+  radii: { xs: 6, sm: 10, row: 12, md: 14, lg: 16, xl: 20, pill: 999 },
 
   // Three elevation steps: a card at rest, a floating panel or popover, and
   // the accent glow under the primary action.

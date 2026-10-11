@@ -84,7 +84,7 @@ UI picks the nearest step. Numbers use tabular figures.
 
 ## Shape and elevation
 
-Radii from `tokens.radii`: 6 (small tags), 10 (buttons), 14 (cards), 16 (sheets
+Radii from `tokens.radii`: 6 (small tags), 10 (buttons), 12 (range bands), 14 (cards), 16 (sheets
 and the FAB), 20 (dialogs), pill (chips and level pills). Elevation from
 `tokens.elevation`: `e1` a card at rest, `e2` a floating panel, popover or map
 control, `e3` the accent glow under the primary action. A circle is
