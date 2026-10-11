@@ -374,7 +374,11 @@ test.describe("design gaps", () => {
       `/logs/new?waterwayId=${FIX.waterway}&sectionId=${FIX.sections.upper}`,
     );
     await next(page).click();
-    const map = await page.locator("canvas.maplibregl-canvas").boundingBox();
+    // The form's map; on desktop the host map draws behind it as well.
+    const map = await page
+      .locator("canvas.maplibregl-canvas")
+      .last()
+      .boundingBox();
     const row = await page
       .getByRole("button", { name: "More actions" })
       .boundingBox();
@@ -462,23 +466,6 @@ test.describe("design gaps", () => {
     await expect(page.getByRole("menuitem", { name: "Accept" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Decline" })).toBeVisible();
     await page.keyboard.press("Escape");
-  });
-
-  test("desktop: the log panel sits flush to the list with a 16px radius", async ({
-    page,
-  }, info) => {
-    test.skip(!isDesktop(info), "desktop layout");
-    await page.goto("/logs/9201");
-    const label = page.getByTestId("fact-label").first();
-    await expect(label).toBeVisible();
-    const panel = page
-      .locator("main")
-      .getByText("Sections (2)")
-      .locator("xpath=ancestor::div[contains(@class,'MuiBox-root')][last()]");
-    expect(await panel.count()).toBeGreaterThan(0);
-    const list = await card(page, "Public multi-section run").boundingBox();
-    const first = await panel.first().boundingBox();
-    expect(list && first && first.x - (list.x + list.width) < 16).toBe(true);
   });
 
   test("desktop: the log header has no rule and shares the body's inset", async ({

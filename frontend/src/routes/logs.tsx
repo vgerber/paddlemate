@@ -2,6 +2,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
+import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   createFileRoute,
@@ -10,19 +11,22 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
+import { useCanvasScene } from "@/components/canvas/CanvasContext";
+import CanvasLayout from "@/components/canvas/CanvasLayout";
+import FloatingCard from "@/components/canvas/FloatingCard";
 import DockedAction from "@/components/DockedAction";
 import ListPaneHeader from "@/components/ListPaneHeader";
 import MyLogsPanel from "@/components/logs-page/MyLogsPanel";
 import SocialPanel from "@/components/logs-page/SocialPanel";
+import { useLogsScene } from "@/components/logs-page/useLogsScene";
 import PanelHeader from "@/components/PanelHeader";
-import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
 import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
-import { BOTTOM_NAV_SPACE, PANEL_HEIGHT, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, labelSx, PANEL_HEIGHT, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -47,6 +51,9 @@ function LogsPage() {
   // The same cached query the list panel reads, so the count costs no
   // extra request - it just has to be known one level up to be shown.
   const { data: myDescents } = useMyDescents({}, isAuthenticated);
+  // Drawn by the canvas host from md; called on a phone too, where it is
+  // harmless.
+  useCanvasScene(useLogsScene(selectedId, isAuthenticated));
 
   // On a phone the log replaces the list; on a desktop it opens beside it.
   if (isMobile && hasChild) return <Outlet />;
@@ -115,50 +122,67 @@ function LogsPage() {
     );
   }
 
-  // Desktop: the log list beside the open log, so moving between a week's
-  // descents never costs a navigation round trip.
+  // Desktop: the list and the open log float over the map, which draws the
+  // open log (or all of them).
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          md: "320px minmax(0, 1fr)",
-          lg: "420px minmax(0, 1fr)",
-        },
-        height: PANEL_HEIGHT,
-        bgcolor: tokens.surfaceLow,
-      }}
-    >
-      <Box sx={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
-        {tab === "mine" && <DockedAction label="Log descent" onClick={onNew} />}
-      </Box>
-      <Box sx={{ minHeight: 0, overflowY: "auto", py: 1.5, pr: 1.5 }}>
+    <CanvasLayout>
+      <FloatingCard
+        id="list"
+        side="left"
+        kind="list"
+        screen="logs"
+        header={<CardTitle>Logs</CardTitle>}
+      >
         <Box
           sx={{
-            maxWidth: 880,
-            minHeight: "100%",
-            boxSizing: "border-box",
+            height: "100%",
             display: "flex",
             flexDirection: "column",
-            // Clipped rather than hidden, so the form's bar can still stick.
-            overflow: "clip",
-            bgcolor: tokens.surface,
-            borderRadius: `${tokens.radii.lg}px`,
-            boxShadow: tokens.elevation.e1,
+            bgcolor: tokens.surfaceLow,
           }}
         >
-          {hasChild ? (
-            <Outlet />
-          ) : (
-            <EmptyState
-              icon={<DirectionsBoatOutlinedIcon />}
-              title="Pick a log to open it."
-              py={10}
-            />
+          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
+          {tab === "mine" && (
+            <DockedAction label="Log descent" onClick={onNew} />
           )}
         </Box>
-      </Box>
+      </FloatingCard>
+      {hasChild && (
+        <FloatingCard
+          id="log"
+          side="right"
+          kind="side"
+          screen="logs"
+          header={
+            <CardTitle>
+              {pathname.startsWith("/logs/new") ? "New log" : "Log"}
+            </CardTitle>
+          }
+        >
+          <Box
+            sx={{
+              minHeight: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Outlet />
+          </Box>
+        </FloatingCard>
+      )}
+    </CanvasLayout>
+  );
+}
+
+function CardTitle({ children }: { children: ReactNode }) {
+  return (
+    <Box sx={{ px: 2, minHeight: 56, display: "flex", alignItems: "center" }}>
+      <Typography
+        component="h2"
+        sx={{ ...labelSx, color: tokens.onSurfaceVariant }}
+      >
+        {children}
+      </Typography>
     </Box>
   );
 }
