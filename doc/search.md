@@ -38,9 +38,16 @@ case.
 Search starts at 2 characters. Typo tolerance starts at 4, so very short terms
 only match exactly.
 
+## Filters and tabs
+
+The search screen has three tabs: **Name**, **Area** and **Region**. A
+**Filters** sheet holds country, grade and **Water now** (low, medium, high).
+The chosen water levels are kept in the URL (`water`), so a filtered search can
+be linked or reloaded.
+
 ## Searching by place
 
-The panel's mode switch offers two ways to search without typing a name:
+Area and Region are the two ways to search without typing a name:
 
 - **Area** — click the map to drop a centre, then set a radius. Rivers with a
   section inside the circle are listed.
@@ -52,7 +59,10 @@ The panel's mode switch offers two ways to search without typing a name:
   down at river level. The map stays quiet so the picked region is the only
   thing that stands out: every boundary is one thin grey line, so an edge two
   regions share reads once, with a faint fill inside that only has to catch
-  your click. Each region has one name, set at its visual centre - the
+  your click. Picking a region opens a sheet with its name, the kind of region, the rivers
+in it and, under "Part of", the larger regions it sits in; before a pick the
+sheet holds chips to limit the map to one kind of region. In region mode the
+base map's roads are muted. Each region has one name, set at its visual centre - the
   point deepest inside its shape, not the middle of its bounding box. A
   valley has no outline, so it is a soft band along the valley floor. Clicking
   ground that several regions share lists them and lets you say which you

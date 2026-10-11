@@ -2,8 +2,11 @@
 
 The rules that keep every screen looking like the same product. This is the
 calm design: light, soft, readable outdoors. The theme (`frontend/src/lib/theme.ts`)
-already carries its tokens; screens move to the rest of it one feature at a
-time, as listed in [plans/ui-overhaul.md](plans/ui-overhaul.md).
+carries the tokens and the component-wide rules.
+
+The token and component reference for the app is the design system artifact
+(private): https://claude.ai/artifact/E8VZQSwJmQhnfLGuPrK585. This page holds
+the rules; the artifact shows the pieces.
 
 ## Character
 
@@ -14,8 +17,9 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 
 ## Layout
 
-- **Desktop** has a fixed top AppBar with text navigation; **mobile** has no
-  top bar and a fixed bottom navigation, the current section as a soft pill.
+- **Desktop** has a fixed top AppBar (56px) with text navigation; **mobile** has
+  no top bar and a fixed bottom navigation (64px, plus the safe area) with Map,
+  Logs, Trips and Profile, the current one as a soft pill (`tokens.chrome`).
   Pages never add their own app-level chrome.
 - Detail content lives in a panel: a card panel beside the list on desktop, a
   full-screen overlay on mobile. Panels open with one header pattern: back
@@ -31,9 +35,13 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   roles and arrow keys; swiping is never the only way.
 - Two panes side by side separate by surface level (the list on the ground, the
   detail on cards), not by a hard border.
-- Multi-step forms have no top header. Their chrome is a fixed bottom bar:
-  cancel or back on the left, title with step progress as subtitle, one round
+- Multi-step forms have no top header. Their chrome is a fixed bottom bar
+  (`PanelBottomBar`): Cancel on the first step and Back after it on the left,
+  the title with the step as subtitle and a bar of step segments, one round
   primary-action button on the right.
+- Fields are filled (the theme's default variant): the label sits inside the
+  field at the top, the value beneath it, a 1px inset line that becomes a 2px
+  accent ring on focus. Dates use a picker field, not free text.
 - One screen, one primary action: a bottom-right FAB on a phone, a full-width
   **docked** button at the foot of the list pane on desktop. Bottom-right of the
   *content*, not the window.
@@ -48,13 +56,30 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   every other screen (Name, Area, Region), results lead with Sections.
 - **Sheets** have a peek and an open height; a picked region or a pick in
   progress opens as a peek so the map keeps its room.
-- **Pinned** elements (the Plan's week calendar, a search field) stay under the
+- **Pinned** elements (the Plan's week strip, a search field) stay under the
   tab bar while the list scrolls beneath them.
+- **Desktop splits** list and detail into two panes (list on the ground, detail
+  beside it, the open item in the URL) from 768px, which is the theme's `md`.
+  Logs, Trips, Proposals and Settings work this way.
 - Inline alerts are quiet notes: a tinted ground, severity carried by the icon.
   The filled variant is reserved for the global error snackbar.
 - Do not repeat what a filter already says; secondary counts drop out when zero.
 - A choice between two states is a small segmented control; a decision that
   commits something (approve, reject) is a labelled button in its own row.
+
+## Screens
+
+| Screen | What defines it |
+|---|---|
+| Section detail | A chart card at the top of the pane (closed: the chart and one options button; open: reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide); History opens over the pane |
+| Search | Tabs Name, Area, Region; a Filters sheet (country, grade, Water now); the chosen levels live in the `water` URL param |
+| Map region mode | The region sheet with level chips, and "Part of" naming the parents of a picked region |
+| Logs | Two panes on desktop; the date is a picker field |
+| Trips | Plan, Bases, Members and Logs tabs; the Plan pins a week strip with a dot on days that have runs and opens to a month; bases and candidate bases; admins get Add member and the trip actions |
+| Proposals | The diff shows the before struck through next to the after; reviewing opens a dialog |
+| Settings | Two panes on desktop; Profile, Inbox and Tools on a phone; an access token is shown once, when made |
+
+Components for each live in the matching folder under `frontend/src/components/`.
 
 ## Color
 
@@ -70,6 +95,8 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   component-wide rules from the theme's `styleOverrides`.
 - Transparency uses the six named alpha steps from `alphas` (`tint 5%`,
   `wash 8%`, `hover 12%`, `hairline 33%`, `border 60%`, `scrim 80%`).
+- Text and its ground keep a readable contrast; chips and level pills use the
+  paired text/background tokens rather than a tint of the marker color.
 - The ground is `surfaceLow`, cards are `surface`, a quiet inset inside a card
   is `surfaceHigh`.
 
@@ -131,3 +158,8 @@ border, and in the picker.
 
 Sentence case, plain words, no em dashes (a plain hyphen). Reuse the app's own
 strings; a new word is agreed first.
+
+## Planned
+
+Wide screens as "map as the canvas": the list and detail float over a map that
+fills the window. Not built; the layout above is what ships.
