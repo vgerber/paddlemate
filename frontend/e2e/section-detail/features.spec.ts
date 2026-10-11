@@ -232,6 +232,33 @@ test.describe("features card", () => {
     expect(x + width).toBeLessThanOrEqual(vw);
   });
 
+  test("the panel title is 20px bold and the tabs sit 20px apart", async ({
+    page,
+  }) => {
+    await openFeatures(page);
+    const header = page
+      .getByRole("button", { name: "Back" })
+      .filter({ visible: true })
+      .first()
+      .locator("xpath=../..");
+    const title = header.getByText("Lower Test", { exact: true });
+    expect(await computed(title, "font-size")).toBe("20px");
+    expect(await computed(title, "font-weight")).toBe("700");
+    const tabs = await header.getByRole("tab").evaluateAll((els) =>
+      els.map((e) => {
+        const r = e.getBoundingClientRect();
+        return { left: r.left, right: r.right, h: r.height, w: r.width };
+      }),
+    );
+    expect(tabs.length).toBeGreaterThan(1);
+    for (let i = 1; i < tabs.length; i++)
+      expect(tabs[i].left - tabs[i - 1].right).toBeCloseTo(20, 0);
+    for (const t of tabs) {
+      expect(t.h).toBeGreaterThanOrEqual(48);
+      expect(t.w).toBeGreaterThanOrEqual(56);
+    }
+  });
+
   test("the header's icons are 44px to hit", async ({ page }) => {
     await openFeatures(page);
     const icons = page
