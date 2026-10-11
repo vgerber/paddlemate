@@ -5,13 +5,20 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
+import { cardRowSx } from "@/components/search/RiverRow";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import type { SectionWithFeatures } from "@/lib/api";
 import { sectionPlace } from "@/lib/format";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
+
+/** Below this list width the row stacks (name on top, count and grade
+ * beneath, the pill at the right). Text at 130% stacks sooner on its own,
+ * because the name column is what shrinks. */
+const STACK_BELOW = 330;
 
 interface SectionListItemProps {
   section: SectionWithFeatures;
@@ -41,11 +48,10 @@ export default function SectionListItem({
   matchedFeature,
   riverName,
 }: SectionListItemProps) {
-  const difficultyChip = (() => {
+  const difficulty = (() => {
     const ww = section.features?.find((f) => f.feature_type === "whitewater");
     const meta = ww?.metadata as Record<string, unknown> | null | undefined;
-    const diff = meta?.difficulty as string | undefined;
-    return diff ? <Chip label={diff} size="small" sx={{ ml: 0.5 }} /> : null;
+    return meta?.difficulty as string | undefined;
   })();
 
   // The river first: in a mixed list it is what tells two "Upper" runs apart,
@@ -58,99 +64,149 @@ export default function SectionListItem({
     (f) => f.created_by === "rivermap-import",
   );
 
+  const hasStar = onToggleFavorite != null;
+  const star = hasStar ? ` ${tokens.touch.min}px` : "";
+  const star2 = hasStar ? " s" : "";
+
   return (
-    <ListItemButton
-      selected={selected}
-      onClick={() => onClick(section.id)}
-      sx={{ py: 0.5 }}
-    >
-      <ListItemText
-        primary={localizedName(section.name, section.names)}
-        secondary={
-          place || matchedFeature ? (
-            <>
-              {place && (
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  {place}
-                </Typography>
-              )}
-              {matchedFeature && (
-                <Typography
-                  variant="caption"
-                  color="text.disabled"
-                  noWrap
-                  sx={{ display: "block" }}
-                >
-                  {`Rapid: ${matchedFeature}`}
-                </Typography>
-              )}
-            </>
-          ) : undefined
-        }
-        slotProps={{
-          primary: { variant: "body2" },
-          secondary: { component: "span", sx: { display: "block" } },
-        }}
-      />
-      <Box
+    // Each row is its own container, so the stacked layout follows the width
+    // the row is given wherever it is listed.
+    <Box sx={{ containerType: "inline-size", mb: 0.75 }}>
+      <ListItemButton
+        selected={selected}
+        onClick={() => onClick(section.id)}
         sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: 0.25,
+          ...cardRowSx,
+          display: "grid",
+          alignItems: "center",
+          columnGap: 1,
+          rowGap: 0.5,
+          gridTemplateColumns: `minmax(0, 1fr) 36px 46px 96px${star}`,
+          gridTemplateAreas: `"n k g c${star2}"`,
+          [`@container (max-width: ${STACK_BELOW}px)`]: {
+            gridTemplateColumns: `auto auto minmax(0, 1fr) auto${star}`,
+            gridTemplateAreas: `"n n n c${star2}" "k g . c${star2}"`,
+            minHeight: 64,
+            py: 1.25,
+          },
         }}
       >
-        <Box sx={{ display: "flex", gap: 0.5 }}>
-          {descentCount != null && descentCount > 0 && (
+        <Box sx={{ gridArea: "n", minWidth: 0 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitBoxOrient: "vertical",
+              WebkitLineClamp: 1,
+              [`@container (max-width: ${STACK_BELOW}px)`]: {
+                WebkitLineClamp: 2,
+              },
+            }}
+          >
+            {localizedName(section.name, section.names)}
+          </Typography>
+          {place && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              noWrap
+              sx={{ display: "block" }}
+            >
+              {place}
+            </Typography>
+          )}
+          {matchedFeature && (
+            <Typography
+              variant="caption"
+              color="text.disabled"
+              noWrap
+              sx={{ display: "block" }}
+            >
+              {`Rapid: ${matchedFeature}`}
+            </Typography>
+          )}
+          {isRivermap && (
             <Chip
-              icon={<DirectionsBoatOutlinedIcon sx={{ fontSize: 12 }} />}
-              label={descentCount}
+              label="rivermap"
               size="small"
               variant="outlined"
-              title={`Paddled ${descentCount} ${descentCount === 1 ? "time" : "times"}`}
-              sx={{
-                ml: 0.5,
-                color: "text.secondary",
-                "& .MuiChip-icon": { color: "text.disabled" },
-              }}
+              sx={{ fontSize: "0.625rem", height: 16, color: "text.secondary" }}
             />
           )}
-          {difficultyChip}
-          <WaterLevelChip waterwayId={waterwayId} sectionId={section.id} />
-          {onToggleFavorite && (
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorite(section.id);
-              }}
-              sx={{ p: 0.25 }}
-            >
-              {isFavorite ? (
-                <StarIcon
-                  fontSize="small"
-                  sx={{ color: theme.tokens.tertiary }}
-                />
-              ) : (
-                <StarBorderIcon fontSize="small" />
-              )}
-            </IconButton>
+        </Box>
+
+        <Box
+          data-testid="boat-count"
+          title={
+            descentCount
+              ? `Paddled ${descentCount} ${descentCount === 1 ? "time" : "times"}`
+              : undefined
+          }
+          sx={{
+            gridArea: "k",
+            justifySelf: "end",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 0.25,
+            color: "text.secondary",
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            [`@container (max-width: ${STACK_BELOW}px)`]: {
+              justifySelf: "start",
+            },
+          }}
+        >
+          {descentCount != null && descentCount > 0 && (
+            <>
+              <DirectionsBoatOutlinedIcon
+                sx={{ fontSize: 14, color: "text.disabled" }}
+              />
+              {descentCount}
+            </>
           )}
         </Box>
-        {isRivermap && (
-          <Chip
-            label="rivermap"
-            size="small"
-            variant="outlined"
-            sx={{
-              fontSize: "0.625rem",
-              height: 16,
-              borderColor: "rgba(0,0,0,0.2)",
-              color: "text.secondary",
+
+        <Box
+          sx={{
+            gridArea: "g",
+            justifySelf: "end",
+            [`@container (max-width: ${STACK_BELOW}px)`]: {
+              justifySelf: "start",
+            },
+          }}
+        >
+          {difficulty && <Chip label={difficulty} size="small" />}
+        </Box>
+
+        <Box sx={{ gridArea: "c", justifySelf: "end", alignSelf: "center" }}>
+          <WaterLevelChip waterwayId={waterwayId} sectionId={section.id} />
+        </Box>
+
+        {hasStar && (
+          <IconButton
+            aria-label={
+              isFavorite ? "Remove from favorites" : "Add to favorites"
+            }
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite(section.id);
             }}
-          />
+            sx={{
+              gridArea: "s",
+              width: tokens.touch.min,
+              height: tokens.touch.min,
+            }}
+          >
+            {isFavorite ? (
+              <StarIcon fontSize="small" sx={{ color: tokens.tertiary }} />
+            ) : (
+              <StarBorderIcon fontSize="small" />
+            )}
+          </IconButton>
         )}
-      </Box>
-    </ListItemButton>
+      </ListItemButton>
+    </Box>
   );
 }

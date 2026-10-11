@@ -42,9 +42,8 @@ export default function ListViewToggle({
           width: "100%",
           "& .MuiToggleButton-root": {
             flex: 1,
-            py: 0.25,
             px: 1,
-            fontSize: "0.75rem",
+            fontSize: "0.8125rem",
           },
         }}
       >
