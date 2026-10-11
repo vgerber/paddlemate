@@ -3,10 +3,10 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
+import type { HistorySource, WaterwaySources } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { timeAgo } from "@/lib/format";
 import { fonts, labelSx, theme } from "@/lib/theme";
-import type { ProvenanceSource, SourcesSummary } from "./types";
 import { useSources } from "./useProvenance";
 
 const { tokens } = theme;
@@ -31,7 +31,7 @@ function SourceCard({
   source,
   entries,
 }: {
-  source: ProvenanceSource;
+  source: HistorySource;
   entries: number;
 }) {
   return (
@@ -95,7 +95,7 @@ function SourceCard({
 function Contributors({
   contributors,
 }: {
-  contributors: SourcesSummary["contributors"];
+  contributors: WaterwaySources["contributors"];
 }) {
   return (
     <Box>

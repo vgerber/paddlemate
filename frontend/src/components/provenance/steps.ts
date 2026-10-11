@@ -1,5 +1,5 @@
+import type { HistoryChange, HistoryStep } from "@/lib/api";
 import { humanize } from "@/lib/format";
-import type { HistoryChange, HistoryStep } from "./types";
 
 /** The label of a changed field: "feature_type" reads "Feature type". */
 export function fieldLabel(field: string): string {
@@ -13,7 +13,7 @@ const FIELD_WORDS: Record<string, string> = {
 
 /** Geometry changes carry no values; the line says the position moved. */
 export function isGeometryChange(change: HistoryChange): boolean {
-  return change.before === null && change.after === null;
+  return change.before == null && change.after == null;
 }
 
 /** What a step says happened, before the who and when. */
@@ -32,9 +32,10 @@ export function stepHeadline(step: HistoryStep): string {
   }
 }
 
-/** The second line: who approved a proposal. */
+/** The second line: who approved the proposal behind the step, a deletion
+included. */
 export function stepByline(step: HistoryStep): string | null {
-  if (step.kind === "proposal_accepted" && step.reviewer) {
+  if (step.proposal_id != null && step.reviewer) {
     return `approved by ${step.reviewer.username}`;
   }
   return null;

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import type { HistoryStep } from "@/lib/api";
 import {
   fieldLabel,
   inOrder,
@@ -6,7 +7,6 @@ import {
   stepByline,
   stepHeadline,
 } from "./steps";
-import type { HistoryStep } from "./types";
 
 const base: HistoryStep = {
   id: 1,
@@ -20,7 +20,7 @@ const base: HistoryStep = {
 };
 
 const source = {
-  id: 1,
+  id: "1",
   name: "Rivermap Alpine Rivers",
   short_name: "Rivermap",
   website: null,
@@ -57,6 +57,17 @@ describe("stepByline", () => {
       stepByline({
         ...base,
         kind: "proposal_accepted",
+        proposal_id: 7,
+        reviewer: { user_id: "r", username: "vincent" },
+      }),
+    ).toBe("approved by vincent");
+  });
+  test("a deleting proposal names its reviewer too", () => {
+    expect(
+      stepByline({
+        ...base,
+        kind: "deleted",
+        proposal_id: 7,
         reviewer: { user_id: "r", username: "vincent" },
       }),
     ).toBe("approved by vincent");

@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import TimelineRail from "@/components/TimelineRail";
+import type { HistoryChange, HistoryStep } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { formatDate, timeAgo } from "@/lib/format";
 import { fonts, labelSx, theme } from "@/lib/theme";
@@ -15,7 +16,7 @@ import {
   stepByline,
   stepHeadline,
 } from "./steps";
-import type { HistoryChange, HistoryStep, HistoryTarget } from "./types";
+import type { HistoryTarget } from "./types";
 import { useHistory } from "./useProvenance";
 
 const { tokens } = theme;

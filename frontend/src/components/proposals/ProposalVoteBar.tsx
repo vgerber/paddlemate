@@ -5,21 +5,18 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import type { Proposal } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { useUnvoteProposal, useVoteProposal } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
 import { fonts, labelSx, theme } from "@/lib/theme";
-import { type ProposalWithNames, proposerName, reviewerLine } from "./status";
+import { proposerName, reviewerLine } from "./status";
 
 const { tokens } = theme;
 
 /** Who proposed it and when, who decided, and the reader's vote. Owns the
  * vote mutations; the decision itself is the review bar's. */
-export default function ProposalVoteBar({
-  proposal,
-}: {
-  proposal: ProposalWithNames;
-}) {
+export default function ProposalVoteBar({ proposal }: { proposal: Proposal }) {
   const { isAuthenticated, user } = useSession();
   const vote = useVoteProposal();
   const unvote = useUnvoteProposal();

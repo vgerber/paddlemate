@@ -16,15 +16,9 @@ export function kindLine(
   return `${labels.op[operation] ?? operation} · ${labels.entity[entityType] ?? entityType}`;
 }
 
-/** A proposal with the usernames the API adds next to the ids. */
-export type ProposalWithNames = Proposal & {
-  submitted_by_name?: string | null;
-  reviewed_by_name?: string | null;
-};
-
 /** Who decided it, for the line under the proposer: "Accepted by anna".
  * Empty while pending or when the API names no one. */
-export function reviewerLine(proposal: ProposalWithNames): string | null {
+export function reviewerLine(proposal: Proposal): string | null {
   if (proposal.status === "pending") return null;
   const who = proposal.reviewed_by_name || proposal.reviewed_by;
   if (!who) return null;
@@ -34,9 +28,7 @@ export function reviewerLine(proposal: ProposalWithNames): string | null {
 /** Who proposed it: the username when the API sent one, "you" for the
  * reader's own, else the id as before. */
 export function proposerName(
-  proposal: Pick<Proposal, "submitted_by"> & {
-    submitted_by_name?: string | null;
-  },
+  proposal: Pick<Proposal, "submitted_by" | "submitted_by_name">,
   currentUserId?: string,
 ): string {
   if (currentUserId && proposal.submitted_by === currentUserId) return "you";

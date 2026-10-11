@@ -1,18 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import {
-  kindLine,
-  type ProposalWithNames,
-  proposerName,
-  reviewerLine,
-  STATUS_LABEL,
-} from "./status";
+import type { Proposal } from "@/lib/api";
+import { kindLine, proposerName, reviewerLine, STATUS_LABEL } from "./status";
 
 describe("reviewerLine", () => {
   const decided = {
     status: "approved",
     reviewed_by: "u2",
     reviewed_by_name: "anna",
-  } as ProposalWithNames;
+  } as Proposal;
   test("names who accepted it", () => {
     expect(reviewerLine(decided)).toBe("Accepted by anna");
   });

@@ -392,6 +392,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/waterways/{waterway_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description History of a river, oldest step first */
+        get: operations["get_waterway_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every source and contributor behind a river, its sections and its features */
+        get: operations["get_waterway_sources"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description History of a section, oldest step first */
+        get: operations["get_section_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description History of a feature, oldest step first; readable after the feature was deleted */
+        get: operations["get_feature_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/waterways/{waterway_id}/media": {
         parameters: {
             query?: never;
@@ -1571,6 +1639,16 @@ export interface components {
          * @enum {string}
          */
         CommentStatus: "ok" | "merged" | "outdated" | "spam";
+        Contributor: {
+            /** Format: date-time */
+            last_at: string;
+            /**
+             * Format: int64
+             * @description Number of steps this user made
+             */
+            steps: number;
+            user: components["schemas"]["HistoryUser"];
+        };
         /**
          * @description A country's border where it crosses the viewport, for keeping your
          *      bearings while browsing regions.
@@ -2257,6 +2335,70 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        /** @description One field a step changed, as short display strings. */
+        HistoryChange: {
+            after?: string | null;
+            before?: string | null;
+            field: string;
+        };
+        HistoryPage: {
+            /** @description Steps, oldest first */
+            items: components["schemas"]["HistoryStep"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            per_page: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            total_pages: number;
+        };
+        /** @description Query parameters of a history listing. */
+        HistoryQuery: {
+            /**
+             * Format: int64
+             * @description Page number, starting at 1.
+             */
+            page?: number | null;
+            /**
+             * Format: int64
+             * @description Steps per page (max 100, default 50).
+             */
+            per_page?: number | null;
+        };
+        /** @description A data source (authority) a step came from. */
+        HistorySource: {
+            id: string;
+            license_name?: string | null;
+            license_url?: string | null;
+            name: string;
+            short_name: string;
+            website?: string | null;
+        };
+        /** @description One step in the life of a river, section or feature. */
+        HistoryStep: {
+            /** @description Null for an import */
+            actor?: components["schemas"]["HistoryUser"] | null;
+            /** Format: date-time */
+            at: string;
+            changes: components["schemas"]["HistoryChange"][];
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["StepKind"];
+            /**
+             * Format: int64
+             * @description Set when the step is the outcome of a proposal
+             */
+            proposal_id?: number | null;
+            reviewer?: components["schemas"]["HistoryUser"] | null;
+            /** @description Set for an import */
+            source?: components["schemas"]["HistorySource"] | null;
+        };
+        /** @description A person named in a history. Only the username is exposed. */
+        HistoryUser: {
+            user_id: string;
+            username: string;
+        };
         /** @description An invite link as its recipient holds it: the token alone. */
         InviteTokenPath: {
             token: string;
@@ -2684,8 +2826,12 @@ export interface components {
             proposed_data: unknown;
             review_note?: string | null;
             reviewed_by?: string | null;
+            /** @description Username of the reviewer; null while pending or when the account is gone */
+            reviewed_by_name?: string | null;
             status: components["schemas"]["ProposalStatus"];
             submitted_by: string;
+            /** @description Username of the submitter; null when the account no longer exists */
+            submitted_by_name?: string | null;
             /** Format: date-time */
             updated_at: string;
             /** Format: int64 */
@@ -2981,6 +3127,19 @@ export interface components {
         SetRoleBody: {
             role: components["schemas"]["GroupMemberRole"];
         };
+        SourceEntries: {
+            /**
+             * Format: int64
+             * @description Number of steps that name this source
+             */
+            entries: number;
+            source: components["schemas"]["HistorySource"];
+        };
+        /**
+         * @description What kind of step this is.
+         * @enum {string}
+         */
+        StepKind: "imported" | "created" | "proposal_accepted" | "edited" | "deleted";
         /**
          * @description A collaborative trip. Ownership is a member row with role `admin`, so it
          *      can be transferred or shared without touching the trip itself.
@@ -3564,6 +3723,11 @@ export interface components {
             /** Format: int64 */
             waterway_id: number;
         };
+        /** @description Where the data of a river comes from and who contributed it. */
+        WaterwaySources: {
+            contributors: components["schemas"]["Contributor"][];
+            sources: components["schemas"]["SourceEntries"][];
+        };
         /** @enum {string} */
         WaterwayType: "river";
         WaterwayWithSections: {
@@ -3923,11 +4087,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-09-26T16:38:25.575132732Z",
-                     *         "expires_at": "2026-12-25T16:38:25.575135032Z",
+                     *         "created_at": "2026-10-11T10:27:52.351562598Z",
+                     *         "expires_at": "2027-01-09T10:27:52.351565048Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-09-26T16:38:25.575140062Z",
+                     *         "last_used_at": "2026-10-11T10:27:52.351571378Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -3958,8 +4122,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-09-26T16:38:25.575257572Z",
-                     *       "expires_at": "2026-12-25T16:38:25.575258002Z",
+                     *       "created_at": "2026-10-11T10:27:52.351685777Z",
+                     *       "expires_at": "2027-01-09T10:27:52.351686207Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -4938,6 +5102,145 @@ export interface operations {
             };
             /** @description Forbidden */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_waterway_history: {
+        parameters: {
+            query?: {
+                /** @description Page number, starting at 1. */
+                page?: number | null;
+                /** @description Steps per page (max 100, default 50). */
+                per_page?: number | null;
+            };
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryPage"];
+                };
+            };
+            /** @description Waterway not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_waterway_sources: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Where the data of a river comes from and who contributed it. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaterwaySources"];
+                };
+            };
+            /** @description Waterway not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_section_history: {
+        parameters: {
+            query?: {
+                /** @description Page number, starting at 1. */
+                page?: number | null;
+                /** @description Steps per page (max 100, default 50). */
+                per_page?: number | null;
+            };
+            header?: never;
+            path: {
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryPage"];
+                };
+            };
+            /** @description Section not found in this waterway */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_feature_history: {
+        parameters: {
+            query?: {
+                /** @description Page number, starting at 1. */
+                page?: number | null;
+                /** @description Steps per page (max 100, default 50). */
+                per_page?: number | null;
+            };
+            header?: never;
+            path: {
+                feature_id: number;
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryPage"];
+                };
+            };
+            /** @description Feature never existed in this section */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { ApiError, rawRequest } from "@/lib/api/client";
-import type { HistoryPage, HistoryTarget, SourcesSummary } from "./types";
+import { client } from "@/lib/api/client";
+import type { HistoryTarget } from "./types";
 
 export const provenanceKeys = {
   all: ["provenance"] as const,
@@ -10,36 +10,57 @@ export const provenanceKeys = {
     [...provenanceKeys.all, "sources", waterwayId] as const,
 };
 
-/** API path of an entry's history. */
-export function historyPath(target: HistoryTarget): string {
-  const base = `/api/v1/waterways/${target.waterwayId}`;
-  if (!("sectionId" in target)) return `${base}/history`;
-  const section = `${base}/sections/${target.sectionId}`;
-  if (!("featureId" in target)) return `${section}/history`;
-  return `${section}/features/${target.featureId}/history`;
-}
-
-async function getJson<T>(path: string): Promise<T> {
-  const { url, headers } = await rawRequest(path);
-  const response = await fetch(url, { headers });
-  if (!response.ok) {
-    throw new ApiError(response.status, response.statusText);
+async function fetchHistory(target: HistoryTarget) {
+  const query = { per_page: 100 };
+  const waterway_id = target.waterwayId;
+  if (!("sectionId" in target)) {
+    const { data } = await client.GET(
+      "/api/v1/waterways/{waterway_id}/history",
+      { params: { path: { waterway_id }, query } },
+    );
+    if (!data) throw new Error("No history");
+    return data;
   }
-  return (await response.json()) as T;
+  const section_id = target.sectionId;
+  if (!("featureId" in target)) {
+    const { data } = await client.GET(
+      "/api/v1/waterways/{waterway_id}/sections/{section_id}/history",
+      { params: { path: { waterway_id, section_id }, query } },
+    );
+    if (!data) throw new Error("No history");
+    return data;
+  }
+  const { data } = await client.GET(
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/history",
+    {
+      params: {
+        path: { waterway_id, section_id, feature_id: target.featureId },
+        query,
+      },
+    },
+  );
+  if (!data) throw new Error("No history");
+  return data;
 }
 
 /** Steps oldest first; one page of up to 100. */
 export function useHistory(target: HistoryTarget) {
   return useQuery({
     queryKey: provenanceKeys.history(target),
-    queryFn: () => getJson<HistoryPage>(`${historyPath(target)}?per_page=100`),
+    queryFn: () => fetchHistory(target),
   });
 }
 
 export function useSources(waterwayId: number) {
   return useQuery({
     queryKey: provenanceKeys.sources(waterwayId),
-    queryFn: () =>
-      getJson<SourcesSummary>(`/api/v1/waterways/${waterwayId}/sources`),
+    queryFn: async () => {
+      const { data } = await client.GET(
+        "/api/v1/waterways/{waterway_id}/sources",
+        { params: { path: { waterway_id: waterwayId } } },
+      );
+      if (!data) throw new Error("No sources");
+      return data;
+    },
   });
 }
