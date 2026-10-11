@@ -52,7 +52,7 @@ interface WaterwayBrowsePanelProps {
   onMobileMapToggle?: () => void;
   mobileMapActive?: boolean;
   /** Everything the section feature timeline needs - passed through as one
-   * group instead of seven loose props. */
+   * group instead of loose props. */
   featureTimeline?: {
     onFeatureClick?: (coords: [number, number] | null) => void;
     onEditFeature?: (f: Feature) => void;
@@ -61,6 +61,7 @@ interface WaterwayBrowsePanelProps {
     showProposed?: boolean;
     onToggleProposed?: () => void;
     proposals?: Proposal[];
+    onFoldedChange?: (folded: boolean) => void;
   };
 }
 
@@ -268,6 +269,7 @@ export default function WaterwayBrowsePanel({
                 onEditFeature={featureTimeline?.onEditFeature}
                 activeFeatureId={featureTimeline?.activeFeatureId}
                 onActiveFeatureChange={featureTimeline?.onActiveFeatureChange}
+                onFoldedChange={featureTimeline?.onFoldedChange}
               />
             )
           ) : tab === "sections" ? (

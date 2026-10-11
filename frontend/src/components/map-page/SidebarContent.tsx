@@ -73,6 +73,7 @@ export default function SidebarContent({
     setSelectedFeatureId,
     showProposedFeatures,
     toggleShowProposedFeatures,
+    setFeaturesFolded,
     featureProposals,
     suggestWaterwayName,
     setSuggestWaterwayName,
@@ -203,6 +204,7 @@ export default function SidebarContent({
         showProposed: showProposedFeatures,
         onToggleProposed: toggleShowProposedFeatures,
         proposals: featureProposals,
+        onFoldedChange: setFeaturesFolded,
       }}
     />
   );

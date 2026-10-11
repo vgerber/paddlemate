@@ -6,14 +6,7 @@ import type { MapPageState } from "./useMapPageState";
 
 /** Chart area below the map / overlay: the selected gauge's chart when one
  * is picked, else the selected section's chart, else nothing. */
-export default function MapCharts({
-  state,
-  tall,
-}: {
-  state: MapPageState;
-  /** Lets the chart grow taller (the features list is folded). */
-  tall?: boolean;
-}) {
+export default function MapCharts({ state }: { state: MapPageState }) {
   const {
     selectedWaterwayId,
     selectedSectionId,
@@ -24,7 +17,13 @@ export default function MapCharts({
     setSelectedGaugeId,
     selectedGaugeRanges,
     selectedFeatureId,
+    featuresFolded,
   } = state;
+  // Folding the features list hands its height to the chart.
+  const tall =
+    featuresFolded &&
+    selectedSectionId != null &&
+    sectionDetailTab === "features";
 
   // The logs and notes tabs replace the chart with their list - give them
   // the space.

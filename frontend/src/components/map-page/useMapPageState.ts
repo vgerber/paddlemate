@@ -135,6 +135,7 @@ export function useMapPageState(search: RouteSearch) {
     [],
   );
 
+  const [featuresFolded, setFeaturesFolded] = useState(false);
   const [showProposedFeatures, setShowProposedFeatures] = useState(false);
   const toggleShowProposedFeatures = useCallback(
     () => setShowProposedFeatures((v) => !v),
@@ -469,6 +470,8 @@ export function useMapPageState(search: RouteSearch) {
     setSuggestGaugePins,
     selectedFeatureId,
     setSelectedFeatureId,
+    featuresFolded,
+    setFeaturesFolded,
     showProposedFeatures,
     toggleShowProposedFeatures,
     featureProposals,

@@ -286,3 +286,21 @@ test.describe("notes", () => {
     expect(await computed(live, "opacity")).toBe("1");
   });
 });
+
+test.describe("chart height", () => {
+  test("folding the features list makes the chart taller and opening restores it", async ({
+    page,
+  }) => {
+    await openFeatures(page);
+    const chart = page.getByTestId("chart-card").filter({ visible: true });
+    await expect(chart).toBeVisible();
+    const height = async () =>
+      Math.round((await chart.boundingBox())?.height ?? 0);
+    const base = await height();
+    const fold = card(page).getByTestId("features-fold");
+    await fold.click();
+    await expect.poll(height).toBeGreaterThan(base);
+    await fold.click();
+    await expect.poll(height).toBe(base);
+  });
+});
