@@ -188,6 +188,35 @@ const tokens = {
   // Chrome: the desktop app bar and the phone bottom nav (before the safe
   // area), the one place these heights are said.
   chrome: { appBar: 56, bottomNav: 64 },
+
+  // Canvas: from `md` up the map fills the window under the app bar and the
+  // content floats in cards over it. Card widths are a share of the window
+  // clamped to a range; a resizable card may be dragged within `resize`. All
+  // expanded cards together cover at most `coverMax` of the width. The chart
+  // dock is `dock.vh` of the window height clamped to the dock range, from
+  // `dock.from` wide; narrower windows fold the chart into the detail card.
+  canvas: {
+    margin: 16,
+    freeMargin: 32,
+    coverMax: 0.55,
+    sideMaxFrac: 0.45,
+    freeMin: { w: 240, h: 200 },
+    headerHeight: 56,
+    gripHit: 20,
+    gripBar: { w: 6, h: 44 },
+    dock: { min: 180, max: 260, vh: 0.22, from: 1280 },
+    cards: {
+      detail: {
+        frac: 0.38,
+        min: 420,
+        max: 720,
+        priority: 3,
+        resize: { min: 360, maxFrac: 0.45 },
+      },
+      list: { frac: 0.2, min: 300, max: 380, priority: 1, resize: null },
+      side: { frac: 0.3, min: 420, max: 600, priority: 2, resize: null },
+    },
+  },
 } as const;
 
 /** Font stacks used across the app: one family, weights carry the hierarchy. */

@@ -1,0 +1,137 @@
+import { describe, expect, test } from "bun:test";
+import {
+  type CardInput,
+  collapsedIds,
+  dockHeight,
+  dockMode,
+  dockRect,
+  freeArea,
+  layoutCards,
+} from "./canvasLayout";
+
+const detail = (width: number): CardInput => ({
+  id: "detail",
+  side: "left",
+  kind: "detail",
+  priority: 3,
+  width,
+});
+const list = (width = 300): CardInput => ({
+  id: "list",
+  side: "left",
+  kind: "list",
+  priority: 1,
+  width,
+});
+const side = (width = 420): CardInput => ({
+  id: "side",
+  side: "right",
+  kind: "side",
+  priority: 2,
+  width,
+});
+
+describe("collapsedIds", () => {
+  test("keeps everything while the cards cover at most 55%", () => {
+    expect(collapsedIds([detail(486)], 1280).size).toBe(0);
+    expect(collapsedIds([list(300), detail(420)], 1440).size).toBe(0);
+  });
+
+  test("folds the lowest priority card first", () => {
+    expect([...collapsedIds([list(), detail(420)], 1024)]).toEqual(["list"]);
+    expect([...collapsedIds([detail(486), side(420)], 1100)]).toEqual(["side"]);
+  });
+
+  test("a pinned card stays open and the detail card folds instead", () => {
+    expect([...collapsedIds([list(), detail(420)], 1024, "list")]).toEqual([
+      "detail",
+    ]);
+  });
+
+  test("never folds the last card", () => {
+    expect(collapsedIds([detail(700)], 800).size).toBe(0);
+  });
+});
+
+describe("layoutCards", () => {
+  test("left cards stack from the margin, right cards from the edge", () => {
+    const [a, b, c] = layoutCards([list(), detail(486), side()], 2400);
+    expect(a.x).toBe(16);
+    expect(b.x).toBe(16 + 300 + 16);
+    expect(c.x).toBe(2400 - 16 - 420);
+  });
+
+  test("a folded card goes after the open ones", () => {
+    const placed = layoutCards([list(), detail(420)], 1024);
+    expect(placed[1].x).toBe(16);
+    expect(placed[0].collapsed).toBe(true);
+    expect(placed[0].x).toBe(16 + 420 + 16);
+  });
+});
+
+describe("freeArea", () => {
+  test("padding is the card edge plus 32", () => {
+    const placed = layoutCards([detail(486)], 1280);
+    const free = freeArea(placed, 1280, 744, null);
+    expect(free.padding).toEqual({
+      top: 32,
+      left: 502 + 32,
+      right: 32,
+      bottom: 32,
+    });
+    expect(free.rect).toEqual({ x: 534, y: 32, w: 1280 - 534 - 32, h: 680 });
+  });
+
+  test("a dock lifts the bottom padding by its height and margin", () => {
+    const placed = layoutCards([detail(486)], 1280);
+    expect(freeArea(placed, 1280, 744, 180).padding.bottom).toBe(16 + 180 + 32);
+  });
+
+  test("a folded card does not cover the free area (left capped at 45%)", () => {
+    const placed = layoutCards([list(), detail(420)], 1024);
+    expect(freeArea(placed, 1024, 700, null).padding.left).toBe(1024 * 0.45);
+  });
+
+  test("each side is clamped to 45% of the window", () => {
+    const placed = layoutCards([detail(700)], 1000);
+    expect(freeArea(placed, 1000, 700, null).padding.left).toBe(450);
+  });
+
+  test("falls back to the whole host when the free area is tiny", () => {
+    const placed = [
+      { ...detail(450), x: 16, collapsed: false },
+      { ...side(420), x: 564, collapsed: false },
+    ];
+    const free = freeArea(placed, 1000, 700, null);
+    expect(free.fallback).toBe(true);
+    expect(free.padding).toEqual({ top: 32, left: 32, right: 32, bottom: 32 });
+  });
+});
+
+describe("dock", () => {
+  test("height is 22% of the window within 180 to 260", () => {
+    expect(dockHeight(720)).toBe(180);
+    expect(dockHeight(1080)).toBe(238);
+    expect(dockHeight(1440)).toBe(260);
+  });
+
+  test("docks from 1280 wide, folds into the card below", () => {
+    expect(dockMode(1280)).toBe("dock");
+    expect(dockMode(1279)).toBe("inline");
+  });
+
+  test("spans the card edge plus 16 to the window edge minus 16", () => {
+    const placed = layoutCards([detail(486)], 1280);
+    expect(dockRect(placed, 1280, 800)).toEqual({
+      left: 518,
+      width: 1280 - 518 - 16,
+      height: 180,
+    });
+  });
+
+  test("stops at a right card", () => {
+    const placed = layoutCards([detail(486), side()], 1920);
+    const dock = dockRect(placed, 1920, 1080);
+    expect(dock.left + dock.width).toBe(1920 - 16 - 420 - 16);
+  });
+});
