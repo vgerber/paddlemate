@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import FocusTrap from "@mui/material/Unstable_TrapFocus";
 import {
   type PointerEvent,
   type ReactNode,
@@ -16,7 +17,7 @@ import {
   snapHeights,
 } from "@/lib/sheetSnap";
 import { releaseVelocity, type Sample } from "@/lib/swipe";
-import { theme } from "@/lib/theme";
+import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -32,7 +33,7 @@ interface BottomSheetProps {
 }
 
 /** A sheet from the bottom edge with a peek and an open height. Drag the
- * handle between them; open shows a scrim, takes focus, and Escape closes it.
+ * handle between them; open shows a scrim, traps focus, and Escape closes it.
  * Moves by transform only. */
 export default function BottomSheet({
   state,
@@ -67,14 +68,19 @@ export default function BottomSheet({
     if (state === "open") sheet.current?.focus();
   }, [state]);
 
-  useEffect(() => {
-    if (state === "closed") return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onStateChange("closed");
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [state, onStateChange]);
+  // Whatever had focus when the sheet appeared gets it back when it closes.
+  const opener = useRef<HTMLElement | null>(null);
+  const wasClosed = useRef(true);
+  useLayoutEffect(() => {
+    const closed = state === "closed";
+    if (wasClosed.current && !closed) {
+      opener.current = document.activeElement as HTMLElement | null;
+    } else if (!wasClosed.current && closed) {
+      if (opener.current?.isConnected) opener.current.focus();
+      opener.current = null;
+    }
+    wasClosed.current = closed;
+  }, [state]);
 
   if (state === "closed") return null;
 
@@ -127,59 +133,66 @@ export default function BottomSheet({
             position: "fixed",
             inset: 0,
             zIndex: theme.zIndex.modal,
-            bgcolor: `${tokens.onSurface}66`,
+            bgcolor: `${tokens.onSurface}${alphas.border}`,
           }}
         />
       )}
-      <Box
-        ref={sheet}
-        role={state === "open" ? "dialog" : "region"}
-        aria-modal={state === "open" ? true : undefined}
-        aria-label={label}
-        tabIndex={-1}
-        sx={{
-          position: "fixed",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: snaps.open,
-          zIndex: theme.zIndex.modal,
-          display: "flex",
-          flexDirection: "column",
-          bgcolor: tokens.surface,
-          borderRadius: `${tokens.radii.xl}px ${tokens.radii.xl}px 0 0`,
-          boxShadow: tokens.elevation.e2,
-          outline: "none",
-          // Starts at the peek so the first paint does not jump.
-          transform: `translate3d(0,${offsetFor(resting, snaps)}px,0)`,
-        }}
-      >
+      <FocusTrap open={state === "open"} disableAutoFocus disableRestoreFocus>
         <Box
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
+          ref={sheet}
+          onKeyDown={(e) => {
+            if (state === "open" && e.key === "Escape") onStateChange("closed");
+          }}
+          role={state === "open" ? "dialog" : "region"}
+          aria-modal={state === "open" ? true : undefined}
+          aria-label={label}
+          tabIndex={-1}
           sx={{
-            touchAction: "none",
-            cursor: "grab",
-            flexShrink: 0,
-            height: tokens.touch.min,
+            position: "fixed",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: snaps.open,
+            zIndex: theme.zIndex.modal,
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            flexDirection: "column",
+            bgcolor: tokens.surface,
+            borderRadius: `${tokens.radii.xl}px ${tokens.radii.xl}px 0 0`,
+            boxShadow: tokens.elevation.e2,
+            outline: "none",
+            // Starts at the peek so the first paint does not jump.
+            transform: `translate3d(0,${offsetFor(resting, snaps)}px,0)`,
           }}
         >
           <Box
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
             sx={{
-              width: 36,
-              height: 4,
-              borderRadius: `${tokens.radii.pill}px`,
-              bgcolor: tokens.outlineVariant,
+              touchAction: "none",
+              cursor: "grab",
+              flexShrink: 0,
+              height: tokens.touch.min,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-          />
+          >
+            <Box
+              sx={{
+                width: 36,
+                height: 4,
+                borderRadius: `${tokens.radii.pill}px`,
+                bgcolor: tokens.outlineVariant,
+              }}
+            />
+          </Box>
+          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+            {children}
+          </Box>
         </Box>
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{children}</Box>
-      </Box>
+      </FocusTrap>
     </>
   );
 }
