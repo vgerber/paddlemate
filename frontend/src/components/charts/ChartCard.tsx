@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
   TIME_RANGE_OPTIONS,
   typeLabel,
@@ -83,6 +83,15 @@ export default function ChartCard({
   children,
 }: ChartCardProps) {
   const [open, setOpen] = useState(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const openRef = useRef<HTMLButtonElement>(null);
+  const toggled = useRef(false);
+  // The control that was pressed leaves the page; hand focus to its
+  // counterpart so a keyboard user never lands on the body.
+  useEffect(() => {
+    if (!toggled.current) return;
+    (open ? closeRef : openRef).current?.focus();
+  }, [open]);
   const type = activeMeasurementType(ranges, measurementType);
   const readings = readingPerType(ranges, preferredFeatureId);
   const charted = readings.find((r) => r.type === type)?.range;
@@ -148,9 +157,13 @@ export default function ChartCard({
               ))}
             </Box>
             <IconButton
+              ref={closeRef}
               aria-label="Close chart options"
               aria-expanded
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                toggled.current = true;
+                setOpen(false);
+              }}
               sx={{
                 width: tokens.touch.min,
                 height: tokens.touch.min,
@@ -257,9 +270,13 @@ export default function ChartCard({
               </Typography>
             </Box>
             <IconButton
+              ref={openRef}
               aria-label="Chart options"
               aria-expanded={false}
-              onClick={() => setOpen(true)}
+              onClick={() => {
+                toggled.current = true;
+                setOpen(true);
+              }}
               sx={{
                 position: "absolute",
                 right: 4,

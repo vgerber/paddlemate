@@ -191,6 +191,23 @@ test.describe("open card", () => {
     ).toHaveAttribute("aria-expanded", "false");
   });
 
+  test("the keyboard never loses focus to the page when it opens and closes", async ({
+    page,
+  }) => {
+    await openSection(page);
+    const active = () =>
+      page.evaluate(
+        () =>
+          document.activeElement?.getAttribute("aria-label") ??
+          document.activeElement?.tagName,
+      );
+    await card(page).getByRole("button", { name: "Chart options" }).focus();
+    await page.keyboard.press("Enter");
+    await expect.poll(active).toBe("Close chart options");
+    await page.keyboard.press("Enter");
+    await expect.poll(active).toBe("Chart options");
+  });
+
   test("a gauge with flow offers both readings", async ({ page }) => {
     await page.route(/\/water-status$/, async (route) => {
       const res = await route.fetch();
