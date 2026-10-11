@@ -22,7 +22,7 @@ function readingLabel(r: WaterRangeWithStatus): string | null {
 
 /** The pill: 24px, a dot and a label. Low and medium are coloured text on a
  * wash, high is solid with white text, empty is hollow. */
-function Pill({
+export function LevelPill({
   level,
   children,
   title,
@@ -99,9 +99,9 @@ export default function WaterLevelChip({
 
   if (isLoading || waterStatus === undefined) {
     return (
-      <Pill level="none" dot={false}>
+      <LevelPill level="none" dot={false}>
         –
-      </Pill>
+      </LevelPill>
     );
   }
 
@@ -115,9 +115,9 @@ export default function WaterLevelChip({
     const reading = waterStatus.ranges.map(readingLabel).find(Boolean);
     if (!reading) return null;
     return (
-      <Pill level="none" dot={false}>
+      <LevelPill level="none" dot={false}>
         {reading}
-      </Pill>
+      </LevelPill>
     );
   }
 
@@ -126,9 +126,9 @@ export default function WaterLevelChip({
   // misleading when the truth is "unknown" - show a neutral dash instead.
   if (calibrated.every((r) => r.latest_reading == null)) {
     return (
-      <Pill level="none" dot={false} title="No current reading">
+      <LevelPill level="none" dot={false} title="No current reading">
         –
-      </Pill>
+      </LevelPill>
     );
   }
 
@@ -141,5 +141,5 @@ export default function WaterLevelChip({
     ) ?? calibrated.find((r) => r.latest_reading != null);
   const reading = source ? readingLabel(source) : null;
 
-  return <Pill level={computedLevel}>{reading ?? cfg.label}</Pill>;
+  return <LevelPill level={computedLevel}>{reading ?? cfg.label}</LevelPill>;
 }
