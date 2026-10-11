@@ -37,14 +37,17 @@ interface Options {
 export const NO_SWIPE_ATTR = "data-no-swipe";
 
 /** Time for the old pane to leave the rest of its way: `instant` for a short
- * hop to `fast` for a full width. With the new pane's `fast` fade the whole
- * change stays under `slow`. */
+ * hop to `fast` for a full width. The new pane's `instant` fade starts only
+ * after React has rendered it (measured 10-60 ms on a loaded desktop), so
+ * leave + render + fade stays under `slow`; a `fast` fade did not. */
 function leaveDuration(distance: number, width: number): number {
   const share = width > 0 ? Math.min(1, Math.abs(distance) / width) : 0;
   return durations.instant + (durations.fast - durations.instant) * share;
 }
 
-/** Horizontal swipe between tab panes. Spread `paneProps` on the element that
+/** Horizontal swipe between tab panes. A scrolling child of the pane must set
+ * `touch-action: pan-y`, or the browser claims the horizontal pan and the
+ * swipe never starts. Spread `paneProps` on the element that
  * holds the active pane; the pane follows the finger by transform only. A
  * committed swipe sends it off the rest of its way and fades the next pane in,
  * all inside `slow`; a short one springs back. Under reduced motion the pane
@@ -89,7 +92,7 @@ export function useSwipeTabs({
     const el = paneRef.current;
     if (!entering.current || !el) return;
     entering.current = false;
-    const ms = prefersReducedMotion() ? REDUCED_FADE_MS / 2 : durations.fast;
+    const ms = prefersReducedMotion() ? REDUCED_FADE_MS / 2 : durations.instant;
     el.style.opacity = "0";
     void el.offsetWidth;
     el.style.transition = `opacity ${ms}ms ${css.easeOut}`;
