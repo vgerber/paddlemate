@@ -66,7 +66,13 @@ export default function TokensSection() {
             variant="contained"
             disabled={!name.trim() || create.isPending}
             onClick={submit}
-            sx={{ minHeight: tokens.touch.min }}
+            sx={{
+              minHeight: tokens.touch.min,
+              "&.Mui-disabled": {
+                bgcolor: tokens.outlineVariant,
+                color: tokens.outline,
+              },
+            }}
           >
             Create
           </Button>

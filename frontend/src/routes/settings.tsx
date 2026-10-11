@@ -34,7 +34,10 @@ export const Route = createFileRoute("/settings")({
 });
 
 const Version = () => (
-  <Typography variant="caption" color="textDisabled">
+  <Typography
+    color="textSecondary"
+    sx={{ fontSize: "0.8125rem", fontWeight: 500 }}
+  >
     v{__COMMIT_HASH__}
   </Typography>
 );
@@ -74,7 +77,7 @@ function SettingsPage() {
         {tab === "profile" && (
           <>
             <SettingsList onOpen={open} />
-            <Box sx={{ px: 2, py: 1 }}>
+            <Box sx={{ px: 2, pt: 1.75, pb: 1 }}>
               <Version />
             </Box>
           </>
@@ -123,7 +126,7 @@ function SettingsPage() {
         <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
           <SettingsList selected={openGroup} onOpen={open} />
         </Box>
-        <Box sx={{ px: 2, py: 1, flexShrink: 0 }}>
+        <Box sx={{ px: 2, pt: 1.75, pb: 1, flexShrink: 0 }}>
           <Version />
         </Box>
       </Box>
