@@ -1,9 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import { type ReactNode, type RefObject, useEffect, useState } from "react";
 import LanguagePicker from "@/components/LanguagePicker";
@@ -14,17 +10,15 @@ import type {
   WaterRangeWithStatus,
 } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
-import { FEATURE_TYPES } from "@/lib/featureTypes";
-import { humanize } from "@/lib/format";
 import { useGaugePicker } from "@/lib/hooks/useGaugePicker";
 import { useWaterwayGauges } from "@/lib/hooks/useGauges";
 import { useCreateFeature, useUpdateFeature } from "@/lib/hooks/useSections";
 import { preferredLanguage } from "@/lib/languagePreference";
+import FormSection from "./FormSection";
 import GaugeRangePicker from "./GaugeRangePicker";
-import GeometryPicker, {
-  type GeometryPicking,
-  minVerticesFor,
-} from "./GeometryPicker";
+import { type GeometryPicking, minVerticesFor } from "./GeometryPicker";
+import SuggestFeatureGeometry from "./SuggestFeatureGeometry";
+import SuggestFeatureTypeGrid from "./SuggestFeatureTypeGrid";
 
 /** A feature built by the form without being submitted to the API - used by
  * the suggest-section wizard, where features travel inside the section
@@ -256,80 +250,73 @@ export default function SuggestFeatureForm({
         pb: 1.5,
         display: "flex",
         flexDirection: "column",
-        gap: 1.5,
-        "& .MuiInputBase-inputSizeSmall": {
-          py: { xs: "12px", md: "8.5px" },
-        },
+        gap: 2.5,
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      <FormSection
+        label="Feature type"
+        hint="What is it? Pick the closest match."
+      >
+        <SuggestFeatureTypeGrid
+          value={featureType}
+          onChange={setFeatureType}
+          disabled={submitting}
+        />
+      </FormSection>
+
+      <FormSection
+        label="Details"
+        hint="Optional - a name and a few words for other paddlers."
+        action={headerAction}
+      >
         <LanguagePicker
           value={langCode}
           onChange={setLangCode}
           size="small"
           overlay
         />
-        {headerAction && (
-          <>
-            <Box sx={{ flex: 1 }} />
-            {headerAction}
-          </>
-        )}
-      </Box>
+        <TextField
+          label="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          fullWidth
+        />
+        <TextField
+          label="Difficulty"
+          value={difficulty}
+          onChange={(e) => setDifficulty(e.target.value)}
+          placeholder="e.g. III+, III-IV, IV-V+"
+          fullWidth
+        />
+        <TextField
+          label="Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          fullWidth
+          multiline
+          minRows={2}
+        />
+      </FormSection>
 
-      <TextField
-        label="Name"
-        size="small"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        fullWidth
-      />
+      <FormSection
+        label="Water levels"
+        hint="Optional - the gauge reading at which this gets easier or harder."
+      >
+        <GaugeRangePicker picker={gaugePicker} />
+      </FormSection>
 
-      <TextField
-        label="Description"
-        size="small"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        fullWidth
-        multiline
-        minRows={2}
-      />
-
-      <FormControl fullWidth size="small">
-        <InputLabel id="feature-type-label">Feature type</InputLabel>
-        <Select
-          labelId="feature-type-label"
-          label="Feature type"
-          value={featureType}
-          onChange={(e) => setFeatureType(e.target.value as FeatureType)}
-          MenuProps={{ sx: { zIndex: 1500 } }}
-        >
-          {FEATURE_TYPES.map((t) => (
-            <MenuItem key={t} value={t}>
-              {humanize(t)}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <TextField
-        label="Difficulty"
-        size="small"
-        value={difficulty}
-        onChange={(e) => setDifficulty(e.target.value)}
-        placeholder="e.g. III+, III-IV, IV-V+"
-        fullWidth
-      />
-
-      <GaugeRangePicker picker={gaugePicker} />
-
-      <GeometryPicker
-        geometry={geometry}
-        sectionLine={sectionLine}
-        useSectionLine={useSectionLine}
-        onUseSectionLineChange={setUseSectionLine}
-        disabled={submitting}
-      />
+      <FormSection
+        label="Location"
+        hint="Place it on the map: a point, a line or an area."
+      >
+        <SuggestFeatureGeometry
+          geometry={geometry}
+          sectionLine={sectionLine}
+          useSectionLine={useSectionLine}
+          onUseSectionLineChange={setUseSectionLine}
+          disabled={submitting}
+        />
+      </FormSection>
 
       {submitError && <Alert severity="error">{submitError}</Alert>}
     </Box>

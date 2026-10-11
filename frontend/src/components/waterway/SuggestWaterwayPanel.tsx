@@ -14,6 +14,7 @@ import ListItemText from "@mui/material/ListItemText";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
+import ChipRow from "@/components/ChipRow";
 import type { GaugePin } from "@/components/map/GaugeMarkers";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import EmptyState from "@/components/states/EmptyState";
@@ -29,7 +30,9 @@ import {
 } from "@/lib/hooks/useGauges";
 import { useSession } from "@/lib/hooks/useSession";
 import { useCreateWaterway } from "@/lib/hooks/useWaterways";
-import { labelSx } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 /** Gauge rows shown before the list collapses behind "Show all". */
 const GAUGE_LIST_CAP = 5;
@@ -244,24 +247,30 @@ export default function SuggestWaterwayPanel({
           pb: 1.5,
           display: "flex",
           flexDirection: "column",
-          gap: 1.5,
-          "& .MuiInputBase-inputSizeSmall": {
-            py: { xs: "12px", md: "8.5px" },
-          },
+          gap: 2.5,
         }}
       >
         {!isAuthenticated ? (
           <SignInGate icon={null} title="Sign in to suggest a river" pt={3} />
         ) : submitted ? (
-          <EmptyState
-            icon={
-              <CheckCircleOutlineIcon
-                sx={{ fontSize: 40, color: "text.disabled" }}
-              />
-            }
-            title="River submitted"
-            caption="It appears in search once an admin approves it."
-          />
+          <Box
+            data-testid="river-submitted"
+            sx={{
+              bgcolor: tokens.surface,
+              borderRadius: `${tokens.radii.md}px`,
+              boxShadow: tokens.elevation.e1,
+            }}
+          >
+            <EmptyState
+              icon={
+                <CheckCircleOutlineIcon
+                  sx={{ fontSize: 40, color: tokens.success }}
+                />
+              }
+              title="River submitted"
+              caption="It appears in search once an admin approves it."
+            />
+          </Box>
         ) : (
           <>
             <FormSection
@@ -270,7 +279,6 @@ export default function SuggestWaterwayPanel({
             >
               <TextField
                 label="Name"
-                size="small"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -281,9 +289,10 @@ export default function SuggestWaterwayPanel({
             {exactGaugeMatch && riverGauges.length > 0 && (
               <Box
                 sx={{
-                  border: "1px solid",
-                  borderColor: "divider",
-                  bgcolor: "background.paper",
+                  bgcolor: tokens.surface,
+                  borderRadius: `${tokens.radii.md}px`,
+                  boxShadow: tokens.elevation.e1,
+                  overflow: "hidden",
                 }}
               >
                 <Box
@@ -291,12 +300,12 @@ export default function SuggestWaterwayPanel({
                     display: "flex",
                     alignItems: "center",
                     gap: 0.75,
-                    px: 1,
-                    pt: 0.75,
-                    pb: 0.25,
+                    pl: 1.5,
+                    pr: 0.5,
+                    pt: 0.5,
                   }}
                 >
-                  <WaterIcon sx={{ fontSize: 14, color: "success.main" }} />
+                  <WaterIcon sx={{ fontSize: 16, color: tokens.success }} />
                   <Typography
                     sx={{ ...labelSx, flex: 1 }}
                     title="Live water levels can be linked to this river's sections"
@@ -307,7 +316,6 @@ export default function SuggestWaterwayPanel({
                   </Typography>
                   {matchedBounds && (
                     <IconButton
-                      size="small"
                       aria-label="Show all on map"
                       title="Show all on map"
                       onClick={() => onFocusBounds?.(matchedBounds)}
@@ -330,7 +338,7 @@ export default function SuggestWaterwayPanel({
                         ])
                       }
                       title="Show on map"
-                      sx={{ py: 0.75, px: 1.5 }}
+                      sx={{ minHeight: tokens.touch.min, px: 1.5 }}
                     >
                       <ListItemText
                         primary={g.name || `Station ${g.station_id}`}
@@ -352,10 +360,13 @@ export default function SuggestWaterwayPanel({
                 </List>
                 {riverGauges.length > GAUGE_LIST_CAP && (
                   <Button
-                    size="small"
                     fullWidth
                     onClick={() => setShowAllGauges((v) => !v)}
-                    sx={{ ...labelSx, py: 1, color: "text.secondary" }}
+                    sx={{
+                      ...labelSx,
+                      minHeight: tokens.touch.min,
+                      color: "text.secondary",
+                    }}
                   >
                     {showAllGauges
                       ? "Show fewer"
@@ -370,9 +381,10 @@ export default function SuggestWaterwayPanel({
                 label="Similar rivers with gauges"
                 hint="Pick one to use its exact name."
               >
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                <ChipRow>
                   {suggestionChips.map((r) => (
                     <Chip
+                      data-testid="similar-river"
                       key={`${r.river}|${r.country ?? ""}`}
                       variant="outlined"
                       label={`${r.river}${r.country ? ` (${r.country})` : ""}`}
@@ -380,7 +392,7 @@ export default function SuggestWaterwayPanel({
                       onClick={() => setName(r.river)}
                     />
                   ))}
-                </Box>
+                </ChipRow>
               </FormSection>
             )}
 
@@ -390,7 +402,6 @@ export default function SuggestWaterwayPanel({
             >
               <TextField
                 label="Description"
-                size="small"
                 multiline
                 rows={2}
                 value={description}
