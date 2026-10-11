@@ -16,6 +16,7 @@ const { tokens } = theme;
 const rangeFieldSx = (color: string) =>
   ({
     flex: 1,
+    minWidth: 0,
     "& label": { color },
     "& label.Mui-focused": { color },
     "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
@@ -45,7 +46,7 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
       label: "Low",
       value: picker.rangeLow,
       onChange: picker.setRangeLow,
-      color: tokens.levels.low.text,
+      color: tokens.success,
     },
     {
       label: "Medium",
@@ -57,7 +58,7 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
       label: "High",
       value: picker.rangeHigh,
       onChange: picker.setRangeHigh,
-      color: tokens.levels.high.text,
+      color: tokens.error,
     },
   ];
 
@@ -88,14 +89,8 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
           </Box>
         )}
         renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Gauge"
-            size="small"
-            placeholder="Search by name…"
-          />
+          <TextField {...params} label="Gauge" placeholder="Search by name…" />
         )}
-        size="small"
         slotProps={{ popper: { sx: { zIndex: 1500 } } }}
         noOptionsText="No gauges found"
         clearOnBlur={false}
@@ -104,7 +99,7 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
       {selected && (
         <>
           {measurementOptions.length > 1 && (
-            <FormControl fullWidth size="small">
+            <FormControl fullWidth>
               <InputLabel id="measurement-label">Measurement</InputLabel>
               <Select
                 labelId="measurement-label"
@@ -121,12 +116,11 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
               </Select>
             </FormControl>
           )}
-          <Box sx={{ display: "flex", gap: 1 }}>
+          <Box sx={{ display: "flex", gap: 1.25 }}>
             {thresholdFields.map((field) => (
               <TextField
                 key={field.label}
                 label={field.label}
-                size="small"
                 inputMode="decimal"
                 value={field.value}
                 onChange={(e) => field.onChange(e.target.value)}
@@ -138,11 +132,7 @@ export default function GaugeRangePicker({ picker }: { picker: GaugePicker }) {
             <Alert severity="warning">{thresholdError}</Alert>
           ) : (
             selected.catalog && (
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: -0.5 }}
-              >
+              <Typography variant="body2" color="text.secondary">
                 New gauge - it starts being fetched once the section is saved.
               </Typography>
             )

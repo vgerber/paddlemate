@@ -1,0 +1,62 @@
+import type { WaterRangeWithStatus } from "@/lib/api";
+
+const isCalibrated = (r: WaterRangeWithStatus) =>
+  r.range_low != null || r.range_medium != null || r.range_high != null;
+
+/** Distinct measurement types present in the ranges, in order of appearance. */
+export function measurementTypesOf(ranges: WaterRangeWithStatus[]): string[] {
+  return [...new Set(ranges.map((r) => r.series.measurement_type))];
+}
+
+/** The measurement type charted: the chosen one if the ranges have it, else
+ * the first calibrated type, else the first type. */
+export function activeMeasurementType(
+  ranges: WaterRangeWithStatus[],
+  chosen?: string | null,
+): string | null {
+  const types = measurementTypesOf(ranges);
+  if (chosen != null && types.includes(chosen)) return chosen;
+  const calibrated = ranges.find(isCalibrated);
+  return calibrated?.series.measurement_type ?? types[0] ?? null;
+}
+
+/** One group per gauge series of the active type. `primary` is the range
+ * whose thresholds the chart draws: the preferred feature's if calibrated,
+ * else the first calibrated one, else the first. */
+export function seriesGroups(
+  ranges: WaterRangeWithStatus[],
+  type: string | null,
+  preferredFeatureId?: number | null,
+) {
+  const visible = type
+    ? ranges.filter((r) => r.series.measurement_type === type)
+    : ranges;
+  const bySeries = new Map<number, WaterRangeWithStatus[]>();
+  for (const r of visible) {
+    const group = bySeries.get(r.series.id);
+    if (group) group.push(r);
+    else bySeries.set(r.series.id, [r]);
+  }
+  return [...bySeries.values()].map((group) => ({
+    primary:
+      (preferredFeatureId != null
+        ? group.find(
+            (r) => r.feature_id === preferredFeatureId && isCalibrated(r),
+          )
+        : undefined) ??
+      group.find(isCalibrated) ??
+      group[0],
+    group,
+  }));
+}
+
+/** The first range of each measurement type, for the reading chips. */
+export function readingPerType(
+  ranges: WaterRangeWithStatus[],
+  preferredFeatureId?: number | null,
+) {
+  return measurementTypesOf(ranges).flatMap((type) => {
+    const first = seriesGroups(ranges, type, preferredFeatureId)[0];
+    return first ? [{ type, range: first.primary }] : [];
+  });
+}

@@ -2,11 +2,8 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import ChartControls from "@/components/charts/ChartControls";
-import ChartPanelShell, {
-  useChartPanelState,
-  useMeasurementTypes,
-} from "@/components/charts/ChartPanelShell";
+import ChartCard from "@/components/charts/ChartCard";
+import { useChartPanelState } from "@/components/charts/chartState";
 import WaterChart from "@/components/charts/water/WaterChart";
 import { GaugeAttributions } from "@/components/GaugeAttribution";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -14,6 +11,9 @@ import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 interface SectionChartPanelProps {
   waterwayId: number;
@@ -26,6 +26,8 @@ interface SectionChartPanelProps {
   selectedFeature?: { name: string; type: string } | null;
   /** Feature owning the section's default thresholds (whitewater). */
   preferredFeatureId?: number | null;
+  /** Lets the chart grow taller (the features list is folded). */
+  tall?: boolean;
 }
 
 export default function SectionChartPanel({
@@ -35,6 +37,7 @@ export default function SectionChartPanel({
   selectedFeatureId,
   selectedFeature,
   preferredFeatureId,
+  tall,
 }: SectionChartPanelProps) {
   const { isAuthenticated } = useSession();
   const navigate = useNavigate();
@@ -73,94 +76,73 @@ export default function SectionChartPanel({
     () => waterStatus?.ranges ?? [],
     [waterStatus?.ranges],
   );
-  const measurementTypes = useMeasurementTypes(ranges);
-
   return (
-    <ChartPanelShell
-      footer={<GaugeAttributions sources={ranges.map((r) => r.source)} />}
-      header={
-        <>
-          {isAuthenticated && (
-            <Box
-              sx={{
-                display: { xs: "none", sm: "flex" },
-                alignItems: "center",
-                gap: 1,
-                flexShrink: 0,
-              }}
-            >
-              {!standingDescent ? (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="success"
-                  sx={{
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    letterSpacing: "0.08em",
-                    flexShrink: 0,
-                  }}
-                  onClick={() =>
-                    startDescent({
-                      startTime: new Date().toISOString(),
-                      waterwayId,
-                      sectionId,
-                      sectionName: sectionName ?? "",
-                    })
-                  }
-                >
-                  Start
-                </Button>
-              ) : null}
-              {!standingDescent && (
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="secondary"
-                  sx={{
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    letterSpacing: "0.08em",
-                    flexShrink: 0,
-                    px: 1.5,
-                  }}
-                  onClick={() =>
-                    navigate({
-                      to: "/logs/new",
-                      search: { waterwayId, sectionId, startTime: undefined },
-                    })
-                  }
-                >
-                  Log descent
-                </Button>
-              )}
-            </Box>
-          )}
-          <ChartControls
-            measurementTypes={measurementTypes}
-            measurementType={measurementType ?? measurementTypes[0]}
-            onMeasurementTypeChange={setMeasurementType}
-            timeRange={timeRange}
-            onTimeRangeChange={setTimeRange}
-          />
-        </>
-      }
-    >
-      {isLoading ? (
-        <LoadingBox size={22} py={3} />
-      ) : (
-        <WaterChart
-          ranges={ranges}
-          selectedFeatureId={selectedFeatureId}
-          selectedFeature={selectedFeature}
-          preferredFeatureId={preferredFeatureId}
-          timeRange={timeRange}
-          onTimeRangeChange={setTimeRange}
-          measurementType={measurementType}
-          onMeasurementTypeChange={setMeasurementType}
-          descentSpans={descentSpans}
-        />
+    <>
+      {isAuthenticated && !standingDescent && (
+        <Box
+          sx={{
+            display: { xs: "none", sm: "flex" },
+            alignItems: "center",
+            gap: 1,
+            px: 1.5,
+            pt: 1.5,
+          }}
+        >
+          <Button
+            variant="outlined"
+            sx={{ minHeight: tokens.touch.min }}
+            onClick={() =>
+              startDescent({
+                startTime: new Date().toISOString(),
+                waterwayId,
+                sectionId,
+                sectionName: sectionName ?? "",
+              })
+            }
+          >
+            Start
+          </Button>
+          <Button
+            variant="contained"
+            sx={{ minHeight: tokens.touch.min }}
+            onClick={() =>
+              navigate({
+                to: "/logs/new",
+                search: { waterwayId, sectionId, startTime: undefined },
+              })
+            }
+          >
+            Log descent
+          </Button>
+        </Box>
       )}
-    </ChartPanelShell>
+      <ChartCard
+        ranges={ranges}
+        timeRange={timeRange}
+        onTimeRangeChange={setTimeRange}
+        measurementType={measurementType}
+        onMeasurementTypeChange={setMeasurementType}
+        preferredFeatureId={preferredFeatureId}
+        tall={tall}
+        footer={<GaugeAttributions sources={ranges.map((r) => r.source)} />}
+      >
+        {(headroom) =>
+          isLoading ? (
+            <LoadingBox size={22} py={6} />
+          ) : (
+            <WaterChart
+              ranges={ranges}
+              selectedFeatureId={selectedFeatureId}
+              selectedFeature={selectedFeature}
+              preferredFeatureId={preferredFeatureId}
+              timeRange={timeRange}
+              measurementType={measurementType}
+              descentSpans={descentSpans}
+              headroom={headroom}
+            />
+          )
+        }
+      </ChartCard>
+    </>
   );
 }

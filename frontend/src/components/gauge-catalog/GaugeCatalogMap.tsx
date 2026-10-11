@@ -36,13 +36,13 @@ const STATES: {
   {
     key: "used",
     label: "On a section",
-    color: tokens.tertiary,
+    color: tokens.success,
     help: "Shows a run's water level",
   },
   {
     key: "fetched",
     label: "Tracked",
-    color: tokens.primary,
+    color: tokens.mapSectionLine,
     help: "We collect its data, but no section uses it yet",
   },
   {
@@ -212,13 +212,13 @@ export default function GaugeCatalogMap() {
                 "match",
                 ["get", "state"],
                 "used",
-                tokens.tertiary,
+                tokens.success,
                 "fetched",
-                tokens.primary,
+                tokens.mapSectionLine,
                 tokens.outline,
               ],
               "circle-stroke-width": 1,
-              "circle-stroke-color": tokens.background,
+              "circle-stroke-color": tokens.surface,
             }}
           />
           {/* Gauge names, once zoomed in. Collision detection hides overlaps
@@ -299,19 +299,22 @@ export default function GaugeCatalogMap() {
 
       {/* Legend + per-state filter (bottom-left, mirrors LabelModeToggle). */}
       <Box
+        data-testid="gauge-legend"
         sx={{
           position: "absolute",
           bottom: 14,
           left: 10,
           zIndex: 10,
-          width: 210,
-          border: "1px solid",
-          borderColor: "divider",
-          bgcolor: "background.paper",
+          width: 220,
+          maxWidth: "calc(100% - 20px)",
+          bgcolor: tokens.surface,
+          borderRadius: `${tokens.radii.md}px`,
+          boxShadow: tokens.elevation.e2,
           overflow: "hidden",
+          py: 0.5,
         }}
       >
-        <Typography sx={{ ...labelSx, display: "block", px: 1.25, pt: 0.75 }}>
+        <Typography sx={{ ...labelSx, display: "block", px: 1.5, pt: 0.75 }}>
           Gauges
         </Typography>
         {STATES.map((s) => {
@@ -326,8 +329,9 @@ export default function GaugeCatalogMap() {
                 alignItems: "flex-start",
                 gap: 1,
                 width: "100%",
-                px: 1.25,
-                py: 0.6,
+                minHeight: tokens.touch.min,
+                px: 1.5,
+                py: 0.75,
                 textAlign: "left",
                 opacity: off ? 0.45 : 1,
               }}
@@ -359,8 +363,8 @@ export default function GaugeCatalogMap() {
                   color="text.secondary"
                   sx={{
                     display: "block",
-                    fontSize: "0.625rem",
-                    lineHeight: 1.25,
+                    fontSize: "0.75rem",
+                    lineHeight: 1.3,
                   }}
                 >
                   {s.help}
@@ -380,11 +384,12 @@ export default function GaugeCatalogMap() {
             left: 10,
             zIndex: 11,
             width: 270,
+            maxWidth: "calc(100% - 20px)",
             maxHeight: "calc(100% - 28px)",
             overflowY: "auto",
-            border: "1px solid",
-            borderColor: "divider",
-            bgcolor: "background.paper",
+            bgcolor: tokens.surface,
+            borderRadius: `${tokens.radii.md}px`,
+            boxShadow: tokens.elevation.e2,
             p: 1.5,
           }}
         >
@@ -407,9 +412,13 @@ export default function GaugeCatalogMap() {
               </Typography>
             </Box>
             <IconButton
-              size="small"
               onClick={() => setSelected(null)}
-              sx={{ mt: -0.75, mr: -0.75 }}
+              sx={{
+                mt: -1.5,
+                mr: -1.5,
+                width: tokens.touch.min,
+                height: tokens.touch.min,
+              }}
               aria-label="Close"
             >
               <CloseIcon fontSize="inherit" />
@@ -470,9 +479,9 @@ export default function GaugeCatalogMap() {
             display: "flex",
             alignItems: "center",
             gap: 1,
-            border: "1px solid",
-            borderColor: "divider",
-            bgcolor: "background.paper",
+            bgcolor: tokens.surface,
+            borderRadius: `${tokens.radii.pill}px`,
+            boxShadow: tokens.elevation.e2,
             px: 1.5,
             py: 0.75,
           }}
@@ -489,9 +498,9 @@ export default function GaugeCatalogMap() {
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 10,
-            border: "1px solid",
-            borderColor: "divider",
-            bgcolor: "background.paper",
+            bgcolor: tokens.surface,
+            borderRadius: `${tokens.radii.pill}px`,
+            boxShadow: tokens.elevation.e2,
             px: 1.5,
             py: 0.75,
           }}
@@ -603,7 +612,7 @@ function DonutCluster({
             />
           ))
         )}
-        <circle r={r0} fill={tokens.background} />
+        <circle r={r0} fill={tokens.surface} />
         <text
           textAnchor="middle"
           dominantBaseline="central"
