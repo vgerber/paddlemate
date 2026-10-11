@@ -34,6 +34,8 @@ interface Props {
   isMember: boolean;
   isAdmin: boolean;
   viewerId: string | null;
+  /** The bases map above the list; off where the canvas draws it behind. */
+  showMap?: boolean;
   onLogSection: (sectionId: number, waterwayId: number) => void;
   onEditStay: (stay: TripStay) => void;
   onEditWatchList: (stay: TripStay) => void;
@@ -49,6 +51,7 @@ export default function TripStays({
   isMember,
   isAdmin,
   viewerId,
+  showMap = true,
   onLogSection,
   onEditStay,
   onEditWatchList,
@@ -80,7 +83,7 @@ export default function TripStays({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      <BasesMap stays={list} candidates={candidates ?? []} />
+      {showMap && <BasesMap tripId={tripId} isMember={isMember} />}
 
       <TripCandidates
         tripId={tripId}
