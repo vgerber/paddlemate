@@ -12,6 +12,7 @@ import type { SectionWithFeatures } from "@/lib/api";
 import { sectionPlace } from "@/lib/format";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
+import GradeTag from "./GradeTag";
 
 const { tokens } = theme;
 
@@ -54,11 +55,13 @@ export default function SectionListItem({
     return meta?.difficulty as string | undefined;
   })();
 
-  // The river first: in a mixed list it is what tells two "Upper" runs apart,
-  // and it matters more than which district they are in.
-  const place = [riverName, ...sectionPlace(section.country, section.regions)]
-    .filter(Boolean)
-    .join(" · ");
+  // Only a list that mixes rivers names the place (river first: it tells two
+  // "Upper" runs apart). Inside one river's own list the row is just a name.
+  const place = riverName
+    ? [riverName, ...sectionPlace(section.country, section.regions)]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
 
   const isRivermap = section.features?.some(
     (f) => f.created_by === "rivermap-import",
@@ -71,7 +74,7 @@ export default function SectionListItem({
   return (
     // Each row is its own container, so the stacked layout follows the width
     // the row is given wherever it is listed.
-    <Box sx={{ containerType: "inline-size", mb: 0.75 }}>
+    <Box sx={{ containerType: "inline-size", mb: 1 }}>
       <ListItemButton
         selected={selected}
         onClick={() => onClick(section.id)}
@@ -79,9 +82,10 @@ export default function SectionListItem({
           ...cardRowSx,
           display: "grid",
           alignItems: "center",
+          minHeight: 56,
           columnGap: 1,
           rowGap: 0.5,
-          gridTemplateColumns: `minmax(0, 1fr) 36px 46px 96px${star}`,
+          gridTemplateColumns: `minmax(0, 1fr) 30px 46px 74px${star}`,
           gridTemplateAreas: `"n k g c${star2}"`,
           [`@container (max-width: ${STACK_BELOW}px)`]: {
             gridTemplateColumns: `auto auto minmax(0, 1fr) auto${star}`,
@@ -93,9 +97,9 @@ export default function SectionListItem({
       >
         <Box sx={{ gridArea: "n", minWidth: 0 }}>
           <Typography
-            variant="body2"
+            variant="body1"
             sx={{
-              fontWeight: 600,
+              fontWeight: 500,
               overflow: "hidden",
               display: "-webkit-box",
               WebkitBoxOrient: "vertical",
@@ -151,8 +155,8 @@ export default function SectionListItem({
             alignItems: "center",
             gap: 0.25,
             color: "text.secondary",
-            fontSize: "0.75rem",
-            fontWeight: 600,
+            fontSize: "0.8125rem",
+            fontWeight: 500,
             [`@container (max-width: ${STACK_BELOW}px)`]: {
               justifySelf: "start",
             },
@@ -177,7 +181,7 @@ export default function SectionListItem({
             },
           }}
         >
-          {difficulty && <Chip label={difficulty} size="small" />}
+          {difficulty && <GradeTag grade={difficulty} />}
         </Box>
 
         <Box sx={{ gridArea: "c", justifySelf: "end", alignSelf: "center" }}>
