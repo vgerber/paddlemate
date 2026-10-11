@@ -50,6 +50,7 @@ export const scenes = {
   set(owner: symbol, scene: MapScene) {
     sceneStore.set({ owner, scene });
   },
+  current: (): MapScene | null => sceneStore.get()?.scene ?? null,
   clear(owner: symbol) {
     if (sceneStore.get()?.owner === owner) sceneStore.set(null);
   },
