@@ -9,7 +9,7 @@ import type { components } from "@/lib/api/schema";
 import { proposalKeys } from "./useProposals";
 import { waterwayKeys } from "./useWaterways";
 
-type CreateSectionBody = components["schemas"]["CreateSectionBody"];
+type CreateSectionBody = components["schemas"]["Proposable_for_CreateSectionBody"];
 
 export function useSectionWithFeatures(
   waterwayId: number,

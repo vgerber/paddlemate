@@ -2,7 +2,7 @@ import type { components } from "@/lib/api/schema";
 import type { SectionNamingValue } from "./SectionNamingForm";
 import type { SectionFeatureDraft } from "./SuggestFeatureForm";
 
-type CreateSectionBody = components["schemas"]["CreateSectionBody"];
+type CreateSectionBody = components["schemas"]["Proposable_for_CreateSectionBody"];
 
 type FeatureBody = NonNullable<CreateSectionBody["features"]>[number];
 
