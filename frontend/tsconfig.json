@@ -3,7 +3,8 @@
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" },
-    { "path": "./tsconfig.test.json" }
+    { "path": "./tsconfig.test.json" },
+    { "path": "./tsconfig.e2e.json" }
   ],
   // Solution-style root: tsc ignores these, but the bun test runner reads
   // this file for path-alias resolution.

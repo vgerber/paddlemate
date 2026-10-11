@@ -1,8 +1,15 @@
 # End-to-end checks
 
-Bun scripts that drive the running app through a real browser (headless
-Chrome over the DevTools Protocol - no Playwright). They exercise the whole
-stack: Keycloak sign-in, the API, and the frontend.
+Two kinds live in this repo.
+
+**Feature tests** are Playwright specs in `frontend/e2e/<feature>/`, run with
+`cd frontend && npx playwright test` (see `AGENTS.md`, "Tooling"). New feature
+checks go there.
+
+**The scripts in this folder** are older Bun scripts that drive the running app
+through a real browser (headless Chrome over the DevTools Protocol, no
+Playwright). They exercise the whole stack: Keycloak sign-in, the API, and the
+frontend, and are kept for one-off drives and screenshots.
 
 ## Prerequisites
 

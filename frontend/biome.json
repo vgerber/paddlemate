@@ -7,7 +7,10 @@
       "!!**/dist",
       "!!openapi.json",
       "!!src/lib/api/schema.d.ts",
-      "!!src/routeTree.gen.ts"
+      "!!src/routeTree.gen.ts",
+      "!!test-results",
+      "!!playwright-report",
+      "!!e2e/.auth"
     ]
   },
   "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2 },

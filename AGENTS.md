@@ -68,15 +68,30 @@ type-checking. Run both after any frontend edit:
 
 ```
 cd frontend && npx tsc -b --force 2>&1
-cd frontend && npx biome check src 2>&1
+cd frontend && npx biome check src e2e 2>&1
 ```
 
-Tests use Bun's built-in runner (`*.test.ts` next to the module, typed via
-`tsconfig.test.json`):
+Unit tests use Bun's built-in runner (`*.test.ts` next to the module, typed
+via `tsconfig.test.json`; `bunfig.toml` limits it to `src`):
 
 ```
 cd frontend && bun test
 ```
+
+Feature tests use Playwright (`*.spec.ts` in `frontend/e2e/<feature>/`, typed
+via `tsconfig.e2e.json`). They drive the running stack through the system
+Chrome after a real Keycloak sign-in, so start the stack first (the
+`dev-services` skill) with the test-data fixture seeded:
+
+```
+cd frontend && npx playwright test                       # everything
+cd frontend && npx playwright test e2e/theme              # one feature
+cd frontend && npx playwright test --project=phone        # one layout
+```
+
+The projects are `phone` (Pixel 7), `small` (320px wide; only specs tagged
+`@small`) and `desktop` (1280px). Run `npx biome check src e2e` with the other
+gates.
 
 Note: the root tsconfig is solution-style (`files: []` + references), so a
 plain `tsc --noEmit` type-checks nothing and always passes - use `tsc -b`.
@@ -417,7 +432,15 @@ A new layer group joins one of these or becomes a new sibling.
 `bun test` runs `*.test.ts` files next to their module. Pure logic gets
 tests: formatting, level math, proposal diffing, payload builders. Both
 `tsc -b` and biome cover them, so tests follow the same style rules as app
-code. Component rendering is not tested; the UI is verified by running it.
+code. Component rendering is not unit-tested.
+
+Every feature has a Playwright spec in `frontend/e2e/<feature>/` that checks
+what the user can do and what the browser computes (tokens, sizes, no sideways
+scroll), on the `phone` and `desktop` projects, and `@small` where a layout can
+break at 320px. A spec is written with the feature, not after it, and each
+guard in it is checked by removing the guard and watching it fail. Specs share
+the seeded fixture and run in one worker, so a spec that changes data puts it
+back.
 
 ## Rust code style (api/)
 

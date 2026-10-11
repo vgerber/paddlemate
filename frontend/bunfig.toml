@@ -1,0 +1,4 @@
+[test]
+# Unit tests live next to their modules in src. The Playwright specs in e2e/
+# are run by `npx playwright test` and must not be picked up here.
+root = "./src"

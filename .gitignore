@@ -10,3 +10,7 @@ deploy/
 !.claude/skills
 # Uploaded media in local development (MEDIA_DIR)
 api/media/
+# Playwright (frontend/e2e)
+frontend/test-results/
+frontend/playwright-report/
+frontend/e2e/.auth/

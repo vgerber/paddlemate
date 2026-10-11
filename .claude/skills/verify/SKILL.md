@@ -107,8 +107,10 @@ Gotchas that cost time:
 
 ## Driving the UI headlessly
 
-No Playwright installed; use system Chrome + CDP over WebSocket with a bun
-script (Bun has native WebSocket):
+Feature checks are Playwright specs: `cd frontend && npx playwright test`
+(they sign in through Keycloak themselves; see `AGENTS.md`, "Tooling"). For a
+one-off drive or a screenshot, use system Chrome + CDP over WebSocket with a
+bun script (Bun has native WebSocket):
 
 ```sh
 google-chrome --headless=new --disable-gpu --no-sandbox \
