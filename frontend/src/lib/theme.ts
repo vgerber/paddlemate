@@ -138,6 +138,7 @@ const tokens = {
   mapGreen: "#e3ebd6",
   mapWater: "#d3e5f0",
   mapRiver: "#b5d5ec",
+  mapRoad: "#dcd8cb",
   // Gauge coverage: the tracked share is a deeper blue than the sections.
   gaugeTracked: "#236d98",
   gaugeUntracked: "#9aa5aa",

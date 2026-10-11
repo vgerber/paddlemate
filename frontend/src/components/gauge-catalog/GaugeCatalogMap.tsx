@@ -17,6 +17,7 @@ import MapGL, {
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { LIBERTY_STYLE } from "@/components/map/mapStyles";
+import { useCalmBaseMap } from "@/components/map/useMutedBaseMap";
 import type { GaugeMapState } from "@/lib/api";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
 import { labelSx, theme } from "@/lib/theme";
@@ -70,6 +71,8 @@ interface ClusterInfo {
 export default function GaugeCatalogMap() {
   const mapRef = useRef<MapRef>(null);
   const { data: points, isLoading, isError } = useGaugeMap();
+  const [mapLoaded, setMapLoaded] = useState(false);
+  useCalmBaseMap(mapRef, mapLoaded, true, "liberty");
   const [hidden, setHidden] = useState<Set<GaugeMapState>>(new Set());
   const [selected, setSelected] = useState<MapGroup | null>(null);
   // On a phone the legend starts folded to a chip so it does not cover the map.
@@ -177,7 +180,10 @@ export default function GaugeCatalogMap() {
         mapStyle={LIBERTY_STYLE}
         interactiveLayerIds={[POINT_LAYER]}
         onClick={handleClick}
-        onLoad={refreshClusters}
+        onLoad={() => {
+          setMapLoaded(true);
+          refreshClusters();
+        }}
         onIdle={refreshClusters}
       >
         <NavigationControl position="top-right" />
