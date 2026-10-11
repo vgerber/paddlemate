@@ -22,7 +22,9 @@ import DraftLayers, { FeatureDraftLayer } from "./DraftLayers";
 import FeatureGeoJSONLayers from "./FeatureGeoJSONLayers";
 import GaugeMarkers, { type GaugePin } from "./GaugeMarkers";
 import LabelModeToggle from "./LabelModeToggle";
+import MapCompass from "./MapCompass";
 import MapNumberMarker from "./MapNumberMarker";
+import MarkerHit from "./MarkerHit";
 import { addMapImages } from "./mapIcons";
 import { buildSectionsGeoJSON } from "./mapLayers";
 import { LIBERTY_STYLE, SATELLITE_STYLE } from "./mapStyles";
@@ -36,7 +38,7 @@ import SectionLayers from "./SectionLayers";
 import { useMapCameraEffects } from "./useMapCameraEffects";
 import { useMapClickHandler } from "./useMapClickHandler";
 import { useMapSources } from "./useMapSources";
-import { useMutedBaseMap } from "./useMutedBaseMap";
+import { useCalmBaseMap, useMutedBaseMap } from "./useMutedBaseMap";
 
 export type { AreaCircle } from "@/lib/geo";
 export type { GaugePin } from "./GaugeMarkers";
@@ -103,6 +105,10 @@ export interface MapChrome {
    * label toggle, the results strip and the filter button, all of which sat
    * on top of it - move it to a free corner there. */
   attributionPosition?: "top-left" | "bottom-right";
+  /** Only the water, the section line, the markers and the zoom keys: no
+   * layer switcher, compass or access-point arrows. Defaults on for maps
+   * embedded in a scrolling page or a wizard (`cooperativeGestures`). */
+  minimal?: boolean;
 }
 
 /** Where the map looks, and where it reports it is looking. */
@@ -184,6 +190,10 @@ const NO_REGIONS: MapRegions = {};
 const NO_PICKING: MapPicking = {};
 const NO_DRAWING: MapDrawing = {};
 const NO_CHROME: MapChrome = {};
+const NO_ENDPOINTS: GeoJSON.FeatureCollection = {
+  type: "FeatureCollection",
+  features: [],
+};
 
 export default function WaterwayMap({
   sections,
@@ -246,6 +256,7 @@ export default function WaterwayMap({
     attributionPosition = "bottom-right",
     cooperativeGestures,
   } = chrome;
+  const minimal = chrome.minimal ?? !!cooperativeGestures;
   const mapRef = useRef<MapRef>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [satellite, setSatellite] = useState(false);
@@ -256,6 +267,12 @@ export default function WaterwayMap({
     mapRef,
     mapLoaded,
     regionChoices != null,
+    satellite ? "satellite" : "liberty",
+  );
+  useCalmBaseMap(
+    mapRef,
+    mapLoaded,
+    !satellite,
     satellite ? "satellite" : "liberty",
   );
   const { handleMapLoad } = useMapCameraEffects({
@@ -361,22 +378,24 @@ export default function WaterwayMap({
               : undefined,
       }}
     >
-      <LabelModeToggle
-        labelMode={labelMode}
-        // Without river names the river mode would silently fall back to
-        // section names - hide the switch instead of showing a dead control.
-        onChange={waterwayNames ? onLabelModeChange : undefined}
-        satellite={satellite}
-        onSatelliteChange={setSatellite}
-        featureNames={showFeatureNames}
-        onFeatureNamesChange={
-          features?.length || proposedFeatures?.length
-            ? setShowFeatureNames
-            : undefined
-        }
-        bottomOffset={controlsBottomOffset}
-        anchor={controlsAnchor}
-      />
+      {!minimal && (
+        <LabelModeToggle
+          labelMode={labelMode}
+          // Without river names the river mode would silently fall back to
+          // section names - hide the switch instead of showing a dead control.
+          onChange={waterwayNames ? onLabelModeChange : undefined}
+          satellite={satellite}
+          onSatelliteChange={setSatellite}
+          featureNames={showFeatureNames}
+          onFeatureNamesChange={
+            features?.length || proposedFeatures?.length
+              ? setShowFeatureNames
+              : undefined
+          }
+          bottomOffset={controlsBottomOffset}
+          anchor={controlsAnchor}
+        />
+      )}
       <MapGL
         ref={mapRef}
         // Rendered as a child instead, so it can be compact and placed in a
@@ -400,7 +419,8 @@ export default function WaterwayMap({
           "region-browse-fill",
         ]}
       >
-        <NavigationControl position="top-right" />
+        <NavigationControl position="top-right" showCompass={false} />
+        {!minimal && <MapCompass />}
         <AttributionControl compact position={attributionPosition} />
 
         <RegionLayers
@@ -431,7 +451,7 @@ export default function WaterwayMap({
         <SectionLayers
           sections={sectionsGeoJSON}
           labels={sectionLabelsGeoJSON}
-          endpoints={sectionEndpointsGeoJSON}
+          endpoints={minimal ? NO_ENDPOINTS : sectionEndpointsGeoJSON}
           connectors={connectorsGeoJSON}
           selectedSectionId={selectedSectionId}
         />
@@ -472,20 +492,22 @@ export default function WaterwayMap({
             longitude={pin.lon}
             latitude={pin.lat}
             anchor="center"
+            style={{ pointerEvents: "none" }}
           >
-            <div
-              title={pin.title}
-              style={{
-                width: pin.emphasis ? 14 : 10,
-                height: pin.emphasis ? 14 : 10,
-                borderRadius: "50%",
-                background: pin.color,
-                border: `2px solid ${theme.tokens.surfaceLowest}`,
-                boxShadow: pin.emphasis
-                  ? `0 0 0 3px ${pin.color}55`
-                  : "0 1px 2px rgba(0,0,0,0.5)",
-              }}
-            />
+            <MarkerHit title={pin.title}>
+              <div
+                style={{
+                  width: pin.emphasis ? 14 : 10,
+                  height: pin.emphasis ? 14 : 10,
+                  borderRadius: "50%",
+                  background: pin.color,
+                  border: `2px solid ${theme.tokens.surfaceLowest}`,
+                  boxShadow: pin.emphasis
+                    ? `0 0 0 3px ${pin.color}55`
+                    : "0 1px 2px rgba(0,0,0,0.5)",
+                }}
+              />
+            </MarkerHit>
           </Marker>
         ))}
 
@@ -550,7 +572,7 @@ export default function WaterwayMap({
             lat={putIn.lat}
             lon={putIn.lon}
             num={1}
-            color={tokens.putIn}
+            color={tokens.primary}
           />
         )}
         {takeOut && (
@@ -558,7 +580,7 @@ export default function WaterwayMap({
             lat={takeOut.lat}
             lon={takeOut.lon}
             num={2}
-            color={tokens.takeOut}
+            color={tokens.primary}
           />
         )}
 
@@ -582,18 +604,20 @@ export default function WaterwayMap({
             longitude={areaCircle.lon}
             latitude={areaCircle.lat}
             anchor="center"
+            style={{ pointerEvents: "none" }}
           >
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                background: tokens.mapAreaCircle,
-                border: `2px solid ${tokens.white}`,
-                boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
-                pointerEvents: "none",
-              }}
-            />
+            <MarkerHit>
+              <div
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  background: tokens.mapAreaCircle,
+                  border: `2px solid ${tokens.white}`,
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
+                }}
+              />
+            </MarkerHit>
           </Marker>
         )}
 
@@ -602,18 +626,20 @@ export default function WaterwayMap({
             longitude={focusedPoint[0]}
             latitude={focusedPoint[1]}
             anchor="center"
+            style={{ pointerEvents: "none" }}
           >
-            <div
-              style={{
-                width: 14,
-                height: 14,
-                borderRadius: "50%",
-                background: tokens.primary,
-                border: `2px solid ${tokens.surface}`,
-                boxShadow: `0 0 0 3px ${tokens.primary}55, 0 0 10px ${tokens.primary}99`,
-                pointerEvents: "none",
-              }}
-            />
+            <MarkerHit>
+              <div
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: "50%",
+                  background: tokens.primary,
+                  border: `2px solid ${tokens.surface}`,
+                  boxShadow: `0 0 0 3px ${tokens.primary}55, 0 0 10px ${tokens.primary}99`,
+                }}
+              />
+            </MarkerHit>
           </Marker>
         )}
       </MapGL>

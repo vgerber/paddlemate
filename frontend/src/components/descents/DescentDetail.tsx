@@ -114,12 +114,14 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
           sx={{
             height: 260,
             borderRadius: `${tokens.radii.md}px`,
+            boxShadow: tokens.elevation.e1,
             overflow: "hidden",
             position: "relative",
           }}
         >
           <WaterwayMap
             sections={mapSections}
+            chrome={{ minimal: true }}
             picking={{
               putIn:
                 descent.put_in_lat != null && descent.put_in_lon != null

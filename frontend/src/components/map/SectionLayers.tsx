@@ -117,17 +117,30 @@ export default function SectionLayers({
           type="line"
           paint={{
             "line-color": tokens.mapSectionLineCasing,
-            "line-width": 6,
-            "line-opacity": 0.85,
+            "line-width": 11,
+            "line-opacity": 0.6,
           }}
         />
         <Layer
           id="sections-line"
           beforeId="section-endpoints-dot"
           type="line"
+          layout={{ "line-cap": "round", "line-join": "round" }}
           paint={{
-            "line-color": tokens.mapSectionLine,
-            "line-width": 4,
+            "line-color": tokens.mapRiver,
+            "line-width": 9,
+            "line-opacity": 1,
+          }}
+        />
+        <Layer
+          id="sections-line-selected-casing"
+          beforeId="section-endpoints-dot"
+          type="line"
+          filter={["==", ["id"], selectedSectionId ?? -1]}
+          layout={{ "line-cap": "round", "line-join": "round" }}
+          paint={{
+            "line-color": tokens.mapSectionLineCasing,
+            "line-width": 10,
             "line-opacity": 1,
           }}
         />
@@ -136,9 +149,10 @@ export default function SectionLayers({
           beforeId="section-endpoints-dot"
           type="line"
           filter={["==", ["id"], selectedSectionId ?? -1]}
+          layout={{ "line-cap": "round", "line-join": "round" }}
           paint={{
             "line-color": tokens.mapSelectedLine,
-            "line-width": 6,
+            "line-width": 5,
             "line-opacity": 1,
           }}
         />

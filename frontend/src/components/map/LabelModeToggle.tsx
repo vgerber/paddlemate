@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import Typography from "@mui/material/Typography";
+import type { ReactNode } from "react";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -19,21 +19,63 @@ interface LabelModeToggleProps {
   anchor?: "top" | "bottom";
 }
 
-const captionSx = {
-  px: 1.5,
-  pt: 1,
-  pb: 0.25,
-  fontSize: "0.75rem",
-  fontWeight: 600,
-  color: tokens.onSurfaceVariant,
-  lineHeight: 1.4,
-} as const;
+/** A recessed track holding cells; the set ones are white pills. */
+function Track({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        gap: "2px",
+        p: "2px",
+        bgcolor: tokens.surfaceLow,
+        border: `1px solid ${tokens.outlineVariant}`,
+        borderRadius: `${tokens.radii.sm}px`,
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
 
-const rule = `1px solid ${tokens.outlineVariant}`;
+function Cell({
+  active,
+  title,
+  onClick,
+  flex,
+  children,
+}: {
+  active: boolean;
+  title: string;
+  onClick: () => void;
+  flex?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <ButtonBase
+      onClick={onClick}
+      title={title}
+      aria-pressed={active}
+      sx={{
+        flex: flex ? 1 : "0 1 auto",
+        px: 1.5,
+        minHeight: tokens.touch.min,
+        whiteSpace: "nowrap",
+        fontSize: "0.8125rem",
+        fontWeight: active ? 600 : 500,
+        color: active ? tokens.onSurface : tokens.onSurfaceVariant,
+        bgcolor: active ? tokens.surface : "transparent",
+        boxShadow: active ? tokens.elevation.e1 : "none",
+        borderRadius: `${tokens.radii.sm - 2}px`,
+        "&:hover": { bgcolor: active ? tokens.surface : tokens.surfaceHighest },
+      }}
+    >
+      {children}
+    </ButtonBase>
+  );
+}
 
-/** Map layer controls: what section labels say, feature-name visibility,
- * and the satellite base layer. A white floating group like the zoom
- * buttons, every button a full touch target. */
+/** Map layer controls: a floating key card with what section labels say,
+ * feature-name visibility, and the satellite base layer. */
 export default function LabelModeToggle({
   labelMode,
   onChange,
@@ -44,87 +86,74 @@ export default function LabelModeToggle({
   bottomOffset = 0,
   anchor = "bottom",
 }: LabelModeToggleProps) {
-  const btn = (active: boolean) =>
-    ({
-      px: 1.5,
-      minHeight: tokens.touch.min,
-      whiteSpace: "nowrap",
-      fontSize: "0.8125rem",
-      fontWeight: active ? 600 : 500,
-      color: active ? tokens.onPrimaryContainer : tokens.onSurface,
-      bgcolor: active ? tokens.primaryContainer : "transparent",
-      "&:hover": {
-        bgcolor: active ? tokens.primaryContainer : tokens.surfaceHigh,
-      },
-    }) as const;
-
-  const showLabelsGroup = onChange || onFeatureNamesChange;
-
+  const edge = { xs: 10, md: 24 };
   return (
     <Box
       data-testid="map-layer-toggle"
       sx={{
         position: "absolute",
-        ...(anchor === "top" ? { top: 14 } : { bottom: 14 + bottomOffset }),
-        left: 10,
+        ...(anchor === "top"
+          ? { top: { xs: 14, md: 24 } }
+          : {
+              bottom: {
+                xs: 14 + bottomOffset,
+                md: 24 + bottomOffset,
+              },
+            }),
+        left: edge,
         zIndex: 10,
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        borderRadius: `${tokens.radii.sm}px`,
+        display: "grid",
+        gap: 1,
+        p: "10px",
+        borderRadius: `${tokens.radii.md}px`,
         boxShadow: tokens.elevation.e2,
         bgcolor: tokens.surface,
       }}
     >
-      {showLabelsGroup && (
-        <>
-          <Typography sx={captionSx}>Labels</Typography>
+      {(onChange || onFeatureNamesChange) && (
+        <Track>
           {onChange && (
-            <Box sx={{ display: "flex" }}>
-              <ButtonBase
-                onClick={() => onChange("section")}
+            <>
+              <Cell
+                flex
+                active={labelMode === "section"}
                 title="Label sections with their own name"
-                sx={{ ...btn(labelMode === "section"), flex: 1 }}
+                onClick={() => onChange("section")}
               >
                 Section
-              </ButtonBase>
-              <ButtonBase
-                onClick={() => onChange("river")}
+              </Cell>
+              <Cell
+                flex
+                active={labelMode === "river"}
                 title="Label sections with their river's name"
-                sx={{
-                  ...btn(labelMode === "river"),
-                  flex: 1,
-                  borderLeft: rule,
-                }}
+                onClick={() => onChange("river")}
               >
                 River
-              </ButtonBase>
-            </Box>
+              </Cell>
+            </>
           )}
           {onFeatureNamesChange && (
-            <ButtonBase
-              onClick={() => onFeatureNamesChange(!featureNames)}
+            <Cell
+              flex
+              active={!!featureNames}
               title="Show names of rapids, put-ins and other features"
-              sx={{
-                ...btn(!!featureNames),
-                ...(onChange ? { borderTop: rule } : {}),
-              }}
+              onClick={() => onFeatureNamesChange(!featureNames)}
             >
               Features
-            </ButtonBase>
+            </Cell>
           )}
-        </>
+        </Track>
       )}
-      <ButtonBase
-        onClick={() => onSatelliteChange(!satellite)}
-        title="Satellite base map"
-        sx={{
-          ...btn(satellite),
-          ...(showLabelsGroup ? { borderTop: rule } : {}),
-        }}
-      >
-        Satellite
-      </ButtonBase>
+      <Track>
+        <Cell
+          flex
+          active={satellite}
+          title="Satellite base map"
+          onClick={() => onSatelliteChange(!satellite)}
+        >
+          Satellite
+        </Cell>
+      </Track>
     </Box>
   );
 }
