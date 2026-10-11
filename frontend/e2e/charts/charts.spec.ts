@@ -338,6 +338,86 @@ test.describe("gauge coverage", () => {
   });
 });
 
+test.describe("gauge coverage design", () => {
+  test("the legend is a 250px card with the design's type and colours", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name !== "desktop", "the phone folds the legend");
+    await page.goto("/tools/gauge-catalog");
+    const legend = page.getByTestId("gauge-legend");
+    await expect(legend).toBeVisible();
+    expect((await legend.boundingBox())?.width).toBe(250);
+    expect(await computed(legend, "padding")).toBe("12px 14px");
+    const title = legend.getByText("Gauges", { exact: true });
+    expect(await computed(title, "font-size")).toBe("14px");
+    expect(await computed(title, "font-weight")).toBe("700");
+    const label = legend.getByText("Tracked", { exact: true });
+    expect(await computed(label, "font-size")).toBe("14px");
+    expect(await computed(label, "font-weight")).toBe("600");
+    const dots = legend.locator("button > div:first-child");
+    expect(await computed(dots.nth(1), "background-color")).toBe(
+      "rgb(35, 109, 152)",
+    );
+    expect(await computed(dots.nth(2), "background-color")).toBe(
+      "rgb(154, 165, 170)",
+    );
+    expect((await dots.nth(0).boundingBox())?.width).toBe(10);
+  });
+
+  test("on a desktop the map sits in a rounded card inset 12px", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name !== "desktop", "the phone map is edge to edge");
+    await page.goto("/tools/gauge-catalog");
+    const frame = page.getByTestId("gauge-legend").locator("xpath=../..");
+    expect(await computed(frame, "border-top-left-radius")).toBe("16px");
+    const map = await page.locator("canvas.maplibregl-canvas").boundingBox();
+    const inner = await frame.boundingBox();
+    expect(inner?.x).toBe(12);
+    expect(map?.width).toBeLessThanOrEqual(1280 - 24);
+  });
+
+  test("a phone folds the legend to a one-line chip that opens @small", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop", "phone only");
+    await page.goto("/tools/gauge-catalog");
+    const legend = page.getByTestId("gauge-legend");
+    await expect(legend).toBeVisible();
+    const chip = legend.getByRole("button", { name: /Gauges/ });
+    await expect(chip).toBeVisible();
+    expect((await legend.boundingBox())?.width).toBeLessThan(160);
+    await expectTouchTargets(chip);
+    await chip.click();
+    await expect(legend.getByText("Untracked")).toBeVisible();
+    await expectTouchTargets(legend.getByRole("button"));
+    await expectNoHorizontalOverflow(page);
+    await legend.getByRole("button", { name: "Fold the legend" }).click();
+    await expect(legend.getByText("Untracked")).toHaveCount(0);
+  });
+
+  test("a cluster draws only its tracked arcs on a white disc, count in bold", async ({
+    page,
+  }) => {
+    await page.goto("/tools/gauge-catalog");
+    const donuts = page.locator('svg[aria-label$=" gauges"]');
+    await expect(donuts.first()).toBeVisible({ timeout: 20_000 });
+    const greys = await donuts
+      .first()
+      .locator("path, circle")
+      .evaluateAll(
+        (els) => els.filter((e) => e.getAttribute("fill") === "#9aa5aa").length,
+      );
+    expect(greys, "untracked is not drawn as a ring").toBe(0);
+    const disc = donuts.first().locator("circle").first();
+    await expect(disc).toHaveAttribute("fill", "#ffffff");
+    await expect(donuts.first().locator("text")).toHaveAttribute(
+      "font-weight",
+      "700",
+    );
+  });
+});
+
 test.describe("design gaps", () => {
   test("the card sits 12px from the edge and the options chips are 44px", async ({
     page,

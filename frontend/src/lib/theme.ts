@@ -127,8 +127,17 @@ const tokens = {
   // Country borders on the region browse map. Drawn over everything with a
   // pale casing under a dark line, so the border reads on the light base map
   // and on satellite imagery alike.
-  mapCountryBorder: "#101418",
-  mapCountryBorderCasing: "#f2f4f6",
+  mapCountryBorder: "#3a454b",
+  mapCountryBorderCasing: "#ffffff",
+  // The calm base map: warm ground, soft greens, pale water. Rivers and
+  // sections share the pale blue so the teal selection is the one accent.
+  mapGround: "#f3f2ec",
+  mapGreen: "#e3ebd6",
+  mapWater: "#d3e5f0",
+  mapRiver: "#b5d5ec",
+  // Gauge coverage: the tracked share is a deeper blue than the sections.
+  gaugeTracked: "#236d98",
+  gaugeUntracked: "#9aa5aa",
 
   // Region browse layer. Neighbouring regions take different entries so the
   // eye can tell where one ends, the way an atlas colours countries. Okabe

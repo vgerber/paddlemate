@@ -4,8 +4,7 @@ import { theme } from "@/lib/theme";
 const { tokens } = theme;
 
 /** Country borders, drawn over every other region so you always know which
- * country you are looking at. Dash-dot over a white casing, so it is never
- * mistaken for the solid line of a region you can pick. */
+ * country you are looking at: one solid line on a white casing. */
 export default function CountryBorderLayer({
   borders,
 }: {
@@ -17,9 +16,8 @@ export default function CountryBorderLayer({
         id="country-border-casing"
         type="line"
         paint={{
-          "line-color": tokens.surfaceLowest,
+          "line-color": tokens.mapCountryBorderCasing,
           "line-width": 4,
-          "line-opacity": 0.9,
         }}
       />
       <Layer
@@ -27,9 +25,7 @@ export default function CountryBorderLayer({
         type="line"
         paint={{
           "line-color": tokens.mapCountryBorder,
-          "line-width": 1.5,
-          "line-dasharray": [4, 2, 1, 2],
-          "line-opacity": 0.85,
+          "line-width": 1.4,
         }}
       />
       <Layer

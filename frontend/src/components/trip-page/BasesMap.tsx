@@ -110,8 +110,9 @@ export default function BasesMap({
         sx={{
           // Short on a phone, so the bases below it stay in view.
           height: { xs: "min(200px, 40vh)", md: 400 },
-          border: "1px solid",
-          borderColor: "divider",
+          borderRadius: `${theme.tokens.radii.md}px`,
+          boxShadow: theme.tokens.elevation.e1,
+          overflow: "hidden",
           position: "relative",
         }}
       >

@@ -4,6 +4,7 @@ import {
   computed,
   expectNoHorizontalOverflow,
   expectTouchTargets,
+  FIX,
   gotoSection,
 } from "../support/fixture";
 import {
@@ -117,16 +118,84 @@ async function clickAt(page: Page, lngLat: [number, number]) {
 }
 
 test.describe("the base map", () => {
-  test("sections are a clear blue with a white casing, the selected one teal", async ({
+  test("sections are a pale 9px river, the selected one teal 5px on a white 10px casing", async ({
     page,
   }) => {
     await gotoSection(page, "lower");
     await page.waitForFunction(() => window.__paddlemateMap?.loaded());
-    expect(await paint(page, "sections-line", "line-color")).toBe("#2b88c8");
+    expect(await paint(page, "sections-line", "line-color")).toBe("#b5d5ec");
+    expect(await paint(page, "sections-line", "line-width")).toBe(9);
     expect(await paint(page, "sections-line-casing", "line-color")).toBe(WHITE);
     expect(await paint(page, "sections-line-selected", "line-color")).toBe(
       TEAL,
     );
+    expect(await paint(page, "sections-line-selected", "line-width")).toBe(5);
+    expect(
+      await paint(page, "sections-line-selected-casing", "line-color"),
+    ).toBe(WHITE);
+    expect(
+      await paint(page, "sections-line-selected-casing", "line-width"),
+    ).toBe(10);
+  });
+
+  test("the base map is calm at every zoom: warm ground, no capitals, no hatching", async ({
+    page,
+  }) => {
+    await gotoSection(page, "lower");
+    await page.waitForFunction(() => window.__paddlemateMap?.loaded());
+    await page.evaluate(() =>
+      window.__paddlemateMap?.jumpTo({ center: [13, 47], zoom: 5 }),
+    );
+    await expect
+      .poll(() => paint(page, "background", "background-color"))
+      .toBe("#f3f2ec");
+    expect(await layout(page, "label_state", "text-transform")).toBe("none");
+    expect(await layout(page, "label_other", "text-transform")).toBe("none");
+    expect(await layout(page, "landcover_wetland", "visibility")).toBe("none");
+  });
+
+  test("feature labels are 12px bold ink to the right of a small marker, names as written", async ({
+    page,
+  }) => {
+    await gotoSection(page, "lower");
+    await page.waitForFunction(() => window.__paddlemateMap?.loaded());
+    expect(await layout(page, "feature-points-label", "text-anchor")).toBe(
+      "left",
+    );
+    expect(await layout(page, "feature-points-label", "text-size")).toBe(12);
+    expect(await layout(page, "feature-points-label", "text-font")).toEqual([
+      "Noto Sans Bold",
+    ]);
+    expect(await paint(page, "feature-points-circle", "circle-radius")).toBe(
+      3.5,
+    );
+    expect(
+      await paint(page, "feature-points-circle", "circle-stroke-color"),
+    ).toBe(WHITE);
+    const labels = [
+      ...(await sourceFeatures(page, "feature-line-labels")),
+      ...(await sourceFeatures(page, "feature-points")),
+    ].map((f) => f.label ?? "");
+    expect(labels.some((l) => /\s[IV]+[-+]?[IV]*\+?$/.test(l))).toBe(true);
+    expect(labels.filter((l) => l.includes("("))).toEqual([]);
+  });
+
+  test("the compass key is an arrow of our own, 44px, that turns with the map", async ({
+    page,
+  }) => {
+    await gotoSection(page, "lower");
+    await expect(page.locator(".maplibregl-ctrl-compass")).toHaveCount(0);
+    const key = page.getByRole("button", { name: "Reset bearing to north" });
+    await expect(key).toBeVisible();
+    await expectTouchTargets(key);
+  });
+
+  test("the small map markers are 44px to hit", async ({ page }) => {
+    await page.goto("/logs/9201");
+    const markers = page.locator(".maplibregl-marker");
+    await expect(markers.first()).toBeAttached();
+    expect(await markers.count()).toBeGreaterThan(0);
+    await expectTouchTargets(markers);
   });
 
   test("the controls are white floating groups with 44px buttons, in sentence case", async ({
@@ -151,6 +220,8 @@ test.describe("the base map", () => {
     expect(await computed(toggle, "box-shadow")).toBe(E2);
     const buttons = toggle.getByRole("button");
     await expectTouchTargets(buttons);
+    expect(await computed(toggle, "border-top-left-radius")).toBe("14px");
+    expect(await computed(toggle, "padding-top")).toBe("10px");
     const count = await buttons.count();
     for (let i = 0; i < count; i++) {
       expect(await computed(buttons.nth(i), "text-transform")).toBe("none");
@@ -178,7 +249,18 @@ test.describe("the layer toggle", () => {
       expect(river?.height).toBe(44);
       expect(
         await toggle.boundingBox().then((b) => b?.width ?? 0),
-      ).toBeLessThan(200);
+      ).toBeLessThan(320);
+      const sat = await toggle
+        .getByRole("button", { name: "Satellite", exact: true })
+        .boundingBox();
+      expect(sat?.y, "Satellite is its own row").toBeGreaterThan(
+        (section?.y ?? 0) + 40,
+      );
+      await toggle.getByRole("button", { name: "River" }).click();
+      await expect(
+        toggle.getByRole("button", { name: "River" }),
+        "the set cell is a white pill",
+      ).toHaveAttribute("aria-pressed", "true");
     });
   }
 });
@@ -233,11 +315,18 @@ test.describe("regions", () => {
     page,
   }) => {
     await openRegionMap(page);
-    const size = (await layout(page, "region-label", "text-size")) as number;
-    expect(size).toBeLessThanOrEqual(12);
-    expect(await layout(page, "region-label", "text-font")).toEqual([
-      "Noto Sans Regular",
-    ]);
+    const sizes = JSON.stringify(
+      await layout(page, "region-label", "text-size"),
+    );
+    expect(sizes, "12 for a choice, 13 for the picked one").toBe(
+      '["case",["get","picked"],13,12]',
+    );
+    const size = 12;
+    const fonts = JSON.stringify(
+      await layout(page, "region-label", "text-font"),
+    );
+    expect(fonts, "the picked name is bold").toContain("Noto Sans Bold");
+    expect(fonts).toContain("Noto Sans Regular");
     const color = JSON.stringify(
       await paint(page, "region-label", "text-color"),
     );
@@ -275,7 +364,7 @@ test.describe("regions", () => {
     );
   });
 
-  test("valleys are soft bands and the country border is dash-dot over a casing", async ({
+  test("valleys are soft bands and the country border is one solid line over a casing", async ({
     page,
   }) => {
     await openRegionMap(page);
@@ -285,10 +374,15 @@ test.describe("regions", () => {
     expect(await paint(page, "country-border-casing", "line-color")).toBe(
       WHITE,
     );
-    const dash = (await paint(page, "country-border-line", "line-dasharray")) as
-      | number[]
-      | undefined;
-    expect(dash?.length, "dash-dot has four lengths").toBe(4);
+    expect(
+      await paint(page, "country-border-line", "line-dasharray"),
+      "solid",
+    ).toBe(undefined);
+    expect(await paint(page, "country-border-line", "line-width")).toBe(1.4);
+    expect(await paint(page, "country-border-line", "line-color")).toBe(
+      "#3a454b",
+    );
+    expect(await paint(page, "country-border-casing", "line-width")).toBe(4);
     expect(await paint(page, "country-border-label", "text-color")).toBe(INK);
   });
 
@@ -398,6 +492,28 @@ test.describe("the region sheet", () => {
       .toBeGreaterThan(1);
   });
 
+  test("the sheet says how to pick, the map has a 48px search field, and chips are 44px to hit @small", async ({
+    page,
+  }) => {
+    await openRegionMap(page);
+    const sheet = page.getByRole("region", { name: "Regions" });
+    await expect(
+      sheet.getByText("Tap a region on the map, or search one by name."),
+    ).toBeVisible();
+    const field = page.getByRole("textbox", { name: "Search regions" });
+    await expect(field).toBeVisible();
+    const box = await field
+      .locator("xpath=ancestor::div[contains(@class,'MuiInputBase-root')]")
+      .boundingBox();
+    expect(box?.height).toBe(48);
+    expect(box?.y).toBe(12);
+    expect(await computed(field, "font-size")).toBe("16px");
+    await expectTouchTargets(
+      sheet.getByRole("button", { name: "Districts", exact: true }),
+    );
+    await expectNoHorizontalOverflow(page);
+  });
+
   test("a pick shows what it is part of and the ranges the map left out @small", async ({
     page,
   }) => {
@@ -406,8 +522,14 @@ test.describe("the region sheet", () => {
     await expect(
       page
         .getByRole("region", { name: "Regions" })
-        .getByText("AT \u00b7 Beta range"),
+        .getByText("AT \u00b7 Mountain ranges"),
     ).toBeVisible();
+    const name = page
+      .getByRole("region", { name: "Regions" })
+      .getByText(REGIONS.beta.name, { exact: true });
+    expect(await computed(name, "color")).toBe("rgb(14, 116, 144)");
+    expect(await computed(name, "font-size")).toBe("17px");
+    expect(await computed(name, "font-weight")).toBe("700");
     await dragSheetOpen(page);
     const sheet = page.getByRole("dialog", { name: "Regions" });
     await expect(sheet.getByText("Part of")).toBeVisible();
@@ -421,5 +543,80 @@ test.describe("the region sheet", () => {
     await expectNoHorizontalOverflow(page);
     await sheet.getByRole("button", { name: REGIONS.big.name }).first().click();
     await expect(page).toHaveURL(new RegExp(`region=${REGIONS.big.id}`));
+  });
+});
+
+test.describe("the put-in and take-out pins in the log form", () => {
+  test("labels are sentence case, fields 16px and 44px, no monospace, verb by device @small", async ({
+    page,
+  }, info) => {
+    await page.goto(
+      `/logs/new?waterwayId=${FIX.waterway}&sectionId=${FIX.sections.upper}`,
+    );
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByText("Step 2 of 3 · Sections")).toBeVisible();
+    const field = page.getByLabel("Label (optional)").first();
+    await expect(field).toBeVisible();
+    expect(await computed(field, "font-size")).toBe("16px");
+    const box = await field
+      .locator("xpath=ancestor::div[contains(@class,'MuiInputBase-root')]")
+      .boundingBox();
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+    const clear = page.getByRole("button", { name: "Clear Put in" });
+    await expectTouchTargets(clear);
+    await clear.click();
+    const verb = info.project.name === "desktop" ? "Click" : "Tap";
+    const hint = page.getByText(`${verb} the map to set`).first();
+    await expect(hint).toBeVisible();
+    expect(await computed(hint, "font-family")).not.toMatch(/mono/i);
+    const title = page.getByText("Put in", { exact: true }).first();
+    expect(await computed(title, "text-transform")).toBe("none");
+    expect(await computed(title, "letter-spacing")).toBe("normal");
+    await expectNoHorizontalOverflow(page);
+  });
+});
+
+test.describe("embedded maps", () => {
+  test("a log's map shows only the route: no layer card, teal numbered markers, a rounded card", async ({
+    page,
+  }) => {
+    await page.goto("/logs/9201");
+    await expect(
+      page.locator("canvas.maplibregl-canvas").first(),
+    ).toBeAttached();
+    await expect(page.getByTestId("map-layer-toggle")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Zoom in" })).toBeVisible();
+    const framed = await page
+      .locator("canvas.maplibregl-canvas")
+      .first()
+      .evaluate((el) => {
+        for (let n = el.parentElement; n; n = n.parentElement) {
+          const css = getComputedStyle(n);
+          if (css.borderTopLeftRadius === "14px")
+            return css.boxShadow !== "none";
+        }
+        return null;
+      });
+    expect(framed, "a 14px card with a shadow").toBe(true);
+    const marks = page
+      .locator(".maplibregl-marker div div")
+      .filter({ hasText: /^[12]$/ });
+    const n = await marks.count();
+    for (let i = 0; i < n; i++) {
+      expect(await computed(marks.nth(i), "background-color")).toBe(
+        "rgb(14, 116, 144)",
+      );
+    }
+  });
+
+  test("a wizard's map has no layer card either", async ({ page }) => {
+    await page.goto(`/waterways/suggest-section?waterway=${FIX.waterway}`);
+    await page.getByLabel("Name").first().fill("Embedded Spec");
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByText("Step 2 of 3 · Section")).toBeVisible();
+    await expect(
+      page.locator("canvas.maplibregl-canvas").first(),
+    ).toBeAttached();
+    await expect(page.getByTestId("map-layer-toggle")).toHaveCount(0);
   });
 });

@@ -57,13 +57,13 @@ function featureDifficulty(f: Feature): string | undefined {
     | undefined;
 }
 
-/** Map label: "Name (III+)", name or difficulty alone, or "" when neither.
+/** Map label: "Name III+", name or difficulty alone, or "" when neither.
  * Features have no untagged name, so the first stored name is the fallback
  * when no translation matches the reader's language. */
 function featureLabel(f: Feature, language: string): string {
   const name = localizedName(f.names[0]?.name ?? "", f.names, language);
   const difficulty = featureDifficulty(f);
-  if (name) return difficulty ? `${name} (${difficulty})` : name;
+  if (name) return difficulty ? `${name} ${difficulty}` : name;
   return difficulty ?? "";
 }
 
