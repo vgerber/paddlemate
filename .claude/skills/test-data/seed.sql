@@ -604,6 +604,280 @@ INSERT INTO trip_stay_candidate_votes (candidate_id, trip_id, user_id, vote) VAL
 UPDATE descents SET trip_id = 9001 WHERE id IN (9201, 9203, 9205, 9207, 9208);
 
 
+-- History, review states, inbox and the rest of the states an empty list
+-- would hide. Everything below is for looking at rather than for the other
+-- fixtures to lean on.
+
+-- A second import authority besides Rivermap (which a migration creates and
+-- cleanup leaves alone): a regional guide-book source with a licence, so the
+-- Sources tab shows a credited source next to a bare one.
+INSERT INTO sources (id, name, short_name, website, country_code, license_name, license_url) VALUES
+  ('9903', 'Tirol Canoe Association river guide', 'TCA', 'https://example.org/tca', 'AT',
+   'CC BY-SA 4.0', 'https://creativecommons.org/licenses/by-sa/4.0/');
+
+-- The current state the history below leads up to.
+UPDATE waterways SET description = 'A synthetic river for testing: seven short runs from easy to hard.'
+WHERE id = 9001;
+UPDATE water_sections SET country = 'AT', regions = ARRAY['Test Valley'],
+  description = 'Steady class III with a technical weir section; portage the weir on the left.'
+WHERE id = 9102;
+
+-- Proposals in the remaining states, with original_data so the before/after
+-- view has both sides. Submitters and reviewers are spread over the crew.
+INSERT INTO proposals (id, entity_type, entity_id, operation, proposed_data, original_data,
+                       status, submitted_by, reviewed_by, review_note, created_at, updated_at)
+VALUES
+  -- Pending feature update that touches many kinds of field at once: a plain
+  -- string (name, description), a nested metadata text (difficulty), a nested
+  -- number (length_km) and a geometry move.
+  (9710, 'feature', 9523, 'update', jsonb_build_object(
+     'section_id', 9102, 'feature_type', 'whitewater',
+     'name', 'Lower Test Rapids', 'description', 'The whole gorge reads as one long rapid.',
+     'metadata', jsonb_build_object('difficulty', 'IV', 'length_km', 1.8),
+     'location', jsonb_build_object('type', 'LineString', 'coordinates', jsonb_build_array(
+       jsonb_build_array(11.0105, 47.0105), jsonb_build_array(11.0215, 47.0215)))
+   ), jsonb_build_object(
+     'id', 9523, 'section_id', 9102, 'feature_type', 'whitewater',
+     'metadata', jsonb_build_object('difficulty', 'III', 'length_km', 1.5),
+     'location', jsonb_build_object('type', 'LineString', 'coordinates', jsonb_build_array(
+       jsonb_build_array(11.01, 47.01), jsonb_build_array(11.02, 47.02)))
+   ), 'pending', :'mara', NULL, NULL, NOW() - INTERVAL '5 hours', NOW() - INTERVAL '5 hours'),
+
+  -- Pending section update with no votes: a plain string, a list (regions),
+  -- numbers (river km) and a geometry move.
+  (9711, 'water_section', 9102, 'update', jsonb_build_object(
+     'waterway_id', 9001, 'name', 'Lower Test Canyon',
+     'description', 'Steady class III with a technical weir section; scout the weir from river left.',
+     'regions', jsonb_build_array('Test Valley', 'Test State', 'Test Alps'), 'country', 'AT',
+     'river_km_start', 4.2, 'river_km_end', 9.6,
+     'location', jsonb_build_object('type', 'LineString', 'coordinates', jsonb_build_array(
+       jsonb_build_array(11.01, 47.01), jsonb_build_array(11.016, 47.014), jsonb_build_array(11.02, 47.02)))
+   ), jsonb_build_object(
+     'id', 9102, 'waterway_id', 9001, 'name', 'Lower Test',
+     'description', 'Steady class III with a technical weir section; portage the weir on the left.',
+     'regions', jsonb_build_array('Test Valley'), 'country', 'AT',
+     'river_km_start', NULL, 'river_km_end', NULL,
+     'location', jsonb_build_object('type', 'LineString', 'coordinates', jsonb_build_array(
+       jsonb_build_array(11.01, 47.01), jsonb_build_array(11.02, 47.02)))
+   ), 'pending', :'tobi', NULL, NULL, NOW() - INTERVAL '1 day 3 hours', NOW() - INTERVAL '1 day 3 hours'),
+
+  -- Pending delete: the strainer was cut out last weekend (see note 9902).
+  (9712, 'feature', 9527, 'delete', jsonb_build_object('section_id', 9102),
+   jsonb_build_object(
+     'id', 9527, 'section_id', 9102, 'feature_type', 'strainer', 'metadata', '{}'::jsonb,
+     'location', jsonb_build_object('type', 'Point', 'coordinates', jsonb_build_array(11.016, 47.016))
+   ), 'pending', :'aoife', NULL, NULL, NOW() - INTERVAL '2 days 6 hours', NOW() - INTERVAL '2 days 6 hours'),
+
+  -- Pending river update: no geometry, a long description replaced.
+  (9715, 'waterway', 9001, 'update', jsonb_build_object(
+     'name', 'Test River',
+     'description', 'A synthetic river for testing: seven short runs from easy to hard, with a gauge and a weir.'
+   ), jsonb_build_object('id', 9001, 'waterway_type', 'river', 'name', 'Test River',
+     'description', 'A synthetic river for testing: seven short runs from easy to hard.'
+   ), 'pending', :'jonas', NULL, NULL, NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days'),
+
+  -- Rejected update with a review note: a downgrade the reviewer disagreed with.
+  (9713, 'feature', 9526, 'update', jsonb_build_object(
+     'section_id', 9102, 'feature_type', 'weir',
+     'metadata', jsonb_build_object('difficulty', 'II'),
+     'name', 'Altes Wehr (easy)'
+   ), jsonb_build_object('id', 9526, 'section_id', 9102, 'feature_type', 'weir', 'metadata', '{}'::jsonb,
+     'location', jsonb_build_object('type', 'Point', 'coordinates', jsonb_build_array(11.015, 47.015))
+   ), 'rejected', :'jonas', :'vincent',
+   'The weir has a sticky stopper at this level, so it is not a II. Add a note instead.',
+   NOW() - INTERVAL '7 days', NOW() - INTERVAL '6 days 20 hours'),
+
+  -- Approved section update: what the history of Lower Test links to.
+  (9714, 'water_section', 9102, 'update', jsonb_build_object(
+     'waterway_id', 9001, 'name', 'Lower Test',
+     'description', 'Steady class III with a technical weir section; portage the weir on the left.'
+   ), jsonb_build_object('id', 9102, 'waterway_id', 9001, 'name', 'Lower Test',
+     'description', NULL, 'regions', jsonb_build_array('Test Valley'), 'country', 'AT'
+   ), 'approved', :'mara', :'vincent', 'Good description, matches what I saw.',
+   NOW() - INTERVAL '21 days', NOW() - INTERVAL '20 days'),
+
+  -- Approved feature update: Slot Machine is a III+ (history of 9524).
+  (9717, 'feature', 9524, 'update', jsonb_build_object(
+     'section_id', 9102, 'feature_type', 'rapid',
+     'metadata', jsonb_build_object('difficulty', 'III+')
+   ), jsonb_build_object('id', 9524, 'section_id', 9102, 'feature_type', 'rapid',
+     'metadata', jsonb_build_object('difficulty', 'III')
+   ), 'approved', :'aoife', :'vincent', NULL,
+   NOW() - INTERVAL '14 days', NOW() - INTERVAL '13 days'),
+
+  -- Approved delete of a feature that is gone (history of 9595).
+  (9718, 'feature', 9595, 'delete', jsonb_build_object('section_id', 9102),
+   jsonb_build_object('id', 9595, 'section_id', 9102, 'feature_type', 'strainer', 'metadata', '{}'::jsonb,
+     'location', jsonb_build_object('type', 'Point', 'coordinates', jsonb_build_array(11.0135, 47.0138))
+   ), 'approved', :'tobi', :'vincent', 'Confirmed gone after the spring flood.',
+   NOW() - INTERVAL '4 days', NOW() - INTERVAL '3 days');
+
+-- Tallies that differ: 9710 is split (2 for, 1 against), 9712 is clearly
+-- for (4), 9713 clearly against (3), 9711 and 9715 have no votes at all.
+INSERT INTO proposal_votes (proposal_id, user_id, vote) VALUES
+  (9710, :'tobi', 1), (9710, :'jonas', -1), (9710, :'aoife', 1),
+  (9712, :'vincent', 1), (9712, :'mara', 1), (9712, :'tobi', 1), (9712, :'jonas', 1),
+  (9713, :'vincent', -1), (9713, :'mara', -1), (9713, :'tobi', -1);
+
+-- One note in every category on Lower Test (9102), by different people, so
+-- the thread shows every badge. 9906 above is the permanent hazard.
+INSERT INTO comments (id, entity_type, entity_id, body, category, status, author_id, created_at, location)
+VALUES
+  (9907, 'water_section', 9102, 'Fresh tree across the right channel below Big Hole, go left.',
+   'danger_temporary', 'ok', :'mara', NOW() - INTERVAL '4 hours', ST_SetSRID(ST_MakePoint(11.0135, 47.0137), 4326)),
+  (9908, 'water_section', 9102, 'The old strainer is gone after the spring flood, the line is open again.',
+   'danger_cleared', 'ok', :'tobi', NOW() - INTERVAL '3 days', NULL),
+  (9909, 'water_section', 9102, 'Shuttle takes 25 minutes, leave a car at the bridge take-out.',
+   'logistics', 'ok', :'aoife', NOW() - INTERVAL '5 days', NULL),
+  (9910, 'water_section', 9102, 'At 85 cm the weir is a clean boof on river left.',
+   'current_conditions', 'ok', :'vincent', NOW() - INTERVAL '2 days', NULL),
+  (9911, 'water_section', 9102, 'No boating on weekends from May to June (fish spawning).',
+   'regulations', 'ok', :'jonas', NOW() - INTERVAL '12 days', NULL),
+  (9912, 'water_section', 9102, 'Urgent: log jam fully blocks the take-out eddy, do not enter the last bend.',
+   'urgent', 'ok', :'mara', NOW() - INTERVAL '90 minutes', ST_SetSRID(ST_MakePoint(11.0195, 47.0195), 4326)),
+  (9913, 'water_section', 9102, 'Gauge reads 10 cm too high since the sensor swap.',
+   'calibration', 'outdated', :'tobi', NOW() - INTERVAL '30 days', NULL);
+
+-- History. Rivermap imports have no actor; later steps name who made them.
+-- Parents are plain ids (no foreign keys), as in the real table. Feature
+-- 9595 is gone from the features table on purpose: its history stays
+-- readable at /waterways/9001/sections/9102/features/9595/history.
+INSERT INTO entity_history
+  (entity_kind, entity_id, waterway_id, section_id, kind, actor_id, source_id,
+   proposal_id, reviewer_id, changes, at)
+SELECT v.entity_kind, v.entity_id, v.waterway_id, v.section_id, v.kind, v.actor_id, v.source_id,
+       v.proposal_id::bigint, v.reviewer_id, v.changes::jsonb, NOW() - v.ago::interval
+FROM (VALUES
+  -- River 9001: imported, then described by Mara, then reworded by Vincent.
+  ('waterway', 9001, 9001, NULL::bigint, 'imported', NULL::varchar, 'import:rivermap', NULL, NULL::varchar,
+   '[{"field":"name","before":null,"after":"Test River"},{"field":"description","before":null,"after":"Test river"}]', '120 days'),
+  ('waterway', 9001, 9001, NULL, 'edited', :'mara', NULL, NULL, NULL,
+   '[{"field":"description","before":"Test river","after":"A synthetic river for testing."}]', '45 days'),
+  ('waterway', 9001, 9001, NULL, 'edited', :'vincent', NULL, NULL, NULL,
+   '[{"field":"description","before":"A synthetic river for testing.","after":"A synthetic river for testing: seven short runs from easy to hard."}]', '10 days'),
+
+  -- Upper Test 9101: imported, then renamed by Tobias.
+  ('section', 9101, 9001, 9101, 'imported', NULL, 'import:rivermap', NULL, NULL,
+   '[{"field":"name","before":null,"after":"Test Upper"},{"field":"location","before":null,"after":null}]', '120 days'),
+  ('section', 9101, 9001, 9101, 'edited', :'tobi', NULL, NULL, NULL,
+   '[{"field":"name","before":"Test Upper","after":"Upper Test"}]', '30 days'),
+
+  -- Lower Test 9102: every step kind a section can have bar a delete.
+  ('section', 9102, 9001, 9102, 'imported', NULL, 'import:rivermap', NULL, NULL,
+   '[{"field":"name","before":null,"after":"Lower Test Run"},{"field":"location","before":null,"after":null}]', '120 days'),
+  ('section', 9102, 9001, 9102, 'edited', :'vincent', NULL, NULL, NULL,
+   '[{"field":"country","before":null,"after":"AT"},{"field":"regions","before":null,"after":"Test Valley"}]', '90 days'),
+  ('section', 9102, 9001, 9102, 'edited', :'mara', NULL, NULL, NULL,
+   '[{"field":"name","before":"Lower Test Run","after":"Lower Test"},{"field":"location","before":null,"after":null}]', '60 days'),
+  ('section', 9102, 9001, 9102, 'proposal_accepted', :'mara', NULL, 9714, :'vincent',
+   '[{"field":"description","before":null,"after":"Steady class III with a technical weir section; portage the weir on the left."}]', '20 days'),
+  ('section', 9103, 9001, 9103, 'created', :'aoife', NULL, NULL, NULL,
+   '[{"field":"name","before":null,"after":"Empty Test"}]', '50 days'),
+
+  -- Features on Lower Test. The whitewater zone: imported, then re-graded
+  -- and its extent moved by Vincent.
+  ('feature', 9523, 9001, 9102, 'imported', NULL, 'import:rivermap', NULL, NULL,
+   '[{"field":"feature_type","before":null,"after":"whitewater"},{"field":"difficulty","before":null,"after":"II"},{"field":"length_km","before":null,"after":"1.5"}]', '120 days'),
+  ('feature', 9523, 9001, 9102, 'edited', :'vincent', NULL, NULL, NULL,
+   '[{"field":"difficulty","before":"II","after":"III"},{"field":"location","before":null,"after":null}]', '70 days'),
+  -- Slot Machine: imported, named, graded through a proposal, moved, ranged.
+  ('feature', 9524, 9001, 9102, 'imported', NULL, 'import:rivermap', NULL, NULL,
+   '[{"field":"feature_type","before":null,"after":"rapid"},{"field":"difficulty","before":null,"after":"III"}]', '120 days'),
+  ('feature', 9524, 9001, 9102, 'edited', :'mara', NULL, NULL, NULL,
+   '[{"field":"name","before":null,"after":"Slot Machine"}]', '80 days'),
+  ('feature', 9524, 9001, 9102, 'proposal_accepted', :'aoife', NULL, 9717, :'vincent',
+   '[{"field":"difficulty","before":"III","after":"III+"}]', '13 days'),
+  ('feature', 9524, 9001, 9102, 'edited', :'tobi', NULL, NULL, NULL,
+   '[{"field":"location","before":null,"after":null},{"field":"description","before":null,"after":"Move left of the pillow at the top."}]', '8 days'),
+  ('feature', 9524, 9001, 9102, 'edited', :'vincent', '9901', NULL, NULL,
+   '[{"field":"water_range_9401","before":null,"after":"70 / 90 / 110"}]', '6 days'),
+  -- Big Hole and the other guide-book imports, credited to the second source.
+  ('feature', 9525, 9001, 9102, 'imported', NULL, '9903', NULL, NULL,
+   '[{"field":"feature_type","before":null,"after":"hole"}]', '100 days'),
+  ('feature', 9525, 9001, 9102, 'edited', :'mara', NULL, NULL, NULL,
+   '[{"field":"name","before":null,"after":"Big Hole"}]', '80 days'),
+  ('feature', 9526, 9001, 9102, 'created', :'tobi', NULL, NULL, NULL,
+   '[{"field":"feature_type","before":null,"after":"weir"}]', '50 days'),
+  ('feature', 9526, 9001, 9102, 'edited', :'vincent', NULL, NULL, NULL,
+   '[{"field":"name","before":null,"after":"Altes Wehr"}]', '40 days'),
+  ('feature', 9527, 9001, 9102, 'created', :'vincent', NULL, NULL, NULL,
+   '[{"field":"feature_type","before":null,"after":"strainer"}]', '30 days'),
+  ('feature', 9528, 9001, 9102, 'imported', NULL, '9903', NULL, NULL,
+   '[{"field":"feature_type","before":null,"after":"portage"}]', '100 days'),
+  ('feature', 9529, 9001, 9102, 'imported', NULL, '9903', NULL, NULL,
+   '[{"field":"feature_type","before":null,"after":"bridge"}]', '100 days'),
+  ('feature', 9521, 9001, 9102, 'imported', NULL, 'import:rivermap', NULL, NULL,
+   '[{"field":"feature_type","before":null,"after":"put_in"}]', '120 days'),
+  ('feature', 9522, 9001, 9102, 'imported', NULL, 'import:rivermap', NULL, NULL,
+   '[{"field":"feature_type","before":null,"after":"take_out"}]', '120 days'),
+
+  -- 9595 was a strainer that has since been deleted: created by Jonas,
+  -- described by Tobias, removed through an accepted delete proposal.
+  ('feature', 9595, 9001, 9102, 'created', :'jonas', NULL, NULL, NULL,
+   '[{"field":"feature_type","before":null,"after":"strainer"}]', '45 days'),
+  ('feature', 9595, 9001, 9102, 'edited', :'tobi', NULL, NULL, NULL,
+   '[{"field":"description","before":null,"after":"Willow across the left channel."}]', '35 days'),
+  ('feature', 9595, 9001, 9102, 'deleted', :'tobi', NULL, 9718, :'vincent',
+   '[]', '3 days')
+) AS v(entity_kind, entity_id, waterway_id, section_id, kind, actor_id, source_id,
+       proposal_id, reviewer_id, changes, ago);
+
+-- More logs on one trip day. Yesterday carries four runs on three rivers by
+-- four people, so a day with many entries and several groups has something
+-- to render; the Oetztal week already has the day before with two rivers.
+INSERT INTO descents (id, user_id, start_time, end_time, visibility_scope, name, trip_id,
+                      put_in_lat, put_in_lon, take_out_lat, take_out_lon)
+SELECT v.id, v.user_id,
+       date_trunc('day', NOW()) - INTERVAL '1 day' + v.at::interval,
+       date_trunc('day', NOW()) - INTERVAL '1 day' + v.at::interval + v.duration::interval,
+       'public', v.name, 9001, v.pi_lat, v.pi_lon, v.to_lat, v.to_lon
+FROM (VALUES
+  (9209, :'tobi',    '9 hours',  '1 hour',     'Morning Upper lap',         47.0,    11.0,   47.01,   11.01),
+  (9210, :'mara',    '10 hours', '90 minutes', 'Lower before the crowds',   47.01,   11.01,  47.02,   11.02),
+  (9211, :'aoife',   '13 hours', '2 hours',    'Tumpen after lunch',        47.15,   10.911, 47.18,   10.91),
+  (9212, :'vincent', '16 hours', '1 hour',     'Evening Imster Schlucht',   47.2029, 10.6812, 47.2152, 10.78)
+) AS v(id, user_id, at, duration, name, pi_lat, pi_lon, to_lat, to_lon);
+
+INSERT INTO descent_sections (descent_id, section_id, sort_order) VALUES
+  (9209, 9101, 1), (9210, 9102, 1), (9211, 9114, 1), (9212, 9151, 1);
+
+-- The bell. Members must have joined before an event for it to be listed,
+-- so the fixture members joined well before the oldest event.
+UPDATE trip_members SET created_at = NOW() - INTERVAL '20 days'
+WHERE trip_id IN (9001, 9002);
+
+-- What happened on the Oetztal week (9001), seen from Vincent: events by
+-- others only. Vincent has read up to 26 hours ago, so the first five are
+-- unread (dot), the next three are read, and the rest form an older group.
+INSERT INTO trip_events (trip_id, actor_id, kind, summary, created_at) VALUES
+  (9001, :'tobi',  'attendance_changed', jsonb_build_object('arrival', (NOW() - INTERVAL '1 day')::date, 'arrival_time', '22:45'), NOW() - INTERVAL '25 minutes'),
+  (9001, :'mara',  'stay_changed',       jsonb_build_object('name', 'Gasthof Post'),     NOW() - INTERVAL '2 hours'),
+  (9001, :'aoife', 'member_joined',      '{}'::jsonb,                                    NOW() - INTERVAL '5 hours'),
+  (9001, :'tobi',  'candidate_proposed', jsonb_build_object('name', 'Camping Aufenfeld'), NOW() - INTERVAL '9 hours'),
+  (9001, :'mara',  'log_linked',         jsonb_build_object('name', 'Public lower-only run'), NOW() - INTERVAL '20 hours'),
+  (9001, :'mara',  'watch_list_changed', jsonb_build_object('name', 'Gasthof Post'),     NOW() - INTERVAL '30 hours'),
+  (9001, :'tobi',  'stay_added',         jsonb_build_object('name', 'Haus Pitztal'),     NOW() - INTERVAL '2 days'),
+  (9001, :'mara',  'candidate_proposed', jsonb_build_object('name', 'Haus Wildspitze'),  NOW() - INTERVAL '3 days'),
+  (9001, :'mara',  'member_joined',      jsonb_build_object('username', 'tobi'),         NOW() - INTERVAL '6 days'),
+  (9001, :'mara',  'member_removed',     jsonb_build_object('username', 'jonas'),        NOW() - INTERVAL '8 days'),
+  (9001, :'mara',  'trip_changed',       '{}'::jsonb,                                    NOW() - INTERVAL '10 days'),
+  (9001, :'tobi',  'stay_removed',       jsonb_build_object('name', 'Camping Aufenberg'), NOW() - INTERVAL '12 days'),
+  (9001, :'aoife', 'attendance_changed', jsonb_build_object('departure', (NOW() + INTERVAL '2 days')::date), NOW() - INTERVAL '14 days'),
+  -- Not listed for Vincent: a vote (live only), his own change, and a trip
+  -- he is not on.
+  (9001, :'mara',    'candidate_voted',  jsonb_build_object('name', 'Haus Wildspitze'),  NOW() - INTERVAL '1 hour'),
+  (9001, :'vincent', 'stay_added',       jsonb_build_object('name', 'Gasthof Post'),     NOW() - INTERVAL '4 days'),
+  (9002, :'mara',    'stay_added',       jsonb_build_object('name', 'Kamp Korita'),      NOW() - INTERVAL '2 days'),
+  -- For Mara's own bell: two changes of Vincent's, one after her read mark.
+  (9001, :'vincent', 'log_linked',       jsonb_build_object('name', 'Wellerbruecke lap'), NOW() - INTERVAL '6 hours'),
+  (9001, :'vincent', 'watch_list_changed', jsonb_build_object('name', 'Camping Oetztal Arena'), NOW() - INTERVAL '7 days');
+
+INSERT INTO notification_reads (user_id, read_until) VALUES
+  (:'vincent', NOW() - INTERVAL '26 hours'),
+  (:'mara',    NOW() - INTERVAL '5 days')
+ON CONFLICT (user_id) DO UPDATE SET read_until = EXCLUDED.read_until;
+
+
 -- The explicit 9xxx ids above bypass the id sequences. Bump them past the
 -- fixture range so rows created through the app get higher ids - otherwise
 -- they sort before the fixture rows (breaking "first range wins" defaults)
