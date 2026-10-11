@@ -908,6 +908,74 @@ async fn sources_view_can_be_scoped_to_one_section(pool: PgPool) {
 }
 
 #[sqlx::test]
+async fn a_proposal_carries_the_submitters_note_into_its_history_step(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+
+    // Too long: rejected before anything is stored.
+    let r = call(
+        &app,
+        Method::POST,
+        "/waterways",
+        Who::User("mara-1"),
+        Some(json!({ "name": "Lech", "proposal_note": "x".repeat(501) })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::BAD_REQUEST, "{}", r.body);
+    assert_eq!(r.body["error"]["target"], "proposal_note");
+    let stored: i64 = sqlx::query_scalar("SELECT count(*) FROM proposals")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(stored, 0);
+
+    let r = call(
+        &app,
+        Method::POST,
+        "/waterways",
+        Who::User("mara-1"),
+        Some(json!({ "name": "Lech", "proposal_note": "  Paddled it last week  " })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::ACCEPTED, "{}", r.body);
+    assert_eq!(r.body["submitter_note"], "Paddled it last week");
+    let pid = r.body["id"].as_i64().unwrap();
+    // The note is not part of the proposed data.
+    assert!(r.body["proposed_data"].get("proposal_note").is_none());
+
+    let r = get(&app, &format!("/proposals/{pid}")).await;
+    assert_eq!(r.body["submitter_note"], "Paddled it last week");
+    let r = get(&app, "/proposals").await;
+    assert_eq!(r.body[0]["submitter_note"], "Paddled it last week");
+
+    call(
+        &app,
+        Method::PATCH,
+        &format!("/proposals/{pid}"),
+        Who::Admin,
+        Some(json!({ "status": "approved" })),
+    )
+    .await;
+    let w: i64 = sqlx::query_scalar("SELECT id FROM waterways WHERE name = 'Lech'")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    let h = get(&app, &format!("/waterways/{w}/history")).await;
+    assert_eq!(h.body["items"][0]["proposal_note"], "Paddled it last week");
+
+    // No note, no field value.
+    let r = call(
+        &app,
+        Method::POST,
+        "/waterways",
+        Who::User("mara-1"),
+        Some(json!({ "name": "Isar" })),
+    )
+    .await;
+    assert!(r.body["submitter_note"].is_null());
+}
+
+#[sqlx::test]
 async fn the_backfill_gives_old_rows_a_first_step(pool: PgPool) {
     people(&pool).await;
     // Rows as they were before history existed.

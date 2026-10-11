@@ -8,6 +8,7 @@ use axum::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::models::proposal::{Proposable, clean_note};
 use crate::{
     doc_fn,
     error::{ApiError, ErrorResponse},
@@ -189,11 +190,16 @@ pub struct CreateWaterwayBody {
 pub async fn create_waterway(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Json(body): Json<CreateWaterwayBody>,
+    Json(Proposable { body, proposal_note }): Json<Proposable<CreateWaterwayBody>>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
         None => return ApiError::unauthorized("Authentication required").into_response(),
+    };
+
+    let note = match clean_note(proposal_note) {
+        Ok(note) => note,
+        Err(err) => return err.into_response(),
     };
 
     // Reject duplicates up front (case-insensitive) for both the admin and
@@ -238,6 +244,7 @@ pub async fn create_waterway(
         "create",
         data,
         token.user_id(),
+        note.as_deref(),
     )
     .await
     {
@@ -269,11 +276,16 @@ pub async fn update_waterway(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path(waterway_id): Path<WaterwayId>,
-    Json(body): Json<UpdateWaterwayBody>,
+    Json(Proposable { body, proposal_note }): Json<Proposable<UpdateWaterwayBody>>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
         None => return ApiError::unauthorized("Authentication required").into_response(),
+    };
+
+    let note = match clean_note(proposal_note) {
+        Ok(note) => note,
+        Err(err) => return err.into_response(),
     };
 
     if token.is_server_admin() {
@@ -304,6 +316,7 @@ pub async fn update_waterway(
         "update",
         data,
         token.user_id(),
+        note.as_deref(),
     )
     .await
     {
@@ -357,6 +370,7 @@ pub async fn delete_waterway(
         "delete",
         serde_json::json!({}),
         token.user_id(),
+        None,
     )
     .await
     {

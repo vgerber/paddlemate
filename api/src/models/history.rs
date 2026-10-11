@@ -90,6 +90,8 @@ pub struct HistoryStep {
     pub source: Option<HistorySource>,
     /// Set when the step is the outcome of a proposal
     pub proposal_id: Option<i64>,
+    /// The submitter's note on that proposal, if they left one
+    pub proposal_note: Option<String>,
     pub reviewer: Option<HistoryUser>,
     pub changes: Vec<HistoryChange>,
 }

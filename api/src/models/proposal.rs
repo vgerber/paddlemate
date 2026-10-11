@@ -64,6 +64,9 @@ pub struct Proposal {
     pub reviewed_by_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub review_note: Option<String>,
+    /// The submitter's own note on why they propose this, if they gave one
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub submitter_note: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub upvotes: i64,
@@ -86,4 +89,45 @@ pub struct ReviewRequest {
 pub struct VoteRequest {
     /// 1 for upvote, -1 for downvote
     pub vote: i16,
+}
+
+/// Longest submitter note, in characters.
+pub const MAX_NOTE_CHARS: usize = 500;
+
+/// A change body that may carry the submitter's note. The note is kept with
+/// the proposal when the caller is not an admin, and ignored when the change
+/// is applied directly.
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct Proposable<T> {
+    #[serde(flatten)]
+    pub body: T,
+    /// Optional note for the reviewer (max 500 characters)
+    pub proposal_note: Option<String>,
+}
+
+/// Trim a submitter note; blank means none. Too long is a validation error.
+pub fn clean_note(raw: Option<String>) -> Result<Option<String>, crate::error::ApiError> {
+    let Some(raw) = raw else { return Ok(None) };
+    let note = raw.trim();
+    if note.chars().count() > MAX_NOTE_CHARS {
+        return Err(crate::error::ApiError::validation(format!(
+            "proposal_note must be at most {MAX_NOTE_CHARS} characters"
+        ))
+        .with_target("proposal_note"));
+    }
+    Ok((!note.is_empty()).then(|| note.to_owned()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn notes_are_trimmed_and_bounded() {
+        assert_eq!(clean_note(None).unwrap(), None);
+        assert_eq!(clean_note(Some("  ".into())).unwrap(), None);
+        assert_eq!(clean_note(Some(" hi ".into())).unwrap(), Some("hi".into()));
+        assert!(clean_note(Some("a".repeat(MAX_NOTE_CHARS))).is_ok());
+        assert!(clean_note(Some("a".repeat(MAX_NOTE_CHARS + 1))).is_err());
+    }
 }

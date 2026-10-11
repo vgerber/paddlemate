@@ -42,6 +42,7 @@ fn step(row: &PgRow) -> HistoryStep {
             .is_some()
             .then(|| source(row)),
         proposal_id: row.get("proposal_id"),
+        proposal_note: row.get("proposal_note"),
         reviewer: user(row, "reviewer_user_id", "reviewer_name"),
         changes: serde_json::from_value::<Vec<HistoryChange>>(changes).unwrap_or_default(),
     }
@@ -92,11 +93,12 @@ pub async fn list_steps(
                 s.id AS source_id, s.name AS source_name, \
                 COALESCE(s.short_name, s.name) AS source_short_name, \
                 s.website AS source_website, s.license_name AS source_license_name, \
-                s.license_url AS source_license_url \
+                s.license_url AS source_license_url, pr.submitter_note AS proposal_note \
          FROM entity_history h \
          LEFT JOIN users au ON au.id = h.actor_id \
          LEFT JOIN users ru ON ru.id = h.reviewer_id \
          LEFT JOIN sources s ON s.id = h.source_id \
+         LEFT JOIN proposals pr ON pr.id = h.proposal_id \
          WHERE h.entity_kind = $1 AND h.entity_id = $2 AND h.waterway_id = $3 \
            AND h.section_id IS NOT DISTINCT FROM $4 \
          ORDER BY h.at, h.id \

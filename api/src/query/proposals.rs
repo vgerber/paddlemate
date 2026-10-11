@@ -89,6 +89,7 @@ fn row_to_proposal(row: &PgRow) -> Proposal {
         reviewed_by: row.get("reviewed_by"),
         reviewed_by_name: row.try_get("reviewed_by_name").ok().flatten(),
         review_note: row.get("review_note"),
+        submitter_note: row.get("submitter_note"),
         created_at: row.get("created_at"),
         updated_at: row.get("updated_at"),
         upvotes: 0,
@@ -123,7 +124,7 @@ fn row_to_proposal_full(row: &PgRow) -> Proposal {
 
 /// Base column list used in RETURNING clauses (no aggregates).
 const RETURNING_COLS: &str = "id, entity_type, entity_id, operation, proposed_data, submitted_by, \
-    original_data, status, reviewed_by, review_note, created_at, updated_at";
+    original_data, status, reviewed_by, review_note, submitter_note, created_at, updated_at";
 
 /// Snapshot the current state of an entity row as JSON, for use as original_data.
 /// Returns None if the entity doesn't exist or the entity_type is unrecognised.
@@ -220,6 +221,7 @@ pub async fn insert_proposal(
     operation: &str,
     proposed_data: Value,
     submitted_by: &str,
+    submitter_note: Option<&str>,
 ) -> Result<Proposal, sqlx::Error> {
     let original_data = if matches!(operation, "update" | "delete") {
         if let Some(eid) = entity_id {
@@ -232,8 +234,8 @@ pub async fn insert_proposal(
     };
 
     let row = sqlx::query(&format!(
-        r#"INSERT INTO proposals (entity_type, entity_id, operation, proposed_data, original_data, submitted_by)
-           VALUES ($1, $2, $3, $4, $5, $6)
+        r#"INSERT INTO proposals (entity_type, entity_id, operation, proposed_data, original_data, submitted_by, submitter_note)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
            RETURNING {RETURNING_COLS}"#,
     ))
     .bind(entity_type)
@@ -242,6 +244,7 @@ pub async fn insert_proposal(
     .bind(proposed_data)
     .bind(original_data)
     .bind(submitted_by)
+    .bind(submitter_note)
     .fetch_one(db)
     .await?;
 
@@ -261,6 +264,7 @@ pub async fn list_proposals(
     let rows = sqlx::query(
         r#"SELECT p.id, p.entity_type, p.entity_id, p.operation, p.proposed_data,
                   p.submitted_by, p.original_data, p.status, p.reviewed_by, p.review_note,
+                  p.submitter_note,
                   p.created_at, p.updated_at,
                   su.username AS submitted_by_name, ru.username AS reviewed_by_name,
                   COALESCE((
@@ -335,6 +339,7 @@ pub async fn get_proposal(
     let row = sqlx::query(
         r#"SELECT p.id, p.entity_type, p.entity_id, p.operation, p.proposed_data,
                   p.submitted_by, p.original_data, p.status, p.reviewed_by, p.review_note,
+                  p.submitter_note,
                   p.created_at, p.updated_at,
                   su.username AS submitted_by_name, ru.username AS reviewed_by_name,
                   COALESCE((
