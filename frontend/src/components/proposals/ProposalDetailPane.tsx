@@ -250,12 +250,6 @@ export default function ProposalDetailPane({
           ))}
         </Box>
       )}
-
-      {/* Footer */}
-      <Typography variant="caption" color="text.secondary">
-        Submitted by {proposal.submitted_by} ·{" "}
-        {new Date(proposal.created_at).toLocaleDateString()}
-      </Typography>
     </Box>
   );
 }

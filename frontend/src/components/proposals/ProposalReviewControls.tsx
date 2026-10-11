@@ -1,14 +1,19 @@
+import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import ProposalVoteBar from "@/components/proposals/ProposalVoteBar";
 import type { Proposal } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useReviewProposal } from "@/lib/hooks/useProposals";
+import { BOTTOM_NAV_SPACE } from "@/lib/theme";
 
-/** Vote bar plus the admin approve/reject flow. Shared by the mobile card
- * and the desktop detail pane so reviewing works the same in both. */
+/** Vote bar plus the admin accept/reject flow: a review bar that stays in
+ * reach while the change is read, and the confirmation behind it. */
 export default function ProposalReviewControls({
   proposal,
   adminMode,
@@ -38,6 +43,7 @@ export default function ProposalReviewControls({
       {
         onSuccess: () => {
           setReviewAction(null);
+          setReviewNote("");
           review.reset();
         },
       },
@@ -46,11 +52,33 @@ export default function ProposalReviewControls({
 
   return (
     <>
-      <ProposalVoteBar
-        proposal={proposal}
-        adminMode={adminMode}
-        onReview={setReviewAction}
-      />
+      <ProposalVoteBar proposal={proposal} />
+
+      {adminMode && proposal.status === "pending" && (
+        <Box
+          sx={{
+            position: "sticky",
+            bottom: { xs: BOTTOM_NAV_SPACE, md: 0 },
+            zIndex: 1,
+          }}
+        >
+          <PanelBottomBar
+            leftIcon={<CloseOutlinedIcon />}
+            leftLabel="Reject"
+            onLeftClick={() => setReviewAction("rejected")}
+            title="Review"
+            subtitle={`${proposal.upvotes} up, ${proposal.downvotes} down`}
+            action={
+              <RoundActionButton
+                ariaLabel="Approve"
+                onClick={() => setReviewAction("approved")}
+              >
+                <CheckOutlinedIcon />
+              </RoundActionButton>
+            }
+          />
+        </Box>
+      )}
 
       <ConfirmDialog
         open={reviewAction !== null}

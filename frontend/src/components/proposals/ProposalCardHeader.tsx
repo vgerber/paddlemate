@@ -5,13 +5,9 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import type { Proposal } from "@/lib/api";
-import {
-  ENTITY_LABEL,
-  OP_LABEL,
-  proposalTitle,
-  STATUS_COLOR,
-} from "@/lib/proposals";
+import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
 import { fonts } from "@/lib/theme";
+import StatusChip from "./StatusChip";
 
 /** Card title row (name, status, open-detail button) plus the
  * entity-and-operation line under it. */
@@ -29,28 +25,14 @@ export default function ProposalCardHeader({
             fontFamily: fonts.label,
             fontWeight: 700,
             fontSize: "0.9rem",
-            letterSpacing: "0.02em",
             flex: 1,
             minWidth: 0,
-            textTransform:
-              proposal.entity_type === "feature" ? "capitalize" : "none",
           }}
           noWrap
         >
           {proposalTitle(proposal)}
         </Typography>
-        <Typography
-          sx={{
-            fontSize: "0.625rem",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            fontFamily: fonts.label,
-            color: `${STATUS_COLOR[proposal.status]}.main`,
-            flexShrink: 0,
-          }}
-        >
-          {proposal.status}
-        </Typography>
+        <StatusChip status={proposal.status} />
         <Tooltip title="View full proposal">
           <IconButton
             size="small"
@@ -73,8 +55,6 @@ export default function ProposalCardHeader({
           fontSize: "0.6875rem",
           color: "text.disabled",
           fontFamily: fonts.label,
-          letterSpacing: "0.04em",
-          textTransform: "uppercase",
         }}
       >
         {ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type} ·{" "}

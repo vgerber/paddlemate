@@ -1,99 +1,83 @@
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
+import PanelHeader from "@/components/PanelHeader";
 import ProposalCreateSummary from "@/components/proposals/ProposalCreateSummary";
 import ProposalDetailPane from "@/components/proposals/ProposalDetailPane";
 import ProposalReviewControls from "@/components/proposals/ProposalReviewControls";
 import type { Proposal } from "@/lib/api";
-import {
-  ENTITY_LABEL,
-  OP_LABEL,
-  proposalTitle,
-  STATUS_COLOR,
-} from "@/lib/proposals";
-import { fonts, labelSx, theme } from "@/lib/theme";
+import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
+import { labelSx } from "@/lib/theme";
+import StatusChip from "./StatusChip";
 
 /** The whole proposal: what it is, the change itself with its map, and the
- * review controls. Fills the pane beside the list on desktop. */
+ * review controls. Fills the pane beside the list on a desktop; with
+ * `onBack` it is a page of its own under the panel header. */
 export default function ProposalDetailView({
   proposal,
   adminMode,
+  onBack,
 }: {
   proposal: Proposal;
   adminMode?: boolean;
+  onBack?: () => void;
 }) {
   const proposed = proposal.proposed_data as Record<string, unknown>;
   const original = proposal.original_data as
     | Record<string, unknown>
     | null
     | undefined;
+  const kind = `${OP_LABEL[proposal.operation] ?? proposal.operation} · ${ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type}`;
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+    <Box data-testid="proposal-detail">
+      {onBack ? (
+        <PanelHeader
+          title={proposalTitle(proposal)}
+          subtitle={kind}
+          onBack={onBack}
+          actionButton={<StatusChip status={proposal.status} />}
+        />
+      ) : (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, pb: 1.5 }}>
+          <Typography sx={{ ...labelSx, flex: 1, minWidth: 0 }} noWrap>
+            {kind}
+          </Typography>
+          <StatusChip status={proposal.status} />
+        </Box>
+      )}
+
       <Box
         sx={{
           display: "flex",
-          alignItems: "center",
-          gap: 1,
-          pb: 1.5,
-          borderBottom: "1px solid",
-          borderColor: `${theme.tokens.outlineVariant}55`,
+          flexDirection: "column",
+          gap: 2.5,
+          px: onBack ? 2 : 0,
+          py: onBack ? 2 : 0,
         }}
       >
-        <Box sx={{ minWidth: 0 }}>
-          <Typography
-            sx={{
-              fontFamily: fonts.label,
-              fontWeight: 600,
-              fontSize: "0.9rem",
-              textTransform:
-                proposal.entity_type === "feature" ? "capitalize" : "none",
-            }}
-            noWrap
-          >
-            {proposalTitle(proposal)}
+        {proposal.operation === "delete" && (
+          <Typography sx={{ fontSize: "0.8125rem", color: "text.secondary" }}>
+            Deletion request
+            {original
+              ? `: "${(original.name as string | undefined) ?? ""}"`
+              : ""}
           </Typography>
-          <Typography sx={{ ...labelSx, display: "block" }}>
-            {OP_LABEL[proposal.operation] ?? proposal.operation} ·{" "}
-            {ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type}
+        )}
+
+        {proposal.operation === "create" && (
+          <ProposalCreateSummary proposed={proposed} />
+        )}
+
+        <ProposalDetailPane proposal={proposal} />
+
+        {proposal.review_note && (
+          <Typography variant="caption" color="text.secondary">
+            Note: {proposal.review_note}
           </Typography>
-        </Box>
-        <Chip
-          label={proposal.status}
-          size="small"
-          variant="outlined"
-          color={STATUS_COLOR[proposal.status]}
-          sx={{
-            ml: "auto",
-            flexShrink: 0,
-            height: 20,
-            fontSize: "0.625rem",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        />
+        )}
+
+        <ProposalReviewControls proposal={proposal} adminMode={adminMode} />
       </Box>
-
-      {proposal.operation === "delete" && (
-        <Typography sx={{ fontSize: "0.8125rem", color: "text.secondary" }}>
-          Deletion request
-          {original ? `: "${(original.name as string | undefined) ?? ""}"` : ""}
-        </Typography>
-      )}
-
-      {proposal.operation === "create" && (
-        <ProposalCreateSummary proposed={proposed} />
-      )}
-
-      <ProposalDetailPane proposal={proposal} />
-
-      {proposal.review_note && (
-        <Typography variant="caption" color="text.secondary">
-          Note: {proposal.review_note}
-        </Typography>
-      )}
-
-      <ProposalReviewControls proposal={proposal} adminMode={adminMode} />
     </Box>
   );
 }
