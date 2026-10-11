@@ -50,7 +50,7 @@ const composerSx = (open: boolean) =>
   ({
     "& .MuiInputBase-input": { fontSize: { xs: "1rem", md: "0.8125rem" } },
     "& .MuiInputBase-inputSizeSmall": { py: { xs: "12px", md: "8.5px" } },
-    "& .MuiInputBase-root": { pr: 0.5 },
+    "& .MuiInputBase-root": { pr: 0.5, minHeight: 48 },
     // Only the icons follow the box as it grows; the text keeps its own
     // alignment, which is what centres it on a single line.
     "& .MuiInputAdornment-positionEnd": {
@@ -220,7 +220,9 @@ export default function CommentThread({
         <Box
           sx={{
             flexShrink: 0,
+            px: 1.5,
             pt: 1.25,
+            pb: 1.5,
             mt: 0.5,
             borderTop: "1px solid",
             borderColor: `${tokens.outlineVariant}55`,

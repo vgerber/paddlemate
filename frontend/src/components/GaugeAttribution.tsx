@@ -53,7 +53,7 @@ export default function GaugeAttribution({
           href={source.website}
           target="_blank"
           rel="noopener noreferrer"
-          color="primary"
+          color="inherit"
           underline="hover"
           sx={linkSx}
         >
@@ -70,7 +70,7 @@ export default function GaugeAttribution({
               href={license.href}
               target="_blank"
               rel="noopener noreferrer"
-              color="primary"
+              color="inherit"
               underline="hover"
               sx={linkSx}
             >
