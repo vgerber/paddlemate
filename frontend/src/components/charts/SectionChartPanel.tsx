@@ -1,6 +1,3 @@
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import ChartCard from "@/components/charts/ChartCard";
 import { useChartPanelState } from "@/components/charts/chartState";
@@ -9,16 +6,11 @@ import { GaugeAttributions } from "@/components/GaugeAttribution";
 import LoadingBox from "@/components/states/LoadingBox";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
-import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
-import { theme } from "@/lib/theme";
-
-const { tokens } = theme;
 
 interface SectionChartPanelProps {
   waterwayId: number;
   sectionId: number;
-  sectionName?: string;
   /** Feature highlighted in the section's feature timeline - its water
    * ranges are brought to the front in the chart. */
   selectedFeatureId?: number | null;
@@ -33,16 +25,12 @@ interface SectionChartPanelProps {
 export default function SectionChartPanel({
   waterwayId,
   sectionId,
-  sectionName,
   selectedFeatureId,
   selectedFeature,
   preferredFeatureId,
   tall,
 }: SectionChartPanelProps) {
   const { isAuthenticated } = useSession();
-  const navigate = useNavigate();
-  const { current: standingDescent, start: startDescent } =
-    useStandingDescent();
   const { data: waterStatus, isLoading } = useWaterStatus(
     waterwayId,
     sectionId,
@@ -78,44 +66,6 @@ export default function SectionChartPanel({
   );
   return (
     <>
-      {isAuthenticated && !standingDescent && (
-        <Box
-          sx={{
-            display: { xs: "none", sm: "flex" },
-            alignItems: "center",
-            gap: 1,
-            px: 1.5,
-            pt: 1.5,
-          }}
-        >
-          <Button
-            variant="outlined"
-            sx={{ minHeight: tokens.touch.min }}
-            onClick={() =>
-              startDescent({
-                startTime: new Date().toISOString(),
-                waterwayId,
-                sectionId,
-                sectionName: sectionName ?? "",
-              })
-            }
-          >
-            Start
-          </Button>
-          <Button
-            variant="contained"
-            sx={{ minHeight: tokens.touch.min }}
-            onClick={() =>
-              navigate({
-                to: "/logs/new",
-                search: { waterwayId, sectionId, startTime: undefined },
-              })
-            }
-          >
-            Log descent
-          </Button>
-        </Box>
-      )}
       <ChartCard
         ranges={ranges}
         timeRange={timeRange}

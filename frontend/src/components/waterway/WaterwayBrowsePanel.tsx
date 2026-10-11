@@ -1,6 +1,8 @@
 import AddIcon from "@mui/icons-material/Add";
+import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import MapIcon from "@mui/icons-material/Map";
-import PendingActionsIcon from "@mui/icons-material/PendingActions";
+import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
+import PlayArrowOutlinedIcon from "@mui/icons-material/PlayArrowOutlined";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
@@ -13,6 +15,7 @@ import type { ReactNode } from "react";
 import DockedAction from "@/components/DockedAction";
 import PanelHeader from "@/components/PanelHeader";
 import SourcesTab from "@/components/provenance/SourcesTab";
+import RowMenu, { type RowAction } from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
 import SectionListItem from "@/components/waterway/SectionListItem";
 import SectionLogsList from "@/components/waterway/SectionLogsList";
@@ -25,6 +28,7 @@ import type {
 } from "@/lib/api";
 import { useSectionDescentCounts } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
+import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
 import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { localizedName } from "@/lib/localization";
@@ -78,8 +82,13 @@ const headerIconSx = {
   height: tokens.touch.min,
 } as const;
 
-const SECTION_TABS: SectionDetailTab[] = ["features", "logs", "notes"];
-const RIVER_TABS: DetailTab[] = ["sections", "gauges", "notes", "sources"];
+const SECTION_TABS: SectionDetailTab[] = [
+  "features",
+  "logs",
+  "notes",
+  "sources",
+];
+const RIVER_TABS: DetailTab[] = ["sections", "gauges", "notes"];
 
 export default function WaterwayBrowsePanel({
   waterwayId,
@@ -112,54 +121,78 @@ export default function WaterwayBrowsePanel({
   const selectedSection = sections.find((s) => s.id === selectedSectionId);
   const inFeatures = selectedSectionId != null && selectedSection != null;
 
-  const showProposedToggle = inFeatures && featureTimeline?.onToggleProposed;
-  const showFavoriteToggle = inFeatures && onToggleFavorite != null;
-  // Desktop only: on a phone these two are on the section speed dial, and
-  // having them in both places gave the same action two homes. There is no
-  // speed dial on desktop, so the header is where they live there.
-  const desktopOnly = {
-    ...headerIconSx,
-    display: { xs: "none", md: "inline-flex" },
-  } as const;
+  const { current: standingDescent, start: startDescent } =
+    useStandingDescent();
+
+  // The section's actions live in one overflow menu in the header, on a phone
+  // and on a desktop alike; the floating or docked button is only the
+  // primary add.
+  const sectionActions: RowAction[] = [];
+  if (inFeatures && onToggleFavorite) {
+    const starred = favoritedIds?.has(selectedSection.id) ?? false;
+    sectionActions.push({
+      label: starred ? "Remove favorite" : "Add favorite",
+      icon: starred ? (
+        <StarIcon fontSize="small" sx={{ color: tokens.tertiary }} />
+      ) : (
+        <StarBorderIcon fontSize="small" />
+      ),
+      onClick: () => onToggleFavorite(selectedSection.id),
+    });
+  }
+  if (
+    inFeatures &&
+    sectionDetailTab === "features" &&
+    featureTimeline?.onToggleProposed
+  ) {
+    sectionActions.push({
+      label: featureTimeline.showProposed
+        ? "Hide proposed features"
+        : "Show proposed features",
+      icon: (
+        <PendingActionsOutlinedIcon
+          fontSize="small"
+          sx={
+            featureTimeline.showProposed ? { color: tokens.primary } : undefined
+          }
+        />
+      ),
+      onClick: featureTimeline.onToggleProposed,
+    });
+  }
+  if (inFeatures && isAuthenticated) {
+    if (!standingDescent) {
+      sectionActions.push({
+        label: "Start descent",
+        icon: <PlayArrowOutlinedIcon fontSize="small" />,
+        onClick: () =>
+          startDescent({
+            startTime: new Date().toISOString(),
+            waterwayId,
+            sectionId: selectedSection.id,
+            sectionName: selectedSection.name,
+          }),
+      });
+    }
+    sectionActions.push({
+      label: "Log descent",
+      icon: <DirectionsBoatOutlinedIcon fontSize="small" />,
+      onClick: () =>
+        navigate({
+          to: "/logs/new",
+          search: {
+            waterwayId,
+            sectionId: selectedSection.id,
+            startTime: undefined,
+          },
+        }),
+    });
+  }
+
   const actionButton =
-    showProposedToggle || showFavoriteToggle || onMobileMapToggle ? (
+    sectionActions.length > 0 || onMobileMapToggle ? (
       <>
-        {showProposedToggle && (
-          <IconButton
-            size="small"
-            sx={desktopOnly}
-            onClick={featureTimeline.onToggleProposed}
-            aria-label={
-              featureTimeline.showProposed
-                ? "Hide proposed features"
-                : "Show proposed features"
-            }
-            color={featureTimeline.showProposed ? "primary" : undefined}
-          >
-            <PendingActionsIcon fontSize="small" />
-          </IconButton>
-        )}
-        {showFavoriteToggle && (
-          <IconButton
-            size="small"
-            sx={desktopOnly}
-            onClick={() => onToggleFavorite(selectedSection.id)}
-            aria-label={
-              favoritedIds?.has(selectedSection.id)
-                ? "Remove from favorites"
-                : "Add to favorites"
-            }
-          >
-            {favoritedIds?.has(selectedSection.id) ? (
-              <StarIcon
-                fontSize="small"
-                sx={{ color: theme.tokens.tertiary }}
-              />
-            ) : (
-              <StarBorderIcon fontSize="small" />
-            )}
-          </IconButton>
-        )}
+        <RowMenu actions={sectionActions} label="Section actions" />
         {onMobileMapToggle && (
           <IconButton
             size="small"
@@ -209,6 +242,7 @@ export default function WaterwayBrowsePanel({
           { value: "features", label: "Features" },
           { value: "logs", label: "Logs" },
           { value: "notes", label: "Notes" },
+          { value: "sources", label: "Sources" },
         ],
       }
     : {
@@ -221,7 +255,6 @@ export default function WaterwayBrowsePanel({
           { value: "sections", label: "Sections" },
           { value: "gauges", label: "Gauges" },
           { value: "notes", label: "Notes" },
-          { value: "sources", label: "Sources" },
         ],
       };
 
@@ -262,12 +295,15 @@ export default function WaterwayBrowsePanel({
             // behind it (the body-level rule alone does not stop chaining
             // that starts inside a scroller).
             overscrollBehavior: "contain",
-            p: 1,
+            py: 1,
             // Leave room so a floating button never covers the last row.
             // Desktop docks its actions in the row below the list, so only
             // the panel's own FAB and the mobile speed dial need it.
             pb:
-              showNewSectionFab || (inFeatures && sectionDetailTab !== "notes")
+              showNewSectionFab ||
+              (inFeatures &&
+                (sectionDetailTab === "features" ||
+                  sectionDetailTab === "logs"))
                 ? { xs: 9, md: 1 }
                 : 1,
           }}
@@ -278,6 +314,8 @@ export default function WaterwayBrowsePanel({
           ) : inFeatures ? (
             sectionDetailTab === "logs" ? (
               <SectionLogsList sectionId={selectedSection.id} />
+            ) : sectionDetailTab === "sources" ? (
+              <SourcesTab waterwayId={waterwayId} />
             ) : sectionDetailTab === "notes" ? (
               <CommentThread
                 waterwayId={waterwayId}
@@ -310,8 +348,6 @@ export default function WaterwayBrowsePanel({
               sections={sections}
               mapPin={noteMapPin}
             />
-          ) : tab === "sources" ? (
-            <SourcesTab waterwayId={waterwayId} />
           ) : (
             <GaugesList
               gaugeRanges={gaugeRanges}
@@ -350,7 +386,7 @@ export default function WaterwayBrowsePanel({
           other pane's action. */}
       {isAuthenticated &&
         inFeatures &&
-        sectionDetailTab !== "notes" &&
+        (sectionDetailTab === "features" || sectionDetailTab === "logs") &&
         (sectionDetailTab === "logs" ? (
           <DockedAction
             label="Log descent"
@@ -392,13 +428,13 @@ function SectionsList({
 }: SectionsListProps) {
   if (sections.length === 0) {
     return (
-      <Typography color="textSecondary" variant="body2" sx={{ p: 1 }}>
+      <Typography color="textSecondary" variant="body2" sx={{ p: 1.5 }}>
         No sections found.
       </Typography>
     );
   }
   return (
-    <List dense disablePadding>
+    <List dense disablePadding sx={{ px: 1.5 }}>
       {sections.map((section) => (
         <SectionListItem
           key={section.id}

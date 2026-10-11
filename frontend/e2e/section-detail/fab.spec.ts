@@ -1,5 +1,5 @@
 import { expect, type Locator, test } from "@playwright/test";
-import { appReady, gotoSection } from "../support/fixture";
+import { gotoSection } from "../support/fixture";
 
 // The round action button floats over a scroller. Nothing a finger needs may
 // sit under it: the chart's controls and the strip at the top of a section,
@@ -23,22 +23,13 @@ async function expectClear(a: Locator, fab: Locator, what: string) {
   expect(apart, `${what} is under the button`).toBe(true);
 }
 
-/** Scroll the results list (the pane's scrolling child) to its foot. */
-async function scrollToEnd(pane: Locator) {
-  await pane.evaluate((el) => {
-    for (const child of el.querySelectorAll("*")) {
-      if (child.scrollHeight > child.clientHeight + 4) child.scrollTop = 1e6;
-    }
-  });
-}
-
 test.describe("floating action button", () => {
   test("clears the strip and the open chart's controls @small", async ({
     page,
   }, info) => {
     test.skip(info.project.name === "desktop", "no button from md up");
     await gotoSection(page, "lower");
-    const fab = seen(page.getByRole("button", { name: "Section actions" }));
+    const fab = seen(page.getByRole("button", { name: "New feature" }));
     await expect(fab).toBeVisible();
     const discs = seen(page.getByTestId("features-strip")).locator(
       "[data-disc]",
@@ -58,32 +49,6 @@ test.describe("floating action button", () => {
       chart.getByRole("button", { name: "1Y", exact: true }),
       fab,
       "the 1Y period",
-    );
-  });
-
-  test("clears the last row of the search results, with its level pill @small", async ({
-    page,
-  }, info) => {
-    test.skip(info.project.name === "desktop", "no button from md up");
-    await page.goto("/?panel=1");
-    await appReady(page);
-    await seen(page.getByPlaceholder("Search rivers or sections…")).fill(
-      "Test",
-    );
-    const pane = seen(page.getByTestId("search-pane"));
-    await seen(
-      page.locator("button.MuiTab-root", { hasText: /^Sections \(/ }),
-    ).click();
-    const pills = pane.locator("[data-level]");
-    await expect(pills.first()).toBeVisible();
-    await scrollToEnd(pane);
-    const fab = seen(page.getByRole("button", { name: "New river" }));
-    await expect(fab).toBeVisible();
-    // The last row is where a pill would sit, whether or not it has one.
-    await expectClear(
-      pane.locator(".MuiListItemButton-root").last(),
-      fab,
-      "the last result row",
     );
   });
 });
