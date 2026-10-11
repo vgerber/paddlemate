@@ -161,6 +161,28 @@ test.describe("the base map", () => {
   });
 });
 
+test.describe("the layer toggle", () => {
+  for (const width of [768, 1280]) {
+    test(`Section and River share one row at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await gotoSection(page, "lower");
+      const toggle = page.getByTestId("map-layer-toggle");
+      const section = await toggle
+        .getByRole("button", { name: "Section", exact: true })
+        .boundingBox();
+      const river = await toggle
+        .getByRole("button", { name: "River", exact: true })
+        .boundingBox();
+      expect(section?.y, "same row").toBe(river?.y);
+      expect(section?.height, "one line of text").toBe(44);
+      expect(river?.height).toBe(44);
+      expect(
+        await toggle.boundingBox().then((b) => b?.width ?? 0),
+      ).toBeLessThan(200);
+    });
+  }
+});
+
 test.describe("regions", () => {
   test("every boundary is one solid grey line in one ink", async ({ page }) => {
     await openRegionMap(page);
@@ -234,7 +256,7 @@ test.describe("regions", () => {
     await openRegionMap(page);
     await expect
       .poll(() => paint(page, "road_motorway", "line-opacity"))
-      .toBeLessThanOrEqual(0.3);
+      .toBeLessThanOrEqual(0.4);
     expect(await layout(page, "highway-shield-non-us", "visibility")).toBe(
       "none",
     );
@@ -247,7 +269,7 @@ test.describe("regions", () => {
     await expect(page).not.toHaveURL(/mode=region/);
     await expect
       .poll(() => paint(page, "road_motorway", "line-opacity"))
-      .toBeGreaterThan(0.3);
+      .toBeGreaterThan(0.4);
     expect(await layout(page, "highway-name-major", "visibility")).toBe(
       "visible",
     );

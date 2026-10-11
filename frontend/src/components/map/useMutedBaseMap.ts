@@ -4,7 +4,7 @@ import type { MapRef } from "react-map-gl/maplibre";
 
 const ROAD_LINE = /^(road|bridge|tunnel)_(?!.*rail)/;
 const ROAD_LABEL = /^(highway-|road_shield|road_one_way)/;
-export const MUTED_ROAD_OPACITY = 0.25;
+export const MUTED_ROAD_OPACITY = 0.4;
 
 /** Fades the base map's roads and hides their names and numbers while
  * `active`, so region outlines are the loudest thing on the map. Puts the
