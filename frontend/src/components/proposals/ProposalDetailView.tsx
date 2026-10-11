@@ -7,8 +7,10 @@ import ProposalReviewControls from "@/components/proposals/ProposalReviewControl
 import ProposalVoteBar from "@/components/proposals/ProposalVoteBar";
 import type { Proposal, ProposalStatus } from "@/lib/api";
 import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
-import { labelSx } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, labelSx, theme } from "@/lib/theme";
 import StatusChip from "./StatusChip";
+
+const { tokens } = theme;
 
 /** The whole proposal: what it is, the change itself with its map, and the
  * review controls. Beside the list on a desktop it keeps its title and drops
@@ -41,11 +43,13 @@ export default function ProposalDetailView({
   return (
     <Box
       data-testid="proposal-detail"
-      sx={
-        docked
-          ? { height: "100%", display: "flex", flexDirection: "column" }
-          : undefined
-      }
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        ...(docked
+          ? { height: "100%" }
+          : { minHeight: `calc(100dvh - ${BOTTOM_NAV_SPACE})` }),
+      }}
     >
       {!docked && (
         <PanelHeader
@@ -67,7 +71,15 @@ export default function ProposalDetailView({
           gap: 2.5,
           px: 2,
           py: 2,
-          ...(docked && { flex: 1, minHeight: 0, overflowY: "auto" }),
+          ...(docked
+            ? { flex: 1, minHeight: 0, overflowY: "auto" }
+            : {
+                // On the phone the change reads as a card on the ground.
+                m: 2,
+                bgcolor: tokens.surface,
+                borderRadius: `${tokens.radii.lg}px`,
+                boxShadow: tokens.elevation.e1,
+              }),
         }}
       >
         <ProposalVoteBar proposal={proposal} />
@@ -106,16 +118,12 @@ export default function ProposalDetailView({
             Note: {proposal.review_note}
           </Typography>
         )}
-
-        {!docked && (
-          <ProposalReviewControls proposal={proposal} adminMode={adminMode} />
-        )}
       </Box>
 
-      {docked && adminMode && proposal.status === "pending" && (
+      {adminMode && proposal.status === "pending" && (
         // The bar's negative margins cancel this padding, so it runs edge to
-        // edge at the card's foot.
-        <Box sx={{ px: 2, pb: 2, flexShrink: 0 }}>
+        // edge at the foot; the auto margin docks it when the change is short.
+        <Box sx={{ px: 2, pb: 2, flexShrink: 0, mt: "auto" }}>
           <ProposalReviewControls proposal={proposal} adminMode={adminMode} />
         </Box>
       )}

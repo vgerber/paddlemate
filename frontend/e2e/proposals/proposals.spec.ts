@@ -384,6 +384,24 @@ test.describe("proposal votes and review bar", () => {
     expect(u.y).toBeGreaterThanOrEqual(0);
   });
 
+  test("the review bar is docked at the foot of a short proposal", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop", "the phone page");
+    await page.goto(`/proposals/${FEATURE_UPDATE}`);
+    const approve = page.getByRole("button", { name: "Approve" });
+    await expect(approve).toBeVisible();
+    const [b, vp] = await Promise.all([
+      approve.boundingBox(),
+      page.viewportSize(),
+    ]);
+    if (!b || !vp) throw new Error("no boxes");
+    // Above the 64px bottom nav, not floating right under the content.
+    expect(b.y + b.height).toBeGreaterThan(vp.height - 64 - 80);
+    const card = page.getByTestId("proposal-detail").locator("> div").nth(1);
+    expect(await computed(card, "background-color")).toBe("rgb(255, 255, 255)");
+  });
+
   test("approve and reject are labelled 44px buttons in one row", async ({
     page,
   }) => {
