@@ -21,6 +21,7 @@ import type { WaterLevel } from "@/lib/waterLevel";
 import AreaControls from "./AreaControls";
 import DifficultySelect from "./DifficultySelect";
 import { gradeSummary } from "./gradeSummary";
+import { RegionHint } from "./RegionSelect";
 import type {
   SearchMode,
   WaterwaySearchFilters,
@@ -166,6 +167,8 @@ function FilterChip({
       onDelete={onDelete}
       aria-pressed={plain ? set : undefined}
       color={set ? "primary" : "default"}
+      // A toggle in the sheet is the thing being tapped: full touch height.
+      sx={plain ? { height: tokens.touch.min } : undefined}
       label={
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
           {label}
@@ -205,7 +208,11 @@ function FiltersBody({
           justifyContent: "space-between",
         }}
       >
-        <Typography variant="h6" component="h2" sx={{ fontWeight: 700 }}>
+        <Typography
+          variant="h6"
+          component="h2"
+          sx={{ fontWeight: 700, fontSize: "1.125rem" }}
+        >
           Filters
         </Typography>
         <Button
@@ -226,7 +233,7 @@ function FiltersBody({
         onMinChange={filters.setMinDiff}
         onMaxChange={filters.setMaxDiff}
       />
-      {mode === "name" && (
+      {mode !== "region" && (
         <TextField
           label="Country"
           placeholder="AT"
@@ -342,7 +349,7 @@ export function SearchControls({
         <SearchField
           value={filters.name}
           onChange={filters.setName}
-          placeholder="Search rivers or sections…"
+          placeholder="Name"
         />
       )}
       {mode === "area" && (
@@ -358,11 +365,14 @@ export function SearchControls({
         />
       )}
       {mode === "region" && (
-        <SearchField
-          value={filters.regionQuery}
-          onChange={filters.setRegionQuery}
-          placeholder="Search regions…"
-        />
+        <>
+          <SearchField
+            value={filters.regionQuery}
+            onChange={filters.setRegionQuery}
+            placeholder="Search regions…"
+          />
+          <RegionHint />
+        </>
       )}
       {!listingRegions && (mode !== "region" || region) && (
         <ChipRow>
@@ -379,7 +389,7 @@ export function SearchControls({
             set={grade !== ""}
             onClick={open}
           />
-          {mode === "name" && (
+          {mode !== "region" && (
             <FilterChip
               label={country || "Country"}
               set={country !== ""}

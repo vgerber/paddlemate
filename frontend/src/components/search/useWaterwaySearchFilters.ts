@@ -151,6 +151,7 @@ export function useWaterwaySearchFilters(
         lat: areaCircle.lat,
         lon: areaCircle.lon,
         radius_km: areaCircle.radiusKm,
+        country: debouncedCountry || undefined,
         min_difficulty: minDiff !== "" ? minDiff : undefined,
         max_difficulty: maxDiff !== "" ? maxDiff : undefined,
         per_page: 100,

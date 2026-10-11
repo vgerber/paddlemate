@@ -1,6 +1,5 @@
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
-import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import IconButton from "@mui/material/IconButton";
@@ -25,13 +24,53 @@ interface AreaControlsProps {
   onShowMap?: () => void;
 }
 
+/** Radius at the slider's end, which fills the preview's frame. */
+const PREVIEW_MAX_KM = 200;
+
+/** A drawn stand-in for the map: the search centre as a pin inside a dashed
+ * ring that grows with the radius. */
+function AreaPreview({ radiusKm }: { radiusKm: number }) {
+  const r = 12 + (Math.min(radiusKm, PREVIEW_MAX_KM) / PREVIEW_MAX_KM) * 44;
+  return (
+    <Box
+      component="svg"
+      viewBox="0 0 160 96"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+      sx={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+    >
+      <rect width="160" height="96" fill={tokens.surfaceLow} />
+      <path
+        d="M-4 70 C 30 50, 50 84, 84 58 S 130 30, 164 44"
+        fill="none"
+        stroke={tokens.primaryContainer}
+        strokeWidth="6"
+        strokeLinecap="round"
+      />
+      <circle
+        cx="80"
+        cy="48"
+        r={r}
+        fill={`${tokens.primary}1f`}
+        stroke={tokens.primary}
+        strokeWidth="1.5"
+        strokeDasharray="5 4"
+      />
+      <circle cx="80" cy="48" r="5" fill={tokens.primary} />
+      <circle cx="80" cy="48" r="2" fill={tokens.surface} />
+    </Box>
+  );
+}
+
 /** The map card where the name field sits in the other modes. The map itself
  * is the real one behind the panel, so on a phone the card takes you to it. */
 function MapCard({
   areaCircle,
+  radiusKm,
   onShowMap,
 }: {
   areaCircle: AreaCircle | null;
+  radiusKm: number;
   onShowMap?: () => void;
 }) {
   return (
@@ -42,6 +81,8 @@ function MapCard({
       aria-label="Map"
       sx={{
         width: "100%",
+        position: "relative",
+        overflow: "hidden",
         minHeight: 96,
         gap: 1,
         borderRadius: `${tokens.radii.md}px`,
@@ -51,9 +92,17 @@ function MapCard({
         "&.Mui-disabled": { color: tokens.onSurfaceVariant },
       }}
     >
-      <MapOutlinedIcon sx={{ color: tokens.primary }} />
+      <AreaPreview radiusKm={radiusKm} />
       {areaCircle && (
-        <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+        <Typography
+          variant="body2"
+          sx={{
+            position: "absolute",
+            left: 10,
+            bottom: 6,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
           {areaCircle.lat.toFixed(2)}, {areaCircle.lon.toFixed(2)}
         </Typography>
       )}
@@ -86,7 +135,11 @@ export default function AreaControls({
 
   return (
     <Box sx={{ display: "grid", gap: 1 }}>
-      <MapCard areaCircle={areaCircle} onShowMap={onShowMap} />
+      <MapCard
+        areaCircle={areaCircle}
+        radiusKm={localRadius}
+        onShowMap={onShowMap}
+      />
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
         <Slider
           data-no-swipe=""
@@ -95,7 +148,6 @@ export default function AreaControls({
           min={1}
           max={200}
           step={1}
-          disabled={!areaCircle}
           onChange={(_, v) => {
             const km = v as number;
             setLocalRadius(km);

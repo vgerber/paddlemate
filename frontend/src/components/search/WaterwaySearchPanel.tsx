@@ -134,23 +134,21 @@ export default function WaterwaySearchPanel({
     [water, allSections],
   );
   const { levels, unknown } = useSectionLevels(levelPairs);
-  // A section whose level could not be read stays in the list, with the
-  // empty pill: hiding it would claim it is not at the chosen level. Only
-  // the ones still being asked wait out of sight.
+  // Only sections known to be at a chosen level are listed. The ones whose
+  // level could not be read are left out and counted in a note, so the list
+  // never claims a level it cannot show.
   const visibleSections = useMemo(
     () =>
       water.length > 0
         ? allSections.filter((s) => {
             const level = levels[s.id];
-            return level != null ? water.includes(level) : unknown.has(s.id);
+            return level != null && water.includes(level);
           })
         : allSections,
-    [water, allSections, levels, unknown],
+    [water, allSections, levels],
   );
   const unknownShown =
-    water.length > 0
-      ? visibleSections.filter((s) => unknown.has(s.id)).length
-      : 0;
+    water.length > 0 ? allSections.filter((s) => unknown.has(s.id)).length : 0;
 
   useEffect(() => {
     onWaterwaysChange?.(waterways.map((w) => w.id));
