@@ -1,12 +1,14 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { Fragment } from "react";
-import { humanize } from "@/lib/format";
-import { diffObjects, HIDDEN_KEYS, shortValue } from "@/lib/proposals";
-import { fonts } from "@/lib/theme";
+import { fieldLabel } from "@/components/provenance/steps";
+import { diffObjects, shortValue } from "@/lib/proposals";
+import { labelSx, theme } from "@/lib/theme";
+import { DIFF_HIDDEN_KEYS } from "./status";
 
-/** Field / before / after grid for an update proposal. Renders nothing when
- * the visible fields are unchanged. */
+const { tokens } = theme;
+
+/** An update as rows: the field, what it was, what it becomes. Renders
+ * nothing when the visible fields are unchanged. */
 export default function ProposalDiffTable({
   original,
   proposed,
@@ -15,46 +17,67 @@ export default function ProposalDiffTable({
   proposed: Record<string, unknown>;
 }) {
   const diffs = diffObjects(original, proposed).filter(
-    ({ key }) => !HIDDEN_KEYS.has(key),
+    ({ key }) => !DIFF_HIDDEN_KEYS.has(key),
   );
   if (diffs.length === 0) return null;
 
   return (
     <Box
       sx={{
-        display: "grid",
-        gridTemplateColumns: "auto 1fr 1fr",
-        gap: "2px 12px",
+        bgcolor: tokens.surfaceHigh,
+        borderRadius: `${tokens.radii.sm}px`,
+        px: 1.5,
+        py: 0.5,
       }}
     >
-      {["field", "before", "after"].map((h) => (
-        <Typography
-          key={h}
-          variant="caption"
+      {diffs.map(({ key, from, to }) => (
+        <Box
+          key={key}
+          data-testid="diff-row"
           sx={{
-            color: "text.disabled",
-            fontFamily: fonts.label,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            fontSize: "0.625rem",
+            py: 1,
+            "&:not(:last-of-type)": {
+              borderBottom: "1px solid",
+              borderColor: `${tokens.outlineVariant}55`,
+            },
           }}
         >
-          {h}
-        </Typography>
-      ))}
-      {diffs.map(({ key, from, to }) => (
-        <Fragment key={key}>
-          <Typography variant="caption">{humanize(key)}</Typography>
-          <Typography
-            variant="caption"
-            sx={{ textDecoration: "line-through", color: "text.disabled" }}
+          <Typography sx={labelSx}>{fieldLabel(key)}</Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "baseline",
+              columnGap: 1,
+            }}
           >
-            {shortValue(key, from)}
-          </Typography>
-          <Typography variant="caption" sx={{ color: "text.primary" }}>
-            {shortValue(key, to)}
-          </Typography>
-        </Fragment>
+            <Typography
+              data-testid="diff-before"
+              variant="body2"
+              sx={{
+                color: "text.disabled",
+                textDecoration: "line-through",
+                overflowWrap: "anywhere",
+              }}
+            >
+              {shortValue(key, from)}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ color: "text.disabled" }}
+              aria-hidden
+            >
+              to
+            </Typography>
+            <Typography
+              data-testid="diff-after"
+              variant="body2"
+              sx={{ overflowWrap: "anywhere" }}
+            >
+              {shortValue(key, to)}
+            </Typography>
+          </Box>
+        </Box>
       ))}
     </Box>
   );

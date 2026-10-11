@@ -26,6 +26,7 @@ import { Route as LogsDescentIdRouteImport } from './routes/logs/$descentId'
 import { Route as InviteTokenRouteImport } from './routes/invite/$token'
 import { Route as DevPrimitivesRouteImport } from './routes/dev/primitives'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AdminProvenancePreviewRouteImport } from './routes/admin/provenance-preview'
 import { Route as AdminProposalsIndexRouteImport } from './routes/admin/proposals/index'
 
 const SettingsRoute = SettingsRouteImport.update({
@@ -113,6 +114,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminProvenancePreviewRoute = AdminProvenancePreviewRouteImport.update({
+  id: '/admin/provenance-preview',
+  path: '/admin/provenance-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProposalsIndexRoute = AdminProposalsIndexRouteImport.update({
   id: '/admin/proposals/',
   path: '/admin/proposals/',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/logs': typeof LogsRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/admin/provenance-preview': typeof AdminProvenancePreviewRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dev/primitives': typeof DevPrimitivesRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/logs': typeof LogsRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/admin/provenance-preview': typeof AdminProvenancePreviewRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dev/primitives': typeof DevPrimitivesRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/logs': typeof LogsRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/admin/provenance-preview': typeof AdminProvenancePreviewRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dev/primitives': typeof DevPrimitivesRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/'
     | '/logs'
     | '/settings'
+    | '/admin/provenance-preview'
     | '/auth/callback'
     | '/dev/primitives'
     | '/invite/$token'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/'
     | '/logs'
     | '/settings'
+    | '/admin/provenance-preview'
     | '/auth/callback'
     | '/dev/primitives'
     | '/invite/$token'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/'
     | '/logs'
     | '/settings'
+    | '/admin/provenance-preview'
     | '/auth/callback'
     | '/dev/primitives'
     | '/invite/$token'
@@ -247,6 +259,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LogsRoute: typeof LogsRouteWithChildren
   SettingsRoute: typeof SettingsRoute
+  AdminProvenancePreviewRoute: typeof AdminProvenancePreviewRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   DevPrimitivesRoute: typeof DevPrimitivesRoute
   InviteTokenRoute: typeof InviteTokenRoute
@@ -383,6 +396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/provenance-preview': {
+      id: '/admin/provenance-preview'
+      path: '/admin/provenance-preview'
+      fullPath: '/admin/provenance-preview'
+      preLoaderRoute: typeof AdminProvenancePreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/proposals/': {
       id: '/admin/proposals/'
       path: '/admin/proposals'
@@ -409,6 +429,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LogsRoute: LogsRouteWithChildren,
   SettingsRoute: SettingsRoute,
+  AdminProvenancePreviewRoute: AdminProvenancePreviewRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   DevPrimitivesRoute: DevPrimitivesRoute,
   InviteTokenRoute: InviteTokenRoute,

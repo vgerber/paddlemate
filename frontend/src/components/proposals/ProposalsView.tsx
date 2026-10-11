@@ -8,16 +8,15 @@ import IconButton from "@mui/material/IconButton";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
-import Tab from "@mui/material/Tab";
-import Tabs from "@mui/material/Tabs";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import ListPaneHeader from "@/components/ListPaneHeader";
 import ProposalDetailView from "@/components/proposals/ProposalDetailView";
 import ProposalRow from "@/components/proposals/ProposalRow";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
-import ProposalCard from "@/components/waterway/ProposalCard";
+import UnderlineTabs from "@/components/UnderlineTabs";
 import type {
   ProposalEntityType,
   ProposalOperation,
@@ -25,8 +24,11 @@ import type {
 } from "@/lib/api";
 import { useProposals } from "@/lib/hooks/useProposals";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { STATUS_LABEL } from "./status";
 
-const STATUS_TABS = ["pending", "approved", "rejected"] as const;
+const STATUS_TABS = (["pending", "approved", "rejected"] as const).map(
+  (value) => ({ value, label: STATUS_LABEL[value] }),
+);
 
 const ENTITY_TABS: { value: ProposalEntityType | ""; label: string }[] = [
   { value: "", label: "All" },
@@ -109,6 +111,7 @@ export default function ProposalsView({
   onOperationChange,
   adminMode,
 }: ProposalsViewProps) {
+  const navigate = useNavigate();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const hasActiveFilters = entityType != null || operation != null;
   const [filtersOpen, setFiltersOpen] = useState(hasActiveFilters);
@@ -143,21 +146,13 @@ export default function ProposalsView({
         }
       />
 
-      {/* Status tabs */}
-      <Tabs
-        value={status}
-        onChange={(_, v) => onStatusChange(v)}
-        variant="fullWidth"
-        sx={{ borderBottom: "1px solid", borderColor: "divider" }}
-      >
-        {STATUS_TABS.map((s) => (
-          <Tab
-            key={s}
-            label={s.charAt(0).toUpperCase() + s.slice(1)}
-            value={s}
-          />
-        ))}
-      </Tabs>
+      <Box sx={{ px: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
+        <UnderlineTabs
+          value={status}
+          onChange={onStatusChange}
+          items={STATUS_TABS}
+        />
+      </Box>
 
       {/* Filters - collapsed by default so the list is what you land on */}
       <Collapse in={filtersOpen}>
@@ -199,20 +194,22 @@ export default function ProposalsView({
           title={`No ${status} proposals.`}
         />
       ) : (
-        <Box sx={{ borderTop: "1px solid", borderColor: "divider" }}>
-          {proposals.map((p) =>
-            isDesktop ? (
-              <ProposalRow
-                key={p.id}
-                proposal={p}
-                selected={p.id === selectedId}
-                showStatus={p.status !== status}
-                onSelect={() => onSelect?.(p.id)}
-              />
-            ) : (
-              <ProposalCard key={p.id} proposal={p} adminMode={adminMode} />
-            ),
-          )}
+        <Box sx={{ py: 0.75 }}>
+          {proposals.map((p) => (
+            <ProposalRow
+              key={p.id}
+              proposal={p}
+              selected={isDesktop && p.id === selectedId}
+              onSelect={() =>
+                isDesktop
+                  ? onSelect?.(p.id)
+                  : navigate({
+                      to: "/proposals/$proposalId",
+                      params: { proposalId: String(p.id) },
+                    })
+              }
+            />
+          ))}
         </Box>
       )}
     </>
@@ -245,7 +242,7 @@ export default function ProposalsView({
       >
         {list}
       </Box>
-      <Box sx={{ overflowY: "auto", px: 4, py: 3 }}>
+      <Box data-testid="proposal-pane" sx={{ overflowY: "auto", px: 4, py: 3 }}>
         <Box sx={{ maxWidth: 880 }}>
           {selected ? (
             <ProposalDetailView proposal={selected} adminMode={adminMode} />
