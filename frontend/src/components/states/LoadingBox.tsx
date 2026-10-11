@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import { SPINNER_DELAY_MS } from "@/lib/motion";
 import { theme } from "@/lib/theme";
 
 const { motion } = theme.tokens;
@@ -22,7 +23,7 @@ export default function LoadingBox({
         display: "flex",
         justifyContent: "center",
         ...(pt != null ? { pt } : { py }),
-        animation: `pm-spinner-in ${motion.fast}ms ${motion.easeOut} 150ms backwards`,
+        animation: `pm-spinner-in ${motion.fast}ms ${motion.easeOut} ${SPINNER_DELAY_MS}ms backwards`,
         "@keyframes pm-spinner-in": {
           from: { opacity: 0 },
           to: { opacity: 1 },

@@ -7,7 +7,6 @@ import { fonts, labelSx } from "@/lib/theme";
 export const factLabelSx = {
   ...labelSx,
   fontWeight: 500,
-  letterSpacing: 0,
   color: "text.secondary",
 } as const;
 

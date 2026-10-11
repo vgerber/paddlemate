@@ -335,9 +335,10 @@ export const theme = createTheme({
           outlineOffset: 2,
         },
         // Motion off for people who ask for it. A per-app switch that wins
-        // over this comes with the motion work.
+        // over this comes with the motion work. An element that sets
+        // `data-reduced-fade` keeps its own short fade.
         "@media (prefers-reduced-motion: reduce)": {
-          "*, *::before, *::after": {
+          "*:not([data-reduced-fade]), *::before, *::after": {
             animationDuration: "1ms !important",
             animationIterationCount: "1 !important",
             transitionDuration: "1ms !important",
@@ -742,7 +743,7 @@ export const PANEL_HEIGHT = {
 export const labelSx = {
   fontFamily: fonts.label,
   fontWeight: 600,
-  letterSpacing: "0.02em",
+  letterSpacing: 0,
   fontSize: "0.75rem",
   color: "text.secondary",
 } as const;

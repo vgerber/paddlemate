@@ -98,7 +98,6 @@ export default function ImageLightbox({
                 <Typography
                   sx={{
                     ...labelSx,
-                    letterSpacing: 0,
                     display: "block",
                     mt: 0.25,
                   }}

@@ -24,8 +24,8 @@ export function RoundActionButton({
       disabled={disabled}
       aria-label={ariaLabel}
       sx={{
-        width: 48,
-        height: 48,
+        width: tokens.touch.row,
+        height: tokens.touch.row,
         borderRadius: "50%",
         bgcolor: tokens.primary,
         color: tokens.onPrimary,
