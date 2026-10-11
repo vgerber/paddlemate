@@ -53,8 +53,13 @@ test.describe("trip list", () => {
     test.skip(info.project.name !== "desktop");
     await openList(page);
     await expect(page.getByText(/\d+ trips?/)).toBeVisible();
-    await page.getByTestId("trip-card").first().click();
+    const first = page.getByTestId("trip-card").first();
+    const name = (await first.innerText()).split("\n")[0];
+    await first.click();
     await expect(page).toHaveURL(/selected=/);
+    // The pane keeps the trip's title and drops only the back arrow.
+    await expect(page.getByText(name, { exact: true })).toHaveCount(2);
+    await expect(page.getByRole("button", { name: "Back" })).toHaveCount(0);
     await expect(
       page.getByRole("tab", { name: "Plan", exact: true }),
     ).toBeVisible();

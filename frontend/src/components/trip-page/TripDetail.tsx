@@ -42,8 +42,8 @@ interface Props {
   onEditingChange: (editing: boolean) => void;
   /** Leaving the trip: back on mobile, deselect in the desktop two-pane. */
   onClose: () => void;
-  /** Rendered beside the trips list, which already names the trip and holds
-   * the way back - so the panel drops its own title and back arrow. */
+  /** Rendered beside the trips list, which holds the way back - so the panel
+   * keeps its title and drops only the back arrow. */
   embedded?: boolean;
   onDeleted: () => void;
 }
@@ -155,10 +155,8 @@ export default function TripDetail({
   return (
     <>
       <PanelHeader
-        title={embedded ? undefined : trip.name}
-        subtitle={
-          embedded ? undefined : dateRange(trip.start_date, trip.end_date)
-        }
+        title={trip.name}
+        subtitle={dateRange(trip.start_date, trip.end_date)}
         onBack={embedded ? undefined : onClose}
         tabs={{
           value: tab,

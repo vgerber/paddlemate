@@ -243,7 +243,7 @@ export default function ProposalsView({
       >
         {list}
       </Box>
-      <Box data-testid="proposal-pane" sx={{ overflowY: "auto", px: 4, py: 3 }}>
+      <Box data-testid="proposal-pane" sx={{ overflowY: "auto" }}>
         <Box sx={{ maxWidth: 880 }}>
           {selected ? (
             <ProposalDetailView proposal={selected} adminMode={adminMode} />

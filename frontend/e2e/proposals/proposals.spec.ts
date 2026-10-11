@@ -189,5 +189,9 @@ test.describe("desktop pane", () => {
     await expect(page.getByTestId("proposal-detail")).toContainText(
       "Mittelschwall",
     );
+    // The pane keeps the title and drops only the back arrow.
+    const detail = page.getByTestId("proposal-detail");
+    await expect(detail.getByText(/Mittelschwall/).first()).toBeVisible();
+    await expect(detail.getByRole("button", { name: "Back" })).toHaveCount(0);
   });
 });
