@@ -56,9 +56,9 @@ test.describe("level pills", () => {
     await openSectionList(page);
     const medium = pill(page, "Lower Test");
     await expect(medium).toHaveAttribute("data-level", "medium");
-    expect(await computed(medium, "color")).toBe("rgb(143, 91, 0)");
+    expect(await computed(medium, "color")).toBe("rgb(133, 84, 0)");
     expect(await computed(medium, "background-color")).toBe(
-      "rgba(143, 91, 0, 0.15)",
+      "rgba(133, 84, 0, 0.15)",
     );
   });
 
