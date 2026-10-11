@@ -1,22 +1,18 @@
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import HistoryIcon from "@mui/icons-material/History";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import RowMenu, { type RowAction } from "@/components/RowMenu";
 import { durations } from "@/lib/motion";
 import { alphas, theme } from "@/lib/theme";
+import { CoordsInfo } from "./CoordsInfo";
 import {
   FeatureListRow,
   kmSx,
   PendingDeleteMarker,
   type RowContext,
 } from "./FeatureListRow";
-import { RAIL_COL, RailLine, RangeTile, ROW_MIN } from "./railParts";
+import { DISC, RAIL_COL, RailLine, RangeTile, ROW_MIN } from "./railParts";
 import { isBand, memberNames } from "./rows";
 import type { TreeNode } from "./types";
 import { featureName, featureTypeLabel, fmtKmSpan } from "./utils";
@@ -71,37 +67,6 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
   const isActive = ctx.activeId === item.feature.id;
   const railDashed = dashed || isPortage;
 
-  const actions: RowAction[] = [];
-  if (ctx.onItemClick) {
-    actions.push({
-      label: "Show on map",
-      icon: <PlaceOutlinedIcon fontSize="small" />,
-      onClick: () => ctx.onItemClick?.(item),
-    });
-  }
-  if (ctx.onHistoryItem) {
-    actions.push({
-      label: "History",
-      icon: <HistoryIcon fontSize="small" />,
-      onClick: () => ctx.onHistoryItem?.(item),
-    });
-  }
-  if (ctx.onEditItem) {
-    actions.push({
-      label: "Edit feature",
-      icon: <EditOutlinedIcon fontSize="small" />,
-      onClick: () => ctx.onEditItem?.(item),
-    });
-  }
-  if (ctx.onDeleteItem) {
-    actions.push({
-      label: "Delete feature",
-      icon: <DeleteOutlinedIcon fontSize="small" />,
-      danger: true,
-      onClick: () => ctx.onDeleteItem?.(item),
-    });
-  }
-
   const subtitle = [
     featureTypeLabel(item.feature),
     open ? null : memberNames(node).join(", "),
@@ -117,7 +82,8 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
           ? `${tokens.primary}${alphas.wash}`
           : tokens.surfaceHigh,
         borderRadius: `${tokens.radii.sm}px`,
-        my: 0.5,
+        mx: 1,
+        my: 0.25,
       }}
     >
       <Box sx={{ display: "flex", alignItems: "stretch" }}>
@@ -127,7 +93,10 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
           data-row
           data-type={type}
           aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
+          onClick={() => {
+            setOpen((o) => !o);
+            ctx.onItemClick?.(item);
+          }}
           sx={{
             flex: 1,
             minWidth: 0,
@@ -136,7 +105,7 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
             textAlign: "left",
             minHeight: ROW_MIN,
             gap: 1,
-            pr: actions.length ? 0 : 1.5,
+            pr: 1.5,
           }}
         >
           <Box
@@ -147,7 +116,7 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
               display: "flex",
               justifyContent: "center",
               alignItems: "flex-start",
-              pt: `${(ROW_MIN - 36) / 2}px`,
+              pt: `${(ROW_MIN - DISC - 4) / 2}px`,
             }}
           >
             <RailLine
@@ -157,55 +126,75 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
             />
             <RangeTile type={type} open={open} foldable />
           </Box>
-          <Box sx={{ flex: 1, minWidth: 0, py: 0.75 }}>
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-              <Box
-                sx={{
-                  flex: 1,
-                  minWidth: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                }}
-              >
-                <Typography
-                  component="span"
-                  sx={{ fontWeight: 600, fontSize: "0.9375rem" }}
+          <Box sx={{ flex: 1, minWidth: 0, pb: 0.75 }}>
+            <Box
+              sx={{
+                minHeight: ROW_MIN,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                <Box
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                  }}
                 >
-                  {featureName(item.feature)}
+                  <Typography
+                    component="span"
+                    sx={{ fontWeight: 600, fontSize: "0.9375rem" }}
+                  >
+                    {featureName(item.feature)}
+                  </Typography>
+                  {ctx.pendingDeleteIds?.has(item.feature.id) && (
+                    <PendingDeleteMarker />
+                  )}
+                </Box>
+                <Typography component="span" data-km sx={kmSx}>
+                  {fmtKmSpan(item.startM, item.endM)}
                 </Typography>
-                {ctx.pendingDeleteIds?.has(item.feature.id) && (
-                  <PendingDeleteMarker />
-                )}
               </Box>
-              <Typography component="span" data-km sx={kmSx}>
-                {fmtKmSpan(item.startM, item.endM)}
-              </Typography>
+              {subtitle && (
+                <Typography
+                  noWrap
+                  sx={{ fontSize: "0.8125rem", color: tokens.onSurfaceVariant }}
+                >
+                  {subtitle}
+                </Typography>
+              )}
             </Box>
-            {subtitle && (
-              <Typography
-                noWrap
-                sx={{ fontSize: "0.8125rem", color: tokens.onSurfaceVariant }}
-              >
-                {subtitle}
-              </Typography>
-            )}
+            <Collapse in={isActive} timeout={durations.base} unmountOnExit>
+              <CoordsInfo
+                coords={item.coords}
+                onHistory={
+                  ctx.onHistoryItem && (() => ctx.onHistoryItem?.(item))
+                }
+                onEdit={ctx.onEditItem && (() => ctx.onEditItem?.(item))}
+                onDelete={ctx.onDeleteItem && (() => ctx.onDeleteItem?.(item))}
+              />
+            </Collapse>
           </Box>
         </ButtonBase>
-        {actions.length > 0 && <RowMenu actions={actions} />}
       </Box>
 
       <Collapse in={open} timeout={durations.base} unmountOnExit>
-        {node.nested.map((child, i) => (
-          <FeatureNode
-            key={child.item.feature.id}
-            node={child}
-            ctx={ctx}
-            startsList={false}
-            endsList={endsList && i === node.nested.length - 1}
-            dashed={railDashed}
-          />
-        ))}
+        <Box sx={{ pl: 3 }}>
+          {node.nested.map((child, i) => (
+            <FeatureNode
+              key={child.item.feature.id}
+              node={child}
+              ctx={ctx}
+              startsList={false}
+              endsList={endsList && i === node.nested.length - 1}
+              dashed={railDashed}
+            />
+          ))}
+        </Box>
       </Collapse>
     </Box>
   );

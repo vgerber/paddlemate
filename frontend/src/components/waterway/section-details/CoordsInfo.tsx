@@ -17,6 +17,12 @@ import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
+const touchSx = {
+  width: tokens.touch.min,
+  height: tokens.touch.min,
+  color: tokens.onSurfaceVariant,
+} as const;
+
 interface Props {
   coords: [number, number]; // [lng, lat]
   /** Extra inline buttons appended to the row (e.g. proposal votes). */
@@ -60,26 +66,24 @@ export function CoordsInfo({
         {lat.toFixed(5)}, {lng.toFixed(5)}
       </Typography>
       <IconButton
-        size="small"
         title="Open in Google Maps"
         component="a"
         href={url}
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
-        sx={{ color: tokens.success }}
+        sx={touchSx}
       >
         <OpenInNewIcon fontSize="small" />
       </IconButton>
       {actions}
       <IconButton
-        size="small"
         title="More actions"
         onClick={(e) => {
           e.stopPropagation();
           setMenuAnchor(e.currentTarget);
         }}
-        sx={{ color: tokens.success }}
+        sx={touchSx}
       >
         <MoreVertIcon fontSize="small" />
       </IconButton>

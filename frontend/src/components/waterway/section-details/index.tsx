@@ -220,7 +220,8 @@ export default function FeatureTimeline({
           bgcolor: tokens.surface,
           borderRadius: `${tokens.radii.md}px`,
           boxShadow: tokens.elevation.e1,
-          m: 1.5,
+          mx: 0.5,
+          my: 1.5,
           pb: 1,
           minWidth: 0,
         }}
@@ -238,14 +239,13 @@ export default function FeatureTimeline({
             data-testid="features-count"
             sx={{
               flex: 1,
-              fontSize: "0.875rem",
+              fontSize: "0.8125rem",
               fontWeight: 600,
               color: tokens.onSurfaceVariant,
             }}
           >
             {count} {count === 1 ? "feature" : "features"}
           </Typography>
-          <RowMenu actions={gradeActions} label="Feature list actions" />
           <IconButton
             data-testid="features-fold"
             aria-expanded={!folded}
@@ -266,12 +266,24 @@ export default function FeatureTimeline({
           </IconButton>
         </Box>
 
-        <Box sx={{ px: 2, pb: 1 }}>
-          <FeatureStrip
-            features={approved}
-            grade={grades.length ? featureName(grades[0].feature) : null}
-            totalM={longest}
-          />
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "flex-start",
+            pl: 2,
+            pr: 0.5,
+            pb: 1,
+            boxShadow: `0 1px 0 ${tokens.outlineVariant}`,
+          }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <FeatureStrip
+              features={approved}
+              grade={grades.length ? featureName(grades[0].feature) : null}
+              totalM={longest}
+            />
+          </Box>
+          <RowMenu actions={gradeActions} label="Feature list actions" />
         </Box>
 
         <Collapse in={!folded} timeout={durations.base} unmountOnExit>

@@ -25,10 +25,10 @@ const { tokens } = theme;
 const OUTLINE_HEADROOM = 46;
 const CLOSED_HEADROOM = 6;
 
-// The phone height gives way on short screens, so a 568px phone still shows
-// the start of the features list under the chart.
+// The phone height gives way on short screens but never below 160px (a taller chart pushes the strip under the FAB at 320px), so the
+// threshold labels keep clear of each other at 320px wide.
 const heights = {
-  base: { xs: "clamp(140px, 24vh, 210px)", md: "clamp(200px, 26vh, 340px)" },
+  base: { xs: "clamp(160px, 24vh, 210px)", md: "clamp(200px, 26vh, 340px)" },
   tall: { xs: 340, md: "clamp(280px, 42vh, 520px)" },
 } as const;
 
@@ -42,6 +42,8 @@ function readingTime(iso: string): string {
 const chipSx = (on: boolean) =>
   ({
     border: "none",
+    height: tokens.touch.min,
+    borderRadius: `${tokens.radii.pill}px`,
     bgcolor: "transparent",
     color: "text.primary",
     fontVariantNumeric: "tabular-nums",
@@ -108,7 +110,8 @@ export default function ChartCard({
     <Box
       data-testid="chart-card"
       sx={{
-        mx: 1.5,
+        // The pane around the cards already pads 8px, which makes 12.
+        mx: 0.5,
         mt: 1.5,
         flexShrink: 0,
         bgcolor: tokens.surface,
@@ -198,8 +201,7 @@ export default function ChartCard({
             <Box sx={{ display: "flex", alignItems: "center", mr: -1.25 }}>
               <Typography
                 variant="body2"
-                color="textSecondary"
-                sx={{ flex: 1, minWidth: 0 }}
+                sx={{ flex: 1, minWidth: 0, color: "text.secondary" }}
               >
                 {charted.gauge.name}
                 {latest && ` · ${readingTime(latest.measured_at)}`}
