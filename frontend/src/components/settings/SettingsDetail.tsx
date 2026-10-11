@@ -18,7 +18,7 @@ function SettingsSection({ group }: { group: GroupId }) {
 }
 
 /** One open section. On a phone it is the overlay, with a back arrow in the
- * panel header; on a desktop the pane beside the list already carries the
+ * panel header; on a desktop the column beside the nav already carries the
  * way back, so it opens with a bold title instead. */
 export default function SettingsDetail({
   group,
@@ -31,7 +31,7 @@ export default function SettingsDetail({
 }) {
   const title = groupLabel(group);
   const body = (
-    <Box sx={{ maxWidth: 640 }}>
+    <Box sx={overlay ? { maxWidth: 640 } : undefined}>
       <SettingsSection group={group} />
     </Box>
   );
@@ -61,11 +61,10 @@ export default function SettingsDetail({
   return (
     <Box
       data-testid="settings-detail"
-      sx={{ minHeight: 0, overflowY: "auto", px: 4, py: 3 }}
+      sx={{ minHeight: 0, overflowY: "auto", py: 2 }}
     >
       <Box
         sx={{
-          maxWidth: 880,
           p: 3,
           bgcolor: tokens.surfaceLowest,
           borderRadius: `${tokens.radii.lg}px`,

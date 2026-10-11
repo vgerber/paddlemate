@@ -24,7 +24,7 @@ export default function SettingsList({
         flexDirection: "column",
         gap: 0.75,
         p: 1.5,
-        bgcolor: { md: tokens.surfaceLow },
+        px: { md: 0 },
       }}
     >
       {GROUPS.map((g) => (
