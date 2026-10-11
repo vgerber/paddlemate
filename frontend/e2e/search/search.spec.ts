@@ -268,6 +268,40 @@ test.describe("filters sheet", () => {
     expect(await computed(chip(page, "Water now"), "color")).toBe(TEAL);
   });
 
+  test("Water now is in the URL, survives a reload and both panels agree", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Test");
+    await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
+    const all = await tabCount(page, "Sections");
+    await chip(page, "Water now").click();
+    await sheet(page)
+      .getByRole("button", { name: "High", exact: true })
+      .click();
+    await expect(page).toHaveURL(/water=/);
+    await page.keyboard.press("Escape");
+    await expect.poll(() => rowLevels(page)).toEqual(["high"]);
+    await page.reload();
+    await appReady(page);
+    expect(await computed(chip(page, "Water now"), "color")).toBe(TEAL);
+    await expect.poll(() => rowLevels(page)).toEqual(["high"]);
+    const narrowed = await tabCount(page, "Sections");
+    expect(narrowed).toBeLessThan(all);
+    // The sidebar and the phone overlay are both mounted; every copy of the
+    // tab, hidden or not, shows the same count.
+    const labels = await page
+      .locator("button.MuiTab-root", { hasText: /^Sections \(/ })
+      .allTextContents();
+    expect(labels.length).toBeGreaterThan(1);
+    expect(new Set(labels).size).toBe(1);
+  });
+
+  test("an unknown water value in the URL is ignored", async ({ page }) => {
+    await openSearch(page, "&q=Test&water=%5B%22bogus%22%5D");
+    await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
+    expect(await computed(chip(page, "Water now"), "color")).not.toBe(TEAL);
+  });
+
   test("Reset clears the filters", async ({ page }) => {
     await openSearch(page, "&q=Test&min_diff=3&country=AT");
     await chip(page, /^Grade III/).click();

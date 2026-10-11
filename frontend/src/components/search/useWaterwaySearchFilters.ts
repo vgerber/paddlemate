@@ -51,6 +51,7 @@ export function useWaterwaySearchFilters(
     max_diff?: number;
     mode?: "area" | "region";
     region?: number;
+    water?: WaterLevel[];
   };
 
   // Mode and region live in the URL rather than in state: clicking a region
@@ -90,17 +91,31 @@ export function useWaterwaySearchFilters(
   );
 
   const [regionQuery, setRegionQuery] = useState("");
-  const [water, setWater] = useState<WaterLevel[]>([]);
+  // In the URL like grade and country, so a reload keeps it and both mounted
+  // panels (sidebar and phone overlay) read the same value.
+  const water = useMemo(() => urlSearch.water ?? [], [urlSearch.water]);
   const toggleWater = useCallback(
     (level: WaterLevel) =>
-      setWater((prev) =>
-        prev.includes(level)
-          ? prev.filter((l) => l !== level)
-          : [...prev, level],
-      ),
-    [],
+      navigate({
+        search: (prev) => {
+          const current = prev.water ?? [];
+          const next = current.includes(level)
+            ? current.filter((l) => l !== level)
+            : [...current, level];
+          return { ...prev, water: next.length > 0 ? next : undefined };
+        },
+        replace: true,
+      }),
+    [navigate],
   );
-  const clearWater = useCallback(() => setWater([]), []);
+  const clearWater = useCallback(
+    () =>
+      navigate({
+        search: (prev) => ({ ...prev, water: undefined }),
+        replace: true,
+      }),
+    [navigate],
+  );
   const [name, setName] = useState(urlSearch.q ?? "");
   const [country, setCountry] = useState(urlSearch.country ?? "");
   const [minDiff, setMinDiff] = useState<number | "">(urlSearch.min_diff ?? "");
