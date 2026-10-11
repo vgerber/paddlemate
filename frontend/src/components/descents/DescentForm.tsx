@@ -10,7 +10,7 @@ import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
-import { theme } from "@/lib/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme";
 import {
   buildPayload,
   copyFromDescent,
@@ -20,9 +20,11 @@ import {
   makeDraft,
   toDatetimeLocal,
 } from "./descent-form/model";
+import SectionPickerMap from "./descent-form/SectionPickerMap";
 import StepDetails from "./descent-form/StepDetails";
 import StepSections from "./descent-form/StepSections";
 import StepWhen from "./descent-form/StepWhen";
+import { useSectionPicking } from "./descent-form/useSectionPicking";
 
 const { tokens } = theme;
 
@@ -37,8 +39,7 @@ interface Props {
   initialTripId?: number;
   onSave: (id: number) => void;
   onCancel: () => void;
-  /** Rendered inside a detail pane rather than the whole window, so the
-   * bottom bar sticks to the form's own column instead of the viewport. */
+  /** Wide screen: the steps in a left pane with the map beside them. */
   embedded?: boolean;
 }
 
@@ -91,6 +92,12 @@ export default function DescentForm({
     setForm((prev) => ({ ...prev, ...update }));
   }
 
+  const picking = useSectionPicking(
+    form,
+    patch,
+    initialSection?.waterwayId ?? null,
+  );
+
   const isLast = step === STEPS.length - 1;
   const isBusy = createDescent.isPending || patchDescent.isPending;
 
@@ -121,21 +128,63 @@ export default function DescentForm({
     />
   );
 
+  const steps = (
+    <>
+      {step === 0 && <StepWhen form={form} onChange={patch} />}
+      {step === 1 && (
+        <StepSections
+          form={form}
+          onChange={patch}
+          picking={picking}
+          mapBeside={embedded}
+        />
+      )}
+      {step === 2 && <StepDetails form={form} onChange={patch} />}
+
+      {saveError && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {saveError}
+        </Alert>
+      )}
+    </>
+  );
+
+  // Wide screen: the steps and their bar in a left pane, the map beside it
+  // on every step so it never shifts.
+  if (embedded) {
+    return (
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "400px minmax(0, 1fr)",
+          height: PANEL_HEIGHT.md,
+          bgcolor: tokens.surfaceLow,
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            bgcolor: tokens.surface,
+            borderRight: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2 }}>
+            {steps}
+          </Box>
+          {bar}
+        </Box>
+        <Box sx={{ minWidth: 0, minHeight: 0, p: 1.5 }}>
+          <SectionPickerMap picking={picking} readOnly={step !== 1} fill />
+        </Box>
+      </Box>
+    );
+  }
+
   return (
-    <Box
-      sx={
-        embedded
-          ? {
-              // In a pane the column fills the height so the bar docks at the
-              // pane foot, instead of trailing whatever the step is tall.
-              flex: 1,
-              minHeight: "100%",
-              display: "flex",
-              flexDirection: "column",
-            }
-          : undefined
-      }
-    >
+    <Box>
       <Box
         sx={{
           maxWidth: 720,
@@ -144,55 +193,27 @@ export default function DescentForm({
           boxSizing: "border-box",
           px: 2,
           py: 3,
-          flex: embedded ? 1 : undefined,
           // Clear the fixed bottom bar so the last field stays reachable.
-          pb: embedded ? 2 : "calc(88px + env(safe-area-inset-bottom))",
+          pb: "calc(88px + env(safe-area-inset-bottom))",
         }}
       >
-        {step === 0 && <StepWhen form={form} onChange={patch} />}
-        {step === 1 && (
-          <StepSections
-            form={form}
-            onChange={patch}
-            initialWaterwayId={initialSection?.waterwayId}
-          />
-        )}
-        {step === 2 && <StepDetails form={form} onChange={patch} />}
-
-        {saveError && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {saveError}
-          </Alert>
-        )}
+        {steps}
       </Box>
 
       {/* Bottom bar - pinned to the viewport bottom, above the mobile
           bottom navigation (zIndex 1300); same pattern as the section and
-          feature wizards. Centring on the viewport would straddle the list
-          pane, so beside a list it docks to the foot of the form's pane. */}
+          feature wizards. */}
       <Box
-        sx={
-          embedded
-            ? {
-                position: "sticky",
-                // The pane keeps a 12px margin below its card.
-                bottom: 12,
-                zIndex: 2,
-                bgcolor: "background.paper",
-                borderBottomLeftRadius: `${tokens.radii.lg}px`,
-                borderBottomRightRadius: `${tokens.radii.lg}px`,
-              }
-            : {
-                position: "fixed",
-                bottom: 0,
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "100%",
-                maxWidth: 720,
-                zIndex: 1350,
-                bgcolor: "background.paper",
-              }
-        }
+        sx={{
+          position: "fixed",
+          bottom: 0,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "100%",
+          maxWidth: 720,
+          zIndex: 1350,
+          bgcolor: "background.paper",
+        }}
       >
         {bar}
       </Box>

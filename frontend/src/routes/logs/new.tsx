@@ -38,7 +38,7 @@ function NewLogPage() {
   const { waterwayId, sectionId, startTime, tripId, copyDescentId } =
     Route.useSearch();
   const { isAuthenticated, isLoading: sessionLoading } = useSession();
-  // From md up this renders in the logs pane, beside the list.
+  // From md up the form is a left pane with its own map beside it.
   const embedded = useMediaQuery(theme.breakpoints.up("md"));
 
   const hasInitialSection = waterwayId != null && sectionId != null;
@@ -60,13 +60,7 @@ function NewLogPage() {
   if (!isAuthenticated) return <Navigate to="/logs" />;
 
   return (
-    <Box
-      sx={
-        embedded
-          ? { flex: 1, display: "flex", flexDirection: "column" }
-          : { maxWidth: 720, mx: "auto" }
-      }
-    >
+    <Box sx={embedded ? undefined : { maxWidth: 720, mx: "auto" }}>
       <DescentForm
         embedded={embedded}
         initialSection={
