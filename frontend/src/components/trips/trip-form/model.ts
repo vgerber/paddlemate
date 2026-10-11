@@ -1,3 +1,4 @@
+import { isBefore, parseISO } from "date-fns";
 import type {
   CreateTripRequest,
   PatchTripRequest,
@@ -67,7 +68,10 @@ export function tripFormError(
 ): string | null {
   if (!form.name.trim()) return "A trip needs a name.";
   if (!form.start_date) return "A trip needs a start date.";
-  if (form.end_date && form.end_date < form.start_date) {
+  if (
+    form.end_date &&
+    isBefore(parseISO(form.end_date), parseISO(form.start_date))
+  ) {
     return "The end date cannot be before the start date.";
   }
   if (needsStay && !form.stay_name.trim()) {

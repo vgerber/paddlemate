@@ -8,10 +8,8 @@ import Button from "@mui/material/Button";
 import ButtonBase from "@mui/material/ButtonBase";
 import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { factLabelSx } from "@/components/Fact";
 import MarkdownText from "@/components/MarkdownText";
@@ -25,7 +23,8 @@ import {
   useVoteCandidate,
   useWithdrawCandidate,
 } from "@/lib/hooks/useTrips";
-import { fonts, theme } from "@/lib/theme";
+import { durations } from "@/lib/motion";
+import { alphas, fonts, theme } from "@/lib/theme";
 import { nearestWatched } from "@/lib/tripRange";
 import StayDialog from "./StayDialog";
 
@@ -66,7 +65,7 @@ export default function TripCandidates({
 
   return (
     <FormSection label={`Up for a vote (${candidates.length})`}>
-      <Box>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         {candidates.map((candidate) => (
           <CandidateRow
             key={candidate.id}
@@ -197,60 +196,113 @@ function CandidateRow({
   }
 
   return (
-    <ButtonBase
-      component="div"
-      disableRipple
-      onClick={onToggle}
-      aria-expanded={isOpen}
-      aria-label={`${candidate.name}, ${candidate.upvotes} for, ${candidate.downvotes} against`}
+    <Box
+      data-testid="candidate-row"
       sx={{
-        display: "block",
-        width: "100%",
-        textAlign: "left",
-        cursor: "pointer",
-        py: 1.5,
-        px: 2,
-        borderBottom: "1px solid",
-        borderColor: `${tokens.outlineVariant}55`,
-        bgcolor: isOpen ? `${tokens.primary}0d` : "transparent",
-        "&:hover": { bgcolor: isOpen ? `${tokens.primary}14` : "action.hover" },
+        borderRadius: `${tokens.radii.md}px`,
+        bgcolor: tokens.surface,
+        boxShadow: tokens.elevation.e1,
+        overflow: "hidden",
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Icon sx={{ fontSize: 18, color: "text.disabled" }} />
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="body2" noWrap sx={{ fontWeight: 600 }}>
-            {candidate.name}
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: fonts.label,
-              fontSize: "0.75rem",
-              color: candidate.arrival ? "primary.main" : "text.disabled",
-            }}
-          >
-            {candidate.arrival
-              ? dateRange(candidate.arrival, candidate.departure)
-              : "No dates yet"}
-          </Typography>
-        </Box>
-        <Chip label={label} size="small" variant="outlined" />
+      <Box sx={{ display: "flex", alignItems: "center", pr: 0.5 }}>
+        <ButtonBase
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          aria-label={`${candidate.name}, ${candidate.upvotes} for, ${candidate.downvotes} against`}
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            minHeight: tokens.touch.row,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            gap: 1,
+            px: 1.5,
+            py: 1,
+            textAlign: "left",
+          }}
+        >
+          <Icon sx={{ fontSize: 18, color: "text.disabled" }} />
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              noWrap
+              sx={{
+                fontFamily: fonts.label,
+                fontWeight: 600,
+                fontSize: "0.9375rem",
+              }}
+            >
+              {candidate.name}
+            </Typography>
+            <Typography
+              sx={{
+                ...factLabelSx,
+                color: candidate.arrival ? "primary.main" : "text.disabled",
+              }}
+            >
+              {candidate.arrival
+                ? dateRange(candidate.arrival, candidate.departure)
+                : "No dates yet"}
+            </Typography>
+          </Box>
+          <Chip label={label} size="small" variant="outlined" />
+        </ButtonBase>
+        <RowMenu actions={actions} label={`Actions for ${candidate.name}`} />
       </Box>
 
-      <SupportBar up={candidate.upvotes} down={candidate.downvotes} />
+      <Box sx={{ px: 1.5, pb: 1 }}>
+        <SupportBar up={candidate.upvotes} down={candidate.downvotes} />
+        {(supporters.length > 0 || objectors.length > 0) && (
+          <Typography sx={{ ...factLabelSx, mt: 0.5, display: "block" }}>
+            {supporters.length > 0 && `For: ${supporters.join(", ")}`}
+            {supporters.length > 0 && objectors.length > 0 && "  ·  "}
+            {objectors.length > 0 && `Against: ${objectors.join(", ")}`}
+          </Typography>
+        )}
 
-      {(supporters.length > 0 || objectors.length > 0) && (
-        <Typography sx={{ ...factLabelSx, mt: 0.5, display: "block" }}>
-          {supporters.length > 0 && `For: ${supporters.join(", ")}`}
-          {supporters.length > 0 && objectors.length > 0 && "  ·  "}
-          {objectors.length > 0 && `Against: ${objectors.join(", ")}`}
-        </Typography>
-      )}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
+          <VoteButton
+            label={`Vote for ${candidate.name}`}
+            icon={<ThumbUpOutlinedIcon sx={{ fontSize: 18 }} />}
+            count={candidate.upvotes}
+            pressed={candidate.viewer_vote === 1}
+            disabled={vote.isPending}
+            // Pressing your own vote again takes it back.
+            onClick={() =>
+              vote.mutate({
+                candidateId: candidate.id,
+                vote: candidate.viewer_vote === 1 ? null : 1,
+              })
+            }
+          />
+          <VoteButton
+            label={`Vote against ${candidate.name}`}
+            icon={<ThumbDownOutlinedIcon sx={{ fontSize: 18 }} />}
+            count={candidate.downvotes}
+            pressed={candidate.viewer_vote === -1}
+            disabled={vote.isPending}
+            onClick={() =>
+              vote.mutate({
+                candidateId: candidate.id,
+                vote: candidate.viewer_vote === -1 ? null : -1,
+              })
+            }
+          />
+          <Box sx={{ flex: 1 }} />
+          {isAdmin && (
+            <Button
+              startIcon={<CheckIcon fontSize="small" />}
+              onClick={onAccept}
+            >
+              Make this a base
+            </Button>
+          )}
+        </Box>
+      </Box>
 
-      {/* Opening a candidate is not voting on it, so the inside swallows the
-          clicks the row would otherwise take as a toggle. */}
-      <Collapse in={isOpen} timeout={200} unmountOnExit>
-        <Box onClick={(e) => e.stopPropagation()} sx={{ pt: 1.5 }}>
+      <Collapse in={isOpen} timeout={durations.base} unmountOnExit>
+        <Box sx={{ px: 1.5, pb: 1.5 }}>
           <Typography sx={{ ...factLabelSx, display: "block" }}>
             Put up by {candidate.proposed_by_username}
           </Typography>
@@ -268,52 +320,50 @@ function CandidateRow({
               ? `${near.km.toFixed(1)} km to ${near.name}${near.river ? ` on the ${near.river}` : ""}`
               : "No location yet, so no distance to go on"}
           </Typography>
-
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1.5 }}>
-            <ToggleButtonGroup
-              size="small"
-              exclusive
-              value={candidate.viewer_vote ?? null}
-              onChange={(_, next: number | null) =>
-                vote.mutate({
-                  candidateId: candidate.id,
-                  // Pressing your own vote again takes it back.
-                  vote: next === 1 || next === -1 ? (next as 1 | -1) : null,
-                })
-              }
-              disabled={vote.isPending}
-            >
-              <ToggleButton value={1} aria-label={`Vote for ${candidate.name}`}>
-                <ThumbUpOutlinedIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                {candidate.upvotes}
-              </ToggleButton>
-              <ToggleButton
-                value={-1}
-                aria-label={`Vote against ${candidate.name}`}
-              >
-                <ThumbDownOutlinedIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                {candidate.downvotes}
-              </ToggleButton>
-            </ToggleButtonGroup>
-
-            <Box sx={{ flex: 1 }} />
-
-            {isAdmin && (
-              <Button
-                size="small"
-                startIcon={<CheckIcon fontSize="small" />}
-                onClick={onAccept}
-              >
-                Make this a base
-              </Button>
-            )}
-            <RowMenu
-              actions={actions}
-              label={`Actions for ${candidate.name}`}
-            />
-          </Box>
         </Box>
       </Collapse>
+    </Box>
+  );
+}
+
+function VoteButton({
+  label,
+  icon,
+  count,
+  pressed,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  icon: ReactNode;
+  count: number;
+  pressed: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <ButtonBase
+      aria-label={label}
+      aria-pressed={pressed}
+      disabled={disabled}
+      onClick={onClick}
+      sx={{
+        minWidth: tokens.touch.min,
+        minHeight: tokens.touch.min,
+        gap: 0.75,
+        px: 1.5,
+        borderRadius: `${tokens.radii.sm}px`,
+        border: "1px solid",
+        borderColor: pressed ? tokens.primary : tokens.outlineVariant,
+        bgcolor: pressed ? `${tokens.primary}${alphas.tint}` : "transparent",
+        color: pressed ? tokens.primary : tokens.onSurfaceVariant,
+        fontFamily: fonts.label,
+        fontWeight: 600,
+        fontSize: "0.8125rem",
+      }}
+    >
+      {icon}
+      {count}
     </ButtonBase>
   );
 }

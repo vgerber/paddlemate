@@ -14,16 +14,20 @@ import RowMenu, { type RowAction } from "@/components/RowMenu";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import { stayKind } from "@/components/trips/stayKinds";
+import WaterLevelChip from "@/components/WaterLevelChip";
 import type { TripSection, TripStay } from "@/lib/api";
 import { dateRange } from "@/lib/format";
 import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
 import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
-import { fonts, theme } from "@/lib/theme";
+import { durations } from "@/lib/motion";
+import { alphas, fonts, theme } from "@/lib/theme";
 import { baseColors, baseNumbers } from "@/lib/tripRange";
-import { levelConfig, type WaterLevel } from "@/lib/waterLevel";
+import { LEVEL_ORDER, type WaterLevel } from "@/lib/waterLevel";
 import BasesMap from "./BasesMap";
 import TripCandidates from "./TripCandidates";
 import WatchList from "./WatchList";
+
+const { tokens } = theme;
 
 interface Props {
   tripId: number;
@@ -75,7 +79,7 @@ export default function TripStays({
   }
 
   return (
-    <Box>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
       <BasesMap stays={list} candidates={candidates ?? []} />
 
       <TripCandidates
@@ -109,46 +113,22 @@ export default function TripStays({
   );
 }
 
-/**
- * One dot per run on the watch list, coloured by what its gauge says right
- * now - so a closed base answers the only question worth asking before you
- * open it: is anything on this list running?
- *
- * `marker` rather than `text`: a dot is geometry, and those are the saturated
- * hues. A run with no gauge, or none calibrated, gets the outline colour -
- * unknown is not a level.
- */
-function WatchDots({
-  sections,
-  levels,
-}: {
-  sections: TripSection[];
-  levels: Record<number, WaterLevel>;
-}) {
-  if (sections.length === 0) return null;
-  return (
-    <Box sx={{ display: "flex", gap: "3px", flexShrink: 0 }}>
-      {sections.map((section) => {
-        const level = levels[section.section_id];
-        return (
-          <Box
-            key={section.id}
-            title={`${section.section_name ?? "A run"}${
-              level ? ` · ${levelConfig[level].label}` : " · no gauge"
-            }`}
-            sx={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              bgcolor: level
-                ? theme.tokens.levels[level].marker
-                : theme.tokens.outlineVariant,
-            }}
-          />
-        );
-      })}
-    </Box>
-  );
+/** The run on the watch list whose water is highest, if any has a level. */
+function wettestSection(
+  sections: TripSection[],
+  levels: Record<number, WaterLevel>,
+): TripSection | null {
+  let best: TripSection | null = null;
+  for (const s of sections) {
+    const level = levels[s.section_id];
+    if (!level || s.waterway_id == null) continue;
+    if (
+      !best ||
+      LEVEL_ORDER.indexOf(level) > LEVEL_ORDER.indexOf(levels[best.section_id])
+    )
+      best = s;
+  }
+  return best;
 }
 
 function StayRow({
@@ -190,6 +170,7 @@ function StayRow({
     [stay.sections],
   );
   const { levels } = useSectionLevels(pairs);
+  const wettest = wettestSection(stay.sections, levels);
 
   // One control per row: a row of bare icons is clutter and names nothing.
   const actions: RowAction[] = [];
@@ -216,21 +197,26 @@ function StayRow({
 
   return (
     <Box
+      data-testid="stay-row"
       sx={{
-        borderBottom: "1px solid",
-        borderColor: `${theme.tokens.outlineVariant}55`,
+        borderRadius: `${tokens.radii.md}px`,
+        bgcolor: tokens.surface,
+        boxShadow: tokens.elevation.e1,
+        overflow: "hidden",
       }}
     >
-      {/* Closed, a base is its name, when it runs, and a dot per run on its
-          watch list; the list itself is what opening it is for. */}
+      {/* Closed, a base is its name, when it runs, and the water level of
+          its wettest run; the list itself is what opening it is for. */}
       <ListItemButton
         onClick={onToggle}
         aria-expanded={isOpen}
         sx={{
           display: "block",
-          py: 1.5,
+          minHeight: tokens.touch.row,
+          py: 1,
+          pr: 0.5,
           cursor: "pointer",
-          bgcolor: isOpen ? `${theme.tokens.primary}0d` : "transparent",
+          bgcolor: isOpen ? `${tokens.primary}${alphas.tint}` : "transparent",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -277,7 +263,12 @@ function StayRow({
               </Typography>
             )}
           </Box>
-          <WatchDots sections={stay.sections} levels={levels} />
+          {wettest && (
+            <WaterLevelChip
+              waterwayId={wettest.waterway_id ?? null}
+              sectionId={wettest.section_id}
+            />
+          )}
           <Chip label={label} size="small" variant="outlined" />
           <RowMenu actions={actions} label="Base actions" />
         </Box>
@@ -289,7 +280,7 @@ function StayRow({
         )}
       </ListItemButton>
 
-      <Collapse in={isOpen} timeout={200} unmountOnExit>
+      <Collapse in={isOpen} timeout={durations.base} unmountOnExit>
         <Box sx={{ px: 2, pb: 1.5 }}>
           <Typography sx={{ ...factLabelSx, ml: 3.5, display: "block" }}>
             Watch list

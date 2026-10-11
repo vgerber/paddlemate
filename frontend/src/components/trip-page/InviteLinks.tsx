@@ -5,8 +5,6 @@ import LinkOffOutlinedIcon from "@mui/icons-material/LinkOffOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -120,48 +118,57 @@ function FreshLink({ invite }: { invite: TripInviteCreated }) {
   const canShare = typeof navigator !== "undefined" && "share" in navigator;
 
   return (
-    <Box>
-      <TextField
-        size="small"
-        fullWidth
-        value={url}
-        label="Link"
-        slotProps={{
-          input: {
-            readOnly: true,
-            endAdornment: (
-              <InputAdornment position="end">
-                {canShare && (
-                  <IconButton
-                    size="small"
-                    aria-label="Share link"
-                    onClick={() =>
-                      navigator
-                        .share({ title: "Join the trip", url })
-                        // Dismissing the share sheet rejects; nothing to do.
-                        .catch(() => undefined)
-                    }
-                  >
-                    <IosShareOutlinedIcon fontSize="small" />
-                  </IconButton>
-                )}
-                <IconButton
-                  size="small"
-                  aria-label={copied ? "Copied" : "Copy link"}
-                  onClick={() => copy(url)}
-                >
-                  {copied ? (
-                    <DoneIcon fontSize="small" />
-                  ) : (
-                    <ContentCopyOutlinedIcon fontSize="small" />
-                  )}
-                </IconButton>
-              </InputAdornment>
-            ),
-          },
+    <Box
+      data-testid="invite-card"
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 1,
+        p: 1.5,
+        borderRadius: `${theme.tokens.radii.md}px`,
+        bgcolor: theme.tokens.surface,
+        boxShadow: theme.tokens.elevation.e1,
+      }}
+    >
+      <Typography
+        sx={{
+          fontSize: "0.9375rem",
+          fontWeight: 600,
+          wordBreak: "break-all",
+          userSelect: "all",
         }}
-        onFocus={(e) => e.target.select()}
-      />
+      >
+        {url}
+      </Typography>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Button
+          variant="outlined"
+          startIcon={
+            copied ? (
+              <DoneIcon fontSize="small" />
+            ) : (
+              <ContentCopyOutlinedIcon fontSize="small" />
+            )
+          }
+          aria-label={copied ? "Copied" : "Copy link"}
+          onClick={() => copy(url)}
+        >
+          {copied ? "Copied" : "Copy link"}
+        </Button>
+        {canShare && (
+          <IconButton
+            aria-label="Share link"
+            onClick={() =>
+              navigator
+                .share({ title: "Join the trip", url })
+                // Dismissing the share sheet rejects; nothing to do.
+                .catch(() => undefined)
+            }
+          >
+            <IosShareOutlinedIcon fontSize="small" />
+          </IconButton>
+        )}
+      </Box>
       <Typography variant="caption" color="text.secondary">
         Copy it now - it is shown only once. Works until{" "}
         {formatDate(invite.expires_at)}.

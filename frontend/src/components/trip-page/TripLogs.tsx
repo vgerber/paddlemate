@@ -3,6 +3,7 @@ import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlin
 import LinkOffOutlinedIcon from "@mui/icons-material/LinkOffOutlined";
 import Box from "@mui/material/Box";
 import DescentCard from "@/components/descents/DescentCard";
+import ListPaneHeader from "@/components/ListPaneHeader";
 import RowMenu from "@/components/RowMenu";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -54,6 +55,7 @@ export default function TripLogs({
 
   return (
     <Box>
+      <ListPaneHeader count={descents.length} sx={{ px: 0.5 }} />
       {descents.map((d) => (
         <Box
           key={d.id}

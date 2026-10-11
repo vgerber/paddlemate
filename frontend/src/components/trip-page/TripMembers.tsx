@@ -3,8 +3,7 @@ import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import ListItemButton from "@mui/material/ListItemButton";
+import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -12,6 +11,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { factLabelSx } from "@/components/Fact";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
+import MemberAvatar from "@/components/trips/MemberAvatar";
 import type { TripMember, TripMemberRole } from "@/lib/api";
 import { clockTime, dateRange } from "@/lib/format";
 import {
@@ -19,7 +19,9 @@ import {
   useRemoveTripMember,
   useTripMembers,
 } from "@/lib/hooks/useTrips";
-import { fonts, theme } from "@/lib/theme";
+import { alphas, fonts, labelSx, theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 interface Props {
   tripId: number;
@@ -49,7 +51,7 @@ export default function TripMembers({
   const leaving = confirmRemove?.user_id === viewerId;
 
   return (
-    <Box>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
       {(members ?? []).map((m) => (
         <MemberRow
           key={m.user_id}
@@ -157,34 +159,43 @@ function MemberRow({
 
   return (
     <Box
+      data-testid="member-row"
       sx={{
-        borderBottom: "1px solid",
-        borderColor: `${theme.tokens.outlineVariant}55`,
+        display: "flex",
+        alignItems: "center",
+        gap: 1.25,
+        minHeight: 56,
+        pl: 1.5,
+        pr: 0.5,
+        borderRadius: `${tokens.radii.md}px`,
+        bgcolor: tokens.surface,
+        boxShadow: tokens.elevation.e1,
       }}
     >
       {/* Your own row goes where its menu's first action goes; somebody
-          else's dates are not yours to open. The menu lives inside the row
-          so hovering covers it too - and stays clickable, which it would not
-          be inside a disabled button. */}
-      <ListItemButton
+          else's dates are not yours to open. */}
+      <ButtonBase
         onClick={isSelf ? onEditAttendance : undefined}
-        disableRipple={!isSelf}
-        tabIndex={isSelf ? 0 : -1}
+        disabled={!isSelf}
         sx={{
+          flex: 1,
+          minWidth: 0,
           display: "flex",
           alignItems: "center",
-          gap: 1,
-          py: 1.25,
-          cursor: isSelf ? "pointer" : "default",
-          ...(isSelf ? {} : { "&:hover": { bgcolor: "transparent" } }),
+          justifyContent: "flex-start",
+          gap: 1.25,
+          py: 1,
+          textAlign: "left",
+          "&.Mui-disabled": { opacity: 1 },
         }}
       >
+        <MemberAvatar name={member.username} />
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             sx={{
               fontFamily: fonts.label,
               fontWeight: 600,
-              fontSize: "0.8125rem",
+              fontSize: "0.9375rem",
             }}
             noWrap
           >
@@ -194,30 +205,36 @@ function MemberRow({
                 component="span"
                 sx={{ ...factLabelSx, ml: 1, display: "inline" }}
               >
-                you
+                You
               </Typography>
             )}
           </Typography>
-          {attendance ? (
-            <Typography
-              sx={{
-                fontFamily: fonts.label,
-                fontSize: "0.75rem",
-                color: "primary.main",
-              }}
-            >
-              {attendance}
-            </Typography>
-          ) : (
-            <Typography sx={factLabelSx}>
-              {isSelf ? "no dates set" : "not said yet"}
-            </Typography>
-          )}
+          <Typography
+            sx={{
+              ...factLabelSx,
+              fontVariantNumeric: "tabular-nums",
+              color: attendance ? "text.secondary" : "text.disabled",
+            }}
+            noWrap
+          >
+            {attendance ?? (isSelf ? "No dates set" : "Not said yet")}
+          </Typography>
         </Box>
+      </ButtonBase>
 
-        <Chip label={member.role} size="small" variant="outlined" />
-        <RowMenu actions={actions} label={`Actions for ${member.username}`} />
-      </ListItemButton>
+      <Typography
+        data-testid="member-role"
+        sx={{
+          ...labelSx,
+          px: 1,
+          py: 0.25,
+          borderRadius: `${tokens.radii.pill}px`,
+          bgcolor: `${tokens.primary}${alphas.tint}`,
+        }}
+      >
+        {member.role === "admin" ? "Admin" : "Member"}
+      </Typography>
+      <RowMenu actions={actions} label={`Actions for ${member.username}`} />
     </Box>
   );
 }

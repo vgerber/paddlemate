@@ -1,35 +1,51 @@
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
-import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import Box from "@mui/material/Box";
-import ListItemButton from "@mui/material/ListItemButton";
+import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
+import { tripStanding } from "@/components/trip-page/planWeek";
 import type { Trip } from "@/lib/api";
-import { dateRange } from "@/lib/format";
+import { dateRange, todayIso } from "@/lib/format";
+import { useTripMembers } from "@/lib/hooks/useTrips";
 import { fonts, labelSx, theme } from "@/lib/theme";
+import MemberAvatar from "./MemberAvatar";
 
-/** One scannable line in the trips list: what it is called, when it runs, how
- * many are coming and how many logs it has gathered. */
+const { tokens } = theme;
+
+const MAX_AVATARS = 4;
+
+/** One trip as a card: what it is called, when it runs and where it stands,
+ * its mood in the group's own words, and who is coming. */
 export default function TripRow({
   trip,
   selected = false,
   onSelect,
 }: {
   trip: Trip;
-  /** Marks the row the desktop detail pane is showing. */
+  /** Marks the card the desktop detail pane is showing. */
   selected?: boolean;
   onSelect: () => void;
 }) {
+  const { data: members } = useTripMembers(trip.id);
+  const standing = tripStanding(trip.start_date, trip.end_date, todayIso());
+  const shown = (members ?? []).slice(0, MAX_AVATARS);
+
   return (
-    <ListItemButton
-      selected={selected}
+    <ButtonBase
+      data-testid="trip-card"
+      aria-current={selected || undefined}
       onClick={onSelect}
       sx={{
-        display: "block",
-        borderBottom: "1px solid",
-        // A full-strength rule between every row turns the list into a grid;
-        // these only need to separate.
-        borderColor: `${theme.tokens.outlineVariant}55`,
-        py: 1.25,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "stretch",
+        gap: 0.75,
+        width: "100%",
+        textAlign: "left",
+        p: 1.75,
+        borderRadius: `${tokens.radii.md}px`,
+        bgcolor: tokens.surface,
+        boxShadow: selected
+          ? `inset 0 0 0 2px ${tokens.primary}, ${tokens.elevation.e1}`
+          : tokens.elevation.e1,
       }}
     >
       <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
@@ -37,7 +53,7 @@ export default function TripRow({
           sx={{
             fontFamily: fonts.label,
             fontWeight: 600,
-            fontSize: "0.8125rem",
+            fontSize: "1rem",
             flex: 1,
             minWidth: 0,
           }}
@@ -46,45 +62,35 @@ export default function TripRow({
           {trip.name}
         </Typography>
         {trip.viewer_role === "admin" && (
-          <Typography sx={{ ...labelSx, flexShrink: 0 }}>admin</Typography>
+          <Typography sx={{ ...labelSx, flexShrink: 0 }}>Admin</Typography>
         )}
       </Box>
 
-      <Box
+      <Typography
         sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1.5,
-          mt: 0.25,
-          color: "text.disabled",
+          ...labelSx,
+          fontSize: "0.8125rem",
+          fontVariantNumeric: "tabular-nums",
         }}
       >
-        <Typography
-          sx={{
-            fontFamily: fonts.label,
-            fontSize: "0.75rem",
-            color: "primary.main",
-          }}
+        {dateRange(trip.start_date, trip.end_date)}
+        {" · "}
+        <Box
+          component="span"
+          sx={{ color: standing === "under way" ? tokens.primary : undefined }}
         >
-          {dateRange(trip.start_date, trip.end_date)}
-        </Typography>
-        <Count icon={<PeopleAltOutlinedIcon sx={{ fontSize: 13 }} />}>
-          {trip.member_count}
-        </Count>
-        {/* Logs, not runs: each paddler on a run keeps their own. */}
-        {trip.descent_count > 0 && (
-          <Count icon={<DirectionsBoatOutlinedIcon sx={{ fontSize: 13 }} />}>
-            {trip.descent_count}
-          </Count>
-        )}
-      </Box>
+          {standing === "under way"
+            ? "Under way"
+            : standing === "past"
+              ? "Past"
+              : "Upcoming"}
+        </Box>
+      </Typography>
 
       {trip.description && (
         <Typography
           variant="body2"
-          color="text.secondary"
           sx={{
-            mt: 0.5,
             overflow: "hidden",
             textOverflow: "ellipsis",
             display: "-webkit-box",
@@ -95,23 +101,28 @@ export default function TripRow({
           {trip.description}
         </Typography>
       )}
-    </ListItemButton>
-  );
-}
 
-function Count({
-  icon,
-  children,
-}: {
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-      {icon}
-      <Typography sx={{ fontFamily: fonts.label, fontSize: "0.6875rem" }}>
-        {children}
-      </Typography>
-    </Box>
+      <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
+        {shown.map((m, i) => (
+          <Box key={m.user_id} sx={{ ml: i === 0 ? 0 : -0.75 }}>
+            <MemberAvatar name={m.username} size={28} ring />
+          </Box>
+        ))}
+        {trip.member_count > shown.length && (
+          <Typography sx={{ ...labelSx, ml: 1 }}>
+            +{trip.member_count - shown.length}
+          </Typography>
+        )}
+        <Box sx={{ flex: 1 }} />
+        {trip.descent_count > 0 && (
+          <Typography
+            sx={{ ...labelSx, color: `${tokens.onSurfaceVariant}` }}
+            title="Logs"
+          >
+            {trip.descent_count} {trip.descent_count === 1 ? "log" : "logs"}
+          </Typography>
+        )}
+      </Box>
+    </ButtonBase>
   );
 }
