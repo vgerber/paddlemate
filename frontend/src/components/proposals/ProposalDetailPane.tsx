@@ -36,8 +36,11 @@ const paneLabelSx = { ...labelSx, color: "text.disabled" } as const;
  * the editing: map, naming, translations and feature rows with positions. */
 export default function ProposalDetailPane({
   proposal,
+  showMap = true,
 }: {
   proposal: Proposal;
+  /** False on the canvas, where the screen's own map draws the change. */
+  showMap?: boolean;
 }) {
   const data = (proposal.proposed_data ?? {}) as Record<string, unknown>;
 
@@ -144,34 +147,37 @@ export default function ProposalDetailPane({
       )}
 
       {/* Map */}
-      {(sectionLine ||
-        pseudoFeatures.length > 0 ||
-        contextSections.length > 0) && (
-        <Box
-          sx={{
-            // Grows with the desktop pane instead of staying phone-sized.
-            height: { xs: 380, md: "clamp(380px, 45vh, 560px)" },
-            border: "1px solid",
-            borderColor: "divider",
-            position: "relative",
-            // Keeps the map's own controls beneath the sticky review bar.
-            isolation: "isolate",
-          }}
-        >
-          <WaterwayMap
-            chrome={{ cooperativeGestures: true }}
-            sections={contextSections.length > 0 ? contextSections : undefined}
-            features={
-              existingFeatures.length > 0 ? existingFeatures : undefined
-            }
-            drawing={{ sectionPreviewCoords: sectionLine }}
-            proposedFeatures={
-              pseudoFeatures.length > 0 ? pseudoFeatures : undefined
-            }
-            camera={{ focusedPoint: focus }}
-          />
-        </Box>
-      )}
+      {showMap &&
+        (sectionLine ||
+          pseudoFeatures.length > 0 ||
+          contextSections.length > 0) && (
+          <Box
+            sx={{
+              // Grows with the desktop pane instead of staying phone-sized.
+              height: { xs: 380, md: "clamp(380px, 45vh, 560px)" },
+              border: "1px solid",
+              borderColor: "divider",
+              position: "relative",
+              // Keeps the map's own controls beneath the sticky review bar.
+              isolation: "isolate",
+            }}
+          >
+            <WaterwayMap
+              chrome={{ cooperativeGestures: true }}
+              sections={
+                contextSections.length > 0 ? contextSections : undefined
+              }
+              features={
+                existingFeatures.length > 0 ? existingFeatures : undefined
+              }
+              drawing={{ sectionPreviewCoords: sectionLine }}
+              proposedFeatures={
+                pseudoFeatures.length > 0 ? pseudoFeatures : undefined
+              }
+              camera={{ focusedPoint: focus }}
+            />
+          </Box>
+        )}
 
       {/* Details */}
       {detailRows.length > 0 && (

@@ -17,6 +17,7 @@ export default function ProposalDetailView({
   adminMode,
   onBack,
   listStatus,
+  docked,
 }: {
   proposal: Proposal;
   adminMode?: boolean;
@@ -25,6 +26,9 @@ export default function ProposalDetailView({
    * repeat the tab, so it is drawn when this is absent (a deep link) or
    * differs. */
   listStatus?: ProposalStatus;
+  /** Inside a canvas card: the card draws the header and the map, and the
+   * review controls sit at its foot instead of scrolling with the text. */
+  docked?: boolean;
 }) {
   const proposed = proposal.proposed_data as Record<string, unknown>;
   const original = proposal.original_data as
@@ -34,17 +38,26 @@ export default function ProposalDetailView({
   const kind = `${OP_LABEL[proposal.operation] ?? proposal.operation} · ${ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type}`;
 
   return (
-    <Box data-testid="proposal-detail">
-      <PanelHeader
-        title={proposalTitle(proposal)}
-        subtitle={kind}
-        onBack={onBack}
-        actionButton={
-          listStatus === proposal.status ? undefined : (
-            <StatusChip status={proposal.status} />
-          )
-        }
-      />
+    <Box
+      data-testid="proposal-detail"
+      sx={
+        docked
+          ? { height: "100%", display: "flex", flexDirection: "column" }
+          : undefined
+      }
+    >
+      {!docked && (
+        <PanelHeader
+          title={proposalTitle(proposal)}
+          subtitle={kind}
+          onBack={onBack}
+          actionButton={
+            listStatus === proposal.status ? undefined : (
+              <StatusChip status={proposal.status} />
+            )
+          }
+        />
+      )}
 
       <Box
         sx={{
@@ -53,6 +66,7 @@ export default function ProposalDetailView({
           gap: 2.5,
           px: 2,
           py: 2,
+          ...(docked && { flex: 1, minHeight: 0, overflowY: "auto" }),
         }}
       >
         <ProposalVoteBar proposal={proposal} />
@@ -70,7 +84,7 @@ export default function ProposalDetailView({
           <ProposalCreateSummary proposed={proposed} />
         )}
 
-        <ProposalDetailPane proposal={proposal} />
+        <ProposalDetailPane proposal={proposal} showMap={!docked} />
 
         {proposal.review_note && (
           <Typography variant="caption" color="textSecondary">
@@ -78,8 +92,18 @@ export default function ProposalDetailView({
           </Typography>
         )}
 
-        <ProposalReviewControls proposal={proposal} adminMode={adminMode} />
+        {!docked && (
+          <ProposalReviewControls proposal={proposal} adminMode={adminMode} />
+        )}
       </Box>
+
+      {docked && adminMode && proposal.status === "pending" && (
+        // The bar's negative margins cancel this padding, so it runs edge to
+        // edge at the card's foot.
+        <Box sx={{ px: 2, pb: 2, flexShrink: 0 }}>
+          <ProposalReviewControls proposal={proposal} adminMode={adminMode} />
+        </Box>
+      )}
     </Box>
   );
 }
