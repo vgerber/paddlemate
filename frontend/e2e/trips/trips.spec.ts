@@ -58,7 +58,7 @@ test.describe("trip list", () => {
     await first.click();
     await expect(page).toHaveURL(/selected=/);
     // The pane keeps the trip's title and drops only the back arrow.
-    await expect(page.getByText(name, { exact: true })).toHaveCount(2);
+    await expect(page.getByText(name, { exact: true })).toHaveCount(1);
     await expect(page.getByRole("button", { name: "Back" })).toHaveCount(0);
     await expect(
       page.getByRole("tab", { name: "Plan", exact: true }),
@@ -255,7 +255,7 @@ test.describe("bases and candidates", () => {
       expect((await r.boundingBox())?.height).toBeGreaterThanOrEqual(48);
       const style = await cardStyle(r);
       expect(style.radius).toBe(CARD_RADIUS);
-      expect(style.shadow).not.toBe("none");
+      expect(style.shadow).toBe("none");
       await expectTouchTargets(r.getByRole("button", { name: /^Actions for/ }));
       await expectTouchTargets(r.getByRole("button", { name: /^Vote / }));
     }
@@ -345,9 +345,9 @@ test.describe("trip forms", () => {
 });
 
 test.describe("add member dialog", () => {
-  test("one field, a contained action, stays open on failure", async ({
+  test("tapping a name adds it, a failure keeps it open", async ({
     page,
-  }) => {
+  }, info) => {
     await page.route("**/trips/*/members", (route) =>
       route.request().method() === "POST"
         ? route.fulfill({
@@ -363,15 +363,171 @@ test.describe("add member dialog", () => {
     await page.getByRole("button", { name: "Add member" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByText("Add a member").first()).toBeVisible();
-    const add = dialog.getByRole("button", { name: "Add to trip" });
-    await expect(add).toBeDisabled();
+    await expect(
+      dialog.getByText("Send a link, or add someone already here"),
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole("button", { name: "Add to trip" }),
+    ).toHaveCount(0);
+    await expectTouchTargets(dialog.getByRole("button", { name: "New link" }));
+    if (info.project.name !== "desktop") {
+      // A sheet from the bottom edge: rounded top, scrim above.
+      await expect(page.getByTestId("sheet-scrim")).toBeVisible();
+      await expect(dialog).toHaveCSS("border-top-left-radius", "20px");
+    }
     await dialog.getByTestId("user-pick").first().click();
-    await expect(add).toBeEnabled();
-    const bg = await add.evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(bg).not.toBe("rgba(0, 0, 0, 0)");
-    await expectTouchTargets(add);
-    await add.click();
     await expect(dialog.getByRole("alert")).toContainText("Nope.");
     await expect(dialog).toBeVisible();
+  });
+});
+
+test.describe("trip gaps", () => {
+  test("the week is a pill band with a disc, the handle 16px with a 44px hit", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop");
+    await openPlan(page);
+    const band = strip(page).getByTestId("trip-band").first();
+    await expect(band).toHaveCSS("height", "36px");
+    await expect(band).toHaveCSS("border-top-left-radius", "18px");
+    await expect(strip(page).getByTestId("current-disc")).toHaveCount(1);
+    const handle = await page
+      .getByRole("button", { name: "Show the month" })
+      .boundingBox();
+    if (!handle) throw new Error("no handle");
+    expect(handle.height).toBe(16);
+    // 14px below the handle is still the handle.
+    const hit = await page.evaluate(
+      ([x, y]) =>
+        document.elementFromPoint(x, y)?.getAttribute("aria-label") ?? "",
+      [handle.x + handle.width / 2, handle.y + handle.height + 14],
+    );
+    expect(hit).toBe("Show the month");
+  });
+
+  test("today keeps its ring when it is also the current day", async ({
+    page,
+  }) => {
+    await openPlan(page);
+    const today = strip(page).locator("[data-today=true]");
+    await today.click();
+    await expect(today).toHaveAttribute("data-current", "true");
+    const disc = strip(page).getByTestId("current-disc").locator("> div");
+    await expect(disc).toHaveCSS("box-shadow", /0px 0px 0px 4px/);
+  });
+
+  test("days outside the trip sit back", async ({ page }) => {
+    await openPlan(page);
+    const first = strip(page).getByTestId("week-day").first();
+    await expect(first.getByTestId("day-number")).toHaveCSS("opacity", "0.55");
+  });
+
+  test("the open month dims the list and a tap on it closes the month", async ({
+    page,
+  }) => {
+    await openPlan(page);
+    await page.getByRole("button", { name: "Show the month" }).click();
+    const scrim = page.getByTestId("month-scrim").filter({ visible: true });
+    await expect(scrim).toBeVisible();
+    await scrim.click({ position: { x: 5, y: 300 } });
+    await expect(monthGrid(page)).toBeHidden();
+    await expect(scrim).toHaveCount(0);
+  });
+
+  test("events read 15px over 13px, kinds in lower case", async ({ page }) => {
+    await openPlan(page);
+    const card = dayCards(page).filter({ hasText: "Camping Oetztal Arena" });
+    await expect(card).toContainText("Based at camp");
+    const title = card.getByText("Camping Oetztal Arena", { exact: true });
+    await expect(title).toHaveCSS("font-size", "15px");
+    await expect(title).toHaveCSS("font-weight", "500");
+    await expect(card.getByText("Based at camp")).toHaveCSS(
+      "font-size",
+      "13px",
+    );
+  });
+
+  test("the add-a-day picker draws the plan's calendar", async ({ page }) => {
+    await openPlan(page);
+    await page.getByRole("button", { name: "Add a day" }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByTestId("day-number").first()).toHaveCSS(
+      "width",
+      "36px",
+    );
+    await expect(dialog.getByTestId("trip-band").first()).toBeVisible();
+  });
+
+  test("the list opens with its count on a phone", async ({ page }, info) => {
+    test.skip(info.project.name === "desktop");
+    await openList(page);
+    await expect(page.getByText(/^\d+ results?$/)).toBeVisible();
+  });
+
+  test("a trip card's role is a pill on the quiet fill", async ({ page }) => {
+    await openList(page);
+    const card = page
+      .getByTestId("trip-card")
+      .filter({ hasText: "Oetztal week" });
+    const pill = card.getByText("Admin", { exact: true });
+    await expect(pill).toHaveCSS("border-radius", "999px");
+    await expect(pill).toHaveCSS("background-color", "rgb(246, 248, 249)");
+  });
+
+  test("member roles use the quiet pill, the bases map stays short", async ({
+    page,
+  }, info) => {
+    await openTab(page, "Members");
+    await expect(
+      page.getByTestId("member-role").filter({ visible: true }).first(),
+    ).toHaveCSS("background-color", "rgb(246, 248, 249)");
+    await page.getByRole("tab", { name: "Bases", exact: true }).click();
+    if (info.project.name !== "desktop") {
+      const map = page
+        .locator(".maplibregl-map")
+        .filter({ visible: true })
+        .first();
+      await expect(map).toBeVisible();
+      const box = await map.boundingBox();
+      expect(box?.height).toBeLessThanOrEqual(200);
+    }
+  });
+
+  test("new trip on a phone covers the bottom nav, dates side by side @small", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop");
+    await page.goto("/trips/new");
+    await expect(page.getByLabel("Trip name")).toBeVisible();
+    const covered = await page.evaluate(() => {
+      const nav = document.querySelector("nav[aria-label=Main]");
+      const r = nav?.getBoundingClientRect();
+      if (!r) return false;
+      const hit = document.elementFromPoint(r.x + r.width / 2, r.y + 10);
+      return !hit?.closest("nav[aria-label=Main]");
+    });
+    expect(covered).toBe(true);
+    const a = await page.getByLabel("Starts").boundingBox();
+    const b = await page.getByLabel("Ends (optional)").boundingBox();
+    expect(a?.y).toBe(b?.y);
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("desktop: trip panel, docked action, deep links land in the split", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name !== "desktop");
+    await page.goto(`/trips/${TRIP}`);
+    await expect(page).toHaveURL(new RegExp(`/trips\\?selected=${TRIP}`));
+    await expect(dayCards(page).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add a day" })).toBeVisible();
+    await expect(page.locator(".MuiFab-root:visible")).toHaveCount(0);
+    const panel = page.getByTestId("trip-panel");
+    await expect(panel).toHaveCSS("background-color", "rgb(255, 255, 255)");
+    await expect(panel).toHaveCSS("border-radius", "14px");
+    await page.goto("/trips/new");
+    await expect(page).toHaveURL(/\/trips\?new=true/);
+    await expect(page.getByTestId("trip-card").first()).toBeVisible();
+    await expect(page.getByLabel("Trip name")).toBeVisible();
   });
 });
