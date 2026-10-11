@@ -1,85 +1,31 @@
 import HistoryIcon from "@mui/icons-material/History";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
+import { useState } from "react";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
-import TimelineRail from "@/components/TimelineRail";
-import type { HistoryChange, HistoryStep } from "@/lib/api";
+import type { HistoryStep, Proposal } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
-import { formatDate, timeAgo } from "@/lib/format";
-import { fonts, labelSx, theme } from "@/lib/theme";
-import {
-  fieldLabel,
-  inOrder,
-  isGeometryChange,
-  stepByline,
-  stepHeadline,
-} from "./steps";
+import { formatDate } from "@/lib/format";
+import { useSession } from "@/lib/hooks/useSession";
+import { labelSx, theme } from "@/lib/theme";
+import HistoryChanges from "./HistoryChanges";
+import type { DotKind } from "./HistoryRail";
+import ProposalStep, { ReviewNote } from "./ProposalStep";
+import StepRow, { Byline, smallSx } from "./StepRow";
+import { inOrder, stepByline, stepHeadline } from "./steps";
 import type { HistoryTarget } from "./types";
-import { useHistory } from "./useProvenance";
+import { useEntryProposals, useHistory } from "./useProvenance";
 
 const { tokens } = theme;
 
-function ChangeLine({ change }: { change: HistoryChange }) {
-  return (
-    <Box
-      data-testid="history-change"
-      sx={{
-        display: "flex",
-        flexWrap: "wrap",
-        alignItems: "baseline",
-        columnGap: 1,
-        mt: 0.5,
-      }}
-    >
-      <Typography sx={{ ...labelSx, color: "text.secondary" }}>
-        {fieldLabel(change.field)}
-      </Typography>
-      {isGeometryChange(change) ? (
-        <Typography variant="body2">changed</Typography>
-      ) : (
-        <>
-          {change.before != null && (
-            <Typography
-              data-testid="change-before"
-              variant="body2"
-              sx={{
-                color: "text.disabled",
-                textDecoration: "line-through",
-                overflowWrap: "anywhere",
-              }}
-            >
-              {change.before}
-            </Typography>
-          )}
-          <Typography
-            variant="body2"
-            sx={{ color: "text.disabled" }}
-            aria-hidden
-          >
-            {change.before == null ? "added" : "to"}
-          </Typography>
-          {change.after != null && (
-            <Typography
-              data-testid="change-after"
-              variant="body2"
-              sx={{ overflowWrap: "anywhere" }}
-            >
-              {change.after}
-            </Typography>
-          )}
-        </>
-      )}
-    </Box>
-  );
-}
-
 function SourceLicence({ step }: { step: HistoryStep }) {
   const source = step.source;
-  if (!source?.license_name) return null;
+  if (step.kind !== "imported" || !source?.license_name) return null;
   return (
-    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+    <Typography sx={{ ...smallSx, color: "text.secondary" }}>
       Licence:{" "}
       {source.license_url ? (
         <Link
@@ -101,61 +47,79 @@ function SourceLicence({ step }: { step: HistoryStep }) {
   );
 }
 
-function Step({ step, isLast }: { step: HistoryStep; isLast: boolean }) {
-  const byline = stepByline(step);
+function dotKind(step: HistoryStep, origin: boolean): DotKind {
+  if (step.kind === "deleted") return "gone";
+  return origin ? "origin" : "done";
+}
+
+function Step({
+  step,
+  origin,
+  first,
+  last,
+  approved,
+}: {
+  step: HistoryStep;
+  origin: boolean;
+  first: boolean;
+  last: boolean;
+  approved: Proposal | undefined;
+}) {
   return (
-    <Box data-testid="history-step" sx={{ display: "flex", gap: 1.5 }}>
-      <TimelineRail isLast={isLast} hollow={step.kind === "deleted"} />
-      <Box sx={{ flex: 1, minWidth: 0, pb: isLast ? 0 : 2 }}>
-        <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-          <Typography
-            sx={{
-              fontFamily: fonts.label,
-              fontWeight: 600,
-              fontSize: "0.9375rem",
-              flex: 1,
-              minWidth: 0,
-              overflowWrap: "anywhere",
-            }}
-          >
-            {stepHeadline(step)}
-            {byline && (
-              <Typography
-                component="span"
-                sx={{
-                  fontWeight: 400,
-                  color: "text.secondary",
-                  fontSize: "inherit",
-                }}
-              >
-                {", "}
-                {byline}
-              </Typography>
-            )}
-          </Typography>
-          <Typography
-            data-testid="history-when"
-            title={formatDate(step.at)}
-            variant="caption"
-            sx={{ color: "text.disabled", flexShrink: 0 }}
-          >
-            {timeAgo(step.at)}
-          </Typography>
-        </Box>
-        <SourceLicence step={step} />
-        {step.changes.map((change) => (
-          <ChangeLine key={change.field} change={change} />
-        ))}
-      </Box>
-    </Box>
+    <StepRow
+      kind={dotKind(step, origin)}
+      first={first}
+      last={last}
+      title={stepHeadline(step)}
+    >
+      <Byline
+        parts={stepByline(step)}
+        tail={[formatDate(step.at)]}
+        dateTestId="history-when"
+      />
+      <SourceLicence step={step} />
+      <HistoryChanges changes={step.changes} />
+      {approved?.review_note && <ReviewNote note={approved.review_note} />}
+    </StepRow>
+  );
+}
+
+function RejectedFold({
+  count,
+  open,
+  onToggle,
+}: {
+  count: number;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <ButtonBase
+      data-testid="rejected-fold"
+      onClick={onToggle}
+      aria-expanded={open}
+      sx={{
+        width: "100%",
+        minHeight: 48,
+        borderTop: `1px solid ${tokens.outlineVariant}`,
+        color: tokens.primary,
+        fontWeight: 600,
+        fontSize: "0.875rem",
+      }}
+    >
+      {open ? "Hide rejected" : `Show rejected (${count})`}
+    </ButtonBase>
   );
 }
 
 /** The history of one entry on the timeline rail, oldest first: where it
- * came from at the top, the latest change at the foot. A deleted entry ends
- * on a hollow dot that says so. */
+ * came from at the top, the latest change below it, then any open proposal
+ * as a hollow step waiting for a decision. Rejected proposals fold away. */
 export default function HistoryTimeline({ target }: { target: HistoryTarget }) {
   const { data, isLoading, error } = useHistory(target);
+  const proposals = useEntryProposals(target);
+  const { isAdmin } = useSession();
+  const [showRejected, setShowRejected] = useState(false);
 
   if (isLoading) return <LoadingBox size={28} py={4} />;
   if (error) {
@@ -166,14 +130,63 @@ export default function HistoryTimeline({ target }: { target: HistoryTarget }) {
     );
   }
   const steps = inOrder(data?.items ?? []);
-  if (steps.length === 0) {
+  const all = proposals.data ?? [];
+  const open = all.filter((p) => p.status === "pending");
+  const rejected = all.filter((p) => p.status === "rejected");
+  const approvedById = new Map(
+    all.filter((p) => p.status === "approved").map((p) => [p.id, p]),
+  );
+  const shown = showRejected ? rejected : [];
+  const total = steps.length + open.length + shown.length;
+  if (total === 0 && rejected.length === 0) {
     return <EmptyState icon={<HistoryIcon />} title="No history yet." />;
   }
   return (
-    <Box data-testid="history" sx={{ px: 2, py: 2 }}>
-      {steps.map((step, i) => (
-        <Step key={step.id} step={step} isLast={i === steps.length - 1} />
-      ))}
+    <Box
+      data-testid="history"
+      sx={{
+        m: 1.5,
+        bgcolor: tokens.surface,
+        borderRadius: `${tokens.radii.md}px`,
+        boxShadow: tokens.elevation.e1,
+        overflow: "hidden",
+      }}
+    >
+      <Typography sx={{ ...labelSx, px: 2, pt: 1.75, pb: 0.5 }}>
+        History
+      </Typography>
+      <Box sx={{ pt: 0.5, pb: 1 }}>
+        {steps.map((step, i) => (
+          <Step
+            key={step.id}
+            step={step}
+            origin={i === 0 && ["imported", "created"].includes(step.kind)}
+            first={i === 0}
+            last={i === total - 1}
+            approved={
+              step.proposal_id != null
+                ? approvedById.get(step.proposal_id)
+                : undefined
+            }
+          />
+        ))}
+        {[...open, ...shown].map((proposal, i) => (
+          <ProposalStep
+            key={proposal.id}
+            proposal={proposal}
+            first={steps.length + i === 0}
+            last={steps.length + i === total - 1}
+            canReview={isAdmin}
+          />
+        ))}
+      </Box>
+      {rejected.length > 0 && (
+        <RejectedFold
+          count={rejected.length}
+          open={showRejected}
+          onToggle={() => setShowRejected((v) => !v)}
+        />
+      )}
     </Box>
   );
 }

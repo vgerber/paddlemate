@@ -1,5 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ProposalFilters, ReviewRequest } from "@/lib/api";
+import { proposalsApi } from "@/lib/api";
 import { client } from "@/lib/api/client";
+import { proposalKeys } from "@/lib/hooks/useProposals";
 import type { HistoryTarget } from "./types";
 
 export const provenanceKeys = {
@@ -61,6 +64,49 @@ export function useSources(waterwayId: number) {
       );
       if (!data) throw new Error("No sources");
       return data;
+    },
+  });
+}
+
+/** Which proposals are about this very entry, as the list filters name them. */
+function entryFilters(target: HistoryTarget): ProposalFilters {
+  if ("featureId" in target) return { feature_id: target.featureId };
+  if ("sectionId" in target) {
+    return { section_id: target.sectionId, entity_type: "water_section" };
+  }
+  return { waterway_id: target.waterwayId, entity_type: "waterway" };
+}
+
+function entryId(target: HistoryTarget): number {
+  if ("featureId" in target) return target.featureId;
+  if ("sectionId" in target) return target.sectionId;
+  return target.waterwayId;
+}
+
+/** Open and rejected change proposals for the entry (creations are not a
+ * change to it), newest first. */
+export function useEntryProposals(target: HistoryTarget) {
+  const filters = entryFilters(target);
+  const id = entryId(target);
+  return useQuery({
+    queryKey: proposalKeys.list(filters),
+    queryFn: () => proposalsApi.list(filters),
+    select: (all) =>
+      all.filter((p) => p.operation !== "create" && p.entity_id === id),
+  });
+}
+
+/** Approve or reject from the timeline; the history gains the step. */
+export function useReviewEntryProposal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: number; body: ReviewRequest }) =>
+      proposalsApi.review(id, body),
+    // The review dialog renders the failure inline.
+    meta: { errorHandledLocally: true },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: proposalKeys.all });
+      queryClient.invalidateQueries({ queryKey: provenanceKeys.all });
     },
   });
 }

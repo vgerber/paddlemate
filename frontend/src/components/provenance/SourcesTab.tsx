@@ -1,186 +1,339 @@
+import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import PhotoOutlinedIcon from "@mui/icons-material/PhotoOutlined";
+import ShowChartIcon from "@mui/icons-material/ShowChart";
+import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
+import ViewAgendaOutlinedIcon from "@mui/icons-material/ViewAgendaOutlined";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
-import type { HistorySource, WaterwaySources } from "@/lib/api";
+import type { GaugeSource, HistoryStep, WaterwaySources } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
-import { timeAgo } from "@/lib/format";
-import { fonts, labelSx, theme } from "@/lib/theme";
-import { useSources } from "./useProvenance";
+import { formatDate } from "@/lib/format";
+import { useWaterwayMedia } from "@/lib/hooks/useComments";
+import { useWaterwayGauges } from "@/lib/hooks/useGauges";
+import { licenseLink } from "@/lib/license";
+import { alphas, fonts, labelSx, theme } from "@/lib/theme";
+import HistoryHost from "./HistoryHost";
+import { smallSx } from "./StepRow";
+import { inOrder, ORIGIN_UNKNOWN, stepHeadline } from "./steps";
+import type { HistoryTarget } from "./types";
+import { useHistory, useSources } from "./useProvenance";
 
 const { tokens } = theme;
 
-const linkSx = {
+const ODBL_URL = "https://opendatacommons.org/licenses/odbl/";
+
+const textLinkSx = {
+  color: tokens.primary,
+  fontWeight: 500,
+  textDecoration: "none",
   display: "inline-flex",
   alignItems: "center",
+  // The line is 13px type; the hit area is drawn around it.
   minHeight: tokens.touch.min,
-  maxWidth: "100%",
-  overflowWrap: "anywhere",
+  my: "-13px",
 } as const;
 
-function host(url: string): string {
-  try {
-    return new URL(url).host;
-  } catch {
-    return url;
-  }
-}
-
-function SourceCard({
-  source,
-  entries,
+function SourceRow({
+  icon,
+  kind,
+  who,
+  meta,
+  onOpen,
 }: {
-  source: HistorySource;
-  entries: number;
+  icon: ReactNode;
+  kind: string;
+  who: string;
+  meta?: ReactNode;
+  onOpen?: () => void;
 }) {
-  return (
-    <Box
-      data-testid="source-card"
-      sx={{
-        p: 2,
-        bgcolor: tokens.surface,
-        borderRadius: `${tokens.radii.md}px`,
-        boxShadow: tokens.elevation.e1,
-      }}
-    >
-      <Typography
-        component="h3"
+  const body = (
+    <>
+      <Box
         sx={{
-          fontFamily: fonts.label,
-          fontWeight: 600,
-          fontSize: "0.9375rem",
-          overflowWrap: "anywhere",
+          width: 36,
+          height: 36,
+          borderRadius: `${tokens.radii.sm}px`,
+          bgcolor: `${tokens.primary}${alphas.wash}`,
+          color: tokens.primary,
+          display: "grid",
+          placeItems: "center",
         }}
       >
-        {source.name}
-      </Typography>
-      <Typography sx={labelSx}>
-        {entries} {entries === 1 ? "entry" : "entries"}
-      </Typography>
-      <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 2, mt: 0.5 }}>
-        {source.license_name &&
-          (source.license_url ? (
-            <Link
-              href={source.license_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={linkSx}
-            >
-              {source.license_name}
-            </Link>
-          ) : (
-            <Typography
-              variant="body2"
-              sx={{ ...linkSx, color: "text.secondary" }}
-            >
-              {source.license_name}
-            </Typography>
-          ))}
-        {source.website && (
-          <Link
-            href={source.website}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={linkSx}
-          >
-            {host(source.website)}
-          </Link>
-        )}
+        {icon}
       </Box>
-    </Box>
-  );
-}
-
-function Contributors({
-  contributors,
-}: {
-  contributors: WaterwaySources["contributors"];
-}) {
-  return (
-    <Box>
-      <Typography sx={{ ...labelSx, px: 0.5, mb: 0.5 }}>
-        Contributors
-      </Typography>
-      {contributors.map((c) => (
-        <Box
-          key={c.user.user_id}
-          data-testid="contributor-row"
+      <Box sx={{ minWidth: 0, textAlign: "left" }}>
+        <Typography
+          sx={{ ...smallSx, color: "text.secondary", display: "block" }}
+        >
+          {kind}
+        </Typography>
+        <Typography
           sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            minHeight: tokens.touch.row,
-            px: 0.5,
-            borderBottom: "1px solid",
-            borderColor: `${tokens.outlineVariant}55`,
+            fontWeight: 500,
+            fontSize: "0.9375rem",
+            lineHeight: "20px",
+            overflowWrap: "anywhere",
           }}
         >
+          {who}
+        </Typography>
+        {meta && (
           <Typography
-            noWrap
-            sx={{
-              flex: 1,
-              minWidth: 0,
-              fontWeight: 600,
-              fontSize: "0.9375rem",
-            }}
+            component="div"
+            sx={{ ...smallSx, color: "text.secondary" }}
           >
-            {c.user.username}
+            {meta}
           </Typography>
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            {c.steps} {c.steps === 1 ? "change" : "changes"}
-          </Typography>
-          <Typography variant="caption" sx={{ color: "text.disabled" }}>
-            {timeAgo(c.last_at)}
-          </Typography>
-        </Box>
-      ))}
+        )}
+      </Box>
+      {onOpen ? (
+        <ChevronRightIcon sx={{ fontSize: 20, color: "text.secondary" }} />
+      ) : (
+        <span />
+      )}
+    </>
+  );
+  const rowSx = {
+    display: "grid",
+    gridTemplateColumns: "36px minmax(0, 1fr) 20px",
+    columnGap: 1.5,
+    alignItems: "center",
+    width: "100%",
+    minHeight: 72,
+    py: 1,
+    pl: 2,
+    pr: 1.5,
+  } as const;
+  return (
+    <Box
+      data-testid="source-row"
+      sx={{
+        "& + &": {
+          borderTop: `1px solid ${tokens.outlineVariant}${alphas.hairline}`,
+        },
+      }}
+    >
+      {onOpen ? (
+        <ButtonBase onClick={onOpen} sx={rowSx}>
+          {body}
+        </ButtonBase>
+      ) : (
+        <Box sx={rowSx}>{body}</Box>
+      )}
     </Box>
   );
 }
 
-/** Where a river's data comes from: each source as a card with its licence
- * and website, then the people who changed it. */
-export default function SourcesTab({ waterwayId }: { waterwayId: number }) {
-  const { data, isLoading, error } = useSources(waterwayId);
+function ExternalLink({ href, children }: { href: string; children: string }) {
+  return (
+    <Link href={href} target="_blank" rel="noopener noreferrer" sx={textLinkSx}>
+      {children}
+    </Link>
+  );
+}
 
-  if (isLoading) return <LoadingBox size={28} py={4} />;
-  if (error) {
+function count(n: number, one: string, many: string): string {
+  return `${n} ${n === 1 ? one : many}`;
+}
+
+function times(n: number): string {
+  if (n === 1) return "once";
+  if (n === 2) return "twice";
+  return `${n} times`;
+}
+
+/** Where the entry itself came from, read off its oldest step. */
+function originLine(first: HistoryStep | undefined): string {
+  if (!first) return ORIGIN_UNKNOWN;
+  if (first.kind === "created" && first.actor) {
+    return `Added by ${first.actor.username}`;
+  }
+  return first.kind === "imported" ? stepHeadline(first) : ORIGIN_UNKNOWN;
+}
+
+function OriginRow({
+  target,
+  sectionId,
+  onOpen,
+}: {
+  target: HistoryTarget;
+  sectionId: number | undefined;
+  onOpen: () => void;
+}) {
+  const { data } = useHistory(target);
+  const steps = inOrder(data?.items ?? []);
+  const first = steps[0];
+  const since = steps.length - 1;
+  const meta = first
+    ? [formatDate(first.at), since > 0 ? `changed ${times(since)} since` : null]
+        .filter(Boolean)
+        .join(" · ")
+    : undefined;
+  return (
+    <SourceRow
+      icon={<VerticalAlignBottomIcon fontSize="small" />}
+      kind={sectionId ? "Section" : "River"}
+      who={originLine(first)}
+      meta={meta}
+      onOpen={steps.length > 0 ? onOpen : undefined}
+    />
+  );
+}
+
+function FeaturesRow({ data }: { data: WaterwaySources }) {
+  const from = data.sources.map(
+    (s) => `${s.entries} from ${s.source.short_name || s.source.name}`,
+  );
+  const last = [...data.contributors].sort(
+    (a, b) => Date.parse(b.last_at) - Date.parse(a.last_at),
+  )[0];
+  if (from.length === 0 && !last) return null;
+  return (
+    <SourceRow
+      icon={<ViewAgendaOutlinedIcon fontSize="small" />}
+      kind="Features"
+      who={from.join(", ") || "Added by paddlers"}
+      meta={
+        last
+          ? `Last change ${formatDate(last.last_at)} by ${last.user.username}`
+          : undefined
+      }
+    />
+  );
+}
+
+function GaugeRows({ sources }: { sources: GaugeSource[] }) {
+  return (
+    <>
+      {sources.map((source) => {
+        const license = licenseLink(source);
+        return (
+          <SourceRow
+            key={source.id}
+            icon={<BarChartOutlinedIcon fontSize="small" />}
+            kind="Gauge"
+            who={`Data: ${source.short_name ?? source.name}`}
+            meta={
+              license &&
+              (license.href ? (
+                <ExternalLink href={license.href}>{license.label}</ExternalLink>
+              ) : (
+                license.label
+              ))
+            }
+          />
+        );
+      })}
+    </>
+  );
+}
+
+/** Where a section's data comes from, one row per kind of data: its own
+ * origin (the row opens its history), the river line, the features, the
+ * gauge credit and the photos. Without a `sectionId` it describes the river. */
+export default function SourcesTab({
+  waterwayId,
+  sectionId,
+  name,
+}: {
+  waterwayId: number;
+  /** The section the tab belongs to; omitted it describes the river. */
+  sectionId?: number;
+  /** What the history panel is titled; defaults to "Section" or "River". */
+  name?: string;
+}) {
+  const sources = useSources(waterwayId);
+  const gauges = useWaterwayGauges(waterwayId);
+  const media = useWaterwayMedia(waterwayId);
+  const [open, setOpen] = useState(false);
+  const target: HistoryTarget =
+    sectionId == null ? { waterwayId } : { waterwayId, sectionId };
+
+  if (sources.isLoading) return <LoadingBox size={28} py={4} />;
+  if (sources.error) {
     return (
       <EmptyState
-        title={apiErrorMessage(error, "The sources could not be loaded.")}
+        title={apiErrorMessage(
+          sources.error,
+          "The sources could not be loaded.",
+        )}
       />
     );
   }
-  if (!data || (data.sources.length === 0 && data.contributors.length === 0)) {
-    return <EmptyState title="No sources yet." />;
+  const gaugeSources = new Map<string, GaugeSource>();
+  for (const g of gauges.data ?? []) {
+    if (g.source) gaugeSources.set(g.source.id, g.source);
   }
+  const photos = (media.data ?? []).filter((m) => m.kind === "photo").length;
+  const videos = (media.data ?? []).filter((m) => m.kind === "video").length;
+  const mediaLine = [
+    photos > 0 ? count(photos, "photo", "photos") : null,
+    videos > 0 ? count(videos, "video", "videos") : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   return (
-    <Box
-      data-testid="sources"
-      sx={{ display: "flex", flexDirection: "column", gap: 2, p: 2 }}
+    <HistoryHost
+      target={open ? target : null}
+      name={name ?? (sectionId == null ? "River" : "Section")}
+      onClose={() => setOpen(false)}
     >
-      <Box>
-        <Typography sx={{ ...labelSx, px: 0.5 }}>Sources</Typography>
-        <Typography
-          variant="body2"
-          sx={{ color: "text.disabled", px: 0.5, mb: 1 }}
-        >
-          Where this data comes from.
+      <Box
+        data-testid="sources"
+        sx={{
+          m: 1.5,
+          bgcolor: tokens.surface,
+          borderRadius: `${tokens.radii.md}px`,
+          boxShadow: tokens.elevation.e1,
+          overflow: "hidden",
+        }}
+      >
+        <Typography sx={{ ...labelSx, px: 2, pt: 1.75, pb: 0.5 }}>
+          Sources
         </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-          {data.sources.map((s) => (
-            <SourceCard
-              key={s.source.id}
-              source={s.source}
-              entries={s.entries}
-            />
-          ))}
-        </Box>
+        <Typography
+          sx={{
+            ...smallSx,
+            fontFamily: fonts.label,
+            color: "text.secondary",
+            px: 2,
+            pb: 1,
+          }}
+        >
+          {sectionId == null
+            ? "Where this data comes from."
+            : "Where this section's data comes from."}
+        </Typography>
+        <OriginRow
+          target={target}
+          sectionId={sectionId}
+          onOpen={() => setOpen(true)}
+        />
+        <SourceRow
+          icon={<ShowChartIcon fontSize="small" />}
+          kind="River line"
+          who="OpenStreetMap"
+          meta={<ExternalLink href={ODBL_URL}>ODbL</ExternalLink>}
+        />
+        {sources.data && <FeaturesRow data={sources.data} />}
+        <GaugeRows sources={[...gaugeSources.values()]} />
+        {mediaLine && (
+          <SourceRow
+            icon={<PhotoOutlinedIcon fontSize="small" />}
+            kind="Photos"
+            who={mediaLine}
+            meta="Each credited in the gallery"
+          />
+        )}
       </Box>
-      {data.contributors.length > 0 && (
-        <Contributors contributors={data.contributors} />
-      )}
-    </Box>
+    </HistoryHost>
   );
 }
