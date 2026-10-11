@@ -41,7 +41,7 @@ export default function FeatureGeoJSONLayers({
     visibility: (showNames ? "visible" : "none") as "visible" | "none",
   });
   const labelPaint = {
-    "text-color": tokens.white,
+    "text-color": tokens.mapLabelText,
     "text-halo-color": tokens.mapLabelHalo,
     "text-halo-width": 1.5,
   };

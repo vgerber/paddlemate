@@ -384,16 +384,20 @@ A new layer group joins one of these or becomes a new sibling.
 ### Theme and styling
 
 - Static `import { theme, fonts, labelSx } from "@/lib/theme"` - not
-  `useTheme()` (single theme, no mode switching).
+  `useTheme()`. The theme is light; a dark mode is its own piece of work
+  (tokens as CSS variables) and until then there is no mode switching.
 - Colors come from tokens; transparency via hex-alpha suffix on a token
   (e.g. `` `${tokens.primary}59` ``), never a literal hex/rgba duplicating
   a token. Map-marker legibility shadows are the documented exception.
-- No `borderRadius` - the theme is square (`shape.borderRadius: 0`); adding
-  scale values is dead code and string values violate the design language.
-  The one exception is `borderRadius: "50%"` to draw a circular dot or
-  marker - circles are part of the design language, rounded corners are not.
-- Small uppercase labels spread `labelSx` and override size/color, instead
-  of re-declaring the five-property block.
+- Radii, shadows, motion and touch sizes come from `tokens.radii`,
+  `tokens.elevation`, `tokens.motion` and `tokens.touch`; no literal pixel
+  radius, no hand-written `box-shadow` or transition duration. A circle is
+  `borderRadius: "50%"`, a pill is `tokens.radii.pill`.
+- Small labels spread `labelSx` (12px, semibold, sentence case) and override
+  size/color, instead of re-declaring the block. No `textTransform:
+  "uppercase"` and no monospace.
+- Every touch target is at least `tokens.touch.min` (44px) in both directions;
+  a smaller visual gets a larger hit area. Text inputs are 16px.
 
 ### Component shape
 

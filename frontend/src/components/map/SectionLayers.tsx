@@ -156,7 +156,7 @@ export default function SectionLayers({
             "text-padding": 6,
           }}
           paint={{
-            "text-color": tokens.white,
+            "text-color": tokens.mapLabelText,
             "text-halo-color": tokens.mapLabelHalo,
             "text-halo-width": 2,
           }}

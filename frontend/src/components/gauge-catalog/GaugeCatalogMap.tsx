@@ -274,7 +274,7 @@ export default function GaugeCatalogMap() {
               "text-optional": true,
             }}
             paint={{
-              "text-color": tokens.white,
+              "text-color": tokens.mapLabelText,
               "text-halo-color": tokens.mapLabelHalo,
               "text-halo-width": 1.5,
             }}

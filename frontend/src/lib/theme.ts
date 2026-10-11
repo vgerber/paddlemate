@@ -1,4 +1,4 @@
-import { createTheme } from "@mui/material/styles";
+import { createTheme, type Shadows } from "@mui/material/styles";
 
 // Extend MUI Theme so components can access tokens via theme.tokens
 declare module "@mui/material/styles" {
@@ -10,83 +10,87 @@ declare module "@mui/material/styles" {
   }
 }
 
-// Design tokens from stitch_whitewater
+// Design tokens for the calm design (doc/design.md). The names follow the
+// Material 3 roles the app already used, so a value change re-skins every
+// consumer; only the new groups at the end (radii, elevation, motion, touch)
+// are additions.
 const tokens = {
-  // Surfaces
-  surfaceLowest: "#0c0e10",
-  surfaceLow: "#1a1c1e",
-  surface: "#1e2022",
-  surfaceHigh: "#282a2c",
-  surfaceHighest: "#333537",
-  surfaceBright: "#37393b",
+  // Surfaces: the ground is the grey every screen sits on, a surface is a
+  // white card on it, surfaceHigh a quiet inset inside a card.
+  surfaceLowest: "#ffffff",
+  surfaceLow: "#eef2f3",
+  surface: "#ffffff",
+  surfaceHigh: "#f6f8f9",
+  surfaceHighest: "#e7edef",
+  surfaceBright: "#ffffff",
 
   // Text
-  onSurface: "#e2e2e5",
-  onSurfaceVariant: "#bfc8ca",
+  onSurface: "#1f2b31",
+  onSurfaceVariant: "#58666d",
 
-  // Primary - cyan, used for key data values and interactive elements
-  primary: "#8bd1e8",
-  onPrimary: "#003642",
-  primaryContainer: "#004b5b",
-  onPrimaryContainer: "#75bbd1",
+  // Primary - teal: the one accent. Interactive elements, the selected
+  // state, the primary call to action of a flow.
+  primary: "#0e7490",
+  onPrimary: "#ffffff",
+  primaryDark: "#0b5d74",
+  primaryContainer: "#d9edf2",
+  onPrimaryContainer: "#0b5d74",
 
-  // Success - muted green (exposed as palette.success; palette.secondary
-  // is the lime CTA, an entirely different color - see the palette block)
-  success: "#b0ceb8",
-  successContainer: "#354f3e",
-  onSuccessContainer: "#a2bfaa",
+  // Success - the calm "low" green, also palette.success
+  success: "#1d6b4f",
+  successContainer: "#d9eee5",
+  onSuccessContainer: "#154f3a",
+  onSuccess: "#ffffff",
 
-  // Tertiary - lime/yellow-green, used for CTA buttons, active states, selection
-  tertiary: "#c2cf47",
-  tertiaryFixed: "#dfec60",
-  tertiaryContainer: "#424800",
-  onTertiaryContainer: "#adba33",
+  // Tertiary: the lime call to action is gone, the accent does that job now.
+  // The keys stay so existing consumers keep resolving.
+  tertiary: "#0e7490",
+  tertiaryFixed: "#0e7490",
+  tertiaryContainer: "#d9edf2",
+  onTertiaryContainer: "#0b5d74",
+  onTertiary: "#ffffff",
 
   // Error
-  error: "#ffb4ab",
-  errorContainer: "#93000a",
+  error: "#b4373f",
+  errorContainer: "#f7dcde",
 
   // Borders
-  outline: "#8a9295",
-  outlineVariant: "#40484a",
+  outline: "#7c8a90",
+  outlineVariant: "#dde4e7",
 
   // Base
-  background: "#121416",
+  background: "#eef2f3",
   white: "#ffffff",
-  // Text on tertiary (CTA) surfaces
-  onTertiary: "#1a1d00",
-  // Text on success surfaces - dark green, M3 onSecondary
-  onSuccess: "#1c3524",
 
   // Water levels: one entry per level. `marker` is the saturated hue for
-  // map geometry; `text`/`bg` are the readable pair for chips and labels -
-  // the marker hues fail AA as small text on dark surfaces, so labels must
-  // never borrow them.
+  // map geometry; `text`/`bg` are the readable pair for chips and labels.
+  // Low and medium are a coloured label on a wash of the same hue; high is
+  // a solid fill with white text, so it stays the loudest thing on a row.
   levels: {
     empty: {
       label: "E",
-      marker: "#9eaab0",
-      text: "rgba(255,255,255,0.35)",
+      marker: "#9aa5ab",
+      text: "#5b676e",
       bg: "transparent",
-      border: "rgba(255,255,255,0.18)",
+      border: "rgba(91,103,110,0.45)",
     },
     low: {
       label: "L",
-      marker: "#4caf50",
-      text: "#81c784",
-      bg: "rgba(129,199,132,0.15)",
+      marker: "#2f9e63",
+      text: "#1d6b4f",
+      bg: "rgba(29,107,79,0.13)",
     },
     medium: {
       label: "M",
       marker: "#ff9800",
-      text: "#ffb74d",
-      bg: "rgba(255,183,77,0.15)",
+      text: "#8f5b00",
+      bg: "rgba(143,91,0,0.15)",
     },
     high: {
       label: "H",
-      marker: "#f44336",
-      text: "#e57373",
-      bg: "rgba(229,115,115,0.15)",
+      marker: "#e5483f",
+      text: "#ffffff",
+      bg: "#b4373f",
     },
   },
 
@@ -105,21 +109,21 @@ const tokens = {
     weir: "#E69F00",
     dam: "#E69F00",
     obstacle: "#CC79A7",
-    bridge: "#bfc8ca",
+    bridge: "#58666d",
   },
 
   // Put-in / take-out picking (same hues as featureColors.put_in/take_out)
   putIn: "#0072B2",
   takeOut: "#D55E00",
 
-  // Map rendering
-  mapSectionLine: "#29b6f6",
-  mapSectionLineCasing: "#0a1a2e",
-  // Selection is lime everywhere (action.selected, list rows) - the old
-  // orange collided with the medium water level. Value = tertiaryFixed.
-  mapSelectedLine: "#dfec60",
-  mapAreaCircle: "#1976d2",
-  mapLabelHalo: "rgb(21, 37, 52)",
+  // Map rendering. The base map is light: labels are ink on a white halo,
+  // the selected line is the accent, sections are a clear blue.
+  mapSectionLine: "#2b88c8",
+  mapSectionLineCasing: "#ffffff",
+  mapSelectedLine: "#0e7490",
+  mapAreaCircle: "#0e7490",
+  mapLabelText: "#1f2b31",
+  mapLabelHalo: "#ffffff",
   // Country borders on the region browse map. Drawn over everything with a
   // pale casing under a dark line, so the border reads on the light base map
   // and on satellite imagery alike.
@@ -128,8 +132,8 @@ const tokens = {
 
   // Region browse layer. Neighbouring regions take different entries so the
   // eye can tell where one ends, the way an atlas colours countries. Okabe
-  // and Ito hues like featureColors, minus the yellow (too close to the
-  // selection lime) - six is what a busy alpine viewport needs.
+  // and Ito hues like featureColors. The region-map rework replaces this
+  // with one neutral line; until then it stays.
   mapRegionPalette: [
     "#0072B2",
     "#D55E00",
@@ -140,16 +144,55 @@ const tokens = {
   ],
 
   // Charts
-  chartSeries: "#1a8ca0",
-  chartGrid: "rgba(255,255,255,0.06)",
+  chartSeries: "#0e7490",
+  chartGrid: "rgba(31,43,49,0.08)",
+
+  // Corner radii in px: small chips and tags, buttons and inputs, cards,
+  // sheets and the FAB, dialogs, and the pill for chips and pills.
+  radii: { xs: 6, sm: 10, md: 14, lg: 16, xl: 20, pill: 999 },
+
+  // Three elevation steps: a card at rest, a floating panel or popover, and
+  // the accent glow under the primary action.
+  elevation: {
+    e1: "0 1px 2px rgba(31,43,49,0.08), 0 1px 1px rgba(31,43,49,0.04)",
+    e2: "0 8px 24px rgba(31,43,49,0.12), 0 2px 6px rgba(31,43,49,0.08)",
+    e3: "0 4px 14px rgba(14,116,144,0.25)",
+  },
+
+  // Motion: the scale from the motion notes. Arrivals ease out, travel
+  // between resting places eases in and out, exits ease in. Anything the
+  // user waits on stays under `slow`.
+  motion: {
+    instant: 90,
+    fast: 160,
+    base: 260,
+    slow: 360,
+    easeOut: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+    easeInOut: "cubic-bezier(0.4, 0, 0.2, 1)",
+    easeIn: "cubic-bezier(0.4, 0, 1, 1)",
+  },
+
+  // Touch: every target is at least `min` px, list rows and tabs `row`.
+  touch: { min: 44, row: 48 },
 } as const;
 
-/** Font stacks used across the app. */
+/** Font stacks used across the app: one family, weights carry the hierarchy. */
 export const fonts = {
-  label: '"Space Grotesk", sans-serif',
-  body: '"Inter", sans-serif',
-  mono: '"Space Mono", "Courier New", monospace',
+  label: '"Figtree Variable", "Figtree", system-ui, sans-serif',
+  body: '"Figtree Variable", "Figtree", system-ui, sans-serif',
+  // No monospace in the calm language; numbers use tabular figures instead.
+  mono: '"Figtree Variable", "Figtree", system-ui, sans-serif',
 } as const;
+
+const { radii, elevation, motion } = tokens;
+
+/** MUI draws elevation 1 as the card step and everything above as the
+ * floating step, so a Paper never invents a shadow of its own. */
+const shadows = [
+  "none",
+  elevation.e1,
+  ...Array.from({ length: 23 }, () => elevation.e2),
+] as unknown as Shadows;
 
 export const theme = createTheme({
   tokens,
@@ -161,33 +204,33 @@ export const theme = createTheme({
     values: { xs: 0, sm: 600, md: 768, lg: 1200, xl: 1536 },
   },
   palette: {
-    mode: "dark",
+    mode: "light",
     primary: {
       main: tokens.primary,
-      dark: tokens.primaryContainer,
+      dark: tokens.primaryDark,
       contrastText: tokens.onPrimary,
     },
-    // Tertiary (lime) is the CTA / action color → map to secondary so
-    // `variant="contained" color="secondary"` gives the lime button.
+    // The accent is also the call to action now, so `color="secondary"`
+    // still resolves; it is the same teal.
     secondary: {
       main: tokens.tertiary,
-      light: tokens.tertiaryFixed,
-      dark: tokens.onTertiaryContainer,
+      dark: tokens.primaryDark,
       contrastText: tokens.onTertiary,
     },
     error: {
       main: tokens.error,
-      dark: tokens.errorContainer,
+      dark: "#8e2b32",
+      contrastText: tokens.white,
     },
     // Amber for pending/incomplete states, aligned with the medium water
     // level so the app has one orange, not MUI's stock one.
     warning: {
-      main: tokens.levels.medium.marker,
+      main: tokens.levels.medium.text,
+      contrastText: tokens.white,
     },
     success: {
       main: tokens.success,
-      dark: tokens.successContainer,
-      // Light-on-light was illegible on contained success buttons
+      dark: tokens.onSuccessContainer,
       contrastText: tokens.onSuccess,
     },
     background: {
@@ -201,82 +244,75 @@ export const theme = createTheme({
     },
     divider: tokens.outlineVariant,
     action: {
-      active: tokens.primary,
-      hover: "rgba(139, 209, 232, 0.08)",
-      selected: "rgba(194, 207, 71, 0.16)",
-      selectedOpacity: 0.16,
-      focus: "rgba(139, 209, 232, 0.12)",
+      active: tokens.onSurfaceVariant,
+      hover: "rgba(14, 116, 144, 0.08)",
+      selected: "rgba(14, 116, 144, 0.12)",
+      selectedOpacity: 0.12,
+      focus: "rgba(14, 116, 144, 0.12)",
     },
   },
 
-  shape: {
-    // Sharp, technical aesthetic - no border radius
-    borderRadius: 0,
+  shape: { borderRadius: radii.md },
+  shadows,
+
+  transitions: {
+    duration: {
+      shortest: motion.instant,
+      shorter: motion.fast,
+      short: motion.fast,
+      standard: motion.base,
+      complex: motion.slow,
+      enteringScreen: motion.base,
+      leavingScreen: 180,
+    },
+    easing: {
+      easeInOut: motion.easeInOut,
+      easeOut: motion.easeOut,
+      easeIn: motion.easeIn,
+      sharp: "cubic-bezier(0.4, 0, 0.6, 1)",
+    },
   },
 
   typography: {
-    fontFamily: '"Inter", "Space Grotesk", system-ui, sans-serif',
+    fontFamily: fonts.body,
     h1: {
-      fontFamily: fonts.label,
       fontWeight: 700,
-      letterSpacing: "-0.02em",
+      fontSize: "1.625rem",
+      lineHeight: 1.2,
+      letterSpacing: "-0.015em",
     },
     h2: {
-      fontFamily: fonts.label,
       fontWeight: 700,
+      fontSize: "1.375rem",
+      lineHeight: 1.25,
       letterSpacing: "-0.01em",
     },
     h3: {
-      fontFamily: fonts.label,
       fontWeight: 700,
+      fontSize: "1.25rem",
+      lineHeight: 1.3,
+      letterSpacing: "-0.01em",
     },
-    h4: {
-      fontFamily: fonts.label,
-      fontWeight: 700,
-    },
-    h5: {
-      fontFamily: fonts.label,
-      fontWeight: 600,
-    },
-    h6: {
-      fontFamily: fonts.label,
-      fontWeight: 600,
-    },
-    subtitle1: {
-      fontFamily: fonts.label,
-      fontWeight: 500,
-      letterSpacing: "0.05em",
-      textTransform: "uppercase",
-      fontSize: "0.75rem",
-    },
-    subtitle2: {
-      fontFamily: fonts.label,
-      fontWeight: 500,
-      letterSpacing: "0.04em",
-      fontSize: "0.6875rem",
-    },
-    body1: {
-      fontFamily: '"Inter", sans-serif',
-    },
-    body2: {
-      fontFamily: '"Inter", sans-serif',
-      fontSize: "0.8125rem",
-    },
+    h4: { fontWeight: 700, fontSize: "1.125rem", lineHeight: 1.33 },
+    h5: { fontWeight: 600, fontSize: "1.0625rem", lineHeight: 1.3 },
+    h6: { fontWeight: 600, fontSize: "1rem", lineHeight: 1.25 },
+    subtitle1: { fontWeight: 600, fontSize: "0.9375rem", lineHeight: 1.33 },
+    subtitle2: { fontWeight: 600, fontSize: "0.8125rem", lineHeight: 1.38 },
+    body1: { fontSize: "0.9375rem", lineHeight: 1.33 },
+    body2: { fontSize: "0.8125rem", lineHeight: 1.38 },
     overline: {
-      fontFamily: fonts.label,
-      letterSpacing: "0.12em",
-      fontWeight: 500,
+      fontWeight: 600,
+      fontSize: "0.75rem",
+      lineHeight: 1.33,
+      letterSpacing: "0.02em",
+      textTransform: "none",
     },
-    caption: {
-      fontFamily: fonts.label,
-      letterSpacing: "0.06em",
-      color: tokens.outline,
-    },
+    caption: { fontSize: "0.75rem", lineHeight: 1.33, letterSpacing: 0 },
     button: {
-      fontFamily: fonts.label,
-      fontWeight: 700,
-      letterSpacing: "0.1em",
-      textTransform: "uppercase",
+      fontWeight: 600,
+      fontSize: "0.875rem",
+      letterSpacing: 0,
+      textTransform: "none",
     },
   },
 
@@ -285,28 +321,44 @@ export const theme = createTheme({
       styleOverrides: {
         body: {
           backgroundColor: tokens.background,
-          scrollbarColor: `${tokens.outlineVariant} ${tokens.surfaceLowest}`,
-          "&::-webkit-scrollbar": { width: 6 },
-          "&::-webkit-scrollbar-track": { background: tokens.surfaceLowest },
-          "&::-webkit-scrollbar-thumb": { background: tokens.outlineVariant },
+          fontVariantNumeric: "tabular-nums",
+          scrollbarColor: `${tokens.outline} transparent`,
+          "&::-webkit-scrollbar": { width: 8 },
+          "&::-webkit-scrollbar-track": { background: "transparent" },
+          "&::-webkit-scrollbar-thumb": {
+            background: tokens.outlineVariant,
+            borderRadius: radii.pill,
+          },
+        },
+        "*:focus-visible": {
+          outline: `2px solid ${tokens.primary}`,
+          outlineOffset: 2,
+        },
+        // Motion off for people who ask for it. A per-app switch that wins
+        // over this comes with the motion work.
+        "@media (prefers-reduced-motion: reduce)": {
+          "*, *::before, *::after": {
+            animationDuration: "1ms !important",
+            animationIterationCount: "1 !important",
+            transitionDuration: "1ms !important",
+            scrollBehavior: "auto !important",
+          },
         },
         // MapLibre's zoom/compass controls, restyled to match the app's own
-        // map controls (LabelModeToggle): dark, square, bordered.
+        // map controls: a white floating group with the floating shadow.
         ".maplibregl-ctrl.maplibregl-ctrl-group": {
           backgroundColor: tokens.surface,
-          border: `1px solid ${tokens.outlineVariant}`,
-          borderRadius: 0,
-          boxShadow: "none",
+          border: "none",
+          borderRadius: radii.sm + 2,
+          boxShadow: elevation.e2,
+          overflow: "hidden",
         },
         ".maplibregl-ctrl-group button": {
+          width: tokens.touch.min,
+          height: tokens.touch.min,
           borderRadius: 0,
-          "&:hover": { backgroundColor: tokens.surfaceHighest },
+          "&:hover": { backgroundColor: tokens.surfaceHigh },
           "& + button": { borderTop: `1px solid ${tokens.outlineVariant}` },
-        },
-        // Stock icons are dark-on-light; invert for the dark surface while
-        // keeping the compass needle's hue.
-        ".maplibregl-ctrl button .maplibregl-ctrl-icon": {
-          filter: "invert(1) hue-rotate(180deg)",
         },
       },
     },
@@ -316,7 +368,8 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: tokens.surfaceLowest,
-          borderBottom: `2px solid ${tokens.outlineVariant}`,
+          color: tokens.onSurface,
+          boxShadow: elevation.e1,
           backgroundImage: "none",
         },
       },
@@ -326,7 +379,7 @@ export const theme = createTheme({
       styleOverrides: {
         paper: {
           backgroundColor: tokens.surfaceLowest,
-          borderRight: `2px solid ${tokens.outlineVariant}`,
+          borderRight: `1px solid ${tokens.outlineVariant}`,
           backgroundImage: "none",
         },
       },
@@ -335,14 +388,8 @@ export const theme = createTheme({
     MuiPaper: {
       defaultProps: { elevation: 0 },
       styleOverrides: {
-        root: {
-          backgroundImage: "none",
-          border: `1px solid ${tokens.outlineVariant}`,
-        },
-        // elevation 0 = surface-container, no extra border noise
-        elevation0: {
-          border: "none",
-        },
+        root: { backgroundImage: "none" },
+        rounded: { borderRadius: radii.md },
       },
     },
 
@@ -351,40 +398,61 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: tokens.surface,
-          border: `1px solid ${tokens.outlineVariant}`,
           backgroundImage: "none",
+          borderRadius: radii.md,
         },
       },
     },
 
     MuiButton: {
-      defaultProps: { disableElevation: true, disableRipple: false },
+      defaultProps: { disableElevation: true },
       styleOverrides: {
         root: {
-          borderRadius: 0,
-          letterSpacing: "0.1em",
-          fontFamily: fonts.label,
-          fontWeight: 700,
-          textTransform: "uppercase",
-          transition: "none",
+          borderRadius: radii.sm,
+          minHeight: tokens.touch.min,
+          paddingInline: 16,
+          fontWeight: 600,
+          textTransform: "none",
         },
-        contained: {
-          "&:hover": { filter: "brightness(1.1)" },
-        },
+        sizeSmall: { minHeight: 36, paddingInline: 12 },
         outlined: {
           borderWidth: 1,
-          "&:hover": { borderWidth: 1 },
+          borderColor: tokens.outlineVariant,
+          color: tokens.onSurface,
+          backgroundColor: tokens.surface,
+          "&:hover": { borderWidth: 1, backgroundColor: tokens.surfaceHigh },
         },
+      },
+      variants: [
+        {
+          props: { variant: "contained", color: "primary" },
+          style: {
+            boxShadow: elevation.e3,
+            "&:hover": { boxShadow: elevation.e3 },
+          },
+        },
+        {
+          props: { variant: "contained", color: "secondary" },
+          style: {
+            boxShadow: elevation.e3,
+            "&:hover": { boxShadow: elevation.e3 },
+          },
+        },
+      ],
+    },
+
+    MuiIconButton: {
+      styleOverrides: {
+        sizeMedium: { padding: 10 },
       },
     },
 
     MuiFab: {
       styleOverrides: {
-        primary: {
-          "&:hover": {
-            backgroundColor: tokens.primary,
-            filter: "brightness(1.1)",
-          },
+        root: {
+          borderRadius: radii.lg,
+          boxShadow: elevation.e3,
+          "&:hover": { boxShadow: elevation.e3 },
         },
       },
     },
@@ -392,13 +460,10 @@ export const theme = createTheme({
     MuiSpeedDialAction: {
       styleOverrides: {
         fab: {
-          backgroundColor: tokens.surfaceHighest,
+          backgroundColor: tokens.surface,
           color: tokens.onSurface,
-          border: `1px solid ${tokens.outline}`,
-          "&:hover": {
-            backgroundColor: tokens.surfaceHighest,
-            filter: "brightness(1.2)",
-          },
+          boxShadow: elevation.e2,
+          "&:hover": { backgroundColor: tokens.surfaceHigh },
         },
       },
     },
@@ -406,14 +471,19 @@ export const theme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 0,
-          fontFamily: fonts.label,
-          fontWeight: 700,
-          fontSize: "0.6875rem",
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          height: 24,
+          position: "relative",
+          borderRadius: radii.pill,
+          fontWeight: 600,
+          fontSize: "0.8125rem",
+          height: 32,
+          // 32px to look at, 44px to hit.
+          "&.MuiChip-clickable::after": {
+            content: '""',
+            position: "absolute",
+            inset: "-6px -2px",
+          },
         },
+        sizeSmall: { height: 24, fontSize: "0.75rem" },
       },
     },
 
@@ -424,8 +494,10 @@ export const theme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 0,
-          backgroundColor: tokens.surfaceLow,
+          borderRadius: radii.sm + 2,
+          backgroundColor: tokens.surface,
+          // 16px: anything smaller makes iOS zoom the page on focus.
+          fontSize: "1rem",
           "& .MuiOutlinedInput-notchedOutline": {
             borderColor: tokens.outlineVariant,
           },
@@ -442,12 +514,7 @@ export const theme = createTheme({
 
     MuiInputLabel: {
       styleOverrides: {
-        root: {
-          fontFamily: fonts.label,
-          fontSize: "0.75rem",
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-        },
+        root: { letterSpacing: 0, textTransform: "none" },
       },
     },
 
@@ -460,11 +527,65 @@ export const theme = createTheme({
     MuiListItemButton: {
       styleOverrides: {
         root: {
+          minHeight: tokens.touch.row,
           "&.Mui-selected": {
-            backgroundColor: tokens.surfaceHigh,
-            color: tokens.tertiary,
-            borderLeft: `4px solid ${tokens.tertiary}`,
-            "&:hover": { backgroundColor: tokens.surfaceHigh },
+            backgroundColor: `${tokens.primary}1f`,
+            "&:hover": { backgroundColor: `${tokens.primary}29` },
+          },
+        },
+      },
+    },
+
+    MuiTabs: {
+      styleOverrides: {
+        root: { minHeight: tokens.touch.row },
+        indicator: { height: 3, borderRadius: "3px 3px 0 0" },
+      },
+    },
+
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          minHeight: tokens.touch.row,
+          minWidth: 56,
+          paddingInline: 4,
+          fontWeight: 600,
+          fontSize: "0.875rem",
+          textTransform: "none",
+          color: tokens.onSurfaceVariant,
+          "&.Mui-selected": { color: tokens.primary },
+        },
+      },
+    },
+
+    MuiToggleButtonGroup: {
+      styleOverrides: {
+        root: {
+          padding: 3,
+          borderRadius: radii.sm + 2,
+          backgroundColor: tokens.surfaceHigh,
+          boxShadow: `inset 0 0 0 1px ${tokens.outlineVariant}`,
+        },
+        grouped: {
+          border: 0,
+          margin: 0,
+          borderRadius: `${radii.sm - 1}px !important`,
+        },
+      },
+    },
+
+    MuiToggleButton: {
+      styleOverrides: {
+        root: {
+          minHeight: tokens.touch.min - 6,
+          fontWeight: 600,
+          textTransform: "none",
+          color: tokens.onSurfaceVariant,
+          "&.Mui-selected": {
+            backgroundColor: tokens.surface,
+            color: tokens.onSurface,
+            boxShadow: elevation.e1,
+            "&:hover": { backgroundColor: tokens.surface },
           },
         },
       },
@@ -473,77 +594,95 @@ export const theme = createTheme({
     MuiTooltip: {
       styleOverrides: {
         tooltip: {
-          borderRadius: 0,
-          backgroundColor: tokens.surfaceHighest,
-          border: `1px solid ${tokens.outlineVariant}`,
-          fontFamily: fonts.label,
-          fontSize: "0.6875rem",
-          letterSpacing: "0.05em",
+          borderRadius: radii.xs + 2,
+          backgroundColor: tokens.onSurface,
+          color: tokens.white,
+          fontSize: "0.75rem",
         },
       },
     },
 
-    // Inline alerts read as an inset note, not a pastel banner: square,
-    // compact, dark ground, with the severity carried by the icon and a
-    // tinted border. Layout lives on the root so the filled variant (the
-    // global error snackbar) keeps its solid background.
+    MuiDialog: {
+      styleOverrides: {
+        paper: { borderRadius: radii.xl, boxShadow: elevation.e2 },
+      },
+    },
+
+    MuiDialogTitle: {
+      styleOverrides: {
+        root: { fontSize: "1.125rem", fontWeight: 700 },
+      },
+    },
+
+    MuiMenu: {
+      styleOverrides: {
+        paper: { borderRadius: radii.md, boxShadow: elevation.e2 },
+      },
+    },
+
+    MuiMenuItem: {
+      styleOverrides: {
+        root: { minHeight: tokens.touch.row },
+      },
+    },
+
+    // Inline alerts read as a quiet note: a tinted ground with the severity
+    // carried by the icon. The filled variant (the global error snackbar)
+    // keeps a solid ground.
     MuiAlert: {
       styleOverrides: {
         root: {
-          borderRadius: 0,
-          padding: "6px 10px",
-          fontSize: "0.75rem",
+          borderRadius: radii.sm + 2,
+          padding: "8px 12px",
+          fontSize: "0.8125rem",
           lineHeight: 1.5,
           alignItems: "center",
         },
         icon: {
           padding: 0,
-          marginRight: 8,
-          fontSize: "1rem",
+          marginRight: 10,
+          fontSize: "1.125rem",
           opacity: 1,
         },
         message: { padding: 0, minWidth: 0 },
         action: { padding: 0, marginRight: 0, alignItems: "center" },
         standard: {
-          backgroundColor: tokens.surfaceLow,
+          backgroundColor: tokens.surfaceHigh,
           color: tokens.onSurface,
           "&.MuiAlert-colorError": {
-            border: `1px solid ${tokens.error}55`,
+            backgroundColor: tokens.errorContainer,
             "& .MuiAlert-icon": { color: tokens.error },
           },
           "&.MuiAlert-colorWarning": {
-            border: `1px solid ${tokens.levels.medium.marker}55`,
-            "& .MuiAlert-icon": { color: tokens.levels.medium.marker },
-          },
-          "&.MuiAlert-colorSuccess": {
-            border: `1px solid ${tokens.success}55`,
-            "& .MuiAlert-icon": { color: tokens.success },
-          },
-          "&.MuiAlert-colorInfo": {
-            border: `1px solid ${tokens.primary}55`,
-            "& .MuiAlert-icon": { color: tokens.primary },
-          },
-        },
-        // In dark mode MUI fills with palette[color].dark but takes the text
-        // colour from palette[color].main - for us a dark red ground under
-        // near-black text. Each pairing is set here instead.
-        filled: {
-          "& .MuiAlert-action .MuiIconButton-root": { color: "inherit" },
-          "&.MuiAlert-colorError": {
-            backgroundColor: tokens.errorContainer,
-            color: tokens.white,
-          },
-          "&.MuiAlert-colorWarning": {
-            backgroundColor: tokens.levels.medium.marker,
-            color: tokens.background,
+            backgroundColor: tokens.levels.medium.bg,
+            "& .MuiAlert-icon": { color: tokens.levels.medium.text },
           },
           "&.MuiAlert-colorSuccess": {
             backgroundColor: tokens.successContainer,
-            color: tokens.onSurface,
+            "& .MuiAlert-icon": { color: tokens.success },
           },
           "&.MuiAlert-colorInfo": {
             backgroundColor: tokens.primaryContainer,
-            color: tokens.onSurface,
+            "& .MuiAlert-icon": { color: tokens.primary },
+          },
+        },
+        filled: {
+          "& .MuiAlert-action .MuiIconButton-root": { color: "inherit" },
+          "&.MuiAlert-colorError": {
+            backgroundColor: tokens.error,
+            color: tokens.white,
+          },
+          "&.MuiAlert-colorWarning": {
+            backgroundColor: tokens.levels.medium.text,
+            color: tokens.white,
+          },
+          "&.MuiAlert-colorSuccess": {
+            backgroundColor: tokens.success,
+            color: tokens.white,
+          },
+          "&.MuiAlert-colorInfo": {
+            backgroundColor: tokens.primary,
+            color: tokens.white,
           },
         },
       },
@@ -551,20 +690,17 @@ export const theme = createTheme({
 
     MuiLinearProgress: {
       styleOverrides: {
-        root: { borderRadius: 0 },
+        root: { borderRadius: 3 },
       },
     },
 
     MuiTableCell: {
       styleOverrides: {
         head: {
-          fontFamily: fonts.label,
-          fontWeight: 700,
-          fontSize: "0.6875rem",
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
+          fontWeight: 600,
+          fontSize: "0.75rem",
           color: tokens.onSurfaceVariant,
-          borderBottom: `2px solid ${tokens.outlineVariant}`,
+          borderBottom: `1px solid ${tokens.outlineVariant}`,
         },
         root: {
           borderBottom: `1px solid ${tokens.outlineVariant}`,
@@ -574,9 +710,7 @@ export const theme = createTheme({
 
     MuiBadge: {
       styleOverrides: {
-        badge: { borderRadius: 0 },
-        // A dot is a dot - circles are part of the language, square ones
-        // read as a stray block next to the icon.
+        // A dot is a dot - circles are part of the language.
         dot: { borderRadius: "50%" },
       },
     },
@@ -603,12 +737,12 @@ export const PANEL_HEIGHT = {
   md: "calc(100vh - 48px)",
 } as const;
 
-/** The app's standard small uppercase label. Spread into sx and override
- * size or color where a variant is needed. */
+/** The app's standard small label: 12px, semibold, sentence case. Spread into
+ * sx and override size or color where a variant is needed. */
 export const labelSx = {
   fontFamily: fonts.label,
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-  fontSize: "0.625rem",
+  fontWeight: 600,
+  letterSpacing: "0.02em",
+  fontSize: "0.75rem",
   color: "text.secondary",
 } as const;

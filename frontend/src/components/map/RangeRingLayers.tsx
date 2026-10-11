@@ -90,7 +90,7 @@ export default function RangeRingLayers({ rings }: { rings: RangeRing[] }) {
             "text-padding": 4,
           }}
           paint={{
-            "text-color": tokens.white,
+            "text-color": tokens.mapLabelText,
             "text-halo-color": tokens.mapLabelHalo,
             "text-halo-width": 2,
           }}

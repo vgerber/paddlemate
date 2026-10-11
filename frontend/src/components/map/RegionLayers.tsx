@@ -50,7 +50,7 @@ export default function RegionLayers({
             "text-padding": 8,
           }}
           paint={{
-            "text-color": tokens.white,
+            "text-color": tokens.mapLabelText,
             "text-halo-color": tokens.mapLabelHalo,
             "text-halo-width": 2,
           }}

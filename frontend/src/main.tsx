@@ -6,11 +6,7 @@ import { createRoot } from "react-dom/client";
 import ErrorFallback from "./components/states/ErrorFallback";
 import { theme } from "./lib/theme";
 import { routeTree } from "./routeTree.gen";
-import "@fontsource/space-grotesk/400.css";
-import "@fontsource/space-grotesk/500.css";
-import "@fontsource/space-grotesk/700.css";
-import "@fontsource/inter/400.css";
-import "@fontsource/inter/500.css";
+import "@fontsource-variable/figtree";
 import "./index.css";
 
 const router = createRouter({
