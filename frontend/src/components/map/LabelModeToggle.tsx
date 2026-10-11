@@ -48,6 +48,7 @@ export default function LabelModeToggle({
     ({
       px: 1.5,
       minHeight: tokens.touch.min,
+      whiteSpace: "nowrap",
       fontSize: "0.8125rem",
       fontWeight: active ? 600 : 500,
       color: active ? tokens.onPrimaryContainer : tokens.onSurface,
