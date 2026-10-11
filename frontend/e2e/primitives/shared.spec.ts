@@ -95,16 +95,16 @@ test.describe("docked action", () => {
 test.describe("confirm dialog", () => {
   test("has the dialog radius, the floating shadow and 44px buttons", async ({
     page,
-  }, info) => {
-    await page.goto("/settings");
-    // Desktop lists the settings sections; the phone shows them on one page.
-    if (info.project.name === "desktop") {
-      await page.getByRole("button", { name: /Access tokens/ }).click();
-    }
+  }) => {
+    // A section's own address: the phone shows the list first, the desktop
+    // opens Account beside it.
+    await page.goto("/settings?group=tokens");
     await page
-      .getByRole("button", { name: /revoke/i })
+      .getByRole("button", { name: "Token actions" })
+      .filter({ visible: true })
       .first()
       .click();
+    await page.getByRole("menuitem", { name: "Revoke" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     const paper = page.locator(".MuiDialog-paper");
@@ -158,7 +158,7 @@ test.describe("empty state", () => {
 
 test.describe("labels", () => {
   test("fact labels and form headings are sentence case", async ({ page }) => {
-    await page.goto("/settings");
+    await page.goto("/settings?group=account");
     const labels = page.locator(
       '[data-testid="fact-label"]:visible, [data-testid="form-section-label"]:visible',
     );
@@ -184,7 +184,7 @@ test.describe("labels", () => {
   });
 
   test("a form heading is 15px and semibold", async ({ page }) => {
-    await page.goto("/settings");
+    await page.goto("/settings?group=account");
     const heading = page.getByTestId("form-section-label").first();
     await expect(heading).toBeVisible();
     expect(await computed(heading, "font-size")).toBe("15px");
