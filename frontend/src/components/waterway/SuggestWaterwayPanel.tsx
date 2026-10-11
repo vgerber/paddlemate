@@ -18,6 +18,8 @@ import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import EmptyState from "@/components/states/EmptyState";
 import SignInGate from "@/components/states/SignInGate";
 import FormSection from "@/components/waterway/FormSection";
+import ProposalNoteField from "@/components/waterway/ProposalNoteField";
+import { proposalNoteValue } from "@/components/waterway/proposalNote";
 import type { CatalogRiver } from "@/lib/api";
 import { ApiError, apiErrorMessage } from "@/lib/api/client";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
@@ -83,6 +85,7 @@ export default function SuggestWaterwayPanel({
 
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState("");
+  const [note, setNote] = useState("");
 
   // Gauge-backed river suggestions: rivers the gauge catalog knows by name.
   // The exact match ranks first server-side, so it is always present.
@@ -214,7 +217,11 @@ export default function SuggestWaterwayPanel({
     // server compares case-insensitively rather than ignoring diacritics,
     // could refuse a name the server would have accepted.
     createWaterway.mutate(
-      { name: trimmed, description: description.trim() || null },
+      {
+        name: trimmed,
+        description: description.trim() || null,
+        proposal_note: proposalNoteValue(note),
+      },
       {
         onSuccess: () => setSubmitted(true),
         onError: (err) => {
@@ -424,6 +431,8 @@ export default function SuggestWaterwayPanel({
                 fullWidth
               />
             </FormSection>
+
+            <ProposalNoteField value={note} onChange={setNote} />
 
             {submitError && <Alert severity="error">{submitError}</Alert>}
           </>

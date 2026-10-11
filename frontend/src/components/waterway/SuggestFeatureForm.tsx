@@ -17,6 +17,8 @@ import { preferredLanguage } from "@/lib/languagePreference";
 import FormSection from "./FormSection";
 import GaugeRangePicker from "./GaugeRangePicker";
 import { type GeometryPicking, minVerticesFor } from "./geometryPicking";
+import ProposalNoteField from "./ProposalNoteField";
+import { proposalNoteValue } from "./proposalNote";
 import SuggestFeatureGeometry from "./SuggestFeatureGeometry";
 import SuggestFeatureTypeGrid from "./SuggestFeatureTypeGrid";
 
@@ -107,6 +109,7 @@ export default function SuggestFeatureForm({
       ""
     );
   });
+  const [note, setNote] = useState("");
   const [featureType, setFeatureType] = useState<FeatureType>(
     () => editFeature?.feature_type ?? "whitewater",
   );
@@ -222,6 +225,7 @@ export default function SuggestFeatureForm({
             name: name.trim() || null,
             description: description.trim() || null,
             water_ranges: waterRanges,
+            proposal_note: proposalNoteValue(note),
           },
         },
         { onSuccess: () => onSubmitted?.() },
@@ -236,6 +240,7 @@ export default function SuggestFeatureForm({
           name: name.trim() || null,
           description: description.trim() || null,
           water_ranges: waterRanges,
+          proposal_note: proposalNoteValue(note),
         },
         { onSuccess: () => onSubmitted?.() },
       );
@@ -317,6 +322,14 @@ export default function SuggestFeatureForm({
       >
         <GaugeRangePicker picker={gaugePicker} />
       </FormSection>
+
+      {!onDraft && (
+        <ProposalNoteField
+          value={note}
+          onChange={setNote}
+          disabled={submitting}
+        />
+      )}
 
       {submitError && <Alert severity="error">{submitError}</Alert>}
     </Box>

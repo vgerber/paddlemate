@@ -32,8 +32,10 @@ export type PaginatedResponse =
 /** A waterway in search results, carrying which text matched the query. */
 export type WaterwayListItem = components["schemas"]["WaterwayListItem"];
 export type MatchSource = components["schemas"]["MatchSource"];
-export type CreateFeatureInput = components["schemas"]["Proposable_for_CreateFeatureBody"];
-export type UpdateFeatureInput = components["schemas"]["Proposable_for_UpdateFeatureBody"];
+export type CreateFeatureInput =
+  components["schemas"]["Proposable_for_CreateFeatureBody"];
+export type UpdateFeatureInput =
+  components["schemas"]["Proposable_for_UpdateFeatureBody"];
 export type SectionWaterStatus = components["schemas"]["SectionWaterStatus"];
 export type WaterRangeWithStatus =
   components["schemas"]["WaterRangeWithStatus"];
@@ -126,7 +128,9 @@ export const waterwaysApi = {
     });
     return assertData(data);
   },
-  create: async (body: components["schemas"]["Proposable_for_CreateWaterwayBody"]) => {
+  create: async (
+    body: components["schemas"]["Proposable_for_CreateWaterwayBody"],
+  ) => {
     const { data } = await client.POST("/api/v1/waterways", { body });
     // 201 (admin, Waterway) or 202 (proposal); client throws ApiError on 409.
     return assertData(data);

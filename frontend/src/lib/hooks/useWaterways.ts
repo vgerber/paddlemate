@@ -9,7 +9,8 @@ import { type WaterwayFilters, waterwaysApi } from "@/lib/api";
 import type { components } from "@/lib/api/schema";
 import { proposalKeys } from "./useProposals";
 
-type CreateWaterwayBody = components["schemas"]["Proposable_for_CreateWaterwayBody"];
+type CreateWaterwayBody =
+  components["schemas"]["Proposable_for_CreateWaterwayBody"];
 
 export const waterwayKeys = {
   all: ["waterways"] as const,

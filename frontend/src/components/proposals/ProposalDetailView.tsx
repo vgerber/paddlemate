@@ -7,6 +7,7 @@ import ProposalReviewControls from "@/components/proposals/ProposalReviewControl
 import ProposalVoteBar from "@/components/proposals/ProposalVoteBar";
 import type { Proposal, ProposalStatus } from "@/lib/api";
 import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
+import { labelSx } from "@/lib/theme";
 import StatusChip from "./StatusChip";
 
 /** The whole proposal: what it is, the change itself with its map, and the
@@ -56,6 +57,20 @@ export default function ProposalDetailView({
         }}
       >
         <ProposalVoteBar proposal={proposal} />
+
+        {proposal.submitter_note && (
+          <Box data-testid="proposal-submitter-note">
+            <Typography sx={{ ...labelSx, color: "text.secondary" }}>
+              Note from the submitter
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+            >
+              {proposal.submitter_note}
+            </Typography>
+          </Box>
+        )}
 
         {proposal.operation === "delete" && (
           <Typography sx={{ fontSize: "0.8125rem", color: "text.secondary" }}>

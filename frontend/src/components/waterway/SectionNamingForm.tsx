@@ -9,6 +9,7 @@ import FormSection from "@/components/waterway/FormSection";
 import { preferredLanguage } from "@/lib/languagePreference";
 import { languageOptions } from "@/lib/languages";
 import { theme } from "@/lib/theme";
+import ProposalNoteField from "./ProposalNoteField";
 
 const { tokens } = theme;
 
@@ -26,6 +27,8 @@ export interface SectionNamingValue {
   name: string;
   description: string;
   translations: SectionTranslationDraft[];
+  /** Optional note for the reviewers. */
+  note: string;
 }
 
 /** Fresh naming state; the primary language defaults to the reader's.
@@ -37,6 +40,7 @@ export function createInitialNaming(): SectionNamingValue {
     name: "",
     description: "",
     translations: [],
+    note: "",
   };
 }
 
@@ -182,6 +186,11 @@ export default function SectionNamingForm({
           </Box>
         ))}
       </FormSection>
+
+      <ProposalNoteField
+        value={value.note}
+        onChange={(note) => onChange({ ...value, note })}
+      />
     </Box>
   );
 }
