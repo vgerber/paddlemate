@@ -1,13 +1,14 @@
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import RuleOutlinedIcon from "@mui/icons-material/RuleOutlined";
-import List from "@mui/material/List";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
 import { useProposals } from "@/lib/hooks/useProposals";
+import { transition } from "@/lib/motion";
+import { alphas, theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 // One entry per tool - adding a tool is a single row here. `as const` keeps
 // each `to` a literal route path so the typed Link accepts it.
@@ -40,52 +41,73 @@ export default function ToolsList() {
   };
 
   return (
-    // Rows on mobile, a card grid on desktop - two tools in one stacked
-    // column wasted the whole width of the page.
-    <List
-      disablePadding
+    <Box
       sx={{
         display: "grid",
-        gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" },
-        gap: { md: 2 },
-        border: { xs: "1px solid", md: "none" },
-        borderColor: "divider",
+        gridTemplateColumns: {
+          xs: "minmax(0, 1fr)",
+          md: "repeat(2, minmax(0, 1fr))",
+        },
+        gap: 1.75,
       }}
     >
-      {TOOLS.map((tool, i) => {
+      {TOOLS.map((tool) => {
         const count = counts[tool.to];
         return (
-          <ListItemButton
+          <Box
             key={tool.to}
             component={Link}
             to={tool.to}
             sx={{
-              ...(i > 0
-                ? {
-                    borderTop: { xs: "1px solid", md: "none" },
-                    borderColor: "divider",
-                  }
-                : {}),
-              border: { md: "1px solid" },
-              borderColor: { md: "divider" },
-              alignItems: { md: "flex-start" },
-              p: { md: 2 },
+              display: "grid",
+              gridTemplateColumns: "40px minmax(0, 1fr) auto",
+              gap: 1.5,
+              alignItems: "start",
+              minHeight: tokens.touch.min,
+              p: 2,
+              color: "text.primary",
+              textDecoration: "none",
+              bgcolor: tokens.surfaceLowest,
+              borderRadius: `${tokens.radii.md}px`,
+              boxShadow: tokens.elevation.e1,
+              transition: transition("box-shadow", { duration: "fast" }),
+              "&:hover": { boxShadow: tokens.elevation.e2 },
             }}
           >
-            <ListItemIcon sx={{ minWidth: 40 }}>{tool.icon}</ListItemIcon>
-            <ListItemText primary={tool.title} secondary={tool.description} />
+            <Box
+              data-testid="tool-icon"
+              sx={{
+                width: 40,
+                height: 40,
+                display: "grid",
+                placeItems: "center",
+                borderRadius: `${tokens.radii.sm + 2}px`,
+                bgcolor: `${tokens.primary}${alphas.hover}`,
+                color: tokens.primary,
+              }}
+            >
+              {tool.icon}
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontWeight: 700, fontSize: "1rem" }}>
+                {tool.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {tool.description}
+              </Typography>
+            </Box>
             {count != null && (
               <Typography
                 variant="body2"
                 color="text.secondary"
-                sx={{ ml: 2, fontVariantNumeric: "tabular-nums" }}
+                sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
               >
                 {count.toLocaleString()}
               </Typography>
             )}
-          </ListItemButton>
+          </Box>
         );
       })}
-    </List>
+    </Box>
   );
 }

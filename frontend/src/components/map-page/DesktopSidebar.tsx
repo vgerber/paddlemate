@@ -7,20 +7,19 @@ interface DesktopSidebarProps {
   state: MapPageState;
 }
 
-/** Sidebar shown only on md+ breakpoints. It widens on larger screens -
- * the lists, gauge rows and feature timeline all truncate at 360px. */
+/** Side panel shown only on md+ breakpoints. It widens on larger screens -
+ * the lists, gauge rows and feature timeline all truncate at 360px. The
+ * panel is set apart from the map by its ground, not by a rule. */
 export default function DesktopSidebar({ state }: DesktopSidebarProps) {
   return (
     <Box
+      data-testid="side-panel"
       sx={{
         width: { md: 360, lg: 420, xl: 480 },
         display: { xs: "none", md: "flex" },
         flexDirection: "column",
         overflow: "hidden",
-        // The same ground and hairline as every other list pane.
         bgcolor: theme.tokens.surfaceLow,
-        borderRight: "1px solid",
-        borderColor: `${theme.tokens.outlineVariant}55`,
         flexShrink: 0,
       }}
     >

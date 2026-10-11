@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import { createFileRoute } from "@tanstack/react-router";
 import GaugeCatalogMap from "@/components/gauge-catalog/GaugeCatalogMap";
+import { PANEL_HEIGHT } from "@/lib/theme";
 
 export const Route = createFileRoute("/tools/gauge-catalog")({
   component: GaugeCatalogPage,
@@ -13,10 +14,7 @@ function GaugeCatalogPage() {
     <Box
       sx={{
         position: "relative",
-        height: {
-          xs: "calc(100dvh - 56px - env(safe-area-inset-bottom))",
-          sm: "calc(100dvh - 48px)",
-        },
+        height: PANEL_HEIGHT,
         overflow: "hidden",
       }}
     >
