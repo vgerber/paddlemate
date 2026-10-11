@@ -5,9 +5,10 @@ import type {
   NotePin,
   PointPin,
 } from "@/components/map/Map";
-import { REGION_SHEET_CLEARANCE } from "@/components/map/RegionSheet";
 import type { Feature, SectionWithFeatures } from "@/lib/api";
 import { lineCoords } from "@/lib/geo";
+import { circleBounds } from "./areaFrame";
+import { modeSheetClearance, modeSheetMode } from "./modeSheet";
 import type { MapPageState } from "./useMapPageState";
 
 /** The part of the page state the map draws and reacts to. */
@@ -105,8 +106,8 @@ type SubjectInput = Pick<
 >;
 
 /** What the canvas keeps inside the free area: the selected section, else the
- * river, else the search results. An area or region search frames its own
- * area instead, so it has no subject. */
+ * river, else the search area (the circle, framed by its radius, or the
+ * picked region), else the search results. */
 export function sceneSubject(input: SubjectInput): MapSubject | null {
   const { selectedWaterwayId, selectedSectionId, sections } = input;
   if (selectedWaterwayId != null) {
@@ -123,7 +124,23 @@ export function sceneSubject(input: SubjectInput): MapSubject | null {
         }
       : null;
   }
-  if (input.visibleAreaCircle || input.regionOutline) return null;
+  const circle = input.visibleAreaCircle;
+  if (circle) {
+    // Keyed by the radius: a new radius refits, a tap that moves the centre
+    // leaves the camera where the finger is.
+    return { key: `area:${circle.radiusKm}`, bounds: circleBounds(circle) };
+  }
+  const region = input.regionOutline;
+  if (region) {
+    const [west, south, east, north] = region.bbox;
+    return {
+      key: `region:${region.id}`,
+      bounds: [
+        [west, south],
+        [east, north],
+      ],
+    };
+  }
   const results = boundsOf(input.filteredSearchSections);
   if (!results) return null;
   const ids = input.filteredSearchSections.map((s) => s.id);
@@ -141,9 +158,7 @@ export function buildMapScene(input: MapSceneInput): MapScene {
     notePinPlacing,
   } = input;
   const riverOpen = selectedWaterwayId != null;
-  const showModeStrip =
-    isMobile && (input.isAreaMode || input.isRegionMode) && !riverOpen;
-  const showRegionStrip = isMobile && input.isRegionMode && !riverOpen;
+  const sheetMode = modeSheetMode(input);
 
   return {
     sections: riverOpen ? input.sections : input.filteredSearchSections,
@@ -212,11 +227,10 @@ export function buildMapScene(input: MapSceneInput): MapScene {
       waterwayNames: input.waterwayNames,
       labelMode: input.labelMode,
       onLabelModeChange: input.setLabelMode,
-      controlsBottomOffset:
-        isMobile && (showModeStrip || input.isMobileMapView)
-          ? showRegionStrip
-            ? REGION_SHEET_CLEARANCE
-            : 60
+      controlsBottomOffset: sheetMode
+        ? modeSheetClearance(sheetMode)
+        : isMobile && input.isMobileMapView
+          ? 60
           : 0,
       controlsAnchor: isMobile && suggestMode === "feature" ? "top" : undefined,
       attributionPosition: isMobile ? "top-left" : "bottom-right",

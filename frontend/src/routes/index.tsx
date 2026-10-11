@@ -44,7 +44,7 @@ export const Route = createFileRoute("/")({
 function Home() {
   const search = Route.useSearch();
   const state = useMapPageState(search);
-  const { scene, regionLevel, setRegionLevel } = useMapScene(state);
+  const scene = useMapScene(state);
   // From md the canvas host draws the scene behind the cards; on a phone the
   // map pane below draws the same scene.
   useCanvasScene(scene);
@@ -69,8 +69,6 @@ function Home() {
         <MapPane
           state={state}
           scene={scene}
-          regionLevel={regionLevel}
-          onRegionLevelChange={setRegionLevel}
           onOpenMobilePanel={() => state.setIsMobilePanelOpen(true)}
         />
       </Box>

@@ -17,6 +17,8 @@ import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
 import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { pushRecentWaterway } from "@/lib/recentWaterways";
+import { DEFAULT_RADIUS_KM, defaultAreaCircle } from "./areaFrame";
+import { modeSheetMode, modeSheetPeek } from "./modeSheet";
 import { useFeaturePicker } from "./useFeaturePicker";
 import { useMobilePanelState } from "./useMobilePanelState";
 
@@ -56,6 +58,8 @@ export function useMapPageState(search: RouteSearch) {
   const [searchWaterwayIds, setSearchWaterwayIds] = useState<number[]>([]);
   const [labelMode, setLabelMode] = useState<"section" | "river">("section");
   const [areaLocked, setAreaLocked] = useState(false);
+  // The level chips narrow which regions the map draws.
+  const [regionLevel, setRegionLevel] = useState<string | null>(null);
   const { favorites, favoritedIds, toggle: toggleFavorite } = useFavorites();
 
   // Feature suggestion: pick geometry vertices from the map
@@ -252,6 +256,29 @@ export function useMapPageState(search: RouteSearch) {
     [navigate],
   );
 
+  // The circle is there from the moment area search opens: at the middle of
+  // the map that is in view, above a phone's sheet. A tap moves it from there.
+  const sheetMode = modeSheetMode({
+    isMobile,
+    isAreaMode,
+    isRegionMode: mode === "region",
+    selectedWaterwayId,
+    suggestMode,
+  });
+  const needsCircle =
+    isAreaMode &&
+    selectedWaterwayId == null &&
+    suggestMode == null &&
+    areaCircle == null;
+  useEffect(() => {
+    if (!needsCircle || !mapBounds) return;
+    const covered =
+      sheetMode === "area" ? modeSheetPeek("area") / window.innerHeight : 0;
+    setAreaCircle(
+      defaultAreaCircle(mapBounds, radius ?? DEFAULT_RADIUS_KM, covered),
+    );
+  }, [needsCircle, mapBounds, radius, sheetMode, setAreaCircle]);
+
   /** Reset live preview then commit to URL. Used when area changes from a panel. */
   const handleAreaCircleChange = useCallback(
     (c: AreaCircle | null) => {
@@ -422,6 +449,8 @@ export function useMapPageState(search: RouteSearch) {
     countryBorders: regionsInView.countries,
     regionsLoading: regionsInView.loading,
     selectRegion,
+    regionLevel,
+    setRegionLevel,
     // Navigation helpers
     setSelectedWaterwayId,
     setSelectedSectionId,

@@ -516,7 +516,7 @@ test.describe("area mode", () => {
     // A finger taps, a pointer clicks.
     const verb = info.project.name === "desktop" ? "Click" : "Tap";
     await expect(
-      seen(page.getByText(`${verb} on the map to set the search center.`)),
+      seen(page.getByText(`${verb} the map to move the search center.`)),
     ).toBeVisible();
     const slider = seen(page.getByRole("slider"));
     await expect(slider).toBeVisible();
@@ -553,11 +553,17 @@ test.describe("region mode", () => {
     const field = regionField(page);
     await expect(field).toBeVisible();
     expect(await computed(field, "font-size")).toBe("16px");
+    // Before a pick the map is the way in: the hint says so, the levels are
+    // chips; typing swaps them for the list.
+    await expect(
+      seen(page.getByText(/a region on the map, or search one by name\./)),
+    ).toBeVisible();
+    await expect(chip(page, "Valleys")).toBeVisible();
+    await field.fill("Wald");
     await expect(
       seen(page.getByText("Type a valley, district, state or range")),
     ).toBeVisible();
     // Facets step aside while regions are listed.
-    await field.fill("Wald");
     const groups = seen(page.getByTestId("region-group"));
     await expect(groups.first()).toBeVisible();
     const heads = await groups.evaluateAll((els) =>

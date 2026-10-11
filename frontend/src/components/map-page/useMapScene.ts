@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { MapScene } from "@/components/canvas/scene";
 import type { NotePin, PointPin } from "@/components/map/Map";
 import {
@@ -36,6 +36,7 @@ export function useMapScene(state: MapPageState) {
     sections,
     notePin,
     regionChoices,
+    regionLevel,
     isAreaMode,
     areaCircle,
     previewRadius,
@@ -189,7 +190,6 @@ export function useMapScene(state: MapPageState) {
   );
 
   // The level chips narrow what the map draws.
-  const [regionLevel, setRegionLevel] = useState<string | null>(null);
   const drawnRegions = useMemo(
     () =>
       regionLevel
@@ -238,5 +238,5 @@ export function useMapScene(state: MapPageState) {
     cache.current = { input, scene: buildMapScene(input) };
   }
 
-  return { scene: cache.current.scene, regionLevel, setRegionLevel };
+  return cache.current.scene;
 }

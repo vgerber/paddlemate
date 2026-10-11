@@ -17,6 +17,7 @@ import { theme } from "@/lib/theme";
 import ListGroupHeader from "./ListGroupHeader";
 import type { ListView } from "./ListViewToggle";
 import RecentRiverList from "./RecentRiverList";
+import type { RegionBrowseProps } from "./RegionBrowse";
 import RegionSuggestions, { isListingRegions } from "./RegionSelect";
 import RiverList from "./RiverList";
 import SearchFiltersHeader, { SearchControls } from "./SearchFiltersHeader";
@@ -55,6 +56,11 @@ interface WaterwaySearchPanelProps {
   onLoadingChange?: (loading: boolean) => void;
   /** Opens the "suggest new river" panel, prefilled with the searched name. */
   onProposeRiver?: (name: string) => void;
+  /** The map's regions, for the level chips and "Part of" in region mode. */
+  regionBrowse?: RegionBrowseProps;
+  /** The panel sits in the phone's peek sheet: no title row, and it asks the
+   * sheet to open for the region list and to rest once a region is picked. */
+  sheet?: { onState: (state: "peek" | "open") => void };
 }
 
 export default function WaterwaySearchPanel({
@@ -76,6 +82,8 @@ export default function WaterwaySearchPanel({
   onRadiusPreview,
   onLoadingChange,
   onProposeRiver,
+  regionBrowse,
+  sheet,
 }: WaterwaySearchPanelProps) {
   const searchFilters = useWaterwaySearchFilters(areaCircle);
   const { mode, searchName, filters } = searchFilters;
@@ -182,6 +190,13 @@ export default function WaterwaySearchPanel({
     (!searchFilters.region || isListingRegions(searchFilters.regionQuery));
   const showResults = hasFilters && !listingRegions;
 
+  // The region list needs room: lift the sheet while one is being typed.
+  const typingRegion = isListingRegions(searchFilters.regionQuery);
+  const sheetState = sheet?.onState;
+  useEffect(() => {
+    if (typingRegion) sheetState?.("open");
+  }, [typingRegion, sheetState]);
+
   const resultTabs = [
     {
       value: "sections" as ListView,
@@ -213,6 +228,7 @@ export default function WaterwaySearchPanel({
         filters={searchFilters}
         swipe={swipe}
         onClose={onClose}
+        sheet={sheet != null}
       />
 
       <Box
@@ -235,6 +251,7 @@ export default function WaterwaySearchPanel({
           onAreaLockedChange={onAreaLockedChange}
           onRadiusPreview={onRadiusPreview}
           listingRegions={listingRegions}
+          regionBrowse={regionBrowse}
         />
 
         {showResults && (
@@ -277,6 +294,7 @@ export default function WaterwaySearchPanel({
                 onPick={(picked) => {
                   searchFilters.setRegion(picked);
                   searchFilters.setRegionQuery("");
+                  sheet?.onState("peek");
                 }}
               />
             </Box>

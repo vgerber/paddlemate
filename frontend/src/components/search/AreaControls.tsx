@@ -92,7 +92,7 @@ export default function AreaControls({
         </Tooltip>
       </Box>
       <Typography variant="body2" color="textSecondary" sx={{ px: 0.25 }}>
-        {verb} on the map to set the search center.
+        {verb} the map to move the search center.
       </Typography>
     </Box>
   );
