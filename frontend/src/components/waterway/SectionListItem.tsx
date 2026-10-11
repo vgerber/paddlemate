@@ -6,6 +6,7 @@ import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
+import { desktopFlatRow } from "@/components/canvas/flatRow";
 import { cardRowSx } from "@/components/search/RiverRow";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import type { SectionWithFeatures } from "@/lib/api";
@@ -74,12 +75,13 @@ export default function SectionListItem({
   return (
     // Each row is its own container, so the stacked layout follows the width
     // the row is given wherever it is listed.
-    <Box sx={{ containerType: "inline-size", mb: 1 }}>
+    <Box sx={{ containerType: "inline-size", mb: { xs: 1, md: 0 } }}>
       <ListItemButton
         selected={selected}
         onClick={() => onClick(section.id)}
         sx={{
           ...cardRowSx,
+          ...desktopFlatRow,
           display: "grid",
           alignItems: "center",
           minHeight: 56,

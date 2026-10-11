@@ -118,7 +118,8 @@ test.describe("canvas foundation", () => {
     expect(await computed(c.locator(".."), "pointer-events")).toBe("none");
     const b = await box(c);
     expect(b.y).toBe(56 + 16);
-    expect(Math.round(b.y + b.height)).toBe(800 - 16);
+    // Height follows the content, never past the margins.
+    expect(Math.round(b.y + b.height)).toBeLessThanOrEqual(800 - 16);
     for (const el of await page.locator("button:visible").all()) {
       expect(await computed(el, "text-transform")).toBe("none");
     }

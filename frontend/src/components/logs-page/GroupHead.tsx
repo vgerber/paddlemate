@@ -17,8 +17,9 @@ export default function GroupHead({
       sx={{
         ...labelSx,
         fontSize: "0.8125rem",
-        px: 0.5,
+        px: { xs: 0.5, md: 2 },
         pt: 0.75,
+        pb: { md: 0.75 },
         color: "text.secondary",
       }}
     >

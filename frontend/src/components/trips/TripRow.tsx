@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
+import { desktopFlatRow } from "@/components/canvas/flatRow";
 import { tripStanding } from "@/components/trip-page/planWeek";
 import type { Trip } from "@/lib/api";
 import { dateRange, todayIso } from "@/lib/format";
@@ -47,6 +48,7 @@ export default function TripRow({
         boxShadow: selected
           ? `inset 0 0 0 2px ${tokens.primary}, ${tokens.elevation.e1}`
           : tokens.elevation.e1,
+        ...desktopFlatRow,
       }}
     >
       <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>

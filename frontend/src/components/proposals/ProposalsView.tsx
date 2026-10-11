@@ -224,7 +224,14 @@ export default function ProposalsView({
       ) : !proposals || proposals.length === 0 ? (
         <EmptyState title={`No ${status} proposals.`} />
       ) : (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1, p: 1.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: { xs: 1, md: 0 },
+            p: { xs: 1.5, md: 0 },
+          }}
+        >
           {proposals.map((p) => (
             <ProposalRow
               key={p.id}
@@ -263,14 +270,23 @@ export default function ProposalsView({
         side="left"
         kind="list"
         screen="proposals"
-        fullHeight={false}
         title="Proposals"
         selfHeaded
       >
-        <Box data-testid="proposal-list" sx={{ bgcolor: tokens.surfaceLow }}>
-          {list}
-        </Box>
+        <Box data-testid="proposal-list">{list}</Box>
       </FloatingCard>
+      {selectedId == null && (
+        <FloatingCard
+          id="proposal"
+          side="right"
+          kind="side"
+          screen="proposals"
+          title="Proposal"
+          selfHeaded
+        >
+          <EmptyState title="Select a proposal to review it." py={4} />
+        </FloatingCard>
+      )}
       {selectedId != null && (
         <ProposalSideCard
           proposal={open.proposal}

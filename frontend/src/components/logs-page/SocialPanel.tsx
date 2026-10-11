@@ -8,6 +8,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { type ReactNode, useState } from "react";
+import { flatRowSx } from "@/components/canvas/flatRow";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
 import MemberAvatar from "@/components/trips/MemberAvatar";
@@ -42,6 +43,7 @@ function PersonRow({
         borderRadius: `${tokens.radii.md}px`,
         bgcolor: tokens.surface,
         boxShadow: tokens.elevation.e1,
+        [theme.breakpoints.up("md")]: { ...flatRowSx, pl: 2 },
       }}
     >
       <MemberAvatar name={name} size={30} />
@@ -73,9 +75,17 @@ function PersonRow({
 
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: { xs: 0.75, md: 0 },
+      }}
+    >
       <GroupHead>{title}</GroupHead>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+      <Box
+        sx={{ display: "flex", flexDirection: "column", gap: { xs: 1, md: 0 } }}
+      >
         {children}
       </Box>
     </Box>
@@ -112,8 +122,11 @@ export default function SocialPanel() {
     : [];
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <Box
+      sx={{ display: "flex", flexDirection: "column", gap: { xs: 2, md: 1 } }}
+    >
       <TextField
+        sx={{ mx: { md: 1.5 }, mt: { md: 1.5 }, width: { md: "auto" } }}
         placeholder="Find users…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}

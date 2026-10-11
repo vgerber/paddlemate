@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
+import { desktopFlatRow } from "@/components/canvas/flatRow";
 import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
 import { durationLabel, formatDate, formatTime, timeAgo } from "@/lib/format";
@@ -45,6 +46,9 @@ interface DescentCardProps {
   flush?: boolean;
   /** Marks the row the desktop detail pane is showing. */
   selected?: boolean;
+  /** From the desktop split up the row is flat on a floating card, as the
+   * other desktop lists are; phones keep the shadowed card. */
+  flatFromMd?: boolean;
 }
 
 const line = { display: "block", minWidth: 0 } as const;
@@ -55,6 +59,7 @@ export default function DescentCard({
   showAuthor,
   flush,
   selected,
+  flatFromMd,
 }: DescentCardProps) {
   const sections = descent.sections
     .slice()
@@ -89,6 +94,7 @@ export default function DescentCard({
   return (
     <ButtonBase
       data-testid="descent-card"
+      aria-current={selected || undefined}
       component={onClick ? "button" : "div"}
       onClick={onClick}
       sx={{
@@ -117,6 +123,7 @@ export default function DescentCard({
                 : tokens.elevation.e1,
             }),
         ...(flush && selected && { bgcolor: "action.selected" }),
+        ...(flatFromMd && !flush && desktopFlatRow),
         transition: transition("background-color", { duration: "instant" }),
         "&:active": onClick
           ? { bgcolor: `${tokens.primary}${alphas.wash}` }
