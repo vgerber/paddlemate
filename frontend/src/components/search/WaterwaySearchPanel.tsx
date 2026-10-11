@@ -246,7 +246,8 @@ export default function WaterwaySearchPanel({
             // a sideways swipe is taken as a pan and the pane never sees it.
             touchAction: "pan-y",
             px: 1,
-            pb: 1,
+            // Room for the New river button, so the last row clears it.
+            pb: onProposeRiver ? { xs: 9, md: 1 } : 1,
           }}
         >
           {isLoading && <LoadingBox />}
