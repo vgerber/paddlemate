@@ -155,6 +155,20 @@ Decided from the two map motion pages; the hook sketch is
 
 ## How each package runs
 
+Setting up the worktree first:
+
+- Check the base: `git log --oneline -3` must show the latest `ui-overhaul`
+  commits; an agent worktree can start from `main`. If it does, reset the clean
+  worktree to `ui-overhaul` before any work.
+- Copy `frontend/.env.development.local` from the main checkout. It is
+  git-ignored, and without it the app signs in against the production
+  Keycloak; the sign-in setup now refuses that.
+- `cd frontend && bun install --frozen-lockfile`, then a Vite of your own on
+  the port the lead gives you (`--strictPort`), stopped by its exact PID at the
+  end, and `E2E_BASE_URL=http://localhost:<port>` for Playwright.
+- The fixture's gauge readings are refreshed by the Playwright global setup;
+  do not reseed the database while other agents run.
+
 1. Read the design page section and `design.md`; read the owned files.
 2. Write the Playwright spec first, from the design (what a user does, what the
    browser computes, `@small` where a layout can break); watch it fail.
