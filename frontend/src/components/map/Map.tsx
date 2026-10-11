@@ -31,6 +31,7 @@ import PickModeButtons from "./PickModeButtons";
 import RangeRingLayers, { type RangeRing } from "./RangeRingLayers";
 import RegionChoicePopup from "./RegionChoicePopup";
 import RegionLayers from "./RegionLayers";
+import type { Bbox } from "./regionGeometry";
 import SectionLayers from "./SectionLayers";
 import { useMapCameraEffects } from "./useMapCameraEffects";
 import { useMapClickHandler } from "./useMapClickHandler";
@@ -52,6 +53,14 @@ export interface PointPin {
 }
 
 const { tokens } = theme;
+
+/** Hands the MapLibre instance to browser tests, so they can read the paint
+ * and data the map really draws. Development builds only. */
+function exposeMapForTests(map: MapRef | null) {
+  if (import.meta.env.DEV && map) {
+    Object.assign(window, { __paddlemateMap: map.getMap() });
+  }
+}
 
 /** Clicking the map to choose places: the section put-in/take-out pair and
  * multi-section selection. Present only while a form is picking. */
@@ -240,6 +249,8 @@ export default function WaterwayMap({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [satellite, setSatellite] = useState(false);
   const [showFeatureNames, setShowFeatureNames] = useState(true);
+  const [viewBounds, setViewBounds] = useState<Bbox | null>(null);
+  const [litRegionId, setLitRegionId] = useState<number | null>(null);
   const { handleMapLoad } = useMapCameraEffects({
     mapRef,
     mapLoaded,
@@ -269,6 +280,8 @@ export default function WaterwayMap({
     proposedLineEndpointsGeoJSON,
     proposedLineLabelsGeoJSON,
     regionChoicesGeoJSON,
+    regionLabelsGeoJSON,
+    regionLitGeoJSON,
     pickedRegionGeoJSON,
     countryBordersGeoJSON,
   } = useMapSources({
@@ -281,6 +294,8 @@ export default function WaterwayMap({
     regionChoices,
     pickedRegion: regionOutline,
     countryBorders,
+    viewBounds,
+    litRegionId,
   });
 
   const { pickMode, togglePickMode, handleClick, regionMenu, closeRegionMenu } =
@@ -308,6 +323,7 @@ export default function WaterwayMap({
   const reportBounds = () => {
     const b = mapRef.current?.getBounds();
     if (!b) return;
+    setViewBounds([b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]);
     onBoundsChange?.({
       south: b.getSouth(),
       west: b.getWest(),
@@ -365,6 +381,7 @@ export default function WaterwayMap({
         mapStyle={satellite ? SATELLITE_STYLE : LIBERTY_STYLE}
         onClick={handleClick}
         onLoad={() => {
+          exposeMapForTests(mapRef.current);
           handleMapLoad();
           reportBounds();
         }}
@@ -381,6 +398,8 @@ export default function WaterwayMap({
 
         <RegionLayers
           choices={regionChoicesGeoJSON}
+          labels={regionLabelsGeoJSON}
+          lit={regionLitGeoJSON}
           picked={pickedRegionGeoJSON}
         />
 
@@ -388,11 +407,17 @@ export default function WaterwayMap({
           <RegionChoicePopup
             at={regionMenu.at}
             choices={regionMenu.options}
+            pickedId={regionOutline?.id ?? regionMenu.pickedId}
             onPick={(regionId) => {
               onRegionSelect(regionId);
               closeRegionMenu();
+              setLitRegionId(null);
             }}
-            onClose={closeRegionMenu}
+            onLight={setLitRegionId}
+            onClose={() => {
+              closeRegionMenu();
+              setLitRegionId(null);
+            }}
           />
         )}
 
@@ -513,9 +538,21 @@ export default function WaterwayMap({
           </Source>
         )}
 
-        {putIn && <MapNumberMarker lat={putIn.lat} lon={putIn.lon} num={1} />}
+        {putIn && (
+          <MapNumberMarker
+            lat={putIn.lat}
+            lon={putIn.lon}
+            num={1}
+            color={tokens.putIn}
+          />
+        )}
         {takeOut && (
-          <MapNumberMarker lat={takeOut.lat} lon={takeOut.lon} num={2} />
+          <MapNumberMarker
+            lat={takeOut.lat}
+            lon={takeOut.lon}
+            num={2}
+            color={tokens.takeOut}
+          />
         )}
 
         {featureVertices && (
@@ -565,7 +602,7 @@ export default function WaterwayMap({
                 height: 14,
                 borderRadius: "50%",
                 background: tokens.primary,
-                border: "2px solid rgba(255,255,255,0.9)",
+                border: `2px solid ${tokens.surface}`,
                 boxShadow: `0 0 0 3px ${tokens.primary}55, 0 0 10px ${tokens.primary}99`,
                 pointerEvents: "none",
               }}

@@ -1,33 +1,39 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
+import GlobalStyles from "@mui/material/GlobalStyles";
 import Typography from "@mui/material/Typography";
 import { Popup } from "react-map-gl/maplibre";
-import { labelSx, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
-const PALETTE = tokens.mapRegionPalette;
 
 export interface RegionChoice {
   id: number;
   label: string;
-  paletteIndex: number;
+  /** Country and level, under the name. */
+  sub: string;
 }
+
+const CARD_CLASS = "region-choices-popup";
 
 /** Which region did you mean? Regions overlap - a side valley runs into the
  * main one, a district sits under a range - so a click on shared ground is
- * ambiguous, and picking whatever happens to be on top gives no way to reach
- * the rest. The stack under the pointer is listed smallest first, each row in
- * the colour its outline is drawn in so the row and the shape on the map read
- * as the same thing. */
+ * ambiguous. The innermost region is already picked; the stack under the
+ * pointer is listed smallest first so any other can be taken instead, and the
+ * row under focus lights its region on the map. */
 export default function RegionChoicePopup({
   at,
   choices,
+  pickedId,
   onPick,
+  onLight,
   onClose,
 }: {
   at: { lng: number; lat: number };
   choices: RegionChoice[];
+  pickedId: number;
   onPick: (regionId: number) => void;
+  onLight: (regionId: number | null) => void;
   onClose: () => void;
 }) {
   return (
@@ -37,44 +43,79 @@ export default function RegionChoicePopup({
       longitude={at.lng}
       latitude={at.lat}
       offset={12}
-      maxWidth="260px"
+      maxWidth="min(280px, calc(100vw - 32px))"
       closeButton={false}
+      className={CARD_CLASS}
       onClose={onClose}
     >
-      <Box sx={{ minWidth: 160 }}>
-        <Typography sx={{ ...labelSx, display: "block", mb: 0.5 }}>
+      <GlobalStyles
+        styles={{
+          [`.${CARD_CLASS} .maplibregl-popup-content`]: {
+            padding: 0,
+            borderRadius: tokens.radii.md,
+            boxShadow: tokens.elevation.e2,
+            backgroundColor: tokens.surface,
+            overflow: "hidden",
+          },
+          [`.${CARD_CLASS} .maplibregl-popup-tip`]: { display: "none" },
+        }}
+      />
+      <Box data-testid="region-choices" sx={{ minWidth: 200 }}>
+        <Typography
+          sx={{
+            px: 2,
+            pt: 1.5,
+            pb: 0.5,
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            color: tokens.onSurfaceVariant,
+          }}
+        >
           {choices.length} regions here
         </Typography>
-        {choices.map((choice) => (
-          <ButtonBase
-            key={choice.id}
-            onClick={() => onPick(choice.id)}
-            sx={{
-              display: "flex",
-              width: "100%",
-              // Comfortably tappable: on a phone this list is the answer to
-              // a finger that could not hit one region cleanly.
-              minHeight: 44,
-              gap: 1,
-              px: 0.5,
-              justifyContent: "flex-start",
-              "&:hover": { backgroundColor: tokens.surfaceHigh },
-            }}
-          >
-            <Box
+        {choices.map((choice) => {
+          const picked = choice.id === pickedId;
+          return (
+            <ButtonBase
+              key={choice.id}
+              aria-current={picked || undefined}
+              onClick={() => onPick(choice.id)}
+              onMouseEnter={() => onLight(choice.id)}
+              onMouseLeave={() => onLight(null)}
+              onFocus={() => onLight(choice.id)}
+              onBlur={() => onLight(null)}
               sx={{
-                width: 10,
-                height: 10,
-                flexShrink: 0,
-                borderRadius: "50%",
-                backgroundColor: PALETTE[choice.paletteIndex % PALETTE.length],
+                display: "flex",
+                width: "100%",
+                minHeight: tokens.touch.row,
+                px: 2,
+                justifyContent: "flex-start",
+                textAlign: "left",
+                color: picked ? tokens.primary : tokens.onSurface,
+                "&:hover, &:focus-visible": {
+                  backgroundColor: tokens.surfaceHigh,
+                },
               }}
-            />
-            <Typography variant="body2" noWrap>
-              {choice.label}
-            </Typography>
-          </ButtonBase>
-        ))}
+            >
+              <Box sx={{ minWidth: 0, py: 0.75 }}>
+                <Typography
+                  noWrap
+                  sx={{ fontSize: "0.9375rem", fontWeight: picked ? 600 : 500 }}
+                >
+                  {choice.label}
+                </Typography>
+                {choice.sub && (
+                  <Typography
+                    noWrap
+                    sx={{ fontSize: "0.75rem", color: tokens.onSurfaceVariant }}
+                  >
+                    {choice.sub}
+                  </Typography>
+                )}
+              </Box>
+            </ButtonBase>
+          );
+        })}
       </Box>
     </Popup>
   );

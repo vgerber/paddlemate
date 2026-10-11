@@ -1,42 +1,68 @@
-import { fonts, theme } from "@/lib/theme";
+import Box from "@mui/material/Box";
+import Fab from "@mui/material/Fab";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
 export type PickMode = "put-in" | "take-out";
 
 function PickButton({
+  num,
   label,
   active,
   activeColor,
   onClick,
 }: {
+  num: number;
   label: string;
   active: boolean;
   activeColor: string;
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <Fab
+      variant="extended"
       onClick={onClick}
-      style={{
-        background: active ? activeColor : `${tokens.background}cc`,
-        color: "white",
-        border: `1px solid ${active ? `${activeColor}cc` : `${tokens.primary}55`}`,
-        padding: "4px 10px",
-        fontSize: 11,
-        fontFamily: fonts.label,
-        letterSpacing: "0.06em",
-        cursor: "pointer",
+      aria-pressed={active}
+      sx={{
+        gap: 1,
+        px: 2,
+        fontSize: "0.875rem",
         fontWeight: 600,
+        textTransform: "none",
+        boxShadow: tokens.elevation.e2,
+        "&:hover": {
+          boxShadow: tokens.elevation.e2,
+          backgroundColor: active ? activeColor : tokens.surfaceHigh,
+        },
+        backgroundColor: active ? activeColor : tokens.surface,
+        color: active ? tokens.onPrimary : tokens.onSurface,
       }}
     >
+      <Box
+        component="span"
+        sx={{
+          width: 24,
+          height: 24,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "50%",
+          fontSize: "0.75rem",
+          fontWeight: 700,
+          color: active ? activeColor : tokens.onPrimary,
+          backgroundColor: active ? tokens.surface : activeColor,
+        }}
+      >
+        {num}
+      </Box>
       {label}
-    </button>
+    </Fab>
   );
 }
 
-/** Put-in / take-out pick toggles floated over the map's top-left corner. */
+/** Put-in / take-out pick toggles floated over the map's top-left corner,
+ * in the same calm button style as the page's other floating actions. */
 export default function PickModeButtons({
   pickMode,
   onToggle,
@@ -49,19 +75,22 @@ export default function PickModeButtons({
   showTakeOut: boolean;
 }) {
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         position: "absolute",
-        top: 8,
-        left: 8,
+        top: 10,
+        left: 10,
         zIndex: 10,
         display: "flex",
-        gap: 6,
+        flexWrap: "wrap",
+        gap: 1,
+        maxWidth: "calc(100% - 20px)",
       }}
     >
       {showPutIn && (
         <PickButton
-          label="① PUT-IN"
+          num={1}
+          label="Put-in"
           active={pickMode === "put-in"}
           activeColor={tokens.putIn}
           onClick={() => onToggle("put-in")}
@@ -69,12 +98,13 @@ export default function PickModeButtons({
       )}
       {showTakeOut && (
         <PickButton
-          label="② TAKE-OUT"
+          num={2}
+          label="Take-out"
           active={pickMode === "take-out"}
           activeColor={tokens.takeOut}
           onClick={() => onToggle("take-out")}
         />
       )}
-    </div>
+    </Box>
   );
 }
