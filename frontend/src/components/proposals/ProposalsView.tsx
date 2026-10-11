@@ -7,14 +7,19 @@ import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import ChipRow from "@/components/ChipRow";
+import { useCanvasScene } from "@/components/canvas/CanvasContext";
+import CanvasLayout from "@/components/canvas/CanvasLayout";
+import FloatingCard from "@/components/canvas/FloatingCard";
 import ListPaneHeader from "@/components/ListPaneHeader";
 import PanelHeader from "@/components/PanelHeader";
-import ProposalDetailView from "@/components/proposals/ProposalDetailView";
 import ProposalRow from "@/components/proposals/ProposalRow";
+import ProposalSideCard from "@/components/proposals/ProposalSideCard";
+import { useProposalScene } from "@/components/proposals/useProposalScene";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import UnderlineTabs from "@/components/UnderlineTabs";
@@ -24,7 +29,7 @@ import type {
   ProposalStatus,
 } from "@/lib/api";
 import { useProposals } from "@/lib/hooks/useProposals";
-import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme";
 import { STATUS_LABEL } from "./status";
 
 const { tokens } = theme;
@@ -145,7 +150,10 @@ export default function ProposalsView({
     else router.navigate({ to: "/settings", search: {} });
   };
 
-  const selected = proposals?.find((p) => p.id === selectedId);
+  // The canvas map draws the open proposal; the scene is set on a phone too,
+  // where no host is mounted and it is ignored.
+  const open = useProposalScene(isDesktop ? selectedId : undefined);
+  useCanvasScene(open.scene);
 
   const list = (
     <>
@@ -247,51 +255,42 @@ export default function ProposalsView({
     );
   }
 
-  // Desktop: a scannable list beside the full proposal, so reviewing a
-  // queue never costs a navigation round-trip.
+  // Desktop: the list and the open proposal float over the map, which draws
+  // the change itself, so reviewing a queue never costs a navigation.
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          md: "320px minmax(0, 1fr)",
-          lg: "420px minmax(0, 1fr)",
-        },
-        height: PANEL_HEIGHT,
-      }}
-    >
-      <Box
-        sx={{
-          overflowY: "auto",
-          bgcolor: theme.tokens.surfaceLow,
-          borderRight: "1px solid",
-          borderColor: `${theme.tokens.outlineVariant}55`,
-        }}
+    <CanvasLayout>
+      <FloatingCard
+        id="list"
+        side="left"
+        kind="list"
+        screen="proposals"
+        fullHeight={false}
+        header={
+          <Box
+            sx={{ px: 2, minHeight: 56, display: "flex", alignItems: "center" }}
+          >
+            <Typography
+              component="h2"
+              sx={{ ...labelSx, color: tokens.onSurfaceVariant }}
+            >
+              Proposals
+            </Typography>
+          </Box>
+        }
       >
-        {list}
-      </Box>
-      <Box data-testid="proposal-pane" sx={{ overflowY: "auto", p: 1.5 }}>
-        <Box
-          sx={{
-            maxWidth: 880,
-            bgcolor: tokens.surface,
-            borderRadius: `${tokens.radii.lg}px`,
-            boxShadow: tokens.elevation.e1,
-            // clip, not hidden: the review bar sticks to the pane's scroll.
-            overflow: "clip",
-          }}
-        >
-          {selected ? (
-            <ProposalDetailView
-              proposal={selected}
-              adminMode={adminMode}
-              listStatus={status}
-            />
-          ) : (
-            <EmptyState title="Select a proposal to review it." py={10} />
-          )}
+        <Box data-testid="proposal-list" sx={{ bgcolor: tokens.surfaceLow }}>
+          {list}
         </Box>
-      </Box>
-    </Box>
+      </FloatingCard>
+      {selectedId != null && (
+        <ProposalSideCard
+          proposal={open.proposal}
+          loading={open.isLoading}
+          adminMode={adminMode}
+          listStatus={status}
+          onClose={() => onSelect?.(undefined)}
+        />
+      )}
+    </CanvasLayout>
   );
 }
