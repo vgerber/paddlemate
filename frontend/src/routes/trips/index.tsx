@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import DockedAction from "@/components/DockedAction";
 import ListPaneHeader from "@/components/ListPaneHeader";
 import EmptyState from "@/components/states/EmptyState";
@@ -97,10 +98,10 @@ function TripsPage() {
   if (!isDesktop) {
     return (
       <>
-        {/* No header above it on a phone, so the list brings its own top
-            gap - the rows' 16px inset, so the first one is not pinned to
-            the edge of the screen. */}
-        <Box sx={{ maxWidth: 720, mx: "auto" }}>{list}</Box>
+        <Box sx={{ maxWidth: 720, mx: "auto" }}>
+          <ListPaneHeader count={trips.length} loading={isLoading} />
+          {list}
+        </Box>
         <Fab
           color="secondary"
           onClick={() => navigate({ to: "/trips/new" })}
@@ -152,21 +153,13 @@ function TripsPage() {
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
-          px: 2,
-          pt: 1.5,
+          p: 1.5,
         }}
       >
         {creating ? (
-          <Box
-            sx={{
-              maxWidth: 880,
-              flex: 1,
-              minHeight: 0,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+          <DetailPanel>
             <TripForm
+              embedded
               onSave={(id) =>
                 navigate({
                   search: (prev) => ({
@@ -180,18 +173,9 @@ function TripsPage() {
                 navigate({ search: (prev) => ({ ...prev, new: undefined }) })
               }
             />
-          </Box>
+          </DetailPanel>
         ) : selectedTrip ? (
-          <Box
-            sx={{
-              position: "relative",
-              maxWidth: 880,
-              flex: 1,
-              minHeight: 0,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+          <DetailPanel>
             <TripDetail
               trip={selectedTrip}
               embedded
@@ -220,7 +204,7 @@ function TripsPage() {
                 })
               }
             />
-          </Box>
+          </DetailPanel>
         ) : (
           <EmptyState
             icon={
@@ -232,6 +216,42 @@ function TripsPage() {
             py={10}
           />
         )}
+      </Box>
+    </Box>
+  );
+}
+
+/** The open trip, or the form beside the list, as one white panel on the
+ * ground like the log detail. The panel fills the pane; what is in it stops
+ * at 880 and centres, so a wide window does not strand it on the left. */
+function DetailPanel({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      data-testid="trip-panel"
+      sx={{
+        position: "relative",
+        flex: 1,
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        bgcolor: theme.tokens.surface,
+        borderRadius: `${theme.tokens.radii.md}px`,
+        boxShadow: theme.tokens.elevation.e1,
+      }}
+    >
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: 880,
+          mx: "auto",
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {children}
       </Box>
     </Box>
   );

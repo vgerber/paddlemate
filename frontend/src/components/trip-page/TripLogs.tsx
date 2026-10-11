@@ -54,28 +54,30 @@ export default function TripLogs({
   }
 
   return (
-    <Box>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
       <ListPaneHeader count={descents.length} sx={{ px: 0.5 }} />
       {descents.map((d) => (
+        // The same card as My logs: the card is the log, its menu sits inside.
         <Box
           key={d.id}
-          onClick={() => onOpen(d)}
           sx={{
             display: "flex",
             alignItems: "flex-start",
-            cursor: "pointer",
-            borderBottom: "1px solid",
-            borderColor: `${theme.tokens.outlineVariant}55`,
-            // The row, not the card, carries the hover - otherwise the band
-            // stops short of the menu beside it.
-            "&:hover": { bgcolor: "action.hover" },
+            borderRadius: `${theme.tokens.radii.md}px`,
+            bgcolor: theme.tokens.surface,
+            boxShadow: theme.tokens.elevation.e1,
           }}
         >
-          <Box sx={{ flex: 1, minWidth: 0, pl: 2, pr: 1 }}>
-            <DescentCard descent={d} showAuthor flush />
+          <Box sx={{ flex: 1, minWidth: 0, pl: 1.75 }}>
+            <DescentCard
+              descent={d}
+              showAuthor
+              flush
+              onClick={() => onOpen(d)}
+            />
           </Box>
           {isMember && (
-            <Box sx={{ pt: 1.5, pr: 0.5 }}>
+            <Box sx={{ pt: 1, pr: 0.5 }}>
               <RowMenu
                 label="Log actions"
                 actions={

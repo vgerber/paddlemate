@@ -21,7 +21,7 @@ import DayPickerDialog from "./DayPickerDialog";
 import LinkDescentDialog from "./LinkDescentDialog";
 import StayDialog from "./StayDialog";
 import StaySectionsDialog from "./StaySectionsDialog";
-import TripFab from "./TripFab";
+import TripFab, { TripDock } from "./TripFab";
 import TripLogs from "./TripLogs";
 import TripMembers from "./TripMembers";
 import TripStays from "./TripStays";
@@ -42,8 +42,9 @@ interface Props {
   onEditingChange: (editing: boolean) => void;
   /** Leaving the trip: back on mobile, deselect in the desktop two-pane. */
   onClose: () => void;
-  /** Rendered beside the trips list, which holds the way back - so the panel
-   * keeps its title and drops only the back arrow. */
+  /** Rendered beside the trips list, which names the open trip and holds the
+   * way back - so the panel drops its title and back arrow and keeps the
+   * tabs. */
   embedded?: boolean;
   onDeleted: () => void;
 }
@@ -110,6 +111,7 @@ export default function TripDetail({
     return (
       <TripForm
         trip={trip}
+        embedded={embedded}
         onSave={() => onEditingChange(false)}
         onCancel={() => onEditingChange(false)}
       />
@@ -155,8 +157,10 @@ export default function TripDetail({
   return (
     <>
       <PanelHeader
-        title={trip.name}
-        subtitle={dateRange(trip.start_date, trip.end_date)}
+        title={embedded ? undefined : trip.name}
+        subtitle={
+          embedded ? undefined : dateRange(trip.start_date, trip.end_date)
+        }
         onBack={embedded ? undefined : onClose}
         tabs={{
           value: tab,
@@ -193,7 +197,7 @@ export default function TripDetail({
               px: 1.5,
               py: 1.5,
               // Leave room so the FAB never covers the last row.
-              pb: 12,
+              pb: { xs: 12, md: 2 },
             }}
           >
             {tab === "bases" && (
@@ -228,6 +232,19 @@ export default function TripDetail({
         )}
       </Box>
 
+      <TripDock
+        tab={tab}
+        isMember={isMember}
+        isAdmin={isAdmin}
+        hasSelf={self !== null}
+        onAddMember={() => setAddingMember(true)}
+        onAddDay={() => setPickingDay(true)}
+        onAddStay={() => setStayEditor("new")}
+        onProposeStay={() => setProposing(true)}
+        onEditAttendance={() => self && setAttendanceFor({ member: self })}
+        onLinkLog={() => setLinking(true)}
+        onNewLog={() => newLog()}
+      />
       <TripFab
         tab={tab}
         isMember={isMember}

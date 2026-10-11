@@ -5,26 +5,69 @@ import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
 import Fab from "@mui/material/Fab";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
+import DockedAction from "@/components/DockedAction";
 import { BOTTOM_NAV_SPACE } from "@/lib/theme";
 import type { TripTab } from "./TripDetail";
 
-/** On a phone, the screen's corner above the bottom nav. On a desktop, the
- * corner of the trip's own column: the column stops at its cap, and a button
- * pinned to the window's corner ended up a screen-width away from the list it
- * adds to. Whatever holds the trip is `position: relative`. */
+/** On a phone, the screen's corner above the bottom nav. From `md` up the
+ * primary action is docked at the foot of the pane instead (`TripDock`), so
+ * the button never floats over the content it adds to. */
 export const fabSx = {
-  position: { xs: "fixed", md: "absolute" } as const,
-  bottom: {
-    xs: `calc(${BOTTOM_NAV_SPACE} + 16px)`,
-    md: 24,
-  },
-  right: { xs: 16, md: 24 },
+  position: "fixed" as const,
+  bottom: `calc(${BOTTOM_NAV_SPACE} + 16px)`,
+  right: 16,
+  display: { xs: "flex", md: "none" },
 };
+
+interface Actions {
+  tab: TripTab;
+  isMember: boolean;
+  isAdmin: boolean;
+  hasSelf: boolean;
+  onAddMember: () => void;
+  onAddDay: () => void;
+  onAddStay: () => void;
+  onProposeStay: () => void;
+  onEditAttendance: () => void;
+  onLinkLog: () => void;
+  onNewLog: () => void;
+}
+
+/** What the tab's docked buttons say and do, top to bottom. The same
+ * decisions the phone's FAB makes, so the two never offer different things. */
+function dockedActions(p: Actions): { label: string; onClick: () => void }[] {
+  if (p.tab === "plan" && p.isMember)
+    return [{ label: "Add a day", onClick: p.onAddDay }];
+  if (p.tab === "bases" && p.isMember)
+    return p.isAdmin
+      ? [{ label: "Add base", onClick: p.onAddStay }]
+      : [{ label: "Propose a base", onClick: p.onProposeStay }];
+  if (p.tab === "members" && p.isAdmin)
+    return [{ label: "Add member", onClick: p.onAddMember }];
+  if (p.tab === "members" && p.isMember && p.hasSelf)
+    return [{ label: "Set your dates", onClick: p.onEditAttendance }];
+  if (p.tab === "logs" && p.isMember)
+    return [
+      { label: "Log a descent", onClick: p.onNewLog },
+      { label: "Link an existing log", onClick: p.onLinkLog },
+    ];
+  return [];
+}
+
+/** The tab's actions at the foot of the detail pane, desktop only. */
+export function TripDock(props: Actions) {
+  return (
+    <>
+      {dockedActions(props).map((a) => (
+        <DockedAction key={a.label} label={a.label} onClick={a.onClick} />
+      ))}
+    </>
+  );
+}
 
 /**
  * One screen, one primary action. Each tab has an obvious thing to do, so the
@@ -98,7 +141,7 @@ export default function TripFab({
         aria-label="Add member"
         sx={fabSx}
       >
-        <PersonAddOutlinedIcon />
+        <AddIcon />
       </Fab>
     );
   }
@@ -147,7 +190,14 @@ export default function TripFab({
       ariaLabel="Trip actions"
       icon={<SpeedDialIcon icon={<MoreVertIcon />} openIcon={<CloseIcon />} />}
       FabProps={{ color: "secondary" }}
-      sx={fabSx}
+      sx={{
+        ...fabSx,
+        // Nothing is docked for these, so they keep the pane's corner.
+        position: { xs: "fixed", md: "absolute" },
+        bottom: { xs: fabSx.bottom, md: 24 },
+        right: { xs: 16, md: 24 },
+        display: "flex",
+      }}
     >
       <SpeedDialAction
         icon={<EditOutlinedIcon />}

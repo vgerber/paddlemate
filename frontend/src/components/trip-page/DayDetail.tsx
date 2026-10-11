@@ -1,17 +1,15 @@
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
-import FlightLandOutlinedIcon from "@mui/icons-material/FlightLandOutlined";
-import FlightTakeoffOutlinedIcon from "@mui/icons-material/FlightTakeoffOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { factLabelSx } from "@/components/Fact";
+import { ArrivalIcon, DepartureIcon } from "@/components/trips/TripIcons";
 import FormSection from "@/components/waterway/FormSection";
 import type { Descent, TripMember, TripStay } from "@/lib/api";
 import { theme } from "@/lib/theme";
 import type { TripDay, TripEvent } from "@/lib/tripTimeline";
-import { eventKey, eventLabels } from "./eventLabels";
+import { EventIcon, EventText, eventKey, eventLabels } from "./eventLabels";
 
 /** What a day lets you reach. Only what this viewer may do is shown. */
 export interface DayActions {
@@ -70,7 +68,7 @@ export default function DayDetail({
           <Box>
             {actions.self && (
               <AddRow
-                icon={<FlightLandOutlinedIcon fontSize="small" />}
+                icon={<ArrivalIcon fontSize="small" />}
                 label="I arrive this day"
                 onClick={() =>
                   actions.onEditAttendance(actions.self as TripMember, {
@@ -81,7 +79,7 @@ export default function DayDetail({
             )}
             {actions.self && (
               <AddRow
-                icon={<FlightTakeoffOutlinedIcon fontSize="small" />}
+                icon={<DepartureIcon fontSize="small" />}
                 label="I leave this day"
                 onClick={() =>
                   actions.onEditAttendance(actions.self as TripMember, {
@@ -131,8 +129,8 @@ function EntryRow({
 
   return (
     <Row icon={icon} onClick={target ?? undefined}>
-      <Typography variant="body2">{title}</Typography>
-      <Typography sx={factLabelSx}>{detail}</Typography>
+      <EventText kind="title">{title}</EventText>
+      <EventText kind="detail">{detail}</EventText>
     </Row>
   );
 }
@@ -169,7 +167,7 @@ function Row({
       sx={{
         display: "flex",
         alignItems: "flex-start",
-        gap: 1.5,
+        gap: "10px",
         px: 1,
         py: 1,
         borderBottom: "1px solid",
@@ -178,9 +176,7 @@ function Row({
         "&.Mui-disabled": { opacity: 1 },
       }}
     >
-      <Box sx={{ color: "text.disabled", pt: "2px", flexShrink: 0 }}>
-        {icon}
-      </Box>
+      <EventIcon>{icon}</EventIcon>
       <Box sx={{ minWidth: 0 }}>{children}</Box>
     </ListItemButton>
   );

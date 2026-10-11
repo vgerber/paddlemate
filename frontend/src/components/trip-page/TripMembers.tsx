@@ -12,6 +12,7 @@ import { factLabelSx } from "@/components/Fact";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
 import MemberAvatar from "@/components/trips/MemberAvatar";
+import RolePill from "@/components/trips/RolePill";
 import type { TripMember, TripMemberRole } from "@/lib/api";
 import { clockTime, dateRange } from "@/lib/format";
 import {
@@ -19,7 +20,7 @@ import {
   useRemoveTripMember,
   useTripMembers,
 } from "@/lib/hooks/useTrips";
-import { alphas, fonts, labelSx, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -212,6 +213,8 @@ function MemberRow({
           <Typography
             sx={{
               ...factLabelSx,
+              fontSize: "0.8125rem",
+              fontWeight: 400,
               fontVariantNumeric: "tabular-nums",
               color: attendance ? "text.secondary" : "text.disabled",
             }}
@@ -222,18 +225,9 @@ function MemberRow({
         </Box>
       </ButtonBase>
 
-      <Typography
-        data-testid="member-role"
-        sx={{
-          ...labelSx,
-          px: 1,
-          py: 0.25,
-          borderRadius: `${tokens.radii.pill}px`,
-          bgcolor: `${tokens.primary}${alphas.tint}`,
-        }}
-      >
+      <RolePill testId="member-role">
         {member.role === "admin" ? "Admin" : "Member"}
-      </Typography>
+      </RolePill>
       <RowMenu actions={actions} label={`Actions for ${member.username}`} />
     </Box>
   );

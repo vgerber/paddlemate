@@ -7,7 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { addMonths, format, parseISO, startOfMonth } from "date-fns";
 import { type PointerEvent, useRef, useState } from "react";
-import { durations } from "@/lib/motion";
+import { css, durations } from "@/lib/motion";
 import { alphas, fonts, theme } from "@/lib/theme";
 import { monthGrid } from "@/lib/tripTimeline";
 import { pulledOpen, weekDays } from "./planWeek";
@@ -15,6 +15,10 @@ import { pulledOpen, weekDays } from "./planWeek";
 const { tokens } = theme;
 
 const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+
+const DISC = 36;
+const BAND_INSET = 4;
+const GRABBER = 16;
 
 interface Props {
   /** The day the reader is on; its week is the one shown. */
@@ -27,6 +31,9 @@ interface Props {
   planned: Set<string>;
   /** Days with something on them. */
   withEntries: Set<string>;
+  /** The month is open; owned by the plan so it can dim the list behind it. */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onPick: (date: string) => void;
 }
 
@@ -39,20 +46,21 @@ export default function PlanCalendar({
   to,
   planned,
   withEntries,
+  open,
+  onOpenChange,
   onPick,
 }: Props) {
-  const [open, setOpen] = useState(false);
   const [cursor, setCursor] = useState(() => startOfMonth(parseISO(current)));
   const drag = useRef<number | null>(null);
 
   const pick = (date: string) => {
-    setOpen(false);
+    onOpenChange(false);
     onPick(date);
   };
 
   const toggle = () => {
     if (!open) setCursor(startOfMonth(parseISO(current)));
-    setOpen(!open);
+    onOpenChange(!open);
   };
 
   const onDown = (e: PointerEvent<HTMLElement>) => {
@@ -69,25 +77,11 @@ export default function PlanCalendar({
     else {
       const next = pulledOpen(dy, open);
       if (next && !open) setCursor(startOfMonth(parseISO(current)));
-      setOpen(next);
+      onOpenChange(next);
     }
   };
 
-  const cell = (date: string, dim = false) => (
-    <DayCell
-      key={date}
-      date={date}
-      dim={dim}
-      today={date === today}
-      current={date === current}
-      inTrip={date >= from && (to === null || date <= to)}
-      hasEntries={withEntries.has(date)}
-      enabled={planned.has(date)}
-      onPick={() => pick(date)}
-    />
-  );
-
-  const monthPrefix = format(cursor, "yyyy-MM");
+  const days = { today, current, from, to, withEntries, planned, onPick: pick };
 
   return (
     <Box
@@ -102,50 +96,13 @@ export default function PlanCalendar({
       }}
     >
       <Collapse in={open} timeout={durations.base} unmountOnExit>
-        <Box data-testid="month-grid">
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: `${tokens.touch.min}px minmax(0, 1fr) ${tokens.touch.min}px`,
-              alignItems: "center",
-              textAlign: "center",
-            }}
-          >
-            <IconButton
-              aria-label="Previous month"
-              onClick={() => setCursor((c) => addMonths(c, -1))}
-              sx={{ width: tokens.touch.min, height: tokens.touch.min }}
-            >
-              <ChevronLeftIcon />
-            </IconButton>
-            <Typography
-              sx={{ fontFamily: fonts.label, fontWeight: 600, fontSize: 15 }}
-            >
-              {format(cursor, "MMMM yyyy")}
-            </Typography>
-            <IconButton
-              aria-label="Next month"
-              onClick={() => setCursor((c) => addMonths(c, 1))}
-              sx={{ width: tokens.touch.min, height: tokens.touch.min }}
-            >
-              <ChevronRightIcon />
-            </IconButton>
-          </Box>
-          <WeekdayHeader />
-          {monthGrid(cursor.getFullYear(), cursor.getMonth() + 1).map(
-            (week) => (
-              <Row key={week[0]}>
-                {week.map((d) => cell(d, !d.startsWith(monthPrefix)))}
-              </Row>
-            ),
-          )}
-        </Box>
+        <MonthView cursor={cursor} onCursorChange={setCursor} {...days} />
       </Collapse>
 
       {!open && (
         <>
           <WeekdayHeader />
-          <Row>{weekDays(current).map((d) => cell(d))}</Row>
+          <WeekRow dates={weekDays(current)} {...days} />
         </>
       )}
 
@@ -163,10 +120,22 @@ export default function PlanCalendar({
           drag.current = null;
         }}
         sx={{
+          position: "relative",
           width: "100%",
-          height: tokens.touch.min,
+          height: GRABBER,
+          mb: 0.75,
           // The drag is ours: the browser must not take it as a scroll.
           touchAction: "none",
+          // 16px to look at, 44px to hit; the extra reaches down into the
+          // list so it never steals taps from the day row above.
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: -6,
+            bottom: -(tokens.touch.min - GRABBER - 6),
+          },
         }}
       >
         <Box
@@ -182,9 +151,73 @@ export default function PlanCalendar({
   );
 }
 
+interface DayProps {
+  today: string;
+  /** The day the reader is on; null where nothing is picked. */
+  current: string | null;
+  /** The trip's own span, tinted. */
+  from: string;
+  to: string | null;
+  withEntries: Set<string>;
+  /** Days that can be picked; null means every day. */
+  planned: Set<string> | null;
+  onPick: (date: string) => void;
+}
+
+/** A month with its title and arrows, in the same cells as the week, so the
+ * plan and the "add a day" picker draw one calendar. */
+export function MonthView({
+  cursor,
+  onCursorChange,
+  ...days
+}: DayProps & { cursor: Date; onCursorChange: (cursor: Date) => void }) {
+  const monthPrefix = format(cursor, "yyyy-MM");
+  return (
+    <Box data-testid="month-grid">
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: `${tokens.touch.min}px minmax(0, 1fr) ${tokens.touch.min}px`,
+          alignItems: "center",
+          textAlign: "center",
+        }}
+      >
+        <IconButton
+          aria-label="Previous month"
+          onClick={() => onCursorChange(addMonths(cursor, -1))}
+          sx={{ width: tokens.touch.min, height: tokens.touch.min }}
+        >
+          <ChevronLeftIcon />
+        </IconButton>
+        <Typography
+          sx={{ fontFamily: fonts.label, fontWeight: 600, fontSize: 15 }}
+        >
+          {format(cursor, "MMMM yyyy")}
+        </Typography>
+        <IconButton
+          aria-label="Next month"
+          onClick={() => onCursorChange(addMonths(cursor, 1))}
+          sx={{ width: tokens.touch.min, height: tokens.touch.min }}
+        >
+          <ChevronRightIcon />
+        </IconButton>
+      </Box>
+      <WeekdayHeader />
+      {monthGrid(cursor.getFullYear(), cursor.getMonth() + 1).map((week) => (
+        <WeekRow
+          key={week[0]}
+          dates={week}
+          dimmed={(d) => !d.startsWith(monthPrefix)}
+          {...days}
+        />
+      ))}
+    </Box>
+  );
+}
+
 function WeekdayHeader() {
   return (
-    <Row>
+    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
       {WEEKDAYS.map((d) => (
         <Typography
           key={d}
@@ -199,14 +232,103 @@ function WeekdayHeader() {
           {d}
         </Typography>
       ))}
-    </Row>
+    </Box>
   );
 }
 
-function Row({ children }: { children: React.ReactNode }) {
+/** The in-trip stretches of a row as [first, last] column pairs. */
+function runs(flags: boolean[]): [number, number][] {
+  const out: [number, number][] = [];
+  flags.forEach((on, i) => {
+    if (!on) return;
+    const last = out[out.length - 1];
+    if (last && last[1] === i - 1) last[1] = i;
+    else out.push([i, i]);
+  });
+  return out;
+}
+
+/** Seven days. The trip's span is one rounded band behind them and the
+ * current day one disc, both drawn on the row so they can have shape and
+ * move; the cells on top only carry the numbers. */
+function WeekRow({
+  dates,
+  dimmed,
+  today,
+  current,
+  from,
+  to,
+  withEntries,
+  planned,
+  onPick,
+}: DayProps & { dates: string[]; dimmed?: (date: string) => boolean }) {
+  const col = current === null ? -1 : dates.indexOf(current);
+  const bands = runs(dates.map((d) => d >= from && (to === null || d <= to)));
   return (
-    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
-      {children}
+    <Box
+      sx={{
+        position: "relative",
+        display: "grid",
+        gridTemplateColumns: "repeat(7, 1fr)",
+      }}
+    >
+      {bands.map(([a, b]) => (
+        <Box
+          key={a}
+          data-testid="trip-band"
+          sx={{
+            position: "absolute",
+            top: 6,
+            height: DISC,
+            left: `calc(${a} * 100% / 7 + ${BAND_INSET}px)`,
+            width: `calc(${b - a + 1} * 100% / 7 - ${2 * BAND_INSET}px)`,
+            borderRadius: `${DISC / 2}px`,
+            bgcolor: `${tokens.primary}${alphas.hover}`,
+          }}
+        />
+      ))}
+      {col >= 0 && (
+        <Box
+          data-testid="current-disc"
+          sx={{
+            position: "absolute",
+            top: 6,
+            left: 0,
+            width: "calc(100% / 7)",
+            display: "grid",
+            placeItems: "center",
+            transform: `translateX(${col * 100}%)`,
+            // The disc slides to the new day as the list scrolls.
+            transition: `transform ${css.base} ${css.easeInOut}`,
+          }}
+        >
+          <Box
+            sx={{
+              width: DISC,
+              height: DISC,
+              borderRadius: "50%",
+              bgcolor: tokens.primary,
+              // Today and current: a white gap, then the accent ring.
+              boxShadow:
+                current === today
+                  ? `0 0 0 2px ${tokens.surface}, 0 0 0 4px ${tokens.primary}`
+                  : "none",
+            }}
+          />
+        </Box>
+      )}
+      {dates.map((d) => (
+        <DayCell
+          key={d}
+          date={d}
+          dim={dimmed?.(d) ?? false}
+          today={d === today}
+          current={d === current}
+          hasEntries={withEntries.has(d)}
+          enabled={planned === null || planned.has(d)}
+          onPick={() => onPick(d)}
+        />
+      ))}
     </Box>
   );
 }
@@ -216,7 +338,6 @@ function DayCell({
   dim,
   today,
   current,
-  inTrip,
   hasEntries,
   enabled,
   onPick,
@@ -225,11 +346,11 @@ function DayCell({
   dim: boolean;
   today: boolean;
   current: boolean;
-  inTrip: boolean;
   hasEntries: boolean;
   enabled: boolean;
   onPick: () => void;
 }) {
+  const faded = dim || !enabled;
   return (
     <ButtonBase
       data-testid="week-day"
@@ -247,14 +368,14 @@ function DayCell({
         minWidth: tokens.touch.min,
         display: "grid",
         placeItems: "center",
-        bgcolor: inTrip ? `${tokens.primary}${alphas.tint}` : "transparent",
         "&.Mui-disabled": { opacity: 1 },
       }}
     >
       <Box
+        data-testid="day-number"
         sx={{
-          width: 36,
-          height: 36,
+          width: DISC,
+          height: DISC,
           borderRadius: "50%",
           display: "grid",
           placeItems: "center",
@@ -262,11 +383,13 @@ function DayCell({
           fontSize: 15,
           fontWeight: current ? 700 : 500,
           fontVariantNumeric: "tabular-nums",
-          bgcolor: current ? tokens.primary : "transparent",
+          transition: `color ${css.base} ${css.easeInOut}`,
+          // Days outside the month or without a card sit back.
+          opacity: faded && !current ? 0.55 : 1,
           color: current
             ? tokens.onPrimary
-            : dim || !enabled
-              ? tokens.outline
+            : faded
+              ? tokens.onSurfaceVariant
               : tokens.onSurface,
           boxShadow:
             today && !current ? `inset 0 0 0 2px ${tokens.primary}` : "none",
