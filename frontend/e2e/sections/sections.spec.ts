@@ -261,6 +261,7 @@ test.describe("river rows and group headings", () => {
   }) => {
     await page.goto("/?panel=true&q=Test");
     await appReady(page);
+    await page.getByRole("tab", { name: /^Rivers/ }).click();
     const r = rows(page).filter({ hasText: "Test River" }).first();
     await expect(r).toBeVisible();
     expect(await computed(r, "border-top-left-radius")).toBe("14px");
