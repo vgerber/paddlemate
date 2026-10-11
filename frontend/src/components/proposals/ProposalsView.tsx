@@ -1,16 +1,18 @@
 import FilterListIcon from "@mui/icons-material/FilterList";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
-import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
-import InputLabel from "@mui/material/InputLabel";
+import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import ChipRow from "@/components/ChipRow";
 import ListPaneHeader from "@/components/ListPaneHeader";
+import PanelHeader from "@/components/PanelHeader";
 import ProposalDetailView from "@/components/proposals/ProposalDetailView";
 import ProposalRow from "@/components/proposals/ProposalRow";
 import EmptyState from "@/components/states/EmptyState";
@@ -24,6 +26,8 @@ import type {
 import { useProposals } from "@/lib/hooks/useProposals";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
 import { STATUS_LABEL } from "./status";
+
+const { tokens } = theme;
 
 const STATUS_TABS = (["pending", "approved", "rejected"] as const).map(
   (value) => ({ value, label: STATUS_LABEL[value] }),
@@ -43,9 +47,8 @@ const OPERATION_TABS: { value: ProposalOperation | ""; label: string }[] = [
   { value: "delete", label: "Delete" },
 ];
 
-/** One filter dimension as a compact dropdown. Two of them sit side by
- * side, which stays one row however many options a dimension gains. */
-function FilterSelect({
+/** One filter dimension as a chip: teal once set, one tap opens its menu. */
+function FilterChip({
   id,
   label,
   options,
@@ -58,27 +61,42 @@ function FilterSelect({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const current = options.find((o) => o.value === value);
   return (
-    <FormControl size="small" sx={{ flex: 1, minWidth: 0 }}>
-      <InputLabel id={`${id}-label`}>{label}</InputLabel>
-      <Select
-        labelId={`${id}-label`}
-        label={label}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        sx={{ fontSize: "0.75rem" }}
+    <>
+      <Chip
+        data-testid={id}
+        variant="outlined"
+        clickable
+        color={value ? "primary" : "default"}
+        onClick={(e) => setAnchor(e.currentTarget)}
+        label={
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+            {value ? `${label}: ${current?.label}` : label}
+            <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
+          </Box>
+        }
+      />
+      <Menu
+        anchorEl={anchor}
+        open={anchor !== null}
+        onClose={() => setAnchor(null)}
       >
         {options.map((option) => (
           <MenuItem
             key={option.label}
-            value={option.value}
-            sx={{ fontSize: "0.75rem" }}
+            selected={option.value === value}
+            onClick={() => {
+              onChange(option.value);
+              setAnchor(null);
+            }}
           >
             {option.label}
           </MenuItem>
         ))}
-      </Select>
-    </FormControl>
+      </Menu>
+    </>
   );
 }
 
@@ -111,6 +129,7 @@ export default function ProposalsView({
   adminMode,
 }: ProposalsViewProps) {
   const navigate = useNavigate();
+  const router = useRouter();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const hasActiveFilters = entityType != null || operation != null;
   const [filtersOpen, setFiltersOpen] = useState(hasActiveFilters);
@@ -119,6 +138,12 @@ export default function ProposalsView({
     entity_type: entityType,
     operation,
   });
+
+  // The phone reaches the list through the Tools tab, so back goes there.
+  const goBack = () => {
+    if (window.history.length > 1) router.history.back();
+    else router.navigate({ to: "/settings", search: {} });
+  };
 
   const selected = proposals?.find((p) => p.id === selectedId);
 
@@ -129,10 +154,14 @@ export default function ProposalsView({
         loading={isLoading}
         actions={
           <IconButton
-            size="small"
             onClick={() => setFiltersOpen((v) => !v)}
             aria-label={filtersOpen ? "Hide filters" : "Show filters"}
             title={filtersOpen ? "Hide filters" : "Show filters"}
+            sx={{
+              width: tokens.touch.min,
+              height: tokens.touch.min,
+              mr: -1.25,
+            }}
           >
             <Badge
               color="primary"
@@ -155,28 +184,30 @@ export default function ProposalsView({
 
       {/* Filters - collapsed by default so the list is what you land on */}
       <Collapse in={filtersOpen}>
-        <Box sx={{ display: "flex", gap: 1, px: 2, py: 1.5 }}>
-          <FilterSelect
-            id="proposal-entity"
-            label="Type"
-            options={ENTITY_TABS}
-            value={entityType ?? ""}
-            onChange={(v) =>
-              onEntityTypeChange((v || undefined) as ProposalEntityType)
-            }
-          />
-
-          {onOperationChange && (
-            <FilterSelect
-              id="proposal-operation"
-              label="Action"
-              options={OPERATION_TABS}
-              value={operation ?? ""}
+        <Box sx={{ px: 2 }}>
+          <ChipRow>
+            <FilterChip
+              id="proposal-entity"
+              label="Type"
+              options={ENTITY_TABS}
+              value={entityType ?? ""}
               onChange={(v) =>
-                onOperationChange((v || undefined) as ProposalOperation)
+                onEntityTypeChange((v || undefined) as ProposalEntityType)
               }
             />
-          )}
+
+            {onOperationChange && (
+              <FilterChip
+                id="proposal-operation"
+                label="Action"
+                options={OPERATION_TABS}
+                value={operation ?? ""}
+                onChange={(v) =>
+                  onOperationChange((v || undefined) as ProposalOperation)
+                }
+              />
+            )}
+          </ChipRow>
         </Box>
       </Collapse>
 
@@ -186,7 +217,7 @@ export default function ProposalsView({
       ) : !proposals || proposals.length === 0 ? (
         <EmptyState title={`No ${status} proposals.`} />
       ) : (
-        <Box sx={{ py: 0.75 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1, p: 1.5 }}>
           {proposals.map((p) => (
             <ProposalRow
               key={p.id}
@@ -208,7 +239,12 @@ export default function ProposalsView({
   );
 
   if (!isDesktop) {
-    return <Box sx={{ maxWidth: 720, mx: "auto" }}>{list}</Box>;
+    return (
+      <Box sx={{ maxWidth: 720, mx: "auto" }}>
+        <PanelHeader title="Proposals" onBack={goBack} />
+        {list}
+      </Box>
+    );
   }
 
   // Desktop: a scannable list beside the full proposal, so reviewing a
@@ -234,10 +270,23 @@ export default function ProposalsView({
       >
         {list}
       </Box>
-      <Box data-testid="proposal-pane" sx={{ overflowY: "auto" }}>
-        <Box sx={{ maxWidth: 880 }}>
+      <Box data-testid="proposal-pane" sx={{ overflowY: "auto", p: 1.5 }}>
+        <Box
+          sx={{
+            maxWidth: 880,
+            bgcolor: tokens.surface,
+            borderRadius: `${tokens.radii.lg}px`,
+            boxShadow: tokens.elevation.e1,
+            // clip, not hidden: the review bar sticks to the pane's scroll.
+            overflow: "clip",
+          }}
+        >
           {selected ? (
-            <ProposalDetailView proposal={selected} adminMode={adminMode} />
+            <ProposalDetailView
+              proposal={selected}
+              adminMode={adminMode}
+              listStatus={status}
+            />
           ) : (
             <EmptyState title="Select a proposal to review it." py={10} />
           )}

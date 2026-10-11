@@ -8,9 +8,11 @@ import {
   toPseudoFeature,
 } from "@/components/waterway/section-details/utils";
 import type { Feature, FeatureType, Proposal } from "@/lib/api";
-import { distanceAlongLineM, representativePoint } from "@/lib/geo";
+import { distanceAlongLineM, lineCoords, representativePoint } from "@/lib/geo";
 import { useWaterway } from "@/lib/hooks/useWaterways";
-import { labelSx } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 interface BundledFeatureData {
   feature_type: FeatureType;
@@ -57,7 +59,8 @@ export default function ProposalDetailPane({
             metadata: data.metadata as Record<string, unknown> | null,
             location,
             name: data.name as string | null,
-            description: data.description as string | null,
+            // The Description row below already says it.
+            description: null,
             lang_code: data.lang_code as string | null,
             water_ranges: (data.water_ranges ??
               null) as BundledFeatureData["water_ranges"],
@@ -70,10 +73,6 @@ export default function ProposalDetailPane({
   const translations = Array.isArray(data.translations)
     ? (data.translations as TranslationData[])
     : [];
-
-  const totalM = sectionLine
-    ? distanceAlongLineM(sectionLine[sectionLine.length - 1], sectionLine)
-    : undefined;
 
   const detailRows: Array<[string, string]> = [];
   if (typeof data.description === "string" && data.description) {
@@ -123,6 +122,15 @@ export default function ProposalDetailPane({
       )
     : [];
 
+  // Feature positions are measured along the section they belong to; a
+  // section proposal measures its bundled features along its own line.
+  const measureLine = isFeatureProposal
+    ? lineCoords(parentSection?.location)
+    : sectionLine;
+  const totalM = measureLine
+    ? distanceAlongLineM(measureLine[measureLine.length - 1], measureLine)
+    : undefined;
+
   const original = proposal.original_data as
     | Record<string, unknown>
     | null
@@ -146,6 +154,8 @@ export default function ProposalDetailPane({
             border: "1px solid",
             borderColor: "divider",
             position: "relative",
+            // Keeps the map's own controls beneath the sticky review bar.
+            isolation: "isolate",
           }}
         >
           <WaterwayMap
@@ -222,32 +232,46 @@ export default function ProposalDetailPane({
           <Typography variant="overline" sx={{ lineHeight: 1 }}>
             Features
           </Typography>
-          {featureData.map((feature, index) => (
-            <FeatureRow
-              key={`${feature.feature_type}-${index}`}
-              featureType={feature.feature_type}
-              name={feature.name}
-              difficulty={
-                (feature.metadata as Record<string, unknown> | null)
-                  ?.difficulty as string | undefined
-              }
-              description={feature.description}
-              gaugeName={
-                (feature.water_ranges?.length ?? 0) > 0
-                  ? "thresholds set"
-                  : undefined
-              }
-              locationType={
-                feature.location.type as "Point" | "LineString" | "Polygon"
-              }
-              extent={
-                sectionLine
-                  ? computeExtent(pseudoFeatures[index], sectionLine)
-                  : null
-              }
-              totalM={totalM}
-            />
-          ))}
+          <Box
+            sx={{
+              bgcolor: tokens.surface,
+              borderRadius: `${tokens.radii.md}px`,
+              boxShadow: tokens.elevation.e1,
+              overflow: "hidden",
+              // The card draws the edge; rows only keep a rule between them.
+              "& > *": { border: "none" },
+              "& > * + *": {
+                borderTop: `1px solid ${tokens.outlineVariant}55`,
+              },
+            }}
+          >
+            {featureData.map((feature, index) => (
+              <FeatureRow
+                key={`${feature.feature_type}-${index}`}
+                featureType={feature.feature_type}
+                name={feature.name}
+                difficulty={
+                  (feature.metadata as Record<string, unknown> | null)
+                    ?.difficulty as string | undefined
+                }
+                description={feature.description}
+                gaugeName={
+                  (feature.water_ranges?.length ?? 0) > 0
+                    ? "thresholds set"
+                    : undefined
+                }
+                locationType={
+                  feature.location.type as "Point" | "LineString" | "Polygon"
+                }
+                extent={
+                  measureLine
+                    ? computeExtent(pseudoFeatures[index], measureLine)
+                    : null
+                }
+                totalM={totalM}
+              />
+            ))}
+          </Box>
         </Box>
       )}
     </Box>

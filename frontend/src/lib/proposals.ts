@@ -57,8 +57,30 @@ export function diffObjects(
   return diffs;
 }
 
+/** A value in words, never JSON: lists as a comma list, objects as
+ * "Label value" pairs, an empty value as "none". */
+function plainValue(v: unknown): string {
+  if (v === null || v === undefined || v === "") return "none";
+  if (Array.isArray(v)) {
+    return v.length === 0 ? "none" : v.map(plainValue).join(", ");
+  }
+  if (typeof v === "object") {
+    const entries = Object.entries(v as Record<string, unknown>);
+    if (entries.length === 0) return "none";
+    return entries
+      .map(([k, value]) => `${humanize(k)} ${plainValue(value)}`)
+      .join(", ");
+  }
+  return String(v);
+}
+
+/** Nothing there: null, an empty string, list or object. */
+export function isEmptyValue(v: unknown): boolean {
+  return !isDisplayable(v);
+}
+
 export function shortValue(key: string, v: unknown): string {
-  if (v === null || v === undefined) return "-";
+  if (v === null || v === undefined) return "none";
   // Features bundled with a new-section proposal: summarize instead of JSON
   if (key === "features" && Array.isArray(v)) {
     return v
@@ -82,15 +104,8 @@ export function shortValue(key: string, v: unknown): string {
       )
       .join(", ");
   }
-  // Feature metadata: show simple entries like "difficulty III+"
-  if (key === "metadata" && typeof v === "object" && !Array.isArray(v)) {
-    const entries = Object.entries(v as Record<string, unknown>)
-      .filter(([, value]) => typeof value !== "object")
-      .map(([k, value]) => `${humanize(k)} ${String(value)}`);
-    if (entries.length > 0) return entries.join(", ");
-  }
-  if (typeof v === "string") return v.length > 60 ? `${v.slice(0, 57)}…` : v;
-  return JSON.stringify(v).slice(0, 80);
+  const text = plainValue(v);
+  return text.length > 60 ? `${text.slice(0, 57)}…` : text;
 }
 
 /** Best human-readable headline for a proposal. */
