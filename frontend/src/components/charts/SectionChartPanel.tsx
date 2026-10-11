@@ -4,7 +4,6 @@ import { useChartPanelState } from "@/components/charts/chartState";
 import WaterChart from "@/components/charts/water/WaterChart";
 import { GaugeAttributions } from "@/components/GaugeAttribution";
 import LoadingBox from "@/components/states/LoadingBox";
-import { useSession } from "@/lib/hooks/useSession";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
 
 interface SectionChartPanelProps {
@@ -29,7 +28,6 @@ export default function SectionChartPanel({
   preferredFeatureId,
   tall,
 }: SectionChartPanelProps) {
-  const { isAuthenticated } = useSession();
   const { data: waterStatus, isLoading } = useWaterStatus(
     waterwayId,
     sectionId,
