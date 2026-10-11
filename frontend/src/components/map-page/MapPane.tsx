@@ -310,7 +310,8 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             position: "absolute",
             top: 0,
             left: 0,
-            right: 0,
+            // Clear of the zoom and compass keys down the right edge.
+            right: 64,
             zIndex: 10,
           }}
         />

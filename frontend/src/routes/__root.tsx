@@ -1,5 +1,4 @@
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import LuggageOutlinedIcon from "@mui/icons-material/LuggageOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
@@ -109,6 +108,11 @@ function Layout() {
   useLiveTripEvents(isAuthenticated);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // Full-bleed map pages: the main world map and the gauge coverage map.
+  // Proposals are reached from Tools, so the nav keeps Tools lit there.
+  const inTools =
+    pathname.startsWith("/tools") ||
+    pathname.startsWith("/proposals") ||
+    pathname.startsWith("/admin/proposals");
   const isMapPage = pathname === "/" || pathname === "/tools/gauge-catalog";
 
   return (
@@ -128,6 +132,7 @@ function Layout() {
         <Toolbar
           sx={{
             gap: 0.5,
+            px: { xs: 2.5, sm: 2.5 },
             // MUI's own sm-up min height would win over a plain value.
             minHeight: {
               xs: tokens.chrome.appBar,
@@ -169,7 +174,12 @@ function Layout() {
             <Box component={Link} to="/trips" sx={navLinkSx}>
               Trips
             </Box>
-            <Box component={Link} to="/tools" sx={navLinkSx}>
+            <Box
+              component={Link}
+              to="/tools"
+              aria-current={inTools ? "page" : undefined}
+              sx={navLinkSx}
+            >
               Tools
             </Box>
           </Box>
@@ -187,18 +197,18 @@ function Layout() {
                   color="secondary"
                   size="small"
                   onClick={signup}
-                  sx={{ fontSize: "0.6875rem" }}
+                  sx={{ fontSize: "0.875rem", minHeight: tokens.touch.min }}
                 >
-                  Sign Up
+                  Create account
                 </Button>
                 <Button
                   variant="contained"
                   color="secondary"
                   size="small"
                   onClick={login}
-                  sx={{ fontSize: "0.6875rem" }}
+                  sx={{ fontSize: "0.875rem", minHeight: tokens.touch.min }}
                 >
-                  Sign In
+                  Sign in
                 </Button>
               </Box>
             ))}
@@ -215,7 +225,17 @@ function Layout() {
         }}
       >
         <StandingDescentBanner
-          sx={{ display: { xs: isMapPage ? "none" : "flex", md: "flex" } }}
+          sx={{
+            display: { xs: isMapPage ? "none" : "flex", md: "flex" },
+            // A desktop floats it at the foot, so the panes keep the full
+            // viewport height and their docked actions stay on screen.
+            position: { md: "fixed" },
+            right: { md: 16 },
+            bottom: { md: 16 },
+            m: { md: 0 },
+            width: { md: 380 },
+            zIndex: { md: 1200 },
+          }}
         />
         <Box component="main" sx={{ flex: 1 }}>
           <Outlet />
@@ -314,10 +334,10 @@ function BottomNav({ signedIn }: { signedIn: boolean }) {
               {to === "/settings" ? (
                 // A phone has no top bar: the inbox is a tab on the profile.
                 <UnreadBadge count={notifications?.unread_count ?? 0}>
-                  <Icon />
+                  <Icon sx={{ fontSize: 22 }} />
                 </UnreadBadge>
               ) : (
-                <Icon />
+                <Icon sx={{ fontSize: 22 }} />
               )}
             </Box>
             {label}
@@ -342,7 +362,6 @@ function UserMenu({
     <>
       <Button
         size="small"
-        endIcon={<ArrowDropDownIcon />}
         onClick={(e) => setAnchor(e.currentTarget)}
         sx={{
           fontFamily: fonts.label,
@@ -361,7 +380,7 @@ function UserMenu({
             display: "grid",
             placeItems: "center",
             borderRadius: "50%",
-            bgcolor: `${tokens.primary}${alphas.hover}`,
+            bgcolor: `${tokens.primary}${alphas.strong}`,
             color: tokens.primary,
             fontSize: "0.8125rem",
             fontWeight: 700,
@@ -395,7 +414,7 @@ function UserMenu({
           }}
           dense
         >
-          Sign Out
+          Sign out
         </MenuItem>
       </Menu>
     </>

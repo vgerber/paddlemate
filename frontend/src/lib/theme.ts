@@ -200,11 +200,13 @@ const shadows = [
 
 /** The only alpha suffixes to append to a token (\`\${token}\${alphas.x}\`):
  * tint for row washes, wash for selected grounds, hover on top of them,
+ * strong for an avatar tile,
  * hairline for rules, border for control outlines, scrim over imagery. */
 export const alphas = {
   tint: "0d",
   wash: "14",
   hover: "1f",
+  strong: "2e",
   hairline: "55",
   border: "99",
   scrim: "cc",
