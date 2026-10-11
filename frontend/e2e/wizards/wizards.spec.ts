@@ -342,7 +342,7 @@ test.describe("suggest river", () => {
       // A phone has no button over the results; it proposes a river from
       // the empty Rivers list.
       await page
-        .getByPlaceholder("Search rivers or sections…")
+        .getByPlaceholder("Name", { exact: true })
         .filter({ visible: true })
         .fill("zzzqqq");
       await page
