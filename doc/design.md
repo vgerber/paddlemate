@@ -76,7 +76,7 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 |---|---|
 | Section detail | A chart card at the top of the pane (closed: the chart and one options button; open: reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide); History opens over the pane |
 | Search | Tabs Name, Area, Region; a Filters sheet (country, grade, Water now); the chosen levels live in the `water` URL param |
-| Map region mode | The region sheet with level chips, and "Part of" naming the parents of a picked region |
+| Map region mode | The search panel (a peek sheet on a phone, the card on desktop) with the region field, level chips, and "Part of" naming the parents of a picked region; the regions stay visible on the map |
 | Logs | Two panes on desktop; the date is a picker field |
 | Trips | Plan, Bases, Members and Logs tabs; the Plan pins a week strip with a dot on days that have runs and opens to a month; bases and candidate bases; admins get Add member and the trip actions |
 | Proposals | The diff shows the before struck through next to the after; reviewing opens a dialog |
