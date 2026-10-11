@@ -129,6 +129,15 @@ INSERT INTO gauges (id, name, provider, source_id, data_source_id, fetch_interva
 INSERT INTO gauge_series (id, gauge_id, measurement_type, unit) VALUES
   (9401, 9301, 'water_level', 'cm'),
   (9402, 9302, 'water_level', 'cm');
+-- Catalog stations for a river no waterway has yet, so the New river form,
+-- given "Test Creek", has gauges to offer. Provider 'fixture' marks them for
+-- cleanup; station ids are in the 9xxx range like everything else here.
+INSERT INTO gauge_catalog (provider, station_id, name, river, country, lat, lon, geom, params) VALUES
+  ('fixture', '9801', 'Test Creek Upper', 'Test Creek', 'AT', 47.1100, 10.9100,
+   ST_SetSRID(ST_MakePoint(10.9100, 47.1100), 4326), '{W,Q}'),
+  ('fixture', '9802', 'Test Creek Lower', 'Test Creek', 'AT', 47.0800, 10.9500,
+   ST_SetSRID(ST_MakePoint(10.9500, 47.0800), 4326), '{W}');
+
 INSERT INTO gauge_readings (series_id, measured_at, value)
 SELECT 9401, NOW() - (n || ' hours')::interval, 85 + 30 * sin(n / 12.0)
 FROM generate_series(0, 168, 2) AS n;
@@ -512,7 +521,7 @@ INSERT INTO trip_members (trip_id, user_id, role) VALUES
   (9002, :'tobi',    'member');
 
 -- Attendance settles before the itinerary does: Vincent drives out a day
--- early (the timeline's Day -1), Tobias joins late, Aoife has not said yet.
+-- early (the timeline's Day -1), Tobias joins late, Aoife only knows when she arrives.
 -- Mara knows the day but not yet the hour she gets away, which is the normal
 -- half-settled state and the one the UI has to read well.
 INSERT INTO trip_member_attendance
@@ -522,7 +531,10 @@ INSERT INTO trip_member_attendance
   (9001, :'mara',    (NOW() - INTERVAL '3 days')::date, '08:15',
                      (NOW() + INTERVAL '3 days')::date, NULL),
   (9001, :'tobi',    (NOW() - INTERVAL '1 day')::date,  '22:45',
-                     (NOW() + INTERVAL '2 days')::date, '16:00');
+                     (NOW() + INTERVAL '2 days')::date, '16:00'),
+  -- Aoife has said when she arrives and not when she leaves: tomorrow is a
+  -- day whose only entry is an arrival.
+  (9001, :'aoife',   (NOW() + INTERVAL '1 day')::date,  '14:00', NULL, NULL);
 
 -- The base moves mid-trip, and the third one is still a placeholder with no
 -- dates - the state a stay sits in while somebody is still ringing around.

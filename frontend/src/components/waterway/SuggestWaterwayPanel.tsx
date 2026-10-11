@@ -2,7 +2,6 @@ import CenterFocusStrongIcon from "@mui/icons-material/CenterFocusStrong";
 import CheckIcon from "@mui/icons-material/Check";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import CloseIcon from "@mui/icons-material/Close";
-import WaterIcon from "@mui/icons-material/Water";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -287,10 +286,11 @@ export default function SuggestWaterwayPanel({
 
             {exactGaugeMatch && riverGauges.length > 0 && (
               <Box
+                data-testid="river-gauges"
                 sx={{
                   bgcolor: tokens.surface,
                   borderRadius: `${tokens.radii.md}px`,
-                  boxShadow: tokens.elevation.e1,
+                  boxShadow: `inset 0 0 0 1px ${tokens.outlineVariant}`,
                   overflow: "hidden",
                 }}
               >
@@ -304,7 +304,14 @@ export default function SuggestWaterwayPanel({
                     pt: 0.5,
                   }}
                 >
-                  <WaterIcon sx={{ fontSize: 16, color: tokens.success }} />
+                  <Box
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      bgcolor: tokens.outline,
+                    }}
+                  />
                   <Typography
                     sx={{ ...labelSx, flex: 1 }}
                     title="Live water levels can be linked to this river's sections"
@@ -317,6 +324,7 @@ export default function SuggestWaterwayPanel({
                     <IconButton
                       aria-label="Show all on map"
                       title="Show all on map"
+                      sx={{ width: tokens.touch.min, height: tokens.touch.min }}
                       onClick={() => onFocusBounds?.(matchedBounds)}
                     >
                       <CenterFocusStrongIcon sx={{ fontSize: 16 }} />
@@ -337,20 +345,24 @@ export default function SuggestWaterwayPanel({
                         ])
                       }
                       title="Show on map"
-                      sx={{ minHeight: tokens.touch.min, px: 1.5 }}
+                      sx={{
+                        minHeight: tokens.touch.min,
+                        px: 1.5,
+                        borderTop: "1px solid",
+                        borderColor: tokens.outlineVariant,
+                      }}
                     >
                       <ListItemText
                         primary={g.name || `Station ${g.station_id}`}
-                        secondary={
-                          g.params && g.params.length > 0
-                            ? `${g.provider} · ${g.params.join(", ")}`
-                            : g.provider
-                        }
-                        slotProps={{
-                          primary: { variant: "body2" },
-                          secondary: { variant: "caption" },
-                        }}
+                        slotProps={{ primary: { variant: "body2" } }}
                       />
+                      <Typography
+                        variant="caption"
+                        color="textSecondary"
+                        data-testid="gauge-params"
+                      >
+                        {g.params?.join(", ")}
+                      </Typography>
                       <CenterFocusStrongIcon
                         sx={{ fontSize: 16, color: "text.disabled", ml: 1 }}
                       />
@@ -364,7 +376,10 @@ export default function SuggestWaterwayPanel({
                     sx={{
                       ...labelSx,
                       minHeight: tokens.touch.min,
-                      color: "text.secondary",
+                      color: tokens.primary,
+                      borderTop: "1px solid",
+                      borderColor: tokens.outlineVariant,
+                      borderRadius: 0,
                     }}
                   >
                     {showAllGauges

@@ -386,6 +386,25 @@ test.describe("suggest river", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("a name the gauge catalog knows lists its gauges as a card @small", async ({
+    page,
+  }) => {
+    await openRiverForm(page);
+    await pane(page).getByLabel("Name").first().fill("Test Creek");
+    const card = pane(page).getByTestId("river-gauges");
+    await expect(card).toBeVisible();
+    await expect(card).toContainText('2 gauges on "Test Creek"');
+    await expect(card).toContainText("Test Creek Upper");
+    await expect(card).toContainText("Test Creek Lower");
+    // A hairline-outlined card with the radius of the other blocks.
+    expect(await computed(card, "border-top-left-radius")).toBe("14px");
+    expect(await computed(card, "box-shadow")).toContain("inset");
+    const params = card.getByTestId("gauge-params");
+    await expect(params).toHaveCount(2);
+    await expectTouchTargets(card.getByRole("button"));
+    await expectNoHorizontalOverflow(page);
+  });
+
   test("similar rivers are chips that fill the name", async ({ page }) => {
     await openRiverForm(page);
     await pane(page).getByLabel("Name").first().fill("Test");

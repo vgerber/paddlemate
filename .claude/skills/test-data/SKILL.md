@@ -40,7 +40,7 @@ this data. All have the password `paddle`; only Vincent is a `server_admin`.
 | `vincent` | Vincent Local | the admin you normally sign in as; owns the club, two logs and the trip |
 | `mara` | Mara Lindqvist | co-admin of the trip, owns a public and a **private** log in it, and a private trip of her own |
 | `tobi` | Tobias Reiner | trip member who joins late and leaves early |
-| `aoife` | Aoife Byrne | trip member with no dates set; owns the club-shared log |
+| `aoife` | Aoife Byrne | trip member who has said when she arrives (tomorrow, 14:00) but not when she leaves; owns the club-shared log |
 | `jonas` | Jonas Weber | in the club but **not** on the trip: sees it, has not joined |
 
 Signing in as somebody other than Vincent is how you check what a non-admin,
@@ -70,6 +70,7 @@ docker compose --profile auth up -d --force-recreate keycloak
 | Sections | 9101-9107 | each with put_in + take_out features (9511-9572) at its line ends, like a normal entry |
 | Whitewater features | 9523/9543/9553 | difficulty III / II / IV-V on sections 9102/9104/9105, spanning put-in to take-out - difficulty chip in the section list |
 | Extra features on Lower Test | 9524-9529 | rapid "Slot Machine" (III+), hole "Big Hole", weir "Altes Wehr", strainer, portage, bridge - 9102 is the feature-rich section for timeline/map/delete testing |
+| Catalog gauges "Test Creek Upper/Lower" | provider `fixture`, 9801, 9802 | river "Test Creek" (no waterway): typing it in the New river form shows the "2 gauges on Test Creek" card |
 | Gauge "Test Gauge" + series | 9301 / 9401, 9402 | water_level in cm; 9401 has a week of 2-hourly sinusoidal readings (55-115, latest ~85), 9402 has none |
 | Water ranges | 9601-9608 | thresholds around the ~85 cm reading so the section list shows every chip variant (see below); section defaults sit on the whitewater features; 9607/9608 sit on the Lower Test rapid/hole (same series as the 9601 default) so selecting them in the timeline swaps the chart thresholds |
 | Descents | 9201-9204 | see below; all owned by the first user |
@@ -187,7 +188,8 @@ Trips:
   timeline has days behind it (solid dots) and ahead of it (hollow). Members:
   Vincent + Mara (admins), Tobias, Aoife. Vincent arrives a day early (19:30),
   which is the timeline's **Day -1**; Mara knows the day she leaves but not
-  the hour, which is the half-settled state the UI has to read well.
+  the hour, which is the half-settled state the UI has to read well. Aoife arrives
+  tomorrow with no departure, so tomorrow is a day with **only an arrival**.
 
   **Four bases**, one of each interesting shape and each in its **own
   valley**: 1 the camp in the Oetztal (Laengenfeld), 2 the hotel in the
