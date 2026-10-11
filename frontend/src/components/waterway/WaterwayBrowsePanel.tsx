@@ -23,6 +23,7 @@ import type {
 } from "@/lib/api";
 import { useSectionDescentCounts } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
+import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
@@ -62,6 +63,8 @@ interface WaterwayBrowsePanelProps {
     proposals?: Proposal[];
   };
 }
+
+const SECTION_TABS: SectionDetailTab[] = ["features", "logs", "notes"];
 
 export default function WaterwayBrowsePanel({
   waterwayId,
@@ -157,8 +160,17 @@ export default function WaterwayBrowsePanel({
     !inFeatures &&
     selectedSectionId == null;
 
+  const swipe = useSwipeTabs({
+    index: SECTION_TABS.indexOf(sectionDetailTab),
+    count: SECTION_TABS.length,
+    onIndexChange: (i) => onSectionDetailTabChange(SECTION_TABS[i]),
+    enabled: inFeatures && !isLoading,
+  });
+
   const headerTabs = inFeatures
     ? {
+        progress: swipe.progress,
+        dragging: swipe.dragging,
         value: sectionDetailTab as string,
         onChange: (t: string) =>
           onSectionDetailTabChange(t as SectionDetailTab),
@@ -201,9 +213,12 @@ export default function WaterwayBrowsePanel({
           position: "relative",
           display: "flex",
           flexDirection: "column",
+          overflowX: "hidden",
         }}
       >
         <Box
+          data-testid="tab-pane"
+          {...(inFeatures ? swipe.paneProps : {})}
           sx={{
             flex: 1,
             overflowY: "auto",

@@ -2,10 +2,9 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import UnderlineTabs from "./UnderlineTabs";
 
 interface PanelHeaderProps<T extends string> {
   /** Omitted where the panel is already named beside it - a desktop detail
@@ -19,11 +18,14 @@ interface PanelHeaderProps<T extends string> {
     value: T;
     onChange: (t: T) => void;
     options: { value: T; label: string }[];
+    /** Swipe state from `useSwipeTabs`, so the underline follows a drag. */
+    progress?: number;
+    dragging?: boolean;
   };
 }
 
 /** The app's one panel header: back arrow, bold title, grey subtitle, action
- * icons right, and a full-width segmented tab bar when the panel has views.
+ * icons right, and underlined tabs when the panel has views.
  * Without a title it is the tab bar alone, in the same chrome. */
 export default function PanelHeader<T extends string>({
   title,
@@ -38,7 +40,7 @@ export default function PanelHeader<T extends string>({
       sx={{
         px: 1.5,
         pt: 1.5,
-        pb: 1,
+        pb: tabs ? 0 : 1,
         borderBottom: "1px solid",
         borderColor: "divider",
         flexShrink: 0,
@@ -81,26 +83,13 @@ export default function PanelHeader<T extends string>({
       )}
 
       {tabs && (
-        <ToggleButtonGroup
+        <UnderlineTabs
           value={tabs.value}
-          exclusive
-          onChange={(_, v) => v && tabs.onChange(v)}
-          size="small"
-          sx={{
-            width: "100%",
-            "& .MuiToggleButton-root": {
-              flex: 1,
-              py: 0.5,
-              fontSize: "0.75rem",
-            },
-          }}
-        >
-          {tabs.options.map((option) => (
-            <ToggleButton key={option.value} value={option.value}>
-              {option.label}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+          onChange={tabs.onChange}
+          items={tabs.options}
+          progress={tabs.progress}
+          dragging={tabs.dragging}
+        />
       )}
     </Box>
   );
