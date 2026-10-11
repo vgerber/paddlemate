@@ -5,6 +5,7 @@ import LocationPin, {
   TAKE_OUT_COLOR,
 } from "@/components/map/LocationPin";
 import SectionAdder from "@/components/search/SectionAdder";
+import FormSection from "@/components/waterway/FormSection";
 import type { SectionWithFeatures } from "@/lib/api";
 import { toPseudoSection } from "@/lib/descents";
 import { useWaterway } from "@/lib/hooks/useWaterways";
@@ -104,61 +105,78 @@ export default function StepSections({
     mapSections.length > 0 ? mapSections : formSectionsForMap;
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <SectionAdder
-        waterwayId={selectedWaterwayId}
-        onWaterwayChange={setSelectedWaterwayId}
-        sections={mapSections}
-        addedIds={selectedIds}
-        onAdd={addSection}
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <FormSection
+        label="Sections"
+        hint="Search a waterway, then tap its sections on the map in paddled order."
       >
-        <SectionPickerMap
-          sections={sectionsForMap}
-          selectedIds={selectedIds}
-          putIn={coordsFromStrings(form.put_in_lat, form.put_in_lon)}
-          takeOut={coordsFromStrings(form.take_out_lat, form.take_out_lon)}
-          onSectionToggle={toggleSection}
-          onPickPutIn={(lat, lon) =>
-            onChange({ put_in_lat: lat.toFixed(6), put_in_lon: lon.toFixed(6) })
-          }
-          onPickTakeOut={(lat, lon) =>
-            onChange({
-              take_out_lat: lat.toFixed(6),
-              take_out_lon: lon.toFixed(6),
-            })
-          }
-        />
-      </SectionAdder>
+        <SectionAdder
+          waterwayId={selectedWaterwayId}
+          onWaterwayChange={setSelectedWaterwayId}
+          sections={mapSections}
+          addedIds={selectedIds}
+          onAdd={addSection}
+        >
+          <SectionPickerMap
+            sections={sectionsForMap}
+            selectedIds={selectedIds}
+            putIn={coordsFromStrings(form.put_in_lat, form.put_in_lon)}
+            takeOut={coordsFromStrings(form.take_out_lat, form.take_out_lon)}
+            onSectionToggle={toggleSection}
+            onPickPutIn={(lat, lon) =>
+              onChange({
+                put_in_lat: lat.toFixed(6),
+                put_in_lon: lon.toFixed(6),
+              })
+            }
+            onPickTakeOut={(lat, lon) =>
+              onChange({
+                take_out_lat: lat.toFixed(6),
+                take_out_lon: lon.toFixed(6),
+              })
+            }
+          />
+        </SectionAdder>
 
-      <SectionDraftList
-        sections={form.sections}
-        onChange={(sections) => onChange({ sections })}
-      />
+        <SectionDraftList
+          sections={form.sections}
+          onChange={(sections) => onChange({ sections })}
+        />
+      </FormSection>
 
-      <Box sx={{ display: "flex", gap: 1.5 }}>
-        <LocationPin
-          num={1}
-          color={PUT_IN_COLOR}
-          title="PUT-IN"
-          coords={coordsFromStrings(form.put_in_lat, form.put_in_lon)}
-          label={form.put_in_label}
-          onClear={() =>
-            onChange({ put_in_lat: "", put_in_lon: "", put_in_label: "" })
-          }
-          onLabelChange={(v) => onChange({ put_in_label: v })}
-        />
-        <LocationPin
-          num={2}
-          color={TAKE_OUT_COLOR}
-          title="TAKE-OUT"
-          coords={coordsFromStrings(form.take_out_lat, form.take_out_lon)}
-          label={form.take_out_label}
-          onClear={() =>
-            onChange({ take_out_lat: "", take_out_lon: "", take_out_label: "" })
-          }
-          onLabelChange={(v) => onChange({ take_out_label: v })}
-        />
-      </Box>
+      <FormSection
+        label="Put in and take out"
+        hint="Set from the sections; tap the map to move them."
+      >
+        <Box sx={{ display: "flex", gap: 1.5 }}>
+          <LocationPin
+            num={1}
+            color={PUT_IN_COLOR}
+            title="Put in"
+            coords={coordsFromStrings(form.put_in_lat, form.put_in_lon)}
+            label={form.put_in_label}
+            onClear={() =>
+              onChange({ put_in_lat: "", put_in_lon: "", put_in_label: "" })
+            }
+            onLabelChange={(v) => onChange({ put_in_label: v })}
+          />
+          <LocationPin
+            num={2}
+            color={TAKE_OUT_COLOR}
+            title="Take out"
+            coords={coordsFromStrings(form.take_out_lat, form.take_out_lon)}
+            label={form.take_out_label}
+            onClear={() =>
+              onChange({
+                take_out_lat: "",
+                take_out_lon: "",
+                take_out_label: "",
+              })
+            }
+            onLabelChange={(v) => onChange({ take_out_label: v })}
+          />
+        </Box>
+      </FormSection>
     </Box>
   );
 }

@@ -1,25 +1,26 @@
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import SpeedDial from "@mui/material/SpeedDial";
-import SpeedDialAction from "@mui/material/SpeedDialAction";
-import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { VISIBILITY_ICONS } from "@/components/descents/DescentCard";
 import DescentDetail from "@/components/descents/DescentDetail";
 import DescentForm from "@/components/descents/DescentForm";
+import PanelHeader from "@/components/PanelHeader";
+import RowMenu from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
+import { formatDate } from "@/lib/format";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
-import { BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
+
+const VISIBILITY_LABELS = {
+  private: "Private",
+  shared: "Shared",
+  public: "Public",
+} as const;
 
 export const Route = createFileRoute("/logs/$descentId")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -64,11 +65,10 @@ function LogDetailPage() {
 
   const isOwner = user != null && user.id === descent.user_id;
 
-  const shellSx = embedded
-    ? { maxWidth: 880, px: 2, py: 2 }
-    : { maxWidth: 720, mx: "auto", px: 2, py: 2 };
   // The edit form carries a bottom bar, which needs a floor to sit on.
-  const formShellSx = embedded ? { ...shellSx, height: "100%" } : shellSx;
+  const formShellSx = embedded
+    ? { height: "100%" }
+    : { maxWidth: 720, mx: "auto" };
 
   if (edit && isOwner) {
     return (
@@ -91,88 +91,41 @@ function LogDetailPage() {
     "Descent";
   const subtitle = [
     descent.username,
-    new Date(descent.start_time).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }),
+    formatDate(descent.start_time),
+    VISIBILITY_LABELS[descent.visibility.type],
   ]
     .filter(Boolean)
     .join(" · ");
 
   return (
-    <Box sx={shellSx}>
-      <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
-        {!embedded && (
-          <IconButton
-            size="small"
-            onClick={() => history.back()}
-            aria-label="Back"
-          >
-            <ArrowBackIcon fontSize="small" />
-          </IconButton>
-        )}
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography noWrap sx={{ fontWeight: 700, fontSize: "0.9rem" }}>
-            {title}
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {subtitle}
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                color: "text.disabled",
-                flexShrink: 0,
-              }}
-            >
-              {VISIBILITY_ICONS[descent.visibility.type]}
-              <Typography
-                sx={{
-                  fontSize: "0.625rem",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  fontFamily: fonts.label,
-                }}
-              >
-                {descent.visibility.type}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
+    <Box sx={embedded ? undefined : { maxWidth: 720, mx: "auto" }}>
+      <PanelHeader
+        title={title}
+        subtitle={subtitle}
+        onBack={embedded ? undefined : () => history.back()}
+        actionButton={
+          isOwner ? (
+            <RowMenu
+              actions={[
+                {
+                  label: "Edit",
+                  icon: <EditOutlinedIcon />,
+                  onClick: () => setEdit(true),
+                },
+                {
+                  label: "Delete",
+                  icon: <DeleteOutlinedIcon />,
+                  danger: true,
+                  onClick: () => setConfirmDelete(true),
+                },
+              ]}
+            />
+          ) : undefined
+        }
+      />
+      <Box sx={{ px: 2, py: 2 }}>
+        <DescentDetail descent={descent} />
       </Box>
-      <DescentDetail descent={descent} />
-      {isOwner && (
-        <SpeedDial
-          ariaLabel="Log actions"
-          icon={
-            <SpeedDialIcon icon={<MoreVertIcon />} openIcon={<CloseIcon />} />
-          }
-          direction="up"
-          sx={{
-            position: "fixed",
-            bottom: {
-              xs: `calc(${BOTTOM_NAV_SPACE} + 16px)`,
-              md: 24,
-            },
-            right: 16,
-          }}
-        >
-          <SpeedDialAction
-            icon={<EditOutlinedIcon />}
-            title="Edit"
-            onClick={() => setEdit(true)}
-          />
-          <SpeedDialAction
-            icon={<DeleteOutlinedIcon />}
-            title="Delete"
-            onClick={() => setConfirmDelete(true)}
-          />
-        </SpeedDial>
-      )}
       <ConfirmDialog
         open={confirmDelete}
         title="Delete this log?"

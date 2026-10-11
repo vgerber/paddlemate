@@ -1,9 +1,9 @@
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
+import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import Fact, { factLabelSx, valueSx } from "@/components/Fact";
+import Fact, { valueSx } from "@/components/Fact";
 import WaterwayMap from "@/components/map/Map";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { toPseudoSection, uniqueSnapshotsBySeries } from "@/lib/descents";
@@ -14,7 +14,11 @@ import {
   formatTime,
 } from "@/lib/format";
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
+import { labelSx, theme } from "@/lib/theme";
 import { levelConfig } from "@/lib/waterLevel";
+import LevelPill from "./LevelPill";
+
+const { tokens } = theme;
 
 const formatDateWithWeekday = (iso: string) =>
   formatDate(iso, { weekday: true });
@@ -54,7 +58,6 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      {/* Trip facts */}
       <Box
         sx={{
           display: "flex",
@@ -111,8 +114,8 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
         <Box
           sx={{
             height: 260,
-            border: "1px solid",
-            borderColor: "divider",
+            borderRadius: `${tokens.radii.md}px`,
+            overflow: "hidden",
             position: "relative",
           }}
         >
@@ -135,131 +138,114 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
       {/* Sections in paddled order */}
       {sections.length > 0 && (
         <Box>
-          <Typography sx={{ ...factLabelSx, mb: 1 }}>
+          <Typography sx={{ ...labelSx, fontSize: "0.875rem", mb: 1 }}>
             Sections ({sections.length})
           </Typography>
-          <Box sx={{ border: "1px solid", borderColor: "divider" }}>
-            {sections.map((s, index) => (
-              <Box
-                key={s.section_id}
-                onClick={
-                  s.waterway_id != null
-                    ? () =>
-                        navigate({
-                          to: "/",
-                          // Fresh map search state - only the target section.
-                          search: {
-                            ...EMPTY_MAP_SEARCH,
-                            waterway: s.waterway_id ?? undefined,
-                            section: s.section_id,
-                          },
-                        })
-                    : undefined
-                }
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 0.5,
-                  p: 1.5,
-                  borderBottom: index < sections.length - 1 ? "1px solid" : 0,
-                  borderColor: "divider",
-                  // Rows with a known waterway link back to the section pane.
-                  ...(s.waterway_id != null && {
-                    cursor: "pointer",
-                    "&:hover": { bgcolor: "action.hover" },
-                  }),
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                  <Typography
+          <Box sx={{ display: "grid", gap: 1 }}>
+            {sections.map((s, index) => {
+              const open = () =>
+                navigate({
+                  to: "/",
+                  // Fresh map search state - only the target section.
+                  search: {
+                    ...EMPTY_MAP_SEARCH,
+                    waterway: s.waterway_id ?? undefined,
+                    section: s.section_id,
+                  },
+                });
+              const snaps = uniqueSnapshotsBySeries(s.water_snapshots ?? []);
+              return (
+                <ButtonBase
+                  key={s.section_id}
+                  data-testid="log-section"
+                  component={s.waterway_id != null ? "button" : "div"}
+                  onClick={s.waterway_id != null ? open : undefined}
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "24px minmax(0, 1fr)",
+                    columnGap: 1,
+                    alignItems: "start",
+                    textAlign: "left",
+                    width: "100%",
+                    boxSizing: "border-box",
+                    minHeight: tokens.touch.min,
+                    p: 1.5,
+                    font: "inherit",
+                    color: "text.primary",
+                    bgcolor: tokens.surfaceHigh,
+                    borderRadius: `${tokens.radii.md}px`,
+                    boxShadow: "none",
+                    cursor: s.waterway_id != null ? "pointer" : "default",
+                  }}
+                >
+                  <Box
+                    component="span"
                     sx={{
                       ...valueSx,
-                      color: "text.disabled",
-                      fontSize: "0.75rem",
+                      color: "text.secondary",
+                      fontSize: "0.8125rem",
                     }}
                   >
                     {index + 1}
-                  </Typography>
-                  <Typography sx={{ ...valueSx, fontWeight: 700 }}>
-                    {s.section_name ?? `Section #${s.section_id}`}
-                  </Typography>
-                  {s.waterway_name && (
-                    <Typography
-                      sx={{ fontSize: "0.75rem", color: "text.secondary" }}
-                    >
-                      {s.waterway_name}
-                    </Typography>
-                  )}
-                </Box>
-                {s.note && (
-                  <Typography
-                    sx={{
-                      fontSize: "0.75rem",
-                      color: "text.secondary",
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {s.note}
-                  </Typography>
-                )}
-                {uniqueSnapshotsBySeries(s.water_snapshots ?? []).length >
-                  0 && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 0.75,
-                      mt: 0.25,
-                    }}
-                  >
-                    {uniqueSnapshotsBySeries(s.water_snapshots ?? []).map(
-                      (snap) => {
-                        const cfg = levelConfig[snap.level];
-                        return (
-                          <Box
-                            key={snap.series_id}
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 0.75,
-                            }}
-                          >
-                            <Chip
-                              size="small"
-                              variant={
-                                snap.level === "empty" ? "outlined" : "filled"
-                              }
-                              label={
-                                snap.value != null
-                                  ? formatReading(snap.value, snap.unit)
-                                  : cfg.label
-                              }
-                              sx={{
-                                fontSize: "0.6875rem",
-                                height: 20,
-                                minWidth: 32,
-                                color: cfg.color,
-                                bgcolor: cfg.bgcolor,
-                                borderColor:
-                                  "border" in cfg ? cfg.border : undefined,
-                              }}
-                            />
-                            <Typography
-                              sx={{
-                                fontSize: "0.75rem",
-                                color: "text.disabled",
-                              }}
-                            >
-                              {snap.gauge_name}
-                            </Typography>
-                          </Box>
-                        );
-                      },
-                    )}
                   </Box>
-                )}
-              </Box>
-            ))}
+                  <Box component="span" sx={{ display: "block", minWidth: 0 }}>
+                    <Box component="span" sx={{ ...valueSx, fontWeight: 600 }}>
+                      {s.section_name ?? `Section #${s.section_id}`}
+                    </Box>{" "}
+                    {s.waterway_name && (
+                      <Box
+                        component="span"
+                        sx={{ fontSize: "0.8125rem", color: "text.secondary" }}
+                      >
+                        {s.waterway_name}
+                      </Box>
+                    )}
+                    {s.note && (
+                      <Box
+                        component="span"
+                        sx={{
+                          display: "block",
+                          mt: 0.5,
+                          fontSize: "0.8125rem",
+                          color: "text.secondary",
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
+                        {s.note}
+                      </Box>
+                    )}
+                    {snaps.map((snap) => (
+                      <Box
+                        key={snap.series_id}
+                        component="span"
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          gap: 1,
+                          mt: 0.75,
+                        }}
+                      >
+                        <LevelPill level={snap.level}>
+                          {snap.value != null
+                            ? formatReading(snap.value, snap.unit)
+                            : levelConfig[snap.level].label}
+                        </LevelPill>
+                        <Box
+                          component="span"
+                          sx={{
+                            fontSize: "0.8125rem",
+                            color: "text.secondary",
+                          }}
+                        >
+                          {snap.gauge_name}
+                        </Box>
+                      </Box>
+                    ))}
+                  </Box>
+                </ButtonBase>
+              );
+            })}
           </Box>
         </Box>
       )}
@@ -267,7 +253,9 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
       {/* Trip note */}
       {descent.note && (
         <Box>
-          <Typography sx={{ ...factLabelSx, mb: 0.5 }}>Note</Typography>
+          <Typography sx={{ ...labelSx, fontSize: "0.875rem", mb: 0.5 }}>
+            Note
+          </Typography>
           <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
             {descent.note}
           </Typography>

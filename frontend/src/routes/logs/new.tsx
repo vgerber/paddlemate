@@ -64,8 +64,6 @@ function NewLogPage() {
       sx={{
         maxWidth: 720,
         mx: "auto",
-        px: 2,
-        py: 2,
         ...(embedded && { height: "100%" }),
       }}
     >
