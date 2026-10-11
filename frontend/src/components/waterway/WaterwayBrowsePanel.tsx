@@ -120,8 +120,13 @@ export default function WaterwayBrowsePanel({
     sectionId: number | undefined;
     filter: EditsFilter;
   }>({ sectionId: undefined, filter: null });
-  const waterwayQuery = useWaterway(waterwayId);
-  const { data: waterway, isLoading } = waterwayQuery;
+  const {
+    data: waterway,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useWaterway(waterwayId);
   const { data: descentCounts } = useSectionDescentCounts(waterwayId);
   const { isAuthenticated } = useSession();
   const sections: SectionWithFeatures[] = waterway?.sections ?? [];
@@ -266,6 +271,22 @@ export default function WaterwayBrowsePanel({
         ],
       };
 
+  if (isError && !waterway) {
+    return (
+      <>
+        <PanelHeader
+          title={selectedSectionId != null ? "Section" : "River"}
+          onBack={selectedSectionId != null ? onSectionDeselect : onBack}
+        />
+        <ErrorState
+          error={error}
+          fallback="Could not load this river."
+          onRetry={() => refetch()}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <Box
@@ -330,12 +351,6 @@ export default function WaterwayBrowsePanel({
             {!isLoading && chartTab && chart}
             {isLoading ? (
               <LoadingBox size={22} />
-            ) : waterwayQuery.isError && !waterway ? (
-              <ErrorState
-                error={waterwayQuery.error}
-                fallback="Could not load this river."
-                onRetry={() => waterwayQuery.refetch()}
-              />
             ) : inFeatures ? (
               sectionDetailTab === "logs" ? (
                 <SectionLogsList sectionId={selectedSection.id} />

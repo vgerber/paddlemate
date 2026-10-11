@@ -3,6 +3,7 @@ import ChartDock from "@/components/canvas/ChartDock";
 import GaugeChartPanel from "@/components/charts/GaugeChartPanel";
 import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import { defaultRangeFeature } from "@/components/waterway/section-details/utils";
+import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
 import { localizedName } from "@/lib/localization";
 import type { MapPageState } from "./useMapPageState";
 
@@ -13,7 +14,18 @@ export default function MapCharts({ state }: { state: MapPageState }) {
   const dockMode = useDockMode();
   const variant = !state.isMobile && dockMode === "dock" ? "dock" : "card";
   const chart = <MapChart state={state} variant={variant} />;
-  if (!hasChart(state)) return null;
+  const { selectedWaterwayId, selectedSectionId, selectedGaugeRanges } = state;
+  const status = useWaterStatus(
+    selectedWaterwayId ?? null,
+    selectedSectionId ?? null,
+  );
+  // A section without a gauge has nothing to chart: no card, no dock.
+  const noGauge =
+    state.selectedGaugeId == null &&
+    selectedGaugeRanges.length === 0 &&
+    status.isSuccess &&
+    status.data.ranges.length === 0;
+  if (!hasChart(state) || noGauge) return null;
   return state.isMobile ? chart : <ChartDock>{chart}</ChartDock>;
 }
 

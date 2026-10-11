@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import ChartCard from "@/components/charts/ChartCard";
+import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
 import { useChartPanelState } from "@/components/charts/chartState";
 import WaterChart from "@/components/charts/water/WaterChart";
 import { GaugeAttributions } from "@/components/GaugeAttribution";
-import LoadingBox from "@/components/states/LoadingBox";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
 
 interface SectionChartPanelProps {
@@ -31,10 +31,13 @@ export default function SectionChartPanel({
   tall,
   variant,
 }: SectionChartPanelProps) {
-  const { data: waterStatus, isLoading } = useWaterStatus(
-    waterwayId,
-    sectionId,
-  );
+  const {
+    data: waterStatus,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useWaterStatus(waterwayId, sectionId);
   const { timeRange, setTimeRange, measurementType, setMeasurementType } =
     useChartPanelState();
 
@@ -52,12 +55,15 @@ export default function SectionChartPanel({
         onMeasurementTypeChange={setMeasurementType}
         preferredFeatureId={preferredFeatureId}
         tall={tall}
+        short={isLoading || isError}
         variant={variant}
         footer={<GaugeAttributions sources={ranges.map((r) => r.source)} />}
       >
         {(headroom) =>
-          isLoading ? (
-            <LoadingBox size={22} py={6} />
+          isError ? (
+            <ChartError error={error} onRetry={() => refetch()} />
+          ) : isLoading ? (
+            <ChartSkeleton />
           ) : (
             <WaterChart
               ranges={ranges}

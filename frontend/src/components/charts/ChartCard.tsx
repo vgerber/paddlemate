@@ -63,6 +63,8 @@ interface ChartCardProps {
   /** Lets the chart grow taller, for when nothing else is competing for the
    * space (the features list is folded). */
   tall?: boolean;
+  /** A short card, for a chart that is still loading or failed to load. */
+  short?: boolean;
   /** Offered in the open options when the card shows a picked gauge. */
   onDismiss?: () => void;
   /** Under the chart, e.g. the gauge credit. */
@@ -85,6 +87,7 @@ export default function ChartCard({
   onMeasurementTypeChange,
   preferredFeatureId,
   tall = false,
+  short = false,
   onDismiss,
   footer,
   variant = "card",
@@ -110,6 +113,25 @@ export default function ChartCard({
   const chartedText = latest
     ? formatReading(latest.value, charted?.series.unit ?? "")
     : typeLabel(type ?? "");
+
+  const closeButton = (
+    <IconButton
+      ref={closeRef}
+      aria-label="Close chart options"
+      aria-expanded
+      onClick={() => {
+        toggled.current = true;
+        setOpen(false);
+      }}
+      sx={{
+        width: tokens.touch.min,
+        height: tokens.touch.min,
+        color: "text.secondary",
+      }}
+    >
+      <ExpandLessIcon />
+    </IconButton>
+  );
 
   return (
     <Box
@@ -137,21 +159,31 @@ export default function ChartCard({
       {open && (
         <Box
           sx={{
-            display: "grid",
-            gap: 1.25,
-            px: 1.75,
-            pt: 1.5,
-            pb: 1.25,
+            flexShrink: 0,
             borderBottom: "1px solid",
             borderColor: "divider",
+            px: 1.75,
+            ...(docked
+              ? {
+                  // One row, so the dock's plot keeps its height.
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  columnGap: 2,
+                  py: 0.5,
+                }
+              : { display: "grid", gap: 1.25, pt: 1.5, pb: 1.25 }),
           }}
         >
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: "minmax(0, 1fr) 44px",
+              gridTemplateColumns: docked
+                ? "minmax(0, 1fr)"
+                : "minmax(0, 1fr) 44px",
               alignItems: "center",
-              mr: -1.25,
+              mr: docked ? 0 : -1.25,
+              order: 0,
             }}
           >
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
@@ -175,24 +207,9 @@ export default function ChartCard({
                 />
               ))}
             </Box>
-            <IconButton
-              ref={closeRef}
-              aria-label="Close chart options"
-              aria-expanded
-              onClick={() => {
-                toggled.current = true;
-                setOpen(false);
-              }}
-              sx={{
-                width: tokens.touch.min,
-                height: tokens.touch.min,
-                color: "text.secondary",
-              }}
-            >
-              <ExpandLessIcon />
-            </IconButton>
+            {!docked && closeButton}
           </Box>
-          <Box sx={{ display: "flex", gap: 0.5 }}>
+          <Box sx={{ display: "flex", gap: 0.5, order: 1 }}>
             {TIME_RANGE_OPTIONS.map((o) => (
               <Chip
                 key={o.value}
@@ -204,17 +221,27 @@ export default function ChartCard({
                 onClick={() => onTimeRangeChange(o.value)}
                 sx={{
                   ...chipSx(o.value === timeRange),
-                  flex: 1,
+                  // Stretch to share a phone's width; natural size from md.
+                  flex: { xs: 1, md: "0 0 auto" },
                   minWidth: 0,
-                  "& .MuiChip-label": { px: 0.5 },
+                  "& .MuiChip-label": { px: { xs: 0.5, md: 1.5 } },
                 }}
               />
             ))}
           </Box>
           {charted && (
-            <Box sx={{ display: "flex", alignItems: "center", mr: -1.25 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                mr: -1.25,
+                order: 2,
+                ...(docked && { flex: 1, minWidth: 0 }),
+              }}
+            >
               <Typography
                 variant="body2"
+                noWrap
                 sx={{ flex: 1, minWidth: 0, color: "text.secondary" }}
               >
                 {charted.gauge.name}
@@ -236,6 +263,7 @@ export default function ChartCard({
               )}
             </Box>
           )}
+          {docked && <Box sx={{ order: 3, ml: "auto" }}>{closeButton}</Box>}
         </Box>
       )}
       <Box
@@ -243,7 +271,7 @@ export default function ChartCard({
           position: "relative",
           ...(docked
             ? { flex: 1, minHeight: 0 }
-            : { height: tall ? heights.tall : heights.base }),
+            : { height: short ? 120 : tall ? heights.tall : heights.base }),
         }}
       >
         {children(open ? CLOSED_HEADROOM : OUTLINE_HEADROOM)}
