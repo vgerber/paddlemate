@@ -25,7 +25,9 @@ async function loudText(page: Page) {
         if (!el.textContent?.trim()) continue;
         if (s.textTransform === "uppercase")
           out.push(`${el.tagName} uppercase`);
-        if (s.letterSpacing !== "normal" && s.letterSpacing !== "0px")
+        // Tracked-out capitals are loud; the headings' slight negative
+        // tracking is part of the type scale.
+        if (Number.parseFloat(s.letterSpacing) > 0)
           out.push(`${el.tagName} ${s.letterSpacing}`);
       }
       return out;
