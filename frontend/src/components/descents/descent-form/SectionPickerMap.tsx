@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import WaterwayMap from "@/components/map/Map";
 import type { SectionWithFeatures } from "@/lib/api";
 import { theme } from "@/lib/theme";
@@ -35,23 +34,6 @@ export default function SectionPickerMap({
         position: "relative",
       }}
     >
-      {sections.length === 0 && (
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            pointerEvents: "none",
-            zIndex: 1,
-          }}
-        >
-          <Typography variant="body2" color="textSecondary">
-            Search a waterway to see its sections
-          </Typography>
-        </Box>
-      )}
       <WaterwayMap
         sections={sections}
         picking={{

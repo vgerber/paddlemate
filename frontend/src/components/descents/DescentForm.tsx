@@ -10,6 +10,7 @@ import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
+import { theme } from "@/lib/theme";
 import {
   buildPayload,
   copyFromDescent,
@@ -22,6 +23,8 @@ import {
 import StepDetails from "./descent-form/StepDetails";
 import StepSections from "./descent-form/StepSections";
 import StepWhen from "./descent-form/StepWhen";
+
+const { tokens } = theme;
 
 const STEPS = ["When", "Sections", "Details"];
 
@@ -91,53 +94,93 @@ export default function DescentForm({
   const isLast = step === STEPS.length - 1;
   const isBusy = createDescent.isPending || patchDescent.isPending;
 
+  const bar = (
+    <PanelBottomBar
+      leftIcon={step === 0 ? <CloseIcon /> : <ArrowBackIcon />}
+      onLeftClick={step === 0 ? onCancel : () => setStep((s) => s - 1)}
+      leftLabel={step === 0 ? "Cancel" : "Back"}
+      leftDisabled={isBusy}
+      title={descent ? "Edit descent" : "Log descent"}
+      subtitle={`Step ${step + 1} of ${STEPS.length} · ${STEPS[step]}`}
+      steps={{ n: step + 1, of: STEPS.length }}
+      action={
+        <RoundActionButton
+          onClick={isLast ? handleSave : () => setStep((s) => s + 1)}
+          disabled={isBusy}
+          ariaLabel={isLast ? "Save" : "Next"}
+        >
+          {isBusy ? (
+            <CircularProgress size={20} color="inherit" />
+          ) : isLast ? (
+            <CheckIcon fontSize="small" />
+          ) : (
+            <ArrowForwardIcon fontSize="small" />
+          )}
+        </RoundActionButton>
+      }
+    />
+  );
+
   return (
     <Box
-      sx={{
-        maxWidth: 720,
-        mx: "auto",
-        px: 2,
-        py: 3,
-        // Clear the fixed bottom bar so the last field stays reachable.
-        pb: embedded ? 2 : "calc(88px + env(safe-area-inset-bottom))",
-        // In a pane the column fills the height so the bar has a floor to
-        // sit on, instead of trailing whatever the current step is tall.
-        ...(embedded && {
-          minHeight: "100%",
-          display: "flex",
-          flexDirection: "column",
-        }),
-      }}
+      sx={
+        embedded
+          ? {
+              // In a pane the column fills the height so the bar docks at the
+              // pane foot, instead of trailing whatever the step is tall.
+              flex: 1,
+              minHeight: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }
+          : undefined
+      }
     >
-      {step === 0 && <StepWhen form={form} onChange={patch} />}
-      {step === 1 && (
-        <StepSections
-          form={form}
-          onChange={patch}
-          initialWaterwayId={initialSection?.waterwayId}
-        />
-      )}
-      {step === 2 && <StepDetails form={form} onChange={patch} />}
+      <Box
+        sx={{
+          maxWidth: 720,
+          mx: "auto",
+          width: "100%",
+          boxSizing: "border-box",
+          px: 2,
+          py: 3,
+          flex: embedded ? 1 : undefined,
+          // Clear the fixed bottom bar so the last field stays reachable.
+          pb: embedded ? 2 : "calc(88px + env(safe-area-inset-bottom))",
+        }}
+      >
+        {step === 0 && <StepWhen form={form} onChange={patch} />}
+        {step === 1 && (
+          <StepSections
+            form={form}
+            onChange={patch}
+            initialWaterwayId={initialSection?.waterwayId}
+          />
+        )}
+        {step === 2 && <StepDetails form={form} onChange={patch} />}
 
-      {saveError && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {saveError}
-        </Alert>
-      )}
+        {saveError && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {saveError}
+          </Alert>
+        )}
+      </Box>
 
       {/* Bottom bar - pinned to the viewport bottom, above the mobile
           bottom navigation (zIndex 1300); same pattern as the section and
           feature wizards. Centring on the viewport would straddle the list
-          pane, so beside a list it sticks to the form column instead. */}
+          pane, so beside a list it docks to the foot of the form's pane. */}
       <Box
         sx={
           embedded
             ? {
                 position: "sticky",
-                bottom: 0,
-                mt: "auto",
+                // The pane keeps a 12px margin below its card.
+                bottom: 12,
                 zIndex: 2,
                 bgcolor: "background.paper",
+                borderBottomLeftRadius: `${tokens.radii.lg}px`,
+                borderBottomRightRadius: `${tokens.radii.lg}px`,
               }
             : {
                 position: "fixed",
@@ -151,30 +194,7 @@ export default function DescentForm({
               }
         }
       >
-        <PanelBottomBar
-          leftIcon={step === 0 ? <CloseIcon /> : <ArrowBackIcon />}
-          onLeftClick={step === 0 ? onCancel : () => setStep((s) => s - 1)}
-          leftLabel={step === 0 ? "Cancel" : "Back"}
-          leftDisabled={isBusy}
-          title={descent ? "Edit descent" : "Log descent"}
-          subtitle={`Step ${step + 1} of ${STEPS.length} · ${STEPS[step]}`}
-          steps={{ n: step + 1, of: STEPS.length }}
-          action={
-            <RoundActionButton
-              onClick={isLast ? handleSave : () => setStep((s) => s + 1)}
-              disabled={isBusy}
-              ariaLabel={isLast ? "Save" : "Next"}
-            >
-              {isBusy ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : isLast ? (
-                <CheckIcon fontSize="small" />
-              ) : (
-                <ArrowForwardIcon fontSize="small" />
-              )}
-            </RoundActionButton>
-          }
-        />
+        {bar}
       </Box>
     </Box>
   );

@@ -61,11 +61,11 @@ function NewLogPage() {
 
   return (
     <Box
-      sx={{
-        maxWidth: 720,
-        mx: "auto",
-        ...(embedded && { height: "100%" }),
-      }}
+      sx={
+        embedded
+          ? { flex: 1, display: "flex", flexDirection: "column" }
+          : { maxWidth: 720, mx: "auto" }
+      }
     >
       <DescentForm
         embedded={embedded}
