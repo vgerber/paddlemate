@@ -3,6 +3,7 @@ import WaterwaySearchPanel from "@/components/search/WaterwaySearchPanel";
 import SuggestFeaturePanel from "@/components/waterway/SuggestFeaturePanel";
 import SuggestWaterwayPanel from "@/components/waterway/SuggestWaterwayPanel";
 import WaterwayBrowsePanel from "@/components/waterway/WaterwayBrowsePanel";
+import MapCharts from "./MapCharts";
 import type { MapPageState } from "./useMapPageState";
 
 interface SidebarContentProps {
@@ -196,6 +197,7 @@ export default function SidebarContent({
       }}
       onMobileMapToggle={onMobileMapToggle}
       mobileMapActive={mobileMapActive}
+      chart={<MapCharts state={state} />}
       featureTimeline={{
         onFeatureClick: setFocusedPoint,
         onEditFeature: startEditFeature,

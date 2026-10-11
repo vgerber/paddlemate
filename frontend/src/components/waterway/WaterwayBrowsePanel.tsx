@@ -9,6 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import DockedAction from "@/components/DockedAction";
 import PanelHeader from "@/components/PanelHeader";
 import SourcesTab from "@/components/provenance/SourcesTab";
@@ -52,6 +53,9 @@ interface WaterwayBrowsePanelProps {
   noteMapPin?: React.ComponentProps<typeof CommentThread>["mapPin"];
   onMobileMapToggle?: () => void;
   mobileMapActive?: boolean;
+  /** The chart card, shown at the top of the tabs it belongs to (the section's
+   * Features, the river's Sections and Gauges). */
+  chart?: ReactNode;
   /** Everything the section feature timeline needs - passed through as one
    * group instead of loose props. */
   featureTimeline?: {
@@ -88,6 +92,7 @@ export default function WaterwayBrowsePanel({
   noteMapPin,
   onMobileMapToggle,
   mobileMapActive,
+  chart,
   featureTimeline,
 }: WaterwayBrowsePanelProps) {
   const navigate = useNavigate();
@@ -156,6 +161,10 @@ export default function WaterwayBrowsePanel({
         )}
       </>
     ) : undefined;
+
+  const chartTab = inFeatures
+    ? sectionDetailTab === "features"
+    : tab === "sections" || tab === "gauges";
 
   const showNewSectionFab =
     isAuthenticated &&
@@ -251,6 +260,7 @@ export default function WaterwayBrowsePanel({
                 : 1,
           }}
         >
+          {!isLoading && chartTab && chart}
           {isLoading ? (
             <LoadingBox size={22} />
           ) : inFeatures ? (

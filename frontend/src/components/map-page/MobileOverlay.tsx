@@ -3,7 +3,6 @@ import Slide from "@mui/material/Slide";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import { durations } from "@/lib/motion";
 import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
-import MapCharts from "./MapCharts";
 import SectionSpeedDial from "./SectionSpeedDial";
 import SidebarContent from "./SidebarContent";
 import type { MapPageState } from "./useMapPageState";
@@ -22,18 +21,12 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
   const {
     isMobilePanelOpen,
     setIsMobilePanelOpen,
-    selectedSectionId,
-    sectionDetailTab,
     isMobileMapView,
     toggleMobileMapView,
     suggestMode,
   } = state;
 
   const closeOverlay = () => setIsMobilePanelOpen(false);
-  // Mirrors MapCharts: no chart on the section Logs and Notes tabs.
-  const chartsHidden =
-    selectedSectionId != null &&
-    (sectionDetailTab === "logs" || sectionDetailTab === "notes");
   // Sheet mode: the map above must stay reachable - suggest flows, and
   // placing a note pin.
   const sheet = Boolean(suggestMode) || state.notePinPlacing;
@@ -105,15 +98,12 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
           />
         </Box>
 
-        {/* Charts shown inline in the overlay on mobile (hidden in suggest mode) */}
-        {!suggestMode && <MapCharts state={state} />}
-
         {/* Speed Dial - section-specific actions on mobile */}
         <SectionSpeedDial
           state={state}
           sx={{
             position: "absolute",
-            bottom: chartsHidden ? 16 : "calc(260px + 16px)",
+            bottom: 16,
             right: 16,
           }}
         />

@@ -22,7 +22,6 @@ import { lineCoords, pointCoords } from "@/lib/geo";
 import { useWaterwayComments } from "@/lib/hooks/useComments";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
-import MapCharts from "./MapCharts";
 import SectionSpeedDial from "./SectionSpeedDial";
 import type { MapPageState } from "./useMapPageState";
 
@@ -36,7 +35,6 @@ interface MapPaneProps {
  * - WaterwayMap
  * - Mobile area strip (area mode, no waterway selected)
  * - Mobile search FAB (all other cases)
- * - Desktop charts (hidden on mobile)
  */
 export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
   const {
@@ -507,11 +505,6 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             </Badge>
           </Box>
         )}
-      </Box>
-
-      {/* Charts - desktop only */}
-      <Box sx={{ display: { xs: "none", md: "block" } }}>
-        <MapCharts state={state} />
       </Box>
     </Box>
   );

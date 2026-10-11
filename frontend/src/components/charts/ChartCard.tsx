@@ -25,8 +25,10 @@ const { tokens } = theme;
 const OUTLINE_HEADROOM = 46;
 const CLOSED_HEADROOM = 6;
 
+// The phone height gives way on short screens, so a 568px phone still shows
+// the start of the features list under the chart.
 const heights = {
-  base: { xs: 210, md: "clamp(200px, 26vh, 340px)" },
+  base: { xs: "clamp(140px, 24vh, 210px)", md: "clamp(200px, 26vh, 340px)" },
   tall: { xs: 340, md: "clamp(280px, 42vh, 520px)" },
 } as const;
 

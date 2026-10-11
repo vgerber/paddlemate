@@ -226,7 +226,10 @@ test.describe("features card", () => {
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(vw);
     const strip = card(page).getByTestId("features-strip");
     const sb = await strip.boundingBox();
-    expect((sb?.x ?? 0) + (sb?.width ?? 0)).toBeLessThanOrEqual(vw);
+    expect(sb, "the strip is drawn").not.toBeNull();
+    const { x, width } = sb as NonNullable<typeof sb>;
+    expect(width).toBeGreaterThan(0);
+    expect(x + width).toBeLessThanOrEqual(vw);
   });
 
   test("the fold chevron is a labelled button", async ({ page }) => {
@@ -288,6 +291,38 @@ test.describe("notes", () => {
 });
 
 test.describe("chart height", () => {
+  test("the chart opens the Features pane, above the list, and the list stays readable @small", async ({
+    page,
+  }) => {
+    await openFeatures(page);
+    const chart = page.getByTestId("chart-card").filter({ visible: true });
+    await expect(chart).toBeVisible();
+    const pane = page.getByTestId("tab-pane").filter({ visible: true });
+    const inPane = await chart.evaluate(
+      (el) => !!el.closest('[data-testid="tab-pane"]'),
+    );
+    expect(inPane, "the chart is inside the tab pane").toBe(true);
+    const c = (await chart.boundingBox()) as NonNullable<
+      Awaited<ReturnType<typeof chart.boundingBox>>
+    >;
+    const f = (await card(page).boundingBox()) as NonNullable<typeof c>;
+    const p = (await pane.boundingBox()) as NonNullable<typeof c>;
+    expect(
+      c.y + c.height,
+      "chart ends before the list starts",
+    ).toBeLessThanOrEqual(f.y);
+    if ((page.viewportSize()?.width ?? 0) < 768) {
+      expect(c.y, "chart sits at the top of the pane").toBeLessThan(p.y + 24);
+      // The list's strip can be read below the chart without scrolling.
+      const strip = (await card(page)
+        .getByTestId("features-strip")
+        .boundingBox()) as typeof c;
+      expect(strip.y + strip.height, "strip inside the pane").toBeLessThan(
+        p.y + p.height,
+      );
+    }
+  });
+
   test("folding the features list makes the chart taller and opening restores it", async ({
     page,
   }) => {
