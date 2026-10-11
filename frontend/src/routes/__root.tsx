@@ -24,6 +24,7 @@ import {
 } from "@tanstack/react-router";
 import { useState } from "react";
 import AppSnackbar, { showErrorSnackbar } from "@/components/AppSnackbar";
+import CanvasHost from "@/components/canvas/CanvasHost";
 import NotificationBell, {
   UnreadBadge,
 } from "@/components/notifications/NotificationBell";
@@ -237,6 +238,7 @@ function Layout() {
             zIndex: { md: 1200 },
           }}
         />
+        <CanvasHost />
         <Box component="main" sx={{ flex: 1 }}>
           <Outlet />
         </Box>
