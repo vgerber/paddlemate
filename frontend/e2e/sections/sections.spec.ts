@@ -42,7 +42,8 @@ async function box(locator: Locator) {
 test.describe("section rows", () => {
   test("a row is a card: 52px or more, radius md, soft shadow, no border", async ({
     page,
-  }) => {
+  }, info) => {
+    test.skip(info.project.name === "desktop", "desktop rows are flat");
     await openRiver(page);
     const r = row(page, "Lower Test");
     expect(
@@ -54,7 +55,10 @@ test.describe("section rows", () => {
     expect(await computed(r, "background-color")).toBe("rgb(255, 255, 255)");
   });
 
-  test("every row is a card and the cards are separated", async ({ page }) => {
+  test("every row is a card and the cards are separated", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop", "desktop rows are flat");
     await openRiver(page);
     const boxes = await rows(page).evaluateAll((els) =>
       els.map((el) => {

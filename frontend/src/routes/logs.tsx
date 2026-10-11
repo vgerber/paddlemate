@@ -158,7 +158,6 @@ function LogsPage() {
             height: "100%",
             display: "flex",
             flexDirection: "column",
-            bgcolor: tokens.surfaceLow,
           }}
         >
           <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
@@ -225,7 +224,7 @@ function LogsList({
           ],
         }}
       />
-      <Box {...swipe.paneProps} sx={{ px: 1.5, py: 1.5 }}>
+      <Box {...swipe.paneProps} sx={{ p: { xs: 1.5, md: 0 } }}>
         {tab === "mine" ? (
           <MyLogsPanel onOpen={onOpen} selectedId={selectedId} />
         ) : (

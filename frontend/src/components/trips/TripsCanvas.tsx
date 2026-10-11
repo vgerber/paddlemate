@@ -12,10 +12,7 @@ import TripDetail from "@/components/trip-page/TripDetail";
 import TripMembersCard from "@/components/trip-page/TripMembersCard";
 import { useTripScene } from "@/components/trip-page/useTripScene";
 import type { Trip } from "@/lib/api";
-import { theme } from "@/lib/theme";
 import TripForm from "./TripForm";
-
-const { tokens } = theme;
 
 /** From this window width the members get a card of their own. */
 export const MEMBERS_CARD_FROM = 1600;
@@ -73,7 +70,6 @@ export default function TripsCanvas({
               height: "100%",
               display: "flex",
               flexDirection: "column",
-              bgcolor: tokens.surfaceLow,
             }}
           >
             <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>

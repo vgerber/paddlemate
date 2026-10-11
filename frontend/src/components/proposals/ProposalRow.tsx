@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
+import { desktopFlatRow } from "@/components/canvas/flatRow";
 import type { Proposal } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
 import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
@@ -53,6 +54,7 @@ export default function ProposalRow({
         boxShadow: selected
           ? `inset 0 0 0 2px ${tokens.primary}, ${tokens.elevation.e1}`
           : tokens.elevation.e1,
+        ...desktopFlatRow,
         "&.Mui-focusVisible": {
           outline: `2px solid ${tokens.primary}`,
           outlineOffset: 2,

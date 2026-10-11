@@ -78,7 +78,14 @@ function TripsPage() {
           py={8}
         />
       ) : (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1, p: 1.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: { xs: 1, md: 0 },
+            p: { xs: 1.5, md: 0 },
+          }}
+        >
           {trips.map((t) => (
             <TripRow
               key={t.id}

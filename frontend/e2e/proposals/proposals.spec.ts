@@ -129,7 +129,8 @@ test.describe("proposal list", () => {
     expect(hit).toBeGreaterThanOrEqual(44);
   });
 
-  test("cards are 14px padded, 8px apart", async ({ page }) => {
+  test("cards are 14px padded, 8px apart", async ({ page }, info) => {
+    test.skip(info.project.name === "desktop", "desktop rows are flat");
     await page.goto("/proposals?status=pending");
     const cards = page.getByTestId("proposal-card").filter({ visible: true });
     await expect(cards.first()).toBeVisible();
@@ -621,5 +622,25 @@ test.describe("phone keeps its pages", () => {
         name: "Back",
       }),
     ).toBeVisible();
+  });
+});
+
+test.describe("proposals on desktop", () => {
+  test("rows are flat with a rule, and the right side says what to do", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name !== "desktop", "desktop layout");
+    await page.goto("/proposals?status=pending");
+    const first = page.getByTestId("proposal-card").filter({ visible: true });
+    await expect(first.first()).toBeVisible();
+    expect(await computed(first.first(), "box-shadow")).toBe("none");
+    expect(await computed(first.first(), "border-bottom-width")).toBe("1px");
+    await expect(
+      page.getByText("Select a proposal to review it."),
+    ).toBeVisible();
+    await first.first().click();
+    expect(await computed(first.first(), "box-shadow")).toContain(
+      "3px 0px 0px 0px",
+    );
   });
 });

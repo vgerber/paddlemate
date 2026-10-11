@@ -64,7 +64,8 @@ test.afterEach(async ({ page }) => {
 test.describe("logs list", () => {
   test("a log is a card: radius md, soft shadow, white, no border", async ({
     page,
-  }) => {
+  }, info) => {
+    test.skip(isDesktop(info), "desktop rows are flat");
     await openLogs(page);
     const c = card(page, "Public multi-section run");
     expect(await computed(c, "border-top-left-radius")).toBe("14px");
@@ -73,7 +74,8 @@ test.describe("logs list", () => {
     expect(await computed(c, "background-color")).toBe("rgb(255, 255, 255)");
   });
 
-  test("cards are separated and at least 56px tall", async ({ page }) => {
+  test("cards are separated and at least 56px tall", async ({ page }, info) => {
+    test.skip(isDesktop(info), "desktop rows are flat");
     await openLogs(page);
     const boxes = await cards(page).evaluateAll((els) =>
       els.map((el) => {
@@ -141,10 +143,19 @@ test.describe("logs list", () => {
     await expect(label).toBeVisible();
     const f = await label.boundingBox();
     expect(list && f && f.x > list.x + list.width).toBe(true);
-    // The list stays, with the open log ringed in teal.
+    // The list stays, flat, with the open log on a teal wash and a 3px bar.
     await expect(c).toBeVisible();
     expect(await computed(c, "box-shadow")).toContain(TEAL);
-    expect(await computed(c, "background-color")).toBe("rgb(255, 255, 255)");
+    expect(await computed(c, "box-shadow")).toContain("3px 0px 0px 0px");
+    expect(await computed(c, "border-top-left-radius")).toBe("0px");
+    expect(await computed(c, "background-color")).not.toBe(
+      "rgb(255, 255, 255)",
+    );
+    // The card is as tall as its four rows, not the window.
+    const pane = await card(page, "Public multi-section run")
+      .locator("xpath=ancestor::section")
+      .boundingBox();
+    expect(pane?.height).toBeLessThan(700);
   });
 
   test("a log opens over the list on a phone and back returns", async ({

@@ -58,7 +58,7 @@ export default function FloatingCard({
   children,
   screen = "default",
   resizable = kind === "detail",
-  fullHeight = true,
+  fullHeight = false,
   priority = canvas.cards[kind].priority,
 }: FloatingCardProps) {
   useLayoutEffect(() => {

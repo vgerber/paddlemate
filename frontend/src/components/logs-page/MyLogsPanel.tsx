@@ -48,19 +48,36 @@ export default function MyLogsPanel({
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: { xs: 2, md: 0 },
+      }}
+    >
       {groups.map(([label, items]) => (
         <Box
           key={label}
-          sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: { xs: 0.75, md: 0 },
+          }}
         >
           <GroupHead testId="log-month">{label}</GroupHead>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: { xs: 1, md: 0 },
+            }}
+          >
             {items.map((d) => (
               <DescentCard
                 key={d.id}
                 descent={d}
                 selected={d.id === selectedId}
+                flatFromMd
                 onClick={() => onOpen(d.id)}
               />
             ))}

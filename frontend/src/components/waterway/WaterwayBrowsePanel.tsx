@@ -486,7 +486,7 @@ function SectionsList({
     return <EmptyState title="No sections found." py={4} />;
   }
   return (
-    <List dense disablePadding sx={{ px: 1.5 }}>
+    <List dense disablePadding sx={{ px: { xs: 1.5, md: 0 } }}>
       {sections.map((section) => (
         <SectionListItem
           key={section.id}
