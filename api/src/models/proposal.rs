@@ -55,9 +55,13 @@ pub struct Proposal {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub original_data: Option<Value>,
     pub submitted_by: String,
+    /// Username of the submitter; null when the account no longer exists
+    pub submitted_by_name: Option<String>,
     pub status: ProposalStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reviewed_by: Option<String>,
+    /// Username of the reviewer; null while pending or when the account is gone
+    pub reviewed_by_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub review_note: Option<String>,
     pub created_at: DateTime<Utc>,

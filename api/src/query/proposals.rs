@@ -9,7 +9,8 @@ use crate::models::{
     },
     water_section::CreateSectionBody,
 };
-use crate::query::{features, gauges, sections};
+use crate::query::history::{self, EntityKind, Op, Scope, State, Via};
+use crate::query::{features, gauges, sections, waterways};
 
 /// Proposals submitted before language tags were normalized at the API
 /// boundary still hold whatever the client sent. Approving one must not fail on
@@ -82,8 +83,11 @@ fn row_to_proposal(row: &PgRow) -> Proposal {
         proposed_data: row.get("proposed_data"),
         original_data: row.get("original_data"),
         submitted_by: row.get("submitted_by"),
+        // Only the listing queries join the names in; see `with_names`.
+        submitted_by_name: row.try_get("submitted_by_name").ok().flatten(),
         status: parse_status(&row.get::<String, _>("status")),
         reviewed_by: row.get("reviewed_by"),
+        reviewed_by_name: row.try_get("reviewed_by_name").ok().flatten(),
         review_note: row.get("review_note"),
         created_at: row.get("created_at"),
         updated_at: row.get("updated_at"),
@@ -91,6 +95,21 @@ fn row_to_proposal(row: &PgRow) -> Proposal {
         downvotes: 0,
         user_vote: None,
     }
+}
+
+/// Fill in the usernames of a proposal built from a RETURNING row.
+async fn with_names(db: &PgPool, mut p: Proposal) -> Result<Proposal, sqlx::Error> {
+    let row = sqlx::query(
+        "SELECT (SELECT username FROM users WHERE id = $1) AS submitted, \
+                (SELECT username FROM users WHERE id = $2) AS reviewed",
+    )
+    .bind(&p.submitted_by)
+    .bind(p.reviewed_by.as_deref())
+    .fetch_one(db)
+    .await?;
+    p.submitted_by_name = row.get("submitted");
+    p.reviewed_by_name = row.get("reviewed");
+    Ok(p)
 }
 
 /// Parse a row that includes vote aggregate columns (upvotes, downvotes, user_vote).
@@ -226,7 +245,7 @@ pub async fn insert_proposal(
     .fetch_one(db)
     .await?;
 
-    Ok(row_to_proposal(&row))
+    with_names(db, row_to_proposal(&row)).await
 }
 
 /// List proposals with wide filtering support.
@@ -243,6 +262,7 @@ pub async fn list_proposals(
         r#"SELECT p.id, p.entity_type, p.entity_id, p.operation, p.proposed_data,
                   p.submitted_by, p.original_data, p.status, p.reviewed_by, p.review_note,
                   p.created_at, p.updated_at,
+                  su.username AS submitted_by_name, ru.username AS reviewed_by_name,
                   COALESCE((
                       SELECT SUM(CASE WHEN v.vote = 1 THEN 1 ELSE 0 END)::bigint
                       FROM proposal_votes v WHERE v.proposal_id = p.id
@@ -254,6 +274,8 @@ pub async fn list_proposals(
                   (SELECT v.vote FROM proposal_votes v
                    WHERE v.proposal_id = p.id AND v.user_id = $1) AS user_vote
            FROM proposals p
+           LEFT JOIN users su ON su.id = p.submitted_by
+           LEFT JOIN users ru ON ru.id = p.reviewed_by
            WHERE ($2::text   IS NULL OR p.status       = $2)
              AND ($3::text   IS NULL OR p.entity_type  = $3)
              AND ($4::text   IS NULL OR p.operation    = $4)
@@ -314,6 +336,7 @@ pub async fn get_proposal(
         r#"SELECT p.id, p.entity_type, p.entity_id, p.operation, p.proposed_data,
                   p.submitted_by, p.original_data, p.status, p.reviewed_by, p.review_note,
                   p.created_at, p.updated_at,
+                  su.username AS submitted_by_name, ru.username AS reviewed_by_name,
                   COALESCE((
                       SELECT SUM(CASE WHEN v.vote = 1 THEN 1 ELSE 0 END)::bigint
                       FROM proposal_votes v WHERE v.proposal_id = p.id
@@ -325,6 +348,8 @@ pub async fn get_proposal(
                   (SELECT v.vote FROM proposal_votes v
                    WHERE v.proposal_id = p.id AND v.user_id = $1) AS user_vote
            FROM proposals p
+           LEFT JOIN users su ON su.id = p.submitted_by
+           LEFT JOIN users ru ON ru.id = p.reviewed_by
            WHERE p.id = $2"#,
     )
     .bind(viewer_user_id)
@@ -417,7 +442,7 @@ pub async fn review_proposal(
     let proposal = row_to_proposal(&row);
 
     if matches!(new_status, ProposalStatus::Approved) {
-        apply_proposal(&mut tx, &proposal).await?;
+        apply_proposal(&mut tx, &proposal, reviewer_id).await?;
     }
 
     let updated_row = sqlx::query(&format!(
@@ -435,50 +460,96 @@ pub async fn review_proposal(
 
     tx.commit().await?;
 
-    Ok(Some(row_to_proposal(&updated_row)))
+    with_names(db, row_to_proposal(&updated_row))
+        .await
+        .map(Some)
 }
 
-/// Apply the proposed change to the live table within an open transaction.
+/// The entity's place and state before an accepted proposal changes it, or
+/// None when it is already gone.
+async fn begin_edit(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    kind: EntityKind,
+    id: i64,
+) -> Result<Option<(Scope, State)>, sqlx::Error> {
+    let Some(scope) = history::scope_of(tx, kind, id).await? else {
+        return Ok(None);
+    };
+    Ok(history::snapshot(tx, &scope)
+        .await?
+        .map(|before| (scope, before)))
+}
+
+/// Record the edit that followed `begin_edit`, in the same transaction.
+async fn finish_edit(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    tracked: Option<(Scope, State)>,
+    via: &Via<'_>,
+) -> Result<(), sqlx::Error> {
+    if let Some((scope, before)) = tracked {
+        let after = history::snapshot(tx, &scope).await?.unwrap_or_default();
+        history::record(tx, &scope, Op::Edit, via, &before, &after).await?;
+    }
+    Ok(())
+}
+
+/// Delete an entity an accepted proposal removes, and record it.
+async fn delete_tracked(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    kind: EntityKind,
+    table: &str,
+    id: i64,
+    via: &Via<'_>,
+) -> Result<(), sqlx::Error> {
+    let scope = history::scope_of(tx, kind, id).await?;
+    sqlx::query(&format!("DELETE FROM {table} WHERE id = $1"))
+        .bind(id)
+        .execute(&mut **tx)
+        .await?;
+    if let Some(scope) = scope {
+        let empty = State::new();
+        history::record(tx, &scope, Op::Delete, via, &empty, &empty).await?;
+    }
+    Ok(())
+}
+
+/// Apply the proposed change to the live table within an open transaction,
+/// writing the history step in the same transaction.
 async fn apply_proposal(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     proposal: &Proposal,
+    reviewer_id: &str,
 ) -> Result<(), sqlx::Error> {
     let data = &proposal.proposed_data;
+    let via = Via::proposal(&proposal.submitted_by, proposal.id, reviewer_id);
 
     match (&proposal.entity_type, &proposal.operation) {
         (ProposalEntityType::Waterway, ProposalOperation::Create) => {
-            sqlx::query(
-                "INSERT INTO waterways (waterway_type, name, description) VALUES ('river', $1, $2)",
+            waterways::insert_waterway(
+                tx,
+                data["name"].as_str().unwrap_or_default(),
+                data["description"].as_str(),
+                &via,
             )
-            .bind(data["name"].as_str().unwrap_or_default())
-            .bind(data["description"].as_str())
-            .execute(&mut **tx)
             .await?;
         }
 
         (ProposalEntityType::Waterway, ProposalOperation::Update) => {
             if let Some(id) = proposal.entity_id {
-                sqlx::query(
-                    "UPDATE waterways \
-                     SET name = COALESCE($1, name), \
-                         description = COALESCE($2, description), \
-                         updated_at = NOW() \
-                     WHERE id = $3",
+                waterways::update_waterway_in(
+                    tx,
+                    id,
+                    data["name"].as_str(),
+                    data["description"].as_str(),
+                    &via,
                 )
-                .bind(data["name"].as_str())
-                .bind(data["description"].as_str())
-                .bind(id)
-                .execute(&mut **tx)
                 .await?;
             }
         }
 
         (ProposalEntityType::Waterway, ProposalOperation::Delete) => {
             if let Some(id) = proposal.entity_id {
-                sqlx::query("DELETE FROM waterways WHERE id = $1")
-                    .bind(id)
-                    .execute(&mut **tx)
-                    .await?;
+                delete_tracked(tx, EntityKind::Waterway, "waterways", id, &via).await?;
             }
         }
 
@@ -487,7 +558,7 @@ async fn apply_proposal(
             let mut body: CreateSectionBody =
                 serde_json::from_value(data.clone()).map_err(|e| sqlx::Error::Decode(e.into()))?;
             normalize_stored_lang_codes(&mut body, proposal.id);
-            sections::create_section_bundle(tx, waterway_id, &body, &proposal.submitted_by).await?;
+            sections::create_section_bundle(tx, waterway_id, &body, &via).await?;
         }
 
         (ProposalEntityType::WaterSection, ProposalOperation::Update) => {
@@ -510,6 +581,7 @@ async fn apply_proposal(
                             .collect()
                     })
                     .or_else(|| data["region"].as_str().map(|r| vec![r.to_owned()]));
+                let tracked = begin_edit(tx, EntityKind::Section, id).await?;
                 sqlx::query(
                     r#"UPDATE water_sections
                        SET name        = COALESCE($1, name),
@@ -528,15 +600,13 @@ async fn apply_proposal(
                 .bind(id)
                 .execute(&mut **tx)
                 .await?;
+                finish_edit(tx, tracked, &via).await?;
             }
         }
 
         (ProposalEntityType::WaterSection, ProposalOperation::Delete) => {
             if let Some(id) = proposal.entity_id {
-                sqlx::query("DELETE FROM water_sections WHERE id = $1")
-                    .bind(id)
-                    .execute(&mut **tx)
-                    .await?;
+                delete_tracked(tx, EntityKind::Section, "water_sections", id, &via).await?;
             }
         }
 
@@ -545,13 +615,13 @@ async fn apply_proposal(
                 let mut body: CreateFeatureBody = serde_json::from_value(data.clone())
                     .map_err(|e| sqlx::Error::Decode(e.into()))?;
                 normalize_stored_feature_lang_code(&mut body, proposal.id);
-                features::create_feature_bundle(tx, section_id, &body, &proposal.submitted_by)
-                    .await?;
+                features::create_feature_bundle(tx, section_id, &body, &via).await?;
             }
         }
 
         (ProposalEntityType::Feature, ProposalOperation::Update) => {
             if let Some(id) = proposal.entity_id {
+                let tracked = begin_edit(tx, EntityKind::Feature, id).await?;
                 // Apply water ranges if included in the delta. Each range names
                 // its gauge by an existing series_id or by a catalog reference
                 // resolved-or-created here (same path as create_feature_bundle).
@@ -635,15 +705,13 @@ async fn apply_proposal(
                 .bind(id)
                 .execute(&mut **tx)
                 .await?;
+                finish_edit(tx, tracked, &via).await?;
             }
         }
 
         (ProposalEntityType::Feature, ProposalOperation::Delete) => {
             if let Some(id) = proposal.entity_id {
-                sqlx::query("DELETE FROM features WHERE id = $1")
-                    .bind(id)
-                    .execute(&mut **tx)
-                    .await?;
+                delete_tracked(tx, EntityKind::Feature, "features", id, &via).await?;
             }
         }
     }

@@ -5,6 +5,7 @@ pub mod feature;
 pub mod gauge;
 pub mod geometry;
 pub mod group;
+pub mod history;
 pub mod lang;
 pub mod media_item;
 pub mod notification;

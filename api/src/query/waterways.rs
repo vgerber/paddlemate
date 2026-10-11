@@ -1,6 +1,9 @@
 use sqlx::{PgPool, QueryBuilder};
 
-use crate::models::waterway::{MatchSource, WaterwayFilters, WaterwayListItem, WaterwayType};
+use crate::models::waterway::{
+    MatchSource, Waterway, WaterwayFilters, WaterwayId, WaterwayListItem, WaterwayType,
+};
+use crate::query::history::{self, Op, Scope, Via};
 
 /// Shortest query that may match approximately. Below this a single typo
 /// leaves too few correct characters for trigram scoring to mean anything.
@@ -14,6 +17,152 @@ pub async fn name_exists(pool: &PgPool, name: &str) -> Result<bool, sqlx::Error>
             .fetch_one(pool)
             .await?;
     Ok(row.0)
+}
+
+pub async fn exists(pool: &PgPool, waterway_id: WaterwayId) -> Result<bool, sqlx::Error> {
+    let row: (bool,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM waterways WHERE id = $1)")
+        .bind(waterway_id)
+        .fetch_one(pool)
+        .await?;
+    Ok(row.0)
+}
+
+/// Create a waterway and its first history step in one transaction.
+pub async fn create_waterway(
+    pool: &PgPool,
+    name: &str,
+    description: Option<&str>,
+    actor: &str,
+) -> Result<Waterway, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let waterway = insert_waterway(&mut tx, name, description, &Via::direct(actor)).await?;
+    tx.commit().await?;
+    Ok(waterway)
+}
+
+/// Insert a waterway on an open transaction and record how it came to be.
+/// Shared by the admin endpoint and proposal approval.
+pub async fn insert_waterway(
+    conn: &mut sqlx::PgConnection,
+    name: &str,
+    description: Option<&str>,
+    via: &Via<'_>,
+) -> Result<Waterway, sqlx::Error> {
+    let r = sqlx::query!(
+        r#"
+        INSERT INTO waterways (waterway_type, name, description, created_by)
+        VALUES ('river', $1, $2, $3)
+        RETURNING id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at
+        "#,
+        name,
+        description,
+        via.actor
+    )
+    .fetch_one(&mut *conn)
+    .await?;
+    let scope = Scope::waterway(r.id);
+    if let Some(after) = history::snapshot(conn, &scope).await? {
+        history::record(conn, &scope, Op::Create, via, &Default::default(), &after).await?;
+    }
+    Ok(Waterway {
+        id: r.id,
+        waterway_type: r.waterway_type,
+        name: r.name,
+        description: r.description,
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+    })
+}
+
+/// Edit a waterway on an open transaction and record what changed. Returns
+/// None when it does not exist.
+pub async fn update_waterway_in(
+    conn: &mut sqlx::PgConnection,
+    waterway_id: WaterwayId,
+    name: Option<&str>,
+    description: Option<&str>,
+    via: &Via<'_>,
+) -> Result<Option<Waterway>, sqlx::Error> {
+    let scope = Scope::waterway(waterway_id);
+    // The row lock keeps the before state true until this transaction ends.
+    sqlx::query("SELECT id FROM waterways WHERE id = $1 FOR UPDATE")
+        .bind(waterway_id)
+        .fetch_optional(&mut *conn)
+        .await?;
+    let Some(before) = history::snapshot(conn, &scope).await? else {
+        return Ok(None);
+    };
+    let r = sqlx::query!(
+        r#"
+        UPDATE waterways
+        SET
+            name = COALESCE($1, name),
+            description = COALESCE($2, description),
+            updated_at = NOW()
+        WHERE id = $3
+        RETURNING id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at
+        "#,
+        name,
+        description,
+        waterway_id
+    )
+    .fetch_one(&mut *conn)
+    .await?;
+    let after = history::snapshot(conn, &scope).await?.unwrap_or_default();
+    history::record(conn, &scope, Op::Edit, via, &before, &after).await?;
+    Ok(Some(Waterway {
+        id: r.id,
+        waterway_type: r.waterway_type,
+        name: r.name,
+        description: r.description,
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+    }))
+}
+
+pub async fn update_waterway(
+    pool: &PgPool,
+    waterway_id: WaterwayId,
+    name: Option<&str>,
+    description: Option<&str>,
+    actor: &str,
+) -> Result<Option<Waterway>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let waterway =
+        update_waterway_in(&mut tx, waterway_id, name, description, &Via::direct(actor)).await?;
+    tx.commit().await?;
+    Ok(waterway)
+}
+
+/// Delete a waterway on an open transaction and record the deletion.
+pub async fn delete_waterway_in(
+    conn: &mut sqlx::PgConnection,
+    waterway_id: WaterwayId,
+    via: &Via<'_>,
+) -> Result<bool, sqlx::Error> {
+    let deleted = sqlx::query("DELETE FROM waterways WHERE id = $1")
+        .bind(waterway_id)
+        .execute(&mut *conn)
+        .await?
+        .rows_affected()
+        > 0;
+    if deleted {
+        let scope = Scope::waterway(waterway_id);
+        let empty = Default::default();
+        history::record(conn, &scope, Op::Delete, via, &empty, &empty).await?;
+    }
+    Ok(deleted)
+}
+
+pub async fn delete_waterway(
+    pool: &PgPool,
+    waterway_id: WaterwayId,
+    actor: &str,
+) -> Result<bool, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let deleted = delete_waterway_in(&mut tx, waterway_id, &Via::direct(actor)).await?;
+    tx.commit().await?;
+    Ok(deleted)
 }
 
 // Row shape of the search query. The matched_* columns are null when no name

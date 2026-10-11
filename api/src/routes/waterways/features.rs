@@ -25,7 +25,7 @@ use crate::{
         water_section::SectionId,
         waterway::WaterwayId,
     },
-    query::{features, gauges, proposals, sections},
+    query::{features, proposals, sections},
     state::AppState,
 };
 
@@ -69,8 +69,13 @@ pub async fn create_feature(
                 return ApiError::internal().into_response();
             }
         };
-        let feature =
-            features::create_feature_bundle(&mut tx, section_id, &body, token.user_id()).await;
+        let feature = features::create_feature_bundle(
+            &mut tx,
+            section_id,
+            &body,
+            &crate::query::history::Via::direct(token.user_id()),
+        )
+        .await;
         return match feature {
             Ok(feature) => match tx.commit().await {
                 Ok(()) => {
@@ -167,89 +172,36 @@ pub async fn update_feature(
             .as_ref()
             .map(|g| serde_json::to_string(g).expect("valid geometry"));
 
-        let feature = match features::update_feature(
+        let edit = features::FeatureEdit {
+            feature_type: body.feature_type,
+            metadata: body.metadata.clone(),
+            location_json,
+            name: body.name.as_deref(),
+            description: body.description.as_deref(),
+            lang_code: &lang_code,
+            water_ranges: &body.water_ranges,
+        };
+        return match features::update_feature(
             &app.pg_pool,
             waterway_id,
             section_id,
             feature_id,
-            body.feature_type,
-            body.metadata.clone(),
-            location_json,
+            edit,
+            token.user_id(),
         )
         .await
         {
-            Ok(Some(feature)) => feature,
-            Ok(None) => return ApiError::not_found("Not found").into_response(),
+            Ok(Some(feature)) => {
+                // A range may have created + activated a gauge; wake the poller.
+                app.gauge_wake.notify_waiters();
+                Json(feature).into_response()
+            }
+            Ok(None) => ApiError::not_found("Not found").into_response(),
             Err(err) => {
                 tracing::error!("Error updating feature {}: {}", feature_id, err);
-                return ApiError::internal().into_response();
+                ApiError::internal().into_response()
             }
         };
-
-        let name = body
-            .name
-            .as_deref()
-            .map(str::trim)
-            .filter(|s| !s.is_empty());
-        if let Some(name) = name {
-            if let Err(err) =
-                features::upsert_name(&app.pg_pool, feature_id, &lang_code, name).await
-            {
-                tracing::error!("Error updating feature {} name: {}", feature_id, err);
-                return ApiError::internal().into_response();
-            }
-        }
-        let description = body
-            .description
-            .as_deref()
-            .map(str::trim)
-            .filter(|s| !s.is_empty());
-        if let Some(description) = description {
-            if let Err(err) =
-                features::upsert_description(&app.pg_pool, feature_id, &lang_code, description)
-                    .await
-            {
-                tracing::error!("Error updating feature {} description: {}", feature_id, err);
-                return ApiError::internal().into_response();
-            }
-        }
-        for range in &body.water_ranges {
-            // Resolve a catalog reference (creating + activating a gauge) or
-            // pass through an existing series_id, then upsert the range.
-            let mut conn = match app.pg_pool.acquire().await {
-                Ok(c) => c,
-                Err(err) => {
-                    tracing::error!("Error acquiring connection: {}", err);
-                    return ApiError::internal().into_response();
-                }
-            };
-            let series_id = match crate::query::features::resolve_range_series(&mut conn, range)
-                .await
-            {
-                Ok(id) => id,
-                Err(err) => {
-                    tracing::error!("Error resolving gauge for feature {}: {}", feature_id, err);
-                    return ApiError::internal().into_response();
-                }
-            };
-            if let Err(err) = gauges::upsert_feature_water_range_partial(
-                &mut *conn,
-                feature_id,
-                series_id,
-                range.range_low,
-                range.range_medium,
-                range.range_high,
-            )
-            .await
-            {
-                tracing::error!("Error updating feature {} ranges: {}", feature_id, err);
-                return ApiError::internal().into_response();
-            }
-        }
-        // A range may have created + activated a gauge; wake the poller.
-        app.gauge_wake.notify_waiters();
-        // Names/descriptions changed after the fetch; clients refetch anyway.
-        return Json(feature).into_response();
     }
 
     let data = serde_json::json!({
@@ -303,8 +255,14 @@ pub async fn delete_feature(
     };
 
     if token.is_server_admin() {
-        return match features::delete_feature(&app.pg_pool, waterway_id, section_id, feature_id)
-            .await
+        return match features::delete_feature(
+            &app.pg_pool,
+            waterway_id,
+            section_id,
+            feature_id,
+            token.user_id(),
+        )
+        .await
         {
             Ok(true) => StatusCode::NO_CONTENT.into_response(),
             Ok(false) => ApiError::not_found("Not found").into_response(),
