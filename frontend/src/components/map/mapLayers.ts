@@ -511,7 +511,11 @@ export function buildCountryBordersGeoJSON(
     type: "FeatureCollection",
     features: (borders ?? []).map((border) => ({
       type: "Feature",
-      properties: { country: border.country },
+      properties: {
+        country: border.country,
+        // Empty where the far side is sea or not imported: no label then.
+        neighbour: border.neighbours.join(" "),
+      },
       geometry: border.geometry as GeoJSON.Geometry,
     })),
   };
