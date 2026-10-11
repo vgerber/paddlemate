@@ -6,6 +6,7 @@ import {
   expectTouchTargets,
   gotoSection,
 } from "../support/fixture";
+import { keepUnread } from "../support/notifications";
 
 // The app shell as the calm design draws it: a white app bar on desktop, a
 // bottom nav with a soft pill on a phone, a side panel on desktop and a
@@ -115,6 +116,7 @@ test.describe("desktop app bar", () => {
   test("the bell opens a floating card with the card radius and e2 shadow", async ({
     page,
   }) => {
+    await keepUnread(page);
     await page.goto("/tools");
     await appBar(page)
       .getByRole("button", { name: /notifications/i })
@@ -122,7 +124,9 @@ test.describe("desktop app bar", () => {
     const card = page.locator(".MuiPopover-paper");
     await expect(card).toBeVisible();
     await expect(card.getByText("Trip changes")).toBeVisible();
-    expect(await computed(card, "border-radius")).toBe("14px");
+    // Six pixels clear of the bar, not overlapping it.
+    await expect.poll(async () => (await card.boundingBox())?.y).toBe(62);
+    expect(await computed(card, "border-radius")).toBe("16px");
     expect(await computed(card, "box-shadow")).toBe(E2);
     const rows = card.getByRole("button");
     const empty = card.getByTestId("empty-state");
