@@ -1,5 +1,6 @@
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -57,33 +58,50 @@ export default function SearchFiltersHeader({
   swipe,
   onClose,
 }: SearchFiltersHeaderProps) {
+  // The design sets the title at panel-title size, larger than the title
+  // PanelHeader draws, so the title row is drawn here and PanelHeader keeps
+  // the tab bar.
   return (
-    <PanelHeader
-      title="Search"
-      actionButton={
-        onClose && (
+    <Box sx={{ flexShrink: 0 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          px: 1.5,
+          minHeight: 56,
+        }}
+      >
+        <Typography variant="h3" component="h1" noWrap sx={{ flex: 1 }}>
+          Search
+        </Typography>
+        {onClose && (
           <IconButton
             onClick={onClose}
-            aria-label="Close search panel"
+            aria-label="Map"
             sx={{
               display: { xs: "flex", md: "none" },
               width: tokens.touch.min,
               height: tokens.touch.min,
+              mr: -0.75,
+              color: tokens.onSurfaceVariant,
             }}
           >
-            <KeyboardArrowDownIcon />
+            <MapOutlinedIcon />
           </IconButton>
-        )
-      }
-      tabs={{
-        value: filters.mode,
-        onChange: filters.setMode,
-        options: MODES,
-        progress: swipe.progress,
-        dragging: swipe.dragging,
-        gesture: swipe.gestureProps,
-      }}
-    />
+        )}
+      </Box>
+      <PanelHeader
+        tabs={{
+          value: filters.mode,
+          onChange: filters.setMode,
+          options: MODES,
+          progress: swipe.progress,
+          dragging: swipe.dragging,
+          gesture: swipe.gestureProps,
+        }}
+      />
+    </Box>
   );
 }
 

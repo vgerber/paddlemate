@@ -14,4 +14,5 @@ export const EMPTY_MAP_SEARCH = {
   lon: undefined,
   radius: undefined,
   region: undefined,
+  water: undefined,
 } as const;

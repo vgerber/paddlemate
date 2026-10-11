@@ -8,6 +8,7 @@ import Slider from "@mui/material/Slider";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
+import { useMapVerb } from "@/components/waterway/useMapVerb";
 import type { AreaCircle } from "@/lib/geo";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { theme } from "@/lib/theme";
@@ -68,6 +69,7 @@ export default function AreaControls({
   onRadiusPreview,
   onShowMap,
 }: AreaControlsProps) {
+  const verb = useMapVerb();
   const [localRadius, setLocalRadius] = useState(areaCircle?.radiusKm ?? 10);
   const debouncedRadius = useDebouncedValue(localRadius, 400);
 
@@ -133,7 +135,7 @@ export default function AreaControls({
         </Tooltip>
       </Box>
       <Typography variant="body2" color="text.secondary" sx={{ px: 0.25 }}>
-        Click on the map to set the search center.
+        {verb} on the map to set the search center.
       </Typography>
     </Box>
   );

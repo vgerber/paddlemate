@@ -1,11 +1,8 @@
-import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
-import { useMemo } from "react";
-import SectionListItem from "@/components/waterway/SectionListItem";
 import type { SectionWithFeatures } from "@/lib/api";
 import { matchedFeatureName } from "@/lib/sectionMatch";
-import ListGroupHeader from "./ListGroupHeader";
+import SearchSectionRow from "./SearchSectionRow";
 
 interface SectionListProps {
   sections: SectionWithFeatures[];
@@ -18,6 +15,8 @@ interface SectionListProps {
   searchName?: string;
 }
 
+/** Sections as one flat list of cards; each names its own river, so no
+ * river headings are needed between them. */
 export default function SectionList({
   sections,
   selectedSectionId,
@@ -27,24 +26,6 @@ export default function SectionList({
   onToggleFavorite,
   searchName,
 }: SectionListProps) {
-  // Group sections by waterway
-  const grouped = useMemo(() => {
-    const result: { waterwayId: number; sections: SectionWithFeatures[] }[] =
-      [];
-    const seen = new Map<number, SectionWithFeatures[]>();
-    for (const s of sections) {
-      const existing = seen.get(s.waterway_id);
-      if (existing) {
-        existing.push(s);
-      } else {
-        const arr = [s];
-        seen.set(s.waterway_id, arr);
-        result.push({ waterwayId: s.waterway_id, sections: arr });
-      }
-    }
-    return result;
-  }, [sections]);
-
   if (sections.length === 0) {
     return (
       <Typography
@@ -59,26 +40,22 @@ export default function SectionList({
 
   return (
     <List dense disablePadding>
-      {grouped.map(({ waterwayId, sections: group }) => (
-        <Box key={waterwayId}>
-          <ListGroupHeader
-            label={waterwayNames?.[waterwayId] ?? `River #${waterwayId}`}
-          />
-          {group.map((section) => (
-            <SectionListItem
-              key={section.id}
-              section={section}
-              waterwayId={section.waterway_id}
-              selected={section.id === selectedSectionId}
-              onClick={(id) => onSectionClick?.(id)}
-              isFavorite={favoritedIds?.has(section.id)}
-              onToggleFavorite={onToggleFavorite}
-              matchedFeature={
-                searchName ? matchedFeatureName(section, searchName) : undefined
-              }
-            />
-          ))}
-        </Box>
+      {sections.map((section) => (
+        <SearchSectionRow
+          key={section.id}
+          section={section}
+          riverName={
+            waterwayNames?.[section.waterway_id] ??
+            `River #${section.waterway_id}`
+          }
+          selected={section.id === selectedSectionId}
+          onClick={(id) => onSectionClick?.(id)}
+          isFavorite={favoritedIds?.has(section.id)}
+          onToggleFavorite={onToggleFavorite}
+          matchedFeature={
+            searchName ? matchedFeatureName(section, searchName) : undefined
+          }
+        />
       ))}
     </List>
   );

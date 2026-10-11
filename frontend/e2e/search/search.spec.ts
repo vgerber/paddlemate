@@ -53,6 +53,26 @@ async function rowLevels(page: Page) {
 }
 
 test.describe("header and tabs", () => {
+  test("@small the title is panel-title size and a phone has the map icon", async ({
+    page,
+  }, info) => {
+    await openSearch(page);
+    const title = seen(page.getByRole("heading", { name: "Search" }));
+    await expect(title).toBeVisible();
+    expect(await computed(title, "font-size")).toBe("20px");
+    expect(await computed(title, "font-weight")).toBe("700");
+    const map = seen(page.getByRole("button", { name: "Map", exact: true }));
+    if (info.project.name === "desktop") {
+      await expect(map).toHaveCount(0);
+      return;
+    }
+    await expect(map).toBeVisible();
+    await expect(map.locator('[data-testid="MapOutlinedIcon"]')).toBeVisible();
+    await expectTouchTargets(map, 44);
+    await map.click();
+    await expect(page).not.toHaveURL(/panel=/);
+  });
+
   test("@small the header names the screen and the tabs are underlined", async ({
     page,
   }) => {
@@ -268,6 +288,83 @@ test.describe("filters sheet", () => {
     expect(await computed(chip(page, "Water now"), "color")).toBe(TEAL);
   });
 
+  test("Water now is in the URL, survives a reload and both panels agree", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Test");
+    await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
+    const all = await tabCount(page, "Sections");
+    await chip(page, "Water now").click();
+    await sheet(page)
+      .getByRole("button", { name: "High", exact: true })
+      .click();
+    await expect(page).toHaveURL(/water=/);
+    await page.keyboard.press("Escape");
+    await expect.poll(() => rowLevels(page)).toEqual(["high"]);
+    await page.reload();
+    await appReady(page);
+    expect(await computed(chip(page, "Water now"), "color")).toBe(TEAL);
+    await expect.poll(() => rowLevels(page)).toEqual(["high"]);
+    const narrowed = await tabCount(page, "Sections");
+    expect(narrowed).toBeLessThan(all);
+    // The sidebar and the phone overlay are both mounted; every copy of the
+    // tab, hidden or not, shows the same count.
+    const labels = await page
+      .locator("button.MuiTab-root", { hasText: /^Sections \(/ })
+      .allTextContents();
+    expect(labels.length).toBeGreaterThan(1);
+    expect(new Set(labels).size).toBe(1);
+  });
+
+  test("sections whose water status fails stay, as unknown", async ({
+    page,
+  }) => {
+    await page.route("**/water-status", (route) =>
+      route.fulfill({ status: 500, json: { error: { code: "x" } } }),
+    );
+    await openSearch(page, "&q=Test");
+    await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
+    const all = await tabCount(page, "Sections");
+    await chip(page, "Water now").click();
+    await sheet(page)
+      .getByRole("button", { name: "High", exact: true })
+      .click();
+    await page.keyboard.press("Escape");
+    await expect(
+      seen(page.getByRole("status")).filter({
+        hasText: /^Water level unknown for \d+ sections\.$/,
+      }),
+    ).toBeVisible();
+    expect(await tabCount(page, "Sections")).toBe(all);
+  });
+
+  test("water status requests run at most six at a time", async ({ page }) => {
+    let active = 0;
+    let peak = 0;
+    await page.route("**/water-status", async (route) => {
+      active++;
+      peak = Math.max(peak, active);
+      await new Promise((r) => setTimeout(r, 150));
+      active--;
+      await route.continue();
+    });
+    await openSearch(page, "&q=Test");
+    await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
+    await chip(page, "Water now").click();
+    await sheet(page)
+      .getByRole("button", { name: "High", exact: true })
+      .click();
+    await expect.poll(() => rowLevels(page)).toEqual(["high"]);
+    expect(peak).toBeGreaterThan(0);
+    expect(peak).toBeLessThanOrEqual(6);
+  });
+
+  test("an unknown water value in the URL is ignored", async ({ page }) => {
+    await openSearch(page, "&q=Test&water=%5B%22bogus%22%5D");
+    await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
+    expect(await computed(chip(page, "Water now"), "color")).not.toBe(TEAL);
+  });
+
   test("Reset clears the filters", async ({ page }) => {
     await openSearch(page, "&q=Test&min_diff=3&country=AT");
     await chip(page, /^Grade III/).click();
@@ -293,13 +390,47 @@ test.describe("results", () => {
   });
 });
 
+test.describe("section rows", () => {
+  test("@small a row is a card: section, river, grade and the level pill", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Lower");
+    const row = seen(
+      page.getByTestId("search-section-row").filter({ hasText: "Lower Test" }),
+    ).first();
+    await expect(row).toBeVisible();
+    // The river sits on the row, so no river heading separates the rows.
+    await expect(row.getByText("Test River", { exact: true })).toBeVisible();
+    await expect(
+      row.locator(".MuiChip-root", { hasText: "III" }),
+    ).toBeVisible();
+    await expect(row.locator("[data-level]")).toHaveCount(1);
+    expect(await computed(row, "border-top-left-radius")).toBe("14px");
+    expect(
+      Number.parseFloat(await computed(row, "height")),
+    ).toBeGreaterThanOrEqual(64);
+    const name = await row
+      .getByText("Lower Test", { exact: true })
+      .boundingBox();
+    const river = await row
+      .getByText("Test River", { exact: true })
+      .boundingBox();
+    const pill = await row.locator("[data-level]").boundingBox();
+    expect(river?.y).toBeGreaterThan(name?.y ?? 0);
+    expect(pill?.x).toBeGreaterThan((river?.x ?? 0) + (river?.width ?? 0) - 1);
+    await expectNoHorizontalOverflow(page);
+  });
+});
+
 test.describe("area mode", () => {
   test("@small the slider and the hint sit under the map card", async ({
     page,
-  }) => {
+  }, info) => {
     await openSearch(page, "&mode=area");
+    // A finger taps, a pointer clicks.
+    const verb = info.project.name === "desktop" ? "Click" : "Tap";
     await expect(
-      seen(page.getByText("Click on the map to set the search center.")),
+      seen(page.getByText(`${verb} on the map to set the search center.`)),
     ).toBeVisible();
     const slider = seen(page.getByRole("slider"));
     await expect(slider).toBeVisible();
