@@ -12,6 +12,7 @@ const FEATURE_CREATE = 9701;
 const FEATURE_UPDATE = 9706;
 const FEATURE_CREATE_DESCRIBED = 9702;
 const DESCRIBED_TEXT = "Sticky";
+const UPDATE_SECTION = 9705;
 
 const card = (page: Page, name: string) =>
   page
@@ -277,8 +278,6 @@ test.describe("proposal detail", () => {
 });
 
 test.describe("proposal diff", () => {
-  const UPDATE_SECTION = 9705;
-
   test("values read in words, one row per field", async ({ page }) => {
     await page.goto(`/proposals/${UPDATE_SECTION}`);
     const rows = page.getByTestId("diff-row");
@@ -445,50 +444,164 @@ test.describe("proposal votes and review bar", () => {
   });
 });
 
-test.describe("desktop pane", () => {
-  test("a selected proposal opens beside the list", async ({
+type MapLike = {
+  isMoving(): boolean;
+  loaded(): boolean;
+  project(lngLat: [number, number]): { x: number; y: number };
+  getPaintProperty(layer: string, name: string): unknown;
+  querySourceFeatures(source: string): unknown[];
+};
+
+const mapOf = (page: Page) =>
+  page.waitForFunction(() => {
+    const map = (window as unknown as { __paddlemateMap?: MapLike })
+      .__paddlemateMap;
+    return !!map && map.loaded() && !map.isMoving();
+  });
+
+const listCard = (page: Page) => page.getByTestId("canvas-card-list");
+const sideCard = (page: Page) => page.getByTestId("canvas-card-proposal");
+
+// WP16e: from md the list and the open proposal float over the shared map.
+test.describe("canvas", () => {
+  test.skip(({ isMobile }) => isMobile, "cards start at md");
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test("the list is a 300px card over the one map", async ({ page }) => {
+    await page.goto("/proposals?status=pending");
+    await expect(card(page, "Mittelschwall")).toBeVisible();
+    expect(Math.round((await listCard(page).boundingBox())?.width ?? 0)).toBe(
+      300,
+    );
+    await expect(sideCard(page)).toHaveCount(0);
+    await expect(page.locator(".maplibregl-map")).toHaveCount(1);
+  });
+
+  test("a selected proposal opens in a 30% side card beside the list", async ({
     page,
-    isMobile,
   }) => {
-    test.skip(!!isMobile, "two panes start at md");
     await page.goto("/proposals?status=pending");
     await card(page, "Mittelschwall").click();
     await expect(page).toHaveURL(/selected=9701/);
-    await expect(page.getByTestId("proposal-detail")).toContainText(
-      "Mittelschwall",
+    const side = sideCard(page);
+    await expect(side).toContainText("Mittelschwall");
+    await expect(side.getByTestId("proposal-detail")).toBeVisible();
+    expect(Math.round((await side.boundingBox())?.width ?? 0)).toBe(432);
+    // The card draws the title; the pane inside has no header of its own and
+    // no map of its own.
+    await expect(side.getByRole("button", { name: "Back" })).toHaveCount(0);
+    await expect(page.locator(".maplibregl-map")).toHaveCount(1);
+    await expect(listCard(page)).not.toHaveAttribute("data-collapsed");
+    // The list keeps its ring on the open row.
+    expect(await computed(card(page, "Mittelschwall"), "box-shadow")).toContain(
+      "14, 116, 144",
     );
-    // The pane keeps the title and drops only the back arrow.
-    const detail = page.getByTestId("proposal-detail");
-    await expect(detail.getByText(/Mittelschwall/).first()).toBeVisible();
-    await expect(detail.getByRole("button", { name: "Back" })).toHaveCount(0);
   });
 
-  test("the open card has a teal ring, the pane is a card without a status chip", async ({
+  test("closing the card clears the selection", async ({ page }) => {
+    await page.goto("/proposals?status=pending&selected=9701");
+    await expect(sideCard(page)).toBeVisible();
+    await sideCard(page).getByRole("button", { name: "Cancel" }).click();
+    await expect(sideCard(page)).toHaveCount(0);
+    await expect(page).not.toHaveURL(/selected=/);
+  });
+
+  test("a deep link opens the proposal with the list beside it", async ({
+    page,
+  }) => {
+    await page.goto(`/proposals/${FEATURE_UPDATE}`);
+    await expect(sideCard(page)).toBeVisible();
+    await expect(sideCard(page).getByTestId("diff-row").first()).toBeVisible();
+    await expect(listCard(page)).toBeVisible();
+    await expect(page.locator(".maplibregl-map")).toHaveCount(1);
+    await expect(page).toHaveURL(new RegExp(`/proposals/${FEATURE_UPDATE}$`));
+  });
+
+  test("the review controls sit at the card's foot", async ({ page }) => {
+    await page.goto(`/proposals/${FEATURE_CREATE}`);
+    const approve = sideCard(page).getByRole("button", { name: "Approve" });
+    await expect(approve).toBeVisible();
+    const [c, b] = await Promise.all([
+      sideCard(page).boundingBox(),
+      approve.boundingBox(),
+    ]);
+    if (!c || !b) throw new Error("no boxes");
+    // 16px of bar padding below the button, however short the proposal.
+    expect(c.y + c.height - (b.y + b.height)).toBeLessThanOrEqual(20);
+  });
+
+  test("a section update draws the old line and the new one in teal", async ({
+    page,
+  }) => {
+    await page.goto(`/proposals/${UPDATE_SECTION}`);
+    await expect(sideCard(page)).toBeVisible();
+    await mapOf(page);
+    const drawn = await page.evaluate(() => {
+      const map = (window as unknown as { __paddlemateMap: MapLike })
+        .__paddlemateMap;
+      return {
+        stored: map.querySourceFeatures("sections").length,
+        proposed: map.querySourceFeatures("section-preview").length,
+        teal: map.getPaintProperty("section-preview-line", "line-color"),
+      };
+    });
+    expect(drawn.stored).toBeGreaterThan(0);
+    expect(drawn.proposed).toBeGreaterThan(0);
+    expect(drawn.teal).toBe("#0e7490");
+  });
+
+  test("the proposed line lies inside the free map area", async ({ page }) => {
+    await page.goto(`/proposals/${UPDATE_SECTION}`);
+    await expect(sideCard(page)).toBeVisible();
+    await expect
+      .poll(
+        async () => {
+          const raw = await page
+            .getByTestId("canvas-host")
+            .getAttribute("data-free");
+          const [x, y, w, h] = (raw ?? "").split(",").map(Number);
+          const pts = await page.evaluate(() => {
+            const map = (window as unknown as { __paddlemateMap?: MapLike })
+              .__paddlemateMap;
+            if (!map || map.isMoving()) return null;
+            return {
+              sw: map.project([11.0, 47.0]),
+              ne: map.project([11.008, 47.012]),
+            };
+          });
+          if (!pts) return "moving";
+          const slack = 2;
+          return pts.sw.x >= x - slack &&
+            pts.ne.x <= x + w + slack &&
+            pts.ne.y >= y - slack &&
+            pts.sw.y <= y + h + slack
+            ? "inside"
+            : JSON.stringify({ x, y, w, h, ...pts });
+        },
+        { timeout: 8000 },
+      )
+      .toBe("inside");
+  });
+
+  test("a proposal that does not exist says so", async ({ page }) => {
+    await page.goto("/proposals/999999");
+    await expect(sideCard(page)).toContainText("Proposal not found.");
+  });
+});
+
+test.describe("phone keeps its pages", () => {
+  test("a proposal is a page with its own map and no canvas card", async ({
     page,
     isMobile,
   }) => {
-    test.skip(!!isMobile, "two panes start at md");
-    await page.goto("/proposals?status=pending");
-    await card(page, "Mittelschwall").click();
-    const c = card(page, "Mittelschwall");
-    expect(await computed(c, "background-color")).toBe("rgb(255, 255, 255)");
-    expect(await computed(c, "box-shadow")).toContain("inset");
-    expect(await computed(c, "box-shadow")).toContain("14, 116, 144");
-    expect(await computed(c, "box-shadow")).toContain("0px 0px 0px 2px");
-    const detail = page.getByTestId("proposal-detail");
-    // The pane is a white card with radius 16 and room around it.
-    const frame = detail.locator("xpath=..");
-    expect(await computed(frame, "border-radius")).toBe("16px");
-    expect(await computed(frame, "background-color")).toBe(
-      "rgb(255, 255, 255)",
-    );
-    const [f, pane] = await Promise.all([
-      frame.boundingBox(),
-      page.getByTestId("proposal-pane").boundingBox(),
-    ]);
-    if (!f || !pane) throw new Error("no boxes");
-    expect(Math.round(f.x - pane.x)).toBe(12);
-    // The tab already says Pending.
-    await expect(detail.getByTestId("proposal-status")).toHaveCount(0);
+    test.skip(!isMobile, "phone only");
+    await page.goto(`/proposals/${FEATURE_CREATE}`);
+    await expect(page.getByTestId("proposal-detail")).toBeVisible();
+    await expect(sideCard(page)).toHaveCount(0);
+    await expect(
+      page.getByTestId("proposal-detail").getByRole("button", {
+        name: "Back",
+      }),
+    ).toBeVisible();
   });
 });
