@@ -335,6 +335,37 @@ test.describe("trip forms", () => {
     await expect(page.getByText(`${old} x`)).toHaveCount(0);
   });
 
+  test("desktop: the form sits in the pane, fields in a 720px column, bar at the foot", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!!isMobile, "two panes start at md");
+    await page.goto("/trips?new=true");
+    const panel = page.getByTestId("trip-panel");
+    await expect(panel).toBeVisible();
+    const name = page.getByLabel("Trip name");
+    await expect(name).toBeVisible();
+    await expect(page.getByTestId("form-section-label")).toHaveCount(3);
+    const [p, f, save] = await Promise.all([
+      panel.boundingBox(),
+      name
+        .locator("xpath=ancestor::div[contains(@class,'MuiFormControl-root')]")
+        .boundingBox(),
+      page.getByRole("button", { name: "Save trip" }).boundingBox(),
+    ]);
+    if (!p || !f || !save) throw new Error("no boxes");
+    expect(f.width).toBeLessThanOrEqual(720);
+    // The field column is centred in the pane.
+    expect(
+      Math.abs(f.x - p.x - (p.x + p.width - (f.x + f.width))),
+    ).toBeLessThan(24);
+    // The round action sits in the bar docked at the pane foot.
+    expect(save.y + save.height).toBeGreaterThan(p.y + p.height - 40);
+    await expectFormFields(page);
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page).not.toHaveURL(/new=true/);
+  });
+
   test("an end before the start blocks saving", async ({ page }) => {
     await page.goto(`/trips/${TRIP}?edit=true`);
     await page.getByLabel("Ends (optional)").fill("2000-01-01");

@@ -101,7 +101,9 @@ export default function TripForm({
           flex: 1,
           minHeight: 0,
           overflowY: "auto",
-          px: 2,
+          // The fields keep the log form's 720px column in a wide pane; the
+          // scrollbar stays at the pane's edge.
+          px: embedded ? "max(16px, calc((100% - 720px) / 2))" : 2,
           py: 2,
           display: "flex",
           flexDirection: "column",
