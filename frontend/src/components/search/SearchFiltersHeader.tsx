@@ -1,6 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
+import SearchIcon from "@mui/icons-material/Search";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -120,7 +121,7 @@ export default function SearchFiltersHeader({
   );
 }
 
-/** One filled field, label inside: the name search or the region search. */
+/** One filled field with a magnifier and the label as placeholder: the name search or the region search. */
 function SearchField({
   value,
   onChange,
@@ -133,12 +134,20 @@ function SearchField({
   return (
     <TextField
       fullWidth
-      label={label}
+      hiddenLabel
+      placeholder={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       slotProps={{
+        htmlInput: { "aria-label": label },
         input: {
-          sx: { pr: 0.5 },
+          sx: { pr: 0.5, "& input": { py: 1.75 } },
+          startAdornment: (
+            <SearchIcon
+              sx={{ mr: 1, color: tokens.onSurfaceVariant }}
+              fontSize="small"
+            />
+          ),
           endAdornment: value ? (
             <IconButton
               aria-label="Clear"
@@ -177,7 +186,15 @@ function FilterChip({
       aria-pressed={plain ? set : undefined}
       color={set ? "primary" : "default"}
       // A toggle in the sheet is the thing being tapped: full touch height.
-      sx={plain ? { height: tokens.touch.min } : undefined}
+      sx={{
+        height: tokens.touch.min,
+        ...(!set &&
+          !plain && {
+            bgcolor: tokens.surface,
+            borderColor: "transparent",
+            boxShadow: tokens.elevation.e1,
+          }),
+      }}
       label={
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
           {label}
