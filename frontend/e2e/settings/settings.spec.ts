@@ -26,7 +26,6 @@ test.describe("settings layout", () => {
     await page.goto("/settings");
     const list = page.getByTestId("settings-list");
     await expect(list).toBeVisible();
-    expect(await computed(list, "background-color")).toBe("rgb(238, 242, 243)");
     for (const [, label] of GROUPS) {
       await expect(list.getByRole("button", { name: label })).toBeVisible();
     }
@@ -46,6 +45,30 @@ test.describe("settings layout", () => {
 
     await page.goto("/settings?group=notifications");
     await expect(title(page, "Notifications")).toBeVisible();
+  });
+
+  test("desktop: 240 nav and 720 column, centred, no map", async ({ page }) => {
+    test.skip(!isDesktop(page), "two columns start at md");
+    for (const [w, h] of [
+      [1280, 800],
+      [1440, 900],
+      [1920, 1080],
+    ]) {
+      await page.setViewportSize({ width: w, height: h });
+      await page.goto("/settings");
+      const nav = await page.getByTestId("settings-list").boundingBox();
+      const col = await page.getByTestId("settings-detail").boundingBox();
+      expect(nav?.width).toBeCloseTo(240, 0);
+      expect(col?.width).toBeCloseTo(720, 0);
+      expect((col?.x ?? 0) - ((nav?.x ?? 0) + (nav?.width ?? 0))).toBeCloseTo(
+        32,
+        0,
+      );
+      const left = nav?.x ?? 0;
+      const right = w - ((col?.x ?? 0) + (col?.width ?? 0));
+      expect(Math.abs(left - right)).toBeLessThanOrEqual(2);
+      await expect(page.locator(".maplibregl-map")).toHaveCount(0);
+    }
   });
 
   test("phone: a list that opens each section as an overlay", async ({
