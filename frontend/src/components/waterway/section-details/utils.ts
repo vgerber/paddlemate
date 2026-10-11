@@ -4,9 +4,19 @@ import { distanceAlongLineM, lineCoords, representativePoint } from "@/lib/geo";
 import { localizedDescription, localizedName } from "@/lib/localization";
 import type { ComputedFeature, TreeNode } from "./types";
 
-/** Formats a metre distance as "X.X KM". */
+/** Formats a metre distance as "0.3 km". */
 export function fmtKm(m: number): string {
-  return `${(m / 1000).toFixed(1)} KM`;
+  return `${(m / 1000).toFixed(1)} km`;
+}
+
+/** Formats a stretch as "0.3-0.5 km". */
+export function fmtKmSpan(startM: number, endM: number): string {
+  return `${(startM / 1000).toFixed(1)}-${(endM / 1000).toFixed(1)} km`;
+}
+
+/** "put in" as "Put in". */
+export function sentence(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /** Difficulty grade from feature metadata, or null. */
@@ -22,7 +32,9 @@ export function featureName(f: Feature): string {
   const diff = featureDifficulty(f);
   const name =
     localizedName(f.names[0]?.name ?? "", f.names) ||
-    (f.feature_type === "whitewater" ? "WW" : humanize(f.feature_type));
+    (f.feature_type === "whitewater"
+      ? "WW"
+      : sentence(humanize(f.feature_type)));
   return diff ? `${name} ${diff}` : name;
 }
 
@@ -59,7 +71,7 @@ export function defaultRangeFeature(
  * entry has no own name, because featureName already falls back to the type. */
 export function featureTypeLabel(f: Feature): string | null {
   const hasName = !!localizedName(f.names[0]?.name ?? "", f.names);
-  return hasName ? humanize(f.feature_type) : null;
+  return hasName ? sentence(humanize(f.feature_type)) : null;
 }
 
 /** Returns the feature's description in the user's language or null. */

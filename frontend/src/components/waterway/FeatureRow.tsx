@@ -4,8 +4,8 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { humanize } from "@/lib/format";
-import { fonts, labelSx } from "@/lib/theme";
-import { fmtKm } from "./section-details/utils";
+import { labelSx } from "@/lib/theme";
+import { fmtKm, fmtKmSpan, sentence } from "./section-details/utils";
 
 /** Position along the section line - the subset of ComputedFeature the row
  * needs, so callers can also pass hand-built extents (e.g. endpoints). */
@@ -96,7 +96,7 @@ export default function FeatureRow({
             {detail}
           </Typography>
         )}
-        <Typography sx={labelSx}>{humanize(featureType)}</Typography>
+        <Typography sx={labelSx}>{sentence(humanize(featureType))}</Typography>
         {description && (
           <Typography variant="caption" color="text.secondary">
             {description}
@@ -125,13 +125,13 @@ export default function FeatureRow({
         {extent && (
           <Typography
             sx={{
-              fontFamily: fonts.mono,
+              fontVariantNumeric: "tabular-nums",
               fontSize: "0.6875rem",
               color: "text.disabled",
             }}
           >
             {extent.isZone
-              ? `${fmtKm(extent.startM)} – ${fmtKm(extent.endM)}`
+              ? fmtKmSpan(extent.startM, extent.endM)
               : fmtKm(extent.distM)}
           </Typography>
         )}

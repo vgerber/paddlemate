@@ -5,6 +5,9 @@ import ProposalCreateSummary from "@/components/proposals/ProposalCreateSummary"
 import ProposalDiffTable from "@/components/proposals/ProposalDiffTable";
 import ProposalReviewControls from "@/components/proposals/ProposalReviewControls";
 import type { Proposal } from "@/lib/api";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 interface ProposalCardProps {
   proposal: Proposal;
@@ -25,9 +28,11 @@ export default function ProposalCard({
     <Box
       sx={{
         p: 2,
-        bgcolor: "background.paper",
-        borderBottom: "1px solid",
-        borderColor: "divider",
+        mx: 1.5,
+        my: 1,
+        bgcolor: tokens.surface,
+        borderRadius: `${tokens.radii.md}px`,
+        boxShadow: tokens.elevation.e1,
         display: "flex",
         flexDirection: "column",
         gap: 0.75,
@@ -50,7 +55,6 @@ export default function ProposalCard({
         <ProposalDiffTable original={original} proposed={proposed} />
       )}
 
-      {/* Review note for non-pending */}
       {proposal.review_note && (
         <Typography variant="caption" color="text.secondary">
           Note: {proposal.review_note}

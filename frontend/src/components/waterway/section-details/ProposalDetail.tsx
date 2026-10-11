@@ -16,8 +16,10 @@ import {
   useVoteProposal,
 } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
-import { fonts, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
+
+import { sentence } from "./utils";
 
 const { tokens } = theme;
 
@@ -61,7 +63,7 @@ function ProposalActions({ proposal }: { proposal: Proposal }) {
       </Tooltip>
       <Typography
         sx={{
-          fontFamily: fonts.mono,
+          fontVariantNumeric: "tabular-nums",
           fontSize: 11,
           color: tokens.outline,
           lineHeight: 1,
@@ -88,7 +90,7 @@ function ProposalActions({ proposal }: { proposal: Proposal }) {
       </Tooltip>
       <Typography
         sx={{
-          fontFamily: fonts.mono,
+          fontVariantNumeric: "tabular-nums",
           fontSize: 11,
           color: tokens.outline,
           lineHeight: 1,
@@ -148,15 +150,12 @@ export function ProposalDetail({ proposal, coords, featureType }: Props) {
     <Stack direction="column" sx={{ mt: "4px", gap: "2px" }}>
       <Typography
         sx={{
-          fontFamily: fonts.label,
-          fontSize: 10,
+          fontSize: "0.75rem",
           fontWeight: 600,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
           color: tokens.outline,
         }}
       >
-        {humanize(featureType)}
+        {sentence(humanize(featureType))}
       </Typography>
       <CoordsInfo
         coords={coords}
