@@ -5,8 +5,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import EmptyState from "@/components/states/EmptyState";
-import LoadingBox from "@/components/states/LoadingBox";
+import QueryStates from "@/components/states/QueryStates";
 import FormSection from "@/components/waterway/FormSection";
 import type { ApiToken, ApiTokenCreated } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
@@ -27,7 +26,8 @@ export default function TokensSection() {
   // Token queued for revocation; drives the confirm dialog.
   const [revokeTarget, setRevokeTarget] = useState<ApiToken | null>(null);
 
-  const { data: list, isLoading } = useApiTokens();
+  const tokenList = useApiTokens();
+  const list = tokenList.data;
   const create = useCreateApiToken();
   const revoke = useRevokeApiToken();
 
@@ -91,19 +91,22 @@ export default function TokensSection() {
         <Typography sx={{ fontWeight: 600, fontSize: "0.9375rem", mb: 0.5 }}>
           Your tokens
         </Typography>
-        {isLoading ? (
-          <LoadingBox size={28} pt={2} />
-        ) : list?.length === 0 ? (
-          <EmptyState title="No tokens yet." py={4} />
-        ) : (
-          list?.map((token) => (
+        <QueryStates
+          query={tokenList}
+          count={list?.length ?? 0}
+          empty={{ title: "No tokens yet." }}
+          errorFallback="Could not load your tokens."
+          loadingSize={28}
+          py={4}
+        >
+          {list?.map((token) => (
             <TokenRow
               key={token.id}
               token={token}
               onRevoke={() => setRevokeTarget(token)}
             />
-          ))
-        )}
+          ))}
+        </QueryStates>
       </Box>
 
       <ConfirmDialog

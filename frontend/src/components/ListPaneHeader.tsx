@@ -12,7 +12,8 @@ export function countLabel(count: number): string {
 }
 
 interface ListPaneHeaderProps {
-  /** How much is in the list. Omitted while there is no honest number. */
+  /** How much is in the list. Omitted while there is no honest number, and
+   * at zero, where the empty state speaks. */
   count?: number;
   /** Suppresses the count rather than showing a stale one mid-fetch. */
   loading?: boolean;
@@ -51,7 +52,7 @@ export default function ListPaneHeader({
         ...(Array.isArray(sx) ? sx : [sx]),
       ]}
     >
-      {count != null && !loading && (
+      {count != null && count > 0 && !loading && (
         <Typography
           variant="body2"
           sx={{
