@@ -86,6 +86,7 @@ describe("buildProposalScene", () => {
       [11, 47],
       [11.2, 47.2],
     ]);
+    expect(scene.drawing?.sectionStates).toEqual({ ghost: [1] });
     expect(scene.subject?.bounds).toEqual([
       [10, 46],
       [11.2, 47.2],

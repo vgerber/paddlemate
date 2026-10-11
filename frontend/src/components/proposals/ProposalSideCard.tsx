@@ -1,6 +1,5 @@
 import Box from "@mui/material/Box";
 import FloatingCard from "@/components/canvas/FloatingCard";
-import PanelHeader from "@/components/PanelHeader";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { Proposal, ProposalStatus } from "@/lib/api";
@@ -41,18 +40,13 @@ export default function ProposalSideCard({
       side="right"
       kind="side"
       screen="proposals"
-      header={
-        <PanelHeader
-          title={proposal ? proposalTitle(proposal) : "Proposal"}
-          subtitle={kind}
-          onBack={onClose}
-          backIcon="close"
-          actionButton={
-            proposal && proposal.status !== listStatus ? (
-              <StatusChip status={proposal.status} />
-            ) : undefined
-          }
-        />
+      title={proposal ? proposalTitle(proposal) : "Proposal"}
+      subtitle={kind}
+      onClose={onClose}
+      actions={
+        proposal && proposal.status !== listStatus ? (
+          <StatusChip status={proposal.status} />
+        ) : undefined
       }
     >
       <Box sx={{ height: "100%" }}>

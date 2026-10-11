@@ -333,24 +333,36 @@ FAB on a phone and a `DockedAction` at the foot of the pane on a desktop,
 never a button above the list; a row's actions are one `RowMenu`, not a
 line of icons.
 
-**Desktop is not a wide phone.** A list-plus-detail screen splits into two
-panes rather than centring one 720px column in an empty window: a grid of
-`320px minmax(0, 1fr)` (`420px` from `lg`) at `calc(100vh - 48px)`, the list
-on `surfaceLow` with a hairline right border, the detail capped at 880px, and
-the open item held in a search param so it stays linkable. `ProposalsView`,
-`routes/trips/index.tsx` and `routes/logs.tsx` are the worked examples; the
-same detail component renders as the mobile overlay, so both sizes show the
-same thing in the same order - except its back arrow, which the pane drops
-because the list beside it carries the way back; the pane keeps the item's
-title. Where the detail already owns an address (`/logs/$descentId`), the
-child route renders into the pane instead and the search param is not
-needed - the point is a linkable open item, not the mechanism.
+**Desktop is not a wide phone.** From `md` (the theme moves it down to **768**
+from MUI's 900; it is the app's one phone-versus-desktop switch) the map is the
+canvas: on the geography routes (`/`, `/logs*`, `/trips*`, `/proposals*`) one
+map fills the window under the app bar and the screen floats over it as cards.
+The rules, built in `components/canvas/` (plan and reasons:
+[doc/plans/wide-canvas.md](doc/plans/wide-canvas.md); user-facing description in
+[doc/design.md](doc/design.md)):
 
-The split starts at `md`, which the theme moves down to **768** from MUI's
-900: `md` is the app's one phone-versus-desktop switch, so it belongs where
-the two panes first fit rather than where a stock breakpoint happens to sit.
-Anything keyed on `md` moves with it, which is the point - one switch, not a
-per-screen judgement.
+- **One host.** `CanvasHost` in `__root.tsx` draws the only map. A route does
+  not render a map; it describes one with `useCanvasScene(scene)`, a memoised
+  `MapScene` (the `WaterwayMap` props, the camera without padding, and a
+  `subject` to frame). Call it unconditionally; it is harmless on a phone,
+  which keeps its own screens. A route that has its own picker map (the log
+  form) leaves `canvasRoutes.ts` so only one map draws.
+- **Cards.** A route renders `FloatingCard`s inside `CanvasLayout`. Kinds and
+  widths live in `tokens.canvas.cards`: `detail` 38% (420-720, resizable),
+  `list` 20% (300-380), `side` 25% (400-600). The cards may cover 55% of the
+  window, or 70% when a list card is among them; beyond that the lowest
+  priority card folds to its header. The map page alone uses a `detail` card.
+- **Header.** A card's header is supplied by the screen: `title`, `subtitle`,
+  `actions`, `onClose`, or `selfHeaded` when the content brings its own panel
+  header. A screen never shows a kind label above its own header.
+- **Dock.** `ChartDock` places the chart along the foot of the free area from
+  1280 wide, and as the first block of the detail card below that.
+- **Free area.** The map area no card or dock covers (`useFreeArea`) is the
+  fit padding for the subject. Map controls (zoom, compass, layer toggle,
+  attribution) are inset into it through `chrome.inset`; never position a
+  control by hand over a card.
+- **Lines.** `drawing.sectionStates` marks sections `highlighted` (teal) or
+  `ghost` (dim, not clickable); do not fake either with a joined preview line.
 
 `WaterwayMap` takes its optional behaviour as three grouped objects rather
 than loose props: `picking` (put-in/take-out and section selection),

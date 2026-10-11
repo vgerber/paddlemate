@@ -121,6 +121,9 @@ const tokens = {
   mapSectionLine: "#2b88c8",
   mapSectionLineCasing: "#ffffff",
   mapSelectedLine: "#0e7490",
+  // A section drawn as the subject of a screen, and one drawn only as context.
+  mapSectionHighlight: "#0e7490",
+  mapSectionGhost: "#c4d3dc",
   mapAreaCircle: "#0e7490",
   mapLabelText: "#1f2b31",
   mapLabelHalo: "#ffffff",
@@ -198,7 +201,10 @@ const tokens = {
   canvas: {
     margin: 16,
     freeMargin: 32,
+    // One detail card (the map page) may cover 55%; with a list card beside
+    // the open item the cards may cover 70%.
     coverMax: 0.55,
+    coverMaxList: 0.7,
     sideMaxFrac: 0.45,
     freeMin: { w: 240, h: 200 },
     headerHeight: 56,
@@ -214,7 +220,7 @@ const tokens = {
         resize: { min: 360, maxFrac: 0.45 },
       },
       list: { frac: 0.2, min: 300, max: 380, priority: 1, resize: null },
-      side: { frac: 0.3, min: 420, max: 600, priority: 2, resize: null },
+      side: { frac: 0.25, min: 400, max: 600, priority: 2, resize: null },
     },
   },
 } as const;

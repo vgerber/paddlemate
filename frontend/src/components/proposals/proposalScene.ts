@@ -59,6 +59,8 @@ interface ProposalMap {
   /** The section line the proposal draws. */
   sectionLine: Position[] | undefined;
   proposedFeatures: Feature[];
+  /** The stored section a section proposal changes, if loaded. */
+  storedSectionId?: number;
 }
 
 function proposalMap(
@@ -111,6 +113,7 @@ function proposalMap(
         ? (lineCoords(location) ?? undefined)
         : undefined,
     proposedFeatures: deleting ? [] : bundled.map(toPseudoFeature),
+    storedSectionId: stored?.id,
   };
 }
 
@@ -138,7 +141,14 @@ export function buildProposalScene(
     features: map.features,
     proposedFeatures:
       map.proposedFeatures.length > 0 ? map.proposedFeatures : undefined,
-    drawing: { sectionPreviewCoords: map.sectionLine },
+    drawing: {
+      sectionPreviewCoords: map.sectionLine,
+      // The stored line dims behind the proposed one it would replace.
+      sectionStates:
+        map.sectionLine && map.storedSectionId != null
+          ? { ghost: [map.storedSectionId] }
+          : undefined,
+    },
     subject: bounds
       ? {
           // The vertex count changes when the stored side finishes loading,

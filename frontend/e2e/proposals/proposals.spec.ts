@@ -477,7 +477,7 @@ test.describe("canvas", () => {
     await expect(page.locator(".maplibregl-map")).toHaveCount(1);
   });
 
-  test("a selected proposal opens in a 30% side card beside the list", async ({
+  test("a selected proposal opens in a 25% side card beside the list", async ({
     page,
   }) => {
     await page.goto("/proposals?status=pending");
@@ -486,7 +486,7 @@ test.describe("canvas", () => {
     const side = sideCard(page);
     await expect(side).toContainText("Mittelschwall");
     await expect(side.getByTestId("proposal-detail")).toBeVisible();
-    expect(Math.round((await side.boundingBox())?.width ?? 0)).toBe(432);
+    expect(Math.round((await side.boundingBox())?.width ?? 0)).toBe(400);
     // The card draws the title; the pane inside has no header of its own and
     // no map of its own.
     await expect(side.getByRole("button", { name: "Back" })).toHaveCount(0);
@@ -501,7 +501,7 @@ test.describe("canvas", () => {
   test("closing the card clears the selection", async ({ page }) => {
     await page.goto("/proposals?status=pending&selected=9701");
     await expect(sideCard(page)).toBeVisible();
-    await sideCard(page).getByRole("button", { name: "Cancel" }).click();
+    await sideCard(page).getByRole("button", { name: "Close" }).click();
     await expect(sideCard(page)).toHaveCount(0);
     await expect(page).not.toHaveURL(/selected=/);
   });

@@ -59,9 +59,11 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   progress opens as a peek so the map keeps its room.
 - **Pinned** elements (the Plan's week strip, a search field) stay under the
   tab bar while the list scrolls beneath them.
-- **Desktop splits** list and detail into two panes (list on the ground, detail
-  beside it, the open item in the URL) from 768px, which is the theme's `md`.
-  Logs, Trips, Proposals and Settings work this way.
+- **Desktop is a map with cards.** From 768px (the theme's `md`) the map fills
+  the window and the screen floats over it as cards: a list card, the open item
+  beside it, the open item in the URL. Logs, Trips, Proposals and the map page
+  work this way; Settings is a centred page without a map. See "Map as the
+  canvas" below.
 - Inline alerts are quiet notes: a tinted ground, severity carried by the icon.
   The filled variant is reserved for the global error snackbar.
 - Do not repeat what a filter already says; secondary counts drop out when zero.
@@ -167,8 +169,36 @@ border, and in the picker.
 Sentence case, plain words, no em dashes (a plain hyphen). Reuse the app's own
 strings; a new word is agreed first.
 
-## Planned
+## Map as the canvas
 
-Wide screens as "map as the canvas": the list and detail float over a map that
-fills the window. Not built; the layout above is what ships. The plan is in
-[plans/wide-canvas.md](plans/wide-canvas.md).
+From 768px wide, on the map page, Logs, Trips and Proposals, one map fills the
+window under the app bar and the content floats over it in cards. The map
+always shows what you are looking at: the open log, the trip's bases, the
+proposed change. Below 768px nothing changes; the phone keeps its own screens.
+The reasons and the work plan are in [plans/wide-canvas.md](plans/wide-canvas.md).
+
+| Card | Width | Used for |
+|---|---|---|
+| Detail | 38% of the window, 420 to 720, drag the grip to resize (remembered) | the map page's search, river and section panel |
+| List | 20%, 300 to 380 | the list of logs, trips or proposals |
+| Side | 25%, 400 to 600 | the open log, trip, proposal, and a trip's members |
+
+- **Budget.** Open cards cover at most 55% of the window, or 70% when a list
+  card is among them (so a list and an open item both fit at 1280, and a
+  trip's members card fits at 1600 and up). Past that the lowest priority card
+  folds to its header; tapping the header opens it and folds another.
+- **Header.** Each card has one header, supplied by its screen: a title, a
+  grey subtitle, actions at the right and a close button. Where the panel in
+  the card has its own header (the search panel, a log), that is the card's
+  header and the card draws none.
+- **Chart dock.** From 1280 wide the chart sits along the foot of the free map
+  area between the cards, 180 to 260 tall and as long as the room allows. Below
+  1280 it is the first block of the detail card.
+- **Free area.** The part of the map no card or dock covers. The map frames
+  the subject inside it, and the zoom keys, compass, layer toggle and
+  attribution sit at its corners, never over a card.
+- **Sections on the map.** The subject of a screen is teal (the open log's
+  sections, a proposed line); context is a dim line you cannot click (other
+  logged sections, the stored line a proposal replaces).
+- **Forms with their own map** (logging a descent) leave the canvas and use the
+  whole page, so only one map is ever drawn.

@@ -14,8 +14,11 @@ const CanvasHostView = lazy(() => import("./CanvasHostView"));
 export default function CanvasHost() {
   const wide = useMediaQuery(theme.breakpoints.up("md"));
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const search = useRouterState({
+    select: (s) => s.location.search as Record<string, unknown>,
+  });
   const scene = useScene();
-  if (!wide || !isGeographyRoute(pathname) || !scene) return null;
+  if (!wide || !isGeographyRoute(pathname, search) || !scene) return null;
   return (
     <Suspense fallback={null}>
       <CanvasHostView scene={scene} />

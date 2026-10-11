@@ -5,6 +5,7 @@ import {
   type DockRect,
   dockMode,
   dockRect,
+  expandedLimit,
   type FreeArea,
   freeArea,
   layoutCards,
@@ -14,7 +15,7 @@ import { type CardKind, cardWidth, clampCardWidth } from "@/lib/cardWidth";
 import { theme } from "@/lib/theme";
 import type { MapScene } from "./scene";
 
-const { canvas, chrome } = theme.tokens;
+const { chrome } = theme.tokens;
 
 /** A tiny external store: a value, listeners, and a hook. Components read
  * slices, so a change to one slice re-renders only its readers. */
@@ -131,7 +132,7 @@ function derive(s: LayoutState): LayoutSnapshot {
     viewport: s.viewport,
     placements,
     used,
-    limit: canvas.coverMax * w,
+    limit: expandedLimit(w, inputs),
     free: freeArea(list, w, hostHeight, dock?.height ?? null),
     dock,
   };

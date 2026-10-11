@@ -72,7 +72,7 @@ export default function PanelHeader<T extends string>({
                 height: tokens.touch.min,
                 ml: -0.75,
               }}
-              aria-label={backIcon === "close" ? "Cancel" : "Back"}
+              aria-label={backIcon === "close" ? "Close" : "Back"}
             >
               {backIcon === "close" ? (
                 <CloseIcon sx={backIconSx} />

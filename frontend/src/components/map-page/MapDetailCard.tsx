@@ -1,7 +1,6 @@
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import FloatingCard from "@/components/canvas/FloatingCard";
-import { labelSx, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import SidebarContent from "./SidebarContent";
 import type { MapPageState } from "./useMapPageState";
 
@@ -24,18 +23,9 @@ export default function MapDetailCard({ state }: { state: MapPageState }) {
       side="left"
       kind="detail"
       screen="map"
-      header={
-        <Box
-          sx={{ px: 2, minHeight: 56, display: "flex", alignItems: "center" }}
-        >
-          <Typography
-            component="h2"
-            sx={{ ...labelSx, color: tokens.onSurfaceVariant }}
-          >
-            {cardTitle(state)}
-          </Typography>
-        </Box>
-      }
+      // Every panel in the card has its own header, which is the card's.
+      title={cardTitle(state)}
+      selfHeaded
     >
       <Box
         data-testid="side-panel"

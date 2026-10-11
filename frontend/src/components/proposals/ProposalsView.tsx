@@ -7,7 +7,6 @@ import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
@@ -29,7 +28,7 @@ import type {
   ProposalStatus,
 } from "@/lib/api";
 import { useProposals } from "@/lib/hooks/useProposals";
-import { labelSx, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import { STATUS_LABEL } from "./status";
 
 const { tokens } = theme;
@@ -265,18 +264,8 @@ export default function ProposalsView({
         kind="list"
         screen="proposals"
         fullHeight={false}
-        header={
-          <Box
-            sx={{ px: 2, minHeight: 56, display: "flex", alignItems: "center" }}
-          >
-            <Typography
-              component="h2"
-              sx={{ ...labelSx, color: tokens.onSurfaceVariant }}
-            >
-              Proposals
-            </Typography>
-          </Box>
-        }
+        title="Proposals"
+        selfHeaded
       >
         <Box data-testid="proposal-list" sx={{ bgcolor: tokens.surfaceLow }}>
           {list}

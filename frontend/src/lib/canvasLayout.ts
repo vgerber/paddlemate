@@ -51,8 +51,15 @@ export interface DockRect {
 const clamp = (n: number, lo: number, hi: number) =>
   Math.min(Math.max(n, lo), hi);
 
-export const expandedLimit = (windowWidth: number) =>
-  canvas.coverMax * windowWidth;
+/** Share of the window the open cards may cover: more when a list card sits
+ * beside the open item, since both are needed to read the screen. */
+export const coverFrac = (cards: { kind: CardKind }[]) =>
+  cards.some((c) => c.kind === "list") ? canvas.coverMaxList : canvas.coverMax;
+
+export const expandedLimit = (
+  windowWidth: number,
+  cards: { kind: CardKind }[] = [],
+) => coverFrac(cards) * windowWidth;
 
 /** Ids to fold to their header so the expanded cards cover at most the
  * budget. Lowest priority folds first, a detail card after the others; the
@@ -64,7 +71,7 @@ export function collapsedIds(
   pinnedId: string | null = null,
 ): Set<string> {
   const folded = new Set<string>();
-  const limit = expandedLimit(windowWidth);
+  const limit = expandedLimit(windowWidth, cards);
   const used = () =>
     cards.reduce((sum, c) => (folded.has(c.id) ? sum : sum + c.width), 0);
   const rank = (c: CardInput) => [
@@ -82,7 +89,8 @@ export function collapsedIds(
     return 0;
   });
   for (const card of order) {
-    if (used() <= limit) break;
+    // Half a pixel of slack: 70% of 1600 must not fail on rounding.
+    if (used() <= limit + 0.5) break;
     if (cards.length - folded.size <= 1) break;
     folded.add(card.id);
   }
@@ -151,6 +159,18 @@ export function dockRect(
     left,
     width: Math.max(0, right - left),
     height: dockHeight(windowHeight),
+  };
+}
+
+/** Where map controls sit: the free area's edges, less the fit margin, so a
+ * control is a small step inside the free area and never under a card. */
+export function controlInset(padding: Padding): Padding {
+  const trim = canvas.freeMargin - canvas.margin;
+  return {
+    top: Math.max(0, padding.top - trim),
+    right: Math.max(0, padding.right - trim),
+    bottom: Math.max(0, padding.bottom - trim),
+    left: Math.max(0, padding.left - trim),
   };
 }
 

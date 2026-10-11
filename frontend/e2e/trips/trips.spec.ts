@@ -717,9 +717,9 @@ test.describe("trips on the canvas", () => {
     const list = await page.getByTestId("canvas-card-list").boundingBox();
     const trip = await page.getByTestId("canvas-card-trip").boundingBox();
     if (!list || !trip) throw new Error("no cards");
-    // List 20% (288 -> clamped to 300), trip card 30% (432).
+    // List 20% (288 -> clamped to 300), trip card 25% (360 -> clamped to 400).
     expect(Math.abs(list.width - 300)).toBeLessThanOrEqual(1);
-    expect(Math.abs(trip.width - 432)).toBeLessThanOrEqual(1);
+    expect(Math.abs(trip.width - 400)).toBeLessThanOrEqual(1);
     await expect(page.getByTestId("trip-card").first()).toBeVisible();
   });
 
@@ -775,15 +775,12 @@ test.describe("trips on the canvas", () => {
     await expect(
       page.getByRole("tab", { name: "Members", exact: true }),
     ).toHaveCount(0);
-    // The cards cannot all stay open: the members card folds first.
-    await expect(page.getByTestId("canvas-card-members")).toHaveAttribute(
-      "data-collapsed",
-      "true",
-    );
-    await page
-      .getByTestId("canvas-card-members")
-      .getByRole("button", { expanded: false })
-      .click();
+    // List, trip and members fit the 70% budget at 1600, so none folds.
+    for (const id of ["list", "trip", "members"]) {
+      await expect(page.getByTestId(`canvas-card-${id}`)).not.toHaveAttribute(
+        "data-collapsed",
+      );
+    }
     await expect(page.getByTestId("trip-members-card")).toBeVisible();
   });
 

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useFreeArea } from "@/components/canvas/CanvasContext";
 import type { MapScene } from "@/components/canvas/scene";
 import type { NotePin, PointPin } from "@/components/map/Map";
 import {
@@ -16,7 +15,6 @@ import type { MapPageState } from "./useMapPageState";
 
 /** Space the map controls keep above the chart dock (the dock's own share of
  * the free area's bottom padding, less the plain margin). */
-const PLAIN_PADDING = 32;
 
 function shallowEqual(a: MapSceneInput, b: MapSceneInput): boolean {
   const keys = Object.keys(a) as (keyof MapSceneInput)[];
@@ -223,12 +221,6 @@ export function useMapScene(state: MapPageState) {
     [showProposedFeatures, featureProposals],
   );
 
-  // On a canvas screen the chart dock sits over the map's bottom edge.
-  const { padding } = useFreeArea();
-  const controlsLift = isMobile
-    ? 0
-    : Math.max(0, padding.bottom - PLAIN_PADDING);
-
   const input: MapSceneInput = {
     ...pickSceneState(state),
     visibleAreaCircle,
@@ -239,7 +231,6 @@ export function useMapScene(state: MapPageState) {
     draftPin,
     onNoteSelect,
     onOpenThread: isMobile ? openNoteInThread : undefined,
-    controlsLift,
   };
 
   const cache = useRef<{ input: MapSceneInput; scene: MapScene } | null>(null);

@@ -2,9 +2,12 @@ import { describe, expect, test } from "bun:test";
 import {
   type CardInput,
   collapsedIds,
+  controlInset,
+  coverFrac,
   dockHeight,
   dockMode,
   dockRect,
+  expandedLimit,
   freeArea,
   layoutCards,
 } from "./canvasLayout";
@@ -23,12 +26,35 @@ const list = (width = 300): CardInput => ({
   priority: 1,
   width,
 });
-const side = (width = 420): CardInput => ({
+const side = (width = 400): CardInput => ({
   id: "side",
   side: "right",
   kind: "side",
   priority: 2,
   width,
+});
+
+describe("cover budget", () => {
+  test("one detail card may cover 55%, a list screen 70%", () => {
+    expect(coverFrac([detail(486)])).toBe(0.55);
+    expect(coverFrac([list(), side()])).toBe(0.7);
+    expect(expandedLimit(1000, [detail(400)])).toBe(550);
+    expect(expandedLimit(1000, [list(), side()])).toBe(700);
+  });
+
+  test("list and side fit at 1280 without folding", () => {
+    expect(collapsedIds([list(), side()], 1280).size).toBe(0);
+  });
+
+  test("list, trip and members fit at exactly 1600", () => {
+    const members = { ...side(), id: "members", priority: 0 };
+    const trip = { ...side(400), id: "trip", side: "left" as const };
+    expect(collapsedIds([list(320), trip, members], 1600).size).toBe(0);
+  });
+
+  test("the map page's detail card plus a side card still folds at 55%", () => {
+    expect([...collapsedIds([detail(486), side()], 1280)]).toEqual(["side"]);
+  });
 });
 
 describe("collapsedIds", () => {
@@ -39,7 +65,7 @@ describe("collapsedIds", () => {
 
   test("folds the lowest priority card first", () => {
     expect([...collapsedIds([list(), detail(420)], 1024)]).toEqual(["list"]);
-    expect([...collapsedIds([detail(486), side(420)], 1100)]).toEqual(["side"]);
+    expect([...collapsedIds([detail(486), side(400)], 1100)]).toEqual(["side"]);
   });
 
   test("a pinned card stays open and the detail card folds instead", () => {
@@ -58,7 +84,7 @@ describe("layoutCards", () => {
     const [a, b, c] = layoutCards([list(), detail(486), side()], 2400);
     expect(a.x).toBe(16);
     expect(b.x).toBe(16 + 300 + 16);
-    expect(c.x).toBe(2400 - 16 - 420);
+    expect(c.x).toBe(2400 - 16 - 400);
   });
 
   test("a folded card goes after the open ones", () => {
@@ -100,7 +126,7 @@ describe("freeArea", () => {
   test("falls back to the whole host when the free area is tiny", () => {
     const placed = [
       { ...detail(450), x: 16, collapsed: false },
-      { ...side(420), x: 564, collapsed: false },
+      { ...side(400), x: 564, collapsed: false },
     ];
     const free = freeArea(placed, 1000, 700, null);
     expect(free.fallback).toBe(true);
@@ -132,6 +158,19 @@ describe("dock", () => {
   test("stops at a right card", () => {
     const placed = layoutCards([detail(486), side()], 1920);
     const dock = dockRect(placed, 1920, 1080);
-    expect(dock.left + dock.width).toBe(1920 - 16 - 420 - 16);
+    expect(dock.left + dock.width).toBe(1920 - 16 - 400 - 16);
+  });
+});
+
+describe("controlInset", () => {
+  test("sits 16px inside a card and above the dock", () => {
+    const placed = layoutCards([detail(486)], 1280);
+    const free = freeArea(placed, 1280, 744, 180);
+    expect(controlInset(free.padding)).toEqual({
+      top: 16,
+      left: 502 + 16,
+      right: 16,
+      bottom: 16 + 180 + 16,
+    });
   });
 });

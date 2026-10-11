@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import { useEffect, useMemo } from "react";
 import WaterwayMap from "@/components/map/Map";
+import { controlInset } from "@/lib/canvasLayout";
 import { theme } from "@/lib/theme";
 import { useFreeArea } from "./CanvasContext";
 import { layout, overlay } from "./canvasStore";
@@ -17,7 +18,11 @@ export default function CanvasHostView({ scene }: { scene: MapScene }) {
   useEffect(() => layout.setViewport(size), [size]);
   const { padding, rect } = useFreeArea();
 
-  const { camera, subject, ...mapProps } = scene;
+  const { camera, subject, chrome, ...mapProps } = scene;
+  const mapChrome = useMemo(
+    () => ({ ...chrome, inset: controlInset(padding) }),
+    [chrome, padding],
+  );
   const mapCamera = useMemo(
     () => ({ ...camera, padding, subject }),
     [camera, padding, subject],
@@ -37,7 +42,7 @@ export default function CanvasHostView({ scene }: { scene: MapScene }) {
         zIndex: 0,
       }}
     >
-      <WaterwayMap {...mapProps} camera={mapCamera} />
+      <WaterwayMap {...mapProps} camera={mapCamera} chrome={mapChrome} />
       <Box
         ref={overlay.set}
         sx={{ position: "absolute", inset: 0, pointerEvents: "none" }}

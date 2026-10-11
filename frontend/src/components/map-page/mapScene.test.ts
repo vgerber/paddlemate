@@ -80,7 +80,6 @@ function input(over: Partial<MapSceneInput> = {}): MapSceneInput {
     draftPin: [],
     onNoteSelect: noop,
     onOpenThread: undefined,
-    controlsLift: 0,
     ...over,
   };
 }
@@ -189,14 +188,14 @@ describe("buildMapScene", () => {
     expect(scene.regions?.onSelect).toBeUndefined();
   });
 
-  test("a phone lifts the controls above its strip, a wide screen above the dock", () => {
+  test("a phone lifts the controls above its strip, a wide screen leaves them to the canvas", () => {
     const phone = buildMapScene(
       input({ isMobile: true, isMobileMapView: true }),
     );
     expect(phone.chrome?.controlsBottomOffset).toBe(60);
     expect(phone.chrome?.attributionPosition).toBe("top-left");
-    const wide = buildMapScene(input({ controlsLift: 244 }));
-    expect(wide.chrome?.controlsBottomOffset).toBe(244);
+    const wide = buildMapScene(input());
+    expect(wide.chrome?.controlsBottomOffset).toBe(0);
     expect(wide.chrome?.attributionPosition).toBe("bottom-right");
   });
 

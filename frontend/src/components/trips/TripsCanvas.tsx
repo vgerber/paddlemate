@@ -1,7 +1,4 @@
-import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import {
   useCanvasLayout,
@@ -16,7 +13,7 @@ import TripMembersCard from "@/components/trip-page/TripMembersCard";
 import { useTripScene } from "@/components/trip-page/useTripScene";
 import type { Trip } from "@/lib/api";
 import { dateRange } from "@/lib/format";
-import { labelSx, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import TripForm from "./TripForm";
 
 const { tokens } = theme;
@@ -37,54 +34,6 @@ interface Props {
   /** Leave the open trip or the new-trip form. */
   onClose: () => void;
   onSaved: (id: number) => void;
-}
-
-function CardTitle({
-  title,
-  subtitle,
-  onClose,
-}: {
-  title: string;
-  subtitle?: string;
-  onClose: () => void;
-}) {
-  return (
-    <Box
-      sx={{
-        pl: 2,
-        pr: 0.5,
-        minHeight: 56,
-        display: "flex",
-        alignItems: "center",
-        gap: 1,
-      }}
-    >
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography
-          component="h2"
-          noWrap
-          sx={{ fontWeight: 600, fontSize: "1rem", lineHeight: 1.3 }}
-        >
-          {title}
-        </Typography>
-        {subtitle && (
-          <Typography
-            noWrap
-            sx={{ ...labelSx, color: tokens.onSurfaceVariant }}
-          >
-            {subtitle}
-          </Typography>
-        )}
-      </Box>
-      <IconButton
-        aria-label="Close"
-        onClick={onClose}
-        sx={{ width: tokens.touch.min, height: tokens.touch.min }}
-      >
-        <CloseIcon />
-      </IconButton>
-    </Box>
-  );
 }
 
 /** The trips screen on the canvas: the list at the left, the open trip beside
@@ -115,11 +64,8 @@ export default function TripsCanvas({
         side="left"
         kind="list"
         screen="trips"
-        header={
-          <Box sx={{ minHeight: 56, display: "flex", alignItems: "center" }}>
-            <ListPaneHeader count={count} loading={loading} />
-          </Box>
-        }
+        title="Trips"
+        selfHeaded
       >
         <Box
           sx={{
@@ -129,7 +75,10 @@ export default function TripsCanvas({
             bgcolor: tokens.surfaceLow,
           }}
         >
-          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
+          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+            <ListPaneHeader count={count} loading={loading} />
+            {list}
+          </Box>
           <DockedAction label="New trip" onClick={onNew} />
         </Box>
       </FloatingCard>
@@ -140,7 +89,8 @@ export default function TripsCanvas({
           side="left"
           kind="side"
           screen="trips"
-          header={<CardTitle title="New trip" onClose={onClose} />}
+          title="New trip"
+          onClose={onClose}
         >
           <Box
             data-testid="trip-panel"
@@ -157,13 +107,9 @@ export default function TripsCanvas({
           side="left"
           kind="side"
           screen="trips"
-          header={
-            <CardTitle
-              title={trip.name}
-              subtitle={dateRange(trip.start_date, trip.end_date)}
-              onClose={onClose}
-            />
-          }
+          title={trip.name}
+          subtitle={dateRange(trip.start_date, trip.end_date)}
+          onClose={onClose}
         >
           <Box
             data-testid="trip-panel"
@@ -191,23 +137,7 @@ export default function TripsCanvas({
           // Folds before the list and the trip: the budget never fits all three.
           priority={0}
           screen="trips"
-          header={
-            <Box
-              sx={{
-                px: 2,
-                minHeight: 56,
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <Typography
-                component="h2"
-                sx={{ ...labelSx, color: tokens.onSurfaceVariant }}
-              >
-                Members
-              </Typography>
-            </Box>
-          }
+          title="Members"
         >
           <TripMembersCard trip={trip} />
         </FloatingCard>
