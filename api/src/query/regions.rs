@@ -1,10 +1,10 @@
 use std::collections::{HashMap, HashSet};
 
-use sqlx::{PgPool, Row, postgres::PgRow};
+use sqlx::{PgPool, Row, postgres::PgRow, types::Json};
 
 use crate::models::{
     geometry::Geometry,
-    region::{CountryBorder, Region, RegionKind, RegionOutline},
+    region::{CountryBorder, Region, RegionKind, RegionOutline, RegionRef},
 };
 
 /// Ways of one named region, ready to be stored. The lines are the member
@@ -90,8 +90,33 @@ fn to_region(row: &PgRow) -> Result<Region, sqlx::Error> {
             row.try_get("east")?,
             row.try_get("north")?,
         ]),
+        parents: match row.try_get::<Option<Json<Vec<RegionRef>>>, _>("parents") {
+            Ok(parents) => parents.map(|p| p.0).unwrap_or_default(),
+            Err(sqlx::Error::ColumnNotFound(_)) => vec![],
+            Err(err) => return Err(err),
+        },
     })
 }
+
+/// Parent chain of the region aliased `r`: at most one region per kind,
+/// containing a point on `r`, most specific first. Valleys and districts
+/// nest in districts and states; every kind but a country lists its country,
+/// and a range skips the states it spans.
+const PARENTS_SQL: &str = "(SELECT jsonb_agg(jsonb_build_object('id', x.id, 'name', x.name, 'kind', x.kind)
+                                      ORDER BY array_position(ARRAY['district', 'state', 'country'], x.kind))
+         FROM (SELECT DISTINCT ON (p.kind) p.id, p.name, p.kind
+               FROM regions p
+               WHERE p.id <> r.id
+                 AND p.match_radius_m = 0
+                 AND r.kind <> 'country'
+                 AND (p.kind = 'country'
+                      OR (r.kind <> 'range'
+                          AND p.kind IN ('district', 'state')
+                          AND array_position(ARRAY['valley', 'district', 'state'], p.kind)
+                              > array_position(ARRAY['valley', 'district', 'state'], r.kind)))
+                 AND p.geom && ST_PointOnSurface(r.geom)
+                 AND ST_Contains(p.geom, ST_PointOnSurface(r.geom))
+               ORDER BY p.kind, ST_Area(ST_Envelope(p.geom))) x) AS parents";
 
 /// Half-width of the corridor a valley is drawn as.
 ///
@@ -138,10 +163,10 @@ pub async fn search(
     let ranking = "ORDER BY (public.search_key(name) = public.search_key(COALESCE($1, name))) DESC, \
                    array_position(ARRAY['valley', 'district', 'state', 'range'], kind), name";
     let rows = sqlx::query(&format!(
-        "SELECT id, name, kind, country, {BBOX_COLUMNS}
+        "SELECT id, name, kind, country, parents, {BBOX_COLUMNS}
          FROM (
-             SELECT id, name, kind, country, {drawn} AS drawn
-             FROM regions
+             SELECT id, name, kind, country, {drawn} AS drawn, {PARENTS_SQL}
+             FROM regions r
              WHERE kind <> 'country'
                AND ($1::text IS NULL
                     OR public.search_key(name) LIKE '%' || public.search_key($1) || '%')
@@ -330,6 +355,11 @@ pub async fn assign_countries(
     Ok(done.rows_affected())
 }
 
+/// How close (degrees, about a kilometre) another country's area must come to
+/// a border line to count as the country on its far side. Outlines are
+/// simplified separately, so a shared border does not coincide exactly.
+const NEIGHBOUR_RADIUS_DEG: f64 = 0.01;
+
 /// Country borders crossing a viewport.
 ///
 /// Only the piece of each boundary that is actually in view is returned:
@@ -345,20 +375,27 @@ pub async fn country_borders(
     let tolerance = ((east - west) / 1000.0).max(0.00005);
     let rows = sqlx::query(
         "WITH box AS (SELECT ST_MakeEnvelope($1, $2, $3, $4, 4326) AS g)
-         SELECT r.name, r.country,
-                ST_AsGeoJSON(ST_SimplifyPreserveTopology(
-                    ST_Intersection(ST_Boundary(r.geom), box.g), $5)) AS geometry
-         FROM regions r, box
-         WHERE r.kind = 'country' AND r.country IS NOT NULL
-           AND r.geom && box.g
-           AND NOT ST_IsEmpty(ST_Intersection(ST_Boundary(r.geom), box.g))
-         ORDER BY r.country",
+         SELECT b.name, b.country, b.line,
+                ST_AsGeoJSON(ST_SimplifyPreserveTopology(b.line, $5)) AS geometry,
+                ARRAY(SELECT o.country FROM regions o
+                      WHERE o.kind = 'country' AND o.country IS NOT NULL
+                        AND o.country <> b.country
+                        AND ST_DWithin(o.geom, b.line, $6)
+                      ORDER BY o.country) AS neighbours
+         FROM (SELECT r.name, r.country,
+                      ST_Intersection(ST_Boundary(r.geom), box.g) AS line
+               FROM regions r, box
+               WHERE r.kind = 'country' AND r.country IS NOT NULL
+                 AND r.geom && box.g) b
+         WHERE NOT ST_IsEmpty(b.line)
+         ORDER BY b.country",
     )
     .bind(west)
     .bind(south)
     .bind(east)
     .bind(north)
     .bind(tolerance)
+    .bind(NEIGHBOUR_RADIUS_DEG)
     .fetch_all(pool)
     .await?;
     rows.iter()
@@ -366,6 +403,7 @@ pub async fn country_borders(
             Ok(CountryBorder {
                 name: row.try_get("name")?,
                 country: row.try_get("country")?,
+                neighbours: row.try_get("neighbours")?,
                 geometry: Geometry::from_db(row.try_get("geometry")?)?,
             })
         })

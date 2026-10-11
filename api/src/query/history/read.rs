@@ -42,6 +42,7 @@ fn step(row: &PgRow) -> HistoryStep {
             .is_some()
             .then(|| source(row)),
         proposal_id: row.get("proposal_id"),
+        proposal_note: row.get("proposal_note"),
         reviewer: user(row, "reviewer_user_id", "reviewer_name"),
         changes: serde_json::from_value::<Vec<HistoryChange>>(changes).unwrap_or_default(),
     }
@@ -92,11 +93,12 @@ pub async fn list_steps(
                 s.id AS source_id, s.name AS source_name, \
                 COALESCE(s.short_name, s.name) AS source_short_name, \
                 s.website AS source_website, s.license_name AS source_license_name, \
-                s.license_url AS source_license_url \
+                s.license_url AS source_license_url, pr.submitter_note AS proposal_note \
          FROM entity_history h \
          LEFT JOIN users au ON au.id = h.actor_id \
          LEFT JOIN users ru ON ru.id = h.reviewer_id \
          LEFT JOIN sources s ON s.id = h.source_id \
+         LEFT JOIN proposals pr ON pr.id = h.proposal_id \
          WHERE h.entity_kind = $1 AND h.entity_id = $2 AND h.waterway_id = $3 \
            AND h.section_id IS NOT DISTINCT FROM $4 \
          ORDER BY h.at, h.id \
@@ -115,10 +117,14 @@ pub async fn list_steps(
 }
 
 /// Every source and contributor named by a river's history, including its
-/// sections' and features' (and those since deleted).
+/// sections' and features' (and those since deleted). With `section_id`
+/// only that section's own and its features' steps count; the section is
+/// matched together with the waterway, so another river's section finds
+/// nothing.
 pub async fn list_waterway_sources(
     pool: &PgPool,
     waterway_id: i64,
+    section_id: Option<i64>,
 ) -> Result<WaterwaySources, sqlx::Error> {
     let source_rows = sqlx::query(
         "SELECT s.id AS source_id, s.name AS source_name, \
@@ -126,26 +132,28 @@ pub async fn list_waterway_sources(
                 s.website AS source_website, s.license_name AS source_license_name, \
                 s.license_url AS source_license_url, count(*) AS entries \
          FROM entity_history h JOIN sources s ON s.id = h.source_id \
-         WHERE h.waterway_id = $1 \
+         WHERE h.waterway_id = $1 AND ($3::bigint IS NULL OR h.section_id = $3) \
          GROUP BY s.id \
          ORDER BY count(*) DESC, s.name \
          LIMIT $2",
     )
     .bind(waterway_id)
     .bind(MAX_LISTED)
+    .bind(section_id)
     .fetch_all(pool)
     .await?;
 
     let contributor_rows = sqlx::query(
         "SELECT u.id AS user_id, u.username, count(*) AS steps, max(h.at) AS last_at \
          FROM entity_history h JOIN users u ON u.id = h.actor_id \
-         WHERE h.waterway_id = $1 \
+         WHERE h.waterway_id = $1 AND ($3::bigint IS NULL OR h.section_id = $3) \
          GROUP BY u.id, u.username \
          ORDER BY count(*) DESC, max(h.at) DESC, u.username \
          LIMIT $2",
     )
     .bind(waterway_id)
     .bind(MAX_LISTED)
+    .bind(section_id)
     .fetch_all(pool)
     .await?;
 

@@ -11,6 +11,7 @@ use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::Value;
 
+use crate::models::proposal::{Proposable, clean_note};
 use crate::{
     doc_fn,
     error::{ApiError, ErrorResponse},
@@ -33,11 +34,16 @@ pub async fn create_feature(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id)): Path<(WaterwayId, SectionId)>,
-    Json(mut body): Json<CreateFeatureBody>,
+    Json(Proposable { mut body, proposal_note }): Json<Proposable<CreateFeatureBody>>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
         None => return ApiError::unauthorized("Authentication required").into_response(),
+    };
+
+    let note = match clean_note(proposal_note) {
+        Ok(note) => note,
+        Err(err) => return err.into_response(),
     };
 
     match sections::section_exists(&app.pg_pool, waterway_id, section_id).await {
@@ -105,6 +111,7 @@ pub async fn create_feature(
         "create",
         data,
         token.user_id(),
+        note.as_deref(),
     )
     .await
     {
@@ -148,11 +155,16 @@ pub async fn update_feature(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id, feature_id)): Path<(WaterwayId, SectionId, i64)>,
-    Json(body): Json<UpdateFeatureBody>,
+    Json(Proposable { body, proposal_note }): Json<Proposable<UpdateFeatureBody>>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
         None => return ApiError::unauthorized("Authentication required").into_response(),
+    };
+
+    let note = match clean_note(proposal_note) {
+        Ok(note) => note,
+        Err(err) => return err.into_response(),
     };
 
     for range in &body.water_ranges {
@@ -222,6 +234,7 @@ pub async fn update_feature(
         "update",
         data,
         token.user_id(),
+        note.as_deref(),
     )
     .await
     {
@@ -281,6 +294,7 @@ pub async fn delete_feature(
         "delete",
         data,
         token.user_id(),
+        None,
     )
     .await
     {

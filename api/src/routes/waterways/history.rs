@@ -9,7 +9,7 @@ use crate::{
     doc_fn,
     error::{ApiError, ErrorResponse},
     models::{
-        history::{HistoryPage, HistoryQuery, WaterwaySources},
+        history::{HistoryPage, HistoryQuery, SourcesQuery, WaterwaySources},
         path_params::{FeaturePath, SectionPath, WaterwayPath},
         waterway::page_bounds,
     },
@@ -140,13 +140,21 @@ doc_fn!(get_feature_history_docs, op =>
 pub async fn get_waterway_sources(
     State(app): State<AppState>,
     Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
+    Query(query): Query<SourcesQuery>,
 ) -> impl IntoApiResponse {
     match waterways::exists(&app.pg_pool, waterway_id).await {
         Ok(true) => {}
         Ok(false) => return ApiError::not_found("Not found").into_response(),
         Err(err) => return ApiError::from_db("Error checking waterway", &err).into_response(),
     }
-    match history::list_waterway_sources(&app.pg_pool, waterway_id).await {
+    if let Some(section_id) = query.section_id {
+        match sections::section_exists(&app.pg_pool, waterway_id, section_id).await {
+            Ok(true) => {}
+            Ok(false) => return ApiError::not_found("Not found").into_response(),
+            Err(err) => return ApiError::from_db("Error checking section", &err).into_response(),
+        }
+    }
+    match history::list_waterway_sources(&app.pg_pool, waterway_id, query.section_id).await {
         Ok(sources) => Json::<WaterwaySources>(sources).into_response(),
         Err(err) => ApiError::from_db("Error listing sources", &err).into_response(),
     }
@@ -154,8 +162,9 @@ pub async fn get_waterway_sources(
 
 doc_fn!(get_waterway_sources_docs, op =>
     op.input::<Path<WaterwayPath>>()
-        .description("Every source and contributor behind a river, its sections and its features")
+        .input::<Query<SourcesQuery>>()
+        .description("Every source and contributor behind a river, its sections and its features; with `section_id`, only those behind that section and its features")
         .response::<200, Json<WaterwaySources>>()
-        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Waterway not found"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Waterway not found, or the section is not in it"))
         .tag("History")
 );

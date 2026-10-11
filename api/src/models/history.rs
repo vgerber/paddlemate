@@ -11,6 +11,14 @@ pub struct HistoryQuery {
     pub per_page: Option<i64>,
 }
 
+/// Query parameters of the sources view.
+#[derive(Debug, Default, Deserialize, JsonSchema)]
+pub struct SourcesQuery {
+    /// Count only this section's entries (its own and its features'), and
+    /// only the contributors behind them. Must belong to the waterway.
+    pub section_id: Option<i64>,
+}
+
 /// What kind of step this is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -82,6 +90,8 @@ pub struct HistoryStep {
     pub source: Option<HistorySource>,
     /// Set when the step is the outcome of a proposal
     pub proposal_id: Option<i64>,
+    /// The submitter's note on that proposal, if they left one
+    pub proposal_note: Option<String>,
     pub reviewer: Option<HistoryUser>,
     pub changes: Vec<HistoryChange>,
 }

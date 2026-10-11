@@ -1,3 +1,4 @@
+use crate::models::proposal::{Proposable, clean_note};
 use crate::{
     doc_fn,
     error::{ApiError, ErrorResponse},
@@ -86,11 +87,16 @@ pub async fn create_section(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path(waterway_id): Path<WaterwayId>,
-    Json(mut body): Json<CreateSectionBody>,
+    Json(Proposable { mut body, proposal_note }): Json<Proposable<CreateSectionBody>>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
         None => return ApiError::unauthorized("Authentication required").into_response(),
+    };
+
+    let note = match clean_note(proposal_note) {
+        Ok(note) => note,
+        Err(err) => return err.into_response(),
     };
 
     for feature in &body.features {
@@ -151,6 +157,7 @@ pub async fn create_section(
         "create",
         data,
         token.user_id(),
+        note.as_deref(),
     )
     .await
     {
@@ -177,11 +184,16 @@ pub async fn update_section(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id)): Path<(WaterwayId, SectionId)>,
-    Json(body): Json<UpdateSectionBody>,
+    Json(Proposable { body, proposal_note }): Json<Proposable<UpdateSectionBody>>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
         None => return ApiError::unauthorized("Authentication required").into_response(),
+    };
+
+    let note = match clean_note(proposal_note) {
+        Ok(note) => note,
+        Err(err) => return err.into_response(),
     };
 
     if token.is_server_admin() {
@@ -212,6 +224,7 @@ pub async fn update_section(
         "update",
         data,
         token.user_id(),
+        note.as_deref(),
     )
     .await
     {
@@ -270,6 +283,7 @@ pub async fn delete_section(
         "delete",
         data,
         token.user_id(),
+        None,
     )
     .await
     {

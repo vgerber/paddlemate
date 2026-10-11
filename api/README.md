@@ -121,16 +121,32 @@ first. All four routes are public, like the entries themselves.
 | `GET /waterways/{id}/history` | steps of the river |
 | `GET /waterways/{id}/sections/{section_id}/history` | steps of the section |
 | `GET /waterways/{id}/sections/{section_id}/features/{feature_id}/history` | steps of the feature, also after it was deleted (the feature itself answers 404) |
-| `GET /waterways/{id}/sources` | every source (with its step count) and contributor (with step count and last step) for the river, its sections and features |
+| `GET /waterways/{id}/sources` | every source (with its step count) and contributor (with step count and last step) for the river, its sections and features; `?section_id=` narrows both to that section and its features (404 when the section is not in this river) |
 
 History routes page with `page` and `per_page` (default 50, max 100) and
 return `items`, `page`, `per_page`, `total`, `total_pages`. A step has `kind`
 (`imported`, `created`, `proposal_accepted`, `edited`, `deleted`), `at`,
 `actor` and `reviewer` (id and username only), `source` (imports),
-`proposal_id` and `changes`, a list of `{field, before, after}` as short
+`proposal_id`, `proposal_note` (the submitter's note on that proposal, if any)
+and `changes`, a list of `{field, before, after}` as short
 display strings. A geometry change is `location` with null values. A deleted
 entity by an accepted proposal is a `deleted` step that also carries
 `proposal_id` and `reviewer`.
+
+Proposals: the create and update routes for rivers, sections and features take
+an optional `proposal_note` next to the usual fields (trimmed, at most 500
+characters, 400 with target `proposal_note` when longer; ignored when an admin
+applies the change directly). It is stored on the proposal as `submitter_note`
+and returned wherever the proposal is, so it is readable by whoever may read
+the proposal, and by anyone in the history step of an accepted one. Delete
+proposals take no body and so no note.
+
+Regions: `GET /geo/regions?q=` results carry `parents`, the regions each one
+lies in (district, state, country; a range lists only its country), found by
+containment of a point on the region, at most one per kind. The `countries`
+of `GET /geo/region-outlines` carry `neighbours`, the ISO codes of the other
+imported countries whose area comes within about a kilometre of the clipped
+border line, so the map can label a line "AT | IT".
 
 Children are looked up inside their parents: a feature id reached through
 another section's path answers 404. Source ids are strings, as in the `sources`
