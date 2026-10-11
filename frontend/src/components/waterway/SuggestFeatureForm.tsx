@@ -265,6 +265,19 @@ export default function SuggestFeatureForm({
       </FormSection>
 
       <FormSection
+        label="Location"
+        hint="Place it on the map: a point, a line or an area."
+      >
+        <SuggestFeatureGeometry
+          geometry={geometry}
+          sectionLine={sectionLine}
+          useSectionLine={useSectionLine}
+          onUseSectionLineChange={setUseSectionLine}
+          disabled={submitting}
+        />
+      </FormSection>
+
+      <FormSection
         label="Details"
         hint="Optional - a name and a few words for other paddlers."
         action={headerAction}
@@ -303,19 +316,6 @@ export default function SuggestFeatureForm({
         hint="Optional - the gauge reading at which this gets easier or harder."
       >
         <GaugeRangePicker picker={gaugePicker} />
-      </FormSection>
-
-      <FormSection
-        label="Location"
-        hint="Place it on the map: a point, a line or an area."
-      >
-        <SuggestFeatureGeometry
-          geometry={geometry}
-          sectionLine={sectionLine}
-          useSectionLine={useSectionLine}
-          onUseSectionLineChange={setUseSectionLine}
-          disabled={submitting}
-        />
       </FormSection>
 
       {submitError && <Alert severity="error">{submitError}</Alert>}

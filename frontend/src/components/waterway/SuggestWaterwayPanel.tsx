@@ -14,7 +14,6 @@ import ListItemText from "@mui/material/ListItemText";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
-import ChipRow from "@/components/ChipRow";
 import type { GaugePin } from "@/components/map/GaugeMarkers";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import EmptyState from "@/components/states/EmptyState";
@@ -281,7 +280,7 @@ export default function SuggestWaterwayPanel({
                 label="Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
+                slotProps={{ htmlInput: { "aria-required": true } }}
                 fullWidth
               />
             </FormSection>
@@ -381,7 +380,7 @@ export default function SuggestWaterwayPanel({
                 label="Similar rivers with gauges"
                 hint="Pick one to use its exact name."
               >
-                <ChipRow>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
                   {suggestionChips.map((r) => (
                     <Chip
                       data-testid="similar-river"
@@ -390,9 +389,10 @@ export default function SuggestWaterwayPanel({
                       label={`${r.river}${r.country ? ` (${r.country})` : ""}`}
                       title={`${r.gauge_count} gauge${r.gauge_count === 1 ? "" : "s"} in the catalog`}
                       onClick={() => setName(r.river)}
+                      sx={{ maxWidth: "100%" }}
                     />
                   ))}
-                </ChipRow>
+                </Box>
               </FormSection>
             )}
 

@@ -16,6 +16,10 @@ import type { BoundingBox, Coordinate } from "@/lib/riverSnap";
 
 export const WIZARD_STEPS = ["Naming", "Section", "Features"] as const;
 
+/** How long the OSM lookup may run before the step says it found nothing and
+ * lets the user place points freely. */
+export const LOOKUP_TIMEOUT_MS = 8000;
+
 /** All state of the three-step suggest-section wizard: naming, the picked
  * section line (with OSM snap), and drafted features with map drawing. */
 export function useSectionWizardState(
@@ -42,6 +46,20 @@ export function useSectionWizardState(
     mapBounds,
     waterwayId,
   );
+
+  const lookupBusy =
+    snap.riverLookup === "searching" ||
+    snap.status === "searching" ||
+    snap.status === "routing";
+  const [lookupStalled, setLookupStalled] = useState(false);
+  useEffect(() => {
+    if (!lookupBusy) {
+      setLookupStalled(false);
+      return;
+    }
+    const timer = setTimeout(() => setLookupStalled(true), LOOKUP_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [lookupBusy]);
 
   // Step 3: features (drafted with the shared feature form, drawn on the map)
   const [draftFeatures, setDraftFeatures] = useState<SectionFeatureDraft[]>([]);
@@ -210,6 +228,7 @@ export function useSectionWizardState(
     setLineSource,
     setMapBounds,
     snap,
+    lookupStalled,
     draftFeatures,
     setDraftFeatures,
     featureVertices,

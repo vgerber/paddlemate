@@ -2,13 +2,14 @@ import CloseIcon from "@mui/icons-material/Close";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import ButtonBase from "@mui/material/ButtonBase";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import { theme } from "@/lib/theme";
+import { alphas, theme } from "@/lib/theme";
 import {
   type GeometryPicking,
   type GeomType,
@@ -183,27 +184,50 @@ export default function SuggestFeatureGeometry({
             </Typography>
           )}
 
-          {pickingActive && (
-            <Typography variant="body2" color="textSecondary">
-              {verb} the map to place {isPoint ? "the point" : "each point"}.
-            </Typography>
-          )}
-
           {(!isPoint || vertices.length === 0) && (
-            <Button
-              variant={pickingActive ? "contained" : "outlined"}
-              fullWidth
-              startIcon={<LocationOnIcon />}
+            <ButtonBase
+              data-testid="place-button"
               onClick={pickingActive ? onStopPick : onRequestPick}
               disabled={disabled}
+              sx={{
+                width: "100%",
+                minHeight: 48,
+                gap: 1,
+                borderRadius: `${tokens.radii.sm + 2}px`,
+                bgcolor: `${tokens.primary}${alphas.hover}`,
+                color: tokens.primary,
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                "&:hover": { bgcolor: `${tokens.primary}${alphas.strong}` },
+                "&.Mui-disabled": { opacity: 0.5 },
+              }}
             >
+              <Box
+                component="span"
+                aria-hidden="true"
+                sx={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  bgcolor: tokens.primary,
+                  boxShadow: pickingActive
+                    ? `0 0 0 4px ${tokens.primary}${alphas.strong}`
+                    : "none",
+                }}
+              />
               {pickingActive
-                ? "Done"
+                ? `${verb} the map to place...`
                 : isPoint
                   ? "Place on map"
                   : vertices.length === 0
                     ? "Start drawing"
                     : "Add another point"}
+            </ButtonBase>
+          )}
+
+          {pickingActive && !isPoint && (
+            <Button onClick={onStopPick} sx={{ minHeight: tokens.touch.min }}>
+              Done
             </Button>
           )}
         </>

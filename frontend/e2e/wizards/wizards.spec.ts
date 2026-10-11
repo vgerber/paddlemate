@@ -119,6 +119,35 @@ test.describe("suggest section", () => {
     await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
   });
 
+  test("naming: Name alone and plain, translations hold the language", async ({
+    page,
+  }) => {
+    await openSectionWizard(page);
+    const name = page.getByLabel("Name").first();
+    // No required asterisk in the label.
+    await expect(page.getByText("Name *")).toHaveCount(0);
+    expect(
+      await page.locator("label", { hasText: /^Name/ }).first().innerText(),
+    ).toBe("Name");
+    // Full width of its block: no language select sharing the row.
+    const nameBox = await name
+      .locator("xpath=ancestor::div[contains(@class,'MuiFormControl-root')][1]")
+      .boundingBox();
+    const blockBox = await page
+      .getByTestId("form-section-label")
+      .first()
+      .locator("xpath=ancestor::div[2]")
+      .boundingBox();
+    expect(nameBox && blockBox && nameBox.width >= blockBox.width - 2).toBe(
+      true,
+    );
+    const add = page.getByRole("button", { name: "Add translation" });
+    await expectTouchTargets(add);
+    await expect(add).toContainText("Add translation");
+    await add.click();
+    await expect(page.getByLabel("Language").first()).toBeVisible();
+  });
+
   test("walks the steps and sends the right body @small", async ({ page }) => {
     const bodies = await captureWrite(
       page,
@@ -149,6 +178,12 @@ test.describe("suggest section", () => {
     await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Step 3 of 3 · Features")).toBeVisible();
     await expectNoHorizontalOverflow(page);
+
+    // The add form starts closed behind a text button.
+    await expect(
+      page.getByRole("radiogroup", { name: "Feature type" }),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: "Add feature" }).click();
 
     // Feature type grid: tiles, the chosen one teal.
     const grid = page.getByRole("radiogroup", { name: "Feature type" });
@@ -188,6 +223,109 @@ test.describe("suggest section", () => {
     expect(body.features[2].name).toBe("Spec weir");
     expect(body.location.coordinates.length).toBeGreaterThanOrEqual(2);
     await expect(page.getByText("Section submitted").first()).toBeVisible();
+  });
+});
+
+test.describe("suggest section steps", () => {
+  async function toLineStep(page: Page) {
+    await openSectionWizard(page);
+    await page.getByLabel("Name").first().fill("Wizard Spec Section");
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByText("Step 2 of 3 · Section")).toBeVisible();
+  }
+
+  test("access points are white cards without coordinates", async ({
+    page,
+  }) => {
+    await toLineStep(page);
+    const unset = page.getByTestId("unpicked-put-in");
+    await expect(unset).toContainText("Not set");
+    await pickOnMap(page, "Put-in", 0.35);
+    await pickOnMap(page, "Take-out", 0.65);
+    const card = page.getByTestId("picked-put-in");
+    await expect(card).toContainText("Put-in");
+    await expect(card).toContainText("0.0 km");
+    await expect(page.getByTestId("picked-take-out")).toContainText(/\d km/);
+    expect(await computed(card, "border-top-left-radius")).toBe("14px");
+    expect(await computed(card, "background-color")).toBe("rgb(255, 255, 255)");
+    expect(await computed(card, "box-shadow")).not.toBe("none");
+    expect((await card.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(56);
+    await expect(card).not.toContainText(/\d+\.\d{4,}/);
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("a lookup that runs long says so and lets the points go free", async ({
+    page,
+  }) => {
+    await page.clock.install();
+    await page.route("**/api/v1/waterways/*/geometry*", () => undefined);
+    await page.route("**/api/v1/river-segments*", () => undefined);
+    await toLineStep(page);
+    await page.clock.runFor(2000);
+    await expect(
+      page.getByText(`Searching for`, { exact: false }),
+    ).toBeVisible();
+    await page.clock.runFor(10_000);
+    await expect(
+      page.getByText("Not found on OpenStreetMap", { exact: false }),
+    ).toContainText(`${verb(page).toLowerCase()} the map to place your points`);
+    await expect(page.getByText("Searching for")).toHaveCount(0);
+    await page.clock.resume();
+    await pickOnMap(page, "Put-in", 0.35);
+    await pickOnMap(page, "Take-out", 0.65);
+    await expect(page.getByRole("button", { name: "Next" })).toBeEnabled();
+  });
+
+  test("the features step: cards, one spelling, form closed", async ({
+    page,
+  }) => {
+    await toLineStep(page);
+    await pickOnMap(page, "Put-in", 0.35);
+    await pickOnMap(page, "Take-out", 0.65);
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByText("Step 3 of 3 · Features")).toBeVisible();
+    const rows = page.getByTestId("section-point-card");
+    await expect(rows).toHaveCount(2);
+    await expect(rows.nth(0)).toContainText("Put-in");
+    await expect(rows.nth(1)).toContainText("Take-out");
+    expect(await computed(rows.first(), "border-top-left-radius")).toBe("14px");
+    expect(await computed(rows.first(), "border-top-width")).toBe("0px");
+    const title = rows.first().getByText("Put-in");
+    expect(await computed(title, "font-weight")).toBe("600");
+    expect(await computed(title, "font-size")).toBe("15px");
+    await expect(page.getByText("Put in", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Point", { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByRole("radiogroup", { name: "Feature type" }),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: "Add feature" }).click();
+    const grid = page.getByRole("radiogroup", { name: "Feature type" });
+    await expect(grid.getByRole("radio", { name: "Put-in" })).toBeVisible();
+    await expect(grid.getByRole("radio", { name: "Take-out" })).toBeVisible();
+    await page.getByRole("button", { name: "Cancel" }).first().click();
+    await expect(grid).toHaveCount(0);
+  });
+
+  test("desktop: the form pane holds its bar and the map keeps its place", async ({
+    page,
+  }) => {
+    test.skip(!isDesktop(page), "desktop split");
+    await toLineStep(page);
+    const map = page.locator("canvas.maplibregl-canvas").first();
+    const bar = page.getByText("Step 2 of 3 · Section");
+    const barBox = await bar.boundingBox();
+    expect(barBox && barBox.x + barBox.width).toBeLessThanOrEqual(420);
+    const mapBox = await map.boundingBox();
+    expect(mapBox?.x ?? 0).toBeGreaterThanOrEqual(400);
+    const top2 = mapBox?.y;
+    await expect(page.getByTestId("map-hint")).toContainText(
+      "Click the map to set where you get on and off the water.",
+    );
+    await pickOnMap(page, "Put-in", 0.35);
+    await pickOnMap(page, "Take-out", 0.65);
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByText("Step 3 of 3 · Features")).toBeVisible();
+    expect((await map.boundingBox())?.y).toBe(top2);
   });
 });
 
@@ -261,6 +399,15 @@ test.describe("suggest river", () => {
       );
     });
     expect(hit).toBeGreaterThanOrEqual(44);
+    // Chips wrap inside the pane and are never wider than it.
+    const paneBox = await pane(page).boundingBox();
+    for (const c of await pane(page).getByTestId("similar-river").all()) {
+      const box = await c.boundingBox();
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(
+        (paneBox?.x ?? 0) + (paneBox?.width ?? 0),
+      );
+    }
+    await expect(pane(page).getByText("Name *")).toHaveCount(0);
     const text = (await chip.textContent()) ?? "";
     await chip.click();
     const value = await pane(page).getByLabel("Name").first().inputValue();
@@ -306,14 +453,27 @@ test.describe("suggest feature", () => {
     await expectNoHorizontalOverflow(page);
     await expect(pane(page).getByText("Suggest new feature")).toBeVisible();
 
+    // Location comes right after the type, before the details.
+    const labels = await pane(page)
+      .getByTestId("form-section-label")
+      .allTextContents();
+    expect(labels.slice(0, 3)).toEqual(["Feature type", "Location", "Details"]);
+    const place = pane(page).getByTestId("place-button");
+    expect(await computed(place, "border-top-left-radius")).toBe("12px");
+    expect(await computed(place, "color")).toBe(TEAL);
+    expect(await computed(place, "background-color")).toBe(
+      "rgba(14, 116, 144, 0.12)",
+    );
+    expect(await computed(place, "font-weight")).toBe("600");
+    expect((await place.boundingBox())?.height).toBeGreaterThanOrEqual(48);
+    expect(await computed(tiles.first(), "font-size")).toBe("13px");
+
     await pane(page)
       .getByLabel("Name", { exact: true })
       .last()
       .fill("Spec siphon");
     await pane(page).getByRole("button", { name: "Place on map" }).click();
-    await expect(
-      pane(page).getByText(`${verb(page)} the map to place`),
-    ).toBeVisible();
+    await expect(place).toContainText(`${verb(page)} the map to place...`);
     await clickMap(page, 0.5, 0.3);
     await expect(pane(page).getByTestId("placed-point")).toBeVisible();
     await pane(page).getByRole("button", { name: "Submit" }).click();
