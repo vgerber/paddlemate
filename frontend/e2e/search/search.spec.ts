@@ -53,6 +53,26 @@ async function rowLevels(page: Page) {
 }
 
 test.describe("header and tabs", () => {
+  test("@small the title is panel-title size and a phone has the map icon", async ({
+    page,
+  }, info) => {
+    await openSearch(page);
+    const title = seen(page.getByRole("heading", { name: "Search" }));
+    await expect(title).toBeVisible();
+    expect(await computed(title, "font-size")).toBe("20px");
+    expect(await computed(title, "font-weight")).toBe("700");
+    const map = seen(page.getByRole("button", { name: "Map", exact: true }));
+    if (info.project.name === "desktop") {
+      await expect(map).toHaveCount(0);
+      return;
+    }
+    await expect(map).toBeVisible();
+    await expect(map.locator('[data-testid="MapOutlinedIcon"]')).toBeVisible();
+    await expectTouchTargets(map, 44);
+    await map.click();
+    await expect(page).not.toHaveURL(/panel=/);
+  });
+
   test("@small the header names the screen and the tabs are underlined", async ({
     page,
   }) => {
