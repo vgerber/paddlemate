@@ -119,7 +119,7 @@ async function serve(page: Page) {
 async function openHistory(page: Page) {
   await gotoSection(page, "lower");
   const card = page.getByTestId("features-card").filter({ visible: true });
-  await card.getByRole("button", { name: "Section actions" }).click();
+  await card.getByRole("button", { name: "Feature list actions" }).click();
   await page.getByRole("menuitem", { name: "History" }).click();
 }
 

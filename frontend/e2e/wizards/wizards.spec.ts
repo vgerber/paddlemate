@@ -260,12 +260,7 @@ test.describe("suggest feature", () => {
       await docked.filter({ visible: true }).first().click();
     } else {
       await page.getByRole("button", { name: "Section actions" }).click();
-      // At 320x568 the open speed dial runs past the top of the screen (a
-      // known limitation of SectionSpeedDial, not of the wizard), so the
-      // action is dispatched rather than tapped.
-      await page
-        .getByRole("menuitem", { name: "Add feature" })
-        .dispatchEvent("click");
+      await page.getByRole("menuitem", { name: "Add feature" }).click();
     }
     await expect(
       pane(page).getByRole("radiogroup", { name: "Feature type" }),

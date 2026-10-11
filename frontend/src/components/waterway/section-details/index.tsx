@@ -245,7 +245,7 @@ export default function FeatureTimeline({
           >
             {count} {count === 1 ? "feature" : "features"}
           </Typography>
-          <RowMenu actions={gradeActions} label="Section actions" />
+          <RowMenu actions={gradeActions} label="Feature list actions" />
           <IconButton
             data-testid="features-fold"
             aria-expanded={!folded}
