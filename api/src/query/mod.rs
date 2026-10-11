@@ -5,6 +5,7 @@ pub mod features;
 pub mod follows;
 pub mod gauges;
 pub mod groups;
+pub mod history;
 pub mod media;
 pub mod notifications;
 pub mod osm_geometry;

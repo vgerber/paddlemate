@@ -115,8 +115,13 @@ pub async fn create_section(
                 return ApiError::internal().into_response();
             }
         };
-        let section =
-            sections::create_section_bundle(&mut tx, waterway_id, &body, token.user_id()).await;
+        let section = sections::create_section_bundle(
+            &mut tx,
+            waterway_id,
+            &body,
+            &crate::query::history::Via::direct(token.user_id()),
+        )
+        .await;
         return match section {
             Ok(section) => match tx.commit().await {
                 Ok(()) => {
@@ -180,7 +185,15 @@ pub async fn update_section(
     };
 
     if token.is_server_admin() {
-        return match sections::update_section(&app.pg_pool, waterway_id, section_id, &body).await {
+        return match sections::update_section(
+            &app.pg_pool,
+            waterway_id,
+            section_id,
+            &body,
+            token.user_id(),
+        )
+        .await
+        {
             Ok(Some(section)) => Json(section).into_response(),
             Ok(None) => ApiError::not_found("Not found").into_response(),
             Err(err) => {
@@ -232,7 +245,14 @@ pub async fn delete_section(
     };
 
     if token.is_server_admin() {
-        return match sections::delete_section(&app.pg_pool, waterway_id, section_id).await {
+        return match sections::delete_section(
+            &app.pg_pool,
+            waterway_id,
+            section_id,
+            token.user_id(),
+        )
+        .await
+        {
             Ok(true) => StatusCode::NO_CONTENT.into_response(),
             Ok(false) => ApiError::not_found("Not found").into_response(),
             Err(err) => {

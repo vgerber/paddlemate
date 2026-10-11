@@ -46,6 +46,7 @@ erDiagram
         enum waterway_type "river"
         varchar name
         text description
+        varchar created_by "nullable"
         timestamptz created_at
         timestamptz updated_at
     }
@@ -85,6 +86,21 @@ erDiagram
         text description
     }
 
+    entity_history {
+        bigserial id PK
+        enum entity_kind "waterway | section | feature"
+        bigint entity_id "no FK, outlives the entity"
+        bigint waterway_id
+        bigint section_id "null for a waterway"
+        enum kind "imported | created | proposal_accepted | edited | deleted"
+        varchar actor_id
+        text source_id FK
+        bigint proposal_id
+        varchar reviewer_id
+        jsonb changes "at most 32 fields"
+        timestamptz at
+    }
+
     users ||--o{ api_tokens : "owns"
     users ||--o{ groups : "creates"
     users ||--o{ group_members : "belongs to"
@@ -94,6 +110,45 @@ erDiagram
     features ||--o{ feature_names : "has"
     features ||--o{ feature_descriptions : "has"
 ```
+
+## History and sources
+
+Every river, section and feature has a history: one step per change, oldest
+first. All four routes are public, like the entries themselves.
+
+| Route | Returns |
+|---|---|
+| `GET /waterways/{id}/history` | steps of the river |
+| `GET /waterways/{id}/sections/{section_id}/history` | steps of the section |
+| `GET /waterways/{id}/sections/{section_id}/features/{feature_id}/history` | steps of the feature, also after it was deleted (the feature itself answers 404) |
+| `GET /waterways/{id}/sources` | every source (with its step count) and contributor (with step count and last step) for the river, its sections and features |
+
+History routes page with `page` and `per_page` (default 50, max 100) and
+return `items`, `page`, `per_page`, `total`, `total_pages`. A step has `kind`
+(`imported`, `created`, `proposal_accepted`, `edited`, `deleted`), `at`,
+`actor` and `reviewer` (id and username only), `source` (imports),
+`proposal_id` and `changes`, a list of `{field, before, after}` as short
+display strings. A geometry change is `location` with null values. A deleted
+entity by an accepted proposal is a `deleted` step that also carries
+`proposal_id` and `reviewer`.
+
+Children are looked up inside their parents: a feature id reached through
+another section's path answers 404. Source ids are strings, as in the `sources`
+table.
+
+Steps are written in the same transaction as the change: admin creates, edits
+and deletes, and accepted proposals (the actor is the submitter, the reviewer
+is the admin who approved). An edit that changes nothing writes no step. Old
+rows got a first step by migration `0048`: `imported` (source Rivermap) for
+rows the Rivermap importer made, else `created`. Not recorded: the bulk import
+binaries and the separate translation endpoints (`.../names/{lang}`,
+`.../descriptions/{lang}`) for sections and features.
+
+Retention: history is the audit trail and is kept for as long as the data. There
+is no cleanup and no cascade from the entity; each step is bounded instead (32
+fields, 200 characters per value).
+
+Proposal responses carry `submitted_by_name` and `reviewed_by_name`.
 
 ## Authentication
 

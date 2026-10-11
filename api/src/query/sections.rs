@@ -11,6 +11,7 @@ use crate::models::{
     waterway::WaterwayId,
 };
 use crate::query::features;
+use crate::query::history::{self, Op, Scope, Via};
 
 const SECTION_COLS: &str = "id, waterway_id, name, description, regions, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at";
 
@@ -52,12 +53,24 @@ pub async fn update_section(
     waterway_id: WaterwayId,
     section_id: SectionId,
     body: &UpdateSectionBody,
+    actor: &str,
 ) -> Result<Option<Section>, sqlx::Error> {
     let location_json = body
         .location
         .as_ref()
         .map(|g| serde_json::to_string(g).expect("valid geometry"));
-    sqlx::query(&format!(
+    let scope = Scope::section(waterway_id, section_id);
+    let mut tx = pool.begin().await?;
+    // The row lock keeps the before state true until this transaction ends.
+    sqlx::query("SELECT id FROM water_sections WHERE id = $1 AND waterway_id = $2 FOR UPDATE")
+        .bind(section_id)
+        .bind(waterway_id)
+        .fetch_optional(&mut *tx)
+        .await?;
+    let Some(before) = history::snapshot(&mut tx, &scope).await? else {
+        return Ok(None);
+    };
+    let section = sqlx::query(&format!(
         "UPDATE water_sections
          SET name        = COALESCE($1, name),
              description = COALESCE($2, description),
@@ -75,23 +88,52 @@ pub async fn update_section(
     .bind(location_json.as_deref())
     .bind(section_id)
     .bind(waterway_id)
-    .fetch_optional(pool)
-    .await?
-    .map(|r| row_to_section(&r))
-    .transpose()
+    .fetch_one(&mut *tx)
+    .await
+    .and_then(|r| row_to_section(&r))?;
+    let after = history::snapshot(&mut tx, &scope)
+        .await?
+        .unwrap_or_default();
+    history::record(
+        &mut tx,
+        &scope,
+        Op::Edit,
+        &Via::direct(actor),
+        &before,
+        &after,
+    )
+    .await?;
+    tx.commit().await?;
+    Ok(Some(section))
 }
 
 pub async fn delete_section(
     pool: &PgPool,
     waterway_id: WaterwayId,
     section_id: SectionId,
+    actor: &str,
 ) -> Result<bool, sqlx::Error> {
+    let mut tx = pool.begin().await?;
     let result = sqlx::query("DELETE FROM water_sections WHERE id = $1 AND waterway_id = $2")
         .bind(section_id)
         .bind(waterway_id)
-        .execute(pool)
+        .execute(&mut *tx)
         .await?;
-    Ok(result.rows_affected() > 0)
+    let deleted = result.rows_affected() > 0;
+    if deleted {
+        let empty = Default::default();
+        history::record(
+            &mut tx,
+            &Scope::section(waterway_id, section_id),
+            Op::Delete,
+            &Via::direct(actor),
+            &empty,
+            &empty,
+        )
+        .await?;
+    }
+    tx.commit().await?;
+    Ok(deleted)
 }
 
 /// Persist a `CreateSectionBody` - section row plus localized texts and
@@ -101,7 +143,7 @@ pub async fn create_section_bundle(
     conn: &mut sqlx::PgConnection,
     waterway_id: WaterwayId,
     body: &CreateSectionBody,
-    created_by: &str,
+    via: &Via<'_>,
 ) -> Result<Section, sqlx::Error> {
     let location_json =
         serde_json::to_string(&body.location).map_err(|e| sqlx::Error::Decode(e.into()))?;
@@ -116,7 +158,7 @@ pub async fn create_section_bundle(
     .bind(body.effective_regions())
     .bind(&body.country)
     .bind(&location_json)
-    .bind(created_by)
+    .bind(via.actor)
     .fetch_one(&mut *conn)
     .await?;
     let section = row_to_section(&row)?;
@@ -130,8 +172,13 @@ pub async fn create_section_bundle(
         }
     }
 
+    let scope = Scope::section(waterway_id, section.id);
+    if let Some(after) = history::snapshot(conn, &scope).await? {
+        history::record(conn, &scope, Op::Create, via, &Default::default(), &after).await?;
+    }
+
     for feature in &body.features {
-        features::create_feature_bundle(&mut *conn, section.id, feature, created_by).await?;
+        features::create_feature_bundle(&mut *conn, section.id, feature, via).await?;
     }
 
     Ok(section)

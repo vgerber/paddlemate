@@ -2,6 +2,7 @@ mod comments;
 mod crud;
 mod features;
 mod geometry;
+mod history;
 mod media;
 mod sections;
 mod water_ranges;
@@ -59,6 +60,34 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
             .delete_with(
                 geometry::delete_waterway_geometry,
                 geometry::delete_waterway_geometry_docs,
+            ),
+        )
+        .api_route(
+            "/{waterway_id}/history",
+            get_with(
+                history::get_waterway_history,
+                history::get_waterway_history_docs,
+            ),
+        )
+        .api_route(
+            "/{waterway_id}/sources",
+            get_with(
+                history::get_waterway_sources,
+                history::get_waterway_sources_docs,
+            ),
+        )
+        .api_route(
+            "/{waterway_id}/sections/{section_id}/history",
+            get_with(
+                history::get_section_history,
+                history::get_section_history_docs,
+            ),
+        )
+        .api_route(
+            "/{waterway_id}/sections/{section_id}/features/{feature_id}/history",
+            get_with(
+                history::get_feature_history,
+                history::get_feature_history_docs,
             ),
         )
         // Section CRUD

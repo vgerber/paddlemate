@@ -8,6 +8,7 @@ use crate::models::{
     water_section::SectionId,
     waterway::WaterwayId,
 };
+use crate::query::history::{self, Op, Scope, Via};
 
 pub async fn feature_belongs_to_section(
     pool: &PgPool,
@@ -119,7 +120,7 @@ pub async fn create_feature_bundle(
     conn: &mut sqlx::PgConnection,
     section_id: SectionId,
     body: &crate::models::feature::CreateFeatureBody,
-    created_by: &str,
+    via: &Via<'_>,
 ) -> Result<Feature, sqlx::Error> {
     let location_json =
         serde_json::to_string(&body.location).map_err(|e| sqlx::Error::Decode(e.into()))?;
@@ -129,7 +130,7 @@ pub async fn create_feature_bundle(
         body.feature_type.clone(),
         body.metadata.clone(),
         &location_json,
-        created_by,
+        via.actor,
     )
     .await?;
 
@@ -159,6 +160,17 @@ pub async fn create_feature_bundle(
         )
         .await?;
     }
+
+    // The parent river is read from the section, never taken from a payload.
+    let waterway_id: i64 =
+        sqlx::query_scalar("SELECT waterway_id FROM water_sections WHERE id = $1")
+            .bind(section_id)
+            .fetch_one(&mut *conn)
+            .await?;
+    let scope = Scope::feature(waterway_id, section_id, feature.id);
+    if let Some(after) = history::snapshot(conn, &scope).await? {
+        history::record(conn, &scope, Op::Create, via, &Default::default(), &after).await?;
+    }
     Ok(feature)
 }
 
@@ -183,15 +195,43 @@ pub async fn resolve_range_series(
     Ok(series_id)
 }
 
+/// What an admin edit of a feature may change.
+pub struct FeatureEdit<'a> {
+    pub feature_type: Option<FeatureType>,
+    pub metadata: Option<Value>,
+    pub location_json: Option<String>,
+    /// Trimmed and ignored when empty.
+    pub name: Option<&'a str>,
+    /// Trimmed and ignored when empty.
+    pub description: Option<&'a str>,
+    /// Normalized language of `name` and `description`.
+    pub lang_code: &'a str,
+    pub water_ranges: &'a [crate::models::gauge::FeatureWaterRangeBody],
+}
+
+/// Edit a feature, its texts and its gauge thresholds in one transaction,
+/// together with the history step. None when the feature is not in this
+/// section and river.
 pub async fn update_feature(
     pool: &PgPool,
     waterway_id: WaterwayId,
     section_id: SectionId,
     feature_id: FeatureId,
-    feature_type: Option<FeatureType>,
-    metadata: Option<Value>,
-    location_json: Option<String>,
+    edit: FeatureEdit<'_>,
+    actor: &str,
 ) -> Result<Option<Feature>, sqlx::Error> {
+    let scope = Scope::feature(waterway_id, section_id, feature_id);
+    let mut tx = pool.begin().await?;
+    // The row lock keeps the before state true until this transaction ends.
+    sqlx::query("SELECT id FROM features WHERE id = $1 AND section_id = $2 FOR UPDATE")
+        .bind(feature_id)
+        .bind(section_id)
+        .fetch_optional(&mut *tx)
+        .await?;
+    let Some(before) = history::snapshot(&mut tx, &scope).await? else {
+        return Ok(None);
+    };
+
     let r = sqlx::query!(
         r#"
         UPDATE features
@@ -205,19 +245,50 @@ pub async fn update_feature(
         RETURNING id, section_id, feature_type AS "feature_type: FeatureType",
                   metadata, created_by, ST_AsGeoJSON(location) AS location, created_at, updated_at
         "#,
-        feature_type as Option<FeatureType>,
-        metadata,
-        location_json,
+        edit.feature_type as Option<FeatureType>,
+        edit.metadata,
+        edit.location_json,
         feature_id,
         section_id,
         waterway_id
     )
-    .fetch_optional(pool)
+    .fetch_one(&mut *tx)
     .await?;
 
-    let Some(r) = r else {
-        return Ok(None);
-    };
+    if let Some(name) = edit.name.map(str::trim).filter(|s| !s.is_empty()) {
+        upsert_name(&mut *tx, feature_id, edit.lang_code, name).await?;
+    }
+    if let Some(description) = edit.description.map(str::trim).filter(|s| !s.is_empty()) {
+        upsert_description(&mut *tx, feature_id, edit.lang_code, description).await?;
+    }
+    for range in edit.water_ranges {
+        // Resolve a catalog reference (creating + activating a gauge) or
+        // pass through an existing series_id, then upsert the range.
+        let series_id = resolve_range_series(&mut tx, range).await?;
+        crate::query::gauges::upsert_feature_water_range_partial(
+            &mut *tx,
+            feature_id,
+            series_id,
+            range.range_low,
+            range.range_medium,
+            range.range_high,
+        )
+        .await?;
+    }
+
+    let after = history::snapshot(&mut tx, &scope)
+        .await?
+        .unwrap_or_default();
+    history::record(
+        &mut tx,
+        &scope,
+        Op::Edit,
+        &Via::direct(actor),
+        &before,
+        &after,
+    )
+    .await?;
+    tx.commit().await?;
 
     let (names, descriptions) =
         tokio::join!(fetch_names(pool, r.id), fetch_descriptions(pool, r.id));
@@ -236,13 +307,17 @@ pub async fn update_feature(
     }))
 }
 
+/// Delete a feature inside its section and river, and record the deletion.
+/// The feature's history stays readable afterwards.
 pub async fn delete_feature(
     pool: &PgPool,
     waterway_id: WaterwayId,
     section_id: SectionId,
     feature_id: FeatureId,
+    actor: &str,
 ) -> Result<bool, sqlx::Error> {
-    sqlx::query!(
+    let mut tx = pool.begin().await?;
+    let deleted = sqlx::query!(
         r#"
         DELETE FROM features
         WHERE id = $1 AND section_id = $2
@@ -253,9 +328,23 @@ pub async fn delete_feature(
         section_id,
         waterway_id
     )
-    .fetch_optional(pool)
-    .await
-    .map(|r| r.is_some())
+    .fetch_optional(&mut *tx)
+    .await?
+    .is_some();
+    if deleted {
+        let empty = Default::default();
+        history::record(
+            &mut tx,
+            &Scope::feature(waterway_id, section_id, feature_id),
+            Op::Delete,
+            &Via::direct(actor),
+            &empty,
+            &empty,
+        )
+        .await?;
+    }
+    tx.commit().await?;
+    Ok(deleted)
 }
 
 pub async fn upsert_name(
@@ -483,4 +572,23 @@ pub async fn fetch_features_for_waterway(
         map.entry(f.section_id).or_default().push(feature);
     }
     Ok(map)
+}
+
+/// Whether the feature exists inside its section and river.
+pub async fn feature_exists(
+    pool: &PgPool,
+    waterway_id: WaterwayId,
+    section_id: SectionId,
+    feature_id: FeatureId,
+) -> Result<bool, sqlx::Error> {
+    let row: (bool,) = sqlx::query_as(
+        "SELECT EXISTS(SELECT 1 FROM features f JOIN water_sections s ON s.id = f.section_id \
+         WHERE f.id = $1 AND f.section_id = $2 AND s.waterway_id = $3)",
+    )
+    .bind(feature_id)
+    .bind(section_id)
+    .bind(waterway_id)
+    .fetch_one(pool)
+    .await?;
+    Ok(row.0)
 }

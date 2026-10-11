@@ -210,31 +210,16 @@ pub async fn create_waterway(
     }
 
     if token.is_server_admin() {
-        let result = sqlx::query!(
-            r#"
-        INSERT INTO waterways (waterway_type, name, description)
-        VALUES ('river', $1, $2)
-        RETURNING id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at
-        "#,
-            body.name,
-            body.description
+        let result = query_waterways::create_waterway(
+            &app.pg_pool,
+            &body.name,
+            body.description.as_deref(),
+            token.user_id(),
         )
-        .fetch_one(&app.pg_pool)
         .await;
 
         return match result {
-            Ok(r) => (
-                StatusCode::CREATED,
-                Json(Waterway {
-                    id: r.id,
-                    waterway_type: r.waterway_type,
-                    name: r.name,
-                    description: r.description,
-                    created_at: r.created_at,
-                    updated_at: r.updated_at,
-                }),
-            )
-                .into_response(),
+            Ok(waterway) => (StatusCode::CREATED, Json(waterway)).into_response(),
             Err(err) if crate::query::is_unique_violation(&err) => {
                 ApiError::conflict("A waterway with this name already exists").into_response()
             }
@@ -292,33 +277,17 @@ pub async fn update_waterway(
     };
 
     if token.is_server_admin() {
-        let result = sqlx::query!(
-            r#"
-        UPDATE waterways
-        SET
-            name = COALESCE($1, name),
-            description = COALESCE($2, description),
-            updated_at = NOW()
-        WHERE id = $3
-        RETURNING id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at
-        "#,
-            body.name,
-            body.description,
-            waterway_id
+        let result = query_waterways::update_waterway(
+            &app.pg_pool,
+            waterway_id,
+            body.name.as_deref(),
+            body.description.as_deref(),
+            token.user_id(),
         )
-        .fetch_optional(&app.pg_pool)
         .await;
 
         return match result {
-            Ok(Some(r)) => Json(Waterway {
-                id: r.id,
-                waterway_type: r.waterway_type,
-                name: r.name,
-                description: r.description,
-                created_at: r.created_at,
-                updated_at: r.updated_at,
-            })
-            .into_response(),
+            Ok(Some(waterway)) => Json(waterway).into_response(),
             Ok(None) => ApiError::not_found("Not found").into_response(),
             Err(err) => {
                 tracing::error!("Error updating waterway {}: {}", waterway_id, err);
@@ -368,16 +337,12 @@ pub async fn delete_waterway(
     };
 
     if token.is_server_admin() {
-        let result = sqlx::query!(
-            "DELETE FROM waterways WHERE id = $1 RETURNING id",
-            waterway_id
-        )
-        .fetch_optional(&app.pg_pool)
-        .await;
+        let result =
+            query_waterways::delete_waterway(&app.pg_pool, waterway_id, token.user_id()).await;
 
         return match result {
-            Ok(Some(_)) => StatusCode::NO_CONTENT.into_response(),
-            Ok(None) => ApiError::not_found("Not found").into_response(),
+            Ok(true) => StatusCode::NO_CONTENT.into_response(),
+            Ok(false) => ApiError::not_found("Not found").into_response(),
             Err(err) => {
                 tracing::error!("Error deleting waterway {}: {}", waterway_id, err);
                 ApiError::internal().into_response()
