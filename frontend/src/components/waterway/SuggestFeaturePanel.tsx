@@ -50,9 +50,6 @@ export default function SuggestFeaturePanel({
         sx={{
           flex: 1,
           overflowY: "auto",
-          borderTop: "3px solid",
-          borderColor: "divider",
-          paddingTop: 2,
         }}
       >
         <SuggestFeatureForm

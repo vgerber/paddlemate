@@ -292,11 +292,7 @@ function SuggestSectionPage() {
           }
           leftLabel={step === 0 || submitted ? "Cancel" : "Back"}
           leftDisabled={submitting}
-          title={
-            submitted
-              ? "Section submitted"
-              : `New section · ${waterway?.name ?? "…"}`
-          }
+          title={submitted ? "Section submitted" : "Suggest section"}
           subtitle={
             submitted
               ? "Pending review"
