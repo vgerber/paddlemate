@@ -1,9 +1,9 @@
 import type { Proposal, ProposalStatus } from "@/lib/api";
 
-/** The status as a reader says it: an approved proposal is "Accepted". */
+/** The status as a reader says it. */
 export const STATUS_LABEL: Record<ProposalStatus, string> = {
   pending: "Pending",
-  approved: "Accepted",
+  approved: "Approved",
   rejected: "Rejected",
 };
 
@@ -16,7 +16,7 @@ export function kindLine(
   return `${labels.op[operation] ?? operation} · ${labels.entity[entityType] ?? entityType}`;
 }
 
-/** Who decided it, for the line under the proposer: "Accepted by anna".
+/** Who decided it, for the line under the proposer: "Approved by anna".
  * Empty while pending or when the API names no one. */
 export function reviewerLine(proposal: Proposal): string | null {
   if (proposal.status === "pending") return null;

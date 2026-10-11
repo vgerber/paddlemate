@@ -46,7 +46,7 @@ test.describe("proposal list", () => {
     ).toBe("none");
   });
 
-  test("accepted and rejected read as words, not capitals", async ({
+  test("approved and rejected read as words, not capitals", async ({
     page,
   }) => {
     const base = {
@@ -69,7 +69,10 @@ test.describe("proposal list", () => {
     );
     await page.goto("/proposals?status=approved");
     const chips = page.getByTestId("proposal-status").filter({ visible: true });
-    await expect(chips).toHaveText(["Accepted", "Rejected"]);
+    await expect(chips).toHaveText(["Approved", "Rejected"]);
+    await expect(
+      page.getByRole("tab", { name: "Approved", exact: true }),
+    ).toBeVisible();
   });
 
   test("no tracked or uppercase text", async ({ page }) => {

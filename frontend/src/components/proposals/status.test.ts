@@ -8,12 +8,12 @@ describe("reviewerLine", () => {
     reviewed_by: "u2",
     reviewed_by_name: "anna",
   } as Proposal;
-  test("names who accepted it", () => {
-    expect(reviewerLine(decided)).toBe("Accepted by anna");
+  test("names who approved it", () => {
+    expect(reviewerLine(decided)).toBe("Approved by anna");
   });
   test("falls back to the id", () => {
     expect(reviewerLine({ ...decided, reviewed_by_name: null })).toBe(
-      "Accepted by u2",
+      "Approved by u2",
     );
   });
   test("is empty while pending", () => {
@@ -22,10 +22,10 @@ describe("reviewerLine", () => {
 });
 
 describe("STATUS_LABEL", () => {
-  test("is sentence case and calls approved accepted", () => {
+  test("is sentence case", () => {
     expect(STATUS_LABEL).toEqual({
       pending: "Pending",
-      approved: "Accepted",
+      approved: "Approved",
       rejected: "Rejected",
     });
   });
