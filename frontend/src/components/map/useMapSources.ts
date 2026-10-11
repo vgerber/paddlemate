@@ -17,10 +17,13 @@ import {
   buildProposedPointFeaturesGeoJSON,
   buildPutInTakeOutConnectorsGeoJSON,
   buildRegionChoicesGeoJSON,
+  buildRegionLabelsGeoJSON,
+  buildRegionLitGeoJSON,
   buildSectionEndpointsGeoJSON,
   buildSectionLabelsGeoJSON,
   buildSectionsGeoJSON,
 } from "./mapLayers";
+import { type Bbox, visibleRegions } from "./regionGeometry";
 
 interface UseMapSourcesInput {
   sections?: SectionWithFeatures[];
@@ -32,6 +35,10 @@ interface UseMapSourcesInput {
   regionChoices?: RegionOutline[] | null;
   pickedRegion?: RegionOutline | null;
   countryBorders?: CountryBorder[] | null;
+  /** The map view, west/south/east/north, for thinning the regions. */
+  viewBounds?: Bbox | null;
+  /** The region lit while its row in the choice card has focus. */
+  litRegionId?: number | null;
 }
 
 /**
@@ -50,6 +57,8 @@ export function useMapSources({
   regionChoices,
   pickedRegion,
   countryBorders,
+  viewBounds = null,
+  litRegionId = null,
 }: UseMapSourcesInput) {
   const language = useLanguage();
 
@@ -108,9 +117,21 @@ export function useMapSources({
     [proposedFeatures, language],
   );
 
+  const shownRegions = useMemo(
+    () => visibleRegions(regionChoices ?? [], viewBounds, pickedRegion?.id),
+    [regionChoices, viewBounds, pickedRegion?.id],
+  );
   const regionChoicesGeoJSON = useMemo(
-    () => buildRegionChoicesGeoJSON(regionChoices, pickedRegion?.id),
-    [regionChoices, pickedRegion?.id],
+    () => buildRegionChoicesGeoJSON(shownRegions, pickedRegion?.id),
+    [shownRegions, pickedRegion?.id],
+  );
+  const regionLabelsGeoJSON = useMemo(
+    () => buildRegionLabelsGeoJSON(shownRegions, pickedRegion),
+    [shownRegions, pickedRegion],
+  );
+  const regionLitGeoJSON = useMemo(
+    () => buildRegionLitGeoJSON(regionChoices, pickedRegion, litRegionId),
+    [regionChoices, pickedRegion, litRegionId],
   );
   const pickedRegionGeoJSON = useMemo(
     () => buildPickedRegionGeoJSON(pickedRegion),
@@ -135,6 +156,8 @@ export function useMapSources({
     proposedLineEndpointsGeoJSON,
     proposedLineLabelsGeoJSON,
     regionChoicesGeoJSON,
+    regionLabelsGeoJSON,
+    regionLitGeoJSON,
     pickedRegionGeoJSON,
     countryBordersGeoJSON,
   };

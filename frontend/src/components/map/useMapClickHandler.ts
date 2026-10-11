@@ -8,6 +8,7 @@ import type { RegionChoice } from "./RegionChoicePopup";
 interface RegionMenu {
   at: { lng: number; lat: number };
   options: RegionChoice[];
+  pickedId: number;
 }
 
 /** Read the region rows out of a click, innermost first and without repeats.
@@ -17,12 +18,12 @@ function regionsUnder(event: MapLayerMouseEvent): RegionChoice[] {
   const options: RegionChoice[] = [];
   for (const feature of event.features ?? []) {
     if (feature.layer.id !== "region-browse-fill") continue;
-    const { id, label, palette_index } = feature.properties ?? {};
+    const { id, label, sub } = feature.properties ?? {};
     if (typeof id !== "number" || options.some((o) => o.id === id)) continue;
     options.push({
       id,
       label: typeof label === "string" ? label : "",
-      paletteIndex: typeof palette_index === "number" ? palette_index : 0,
+      sub: typeof sub === "string" ? sub : "",
     });
   }
   return options;
@@ -100,11 +101,11 @@ export function useMapClickHandler({
     }
     if (!onRegionSelect) return;
     const options = regionsUnder(e);
-    // One region under the pointer is not a choice, it is the answer.
-    if (options.length === 1) {
-      onRegionSelect(options[0].id);
-    } else if (options.length > 1) {
-      setRegionMenu({ at: e.lngLat, options });
+    if (options.length === 0) return;
+    // The innermost region is the answer at once; any others are offered.
+    onRegionSelect(options[0].id);
+    if (options.length > 1) {
+      setRegionMenu({ at: e.lngLat, options, pickedId: options[0].id });
     }
   };
 

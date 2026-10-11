@@ -1,7 +1,9 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
-import { fonts } from "@/lib/theme";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 interface LabelModeToggleProps {
   labelMode: "section" | "river";
@@ -19,19 +21,19 @@ interface LabelModeToggleProps {
 
 const captionSx = {
   px: 1.5,
-  pt: 0.75,
-  pb: 0.5,
-  fontFamily: fonts.label,
-  fontSize: "0.625rem",
+  pt: 1,
+  pb: 0.25,
+  fontSize: "0.75rem",
   fontWeight: 600,
-  letterSpacing: "0.12em",
-  color: "text.disabled",
-  textTransform: "uppercase",
+  color: tokens.onSurfaceVariant,
   lineHeight: 1.4,
 } as const;
 
+const rule = `1px solid ${tokens.outlineVariant}`;
+
 /** Map layer controls: what section labels say, feature-name visibility,
- * and the satellite base layer. */
+ * and the satellite base layer. A white floating group like the zoom
+ * buttons, every button a full touch target. */
 export default function LabelModeToggle({
   labelMode,
   onChange,
@@ -45,20 +47,21 @@ export default function LabelModeToggle({
   const btn = (active: boolean) =>
     ({
       px: 1.5,
-      py: 0.6,
-      fontFamily: fonts.label,
-      fontSize: "0.6875rem",
-      fontWeight: 600,
-      letterSpacing: "0.06em",
-      textTransform: "uppercase",
-      color: active ? "text.primary" : "text.secondary",
-      bgcolor: active ? "action.selected" : "transparent",
+      minHeight: tokens.touch.min,
+      fontSize: "0.8125rem",
+      fontWeight: active ? 600 : 500,
+      color: active ? tokens.onPrimaryContainer : tokens.onSurface,
+      bgcolor: active ? tokens.primaryContainer : "transparent",
+      "&:hover": {
+        bgcolor: active ? tokens.primaryContainer : tokens.surfaceHigh,
+      },
     }) as const;
 
   const showLabelsGroup = onChange || onFeatureNamesChange;
 
   return (
     <Box
+      data-testid="map-layer-toggle"
       sx={{
         position: "absolute",
         ...(anchor === "top" ? { top: 14 } : { bottom: 14 + bottomOffset }),
@@ -67,9 +70,9 @@ export default function LabelModeToggle({
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        border: "1px solid",
-        borderColor: "divider",
-        bgcolor: "background.paper",
+        borderRadius: `${tokens.radii.sm}px`,
+        boxShadow: tokens.elevation.e2,
+        bgcolor: tokens.surface,
       }}
     >
       {showLabelsGroup && (
@@ -90,8 +93,7 @@ export default function LabelModeToggle({
                 sx={{
                   ...btn(labelMode === "river"),
                   flex: 1,
-                  borderLeft: "1px solid",
-                  borderColor: "divider",
+                  borderLeft: rule,
                 }}
               >
                 River
@@ -104,9 +106,7 @@ export default function LabelModeToggle({
               title="Show names of rapids, put-ins and other features"
               sx={{
                 ...btn(!!featureNames),
-                ...(onChange
-                  ? { borderTop: "1px solid", borderColor: "divider" }
-                  : {}),
+                ...(onChange ? { borderTop: rule } : {}),
               }}
             >
               Features
@@ -119,9 +119,7 @@ export default function LabelModeToggle({
         title="Satellite base map"
         sx={{
           ...btn(satellite),
-          ...(showLabelsGroup
-            ? { borderTop: "1px solid", borderColor: "divider" }
-            : {}),
+          ...(showLabelsGroup ? { borderTop: rule } : {}),
         }}
       >
         Satellite

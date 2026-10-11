@@ -8,6 +8,7 @@ import { humanize } from "@/lib/format";
 import { lineCoords, pointCoords, representativePoint } from "@/lib/geo";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
+import { labelPoint, regionSubtitle } from "./regionGeometry";
 
 export const FEATURE_COLORS: Record<string, string> =
   theme.tokens.featureColors;
@@ -398,17 +399,14 @@ export function buildProposedLineFeaturesGeoJSON(
   };
 }
 
-/** Regions offered in the browse layer, coloured so that ones overlapping
- * each other differ. The server hands out `palette_index`; a viewport busy
- * enough to run past the palette wraps and repeats a hue.
- *
- * The region already picked is left out - buildPickedRegionGeoJSON draws
- * that one, and keeps drawing it after a pan takes it out of view. */
+/** Regions offered in the browse layer. They all look the same: the line is
+ * one paint rule, not data on the feature. The region already picked is left
+ * out - buildPickedRegionGeoJSON draws that one, and keeps drawing it after a
+ * pan takes it out of view. */
 export function buildRegionChoicesGeoJSON(
   outlines: RegionOutline[] | null | undefined,
   pickedId: number | null | undefined,
 ): GeoJSON.FeatureCollection {
-  const palette = theme.tokens.mapRegionPalette;
   return {
     type: "FeatureCollection",
     features: (outlines ?? [])
@@ -418,15 +416,71 @@ export function buildRegionChoicesGeoJSON(
         id: region.id,
         properties: {
           id: region.id,
-          color: palette[region.palette_index % palette.length],
-          // Panning across a border is easy to miss when every label is
-          // just a valley name.
-          label: region.country
-            ? `${region.country} \u00b7 ${region.name}`
-            : region.name,
+          kind: region.kind,
+          label: region.name,
+          sub: regionSubtitle(region.country, region.kind),
         },
         geometry: region.geometry as GeoJSON.Geometry,
       })),
+  };
+}
+
+const labelPoints = new WeakMap<object, [number, number] | null>();
+
+/** Label point of a region, worked out once per geometry. */
+function cachedLabelPoint(geometry: GeoJSON.Geometry) {
+  if (!labelPoints.has(geometry)) {
+    labelPoints.set(geometry, labelPoint(geometry));
+  }
+  return labelPoints.get(geometry) ?? null;
+}
+
+/** One name per region, at the region's visual centre. The picked region is
+ * flagged so its name can be teal. */
+export function buildRegionLabelsGeoJSON(
+  outlines: RegionOutline[] | null | undefined,
+  picked: RegionOutline | null | undefined,
+): GeoJSON.FeatureCollection {
+  const all = picked
+    ? [...(outlines ?? []).filter((r) => r.id !== picked.id), picked]
+    : (outlines ?? []);
+  const features: GeoJSON.Feature[] = [];
+  for (const region of all) {
+    const at = cachedLabelPoint(region.geometry as GeoJSON.Geometry);
+    if (!at) continue;
+    features.push({
+      type: "Feature",
+      properties: {
+        id: region.id,
+        label: region.name,
+        picked: region.id === picked?.id,
+      },
+      geometry: { type: "Point", coordinates: at },
+    });
+  }
+  return { type: "FeatureCollection", features };
+}
+
+/** The region lit while its row in the choice card has focus. */
+export function buildRegionLitGeoJSON(
+  outlines: RegionOutline[] | null | undefined,
+  picked: RegionOutline | null | undefined,
+  litId: number | null | undefined,
+): GeoJSON.FeatureCollection {
+  const region = [...(outlines ?? []), ...(picked ? [picked] : [])].find(
+    (r) => r.id === litId,
+  );
+  return {
+    type: "FeatureCollection",
+    features: region
+      ? [
+          {
+            type: "Feature",
+            properties: { id: region.id, kind: region.kind },
+            geometry: region.geometry as GeoJSON.Geometry,
+          },
+        ]
+      : [],
   };
 }
 

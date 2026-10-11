@@ -9,10 +9,13 @@ export default function MapNumberMarker({
   lat,
   lon,
   num,
+  color = tokens.tertiary,
 }: {
   lat: number;
   lon: number;
   num: number;
+  /** Defaults to the accent; put-in and take-out bring their own hue. */
+  color?: string;
 }) {
   return (
     <Marker latitude={lat} longitude={lon} anchor="center">
@@ -21,14 +24,14 @@ export default function MapNumberMarker({
           width: 20,
           height: 20,
           borderRadius: "50%",
-          background: tokens.tertiary,
-          color: tokens.onTertiary,
+          background: color,
+          color: tokens.onPrimary,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           fontSize: 11,
           fontWeight: 700,
-          border: "2px solid white",
+          border: `2px solid ${tokens.surface}`,
           boxShadow: "0 1px 4px rgba(0,0,0,0.6)",
           pointerEvents: "none",
         }}
