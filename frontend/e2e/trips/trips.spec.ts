@@ -521,13 +521,41 @@ test.describe("trip gaps", () => {
     await expect(page).toHaveURL(new RegExp(`/trips\\?selected=${TRIP}`));
     await expect(dayCards(page).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Add a day" })).toBeVisible();
-    await expect(page.locator(".MuiFab-root:visible")).toHaveCount(0);
+    // Only the admin's trip-actions dial floats; the add button is docked.
+    await expect(page.locator(".MuiFab-root:visible")).toHaveCount(1);
+    await expect(
+      page.getByRole("button", { name: "Trip actions" }),
+    ).toBeVisible();
     const panel = page.getByTestId("trip-panel");
     await expect(panel).toHaveCSS("background-color", "rgb(255, 255, 255)");
     await expect(panel).toHaveCSS("border-radius", "14px");
     await page.goto("/trips/new");
     await expect(page).toHaveURL(/\/trips\?new=true/);
     await expect(page.getByTestId("trip-card").first()).toBeVisible();
+    await expect(page.getByLabel("Trip name")).toBeVisible();
+  });
+});
+
+test.describe("trip actions", () => {
+  test("an admin reaches Edit and Delete on every tab", async ({ page }) => {
+    await openPlan(page);
+    const dial = page
+      .getByRole("button", { name: "Trip actions" })
+      .filter({ visible: true });
+    for (const tab of ["Plan", "Bases", "Members", "Logs"]) {
+      await page
+        .getByRole("tab", { name: tab, exact: true })
+        .filter({ visible: true })
+        .click();
+      await expect(dial, `${tab} tab`).toBeVisible();
+      await expectTouchTargets(dial);
+    }
+    await dial.click();
+    await expect(
+      page.getByRole("menuitem", { name: "Delete trip" }),
+    ).toBeVisible();
+    await page.getByRole("menuitem", { name: "Edit trip" }).click();
+    await expect(page).toHaveURL(/edit=true/);
     await expect(page.getByLabel("Trip name")).toBeVisible();
   });
 });
