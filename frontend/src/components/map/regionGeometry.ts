@@ -1,6 +1,8 @@
 /** Rules for which regions the map draws, and where each one's name sits.
  * Pure, so the rules can be tested without a map. */
 
+import polylabel from "polylabel";
+
 /** [west, south, east, north] */
 export type Bbox = readonly [number, number, number, number];
 
@@ -17,12 +19,17 @@ export const MIN_VIEW_SHARE = 0.003;
 /** A range holding at least this many other ranges is not drawn. */
 export const MAX_NESTED_RANGES = 2;
 
-const KIND_LABELS: Record<string, string> = {
-  valley: "Valleys",
-  district: "Districts",
-  range: "Mountain ranges",
-  state: "States",
-};
+/** The levels regions come in, in the order the level chips show them. */
+export const LEVELS = [
+  { kind: "valley", label: "Valleys" },
+  { kind: "district", label: "Districts" },
+  { kind: "range", label: "Mountain ranges" },
+  { kind: "state", label: "States" },
+] as const;
+
+const KIND_LABELS: Record<string, string> = Object.fromEntries(
+  LEVELS.map((level) => [level.kind, level.label]),
+);
 
 /** The line under a region's name in the choice card: its country, then the
  * level it belongs to. The map label itself carries the name alone. */
@@ -70,13 +77,47 @@ export function visibleRegions<T extends DrawableRegion>(
     if (viewArea > 0 && bboxArea(region.bbox) / viewArea < MIN_VIEW_SHARE) {
       return false;
     }
-    if (region.kind !== "range") return true;
-    const nested = ranges.filter(
-      (other) =>
-        other.id !== region.id && bboxContains(region.bbox, other.bbox),
-    ).length;
-    return nested < MAX_NESTED_RANGES;
+    return !holdsManyRanges(region, ranges);
   });
+}
+
+function holdsManyRanges(
+  region: DrawableRegion,
+  ranges: readonly DrawableRegion[],
+): boolean {
+  if (region.kind !== "range") return false;
+  const nested = ranges.filter(
+    (other) => other.id !== region.id && bboxContains(region.bbox, other.bbox),
+  ).length;
+  return nested >= MAX_NESTED_RANGES;
+}
+
+/** The ranges that `visibleRegions` leaves out because they hold other
+ * ranges, so they can still be reached from a list. Bounding boxes stand in
+ * for containment, as there: the API cannot answer "inside" yet. */
+export function rangesHiddenByNesting<T extends DrawableRegion>(
+  regions: readonly T[],
+  pickedId?: number | null,
+): T[] {
+  const ranges = regions.filter((r) => r.kind === "range");
+  return ranges.filter(
+    (range) => range.id !== pickedId && holdsManyRanges(range, ranges),
+  );
+}
+
+/** The regions the picked one lies in, nearest first. Bounding boxes stand in
+ * for containment (an approximation: a neighbour's box can swallow a region
+ * that is not inside it) until the API answers it. */
+export function partOf<T extends DrawableRegion>(
+  regions: readonly T[],
+  picked: { id: number; bbox: readonly number[] },
+): T[] {
+  return regions
+    .filter(
+      (region) =>
+        region.id !== picked.id && bboxContains(region.bbox, picked.bbox),
+    )
+    .sort((a, b) => bboxArea(a.bbox) - bboxArea(b.bbox));
 }
 
 type Pt = readonly [number, number];
@@ -120,105 +161,28 @@ function lineMidpoint(line: readonly Pt[]): Pt | null {
   return line[line.length - 1];
 }
 
-function segmentDistance(p: Pt, a: Pt, b: Pt): number {
-  let x = a[0];
-  let y = a[1];
-  let dx = b[0] - x;
-  let dy = b[1] - y;
-  if (dx !== 0 || dy !== 0) {
-    const t = ((p[0] - x) * dx + (p[1] - y) * dy) / (dx * dx + dy * dy);
-    if (t > 1) {
-      x = b[0];
-      y = b[1];
-    } else if (t > 0) {
-      x += dx * t;
-      y += dy * t;
-    }
-  }
-  dx = p[0] - x;
-  dy = p[1] - y;
-  return Math.hypot(dx, dy);
-}
-
-/** Signed distance from `p` to the polygon edge: positive inside. */
-function edgeDistance(p: Pt, rings: readonly (readonly Pt[])[]): number {
-  let inside = false;
-  let min = Number.POSITIVE_INFINITY;
-  for (const ring of rings) {
-    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const a = ring[i];
-      const b = ring[j];
-      if (
-        a[1] > p[1] !== b[1] > p[1] &&
-        p[0] < ((b[0] - a[0]) * (p[1] - a[1])) / (b[1] - a[1]) + a[0]
-      ) {
-        inside = !inside;
-      }
-      min = Math.min(min, segmentDistance(p, a, b));
-    }
-  }
-  return inside ? min : -min;
-}
-
-interface Cell {
-  x: number;
-  y: number;
-  half: number;
-  d: number;
-  max: number;
-}
-
-function makeCell(x: number, y: number, half: number, rings: Pt[][]): Cell {
-  const d = edgeDistance([x, y], rings);
-  return { x, y, half, d, max: d + half * Math.SQRT2 };
-}
-
-/** The visual centre of a polygon: the inside point farthest from every edge
- * (the pole of inaccessibility), found by refining a grid until a cell cannot
- * beat the best by more than a hundredth of the shape. Hand-rolled because
- * the shape is the only input and a dependency would dwarf the need. Works in
- * degrees; at region scale the distortion does not move the label visibly. */
+/** The visual centre of a polygon (pole of inaccessibility) in degrees, at a
+ * precision of a hundredth of the shape's longer side. */
 function polygonCentre(rings: Pt[][]): Pt | null {
   const outer = rings[0];
   if (!outer || outer.length < 3) return null;
   let minX = Number.POSITIVE_INFINITY;
-  let minY = Number.POSITIVE_INFINITY;
   let maxX = Number.NEGATIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
   let maxY = Number.NEGATIVE_INFINITY;
   for (const [x, y] of outer) {
     minX = Math.min(minX, x);
-    minY = Math.min(minY, y);
     maxX = Math.max(maxX, x);
+    minY = Math.min(minY, y);
     maxY = Math.max(maxY, y);
   }
-  const size = Math.min(maxX - minX, maxY - minY);
-  if (size === 0) return [minX, minY];
   const precision = Math.max(maxX - minX, maxY - minY) / 100;
-  let half = size / 2;
-  const queue: Cell[] = [];
-  for (let x = minX; x < maxX; x += size) {
-    for (let y = minY; y < maxY; y += size) {
-      queue.push(makeCell(x + half, y + half, half, rings));
-    }
-  }
-  const mid = makeCell((minX + maxX) / 2, (minY + maxY) / 2, 0, rings);
-  let best = mid;
-  while (queue.length > 0) {
-    queue.sort((a, b) => b.max - a.max);
-    const cell = queue.shift() as Cell;
-    if (cell.d > best.d) best = cell;
-    if (cell.max - best.d <= precision) continue;
-    half = cell.half / 2;
-    for (const [dx, dy] of [
-      [-1, -1],
-      [1, -1],
-      [-1, 1],
-      [1, 1],
-    ]) {
-      queue.push(makeCell(cell.x + dx * half, cell.y + dy * half, half, rings));
-    }
-  }
-  return [best.x, best.y];
+  if (precision === 0) return [minX, minY];
+  const [x, y] = polylabel(
+    rings.map((ring) => ring.map(([px, py]) => [px, py])),
+    precision,
+  );
+  return [x, y];
 }
 
 function asPoints(coords: number[][]): Pt[] {

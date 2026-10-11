@@ -108,12 +108,15 @@ export default function RegionLayers({
       </Source>
 
       <Source id="region-labels" type="geojson" data={labels}>
+        {/* Quiet on purpose: smaller than the base map's labels and in the
+            secondary ink. The style serves Regular, Bold and Italic only, so
+            Regular is the lightest weight there is. */}
         <Layer
           id="region-label"
           type="symbol"
           layout={{
             "text-field": ["get", "label"],
-            "text-size": 13,
+            "text-size": 12,
             "text-font": ["Noto Sans Regular"],
             "text-padding": 8,
             "text-max-width": 8,
@@ -123,7 +126,7 @@ export default function RegionLayers({
               "case",
               ["get", "picked"],
               tokens.mapSelectedLine,
-              tokens.mapLabelText,
+              tokens.onSurfaceVariant,
             ],
             "text-halo-color": tokens.mapLabelHalo,
             "text-halo-width": 2,

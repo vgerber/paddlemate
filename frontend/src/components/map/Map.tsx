@@ -36,6 +36,7 @@ import SectionLayers from "./SectionLayers";
 import { useMapCameraEffects } from "./useMapCameraEffects";
 import { useMapClickHandler } from "./useMapClickHandler";
 import { useMapSources } from "./useMapSources";
+import { useMutedBaseMap } from "./useMutedBaseMap";
 
 export type { AreaCircle } from "@/lib/geo";
 export type { GaugePin } from "./GaugeMarkers";
@@ -251,6 +252,12 @@ export default function WaterwayMap({
   const [showFeatureNames, setShowFeatureNames] = useState(true);
   const [viewBounds, setViewBounds] = useState<Bbox | null>(null);
   const [litRegionId, setLitRegionId] = useState<number | null>(null);
+  useMutedBaseMap(
+    mapRef,
+    mapLoaded,
+    regionChoices != null,
+    satellite ? "satellite" : "liberty",
+  );
   const { handleMapLoad } = useMapCameraEffects({
     mapRef,
     mapLoaded,

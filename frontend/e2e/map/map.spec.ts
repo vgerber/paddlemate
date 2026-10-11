@@ -33,6 +33,7 @@ type FeatureCollection = {
 
 type MapHook = {
   getPaintProperty(layer: string, prop: string): unknown;
+  getLayoutProperty(layer: string, prop: string): unknown;
   getSource(id: string): { serialize(): { data: FeatureCollection } };
   project(lngLat: [number, number]): { x: number; y: number };
   jumpTo(o: { center: [number, number]; zoom: number }): void;
@@ -52,6 +53,12 @@ declare global {
 const paint = (page: Page, layer: string, prop: string) =>
   page.evaluate(
     ([l, p]) => window.__paddlemateMap?.getPaintProperty(l, p),
+    [layer, prop],
+  );
+
+const layout = (page: Page, layer: string, prop: string) =>
+  page.evaluate(
+    ([l, p]) => window.__paddlemateMap?.getLayoutProperty(l, p),
     [layer, prop],
   );
 
@@ -154,6 +161,28 @@ test.describe("the base map", () => {
   });
 });
 
+test.describe("the layer toggle", () => {
+  for (const width of [768, 1280]) {
+    test(`Section and River share one row at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await gotoSection(page, "lower");
+      const toggle = page.getByTestId("map-layer-toggle");
+      const section = await toggle
+        .getByRole("button", { name: "Section", exact: true })
+        .boundingBox();
+      const river = await toggle
+        .getByRole("button", { name: "River", exact: true })
+        .boundingBox();
+      expect(section?.y, "same row").toBe(river?.y);
+      expect(section?.height, "one line of text").toBe(44);
+      expect(river?.height).toBe(44);
+      expect(
+        await toggle.boundingBox().then((b) => b?.width ?? 0),
+      ).toBeLessThan(200);
+    });
+  }
+});
+
 test.describe("regions", () => {
   test("every boundary is one solid grey line in one ink", async ({ page }) => {
     await openRegionMap(page);
@@ -197,6 +226,52 @@ test.describe("regions", () => {
     const alpha = labels.find((l) => l.id === REGIONS.alpha.id);
     expect(alpha?.label, "the name alone, no country prefix").toBe(
       REGIONS.alpha.name,
+    );
+  });
+
+  test("region names are quieter than the base map's labels", async ({
+    page,
+  }) => {
+    await openRegionMap(page);
+    const size = (await layout(page, "region-label", "text-size")) as number;
+    expect(size).toBeLessThanOrEqual(12);
+    expect(await layout(page, "region-label", "text-font")).toEqual([
+      "Noto Sans Regular",
+    ]);
+    const color = JSON.stringify(
+      await paint(page, "region-label", "text-color"),
+    );
+    expect(color).toContain(INK);
+    expect(color, "ink and the one teal, nothing else").not.toContain(
+      "#1f2b31",
+    );
+    expect(await paint(page, "region-label", "text-halo-color")).toBe(WHITE);
+    const base = await layout(page, "label_town", "text-size");
+    expect(JSON.stringify(base)).not.toBe(JSON.stringify(size));
+  });
+
+  test("roads and road numbers fade in region mode and come back", async ({
+    page,
+  }) => {
+    await openRegionMap(page);
+    await expect
+      .poll(() => paint(page, "road_motorway", "line-opacity"))
+      .toBeLessThanOrEqual(0.4);
+    expect(await layout(page, "highway-shield-non-us", "visibility")).toBe(
+      "none",
+    );
+    expect(await layout(page, "highway-name-major", "visibility")).toBe("none");
+    // Leave region mode inside the app, without a reload.
+    await page.evaluate(() => {
+      window.history.pushState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    await expect(page).not.toHaveURL(/mode=region/);
+    await expect
+      .poll(() => paint(page, "road_motorway", "line-opacity"))
+      .toBeGreaterThan(0.4);
+    expect(await layout(page, "highway-name-major", "visibility")).toBe(
+      "visible",
     );
   });
 
@@ -262,6 +337,11 @@ test.describe("regions", () => {
 
   test("@small the choice card fits a 320px screen", async ({ page }) => {
     await openRegionMap(page);
+    // The peek sheet covers the foot of a 320px screen; look further south so
+    // the shared ground is above it.
+    await page.evaluate(() =>
+      window.__paddlemateMap?.jumpTo({ center: [10.9, 46.5], zoom: 7 }),
+    );
     await clickAt(page, SHARED_POINT);
     const card = page.getByTestId("region-choices");
     await expect(card).toBeVisible();
@@ -271,5 +351,75 @@ test.describe("regions", () => {
       page.viewportSize()?.width ?? 0,
     );
     await expectNoHorizontalOverflow(page);
+  });
+});
+
+async function dragSheetOpen(page: Page) {
+  const box = await page.getByRole("region", { name: "Regions" }).boundingBox();
+  const x = (box?.x ?? 0) + (box?.width ?? 0) / 2;
+  const y = (box?.y ?? 0) + 22;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y - 150, { steps: 6 });
+  await page.mouse.move(x, y - 300, { steps: 6 });
+  await page.mouse.up();
+  await expect(page.getByRole("dialog", { name: "Regions" })).toBeVisible();
+}
+
+test.describe("the region sheet", () => {
+  test.beforeEach(({ browserName }, info) => {
+    void browserName;
+    test.skip(info.project.name === "desktop", "the sheet is the phone layout");
+  });
+
+  test("levels are chips that narrow the map, and the results button is named", async ({
+    page,
+  }) => {
+    await openRegionMap(page);
+    const sheet = page.getByRole("region", { name: "Regions" });
+    for (const level of ["Valleys", "Districts", "Mountain ranges", "States"]) {
+      await expect(
+        sheet.getByRole("button", { name: level, exact: true }),
+      ).toBeVisible();
+    }
+    const results = page.getByRole("button", { name: "Open search panel" });
+    await expect(results).toBeVisible();
+    await expectTouchTargets(results);
+
+    await sheet.getByRole("button", { name: "Districts", exact: true }).click();
+    await expect
+      .poll(async () =>
+        (await sourceFeatures(page, "region-browse")).map((f) => f.id),
+      )
+      .toEqual([REGIONS.inner.id]);
+    await sheet.getByRole("button", { name: "Districts", exact: true }).click();
+    await expect
+      .poll(async () => (await sourceFeatures(page, "region-browse")).length)
+      .toBeGreaterThan(1);
+  });
+
+  test("a pick shows what it is part of and the ranges the map left out @small", async ({
+    page,
+  }) => {
+    await openRegionMap(page);
+    await clickAt(page, SOLO_POINT);
+    await expect(
+      page
+        .getByRole("region", { name: "Regions" })
+        .getByText("AT \u00b7 Beta range"),
+    ).toBeVisible();
+    await dragSheetOpen(page);
+    const sheet = page.getByRole("dialog", { name: "Regions" });
+    await expect(sheet.getByText("Part of")).toBeVisible();
+    await expect(
+      sheet.getByRole("button", { name: REGIONS.big.name }),
+    ).toBeVisible();
+    await sheet
+      .getByRole("button", { name: "Mountain ranges in view (1)" })
+      .click();
+    await expect(sheet.getByText(REGIONS.big.name).nth(1)).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await sheet.getByRole("button", { name: REGIONS.big.name }).first().click();
+    await expect(page).toHaveURL(new RegExp(`region=${REGIONS.big.id}`));
   });
 });

@@ -168,7 +168,7 @@ in `regionGeometry.test.ts`) and the layers in `RegionLayers.tsx` and
 | A range holding `MAX_NESTED_RANGES` (2) or more other ranges is not drawn; bounding boxes stand in until the API answers containment | `visibleRegions` |
 | A region under `MIN_VIEW_SHARE` (0.003) of the view area is not drawn | `visibleRegions` |
 | The picked region is never hidden by either rule, and has its own source so panning it out of the viewport does not remove it | `visibleRegions`, `RegionLayers` |
-| One label per region at the pole of inaccessibility of its biggest part, or the middle of its longest line; hand-rolled because the polygon is the only input | `labelPoint` |
+| One label per region at the pole of inaccessibility of its biggest part, or the middle of its longest line; computed with the `polylabel` library, cached per geometry | `labelPoint` |
 | Every boundary: 1px `onSurfaceVariant` line, fill at 4% opacity (not for valleys) | `region-browse-line`, `region-browse-fill` |
 | Valleys: a 14px blurred line band at 14% opacity, no outline | `region-valley-band` |
 | Picked region: `mapSelectedLine` fill at 12% and a 2.5px line, label in the same colour; a region whose row has focus in the choice card is lit the same way | `region-picked-*`, `region-lit-*` |
