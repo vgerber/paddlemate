@@ -1,3 +1,4 @@
+import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
@@ -161,13 +162,14 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
                   onClick={s.waterway_id != null ? open : undefined}
                   sx={{
                     display: "grid",
-                    gridTemplateColumns: "24px minmax(0, 1fr)",
-                    columnGap: 1,
+                    gridTemplateColumns: "auto minmax(0, 1fr)",
+                    columnGap: 1.5,
                     alignItems: "start",
+                    alignContent: "center",
                     textAlign: "left",
                     width: "100%",
                     boxSizing: "border-box",
-                    minHeight: tokens.touch.min,
+                    minHeight: 56,
                     p: 1.5,
                     font: "inherit",
                     color: "text.primary",
@@ -181,10 +183,15 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
                     component="span"
                     sx={{
                       ...valueSx,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      minWidth: 36,
                       color: "text.secondary",
                       fontSize: "0.8125rem",
                     }}
                   >
+                    <DirectionsBoatOutlinedIcon sx={{ fontSize: 18 }} />
                     {index + 1}
                   </Box>
                   <Box component="span" sx={{ display: "block", minWidth: 0 }}>

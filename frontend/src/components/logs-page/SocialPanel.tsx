@@ -3,17 +3,90 @@ import CloseIcon from "@mui/icons-material/Close";
 import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
 import PersonRemoveOutlinedIcon from "@mui/icons-material/PersonRemoveOutlined";
 import SearchIcon from "@mui/icons-material/Search";
-import CircularProgress from "@mui/material/CircularProgress";
-import Divider from "@mui/material/Divider";
-import IconButton from "@mui/material/IconButton";
+import Box from "@mui/material/Box";
 import InputAdornment from "@mui/material/InputAdornment";
-import Paper from "@mui/material/Paper";
-import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
+import RowMenu, { type RowAction } from "@/components/RowMenu";
+import LoadingBox from "@/components/states/LoadingBox";
+import MemberAvatar from "@/components/trips/MemberAvatar";
 import { useAllUsers, useFollows } from "@/lib/hooks/useFollows";
 import { useSession } from "@/lib/hooks/useSession";
+import { fonts, theme } from "@/lib/theme";
+import GroupHead from "./GroupHead";
+
+const { tokens } = theme;
+
+/** One person: an initial, the name, and one menu for what can be done. */
+function PersonRow({
+  name,
+  actions = [],
+  note,
+}: {
+  name: string;
+  actions?: RowAction[];
+  /** Quiet text at the right edge when there is no menu to open. */
+  note?: ReactNode;
+}) {
+  return (
+    <Box
+      data-testid="person-row"
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1.25,
+        minHeight: 56,
+        pl: 1.5,
+        pr: actions.length > 0 ? 0.5 : 1.5,
+        borderRadius: `${tokens.radii.md}px`,
+        bgcolor: tokens.surface,
+        boxShadow: tokens.elevation.e1,
+      }}
+    >
+      <MemberAvatar name={name} size={30} />
+      <Typography
+        sx={{
+          flex: 1,
+          minWidth: 0,
+          fontFamily: fonts.label,
+          fontWeight: 600,
+          fontSize: "0.9375rem",
+        }}
+        noWrap
+      >
+        {name}
+      </Typography>
+      {note && (
+        <Typography
+          variant="body2"
+          color="textSecondary"
+          sx={{ fontSize: "0.8125rem" }}
+        >
+          {note}
+        </Typography>
+      )}
+      <RowMenu actions={actions} />
+    </Box>
+  );
+}
+
+function Group({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+      <GroupHead>{title}</GroupHead>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+        {children}
+      </Box>
+    </Box>
+  );
+}
+
+const quiet = (text: string) => (
+  <Typography variant="body2" color="textDisabled" sx={{ px: 0.5 }}>
+    {text}
+  </Typography>
+);
 
 /** Follow requests, following/followers lists and user search. */
 export default function SocialPanel() {
@@ -39,8 +112,7 @@ export default function SocialPanel() {
     : [];
 
   return (
-    <Stack spacing={3}>
-      {/* User search */}
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <TextField
         placeholder="Find users…"
         value={search}
@@ -59,158 +131,92 @@ export default function SocialPanel() {
       />
 
       {search.trim() && (
-        <Stack spacing={1}>
-          {usersLoading ? (
-            <CircularProgress size={20} />
-          ) : filtered.length === 0 ? (
-            <Typography variant="body2" color="textDisabled">
-              No users found.
-            </Typography>
-          ) : (
-            filtered.map((u) => (
-              <Paper key={u.id} variant="outlined" sx={{ px: 2, py: 1.5 }}>
-                <Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
-                  <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
-                    {u.username}
-                  </Typography>
-                  {u.id !== self?.id && (
-                    <IconButton
-                      size="small"
-                      disabled={
-                        u.outgoing_status === "pending" ||
-                        follow.isPending ||
-                        unfollow.isPending
-                      }
-                      onClick={() =>
-                        u.outgoing_status === "accepted"
-                          ? unfollow.mutate(u.id)
-                          : follow.mutate(u.id)
-                      }
-                      title={
-                        u.outgoing_status === "accepted"
-                          ? "Unfollow"
-                          : u.outgoing_status === "pending"
-                            ? "Pending"
-                            : "Follow"
-                      }
-                    >
-                      {u.outgoing_status === "accepted" ? (
-                        <PersonRemoveOutlinedIcon fontSize="small" />
-                      ) : (
-                        <PersonAddOutlinedIcon fontSize="small" />
-                      )}
-                    </IconButton>
-                  )}
-                </Stack>
-              </Paper>
-            ))
-          )}
-        </Stack>
+        <Group title="Results">
+          {usersLoading && <LoadingBox size={24} pt={1} />}
+          {!usersLoading && filtered.length === 0 && quiet("No users found.")}
+          {filtered.map((u) => {
+            const actions: RowAction[] = [];
+            if (u.id !== self?.id && u.outgoing_status !== "pending") {
+              actions.push(
+                u.outgoing_status === "accepted"
+                  ? {
+                      label: "Unfollow",
+                      icon: <PersonRemoveOutlinedIcon fontSize="small" />,
+                      onClick: () => unfollow.mutate(u.id),
+                    }
+                  : {
+                      label: "Follow",
+                      icon: <PersonAddOutlinedIcon fontSize="small" />,
+                      onClick: () => follow.mutate(u.id),
+                    },
+              );
+            }
+            return (
+              <PersonRow
+                key={u.id}
+                name={u.username}
+                actions={actions}
+                note={u.outgoing_status === "pending" ? "Pending" : undefined}
+              />
+            );
+          })}
+        </Group>
       )}
 
       {followsLoading ? (
-        <CircularProgress size={24} />
+        <LoadingBox size={24} pt={2} />
       ) : (
         <>
-          {/* Pending incoming requests */}
           {pendingRequests.length > 0 && (
-            <>
-              <Stack spacing={1}>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Pending requests ({pendingRequests.length})
-                </Typography>
-                {pendingRequests.map((u) => (
-                  <Paper key={u.id} variant="outlined" sx={{ px: 2, py: 1.5 }}>
-                    <Stack
-                      direction="row"
-                      sx={{ alignItems: "center", gap: 1 }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{ flex: 1, fontWeight: 500 }}
-                      >
-                        {u.username}
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={() => accept.mutate(u.id)}
-                        disabled={accept.isPending}
-                        title="Accept"
-                      >
-                        <CheckOutlinedIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => unfollow.mutate(u.id)}
-                        disabled={unfollow.isPending}
-                        title="Decline"
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                  </Paper>
-                ))}
-              </Stack>
-              <Divider />
-            </>
+            <Group title={`Pending requests (${pendingRequests.length})`}>
+              {pendingRequests.map((u) => (
+                <PersonRow
+                  key={u.id}
+                  name={u.username}
+                  actions={[
+                    {
+                      label: "Accept",
+                      icon: <CheckOutlinedIcon fontSize="small" />,
+                      onClick: () => accept.mutate(u.id),
+                    },
+                    {
+                      label: "Decline",
+                      icon: <CloseIcon fontSize="small" />,
+                      danger: true,
+                      onClick: () => unfollow.mutate(u.id),
+                    },
+                  ]}
+                />
+              ))}
+            </Group>
           )}
 
-          {/* Following */}
-          <Stack spacing={1}>
-            <Typography variant="subtitle2" color="textSecondary">
-              Following ({following.length})
-            </Typography>
-            {following.length === 0 ? (
-              <Typography variant="body2" color="textDisabled">
-                Not following anyone yet.
-              </Typography>
-            ) : (
-              following.map((u) => (
-                <Paper key={u.id} variant="outlined" sx={{ px: 2, py: 1.5 }}>
-                  <Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ flex: 1, fontWeight: 500 }}
-                    >
-                      {u.username}
-                    </Typography>
-                    <IconButton
-                      size="small"
-                      onClick={() => unfollow.mutate(u.id)}
-                      disabled={unfollow.isPending}
-                      title="Unfollow"
-                    >
-                      <PersonRemoveOutlinedIcon fontSize="small" />
-                    </IconButton>
-                  </Stack>
-                </Paper>
-              ))
-            )}
-          </Stack>
+          <Group title={`Following (${following.length})`}>
+            {following.length === 0 && quiet("Not following anyone yet.")}
+            {following.map((u) => (
+              <PersonRow
+                key={u.id}
+                name={u.username}
+                actions={[
+                  {
+                    label: "Unfollow",
+                    icon: <PersonRemoveOutlinedIcon fontSize="small" />,
+                    danger: true,
+                    onClick: () => unfollow.mutate(u.id),
+                  },
+                ]}
+              />
+            ))}
+          </Group>
 
-          <Divider />
-
-          {/* Followers */}
-          <Stack spacing={1}>
-            <Typography variant="subtitle2" color="textSecondary">
-              Followers ({followers.length})
-            </Typography>
-            {followers.length === 0 ? (
-              <Typography variant="body2" color="textDisabled">
-                No followers yet.
-              </Typography>
-            ) : (
-              followers.map((u) => (
-                <Paper key={u.id} variant="outlined" sx={{ px: 2, py: 1.5 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {u.username}
-                  </Typography>
-                </Paper>
-              ))
-            )}
-          </Stack>
+          <Group title={`Followers (${followers.length})`}>
+            {followers.length === 0 && quiet("No followers yet.")}
+            {followers.map((u) => (
+              <PersonRow key={u.id} name={u.username} />
+            ))}
+          </Group>
         </>
       )}
-    </Stack>
+    </Box>
   );
 }
