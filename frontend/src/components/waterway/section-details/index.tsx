@@ -1,3 +1,5 @@
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
@@ -5,6 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import RowMenu, { type RowAction } from "@/components/RowMenu";
 import EmptyState from "@/components/states/EmptyState";
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
 import { distanceAlongLineM, lineCoords } from "@/lib/geo";
@@ -142,6 +145,25 @@ export default function FeatureTimeline({
     pendingDeleteIds,
   };
 
+  // A grade over the whole run has no row, so its actions live in the header.
+  const grade = grades[0];
+  const gradeActions: RowAction[] = [];
+  if (grade && onEditItem) {
+    gradeActions.push({
+      label: "Edit grade",
+      icon: <EditOutlinedIcon fontSize="small" />,
+      onClick: () => onEditItem(grade),
+    });
+  }
+  if (grade && onDeleteItem) {
+    gradeActions.push({
+      label: "Delete grade",
+      icon: <DeleteOutlinedIcon fontSize="small" />,
+      danger: true,
+      onClick: () => onDeleteItem(grade),
+    });
+  }
+
   if (!section.features.length && !tree.length) {
     return <EmptyState title="No features for this section." />;
   }
@@ -185,6 +207,7 @@ export default function FeatureTimeline({
         >
           {count} {count === 1 ? "feature" : "features"}
         </Typography>
+        <RowMenu actions={gradeActions} label="Grade actions" />
         <IconButton
           data-testid="features-fold"
           aria-expanded={!folded}

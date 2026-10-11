@@ -304,3 +304,18 @@ test.describe("chart height", () => {
     await expect.poll(height).toBe(base);
   });
 });
+
+test.describe("whole-run grade", () => {
+  test("its edit and delete live in the header menu", async ({ page }) => {
+    await openFeatures(page);
+    await expect(row(page, "WW III")).toHaveCount(0);
+    await card(page).getByRole("button", { name: "Grade actions" }).click();
+    await expect(
+      page.getByRole("menuitem", { name: "Edit grade" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("menuitem", { name: "Delete grade" }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+  });
+});
