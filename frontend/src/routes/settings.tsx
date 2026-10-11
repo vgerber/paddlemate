@@ -81,7 +81,7 @@ function SettingsPage() {
           </>
         )}
         {/* The inbox is a list, edge to edge like every other list. */}
-        {tab === "inbox" && <NotificationList />}
+        {tab === "inbox" && <NotificationList cards />}
         {tab === "tools" && (
           <Box sx={{ px: 2, py: 3 }}>
             <ToolsList />
