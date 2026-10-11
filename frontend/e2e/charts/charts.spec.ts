@@ -337,3 +337,43 @@ test.describe("gauge coverage", () => {
     await expectNoHorizontalOverflow(page);
   });
 });
+
+test.describe("design gaps", () => {
+  test("the card sits 12px from the edge and the options chips are 44px", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop", "phone margins");
+    await openSection(page);
+    const box = await card(page).boundingBox();
+    expect(box?.x).toBe(12);
+    await card(page).getByRole("button", { name: "Chart options" }).click();
+    const chips = card(page).getByTestId("chart-option-chip");
+    await expectTouchTargets(chips);
+  });
+
+  test("the area fades to nothing and no descent bar is drawn", async ({
+    page,
+  }) => {
+    await openSection(page);
+    const last = card(page).locator("linearGradient stop").last();
+    await expect(last).toHaveAttribute("stop-opacity", "0");
+    const marks = await card(page)
+      .locator(".recharts-reference-area rect")
+      .evaluateAll(
+        (els) => els.filter((e) => e.getAttribute("stroke") !== "none").length,
+      );
+    expect(marks, "only threshold bands, no descent bar").toBe(0);
+  });
+
+  test("the plot keeps 160px of height on a small screen @small", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop", "phone height");
+    await openSection(page);
+    const plot = await card(page)
+      .getByTestId("latest-dot")
+      .locator("xpath=ancestor::*[contains(@class,'recharts-wrapper')]")
+      .boundingBox();
+    expect(plot?.height).toBeGreaterThanOrEqual(160);
+  });
+});

@@ -394,3 +394,45 @@ test.describe("whole-run grade", () => {
     await page.keyboard.press("Escape");
   });
 });
+
+test.describe("design gaps", () => {
+  test("rows follow the calm rail: weights, disc, indent, no band menu", async ({
+    page,
+  }) => {
+    await openFeatures(page);
+    const name = (n: string) => row(page, n).locator("span").first();
+    expect(await computed(name("Put in"), "font-weight")).toBe("500");
+    expect(
+      await computed(row(page, "Put in").locator("[data-km]"), "font-weight"),
+    ).toBe("500");
+    expect(await computed(name("Slot Machine"), "font-weight")).toBe("600");
+    const disc = await row(page, "Put in")
+      .locator("[data-row-disc]")
+      .boundingBox();
+    expect(disc?.width).toBe(28);
+    const head = await name("Slot Machine").boundingBox();
+    const member = await name("Big Hole").boundingBox();
+    expect((member?.x ?? 0) - (head?.x ?? 0)).toBe(24);
+    await expect(
+      card(page).getByRole("button", { name: "More actions" }),
+    ).toHaveCount(0);
+  });
+
+  test("the header holds the count and the fold only", async ({ page }) => {
+    await openFeatures(page);
+    const count = card(page).getByTestId("features-count");
+    await expect(count.locator("..").getByRole("button")).toHaveCount(1);
+    expect(await computed(count, "font-size")).toBe("13px");
+  });
+
+  test("a picked row shows 44px coordinate buttons in secondary ink", async ({
+    page,
+  }) => {
+    await openFeatures(page);
+    await row(page, "Altes Wehr").click();
+    const open = card(page).getByTitle("Open in Google Maps");
+    await expectTouchTargets(open);
+    expect(await computed(open, "color")).toBe("rgb(88, 102, 109)");
+    await row(page, "Altes Wehr").click();
+  });
+});

@@ -18,7 +18,7 @@ import {
 } from "recharts";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { GaugeReading, WaterRangeWithStatus } from "@/lib/api";
-import { humanize } from "@/lib/format";
+import { formatTime, humanize } from "@/lib/format";
 import { useGaugeReadings } from "@/lib/hooks/useGauges";
 import { theme } from "@/lib/theme";
 import type { DescentSpan } from "./types";
@@ -37,9 +37,8 @@ const LABEL_GAP = DOT_RADIUS + 10;
 
 export interface SeriesChartProps {
   range: WaterRangeWithStatus;
-  /** Range of the feature selected in the timeline. While set (and not the
-   * default range itself), the default thresholds dim and these render on
-   * top. */
+  /** Range of the feature selected in the timeline. While set, its
+   * thresholds replace the default ones. */
   selectedRange?: WaterRangeWithStatus | null;
   /** Name and type of the selected feature, shown as a chart caption. */
   selectedFeature?: { name: string; type: string } | null;
@@ -65,6 +64,11 @@ export function dayTicks([from, to]: [number, number], target = 4): number[] {
     ticks.push(d.getTime());
   }
   return ticks;
+}
+
+function typeCaption(type: string): string {
+  const text = humanize(type);
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function formatTick(v: number): string {
@@ -252,8 +256,6 @@ export default function SeriesChart({
   // always clearly in view; otherwise the default range does.
   const displayRange = selectedRange ?? range;
   const hasSelectedRange = selectedRange != null;
-  // No dimming when the selected feature owns the default range itself.
-  const dimDefault = selectedRange != null && selectedRange.id !== range.id;
   const thresholds = useMemo(
     () =>
       [
@@ -283,6 +285,9 @@ export default function SeriesChart({
   // Measure container explicitly and pass width/height directly to AreaChart,
   // bypassing ResponsiveContainer's -1/-1 initial state which causes console warnings.
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  // A touch leaves the tooltip standing; pointerleave hides it until the
+  // next touch or move.
+  const [hoverOff, setHoverOff] = useState(false);
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
   );
@@ -325,6 +330,9 @@ export default function SeriesChart({
     <div
       ref={setContainer}
       data-plot-top={headroom}
+      onPointerLeave={() => setHoverOff(true)}
+      onPointerDown={() => setHoverOff(false)}
+      onPointerMove={() => setHoverOff(false)}
       style={{
         width: "100%",
         height: "100%",
@@ -386,16 +394,8 @@ export default function SeriesChart({
               x2="0"
               y2="1"
             >
-              <stop
-                offset="5%"
-                stopColor={tokens.primaryContainer}
-                stopOpacity={0.9}
-              />
-              <stop
-                offset="95%"
-                stopColor={tokens.primaryContainer}
-                stopOpacity={0.55}
-              />
+              <stop offset="0%" stopColor={tokens.primary} stopOpacity={0.24} />
+              <stop offset="100%" stopColor={tokens.primary} stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
@@ -451,6 +451,7 @@ export default function SeriesChart({
             tickFormatter={formatTick}
           />
           <Tooltip
+            active={hoverOff ? false : undefined}
             content={({ active, payload, label }) => {
               const value = payload?.[0]?.value;
               if (!active || value == null) return null;
@@ -468,12 +469,10 @@ export default function SeriesChart({
                   }}
                 >
                   <div style={{ color: tokens.outline, marginBottom: 2 }}>
-                    {new Date(ts).toLocaleString(undefined, {
+                    {`${new Date(ts).toLocaleDateString(undefined, {
                       month: "short",
                       day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    })}, ${formatTime(new Date(ts).toISOString())}`}
                   </div>
                   <div style={{ color: tokens.onSurface }}>
                     {`${Number(value).toFixed(1)} ${series.unit}`}
@@ -498,12 +497,7 @@ export default function SeriesChart({
             isAnimationActive={false}
           />
           {showThresholds && thresholdBands(displayRange)}
-          {showThresholds &&
-            thresholdLines(range, dimDefault ? 0.25 : 1, "default")}
-          {showThresholds &&
-            dimDefault &&
-            selectedRange &&
-            thresholdLines(selectedRange, 1, "selected")}
+          {showThresholds && thresholdLines(displayRange, 1, "thresholds")}
           {lastPoint && (
             <ReferenceDot
               x={lastPoint.time}
@@ -547,7 +541,7 @@ export default function SeriesChart({
               component="span"
               sx={{ fontWeight: 400, color: "text.secondary" }}
             >
-              {` · ${humanize(selectedFeature.type)}`}
+              {` · ${typeCaption(selectedFeature.type)}`}
             </Box>
           </Typography>
         </Box>

@@ -8,10 +8,10 @@ import { theme } from "@/lib/theme";
 const { tokens } = theme;
 
 /** Height of the first line of a row: the disc is centred on it. */
-export const ROW_MIN = tokens.touch.row;
-export const DISC = 32;
+export const ROW_MIN = 52;
+export const DISC = 28;
 /** Width of the rail column. */
-export const RAIL_COL = 40;
+export const RAIL_COL = 36;
 
 export interface RailShape {
   /** The line continues up to the previous row. */
@@ -69,7 +69,7 @@ export function IconDisc({
         flexShrink: 0,
       }}
     >
-      <FeatureTypeIcon type={type} size={20} />
+      <FeatureTypeIcon type={type} size={16} />
     </Box>
   );
 }
@@ -108,8 +108,8 @@ export function RangeTile({
             position: "absolute",
             right: -6,
             bottom: -6,
-            width: 18,
-            height: 18,
+            width: 16,
+            height: 16,
             borderRadius: "50%",
             bgcolor: tokens.surface,
             border: `1.5px solid ${tokens.primaryContainer}`,
@@ -120,7 +120,7 @@ export function RangeTile({
         >
           <ExpandMoreIcon
             sx={{
-              fontSize: 14,
+              fontSize: 12,
               transform: open ? "none" : "rotate(-90deg)",
               transition: `transform ${css.fast} ${css.easeOut}`,
             }}
