@@ -1,7 +1,5 @@
-import AddIcon from "@mui/icons-material/Add";
 import StarIcon from "@mui/icons-material/Star";
 import Box from "@mui/material/Box";
-import Fab from "@mui/material/Fab";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
 import DockedAction from "@/components/DockedAction";
@@ -252,9 +250,8 @@ export default function WaterwaySearchPanel({
             // A scroller starts its own touch-action boundary: without this
             // a sideways swipe is taken as a pan and the pane never sees it.
             touchAction: "pan-y",
-            px: 1,
-            // Room for the New river button, so the last row clears it.
-            pb: onProposeRiver ? { xs: 9, md: 1 } : 1,
+            px: 1.5,
+            pb: 1,
           }}
         >
           {isLoading && <LoadingBox />}
@@ -359,30 +356,14 @@ export default function WaterwaySearchPanel({
         </Box>
       </Box>
 
-      {/* Always-visible entry point for proposing a river; prefills the
-          suggest panel with the current search text. A FAB on a phone, the
-          docked button every pane has on a desktop. */}
+      {/* Entry point for proposing a river; prefills the suggest panel with
+          the current search text. Desktop only: a phone has no FAB over the
+          results and proposes from the empty-result prompt. */}
       {onProposeRiver && (
-        <>
-          <Fab
-            color="secondary"
-            aria-label="New river"
-            title="New river"
-            onClick={() => onProposeRiver(mode === "name" ? searchName : "")}
-            sx={{
-              position: "absolute",
-              bottom: 16,
-              right: 16,
-              display: { xs: "flex", md: "none" },
-            }}
-          >
-            <AddIcon />
-          </Fab>
-          <DockedAction
-            label="New river"
-            onClick={() => onProposeRiver(mode === "name" ? searchName : "")}
-          />
-        </>
+        <DockedAction
+          label="New river"
+          onClick={() => onProposeRiver(mode === "name" ? searchName : "")}
+        />
       )}
     </Box>
   );

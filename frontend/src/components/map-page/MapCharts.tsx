@@ -25,18 +25,10 @@ export default function MapCharts({ state }: { state: MapPageState }) {
     selectedSectionId != null &&
     sectionDetailTab === "features";
 
-  // The logs and notes tabs replace the chart with their list - give them
-  // the space.
-  if (
-    selectedSectionId != null &&
-    (sectionDetailTab === "logs" || sectionDetailTab === "notes")
-  )
-    return null;
-  if (
-    selectedSectionId == null &&
-    (detailTab === "notes" || detailTab === "sources")
-  )
-    return null;
+  // The logs, notes and sources tabs replace the chart with their list -
+  // give them the space.
+  if (selectedSectionId != null && sectionDetailTab !== "features") return null;
+  if (selectedSectionId == null && detailTab === "notes") return null;
 
   if (selectedGaugeId != null && selectedGaugeRanges.length > 0) {
     return (
@@ -61,11 +53,6 @@ export default function MapCharts({ state }: { state: MapPageState }) {
       waterwayId={selectedWaterwayId}
       sectionId={selectedSectionId}
       tall={tall}
-      sectionName={
-        selectedSection
-          ? localizedName(selectedSection.name, selectedSection.names)
-          : undefined
-      }
       selectedFeatureId={selectedFeatureId}
       selectedFeature={
         selectedFeature
