@@ -1,6 +1,5 @@
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -10,8 +9,8 @@ import PanelHeader from "@/components/PanelHeader";
 import { type GroupId, parseGroup } from "@/components/settings/groups";
 import SettingsDetail from "@/components/settings/SettingsDetail";
 import SettingsList from "@/components/settings/SettingsList";
-import SignInCard from "@/components/settings/SignInCard";
 import LoadingBox from "@/components/states/LoadingBox";
+import SignInGate from "@/components/states/SignInGate";
 import ToolsList from "@/components/ToolsList";
 import { useSession } from "@/lib/hooks/useSession";
 import { alphas, PANEL_HEIGHT, theme } from "@/lib/theme";
@@ -42,7 +41,7 @@ const Version = () => (
 
 function SettingsPage() {
   const [tab, setTab] = useState<PhoneTab>("profile");
-  const { isAuthenticated, isLoading, login, signup } = useSession();
+  const { isAuthenticated, isLoading } = useSession();
   const navigate = useNavigate({ from: "/settings" });
   const { group } = Route.useSearch();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
@@ -53,24 +52,10 @@ function SettingsPage() {
 
   if (!isAuthenticated) {
     return (
-      <SignInCard
+      <SignInGate
         icon={<AccountCircleOutlinedIcon />}
         title="Sign in to access settings"
-      >
-        <Button
-          variant="contained"
-          onClick={login}
-          sx={{ minHeight: tokens.touch.min }}
-        >
-          Sign in
-        </Button>
-        <Button
-          onClick={signup}
-          sx={{ minHeight: tokens.touch.min, color: "text.secondary" }}
-        >
-          New here? Create an account
-        </Button>
-      </SignInCard>
+      />
     );
   }
 

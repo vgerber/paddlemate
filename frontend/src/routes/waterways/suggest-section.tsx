@@ -109,7 +109,7 @@ function SuggestSectionPage() {
   }
 
   if (!isAuthenticated) {
-    return <SignInGate icon={null} title="Sign in to suggest a section" />;
+    return <SignInGate title="Sign in to suggest a section" />;
   }
 
   return (

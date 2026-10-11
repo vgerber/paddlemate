@@ -6,8 +6,8 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import SignInCard from "@/components/settings/SignInCard";
 import LoadingBox from "@/components/states/LoadingBox";
+import StateCard from "@/components/states/StateCard";
 import { getUserManager } from "@/lib/auth";
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
 import { safeReturnTo } from "@/lib/returnTo";
@@ -45,7 +45,7 @@ function AuthCallback() {
 
   if (error) {
     return (
-      <SignInCard
+      <StateCard
         icon={<ErrorOutlineIcon />}
         title="Sign-in failed"
         caption={error}
@@ -57,7 +57,7 @@ function AuthCallback() {
         >
           Go home
         </Button>
-      </SignInCard>
+      </StateCard>
     );
   }
 

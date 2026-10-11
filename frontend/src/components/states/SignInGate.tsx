@@ -1,52 +1,39 @@
-import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Link from "@mui/material/Link";
-import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { useSession } from "@/lib/hooks/useSession";
-import { StateTile } from "./EmptyState";
+import { theme } from "@/lib/theme";
+import StateCard from "./StateCard";
 
-/** Sign-in prompt: icon in a soft tile, one line, sign-in button. `pt` shrinks
- * it for use inside a panel rather than a full page. */
+const { tokens } = theme;
+
+/** The one sign-in prompt: a calm card with a line saying what signing in
+ * unlocks, "Sign in" and "New here? Create an account". `pt` shrinks it for
+ * use inside a panel rather than a page of its own. */
 export default function SignInGate({
   icon,
   title,
-  pt = 10,
+  pt = 8,
 }: {
-  icon: ReactNode;
+  icon?: ReactNode;
   title: string;
   pt?: number;
 }) {
   const { login, signup } = useSession();
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 1,
-        pt,
-        px: 2,
-        textAlign: "center",
-      }}
-    >
-      <StateTile>{icon}</StateTile>
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        {title}
-      </Typography>
-      <Button variant="contained" onClick={login}>
-        Sign In
+    <StateCard icon={icon} title={title} pt={pt}>
+      <Button
+        variant="contained"
+        onClick={login}
+        sx={{ minHeight: tokens.touch.min }}
+      >
+        Sign in
       </Button>
-      <Link
-        component="button"
-        type="button"
-        variant="body2"
-        color="text.secondary"
+      <Button
         onClick={signup}
-        sx={{ minHeight: 44 }}
+        sx={{ minHeight: tokens.touch.min, color: "text.secondary" }}
       >
         New here? Create an account
-      </Link>
-    </Box>
+      </Button>
+    </StateCard>
   );
 }

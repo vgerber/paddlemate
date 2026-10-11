@@ -251,7 +251,7 @@ export default function SuggestWaterwayPanel({
         }}
       >
         {!isAuthenticated ? (
-          <SignInGate icon={null} title="Sign in to suggest a river" pt={3} />
+          <SignInGate title="Sign in to suggest a river" pt={3} />
         ) : submitted ? (
           <Box
             data-testid="river-submitted"

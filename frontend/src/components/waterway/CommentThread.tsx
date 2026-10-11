@@ -213,7 +213,7 @@ export default function CommentThread({
       </Box>
 
       {!isAuthenticated ? (
-        <SignInGate icon={null} title="Sign in to add a note" pt={2} />
+        <SignInGate title="Sign in to add a note" pt={2} />
       ) : (
         /* Docked at the bottom of the panel, collapsed until it is used:
            a panel this narrow should show notes, not a standing form. */

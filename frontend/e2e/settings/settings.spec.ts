@@ -178,6 +178,23 @@ test.describe("access tokens", () => {
 test.describe("signed out", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
+  test("trips and logs show the same card", async ({ page }) => {
+    for (const [path, title] of [
+      ["/trips", "Sign in to plan trips"],
+      ["/logs", "Sign in to view your logs"],
+    ] as const) {
+      await page.goto(path);
+      const card = page.getByTestId("state-card");
+      await expect(card).toContainText(title);
+      await expect(
+        card.getByRole("button", { name: "Sign in", exact: true }),
+      ).toBeVisible();
+      await expect(
+        card.getByRole("button", { name: "New here? Create an account" }),
+      ).toBeVisible();
+    }
+  });
+
   test("settings shows the sign-in card, in sentence case", async ({
     page,
   }) => {
@@ -193,7 +210,7 @@ test.describe("signed out", () => {
     await expect(
       page.getByRole("button", { name: "New here? Create an account" }),
     ).toBeVisible();
-    const card = page.getByTestId("sign-in-card");
+    const card = page.getByTestId("state-card");
     await expect(card).toBeVisible();
     expect(await computed(card, "border-top-left-radius")).toBe("14px");
     await expectNoHorizontalOverflow(page);
