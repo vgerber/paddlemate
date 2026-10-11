@@ -80,7 +80,7 @@ function TripsPage() {
           py={8}
         />
       ) : (
-        <Box>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1, p: 1.5 }}>
           {trips.map((t) => (
             <TripRow
               key={t.id}
@@ -100,7 +100,7 @@ function TripsPage() {
         {/* No header above it on a phone, so the list brings its own top
             gap - the rows' 16px inset, so the first one is not pinned to
             the edge of the screen. */}
-        <Box sx={{ maxWidth: 720, mx: "auto", pt: 2 }}>{list}</Box>
+        <Box sx={{ maxWidth: 720, mx: "auto" }}>{list}</Box>
         <Fab
           color="secondary"
           onClick={() => navigate({ to: "/trips/new" })}

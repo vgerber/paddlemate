@@ -1,18 +1,18 @@
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import EventNoteOutlinedIcon from "@mui/icons-material/EventNoteOutlined";
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
 import Collapse from "@mui/material/Collapse";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { factLabelSx } from "@/components/Fact";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
-import TimelineRail from "@/components/TimelineRail";
 import type { Trip } from "@/lib/api";
 import { formatDate, todayIso } from "@/lib/format";
 import { useTripTimeline } from "@/lib/hooks/useTrips";
-import { fonts, theme } from "@/lib/theme";
+import { durations } from "@/lib/motion";
+import { alphas, fonts, theme } from "@/lib/theme";
 import {
   type PaddledRiver,
   paddledByRiver,
@@ -20,17 +20,18 @@ import {
 } from "@/lib/tripTimeline";
 import DayDetail, { type DayActions } from "./DayDetail";
 import { eventKey, eventLabels } from "./eventLabels";
+import PlanCalendar from "./PlanCalendar";
+import { dayAtScroll } from "./planWeek";
 
 const { tokens } = theme;
 
 /**
- * The trip as it runs: one entry per day, with who turned up, where the group
- * was based and what got paddled. Days before the start count backwards, so
- * an early arrival reads as Day -1.
+ * The trip as it runs: the week pinned above, one card per day below, with
+ * who turned up, where the group was based and what got paddled. Days before
+ * the start count backwards, so an early arrival reads as Day -1.
  *
  * A day is the unit you act on, and it opens where it sits: the plan stays on
- * screen around it, so moving between days costs nothing and the day you are
- * editing keeps its place in the week.
+ * screen around it, so moving between days costs nothing.
  */
 export default function TripTimeline({
   trip,
@@ -45,17 +46,64 @@ export default function TripTimeline({
   actions: DayActions;
 }) {
   const { days, isLoading } = useTripTimeline(trip);
+  const today = todayIso();
+  const scroller = useRef<HTMLDivElement>(null);
+  const [current, setCurrent] = useState<string | null>(null);
+  // After a jump the list may not be able to scroll the day all the way to
+  // the top; the jump stays the current day until the reader scrolls again.
+  const jumped = useRef(false);
+
+  const planned = useMemo(() => new Set(days.map((d) => d.date)), [days]);
+  const withEntries = useMemo(
+    () => new Set(days.filter((d) => d.events.length > 0).map((d) => d.date)),
+    [days],
+  );
+  const shown = current ?? days[0]?.date ?? today;
+
+  const jumpTo = useCallback((date: string) => {
+    const el = scroller.current;
+    const card = el?.querySelector<HTMLElement>(`[data-date="${date}"]`);
+    if (!el || !card) return;
+    jumped.current = true;
+    setCurrent(date);
+    el.scrollTo({ top: card.offsetTop - el.offsetTop - 8 });
+  }, []);
+
+  const onScroll = () => {
+    const el = scroller.current;
+    if (!el || jumped.current) return;
+    const tops = Array.from(
+      el.querySelectorAll<HTMLElement>("[data-testid=plan-day]"),
+    ).map((c) => ({
+      date: c.dataset.date ?? "",
+      top: c.offsetTop - el.offsetTop - 8,
+    }));
+    const date = dayAtScroll(tops, el.scrollTop);
+    if (date) setCurrent(date);
+  };
+
+  // Reading again (a finger or the wheel) hands the strip back to the scroll.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the scroller only mounts once loading ends
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const release = () => {
+      jumped.current = false;
+    };
+    el.addEventListener("wheel", release, { passive: true });
+    el.addEventListener("touchstart", release, { passive: true });
+    return () => {
+      el.removeEventListener("wheel", release);
+      el.removeEventListener("touchstart", release);
+    };
+  }, [isLoading]);
 
   if (isLoading) return <LoadingBox size={40} pt={6} />;
 
   if (days.length === 0) {
     return (
       <EmptyState
-        icon={
-          <EventNoteOutlinedIcon
-            sx={{ fontSize: 48, color: "text.disabled" }}
-          />
-        }
+        icon={<EventNoteOutlinedIcon />}
         title="Nothing on the plan yet."
         caption="Add a day to say when you arrive, where you are based, or what you paddled."
         py={6}
@@ -63,149 +111,184 @@ export default function TripTimeline({
     );
   }
 
-  const today = todayIso();
-
   return (
-    <Stack direction="column">
-      {days.map((day, idx) => (
-        <DayEntry
-          key={day.date}
-          day={day}
-          isLast={idx === days.length - 1}
-          today={today}
-          isOpen={day.date === openDay}
-          actions={actions}
-          onToggle={() => onToggleDay(day.date)}
-        />
-      ))}
-    </Stack>
+    <Box
+      sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+    >
+      <PlanCalendar
+        current={shown}
+        today={today}
+        from={trip.start_date}
+        to={trip.end_date ?? null}
+        planned={planned}
+        withEntries={withEntries}
+        onPick={jumpTo}
+      />
+      <Box
+        ref={scroller}
+        data-testid="plan-scroll"
+        onScroll={onScroll}
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          overscrollBehavior: "contain",
+          touchAction: "pan-y",
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          p: 1.5,
+          // Leave room so the FAB never covers the last day.
+          pb: 12,
+        }}
+      >
+        {days.map((day) => (
+          <DayEntry
+            key={day.date}
+            day={day}
+            today={today}
+            isOpen={day.date === openDay}
+            actions={actions}
+            onToggle={() => onToggleDay(day.date)}
+          />
+        ))}
+      </Box>
+    </Box>
   );
 }
 
 function DayEntry({
   day,
-  isLast,
   today,
   isOpen,
   actions,
   onToggle,
 }: {
   day: TripDay;
-  isLast: boolean;
   today: string;
   isOpen: boolean;
   actions: DayActions;
   onToggle: () => void;
 }) {
-  // A day still ahead is a plan, not a record - the hollow dot says so.
+  // A day still ahead is a plan, not a record: it sits outlined, not raised.
   const planned = day.date > today;
+  const isToday = day.date === today;
   const plans = day.events.filter((e) => e.kind !== "paddled");
   const { rivers, unsectioned } = paddledByRiver(day.events);
 
   return (
-    <ButtonBase
-      component="div"
-      disableRipple
+    <Box
+      data-testid="plan-day"
+      data-date={day.date}
+      role="button"
+      tabIndex={0}
       onClick={onToggle}
+      onKeyDown={(e) => {
+        if (
+          e.target === e.currentTarget &&
+          (e.key === "Enter" || e.key === " ")
+        ) {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
       aria-expanded={isOpen}
       aria-label={`Day ${day.day}, ${formatDate(day.date)}`}
       sx={{
-        display: "flex",
-        gap: "10px",
-        px: "6px",
-        width: "100%",
-        alignItems: "flex-start",
-        textAlign: "left",
+        flexShrink: 0,
         cursor: "pointer",
-        // The open day keeps a ground of its own, so the part of the plan you
-        // are working on stays findable while you scroll the rest.
-        bgcolor: isOpen ? `${tokens.primary}0d` : "transparent",
-        "&:hover": { bgcolor: isOpen ? `${tokens.primary}14` : "action.hover" },
+        textAlign: "left",
+        px: 1.75,
+        py: 1.5,
+        borderRadius: `${tokens.radii.md}px`,
+        bgcolor: planned ? "transparent" : tokens.surface,
+        boxShadow: isToday
+          ? `inset 0 0 0 2px ${tokens.primary}, ${tokens.elevation.e1}`
+          : planned
+            ? `inset 0 0 0 1px ${tokens.outlineVariant}`
+            : tokens.elevation.e1,
+        outlineOffset: 2,
+        ...(isOpen ? { bgcolor: `${tokens.primary}${alphas.tint}` } : {}),
       }}
     >
-      <TimelineRail isLast={isLast} hollow={planned} />
-      <Box
-        sx={{
-          flex: 1,
-          minWidth: 0,
-          pt: "4px",
-          pb: isLast ? "8px" : "20px",
-        }}
-      >
-        <Stack direction="row" sx={{ alignItems: "baseline", gap: 1 }}>
-          <Typography
-            component="span"
-            sx={{
-              fontFamily: fonts.label,
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: "0.07em",
-              textTransform: "uppercase",
-              color: planned ? tokens.onSurfaceVariant : tokens.primary,
-              opacity: planned ? 0.7 : 1,
-              lineHeight: 1.25,
-              flex: 1,
-            }}
-          >
-            Day {day.day}
-          </Typography>
-          <Typography
-            component="span"
-            sx={{
-              fontFamily: fonts.mono,
-              fontSize: 12,
-              color: tokens.outline,
-              flexShrink: 0,
-            }}
-          >
-            {formatDate(day.date, { weekday: true })}
-          </Typography>
-        </Stack>
+      <Stack direction="row" sx={{ alignItems: "baseline", gap: 1 }}>
+        <Typography
+          component="span"
+          sx={{
+            fontFamily: fonts.label,
+            fontSize: 15,
+            fontWeight: 700,
+            flex: 1,
+          }}
+        >
+          Day {day.day}
+          {isToday && (
+            <Box
+              component="span"
+              sx={{
+                display: "inline-block",
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                bgcolor: tokens.primary,
+                ml: 1,
+                verticalAlign: "middle",
+              }}
+            />
+          )}
+        </Typography>
+        <Typography
+          component="span"
+          sx={{
+            fontFamily: fonts.label,
+            fontSize: 13,
+            fontWeight: 500,
+            color: "text.secondary",
+            flexShrink: 0,
+          }}
+        >
+          {formatDate(day.date, { weekday: true })}
+        </Typography>
+      </Stack>
 
-        {/* Closed, the day is a summary to read; open, the same entries come
-            back as rows you can act on, so only one of the two shows. */}
-        <Collapse in={!isOpen} timeout={200}>
-          <Stack direction="column" sx={{ gap: 0.75, mt: 0.75 }}>
-            {/* A day with nothing on it is still a day of the trip - and the
-                place you go to put something on it. */}
-            {day.events.length === 0 && (
-              <Typography sx={factLabelSx}>Rest</Typography>
-            )}
+      <Collapse in={!isOpen} timeout={durations.base}>
+        <Stack direction="column" sx={{ gap: 1, mt: 1 }}>
+          {day.events.length === 0 && (
+            <Typography sx={factLabelSx}>Rest</Typography>
+          )}
 
-            {plans.map((event) => {
-              const { icon, title, detail } = eventLabels(event);
-              return (
-                <EventLine
-                  key={eventKey(event)}
-                  icon={icon}
-                  title={title}
-                  detail={detail}
-                />
-              );
-            })}
-
-            {/* What went that day, by river - two people on one stretch is one
-              line with both names, not the same stretch twice. */}
-            {rivers.map((river) => (
-              <RiverLine key={river.waterwayId ?? river.name} river={river} />
-            ))}
-
-            {unsectioned.map((descent) => (
+          {plans.map((event) => {
+            const { icon, title, detail } = eventLabels(event);
+            return (
               <EventLine
-                key={`paddled-${descent.id}`}
-                icon={<DirectionsBoatOutlinedIcon sx={{ fontSize: 14 }} />}
-                title={descent.name ?? "A descent"}
-                detail={`Paddled by ${descent.username ?? "a member"}`}
+                key={eventKey(event)}
+                icon={icon}
+                title={title}
+                detail={detail}
               />
-            ))}
-          </Stack>
-        </Collapse>
+            );
+          })}
 
-        <Collapse in={isOpen} timeout={200} unmountOnExit>
-          <DayDetail day={day} actions={actions} />
-        </Collapse>
-      </Box>
-    </ButtonBase>
+          {rivers.map((river) => (
+            <RiverLine key={river.waterwayId ?? river.name} river={river} />
+          ))}
+
+          {unsectioned.map((descent) => (
+            <EventLine
+              key={`paddled-${descent.id}`}
+              icon={<DirectionsBoatOutlinedIcon sx={{ fontSize: 14 }} />}
+              title={descent.name ?? "A descent"}
+              detail={`Paddled by ${descent.username ?? "a member"}`}
+            />
+          ))}
+        </Stack>
+      </Collapse>
+
+      <Collapse in={isOpen} timeout={durations.base} unmountOnExit>
+        <DayDetail day={day} actions={actions} />
+      </Collapse>
+    </Box>
   );
 }
 

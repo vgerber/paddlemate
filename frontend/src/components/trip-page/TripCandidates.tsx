@@ -25,6 +25,7 @@ import {
   useVoteCandidate,
   useWithdrawCandidate,
 } from "@/lib/hooks/useTrips";
+import { durations } from "@/lib/motion";
 import { fonts, theme } from "@/lib/theme";
 import { nearestWatched } from "@/lib/tripRange";
 import StayDialog from "./StayDialog";
@@ -249,7 +250,7 @@ function CandidateRow({
 
       {/* Opening a candidate is not voting on it, so the inside swallows the
           clicks the row would otherwise take as a toggle. */}
-      <Collapse in={isOpen} timeout={200} unmountOnExit>
+      <Collapse in={isOpen} timeout={durations.base} unmountOnExit>
         <Box onClick={(e) => e.stopPropagation()} sx={{ pt: 1.5 }}>
           <Typography sx={{ ...factLabelSx, display: "block" }}>
             Put up by {candidate.proposed_by_username}

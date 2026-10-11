@@ -7,6 +7,7 @@ import TripForm from "@/components/trips/TripForm";
 import type { Descent, Trip, TripMember, TripStay } from "@/lib/api";
 import { dateRange } from "@/lib/format";
 import { useSession } from "@/lib/hooks/useSession";
+import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import {
   useDeleteTrip,
   useDeleteTripStay,
@@ -92,6 +93,14 @@ export default function TripDetail({
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [pickingDay, setPickingDay] = useState(false);
 
+  const tabIndex = TABS.findIndex((t) => t.value === tab);
+  const swipe = useSwipeTabs({
+    index: tabIndex,
+    count: TABS.length,
+    onIndexChange: (i) => setTab(TABS[i].value),
+    enabled: !editing,
+  });
+
   const isMember = trip.viewer_role != null;
   const isAdmin = trip.viewer_role === "admin";
   const viewerId = user?.id ?? null;
@@ -155,27 +164,18 @@ export default function TripDetail({
           value: tab,
           onChange: setTab,
           options: TABS.map((t) => ({ value: t.value, label: t.label })),
+          progress: swipe.progress,
+          dragging: swipe.dragging,
+          gesture: swipe.gestureProps,
         }}
       />
 
       <Box
-        sx={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-          // Overscroll at the list edge must not chain into a document
-          // bounce - that drags the fixed mobile overlay.
-          overscrollBehavior: "contain",
-          // The panel holds the rows off its edges so a hovered row reads as
-          // a band inside the panel rather than a stripe across it; the row
-          // then supplies its own inset for the text.
-          px: 2,
-          py: 1,
-          // Leave room so the FAB never covers the last row.
-          pb: 12,
-        }}
+        data-testid="trip-pane"
+        {...swipe.paneProps}
+        sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
       >
-        {tab === "plan" && (
+        {tab === "plan" ? (
           <TripTimeline
             trip={trip}
             openDay={openDay}
@@ -184,34 +184,49 @@ export default function TripDetail({
             }
             actions={dayActions}
           />
-        )}
-        {tab === "bases" && (
-          <TripStays
-            tripId={trip.id}
-            isMember={isMember}
-            isAdmin={isAdmin}
-            viewerId={viewerId}
-            onLogSection={newLog}
-            {...stayActions}
-          />
-        )}
-        {tab === "members" && (
-          <TripMembers
-            tripId={trip.id}
-            viewerId={viewerId}
-            isAdmin={isAdmin}
-            onEditAttendance={(member) => setAttendanceFor({ member })}
-          />
-        )}
-        {tab === "logs" && (
-          <TripLogs
-            tripId={trip.id}
-            viewerId={viewerId}
-            isMember={isMember}
-            onOpen={openLog}
-            onCopy={copyLog}
-            onUnlink={setConfirmUnlink}
-          />
+        ) : (
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              overscrollBehavior: "contain",
+              touchAction: "pan-y",
+              px: 1.5,
+              py: 1.5,
+              // Leave room so the FAB never covers the last row.
+              pb: 12,
+            }}
+          >
+            {tab === "bases" && (
+              <TripStays
+                tripId={trip.id}
+                isMember={isMember}
+                isAdmin={isAdmin}
+                viewerId={viewerId}
+                onLogSection={newLog}
+                {...stayActions}
+              />
+            )}
+            {tab === "members" && (
+              <TripMembers
+                tripId={trip.id}
+                viewerId={viewerId}
+                isAdmin={isAdmin}
+                onEditAttendance={(member) => setAttendanceFor({ member })}
+              />
+            )}
+            {tab === "logs" && (
+              <TripLogs
+                tripId={trip.id}
+                viewerId={viewerId}
+                isMember={isMember}
+                onOpen={openLog}
+                onCopy={copyLog}
+                onUnlink={setConfirmUnlink}
+              />
+            )}
+          </Box>
         )}
       </Box>
 

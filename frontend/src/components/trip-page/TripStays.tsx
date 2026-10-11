@@ -18,6 +18,7 @@ import type { TripSection, TripStay } from "@/lib/api";
 import { dateRange } from "@/lib/format";
 import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
 import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
+import { durations } from "@/lib/motion";
 import { fonts, theme } from "@/lib/theme";
 import { baseColors, baseNumbers } from "@/lib/tripRange";
 import { levelConfig, type WaterLevel } from "@/lib/waterLevel";
@@ -289,7 +290,7 @@ function StayRow({
         )}
       </ListItemButton>
 
-      <Collapse in={isOpen} timeout={200} unmountOnExit>
+      <Collapse in={isOpen} timeout={durations.base} unmountOnExit>
         <Box sx={{ px: 2, pb: 1.5 }}>
           <Typography sx={{ ...factLabelSx, ml: 3.5, display: "block" }}>
             Watch list
