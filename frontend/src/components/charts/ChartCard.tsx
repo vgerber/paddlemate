@@ -139,6 +139,7 @@ export default function ChartCard({
       sx={
         docked
           ? {
+              position: "relative",
               height: "100%",
               display: "flex",
               flexDirection: "column",
@@ -165,7 +166,15 @@ export default function ChartCard({
             px: 1.75,
             ...(docked
               ? {
-                  // One row, so the dock's plot keeps its height.
+                  // One row laid over the top of the plot, where the closed
+                  // card shows its reading outline, so the plot keeps its
+                  // full height.
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 1,
+                  bgcolor: `${tokens.surface}f2`,
                   display: "flex",
                   flexWrap: "wrap",
                   alignItems: "center",
