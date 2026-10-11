@@ -32,7 +32,11 @@ export default function MapCharts({ state }: { state: MapPageState }) {
     (sectionDetailTab === "logs" || sectionDetailTab === "notes")
   )
     return null;
-  if (selectedSectionId == null && detailTab === "notes") return null;
+  if (
+    selectedSectionId == null &&
+    (detailTab === "notes" || detailTab === "sources")
+  )
+    return null;
 
   if (selectedGaugeId != null && selectedGaugeRanges.length > 0) {
     return (

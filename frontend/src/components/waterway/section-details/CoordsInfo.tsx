@@ -2,6 +2,7 @@ import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import DoneIcon from "@mui/icons-material/Done";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import HistoryIcon from "@mui/icons-material/History";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import IconButton from "@mui/material/IconButton";
@@ -20,6 +21,8 @@ interface Props {
   coords: [number, number]; // [lng, lat]
   /** Extra inline buttons appended to the row (e.g. proposal votes). */
   actions?: ReactNode;
+  /** Adds a "History" entry to the more-actions menu. */
+  onHistory?: () => void;
   /** Adds an "Edit feature" entry to the more-actions menu. */
   onEdit?: () => void;
   /** Adds a "Delete feature" entry to the more-actions menu. */
@@ -28,7 +31,13 @@ interface Props {
 
 /** Formatted coordinate pair with a Google Maps button and a more-actions
  * menu (copy coordinates, plus the edit/delete feature actions). */
-export function CoordsInfo({ coords, actions, onEdit, onDelete }: Props) {
+export function CoordsInfo({
+  coords,
+  actions,
+  onHistory,
+  onEdit,
+  onDelete,
+}: Props) {
   const [lng, lat] = coords;
   const { copied, copy } = useCopyToClipboard();
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -98,6 +107,20 @@ export function CoordsInfo({ coords, actions, onEdit, onDelete }: Props) {
           </ListItemIcon>
           Copy coordinates
         </MenuItem>
+        {onHistory && (
+          <MenuItem
+            sx={{ py: 1.25 }}
+            onClick={() => {
+              setMenuAnchor(null);
+              onHistory();
+            }}
+          >
+            <ListItemIcon>
+              <HistoryIcon fontSize="small" />
+            </ListItemIcon>
+            History
+          </MenuItem>
+        )}
         {onEdit && (
           <MenuItem
             sx={{ py: 1.25 }}

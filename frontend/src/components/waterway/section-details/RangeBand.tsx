@@ -1,5 +1,6 @@
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import HistoryIcon from "@mui/icons-material/History";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
@@ -76,6 +77,13 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
       label: "Show on map",
       icon: <PlaceOutlinedIcon fontSize="small" />,
       onClick: () => ctx.onItemClick?.(item),
+    });
+  }
+  if (ctx.onHistoryItem) {
+    actions.push({
+      label: "History",
+      icon: <HistoryIcon fontSize="small" />,
+      onClick: () => ctx.onHistoryItem?.(item),
     });
   }
   if (ctx.onEditItem) {

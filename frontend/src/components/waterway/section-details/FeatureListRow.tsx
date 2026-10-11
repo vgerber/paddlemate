@@ -33,6 +33,8 @@ export interface RowContext {
   /** Edit and delete, for signed-in users; proposals never get them. */
   onEditItem?: (item: ComputedFeature) => void;
   onDeleteItem?: (item: ComputedFeature) => void;
+  /** Opens the feature's history. Not offered for a proposal: it has none. */
+  onHistoryItem?: (item: ComputedFeature) => void;
   /** Features with a pending delete proposal. */
   pendingDeleteIds?: Set<number>;
 }
@@ -173,6 +175,7 @@ export function FeatureListRow({
           ) : (
             <CoordsInfo
               coords={item.coords}
+              onHistory={ctx.onHistoryItem && (() => ctx.onHistoryItem?.(item))}
               onEdit={ctx.onEditItem && (() => ctx.onEditItem?.(item))}
               onDelete={ctx.onDeleteItem && (() => ctx.onDeleteItem?.(item))}
             />

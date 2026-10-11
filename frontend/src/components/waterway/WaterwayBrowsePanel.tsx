@@ -11,6 +11,7 @@ import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import DockedAction from "@/components/DockedAction";
 import PanelHeader from "@/components/PanelHeader";
+import SourcesTab from "@/components/provenance/SourcesTab";
 import LoadingBox from "@/components/states/LoadingBox";
 import SectionListItem from "@/components/waterway/SectionListItem";
 import SectionLogsList from "@/components/waterway/SectionLogsList";
@@ -66,7 +67,7 @@ interface WaterwayBrowsePanelProps {
 }
 
 const SECTION_TABS: SectionDetailTab[] = ["features", "logs", "notes"];
-const RIVER_TABS: DetailTab[] = ["sections", "gauges", "notes"];
+const RIVER_TABS: DetailTab[] = ["sections", "gauges", "notes", "sources"];
 
 export default function WaterwayBrowsePanel({
   waterwayId,
@@ -199,6 +200,7 @@ export default function WaterwayBrowsePanel({
           { value: "sections", label: "Sections" },
           { value: "gauges", label: "Gauges" },
           { value: "notes", label: "Notes" },
+          { value: "sources", label: "Sources" },
         ],
       };
 
@@ -286,6 +288,8 @@ export default function WaterwayBrowsePanel({
               sections={sections}
               mapPin={noteMapPin}
             />
+          ) : tab === "sources" ? (
+            <SourcesTab waterwayId={waterwayId} />
           ) : (
             <GaugesList
               gaugeRanges={gaugeRanges}

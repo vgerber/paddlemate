@@ -40,7 +40,7 @@ function ChangeLine({ change }: { change: HistoryChange }) {
         <Typography variant="body2">changed</Typography>
       ) : (
         <>
-          {change.before !== null && (
+          {change.before != null && (
             <Typography
               data-testid="change-before"
               variant="body2"
@@ -58,9 +58,9 @@ function ChangeLine({ change }: { change: HistoryChange }) {
             sx={{ color: "text.disabled" }}
             aria-hidden
           >
-            {change.before === null ? "added" : "to"}
+            {change.before == null ? "added" : "to"}
           </Typography>
-          {change.after !== null && (
+          {change.after != null && (
             <Typography
               data-testid="change-after"
               variant="body2"

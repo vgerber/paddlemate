@@ -1,18 +1,22 @@
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import HistoryIcon from "@mui/icons-material/History";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import HistoryHost from "@/components/provenance/HistoryHost";
+import type { HistoryTarget } from "@/components/provenance/types";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import EmptyState from "@/components/states/EmptyState";
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
 import { distanceAlongLineM, lineCoords } from "@/lib/geo";
 import { useDeleteFeature } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
+import { localizedName } from "@/lib/localization";
 import { css, durations } from "@/lib/motion";
 import { theme } from "@/lib/theme";
 import { FeatureStrip } from "./FeatureStrip";
@@ -137,8 +141,27 @@ export default function FeatureTimeline({
       ? (cf: ComputedFeature) => onEditFeature(cf.feature)
       : undefined;
 
+  const [historyTarget, setHistoryTarget] = useState<HistoryTarget | null>(
+    null,
+  );
+  const [historyName, setHistoryName] = useState("");
+  function openHistory(target: HistoryTarget, name: string) {
+    setHistoryName(name);
+    setHistoryTarget(target);
+  }
+  const onHistoryItem = (cf: ComputedFeature) =>
+    openHistory(
+      {
+        waterwayId: section.waterway_id,
+        sectionId: section.id,
+        featureId: cf.feature.id,
+      },
+      featureName(cf.feature),
+    );
+
   const ctx = {
     activeId,
+    onHistoryItem,
     onItemClick: handleItemClick,
     onEditItem,
     onDeleteItem,
@@ -147,7 +170,17 @@ export default function FeatureTimeline({
 
   // A grade over the whole run has no row, so its actions live in the header.
   const grade = grades[0];
-  const gradeActions: RowAction[] = [];
+  const gradeActions: RowAction[] = [
+    {
+      label: "History",
+      icon: <HistoryIcon fontSize="small" />,
+      onClick: () =>
+        openHistory(
+          { waterwayId: section.waterway_id, sectionId: section.id },
+          localizedName(section.name, section.names),
+        ),
+    },
+  ];
   if (grade && onEditItem) {
     gradeActions.push({
       label: "Edit grade",
@@ -176,92 +209,98 @@ export default function FeatureTimeline({
   );
 
   return (
-    <Box
-      data-testid="features-card"
-      sx={{
-        bgcolor: tokens.surface,
-        borderRadius: `${tokens.radii.md}px`,
-        boxShadow: tokens.elevation.e1,
-        m: 1.5,
-        pb: 1,
-        minWidth: 0,
-      }}
+    <HistoryHost
+      target={historyTarget}
+      name={historyName}
+      onClose={() => setHistoryTarget(null)}
     >
       <Box
+        data-testid="features-card"
         sx={{
-          display: "flex",
-          alignItems: "center",
-          pl: 2,
-          pr: 0.5,
-          minHeight: tokens.touch.min,
+          bgcolor: tokens.surface,
+          borderRadius: `${tokens.radii.md}px`,
+          boxShadow: tokens.elevation.e1,
+          m: 1.5,
+          pb: 1,
+          minWidth: 0,
         }}
       >
-        <Typography
-          data-testid="features-count"
+        <Box
           sx={{
-            flex: 1,
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            color: tokens.onSurfaceVariant,
+            display: "flex",
+            alignItems: "center",
+            pl: 2,
+            pr: 0.5,
+            minHeight: tokens.touch.min,
           }}
         >
-          {count} {count === 1 ? "feature" : "features"}
-        </Typography>
-        <RowMenu actions={gradeActions} label="Grade actions" />
-        <IconButton
-          data-testid="features-fold"
-          aria-expanded={!folded}
-          aria-label={folded ? "Show features" : "Fold features"}
-          onClick={() => setFolded((f) => !f)}
-          sx={{
-            width: tokens.touch.min,
-            height: tokens.touch.min,
-            color: tokens.onSurfaceVariant,
-          }}
-        >
-          <ExpandLessIcon
+          <Typography
+            data-testid="features-count"
             sx={{
-              transform: folded ? "rotate(180deg)" : "none",
-              transition: `transform ${css.fast} ${css.easeOut}`,
+              flex: 1,
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              color: tokens.onSurfaceVariant,
             }}
-          />
-        </IconButton>
-      </Box>
+          >
+            {count} {count === 1 ? "feature" : "features"}
+          </Typography>
+          <RowMenu actions={gradeActions} label="Section actions" />
+          <IconButton
+            data-testid="features-fold"
+            aria-expanded={!folded}
+            aria-label={folded ? "Show features" : "Fold features"}
+            onClick={() => setFolded((f) => !f)}
+            sx={{
+              width: tokens.touch.min,
+              height: tokens.touch.min,
+              color: tokens.onSurfaceVariant,
+            }}
+          >
+            <ExpandLessIcon
+              sx={{
+                transform: folded ? "rotate(180deg)" : "none",
+                transition: `transform ${css.fast} ${css.easeOut}`,
+              }}
+            />
+          </IconButton>
+        </Box>
 
-      <Box sx={{ px: 2, pb: 1 }}>
-        <FeatureStrip
-          features={approved}
-          grade={grades.length ? featureName(grades[0].feature) : null}
-          totalM={longest}
+        <Box sx={{ px: 2, pb: 1 }}>
+          <FeatureStrip
+            features={approved}
+            grade={grades.length ? featureName(grades[0].feature) : null}
+            totalM={longest}
+          />
+        </Box>
+
+        <Collapse in={!folded} timeout={durations.base} unmountOnExit>
+          <Box sx={{ px: 0.5 }}>
+            {tree.map((node, idx) => (
+              <FeatureNode
+                key={node.item.feature.id}
+                node={node}
+                ctx={ctx}
+                startsList={idx === 0}
+                endsList={idx === tree.length - 1}
+                dashed={false}
+              />
+            ))}
+          </Box>
+        </Collapse>
+
+        <ConfirmDialog
+          open={deleteTarget !== null}
+          title="Delete feature?"
+          body={`${deleteTarget ? `"${featureName(deleteTarget.feature)}" - the` : "The"} deletion is submitted as a proposal first; the feature stays until the proposal is approved.`}
+          confirmLabel="Delete"
+          pendingLabel="Submitting…"
+          color="error"
+          pending={deleteFeature.isPending}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={confirmDelete}
         />
       </Box>
-
-      <Collapse in={!folded} timeout={durations.base} unmountOnExit>
-        <Box sx={{ px: 0.5 }}>
-          {tree.map((node, idx) => (
-            <FeatureNode
-              key={node.item.feature.id}
-              node={node}
-              ctx={ctx}
-              startsList={idx === 0}
-              endsList={idx === tree.length - 1}
-              dashed={false}
-            />
-          ))}
-        </Box>
-      </Collapse>
-
-      <ConfirmDialog
-        open={deleteTarget !== null}
-        title="Delete feature?"
-        body={`${deleteTarget ? `"${featureName(deleteTarget.feature)}" - the` : "The"} deletion is submitted as a proposal first; the feature stays until the proposal is approved.`}
-        confirmLabel="Delete"
-        pendingLabel="Submitting…"
-        color="error"
-        pending={deleteFeature.isPending}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={confirmDelete}
-      />
-    </Box>
+    </HistoryHost>
   );
 }
