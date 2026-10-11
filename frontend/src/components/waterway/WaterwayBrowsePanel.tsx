@@ -9,7 +9,6 @@ import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
-import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import DockedAction from "@/components/DockedAction";
@@ -17,6 +16,8 @@ import PanelHeader from "@/components/PanelHeader";
 import type { EditsFilter } from "@/components/provenance/EditsTimeline";
 import SourcesTab from "@/components/provenance/SourcesTab";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
+import EmptyState from "@/components/states/EmptyState";
+import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import SectionListItem from "@/components/waterway/SectionListItem";
 import SectionLogsList from "@/components/waterway/SectionLogsList";
@@ -119,7 +120,8 @@ export default function WaterwayBrowsePanel({
     sectionId: number | undefined;
     filter: EditsFilter;
   }>({ sectionId: undefined, filter: null });
-  const { data: waterway, isLoading } = useWaterway(waterwayId);
+  const waterwayQuery = useWaterway(waterwayId);
+  const { data: waterway, isLoading } = waterwayQuery;
   const { data: descentCounts } = useSectionDescentCounts(waterwayId);
   const { isAuthenticated } = useSession();
   const sections: SectionWithFeatures[] = waterway?.sections ?? [];
@@ -328,6 +330,12 @@ export default function WaterwayBrowsePanel({
             {!isLoading && chartTab && chart}
             {isLoading ? (
               <LoadingBox size={22} />
+            ) : waterwayQuery.isError && !waterway ? (
+              <ErrorState
+                error={waterwayQuery.error}
+                fallback="Could not load this river."
+                onRetry={() => waterwayQuery.refetch()}
+              />
             ) : inFeatures ? (
               sectionDetailTab === "logs" ? (
                 <SectionLogsList sectionId={selectedSection.id} />
@@ -460,11 +468,7 @@ function SectionsList({
   descentCounts,
 }: SectionsListProps) {
   if (sections.length === 0) {
-    return (
-      <Typography color="textSecondary" variant="body2" sx={{ p: 1.5 }}>
-        No sections found.
-      </Typography>
-    );
+    return <EmptyState title="No sections found." py={4} />;
   }
   return (
     <List dense disablePadding sx={{ px: 1.5 }}>

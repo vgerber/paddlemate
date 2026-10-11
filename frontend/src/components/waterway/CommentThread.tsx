@@ -13,8 +13,7 @@ import TextField from "@mui/material/TextField";
 import { useRef, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import ImageLightbox from "@/components/ImageLightbox";
-import EmptyState from "@/components/states/EmptyState";
-import LoadingBox from "@/components/states/LoadingBox";
+import QueryStates from "@/components/states/QueryStates";
 import SignInGate from "@/components/states/SignInGate";
 import type { CommentCategory, Media, SectionWithFeatures } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
@@ -101,8 +100,8 @@ export default function CommentThread({
     sectionScope == null ? null : waterwayId,
     sectionScope,
   );
-  const { data: comments, isLoading } =
-    sectionScope == null ? riverThread : sectionThread;
+  const thread = sectionScope == null ? riverThread : sectionThread;
+  const comments = thread.data;
 
   const createComment = useCreateComment(waterwayId, sectionScope);
   const deleteComment = useDeleteComment(waterwayId);
@@ -174,15 +173,17 @@ export default function CommentThread({
       <Box
         sx={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden" }}
       >
-        {isLoading ? (
-          <LoadingBox size={22} />
-        ) : !comments || comments.length === 0 ? (
-          <EmptyState
-            title="No notes on this river yet."
-            caption="Hazards, conditions and access - anything worth knowing before putting on."
-          />
-        ) : (
-          comments.map((comment) => (
+        <QueryStates
+          query={thread}
+          count={comments?.length ?? 0}
+          empty={{
+            title: "No notes on this river yet.",
+            caption:
+              "Hazards, conditions and access - anything worth knowing before putting on.",
+          }}
+          errorFallback="Could not load the notes."
+        >
+          {comments?.map((comment) => (
             <CommentRow
               key={comment.id}
               comment={comment}
@@ -208,8 +209,8 @@ export default function CommentThread({
                   : undefined
               }
             />
-          ))
-        )}
+          ))}
+        </QueryStates>
       </Box>
 
       {!isAuthenticated ? (

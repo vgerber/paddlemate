@@ -37,6 +37,7 @@ import {
 import { useSession } from "@/lib/hooks/useSession";
 import { useLanguage } from "@/lib/languagePreference";
 import { transition } from "@/lib/motion";
+import { shouldRetryQuery } from "@/lib/retry";
 import { alphas, BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -73,6 +74,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60,
+      retry: shouldRetryQuery,
       refetchOnWindowFocus: true,
     },
   },
