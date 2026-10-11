@@ -296,6 +296,49 @@ test.describe("filters sheet", () => {
     expect(new Set(labels).size).toBe(1);
   });
 
+  test("sections whose water status fails stay, as unknown", async ({
+    page,
+  }) => {
+    await page.route("**/water-status", (route) =>
+      route.fulfill({ status: 500, json: { error: { code: "x" } } }),
+    );
+    await openSearch(page, "&q=Test");
+    await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
+    const all = await tabCount(page, "Sections");
+    await chip(page, "Water now").click();
+    await sheet(page)
+      .getByRole("button", { name: "High", exact: true })
+      .click();
+    await page.keyboard.press("Escape");
+    await expect(
+      seen(page.getByRole("status")).filter({
+        hasText: /^Water level unknown for \d+ sections\.$/,
+      }),
+    ).toBeVisible();
+    expect(await tabCount(page, "Sections")).toBe(all);
+  });
+
+  test("water status requests run at most six at a time", async ({ page }) => {
+    let active = 0;
+    let peak = 0;
+    await page.route("**/water-status", async (route) => {
+      active++;
+      peak = Math.max(peak, active);
+      await new Promise((r) => setTimeout(r, 150));
+      active--;
+      await route.continue();
+    });
+    await openSearch(page, "&q=Test");
+    await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
+    await chip(page, "Water now").click();
+    await sheet(page)
+      .getByRole("button", { name: "High", exact: true })
+      .click();
+    await expect.poll(() => rowLevels(page)).toEqual(["high"]);
+    expect(peak).toBeGreaterThan(0);
+    expect(peak).toBeLessThanOrEqual(6);
+  });
+
   test("an unknown water value in the URL is ignored", async ({ page }) => {
     await openSearch(page, "&q=Test&water=%5B%22bogus%22%5D");
     await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
