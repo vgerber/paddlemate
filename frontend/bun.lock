@@ -17,6 +17,7 @@
         "maplibre-gl": "^5.24.0",
         "oidc-client-ts": "^3.5.0",
         "openapi-fetch": "^0.17.0",
+        "polylabel": "2.1.0",
         "react": "^19.2.5",
         "react-dom": "^19.2.5",
         "react-map-gl": "^8.1.1",
@@ -1257,6 +1258,8 @@
     "playwright-core": ["playwright-core@1.63.0", "", { "bin": { "playwright-core": "cli.js" } }, "sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg=="],
 
     "pluralize": ["pluralize@8.0.0", "", {}, "sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA=="],
+
+    "polylabel": ["polylabel@2.1.0", "", { "dependencies": { "tinyqueue": "^3.0.0" } }, "sha512-ZCL9pc/BpnyBB1Es5Eh6baziBhZFS0fTlEXGarLMqbMYbAyawqGAjyo2+MfignMggSubmllMgRGcR0L0liOugg=="],
 
     "possible-typed-array-names": ["possible-typed-array-names@1.1.0", "", {}, "sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg=="],
 
