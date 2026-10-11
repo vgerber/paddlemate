@@ -4,6 +4,8 @@ import {
   bboxContains,
   type DrawableRegion,
   labelPoint,
+  partOf,
+  rangesHiddenByNesting,
   regionSubtitle,
   visibleRegions,
 } from "./regionGeometry";
@@ -179,5 +181,47 @@ describe("labelPoint", () => {
 
   test("an empty line has no label", () => {
     expect(labelPoint({ type: "LineString", coordinates: [] })).toBeNull();
+  });
+});
+
+describe("rangesHiddenByNesting", () => {
+  const big = region(1, "range", 0, 0, 10, 10);
+  const a = region(2, "range", 1, 1, 3, 3);
+  const b = region(3, "range", 5, 5, 8, 8);
+
+  test("lists a range that holds two others", () => {
+    expect(rangesHiddenByNesting([big, a, b]).map((r) => r.id)).toEqual([1]);
+  });
+
+  test("agrees with visibleRegions about what is left out", () => {
+    const shown = visibleRegions([big, a, b], VIEW).map((r) => r.id);
+    const hidden = rangesHiddenByNesting([big, a, b]).map((r) => r.id);
+    expect(shown.some((id) => hidden.includes(id))).toBe(false);
+  });
+
+  test("never lists the picked range", () => {
+    expect(rangesHiddenByNesting([big, a, b], 1)).toHaveLength(0);
+  });
+
+  test("ignores districts", () => {
+    expect(
+      rangesHiddenByNesting([region(4, "district", 0, 0, 10, 10), a, b]),
+    ).toHaveLength(0);
+  });
+});
+
+describe("partOf", () => {
+  const state = region(1, "state", 0, 0, 10, 10);
+  const district = region(2, "district", 1, 1, 6, 6);
+  const valley = region(3, "valley", 2, 2, 3, 3);
+  const aside = region(4, "range", 7, 7, 9, 9);
+
+  test("lists the regions around the picked one, nearest first", () => {
+    const parents = partOf([state, district, valley, aside], valley);
+    expect(parents.map((r) => r.id)).toEqual([2, 1]);
+  });
+
+  test("leaves out the picked region and its neighbours", () => {
+    expect(partOf([valley, aside], valley)).toHaveLength(0);
   });
 });

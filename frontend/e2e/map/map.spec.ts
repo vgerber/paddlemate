@@ -348,3 +348,73 @@ test.describe("regions", () => {
     await expectNoHorizontalOverflow(page);
   });
 });
+
+async function dragSheetOpen(page: Page) {
+  const box = await page.getByRole("region", { name: "Regions" }).boundingBox();
+  const x = (box?.x ?? 0) + (box?.width ?? 0) / 2;
+  const y = (box?.y ?? 0) + 22;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y - 150, { steps: 6 });
+  await page.mouse.move(x, y - 300, { steps: 6 });
+  await page.mouse.up();
+  await expect(page.getByRole("dialog", { name: "Regions" })).toBeVisible();
+}
+
+test.describe("the region sheet", () => {
+  test.beforeEach(({ browserName }, info) => {
+    void browserName;
+    test.skip(info.project.name === "desktop", "the sheet is the phone layout");
+  });
+
+  test("levels are chips that narrow the map, and the results button is named", async ({
+    page,
+  }) => {
+    await openRegionMap(page);
+    const sheet = page.getByRole("region", { name: "Regions" });
+    for (const level of ["Valleys", "Districts", "Mountain ranges", "States"]) {
+      await expect(
+        sheet.getByRole("button", { name: level, exact: true }),
+      ).toBeVisible();
+    }
+    const results = page.getByRole("button", { name: "Open search panel" });
+    await expect(results).toBeVisible();
+    await expectTouchTargets(results);
+
+    await sheet.getByRole("button", { name: "Districts", exact: true }).click();
+    await expect
+      .poll(async () =>
+        (await sourceFeatures(page, "region-browse")).map((f) => f.id),
+      )
+      .toEqual([REGIONS.inner.id]);
+    await sheet.getByRole("button", { name: "Districts", exact: true }).click();
+    await expect
+      .poll(async () => (await sourceFeatures(page, "region-browse")).length)
+      .toBeGreaterThan(1);
+  });
+
+  test("a pick shows what it is part of and the ranges the map left out @small", async ({
+    page,
+  }) => {
+    await openRegionMap(page);
+    await clickAt(page, SOLO_POINT);
+    await expect(
+      page
+        .getByRole("region", { name: "Regions" })
+        .getByText("AT \u00b7 Beta range"),
+    ).toBeVisible();
+    await dragSheetOpen(page);
+    const sheet = page.getByRole("dialog", { name: "Regions" });
+    await expect(sheet.getByText("Part of")).toBeVisible();
+    await expect(
+      sheet.getByRole("button", { name: REGIONS.big.name }),
+    ).toBeVisible();
+    await sheet
+      .getByRole("button", { name: "Mountain ranges in view (1)" })
+      .click();
+    await expect(sheet.getByText(REGIONS.big.name).nth(1)).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await sheet.getByRole("button", { name: REGIONS.big.name }).first().click();
+    await expect(page).toHaveURL(new RegExp(`region=${REGIONS.big.id}`));
+  });
+});

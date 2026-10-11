@@ -19,12 +19,17 @@ export const MIN_VIEW_SHARE = 0.003;
 /** A range holding at least this many other ranges is not drawn. */
 export const MAX_NESTED_RANGES = 2;
 
-const KIND_LABELS: Record<string, string> = {
-  valley: "Valleys",
-  district: "Districts",
-  range: "Mountain ranges",
-  state: "States",
-};
+/** The levels regions come in, in the order the level chips show them. */
+export const LEVELS = [
+  { kind: "valley", label: "Valleys" },
+  { kind: "district", label: "Districts" },
+  { kind: "range", label: "Mountain ranges" },
+  { kind: "state", label: "States" },
+] as const;
+
+const KIND_LABELS: Record<string, string> = Object.fromEntries(
+  LEVELS.map((level) => [level.kind, level.label]),
+);
 
 /** The line under a region's name in the choice card: its country, then the
  * level it belongs to. The map label itself carries the name alone. */
@@ -72,13 +77,47 @@ export function visibleRegions<T extends DrawableRegion>(
     if (viewArea > 0 && bboxArea(region.bbox) / viewArea < MIN_VIEW_SHARE) {
       return false;
     }
-    if (region.kind !== "range") return true;
-    const nested = ranges.filter(
-      (other) =>
-        other.id !== region.id && bboxContains(region.bbox, other.bbox),
-    ).length;
-    return nested < MAX_NESTED_RANGES;
+    return !holdsManyRanges(region, ranges);
   });
+}
+
+function holdsManyRanges(
+  region: DrawableRegion,
+  ranges: readonly DrawableRegion[],
+): boolean {
+  if (region.kind !== "range") return false;
+  const nested = ranges.filter(
+    (other) => other.id !== region.id && bboxContains(region.bbox, other.bbox),
+  ).length;
+  return nested >= MAX_NESTED_RANGES;
+}
+
+/** The ranges that `visibleRegions` leaves out because they hold other
+ * ranges, so they can still be reached from a list. Bounding boxes stand in
+ * for containment, as there: the API cannot answer "inside" yet. */
+export function rangesHiddenByNesting<T extends DrawableRegion>(
+  regions: readonly T[],
+  pickedId?: number | null,
+): T[] {
+  const ranges = regions.filter((r) => r.kind === "range");
+  return ranges.filter(
+    (range) => range.id !== pickedId && holdsManyRanges(range, ranges),
+  );
+}
+
+/** The regions the picked one lies in, nearest first. Bounding boxes stand in
+ * for containment (an approximation: a neighbour's box can swallow a region
+ * that is not inside it) until the API answers it. */
+export function partOf<T extends DrawableRegion>(
+  regions: readonly T[],
+  picked: { id: number; bbox: readonly number[] },
+): T[] {
+  return regions
+    .filter(
+      (region) =>
+        region.id !== picked.id && bboxContains(region.bbox, picked.bbox),
+    )
+    .sort((a, b) => bboxArea(a.bbox) - bboxArea(b.bbox));
 }
 
 type Pt = readonly [number, number];

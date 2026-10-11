@@ -8,8 +8,12 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import WaterwayMap, { type NotePin, type PointPin } from "@/components/map/Map";
+import RegionSheet, {
+  REGION_SHEET_CLEARANCE,
+} from "@/components/map/RegionSheet";
+import { partOf, rangesHiddenByNesting } from "@/components/map/regionGeometry";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import AreaControls from "@/components/search/AreaControls";
 import {
@@ -231,6 +235,25 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     isMobile && isRegionMode && selectedWaterwayId == null;
   const showModeStrip = showAreaStrip || showRegionStrip;
 
+  // The level chips narrow what the map draws; "part of" and the ranges the
+  // map left out are read from everything in view.
+  const [regionLevel, setRegionLevel] = useState<string | null>(null);
+  const drawnRegions = useMemo(
+    () =>
+      regionLevel
+        ? regionChoices.filter((r) => r.kind === regionLevel)
+        : regionChoices,
+    [regionChoices, regionLevel],
+  );
+  const regionParents = useMemo(
+    () => (regionOutline ? partOf(regionChoices, regionOutline) : []),
+    [regionChoices, regionOutline],
+  );
+  const hiddenRanges = useMemo(
+    () => rangesHiddenByNesting(regionChoices, regionOutline?.id),
+    [regionChoices, regionOutline?.id],
+  );
+
   // Line features spanning (nearly) the whole section (e.g. the whitewater
   // zone) would just redraw the section line - keep them in the timeline
   // but off the map.
@@ -257,6 +280,18 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
     <CircularProgress size={10} color="inherit" />
   ) : (
     filteredSearchSections.length || null
+  );
+
+  const resultsButton = (
+    <Badge badgeContent={resultsBadge} color="secondary" max={99}>
+      <IconButton
+        aria-label="Open search panel"
+        onClick={onOpenMobilePanel}
+        sx={{ color: "text.primary" }}
+      >
+        <FormatListBulletedIcon />
+      </IconButton>
+    </Badge>
   );
 
   return (
@@ -308,9 +343,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             // A selected river takes the map over; the regions it was found
             // through would only be clutter behind it.
             choices:
-              selectedWaterwayId != null || !isRegionMode
-                ? null
-                : regionChoices,
+              selectedWaterwayId != null || !isRegionMode ? null : drawnRegions,
             picked: selectedWaterwayId != null ? null : regionOutline,
             borders: countryBorders,
             onSelect: selectedWaterwayId != null ? undefined : selectRegion,
@@ -356,15 +389,32 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             labelMode,
             onLabelModeChange: setLabelMode,
             controlsBottomOffset:
-              isMobile && (showModeStrip || isMobileMapView) ? 60 : 0,
+              isMobile && (showModeStrip || isMobileMapView)
+                ? showRegionStrip
+                  ? REGION_SHEET_CLEARANCE
+                  : 60
+                : 0,
             controlsAnchor:
               isMobile && suggestMode === "feature" ? "top" : undefined,
             attributionPosition: isMobile ? "top-left" : "bottom-right",
           }}
         />
 
-        {/* Mode strip - mobile, map-driven mode, no waterway selected */}
-        {showModeStrip ? (
+        {showRegionStrip && (
+          <RegionSheet
+            picked={regionOutline}
+            loading={regionsLoading && !regionOutline}
+            level={regionLevel}
+            onLevelChange={setRegionLevel}
+            parents={regionParents}
+            hiddenRanges={hiddenRanges}
+            onPick={selectRegion}
+            action={resultsButton}
+          />
+        )}
+
+        {/* Area strip - mobile, no waterway selected */}
+        {showAreaStrip ? (
           <Box
             sx={{
               position: "absolute",
@@ -385,24 +435,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             }}
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              {showRegionStrip ? (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  {/* A viewport the server has not seen takes ten seconds to
-                      fetch from OSM; without this the map just sits empty. */}
-                  {regionsLoading && !regionOutline && (
-                    <CircularProgress size={12} color="inherit" />
-                  )}
-                  <Typography variant="body2" color="text.secondary" noWrap>
-                    {regionOutline
-                      ? [regionOutline.country, regionOutline.name]
-                          .filter(Boolean)
-                          .join(" · ")
-                      : regionsLoading
-                        ? "Finding the regions here…"
-                        : "Tap a region on the map to search in it"}
-                  </Typography>
-                </Box>
-              ) : areaCircle ? (
+              {areaCircle ? (
                 <AreaControls
                   areaCircle={areaCircle}
                   locked={areaLocked}
@@ -419,16 +452,9 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
                 </Typography>
               )}
             </Box>
-            <Badge badgeContent={resultsBadge} color="secondary" max={99}>
-              <IconButton
-                onClick={onOpenMobilePanel}
-                sx={{ color: "text.primary" }}
-              >
-                <FormatListBulletedIcon />
-              </IconButton>
-            </Badge>
+            {resultsButton}
           </Box>
-        ) : isMobileMapView ? (
+        ) : showRegionStrip ? null : isMobileMapView ? (
           /* Map-view mini header - shown when the detail overlay is toggled away */
           <>
             <SectionSpeedDial
