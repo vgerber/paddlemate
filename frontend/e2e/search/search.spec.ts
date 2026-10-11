@@ -27,7 +27,7 @@ const seen = (l: Locator) => l.filter({ visible: true });
 const modeTab = (page: Page, name: string) =>
   seen(page.getByRole("tab", { name, exact: true }));
 const nameField = (page: Page) =>
-  seen(page.getByPlaceholder("Search rivers or sections…"));
+  seen(page.getByPlaceholder("Name", { exact: true }));
 const chip = (page: Page, name: RegExp | string) =>
   seen(page.locator(".MuiChip-root", { hasText: name }));
 const sheet = (page: Page) =>
@@ -164,6 +164,17 @@ test.describe("name mode", () => {
     );
     await openSearch(page);
     await expect(seen(page.getByText("Recent rivers"))).toBeVisible();
+    const row = seen(page.getByTestId("recent-river")).first();
+    expect(await computed(row.getByText("Test River"), "font-size")).toBe(
+      "15px",
+    );
+    expect(await computed(row.getByText("Test River"), "font-weight")).toBe(
+      "500",
+    );
+    await expect(row.getByText("river", { exact: true })).toBeVisible();
+    await expect(
+      seen(page.getByText("Recent rivers")).locator("svg"),
+    ).toHaveCount(0);
   });
 
   test("@small chips are 32px to look at, 44px to hit and teal when set", async ({
@@ -218,6 +229,39 @@ test.describe("filters sheet", () => {
       );
     }
     await expectNoHorizontalOverflow(page);
+  });
+
+  test("@small the sheet title is 18px bold, fields are filled and Water now chips 44px", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Test");
+    await chip(page, "Water now").click();
+    const title = sheet(page).getByRole("heading", { name: "Filters" });
+    expect(await computed(title, "font-size")).toBe("18px");
+    expect(await computed(title, "font-weight")).toBe("700");
+    for (const label of ["Min grade", "Max grade", "Country"]) {
+      const field = sheet(page)
+        .getByLabel(label)
+        .locator("xpath=ancestor::div[contains(@class,'MuiFilledInput-root')]");
+      const box = await field.boundingBox();
+      expect(box?.height, label).toBeGreaterThanOrEqual(52);
+      expect(box?.height, label).toBeLessThanOrEqual(56);
+      expect(await computed(field, "border-top-left-radius")).toBe("12px");
+      // The label sits inside the field, above the value.
+      const lab = await sheet(page)
+        .locator("label", { hasText: label })
+        .boundingBox();
+      expect(lab?.y).toBeGreaterThan(box?.y ?? 0);
+      expect((lab?.y ?? 0) + (lab?.height ?? 0)).toBeLessThan(
+        (box?.y ?? 0) + (box?.height ?? 0) / 2 + 4,
+      );
+    }
+    for (const name of ["Low", "Medium", "High"]) {
+      const b = await sheet(page)
+        .getByRole("button", { name, exact: true })
+        .boundingBox();
+      expect(b?.height, name).toBeGreaterThanOrEqual(44);
+    }
   });
 
   test("Escape closes the sheet and focus returns to the chip", async ({
@@ -316,7 +360,7 @@ test.describe("filters sheet", () => {
     expect(new Set(labels).size).toBe(1);
   });
 
-  test("sections whose water status fails stay, as unknown", async ({
+  test("sections whose water status fails are left out and counted", async ({
     page,
   }) => {
     await page.route("**/water-status", (route) =>
@@ -335,7 +379,8 @@ test.describe("filters sheet", () => {
         hasText: /^Water level unknown for \d+ sections\.$/,
       }),
     ).toBeVisible();
-    expect(await tabCount(page, "Sections")).toBe(all);
+    expect(all).toBeGreaterThan(1);
+    await expect.poll(() => tabCount(page, "Sections")).toBe(0);
   });
 
   test("water status requests run at most six at a time", async ({ page }) => {
@@ -401,9 +446,7 @@ test.describe("section rows", () => {
     await expect(row).toBeVisible();
     // The river sits on the row, so no river heading separates the rows.
     await expect(row.getByText("Test River", { exact: true })).toBeVisible();
-    await expect(
-      row.locator(".MuiChip-root", { hasText: "III" }),
-    ).toBeVisible();
+    await expect(row.getByText("III", { exact: true })).toBeVisible();
     await expect(row.locator("[data-level]")).toHaveCount(1);
     expect(await computed(row, "border-top-left-radius")).toBe("14px");
     expect(
@@ -443,6 +486,25 @@ test.describe("area mode", () => {
     await expect(seen(page.getByTestId("area-map-card"))).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
+
+  test("@small the card draws the radius ring, the slider is live and Country is a chip", async ({
+    page,
+  }) => {
+    await openSearch(page, "&mode=area");
+    const card = seen(page.getByTestId("area-map-card"));
+    const ring = card.locator("circle[stroke-dasharray]");
+    await expect(ring).toHaveCount(1);
+    await expect(seen(page.getByRole("slider"))).toBeEnabled();
+    const before = Number(await ring.getAttribute("r"));
+    await seen(page.getByRole("slider")).focus();
+    for (let i = 0; i < 20; i++) await page.keyboard.press("ArrowRight");
+    expect(Number(await ring.getAttribute("r"))).toBeGreaterThan(before);
+    const track = seen(page.locator(".MuiSlider-track"));
+    expect(await computed(track, "background-color")).toBe(TEAL);
+    await expect(chip(page, "Grade")).toBeVisible();
+    await expect(chip(page, "Country")).toBeVisible();
+    await expect(chip(page, "Water now")).toBeVisible();
+  });
 });
 
 test.describe("region mode", () => {
@@ -470,6 +532,20 @@ test.describe("region mode", () => {
     ]);
     await expect(chip(page, "Grade")).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
+  });
+
+  test("@small suggestion rows read from the left and the hint stays", async ({
+    page,
+  }) => {
+    await openSearch(page, "&mode=region");
+    await seen(page.getByPlaceholder("Search regions…")).fill("Wald");
+    await expect(
+      seen(page.getByText("Type a valley, district, state or range")),
+    ).toBeVisible();
+    const row = seen(page.getByTestId("region-option")).first();
+    const rowBox = await row.boundingBox();
+    const nameBox = await row.locator("p").first().boundingBox();
+    expect((nameBox?.x ?? 0) - (rowBox?.x ?? 0)).toBeLessThan(24);
   });
 
   test("picking a region returns to the results with the region as a chip", async ({
