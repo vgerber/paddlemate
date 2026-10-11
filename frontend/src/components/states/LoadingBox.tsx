@@ -1,7 +1,11 @@
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import { theme } from "@/lib/theme";
 
-/** Centered loading spinner for panel and page bodies. */
+const { motion } = theme.tokens;
+
+/** Centered loading spinner for panel and page bodies. It waits 150 ms before
+ * it shows, so a fast answer never flashes one. */
 export default function LoadingBox({
   size = 24,
   py = 4,
@@ -18,9 +22,14 @@ export default function LoadingBox({
         display: "flex",
         justifyContent: "center",
         ...(pt != null ? { pt } : { py }),
+        animation: `pm-spinner-in ${motion.fast}ms ${motion.easeOut} 150ms backwards`,
+        "@keyframes pm-spinner-in": {
+          from: { opacity: 0 },
+          to: { opacity: 1 },
+        },
       }}
     >
-      <CircularProgress size={size} />
+      <CircularProgress size={size} thickness={4} />
     </Box>
   );
 }

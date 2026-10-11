@@ -2,6 +2,7 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { theme } from "@/lib/theme";
 
 /**
  * Somebody's text, formatted. Markdown only - `react-markdown` escapes raw
@@ -92,7 +93,12 @@ export default function MarkdownText({ children }: { children: string }) {
         code: ({ children }) => (
           <Typography
             component="code"
-            sx={{ fontFamily: "monospace", fontSize: "0.8125rem" }}
+            sx={{
+              fontSize: "0.8125rem",
+              px: 0.5,
+              bgcolor: theme.tokens.surfaceHigh,
+              borderRadius: `${theme.tokens.radii.xs}px`,
+            }}
           >
             {children}
           </Typography>

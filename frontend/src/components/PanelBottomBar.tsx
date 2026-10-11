@@ -2,6 +2,9 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 /** The round primary-action button used in panel bottom bars. */
 export function RoundActionButton({
@@ -17,18 +20,21 @@ export function RoundActionButton({
 }) {
   return (
     <IconButton
-      size="large"
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
       sx={{
+        width: 48,
+        height: 48,
         borderRadius: "50%",
-        bgcolor: "secondary.main",
-        color: "secondary.contrastText",
-        "&:hover": { bgcolor: "secondary.light" },
+        bgcolor: tokens.primary,
+        color: tokens.onPrimary,
+        boxShadow: tokens.elevation.e3,
+        "&:hover": { bgcolor: tokens.primaryDark },
         "&.Mui-disabled": {
-          bgcolor: "action.disabledBackground",
-          color: "action.disabled",
+          bgcolor: tokens.surfaceHighest,
+          color: tokens.outline,
+          boxShadow: "none",
         },
       }}
     >
@@ -64,6 +70,7 @@ export default function PanelBottomBar({
         px: 1,
         pt: 1,
         pb: "calc(8px + env(safe-area-inset-bottom))",
+        bgcolor: tokens.surface,
         borderTop: "1px solid",
         borderColor: "divider",
         flexShrink: 0,
@@ -78,11 +85,14 @@ export default function PanelBottomBar({
         {leftIcon}
       </IconButton>
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700 }}>
+        <Typography
+          noWrap
+          sx={{ fontSize: "0.9375rem", fontWeight: 700, lineHeight: 1.33 }}
+        >
           {title}
         </Typography>
         <Typography
-          variant="caption"
+          variant="body2"
           color="text.secondary"
           sx={{ display: "block" }}
         >

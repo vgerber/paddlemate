@@ -2,6 +2,9 @@ import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 interface ListPaneHeaderProps {
   /** How much is in the list. Omitted while there is no honest number. */
@@ -33,23 +36,23 @@ export default function ListPaneHeader({
           display: "flex",
           alignItems: "center",
           gap: 0.5,
-          // The line is as tall as a small IconButton whether or not this
-          // pane has one, so every counter sits at the same height and every
-          // list starts at the same place. Content-box, so padding adds to it.
-          minHeight: 30,
-          boxSizing: "content-box",
+          // As tall as a touch target whether or not this pane has controls,
+          // so every counter sits at the same height and every list starts
+          // at the same place.
+          minHeight: tokens.touch.min,
+          boxSizing: "border-box",
           px: 2,
-          pt: 1.5,
-          pb: 1,
+          pt: 0.5,
         },
         ...(Array.isArray(sx) ? sx : [sx]),
       ]}
     >
       {count != null && !loading && (
         <Typography
-          variant="caption"
+          variant="body2"
           sx={{
-            color: "text.disabled",
+            fontWeight: 500,
+            color: "text.secondary",
             display: hideCountOnMobile
               ? { xs: "none", md: "block" }
               : undefined,

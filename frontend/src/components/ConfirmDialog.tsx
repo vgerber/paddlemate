@@ -37,7 +37,12 @@ export default function ConfirmDialog({
   children,
 }: ConfirmDialogProps) {
   return (
-    <Dialog open={open} onClose={pending ? undefined : onCancel}>
+    <Dialog
+      open={open}
+      onClose={pending ? undefined : onCancel}
+      fullWidth
+      maxWidth="xs"
+    >
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         {body && (
@@ -48,10 +53,19 @@ export default function ConfirmDialog({
         {children}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel} disabled={pending}>
+        <Button
+          onClick={onCancel}
+          disabled={pending}
+          sx={{ color: "text.secondary" }}
+        >
           Cancel
         </Button>
-        <Button onClick={onConfirm} color={color} disabled={pending}>
+        <Button
+          variant="contained"
+          onClick={onConfirm}
+          color={color}
+          disabled={pending}
+        >
           {pending ? (pendingLabel ?? confirmLabel) : confirmLabel}
         </Button>
       </DialogActions>

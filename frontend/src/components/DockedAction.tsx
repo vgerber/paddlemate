@@ -20,22 +20,11 @@ export default function DockedAction({
     <Box
       sx={{
         display: { xs: "none", md: "flex" },
-        px: 1.5,
-        py: 1,
+        p: 1.5,
         flexShrink: 0,
-        borderTop: "1px solid",
-        borderColor: "divider",
       }}
     >
-      {/* Secondary is the lime call-to-action, the colour the FABs use. */}
-      <Button
-        variant="contained"
-        color="secondary"
-        size="small"
-        fullWidth
-        startIcon={icon}
-        onClick={onClick}
-      >
+      <Button variant="contained" fullWidth startIcon={icon} onClick={onClick}>
         {label}
       </Button>
     </Box>

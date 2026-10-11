@@ -5,7 +5,7 @@ import IconButton from "@mui/material/IconButton";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { Media } from "@/lib/api";
-import { labelSx, theme } from "@/lib/theme";
+import { alphas, labelSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -35,8 +35,8 @@ export default function ImageLightbox({
         paper: {
           sx: {
             bgcolor: tokens.surfaceLowest,
-            border: "1px solid",
-            borderColor: tokens.outlineVariant,
+            borderRadius: `${tokens.radii.lg}px`,
+            overflow: "hidden",
             maxWidth: "min(1200px, 96vw)",
             m: { xs: 1, md: 2 },
           },
@@ -56,11 +56,12 @@ export default function ImageLightbox({
             onClick={onClose}
             sx={{
               position: "absolute",
-              top: 4,
-              right: 4,
-              bgcolor: `${tokens.surfaceLowest}cc`,
-              border: "1px solid",
-              borderColor: `${tokens.outlineVariant}99`,
+              top: 8,
+              right: 8,
+              width: tokens.touch.min,
+              height: tokens.touch.min,
+              bgcolor: `${tokens.surfaceLowest}${alphas.scrim}`,
+              boxShadow: tokens.elevation.e1,
               "&:hover": { bgcolor: tokens.surfaceHigh },
             }}
           >
@@ -84,17 +85,24 @@ export default function ImageLightbox({
           {(media.caption || attribution) && (
             <Box
               sx={{
-                px: 1.5,
-                py: 1,
+                px: 2,
+                py: 1.5,
                 borderTop: "1px solid",
-                borderColor: `${tokens.outlineVariant}55`,
+                borderColor: `${tokens.outlineVariant}${alphas.hairline}`,
               }}
             >
               {media.caption && (
                 <Typography variant="body2">{media.caption}</Typography>
               )}
               {attribution && (
-                <Typography sx={{ ...labelSx, display: "block", mt: 0.25 }}>
+                <Typography
+                  sx={{
+                    ...labelSx,
+                    letterSpacing: 0,
+                    display: "block",
+                    mt: 0.25,
+                  }}
+                >
                   {media.license_url ? (
                     <Link
                       href={media.license_url}

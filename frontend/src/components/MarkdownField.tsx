@@ -10,6 +10,9 @@ import Typography from "@mui/material/Typography";
 import { useRef, useState } from "react";
 import { factLabelSx } from "@/components/Fact";
 import MarkdownText from "@/components/MarkdownText";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 // Four toolbar buttons over a plain text field, written here: every markdown
 // editor library is many times this size for features nobody asked for.
@@ -138,12 +141,19 @@ export default function MarkdownField({
 
   return (
     <Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 0.5,
+          mb: 0.5,
+        }}
+      >
         <Typography sx={{ ...factLabelSx, flex: 1 }}>{label}</Typography>
         {marks.map((mark) => (
           <IconButton
             key={mark.key}
-            size="small"
             title={mark.title}
             aria-label={mark.title}
             onClick={mark.run}
@@ -152,7 +162,7 @@ export default function MarkdownField({
             {mark.icon}
           </IconButton>
         ))}
-        <Button size="small" onClick={() => setPreview((p) => !p)}>
+        <Button onClick={() => setPreview((p) => !p)}>
           {preview ? "Write" : "Preview"}
         </Button>
       </Box>
@@ -162,6 +172,8 @@ export default function MarkdownField({
           sx={{
             border: "1px solid",
             borderColor: "divider",
+            borderRadius: `${tokens.radii.sm}px`,
+            bgcolor: tokens.surfaceHigh,
             p: 1.5,
             minHeight: minRows * 24,
           }}

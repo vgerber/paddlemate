@@ -1,6 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import { useEffect, useState } from "react";
+import { theme } from "@/lib/theme";
 
 type Listener = (message: string) => void;
 
@@ -45,7 +46,7 @@ export default function AppSnackbar() {
         severity="error"
         variant="filled"
         onClose={() => setMessage(null)}
-        sx={{ width: "100%" }}
+        sx={{ width: "100%", boxShadow: theme.tokens.elevation.e2 }}
       >
         {message}
       </Alert>

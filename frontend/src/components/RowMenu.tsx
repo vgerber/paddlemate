@@ -4,6 +4,9 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { type ReactNode, useState } from "react";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 export interface RowAction {
   label: string;
@@ -32,7 +35,6 @@ export default function RowMenu({
   return (
     <>
       <IconButton
-        size="small"
         title={label}
         aria-label={label}
         onClick={(e) => {
@@ -40,7 +42,7 @@ export default function RowMenu({
           setAnchor(e.currentTarget);
         }}
       >
-        <MoreVertIcon fontSize="small" />
+        <MoreVertIcon />
       </IconButton>
       <Menu
         anchorEl={anchor}
@@ -52,13 +54,19 @@ export default function RowMenu({
         {actions.map((action) => (
           <MenuItem
             key={action.label}
-            sx={{ py: 1.25, color: action.danger ? "error.main" : undefined }}
+            sx={{
+              minHeight: tokens.touch.min,
+              gap: 1.5,
+              color: action.danger ? "error.main" : undefined,
+            }}
             onClick={() => {
               setAnchor(null);
               action.onClick();
             }}
           >
-            <ListItemIcon sx={{ color: "inherit" }}>{action.icon}</ListItemIcon>
+            <ListItemIcon sx={{ color: "inherit", minWidth: 0 }}>
+              {action.icon}
+            </ListItemIcon>
             {action.label}
           </MenuItem>
         ))}

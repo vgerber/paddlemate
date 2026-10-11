@@ -8,9 +8,13 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
+import { factLabelSx } from "@/components/Fact";
 import type { Group } from "@/lib/api";
 import { useGroups } from "@/lib/hooks/useGroups";
+import { theme } from "@/lib/theme";
 import { VISIBILITY_LABEL, type VisibilityType } from "@/lib/visibility";
+
+const { tokens } = theme;
 
 export interface Audience {
   type: VisibilityType;
@@ -45,23 +49,26 @@ export default function VisibilityPicker({
   return (
     <>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        <Typography variant="overline" sx={{ lineHeight: 1 }}>
-          Visibility
-        </Typography>
+        <Typography sx={factLabelSx}>Visibility</Typography>
         <ToggleButtonGroup
           exclusive
           value={value.type}
           onChange={(_, v: VisibilityType | null) => v && onChange({ type: v })}
-          size="small"
+          fullWidth
+          sx={{ maxWidth: 420 }}
         >
           {(["private", "shared", "public"] as const).map((t) => (
-            <ToggleButton key={t} value={t}>
+            <ToggleButton
+              key={t}
+              value={t}
+              sx={{ minHeight: tokens.touch.min, flex: 1 }}
+            >
               {VISIBILITY_LABEL[t]}
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
         {privateHint && value.type === "private" && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="body2" color="text.secondary">
             {privateHint}
           </Typography>
         )}
@@ -75,9 +82,7 @@ export default function VisibilityPicker({
             getOptionLabel={(opt) => opt.name}
             value={selectedGroups}
             onChange={(_, val) => onChange({ groups: val.map((g) => g.id) })}
-            renderInput={(params) => (
-              <TextField {...params} label="Groups" size="small" />
-            )}
+            renderInput={(params) => <TextField {...params} label="Groups" />}
             renderValue={(
               val: Group[],
               getItemProps: AutocompleteRenderValueGetItemProps<true>,
@@ -87,7 +92,6 @@ export default function VisibilityPicker({
                   {...getItemProps({ index: idx })}
                   key={opt.id}
                   label={opt.name}
-                  size="small"
                 />
               ))
             }
@@ -97,7 +101,6 @@ export default function VisibilityPicker({
             <TextField
               label="Add user by ID"
               value={userInput}
-              size="small"
               onChange={(e) => setUserInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key !== "Enter") return;
@@ -116,7 +119,6 @@ export default function VisibilityPicker({
                   <Chip
                     key={u}
                     label={u}
-                    size="small"
                     onDelete={() =>
                       onChange({ users: value.users.filter((x) => x !== u) })
                     }

@@ -4,9 +4,10 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { useSession } from "@/lib/hooks/useSession";
+import { StateTile } from "./EmptyState";
 
-/** Sign-in prompt: disabled icon, one line, sign-in button. `pt` shrinks it
- * for use inside a panel rather than a full page. */
+/** Sign-in prompt: icon in a soft tile, one line, sign-in button. `pt` shrinks
+ * it for use inside a panel rather than a full page. */
 export default function SignInGate({
   icon,
   title,
@@ -23,16 +24,17 @@ export default function SignInGate({
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 2,
+        gap: 1,
         pt,
         px: 2,
+        textAlign: "center",
       }}
     >
-      {icon}
-      <Typography variant="h6" color="text.secondary">
+      <StateTile>{icon}</StateTile>
+      <Typography variant="h6" sx={{ mb: 1 }}>
         {title}
       </Typography>
-      <Button variant="contained" color="secondary" onClick={login}>
+      <Button variant="contained" onClick={login}>
         Sign In
       </Button>
       <Link
@@ -41,6 +43,7 @@ export default function SignInGate({
         variant="body2"
         color="text.secondary"
         onClick={signup}
+        sx={{ minHeight: 44 }}
       >
         New here? Create an account
       </Link>

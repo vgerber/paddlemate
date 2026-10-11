@@ -3,22 +3,23 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { fonts, labelSx } from "@/lib/theme";
 
-/** Overline label of a fact block; also the app's small metadata label. */
+/** Label of a fact block; also the app's small metadata label. */
 export const factLabelSx = {
   ...labelSx,
-  fontSize: "0.625rem",
-  letterSpacing: "0.1em",
-  color: "text.disabled",
+  fontWeight: 500,
+  letterSpacing: 0,
+  color: "text.secondary",
 } as const;
 
 /** The value line of a fact block. */
 export const valueSx = {
   fontFamily: fonts.label,
-  fontSize: "0.8125rem",
+  fontSize: "0.9375rem",
+  fontWeight: 600,
 } as const;
 
-/** One labelled value in a detail header: overline label, value beneath, and
- * an optional quieter second line. The app's way of stating a fact. */
+/** One labelled value in a detail header: label, value beneath, and an
+ * optional quieter second line. The app's way of stating a fact. */
 export default function Fact({
   label,
   value,
@@ -30,14 +31,14 @@ export default function Fact({
 }) {
   return (
     <Box>
-      <Typography sx={factLabelSx}>{label}</Typography>
+      <Typography data-testid="fact-label" sx={factLabelSx}>
+        {label}
+      </Typography>
       <Typography sx={valueSx} component="div">
         {value}
       </Typography>
       {caption && (
-        <Typography
-          sx={{ ...factLabelSx, textTransform: "none", letterSpacing: 0 }}
-        >
+        <Typography sx={{ ...factLabelSx, color: "text.disabled" }}>
           {caption}
         </Typography>
       )}

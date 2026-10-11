@@ -20,9 +20,8 @@ export default function TimelineRail({
       sx={{
         width: 16,
         flexShrink: 0,
-        // Centers the 12px dot on the first text line (text pt 4px +
-        // ~8px half line height - 6px half dot).
-        pt: "6px",
+        // Centers the 10px dot on the first text line.
+        pt: "7px",
         alignItems: "center",
         alignSelf: "stretch",
       }}
@@ -34,18 +33,17 @@ export default function TimelineRail({
                 width: 10,
                 height: 10,
                 borderRadius: "50%",
-                border: `1.5px solid ${tokens.onSurfaceVariant}`,
-                opacity: 0.45,
+                border: `2px solid ${tokens.outline}`,
+                bgcolor: tokens.surface,
                 flexShrink: 0,
                 mb: "4px",
               }
             : {
-                width: 12,
-                height: 12,
+                width: 10,
+                height: 10,
                 borderRadius: "50%",
                 bgcolor: tokens.primary,
                 flexShrink: 0,
-                boxShadow: `0 0 10px ${tokens.primary}99, 0 0 4px ${tokens.primary}`,
                 mb: "4px",
               }
         }
@@ -56,8 +54,8 @@ export default function TimelineRail({
             width: 2,
             flex: 1,
             minHeight: 20,
-            bgcolor: tokens.outline,
-            opacity: 0.45,
+            bgcolor: tokens.outlineVariant,
+            borderRadius: `${tokens.radii.pill}px`,
             mt: "4px",
             mb: "4px",
           }}
