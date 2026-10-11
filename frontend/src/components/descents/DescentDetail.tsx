@@ -26,7 +26,14 @@ const formatDateWithWeekday = (iso: string) =>
 
 /** Full trip view for one descent: facts, route map, the sections in paddled
  * order with their notes and the water levels captured when it was logged. */
-export default function DescentDetail({ descent }: { descent: Descent }) {
+export default function DescentDetail({
+  descent,
+  showMap = true,
+}: {
+  descent: Descent;
+  /** Off where the canvas map already draws this log. */
+  showMap?: boolean;
+}) {
   const navigate = useNavigate();
 
   const sections = useMemo(
@@ -110,7 +117,7 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
       )}
 
       {/* Route */}
-      {(mapSections.length > 0 || descent.put_in_lat != null) && (
+      {showMap && (mapSections.length > 0 || descent.put_in_lat != null) && (
         <Box
           sx={{
             height: 260,
