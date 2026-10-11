@@ -251,7 +251,7 @@ test.describe("phone bottom navigation", () => {
   }) => {
     await page.goto("/");
     await appReady(page);
-    await page.locator("button.MuiFab-root:visible").first().click();
+    await page.getByRole("button", { name: "Open search panel" }).click();
     const overlay = page.getByTestId("mobile-overlay");
     await expect(overlay).toBeVisible();
     await page.goBack();

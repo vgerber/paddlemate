@@ -497,7 +497,11 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             }}
           >
             <Badge badgeContent={resultsBadge} color="secondary" max={99}>
-              <Fab color="secondary" onClick={onOpenMobilePanel}>
+              <Fab
+                color="secondary"
+                aria-label="Open search panel"
+                onClick={onOpenMobilePanel}
+              >
                 <FilterAltIcon />
               </Fab>
             </Badge>
