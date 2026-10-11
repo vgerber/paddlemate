@@ -176,7 +176,7 @@ test.describe("river panel", () => {
   }) => {
     await openRiver(page);
     await expect(
-      page.locator("p:visible, h6:visible").filter({ hasText: /^Test River$/ }),
+      page.locator("p:visible, h3:visible").filter({ hasText: /^Test River$/ }),
     ).toBeVisible();
     for (const name of ["Sections", "Gauges", "Notes"]) {
       await expect(tab(page, name)).toBeVisible();

@@ -72,6 +72,26 @@ test.describe("closed card", () => {
     expect(h, "one line").toBeLessThanOrEqual(20);
   });
 
+  test("the credit's links are 44px to hit", async ({ page }) => {
+    await openSection(page);
+    const links = card(page).getByTestId("gauge-attribution").getByRole("link");
+    expect(await links.count()).toBeGreaterThan(0);
+    // The link is 12px type; its hit area is the pseudo element around it.
+    const hits = await links.evaluateAll((els) =>
+      els.map((el) => {
+        const after = getComputedStyle(el, "::after");
+        return {
+          w: Number.parseFloat(after.width),
+          h: Number.parseFloat(after.height),
+        };
+      }),
+    );
+    for (const h of hits) {
+      expect(h.w).toBeGreaterThanOrEqual(44);
+      expect(h.h).toBeGreaterThanOrEqual(44);
+    }
+  });
+
   test("threshold labels sit short of the latest reading's dot", async ({
     page,
   }) => {
@@ -191,6 +211,23 @@ test.describe("open card", () => {
     ).toHaveAttribute("aria-expanded", "false");
   });
 
+  test("the keyboard never loses focus to the page when it opens and closes", async ({
+    page,
+  }) => {
+    await openSection(page);
+    const active = () =>
+      page.evaluate(
+        () =>
+          document.activeElement?.getAttribute("aria-label") ??
+          document.activeElement?.tagName,
+      );
+    await card(page).getByRole("button", { name: "Chart options" }).focus();
+    await page.keyboard.press("Enter");
+    await expect.poll(active).toBe("Close chart options");
+    await page.keyboard.press("Enter");
+    await expect.poll(active).toBe("Chart options");
+  });
+
   test("a gauge with flow offers both readings", async ({ page }) => {
     await page.route(/\/water-status$/, async (route) => {
       const res = await route.fetch();
@@ -298,18 +335,5 @@ test.describe("gauge coverage", () => {
     ).toBeGreaterThanOrEqual(10);
     await expectTouchTargets(legend.getByRole("button"));
     await expectNoHorizontalOverflow(page);
-  });
-});
-
-test("screens for review", async ({ page }, testInfo) => {
-  await openSection(page);
-  await testInfo.attach("closed", {
-    body: await page.screenshot(),
-    contentType: "image/png",
-  });
-  await card(page).getByRole("button", { name: "Chart options" }).click();
-  await testInfo.attach("open", {
-    body: await page.screenshot(),
-    contentType: "image/png",
   });
 });

@@ -9,6 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import DockedAction from "@/components/DockedAction";
 import PanelHeader from "@/components/PanelHeader";
 import SourcesTab from "@/components/provenance/SourcesTab";
@@ -52,6 +53,9 @@ interface WaterwayBrowsePanelProps {
   noteMapPin?: React.ComponentProps<typeof CommentThread>["mapPin"];
   onMobileMapToggle?: () => void;
   mobileMapActive?: boolean;
+  /** The chart card, shown at the top of the tabs it belongs to (the section's
+   * Features, the river's Sections and Gauges). */
+  chart?: ReactNode;
   /** Everything the section feature timeline needs - passed through as one
    * group instead of loose props. */
   featureTimeline?: {
@@ -65,6 +69,14 @@ interface WaterwayBrowsePanelProps {
     onFoldedChange?: (folded: boolean) => void;
   };
 }
+
+const { tokens } = theme;
+
+/** The header's icons are small to look at and 44px to hit. */
+const headerIconSx = {
+  width: tokens.touch.min,
+  height: tokens.touch.min,
+} as const;
 
 const SECTION_TABS: SectionDetailTab[] = ["features", "logs", "notes"];
 const RIVER_TABS: DetailTab[] = ["sections", "gauges", "notes", "sources"];
@@ -88,6 +100,7 @@ export default function WaterwayBrowsePanel({
   noteMapPin,
   onMobileMapToggle,
   mobileMapActive,
+  chart,
   featureTimeline,
 }: WaterwayBrowsePanelProps) {
   const navigate = useNavigate();
@@ -104,7 +117,10 @@ export default function WaterwayBrowsePanel({
   // Desktop only: on a phone these two are on the section speed dial, and
   // having them in both places gave the same action two homes. There is no
   // speed dial on desktop, so the header is where they live there.
-  const desktopOnly = { display: { xs: "none", md: "inline-flex" } } as const;
+  const desktopOnly = {
+    ...headerIconSx,
+    display: { xs: "none", md: "inline-flex" },
+  } as const;
   const actionButton =
     showProposedToggle || showFavoriteToggle || onMobileMapToggle ? (
       <>
@@ -147,6 +163,7 @@ export default function WaterwayBrowsePanel({
         {onMobileMapToggle && (
           <IconButton
             size="small"
+            sx={headerIconSx}
             onClick={onMobileMapToggle}
             aria-label={mobileMapActive ? "Back to detail" : "View on map"}
             color={mobileMapActive ? "primary" : undefined}
@@ -156,6 +173,10 @@ export default function WaterwayBrowsePanel({
         )}
       </>
     ) : undefined;
+
+  const chartTab = inFeatures
+    ? sectionDetailTab === "features"
+    : tab === "sections" || tab === "gauges";
 
   const showNewSectionFab =
     isAuthenticated &&
@@ -251,6 +272,7 @@ export default function WaterwayBrowsePanel({
                 : 1,
           }}
         >
+          {!isLoading && chartTab && chart}
           {isLoading ? (
             <LoadingBox size={22} />
           ) : inFeatures ? (

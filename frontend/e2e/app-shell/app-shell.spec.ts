@@ -3,6 +3,7 @@ import {
   appReady,
   computed,
   expectNoHorizontalOverflow,
+  expectTouchTargets,
 } from "../support/fixture";
 
 test("the app loads signed in, with the map and no console errors", async ({
@@ -42,4 +43,16 @@ test("no navigation text is set in capitals", async ({ page }) => {
     expect(await computed(link, "text-transform")).toBe("none");
     expect(await computed(link, "letter-spacing")).toBe("normal");
   }
+});
+
+test("the top bar's links and bell are 44px to hit", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop", "the top bar is md and up");
+  await page.goto("/");
+  await appReady(page);
+  const links = page.locator("header a:visible");
+  await expect(links.first()).toBeVisible();
+  await expectTouchTargets(links);
+  await expectTouchTargets(
+    page.getByRole("button", { name: /notifications/i }),
+  );
 });

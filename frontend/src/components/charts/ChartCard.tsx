@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
   TIME_RANGE_OPTIONS,
   typeLabel,
@@ -25,8 +25,10 @@ const { tokens } = theme;
 const OUTLINE_HEADROOM = 46;
 const CLOSED_HEADROOM = 6;
 
+// The phone height gives way on short screens, so a 568px phone still shows
+// the start of the features list under the chart.
 const heights = {
-  base: { xs: 210, md: "clamp(200px, 26vh, 340px)" },
+  base: { xs: "clamp(140px, 24vh, 210px)", md: "clamp(200px, 26vh, 340px)" },
   tall: { xs: 340, md: "clamp(280px, 42vh, 520px)" },
 } as const;
 
@@ -83,6 +85,15 @@ export default function ChartCard({
   children,
 }: ChartCardProps) {
   const [open, setOpen] = useState(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const openRef = useRef<HTMLButtonElement>(null);
+  const toggled = useRef(false);
+  // The control that was pressed leaves the page; hand focus to its
+  // counterpart so a keyboard user never lands on the body.
+  useEffect(() => {
+    if (!toggled.current) return;
+    (open ? closeRef : openRef).current?.focus();
+  }, [open]);
   const type = activeMeasurementType(ranges, measurementType);
   const readings = readingPerType(ranges, preferredFeatureId);
   const charted = readings.find((r) => r.type === type)?.range;
@@ -148,9 +159,13 @@ export default function ChartCard({
               ))}
             </Box>
             <IconButton
+              ref={closeRef}
               aria-label="Close chart options"
               aria-expanded
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                toggled.current = true;
+                setOpen(false);
+              }}
               sx={{
                 width: tokens.touch.min,
                 height: tokens.touch.min,
@@ -257,9 +272,13 @@ export default function ChartCard({
               </Typography>
             </Box>
             <IconButton
+              ref={openRef}
               aria-label="Chart options"
               aria-expanded={false}
-              onClick={() => setOpen(true)}
+              onClick={() => {
+                toggled.current = true;
+                setOpen(true);
+              }}
               sx={{
                 position: "absolute",
                 right: 4,

@@ -77,7 +77,7 @@ export default function UnderlineTabs<T extends string>({
         // The scroller is its own touch-action boundary: without this a
         // swipe that starts on the bar is taken as a sideways scroll.
         "& .MuiTabs-scroller": { touchAction: "pan-y" },
-        "& .MuiTabs-flexContainer": { gap: 2.5 },
+        "& .MuiTabs-list": { gap: 2.5 },
       }}
     >
       {items.map((item, i) => (

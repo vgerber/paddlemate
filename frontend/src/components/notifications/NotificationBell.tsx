@@ -6,8 +6,10 @@ import Popover from "@mui/material/Popover";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { useNotificationState } from "@/lib/hooks/useNotifications";
-
+import { theme } from "@/lib/theme";
 import NotificationList from "./NotificationList";
+
+const { tokens } = theme;
 
 /** The desktop top bar's bell: the unread count, and the list beneath it. */
 export default function NotificationBell() {
@@ -21,7 +23,11 @@ export default function NotificationBell() {
         size="small"
         aria-label={unread ? `${unread} unread notifications` : "Notifications"}
         onClick={(e) => setAnchor(e.currentTarget)}
-        sx={{ color: "text.secondary" }}
+        sx={{
+          width: tokens.touch.min,
+          height: tokens.touch.min,
+          color: "text.secondary",
+        }}
       >
         <UnreadBadge count={unread}>
           <NotificationsNoneOutlinedIcon fontSize="small" />

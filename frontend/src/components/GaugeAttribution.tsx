@@ -4,6 +4,21 @@ import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import type { GaugeSource } from "@/lib/api";
 import { licenseLink } from "@/lib/license";
+import { theme } from "@/lib/theme";
+
+// The credit is 12px type; the hit area of each link is drawn around it.
+const linkSx = {
+  position: "relative",
+  "&::after": {
+    content: '""',
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    width: `max(100%, ${theme.tokens.touch.min}px)`,
+    height: theme.tokens.touch.min,
+    transform: "translate(-50%, -50%)",
+  },
+} as const;
 
 /** One-line provider attribution for gauge data: who published it and under
  * what terms. The provider's full statement runs to a few hundred characters,
@@ -40,6 +55,7 @@ export default function GaugeAttribution({
           rel="noopener noreferrer"
           color="primary"
           underline="hover"
+          sx={linkSx}
         >
           {label}
         </Link>
@@ -56,6 +72,7 @@ export default function GaugeAttribution({
               rel="noopener noreferrer"
               color="primary"
               underline="hover"
+              sx={linkSx}
             >
               {license.label}
             </Link>
