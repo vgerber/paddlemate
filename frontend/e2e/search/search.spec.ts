@@ -370,6 +370,38 @@ test.describe("results", () => {
   });
 });
 
+test.describe("section rows", () => {
+  test("@small a row is a card: section, river, grade and the level pill", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Lower");
+    const row = seen(
+      page.getByTestId("search-section-row").filter({ hasText: "Lower Test" }),
+    ).first();
+    await expect(row).toBeVisible();
+    // The river sits on the row, so no river heading separates the rows.
+    await expect(row.getByText("Test River", { exact: true })).toBeVisible();
+    await expect(
+      row.locator(".MuiChip-root", { hasText: "III" }),
+    ).toBeVisible();
+    await expect(row.locator("[data-level]")).toHaveCount(1);
+    expect(await computed(row, "border-top-left-radius")).toBe("14px");
+    expect(
+      Number.parseFloat(await computed(row, "height")),
+    ).toBeGreaterThanOrEqual(64);
+    const name = await row
+      .getByText("Lower Test", { exact: true })
+      .boundingBox();
+    const river = await row
+      .getByText("Test River", { exact: true })
+      .boundingBox();
+    const pill = await row.locator("[data-level]").boundingBox();
+    expect(river?.y).toBeGreaterThan(name?.y ?? 0);
+    expect(pill?.x).toBeGreaterThan((river?.x ?? 0) + (river?.width ?? 0) - 1);
+    await expectNoHorizontalOverflow(page);
+  });
+});
+
 test.describe("area mode", () => {
   test("@small the slider and the hint sit under the map card", async ({
     page,
