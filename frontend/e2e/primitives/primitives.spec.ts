@@ -77,12 +77,12 @@ test.describe("underlined tabs", () => {
   }) => {
     await openSection(page);
     const tabs = page.locator("button.MuiTab-root:visible");
-    await expect(tabs).toHaveCount(3);
+    await expect(tabs).toHaveCount(4);
     const heights = await tabs.evaluateAll((els) =>
       els.map((e) => e.getBoundingClientRect().height),
     );
     for (const h of heights) expect(h).toBeGreaterThanOrEqual(48);
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       expect(await computed(tabs.nth(i), "text-transform")).toBe("none");
     }
     await expect(tab(page, "Features")).toHaveAttribute(

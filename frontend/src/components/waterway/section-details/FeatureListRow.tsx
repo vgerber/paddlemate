@@ -94,6 +94,10 @@ export function FeatureListRow({
         gap: 1,
         pr: 1.5,
         bgcolor: isActive ? `${tokens.primary}${alphas.tint}` : "transparent",
+        // The selected row's 2px teal ring, drawn inside so it never shifts.
+        outline: isActive ? `2px solid ${tokens.primary}` : "none",
+        outlineOffset: -2,
+        borderRadius: `${tokens.radii.row}px`,
       }}
     >
       <Box

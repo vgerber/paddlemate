@@ -198,3 +198,34 @@ test.describe("feature type icons", () => {
     });
   }
 });
+
+test.describe("bottom sheet over the nav", () => {
+  test("an open sheet and its scrim cover the bottom nav", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop", "the nav is a phone bar");
+    await openToPeek(page);
+    await dragOpen(page);
+    await expect(page.getByTestId("sheet-scrim")).toBeVisible();
+    const nav = await page
+      .getByRole("navigation", { name: "Main" })
+      .boundingBox();
+    if (!nav) throw new Error("no nav");
+    const probe = async (x: number) =>
+      page.evaluate(
+        ({ x, y }) => {
+          const el = document.elementFromPoint(x, y);
+          return {
+            scrim: !!el?.closest("[data-testid=sheet-scrim]"),
+            sheet: !!el?.closest("[aria-label='Gallery sheet']"),
+            nav: !!el?.closest("nav"),
+          };
+        },
+        { x, y: nav.y + nav.height / 2 },
+      );
+    // Over the sheet's width the sheet is on top; the nav never is.
+    const hit = await probe(nav.x + nav.width / 2);
+    expect(hit.nav).toBe(false);
+    expect(hit.sheet || hit.scrim).toBe(true);
+  });
+});

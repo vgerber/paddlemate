@@ -1,9 +1,10 @@
 import Box from "@mui/material/Box";
 import Portal from "@mui/material/Portal";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import type { ReactNode } from "react";
+import { type ReactNode, useContext } from "react";
 import PanelHeader from "@/components/PanelHeader";
 import { theme } from "@/lib/theme";
+import { HistorySlot } from "./HistorySlot";
 import HistoryTimeline from "./HistoryTimeline";
 import type { HistoryTarget } from "./types";
 
@@ -30,6 +31,34 @@ export default function HistoryHost({
   children,
 }: Props) {
   const desktop = useMediaQuery(theme.breakpoints.up("md"));
+  const slot = useContext(HistorySlot);
+  if (target && desktop && slot) {
+    // Over the whole panel, so the section view is replaced rather than
+    // nested under its chart. The view stays mounted underneath.
+    return (
+      <>
+        {children}
+        <Portal container={slot}>
+          <Box
+            data-testid="history-pane"
+            sx={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 2,
+              display: "flex",
+              flexDirection: "column",
+              bgcolor: tokens.background,
+            }}
+          >
+            <PanelHeader title={name} subtitle={subtitle} onBack={onClose} />
+            <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+              <HistoryTimeline target={target} />
+            </Box>
+          </Box>
+        </Portal>
+      </>
+    );
+  }
   if (target && desktop) {
     return (
       <Box data-testid="history-pane">

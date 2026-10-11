@@ -55,7 +55,8 @@ export default function RowMenu({
           <MenuItem
             key={action.label}
             sx={{
-              minHeight: tokens.touch.min,
+              // Doubled class: MUI's sm+ MenuItem rule shrinks it otherwise.
+              "&&": { minHeight: tokens.touch.min },
               gap: 1.5,
               color: action.danger ? "error.main" : undefined,
             }}

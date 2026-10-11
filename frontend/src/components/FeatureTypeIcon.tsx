@@ -44,7 +44,7 @@ export const FEATURE_ICON_PATHS: Record<FeatureType, string[]> = {
   ],
 };
 
-export type FeatureIconSize = 16 | 20 | 24;
+export type FeatureIconSize = 16 | 18 | 20 | 24;
 
 /** The icon of a feature type. It always sits beside the name, so it is
  * hidden from assistive tech unless a `title` is given. Colour is the text

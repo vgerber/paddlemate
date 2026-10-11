@@ -436,3 +436,26 @@ test.describe("design gaps", () => {
     await row(page, "Altes Wehr").click();
   });
 });
+
+test.describe("features card seams", () => {
+  test("the selected row carries a 2px teal ring", async ({ page }) => {
+    await openFeatures(page);
+    const r = row(page, "Altes Wehr");
+    expect(await computed(r, "outline-style")).toBe("none");
+    await r.click();
+    expect(await computed(r, "outline-width")).toBe("2px");
+    expect(await computed(r, "outline-style")).toBe("solid");
+    expect(await computed(r, "outline-color")).toBe("rgb(14, 116, 144)");
+    await r.click();
+  });
+
+  test("a point's icon is 18px in its disc, a range band has a 12px radius", async ({
+    page,
+  }) => {
+    await openFeatures(page);
+    const icon = row(page, "Altes Wehr").locator("[data-row-disc] svg");
+    expect(await computed(icon, "width")).toBe("18px");
+    const band = card(page).locator("[data-band]").first();
+    expect(await computed(band, "border-top-left-radius")).toBe("12px");
+  });
+});

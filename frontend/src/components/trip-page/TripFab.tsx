@@ -74,7 +74,7 @@ export function TripDock(props: Actions) {
  * FAB does it directly; only where several actions genuinely share the spot
  * does it open a menu.
  */
-export default function TripFab({
+function PrimaryFab({
   tab,
   isMember,
   isAdmin,
@@ -86,8 +86,6 @@ export default function TripFab({
   onEditAttendance,
   onLinkLog,
   onNewLog,
-  onEdit,
-  onDelete,
 }: {
   tab: TripTab;
   isMember: boolean;
@@ -100,8 +98,6 @@ export default function TripFab({
   onEditAttendance: () => void;
   onLinkLog: () => void;
   onNewLog: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
 }) {
   if (tab === "plan" && isMember) {
     return (
@@ -183,32 +179,57 @@ export default function TripFab({
     );
   }
 
-  if (!isAdmin) return null;
+  return null;
+}
 
+/** Edit and delete sit apart from the tab's primary action, in the opposite
+ * corner, so an admin reaches them on every tab. */
+function AdminDial({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
   return (
     <SpeedDial
       ariaLabel="Trip actions"
       icon={<SpeedDialIcon icon={<MoreVertIcon />} openIcon={<CloseIcon />} />}
-      FabProps={{ color: "secondary" }}
+      FabProps={{ color: "default" }}
       sx={{
         ...fabSx,
-        // Nothing is docked for these, so they keep the pane's corner.
+        // Docked actions own the pane's foot on a desktop, so the dial sits
+        // above them.
         position: { xs: "fixed", md: "absolute" },
-        bottom: { xs: fabSx.bottom, md: 24 },
-        right: { xs: 16, md: 24 },
+        bottom: { xs: fabSx.bottom, md: 88 },
+        right: "auto",
+        left: { xs: 16, md: 24 },
         display: "flex",
       }}
     >
       <SpeedDialAction
         icon={<EditOutlinedIcon />}
-        slotProps={{ tooltip: { title: "Edit trip" } }}
+        slotProps={{ tooltip: { title: "Edit trip", placement: "right" } }}
         onClick={onEdit}
       />
       <SpeedDialAction
         icon={<DeleteOutlinedIcon />}
-        slotProps={{ tooltip: { title: "Delete trip" } }}
+        slotProps={{ tooltip: { title: "Delete trip", placement: "right" } }}
         onClick={onDelete}
       />
     </SpeedDial>
+  );
+}
+
+export default function TripFab({
+  onEdit,
+  onDelete,
+  ...actions
+}: Actions & { onEdit: () => void; onDelete: () => void }) {
+  return (
+    <>
+      <PrimaryFab {...actions} />
+      {actions.isAdmin && <AdminDial onEdit={onEdit} onDelete={onDelete} />}
+    </>
   );
 }

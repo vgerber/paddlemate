@@ -13,6 +13,7 @@ import type { HistoryTarget } from "@/components/provenance/types";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import EmptyState from "@/components/states/EmptyState";
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
+import { humanize } from "@/lib/format";
 import { distanceAlongLineM, lineCoords } from "@/lib/geo";
 import { useDeleteFeature } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
@@ -27,7 +28,9 @@ import {
   buildTree,
   computeExtent,
   featureName,
+  fmtKm,
   proposalToComputedFeature,
+  sentence,
 } from "./utils";
 
 const { tokens } = theme;
@@ -145,10 +148,13 @@ export default function FeatureTimeline({
     null,
   );
   const [historyName, setHistoryName] = useState("");
-  function openHistory(target: HistoryTarget, name: string) {
+  const [historySubtitle, setHistorySubtitle] = useState("");
+  function openHistory(target: HistoryTarget, name: string, subtitle: string) {
     setHistoryName(name);
+    setHistorySubtitle(subtitle);
     setHistoryTarget(target);
   }
+  const sectionName = localizedName(section.name, section.names);
   const onHistoryItem = (cf: ComputedFeature) =>
     openHistory(
       {
@@ -157,6 +163,7 @@ export default function FeatureTimeline({
         featureId: cf.feature.id,
       },
       featureName(cf.feature),
+      `${sentence(humanize(cf.feature.feature_type))} · ${sectionName}, ${fmtKm(cf.distM)}`,
     );
 
   const ctx = {
@@ -177,7 +184,8 @@ export default function FeatureTimeline({
       onClick: () =>
         openHistory(
           { waterwayId: section.waterway_id, sectionId: section.id },
-          localizedName(section.name, section.names),
+          sectionName,
+          `Section · ${fmtKm(totalM)}`,
         ),
     },
   ];
@@ -212,6 +220,7 @@ export default function FeatureTimeline({
     <HistoryHost
       target={historyTarget}
       name={historyName}
+      subtitle={historySubtitle}
       onClose={() => setHistoryTarget(null)}
     >
       <Box

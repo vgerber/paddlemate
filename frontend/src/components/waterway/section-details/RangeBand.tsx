@@ -81,7 +81,9 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
         bgcolor: isActive
           ? `${tokens.primary}${alphas.wash}`
           : tokens.surfaceHigh,
-        borderRadius: `${tokens.radii.sm}px`,
+        outline: isActive ? `2px solid ${tokens.primary}` : "none",
+        outlineOffset: -2,
+        borderRadius: `${tokens.radii.row}px`,
         mx: 1,
         my: 0.25,
       }}

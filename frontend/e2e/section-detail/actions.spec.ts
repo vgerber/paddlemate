@@ -4,10 +4,7 @@ import { gotoSection } from "../support/fixture";
 // The header menu of a section opens a menu that has to stay on
 // screen however small the screen is.
 
-test("the section actions stay inside the screen @small", async ({
-  page,
-}, info) => {
-  test.skip(info.project.name === "desktop", "the pointer menu is compact");
+test("the section actions stay inside the screen @small", async ({ page }) => {
   await gotoSection(page, "lower");
   await page.getByRole("button", { name: "Section actions" }).click();
   const items = page.getByRole("menuitem");

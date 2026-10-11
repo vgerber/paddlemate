@@ -11,9 +11,10 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import DockedAction from "@/components/DockedAction";
 import PanelHeader from "@/components/PanelHeader";
+import { HistorySlot } from "@/components/provenance/HistorySlot";
 import SourcesTab from "@/components/provenance/SourcesTab";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -113,6 +114,7 @@ export default function WaterwayBrowsePanel({
   featureTimeline,
 }: WaterwayBrowsePanelProps) {
   const navigate = useNavigate();
+  const [historySlot, setHistorySlot] = useState<HTMLElement | null>(null);
   const { data: waterway, isLoading } = useWaterway(waterwayId);
   const { data: descentCounts } = useSectionDescentCounts(waterwayId);
   const { isAuthenticated } = useSession();
@@ -259,155 +261,176 @@ export default function WaterwayBrowsePanel({
       };
 
   return (
-    <>
-      <PanelHeader
-        title={
-          inFeatures
-            ? localizedName(selectedSection.name, selectedSection.names)
-            : (waterway?.name ?? "…")
-        }
-        subtitle={
-          inFeatures ? (waterway?.name ?? "") : (waterway?.waterway_type ?? "")
-        }
-        onBack={inFeatures ? onSectionDeselect : onBack}
-        actionButton={actionButton}
-        tabs={headerTabs}
-      />
-
+    <HistorySlot.Provider value={historySlot}>
       <Box
+        ref={setHistorySlot}
         sx={{
+          position: "relative",
           flex: 1,
           minHeight: 0,
-          position: "relative",
           display: "flex",
           flexDirection: "column",
-          overflowX: "hidden",
         }}
       >
+        <PanelHeader
+          title={
+            inFeatures
+              ? localizedName(selectedSection.name, selectedSection.names)
+              : (waterway?.name ?? "…")
+          }
+          subtitle={
+            inFeatures
+              ? (waterway?.name ?? "")
+              : (waterway?.waterway_type ?? "")
+          }
+          onBack={inFeatures ? onSectionDeselect : onBack}
+          actionButton={actionButton}
+          tabs={headerTabs}
+        />
+
         <Box
-          data-testid="tab-pane"
-          {...swipe.paneProps}
           sx={{
             flex: 1,
-            overflowY: "auto",
-            // Overscroll at the list edge must not chain into a document
-            // bounce - that drags the fixed overlay and shows the map
-            // behind it (the body-level rule alone does not stop chaining
-            // that starts inside a scroller).
-            overscrollBehavior: "contain",
-            py: 1,
-            // Leave room so a floating button never covers the last row.
-            // Desktop docks its actions in the row below the list, so only
-            // the panel's own FAB and the mobile speed dial need it.
-            pb:
-              showNewSectionFab ||
-              (inFeatures &&
-                (sectionDetailTab === "features" ||
-                  sectionDetailTab === "logs"))
-                ? { xs: 9, md: 1 }
-                : 1,
+            minHeight: 0,
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            overflowX: "hidden",
           }}
         >
-          {!isLoading && chartTab && chart}
-          {isLoading ? (
-            <LoadingBox size={22} />
-          ) : inFeatures ? (
-            sectionDetailTab === "logs" ? (
-              <SectionLogsList sectionId={selectedSection.id} />
-            ) : sectionDetailTab === "sources" ? (
-              <SourcesTab waterwayId={waterwayId} />
-            ) : sectionDetailTab === "notes" ? (
+          <Box
+            data-testid="tab-pane"
+            {...swipe.paneProps}
+            sx={{
+              flex: 1,
+              overflowY: "auto",
+              // Overscroll at the list edge must not chain into a document
+              // bounce - that drags the fixed overlay and shows the map
+              // behind it (the body-level rule alone does not stop chaining
+              // that starts inside a scroller).
+              overscrollBehavior: "contain",
+              py: 1,
+              // Leave room so a floating button never covers the last row.
+              // Desktop docks its actions in the row below the list, so only
+              // the panel's own FAB and the mobile speed dial need it.
+              pb:
+                showNewSectionFab ||
+                (inFeatures &&
+                  (sectionDetailTab === "features" ||
+                    sectionDetailTab === "logs"))
+                  ? { xs: 9, md: 1 }
+                  : 1,
+            }}
+          >
+            {!isLoading && chartTab && chart}
+            {isLoading ? (
+              <LoadingBox size={22} />
+            ) : inFeatures ? (
+              sectionDetailTab === "logs" ? (
+                <SectionLogsList sectionId={selectedSection.id} />
+              ) : sectionDetailTab === "sources" ? (
+                <SourcesTab
+                  waterwayId={waterwayId}
+                  sectionId={selectedSection.id}
+                  name={localizedName(
+                    selectedSection.name,
+                    selectedSection.names,
+                  )}
+                  subtitle={waterway?.name}
+                />
+              ) : sectionDetailTab === "notes" ? (
+                <CommentThread
+                  waterwayId={waterwayId}
+                  sectionId={selectedSection.id}
+                  mapPin={noteMapPin}
+                />
+              ) : (
+                <FeatureTimeline
+                  section={selectedSection}
+                  proposals={featureTimeline?.proposals ?? []}
+                  showProposed={featureTimeline?.showProposed ?? false}
+                  onFeatureClick={featureTimeline?.onFeatureClick}
+                  onEditFeature={featureTimeline?.onEditFeature}
+                  activeFeatureId={featureTimeline?.activeFeatureId}
+                  onActiveFeatureChange={featureTimeline?.onActiveFeatureChange}
+                  onFoldedChange={featureTimeline?.onFoldedChange}
+                />
+              )
+            ) : tab === "sections" ? (
+              <SectionsList
+                sections={sections}
+                waterwayId={waterwayId}
+                selectedSectionId={selectedSectionId}
+                onSectionClick={onSectionClick}
+                descentCounts={descentCounts}
+              />
+            ) : tab === "notes" ? (
               <CommentThread
                 waterwayId={waterwayId}
-                sectionId={selectedSection.id}
+                sections={sections}
                 mapPin={noteMapPin}
               />
             ) : (
-              <FeatureTimeline
-                section={selectedSection}
-                proposals={featureTimeline?.proposals ?? []}
-                showProposed={featureTimeline?.showProposed ?? false}
-                onFeatureClick={featureTimeline?.onFeatureClick}
-                onEditFeature={featureTimeline?.onEditFeature}
-                activeFeatureId={featureTimeline?.activeFeatureId}
-                onActiveFeatureChange={featureTimeline?.onActiveFeatureChange}
-                onFoldedChange={featureTimeline?.onFoldedChange}
+              <GaugesList
+                gaugeRanges={gaugeRanges}
+                selectedGaugeId={selectedGaugeId}
+                onGaugeSelect={onGaugeSelect}
               />
-            )
-          ) : tab === "sections" ? (
-            <SectionsList
-              sections={sections}
-              waterwayId={waterwayId}
-              selectedSectionId={selectedSectionId}
-              onSectionClick={onSectionClick}
-              descentCounts={descentCounts}
-            />
-          ) : tab === "notes" ? (
-            <CommentThread
-              waterwayId={waterwayId}
-              sections={sections}
-              mapPin={noteMapPin}
-            />
-          ) : (
-            <GaugesList
-              gaugeRanges={gaugeRanges}
-              selectedGaugeId={selectedGaugeId}
-              onGaugeSelect={onGaugeSelect}
-            />
+            )}
+          </Box>
+
+          {showNewSectionFab && (
+            <Fab
+              color="secondary"
+              aria-label="New section"
+              title="New section"
+              onClick={() => onSuggestModeChange("section")}
+              sx={{
+                position: "absolute",
+                bottom: 16,
+                right: 16,
+                display: { xs: "flex", md: "none" },
+              }}
+            >
+              <AddIcon />
+            </Fab>
           )}
         </Box>
 
         {showNewSectionFab && (
-          <Fab
-            color="secondary"
-            aria-label="New section"
-            title="New section"
+          <DockedAction
+            label="New section"
             onClick={() => onSuggestModeChange("section")}
-            sx={{
-              position: "absolute",
-              bottom: 16,
-              right: 16,
-              display: { xs: "flex", md: "none" },
-            }}
-          >
-            <AddIcon />
-          </Fab>
+          />
         )}
-      </Box>
 
-      {showNewSectionFab && (
-        <DockedAction
-          label="New section"
-          onClick={() => onSuggestModeChange("section")}
-        />
-      )}
-
-      {/* Desktop counterpart of the mobile speed dial, docked like every
+        {/* Desktop counterpart of the mobile speed dial, docked like every
           other pane's action. */}
-      {isAuthenticated &&
-        inFeatures &&
-        (sectionDetailTab === "features" || sectionDetailTab === "logs") &&
-        (sectionDetailTab === "logs" ? (
-          <DockedAction
-            label="Log descent"
-            onClick={() =>
-              navigate({
-                to: "/logs/new",
-                search: {
-                  waterwayId,
-                  sectionId: selectedSectionId,
-                  startTime: undefined,
-                },
-              })
-            }
-          />
-        ) : (
-          <DockedAction
-            label="New feature"
-            onClick={() => onSuggestModeChange("feature")}
-          />
-        ))}
-    </>
+        {isAuthenticated &&
+          inFeatures &&
+          (sectionDetailTab === "features" || sectionDetailTab === "logs") &&
+          (sectionDetailTab === "logs" ? (
+            <DockedAction
+              label="Log descent"
+              onClick={() =>
+                navigate({
+                  to: "/logs/new",
+                  search: {
+                    waterwayId,
+                    sectionId: selectedSectionId,
+                    startTime: undefined,
+                  },
+                })
+              }
+            />
+          ) : (
+            <DockedAction
+              label="New feature"
+              onClick={() => onSuggestModeChange("feature")}
+            />
+          ))}
+      </Box>
+    </HistorySlot.Provider>
   );
 }
 
