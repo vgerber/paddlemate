@@ -27,7 +27,9 @@ const seen = (l: Locator) => l.filter({ visible: true });
 const modeTab = (page: Page, name: string) =>
   seen(page.getByRole("tab", { name, exact: true }));
 const nameField = (page: Page) =>
-  seen(page.getByPlaceholder("Name", { exact: true }));
+  seen(page.getByRole("textbox", { name: "Name", exact: true }));
+const regionField = (page: Page) =>
+  seen(page.getByRole("textbox", { name: "Search regions" }));
 const chip = (page: Page, name: RegExp | string) =>
   seen(page.locator(".MuiChip-root", { hasText: name }));
 const sheet = (page: Page) =>
@@ -58,14 +60,18 @@ test.describe("header and tabs", () => {
   }, info) => {
     await openSearch(page);
     const title = seen(page.getByRole("heading", { name: "Search" }));
+    if (info.project.name === "desktop") {
+      // The desktop card draws the title in its own header.
+      await expect(title).toHaveCount(0);
+      await expect(
+        seen(page.getByRole("button", { name: "Map", exact: true })),
+      ).toHaveCount(0);
+      return;
+    }
     await expect(title).toBeVisible();
     expect(await computed(title, "font-size")).toBe("20px");
     expect(await computed(title, "font-weight")).toBe("700");
     const map = seen(page.getByRole("button", { name: "Map", exact: true }));
-    if (info.project.name === "desktop") {
-      await expect(map).toHaveCount(0);
-      return;
-    }
     await expect(map).toBeVisible();
     await expect(map.locator('[data-testid="MapOutlinedIcon"]')).toBeVisible();
     await expectTouchTargets(map, 44);
@@ -91,6 +97,22 @@ test.describe("header and tabs", () => {
     expect(await computed(modeTab(page, "Name"), "text-transform")).toBe(
       "none",
     );
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("@small title, tabs, field and chips share one ground", async ({
+    page,
+  }, info) => {
+    await openSearch(page, "&q=Test");
+    const white = "rgb(255, 255, 255)";
+    if (info.project.name === "desktop") {
+      // One white surface from the tabs down to the rows: no grey band.
+      const pane = seen(page.getByTestId("search-pane"));
+      const root = pane.locator("xpath=..");
+      expect(await computed(root, "background-color")).toBe(white);
+      const row = seen(page.getByTestId("search-section-row")).first();
+      expect(await computed(row, "background-color")).toBe("rgba(0, 0, 0, 0)");
+    }
     await expectNoHorizontalOverflow(page);
   });
 
@@ -132,7 +154,7 @@ test.describe("header and tabs", () => {
 });
 
 test.describe("name mode", () => {
-  test("@small the field is 16px and 52px, rounded, with a 44px clear button", async ({
+  test("@small the field is the filled one: 16px, label inside, 44px clear button", async ({
     page,
   }) => {
     await openSearch(page);
@@ -141,7 +163,7 @@ test.describe("name mode", () => {
     const box = await field
       .locator("xpath=ancestor::div[contains(@class,'MuiInputBase-root')]")
       .boundingBox();
-    expect(box?.height).toBe(52);
+    expect(box?.height).toBe(56);
     await expect(seen(page.getByRole("button", { name: "Clear" }))).toHaveCount(
       0,
     );
@@ -451,9 +473,9 @@ test.describe("results", () => {
 });
 
 test.describe("section rows", () => {
-  test("@small a row is a card: section, river, grade and the level pill", async ({
+  test("@small a row is a card on a phone and a ruled row in the desktop card: section, river, grade and the level pill", async ({
     page,
-  }) => {
+  }, info) => {
     await openSearch(page, "&q=Lower");
     const row = seen(
       page.getByTestId("search-section-row").filter({ hasText: "Lower Test" }),
@@ -463,7 +485,13 @@ test.describe("section rows", () => {
     await expect(row.getByText("Test River", { exact: true })).toBeVisible();
     await expect(row.getByText("III", { exact: true })).toBeVisible();
     await expect(row.locator("[data-level]")).toHaveCount(1);
-    expect(await computed(row, "border-top-left-radius")).toBe("14px");
+    if (info.project.name === "desktop") {
+      expect(await computed(row, "border-top-left-radius")).toBe("0px");
+      expect(await computed(row, "box-shadow")).toBe("none");
+      expect(await computed(row, "border-bottom-width")).toBe("1px");
+    } else {
+      expect(await computed(row, "border-top-left-radius")).toBe("14px");
+    }
     expect(
       Number.parseFloat(await computed(row, "height")),
     ).toBeGreaterThanOrEqual(64);
@@ -481,7 +509,7 @@ test.describe("section rows", () => {
 });
 
 test.describe("area mode", () => {
-  test("@small the slider and the hint sit under the map card", async ({
+  test("@small the slider and the hint lead the panel, with no map preview", async ({
     page,
   }, info) => {
     await openSearch(page, "&mode=area");
@@ -498,22 +526,17 @@ test.describe("area mode", () => {
     expect(t?.height).toBe(28);
     const root = await seen(page.locator(".MuiSlider-root")).boundingBox();
     expect(root?.height).toBeGreaterThanOrEqual(44);
-    await expect(seen(page.getByTestId("area-map-card"))).toBeVisible();
+    await expect(page.getByTestId("area-map-card")).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
   });
 
-  test("@small the card draws the radius ring, the slider is live and Country is a chip", async ({
-    page,
-  }) => {
+  test("@small the slider is live and Country is a chip", async ({ page }) => {
     await openSearch(page, "&mode=area");
-    const card = seen(page.getByTestId("area-map-card"));
-    const ring = card.locator("circle[stroke-dasharray]");
-    await expect(ring).toHaveCount(1);
     await expect(seen(page.getByRole("slider"))).toBeEnabled();
-    const before = Number(await ring.getAttribute("r"));
+    await expect(seen(page.getByText("10 km", { exact: true }))).toBeVisible();
     await seen(page.getByRole("slider")).focus();
     for (let i = 0; i < 20; i++) await page.keyboard.press("ArrowRight");
-    expect(Number(await ring.getAttribute("r"))).toBeGreaterThan(before);
+    await expect(seen(page.getByText("30 km", { exact: true }))).toBeVisible();
     const track = seen(page.locator(".MuiSlider-track"));
     expect(await computed(track, "background-color")).toBe(TEAL);
     await expect(chip(page, "Grade")).toBeVisible();
@@ -527,7 +550,7 @@ test.describe("region mode", () => {
     page,
   }) => {
     await openSearch(page, "&mode=region");
-    const field = seen(page.getByPlaceholder("Search regions…"));
+    const field = regionField(page);
     await expect(field).toBeVisible();
     expect(await computed(field, "font-size")).toBe("16px");
     await expect(
@@ -553,7 +576,7 @@ test.describe("region mode", () => {
     page,
   }) => {
     await openSearch(page, "&mode=region");
-    await seen(page.getByPlaceholder("Search regions…")).fill("Wald");
+    await regionField(page).fill("Wald");
     await expect(
       seen(page.getByText("Type a valley, district, state or range")),
     ).toBeVisible();
@@ -567,7 +590,7 @@ test.describe("region mode", () => {
     page,
   }) => {
     await openSearch(page, "&mode=region");
-    await seen(page.getByPlaceholder("Search regions…")).fill("Wald");
+    await regionField(page).fill("Wald");
     const option = seen(page.getByTestId("region-option")).first();
     const name = await option.getAttribute("data-name");
     await option.click();
@@ -579,7 +602,7 @@ test.describe("region mode", () => {
       seen(page.getByRole("tab", { name: /^Sections \(/ })),
     ).toBeVisible();
     // Typing again lists regions again, and the facets step aside again.
-    await seen(page.getByPlaceholder("Search regions…")).fill("Wald");
+    await regionField(page).fill("Wald");
     await expect(seen(page.getByTestId("region-group")).first()).toBeVisible();
     await expect(chip(page, "Grade")).toHaveCount(0);
   });

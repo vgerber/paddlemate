@@ -9,7 +9,7 @@ import Typography from "@mui/material/Typography";
 import type { WaterwayListItem } from "@/lib/api";
 import { humanize } from "@/lib/format";
 import ListGroupHeader from "./ListGroupHeader";
-import RiverRow, { cardRowSx } from "./RiverRow";
+import RiverRow, { listRowSx } from "./RiverRow";
 
 interface PendingRiver {
   id: number;
@@ -93,7 +93,7 @@ function PendingRiverItems({
       {pendingRivers.map((p) => (
         <ListItem
           key={`pending-${p.id}`}
-          sx={{ ...cardRowSx, mb: 0.75, gap: 1, opacity: 0.6 }}
+          sx={{ ...listRowSx, gap: 1, opacity: 0.6 }}
         >
           <ListItemText
             primary={p.name}
@@ -148,6 +148,7 @@ export default function RiverList({
             size="small"
             fullWidth
             startIcon={<AddIcon />}
+            sx={{ width: { md: "calc(100% - 32px)" }, mx: { md: 2 } }}
           >
             Can't find your river? Add it
           </Button>
@@ -191,7 +192,7 @@ export default function RiverList({
           variant="outlined"
           size="small"
           fullWidth
-          sx={{ mt: 1 }}
+          sx={{ mt: 1, width: { md: "calc(100% - 32px)" }, mx: { md: 2 } }}
         >
           {isFetchingNextPage ? "Loading…" : "Load more"}
         </Button>

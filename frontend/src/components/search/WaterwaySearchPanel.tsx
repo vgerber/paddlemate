@@ -13,6 +13,7 @@ import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
 import { useWaterways } from "@/lib/hooks/useWaterways";
 import { readRecentWaterways } from "@/lib/recentWaterways";
+import { theme } from "@/lib/theme";
 import ListGroupHeader from "./ListGroupHeader";
 import type { ListView } from "./ListViewToggle";
 import RecentRiverList from "./RecentRiverList";
@@ -26,6 +27,8 @@ import {
   type SearchMode,
   useWaterwaySearchFilters,
 } from "./useWaterwaySearchFilters";
+
+const { tokens } = theme;
 
 const MODES: SearchMode[] = ["name", "area", "region"];
 
@@ -45,6 +48,7 @@ interface WaterwaySearchPanelProps {
   favorites?: FavoriteSection[];
   favoritedIds?: Set<number>;
   onToggleFavorite?: (id: number) => void;
+  /** Not used by the panel any more; kept so callers need not change. */
   onMapModeActivate?: () => void;
   onClose?: () => void;
   onRadiusPreview?: (radiusKm: number) => void;
@@ -68,7 +72,6 @@ export default function WaterwaySearchPanel({
   favorites = [],
   favoritedIds,
   onToggleFavorite,
-  onMapModeActivate,
   onClose,
   onRadiusPreview,
   onLoadingChange,
@@ -201,6 +204,9 @@ export default function WaterwaySearchPanel({
         flexDirection: "column",
         height: "100%",
         position: "relative",
+        // In the desktop card the whole panel is one white ground; on a phone
+        // the list sits on the overlay's grey ground, header and cards white.
+        bgcolor: { md: tokens.surface },
       }}
     >
       <SearchFiltersHeader
@@ -228,7 +234,6 @@ export default function WaterwaySearchPanel({
           onAreaCircleChange={onAreaCircleChange}
           onAreaLockedChange={onAreaLockedChange}
           onRadiusPreview={onRadiusPreview}
-          onShowMap={onMapModeActivate}
           listingRegions={listingRegions}
         />
 
@@ -250,18 +255,23 @@ export default function WaterwaySearchPanel({
             // A scroller starts its own touch-action boundary: without this
             // a sideways swipe is taken as a pan and the pane never sees it.
             touchAction: "pan-y",
-            px: 1.5,
+            px: { xs: 1.5, md: 0 },
+            pt: 0.5,
             pb: 1,
           }}
         >
           {isLoading && <LoadingBox />}
           {error && (
-            <Typography color="error" variant="body2" sx={{ p: 1 }}>
+            <Typography
+              color="error"
+              variant="body2"
+              sx={{ px: { xs: 1, md: 2 }, py: 1 }}
+            >
               Failed to load rivers.
             </Typography>
           )}
           {listingRegions && (
-            <Box sx={{ px: 1, pt: 1 }}>
+            <Box sx={{ px: { xs: 1, md: 2 }, pt: 1 }}>
               <RegionSuggestions
                 query={searchFilters.regionQuery}
                 onPick={(picked) => {
@@ -335,7 +345,7 @@ export default function WaterwaySearchPanel({
               role="status"
               variant="caption"
               color="textSecondary"
-              sx={{ display: "block", px: 1, pt: 1 }}
+              sx={{ display: "block", px: { xs: 1, md: 2 }, pt: 1 }}
             >
               {unknownShown === 1
                 ? "Water level unknown for 1 section."

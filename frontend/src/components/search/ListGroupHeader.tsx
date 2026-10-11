@@ -20,7 +20,7 @@ export default function ListGroupHeader({
         display: "flex",
         alignItems: "center",
         gap: 0.5,
-        px: 0.5,
+        px: { xs: 0.5, md: 2 },
         pt: 1,
         pb: 0.75,
         lineHeight: 1.3,

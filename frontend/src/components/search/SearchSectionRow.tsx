@@ -9,7 +9,7 @@ import GradeTag from "@/components/waterway/GradeTag";
 import type { SectionWithFeatures } from "@/lib/api";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
-import { cardRowSx } from "./RiverRow";
+import { listRowSx } from "./RiverRow";
 
 const { tokens } = theme;
 
@@ -51,8 +51,7 @@ export default function SearchSectionRow({
       selected={selected}
       onClick={() => onClick(section.id)}
       sx={{
-        ...cardRowSx,
-        mb: 0.75,
+        ...listRowSx,
         minHeight: 64,
         display: "grid",
         gridTemplateColumns: onToggleFavorite
