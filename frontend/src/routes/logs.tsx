@@ -179,7 +179,10 @@ function LogsList({
   });
   return (
     <>
-      <ListPaneHeader count={tab === "mine" ? count : undefined} />
+      <ListPaneHeader
+        count={tab === "mine" ? count : undefined}
+        noun={{ one: "log", other: "logs" }}
+      />
       <PanelHeader
         tabs={{
           value: tab,

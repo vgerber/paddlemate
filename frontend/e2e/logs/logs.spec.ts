@@ -114,7 +114,7 @@ test.describe("logs list", () => {
     page,
   }) => {
     await openLogs(page);
-    await expect(page.getByText(/^\d+ results?$/).first()).toBeVisible();
+    await expect(page.getByText(/^\d+ logs?$/).first()).toBeVisible();
     const month = page.getByTestId("log-month").first();
     expect(await computed(month, "text-transform")).toBe("none");
   });

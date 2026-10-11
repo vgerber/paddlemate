@@ -127,6 +127,7 @@ export default function ProposalsView({
     <>
       <ListPaneHeader
         count={proposals?.length ?? 0}
+        noun={{ one: "proposal", other: "proposals" }}
         loading={isLoading}
         actions={
           <IconButton

@@ -52,7 +52,7 @@ test.describe("trip list", () => {
   test("desktop opens the trip beside the list", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop");
     await openList(page);
-    await expect(page.getByText(/\d+ results?/)).toBeVisible();
+    await expect(page.getByText(/\d+ trips?/)).toBeVisible();
     await page.getByTestId("trip-card").first().click();
     await expect(page).toHaveURL(/selected=/);
     await expect(
@@ -272,7 +272,7 @@ test.describe("bases and candidates", () => {
 
   test("logs tab opens with a count @small", async ({ page }) => {
     await openTab(page, "Logs");
-    await expect(page.getByText(/^\d+ results?$/).first()).toBeVisible();
+    await expect(page.getByText(/^\d+ logs?$/).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 });
