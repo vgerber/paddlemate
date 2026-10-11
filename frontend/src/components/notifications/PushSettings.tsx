@@ -1,8 +1,7 @@
 import Alert from "@mui/material/Alert";
-import FormControlLabel from "@mui/material/FormControlLabel";
+import Box from "@mui/material/Box";
 import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
-import FormSection from "@/components/waterway/FormSection";
 import { apiErrorMessage } from "@/lib/api/client";
 import {
   pushSupported,
@@ -10,6 +9,9 @@ import {
   usePushOnThisDevice,
   useSetPush,
 } from "@/lib/hooks/useNotifications";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 /** Push on this device: the phone buzzes when a trip's plans change, even
  * with the app closed. Per device, because each browser subscribes itself. */
@@ -20,34 +22,59 @@ export default function PushSettings() {
   const { data: on = false, isLoading } = usePushOnThisDevice(publicKey);
   const setPush = useSetPush(publicKey);
 
+  const deviceState = supported
+    ? on
+      ? "On for this device"
+      : "Off for this device"
+    : publicKey
+      ? "This browser cannot receive push notifications. On an iPhone, add Paddlemate to the home screen first."
+      : "This server does not send push notifications.";
+
   return (
-    <FormSection
-      label="Notifications"
-      hint="Who joins or leaves, bases added, moved or decided, and when people arrive. Votes and edits only show under the bell."
-    >
-      {!supported ? (
-        <Typography variant="body2" color="text.secondary">
-          {publicKey
-            ? "This browser cannot receive push notifications. On an iPhone, add Paddlemate to the home screen first."
-            : "This server does not send push notifications."}
-        </Typography>
-      ) : (
-        <FormControlLabel
-          control={
-            <Switch
-              checked={on}
-              disabled={isLoading || setPush.isPending}
-              onChange={(_, checked) => setPush.mutate(checked)}
-            />
-          }
-          label="Push notifications on this device"
-        />
-      )}
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+      <Box
+        component="label"
+        data-testid="push-row"
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          minHeight: tokens.touch.row,
+          cursor: supported ? "pointer" : "default",
+        }}
+      >
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{ fontWeight: 600 }}>Trip changes</Typography>
+          <Typography
+            data-testid="push-hint"
+            variant="body2"
+            color="text.secondary"
+          >
+            Who joins or leaves, bases added, moved or decided, and when people
+            arrive. Votes and edits only show under the bell.
+          </Typography>
+        </Box>
+        {supported && (
+          <Switch
+            checked={on}
+            disabled={isLoading || setPush.isPending}
+            onChange={(_, checked) => setPush.mutate(checked)}
+            slotProps={{ input: { "aria-label": "Push on this device" } }}
+          />
+        )}
+      </Box>
+      <Typography
+        data-testid="push-device-state"
+        variant="body2"
+        color="text.secondary"
+      >
+        {deviceState}
+      </Typography>
       {setPush.isError && (
         <Alert severity="error">
           {apiErrorMessage(setPush.error, setPush.error.message)}
         </Alert>
       )}
-    </FormSection>
+    </Box>
   );
 }

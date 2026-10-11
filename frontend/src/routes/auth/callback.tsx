@@ -1,17 +1,17 @@
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineOutlined";
-import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
 import {
   createFileRoute,
   useNavigate,
   useRouter,
 } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import SignInCard from "@/components/settings/SignInCard";
 import LoadingBox from "@/components/states/LoadingBox";
 import { getUserManager } from "@/lib/auth";
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
 import { safeReturnTo } from "@/lib/returnTo";
+import { theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/auth/callback")({
   component: AuthCallback,
@@ -45,32 +45,19 @@ function AuthCallback() {
 
   if (error) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 2,
-          pt: 10,
-          px: 2,
-          textAlign: "center",
-        }}
+      <SignInCard
+        icon={<ErrorOutlineIcon />}
+        title="Sign-in failed"
+        caption={error}
       >
-        <ErrorOutlineIcon sx={{ fontSize: 56, color: "text.disabled" }} />
-        <Typography variant="h6" color="text.secondary">
-          Sign-in failed
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {error}
-        </Typography>
         <Button
           variant="contained"
-          color="secondary"
+          sx={{ minHeight: theme.tokens.touch.min }}
           onClick={() => navigate({ to: "/", search: EMPTY_MAP_SEARCH })}
         >
           Go home
         </Button>
-      </Box>
+      </SignInCard>
     );
   }
 
