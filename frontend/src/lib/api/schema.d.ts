@@ -416,7 +416,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Every source and contributor behind a river, its sections and its features */
+        /** @description Every source and contributor behind a river, its sections and its features; with `section_id`, only those behind that section and its features */
         get: operations["get_waterway_sources"];
         put?: never;
         post?: never;
@@ -1659,6 +1659,14 @@ export interface components {
             /** @description The boundary line, clipped to the viewport and simplified for it. */
             geometry: components["schemas"]["Geometry"];
             name: string;
+            /**
+             * @description ISO codes of the other imported countries whose ground lies against
+             *      this line inside the viewport, so the map can label the line
+             *      "AT | IT". Derived from the country polygons: a neighbour is one
+             *      whose area comes within about a kilometre of the clipped line.
+             *      Empty where the other side is not imported or is sea.
+             */
+            neighbours: string[];
         };
         CreateCommentRequest: {
             body: string;
@@ -1752,37 +1760,6 @@ export interface components {
             endpoint: string;
             keys: components["schemas"]["PushSubscriptionKeys"];
         };
-        /**
-         * @description Payload for creating a section together with its localized texts and
-         *      features - one reviewable unit for the proposal workflow.
-         */
-        CreateSectionBody: {
-            description?: string | null;
-            country?: string | null;
-            /**
-             * @description Features created together with the section
-             * @default []
-             */
-            features?: components["schemas"]["CreateFeatureBody"][];
-            /** @description GeoJSON LineString geometry */
-            location: components["schemas"]["Geometry"];
-            name: string;
-            /**
-             * @description Legacy single-region field, still accepted so proposals stored before
-             *      the regions array keep applying. Folded into `regions` on use.
-             */
-            region?: string | null;
-            /**
-             * @description Region names, most specific first (valley, district, state, range).
-             * @default []
-             */
-            regions?: string[];
-            /**
-             * @description Localized names/descriptions created together with the section
-             * @default []
-             */
-            translations?: components["schemas"]["SectionTranslationBody"][];
-        };
         CreateSeriesRequest: {
             label?: string | null;
             measurement_type: components["schemas"]["MeasurementType"];
@@ -1846,10 +1823,6 @@ export interface components {
             range_medium: number;
             /** Format: int64 */
             series_id: number;
-        };
-        CreateWaterwayBody: {
-            description?: string | null;
-            name: string;
         };
         /** @description A logged paddling descent. */
         Descent: {
@@ -2390,6 +2363,8 @@ export interface components {
              * @description Set when the step is the outcome of a proposal
              */
             proposal_id?: number | null;
+            /** @description The submitter's note on that proposal, if they left one */
+            proposal_note?: string | null;
             reviewer?: components["schemas"]["HistoryUser"] | null;
             /** @description Set for an import */
             source?: components["schemas"]["HistorySource"] | null;
@@ -2806,6 +2781,123 @@ export interface components {
             lon?: number | null;
             name?: string | null;
         };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
+        Proposable_for_CreateFeatureBody: {
+            description?: string | null;
+            feature_type: components["schemas"]["FeatureType"];
+            /** @description Language tag for name/description, stored lowercase (default: "en") */
+            lang_code?: string | null;
+            /** @description GeoJSON geometry (Point, LineString, or Polygon) */
+            location: components["schemas"]["Geometry"];
+            /** @default {} */
+            metadata?: unknown;
+            name?: string | null;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+            /**
+             * @description Gauge thresholds created together with the feature
+             * @default []
+             */
+            water_ranges?: components["schemas"]["FeatureWaterRangeBody"][];
+        };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
+        Proposable_for_CreateSectionBody: {
+            description?: string | null;
+            country?: string | null;
+            /**
+             * @description Features created together with the section
+             * @default []
+             */
+            features?: components["schemas"]["CreateFeatureBody"][];
+            /** @description GeoJSON LineString geometry */
+            location: components["schemas"]["Geometry"];
+            name: string;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+            /**
+             * @description Legacy single-region field, still accepted so proposals stored before
+             *      the regions array keep applying. Folded into `regions` on use.
+             */
+            region?: string | null;
+            /**
+             * @description Region names, most specific first (valley, district, state, range).
+             * @default []
+             */
+            regions?: string[];
+            /**
+             * @description Localized names/descriptions created together with the section
+             * @default []
+             */
+            translations?: components["schemas"]["SectionTranslationBody"][];
+        };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
+        Proposable_for_CreateWaterwayBody: {
+            description?: string | null;
+            name: string;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+        };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
+        Proposable_for_UpdateFeatureBody: {
+            /** @description New description in `lang_code`; omit to leave descriptions unchanged */
+            description?: string | null;
+            feature_type?: components["schemas"]["FeatureType"] | null;
+            /** @description Language tag for name/description, stored lowercase (default: "en") */
+            lang_code?: string | null;
+            location?: components["schemas"]["Geometry"] | null;
+            metadata?: unknown;
+            /** @description New name in `lang_code`; omit to leave names unchanged */
+            name?: string | null;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+            /**
+             * @description Gauge thresholds upserted together with the update
+             * @default []
+             */
+            water_ranges?: components["schemas"]["FeatureWaterRangeBody"][];
+        };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
+        Proposable_for_UpdateSectionBody: {
+            description?: string | null;
+            country?: string | null;
+            location?: components["schemas"]["Geometry"] | null;
+            name?: string | null;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+            /** @description Region names, most specific first; `None` keeps the current list. */
+            regions?: string[] | null;
+        };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
+        Proposable_for_UpdateWaterwayBody: {
+            description?: string | null;
+            name?: string | null;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+        };
         Proposal: {
             /** Format: date-time */
             created_at: string;
@@ -2832,6 +2924,8 @@ export interface components {
             submitted_by: string;
             /** @description Username of the submitter; null when the account no longer exists */
             submitted_by_name?: string | null;
+            /** @description The submitter's own note on why they propose this, if they gave one */
+            submitter_note?: string | null;
             /** Format: date-time */
             updated_at: string;
             /** Format: int64 */
@@ -2892,6 +2986,14 @@ export interface components {
             id?: number | null;
             kind: components["schemas"]["RegionKind"];
             name: string;
+            /**
+             * @description The larger regions this one lies in, most specific first (district,
+             *      state, country), for showing "Tirol, AT". Found by containment of a
+             *      point on the region; mountain ranges list only their country. Empty
+             *      for regions derived live from OSM.
+             * @default []
+             */
+            parents?: components["schemas"]["RegionRef"][];
         };
         /**
          * @description How specific a region name is. Ordered most specific first, which is also
@@ -2953,6 +3055,13 @@ export interface components {
              *      and common misspellings match too.
              */
             q?: string | null;
+        };
+        /** @description A region named by a child's parent chain. */
+        RegionRef: {
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["RegionKind"];
+            name: string;
         };
         ReplaceTripSectionsRequest: {
             sections: components["schemas"]["TripSectionInput"][];
@@ -3134,6 +3243,15 @@ export interface components {
              */
             entries: number;
             source: components["schemas"]["HistorySource"];
+        };
+        /** @description Query parameters of the sources view. */
+        SourcesQuery: {
+            /**
+             * Format: int64
+             * @description Count only this section's entries (its own and its features'), and
+             *      only the contributors behind them. Must belong to the waterway.
+             */
+            section_id?: number | null;
         };
         /**
          * @description What kind of step this is.
@@ -3435,22 +3553,6 @@ export interface components {
             /** @default null */
             category?: components["schemas"]["CommentCategory"] | null;
         };
-        UpdateFeatureBody: {
-            /** @description New description in `lang_code`; omit to leave descriptions unchanged */
-            description?: string | null;
-            feature_type?: components["schemas"]["FeatureType"] | null;
-            /** @description Language tag for name/description, stored lowercase (default: "en") */
-            lang_code?: string | null;
-            location?: components["schemas"]["Geometry"] | null;
-            metadata?: unknown;
-            /** @description New name in `lang_code`; omit to leave names unchanged */
-            name?: string | null;
-            /**
-             * @description Gauge thresholds upserted together with the update
-             * @default []
-             */
-            water_ranges?: components["schemas"]["FeatureWaterRangeBody"][];
-        };
         UpdateFollowerBody: {
             /** @description Only "accepted" is supported. Reject a request by deleting the follow. */
             status: components["schemas"]["FollowStatus"];
@@ -3473,14 +3575,6 @@ export interface components {
             description?: string | null;
             name?: string | null;
         };
-        UpdateSectionBody: {
-            description?: string | null;
-            country?: string | null;
-            location?: components["schemas"]["Geometry"] | null;
-            name?: string | null;
-            /** @description Region names, most specific first; `None` keeps the current list. */
-            regions?: string[] | null;
-        };
         UpdateSeriesRequest: {
             label?: string | null;
             measurement_type: components["schemas"]["MeasurementType"];
@@ -3493,10 +3587,6 @@ export interface components {
             range_low: number;
             /** Format: double */
             range_medium: number;
-        };
-        UpdateWaterwayBody: {
-            description?: string | null;
-            name?: string | null;
         };
         UpsertDescriptionBody: {
             description: string;
@@ -4087,11 +4177,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-11T10:27:52.351562598Z",
-                     *         "expires_at": "2027-01-09T10:27:52.351565048Z",
+                     *         "created_at": "2026-10-11T18:22:24.863811843Z",
+                     *         "expires_at": "2027-01-09T18:22:24.863814243Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-11T10:27:52.351571378Z",
+                     *         "last_used_at": "2026-10-11T18:22:24.863817133Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4122,8 +4212,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-11T10:27:52.351685777Z",
-                     *       "expires_at": "2027-01-09T10:27:52.351686207Z",
+                     *       "created_at": "2026-10-11T18:22:24.863951253Z",
+                     *       "expires_at": "2027-01-09T18:22:24.863951663Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -4839,9 +4929,14 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateWaterwayBody"];
+                "application/json": components["schemas"]["Proposable_for_CreateWaterwayBody"];
             };
         };
         responses: {
@@ -4922,9 +5017,14 @@ export interface operations {
             };
             cookie?: never;
         };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateWaterwayBody"];
+                "application/json": components["schemas"]["Proposable_for_UpdateWaterwayBody"];
             };
         };
         responses: {
@@ -5148,7 +5248,13 @@ export interface operations {
     };
     get_waterway_sources: {
         parameters: {
-            query?: never;
+            query?: {
+                /**
+                 * @description Count only this section's entries (its own and its features'), and
+                 *      only the contributors behind them. Must belong to the waterway.
+                 */
+                section_id?: number | null;
+            };
             header?: never;
             path: {
                 waterway_id: number;
@@ -5166,7 +5272,7 @@ export interface operations {
                     "application/json": components["schemas"]["WaterwaySources"];
                 };
             };
-            /** @description Waterway not found */
+            /** @description Waterway not found, or the section is not in it */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -5586,12 +5692,13 @@ export interface operations {
             cookie?: never;
         };
         /**
-         * @description Payload for creating a section together with its localized texts and
-         *      features - one reviewable unit for the proposal workflow.
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
          */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateSectionBody"];
+                "application/json": components["schemas"]["Proposable_for_CreateSectionBody"];
             };
         };
         responses: {
@@ -5901,9 +6008,14 @@ export interface operations {
             };
             cookie?: never;
         };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateSectionBody"];
+                "application/json": components["schemas"]["Proposable_for_UpdateSectionBody"];
             };
         };
         responses: {
@@ -6003,12 +6115,13 @@ export interface operations {
             cookie?: never;
         };
         /**
-         * @description Payload for creating a feature - used by the feature endpoint, by bundled
-         *      section-create payloads, and inside proposals.
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
          */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateFeatureBody"];
+                "application/json": components["schemas"]["Proposable_for_CreateFeatureBody"];
             };
         };
         responses: {
@@ -6070,9 +6183,14 @@ export interface operations {
             };
             cookie?: never;
         };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateFeatureBody"];
+                "application/json": components["schemas"]["Proposable_for_UpdateFeatureBody"];
             };
         };
         responses: {
