@@ -62,7 +62,6 @@ export default function DescentDetail({ descent }: { descent: Descent }) {
         sx={{
           display: "flex",
           flexWrap: "wrap",
-          justifyContent: "space-between",
           columnGap: 4,
           rowGap: 1.5,
         }}

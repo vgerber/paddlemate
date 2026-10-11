@@ -9,6 +9,8 @@ import UnderlineTabs from "./UnderlineTabs";
 
 const { tokens } = theme;
 
+const backIconSx = { fontSize: 22, color: "text.primary" } as const;
+
 interface PanelHeaderProps<T extends string> {
   /** Omitted where the panel is already named beside it - a desktop detail
    * pane next to the list it was picked from. The tab bar then stands alone. */
@@ -43,11 +45,13 @@ export default function PanelHeader<T extends string>({
   return (
     <Box
       sx={{
-        px: 1.5,
-        pt: 1.5,
+        px: 2,
+        pt: title ? 1.5 : 0,
         pb: tabs ? 0 : 1,
-        borderBottom: "1px solid",
-        borderColor: "divider",
+        bgcolor: tokens.surface,
+        boxShadow: tokens.elevation.e1,
+        position: "relative",
+        zIndex: 1,
         flexShrink: 0,
       }}
     >
@@ -71,9 +75,9 @@ export default function PanelHeader<T extends string>({
               aria-label={backIcon === "close" ? "Cancel" : "Back"}
             >
               {backIcon === "close" ? (
-                <CloseIcon fontSize="small" />
+                <CloseIcon sx={backIconSx} />
               ) : (
-                <ArrowBackIcon fontSize="small" />
+                <ArrowBackIcon sx={backIconSx} />
               )}
             </IconButton>
           )}
@@ -82,7 +86,11 @@ export default function PanelHeader<T extends string>({
               {title}
             </Typography>
             {subtitle && (
-              <Typography variant="caption" color="textSecondary">
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                sx={{ fontSize: "0.8125rem", lineHeight: "18px" }}
+              >
                 {subtitle}
               </Typography>
             )}

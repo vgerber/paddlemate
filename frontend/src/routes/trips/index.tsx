@@ -136,11 +136,7 @@ function TripsPage() {
           borderColor: `${theme.tokens.outlineVariant}55`,
         }}
       >
-        <ListPaneHeader
-          count={trips.length}
-          noun={{ one: "trip", other: "trips" }}
-          loading={isLoading}
-        />
+        <ListPaneHeader count={trips.length} loading={isLoading} />
         <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
         <DockedAction
           label="New trip"

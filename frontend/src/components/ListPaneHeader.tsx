@@ -6,21 +6,14 @@ import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
-export interface Noun {
-  one: string;
-  other: string;
-}
-
-/** "1 trip", "3 trips". */
-export function countLabel(count: number, noun: Noun): string {
-  return `${count} ${count === 1 ? noun.one : noun.other}`;
+/** "1 result", "3 results": every list names its count the same way. */
+export function countLabel(count: number): string {
+  return `${count} ${count === 1 ? "result" : "results"}`;
 }
 
 interface ListPaneHeaderProps {
   /** How much is in the list. Omitted while there is no honest number. */
   count?: number;
-  /** What the list holds, in singular and plural: "log" and "logs". */
-  noun: Noun;
   /** Suppresses the count rather than showing a stale one mid-fetch. */
   loading?: boolean;
   /** For a panel whose tabs already carry the counts on a phone. */
@@ -36,7 +29,6 @@ interface ListPaneHeaderProps {
  * list-plus-detail screen opens with this, so they all behave alike. */
 export default function ListPaneHeader({
   count,
-  noun,
   loading,
   hideCountOnMobile,
   actions,
@@ -55,7 +47,6 @@ export default function ListPaneHeader({
           minHeight: tokens.touch.min,
           boxSizing: "border-box",
           px: 2,
-          pt: 0.5,
         },
         ...(Array.isArray(sx) ? sx : [sx]),
       ]}
@@ -71,7 +62,7 @@ export default function ListPaneHeader({
               : undefined,
           }}
         >
-          {countLabel(count, noun)}
+          {countLabel(count)}
         </Typography>
       )}
       {/* The spacer, not the count, holds the actions at the right edge: a

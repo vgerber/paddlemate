@@ -6,7 +6,8 @@ import ButtonBase from "@mui/material/ButtonBase";
 import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
 import { durationLabel, formatDate, formatTime, timeAgo } from "@/lib/format";
-import { theme } from "@/lib/theme";
+import { transition } from "@/lib/motion";
+import { alphas, theme } from "@/lib/theme";
 import { levelAtTime } from "./levelAtTime";
 
 const { tokens } = theme;
@@ -98,7 +99,6 @@ export default function DescentCard({
       data-testid="descent-card"
       component={onClick ? "button" : "div"}
       onClick={onClick}
-      focusRipple
       sx={{
         display: "grid",
         gridTemplateColumns: "minmax(0, 1fr) auto",
@@ -125,6 +125,10 @@ export default function DescentCard({
                 : tokens.elevation.e1,
             }),
         ...(flush && selected && { bgcolor: "action.selected" }),
+        transition: transition("background-color", { duration: "instant" }),
+        "&:active": onClick
+          ? { bgcolor: `${tokens.primary}${alphas.wash}` }
+          : undefined,
       }}
     >
       <Box

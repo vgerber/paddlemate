@@ -198,6 +198,18 @@ const shadows = [
   ...Array.from({ length: 23 }, () => elevation.e2),
 ] as unknown as Shadows;
 
+/** The only alpha suffixes to append to a token (\`\${token}\${alphas.x}\`):
+ * tint for row washes, wash for selected grounds, hover on top of them,
+ * hairline for rules, border for control outlines, scrim over imagery. */
+export const alphas = {
+  tint: "0d",
+  wash: "14",
+  hover: "1f",
+  hairline: "55",
+  border: "99",
+  scrim: "cc",
+} as const;
+
 export const theme = createTheme({
   tokens,
   // `md` is the one switch between the phone layout and the two-pane desktop
@@ -409,6 +421,19 @@ export const theme = createTheme({
       },
     },
 
+    // No ripple: press is a wash on the row, focus a visible teal ring.
+    MuiButtonBase: {
+      defaultProps: { disableRipple: true },
+      styleOverrides: {
+        root: {
+          "&.Mui-focusVisible, &:focus-visible": {
+            outline: `2px solid ${tokens.primary}`,
+            outlineOffset: -2,
+          },
+        },
+      },
+    },
+
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
@@ -481,6 +506,12 @@ export const theme = createTheme({
           fontWeight: 600,
           fontSize: "0.8125rem",
           height: 32,
+          // A set filter: teal ring and a wash, not just teal text.
+          "&.MuiChip-outlinedPrimary": {
+            backgroundColor: `${tokens.primary}${alphas.wash}`,
+            borderColor: tokens.primary,
+            borderWidth: 1.5,
+          },
           // 32px to look at, 44px to hit.
           "&.MuiChip-clickable::after": {
             content: '""',
@@ -493,7 +524,53 @@ export const theme = createTheme({
     },
 
     MuiTextField: {
-      defaultProps: { variant: "outlined" },
+      defaultProps: { variant: "filled" },
+    },
+
+    MuiFormControl: {
+      defaultProps: { variant: "filled" },
+    },
+
+    // The calm field: the label always sits inside at the top, the value
+    // beneath it, a 1px inset line that becomes a 2px accent ring on focus.
+    MuiFilledInput: {
+      defaultProps: { disableUnderline: true },
+      styleOverrides: {
+        root: {
+          borderRadius: radii.sm + 2,
+          backgroundColor: tokens.surface,
+          boxShadow: `inset 0 0 0 1px ${tokens.outlineVariant}`,
+          overflow: "hidden",
+          // 16px: anything smaller makes iOS zoom the page on focus.
+          fontSize: "1rem",
+          transition: `box-shadow ${motion.fast}ms ${motion.easeOut}`,
+          "&:hover": {
+            backgroundColor: tokens.surface,
+            boxShadow: `inset 0 0 0 1px ${tokens.outline}`,
+          },
+          "&.Mui-focused": {
+            backgroundColor: tokens.surface,
+            boxShadow: `inset 0 0 0 2px ${tokens.primary}`,
+          },
+          "&.Mui-error": {
+            boxShadow: `inset 0 0 0 1px ${tokens.error}`,
+          },
+          "&.Mui-error.Mui-focused": {
+            boxShadow: `inset 0 0 0 2px ${tokens.error}`,
+          },
+          "&.Mui-disabled": { backgroundColor: tokens.surfaceHigh },
+        },
+        input: {
+          padding: "25px 14px 8px",
+          height: "auto",
+          "&.MuiInputBase-inputSizeSmall": {
+            paddingTop: 22,
+            paddingBottom: 6,
+          },
+        },
+        multiline: { padding: "25px 14px 8px" },
+        adornedStart: { paddingLeft: 14 },
+      },
     },
 
     MuiOutlinedInput: {
@@ -501,7 +578,6 @@ export const theme = createTheme({
         root: {
           borderRadius: radii.sm + 2,
           backgroundColor: tokens.surface,
-          // 16px: anything smaller makes iOS zoom the page on focus.
           fontSize: "1rem",
           "& .MuiOutlinedInput-notchedOutline": {
             borderColor: tokens.outlineVariant,
@@ -518,8 +594,18 @@ export const theme = createTheme({
     },
 
     MuiInputLabel: {
+      defaultProps: { shrink: true },
       styleOverrides: {
         root: { letterSpacing: 0, textTransform: "none" },
+        filled: {
+          fontSize: "1rem",
+          fontWeight: 500,
+          color: tokens.onSurfaceVariant,
+          // Pinned inside the field at 12px, never a placeholder.
+          transform: "translate(14px, 7px) scale(0.75)",
+          "&.Mui-focused": { color: tokens.primary },
+          "&.Mui-error": { color: tokens.error },
+        },
       },
     },
 
@@ -533,6 +619,8 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           minHeight: tokens.touch.row,
+          transition: `background-color ${motion.instant}ms ${motion.easeOut}`,
+          "&:active": { backgroundColor: `${tokens.primary}${alphas.wash}` },
           "&.Mui-selected": {
             backgroundColor: `${tokens.primary}1f`,
             "&:hover": { backgroundColor: `${tokens.primary}29` },
@@ -721,18 +809,6 @@ export const theme = createTheme({
     },
   },
 });
-
-/** The only alpha suffixes to append to a token (\`\${token}\${alphas.x}\`):
- * tint for row washes, wash for selected grounds, hover on top of them,
- * hairline for rules, border for control outlines, scrim over imagery. */
-export const alphas = {
-  tint: "0d",
-  wash: "14",
-  hover: "1f",
-  hairline: "55",
-  border: "99",
-  scrim: "cc",
-} as const;
 
 /** Height of a full-screen panel: the window less the desktop app bar, or
  * less the mobile bottom nav and its safe area. A panel that pins a bottom

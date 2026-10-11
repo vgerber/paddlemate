@@ -16,7 +16,7 @@ import BottomSheet from "@/components/BottomSheet";
 import ChipRow from "@/components/ChipRow";
 import PanelHeader from "@/components/PanelHeader";
 import type { AreaCircle } from "@/lib/geo";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import type { WaterLevel } from "@/lib/waterLevel";
 import AreaControls from "./AreaControls";
 import DifficultySelect from "./DifficultySelect";
@@ -173,15 +173,6 @@ function FilterChip({
             <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
           )}
         </Box>
-      }
-      sx={
-        set
-          ? {
-              bgcolor: `${tokens.primary}${alphas.wash}`,
-              borderColor: tokens.primary,
-              borderWidth: 1.5,
-            }
-          : undefined
       }
     />
   );
