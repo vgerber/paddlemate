@@ -10,7 +10,8 @@ translations, rivers-and-features) and `api/README.md`. Topic docs go deep on
 one area each.
 
 UI work follows the layout and color rules in [doc/design.md](doc/design.md);
-new patterns agreed in review get added there.
+new patterns agreed in review get added there. The UI overhaul is run from
+[doc/plans/ui-overhaul.md](doc/plans/ui-overhaul.md) until it has landed.
 
 Rules for the docs:
 
