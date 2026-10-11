@@ -63,18 +63,14 @@ function RegionChip({
       color={set ? "primary" : "default"}
       label={label}
       sx={{
-        // 32px to look at, a 44px band to hit.
-        position: "relative",
-        "&::after": {
-          content: '""',
-          position: "absolute",
-          inset: `${-(tokens.touch.min - 32) / 2}px 0`,
-        },
-        ...(set && {
-          bgcolor: `${tokens.primary}${alphas.wash}`,
-          borderColor: tokens.primary,
-          borderWidth: 1.5,
-        }),
+        border: "none",
+        height: tokens.touch.min,
+        borderRadius: `${tokens.radii.pill}px`,
+        bgcolor: set ? `${tokens.primary}${alphas.wash}` : "transparent",
+        boxShadow: set
+          ? `inset 0 0 0 2px ${tokens.primary}`
+          : `inset 0 0 0 1px ${tokens.outlineVariant}`,
+        "&:hover": { bgcolor: "transparent" },
       }}
     />
   );
