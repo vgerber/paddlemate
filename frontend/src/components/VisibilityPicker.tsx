@@ -2,10 +2,9 @@ import Autocomplete, {
   type AutocompleteRenderValueGetItemProps,
 } from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import Chip from "@mui/material/Chip";
 import TextField from "@mui/material/TextField";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { factLabelSx } from "@/components/Fact";
@@ -53,23 +52,41 @@ export default function VisibilityPicker({
     <>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         {!hideLabel && <Typography sx={factLabelSx}>Visibility</Typography>}
-        <ToggleButtonGroup
-          exclusive
-          value={value.type}
-          onChange={(_, v: VisibilityType | null) => v && onChange({ type: v })}
-          fullWidth
-          sx={{ maxWidth: 420 }}
+        <Box
+          role="radiogroup"
+          aria-label="Visibility"
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 1,
+            maxWidth: 420,
+          }}
         >
-          {(["private", "shared", "public"] as const).map((t) => (
-            <ToggleButton
-              key={t}
-              value={t}
-              sx={{ minHeight: tokens.touch.min, flex: 1 }}
-            >
-              {VISIBILITY_LABEL[t]}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+          {(["private", "shared", "public"] as const).map((t) => {
+            const on = value.type === t;
+            return (
+              <ButtonBase
+                key={t}
+                role="radio"
+                aria-checked={on}
+                onClick={() => onChange({ type: t })}
+                sx={{
+                  minHeight: tokens.touch.min,
+                  borderRadius: `${tokens.radii.sm + 2}px`,
+                  bgcolor: tokens.surface,
+                  fontWeight: 600,
+                  fontSize: "0.9375rem",
+                  color: on ? tokens.onSurface : tokens.onSurfaceVariant,
+                  boxShadow: on
+                    ? `inset 0 0 0 2px ${tokens.primary}`
+                    : `inset 0 0 0 1px ${tokens.outlineVariant}`,
+                }}
+              >
+                {VISIBILITY_LABEL[t]}
+              </ButtonBase>
+            );
+          })}
+        </Box>
         {privateHint && value.type === "private" && (
           <Typography variant="body2" color="textSecondary">
             {privateHint}

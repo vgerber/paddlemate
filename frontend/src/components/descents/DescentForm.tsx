@@ -158,6 +158,7 @@ export default function DescentForm({
           leftDisabled={isBusy}
           title={descent ? "Edit descent" : "Log descent"}
           subtitle={`Step ${step + 1} of ${STEPS.length} · ${STEPS[step]}`}
+          steps={{ n: step + 1, of: STEPS.length }}
           action={
             <RoundActionButton
               onClick={isLast ? handleSave : () => setStep((s) => s + 1)}

@@ -298,6 +298,9 @@ function SuggestSectionPage() {
               ? "Pending review"
               : `Step ${step + 1} of ${WIZARD_STEPS.length} · ${WIZARD_STEPS[step]}`
           }
+          steps={
+            submitted ? undefined : { n: step + 1, of: WIZARD_STEPS.length }
+          }
           action={
             <RoundActionButton
               onClick={

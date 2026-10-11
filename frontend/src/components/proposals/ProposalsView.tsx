@@ -1,5 +1,4 @@
 import FilterListIcon from "@mui/icons-material/FilterList";
-import HowToVoteOutlinedIcon from "@mui/icons-material/HowToVoteOutlined";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
@@ -185,14 +184,7 @@ export default function ProposalsView({
       {isLoading ? (
         <LoadingBox size={40} py={6} />
       ) : !proposals || proposals.length === 0 ? (
-        <EmptyState
-          icon={
-            <HowToVoteOutlinedIcon
-              sx={{ fontSize: 56, color: "text.disabled" }}
-            />
-          }
-          title={`No ${status} proposals.`}
-        />
+        <EmptyState title={`No ${status} proposals.`} />
       ) : (
         <Box sx={{ py: 0.75 }}>
           {proposals.map((p) => (
@@ -247,15 +239,7 @@ export default function ProposalsView({
           {selected ? (
             <ProposalDetailView proposal={selected} adminMode={adminMode} />
           ) : (
-            <EmptyState
-              icon={
-                <HowToVoteOutlinedIcon
-                  sx={{ fontSize: 56, color: "text.disabled" }}
-                />
-              }
-              title="Select a proposal to review it."
-              py={10}
-            />
+            <EmptyState title="Select a proposal to review it." py={10} />
           )}
         </Box>
       </Box>

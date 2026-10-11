@@ -16,7 +16,7 @@ export function StateTile({ children }: { children: ReactNode }) {
         width: 48,
         height: 48,
         borderRadius: `${tokens.radii.md}px`,
-        bgcolor: `${tokens.primary}${alphas.hover}`,
+        bgcolor: `${tokens.primary}${alphas.wash}`,
         color: tokens.primary,
         display: "grid",
         placeItems: "center",
@@ -57,8 +57,12 @@ export default function EmptyState({
     >
       <StateTile>{icon}</StateTile>
       <Typography
-        variant="body1"
-        sx={{ fontWeight: 600, color: "text.primary" }}
+        variant="body2"
+        sx={{
+          fontSize: "0.875rem",
+          lineHeight: "20px",
+          color: "text.secondary",
+        }}
       >
         {title}
       </Typography>
