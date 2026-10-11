@@ -111,8 +111,29 @@ export interface MapChrome {
   minimal?: boolean;
 }
 
+/** What the camera frames: refit when `key` changes, and again (unless it is
+ * already inside) when the padding changes. While a subject is set the camera
+ * no longer fits all sections or the selected section by itself. */
+export interface MapSubject {
+  key: string;
+  /** [[minLon, minLat], [maxLon, maxLat]] */
+  bounds: [[number, number], [number, number]];
+  maxZoom?: number;
+}
+
+export interface MapPadding {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
 /** Where the map looks, and where it reports it is looking. */
 export interface MapCamera {
+  /** Fit padding in px; the free map area on a canvas screen. Defaults to the
+   * fixed per-move values. Replaces `focusPaddingBottom` when given. */
+  padding?: MapPadding;
+  subject?: MapSubject | null;
   /** [lng, lat] to fly to and highlight; set by clicking a feature in the panel. */
   focusedPoint?: [number, number] | null;
   /** [[minLon, minLat], [maxLon, maxLat]] box to fit (e.g. a river's gauges). */
@@ -160,7 +181,7 @@ export interface MapRegions {
   onSelect?: (regionId: number) => void;
 }
 
-interface WaterwayMapProps {
+export interface WaterwayMapProps {
   sections?: SectionWithFeatures[];
   features?: Feature[];
   selectedSectionId?: number | null;
@@ -237,8 +258,14 @@ export default function WaterwayMap({
     borders: countryBorders,
     onSelect: onRegionSelect,
   } = regions;
-  const { focusedPoint, focusBounds, focusPaddingBottom, onBoundsChange } =
-    camera;
+  const {
+    focusedPoint,
+    focusBounds,
+    focusPaddingBottom,
+    onBoundsChange,
+    padding,
+    subject,
+  } = camera;
   const {
     featureVertices,
     featureGeomType,
@@ -288,6 +315,8 @@ export default function WaterwayMap({
     regionFocused: regionOutline != null,
     focusBounds,
     focusPaddingBottom,
+    padding,
+    subject,
   });
 
   const {

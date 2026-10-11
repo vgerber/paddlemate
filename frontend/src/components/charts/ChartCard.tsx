@@ -67,6 +67,9 @@ interface ChartCardProps {
   onDismiss?: () => void;
   /** Under the chart, e.g. the gauge credit. */
   footer?: ReactNode;
+  /** "dock" fills the canvas chart dock, which owns the card's surface,
+   * radius and shadow; the plot takes the height the options leave. */
+  variant?: "card" | "dock";
   /** The chart, given the room to keep above its plot. */
   children: (headroom: number) => ReactNode;
 }
@@ -84,8 +87,10 @@ export default function ChartCard({
   tall = false,
   onDismiss,
   footer,
+  variant = "card",
   children,
 }: ChartCardProps) {
+  const docked = variant === "dock";
   const [open, setOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const openRef = useRef<HTMLButtonElement>(null);
@@ -109,16 +114,25 @@ export default function ChartCard({
   return (
     <Box
       data-testid="chart-card"
-      sx={{
-        // The pane has no side padding; every list in it sets its own 12px.
-        mx: 1.5,
-        mt: 1.5,
-        flexShrink: 0,
-        bgcolor: tokens.surface,
-        borderRadius: `${tokens.radii.md}px`,
-        boxShadow: tokens.elevation.e1,
-        overflow: "hidden",
-      }}
+      sx={
+        docked
+          ? {
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }
+          : {
+              // The pane has no side padding; every list in it sets its own 12px.
+              mx: 1.5,
+              mt: 1.5,
+              flexShrink: 0,
+              bgcolor: tokens.surface,
+              borderRadius: `${tokens.radii.md}px`,
+              boxShadow: tokens.elevation.e1,
+              overflow: "hidden",
+            }
+      }
     >
       {open && (
         <Box
@@ -227,7 +241,9 @@ export default function ChartCard({
       <Box
         sx={{
           position: "relative",
-          height: tall ? heights.tall : heights.base,
+          ...(docked
+            ? { flex: 1, minHeight: 0 }
+            : { height: tall ? heights.tall : heights.base }),
         }}
       >
         {children(open ? CLOSED_HEADROOM : OUTLINE_HEADROOM)}
