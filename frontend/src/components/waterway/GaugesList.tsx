@@ -1,10 +1,13 @@
-import List from "@mui/material/List";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
+import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import GaugeAttribution from "@/components/GaugeAttribution";
+import EmptyState from "@/components/states/EmptyState";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { formatReading } from "@/lib/format";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 interface GaugesListProps {
   gaugeRanges: WaterRangeWithStatus[];
@@ -12,57 +15,81 @@ interface GaugesListProps {
   onGaugeSelect?: (id: number) => void;
 }
 
-/** The river's gauges, each credited to the authority that publishes it. */
+/** The river's gauges, one card each: name, station, the credit to the
+ * authority that publishes it, and the latest reading. */
 export default function GaugesList({
   gaugeRanges,
   selectedGaugeId,
   onGaugeSelect,
 }: GaugesListProps) {
   if (gaugeRanges.length === 0) {
-    return (
-      <Typography color="text.secondary" variant="body2" sx={{ p: 1 }}>
-        No gauges found.
-      </Typography>
-    );
+    return <EmptyState title="No gauges found." py={4} />;
   }
   return (
-    <List dense disablePadding>
-      {gaugeRanges.map((range) => (
-        <ListItemButton
-          key={range.gauge.id}
-          selected={selectedGaugeId === range.gauge.id}
-          onClick={() => onGaugeSelect?.(range.gauge.id)}
-          sx={{ py: 0.75, px: 1.5, alignItems: "flex-start" }}
-        >
-          <ListItemText
-            primary={(range.series.label ?? range.gauge.name).replace(
-              /\s*\([WQ]\)\s*$/,
-              "",
-            )}
-            secondary={
-              <>
-                {range.gauge.name}
-                <GaugeAttribution source={range.source} />
-              </>
-            }
-            slotProps={{
-              primary: { variant: "body2" },
-              // The attribution is a block element, so the secondary slot has
-              // to be a div rather than the default p.
-              secondary: { variant: "caption", component: "div" },
+    <Box
+      sx={{ display: "grid", gap: 1.25, p: 1.5 }}
+      role="list"
+      aria-label="Gauges"
+    >
+      {gaugeRanges.map((range) => {
+        const selected = selectedGaugeId === range.gauge.id;
+        return (
+          <ButtonBase
+            key={range.gauge.id}
+            role="listitem"
+            data-testid="gauge-card"
+            aria-current={selected || undefined}
+            onClick={() => onGaugeSelect?.(range.gauge.id)}
+            sx={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 1.5,
+              width: "100%",
+              minHeight: tokens.touch.row,
+              px: 1.75,
+              py: 1.25,
+              textAlign: "left",
+              bgcolor: tokens.surface,
+              borderRadius: `${tokens.radii.md}px`,
+              boxShadow: selected
+                ? `${tokens.elevation.e1}, inset 0 0 0 2px ${tokens.primary}`
+                : tokens.elevation.e1,
             }}
-          />
-          {range.latest_reading != null && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mr: 1, whiteSpace: "nowrap" }}
-            >
-              {formatReading(range.latest_reading.value, range.series.unit)}
-            </Typography>
-          )}
-        </ListItemButton>
-      ))}
-    </List>
+          >
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography
+                sx={{
+                  fontSize: "0.9375rem",
+                  fontWeight: 600,
+                  lineHeight: 1.35,
+                }}
+              >
+                {(range.series.label ?? range.gauge.name).replace(
+                  /\s*\([WQ]\)\s*$/,
+                  "",
+                )}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {range.gauge.name}
+              </Typography>
+              <GaugeAttribution source={range.source} />
+            </Box>
+            {range.latest_reading != null && (
+              <Typography
+                sx={{
+                  fontSize: "0.9375rem",
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {formatReading(range.latest_reading.value, range.series.unit)}
+              </Typography>
+            )}
+          </ButtonBase>
+        );
+      })}
+    </Box>
   );
 }

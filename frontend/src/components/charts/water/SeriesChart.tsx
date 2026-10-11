@@ -1,8 +1,8 @@
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import { addDays, differenceInCalendarDays, startOfDay } from "date-fns";
 import type { JSX } from "react";
 import { useLayoutEffect, useMemo, useState } from "react";
 import {
@@ -10,16 +10,18 @@ import {
   AreaChart,
   CartesianGrid,
   ReferenceArea,
+  ReferenceDot,
   ReferenceLine,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import LoadingBox from "@/components/states/LoadingBox";
 import type { GaugeReading, WaterRangeWithStatus } from "@/lib/api";
 import { humanize } from "@/lib/format";
 import { useGaugeReadings } from "@/lib/hooks/useGauges";
-import { fonts, theme } from "@/lib/theme";
-import type { DescentSpan, TimeRange } from "./types";
+import { theme } from "@/lib/theme";
+import type { DescentSpan } from "./types";
 import { useChartZoom } from "./useChartZoom";
 
 const { tokens } = theme;
@@ -27,6 +29,11 @@ const { tokens } = theme;
 /** Single source of truth for the plot geometry - the zoom hook derives the
  * plot area's pixel bounds from these same numbers. */
 const CHART_MARGIN = { top: 6, right: 12, bottom: 4, left: 0 };
+
+/** Radius of the latest reading's dot, and the gap the threshold labels keep
+ * from it. The labels end this far short of the plot's right edge. */
+const DOT_RADIUS = 5;
+const LABEL_GAP = DOT_RADIUS + 10;
 
 export interface SeriesChartProps {
   range: WaterRangeWithStatus;
@@ -38,9 +45,26 @@ export interface SeriesChartProps {
   selectedFeature?: { name: string; type: string } | null;
   from: string;
   showThresholds?: boolean;
-  timeRange: TimeRange;
   /** Own descents drawn as shaded time bands. */
   descentSpans?: DescentSpan[];
+  /** Room kept above the plot, in px, for text laid over the chart. */
+  headroom?: number;
+}
+
+/** Midnight ticks across the window, stepped so about four fit: a day label
+ * never repeats. */
+export function dayTicks([from, to]: [number, number], target = 4): number[] {
+  const days = differenceInCalendarDays(to, from);
+  const step = Math.max(1, Math.ceil(days / target));
+  const ticks: number[] = [];
+  for (
+    let d = addDays(startOfDay(from), 1);
+    d.getTime() <= to;
+    d = addDays(d, step)
+  ) {
+    ticks.push(d.getTime());
+  }
+  return ticks;
 }
 
 function formatTick(v: number): string {
@@ -68,8 +92,9 @@ function yDomainOf(
   };
 }
 
-/** Threshold reference lines for one range. Returned as an element array
- * because recharts only recognizes direct children. */
+/** Threshold reference lines for one range, each labelled under its line and
+ * short of the latest reading's dot. Returned as an element array because
+ * recharts only recognizes direct children. */
 function thresholdLines(
   r: WaterRangeWithStatus,
   opacity: number,
@@ -82,13 +107,25 @@ function thresholdLines(
       ifOverflow="hidden"
       stroke={color}
       strokeOpacity={opacity}
-      strokeDasharray="4 2"
+      strokeDasharray="4 4"
       label={{
-        value: labelText,
-        position: "insideTopRight",
-        fontSize: 10,
-        fill: color,
-        opacity,
+        content: ({ viewBox }) =>
+          viewBox && "width" in viewBox ? (
+            <text
+              data-testid="threshold-label"
+              x={(viewBox.x ?? 0) + (viewBox.width ?? 0) - LABEL_GAP}
+              y={(viewBox.y ?? 0) + 13}
+              textAnchor="end"
+              fontSize={11}
+              fontWeight={600}
+              fill={color}
+              opacity={opacity}
+            >
+              {labelText}
+            </text>
+          ) : (
+            <g />
+          ),
       }}
     />
   );
@@ -96,9 +133,38 @@ function thresholdLines(
     r.range_low != null &&
       line("low", r.range_low, tokens.success, `L ${r.range_low}`),
     r.range_medium != null &&
-      line("medium", r.range_medium, tokens.tertiary, `M ${r.range_medium}`),
+      line(
+        "medium",
+        r.range_medium,
+        tokens.levels.medium.text,
+        `M ${r.range_medium}`,
+      ),
     r.range_high != null &&
       line("high", r.range_high, tokens.error, `H ${r.range_high}`),
+  ].filter((l): l is JSX.Element => l !== false);
+}
+
+/** The quiet wash between thresholds: green from low to medium, amber from
+ * medium to high. */
+function thresholdBands(r: WaterRangeWithStatus) {
+  const band = (key: string, y1: number, y2: number, fill: string) => (
+    <ReferenceArea
+      key={key}
+      y1={y1}
+      y2={y2}
+      ifOverflow="hidden"
+      fill={fill}
+      fillOpacity={0.06}
+      stroke="none"
+    />
+  );
+  return [
+    r.range_low != null &&
+      r.range_medium != null &&
+      band("low", r.range_low, r.range_medium, tokens.levels.low.text),
+    r.range_medium != null &&
+      r.range_high != null &&
+      band("medium", r.range_medium, r.range_high, tokens.levels.medium.text),
   ].filter((l): l is JSX.Element => l !== false);
 }
 
@@ -108,8 +174,8 @@ export default function SeriesChart({
   selectedFeature,
   from,
   showThresholds = true,
-  timeRange,
   descentSpans,
+  headroom = CHART_MARGIN.top,
 }: SeriesChartProps) {
   const { series, gauge } = range;
 
@@ -202,17 +268,17 @@ export default function SeriesChart({
     ],
   );
 
-  // Axis width from the full data range so the plot geometry (and with it
-  // the zoom gesture math) stays stable while zooming.
-  const yAxisWidth = useMemo(() => {
-    const d = yDomainOf(allValues, thresholds);
-    if (!d) return 32;
-    const widestLabel = [d.lo, d.hi]
-      .map(formatTick)
-      .reduce((a, b) => (a.length >= b.length ? a : b));
-    // 7px per character at fontSize 11, plus 6px right padding
-    return widestLabel.length * 7 + 6;
-  }, [allValues, thresholds]);
+  // The chart runs edge to edge: no y axis, the threshold labels and the
+  // tooltip carry the scale.
+  const yAxisWidth = 0;
+  const margin = { ...CHART_MARGIN, top: headroom };
+  const lastPoint = useMemo(() => {
+    for (let i = chartData.length - 1; i >= 0; i--) {
+      const v = chartData[i].value;
+      if (v !== null) return { time: chartData[i].time, value: v };
+    }
+    return null;
+  }, [chartData]);
 
   // Measure container explicitly and pass width/height directly to AreaChart,
   // bypassing ResponsiveContainer's -1/-1 initial state which causes console warnings.
@@ -247,26 +313,18 @@ export default function SeriesChart({
     return d ? [d.lo, d.hi] : ["auto", "auto"];
   }, [allValues, thresholds]);
 
-  if (isLoading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100%",
-        }}
-      >
-        <CircularProgress size={20} />
-      </Box>
-    );
-  }
+  // Day labels while the window spans days; clock times once it is zoomed in.
+  const [winFrom, winTo] = domain ?? extent;
+  const byDay = winTo - winFrom >= 2 * 24 * 3600 * 1000;
+
+  if (isLoading) return <LoadingBox size={20} py={6} />;
 
   const tickStyle = { fontSize: 11, fill: tokens.outline };
 
   return (
     <div
       ref={setContainer}
+      data-plot-top={headroom}
       style={{
         width: "100%",
         height: "100%",
@@ -297,23 +355,20 @@ export default function SeriesChart({
       )}
       {domain && (
         <IconButton
-          size="small"
           aria-label="Reset zoom"
           title="Reset zoom"
           onClick={reset}
           sx={{
             position: "absolute",
-            top: 2,
-            right: CHART_MARGIN.right + 2,
+            top: headroom,
+            right: 0,
             zIndex: 2,
+            width: tokens.touch.min,
+            height: tokens.touch.min,
             color: "text.secondary",
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "divider",
-            "&:hover": { bgcolor: "background.paper" },
           }}
         >
-          <ZoomOutMapIcon sx={{ fontSize: 16 }} />
+          <ZoomOutMapIcon sx={{ fontSize: 20 }} />
         </IconButton>
       )}
       {size && (
@@ -321,7 +376,7 @@ export default function SeriesChart({
           width={size.width}
           height={size.height}
           data={chartData}
-          margin={CHART_MARGIN}
+          margin={margin}
         >
           <defs>
             <linearGradient
@@ -366,19 +421,22 @@ export default function SeriesChart({
             scale="time"
             domain={domain ?? extent ?? ["dataMin", "dataMax"]}
             allowDataOverflow
+            ticks={
+              byDay
+                ? dayTicks((domain ?? extent) as [number, number])
+                : undefined
+            }
             tickFormatter={(ts: number) => {
               const d = new Date(ts);
-              if (timeRange === "24h") {
+              if (!byDay) {
                 return d.toLocaleTimeString(undefined, {
                   hour: "2-digit",
                   minute: "2-digit",
                 });
               }
-              return d.toLocaleString(undefined, {
+              return d.toLocaleDateString(undefined, {
                 month: "short",
                 day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
               });
             }}
             tick={tickStyle}
@@ -387,12 +445,9 @@ export default function SeriesChart({
             minTickGap={60}
           />
           <YAxis
+            hide
             domain={yDomain}
-            tick={tickStyle}
-            axisLine={false}
-            tickLine={false}
             width={yAxisWidth}
-            tickCount={5}
             tickFormatter={formatTick}
           />
           <Tooltip
@@ -442,20 +497,39 @@ export default function SeriesChart({
             connectNulls={false}
             isAnimationActive={false}
           />
+          {showThresholds && thresholdBands(displayRange)}
           {showThresholds &&
             thresholdLines(range, dimDefault ? 0.25 : 1, "default")}
           {showThresholds &&
             dimDefault &&
             selectedRange &&
             thresholdLines(selectedRange, 1, "selected")}
+          {lastPoint && (
+            <ReferenceDot
+              x={lastPoint.time}
+              y={lastPoint.value}
+              ifOverflow="hidden"
+              shape={({ cx, cy }) => (
+                <circle
+                  data-testid="latest-dot"
+                  cx={cx}
+                  cy={cy}
+                  r={DOT_RADIUS}
+                  fill={tokens.surface}
+                  stroke={tokens.chartSeries}
+                  strokeWidth={2}
+                />
+              )}
+            />
+          )}
         </AreaChart>
       )}
       {hasSelectedRange && selectedFeature && (
         <Box
           sx={{
             position: "absolute",
-            top: 2,
-            left: yAxisWidth + 8,
+            top: headroom + 2,
+            left: yAxisWidth + 14,
             zIndex: 2,
             pointerEvents: "none",
           }}
@@ -469,17 +543,12 @@ export default function SeriesChart({
             }}
           >
             {selectedFeature.name}
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: fonts.label,
-              fontSize: "0.625rem",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "text.secondary",
-            }}
-          >
-            {humanize(selectedFeature.type)}
+            <Box
+              component="span"
+              sx={{ fontWeight: 400, color: "text.secondary" }}
+            >
+              {` · ${humanize(selectedFeature.type)}`}
+            </Box>
           </Typography>
         </Box>
       )}

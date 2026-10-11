@@ -23,9 +23,14 @@ export default function GaugeAttribution({
 
   const line = (
     <Typography
-      variant="caption"
-      color="text.disabled"
-      sx={{ display: "block", minWidth: 0 }}
+      data-testid="gauge-attribution"
+      sx={{
+        display: "block",
+        minWidth: 0,
+        fontSize: "0.75rem",
+        lineHeight: "16px",
+        color: "text.secondary",
+      }}
     >
       Data:{" "}
       {source.website ? (
@@ -33,7 +38,7 @@ export default function GaugeAttribution({
           href={source.website}
           target="_blank"
           rel="noopener noreferrer"
-          color="inherit"
+          color="primary"
           underline="hover"
         >
           {label}
@@ -49,7 +54,7 @@ export default function GaugeAttribution({
               href={license.href}
               target="_blank"
               rel="noopener noreferrer"
-              color="inherit"
+              color="primary"
               underline="hover"
             >
               {license.label}

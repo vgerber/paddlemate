@@ -6,7 +6,14 @@ import type { MapPageState } from "./useMapPageState";
 
 /** Chart area below the map / overlay: the selected gauge's chart when one
  * is picked, else the selected section's chart, else nothing. */
-export default function MapCharts({ state }: { state: MapPageState }) {
+export default function MapCharts({
+  state,
+  tall,
+}: {
+  state: MapPageState;
+  /** Lets the chart grow taller (the features list is folded). */
+  tall?: boolean;
+}) {
   const {
     selectedWaterwayId,
     selectedSectionId,
@@ -32,6 +39,7 @@ export default function MapCharts({ state }: { state: MapPageState }) {
     return (
       <GaugeChartPanel
         ranges={selectedGaugeRanges}
+        tall={tall}
         onClose={() => setSelectedGaugeId(null)}
       />
     );
@@ -49,6 +57,7 @@ export default function MapCharts({ state }: { state: MapPageState }) {
     <SectionChartPanel
       waterwayId={selectedWaterwayId}
       sectionId={selectedSectionId}
+      tall={tall}
       sectionName={
         selectedSection
           ? localizedName(selectedSection.name, selectedSection.names)
