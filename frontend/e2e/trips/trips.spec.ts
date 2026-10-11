@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Finger } from "../support/finger";
 import {
   expectNoHorizontalOverflow,
@@ -206,5 +206,167 @@ test.describe("members and invite", () => {
     await expect(
       page.getByRole("button", { name: "Link actions" }),
     ).toHaveCount(0);
+  });
+});
+
+const CARD_RADIUS = "14px";
+
+async function cardStyle(row: Locator) {
+  return row.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { radius: s.borderRadius, shadow: s.boxShadow };
+  });
+}
+
+async function openTab(page: Page, name: string) {
+  await page.goto(`/trips/${TRIP}`);
+  await page.getByRole("tab", { name, exact: true }).click();
+}
+
+test.describe("bases and candidates", () => {
+  test("base rows are cards with a 44px menu", async ({ page }) => {
+    await openTab(page, "Bases");
+    const rows = page.getByTestId("stay-row").filter({ visible: true });
+    await expect(rows.first()).toBeVisible();
+    for (const r of await rows.all()) {
+      expect((await r.boundingBox())?.height).toBeGreaterThanOrEqual(48);
+      const style = await cardStyle(r);
+      expect(style.radius).toBe(CARD_RADIUS);
+      expect(style.shadow).not.toBe("none");
+    }
+    await expectTouchTargets(
+      rows.first().getByRole("button", { name: "Base actions" }),
+    );
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("candidate rows are cards with a menu and 44px votes", async ({
+    page,
+  }) => {
+    await openTab(page, "Bases");
+    const rows = page.getByTestId("candidate-row").filter({ visible: true });
+    await expect(rows).toHaveCount(2);
+    for (const r of await rows.all()) {
+      expect((await r.boundingBox())?.height).toBeGreaterThanOrEqual(48);
+      const style = await cardStyle(r);
+      expect(style.radius).toBe(CARD_RADIUS);
+      expect(style.shadow).not.toBe("none");
+      await expectTouchTargets(r.getByRole("button", { name: /^Actions for/ }));
+      await expectTouchTargets(r.getByRole("button", { name: /^Vote / }));
+    }
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("a vote is pressed and taken back", async ({ page }) => {
+    await openTab(page, "Bases");
+    const row = page
+      .getByTestId("candidate-row")
+      .filter({ visible: true, hasText: "Haus Wildspitze" });
+    const against = row.getByRole("button", { name: /^Vote against/ });
+    await expect(against).toHaveAttribute("aria-pressed", "false");
+    await against.click();
+    await expect(against).toHaveAttribute("aria-pressed", "true");
+    await against.click();
+    await expect(against).toHaveAttribute("aria-pressed", "false");
+  });
+
+  test("logs tab opens with a count @small", async ({ page }) => {
+    await openTab(page, "Logs");
+    await expect(page.getByText(/^\d+ results?$/).first()).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+});
+
+test.describe("trip forms", () => {
+  async function expectFormFields(page: Page) {
+    const sizes = await page
+      .locator(
+        "input:visible:not([aria-hidden]), textarea:visible, [role=combobox]:visible",
+      )
+      .evaluateAll((els) =>
+        els.map((el) => ({
+          font: getComputedStyle(el).fontSize,
+          h: Math.round(
+            el.closest(".MuiInputBase-root")?.getBoundingClientRect().height ??
+              0,
+          ),
+        })),
+      );
+    expect(sizes.length).toBeGreaterThan(2);
+    for (const s of sizes) {
+      expect(s.font).toBe("16px");
+      expect(s.h).toBeGreaterThanOrEqual(44);
+    }
+    await expectTouchTargets(page.getByRole("button", { name: "Save trip" }));
+    await expectNoHorizontalOverflow(page);
+  }
+
+  test("new trip: sections, 16px inputs, 44px controls @small", async ({
+    page,
+  }) => {
+    await page.goto("/trips/new");
+    await expect(page.getByLabel("Trip name")).toBeVisible();
+    await expect(page.getByTestId("form-section-label")).toHaveCount(3);
+    await expect(
+      page.getByRole("button", { name: "Save trip" }),
+    ).toBeDisabled();
+    await expectFormFields(page);
+  });
+
+  test("edit trip saves a change and puts it back @small", async ({ page }) => {
+    await page.goto(`/trips/${TRIP}?edit=true`);
+    const name = page.getByLabel("Trip name");
+    await expect(name).toBeVisible();
+    await expectFormFields(page);
+    const old = await name.inputValue();
+    await name.fill(`${old} x`);
+    await page.getByRole("button", { name: "Save trip" }).click();
+    await expect(page).not.toHaveURL(/edit=true/);
+    await expect(page.getByText(`${old} x`).first()).toBeVisible();
+    await page.goto(`/trips/${TRIP}?edit=true`);
+    await page.getByLabel("Trip name").fill(old);
+    await page.getByRole("button", { name: "Save trip" }).click();
+    await expect(page).not.toHaveURL(/edit=true/);
+    await expect(page.getByText(`${old} x`)).toHaveCount(0);
+  });
+
+  test("an end before the start blocks saving", async ({ page }) => {
+    await page.goto(`/trips/${TRIP}?edit=true`);
+    await page.getByLabel("Ends (optional)").fill("2000-01-01");
+    await expect(
+      page.getByRole("button", { name: "Save trip" }),
+    ).toBeDisabled();
+  });
+});
+
+test.describe("add member dialog", () => {
+  test("one field, a contained action, stays open on failure", async ({
+    page,
+  }) => {
+    await page.route("**/trips/*/members", (route) =>
+      route.request().method() === "POST"
+        ? route.fulfill({
+            status: 409,
+            contentType: "application/json",
+            body: JSON.stringify({
+              error: { code: "conflict", message: "Nope.", target: null },
+            }),
+          })
+        : route.continue(),
+    );
+    await openTab(page, "Members");
+    await page.getByRole("button", { name: "Add member" }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("Add a member").first()).toBeVisible();
+    const add = dialog.getByRole("button", { name: "Add to trip" });
+    await expect(add).toBeDisabled();
+    await dialog.getByTestId("user-pick").first().click();
+    await expect(add).toBeEnabled();
+    const bg = await add.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(bg).not.toBe("rgba(0, 0, 0, 0)");
+    await expectTouchTargets(add);
+    await add.click();
+    await expect(dialog.getByRole("alert")).toContainText("Nope.");
+    await expect(dialog).toBeVisible();
   });
 });

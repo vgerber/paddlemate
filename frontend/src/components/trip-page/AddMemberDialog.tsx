@@ -1,22 +1,29 @@
-import CloseIcon from "@mui/icons-material/Close";
 import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import ListItemButton from "@mui/material/ListItemButton";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useMemo, useState } from "react";
-import PanelBottomBar from "@/components/PanelBottomBar";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import FormSection from "@/components/waterway/FormSection";
+import { apiErrorMessage } from "@/lib/api/client";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useAllUsers } from "@/lib/hooks/useFollows";
 import { useAddTripMember } from "@/lib/hooks/useTrips";
-import { theme } from "@/lib/theme";
+import { alphas, theme } from "@/lib/theme";
+
 import InviteLinks from "./InviteLinks";
+
+const { tokens } = theme;
 
 /**
  * Who to add: a link for people not on Paddlemate yet, or somebody already
@@ -41,6 +48,20 @@ export default function AddMemberDialog({
   const query = useDebouncedValue(search, 200);
   const { data: users, isLoading } = useAllUsers(open);
   const addMember = useAddTripMember(tripId);
+  const [picked, setPicked] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleAdd() {
+    if (!picked) return;
+    setError(null);
+    try {
+      await addMember.mutateAsync(picked);
+      setPicked(null);
+      onClose();
+    } catch (err) {
+      setError(apiErrorMessage(err, "Adding failed. Please try again."));
+    }
+  }
 
   const candidates = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -58,6 +79,7 @@ export default function AddMemberDialog({
       maxWidth="xs"
       fullScreen={fullScreen}
     >
+      <DialogTitle sx={{ fontWeight: 600 }}>Add a member</DialogTitle>
       <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
         <InviteLinks tripId={tripId} />
         <FormSection
@@ -65,12 +87,10 @@ export default function AddMemberDialog({
           hint="Added straight away - no link needed."
         >
           <TextField
-            size="small"
             label="Search people"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             fullWidth
-            autoFocus
           />
           {isLoading ? (
             <LoadingBox size={40} pt={4} />
@@ -92,15 +112,14 @@ export default function AddMemberDialog({
               {candidates.map((user) => (
                 <ListItemButton
                   key={user.id}
+                  data-testid="user-pick"
+                  selected={user.id === picked}
                   disabled={addMember.isPending}
-                  onClick={() => {
-                    addMember.mutate(user.id);
-                    onClose();
-                  }}
+                  onClick={() => setPicked(user.id)}
                   sx={{
-                    py: 1.25,
+                    minHeight: tokens.touch.min,
                     borderBottom: "1px solid",
-                    borderColor: `${theme.tokens.outlineVariant}55`,
+                    borderColor: `${tokens.outlineVariant}${alphas.hairline}`,
                   }}
                 >
                   <Typography variant="body2">{user.username}</Typography>
@@ -109,15 +128,23 @@ export default function AddMemberDialog({
             </Box>
           )}
         </FormSection>
+        {error && <Alert severity="error">{error}</Alert>}
       </DialogContent>
-      <PanelBottomBar
-        leftIcon={<CloseIcon />}
-        onLeftClick={onClose}
-        leftLabel="Close"
-        title="Add a member"
-        subtitle="Send a link, or add someone already here"
-        action={null}
-      />
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose} disabled={addMember.isPending}>
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          disabled={!picked || addMember.isPending}
+          onClick={handleAdd}
+          startIcon={
+            addMember.isPending ? <CircularProgress size={16} /> : undefined
+          }
+        >
+          Add to trip
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }

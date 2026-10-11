@@ -77,15 +77,11 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
           flex: 1,
           minHeight: 0,
           overflowY: "auto",
-          px: 1.5,
-          py: 1.5,
+          px: 2,
+          py: 2,
           display: "flex",
           flexDirection: "column",
           gap: 2.5,
-          // Touch targets on a phone, compact rows on a desktop panel.
-          "& .MuiInputBase-inputSizeSmall": {
-            py: { xs: "12px", md: "8.5px" },
-          },
         }}
       >
         <FormSection
@@ -93,7 +89,6 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
           hint="What the group calls it - shown in everyone's trip list."
         >
           <TextField
-            size="small"
             label="Trip name"
             value={form.name}
             onChange={(e) => patch({ name: e.target.value })}
@@ -102,7 +97,6 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
             slotProps={{ htmlInput: { maxLength: 255 } }}
           />
           <TextField
-            size="small"
             label="Description"
             value={form.description}
             onChange={(e) => patch({ description: e.target.value })}
@@ -117,7 +111,6 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
           hint="The window the trip covers. Leave the end open if you do not know yet - members set their own dates separately."
         >
           <TextField
-            size="small"
             label="Starts"
             type="date"
             value={form.start_date}
@@ -126,7 +119,6 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
             slotProps={{ inputLabel: { shrink: true } }}
           />
           <TextField
-            size="small"
             label="Ends (optional)"
             type="date"
             value={form.end_date}
@@ -157,7 +149,6 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
               ))}
             </TextField>
             <TextField
-              size="small"
               label="Name"
               value={form.stay_name}
               onChange={(e) => patch({ stay_name: e.target.value })}
