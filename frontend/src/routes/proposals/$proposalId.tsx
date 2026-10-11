@@ -43,6 +43,9 @@ function ProposalDetailPage() {
           proposal={proposal}
           adminMode={isAdmin}
           onBack={goBack}
+          // Pending is the tab a proposal is opened from; its chip would only
+          // repeat it. Other states keep the chip.
+          listStatus="pending"
         />
       ) : (
         <EmptyState title="Proposal not found." />
