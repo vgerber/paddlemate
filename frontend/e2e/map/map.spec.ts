@@ -33,6 +33,7 @@ type FeatureCollection = {
 
 type MapHook = {
   getPaintProperty(layer: string, prop: string): unknown;
+  getLayoutProperty(layer: string, prop: string): unknown;
   getSource(id: string): { serialize(): { data: FeatureCollection } };
   project(lngLat: [number, number]): { x: number; y: number };
   jumpTo(o: { center: [number, number]; zoom: number }): void;
@@ -52,6 +53,12 @@ declare global {
 const paint = (page: Page, layer: string, prop: string) =>
   page.evaluate(
     ([l, p]) => window.__paddlemateMap?.getPaintProperty(l, p),
+    [layer, prop],
+  );
+
+const layout = (page: Page, layer: string, prop: string) =>
+  page.evaluate(
+    ([l, p]) => window.__paddlemateMap?.getLayoutProperty(l, p),
     [layer, prop],
   );
 
@@ -197,6 +204,52 @@ test.describe("regions", () => {
     const alpha = labels.find((l) => l.id === REGIONS.alpha.id);
     expect(alpha?.label, "the name alone, no country prefix").toBe(
       REGIONS.alpha.name,
+    );
+  });
+
+  test("region names are quieter than the base map's labels", async ({
+    page,
+  }) => {
+    await openRegionMap(page);
+    const size = (await layout(page, "region-label", "text-size")) as number;
+    expect(size).toBeLessThanOrEqual(12);
+    expect(await layout(page, "region-label", "text-font")).toEqual([
+      "Noto Sans Regular",
+    ]);
+    const color = JSON.stringify(
+      await paint(page, "region-label", "text-color"),
+    );
+    expect(color).toContain(INK);
+    expect(color, "ink and the one teal, nothing else").not.toContain(
+      "#1f2b31",
+    );
+    expect(await paint(page, "region-label", "text-halo-color")).toBe(WHITE);
+    const base = await layout(page, "label_town", "text-size");
+    expect(JSON.stringify(base)).not.toBe(JSON.stringify(size));
+  });
+
+  test("roads and road numbers fade in region mode and come back", async ({
+    page,
+  }) => {
+    await openRegionMap(page);
+    await expect
+      .poll(() => paint(page, "road_motorway", "line-opacity"))
+      .toBeLessThanOrEqual(0.3);
+    expect(await layout(page, "highway-shield-non-us", "visibility")).toBe(
+      "none",
+    );
+    expect(await layout(page, "highway-name-major", "visibility")).toBe("none");
+    // Leave region mode inside the app, without a reload.
+    await page.evaluate(() => {
+      window.history.pushState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    await expect(page).not.toHaveURL(/mode=region/);
+    await expect
+      .poll(() => paint(page, "road_motorway", "line-opacity"))
+      .toBeGreaterThan(0.3);
+    expect(await layout(page, "highway-name-major", "visibility")).toBe(
+      "visible",
     );
   });
 

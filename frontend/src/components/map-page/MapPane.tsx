@@ -307,7 +307,10 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
           regions={{
             // A selected river takes the map over; the regions it was found
             // through would only be clutter behind it.
-            choices: selectedWaterwayId != null ? null : regionChoices,
+            choices:
+              selectedWaterwayId != null || !isRegionMode
+                ? null
+                : regionChoices,
             picked: selectedWaterwayId != null ? null : regionOutline,
             borders: countryBorders,
             onSelect: selectedWaterwayId != null ? undefined : selectRegion,
