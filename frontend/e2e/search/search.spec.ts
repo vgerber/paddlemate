@@ -425,10 +425,12 @@ test.describe("section rows", () => {
 test.describe("area mode", () => {
   test("@small the slider and the hint sit under the map card", async ({
     page,
-  }) => {
+  }, info) => {
     await openSearch(page, "&mode=area");
+    // A finger taps, a pointer clicks.
+    const verb = info.project.name === "desktop" ? "Click" : "Tap";
     await expect(
-      seen(page.getByText("Click on the map to set the search center.")),
+      seen(page.getByText(`${verb} on the map to set the search center.`)),
     ).toBeVisible();
     const slider = seen(page.getByRole("slider"));
     await expect(slider).toBeVisible();
