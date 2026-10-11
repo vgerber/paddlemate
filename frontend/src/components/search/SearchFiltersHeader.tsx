@@ -1,232 +1,394 @@
-import FilterListIcon from "@mui/icons-material/FilterList";
+import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SearchIcon from "@mui/icons-material/Search";
-import TerrainIcon from "@mui/icons-material/Terrain";
-import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
-import Collapse from "@mui/material/Collapse";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { useState } from "react";
-import ListPaneHeader from "@/components/ListPaneHeader";
+import BottomSheet from "@/components/BottomSheet";
+import ChipRow from "@/components/ChipRow";
+import PanelHeader from "@/components/PanelHeader";
 import type { AreaCircle } from "@/lib/geo";
+import { alphas, theme } from "@/lib/theme";
+import type { WaterLevel } from "@/lib/waterLevel";
 import AreaControls from "./AreaControls";
-import DifficultySelect from "./DifficultySelect";
-import RegionSelect from "./RegionSelect";
-import type { WaterwaySearchFilters } from "./useWaterwaySearchFilters";
+import DifficultySelect, { gradeSummary } from "./DifficultySelect";
+import type {
+  SearchMode,
+  WaterwaySearchFilters,
+} from "./useWaterwaySearchFilters";
 
-/** The input the active mode searches with: a name field, the area circle's
- * radius controls, or the region picker. */
-function SearchInput({
-  filters,
-  areaCircle,
-  areaLocked,
-  onAreaCircleChange,
-  onAreaLockedChange,
-  onRadiusPreview,
-}: {
+const { tokens } = theme;
+
+const WATER_LEVELS: { level: WaterLevel; label: string }[] = [
+  { level: "low", label: "Low" },
+  { level: "medium", label: "Medium" },
+  { level: "high", label: "High" },
+];
+
+const MODES: { value: SearchMode; label: string }[] = [
+  { value: "name", label: "Name" },
+  { value: "area", label: "Area" },
+  { value: "region", label: "Region" },
+];
+
+interface SearchFiltersHeaderProps {
   filters: WaterwaySearchFilters;
-  areaCircle: AreaCircle | null;
-  areaLocked: boolean;
-  onAreaCircleChange?: (circle: AreaCircle | null) => void;
-  onAreaLockedChange?: (locked: boolean) => void;
-  onRadiusPreview?: (radiusKm: number) => void;
+  /** Swipe state from `useSwipeTabs`, so the underline follows a drag. */
+  swipe: {
+    progress: number;
+    dragging: boolean;
+    gestureProps: React.HTMLAttributes<HTMLElement>;
+  };
+  onClose?: () => void;
+}
+
+/** The panel header: the title and the underlined Name, Area and Region
+ * tabs. The mode itself lives in the URL, see `useWaterwaySearchFilters`. */
+export default function SearchFiltersHeader({
+  filters,
+  swipe,
+  onClose,
+}: SearchFiltersHeaderProps) {
+  return (
+    <PanelHeader
+      title="Search"
+      actionButton={
+        onClose && (
+          <IconButton
+            onClick={onClose}
+            aria-label="Close search panel"
+            sx={{
+              display: { xs: "flex", md: "none" },
+              width: tokens.touch.min,
+              height: tokens.touch.min,
+            }}
+          >
+            <KeyboardArrowDownIcon />
+          </IconButton>
+        )
+      }
+      tabs={{
+        value: filters.mode,
+        onChange: filters.setMode,
+        options: MODES,
+        progress: swipe.progress,
+        dragging: swipe.dragging,
+        gesture: swipe.gestureProps,
+      }}
+    />
+  );
+}
+
+/** One field, 52px: the name search or the region search. */
+function SearchField({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
 }) {
-  if (filters.mode === "region") {
-    return (
-      <RegionSelect region={filters.region} onChange={filters.setRegion} />
-    );
-  }
-  if (filters.mode === "area") {
-    return (
-      <AreaControls
-        areaCircle={areaCircle}
-        locked={areaLocked}
-        onLockedChange={(v) => onAreaLockedChange?.(v)}
-        onRadiusChange={(r) =>
-          areaCircle && onAreaCircleChange?.({ ...areaCircle, radiusKm: r })
-        }
-        onRadiusPreview={onRadiusPreview}
-      />
-    );
-  }
   return (
     <TextField
       fullWidth
-      placeholder="Search rivers or sections…"
-      value={filters.name}
-      onChange={(e) => filters.setName(e.target.value)}
-      size="small"
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
       slotProps={{
         input: {
+          sx: { height: 52, pr: 0.5 },
           startAdornment: (
             <InputAdornment position="start">
-              <SearchIcon fontSize="small" sx={{ color: "text.disabled" }} />
+              <SearchIcon sx={{ color: tokens.onSurfaceVariant }} />
             </InputAdornment>
           ),
+          endAdornment: value ? (
+            <IconButton
+              aria-label="Clear"
+              onClick={() => onChange("")}
+              sx={{ width: tokens.touch.min, height: tokens.touch.min }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          ) : undefined,
         },
       }}
     />
   );
 }
 
-interface SearchFiltersHeaderProps {
+function FilterChip({
+  label,
+  set,
+  onClick,
+  onDelete,
+  plain = false,
+}: {
+  label: string;
+  set: boolean;
+  onClick: () => void;
+  onDelete?: () => void;
+  /** No chevron: the chip toggles instead of opening something. */
+  plain?: boolean;
+}) {
+  return (
+    <Chip
+      variant="outlined"
+      clickable
+      onClick={onClick}
+      onDelete={onDelete}
+      aria-pressed={plain ? set : undefined}
+      color={set ? "primary" : "default"}
+      label={
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+          {label}
+          {!onDelete && !plain && (
+            <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
+          )}
+        </Box>
+      }
+      sx={
+        set
+          ? {
+              bgcolor: `${tokens.primary}${alphas.wash}`,
+              borderColor: tokens.primary,
+              borderWidth: 1.5,
+            }
+          : undefined
+      }
+    />
+  );
+}
+
+interface FiltersSheetProps {
+  open: boolean;
+  onClose: () => void;
   filters: WaterwaySearchFilters;
   total: number;
-  isLoading: boolean;
-  onClose?: () => void;
-  onMapModeActivate?: () => void;
+}
+
+function FiltersBody({
+  filters,
+  total,
+  onClose,
+}: Omit<FiltersSheetProps, "open">) {
+  const { mode, country, minDiff, maxDiff } = filters;
+  const hasAny =
+    country !== "" ||
+    minDiff !== "" ||
+    maxDiff !== "" ||
+    filters.water.length > 0;
+  return (
+    <Box sx={{ display: "grid", gap: 2, px: 2, pb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Typography variant="h6" component="h2" sx={{ fontWeight: 700 }}>
+          Filters
+        </Typography>
+        <Button
+          onClick={() => {
+            filters.setMinDiff("");
+            filters.setMaxDiff("");
+            filters.setCountry("");
+            filters.clearWater();
+          }}
+          disabled={!hasAny}
+        >
+          Reset
+        </Button>
+      </Box>
+      <DifficultySelect
+        minDiff={minDiff}
+        maxDiff={maxDiff}
+        onMinChange={filters.setMinDiff}
+        onMaxChange={filters.setMaxDiff}
+      />
+      {mode === "name" && (
+        <TextField
+          label="Country"
+          placeholder="AT"
+          value={country}
+          onChange={(e) => filters.setCountry(e.target.value.toUpperCase())}
+          slotProps={{ htmlInput: { maxLength: 2 } }}
+        />
+      )}
+      <Box>
+        <Typography
+          variant="body2"
+          component="span"
+          sx={{ display: "block", mb: 0.75, fontWeight: 600 }}
+          color="text.secondary"
+        >
+          Water now
+        </Typography>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 1,
+          }}
+        >
+          {WATER_LEVELS.map(({ level, label }) => (
+            <FilterChip
+              key={level}
+              label={label}
+              set={filters.water.includes(level)}
+              onClick={() => filters.toggleWater(level)}
+              plain
+            />
+          ))}
+        </Box>
+      </Box>
+      <Button
+        variant="contained"
+        onClick={onClose}
+        sx={{ height: 52, borderRadius: `${tokens.radii.md}px` }}
+      >
+        {total === 1 ? "1 result" : `${total} results`}
+      </Button>
+    </Box>
+  );
+}
+
+/** The one Filters sheet: a bottom sheet on a phone, a dialog beside the
+ * map on a desktop. */
+function FiltersSheet({ open, onClose, filters, total }: FiltersSheetProps) {
+  const desktop = useMediaQuery(theme.breakpoints.up("md"));
+  if (desktop) {
+    return (
+      <Dialog
+        open={open}
+        onClose={onClose}
+        fullWidth
+        maxWidth="xs"
+        slotProps={{ paper: { "aria-label": "Filters" } }}
+      >
+        <Box sx={{ pt: 2 }}>
+          <FiltersBody filters={filters} total={total} onClose={onClose} />
+        </Box>
+      </Dialog>
+    );
+  }
+  return (
+    <BottomSheet
+      state={open ? "open" : "closed"}
+      onStateChange={(s) => s === "open" || onClose()}
+      label="Filters"
+    >
+      <FiltersBody filters={filters} total={total} onClose={onClose} />
+    </BottomSheet>
+  );
+}
+
+interface SearchControlsProps {
+  filters: WaterwaySearchFilters;
+  total: number;
   areaCircle?: AreaCircle | null;
   areaLocked?: boolean;
   onAreaCircleChange?: (circle: AreaCircle | null) => void;
   onAreaLockedChange?: (locked: boolean) => void;
   onRadiusPreview?: (radiusKm: number) => void;
+  /** Phone only: leave the panel for the map behind it. */
+  onShowMap?: () => void;
+  /** Regions are being listed, so the facets step aside. */
+  listingRegions: boolean;
 }
 
-/** Panel header: title row, name/area/region mode toggle and the search
- * input of the active mode.
- * Optional filters (country, difficulty) stay collapsed behind the filter
- * button; a badge dot marks active filters while they are hidden. */
-export default function SearchFiltersHeader({
+/** What the active mode searches with - the name field, the map card with
+ * its radius, or the region field - and under it the chips that summarize the
+ * filters. A chip opens the Filters sheet. */
+export function SearchControls({
   filters,
   total,
-  isLoading,
-  onClose,
-  onMapModeActivate,
   areaCircle,
   areaLocked,
   onAreaCircleChange,
   onAreaLockedChange,
   onRadiusPreview,
-}: SearchFiltersHeaderProps) {
-  const { mode, country, minDiff, maxDiff } = filters;
-  const hasActiveFilters =
-    country.trim() !== "" || minDiff !== "" || maxDiff !== "";
-  // Open on mount when a filter is already set (e.g. seeded from the URL),
-  // so active filters are never invisible-but-effective on first paint.
-  const [filtersOpen, setFiltersOpen] = useState(hasActiveFilters);
+  onShowMap,
+  listingRegions,
+}: SearchControlsProps) {
+  const { mode, country, minDiff, maxDiff, region } = filters;
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const grade = gradeSummary(minDiff, maxDiff);
+  const open = () => setSheetOpen(true);
 
   return (
-    <Box
-      sx={{
-        px: 2,
-        pt: 1.5,
-        pb: 1,
-        borderBottom: "1px solid",
-        borderColor: "divider",
-        flexShrink: 0,
-      }}
-    >
-      <ListPaneHeader
-        count={total}
-        loading={isLoading}
-        // The tabs below carry the counts on a phone.
-        hideCountOnMobile
-        sx={{ px: 0, pt: 0, pb: 0, mb: 1 }}
-        actions={
-          <>
-            <IconButton
-              size="small"
-              onClick={() => setFiltersOpen((v) => !v)}
-              aria-label={filtersOpen ? "Hide filters" : "Show filters"}
-              title={filtersOpen ? "Hide filters" : "Show filters"}
-            >
-              <Badge
-                color="primary"
-                variant="dot"
-                invisible={!hasActiveFilters || filtersOpen}
-              >
-                <FilterListIcon fontSize="small" />
-              </Badge>
-            </IconButton>
-            {onClose && (
-              <IconButton
-                size="small"
-                onClick={onClose}
-                sx={{ display: { xs: "flex", md: "none" } }}
-                aria-label="Close search panel"
-              >
-                <KeyboardArrowDownIcon fontSize="small" />
-              </IconButton>
-            )}
-          </>
-        }
-      />
-
-      {/* Mode toggle */}
-      <ToggleButtonGroup
-        value={mode}
-        exclusive
-        size="small"
-        onChange={(_, v) => {
-          if (v) {
-            filters.setMode(v);
-            // Area and region are both picked on the map, so on mobile
-            // the panel gets out of the way when either is chosen.
-            if (v !== "name") onMapModeActivate?.();
+    <Box sx={{ px: 2, pt: 1.5, pb: 0.5, flexShrink: 0 }}>
+      {mode === "name" && (
+        <SearchField
+          value={filters.name}
+          onChange={filters.setName}
+          placeholder="Search rivers or sections…"
+        />
+      )}
+      {mode === "area" && (
+        <AreaControls
+          areaCircle={areaCircle ?? null}
+          locked={areaLocked ?? false}
+          onLockedChange={(v) => onAreaLockedChange?.(v)}
+          onRadiusChange={(r) =>
+            areaCircle && onAreaCircleChange?.({ ...areaCircle, radiusKm: r })
           }
-        }}
-        sx={{
-          mb: 1,
-          width: "100%",
-          "& .MuiToggleButton-root": {
-            flex: 1,
-            py: 0.5,
-            fontSize: "0.75rem",
-          },
-        }}
-      >
-        <ToggleButton value="name">
-          <SearchIcon sx={{ fontSize: 14, mr: 0.5 }} /> Name
-        </ToggleButton>
-        <ToggleButton value="area">
-          <RadioButtonUncheckedIcon sx={{ fontSize: 14, mr: 0.5 }} /> Area
-        </ToggleButton>
-        <ToggleButton value="region">
-          <TerrainIcon sx={{ fontSize: 14, mr: 0.5 }} /> Region
-        </ToggleButton>
-      </ToggleButtonGroup>
-
-      <SearchInput
-        filters={filters}
-        areaCircle={areaCircle ?? null}
-        areaLocked={areaLocked ?? false}
-        onAreaCircleChange={onAreaCircleChange}
-        onAreaLockedChange={onAreaLockedChange}
-        onRadiusPreview={onRadiusPreview}
-      />
-
-      <Collapse in={filtersOpen}>
-        <Box sx={{ display: "flex", gap: 1, pt: 1 }}>
-          {mode === "name" && (
-            <TextField
-              label="Country"
-              placeholder="AT"
-              value={country}
-              onChange={(e) => filters.setCountry(e.target.value)}
-              size="small"
-              slotProps={{
-                inputLabel: { shrink: true },
-                htmlInput: {
-                  maxLength: 2,
-                  style: { textTransform: "uppercase" },
-                },
-              }}
-              sx={{ flex: 1, minWidth: 0 }}
+          onRadiusPreview={onRadiusPreview}
+          onShowMap={onShowMap}
+        />
+      )}
+      {mode === "region" && (
+        <SearchField
+          value={filters.regionQuery}
+          onChange={filters.setRegionQuery}
+          placeholder="Search regions…"
+        />
+      )}
+      {!listingRegions && (mode !== "region" || region) && (
+        <ChipRow>
+          {mode === "region" && region && (
+            <FilterChip
+              label={region.name}
+              set
+              onClick={() => filters.setRegionQuery(region.name)}
+              onDelete={() => filters.setRegion(null)}
             />
           )}
-          <DifficultySelect
-            minDiff={minDiff}
-            maxDiff={maxDiff}
-            onMinChange={filters.setMinDiff}
-            onMaxChange={filters.setMaxDiff}
+          <FilterChip
+            label={grade ? `Grade ${grade}` : "Grade"}
+            set={grade !== ""}
+            onClick={open}
           />
-        </Box>
-      </Collapse>
+          {mode === "name" && (
+            <FilterChip
+              label={country || "Country"}
+              set={country !== ""}
+              onClick={open}
+            />
+          )}
+          <FilterChip
+            label="Water now"
+            set={filters.water.length > 0}
+            onClick={open}
+          />
+        </ChipRow>
+      )}
+      <FiltersSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        filters={filters}
+        total={total}
+      />
     </Box>
   );
 }
