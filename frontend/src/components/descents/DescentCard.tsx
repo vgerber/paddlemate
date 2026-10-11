@@ -1,6 +1,3 @@
-import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import { LevelPill } from "@/components/WaterLevelChip";
@@ -13,33 +10,28 @@ import { levelAtTime } from "./levelAtTime";
 const { tokens } = theme;
 
 const VISIBILITY = {
-  private: { icon: LockOutlinedIcon, label: "Private" },
-  shared: { icon: GroupOutlinedIcon, label: "Shared" },
-  public: { icon: PublicOutlinedIcon, label: "Public" },
+  private: "Private",
+  shared: "Shared",
+  public: "Public",
 } as const;
 
-/** Who can see a log: an icon and one plain word. */
+/** Who can see a log: one plain word. */
 export function VisibilityTag({
   type,
 }: {
   type: Descent["visibility"]["type"];
 }) {
-  const { icon: Icon, label } = VISIBILITY[type];
   return (
     <Box
       component="span"
       sx={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 0.5,
         flexShrink: 0,
         color: "text.secondary",
         fontSize: "0.75rem",
         fontWeight: 500,
       }}
     >
-      <Icon sx={{ fontSize: 14 }} />
-      {label}
+      {VISIBILITY[type]}
     </Box>
   );
 }
@@ -209,6 +201,11 @@ export default function DescentCard({
           fontWeight: 500,
           color: "text.secondary",
           justifySelf: "end",
+          // On the date line when the pill wraps above it.
+          alignSelf: "end",
+          minHeight: 24,
+          display: "flex",
+          alignItems: "center",
         }}
       >
         {timeAgo(descent.start_time)}

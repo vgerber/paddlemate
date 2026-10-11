@@ -133,14 +133,18 @@ function LogsPage() {
         <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
         {tab === "mine" && <DockedAction label="Log descent" onClick={onNew} />}
       </Box>
-      <Box sx={{ minHeight: 0, overflowY: "auto", p: 1.5 }}>
+      <Box sx={{ minHeight: 0, overflowY: "auto", py: 1.5, pr: 1.5 }}>
         <Box
           sx={{
             maxWidth: 880,
             minHeight: "100%",
             boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            // Clipped rather than hidden, so the form's bar can still stick.
+            overflow: "clip",
             bgcolor: tokens.surface,
-            borderRadius: `${tokens.radii.md}px`,
+            borderRadius: `${tokens.radii.lg}px`,
             boxShadow: tokens.elevation.e1,
           }}
         >
@@ -179,7 +183,7 @@ function LogsList({
   });
   return (
     <>
-      <ListPaneHeader count={tab === "mine" ? count : undefined} />
+      {tab === "mine" && <ListPaneHeader count={count} />}
       <PanelHeader
         tabs={{
           value: tab,

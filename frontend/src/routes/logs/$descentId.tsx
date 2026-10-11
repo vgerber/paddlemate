@@ -1,6 +1,7 @@
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
+import type { SxProps, Theme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -66,8 +67,8 @@ function LogDetailPage() {
   const isOwner = user != null && user.id === descent.user_id;
 
   // The edit form carries a bottom bar, which needs a floor to sit on.
-  const formShellSx = embedded
-    ? { height: "100%" }
+  const formShellSx: SxProps<Theme> = embedded
+    ? { flex: 1, display: "flex", flexDirection: "column" }
     : { maxWidth: 720, mx: "auto" };
 
   if (edit && isOwner) {
@@ -97,33 +98,61 @@ function LogDetailPage() {
     .filter(Boolean)
     .join(" · ");
 
+  const menu = isOwner ? (
+    <RowMenu
+      actions={[
+        {
+          label: "Edit",
+          icon: <EditOutlinedIcon />,
+          onClick: () => setEdit(true),
+        },
+        {
+          label: "Delete",
+          icon: <DeleteOutlinedIcon />,
+          danger: true,
+          onClick: () => setConfirmDelete(true),
+        },
+      ]}
+    />
+  ) : undefined;
+
   return (
     <Box sx={embedded ? undefined : { maxWidth: 720, mx: "auto" }}>
-      <PanelHeader
-        title={title}
-        subtitle={subtitle}
-        onBack={embedded ? undefined : () => history.back()}
-        actionButton={
-          isOwner ? (
-            <RowMenu
-              actions={[
-                {
-                  label: "Edit",
-                  icon: <EditOutlinedIcon />,
-                  onClick: () => setEdit(true),
-                },
-                {
-                  label: "Delete",
-                  icon: <DeleteOutlinedIcon />,
-                  danger: true,
-                  onClick: () => setConfirmDelete(true),
-                },
-              ]}
-            />
-          ) : undefined
-        }
-      />
-      <Box sx={{ px: 2, py: 2 }}>
+      {embedded ? (
+        // The pane is one card: the header and the body share its padding
+        // and no rule divides them.
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 1,
+            px: 3.5,
+            pt: 2.5,
+          }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="h3" noWrap>
+              {title}
+            </Typography>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              sx={{ fontSize: "0.8125rem", lineHeight: "18px" }}
+            >
+              {subtitle}
+            </Typography>
+          </Box>
+          {menu}
+        </Box>
+      ) : (
+        <PanelHeader
+          title={title}
+          subtitle={subtitle}
+          onBack={() => history.back()}
+          actionButton={menu}
+        />
+      )}
+      <Box sx={embedded ? { px: 3.5, py: 2.5 } : { px: 2, py: 2 }}>
         <DescentDetail descent={descent} />
       </Box>
       <ConfirmDialog

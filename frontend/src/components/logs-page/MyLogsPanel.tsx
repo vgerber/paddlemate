@@ -1,12 +1,11 @@
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import DescentCard from "@/components/descents/DescentCard";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import { useMyDescents } from "@/lib/hooks/useDescents";
-import { labelSx } from "@/lib/theme";
+import GroupHead from "./GroupHead";
 
 /** The signed-in user's own descents, grouped by month. */
 export default function MyLogsPanel({
@@ -51,19 +50,11 @@ export default function MyLogsPanel({
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {groups.map(([label, items]) => (
-        <Box key={label}>
-          <Typography
-            data-testid="log-month"
-            sx={{
-              ...labelSx,
-              fontSize: "0.8125rem",
-              px: 0.5,
-              pb: 0.75,
-              color: "text.secondary",
-            }}
-          >
-            {label}
-          </Typography>
+        <Box
+          key={label}
+          sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}
+        >
+          <GroupHead testId="log-month">{label}</GroupHead>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {items.map((d) => (
               <DescentCard
