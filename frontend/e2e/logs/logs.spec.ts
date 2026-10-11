@@ -251,18 +251,6 @@ test.describe("log descent", () => {
     await expect(page.getByText("Step 2 of 3 · Sections")).toBeVisible();
   });
 
-  test("the blocks are labelled sections", async ({ page }) => {
-    await startNewLog(page);
-    await expect(page.getByTestId("form-section-label")).toHaveCount(2);
-    await next(page).click();
-    await next(page).click();
-    await expect(
-      page.getByTestId("form-section-label").filter({ hasText: "Title" }),
-    ).toBeVisible();
-    // The heading names the choice; the picker does not repeat it.
-    await expect(page.getByText("Visibility", { exact: true })).toHaveCount(0);
-  });
-
   test("create a log through the UI and delete it again", async ({
     page,
   }, info) => {
@@ -343,5 +331,191 @@ test.describe("narrow screens", () => {
     await next(page).click();
     await next(page).click();
     await expectNoHorizontalOverflow(page);
+  });
+});
+
+test.describe("design gaps", () => {
+  const nativeDate = (page: Page) => page.locator('input[type="date"]');
+
+  test("dates and times read in the app's format, not the browser's", async ({
+    page,
+  }) => {
+    await startNewLog(page);
+    await nativeDate(page).fill("2026-10-07");
+    const shown = page.locator("input[readonly]").first();
+    await expect(shown).toHaveValue(/^[A-Z][a-z]{2},? 07 Oct 2026$/);
+    await page.locator('input[type="time"]').first().fill("07:05");
+    await expect(page.locator("input[readonly]").nth(1)).toHaveValue("07:05");
+    // The native input is the control and covers the field.
+    const field = await shown.boundingBox();
+    const native = await nativeDate(page).boundingBox();
+    expect(field && native && native.width >= field.width - 1).toBe(true);
+  });
+
+  test("step 1 and 3 carry no block headings", async ({ page }) => {
+    await startNewLog(page);
+    await expect(page.getByTestId("form-section-label")).toHaveCount(0);
+    await next(page).click();
+    await next(page).click();
+    await expect(page.getByTestId("form-section-label")).toHaveCount(0);
+    await expect(page.getByLabel("Title")).toHaveAttribute(
+      "placeholder",
+      "Leave blank to use section / waterway name",
+    );
+  });
+
+  test("the publish chips reach 44px", async ({ page }) => {
+    await startNewLog(page);
+    await next(page).click();
+    await next(page).click();
+    await expectTouchTargets(page.locator(".MuiChip-root"));
+  });
+
+  test("sections: map, the picked list, then the search", async ({ page }) => {
+    await page.goto(
+      `/logs/new?waterwayId=${FIX.waterway}&sectionId=${FIX.sections.upper}`,
+    );
+    await next(page).click();
+    const map = await page.locator("canvas.maplibregl-canvas").boundingBox();
+    const row = await page
+      .getByRole("button", { name: "More actions" })
+      .boundingBox();
+    const search = await page.getByLabel("Search waterway").boundingBox();
+    expect(map && row && search).toBeTruthy();
+    expect(map && row && map.y < row.y).toBe(true);
+    expect(row && search && row.y < search.y).toBe(true);
+    // No tiles or headings of their own: the pins sit under the list.
+    await expect(page.getByText("Put in and take out")).toHaveCount(0);
+    await expect(page.getByText("Search a waterway to see")).toHaveCount(0);
+  });
+
+  test("sections: no put-in or take-out tiles before there is a route", async ({
+    page,
+  }) => {
+    await startNewLog(page);
+    await next(page).click();
+    await expect(page.getByLabel("Search waterway")).toBeVisible();
+    await expect(page.getByLabel("Label (optional)")).toHaveCount(0);
+  });
+
+  test("desktop: the bar docks at the pane foot and the segment is full width", async ({
+    page,
+  }, info) => {
+    test.skip(!isDesktop(info), "desktop layout");
+    await startNewLog(page);
+    const pane = await page.getByText("Step 1 of 3 · When").boundingBox();
+    const seg = await page
+      .getByRole("button", { name: "Single day" })
+      .boundingBox();
+    const date = await page.locator('input[type="date"]').boundingBox();
+    const vh = page.viewportSize()?.height ?? 0;
+    expect(pane && pane.y > vh - 130).toBe(true);
+    expect(seg && date && seg.x < date.x + 4).toBe(true);
+    const group = await page
+      .locator(".MuiToggleButtonGroup-root")
+      .boundingBox();
+    expect(group && date && Math.abs(group.width - date.width) <= 2).toBe(true);
+  });
+
+  test("a card names visibility in one word, no icon", async ({ page }) => {
+    await openLogs(page);
+    const c = card(page, "Private upper run");
+    await expect(c).toContainText("Private");
+    await expect(c.locator("svg")).toHaveCount(0);
+  });
+
+  test("a month label has its space above, not below", async ({ page }) => {
+    await openLogs(page);
+    const m = page.getByTestId("log-month").first();
+    expect(await computed(m, "padding-top")).toBe("6px");
+    expect(await computed(m, "padding-bottom")).toBe("0px");
+  });
+
+  test("social leaves no empty band above the tabs", async ({ page }) => {
+    await openLogs(page);
+    const mine = await page.getByText("My logs", { exact: true }).boundingBox();
+    await page.getByText("Social", { exact: true }).first().click();
+    await expect(page.getByText(/^Following \(/)).toBeVisible();
+    const social = await page
+      .getByText("My logs", { exact: true })
+      .boundingBox();
+    expect(mine && social && social.y < mine.y).toBe(true);
+  });
+
+  test("social rows have an avatar and one menu, never bare icons", async ({
+    page,
+  }) => {
+    await openLogs(page);
+    await page.getByText("Social", { exact: true }).first().click();
+    const rows = page.getByTestId("person-row");
+    await expect(rows.first()).toBeVisible();
+    for (const row of await rows.all()) {
+      expect(await row.getByRole("button").count()).toBeLessThanOrEqual(1);
+      const av = await row.getByTestId("member-avatar").boundingBox();
+      expect(av?.width).toBe(30);
+      const box = await row.boundingBox();
+      expect(box?.height).toBeGreaterThanOrEqual(56);
+    }
+    const head = page.getByText(/^Following \(/);
+    expect(await computed(head, "font-size")).toBe("13px");
+    expect(await computed(head, "font-weight")).toBe("600");
+    const pending = rows.filter({ hasText: "aoife" }).getByRole("button");
+    await pending.click();
+    await expect(page.getByRole("menuitem", { name: "Accept" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Decline" })).toBeVisible();
+    await page.keyboard.press("Escape");
+  });
+
+  test("desktop: the log panel sits flush to the list with a 16px radius", async ({
+    page,
+  }, info) => {
+    test.skip(!isDesktop(info), "desktop layout");
+    await page.goto("/logs/9201");
+    const label = page.getByTestId("fact-label").first();
+    await expect(label).toBeVisible();
+    const panel = page
+      .locator("main")
+      .getByText("Sections (2)")
+      .locator("xpath=ancestor::div[contains(@class,'MuiBox-root')][last()]");
+    expect(await panel.count()).toBeGreaterThan(0);
+    const list = await card(page, "Public multi-section run").boundingBox();
+    const first = await panel.first().boundingBox();
+    expect(list && first && first.x - (list.x + list.width) < 16).toBe(true);
+  });
+
+  test("desktop: the log header has no rule and shares the body's inset", async ({
+    page,
+  }, info) => {
+    test.skip(!isDesktop(info), "desktop layout");
+    await page.goto("/logs/9201");
+    const title = page.getByRole("heading", { level: 3 });
+    await expect(title).toBeVisible();
+    const t = await title.boundingBox();
+    const f = await page.getByTestId("fact-label").first().boundingBox();
+    expect(t && f && Math.abs(t.x - f.x) <= 1).toBe(true);
+    const sub = page.getByText(/vincent · .* · (Public|Private)/);
+    expect(await computed(sub, "font-size")).toBe("13px");
+  });
+
+  test("log sections are 56px rows with a boat glyph", async ({ page }) => {
+    await page.goto("/logs/9201");
+    const row = page.getByTestId("log-section").first();
+    await expect(row).toBeVisible();
+    const box = await row.boundingBox();
+    expect(box?.height).toBeGreaterThanOrEqual(56);
+    await expect(row.locator("svg")).toHaveCount(1);
+  });
+
+  test("a wrapped level pill keeps the age on the date line @small", async ({
+    page,
+  }) => {
+    await openLogs(page);
+    const c = card(page, "Public multi-section run");
+    const ago = await c.getByText(/ago$/).boundingBox();
+    const date = await c.getByText(/09 Oct 2026/).boundingBox();
+    expect(ago && date && ago.y + ago.height >= date.y + date.height - 1).toBe(
+      true,
+    );
+    expect(ago && date && ago.y >= date.y - 2).toBe(true);
   });
 });
