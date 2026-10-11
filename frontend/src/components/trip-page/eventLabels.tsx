@@ -1,9 +1,55 @@
 import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
-import FlightLandOutlinedIcon from "@mui/icons-material/FlightLandOutlined";
-import FlightTakeoffOutlinedIcon from "@mui/icons-material/FlightTakeoffOutlined";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import type { ReactNode } from "react";
 import { stayKind } from "@/components/trips/stayKinds";
+import { ArrivalIcon, DepartureIcon } from "@/components/trips/TripIcons";
 import { clockTime, formatTime } from "@/lib/format";
 import type { TripEvent } from "@/lib/tripTimeline";
+
+/** The icon column of an event line (22px) plus its 10px gap: where the text
+ * starts, and where a line without an icon has to indent to. */
+export const EVENT_ICON_COLUMN = 32;
+
+/** The event's glyph in its 22px column. */
+export function EventIcon({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      sx={{
+        width: 22,
+        flexShrink: 0,
+        display: "grid",
+        placeItems: "center",
+        height: 20,
+        color: "text.disabled",
+        "& svg": { fontSize: 20 },
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+/** An event's name (15/20, medium) or what it was (13/18, secondary). */
+export function EventText({
+  kind,
+  children,
+}: {
+  kind: "title" | "detail";
+  children: ReactNode;
+}) {
+  return (
+    <Typography
+      sx={
+        kind === "title"
+          ? { fontSize: 15, lineHeight: "20px", fontWeight: 500 }
+          : { fontSize: 13, lineHeight: "18px", color: "text.secondary" }
+      }
+    >
+      {children}
+    </Typography>
+  );
+}
 
 export function eventKey(event: TripEvent): string {
   switch (event.kind) {
@@ -33,20 +79,16 @@ export function eventLabels(event: TripEvent): {
   if (event.kind === "base") {
     const { Icon, label } = stayKind(event.stay.kind);
     return {
-      icon: <Icon sx={{ fontSize: 14 }} />,
+      icon: <Icon />,
       title: event.stay.name,
-      detail: `Based at ${label}`,
+      detail: `Based at ${label.toLowerCase()}`,
     };
   }
 
   if (event.kind === "arrives" || event.kind === "leaves") {
     const arriving = event.kind === "arrives";
     return {
-      icon: arriving ? (
-        <FlightLandOutlinedIcon sx={{ fontSize: 14 }} />
-      ) : (
-        <FlightTakeoffOutlinedIcon sx={{ fontSize: 14 }} />
-      ),
+      icon: arriving ? <ArrivalIcon /> : <DepartureIcon />,
       title: event.member.username,
       detail: withTime(
         arriving ? "Arrives" : "Leaves",
@@ -70,7 +112,7 @@ export function eventLabels(event: TripEvent): {
   ].join(" / ");
 
   return {
-    icon: <DirectionsBoatOutlinedIcon sx={{ fontSize: 14 }} />,
+    icon: <DirectionsBoatOutlinedIcon />,
     title: sections || descent.name || "A descent",
     detail: `${rivers ? `${rivers} · ` : ""}Paddled by ${descent.username ?? "a member"} · ${formatTime(descent.start_time)}`,
   };

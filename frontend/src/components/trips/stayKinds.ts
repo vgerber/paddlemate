@@ -1,10 +1,10 @@
 import type { SvgIconComponent } from "@mui/icons-material";
-import CabinOutlinedIcon from "@mui/icons-material/CabinOutlined";
 import CottageOutlinedIcon from "@mui/icons-material/CottageOutlined";
 import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
 import NightShelterOutlinedIcon from "@mui/icons-material/NightShelterOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import type { TripStayKind } from "@/lib/api";
+import { TentIcon } from "./TripIcons";
 
 interface StayKind {
   value: TripStayKind;
@@ -21,7 +21,7 @@ const OTHER: StayKind = {
 };
 
 export const STAY_KINDS: StayKind[] = [
-  { value: "camp", label: "Camp", Icon: CabinOutlinedIcon },
+  { value: "camp", label: "Camp", Icon: TentIcon },
   { value: "hotel", label: "Hotel", Icon: HotelOutlinedIcon },
   { value: "bivouac", label: "Bivouac", Icon: NightShelterOutlinedIcon },
   // Ferienhaus, holiday let, Airbnb - a whole place the group rents.

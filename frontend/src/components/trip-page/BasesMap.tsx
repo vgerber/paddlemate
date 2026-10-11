@@ -108,7 +108,8 @@ export default function BasesMap({
     <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, pb: 2 }}>
       <Box
         sx={{
-          height: { xs: 300, md: 400 },
+          // Short on a phone, so the bases below it stay in view.
+          height: { xs: "min(200px, 40vh)", md: 400 },
           border: "1px solid",
           borderColor: "divider",
           position: "relative",
@@ -122,7 +123,9 @@ export default function BasesMap({
           chrome={{ cooperativeGestures: true }}
         />
       </Box>
-      <Typography sx={factLabelSx}>
+      <Typography
+        sx={{ ...factLabelSx, fontSize: "0.8125rem", fontWeight: 400 }}
+      >
         {furthest.radiusKm > 0
           ? `Rings reach the farthest section on each base's list - ${furthest.radiusKm.toFixed(1)} km from ${furthest.name}`
           : "No sections on any watch list yet"}

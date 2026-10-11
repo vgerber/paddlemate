@@ -7,6 +7,7 @@ import { dateRange, todayIso } from "@/lib/format";
 import { useTripMembers } from "@/lib/hooks/useTrips";
 import { fonts, labelSx, theme } from "@/lib/theme";
 import MemberAvatar from "./MemberAvatar";
+import RolePill from "./RolePill";
 
 const { tokens } = theme;
 
@@ -61,15 +62,14 @@ export default function TripRow({
         >
           {trip.name}
         </Typography>
-        {trip.viewer_role === "admin" && (
-          <Typography sx={{ ...labelSx, flexShrink: 0 }}>Admin</Typography>
-        )}
+        {trip.viewer_role === "admin" && <RolePill>Admin</RolePill>}
       </Box>
 
       <Typography
         sx={{
           ...labelSx,
           fontSize: "0.8125rem",
+          fontWeight: 400,
           fontVariantNumeric: "tabular-nums",
         }}
       >
@@ -91,6 +91,7 @@ export default function TripRow({
         <Typography
           variant="body2"
           sx={{
+            fontSize: "0.875rem",
             overflow: "hidden",
             textOverflow: "ellipsis",
             display: "-webkit-box",

@@ -19,11 +19,20 @@ import {
   type TripDay,
 } from "@/lib/tripTimeline";
 import DayDetail, { type DayActions } from "./DayDetail";
-import { eventKey, eventLabels } from "./eventLabels";
+import {
+  EVENT_ICON_COLUMN,
+  EventIcon,
+  EventText,
+  eventKey,
+  eventLabels,
+} from "./eventLabels";
 import PlanCalendar from "./PlanCalendar";
 import { dayAtScroll } from "./planWeek";
 
 const { tokens } = theme;
+
+// Ink at 22%: the month's veil over the list. alphas has no step this light.
+const MONTH_SCRIM = "38";
 
 /**
  * The trip as it runs: the week pinned above, one card per day below, with
@@ -49,6 +58,7 @@ export default function TripTimeline({
   const today = todayIso();
   const scroller = useRef<HTMLDivElement>(null);
   const [current, setCurrent] = useState<string | null>(null);
+  const [monthOpen, setMonthOpen] = useState(false);
   // After a jump the list may not be able to scroll the day all the way to
   // the top; the jump stays the current day until the reader scrolls again.
   const jumped = useRef(false);
@@ -113,8 +123,26 @@ export default function TripTimeline({
 
   return (
     <Box
-      sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+      sx={{
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        flex: 1,
+        minHeight: 0,
+      }}
     >
+      {monthOpen && (
+        <Box
+          data-testid="month-scrim"
+          onClick={() => setMonthOpen(false)}
+          sx={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 1,
+            bgcolor: `${tokens.onSurface}${MONTH_SCRIM}`,
+          }}
+        />
+      )}
       <PlanCalendar
         current={shown}
         today={today}
@@ -122,6 +150,8 @@ export default function TripTimeline({
         to={trip.end_date ?? null}
         planned={planned}
         withEntries={withEntries}
+        open={monthOpen}
+        onOpenChange={setMonthOpen}
         onPick={jumpTo}
       />
       <Box
@@ -140,7 +170,7 @@ export default function TripTimeline({
           gap: 1,
           p: 1.5,
           // Leave room so the FAB never covers the last day.
-          pb: 12,
+          pb: { xs: 12, md: 1.5 },
         }}
       >
         {days.map((day) => (
@@ -255,7 +285,9 @@ function DayEntry({
       <Collapse in={!isOpen} timeout={durations.base}>
         <Stack direction="column" sx={{ gap: 1, mt: 1 }}>
           {day.events.length === 0 && (
-            <Typography sx={factLabelSx}>Rest</Typography>
+            <Typography sx={{ ...factLabelSx, pl: `${EVENT_ICON_COLUMN}px` }}>
+              Rest
+            </Typography>
           )}
 
           {plans.map((event) => {
@@ -277,7 +309,7 @@ function DayEntry({
           {unsectioned.map((descent) => (
             <EventLine
               key={`paddled-${descent.id}`}
-              icon={<DirectionsBoatOutlinedIcon sx={{ fontSize: 14 }} />}
+              icon={<DirectionsBoatOutlinedIcon />}
               title={descent.name ?? "A descent"}
               detail={`Paddled by ${descent.username ?? "a member"}`}
             />
@@ -294,16 +326,16 @@ function DayEntry({
 
 function RiverLine({ river }: { river: PaddledRiver }) {
   return (
-    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-      <Box sx={{ color: "text.disabled", pt: "2px", flexShrink: 0 }}>
-        <DirectionsBoatOutlinedIcon sx={{ fontSize: 14 }} />
-      </Box>
+    <Box sx={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+      <EventIcon>
+        <DirectionsBoatOutlinedIcon />
+      </EventIcon>
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="body2">{river.name}</Typography>
+        <EventText kind="title">{river.name}</EventText>
         {river.sections.map((section) => (
-          <Typography key={section.sectionId} sx={factLabelSx}>
+          <EventText key={section.sectionId} kind="detail">
             {section.name} · {section.paddlers.join(", ")}
-          </Typography>
+          </EventText>
         ))}
       </Box>
     </Box>
@@ -320,13 +352,11 @@ function EventLine({
   detail: string;
 }) {
   return (
-    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-      <Box sx={{ color: "text.disabled", pt: "2px", flexShrink: 0 }}>
-        {icon}
-      </Box>
+    <Box sx={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+      <EventIcon>{icon}</EventIcon>
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="body2">{title}</Typography>
-        <Typography sx={factLabelSx}>{detail}</Typography>
+        <EventText kind="title">{title}</EventText>
+        <EventText kind="detail">{detail}</EventText>
       </Box>
     </Box>
   );

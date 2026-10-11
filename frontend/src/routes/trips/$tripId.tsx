@@ -1,10 +1,11 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import LoadingBox from "@/components/states/LoadingBox";
 import TripDetail from "@/components/trip-page/TripDetail";
 import { useTrip } from "@/lib/hooks/useTrips";
-import { PANEL_HEIGHT } from "@/lib/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/trips/$tripId")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -20,6 +21,18 @@ function TripDetailPage() {
   const { tripId } = Route.useParams();
   const { edit } = Route.useSearch();
   const { data: trip, isLoading } = useTrip(Number(tripId));
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"), { noSsr: true });
+
+  // Desktop shows the trip beside the list; this address stays a valid link.
+  if (isDesktop) {
+    return (
+      <Navigate
+        to="/trips"
+        search={{ selected: Number(tripId), edit: edit || undefined }}
+        replace
+      />
+    );
+  }
 
   if (isLoading) return <LoadingBox size={40} pt={8} />;
 
