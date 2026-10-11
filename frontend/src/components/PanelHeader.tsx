@@ -3,7 +3,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import type { ReactNode } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 import UnderlineTabs from "./UnderlineTabs";
 
 interface PanelHeaderProps<T extends string> {
@@ -21,6 +21,8 @@ interface PanelHeaderProps<T extends string> {
     /** Swipe state from `useSwipeTabs`, so the underline follows a drag. */
     progress?: number;
     dragging?: boolean;
+    /** `gestureProps` from `useSwipeTabs`, so a swipe can start on the bar. */
+    gesture?: HTMLAttributes<HTMLElement>;
   };
 }
 
@@ -83,13 +85,15 @@ export default function PanelHeader<T extends string>({
       )}
 
       {tabs && (
-        <UnderlineTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          items={tabs.options}
-          progress={tabs.progress}
-          dragging={tabs.dragging}
-        />
+        <Box {...tabs.gesture} sx={{ touchAction: "pan-y" }}>
+          <UnderlineTabs
+            value={tabs.value}
+            onChange={tabs.onChange}
+            items={tabs.options}
+            progress={tabs.progress}
+            dragging={tabs.dragging}
+          />
+        </Box>
       )}
     </Box>
   );

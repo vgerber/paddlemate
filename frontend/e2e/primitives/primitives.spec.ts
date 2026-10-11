@@ -1,10 +1,5 @@
-import {
-  type CDPSession,
-  expect,
-  type Locator,
-  type Page,
-  test,
-} from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
+import { Finger } from "../support/finger";
 import {
   computed,
   expectNoHorizontalOverflow,
@@ -23,47 +18,39 @@ const TEAL = "rgb(14, 116, 144)";
 const tab = (page: Page, name: string) =>
   page.getByRole("tab", { name, exact: true });
 
-/** One finger driven through the devtools protocol. Steps are spaced so the
- * release speed stays near zero: a slow drag, never a flick. */
-class Finger {
-  private constructor(
-    private cdp: CDPSession,
-    private x: number,
-    private y: number,
-  ) {}
-
-  static async down(page: Page, x: number, y: number) {
-    const cdp = await page.context().newCDPSession(page);
-    await cdp.send("Input.dispatchTouchEvent", {
-      type: "touchStart",
-      touchPoints: [{ x, y }],
-    });
-    return new Finger(cdp, x, y);
-  }
-
-  async moveBy(dx: number, dy = 0, steps = 10, stepMs = 25) {
-    for (let i = 1; i <= steps; i++) {
-      await this.cdp.send("Input.dispatchTouchEvent", {
-        type: "touchMove",
-        touchPoints: [
-          { x: this.x + (dx * i) / steps, y: this.y + (dy * i) / steps },
-        ],
-      });
-      await new Promise((r) => setTimeout(r, stepMs));
-    }
-    this.x += dx;
-    this.y += dy;
-  }
-
-  async up() {
-    // Rest a moment so the release speed reads as zero.
-    await new Promise((r) => setTimeout(r, 150));
-    await this.cdp.send("Input.dispatchTouchEvent", {
-      type: "touchEnd",
-      touchPoints: [],
-    });
-    await this.cdp.detach();
-  }
+/** Starts timing at the next pointer release and resolves with the ms until
+ * the Logs tab is selected and its pane rests at full opacity. Call it before
+ * the release and await it after. */
+function timeSettle(page: Page): Promise<number> {
+  return page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        addEventListener(
+          "pointerup",
+          () => {
+            const t0 = performance.now();
+            const tick = () => {
+              const logs =
+                document.querySelector("[role=tab][aria-selected=true]")
+                  ?.textContent === "Logs";
+              const pane = [
+                ...document.querySelectorAll<HTMLElement>(
+                  "[data-testid=tab-pane]",
+                ),
+              ].find((el) => el.offsetParent !== null);
+              const cs = pane && getComputedStyle(pane);
+              if (logs && cs?.opacity === "1" && cs.transform === "none") {
+                resolve(performance.now() - t0);
+              } else {
+                requestAnimationFrame(tick);
+              }
+            };
+            tick();
+          },
+          { capture: true, once: true },
+        );
+      }),
+  );
 }
 
 /** The pane's horizontal translation in px, from its computed matrix. */
@@ -222,9 +209,26 @@ test.describe("swipeable tabs", () => {
     );
   });
 
-  test("under reduced motion the change is instant", async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
+  test("a swipe that starts on the tab bar works", async ({ page }) => {
+    const { pane, box } = await openSection(page);
+    const bar = await page.locator(".MuiTabs-root:visible").boundingBox();
+    if (!bar) throw new Error("no tab bar box");
+    const f = await Finger.down(
+      page,
+      bar.x + bar.width * 0.8,
+      bar.y + bar.height / 2,
+    );
+    await f.moveBy(-box.width * 0.55);
+    await f.up();
+    await expect(tab(page, "Logs")).toHaveAttribute("aria-selected", "true");
+    await expect.poll(() => paneX(pane)).toBe(0);
+  });
+
+  test("a committed swipe settles inside the slow ceiling", async ({
+    page,
+  }) => {
     const { box } = await openSection(page);
+    const settled = timeSettle(page);
     const f = await Finger.down(
       page,
       box.x + box.width * 0.8,
@@ -232,9 +236,31 @@ test.describe("swipeable tabs", () => {
     );
     await f.moveBy(-box.width * 0.55);
     await f.up();
-    // Inside the shortest settle time, which an animation would exceed.
-    await expect(tab(page, "Logs")).toHaveAttribute("aria-selected", "true", {
-      timeout: 80,
-    });
+    const ms = await settled;
+    // 360ms is `tokens.motion.slow`; the margin is the harness, not the app.
+    expect(ms, "release to a settled new pane, ms").toBeLessThan(360 + 30);
+    expect(ms).toBeGreaterThan(0);
+  });
+
+  test("under reduced motion the pane cross-fades in about 140ms", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const { pane, box } = await openSection(page);
+    const settled = timeSettle(page);
+    const f = await Finger.down(
+      page,
+      box.x + box.width * 0.8,
+      box.y + box.height / 2,
+    );
+    await f.moveBy(-box.width * 0.55);
+    // Nothing slides: the pane stays where the finger left it until the fade.
+    await f.up();
+    const ms = await settled;
+    expect(ms, "release to a settled new pane, ms").toBeGreaterThan(100);
+    // The fade is 140ms; rendering the new tab on a slow desktop adds to it.
+    expect(ms).toBeLessThan(360);
+    await expect(tab(page, "Logs")).toHaveAttribute("aria-selected", "true");
+    expect(await paneX(pane)).toBe(0);
   });
 });

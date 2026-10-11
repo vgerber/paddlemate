@@ -73,7 +73,12 @@ export default function UnderlineTabs<T extends string>({
       variant="scrollable"
       scrollButtons={false}
       slotProps={{ indicator: { style: indicatorStyle } }}
-      sx={{ "& .MuiTabs-flexContainer": { gap: 2.5 } }}
+      sx={{
+        // The scroller is its own touch-action boundary: without this a
+        // swipe that starts on the bar is taken as a sideways scroll.
+        "& .MuiTabs-scroller": { touchAction: "pan-y" },
+        "& .MuiTabs-flexContainer": { gap: 2.5 },
+      }}
     >
       {items.map((item, i) => (
         <Tab

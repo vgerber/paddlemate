@@ -171,6 +171,7 @@ export default function WaterwayBrowsePanel({
     ? {
         progress: swipe.progress,
         dragging: swipe.dragging,
+        gesture: swipe.gestureProps,
         value: sectionDetailTab as string,
         onChange: (t: string) =>
           onSectionDetailTabChange(t as SectionDetailTab),

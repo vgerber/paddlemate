@@ -6,7 +6,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { prefersReducedMotion, transition } from "@/lib/motion";
+import {
+  css,
+  durations,
+  prefersReducedMotion,
+  REDUCED_FADE_MS,
+  transition,
+} from "@/lib/motion";
 import {
   dragOffset,
   dragProgress,
@@ -30,11 +36,22 @@ interface Options {
  * zoomed chart) opt out with this attribute. */
 export const NO_SWIPE_ATTR = "data-no-swipe";
 
+/** Time for the old pane to leave the rest of its way: `instant` for a short
+ * hop to `fast` for a full width. With the new pane's `fast` fade the whole
+ * change stays under `slow`. */
+function leaveDuration(distance: number, width: number): number {
+  const share = width > 0 ? Math.min(1, Math.abs(distance) / width) : 0;
+  return durations.instant + (durations.fast - durations.instant) * share;
+}
+
 /** Horizontal swipe between tab panes. Spread `paneProps` on the element that
- * holds the active pane; the pane follows the finger by transform only and
- * settles on the next tab or springs back. Pass `progress` and `dragging` to
- * `UnderlineTabs` so its underline follows. Touch and pen only: a mouse keeps
- * text selection, and the tab bar stays the other way in. */
+ * holds the active pane; the pane follows the finger by transform only. A
+ * committed swipe sends it off the rest of its way and fades the next pane in,
+ * all inside `slow`; a short one springs back. Under reduced motion the pane
+ * cross-fades instead. Spread `gestureProps` on the tab bar so a swipe can
+ * start there too, and pass `progress` and `dragging` to `UnderlineTabs` so
+ * its underline follows. Touch and pen only: a mouse keeps text selection,
+ * and the tab bar stays the other way in. */
 export function useSwipeTabs({
   index,
   count,
@@ -52,7 +69,7 @@ export function useSwipeTabs({
   } | null>(null);
   const busy = useRef(false);
   const timer = useRef<number | undefined>(undefined);
-  const enterFrom = useRef(0);
+  const entering = useRef(false);
   const [progress, setProgress] = useState(0);
   const [dragging, setDragging] = useState(false);
 
@@ -66,25 +83,28 @@ export function useSwipeTabs({
     el.style.transform = x === 0 ? "" : `translate3d(${x}px,0,0)`;
   }, []);
 
-  // The new pane enters from the side the old one left toward.
+  // The new pane fades in once the index has changed.
   // biome-ignore lint/correctness/useExhaustiveDependencies: index is the trigger
   useLayoutEffect(() => {
-    const width = paneRef.current?.offsetWidth ?? 0;
-    const from = enterFrom.current;
-    enterFrom.current = 0;
-    if (!from || !width || prefersReducedMotion()) return;
-    place(from * width);
-    void paneRef.current?.offsetWidth;
-    place(0, settleDuration(width, width));
+    const el = paneRef.current;
+    if (!entering.current || !el) return;
+    entering.current = false;
+    const ms = prefersReducedMotion() ? REDUCED_FADE_MS / 2 : durations.fast;
+    el.style.opacity = "0";
+    void el.offsetWidth;
+    el.style.transition = `opacity ${ms}ms ${css.easeOut}`;
+    el.style.opacity = "";
     // `index` is the trigger; the rest is read from refs.
-  }, [index, place]);
+  }, [index]);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const reset = useCallback(() => {
     drag.current = null;
     busy.current = false;
+    entering.current = false;
     place(0);
+    if (paneRef.current) paneRef.current.style.opacity = "";
     setProgress(0);
     setDragging(false);
   }, [place]);
@@ -118,7 +138,7 @@ export function useSwipeTabs({
     d.offset = dragOffset(dx, index > 0, index < count - 1);
     d.samples.push({ x: e.clientX, t: e.timeStamp });
     place(d.offset);
-    setProgress(dragProgress(d.offset, e.currentTarget.offsetWidth));
+    setProgress(dragProgress(d.offset, paneRef.current?.offsetWidth ?? 0));
   };
 
   const onPointerUp = (e: PointerEvent<HTMLElement>) => {
@@ -126,7 +146,7 @@ export function useSwipeTabs({
     if (!d || e.pointerId !== d.id) return;
     drag.current = null;
     if (d.lock !== "horizontal") return;
-    const width = e.currentTarget.offsetWidth;
+    const width = paneRef.current?.offsetWidth ?? 0;
     d.samples.push({ x: e.clientX, t: e.timeStamp });
     const target = targetIndex(
       index,
@@ -146,24 +166,34 @@ export function useSwipeTabs({
     }
 
     const dir = target > index ? 1 : -1;
+    const el = paneRef.current;
+    const reduced = prefersReducedMotion();
     const commit = () => {
-      enterFrom.current = dir;
+      entering.current = true;
       busy.current = false;
       place(0);
+      // Hold the pane empty until the new index paints, then it fades in.
+      if (el) el.style.opacity = "0";
       setProgress(0);
       onIndexChange(target);
+      // If the index never changes, do not leave the pane blank.
+      timer.current = window.setTimeout(() => {
+        if (entering.current) reset();
+      }, durations.slow);
     };
-    if (prefersReducedMotion()) {
-      enterFrom.current = 0;
-      busy.current = false;
-      place(0);
-      setProgress(0);
-      onIndexChange(target);
+    busy.current = true;
+    setProgress(dir);
+    if (reduced) {
+      const half = REDUCED_FADE_MS / 2;
+      if (el) {
+        el.style.transition = `opacity ${half}ms ${css.easeIn}`;
+        el.style.opacity = "0";
+      }
+      timer.current = window.setTimeout(commit, half);
       return;
     }
-    busy.current = true;
-    const ms = settleDuration(width + (dir > 0 ? d.offset : -d.offset), width);
-    setProgress(dir);
+    const remaining = width + (dir > 0 ? d.offset : -d.offset);
+    const ms = leaveDuration(remaining, width);
     place(-dir * width, ms);
     timer.current = window.setTimeout(commit, ms);
   };
@@ -174,17 +204,23 @@ export function useSwipeTabs({
     reset();
   };
 
+  const gestureProps = {
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onPointerCancel,
+  };
+
   return {
     progress,
     dragging,
+    gestureProps,
     paneProps: {
       ref: (el: HTMLElement | null) => {
         paneRef.current = el;
       },
-      onPointerDown,
-      onPointerMove,
-      onPointerUp,
-      onPointerCancel,
+      ...gestureProps,
+      "data-reduced-fade": "",
       style: { touchAction: "pan-y" as const, willChange: "transform" },
     },
   };

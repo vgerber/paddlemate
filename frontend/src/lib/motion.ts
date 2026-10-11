@@ -24,6 +24,12 @@ export const css = {
   easeIn: motion.easeIn,
 } as const;
 
+/** How long a spinner waits before it shows, so a fast answer never flashes one. */
+export const SPINNER_DELAY_MS = 150;
+
+/** The cross-fade that replaces movement under reduced motion, out and in. */
+export const REDUCED_FADE_MS = 140;
+
 export function prefersReducedMotion(): boolean {
   return (
     typeof window !== "undefined" &&
