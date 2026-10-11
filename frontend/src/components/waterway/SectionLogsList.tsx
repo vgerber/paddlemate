@@ -6,6 +6,9 @@ import DescentCard from "@/components/descents/DescentCard";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import { useInfiniteDescents } from "@/lib/hooks/useDescents";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 interface SectionLogsListProps {
   sectionId: number;
@@ -39,10 +42,20 @@ export default function SectionLogsList({ sectionId }: SectionLogsListProps) {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      <Box sx={{ border: "1px solid", borderColor: "divider" }}>
-        {descents.map((descent) => (
+      {descents.map((descent) => (
+        <Box
+          key={descent.id}
+          data-testid="section-log"
+          sx={{
+            bgcolor: tokens.surface,
+            borderRadius: `${tokens.radii.md}px`,
+            boxShadow: tokens.elevation.e1,
+            px: 2,
+            overflow: "hidden",
+          }}
+        >
           <DescentCard
-            key={descent.id}
+            flush
             descent={descent}
             showAuthor
             onClick={() =>
@@ -53,8 +66,8 @@ export default function SectionLogsList({ sectionId }: SectionLogsListProps) {
               })
             }
           />
-        ))}
-      </Box>
+        </Box>
+      ))}
       {hasNextPage && (
         <Button
           size="small"

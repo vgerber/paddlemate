@@ -7,8 +7,9 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import type { WaterwayListItem } from "@/lib/api";
+import { humanize } from "@/lib/format";
 import ListGroupHeader from "./ListGroupHeader";
-import RiverRow from "./RiverRow";
+import RiverRow, { cardRowSx } from "./RiverRow";
 
 interface PendingRiver {
   id: number;
@@ -56,7 +57,7 @@ function RiverItem({
       onClick={() => onSelect(waterway.id)}
       trailing={
         <Chip
-          label={waterway.waterway_type.toUpperCase()}
+          label={humanize(waterway.waterway_type)}
           color="primary"
           size="small"
           variant="outlined"
@@ -90,7 +91,10 @@ function PendingRiverItems({
   return (
     <>
       {pendingRivers.map((p) => (
-        <ListItem key={`pending-${p.id}`} sx={{ mb: 0.5, opacity: 0.6 }}>
+        <ListItem
+          key={`pending-${p.id}`}
+          sx={{ ...cardRowSx, mb: 0.75, gap: 1, opacity: 0.6 }}
+        >
           <ListItemText
             primary={p.name}
             slotProps={{
@@ -99,7 +103,7 @@ function PendingRiverItems({
           />
           <Chip
             icon={<HourglassEmptyIcon sx={{ fontSize: "0.8rem !important" }} />}
-            label="PENDING APPROVAL"
+            label="Pending approval"
             color="warning"
             size="small"
             variant="outlined"

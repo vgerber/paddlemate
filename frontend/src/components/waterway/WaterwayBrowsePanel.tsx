@@ -65,6 +65,7 @@ interface WaterwayBrowsePanelProps {
 }
 
 const SECTION_TABS: SectionDetailTab[] = ["features", "logs", "notes"];
+const RIVER_TABS: DetailTab[] = ["sections", "gauges", "notes"];
 
 export default function WaterwayBrowsePanel({
   waterwayId,
@@ -160,11 +161,17 @@ export default function WaterwayBrowsePanel({
     !inFeatures &&
     selectedSectionId == null;
 
+  // One swipe for whichever tab bar is showing: the section's or the river's.
   const swipe = useSwipeTabs({
-    index: SECTION_TABS.indexOf(sectionDetailTab),
-    count: SECTION_TABS.length,
-    onIndexChange: (i) => onSectionDetailTabChange(SECTION_TABS[i]),
-    enabled: inFeatures && !isLoading,
+    index: inFeatures
+      ? SECTION_TABS.indexOf(sectionDetailTab)
+      : RIVER_TABS.indexOf(tab),
+    count: inFeatures ? SECTION_TABS.length : RIVER_TABS.length,
+    onIndexChange: (i) =>
+      inFeatures
+        ? onSectionDetailTabChange(SECTION_TABS[i])
+        : onTabChange(RIVER_TABS[i]),
+    enabled: !isLoading,
   });
 
   const headerTabs = inFeatures
@@ -182,6 +189,9 @@ export default function WaterwayBrowsePanel({
         ],
       }
     : {
+        progress: swipe.progress,
+        dragging: swipe.dragging,
+        gesture: swipe.gestureProps,
         value: tab as string,
         onChange: (t: string) => onTabChange(t as DetailTab),
         options: [
@@ -219,7 +229,7 @@ export default function WaterwayBrowsePanel({
       >
         <Box
           data-testid="tab-pane"
-          {...(inFeatures ? swipe.paneProps : {})}
+          {...swipe.paneProps}
           sx={{
             flex: 1,
             overflowY: "auto",
