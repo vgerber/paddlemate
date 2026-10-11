@@ -27,6 +27,8 @@ interface Props {
   onChange: (patch: Partial<Audience>) => void;
   /** What the choice applies to, shown under the toggle. */
   privateHint?: string;
+  /** Drops the "Visibility" label where a heading already names the choice. */
+  hideLabel?: boolean;
 }
 
 /**
@@ -38,6 +40,7 @@ export default function VisibilityPicker({
   value,
   onChange,
   privateHint,
+  hideLabel,
 }: Props) {
   const [userInput, setUserInput] = useState("");
   const { data: groups } = useGroups();
@@ -49,7 +52,7 @@ export default function VisibilityPicker({
   return (
     <>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        <Typography sx={factLabelSx}>Visibility</Typography>
+        {!hideLabel && <Typography sx={factLabelSx}>Visibility</Typography>}
         <ToggleButtonGroup
           exclusive
           value={value.type}

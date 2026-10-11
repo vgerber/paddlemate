@@ -34,6 +34,7 @@ export default function StepDetails({ form, onChange }: StepProps) {
 
       <FormSection label="Who can see it" hint="Private logs are only yours.">
         <VisibilityPicker
+          hideLabel
           value={{
             type: form.visibility_type,
             groups: form.shared_groups,
