@@ -7,10 +7,16 @@ import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { factLabelSx } from "@/components/Fact";
 import EmptyState from "@/components/states/EmptyState";
+import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { Trip } from "@/lib/api";
 import { formatDate, todayIso } from "@/lib/format";
-import { useTripTimeline } from "@/lib/hooks/useTrips";
+import { useTripDescents } from "@/lib/hooks/useDescents";
+import {
+  useTripMembers,
+  useTripStays,
+  useTripTimeline,
+} from "@/lib/hooks/useTrips";
 import { durations } from "@/lib/motion";
 import { alphas, fonts, theme } from "@/lib/theme";
 import {
@@ -34,13 +40,18 @@ import TripWeek from "./TripWeek";
 
 const { tokens } = theme;
 
+/** Days before the start have no number of their own. */
+function dayLabel(day: number): string {
+  return day < 1 ? "Before" : `Day ${day}`;
+}
+
 // Ink at 22%: the month's veil over the list. alphas has no step this light.
 const MONTH_SCRIM = "38";
 
 /**
  * The trip as it runs: the week pinned above, one card per day below, with
  * who turned up, where the group was based and what got paddled. Days before
- * the start count backwards, so an early arrival reads as Day -1.
+ * the start count backwards, so an early arrival reads as "Before".
  *
  * A day is the unit you act on, and it opens where it sits: the plan stays on
  * screen around it, so moving between days costs nothing.
@@ -65,6 +76,13 @@ export default function TripTimeline({
   membersBelow?: boolean;
 }) {
   const { days, isLoading } = useTripTimeline(trip);
+  // The same three fetches the timeline is built from (deduped): a failed
+  // one must not read as an empty plan.
+  const loadFailed = [
+    useTripMembers(trip.id),
+    useTripStays(trip.id),
+    useTripDescents(trip.id),
+  ].find((q) => q.isError && !q.data);
   const today = todayIso();
   const scroller = useRef<HTMLDivElement>(null);
   const [current, setCurrent] = useState<string | null>(null);
@@ -116,6 +134,17 @@ export default function TripTimeline({
   }, [isLoading]);
 
   if (isLoading) return <LoadingBox size={40} pt={6} />;
+
+  if (loadFailed) {
+    return (
+      <ErrorState
+        error={loadFailed.error}
+        fallback="Could not load the plan."
+        onRetry={() => loadFailed.refetch()}
+        py={6}
+      />
+    );
+  }
 
   if (days.length === 0) {
     return (
@@ -243,7 +272,7 @@ function DayEntry({
         }
       }}
       aria-expanded={isOpen}
-      aria-label={`Day ${day.day}, ${formatDate(day.date)}`}
+      aria-label={`${dayLabel(day.day)}, ${formatDate(day.date)}`}
       sx={{
         flexShrink: 0,
         cursor: "pointer",
@@ -271,7 +300,7 @@ function DayEntry({
             flex: 1,
           }}
         >
-          Day {day.day}
+          {dayLabel(day.day)}
           {isToday && (
             <Box
               component="span"

@@ -100,7 +100,7 @@ export default function ToolsList() {
                 {tool.description}
               </Typography>
             </Box>
-            {count != null && (
+            {count != null && count > 0 && (
               <Typography
                 color="textSecondary"
                 sx={{

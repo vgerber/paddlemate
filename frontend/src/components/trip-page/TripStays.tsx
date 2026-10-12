@@ -12,6 +12,7 @@ import { factLabelSx } from "@/components/Fact";
 import MarkdownText from "@/components/MarkdownText";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import EmptyState from "@/components/states/EmptyState";
+import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import { stayKind } from "@/components/trips/stayKinds";
 import WaterLevelChip from "@/components/WaterLevelChip";
@@ -58,10 +59,22 @@ export default function TripStays({
   onDeleteStay,
 }: Props) {
   const [openId, setOpenId] = useState<number | null>(null);
-  const { data: stays, isLoading } = useTripStays(tripId);
-  const { data: candidates } = useTripCandidates(tripId, isMember);
+  const staysQuery = useTripStays(tripId);
+  const { data: stays, isLoading } = staysQuery;
+  const candidatesQuery = useTripCandidates(tripId, isMember);
+  const candidates = candidatesQuery.data;
 
   if (isLoading) return <LoadingBox size={40} pt={6} />;
+  if (staysQuery.isError && !stays) {
+    return (
+      <ErrorState
+        error={staysQuery.error}
+        fallback="Could not load the bases."
+        onRetry={() => staysQuery.refetch()}
+        py={6}
+      />
+    );
+  }
 
   const list = stays ?? [];
   // The same colour the base wears on the map above, so a ring and a row are
@@ -71,13 +84,7 @@ export default function TripStays({
 
   if (list.length === 0) {
     return (
-      <EmptyState
-        icon={
-          <PlaceOutlinedIcon sx={{ fontSize: 48, color: "text.disabled" }} />
-        }
-        title="No bases yet."
-        py={6}
-      />
+      <EmptyState icon={<PlaceOutlinedIcon />} title="No bases yet." py={6} />
     );
   }
 
@@ -85,6 +92,14 @@ export default function TripStays({
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
       {showMap && <BasesMap tripId={tripId} isMember={isMember} />}
 
+      {candidatesQuery.isError && !candidates && (
+        <ErrorState
+          error={candidatesQuery.error}
+          fallback="Could not load the proposed bases."
+          onRetry={() => candidatesQuery.refetch()}
+          py={2}
+        />
+      )}
       <TripCandidates
         tripId={tripId}
         candidates={candidates ?? []}

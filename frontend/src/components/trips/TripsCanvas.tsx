@@ -8,6 +8,8 @@ import CanvasLayout from "@/components/canvas/CanvasLayout";
 import FloatingCard from "@/components/canvas/FloatingCard";
 import DockedAction from "@/components/DockedAction";
 import ListPaneHeader from "@/components/ListPaneHeader";
+import ErrorState from "@/components/states/ErrorState";
+import LoadingBox from "@/components/states/LoadingBox";
 import TripDetail from "@/components/trip-page/TripDetail";
 import TripMembersCard from "@/components/trip-page/TripMembersCard";
 import { useTripScene } from "@/components/trip-page/useTripScene";
@@ -23,6 +25,8 @@ interface Props {
   count: number;
   loading: boolean;
   trip: Trip | null;
+  /** The open trip's own fetch, while there is no trip to show yet. */
+  opening?: { isError: boolean; error: unknown; refetch: () => unknown };
   creating: boolean;
   editing: boolean;
   onNew: () => void;
@@ -40,6 +44,7 @@ export default function TripsCanvas({
   count,
   loading,
   trip,
+  opening,
   creating,
   editing,
   onNew,
@@ -56,7 +61,7 @@ export default function TripsCanvas({
   return (
     <CanvasLayout>
       {/* An open trip is the one card; its back arrow returns to the list. */}
-      {(creating || !trip) && (
+      {(creating || (!trip && !opening)) && (
         <FloatingCard
           id="list"
           side="left"
@@ -95,6 +100,30 @@ export default function TripsCanvas({
             sx={{ height: "100%", display: "flex", flexDirection: "column" }}
           >
             <TripForm embedded onSave={onSaved} onCancel={onClose} />
+          </Box>
+        </FloatingCard>
+      )}
+
+      {!creating && !trip && opening && (
+        <FloatingCard
+          id="trip"
+          side="left"
+          kind="side"
+          screen="trips"
+          title="Trip"
+          onClose={onClose}
+        >
+          <Box data-testid="trip-panel">
+            {opening.isError ? (
+              <ErrorState
+                error={opening.error}
+                fallback="Could not load this trip."
+                onRetry={() => opening.refetch()}
+                py={8}
+              />
+            ) : (
+              <LoadingBox size={40} pt={8} />
+            )}
           </Box>
         </FloatingCard>
       )}

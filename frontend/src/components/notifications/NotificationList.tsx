@@ -6,6 +6,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { StateTile } from "@/components/states/EmptyState";
+import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { TripEvent } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
@@ -29,7 +30,8 @@ export default function NotificationList({
   /** Called after navigating to a trip, e.g. to close a popover. */
   onOpenTrip?: () => void;
 }) {
-  const { data, isLoading } = useNotifications(true);
+  const query = useNotifications(true);
+  const { data, isLoading } = query;
   const refresh = useRefreshNotifications();
   // The count beside the bell may predate this list - changes read on
   // another device, a trip left, old ones pruned. Opening shows both fresh.
@@ -50,6 +52,16 @@ export default function NotificationList({
   }, [newest, hasUnread, mutate]);
 
   if (isLoading) return <LoadingBox size={28} pt={3} />;
+  if (query.isError && !data) {
+    return (
+      <ErrorState
+        error={query.error}
+        fallback="Could not load your notifications."
+        onRetry={() => query.refetch()}
+        py={5}
+      />
+    );
+  }
   if (!data?.items.length) {
     return (
       <Box
