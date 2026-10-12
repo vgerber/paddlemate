@@ -49,9 +49,9 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   action. A finished flow ends the same way.
 - Forms are built from labelled blocks (`FormSection`): a heading, one hint line
   saying what the block is for, and an optional action in the heading.
-- **Rows** are cards with the soft shadow, not bordered boxes. A selected trip,
-  proposal, gauge or settings card gets a 2px teal ring; a selected river row
-  (`cardRowSx`) takes a teal wash instead. A row's actions are one overflow menu (`RowMenu`).
+- **Rows** are cards with the soft shadow, not bordered boxes. The open row in
+  every list (trip, proposal, gauge, settings, river) gets the teal wash and
+  the 3px inset bar of `canvas/flatRow.ts`. A row's actions are one overflow menu (`RowMenu`).
 - **Filters** are chips under the search field: teal when set, one tap opens a
   sheet with the exact fields. The search screen has the header and tabs like
   every other screen (Name, Area, Region), results lead with Sections.

@@ -514,7 +514,7 @@ test.describe("canvas", () => {
     await expect(side.getByRole("button", { name: "Back" })).toHaveCount(0);
     await expect(page.locator(".maplibregl-map")).toHaveCount(1);
     await expect(listCard(page)).not.toHaveAttribute("data-collapsed");
-    // The list keeps its ring on the open row.
+    // The list marks the open row with the teal bar.
     expect(await computed(card(page, "Mittelschwall"), "box-shadow")).toContain(
       "14, 116, 144",
     );

@@ -70,19 +70,19 @@ export default function ProposalReviewControls({
           }}
         >
           <Button
+            variant="contained"
+            onClick={() => setReviewAction("approved")}
+            sx={{ minHeight: tokens.touch.min }}
+          >
+            Approve
+          </Button>
+          <Button
             variant="outlined"
             color="inherit"
             onClick={() => setReviewAction("rejected")}
             sx={{ minHeight: tokens.touch.min }}
           >
             Reject
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => setReviewAction("approved")}
-            sx={{ minHeight: tokens.touch.min }}
-          >
-            Approve
           </Button>
         </Box>
       )}
