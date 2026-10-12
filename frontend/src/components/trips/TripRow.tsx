@@ -6,7 +6,7 @@ import { tripStanding } from "@/components/trip-page/planWeek";
 import type { Trip } from "@/lib/api";
 import { dateRange, todayIso } from "@/lib/format";
 import { useTripMembers } from "@/lib/hooks/useTrips";
-import { fonts, labelSx, theme } from "@/lib/theme";
+import { alphas, fonts, labelSx, theme } from "@/lib/theme";
 import MemberAvatar from "./MemberAvatar";
 import RolePill from "./RolePill";
 
@@ -44,9 +44,9 @@ export default function TripRow({
         textAlign: "left",
         p: 1.75,
         borderRadius: `${tokens.radii.md}px`,
-        bgcolor: tokens.surface,
+        bgcolor: selected ? `${tokens.primary}${alphas.wash}` : tokens.surface,
         boxShadow: selected
-          ? `inset 0 0 0 2px ${tokens.primary}, ${tokens.elevation.e1}`
+          ? `inset 3px 0 0 ${tokens.primary}, ${tokens.elevation.e1}`
           : tokens.elevation.e1,
         ...desktopFlatRow,
       }}

@@ -5,7 +5,7 @@ import { desktopFlatRow } from "@/components/canvas/flatRow";
 import type { Proposal } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
 import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
-import { fonts, theme } from "@/lib/theme";
+import { alphas, fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -49,10 +49,10 @@ export default function ProposalRow({
         py: 1.5,
         minHeight: 64,
         borderRadius: `${tokens.radii.md}px`,
-        bgcolor: tokens.surface,
-        // A selected card keeps its ground and gains a 2px ring.
+        bgcolor: selected ? `${tokens.primary}${alphas.wash}` : tokens.surface,
+        // The open row takes the teal wash and a 3px bar at its left edge.
         boxShadow: selected
-          ? `inset 0 0 0 2px ${tokens.primary}, ${tokens.elevation.e1}`
+          ? `inset 3px 0 0 ${tokens.primary}, ${tokens.elevation.e1}`
           : tokens.elevation.e1,
         ...desktopFlatRow,
         "&.Mui-focusVisible": {

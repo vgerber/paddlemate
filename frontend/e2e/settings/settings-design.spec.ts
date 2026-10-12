@@ -26,17 +26,19 @@ test.describe("settings list rows", () => {
     expect(await computed(list(page), "padding")).toBe("12px");
   });
 
-  test("the open group is a white card with a ring; focus looks different", async ({
+  test("the open group has the teal wash and 3px bar; focus looks different", async ({
     page,
   }) => {
     test.skip(!isDesktop(page), "a phone has no open group");
     await page.goto("/settings?group=account");
     const open = list(page).getByRole("button", { name: "Account" });
-    expect(await computed(open, "background-color")).toBe("rgb(255, 255, 255)");
+    expect(await computed(open, "background-color")).not.toBe(
+      "rgb(255, 255, 255)",
+    );
     const shadow = await computed(open, "box-shadow");
     expect(shadow).toContain(TEAL);
     expect(shadow).toContain("inset");
-    expect(shadow).toContain("2px");
+    expect(shadow).toContain("3px");
 
     const other = list(page).getByRole("button", { name: "Access tokens" });
     await page.keyboard.press("Tab");

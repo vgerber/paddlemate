@@ -2,7 +2,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
-import { theme } from "@/lib/theme";
+import { alphas, theme } from "@/lib/theme";
 import { GROUPS, type GroupId } from "./groups";
 
 const { tokens } = theme;
@@ -38,8 +38,8 @@ export default function SettingsList({
             py: 1.25,
             px: 1.75,
             "&.Mui-selected, &.Mui-selected:hover": {
-              bgcolor: tokens.surfaceLowest,
-              boxShadow: `inset 0 0 0 2px ${tokens.primary}, ${tokens.elevation.e1}`,
+              bgcolor: `${tokens.primary}${alphas.wash}`,
+              boxShadow: `inset 3px 0 0 ${tokens.primary}, ${tokens.elevation.e1}`,
             },
             "&.Mui-focusVisible": {
               outline: `2px solid ${tokens.primary}`,
