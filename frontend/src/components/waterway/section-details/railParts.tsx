@@ -44,6 +44,32 @@ export function RailLine({ top, bottom, dashed }: RailShape) {
   );
 }
 
+/** The number a feature carries on its row and its map pin. */
+export function NumberDisc({ n, size = DISC }: { n: number; size?: number }) {
+  return (
+    <Box
+      data-row-disc
+      data-pin-number={n}
+      sx={{
+        position: "relative",
+        zIndex: 1,
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        bgcolor: tokens.primary,
+        color: tokens.onPrimary,
+        display: "grid",
+        placeItems: "center",
+        flexShrink: 0,
+        fontSize: "0.75rem",
+        fontWeight: 600,
+      }}
+    >
+      {n}
+    </Box>
+  );
+}
+
 /** A point feature's icon in a white disc on the rail. */
 export function IconDisc({
   type,
@@ -79,10 +105,13 @@ export function RangeTile({
   type,
   open,
   foldable,
+  n,
 }: {
   type: FeatureType;
   open: boolean;
   foldable: boolean;
+  /** Its number, in place of the type icon. */
+  n?: number;
 }) {
   return (
     <Box
@@ -100,7 +129,11 @@ export function RangeTile({
         flexShrink: 0,
       }}
     >
-      <FeatureTypeIcon type={type} size={20} />
+      {n != null ? (
+        <NumberDisc n={n} size={DISC} />
+      ) : (
+        <FeatureTypeIcon type={type} size={20} />
+      )}
       {foldable && (
         <Box
           aria-hidden="true"

@@ -5,7 +5,15 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { layout } from "@/components/canvas/canvasStore";
 import {
   TIME_RANGE_OPTIONS,
   typeLabel,
@@ -31,6 +39,23 @@ const heights = {
   base: { xs: "clamp(160px, 24vh, 210px)", md: "clamp(200px, 26vh, 340px)" },
   tall: { xs: 340, md: "clamp(280px, 42vh, 520px)" },
 } as const;
+
+/** Reports the options row's height to the dock while it is open, so the dock
+ * grows by it and the free map area's padding follows. */
+function useDockExtra(active: boolean, ref: RefObject<HTMLElement | null>) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!active || !el) return;
+    const report = () => layout.setDockExtra(el.offsetHeight);
+    report();
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      layout.setDockExtra(0);
+    };
+  }, [active, ref]);
+}
 
 /** Today's readings show their time, older ones their date. */
 function readingTime(iso: string): string {
@@ -98,6 +123,8 @@ export default function ChartCard({
   const closeRef = useRef<HTMLButtonElement>(null);
   const openRef = useRef<HTMLButtonElement>(null);
   const toggled = useRef(false);
+  const optionsRef = useRef<HTMLDivElement>(null);
+  useDockExtra(docked && open, optionsRef);
   // The control that was pressed leaves the page; hand focus to its
   // counterpart so a keyboard user never lands on the body.
   useEffect(() => {
@@ -139,7 +166,6 @@ export default function ChartCard({
       sx={
         docked
           ? {
-              position: "relative",
               height: "100%",
               display: "flex",
               flexDirection: "column",
@@ -159,6 +185,7 @@ export default function ChartCard({
     >
       {open && (
         <Box
+          ref={optionsRef}
           sx={{
             flexShrink: 0,
             borderBottom: "1px solid",
@@ -166,15 +193,8 @@ export default function ChartCard({
             px: 1.75,
             ...(docked
               ? {
-                  // One row laid over the top of the plot, where the closed
-                  // card shows its reading outline, so the plot keeps its
-                  // full height.
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  zIndex: 1,
-                  bgcolor: `${tokens.surface}f2`,
+                  // The dock grows by this row (see useDockExtra), so the
+                  // plot keeps its full height.
                   display: "flex",
                   flexWrap: "wrap",
                   alignItems: "center",

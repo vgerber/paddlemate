@@ -2,7 +2,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { theme } from "@/lib/theme";
+import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -25,7 +25,7 @@ export const cardRowSx = {
 
 /** A row of a list inside the desktop card, which is already a white
  * surface: no card of its own, a dimmed rule under it, and the selected row
- * wears the 2px teal ring. On a phone the list sits on the grey ground and
+ * wears the teal bar and wash of `canvas/flatRow`. On a phone the list sits on the grey ground and
  * keeps `cardRowSx`. */
 export const flatRowSx = {
   bgcolor: "transparent",
@@ -36,9 +36,9 @@ export const flatRowSx = {
   borderBottom: `1px solid ${tokens.outlineVariant}55`,
   "&:hover": { bgcolor: tokens.surfaceLow },
   "&.Mui-selected": {
-    bgcolor: "transparent",
-    boxShadow: `inset 0 0 0 2px ${tokens.primary}`,
-    "&:hover": { bgcolor: tokens.surfaceLow },
+    bgcolor: `${tokens.primary}${alphas.wash}`,
+    boxShadow: `inset 3px 0 0 ${tokens.primary}`,
+    "&:hover": { bgcolor: `${tokens.primary}${alphas.wash}` },
   },
 } as const;
 

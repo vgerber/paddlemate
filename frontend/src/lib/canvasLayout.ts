@@ -145,11 +145,13 @@ function edges(placements: Placement[], windowWidth: number) {
 }
 
 /** Where the chart dock sits: from the rightmost left card plus a margin to
- * the leftmost right card minus a margin. */
+ * the leftmost right card minus a margin. `extra` is the chart's options row
+ * while open, so the plot keeps its full height. */
 export function dockRect(
   placements: Placement[],
   windowWidth: number,
   windowHeight: number,
+  extra = 0,
 ): DockRect {
   const e = edges(placements, windowWidth);
   const m = canvas.margin;
@@ -158,7 +160,7 @@ export function dockRect(
   return {
     left,
     width: Math.max(0, right - left),
-    height: dockHeight(windowHeight),
+    height: dockHeight(windowHeight) + extra,
   };
 }
 

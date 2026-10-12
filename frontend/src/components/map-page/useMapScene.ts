@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { MapScene } from "@/components/canvas/scene";
+import { setFeatureNumbers } from "@/components/map/featureNumbers";
 import type { NotePin, PointPin } from "@/components/map/Map";
+import { featureNumbers } from "@/components/waterway/section-details/rows";
 import {
   proposalToPseudoFeature,
   spansWholeSection,
@@ -207,6 +209,12 @@ export function useMapScene(state: MapPageState) {
     const line = lineCoords(selectedSection.location);
     if (!line) return selectedSection.features;
     return selectedSection.features.filter((f) => !spansWholeSection(f, line));
+  }, [selectedSection]);
+
+  // The pins carry the numbers of the rows in the section's feature list.
+  useEffect(() => {
+    setFeatureNumbers(selectedSection ? featureNumbers(selectedSection) : null);
+    return () => setFeatureNumbers(null);
   }, [selectedSection]);
 
   // Stable identity - inline mapping in JSX would rebuild the array every

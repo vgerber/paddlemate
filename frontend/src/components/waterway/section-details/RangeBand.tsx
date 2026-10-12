@@ -126,7 +126,12 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
               bottom={open || !endsList}
               dashed={railDashed}
             />
-            <RangeTile type={type} open={open} foldable />
+            <RangeTile
+              type={type}
+              open={open}
+              foldable
+              n={ctx.numbers?.get(item.feature.id)}
+            />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0, pb: 0.75 }}>
             <Box

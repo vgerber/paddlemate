@@ -19,11 +19,13 @@ import { css, durations } from "@/lib/motion";
 import { theme } from "@/lib/theme";
 import { FeatureStrip } from "./FeatureStrip";
 import { FeatureNode } from "./RangeBand";
-import { splitWholeRunGrades } from "./rows";
+import { featureNumbers, splitWholeRunGrades } from "./rows";
+import SectionFacts from "./SectionFacts";
 import type { ComputedFeature } from "./types";
 import {
   buildTree,
   computeExtent,
+  defaultRangeFeature,
   featureName,
   proposalToComputedFeature,
 } from "./utils";
@@ -148,8 +150,11 @@ export default function FeatureTimeline({
         onOpenHistory({ kind: "feature", id: cf.feature.id })
     : undefined;
 
+  const numbers = useMemo(() => featureNumbers(section), [section]);
+
   const ctx = {
     activeId,
+    numbers,
     onHistoryItem,
     onItemClick: handleItemClick,
     onEditItem,
@@ -208,6 +213,11 @@ export default function FeatureTimeline({
         minWidth: 0,
       }}
     >
+      <SectionFacts
+        waterwayId={section.waterway_id}
+        sectionId={section.id}
+        preferredFeatureId={defaultRangeFeature(section)?.id}
+      />
       <Box
         sx={{
           display: "flex",
