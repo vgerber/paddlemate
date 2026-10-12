@@ -14,7 +14,11 @@ import TripDetail from "@/components/trip-page/TripDetail";
 import TripMembersCard from "@/components/trip-page/TripMembersCard";
 import { useTripScene } from "@/components/trip-page/useTripScene";
 import type { Trip } from "@/lib/api";
+import { theme } from "@/lib/theme";
 import TripForm from "./TripForm";
+
+const { tokens } = theme;
+const { canvas } = tokens;
 
 /** From this window width the members get a card of their own. */
 export const MEMBERS_CARD_FROM = 1600;
@@ -139,7 +143,16 @@ export default function TripsCanvas({
         >
           <Box
             data-testid="trip-panel"
-            sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+            sx={{
+              height: "100%",
+              // The card is as tall as its content, so a percentage height
+              // has nothing to resolve against: bound the panel to the card's
+              // own limit, or the card scrolls header and all and the plan
+              // and tab scrollers never do.
+              maxHeight: `calc(100vh - ${tokens.chrome.appBar + 2 * canvas.margin}px)`,
+              display: "flex",
+              flexDirection: "column",
+            }}
           >
             <TripDetail
               trip={trip}
