@@ -78,7 +78,7 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 | Search | Tabs Name, Area, Region; a Filters sheet (country, grade, Water now); the chosen levels live in the `water` URL param |
 | Map region mode | The search panel (a peek sheet on a phone, the card on desktop) with the region field, level chips, and "Part of" naming the parents of a picked region; the regions stay visible on the map |
 | Logs | Two panes on desktop; the date is a picker field |
-| Trips | Plan, Bases, Members and Logs tabs; the Plan pins a week strip with a dot on days that have runs and opens to a month; bases and candidate bases; admins get Add member and the trip actions |
+| Trips | Plan, Bases, Members and Logs tabs; the Plan pins a week strip with a dot on days that have runs and opens to a month; its days read in three states - past quiet (sunk ground, no shadow, grey heading), today ringed in teal, upcoming white with a hairline outline; bases and candidate bases; admins get Add member and the trip actions |
 | Proposals | The diff shows the before struck through next to the after; reviewing opens a dialog |
 | Settings | Two panes on desktop; Profile, Inbox and Tools on a phone; an access token is shown once, when made |
 

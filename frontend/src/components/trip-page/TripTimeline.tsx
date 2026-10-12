@@ -249,9 +249,11 @@ function DayEntry({
   actions: DayActions;
   onToggle: () => void;
 }) {
-  // A day still ahead is a plan, not a record: it sits outlined, not raised.
+  // Three states: a day behind is quiet (sunk, no shadow, grey heading), today
+  // wears the ring, and a day still ahead is white and outlined.
   const planned = day.date > today;
   const isToday = day.date === today;
+  const past = day.date < today;
   const plans = day.events.filter((e) => e.kind !== "paddled");
   const { rivers, unsectioned } = paddledByRiver(day.events);
 
@@ -280,12 +282,12 @@ function DayEntry({
         px: 1.75,
         py: 1.5,
         borderRadius: `${tokens.radii.md}px`,
-        bgcolor: planned ? "transparent" : tokens.surface,
+        bgcolor: past ? tokens.surfaceLow : tokens.surfaceLowest,
         boxShadow: isToday
           ? `inset 0 0 0 2px ${tokens.primary}, ${tokens.elevation.e1}`
           : planned
             ? `inset 0 0 0 1px ${tokens.outlineVariant}`
-            : tokens.elevation.e1,
+            : "none",
         outlineOffset: 2,
         ...(isOpen ? { bgcolor: `${tokens.primary}${alphas.tint}` } : {}),
       }}
@@ -298,6 +300,7 @@ function DayEntry({
             fontSize: 15,
             fontWeight: 700,
             flex: 1,
+            color: past ? "text.secondary" : "text.primary",
           }}
         >
           {dayLabel(day.day)}

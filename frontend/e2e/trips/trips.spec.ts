@@ -88,6 +88,52 @@ test.describe("trip list", () => {
 });
 
 test.describe("trip plan", () => {
+  test("the plan scrolls inside the card, header and tabs stay", async ({
+    page,
+  }) => {
+    await openPlan(page);
+    const box = scroller(page);
+    const fits = await box.evaluate((el) => el.scrollHeight <= el.clientHeight);
+    test.skip(fits, "plan fits the window");
+    const bb = await box.boundingBox();
+    if (!bb) throw new Error("no plan box");
+    await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2);
+    await page.mouse.wheel(0, 400);
+    await expect
+      .poll(() => box.evaluate((el) => el.scrollTop))
+      .toBeGreaterThan(0);
+    await expect(page.getByRole("tab", { name: "Plan" })).toBeInViewport();
+  });
+
+  test("past days sit sunk, upcoming days white and outlined", async ({
+    page,
+  }) => {
+    await openPlan(page);
+    const look = (card: Locator) =>
+      card.evaluate((el) => {
+        const cs = getComputedStyle(el);
+        return { bg: cs.backgroundColor, shadow: cs.boxShadow };
+      });
+    const today = await page.evaluate(() =>
+      new Date().toLocaleDateString("sv"),
+    );
+    const dates = await dayCards(page).evaluateAll((els) =>
+      els.map((e) => e.getAttribute("data-date") ?? ""),
+    );
+    const before = dates.find((d) => d < today);
+    const after = dates.find((d) => d > today);
+    expect(before && after, "fixture spans today").toBeTruthy();
+    const a = await look(
+      page.locator(`[data-testid=plan-day][data-date="${before}"]:visible`),
+    );
+    const b = await look(
+      page.locator(`[data-testid=plan-day][data-date="${after}"]:visible`),
+    );
+    expect(a.bg).not.toBe(b.bg);
+    expect(a.shadow).toBe("none");
+    expect(b.shadow).not.toBe("none");
+  });
+
   test("week strip: seven days, 44px, today marked", async ({ page }) => {
     await openPhonePlan(page);
     const days = strip(page).getByTestId("week-day");
