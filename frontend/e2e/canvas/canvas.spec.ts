@@ -93,9 +93,9 @@ test.describe("canvas foundation", () => {
   test.skip(({ isMobile }) => isMobile, "wide screens only");
 
   for (const [width, expected] of [
-    [1280, 486],
-    [1440, 547],
-    [1920, 720],
+    [1280, 340],
+    [1440, 374],
+    [1920, 440],
   ]) {
     test(`the detail card is ${expected}px wide at ${width}`, async ({
       page,
@@ -132,10 +132,10 @@ test.describe("canvas foundation", () => {
     const before = (await box(card(page))).width;
     const grip = page.getByRole("separator", { name: "Resize panel" });
     await expect(grip).toHaveAttribute("aria-orientation", "vertical");
-    await expect(grip).toHaveAttribute("aria-valuemin", "360");
-    await expect(grip).toHaveAttribute("aria-valuemax", "576");
+    await expect(grip).toHaveAttribute("aria-valuemin", "340");
+    await expect(grip).toHaveAttribute("aria-valuemax", "560");
     const g = await box(grip);
-    expect(g.width).toBe(20);
+    expect(g.width).toBe(44);
     expect(g.height).toBeGreaterThanOrEqual(44);
     await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
     await page.mouse.down();
@@ -165,7 +165,7 @@ test.describe("canvas foundation", () => {
     await page.mouse.up();
     await expect
       .poll(async () => Math.round((await box(card(page))).width))
-      .toBe(576);
+      .toBe(560);
   });
 
   test("the page renders and the card works with storage blocked", async ({
@@ -190,7 +190,7 @@ test.describe("canvas foundation", () => {
     });
     await openDemo(page, { width: 1280, height: 800 });
     const b = await box(card(page));
-    expect(Math.abs(b.width - 486)).toBeLessThanOrEqual(1);
+    expect(Math.abs(b.width - 340)).toBeLessThanOrEqual(1);
     await page.getByRole("separator", { name: "Resize panel" }).focus();
     await page.keyboard.press("ArrowRight");
     await expect
@@ -216,14 +216,14 @@ test.describe("canvas foundation", () => {
     await page.keyboard.press("End");
     await expect
       .poll(async () => Math.round((await box(card(page))).width))
-      .toBe(576);
+      .toBe(560);
     await page.keyboard.press("Home");
     await expect
       .poll(async () => Math.round((await box(card(page))).width))
-      .toBe(360);
+      .toBe(340);
     await page.reload();
     await expect(card(page)).toBeVisible();
-    expect(Math.round((await box(card(page))).width)).toBe(360);
+    expect(Math.round((await box(card(page))).width)).toBe(340);
   });
 
   for (const width of [1280, 1920]) {
@@ -279,7 +279,7 @@ test.describe("canvas foundation", () => {
       "data-collapsed",
       "true",
     );
-    expect(Math.round((await box(card(page, "detail"))).width)).toBe(420);
+    expect(Math.round((await box(card(page, "detail"))).width)).toBe(360);
 
     await header.click();
     await expect(list).not.toHaveAttribute("data-collapsed", "true");
@@ -314,18 +314,18 @@ test.describe("canvas foundation", () => {
   });
 
   for (const [width, height, expected] of [
-    [1280, 720, 180],
+    [1280, 720, 184],
     [1920, 1080, 238],
-    [1920, 1440, 260],
+    [1920, 1440, 248],
   ]) {
-    test(`the chart dock is ${expected}px tall at ${width}x${height}`, async ({
+    test(`the rail is ${expected}px tall at ${width}x${height}`, async ({
       page,
     }) => {
       await openDemo(page, { width, height });
       const dock = await box(page.getByTestId("chart-dock"));
       expect(Math.abs(dock.height - expected)).toBeLessThanOrEqual(1);
       const b = await box(card(page));
-      expect(Math.abs(dock.x - (b.x + b.width + 16))).toBeLessThanOrEqual(1);
+      expect(Math.abs(dock.x - (b.x + b.width))).toBeLessThanOrEqual(1);
       expect(Math.abs(dock.x + dock.width - (width - 16))).toBeLessThanOrEqual(
         1,
       );

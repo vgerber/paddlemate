@@ -2,6 +2,9 @@ import { useMemo } from "react";
 import ChartCard from "@/components/charts/ChartCard";
 import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
 import { useChartPanelState } from "@/components/charts/chartState";
+import ReadingChart, {
+  type ChartPlacement,
+} from "@/components/charts/ReadingChart";
 import WaterChart from "@/components/charts/water/WaterChart";
 import { GaugeAttributions } from "@/components/GaugeAttribution";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
@@ -18,8 +21,8 @@ interface SectionChartPanelProps {
   preferredFeatureId?: number | null;
   /** Lets the chart grow taller (the features list is folded). */
   tall?: boolean;
-  /** "dock" when the canvas chart dock holds the card. */
-  variant?: "card" | "dock";
+  /** Where the chart sits; the phone keeps its own card. */
+  placement: ChartPlacement;
 }
 
 export default function SectionChartPanel({
@@ -29,7 +32,7 @@ export default function SectionChartPanel({
   selectedFeature,
   preferredFeatureId,
   tall,
-  variant,
+  placement,
 }: SectionChartPanelProps) {
   const {
     data: waterStatus,
@@ -45,6 +48,25 @@ export default function SectionChartPanel({
     () => waterStatus?.ranges ?? [],
     [waterStatus?.ranges],
   );
+  const footer = <GaugeAttributions sources={ranges.map((r) => r.source)} />;
+  if (placement !== "phone") {
+    return (
+      <ReadingChart
+        placement={placement}
+        ranges={ranges}
+        status={{ isLoading, isError, error, refetch }}
+        timeRange={timeRange}
+        onTimeRangeChange={setTimeRange}
+        measurementType={measurementType}
+        onMeasurementTypeChange={setMeasurementType}
+        preferredFeatureId={preferredFeatureId}
+        selectedFeatureId={selectedFeatureId}
+        selectedFeature={selectedFeature}
+        thresholdsAvailable
+        footer={footer}
+      />
+    );
+  }
   return (
     <>
       <ChartCard
@@ -56,8 +78,7 @@ export default function SectionChartPanel({
         preferredFeatureId={preferredFeatureId}
         tall={tall}
         short={isLoading || isError}
-        variant={variant}
-        footer={<GaugeAttributions sources={ranges.map((r) => r.source)} />}
+        footer={footer}
       >
         {(headroom) =>
           isError ? (

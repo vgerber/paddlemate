@@ -9,6 +9,9 @@ const CORNERS = [
   [".maplibregl-ctrl-bottom-left", "bottom", "left"],
 ] as const;
 
+/** MapLibre keeps each control 10px off its corner. */
+const CTRL_MARGIN = 10;
+
 /** Moves MapLibre's own control corners (zoom, attribution) in from the map's
  * edges, so on a canvas screen they sit in the free area and not under a
  * card. Without an inset the corners are left where MapLibre puts them. */
@@ -21,7 +24,13 @@ export function useControlInset(
   useEffect(() => {
     const root = mapRef.current?.getContainer();
     if (!root || !mapLoaded) return;
-    const px = { top, right, bottom, left };
+    // The controls' own margin is taken out, so the inset is where they sit.
+    const px = {
+      top: top == null ? top : Math.max(0, top - CTRL_MARGIN),
+      right: right == null ? right : Math.max(0, right - CTRL_MARGIN),
+      bottom: bottom == null ? bottom : Math.max(0, bottom - CTRL_MARGIN),
+      left: left == null ? left : Math.max(0, left - CTRL_MARGIN),
+    };
     for (const [selector, a, b] of CORNERS) {
       const el = root.querySelector<HTMLElement>(selector);
       if (!el) continue;

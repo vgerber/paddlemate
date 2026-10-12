@@ -134,30 +134,28 @@ describe("freeArea", () => {
   });
 });
 
-describe("dock", () => {
-  test("height is 22% of the window within 180 to 260", () => {
-    expect(dockHeight(720)).toBe(180);
+describe("rail", () => {
+  test("height is 22% of the window within 184 to 248", () => {
+    expect(dockHeight(720)).toBe(184);
+    expect(dockHeight(900)).toBe(198);
     expect(dockHeight(1080)).toBe(238);
-    expect(dockHeight(1440)).toBe(260);
+    expect(dockHeight(1440)).toBe(248);
   });
 
-  test("docks from 1280 wide, folds into the card below", () => {
-    expect(dockMode(1280)).toBe("dock");
-    expect(dockMode(1279)).toBe("inline");
+  test("shows from 1280 wide and 600 tall, else the chart leads the card", () => {
+    expect(dockMode(1280, 720)).toBe("dock");
+    expect(dockMode(1279, 720)).toBe("inline");
+    expect(dockMode(1920, 599)).toBe("inline");
+    expect(dockMode(1920, 600)).toBe("dock");
   });
 
-  test("spans the card edge plus 16 to the window edge minus 16", () => {
+  test("starts at the card's edge and ends 16px short of the window", () => {
     const placed = layoutCards([detail(486)], 1280);
     expect(dockRect(placed, 1280, 800)).toEqual({
-      left: 518,
-      width: 1280 - 518 - 16,
-      height: 180,
+      left: 502,
+      width: 1280 - 502 - 16,
+      height: 184,
     });
-  });
-
-  test("grows by the open options row", () => {
-    const placed = layoutCards([detail(486)], 1280);
-    expect(dockRect(placed, 1280, 800, 44).height).toBe(180 + 44);
   });
 
   test("stops at a right card", () => {
@@ -168,14 +166,20 @@ describe("dock", () => {
 });
 
 describe("controlInset", () => {
-  test("sits 16px inside a card and above the dock", () => {
+  test("sits 16px inside a card, 8px above the rail, 24px above the foot", () => {
     const placed = layoutCards([detail(486)], 1280);
-    const free = freeArea(placed, 1280, 744, 180);
-    expect(controlInset(free.padding)).toEqual({
+    const free = freeArea(placed, 1280, 744, 184);
+    expect(controlInset(free.padding, 184)).toEqual({
       top: 16,
       left: 502 + 16,
       right: 16,
-      bottom: 16 + 180 + 16,
+      bottom: 16 + 184 + 8,
     });
+  });
+
+  test("without a rail the foot is 24px", () => {
+    const placed = layoutCards([detail(486)], 1280);
+    const free = freeArea(placed, 1280, 744, null);
+    expect(controlInset(free.padding, null).bottom).toBe(24);
   });
 });

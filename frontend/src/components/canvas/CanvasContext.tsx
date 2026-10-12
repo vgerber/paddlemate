@@ -25,9 +25,10 @@ export function useFreeArea(): FreeArea {
   return useLayout((s) => s.free);
 }
 
-/** "dock" from 1280 wide, "inline" (folded into the detail card) below. */
+/** "dock" (the reading rail) from 1280 wide and 600 tall, else "inline" (the
+ * first block of the detail card). */
 export function useDockMode(): "dock" | "inline" {
-  return useLayout((s) => dockMode(s.viewport.w));
+  return useLayout((s) => dockMode(s.viewport.w, s.viewport.h));
 }
 
 export interface CanvasLayoutInfo {

@@ -8,9 +8,12 @@ import { layout, useLayout, useOverlay } from "./canvasStore";
 const { tokens } = theme;
 const { canvas } = tokens;
 
-/** Where the chart goes. From 1280 wide it docks along the bottom of the free
- * map area, between the cards; narrower, it renders in place, so put it as
- * the first block of the detail card. */
+const FILLET = tokens.radii.md;
+
+/** The reading rail. From 1280 wide it is the rest of the detail card's foot:
+ * it starts at the card's edge, along the foot of the window, and holds the
+ * plot. Narrower, it renders in place, so put it as the first block of the
+ * detail card. */
 export default function ChartDock({ children }: { children: ReactNode }) {
   const mode = useDockMode();
   const overlay = useOverlay();
@@ -35,13 +38,35 @@ export default function ChartDock({ children }: { children: ReactNode }) {
         height: dock.height,
         bottom: canvas.margin,
         pointerEvents: "auto",
-        overflow: "hidden",
-        bgcolor: tokens.surface,
-        borderRadius: `${tokens.radii.lg}px`,
-        boxShadow: tokens.elevation.e2,
+        // The shadow stops at the card's edge: card and rail read as one
+        // surface.
+        clipPath: "inset(-24px -24px -24px 0)",
       }}
     >
-      {children}
+      <Box
+        sx={{
+          height: "100%",
+          overflow: "hidden",
+          bgcolor: tokens.surface,
+          borderRadius: `0 ${tokens.radii.md}px ${tokens.radii.md}px 0`,
+          boxShadow: tokens.elevation.e2,
+          borderLeft: `1px solid ${tokens.outlineVariant}`,
+        }}
+      >
+        {children}
+      </Box>
+      <Box
+        aria-hidden
+        sx={{
+          position: "absolute",
+          left: 0,
+          top: -FILLET,
+          width: FILLET,
+          height: FILLET,
+          // A concave corner where the rail's top meets the card's edge.
+          background: `radial-gradient(circle at 100% 0, transparent ${FILLET - 0.5}px, ${tokens.surface} ${FILLET}px)`,
+        }}
+      />
     </Box>,
     overlay,
   );

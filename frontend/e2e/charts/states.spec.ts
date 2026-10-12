@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { FIX, gotoSection } from "../support/fixture";
 
 // The chart's broken and empty states: no gauge, slow or failing readings,
-// a failing river request, and the options open in the desktop dock.
+// a failing river request, and the options open over the desktop map.
 
 const failure = {
   status: 500,
@@ -12,13 +12,23 @@ const failure = {
   }),
 };
 
-test("a section without a gauge draws no chart card and no dock", async ({
+test("a section without a gauge draws no chart card and no rail", async ({
   page,
 }) => {
   await gotoSection(page, "empty");
   await expect(page.getByText("Put in")).toBeVisible();
   await expect(page.getByTestId("chart-card")).toHaveCount(0);
   await expect(page.getByTestId("chart-dock")).toHaveCount(0);
+});
+
+test("on a wide screen that section ends in a foot row that says so", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "the rail is a desktop layout");
+  await gotoSection(page, "empty");
+  const row = page.getByTestId("no-gauge");
+  await expect(row).toContainText("No gauge for this section");
+  await expect(row.getByRole("button", { name: "Link a gauge" })).toBeVisible();
 });
 
 test("slow readings show the skeleton, not a spinner", async ({ page }) => {
@@ -35,8 +45,9 @@ test("failing readings show a note with Retry inside the card", async ({
 }) => {
   await page.route(/\/readings/, (route) => route.fulfill(failure));
   await gotoSection(page, "lower");
+  // The phone's card or the desktop rail holds the note.
   const note = page
-    .getByTestId("chart-card")
+    .locator('[data-testid="chart-card"], [data-testid="chart-dock"]')
     .filter({ visible: true })
     .getByTestId("chart-error");
   await expect(note).toBeVisible({ timeout: 20_000 });
@@ -57,30 +68,10 @@ test("a failing river request keeps a section header with Retry", async ({
   await expect(page.getByTestId("chart-card")).toHaveCount(0);
 });
 
-test("options open in the dock keep the plot tall and chips natural", async ({
+test("options open as a popover over the map and leave the plot alone", async ({
   page,
 }, info) => {
-  test.skip(info.project.name !== "desktop", "dock is a desktop layout");
-  await gotoSection(page, "lower");
-  const dock = page.getByTestId("chart-dock");
-  await expect(dock.getByTestId("latest-dot")).toBeVisible();
-  const before = await dock.getByTestId("latest-dot").boundingBox();
-  await dock.getByLabel("Chart options").click();
-  const chips = dock.getByTestId("chart-option-chip");
-  await expect(chips.first()).toBeVisible();
-  const widths = await chips.evaluateAll((els) =>
-    els.map((e) => e.getBoundingClientRect().width),
-  );
-  expect(Math.max(...widths)).toBeLessThan(120);
-  const plot = await dock.locator("svg").first().boundingBox();
-  expect(plot?.height ?? 0).toBeGreaterThan(100);
-  expect(before).not.toBeNull();
-});
-
-test("options open grow the dock by their row and keep the plot's height", async ({
-  page,
-}, info) => {
-  test.skip(info.project.name !== "desktop", "dock is a desktop layout");
+  test.skip(info.project.name !== "desktop", "the rail is a desktop layout");
   await gotoSection(page, "lower");
   const dock = page.getByTestId("chart-dock");
   await expect(dock.getByTestId("latest-dot")).toBeVisible();
@@ -90,15 +81,16 @@ test("options open grow the dock by their row and keep the plot's height", async
     dock: (await dock.boundingBox())?.height ?? 0,
     plot: await plotOf(),
   };
-  await dock.getByLabel("Chart options").click();
-  await expect(dock.getByTestId("chart-option-chip").first()).toBeVisible();
-  await expect
-    .poll(async () => (await dock.boundingBox())?.height ?? 0)
-    .toBeGreaterThan(closed.dock + 20);
-  expect(Math.abs((await plotOf()) - closed.plot)).toBeLessThanOrEqual(2);
-  // The dock stays on the window's foot, so the grown part came from above.
-  const box = await dock.boundingBox();
-  expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBe(
-    (page.viewportSize()?.height ?? 0) - 16,
+  await page.getByRole("button", { name: "Chart options" }).click();
+  const pop = page.getByRole("dialog", { name: "Chart options" });
+  await expect(pop.getByText("Thresholds")).toBeVisible();
+  expect((await pop.boundingBox())?.width).toBe(300);
+  expect((await dock.boundingBox())?.height ?? 0).toBe(closed.dock);
+  expect(Math.abs((await plotOf()) - closed.plot)).toBeLessThanOrEqual(1);
+  // The popover floats above the rail, over the map.
+  const rail = await dock.boundingBox();
+  const over = await pop.boundingBox();
+  expect((over?.y ?? 0) + (over?.height ?? 0)).toBeLessThanOrEqual(
+    rail?.y ?? 0,
   );
 });

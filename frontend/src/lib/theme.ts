@@ -196,9 +196,10 @@ const tokens = {
   // Canvas: from `md` up the map fills the window under the app bar and the
   // content floats in cards over it. Card widths are a share of the window
   // clamped to a range; a resizable card may be dragged within `resize`. All
-  // expanded cards together cover at most `coverMax` of the width. The chart
-  // dock is `dock.vh` of the window height clamped to the dock range, from
-  // `dock.from` wide; narrower windows fold the chart into the detail card.
+  // expanded cards together cover at most `coverMax` of the width. The reading
+  // rail is `dock.vh` of the window height clamped to the dock range, from
+  // `dock.from` wide and `dock.minWindowHeight` tall; otherwise the chart is the
+  // detail card's first block.
   canvas: {
     margin: 16,
     freeMargin: 32,
@@ -209,16 +210,20 @@ const tokens = {
     sideMaxFrac: 0.45,
     freeMin: { w: 240, h: 200 },
     headerHeight: 56,
-    gripHit: 20,
-    gripBar: { w: 6, h: 44 },
-    dock: { min: 180, max: 260, vh: 0.22, from: 1280 },
+    gripHit: 44,
+    gripBar: { w: 14, h: 44 },
+    dock: { min: 184, max: 248, vh: 0.22, from: 1280, minWindowHeight: 600 },
     cards: {
       detail: {
-        frac: 0.38,
-        min: 420,
-        max: 720,
+        frac: 0.26,
+        min: 340,
+        max: 440,
+        // Under `dock.from` the card is this wide (no rail beside it).
+        narrow: 360,
         priority: 3,
-        resize: { min: 360, maxFrac: 0.45 },
+        // The card never takes more than `maxPx`, nor leaves the rail's
+        // plot less than `minPlot`.
+        resize: { min: 340, maxFrac: 0.45, maxPx: 560, minPlot: 480 },
       },
       list: { frac: 0.2, min: 300, max: 380, priority: 1, resize: null },
       side: { frac: 0.25, min: 400, max: 600, priority: 2, resize: null },

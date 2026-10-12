@@ -14,9 +14,19 @@ export function resizeBounds(
 ): { min: number; max: number } | null {
   const { resize } = canvas.cards[kind];
   if (!resize) return null;
+  // The rail's plot, 16px margins either side, bounds a card that has one
+  // (from `dock.from` wide).
+  const room =
+    "minPlot" in resize && windowWidth >= canvas.dock.from
+      ? windowWidth - 2 * canvas.margin - resize.minPlot
+      : Infinity;
+  const cap = "maxPx" in resize ? resize.maxPx : Infinity;
   return {
     min: resize.min,
-    max: Math.max(resize.min, resize.maxFrac * windowWidth),
+    max: Math.max(
+      resize.min,
+      Math.min(resize.maxFrac * windowWidth, cap, room),
+    ),
   };
 }
 
@@ -33,6 +43,7 @@ export function cardWidth(
   if (bounds && frac != null && Number.isFinite(frac)) {
     return clamp(frac * windowWidth, bounds.min, bounds.max);
   }
+  if ("narrow" in spec && windowWidth < canvas.dock.from) return spec.narrow;
   return clamp(spec.frac * windowWidth, spec.min, spec.max);
 }
 

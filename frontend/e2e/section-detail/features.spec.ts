@@ -352,7 +352,11 @@ test.describe("notes", () => {
 test.describe("chart height", () => {
   test("the chart opens the Features pane, above the list, and the list stays readable @small", async ({
     page,
-  }) => {
+  }, info) => {
+    test.skip(
+      info.project.name === "desktop",
+      "the desktop's chart is the rail",
+    );
     await openFeatures(page);
     const chart = page.getByTestId("chart-card").filter({ visible: true });
     await expect(chart).toBeVisible();
@@ -384,7 +388,11 @@ test.describe("chart height", () => {
 
   test("folding the features list makes the chart taller and opening restores it", async ({
     page,
-  }) => {
+  }, info) => {
+    test.skip(
+      info.project.name === "desktop",
+      "the desktop's chart is the rail",
+    );
     await openFeatures(page);
     const chart = page.getByTestId("chart-card").filter({ visible: true });
     await expect(chart).toBeVisible();

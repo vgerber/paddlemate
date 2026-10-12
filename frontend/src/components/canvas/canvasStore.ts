@@ -86,6 +86,7 @@ export interface LayoutSnapshot {
   used: number;
   limit: number;
   free: FreeArea;
+  /** The reading rail along the foot, when a chart wants it. */
   dock: DockRect | null;
 }
 
@@ -94,9 +95,8 @@ interface LayoutState {
   live: { id: string; width: number } | null;
   pinned: string | null;
   viewport: Viewport;
+  /** Charts that want the rail. */
   docks: number;
-  /** Height the open chart options add to the dock. */
-  dockExtra: number;
 }
 
 const initialViewport = (): Viewport =>
@@ -110,7 +110,6 @@ let state: LayoutState = {
   pinned: null,
   viewport: initialViewport(),
   docks: 0,
-  dockExtra: 0,
 };
 
 function derive(s: LayoutState): LayoutSnapshot {
@@ -128,8 +127,8 @@ function derive(s: LayoutState): LayoutSnapshot {
   const list = layoutCards(inputs, w, s.pinned);
   const placements = new Map(list.map((p) => [p.id, p]));
   const used = list.reduce((sum, p) => (p.collapsed ? sum : sum + p.width), 0);
-  const docked = s.docks > 0 && dockMode(w) === "dock";
-  const dock = docked ? dockRect(list, w, h, s.dockExtra) : null;
+  const docked = s.docks > 0 && dockMode(w, h) === "dock";
+  const dock = docked ? dockRect(list, w, h) : null;
   const hostHeight = h - chrome.appBar;
   return {
     viewport: s.viewport,
@@ -179,11 +178,6 @@ export const layout = {
   },
   addDock(delta: 1 | -1) {
     update({ docks: Math.max(0, state.docks + delta) });
-  },
-  setDockExtra(px: number) {
-    const dockExtra = Math.max(0, Math.round(px));
-    if (dockExtra === state.dockExtra) return;
-    update({ dockExtra });
   },
   get: () => layoutStore.get(),
 };

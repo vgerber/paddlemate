@@ -1,8 +1,12 @@
+import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import type { ReactNode } from "react";
-import { theme } from "@/lib/theme";
+import Paper, { type PaperProps } from "@mui/material/Paper";
+import Popover from "@mui/material/Popover";
+import { type ReactNode, useState } from "react";
+import { alphas, theme } from "@/lib/theme";
 import type { MapPadding } from "./Map";
+import { BELOW_ZOOM, stackOffset } from "./MapCompass";
 
 const { tokens } = theme;
 
@@ -77,47 +81,26 @@ function Cell({
   );
 }
 
-/** Map layer controls: a floating key card with what section labels say,
- * feature-name visibility, and the satellite base layer. */
-export default function LabelModeToggle({
+/** The layer choices: what section labels say, feature-name visibility and
+ * the satellite base layer. */
+function Choices({
   labelMode,
   onChange,
   satellite,
   onSatelliteChange,
   featureNames,
   onFeatureNamesChange,
-  bottomOffset = 0,
-  anchor = "bottom",
-  inset,
-}: LabelModeToggleProps) {
-  const edge = { xs: 10, md: 24 };
-  const place = inset
-    ? { bottom: inset.bottom + bottomOffset + 8, left: inset.left + 8 }
-    : null;
+}: Pick<
+  LabelModeToggleProps,
+  | "labelMode"
+  | "onChange"
+  | "satellite"
+  | "onSatelliteChange"
+  | "featureNames"
+  | "onFeatureNamesChange"
+>) {
   return (
-    <Box
-      data-testid="map-layer-toggle"
-      sx={{
-        position: "absolute",
-        ...(place ??
-          (anchor === "top"
-            ? { top: { xs: 14, md: 24 }, left: edge }
-            : {
-                bottom: {
-                  xs: 14 + bottomOffset,
-                  md: 24 + bottomOffset,
-                },
-                left: edge,
-              })),
-        zIndex: 10,
-        display: "grid",
-        gap: 1,
-        p: "10px",
-        borderRadius: `${tokens.radii.md}px`,
-        boxShadow: tokens.elevation.e2,
-        bgcolor: tokens.surface,
-      }}
-    >
+    <>
       {(onChange || onFeatureNamesChange) && (
         <Track>
           {onChange && (
@@ -162,6 +145,117 @@ export default function LabelModeToggle({
           Satellite
         </Cell>
       </Track>
+    </>
+  );
+}
+
+/** The popover's surface, named for tests and for the toggle's design. */
+function LayerPaper(props: PaperProps) {
+  return <Paper data-testid="map-layer-toggle" {...props} />;
+}
+
+/** On a canvas screen the layer choices are one key in the control stack, under
+ * the compass, and open in a 272px popover to its left. */
+function LayerKey(
+  props: Parameters<typeof Choices>[0] & { inset: MapPadding },
+) {
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const { inset, ...choices } = props;
+  const { top, right } = stackOffset(inset);
+  const open = anchor != null;
+  return (
+    <>
+      <ButtonBase
+        data-testid="map-layer-button"
+        aria-label="Map layers"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={(e) => setAnchor(open ? null : e.currentTarget)}
+        sx={{
+          position: "absolute",
+          zIndex: 2,
+          top: top + BELOW_ZOOM + tokens.touch.min + 8,
+          right,
+          width: tokens.touch.min,
+          height: tokens.touch.min,
+          borderRadius: `${tokens.radii.sm}px`,
+          bgcolor: open ? `${tokens.primary}${alphas.wash}` : tokens.surface,
+          color: open ? tokens.primary : tokens.onSurface,
+          boxShadow: open
+            ? `${tokens.elevation.e2}, inset 0 0 0 2px ${tokens.primary}`
+            : tokens.elevation.e2,
+        }}
+      >
+        <LayersOutlinedIcon />
+      </ButtonBase>
+      <Popover
+        open={open}
+        anchorEl={anchor}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: "top", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        // The popover sits 8px left of the key, level with its top.
+        marginThreshold={8}
+        disableScrollLock
+        slots={{ paper: LayerPaper }}
+        slotProps={{
+          paper: {
+            role: "dialog",
+            "aria-label": "Map layers",
+            sx: {
+              width: 272,
+              ml: -1,
+              display: "grid",
+              gap: 1,
+              p: "10px",
+              bgcolor: tokens.surface,
+              borderRadius: `${tokens.radii.md}px`,
+              boxShadow: tokens.elevation.e2,
+            },
+          },
+        }}
+      >
+        <Choices {...choices} />
+      </Popover>
+    </>
+  );
+}
+
+/** Map layer controls: a floating key card with what section labels say,
+ * feature-name visibility, and the satellite base layer; on a canvas screen
+ * (`inset` given) one key in the control stack with a popover. */
+export default function LabelModeToggle({
+  bottomOffset = 0,
+  anchor = "bottom",
+  inset,
+  ...choices
+}: LabelModeToggleProps) {
+  if (inset) return <LayerKey {...choices} inset={inset} />;
+  const edge = { xs: 10, md: 24 };
+  return (
+    <Box
+      data-testid="map-layer-toggle"
+      sx={{
+        position: "absolute",
+        ...(anchor === "top"
+          ? { top: { xs: 14, md: 24 }, left: edge }
+          : {
+              bottom: {
+                xs: 14 + bottomOffset,
+                md: 24 + bottomOffset,
+              },
+              left: edge,
+            }),
+        zIndex: 10,
+        display: "grid",
+        gap: 1,
+        p: "10px",
+        borderRadius: `${tokens.radii.md}px`,
+        boxShadow: tokens.elevation.e2,
+        bgcolor: tokens.surface,
+      }}
+    >
+      <Choices {...choices} />
     </Box>
   );
 }

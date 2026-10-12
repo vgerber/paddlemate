@@ -5,15 +5,7 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import {
-  type ReactNode,
-  type RefObject,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import { layout } from "@/components/canvas/canvasStore";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
   TIME_RANGE_OPTIONS,
   typeLabel,
@@ -39,23 +31,6 @@ const heights = {
   base: { xs: "clamp(160px, 24vh, 210px)", md: "clamp(200px, 26vh, 340px)" },
   tall: { xs: 340, md: "clamp(280px, 42vh, 520px)" },
 } as const;
-
-/** Reports the options row's height to the dock while it is open, so the dock
- * grows by it and the free map area's padding follows. */
-function useDockExtra(active: boolean, ref: RefObject<HTMLElement | null>) {
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!active || !el) return;
-    const report = () => layout.setDockExtra(el.offsetHeight);
-    report();
-    const ro = new ResizeObserver(report);
-    ro.observe(el);
-    return () => {
-      ro.disconnect();
-      layout.setDockExtra(0);
-    };
-  }, [active, ref]);
-}
 
 /** Today's readings show their time, older ones their date. */
 function readingTime(iso: string): string {
@@ -94,14 +69,11 @@ interface ChartCardProps {
   onDismiss?: () => void;
   /** Under the chart, e.g. the gauge credit. */
   footer?: ReactNode;
-  /** "dock" fills the canvas chart dock, which owns the card's surface,
-   * radius and shadow; the plot takes the height the options leave. */
-  variant?: "card" | "dock";
   /** The chart, given the room to keep above its plot. */
   children: (headroom: number) => ReactNode;
 }
 
-/** The chart card. Closed it is the chart edge to edge with a faint outline
+/** The phone's chart card. Closed it is the chart edge to edge with a faint outline
  * (the charted reading, its time and the period) and one options button;
  * open, the options sit above the chart: which reading, which period. */
 export default function ChartCard({
@@ -115,16 +87,12 @@ export default function ChartCard({
   short = false,
   onDismiss,
   footer,
-  variant = "card",
   children,
 }: ChartCardProps) {
-  const docked = variant === "dock";
   const [open, setOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const openRef = useRef<HTMLButtonElement>(null);
   const toggled = useRef(false);
-  const optionsRef = useRef<HTMLDivElement>(null);
-  useDockExtra(docked && open, optionsRef);
   // The control that was pressed leaves the page; hand focus to its
   // counterpart so a keyboard user never lands on the body.
   useEffect(() => {
@@ -163,55 +131,36 @@ export default function ChartCard({
   return (
     <Box
       data-testid="chart-card"
-      sx={
-        docked
-          ? {
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }
-          : {
-              // The pane has no side padding; every list in it sets its own 12px.
-              mx: 1.5,
-              mt: 1.5,
-              flexShrink: 0,
-              bgcolor: tokens.surface,
-              borderRadius: `${tokens.radii.md}px`,
-              boxShadow: tokens.elevation.e1,
-              overflow: "hidden",
-            }
-      }
+      sx={{
+        // The pane has no side padding; every list in it sets its own 12px.
+        mx: 1.5,
+        mt: 1.5,
+        flexShrink: 0,
+        bgcolor: tokens.surface,
+        borderRadius: `${tokens.radii.md}px`,
+        boxShadow: tokens.elevation.e1,
+        overflow: "hidden",
+      }}
     >
       {open && (
         <Box
-          ref={optionsRef}
           sx={{
             flexShrink: 0,
             borderBottom: "1px solid",
             borderColor: "divider",
             px: 1.75,
-            ...(docked
-              ? {
-                  // The dock grows by this row (see useDockExtra), so the
-                  // plot keeps its full height.
-                  display: "flex",
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  columnGap: 2,
-                  py: 0.5,
-                }
-              : { display: "grid", gap: 1.25, pt: 1.5, pb: 1.25 }),
+            display: "grid",
+            gap: 1.25,
+            pt: 1.5,
+            pb: 1.25,
           }}
         >
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: docked
-                ? "minmax(0, 1fr)"
-                : "minmax(0, 1fr) 44px",
+              gridTemplateColumns: "minmax(0, 1fr) 44px",
               alignItems: "center",
-              mr: docked ? 0 : -1.25,
+              mr: -1.25,
               order: 0,
             }}
           >
@@ -236,7 +185,7 @@ export default function ChartCard({
                 />
               ))}
             </Box>
-            {!docked && closeButton}
+            {closeButton}
           </Box>
           <Box sx={{ display: "flex", gap: 0.5, order: 1 }}>
             {TIME_RANGE_OPTIONS.map((o) => (
@@ -265,7 +214,6 @@ export default function ChartCard({
                 alignItems: "center",
                 mr: -1.25,
                 order: 2,
-                ...(docked && { flex: 1, minWidth: 0 }),
               }}
             >
               <Typography
@@ -292,15 +240,12 @@ export default function ChartCard({
               )}
             </Box>
           )}
-          {docked && <Box sx={{ order: 3, ml: "auto" }}>{closeButton}</Box>}
         </Box>
       )}
       <Box
         sx={{
           position: "relative",
-          ...(docked
-            ? { flex: 1, minHeight: 0 }
-            : { height: short ? 120 : tall ? heights.tall : heights.base }),
+          height: short ? 120 : tall ? heights.tall : heights.base,
         }}
       >
         {children(open ? CLOSED_HEADROOM : OUTLINE_HEADROOM)}

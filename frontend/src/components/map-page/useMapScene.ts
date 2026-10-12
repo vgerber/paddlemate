@@ -15,9 +15,6 @@ import { theme } from "@/lib/theme";
 import { buildMapScene, type MapSceneInput, pickSceneState } from "./mapScene";
 import type { MapPageState } from "./useMapPageState";
 
-/** Space the map controls keep above the chart dock (the dock's own share of
- * the free area's bottom padding, less the plain margin). */
-
 function shallowEqual(a: MapSceneInput, b: MapSceneInput): boolean {
   const keys = Object.keys(a) as (keyof MapSceneInput)[];
   return keys.every((k) => Object.is(a[k], b[k]));

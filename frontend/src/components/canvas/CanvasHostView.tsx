@@ -4,7 +4,7 @@ import WaterwayMap from "@/components/map/Map";
 import { controlInset } from "@/lib/canvasLayout";
 import { theme } from "@/lib/theme";
 import { useFreeArea } from "./CanvasContext";
-import { layout, overlay } from "./canvasStore";
+import { layout, overlay, useLayout } from "./canvasStore";
 import type { MapScene } from "./scene";
 import { useWindowSize } from "./useWindowSize";
 
@@ -17,11 +17,12 @@ export default function CanvasHostView({ scene }: { scene: MapScene }) {
   const size = useWindowSize();
   useEffect(() => layout.setViewport(size), [size]);
   const { padding, rect } = useFreeArea();
+  const rail = useLayout((s) => s.dock?.height ?? null);
 
   const { camera, subject, chrome, ...mapProps } = scene;
   const mapChrome = useMemo(
-    () => ({ ...chrome, inset: controlInset(padding) }),
-    [chrome, padding],
+    () => ({ ...chrome, inset: controlInset(padding, rail) }),
+    [chrome, padding, rail],
   );
   const mapCamera = useMemo(
     () => ({ ...camera, padding, subject }),
