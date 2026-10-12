@@ -148,3 +148,20 @@ describe("buildProposalScene", () => {
     expect(scene.subject).toBeNull();
   });
 });
+
+describe("buildProposalScene without the river's data", () => {
+  test("frames the old place the proposal itself carries", () => {
+    const scene = buildProposalScene(
+      proposal({
+        entity_type: "feature",
+        original_data: { location: { type: "Point", coordinates: [11, 47] } },
+        proposed_data: { metadata: { difficulty: "IV" } },
+      }),
+      undefined,
+    );
+    expect(scene.subject?.bounds).toEqual([
+      [11, 47],
+      [11, 47],
+    ]);
+  });
+});

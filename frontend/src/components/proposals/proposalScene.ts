@@ -70,6 +70,9 @@ function proposalMap(
   const data = (proposal.proposed_data ?? {}) as Record<string, unknown>;
   const original = (proposal.original_data ?? {}) as Record<string, unknown>;
   const location = data.location as Geometry | undefined;
+  // The proposal carries the old place itself, so the map can frame the change
+  // even before (or without) the river's own data.
+  const storedLocation = (original.location as Geometry | undefined) ?? null;
   const deleting = proposal.operation === "delete";
   const entityId = proposal.entity_id;
 
@@ -89,7 +92,7 @@ function proposalMap(
       }
     }
     return {
-      before: stored?.location ?? null,
+      before: stored?.location ?? storedLocation,
       sections: parent ? [parent] : undefined,
       features: parent?.features,
       sectionLine: undefined,
@@ -105,7 +108,7 @@ function proposalMap(
       ? sections?.find((s) => s.id === entityId)
       : undefined;
   return {
-    before: stored?.location ?? null,
+    before: stored?.location ?? storedLocation,
     sections: sections && sections.length > 0 ? sections : undefined,
     features: undefined,
     sectionLine:

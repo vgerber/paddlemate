@@ -20,7 +20,7 @@ import ProposalRow from "@/components/proposals/ProposalRow";
 import ProposalSideCard from "@/components/proposals/ProposalSideCard";
 import { useProposalScene } from "@/components/proposals/useProposalScene";
 import EmptyState from "@/components/states/EmptyState";
-import LoadingBox from "@/components/states/LoadingBox";
+import QueryStates from "@/components/states/QueryStates";
 import UnderlineTabs from "@/components/UnderlineTabs";
 import type {
   ProposalEntityType,
@@ -137,11 +137,12 @@ export default function ProposalsView({
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const hasActiveFilters = entityType != null || operation != null;
   const [filtersOpen, setFiltersOpen] = useState(hasActiveFilters);
-  const { data: proposals, isLoading } = useProposals({
+  const query = useProposals({
     status,
     entity_type: entityType,
     operation,
   });
+  const { data: proposals, isLoading } = query;
 
   // The phone reaches the list through the Tools tab, so back goes there.
   const goBack = () => {
@@ -219,11 +220,14 @@ export default function ProposalsView({
       </Collapse>
 
       {/* List */}
-      {isLoading ? (
-        <LoadingBox size={40} py={6} />
-      ) : !proposals || proposals.length === 0 ? (
-        <EmptyState title={`No ${status} proposals.`} />
-      ) : (
+      <QueryStates
+        query={query}
+        count={proposals?.length ?? 0}
+        empty={{ title: `No ${status} proposals.` }}
+        errorFallback="Could not load proposals."
+        loadingSize={40}
+        py={6}
+      >
         <Box
           sx={{
             display: "flex",
@@ -232,7 +236,7 @@ export default function ProposalsView({
             p: { xs: 1.5, md: 0 },
           }}
         >
-          {proposals.map((p) => (
+          {proposals?.map((p) => (
             <ProposalRow
               key={p.id}
               proposal={p}
@@ -248,7 +252,7 @@ export default function ProposalsView({
             />
           ))}
         </Box>
-      )}
+      </QueryStates>
     </>
   );
 
@@ -271,6 +275,9 @@ export default function ProposalsView({
         kind="list"
         screen="proposals"
         title="Proposals"
+        // An empty or failed list keeps the pane's height instead of
+        // shrinking to its note.
+        fullHeight={!proposals?.length}
         selfHeaded
       >
         <Box data-testid="proposal-list">{list}</Box>
@@ -291,6 +298,8 @@ export default function ProposalsView({
         <ProposalSideCard
           proposal={open.proposal}
           loading={open.isLoading}
+          error={open.error}
+          onRetry={() => open.refetch()}
           adminMode={adminMode}
           listStatus={status}
           onClose={() => onSelect?.(undefined)}

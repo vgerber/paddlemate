@@ -10,7 +10,12 @@ import { buildProposalScene } from "./proposalScene";
  * scene keeps its identity until the proposal or the river around it
  * changes, so the map is not redrawn by unrelated renders. */
 export function useProposalScene(id: number | undefined) {
-  const { data: proposal, isLoading } = useQuery({
+  const {
+    data: proposal,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: proposalKeys.detail(id ?? 0),
     queryFn: () => proposalsApi.get(id as number),
     enabled: id != null,
@@ -31,5 +36,11 @@ export function useProposalScene(id: number | undefined) {
     () => buildProposalScene(proposal, sections),
     [proposal, sections],
   );
-  return { proposal, isLoading: id != null && isLoading, scene };
+  return {
+    proposal,
+    isLoading: id != null && isLoading,
+    error,
+    refetch,
+    scene,
+  };
 }

@@ -12,6 +12,7 @@ import DescentForm from "@/components/descents/DescentForm";
 import PanelHeader from "@/components/PanelHeader";
 import RowMenu from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
+import MissingState from "@/components/states/MissingState";
 import { formatDate } from "@/lib/format";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
@@ -38,7 +39,12 @@ function LogDetailPage() {
   // From md up this renders in the logs pane, where the list beside it
   // already names the log and carries the way back.
   const embedded = useMediaQuery(theme.breakpoints.up("md"));
-  const { data: descent, isLoading } = useDescent(Number(descentId));
+  const {
+    data: descent,
+    isLoading,
+    error,
+    refetch,
+  } = useDescent(Number(descentId));
   const deleteDescent = useDeleteDescent();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -56,10 +62,13 @@ function LogDetailPage() {
 
   if (!descent) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
-        <Typography variant="body2" color="textDisabled">
-          Log not found.
-        </Typography>
+      <Box sx={embedded ? undefined : { maxWidth: 720, mx: "auto" }}>
+        {!embedded && <PanelHeader title="Log" onBack={() => history.back()} />}
+        <MissingState
+          error={error}
+          notFound="Log not found."
+          onRetry={() => refetch()}
+        />
       </Box>
     );
   }
