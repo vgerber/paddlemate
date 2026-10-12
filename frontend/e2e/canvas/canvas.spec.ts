@@ -135,13 +135,27 @@ test.describe("canvas foundation", () => {
     await expect(grip).toHaveAttribute("aria-valuemin", "340");
     await expect(grip).toHaveAttribute("aria-valuemax", "560");
     const g = await box(grip);
-    expect(g.width).toBe(44);
-    expect(g.height).toBeGreaterThanOrEqual(44);
-    await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
+    expect(g.width).toBe(12);
+    const c = await box(card(page));
+    expect(g.height).toBe(c.height);
+    expect(Math.abs(g.x + g.width - (c.x + c.width))).toBeLessThanOrEqual(1);
+    const bar = grip.locator("> span");
+    expect((await box(bar)).width).toBe(4);
+    expect((await box(bar)).height).toBe(40);
+    await grip.hover();
+    await expect.poll(async () => (await box(bar)).height).toBe(56);
+    await expect(bar).toHaveCSS("background-color", "rgb(14, 116, 144)");
+    await expect(grip).toHaveCSS("opacity", "1");
+    const g2 = await box(grip);
+    await page.mouse.move(g2.x + g2.width / 2, g2.y + g2.height / 2);
     await page.mouse.down();
-    await page.mouse.move(g.x + g.width / 2 + 60, g.y + g.height / 2, {
+    await page.mouse.move(g2.x + g2.width / 2 + 60, g2.y + g2.height / 2, {
       steps: 6,
     });
+    // While dragging, a 2px teal line runs along the card's edge.
+    expect(
+      await grip.evaluate((el) => getComputedStyle(el, "::after").opacity),
+    ).toBe("1");
     await page.mouse.up();
     await expect
       .poll(async () => Math.round((await box(card(page))).width))
@@ -166,6 +180,10 @@ test.describe("canvas foundation", () => {
     await expect
       .poll(async () => Math.round((await box(card(page))).width))
       .toBe(560);
+    // At a limit the handle dims to 40%.
+    await expect(
+      page.getByRole("separator", { name: "Resize panel" }),
+    ).toHaveCSS("opacity", "0.4");
   });
 
   test("the page renders and the card works with storage blocked", async ({

@@ -234,7 +234,7 @@ test.describe("map page on the canvas", () => {
     await expect(pop).toBeHidden();
   });
 
-  test("the layer toggle is one key under the compass and opens a popover to its left", async ({
+  test("the layer toggle is one key under the zoom group and opens a popover to its left", async ({
     page,
   }) => {
     await open(page, { width: 1440, height: 900 });
@@ -244,10 +244,16 @@ test.describe("map page on the canvas", () => {
     expect(k.x).toBeGreaterThanOrEqual(c.x + c.width);
     expect(Math.abs(k.x + k.width - (1440 - 16))).toBeLessThanOrEqual(1);
     expect(Math.abs(k.width - 44)).toBeLessThanOrEqual(1);
+    const zoom = await box(page.locator(".maplibregl-ctrl-group").first());
+    expect(Math.abs(k.y - (zoom.y + zoom.height + 8))).toBeLessThanOrEqual(1);
+    // The compass arrives below the layers key; the key does not move.
+    await page.evaluate(() => window.__paddlemateMap?.setBearing(40));
     const compass = await box(
       page.getByRole("button", { name: "Reset bearing to north" }),
     );
-    expect(k.y).toBeGreaterThan(compass.y + compass.height);
+    expect(compass.y).toBeGreaterThan(k.y + k.height);
+    expect(Math.abs((await box(key)).y - k.y)).toBeLessThanOrEqual(1);
+    await page.evaluate(() => window.__paddlemateMap?.setBearing(0));
     await expect(page.getByTestId("map-layer-toggle")).toHaveCount(0);
     await key.click();
     const pop = await box(page.getByTestId("map-layer-toggle"));

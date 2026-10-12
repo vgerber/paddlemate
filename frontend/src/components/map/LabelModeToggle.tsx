@@ -174,7 +174,7 @@ function LayerKey(
         sx={{
           position: "absolute",
           zIndex: 2,
-          top: top + BELOW_ZOOM + tokens.touch.min + 8,
+          top: top + BELOW_ZOOM,
           right,
           width: tokens.touch.min,
           height: tokens.touch.min,
