@@ -221,10 +221,10 @@ export default function CommentThread({
         <Box
           sx={{
             flexShrink: 0,
-            px: 1.5,
-            pt: 1.25,
-            pb: 1.5,
-            mt: 0.5,
+            px: { xs: 1.5, md: 0 },
+            pt: { xs: 1.25, md: 1 },
+            pb: { xs: 1.5, md: 0 },
+            mt: { xs: 0.5, md: 0 },
             borderTop: "1px solid",
             borderColor: `${tokens.outlineVariant}55`,
             display: "flex",

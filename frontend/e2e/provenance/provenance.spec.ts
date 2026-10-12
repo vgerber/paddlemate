@@ -160,13 +160,12 @@ const vis = (page: Page, id: string) =>
 
 const header = (page: Page) => vis(page, "edits-header");
 
-/** The section's history through its header menu, the way a reader opens it:
- * the Sources tab, narrowed to the section. */
+/** The section's history the way a reader opens it: the Sources tab, then
+ * its first row, narrowed to the section. */
 async function openHistory(page: Page) {
   await gotoSection(page, "lower");
-  const card = page.getByTestId("features-card").filter({ visible: true });
-  await card.getByRole("button", { name: "Feature list actions" }).click();
-  await page.getByRole("menuitem", { name: "History" }).click();
+  await page.getByRole("tab", { name: "Sources", exact: true }).click();
+  await vis(page, "sources").getByRole("button").first().click();
   await expect(header(page)).toBeVisible();
 }
 
@@ -176,7 +175,7 @@ async function openSources(page: Page) {
 }
 
 test.describe("history mount", () => {
-  test("the section menu opens the real history", async ({ page }) => {
+  test("the Sources tab opens the real history", async ({ page }) => {
     await openHistory(page);
     const steps = page.getByTestId("history-step");
     await expect(steps.first()).toContainText("Imported from Rivermap");

@@ -8,6 +8,7 @@ import { theme } from "@/lib/theme";
 import UnderlineTabs from "./UnderlineTabs";
 
 const { tokens } = theme;
+const { panel } = tokens.canvas;
 
 const backIconSx = { fontSize: 22, color: "text.primary" } as const;
 
@@ -45,9 +46,11 @@ export default function PanelHeader<T extends string>({
   return (
     <Box
       sx={{
-        px: 2,
-        pt: title ? 1.5 : 0,
-        pb: tabs ? 0 : 1,
+        // A titled header is the section panel's 56 + 48 from md; the tab
+        // bar alone keeps its 16 inset.
+        px: { xs: 2, md: title ? 0 : 2 },
+        pt: { xs: title ? 1.5 : 0, md: 0 },
+        pb: { xs: tabs ? 0 : 1, md: tabs ? 0 : 1 },
         bgcolor: tokens.surface,
         boxShadow: tokens.elevation.e1,
         position: "relative",
@@ -61,7 +64,12 @@ export default function PanelHeader<T extends string>({
             display: "flex",
             alignItems: "center",
             gap: 1,
-            mb: tabs ? 0.75 : 0,
+            mb: { xs: tabs ? 0.75 : 0, md: 0 },
+            // From md the title row is one 56 row: back box at +12, title
+            // text at +64, the last action box ends 12 from the edge.
+            minHeight: { md: panel.headerRow },
+            pl: { md: `${panel.hitEdge}px` },
+            pr: { md: `${panel.hitEdge}px` },
           }}
         >
           {onBack && (
@@ -70,7 +78,7 @@ export default function PanelHeader<T extends string>({
               sx={{
                 width: tokens.touch.min,
                 height: tokens.touch.min,
-                ml: -0.75,
+                ml: { xs: -0.75, md: 0 },
               }}
               aria-label={backIcon === "close" ? "Close" : "Back"}
             >
@@ -100,7 +108,15 @@ export default function PanelHeader<T extends string>({
       )}
 
       {tabs && (
-        <Box {...tabs.gesture} sx={{ touchAction: "pan-y" }}>
+        <Box
+          {...tabs.gesture}
+          sx={{
+            touchAction: "pan-y",
+            // The first label starts on the 24 line (tab padding is 4).
+            pl: { md: title ? `${panel.line - 4}px` : 0 },
+            minHeight: { md: title ? panel.tabRow : undefined },
+          }}
+        >
           <UnderlineTabs
             value={tabs.value}
             onChange={tabs.onChange}

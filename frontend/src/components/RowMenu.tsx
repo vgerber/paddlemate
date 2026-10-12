@@ -14,6 +14,8 @@ export interface RowAction {
   onClick: () => void;
   /** Destructive entries render in the error color. */
   danger?: boolean;
+  /** Starts a new group: a hairline divider above the entry. */
+  groupStart?: boolean;
 }
 
 /**
@@ -59,6 +61,9 @@ export default function RowMenu({
               "&&": { minHeight: tokens.touch.min },
               gap: 1.5,
               color: action.danger ? "error.main" : undefined,
+              ...(action.groupStart && {
+                borderTop: `1px solid ${tokens.outlineVariant}`,
+              }),
             }}
             onClick={() => {
               setAnchor(null);

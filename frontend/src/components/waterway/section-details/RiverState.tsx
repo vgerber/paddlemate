@@ -1,12 +1,12 @@
 import ChatBubbleOutlinedIcon from "@mui/icons-material/ChatBubbleOutlined";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import KayakingOutlinedIcon from "@mui/icons-material/KayakingOutlined";
 import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
+import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { flatRowSx } from "@/components/canvas/flatRow";
 import { useHistory } from "@/components/provenance/useProvenance";
 import { useSectionComments } from "@/lib/hooks/useComments";
 import { useDescents } from "@/lib/hooks/useDescents";
@@ -34,6 +34,10 @@ import {
 } from "./stateRows";
 
 const { tokens } = theme;
+const { panel } = tokens.canvas;
+
+/** The icon box: the name lands 56 from the card edge (16 + 28 + 12). */
+const TILE = 28;
 
 const ICONS: Record<StateRow["key"], ReactNode> = {
   hazard: <WarningAmberIcon />,
@@ -82,7 +86,7 @@ const rowSx = {
   alignItems: "center",
   gap: 1.5,
   height: ROW_PX,
-  px: 2,
+  px: `${panel.inner}px`,
   width: "100%",
   textAlign: "left",
   boxSizing: "border-box",
@@ -99,7 +103,16 @@ function Row({
 }) {
   const body = (
     <>
-      <Box sx={{ display: "grid", color: tokens.onSurfaceVariant }}>
+      <Box
+        sx={{
+          display: "grid",
+          placeItems: "center",
+          width: TILE,
+          height: TILE,
+          flex: "none",
+          color: tokens.onSurfaceVariant,
+        }}
+      >
         {ICONS[row.key]}
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -134,11 +147,6 @@ function Row({
           {row.when}
         </Typography>
       )}
-      {onOpen && (
-        <ChevronRightIcon
-          sx={{ flex: "none", color: tokens.outline, mr: -0.5 }}
-        />
-      )}
     </>
   );
   if (!onOpen) {
@@ -149,13 +157,13 @@ function Row({
     );
   }
   return (
-    <ButtonBase
+    <ListItemButton
       data-testid={`river-state-${row.key}`}
       onClick={() => onOpen(row.opens)}
-      sx={{ ...rowSx, justifyContent: "flex-start" }}
+      sx={{ ...rowSx, "&:hover": flatRowSx["&:hover"] }}
     >
       {body}
-    </ButtonBase>
+    </ListItemButton>
   );
 }
 
@@ -300,19 +308,18 @@ export default function RiverState({
       ref={ref}
       data-testid="river-state"
       sx={{
+        // The invisible box `fitRows` measures; the card inside hugs its
+        // rows and the ground below stays plain.
         height: "100%",
         minHeight: 0,
         overflow: "hidden",
-        mx: 0.5,
-        pb: 1.5,
       }}
     >
       {fit.rows > 0 && (
-        // A card of its own, like the features card above, running to the
-        // card's foot so the spare room reads as one panel, not bare ground.
         <Box
           sx={{
-            height: "100%",
+            alignSelf: "flex-start",
+            width: "100%",
             overflow: "hidden",
             bgcolor: tokens.surface,
             borderRadius: `${tokens.radii.md}px`,

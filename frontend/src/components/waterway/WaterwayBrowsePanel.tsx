@@ -27,6 +27,7 @@ import {
   gradeLabel,
   sectionGradeOf,
 } from "@/components/waterway/section-details/grade";
+import { useGradeActions } from "@/components/waterway/section-details/useGradeActions";
 import { sectionLengthM } from "@/components/waterway/section-details/utils";
 import type {
   Feature,
@@ -85,11 +86,11 @@ interface WaterwayBrowsePanelProps {
     showProposed?: boolean;
     onToggleProposed?: () => void;
     proposals?: Proposal[];
-    onFoldedChange?: (folded: boolean) => void;
   };
 }
 
 const { tokens } = theme;
+const { panel } = tokens.canvas;
 
 /** The header's icons are small to look at and 44px to hit. */
 const headerIconSx = {
@@ -151,14 +152,26 @@ export default function WaterwayBrowsePanel({
 
   const { current: standingDescent, start: startDescent } =
     useStandingDescent();
+  const logSearch = {
+    waterwayId,
+    sectionId: selectedSection?.id,
+    startTime: undefined,
+  };
+
+  const grade = useGradeActions(
+    selectedSection,
+    featureTimeline?.onEditFeature,
+    () => featureTimeline?.onActiveFeatureChange?.(null),
+  );
 
   // The section's actions live in one overflow menu in the header, on a phone
   // and on a desktop alike; the floating or docked button is only the
-  // primary add.
-  const sectionActions: RowAction[] = [];
+  // primary add. Three groups, a divider between: the section's own, the
+  // grade, the view toggle.
+  const own: RowAction[] = [];
   if (inFeatures && onToggleFavorite) {
     const starred = favoritedIds?.has(selectedSection.id) ?? false;
-    sectionActions.push({
+    own.push({
       label: starred ? "Remove favorite" : "Add favorite",
       icon: starred ? (
         <StarIcon fontSize="small" sx={{ color: tokens.tertiary }} />
@@ -168,12 +181,36 @@ export default function WaterwayBrowsePanel({
       onClick: () => onToggleFavorite(selectedSection.id),
     });
   }
+  if (inFeatures && isAuthenticated) {
+    if (!standingDescent) {
+      own.push({
+        label: "Start descent",
+        icon: <PlayArrowOutlinedIcon fontSize="small" />,
+        onClick: () =>
+          startDescent({
+            startTime: new Date().toISOString(),
+            waterwayId,
+            sectionId: selectedSection.id,
+            sectionName: selectedSection.name,
+          }),
+      });
+    }
+    // The Logs tab's docked button is this action.
+    if (sectionDetailTab !== "logs") {
+      own.push({
+        label: "Log descent",
+        icon: <DirectionsBoatOutlinedIcon fontSize="small" />,
+        onClick: () => navigate({ to: "/logs/new", search: logSearch }),
+      });
+    }
+  }
+  const view: RowAction[] = [];
   if (
     inFeatures &&
     sectionDetailTab === "features" &&
     featureTimeline?.onToggleProposed
   ) {
-    sectionActions.push({
+    view.push({
       label: featureTimeline.showProposed
         ? "Hide proposed features"
         : "Show proposed features",
@@ -188,34 +225,12 @@ export default function WaterwayBrowsePanel({
       onClick: featureTimeline.onToggleProposed,
     });
   }
-  if (inFeatures && isAuthenticated) {
-    if (!standingDescent) {
-      sectionActions.push({
-        label: "Start descent",
-        icon: <PlayArrowOutlinedIcon fontSize="small" />,
-        onClick: () =>
-          startDescent({
-            startTime: new Date().toISOString(),
-            waterwayId,
-            sectionId: selectedSection.id,
-            sectionName: selectedSection.name,
-          }),
-      });
-    }
-    sectionActions.push({
-      label: "Log descent",
-      icon: <DirectionsBoatOutlinedIcon fontSize="small" />,
-      onClick: () =>
-        navigate({
-          to: "/logs/new",
-          search: {
-            waterwayId,
-            sectionId: selectedSection.id,
-            startTime: undefined,
-          },
-        }),
-    });
-  }
+  const sectionActions = [own, grade.actions, view].flatMap((group, i, all) =>
+    group.map((action, j) => ({
+      ...action,
+      groupStart: j === 0 && all.slice(0, i).some((g) => g.length > 0),
+    })),
+  );
 
   const actionButton =
     sectionActions.length > 0 || onMobileMapToggle ? (
@@ -314,6 +329,7 @@ export default function WaterwayBrowsePanel({
 
   return (
     <>
+      {grade.dialog}
       <Box
         sx={{
           position: "relative",
@@ -356,14 +372,24 @@ export default function WaterwayBrowsePanel({
             sx={{
               flex: 1,
               overflowY: "auto",
-              // The spare room goes to the river state, so the list's own
-              // blocks keep their height.
-              ...(inFeatures &&
-                sectionDetailTab === "features" && {
-                  display: "flex",
-                  flexDirection: "column",
-                  "& > *": { flexShrink: 0 },
-                }),
+              // From md every tab of a section is one well: 8 round, 8 between
+              // cards. Below it the cards keep their own insets; the river's
+              // lists run edge to edge.
+              // On a phone only the features tab is a column (the river state
+              // takes the spare room).
+              display: {
+                xs:
+                  inFeatures && sectionDetailTab === "features"
+                    ? "flex"
+                    : "block",
+                md: "flex",
+              },
+              flexDirection: "column",
+              gap: { md: `${panel.gutter}px` },
+              "& > *": { flexShrink: 0 },
+              // The features card takes the pane's room and its list scrolls
+              // inside it.
+              "& > [data-testid='features-card']": { flexShrink: { md: 1 } },
               // A fade over the last 20px says more is below.
               ...(moreBelow && {
                 maskImage:
@@ -375,6 +401,7 @@ export default function WaterwayBrowsePanel({
               // that starts inside a scroller).
               overscrollBehavior: "contain",
               py: 1,
+              ...(inFeatures && { p: { md: `${panel.gutter}px` } }),
               // Leave room so a floating button never covers the last row.
               // Desktop docks its actions in the row below the list, so only
               // the panel's own FAB and the mobile speed dial need it.
@@ -383,7 +410,7 @@ export default function WaterwayBrowsePanel({
                 (inFeatures &&
                   (sectionDetailTab === "features" ||
                     sectionDetailTab === "logs"))
-                  ? { xs: 9, md: 0 }
+                  ? { xs: 9, md: inFeatures ? `${panel.gutter}px` : 0 }
                   : 1,
             }}
           >
@@ -424,7 +451,6 @@ export default function WaterwayBrowsePanel({
                     onActiveFeatureChange={
                       featureTimeline?.onActiveFeatureChange
                     }
-                    onFoldedChange={featureTimeline?.onFoldedChange}
                     onOpenHistory={(filter) => {
                       setEditsFilter({ sectionId: selectedSection.id, filter });
                       onSectionDetailTabChange("sources");
@@ -432,7 +458,10 @@ export default function WaterwayBrowsePanel({
                   />
                   <Box
                     data-testid="river-state-slot"
-                    sx={{ flex: 1, minHeight: riverState ? 96 : 0 }}
+                    sx={{
+                      flex: "1 1 0",
+                      minHeight: { xs: riverState ? 96 : 0, md: 0 },
+                    }}
                   >
                     {riverState}
                   </Box>
@@ -481,6 +510,7 @@ export default function WaterwayBrowsePanel({
 
         {showNewSectionFab && (
           <DockedAction
+            inset={panel.gutter}
             label="New section"
             onClick={() => onSuggestModeChange("section")}
           />
@@ -493,20 +523,13 @@ export default function WaterwayBrowsePanel({
           (sectionDetailTab === "features" || sectionDetailTab === "logs") &&
           (sectionDetailTab === "logs" ? (
             <DockedAction
+              inset={panel.gutter}
               label="Log descent"
-              onClick={() =>
-                navigate({
-                  to: "/logs/new",
-                  search: {
-                    waterwayId,
-                    sectionId: selectedSectionId,
-                    startTime: undefined,
-                  },
-                })
-              }
+              onClick={() => navigate({ to: "/logs/new", search: logSearch })}
             />
           ) : (
             <DockedAction
+              inset={panel.gutter}
               label="New feature"
               onClick={() => onSuggestModeChange("feature")}
             />

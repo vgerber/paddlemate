@@ -24,9 +24,11 @@ test("the section actions stay inside the screen @small", async ({ page }) => {
   );
   expect(boxes.map((b) => b.label)).toEqual([
     "Add favorite",
-    "Show proposed features",
     "Start descent",
     "Log descent",
+    "Edit grade",
+    "Delete grade",
+    "Show proposed features",
   ]);
   for (const b of boxes) {
     expect(b.top, `${b.label} top`).toBeGreaterThanOrEqual(0);

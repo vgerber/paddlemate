@@ -133,7 +133,7 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
               n={ctx.numbers?.get(item.feature.id)}
             />
           </Box>
-          <Box sx={{ flex: 1, minWidth: 0, pb: 0.75 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box
               sx={{
                 minHeight: ROW_MIN,

@@ -8,7 +8,7 @@ import { theme } from "@/lib/theme";
 const { tokens } = theme;
 
 /** Height of the first line of a row: the disc is centred on it. */
-export const ROW_MIN = 52;
+export const ROW_MIN = tokens.canvas.panel.row;
 export const DISC = 28;
 /** Width of the rail column. */
 export const RAIL_COL = 36;

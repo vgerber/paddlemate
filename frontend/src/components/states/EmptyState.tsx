@@ -36,11 +36,16 @@ export default function EmptyState({
   title,
   caption,
   py = 6,
+  pt = py,
+  pb = py,
 }: {
   icon?: ReactNode;
   title: string;
   caption?: string;
   py?: number;
+  /** Override the top or bottom of `py`. */
+  pt?: number;
+  pb?: number;
 }) {
   return (
     <Box
@@ -50,7 +55,8 @@ export default function EmptyState({
         flexDirection: "column",
         alignItems: "center",
         gap: 0.75,
-        py,
+        pt,
+        pb,
         px: 2,
         textAlign: "center",
       }}
