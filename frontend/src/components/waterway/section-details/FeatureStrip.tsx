@@ -54,18 +54,15 @@ function Icon({
   );
 }
 
-/** The run to scale: the grade bar above the line, ranges on it (a portage
+/** The run to scale: ranges on the line (a portage
  * as a dashed path), each feature as its icon in a small white disc, close
  * neighbours stepped below and crowds merged into one group disc. It never
  * folds; the list under it does. */
 export function FeatureStrip({
   features,
-  grade,
   totalM,
 }: {
   features: ComputedFeature[];
-  /** Label of a grade over the whole run, e.g. "WW III". */
-  grade: string | null;
   totalM: number;
 }) {
   const { ref, width } = useWidth();
@@ -79,7 +76,7 @@ export function FeatureStrip({
     }));
   const { discs, groups } = layoutStrip(points, totalM, width);
 
-  const lineY = grade ? 34 : 18;
+  const lineY = 18;
   const hasStep = discs.some((d) => d.level === 1);
   const axisY = lineY + (hasStep ? 50 : 32);
   const height = axisY + 4;
@@ -87,7 +84,6 @@ export function FeatureStrip({
   const km = (m: number) => (m / 1000).toFixed(1);
   const left = x(0);
   const right = x(totalM);
-  const gradeStart = left + (grade ? grade.length * 6 + 10 : 0);
 
   return (
     <Box ref={ref} data-testid="features-strip" sx={{ width: "100%" }}>
@@ -98,30 +94,6 @@ export function FeatureStrip({
         aria-hidden="true"
         style={{ display: "block" }}
       >
-        {grade && (
-          <>
-            <text
-              x={left}
-              y={11}
-              data-testid="strip-grade"
-              fontFamily={fonts.body}
-              fontSize={11}
-              fontWeight={600}
-              fill={tokens.onSurfaceVariant}
-            >
-              {grade}
-            </text>
-            <line
-              x1={gradeStart}
-              x2={right}
-              y1={8}
-              y2={8}
-              stroke={tokens.outlineVariant}
-              strokeWidth={4}
-              strokeLinecap="round"
-            />
-          </>
-        )}
         <line
           x1={left}
           x2={right}

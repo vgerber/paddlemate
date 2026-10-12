@@ -38,6 +38,11 @@ export function featureName(f: Feature): string {
   return diff ? `${name} ${diff}` : name;
 }
 
+/** Length of the section line in metres; 0 for a degenerate line. */
+export function sectionLengthM(line: [number, number][]): number {
+  return line.length < 2 ? 0 : distanceAlongLineM(line[line.length - 1], line);
+}
+
 /** Tolerance (m) when detecting that a zone spans the whole section. */
 export const FULL_SECTION_TOLERANCE_M = 50;
 

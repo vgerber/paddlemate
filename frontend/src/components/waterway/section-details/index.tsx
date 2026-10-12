@@ -2,6 +2,7 @@ import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import HistoryIcon from "@mui/icons-material/History";
+import WavesIcon from "@mui/icons-material/Waves";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
@@ -12,14 +13,14 @@ import type { EditsFilter } from "@/components/provenance/EditsTimeline";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import EmptyState from "@/components/states/EmptyState";
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
-import { distanceAlongLineM, lineCoords } from "@/lib/geo";
+import { lineCoords } from "@/lib/geo";
 import { useDeleteFeature } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
 import { css, durations } from "@/lib/motion";
 import { theme } from "@/lib/theme";
 import { FeatureStrip } from "./FeatureStrip";
 import { FeatureNode } from "./RangeBand";
-import { featureNumbers, splitWholeRunGrades } from "./rows";
+import { countLabel, featureNumbers, splitBaseGrade, stripShown } from "./rows";
 import SectionFacts from "./SectionFacts";
 import type { ComputedFeature } from "./types";
 import {
@@ -28,6 +29,7 @@ import {
   defaultRangeFeature,
   featureName,
   proposalToComputedFeature,
+  sectionLengthM,
 } from "./utils";
 
 const { tokens } = theme;
@@ -79,24 +81,20 @@ export default function FeatureTimeline({
     [section.location],
   );
 
-  const totalM = useMemo(() => {
-    if (sectionLine.length < 2) return 0;
-    return distanceAlongLineM(sectionLine[sectionLine.length - 1], sectionLine);
-  }, [sectionLine]);
+  const totalM = useMemo(() => sectionLengthM(sectionLine), [sectionLine]);
 
-  const { approved, grades, tree } = useMemo(() => {
-    const approved = section.features.map((f) => computeExtent(f, sectionLine));
-    const split = splitWholeRunGrades(approved, totalM);
-    const proposed = showProposed
-      ? proposals
-          .map((p) => proposalToComputedFeature(p, sectionLine))
-          .filter((cf): cf is ComputedFeature => cf !== null)
-      : [];
-    const all = [...split.rest, ...proposed];
+  const { approved, grade, proposedCount, tree } = useMemo(() => {
+    const all = section.features.map((f) => computeExtent(f, sectionLine));
+    const split = splitBaseGrade(all, totalM);
+    const proposed = proposals
+      .map((p) => proposalToComputedFeature(p, sectionLine))
+      .filter((cf): cf is ComputedFeature => cf !== null);
+    const shown = [...split.rest, ...(showProposed ? proposed : [])];
     return {
       approved: split.rest,
-      grades: split.grades,
-      tree: all.length ? buildTree(all) : [],
+      grade: split.grade,
+      proposedCount: proposed.length,
+      tree: shown.length ? buildTree(shown) : [],
     };
   }, [section.features, proposals, showProposed, sectionLine, totalM]);
 
@@ -162,8 +160,7 @@ export default function FeatureTimeline({
     pendingDeleteIds,
   };
 
-  // A grade over the whole run has no row, so its actions live in the header.
-  const grade = grades[0];
+  // The base grade has no row, so its actions live in the header.
   const gradeActions: RowAction[] = onOpenHistory
     ? [
         {
@@ -189,16 +186,9 @@ export default function FeatureTimeline({
     });
   }
 
-  if (!section.features.length && !tree.length) {
-    return <EmptyState title="No features for this section." />;
-  }
-
-  const count = section.features.length;
-  const longest = Math.max(
-    totalM,
-    ...approved.map((f) => f.endM),
-    ...grades.map((f) => f.endM),
-  );
+  const empty = approved.length === 0 && tree.length === 0;
+  const longest = Math.max(totalM, ...approved.map((f) => f.endM));
+  const showCount = approved.length > 0 || tree.length > 0;
 
   return (
     <Box
@@ -218,65 +208,70 @@ export default function FeatureTimeline({
         sectionId={section.id}
         preferredFeatureId={defaultRangeFeature(section)?.id}
       />
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          pl: 2,
-          pr: 0.5,
-          minHeight: tokens.touch.min,
-        }}
-      >
-        <Typography
-          data-testid="features-count"
+      {(showCount || gradeActions.length > 0) && (
+        <Box
           sx={{
-            flex: 1,
-            fontSize: "0.8125rem",
-            fontWeight: 600,
-            color: tokens.onSurfaceVariant,
+            display: "flex",
+            alignItems: "center",
+            pl: 2,
+            pr: 0.5,
+            minHeight: tokens.touch.min,
           }}
         >
-          {count} {count === 1 ? "feature" : "features"}
-        </Typography>
-        <IconButton
-          data-testid="features-fold"
-          aria-expanded={!folded}
-          aria-label={folded ? "Show features" : "Fold features"}
-          onClick={() => setFolded((f) => !f)}
-          sx={{
-            width: tokens.touch.min,
-            height: tokens.touch.min,
-            color: tokens.onSurfaceVariant,
-          }}
-        >
-          <ExpandLessIcon
+          <Typography
+            data-testid="features-count"
             sx={{
-              transform: folded ? "rotate(180deg)" : "none",
-              transition: `transform ${css.fast} ${css.easeOut}`,
+              flex: 1,
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              color: tokens.onSurfaceVariant,
             }}
-          />
-        </IconButton>
-      </Box>
-
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "flex-start",
-          pl: 2,
-          pr: 0.5,
-          pb: 1,
-          boxShadow: `0 1px 0 ${tokens.outlineVariant}`,
-        }}
-      >
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <FeatureStrip
-            features={approved}
-            grade={grades.length ? featureName(grades[0].feature) : null}
-            totalM={longest}
-          />
+          >
+            {showCount ? countLabel(approved.length, proposedCount) : null}
+          </Typography>
+          <RowMenu actions={gradeActions} label="Feature list actions" />
+          {showCount && (
+            <IconButton
+              data-testid="features-fold"
+              aria-expanded={!folded}
+              aria-label={folded ? "Show features" : "Fold features"}
+              onClick={() => setFolded((f) => !f)}
+              sx={{
+                width: tokens.touch.min,
+                height: tokens.touch.min,
+                color: tokens.onSurfaceVariant,
+              }}
+            >
+              <ExpandLessIcon
+                sx={{
+                  transform: folded ? "rotate(180deg)" : "none",
+                  transition: `transform ${css.fast} ${css.easeOut}`,
+                }}
+              />
+            </IconButton>
+          )}
         </Box>
-        <RowMenu actions={gradeActions} label="Feature list actions" />
-      </Box>
+      )}
+
+      {empty && (
+        <EmptyState
+          icon={<WavesIcon />}
+          title="No rapids, hazards or access points yet."
+        />
+      )}
+
+      {stripShown(approved) && (
+        <Box
+          sx={{
+            pl: 2,
+            pr: 2,
+            pb: 1,
+            boxShadow: `0 1px 0 ${tokens.outlineVariant}`,
+          }}
+        >
+          <FeatureStrip features={approved} totalM={longest} />
+        </Box>
+      )}
 
       <Collapse in={!folded} timeout={durations.base} unmountOnExit>
         <Box sx={{ px: 0.5 }}>

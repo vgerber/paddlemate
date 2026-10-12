@@ -74,7 +74,7 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 
 | Screen | What defines it |
 |---|---|
-| Section detail | A chart card at the top of the pane (closed: the chart and one options button; open: reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide); History opens over the pane |
+| Section detail | A chart card at the top of the pane (closed: the chart and one options button; open: reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide; hidden for no rows, a single row, or put-in and take-out only); a graded range over 80% or more of the run is the section's grade, so it leaves the rows, strip and count (`sectionGrade` in `section-details/grade.ts`, shown in the card subtitle), with the hardest harder stretch in brackets; the count line reads "n features · m proposed"; a section with nothing but a grade reads "No rapids, hazards or access points yet."; History opens over the pane |
 | Search | Tabs Name, Area, Region; a Filters sheet (country, grade, Water now); the chosen levels live in the `water` URL param |
 | Map region mode | The search panel (a peek sheet on a phone, the card on desktop) with the region field, level chips, and "Part of" naming the parents of a picked region; the regions stay visible on the map |
 | Logs | Two panes on desktop; the date is a picker field |
