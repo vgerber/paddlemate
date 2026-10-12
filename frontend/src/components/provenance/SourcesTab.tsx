@@ -270,7 +270,7 @@ function FilterHeader({
     <Box
       data-testid="edits-header"
       sx={{
-        m: 1.5,
+        m: { xs: 1.5, md: 0 },
         mb: 0,
         pl: 0.5,
         pr: 1.5,
@@ -395,7 +395,7 @@ export default function SourcesTab({
       <Box
         data-testid="sources"
         sx={{
-          m: 1.5,
+          m: { xs: 1.5, md: 0 },
           bgcolor: tokens.surface,
           borderRadius: `${tokens.radii.md}px`,
           boxShadow: tokens.elevation.e1,

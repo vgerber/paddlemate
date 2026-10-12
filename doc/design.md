@@ -33,6 +33,21 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   system back gesture. A chart that is zoomed, a chip row, a slider and the map
   keep their own horizontal gestures. Wizard steps do not swipe. Tabs keep their
   roles and arrow keys; swiping is never the only way.
+- **Spacing in the section panel** (`tokens.canvas.panel`, from `md`): the
+  well under the header has 8 on all sides and 8 between cards, on every tab;
+  inside a card text sits 16 from the edge (24 from the panel's edge), a hit
+  box ends 12 from the edge, a row is 56 high and the header 104 (a 56 title
+  row with the back box at +12 and the title text at +64, then a 48 tab row
+  whose first label starts on the 24 line). Cards carry no outer margin of
+  their own; the well supplies it. A docked action sits on the card edges
+  (`DockedAction` with `inset`), 8 below the last card. Other panes keep
+  their own inset until they move to this system.
+- **One header menu, grouped.** The section's actions sit in one overflow menu
+  in the header, in groups with a hairline between (`groupStart` on a
+  `RowAction`): the section (favorite, start and log descent), then its grade
+  (edit, delete), then the view (show proposed features, Features tab only).
+  An action the tab already offers as its docked button (Log descent on Logs)
+  is left out of the menu. A card inside the panel has no menu of its own.
 - Two panes side by side separate by surface level (the list on the ground, the
   detail on cards), not by a hard border.
 - Multi-step forms have no top header. Their chrome is a fixed bottom bar
@@ -58,6 +73,9 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 - **Rows** are cards with the soft shadow, not bordered boxes. The open row in
   every list (trip, proposal, gauge, settings, river) gets the teal wash and
   the 3px inset bar of `canvas/flatRow.ts`. A row's actions are one overflow menu (`RowMenu`).
+  Inside a panel card a row is a plain 56px row, a dimmed rule between rows,
+  and the whole row is the target: no chevron at the right (the river state
+  rows). A card hugs its rows; the ground below it stays plain.
 - **Filters** are chips under the search field: teal when set, one tap opens a
   sheet with the exact fields. The search screen has the header and tabs like
   every other screen (Name, Area, Region), results lead with Sections.
@@ -80,7 +98,7 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 
 | Screen | What defines it |
 |---|---|
-| Section detail | The chart: from 1280 the reading block at the card's foot and the plot in the rail beside it, below that a card at the top of the pane (reading, plot, the credit and the period; on a phone the chart with an options button that opens reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide; hidden for no rows, a single row, or put-in and take-out only); a graded range over 80% or more of the run is the section's grade, so it leaves the rows, strip and count (`sectionGrade` in `section-details/grade.ts`, shown in the card subtitle), with the hardest harder stretch in brackets; the count line reads "n features · m proposed"; a section with nothing but a grade reads "No rapids, hazards or access points yet."; the river state block (hazard, last paddled, latest note, open proposals) fills the card's spare room; History opens over the pane |
+| Section detail | The chart: from 1280 the reading block at the card's foot and the plot in the rail beside it, below that a card at the top of the pane (reading, plot, the credit and the period; on a phone the chart with an options button that opens reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide; hidden for no rows, a single row, or put-in and take-out only); a graded range over 80% or more of the run is the section's grade, so it leaves the rows, strip and count (`sectionGrade` in `section-details/grade.ts`, shown in the card subtitle), with the hardest harder stretch in brackets; the count line reads "n features · m proposed"; a section with nothing but a grade reads "No rapids, hazards or access points yet."; the river state block (hazard, last paddled, latest note, open proposals) fills the card's spare room as a card that hugs its rows; the section's history opens from the Sources tab, a feature's from its open row |
 | Search | Tabs Name, Area, Region; a Filters sheet (country, grade, Water now); the chosen levels live in the `water` URL param |
 | Map region mode | The search panel (a peek sheet on a phone, the card on desktop) with the region field, level chips, and "Part of" naming the parents of a picked region; the regions stay visible on the map |
 | Logs | Two panes on desktop; the date is a picker field |

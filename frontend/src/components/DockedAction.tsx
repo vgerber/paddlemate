@@ -12,15 +12,19 @@ const { tokens } = theme;
 export default function DockedAction({
   label,
   onClick,
+  inset,
 }: {
   label: string;
   onClick: () => void;
+  /** Space in px on the sides and below, none above, where the pane's own
+   * gutter supplies it. Omitted: 12px all round. */
+  inset?: number;
 }) {
   return (
     <Box
       sx={{
         display: { xs: "none", md: "flex" },
-        p: 1.5,
+        p: inset === undefined ? 1.5 : `0 ${inset}px ${inset}px`,
         flexShrink: 0,
       }}
     >

@@ -289,7 +289,8 @@ export default function EditsTimeline({
     <Box
       data-testid="history"
       sx={{
-        m: 1.5,
+        // From md the pane's own 8 gutter spaces the card.
+        m: { xs: 1.5, md: 0 },
         bgcolor: tokens.surface,
         borderRadius: `${tokens.radii.md}px`,
         boxShadow: tokens.elevation.e1,

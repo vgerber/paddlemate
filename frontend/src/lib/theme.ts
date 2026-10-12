@@ -212,6 +212,19 @@ const tokens = {
     headerHeight: 56,
     gripHit: 12,
     gripBar: { w: 4, h: 40 },
+    // The section panel's spacing system: 8 between the card ground and a
+    // card, 16 inside a card, text on a 24 line, hit boxes end 12 from the
+    // edge, rows 56, a header of 56 + 48.
+    panel: {
+      gutter: 8,
+      inner: 16,
+      line: 24,
+      hit: 44,
+      hitEdge: 12,
+      row: 56,
+      headerRow: 56,
+      tabRow: 48,
+    },
     dock: { min: 184, max: 248, vh: 0.22, from: 1280, minWindowHeight: 600 },
     cards: {
       detail: {

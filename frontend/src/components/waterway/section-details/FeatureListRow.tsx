@@ -27,6 +27,7 @@ import {
 } from "./utils";
 
 const { tokens } = theme;
+const { panel } = tokens.canvas;
 
 /** What every row of the list shares. */
 export interface RowContext {
@@ -96,7 +97,8 @@ export function FeatureListRow({
         textAlign: "left",
         minHeight: ROW_MIN,
         gap: 1,
-        pr: 1.5,
+        pl: 1.5,
+        pr: `${panel.inner}px`,
         bgcolor: isActive ? `${tokens.primary}${alphas.tint}` : "transparent",
         // The selected row's 2px teal ring, drawn inside so it never shifts.
         outline: isActive ? `2px solid ${tokens.primary}` : "none",
@@ -129,7 +131,6 @@ export function FeatureListRow({
         sx={{
           flex: 1,
           minWidth: 0,
-          pb: 0.75,
           opacity: isProposal ? 0.6 : 1,
         }}
       >
@@ -181,6 +182,7 @@ export function FeatureListRow({
               fontSize: "0.8125rem",
               color: tokens.onSurfaceVariant,
               mt: 0.5,
+              pb: 0.75,
             }}
           >
             {desc}
