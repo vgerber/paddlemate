@@ -1,9 +1,10 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import {
   appReady,
   computed,
   expectNoHorizontalOverflow,
   expectTouchTargets,
+  FIX,
   gotoSection,
 } from "../support/fixture";
 
@@ -468,19 +469,65 @@ test.describe("reading block and rail", () => {
 
   const block = (page: Page) => page.getByTestId("reading-block");
   const rail = (page: Page) => page.getByTestId("chart-dock");
+  const plot = (page: Page) => rail(page).getByTestId("chart-plot");
 
   async function openRail(page: Page) {
     await gotoSection(page, "lower");
     await expect(rail(page).getByTestId("latest-dot")).toBeVisible();
   }
 
-  test("the block says the gauge, the reading and the level as a dot and a word", async ({
+  async function boxOf(locator: Locator) {
+    return (await locator.boundingBox()) as NonNullable<
+      Awaited<ReturnType<Locator["boundingBox"]>>
+    >;
+  }
+
+  async function pointAt(page: Page, fraction: number) {
+    const b = await boxOf(plot(page));
+    await page.mouse.move(b.x + b.width * fraction, b.y + b.height / 2);
+  }
+
+  async function withFlow(page: Page) {
+    await page.route(/\/water-status$/, async (route) => {
+      const res = await route.fetch();
+      const body = await res.json();
+      const level = body.ranges[0];
+      if (!level) return route.fulfill({ response: res, json: body });
+      body.ranges = [
+        ...body.ranges,
+        {
+          ...level,
+          id: 99001,
+          series: {
+            ...level.series,
+            id: 99401,
+            measurement_type: "discharge",
+            unit: "m3/s",
+          },
+          range_low: null,
+          range_medium: null,
+          range_high: null,
+          latest_reading: {
+            ...level.latest_reading,
+            series_id: 99401,
+            value: 12.4,
+          },
+        },
+      ];
+      await route.fulfill({ response: res, json: body });
+    });
+    await page.route(/\/series\/99401\/readings/, (route) =>
+      route.fulfill({ json: [] }),
+    );
+  }
+
+  test("the block says the gauge, the time, a level dot and word - no number, no trend", async ({
     page,
   }) => {
     await openRail(page);
     await expect(block(page)).toContainText("Test Gauge");
-    await expect(block(page).getByTestId("chart-reading")).toContainText(
-      /^\d+(\.\d)? cm/,
+    await expect(block(page).getByTestId("reading-time")).toContainText(
+      /\d{2}:\d{2}|\d/,
     );
     const level = block(page).getByTestId("reading-level");
     await expect(level).toContainText("Medium");
@@ -488,38 +535,117 @@ test.describe("reading block and rail", () => {
     expect(await computed(level, "background-color")).toBe("rgba(0, 0, 0, 0)");
     const dot = level.locator("span, div").first();
     expect(Math.round((await dot.boundingBox())?.width ?? 0)).toBe(10);
-  });
-
-  test("the period is a four-way control with 44px keys", async ({ page }) => {
-    await openRail(page);
-    const period = block(page).getByRole("group", { name: "Period" });
-    for (const p of ["24h", "7d", "30d", "1y"]) {
-      await expect(period.getByRole("button", { name: p })).toBeVisible();
-    }
-    await expectTouchTargets(period.getByRole("button"));
-    await period.getByRole("button", { name: "30d" }).click();
-    await expect(period.getByRole("button", { name: "30d" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
+    await expect(block(page)).not.toContainText(/\d+(\.\d)? cm/);
+    await expect(block(page)).not.toContainText(
+      /rising|falling|steady| in 24 h/,
     );
-    await period.getByRole("button", { name: "7d" }).click();
   });
 
-  test("the thresholds are labelled in a gutter right of the plot", async ({
+  test("the period is one text button that opens four items upward", async ({
+    page,
+  }) => {
+    await openRail(page);
+    const button = block(page).getByRole("button", { name: "Chart period" });
+    await expect(button).toContainText("Last 7 days");
+    await expectTouchTargets(button);
+    await button.click();
+    const items = page.getByRole("menuitem");
+    await expect(items).toHaveText([
+      "Last 24 hours",
+      "Last 7 days",
+      "Last 30 days",
+      "Last year",
+    ]);
+    await expectTouchTargets(items);
+    const menu = await boxOf(page.getByRole("menu"));
+    const trigger = await boxOf(button);
+    expect(menu.y + menu.height).toBeLessThanOrEqual(trigger.y);
+    await items.nth(2).click();
+    await expect(button).toContainText("Last 30 days");
+    await button.click();
+    await items.nth(1).click();
+    await expect(button).toContainText("Last 7 days");
+  });
+
+  test("there is no options button and no grid; the line is 2px", async ({
+    page,
+  }) => {
+    await openRail(page);
+    await expect(
+      page.getByRole("button", { name: "Chart options" }),
+    ).toHaveCount(0);
+    await expect(rail(page).locator(".recharts-cartesian-grid")).toHaveCount(0);
+    const line = rail(page).locator(".recharts-area-curve").first();
+    expect(await computed(line, "stroke-width")).toBe("2px");
+  });
+
+  test("the plot runs edge to edge in the rail", async ({ page }) => {
+    await openRail(page);
+    const p = await boxOf(plot(page));
+    const r = await boxOf(rail(page));
+    expect(p.x).toBeLessThanOrEqual(r.x + 2);
+    expect(p.x + p.width).toBeGreaterThanOrEqual(r.x + r.width - 1);
+    const svg = await boxOf(rail(page).locator("svg.recharts-surface"));
+    expect(Math.abs(svg.x - p.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(svg.x + svg.width - (p.x + p.width))).toBeLessThanOrEqual(
+      1,
+    );
+  });
+
+  test("the latest dot sits inside the plot, with its value beside it", async ({
+    page,
+  }) => {
+    await openRail(page);
+    const p = await boxOf(plot(page));
+    const dot = await boxOf(rail(page).getByTestId("latest-dot"));
+    expect(dot.x + dot.width).toBeLessThanOrEqual(p.x + p.width);
+    await expect(rail(page).getByTestId("latest-value")).toHaveText(
+      /^\d+(\.\d)? cm$/,
+    );
+  });
+
+  test("the thresholds are the words Low, Medium, High on the lines, no gutter", async ({
     page,
   }) => {
     await openRail(page);
     const labels = rail(page).getByTestId("threshold-label");
-    await expect(labels).toHaveCount(3);
-    await expect(labels.nth(0)).toHaveText(/^(High|Medium|Low) \d+/);
-    const dot = await rail(page).getByTestId("latest-dot").boundingBox();
-    for (const b of await labels.evaluateAll((els) =>
+    const words = await labels.allTextContents();
+    expect(words.length).toBeGreaterThan(0);
+    for (const w of words) expect(["Low", "Medium", "High"]).toContain(w);
+    const p = await boxOf(plot(page));
+    for (const x of await labels.evaluateAll((els) =>
       els.map((e) => e.getBoundingClientRect().x),
     )) {
-      expect(b, "label starts right of the latest dot").toBeGreaterThan(
-        (dot?.x ?? 0) + (dot?.width ?? 0) - 1,
-      );
+      expect(
+        x - p.x,
+        "starts about 12px in from the plot's left",
+      ).toBeGreaterThan(11);
+      expect(x - p.x).toBeLessThan(15);
     }
+  });
+
+  test("the first and last date labels keep 12px from the plot's edges", async ({
+    page,
+  }) => {
+    await openRail(page);
+    const p = await boxOf(plot(page));
+    const ticks = await rail(page)
+      .locator("svg.recharts-surface text")
+      .evaluateAll((els) =>
+        els
+          .filter((e) => e.getAttribute("font-size") === "11")
+          .map((e) => {
+            const r = e.getBoundingClientRect();
+            return { left: r.left, right: r.right };
+          }),
+      );
+    expect(ticks.length).toBeGreaterThan(1);
+    expect(Math.min(...ticks.map((t) => t.left)) - p.x).toBeGreaterThanOrEqual(
+      11,
+    );
+    expect(
+      p.x + p.width - Math.max(...ticks.map((t) => t.right)),
+    ).toBeGreaterThanOrEqual(11);
   });
 
   test("the credit is one line under the plot, inside the rail", async ({
@@ -528,50 +654,92 @@ test.describe("reading block and rail", () => {
     await openRail(page);
     const credit = rail(page).getByTestId("gauge-attribution").first();
     await expect(credit).toContainText("Data: THS · CC BY 4.0");
-    const plot = await rail(page).getByTestId("chart-plot").boundingBox();
-    const line = await credit.boundingBox();
-    expect(line?.y ?? 0).toBeGreaterThanOrEqual(
-      (plot?.y ?? 0) + (plot?.height ?? 0) - 1,
+    const p = await boxOf(plot(page));
+    const line = await boxOf(credit);
+    expect(line.y).toBeGreaterThanOrEqual(p.y + p.height - 1);
+    expect(line.x - p.x, "the credit keeps its 16px").toBeGreaterThanOrEqual(
+      15,
     );
   });
 
-  test("the options hold only what the chart can do, and the thresholds switch works", async ({
+  test("pointing shows the readout and Latest; leaving keeps the point until Latest", async ({
     page,
   }) => {
     await openRail(page);
-    const button = block(page).getByRole("button", { name: "Chart options" });
-    await expectTouchTargets(button);
-    await button.click();
-    const pop = page.getByRole("dialog", { name: "Chart options" });
-    await expect(button).toHaveAttribute("aria-expanded", "true");
-    const sw = pop.getByRole("checkbox", { name: "Thresholds" });
-    await expect(sw).toBeChecked();
-    await sw.click();
-    await expect(rail(page).getByTestId("threshold-label")).toHaveCount(0);
-    await sw.click();
-    await expect(rail(page).getByTestId("threshold-label")).toHaveCount(3);
-    await page.keyboard.press("Escape");
-    await expect(pop).toBeHidden();
-  });
-
-  test("pointing at the plot replaces the reading and Latest returns it", async ({
-    page,
-  }) => {
-    await openRail(page);
-    const reading = block(page).getByTestId("chart-reading");
     const latest = block(page).getByRole("button", { name: "Latest" });
     await expect(latest).toHaveCount(0);
-    const plot = await rail(page).getByTestId("chart-plot").boundingBox();
-    await page.mouse.move(
-      (plot?.x ?? 0) + (plot?.width ?? 0) / 3,
-      (plot?.y ?? 0) + (plot?.height ?? 0) / 2,
-    );
+    await pointAt(page, 1 / 3);
     await expect(latest).toBeVisible();
-    const before = await block(page).boundingBox();
+    const readout = rail(page).getByTestId("chart-readout");
+    await expect(readout).toContainText(/\d+(\.\d)? cm/);
+    await expect(readout).toContainText(/, \d{2}:\d{2}/);
+    const before = await boxOf(block(page));
+    // Off the plot: the readout goes, the point and the block's time stay.
+    await page.mouse.move(5, 300);
+    await expect(readout).toHaveCount(0);
+    await expect(latest).toBeVisible();
+    await expect(rail(page).getByTestId("chart-marker-line")).toHaveCount(1);
     await latest.click();
     await expect(latest).toHaveCount(0);
-    await expect(reading).toBeVisible();
-    const after = await block(page).boundingBox();
-    expect(after?.height).toBe(before?.height);
+    await expect(rail(page).getByTestId("chart-marker-line")).toHaveCount(0);
+    expect((await boxOf(block(page))).height).toBe(before.height);
+  });
+
+  test("at the far right the readout stays inside the plot", async ({
+    page,
+  }) => {
+    await openRail(page);
+    await pointAt(page, 0.999);
+    const readout = rail(page).getByTestId("chart-readout");
+    await expect(readout).toBeVisible();
+    const p = await boxOf(plot(page));
+    const r = await boxOf(readout);
+    expect(r.x + r.width).toBeLessThanOrEqual(p.x + p.width);
+    await pointAt(page, 0.001);
+    const l = await boxOf(readout);
+    expect(l.x).toBeGreaterThanOrEqual(p.x);
+  });
+
+  test("Level | Flow shows only for a gauge with both, and switches the plot", async ({
+    page,
+  }) => {
+    await openRail(page);
+    await expect(
+      block(page).getByRole("group", { name: "Reading" }),
+    ).toHaveCount(0);
+    await page.unroute(/\/water-status$/);
+    await withFlow(page);
+    await page.reload();
+    await expect(rail(page).getByTestId("latest-dot")).toBeVisible();
+    const choice = block(page).getByRole("group", { name: "Reading" });
+    await expect(choice.getByRole("button")).toHaveText(["Level", "Flow"]);
+    await expectTouchTargets(choice.getByRole("button"));
+    await choice.getByRole("button", { name: "Flow" }).click();
+    await expect(choice.getByRole("button", { name: "Flow" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  test("a section's chart has no close mark", async ({ page }) => {
+    await openRail(page);
+    await expect(
+      block(page).getByRole("button", { name: "Close gauge chart" }),
+    ).toHaveCount(0);
+  });
+
+  test("a picked gauge closes on the gauge name", async ({ page }) => {
+    await page.goto(`/?waterway=${FIX.waterway}`);
+    await appReady(page);
+    await page.getByRole("tab", { name: "Gauges" }).click();
+    await page.locator('[data-testid="gauge-card"]:visible').first().click();
+    const close = block(page).getByRole("button", {
+      name: "Close gauge chart",
+    });
+    await expect(close).toBeVisible();
+    await expectTouchTargets(close);
+    await expect(rail(page).getByTestId("threshold-label")).toHaveCount(0);
+    await close.click();
+    await expect(close).toHaveCount(0);
   });
 });

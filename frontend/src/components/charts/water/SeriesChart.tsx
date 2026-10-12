@@ -8,7 +8,6 @@ import { useLayoutEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
-  CartesianGrid,
   ReferenceArea,
   ReferenceDot,
   ReferenceLine,
@@ -18,10 +17,18 @@ import {
 } from "recharts";
 import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
 import type { GaugeReading, WaterRangeWithStatus } from "@/lib/api";
-import { formatTime, humanize } from "@/lib/format";
+import { humanize } from "@/lib/format";
 import { useGaugeReadings } from "@/lib/hooks/useGauges";
+import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
-import type { DescentSpan } from "./types";
+import { pointTime } from "./chartTime";
+import RailOverlay, {
+  RAIL_AXIS,
+  RailTick,
+  type RailTickProps,
+} from "./RailOverlay";
+import { axisTicks, insetExtent, tickLabel } from "./railGeometry";
+import type { DescentSpan, TimeRange } from "./types";
 import { useChartZoom } from "./useChartZoom";
 
 const { tokens } = theme;
@@ -33,13 +40,13 @@ const CHART_MARGIN = { top: 6, right: 12, bottom: 4, left: 0 };
 /** Radius of the latest reading's dot, and the gap the threshold labels keep
  * from it. The labels end this far short of the plot's right edge. */
 const DOT_RADIUS = 5;
+/** How far back the rail looks to tell whether the curve falls into the
+ * newest reading, in px. */
+const LABEL_SPAN_PX = 50;
 const LABEL_GAP = DOT_RADIUS + 10;
 
-/** The rail's plot: threshold labels sit in a gutter right of the plot, and
- * the latest reading is a larger dot with a ring. */
-const RAIL_GUTTER = 84;
-const RAIL_DOT_RADIUS = 6;
-const RAIL_LABEL_OFFSET = 8;
+/** The rail's plot runs edge to edge: no margins but the headroom. */
+const RAIL_MARGIN = { top: 6, right: 0, bottom: 0, left: 0 };
 
 export interface ScrubPoint {
   time: number;
@@ -59,8 +66,13 @@ export interface SeriesChartProps {
   descentSpans?: DescentSpan[];
   /** Room kept above the plot, in px, for text laid over the chart. */
   headroom?: number;
-  /** The reading rail's look: labelled gutter, no tooltip, a 20px axis row. */
+  /** The reading rail's look: edge to edge, threshold words on the lines,
+   * its own hover readout, a 20px axis row. */
   rail?: boolean;
+  /** The period drawn; the rail picks its axis ticks from it. */
+  timeRange?: TimeRange;
+  /** The point the pointer picked, kept marked on the rail. */
+  marker?: ScrubPoint | null;
   /** The reading under the pointer; it stays until the caller clears it. */
   onScrub?: (point: ScrubPoint | null) => void;
 }
@@ -111,70 +123,51 @@ function yDomainOf(
   };
 }
 
-/** Threshold reference lines for one range, each labelled under its line and
- * short of the latest reading's dot. Returned as an element array because
- * recharts only recognizes direct children. */
-function thresholdLines(
-  r: WaterRangeWithStatus,
-  opacity: number,
-  keyPrefix: string,
-  rail: boolean,
-) {
+/** Threshold reference lines for one range. The phone labels each under its
+ * line and short of the latest reading's dot; the rail names them in its
+ * overlay. Returned as an element array because recharts only recognizes
+ * direct children. */
+function thresholdLines(r: WaterRangeWithStatus, rail: boolean) {
   const line = (key: string, y: number, color: string, labelText: string) => (
     <ReferenceLine
-      key={`${keyPrefix}-${key}`}
+      key={`thresholds-${key}`}
       y={y}
       ifOverflow="hidden"
       stroke={color}
-      strokeOpacity={opacity}
+      strokeWidth={1.2}
       strokeDasharray="4 4"
-      label={{
-        content: ({ viewBox }) =>
-          viewBox && "width" in viewBox ? (
-            <text
-              data-testid="threshold-label"
-              x={
-                (viewBox.x ?? 0) +
-                (viewBox.width ?? 0) +
-                (rail ? RAIL_LABEL_OFFSET : -LABEL_GAP)
-              }
-              y={(viewBox.y ?? 0) + (rail ? 4 : 13)}
-              textAnchor={rail ? "start" : "end"}
-              fontSize={11}
-              fontWeight={600}
-              fill={color}
-              opacity={opacity}
-            >
-              {labelText}
-            </text>
-          ) : (
-            <g />
-          ),
-      }}
+      label={
+        rail
+          ? undefined
+          : {
+              content: ({ viewBox }) =>
+                viewBox && "width" in viewBox ? (
+                  <text
+                    data-testid="threshold-label"
+                    x={(viewBox.x ?? 0) + (viewBox.width ?? 0) - LABEL_GAP}
+                    y={(viewBox.y ?? 0) + 13}
+                    textAnchor="end"
+                    fontSize={11}
+                    fontWeight={600}
+                    fill={color}
+                  >
+                    {labelText}
+                  </text>
+                ) : (
+                  <g />
+                ),
+            }
+      }
     />
   );
+  const { low, medium, high } = tokens.levels;
   return [
     r.range_low != null &&
-      line(
-        "low",
-        r.range_low,
-        tokens.success,
-        `${rail ? "Low" : "L"} ${r.range_low}`,
-      ),
+      line("low", r.range_low, low.text, `L ${r.range_low}`),
     r.range_medium != null &&
-      line(
-        "medium",
-        r.range_medium,
-        tokens.levels.medium.text,
-        `${rail ? "Medium" : "M"} ${r.range_medium}`,
-      ),
+      line("medium", r.range_medium, medium.text, `M ${r.range_medium}`),
     r.range_high != null &&
-      line(
-        "high",
-        r.range_high,
-        tokens.error,
-        `${rail ? "High" : "H"} ${r.range_high}`,
-      ),
+      line("high", r.range_high, high.text, `H ${r.range_high}`),
   ].filter((l): l is JSX.Element => l !== false);
 }
 
@@ -211,6 +204,8 @@ export default function SeriesChart({
   descentSpans,
   headroom = CHART_MARGIN.top,
   rail = false,
+  timeRange,
+  marker = null,
   onScrub,
 }: SeriesChartProps) {
   const { series, gauge } = range;
@@ -306,11 +301,7 @@ export default function SeriesChart({
   // The chart runs edge to edge: no y axis, the threshold labels and the
   // tooltip carry the scale.
   const yAxisWidth = 0;
-  const margin = {
-    ...CHART_MARGIN,
-    top: headroom,
-    right: rail ? RAIL_GUTTER : CHART_MARGIN.right,
-  };
+  const margin = { ...(rail ? RAIL_MARGIN : CHART_MARGIN), top: headroom };
   const lastPoint = useMemo(() => {
     for (let i = chartData.length - 1; i >= 0; i--) {
       const v = chartData[i].value;
@@ -325,6 +316,8 @@ export default function SeriesChart({
   // A touch leaves the tooltip standing; pointerleave hides it until the
   // next touch or move.
   const [hoverOff, setHoverOff] = useState(false);
+  // The rail's readout shows only while the pointer is over the plot.
+  const [inside, setInside] = useState(false);
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
   );
@@ -341,22 +334,32 @@ export default function SeriesChart({
     return () => ro.disconnect();
   }, [container]);
 
-  const plotLeft = yAxisWidth + CHART_MARGIN.left;
+  // The rail leaves the newest reading a few px short of the right edge;
+  // bands and threshold lines run on to the edge.
+  const plotExtent = useMemo<[number, number]>(
+    () => (rail && size ? insetExtent(extent, size.width) : extent),
+    [rail, size, extent],
+  );
+
+  const plotLeft = yAxisWidth + margin.left;
   const { domain, reset } = useChartZoom(container, {
-    extent,
+    extent: plotExtent,
     plotLeft,
     plotWidth: Math.max((size?.width ?? 0) - plotLeft - margin.right, 1),
   });
 
   // Zooming only narrows the time axis; the y window stays fixed on the
   // full data range so values remain comparable while panning.
-  const yDomain = useMemo<[number | "auto", number | "auto"]>(() => {
-    const d = yDomainOf(allValues, thresholds);
-    return d ? [d.lo, d.hi] : ["auto", "auto"];
-  }, [allValues, thresholds]);
+  const yWindow = useMemo(
+    () => yDomainOf(allValues, thresholds),
+    [allValues, thresholds],
+  );
+  const yDomain: [number | "auto", number | "auto"] = yWindow
+    ? [yWindow.lo, yWindow.hi]
+    : ["auto", "auto"];
 
   // Day labels while the window spans days; clock times once it is zoomed in.
-  const [winFrom, winTo] = domain ?? extent;
+  const [winFrom, winTo] = domain ?? plotExtent;
   const byDay = winTo - winFrom >= 2 * 24 * 3600 * 1000;
 
   if (isError) return <ChartError error={error} onRetry={() => refetch()} />;
@@ -379,14 +382,61 @@ export default function SeriesChart({
   }
 
   const tickStyle = { fontSize: 11, fill: tokens.outline };
+  const zoomed = domain != null;
+  const railPeriod = rail && !zoomed && timeRange != null;
+  const xTicks = railPeriod
+    ? axisTicks(timeRange, plotExtent)
+    : byDay
+      ? dayTicks((domain ?? plotExtent) as [number, number])
+      : undefined;
+  const formatTickLabel = (ts: number) => {
+    if (railPeriod) return tickLabel(timeRange, ts);
+    const d = new Date(ts);
+    if (!byDay) {
+      return d.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
+  const latestRail = rail ? lastPoint : null;
+  // The curve a label's width back from the newest reading, to see which
+  // way it arrives.
+  const falling = (() => {
+    if (!lastPoint || !size) return false;
+    const back =
+      lastPoint.time -
+      (LABEL_SPAN_PX * (plotExtent[1] - plotExtent[0])) / size.width;
+    const before = allValues.length
+      ? chartData.find((d) => d.time >= back && d.value !== null)
+      : undefined;
+    return before?.value != null && before.value > lastPoint.value;
+  })();
+  const staleLatest =
+    lastPoint != null &&
+    isStale(
+      new Date(lastPoint.time).toISOString(),
+      Date.now(),
+      gauge.fetch_interval_secs,
+    );
 
   return (
     <div
       ref={setContainer}
       data-plot-top={headroom}
-      onPointerLeave={() => setHoverOff(true)}
-      onPointerDown={() => setHoverOff(false)}
-      onPointerMove={() => setHoverOff(false)}
+      onPointerLeave={() => {
+        setHoverOff(true);
+        setInside(false);
+      }}
+      onPointerDown={() => {
+        setHoverOff(false);
+        setInside(true);
+      }}
+      onPointerMove={() => {
+        setHoverOff(false);
+        setInside(true);
+      }}
       style={{
         width: "100%",
         height: "100%",
@@ -448,11 +498,6 @@ export default function SeriesChart({
               <stop offset="100%" stopColor={tokens.primary} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke={tokens.chartGrid}
-            vertical={false}
-          />
           {visibleSpans.map((s) => (
             <ReferenceArea
               key={s.id}
@@ -469,31 +514,26 @@ export default function SeriesChart({
             dataKey="time"
             type="number"
             scale="time"
-            domain={domain ?? extent ?? ["dataMin", "dataMax"]}
+            domain={domain ?? plotExtent}
             allowDataOverflow
-            ticks={
-              byDay
-                ? dayTicks((domain ?? extent) as [number, number])
-                : undefined
+            ticks={xTicks}
+            tickFormatter={formatTickLabel}
+            tick={
+              rail
+                ? (p: RailTickProps) => (
+                    <RailTick
+                      {...p}
+                      width={size?.width ?? 0}
+                      label={formatTickLabel(Number(p.payload?.value))}
+                    />
+                  )
+                : tickStyle
             }
-            tickFormatter={(ts: number) => {
-              const d = new Date(ts);
-              if (!byDay) {
-                return d.toLocaleTimeString(undefined, {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                });
-              }
-              return d.toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-              });
-            }}
-            tick={tickStyle}
             axisLine={false}
             tickLine={false}
+            interval={rail ? 0 : "preserveEnd"}
             minTickGap={60}
-            height={rail ? 20 : undefined}
+            height={rail ? RAIL_AXIS : undefined}
           />
           <YAxis
             hide
@@ -503,6 +543,7 @@ export default function SeriesChart({
           />
           <Tooltip
             active={hoverOff ? false : undefined}
+            cursor={!rail}
             content={({ active, payload, label }) => {
               if (rail) return null;
               const value = payload?.[0]?.value;
@@ -521,10 +562,7 @@ export default function SeriesChart({
                   }}
                 >
                   <div style={{ color: tokens.outline, marginBottom: 2 }}>
-                    {`${new Date(ts).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                    })}, ${formatTime(new Date(ts).toISOString())}`}
+                    {pointTime(ts)}
                   </div>
                   <div style={{ color: tokens.onSurface }}>
                     {`${Number(value).toFixed(1)} ${series.unit}`}
@@ -542,52 +580,50 @@ export default function SeriesChart({
             type="monotone"
             dataKey="value"
             stroke={tokens.chartSeries}
-            strokeWidth={1.5}
+            strokeWidth={2}
+            strokeLinecap="round"
             fill={`url(#fill-${series.id})`}
             dot={false}
             connectNulls={false}
             isAnimationActive={false}
           />
           {showThresholds && thresholdBands(displayRange)}
-          {showThresholds &&
-            thresholdLines(displayRange, 1, "thresholds", rail)}
-          {lastPoint && (
+          {showThresholds && thresholdLines(displayRange, rail)}
+          {lastPoint && !rail && (
             <ReferenceDot
               x={lastPoint.time}
               y={lastPoint.value}
               ifOverflow="hidden"
-              shape={({ cx, cy }) =>
-                rail ? (
-                  <g data-testid="latest-dot">
-                    <circle
-                      cx={cx}
-                      cy={cy}
-                      r={RAIL_DOT_RADIUS + 4}
-                      fill={tokens.chartSeries}
-                      fillOpacity={0.2}
-                    />
-                    <circle
-                      cx={cx}
-                      cy={cy}
-                      r={RAIL_DOT_RADIUS}
-                      fill={tokens.chartSeries}
-                    />
-                  </g>
-                ) : (
-                  <circle
-                    data-testid="latest-dot"
-                    cx={cx}
-                    cy={cy}
-                    r={DOT_RADIUS}
-                    fill={tokens.surface}
-                    stroke={tokens.chartSeries}
-                    strokeWidth={2}
-                  />
-                )
-              }
+              shape={({ cx, cy }) => (
+                <circle
+                  data-testid="latest-dot"
+                  cx={cx}
+                  cy={cy}
+                  r={DOT_RADIUS}
+                  fill={tokens.surface}
+                  stroke={tokens.chartSeries}
+                  strokeWidth={2}
+                />
+              )}
             />
           )}
         </AreaChart>
+      )}
+      {rail && size && (
+        <RailOverlay
+          width={size.width}
+          height={size.height}
+          top={headroom}
+          domain={(domain ?? plotExtent) as [number, number]}
+          yDomain={yWindow}
+          thresholds={showThresholds ? displayRange : undefined}
+          unit={series.unit}
+          latest={latestRail}
+          stale={staleLatest}
+          falling={falling}
+          marker={marker}
+          hovering={inside}
+        />
       )}
       {hasSelectedRange && selectedFeature && (
         <Box

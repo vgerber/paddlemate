@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { FIX, gotoSection } from "../support/fixture";
 
 // The chart's broken and empty states: no gauge, slow or failing readings,
-// a failing river request, and the options open over the desktop map.
+// a failing river request, and the period menu open over the desktop map.
 
 const failure = {
   status: 500,
@@ -68,7 +68,7 @@ test("a failing river request keeps a section header with Retry", async ({
   await expect(page.getByTestId("chart-card")).toHaveCount(0);
 });
 
-test("options open as a popover over the map and leave the plot alone", async ({
+test("the period menu opens over the map and leaves the plot alone", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop", "the rail is a desktop layout");
@@ -81,16 +81,12 @@ test("options open as a popover over the map and leave the plot alone", async ({
     dock: (await dock.boundingBox())?.height ?? 0,
     plot: await plotOf(),
   };
-  await page.getByRole("button", { name: "Chart options" }).click();
-  const pop = page.getByRole("dialog", { name: "Chart options" });
-  await expect(pop.getByText("Thresholds")).toBeVisible();
-  expect((await pop.boundingBox())?.width).toBe(300);
+  await page.getByRole("button", { name: "Chart period" }).click();
+  const menu = page.getByRole("menu");
+  await expect(menu.getByRole("menuitem")).toHaveCount(4);
+  expect((await menu.boundingBox())?.width).toBe(200);
   expect((await dock.boundingBox())?.height ?? 0).toBe(closed.dock);
   expect(Math.abs((await plotOf()) - closed.plot)).toBeLessThanOrEqual(1);
-  // The popover floats above the rail, over the map.
-  const rail = await dock.boundingBox();
-  const over = await pop.boundingBox();
-  expect((over?.y ?? 0) + (over?.height ?? 0)).toBeLessThanOrEqual(
-    rail?.y ?? 0,
-  );
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeHidden();
 });
