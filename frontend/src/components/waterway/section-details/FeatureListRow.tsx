@@ -10,6 +10,7 @@ import { ProposalDetail } from "./ProposalDetail";
 import {
   DISC,
   IconDisc,
+  NumberDisc,
   RAIL_COL,
   RailLine,
   type RailShape,
@@ -36,6 +37,8 @@ export interface RowContext {
   onDeleteItem?: (item: ComputedFeature) => void;
   /** Opens the feature's history. Not offered for a proposal: it has none. */
   onHistoryItem?: (item: ComputedFeature) => void;
+  /** The number each feature carries (see `featureNumbers`). */
+  numbers?: ReadonlyMap<number, number>;
   /** Features with a pending delete proposal. */
   pendingDeleteIds?: Set<number>;
 }
@@ -76,6 +79,7 @@ export function FeatureListRow({
   const isActive = ctx.activeId === item.feature.id;
   const type = item.feature.feature_type;
   const asRange = item.isZone && !isProposal;
+  const n = ctx.numbers?.get(item.feature.id);
 
   return (
     <ButtonBase
@@ -113,7 +117,9 @@ export function FeatureListRow({
       >
         <RailLine {...rail} />
         {asRange ? (
-          <RangeTile type={type} open={false} foldable={false} />
+          <RangeTile type={type} open={false} foldable={false} n={n} />
+        ) : n != null && !isProposal ? (
+          <NumberDisc n={n} />
         ) : (
           <IconDisc type={type} hollow={isProposal} />
         )}

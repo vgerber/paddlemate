@@ -36,23 +36,42 @@ test.describe("features card", () => {
     );
   });
 
-  test("every row carries the icon of its type", async ({ page }) => {
+  test("access points carry the icon of their type, the rest a number", async ({
+    page,
+  }) => {
     await openFeatures(page);
-    for (const [name, type] of [
-      ["Put in", "put_in"],
-      ["Slot Machine", "rapid"],
-      ["Big Hole", "hole"],
-      ["Altes Wehr", "weir"],
-      ["Portage", "portage"],
-      ["Strainer", "strainer"],
-      ["Bridge", "bridge"],
-      ["Take out", "take_out"],
+    for (const [name, type, n] of [
+      ["Put in", "put_in", null],
+      ["Slot Machine", "rapid", 1],
+      ["Big Hole", "hole", 2],
+      ["Altes Wehr", "weir", 3],
+      ["Portage", "portage", 4],
+      ["Strainer", "strainer", 5],
+      ["Bridge", "bridge", 6],
+      ["Take out", "take_out", null],
     ] as const) {
       const r = row(page, name);
       await expect(r, `${name} row`).toHaveAttribute("data-type", type);
-      const paths = await r.locator("svg path").count();
-      expect(paths, `${name} icon drawn`).toBeGreaterThan(0);
+      if (n == null) {
+        const paths = await r.locator("svg path").count();
+        expect(paths, `${name} icon drawn`).toBeGreaterThan(0);
+      } else {
+        await expect(
+          r.locator("[data-pin-number]"),
+          `${name} number`,
+        ).toHaveAttribute("data-pin-number", String(n));
+      }
     }
+  });
+
+  test("the facts row states the level and thresholds on a desktop card", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name !== "desktop", "facts are a desktop block");
+    await openFeatures(page);
+    const facts = card(page).getByTestId("section-facts");
+    await expect(facts).toContainText("Level now");
+    await expect(facts).toContainText("L 60 \u00b7 M 80 \u00b7 H 120");
   });
 
   test("text is sentence case with km in lower case", async ({ page }) => {
@@ -453,7 +472,7 @@ test.describe("features card seams", () => {
     page,
   }) => {
     await openFeatures(page);
-    const icon = row(page, "Altes Wehr").locator("[data-row-disc] svg");
+    const icon = row(page, "Put in").locator("[data-row-disc] svg");
     expect(await computed(icon, "width")).toBe("18px");
     const band = card(page).locator("[data-band]").first();
     expect(await computed(band, "border-top-left-radius")).toBe("12px");
