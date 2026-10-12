@@ -6,10 +6,11 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { useState } from "react";
+import PanelHeader from "@/components/PanelHeader";
 import ProposalDetailView from "@/components/proposals/ProposalDetailView";
 import ProposalsView from "@/components/proposals/ProposalsView";
-import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
+import MissingState from "@/components/states/MissingState";
 import type {
   ProposalEntityType,
   ProposalOperation,
@@ -72,7 +73,12 @@ function OpenOnCanvas() {
 function ProposalPage() {
   const router = useRouter();
   const { proposalId } = Route.useParams();
-  const { data: proposal, isLoading } = useProposal(Number(proposalId));
+  const {
+    data: proposal,
+    isLoading,
+    error,
+    refetch,
+  } = useProposal(Number(proposalId));
   const { isAdmin } = useSession();
 
   const goBack = () => {
@@ -94,7 +100,10 @@ function ProposalPage() {
   return (
     <Box sx={{ maxWidth: 720, mx: "auto" }}>
       {isLoading ? (
-        <LoadingBox size={22} py={6} />
+        <>
+          <PanelHeader title="Proposal" onBack={goBack} />
+          <LoadingBox size={22} py={6} />
+        </>
       ) : proposal ? (
         <ProposalDetailView
           proposal={proposal}
@@ -105,7 +114,14 @@ function ProposalPage() {
           listStatus="pending"
         />
       ) : (
-        <EmptyState title="Proposal not found." />
+        <>
+          <PanelHeader title="Proposal" onBack={goBack} />
+          <MissingState
+            error={error}
+            notFound="Proposal not found."
+            onRetry={() => refetch()}
+          />
+        </>
       )}
     </Box>
   );

@@ -515,3 +515,45 @@ test.describe("design gaps", () => {
     expect(ago && date && ago.y >= date.y - 2).toBe(true);
   });
 });
+
+test.describe("log load failures", () => {
+  const body = {
+    error: { code: "internal", message: "Boom from server", target: null },
+  };
+
+  test("a failed list shows the server message, not the empty state", async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/descents?*", (r) =>
+      r.fulfill({ status: 500, json: body }),
+    );
+    await page.goto("/logs");
+    await expect(page.getByTestId("error-state")).toContainText(
+      "Boom from server",
+    );
+    await expect(page.getByText("No descents logged yet.")).toHaveCount(0);
+  });
+
+  test("a failed log does not say not found", async ({ page }) => {
+    await page.route("**/api/v1/descents/9201", (r) =>
+      r.fulfill({ status: 500, json: body }),
+    );
+    await page.goto("/logs/9201");
+    await expect(page.getByTestId("error-state")).toContainText(
+      "Boom from server",
+    );
+    await expect(page.getByText("Log not found.")).toHaveCount(0);
+  });
+
+  test("the desktop card states duration, sections, level and the run", async ({
+    page,
+  }, info) => {
+    test.skip(!isDesktop(info), "the desktop card");
+    await page.goto("/logs/9201");
+    const facts = page.getByTestId("log-facts");
+    await expect(facts).toContainText("Duration");
+    await expect(facts).toContainText("Sections");
+    await expect(facts).toContainText("Level");
+    await expect(page.getByTestId("log-stop")).toHaveCount(2);
+  });
+});

@@ -289,13 +289,13 @@ test.describe("proposal diff", () => {
     await expect(regions.getByTestId("diff-after")).toHaveText(
       "Test Valley, Test State",
     );
-    await expect(regions.getByTestId("diff-note")).toHaveText("added");
+    await expect(regions.getByTestId("diff-note")).toHaveText("none");
     const country = rows.filter({ hasText: "Country" });
     await expect(country.getByTestId("diff-after")).toHaveText("AT");
-    await expect(country.getByTestId("diff-note")).toHaveText("added");
+    await expect(country.getByTestId("diff-note")).toHaveText("none");
   });
 
-  test("the old value is struck through, then an arrow, then the new", async ({
+  test("the old value is struck through under Before, the new under After", async ({
     page,
   }) => {
     await page.goto(`/proposals/${UPDATE_SECTION}`);
@@ -305,7 +305,10 @@ test.describe("proposal diff", () => {
       await computed(name.getByTestId("diff-before"), "text-decoration-line"),
     ).toBe("line-through");
     await expect(name.getByTestId("diff-after")).toHaveText("Upper Test Gorge");
-    await expect(page.getByTestId("proposal-detail")).toContainText("→");
+    const table = page.getByTestId("diff-table");
+    await expect(table).toContainText("Before");
+    await expect(table).toContainText("After");
+    await expect(table).not.toContainText("→");
     for (const row of await page.getByTestId("diff-row").all()) {
       await expect(row).not.toContainText(" to ");
     }
@@ -642,5 +645,40 @@ test.describe("proposals on desktop", () => {
     expect(await computed(first.first(), "box-shadow")).toContain(
       "3px 0px 0px 0px",
     );
+  });
+});
+
+test.describe("proposal load failures", () => {
+  const body = {
+    error: { code: "internal", message: "Boom from server", target: null },
+  };
+
+  test("a failed list shows the server message, not the empty state", async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/proposals?*", (r) =>
+      r.fulfill({ status: 500, json: body }),
+    );
+    await page.goto("/proposals?status=pending");
+    await expect(page.getByTestId("error-state")).toContainText(
+      "Boom from server",
+    );
+    await expect(page.getByText(/No pending proposals/)).toHaveCount(0);
+    await expect(page.getByText(/\d+ results?/)).toHaveCount(0);
+  });
+
+  test("a failed detail keeps its header and does not say not found", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop", "the phone overlay");
+    await page.route(`**/api/v1/proposals/${FEATURE_UPDATE}`, (r) =>
+      r.fulfill({ status: 500, json: body }),
+    );
+    await page.goto(`/proposals/${FEATURE_UPDATE}`);
+    await expect(page.getByTestId("error-state")).toContainText(
+      "Boom from server",
+    );
+    await expect(page.getByRole("button", { name: /back/i })).toBeVisible();
+    await expect(page.getByText("Proposal not found.")).toHaveCount(0);
   });
 });
