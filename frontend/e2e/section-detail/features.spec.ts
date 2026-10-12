@@ -29,10 +29,12 @@ async function ensureExpanded(page: Page) {
 }
 
 test.describe("features card", () => {
-  test("the header counts the features from the data", async ({ page }) => {
+  test("the header counts the features, the base grade not among them", async ({
+    page,
+  }) => {
     await openFeatures(page);
     await expect(card(page).getByTestId("features-count")).toHaveText(
-      "9 features",
+      /^8 features/,
     );
   });
 
@@ -108,7 +110,7 @@ test.describe("features card", () => {
     );
   });
 
-  test("a grade over the whole run has no row, the strip shows it", async ({
+  test("the base grade has no row and no mark on the strip", async ({
     page,
   }) => {
     await openFeatures(page);
@@ -116,7 +118,7 @@ test.describe("features card", () => {
     await expect(
       card(page).locator("[data-row]").filter({ hasText: "WW III" }),
     ).toHaveCount(0);
-    await expect(card(page).getByTestId("strip-grade")).toHaveText("WW III");
+    await expect(card(page).getByTestId("strip-grade")).toHaveCount(0);
   });
 
   test("no closing rows: each range has one row", async ({ page }) => {
@@ -437,10 +439,14 @@ test.describe("design gaps", () => {
     ).toHaveCount(0);
   });
 
-  test("the header holds the count and the fold only", async ({ page }) => {
+  test("the header holds the count, the fold and the list actions", async ({
+    page,
+  }) => {
     await openFeatures(page);
     const count = card(page).getByTestId("features-count");
-    await expect(count.locator("..").getByRole("button")).toHaveCount(1);
+    await expect(
+      count.locator("..").getByRole("button", { name: /fold features/i }),
+    ).toHaveCount(1);
     expect(await computed(count, "font-size")).toBe("13px");
   });
 
