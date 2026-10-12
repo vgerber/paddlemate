@@ -2,17 +2,16 @@ import Box from "@mui/material/Box";
 import { type ReactNode, useMemo, useState } from "react";
 import ChartDock from "@/components/canvas/ChartDock";
 import { useLayout } from "@/components/canvas/canvasStore";
-import ChartOptions, {
-  hasChartOptions,
-} from "@/components/charts/ChartOptions";
 import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
+import PeriodMenu from "@/components/charts/PeriodMenu";
 import ReadingBlock, {
   type ReadingView,
 } from "@/components/charts/ReadingBlock";
-import { typeLabel } from "@/components/charts/water/chartTime";
+import { pointTime, typeLabel } from "@/components/charts/water/chartTime";
 import type { ScrubPoint } from "@/components/charts/water/SeriesChart";
 import {
   activeMeasurementType,
+  levelAt,
   measurementTypesOf,
   readingPerType,
 } from "@/components/charts/water/series";
@@ -21,13 +20,11 @@ import WaterChart from "@/components/charts/water/WaterChart";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { dockHeight } from "@/lib/canvasLayout";
 import { formatTime } from "@/lib/format";
-import { useGaugeReadings } from "@/lib/hooks/useGauges";
+import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
-import { readingState, TREND_SPAN_H, trendText } from "@/lib/trend";
 import type { WaterLevel } from "@/lib/waterLevel";
 
 const { tokens } = theme;
-const { canvas } = tokens;
 
 const LEVEL_WORD: Partial<Record<WaterLevel, string>> = {
   low: "Low",
@@ -38,6 +35,10 @@ const LEVEL_WORD: Partial<Record<WaterLevel, string>> = {
 /** The plot of the inline card, in px (the rail's follows its height). */
 const INLINE_PLOT = 128;
 const SOURCE_LINE = 18;
+/** Side padding of the reading block: the rail's text line and the inline
+ * card's. */
+const RAIL_INSET = 24;
+const INLINE_INSET = 16;
 /** Padding above and below the rail's plot: with the axis row and the source
  * line they leave the plot rail height minus 54. */
 const RAIL_PAD = 18;
@@ -85,58 +86,42 @@ export interface ReadingChartProps {
   footer?: ReactNode;
 }
 
-/** The reading view for the charted range: the newest value with its level
- * and trend, or "No recent reading" when it is too old to say. */
+/** The reading view for the charted range: when the newest reading (or the
+ * scrubbed one) was taken and its level, or "No recent reading" when it is
+ * too old to say. */
 function useReadingView(
   charted: WaterRangeWithStatus | undefined,
   scrub: ScrubPoint | null,
 ): ReadingView | null {
-  const gaugeId = charted?.gauge.id ?? null;
-  const seriesId = charted?.series.id ?? null;
-  // Truncated to the minute so the query key holds still.
-  const from = useMemo(() => {
-    const d = new Date(Date.now() - (TREND_SPAN_H + 6) * 3_600_000);
-    d.setSeconds(0, 0);
-    return d.toISOString();
-  }, []);
-  const { data } = useGaugeReadings(gaugeId, seriesId, from, 500);
   if (!charted) return null;
-  const unit = charted.series.unit;
+  const levelWord = (level: WaterLevel) => {
+    const word = LEVEL_WORD[level];
+    return word ? { word, color: tokens.levels[level].marker } : undefined;
+  };
   if (scrub) {
     return {
-      value: scrub.value,
-      unit,
-      time: readingTime(new Date(scrub.time).toISOString(), true),
+      time: pointTime(scrub.time),
+      level: levelWord(levelAt(scrub.value, charted)),
       stale: false,
       scrubbing: true,
     };
   }
   const latest = charted.latest_reading;
-  const points = [...(data ?? []), ...(latest ? [latest] : [])];
-  const state = readingState(
-    points,
+  const stale = isStale(
+    latest?.measured_at,
     Date.now(),
     charted.gauge.fetch_interval_secs,
-    charted.range_high,
   );
-  if (state.stale || !latest) {
+  if (stale || !latest) {
     return {
-      value: latest?.value ?? null,
-      unit,
       time: latest ? readingTime(latest.measured_at, false) : "",
       stale: true,
       scrubbing: false,
     };
   }
-  const word = LEVEL_WORD[charted.level];
   return {
-    value: latest.value,
-    unit,
     time: readingTime(latest.measured_at, false),
-    level: word
-      ? { word, color: tokens.levels[charted.level].marker }
-      : undefined,
-    trend: state.trend ? trendText(state.trend, unit) : undefined,
+    level: levelWord(charted.level),
     stale: false,
     scrubbing: false,
   };
@@ -162,12 +147,6 @@ export default function ReadingChart(props: ReadingChartProps) {
   const rail = placement === "rail";
   const [gaugeChoice, setGaugeChoice] = useState<number | null>(null);
   const [scrub, setScrub] = useState<ScrubPoint | null>(null);
-  const [thresholds, setThresholds] = useState(true);
-  const [optionsOpen, setOptionsOpen] = useState(false);
-  const [optionsButton, setOptionsButton] = useState<HTMLButtonElement | null>(
-    null,
-  );
-  const dock = useLayout((s) => s.dock);
   const windowHeight = useLayout((s) => s.viewport.h);
 
   const gauges = useMemo(() => {
@@ -188,25 +167,15 @@ export default function ReadingChart(props: ReadingChartProps) {
     (r) => r.type === type,
   )?.range;
   const view = useReadingView(charted, scrub);
-  const calibrated =
-    charted != null &&
-    (charted.range_low != null ||
-      charted.range_medium != null ||
-      charted.range_high != null);
-
-  const optionProps = {
-    types: measurementTypesOf(own).map((t) => ({
-      type: t,
-      label: typeLabel(t),
-    })),
-    thresholds:
-      thresholdsAvailable && calibrated
-        ? { on: thresholds, onChange: setThresholds }
-        : undefined,
-    onDismiss,
-  };
-  const hasOptions = hasChartOptions(optionProps);
   const railHeight = dockHeight(windowHeight);
+  const types = measurementTypesOf(own).map((t) => ({
+    type: t,
+    label: typeLabel(t),
+  }));
+  const changeRange = (range: TimeRange) => {
+    setScrub(null);
+    onTimeRangeChange(range);
+  };
 
   const block = (
     <ReadingBlock
@@ -218,20 +187,17 @@ export default function ReadingChart(props: ReadingChartProps) {
       }}
       view={view}
       onLatest={() => setScrub(null)}
-      timeRange={timeRange}
-      onTimeRange={(range) => {
-        setScrub(null);
-        onTimeRangeChange(range);
+      measurement={{
+        types,
+        type,
+        onType: (t) => {
+          setScrub(null);
+          onMeasurementTypeChange(t);
+        },
       }}
-      options={
-        hasOptions
-          ? {
-              open: optionsOpen,
-              onToggle: () => setOptionsOpen((o) => !o),
-              buttonRef: setOptionsButton,
-            }
-          : undefined
-      }
+      onDismiss={onDismiss}
+      period={rail ? { value: timeRange, onChange: changeRange } : undefined}
+      inset={rail ? RAIL_INSET : INLINE_INSET}
     />
   );
 
@@ -244,7 +210,8 @@ export default function ReadingChart(props: ReadingChartProps) {
       ranges={own}
       rail
       onScrub={setScrub}
-      showThresholds={thresholdsAvailable ? thresholds : false}
+      marker={scrub}
+      showThresholds={thresholdsAvailable}
       timeRange={timeRange}
       measurementType={measurementType}
       selectedFeatureId={selectedFeatureId}
@@ -257,35 +224,6 @@ export default function ReadingChart(props: ReadingChartProps) {
     <Box sx={{ height: SOURCE_LINE, minWidth: 0, overflow: "hidden" }}>
       {footer}
     </Box>
-  );
-
-  const options = (
-    <ChartOptions
-      open={optionsOpen && hasOptions}
-      onClose={() => setOptionsOpen(false)}
-      anchor={
-        rail && dock
-          ? {
-              anchorReference: "anchorPosition",
-              anchorPosition: {
-                left: dock.left + 8,
-                top: windowHeight - canvas.margin - railHeight - 8,
-              },
-              transformOrigin: { vertical: "bottom", horizontal: "left" },
-            }
-          : {
-              anchorEl: optionsButton,
-              anchorOrigin: { vertical: "bottom", horizontal: "right" },
-              transformOrigin: { vertical: "top", horizontal: "right" },
-            }
-      }
-      type={type}
-      onType={(t) => {
-        setScrub(null);
-        onMeasurementTypeChange(t);
-      }}
-      {...optionProps}
-    />
   );
 
   if (rail) {
@@ -309,8 +247,8 @@ export default function ReadingChart(props: ReadingChartProps) {
               boxSizing: "border-box",
               display: "flex",
               flexDirection: "column",
-              pl: 2,
               py: `${RAIL_PAD}px`,
+              overflow: "hidden",
             }}
           >
             <Box
@@ -319,10 +257,9 @@ export default function ReadingChart(props: ReadingChartProps) {
             >
               {plotBody}
             </Box>
-            {source}
+            <Box sx={{ pl: 2 }}>{source}</Box>
           </Box>
         </ChartDock>
-        {options}
       </>
     );
   }
@@ -341,11 +278,25 @@ export default function ReadingChart(props: ReadingChartProps) {
       }}
     >
       <Box sx={{ pt: 0.5 }}>{block}</Box>
-      <Box sx={{ height: INLINE_PLOT, pl: 2, position: "relative" }}>
+      <Box
+        data-testid="chart-plot"
+        sx={{ height: INLINE_PLOT, position: "relative" }}
+      >
         {plotBody}
       </Box>
-      <Box sx={{ px: 2, pt: 0.5, pb: 1 }}>{source}</Box>
-      {options}
+      <Box
+        sx={{
+          px: `${INLINE_INSET}px`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1,
+          minHeight: tokens.touch.min,
+        }}
+      >
+        <Box sx={{ flex: 1, minWidth: 0 }}>{source}</Box>
+        <PeriodMenu value={timeRange} onChange={changeRange} />
+      </Box>
     </Box>
   );
 }

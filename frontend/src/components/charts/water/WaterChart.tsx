@@ -27,6 +27,8 @@ export interface WaterChartProps {
   headroom?: number;
   /** The reading rail's look and its pointer reading. */
   rail?: boolean;
+  /** The point the pointer picked, kept marked on the rail. */
+  marker?: ScrubPoint | null;
   onScrub?: (point: ScrubPoint | null) => void;
 }
 
@@ -43,6 +45,7 @@ export default function WaterChart({
   selectedFeature,
   headroom,
   rail,
+  marker,
   onScrub,
 }: WaterChartProps) {
   const from = useMemo(() => fromForRange(timeRange), [timeRange]);
@@ -91,6 +94,8 @@ export default function WaterChart({
               descentSpans={descentSpans}
               headroom={headroom}
               rail={rail}
+              timeRange={timeRange}
+              marker={marker}
               onScrub={onScrub}
             />
           </Box>

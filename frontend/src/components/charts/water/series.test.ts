@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import {
   activeMeasurementType,
+  levelAt,
   measurementTypesOf,
   readingPerType,
   seriesGroups,
@@ -69,5 +70,22 @@ describe("readingPerType", () => {
       level,
       flow,
     ]);
+  });
+});
+
+describe("levelAt", () => {
+  const r = { range_low: 60, range_medium: 80, range_high: 120 };
+  test("the highest threshold reached wins", () => {
+    expect(levelAt(130, r)).toBe("high");
+    expect(levelAt(120, r)).toBe("high");
+    expect(levelAt(85, r)).toBe("medium");
+    expect(levelAt(60, r)).toBe("low");
+    expect(levelAt(59.9, r)).toBe("empty");
+  });
+  test("a missing threshold is skipped", () => {
+    expect(levelAt(90, { ...r, range_medium: null })).toBe("low");
+    expect(
+      levelAt(5, { range_low: null, range_medium: null, range_high: null }),
+    ).toBe("empty");
   });
 });

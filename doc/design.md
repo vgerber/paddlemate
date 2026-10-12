@@ -80,7 +80,7 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 
 | Screen | What defines it |
 |---|---|
-| Section detail | The chart: from 1280 the reading block at the card's foot and the plot in the rail beside it, below that a card at the top of the pane (reading, period, plot; on a phone the chart with an options button that opens reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide; hidden for no rows, a single row, or put-in and take-out only); a graded range over 80% or more of the run is the section's grade, so it leaves the rows, strip and count (`sectionGrade` in `section-details/grade.ts`, shown in the card subtitle), with the hardest harder stretch in brackets; the count line reads "n features · m proposed"; a section with nothing but a grade reads "No rapids, hazards or access points yet."; the river state block (hazard, last paddled, latest note, open proposals) fills the card's spare room; History opens over the pane |
+| Section detail | The chart: from 1280 the reading block at the card's foot and the plot in the rail beside it, below that a card at the top of the pane (reading, plot, the credit and the period; on a phone the chart with an options button that opens reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide; hidden for no rows, a single row, or put-in and take-out only); a graded range over 80% or more of the run is the section's grade, so it leaves the rows, strip and count (`sectionGrade` in `section-details/grade.ts`, shown in the card subtitle), with the hardest harder stretch in brackets; the count line reads "n features · m proposed"; a section with nothing but a grade reads "No rapids, hazards or access points yet."; the river state block (hazard, last paddled, latest note, open proposals) fills the card's spare room; History opens over the pane |
 | Search | Tabs Name, Area, Region; a Filters sheet (country, grade, Water now); the chosen levels live in the `water` URL param |
 | Map region mode | The search panel (a peek sheet on a phone, the card on desktop) with the region field, level chips, and "Part of" naming the parents of a picked region; the regions stay visible on the map |
 | Logs | Two panes on desktop; the date is a picker field |
@@ -206,21 +206,29 @@ The reasons and the work plan are in [plans/wide-canvas.md](plans/wide-canvas.md
   floats 16px from the right and the foot. The card's order from the top:
   header, tabs, scroll area (strip, count, rows; the river-state slot takes the
   spare room), the docked action, the reading block. The reading block holds
-  the gauge name (a picker with several gauges), the options button, the level
-  with its unit, a dot and the level word, the trend ("High, falling 24 cm in
-  24 h": newest reading against the one 24 h earlier, within 3 h; a change of
-  3% of the high threshold, 1 unit without one, counts) and the time, and the
-  period (24h, 7d, 30d, 1y). A reading older than 3 h or three gauge
-  intervals shows "No recent reading" with no level word or trend. The plot has
-  threshold labels in an 84px right gutter, the latest point as a ringed dot
-  and the credit line under it; pointing at it replaces the reading until
-  "Latest". The options (which reading, the threshold lines, closing a picked
-  gauge) are a 300px popover over the map. Without a gauge there is no rail and
+  the gauge name with the time of the newest reading (a picker with several
+  gauges), at the right the Level | Flow choice (only for a gauge that measures
+  both) and a close mark (only for a gauge picked from the map), a dot and the
+  level word, and the period as one quiet text button ("Last 7 days") that
+  opens a four-item menu upward. It has no big number and no trend: the value
+  stands at the line's right end, and a trend comes back with predictions. A
+  reading older than 3 h or three gauge intervals shows "No recent reading"
+  with no level word, and its dot is grey. The plot runs edge to edge with no
+  grid and a 2px line: threshold words (Low, Medium, High; the number is in the
+  tooltip) stand on the lines at the plot's left, no gutter, thresholds are
+  always drawn; the latest point is a ringed dot 8px short of the right edge
+  with its value beside it; the credit line is under it. Pointing at the plot
+  shows a hairline, a ring dot and a readout ("High, 78.8 cm" with the time)
+  and the block says the hovered time and level with "Latest"; leaving keeps
+  the point as a dashed hairline until "Latest". The axis steps 6 h (24h), 2
+  days (7d), 5 days (30d) or 2 months (year, with the year at January). Without
+  a gauge there is no rail and
   the card ends in a 64px row "No gauge for this section" with "Link a gauge"
   (signed in; it opens the New feature form, where the gauge is chosen). Below
   1280, or under 600 tall, there is no rail: the card is 360 wide, hugs its
   content and the chart (reading, period, a 128px plot, the credit) is its
-  first block. The open tab and its scroll survive crossing 1280.
+  first block (the plot full card width, the period beside the credit). The
+  open tab and its scroll survive crossing 1280.
 - **Free area.** The part of the map no card or rail covers. The map frames
   the subject inside it, and the zoom keys, compass and layer key form
   one stack 16px from the right and the top, and the attribution sits 8px above

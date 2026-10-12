@@ -1,4 +1,5 @@
 import type { WaterRangeWithStatus } from "@/lib/api";
+import type { WaterLevel } from "@/lib/waterLevel";
 
 const isCalibrated = (r: WaterRangeWithStatus) =>
   r.range_low != null || r.range_medium != null || r.range_high != null;
@@ -59,4 +60,18 @@ export function readingPerType(
     const first = seriesGroups(ranges, type, preferredFeatureId)[0];
     return first ? [{ type, range: first.primary }] : [];
   });
+}
+
+type Thresholds = Pick<
+  WaterRangeWithStatus,
+  "range_low" | "range_medium" | "range_high"
+>;
+
+/** The level a reading falls in, by the same rule as the API's
+ * `WaterLevel::from_reading`: at or above a threshold, the highest one wins. */
+export function levelAt(value: number, r: Thresholds): WaterLevel {
+  if (r.range_high != null && value >= r.range_high) return "high";
+  if (r.range_medium != null && value >= r.range_medium) return "medium";
+  if (r.range_low != null && value >= r.range_low) return "low";
+  return "empty";
 }
