@@ -1,11 +1,13 @@
 import Box from "@mui/material/Box";
-import { type KeyboardEvent, type PointerEvent, useRef } from "react";
+import { type KeyboardEvent, type PointerEvent, useRef, useState } from "react";
 import { transition } from "@/lib/motion";
-import { theme } from "@/lib/theme";
+import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 const { canvas } = tokens;
 
+/** Bar height while hovered, focused or dragged. */
+const BAR_ACTIVE = 56;
 const STEP = 16;
 const STEP_BIG = 64;
 
@@ -42,6 +44,7 @@ export default function ResizeGrip({
   // a render.
   const current = useRef(width);
   const frame = useRef(0);
+  const [dragging, setDragging] = useState(false);
   const grow = side === "left" ? 1 : -1;
 
   const push = (next: number) => {
@@ -53,6 +56,7 @@ export default function ResizeGrip({
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
     drag.current = { x: e.clientX, width };
+    setDragging(true);
     current.current = width;
     e.preventDefault();
   };
@@ -64,6 +68,7 @@ export default function ResizeGrip({
   const onPointerUp = (e: PointerEvent<HTMLDivElement>) => {
     if (!drag.current) return;
     drag.current = null;
+    setDragging(false);
     e.currentTarget.releasePointerCapture(e.pointerId);
     cancelAnimationFrame(frame.current);
     onCommit(current.current);
@@ -109,48 +114,49 @@ export default function ResizeGrip({
       onPointerCancel={onPointerUp}
       onKeyDown={onKeyDown}
       onKeyUp={onKeyUp}
+      data-dragging={dragging || undefined}
       sx={{
         position: "absolute",
-        top: "50%",
-        transform: "translateY(-50%)",
+        top: 0,
+        bottom: 0,
         [side === "left" ? "right" : "left"]: 0,
         width: canvas.gripHit,
-        height: tokens.touch.min,
         display: "grid",
-        // The pill hugs the card's edge so it stays off the rows.
-        placeItems: side === "left" ? "center end" : "center start",
+        placeItems: "center",
         cursor: "col-resize",
         touchAction: "none",
         outline: "none",
-        // A pill with two grip lines, so it reads as a handle and not as the
-        // card's scrollbar.
+        opacity: width <= min || width >= max ? 0.4 : 1,
+        transition: transition(["opacity"], { duration: "fast" }),
+        // The line the card's edge shows while it is being dragged.
+        "&::after": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          [side === "left" ? "right" : "left"]: 0,
+          width: 2,
+          bgcolor: tokens.primary,
+          opacity: 0,
+          transition: transition(["opacity"], { duration: "fast" }),
+        },
+        "&[data-dragging]::after": { opacity: 1 },
         "& > span": {
           width: canvas.gripBar.w,
           height: canvas.gripBar.h,
-          boxSizing: "border-box",
           borderRadius: `${tokens.radii.pill}px`,
-          bgcolor: tokens.surfaceLowest,
-          border: `1px solid ${tokens.outline}`,
-          boxShadow: tokens.elevation.e1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "3px",
-          color: tokens.outline,
-          transition: transition(["border-color", "color"], {
+          bgcolor: `${tokens.outline}${alphas.border}`,
+          transition: transition(["height", "background-color"], {
             duration: "fast",
           }),
-          "&::before, &::after": {
-            content: '""',
-            width: 2,
-            height: 16,
-            borderRadius: `${tokens.radii.pill}px`,
-            bgcolor: "currentColor",
-          },
         },
-        "&:hover > span, &:focus-visible > span, &:active > span": {
-          color: tokens.primary,
-          borderColor: tokens.primary,
+        "&:hover > span, &:focus-visible > span, &[data-dragging] > span": {
+          height: BAR_ACTIVE,
+          bgcolor: tokens.primary,
+        },
+        "&:focus-visible > span": {
+          outline: `2px solid ${tokens.primary}`,
+          outlineOffset: 2,
         },
       }}
     >

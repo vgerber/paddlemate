@@ -46,6 +46,8 @@ type MapHook = {
   jumpTo(o: { center: [number, number]; zoom: number }): void;
   getCanvas(): HTMLCanvasElement;
   loaded(): boolean;
+  setBearing(deg: number): void;
+  getBearing(): number;
   queryRenderedFeatures(
     at: { x: number; y: number },
     o: { layers: string[] },
@@ -186,14 +188,23 @@ test.describe("the base map", () => {
     expect(labels.filter((l) => l.includes("("))).toEqual([]);
   });
 
-  test("the compass key is an arrow of our own, 44px, that turns with the map", async ({
+  test("the compass is absent at north and fades in once the map is rotated", async ({
     page,
   }) => {
     await gotoSection(page, "lower");
     await expect(page.locator(".maplibregl-ctrl-compass")).toHaveCount(0);
+    await page.waitForFunction(() => window.__paddlemateMap?.loaded());
     const key = page.getByRole("button", { name: "Reset bearing to north" });
-    await expect(key).toBeVisible();
+    await expect(key).toHaveCSS("opacity", "0");
+    await expect(key).toHaveCSS("pointer-events", "none");
+    await page.evaluate(() => window.__paddlemateMap?.setBearing(40));
+    await expect(key).toHaveCSS("opacity", "1");
     await expectTouchTargets(key);
+    await key.click();
+    await expect(key).toHaveCSS("opacity", "0");
+    expect(
+      await page.evaluate(() => window.__paddlemateMap?.getBearing()),
+    ).toBe(0);
   });
 
   test("the small map markers are 44px to hit", async ({ page }) => {

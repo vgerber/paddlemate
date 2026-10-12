@@ -210,8 +210,8 @@ const tokens = {
     sideMaxFrac: 0.45,
     freeMin: { w: 240, h: 200 },
     headerHeight: 56,
-    gripHit: 44,
-    gripBar: { w: 14, h: 44 },
+    gripHit: 12,
+    gripBar: { w: 4, h: 40 },
     dock: { min: 184, max: 248, vh: 0.22, from: 1280, minWindowHeight: 600 },
     cards: {
       detail: {
