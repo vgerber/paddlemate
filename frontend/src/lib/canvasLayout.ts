@@ -122,15 +122,23 @@ export function layoutCards(
   return cards.map((c) => placed.get(c.id) as Placement);
 }
 
-/** The height the dock takes: a share of the window height, kept in range. */
+/** The height of the rail and of the card's reading block: a share of the window height, kept in range. */
 export function dockHeight(windowHeight: number): number {
   return Math.round(
     clamp(windowHeight * canvas.dock.vh, canvas.dock.min, canvas.dock.max),
   );
 }
 
-export function dockMode(windowWidth: number): "dock" | "inline" {
-  return windowWidth >= canvas.dock.from ? "dock" : "inline";
+/** The rail needs a wide and tall enough window; otherwise the chart is the
+ * detail card's first block. */
+export function dockMode(
+  windowWidth: number,
+  windowHeight: number,
+): "dock" | "inline" {
+  return windowWidth >= canvas.dock.from &&
+    windowHeight >= canvas.dock.minWindowHeight
+    ? "dock"
+    : "inline";
 }
 
 function edges(placements: Placement[], windowWidth: number) {
@@ -144,34 +152,34 @@ function edges(placements: Placement[], windowWidth: number) {
   return { left, right };
 }
 
-/** Where the chart dock sits: from the rightmost left card plus a margin to
- * the leftmost right card minus a margin. `extra` is the chart's options row
- * while open, so the plot keeps its full height. */
+/** Where the rail sits: it continues the left card's foot, so it starts at
+ * the card's edge (no gap) and runs to the leftmost right card minus a
+ * margin. */
 export function dockRect(
   placements: Placement[],
   windowWidth: number,
   windowHeight: number,
-  extra = 0,
 ): DockRect {
   const e = edges(placements, windowWidth);
   const m = canvas.margin;
-  const left = e.left > 0 ? e.left + m : m;
+  const left = e.left > 0 ? e.left : m;
   const right = e.right < windowWidth ? e.right - m : windowWidth - m;
   return {
     left,
     width: Math.max(0, right - left),
-    height: dockHeight(windowHeight) + extra,
+    height: dockHeight(windowHeight),
   };
 }
 
-/** Where map controls sit: the free area's edges, less the fit margin, so a
- * control is a small step inside the free area and never under a card. */
-export function controlInset(padding: Padding): Padding {
+/** Where map controls sit, as edge insets: 16px inside the free area at the
+ * top, right and left, and at the foot 24px above the window or 8px above the
+ * rail (`rail` is its height), so a control is never under a card. */
+export function controlInset(padding: Padding, rail: number | null): Padding {
   const trim = canvas.freeMargin - canvas.margin;
   return {
     top: Math.max(0, padding.top - trim),
     right: Math.max(0, padding.right - trim),
-    bottom: Math.max(0, padding.bottom - trim),
+    bottom: rail == null ? 24 : canvas.margin + rail + 8,
     left: Math.max(0, padding.left - trim),
   };
 }

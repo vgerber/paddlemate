@@ -35,6 +35,17 @@ const CHART_MARGIN = { top: 6, right: 12, bottom: 4, left: 0 };
 const DOT_RADIUS = 5;
 const LABEL_GAP = DOT_RADIUS + 10;
 
+/** The rail's plot: threshold labels sit in a gutter right of the plot, and
+ * the latest reading is a larger dot with a ring. */
+const RAIL_GUTTER = 84;
+const RAIL_DOT_RADIUS = 6;
+const RAIL_LABEL_OFFSET = 8;
+
+export interface ScrubPoint {
+  time: number;
+  value: number;
+}
+
 export interface SeriesChartProps {
   range: WaterRangeWithStatus;
   /** Range of the feature selected in the timeline. While set, its
@@ -48,6 +59,10 @@ export interface SeriesChartProps {
   descentSpans?: DescentSpan[];
   /** Room kept above the plot, in px, for text laid over the chart. */
   headroom?: number;
+  /** The reading rail's look: labelled gutter, no tooltip, a 20px axis row. */
+  rail?: boolean;
+  /** The reading under the pointer; it stays until the caller clears it. */
+  onScrub?: (point: ScrubPoint | null) => void;
 }
 
 /** Midnight ticks across the window, stepped so about four fit: a day label
@@ -103,6 +118,7 @@ function thresholdLines(
   r: WaterRangeWithStatus,
   opacity: number,
   keyPrefix: string,
+  rail: boolean,
 ) {
   const line = (key: string, y: number, color: string, labelText: string) => (
     <ReferenceLine
@@ -117,9 +133,13 @@ function thresholdLines(
           viewBox && "width" in viewBox ? (
             <text
               data-testid="threshold-label"
-              x={(viewBox.x ?? 0) + (viewBox.width ?? 0) - LABEL_GAP}
-              y={(viewBox.y ?? 0) + 13}
-              textAnchor="end"
+              x={
+                (viewBox.x ?? 0) +
+                (viewBox.width ?? 0) +
+                (rail ? RAIL_LABEL_OFFSET : -LABEL_GAP)
+              }
+              y={(viewBox.y ?? 0) + (rail ? 4 : 13)}
+              textAnchor={rail ? "start" : "end"}
               fontSize={11}
               fontWeight={600}
               fill={color}
@@ -135,16 +155,26 @@ function thresholdLines(
   );
   return [
     r.range_low != null &&
-      line("low", r.range_low, tokens.success, `L ${r.range_low}`),
+      line(
+        "low",
+        r.range_low,
+        tokens.success,
+        `${rail ? "Low" : "L"} ${r.range_low}`,
+      ),
     r.range_medium != null &&
       line(
         "medium",
         r.range_medium,
         tokens.levels.medium.text,
-        `M ${r.range_medium}`,
+        `${rail ? "Medium" : "M"} ${r.range_medium}`,
       ),
     r.range_high != null &&
-      line("high", r.range_high, tokens.error, `H ${r.range_high}`),
+      line(
+        "high",
+        r.range_high,
+        tokens.error,
+        `${rail ? "High" : "H"} ${r.range_high}`,
+      ),
   ].filter((l): l is JSX.Element => l !== false);
 }
 
@@ -180,6 +210,8 @@ export default function SeriesChart({
   showThresholds = true,
   descentSpans,
   headroom = CHART_MARGIN.top,
+  rail = false,
+  onScrub,
 }: SeriesChartProps) {
   const { series, gauge } = range;
 
@@ -274,7 +306,11 @@ export default function SeriesChart({
   // The chart runs edge to edge: no y axis, the threshold labels and the
   // tooltip carry the scale.
   const yAxisWidth = 0;
-  const margin = { ...CHART_MARGIN, top: headroom };
+  const margin = {
+    ...CHART_MARGIN,
+    top: headroom,
+    right: rail ? RAIL_GUTTER : CHART_MARGIN.right,
+  };
   const lastPoint = useMemo(() => {
     for (let i = chartData.length - 1; i >= 0; i--) {
       const v = chartData[i].value;
@@ -309,7 +345,7 @@ export default function SeriesChart({
   const { domain, reset } = useChartZoom(container, {
     extent,
     plotLeft,
-    plotWidth: Math.max((size?.width ?? 0) - plotLeft - CHART_MARGIN.right, 1),
+    plotWidth: Math.max((size?.width ?? 0) - plotLeft - margin.right, 1),
   });
 
   // Zooming only narrows the time axis; the y window stays fixed on the
@@ -386,6 +422,19 @@ export default function SeriesChart({
           height={size.height}
           data={chartData}
           margin={margin}
+          onMouseMove={
+            onScrub
+              ? (st) => {
+                  const i = Number(st.activeIndex);
+                  const d = Number.isInteger(i) ? chartData[i] : undefined;
+                  onScrub(
+                    d && d.value !== null
+                      ? { time: d.time, value: d.value }
+                      : null,
+                  );
+                }
+              : undefined
+          }
         >
           <defs>
             <linearGradient
@@ -444,6 +493,7 @@ export default function SeriesChart({
             axisLine={false}
             tickLine={false}
             minTickGap={60}
+            height={rail ? 20 : undefined}
           />
           <YAxis
             hide
@@ -454,6 +504,7 @@ export default function SeriesChart({
           <Tooltip
             active={hoverOff ? false : undefined}
             content={({ active, payload, label }) => {
+              if (rail) return null;
               const value = payload?.[0]?.value;
               if (!active || value == null) return null;
               const ts = label as number;
@@ -498,23 +549,42 @@ export default function SeriesChart({
             isAnimationActive={false}
           />
           {showThresholds && thresholdBands(displayRange)}
-          {showThresholds && thresholdLines(displayRange, 1, "thresholds")}
+          {showThresholds &&
+            thresholdLines(displayRange, 1, "thresholds", rail)}
           {lastPoint && (
             <ReferenceDot
               x={lastPoint.time}
               y={lastPoint.value}
               ifOverflow="hidden"
-              shape={({ cx, cy }) => (
-                <circle
-                  data-testid="latest-dot"
-                  cx={cx}
-                  cy={cy}
-                  r={DOT_RADIUS}
-                  fill={tokens.surface}
-                  stroke={tokens.chartSeries}
-                  strokeWidth={2}
-                />
-              )}
+              shape={({ cx, cy }) =>
+                rail ? (
+                  <g data-testid="latest-dot">
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={RAIL_DOT_RADIUS + 4}
+                      fill={tokens.chartSeries}
+                      fillOpacity={0.2}
+                    />
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={RAIL_DOT_RADIUS}
+                      fill={tokens.chartSeries}
+                    />
+                  </g>
+                ) : (
+                  <circle
+                    data-testid="latest-dot"
+                    cx={cx}
+                    cy={cy}
+                    r={DOT_RADIUS}
+                    fill={tokens.surface}
+                    stroke={tokens.chartSeries}
+                    strokeWidth={2}
+                  />
+                )
+              }
             />
           )}
         </AreaChart>

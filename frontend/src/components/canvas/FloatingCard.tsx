@@ -39,6 +39,9 @@ interface FloatingCardProps {
   resizable?: boolean;
   /** Full height between the margins; otherwise as tall as its content. */
   fullHeight?: boolean;
+  /** The card's foot continues into the reading rail on its right, so its
+   * lower right corner is square. */
+  joinedRail?: boolean;
   /** Folded first when the cards cover too much; higher stays open longer. */
   priority?: number;
 }
@@ -59,6 +62,7 @@ export default function FloatingCard({
   screen = "default",
   resizable = kind === "detail",
   fullHeight = false,
+  joinedRail = false,
   priority = canvas.cards[kind].priority,
 }: FloatingCardProps) {
   useLayoutEffect(() => {
@@ -97,6 +101,7 @@ export default function FloatingCard({
         pointerEvents: "auto",
         bgcolor: tokens.surfaceLowest,
         borderRadius: `${tokens.radii.lg}px`,
+        borderBottomRightRadius: joinedRail && !collapsed ? 0 : undefined,
         boxShadow: tokens.elevation.e2,
       }}
     >

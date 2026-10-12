@@ -8,11 +8,16 @@ import {
 } from "./cardWidth";
 
 describe("cardWidth", () => {
-  test("detail is 38% of the window within 420 to 720", () => {
-    expect(Math.round(cardWidth("detail", 1280))).toBe(486);
-    expect(Math.round(cardWidth("detail", 1440))).toBe(547);
-    expect(cardWidth("detail", 1920)).toBe(720);
-    expect(cardWidth("detail", 900)).toBe(420);
+  test("detail is 26% of the window within 340 to 440", () => {
+    expect(cardWidth("detail", 1280)).toBe(340);
+    expect(Math.round(cardWidth("detail", 1440))).toBe(374);
+    expect(cardWidth("detail", 1920)).toBe(440);
+  });
+
+  test("detail is 360 wide under 1280, where no rail sits beside it", () => {
+    expect(cardWidth("detail", 1279)).toBe(360);
+    expect(cardWidth("detail", 900)).toBe(360);
+    expect(cardWidth("detail", 900, 0.5)).toBe(405);
   });
 
   test("list is 20% within 300 to 380, side 25% within 400 to 600", () => {
@@ -29,19 +34,25 @@ describe("cardWidth", () => {
   });
 
   test("a remembered fraction is held to the resize range", () => {
-    expect(cardWidth("detail", 1280, 0.1)).toBe(360);
-    expect(cardWidth("detail", 1280, 0.9)).toBe(576);
-    expect(cardWidth("detail", 1920, 0.5)).toBe(864);
+    expect(cardWidth("detail", 1280, 0.1)).toBe(340);
+    expect(cardWidth("detail", 1280, 0.9)).toBe(560);
+    expect(cardWidth("detail", 1920, 0.5)).toBe(560);
   });
 
-  test("resizeBounds is 360 to 45% for detail and null for fixed cards", () => {
-    expect(resizeBounds("detail", 1000)).toEqual({ min: 360, max: 450 });
+  test("resizeBounds is 340 to 45% for detail and null for fixed cards", () => {
+    expect(resizeBounds("detail", 1000)).toEqual({ min: 340, max: 450 });
+    expect(resizeBounds("detail", 1400)?.max).toBe(560);
     expect(resizeBounds("list", 1000)).toBeNull();
   });
 
+  test("the rail's plot keeps 480px", () => {
+    expect(resizeBounds("detail", 1280)?.max).toBe(560);
+    expect(resizeBounds("detail", 1000)?.max).toBe(450);
+  });
+
   test("clampCardWidth holds a drag in range and leaves fixed cards alone", () => {
-    expect(clampCardWidth("detail", 100, 1280)).toBe(360);
-    expect(clampCardWidth("detail", 2000, 1280)).toBe(576);
+    expect(clampCardWidth("detail", 100, 1280)).toBe(340);
+    expect(clampCardWidth("detail", 2000, 1280)).toBe(560);
     expect(clampCardWidth("detail", 500, 1280)).toBe(500);
     expect(clampCardWidth("side", 5, 1280)).toBe(5);
   });

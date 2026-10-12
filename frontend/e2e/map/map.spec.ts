@@ -25,6 +25,12 @@ const INK = "#58666d";
 const E2 =
   "rgba(31, 43, 49, 0.12) 0px 8px 24px 0px, rgba(31, 43, 49, 0.08) 0px 2px 6px 0px";
 
+/** On a canvas screen the layer choices sit behind one key; open it. */
+async function openLayers(page: Page) {
+  const key = page.getByTestId("map-layer-button");
+  if (await key.count()) await key.click();
+}
+
 type FeatureCollection = {
   features: {
     properties?: Record<string, unknown> | null;
@@ -212,6 +218,7 @@ test.describe("the base map", () => {
       page.locator(".maplibregl-ctrl-group button:visible"),
     );
 
+    await openLayers(page);
     const toggle = page.getByTestId("map-layer-toggle");
     await expect(toggle).toBeVisible();
     expect(await computed(toggle, "background-color")).toBe(
@@ -237,6 +244,7 @@ test.describe("the layer toggle", () => {
     test(`Section and River share one row at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
       await gotoSection(page, "lower");
+      await openLayers(page);
       const toggle = page.getByTestId("map-layer-toggle");
       const section = await toggle
         .getByRole("button", { name: "Section", exact: true })

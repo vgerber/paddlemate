@@ -215,7 +215,8 @@ export default function SidebarContent({
       }}
       onMobileMapToggle={onMobileMapToggle}
       mobileMapActive={mobileMapActive}
-      chart={<MapCharts state={state} />}
+      chart={<MapCharts state={state} slot="pane" />}
+      foot={<MapCharts state={state} slot="foot" />}
       featureTimeline={{
         onFeatureClick: setFocusedPoint,
         onEditFeature: startEditFeature,

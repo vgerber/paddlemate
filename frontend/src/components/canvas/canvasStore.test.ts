@@ -47,7 +47,7 @@ describe("layout", () => {
   });
 
   test("cards register, fold under the budget and unregister", () => {
-    layout.setViewport({ w: 1024, h: 800 });
+    layout.setViewport({ w: 800, h: 800 });
     layout.register({
       id: "a",
       side: "left",
@@ -79,8 +79,8 @@ describe("layout", () => {
       frac: null,
     });
     layout.setLive({ id: "a", width: 5000 });
-    expect(layout.get().placements.get("a")?.width).toBe(576);
+    expect(layout.get().placements.get("a")?.width).toBe(560);
     layout.setLive(null);
-    expect(Math.round(layout.get().placements.get("a")?.width ?? 0)).toBe(486);
+    expect(Math.round(layout.get().placements.get("a")?.width ?? 0)).toBe(340);
   });
 });

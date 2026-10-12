@@ -7,9 +7,10 @@ import {
   gotoSection,
 } from "../support/fixture";
 
-// WP5: the chart card that opens, the gauge cards and the credit line
+// WP5: the phone's chart card that opens, the gauge cards and the credit line
 // (doc/plans/ui-overhaul/calm-design.html, "A chart that opens for its
-// options"). The fixture gauge reads about 85 cm with thresholds 60/80/120.
+// options"), and the desktop's reading block and rail. The fixture gauge reads
+// about 85 cm with thresholds 60/80/120.
 
 const PERIODS = ["24h", "7d", "1M", "3M", "6M", "1Y"];
 
@@ -37,6 +38,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe("closed card", () => {
+  test.skip(({ isMobile }) => !isMobile, "the phone's chart card");
   test("shows the reading, its time and the period, and one 44px button", async ({
     page,
   }) => {
@@ -161,6 +163,7 @@ test.describe("closed card", () => {
 });
 
 test.describe("open card", () => {
+  test.skip(({ isMobile }) => !isMobile, "the phone's chart card");
   test("lists the reading and all six periods, each 44px to hit", async ({
     page,
   }) => {
@@ -274,6 +277,7 @@ test.describe("open card", () => {
 });
 
 test.describe("layout", () => {
+  test.skip(({ isMobile }) => !isMobile, "the phone's chart card");
   test("the section screen never scrolls sideways, open or closed @small", async ({
     page,
   }) => {
@@ -419,6 +423,7 @@ test.describe("gauge coverage design", () => {
 });
 
 test.describe("design gaps", () => {
+  test.skip(({ isMobile }) => !isMobile, "the phone's chart card");
   test("the card sits 12px from the edge and the options chips are 44px", async ({
     page,
   }, info) => {
@@ -455,5 +460,118 @@ test.describe("design gaps", () => {
       .locator("xpath=ancestor::*[contains(@class,'recharts-wrapper')]")
       .boundingBox();
     expect(plot?.height).toBeGreaterThanOrEqual(160);
+  });
+});
+
+test.describe("reading block and rail", () => {
+  test.skip(({ isMobile }) => isMobile, "the rail is a desktop layout");
+
+  const block = (page: Page) => page.getByTestId("reading-block");
+  const rail = (page: Page) => page.getByTestId("chart-dock");
+
+  async function openRail(page: Page) {
+    await gotoSection(page, "lower");
+    await expect(rail(page).getByTestId("latest-dot")).toBeVisible();
+  }
+
+  test("the block says the gauge, the reading and the level as a dot and a word", async ({
+    page,
+  }) => {
+    await openRail(page);
+    await expect(block(page)).toContainText("Test Gauge");
+    await expect(block(page).getByTestId("chart-reading")).toContainText(
+      /^\d+(\.\d)? cm/,
+    );
+    const level = block(page).getByTestId("reading-level");
+    await expect(level).toContainText("Medium");
+    // Neutral ground: the colour is the dot only, no filled chip.
+    expect(await computed(level, "background-color")).toBe("rgba(0, 0, 0, 0)");
+    const dot = level.locator("span, div").first();
+    expect(Math.round((await dot.boundingBox())?.width ?? 0)).toBe(10);
+  });
+
+  test("the period is a four-way control with 44px keys", async ({ page }) => {
+    await openRail(page);
+    const period = block(page).getByRole("group", { name: "Period" });
+    for (const p of ["24h", "7d", "30d", "1y"]) {
+      await expect(period.getByRole("button", { name: p })).toBeVisible();
+    }
+    await expectTouchTargets(period.getByRole("button"));
+    await period.getByRole("button", { name: "30d" }).click();
+    await expect(period.getByRole("button", { name: "30d" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await period.getByRole("button", { name: "7d" }).click();
+  });
+
+  test("the thresholds are labelled in a gutter right of the plot", async ({
+    page,
+  }) => {
+    await openRail(page);
+    const labels = rail(page).getByTestId("threshold-label");
+    await expect(labels).toHaveCount(3);
+    await expect(labels.nth(0)).toHaveText(/^(High|Medium|Low) \d+/);
+    const dot = await rail(page).getByTestId("latest-dot").boundingBox();
+    for (const b of await labels.evaluateAll((els) =>
+      els.map((e) => e.getBoundingClientRect().x),
+    )) {
+      expect(b, "label starts right of the latest dot").toBeGreaterThan(
+        (dot?.x ?? 0) + (dot?.width ?? 0) - 1,
+      );
+    }
+  });
+
+  test("the credit is one line under the plot, inside the rail", async ({
+    page,
+  }) => {
+    await openRail(page);
+    const credit = rail(page).getByTestId("gauge-attribution").first();
+    await expect(credit).toContainText("Data: THS · CC BY 4.0");
+    const plot = await rail(page).getByTestId("chart-plot").boundingBox();
+    const line = await credit.boundingBox();
+    expect(line?.y ?? 0).toBeGreaterThanOrEqual(
+      (plot?.y ?? 0) + (plot?.height ?? 0) - 1,
+    );
+  });
+
+  test("the options hold only what the chart can do, and the thresholds switch works", async ({
+    page,
+  }) => {
+    await openRail(page);
+    const button = block(page).getByRole("button", { name: "Chart options" });
+    await expectTouchTargets(button);
+    await button.click();
+    const pop = page.getByRole("dialog", { name: "Chart options" });
+    await expect(button).toHaveAttribute("aria-expanded", "true");
+    const sw = pop.getByRole("checkbox", { name: "Thresholds" });
+    await expect(sw).toBeChecked();
+    await sw.click();
+    await expect(rail(page).getByTestId("threshold-label")).toHaveCount(0);
+    await sw.click();
+    await expect(rail(page).getByTestId("threshold-label")).toHaveCount(3);
+    await page.keyboard.press("Escape");
+    await expect(pop).toBeHidden();
+  });
+
+  test("pointing at the plot replaces the reading and Latest returns it", async ({
+    page,
+  }) => {
+    await openRail(page);
+    const reading = block(page).getByTestId("chart-reading");
+    const latest = block(page).getByRole("button", { name: "Latest" });
+    await expect(latest).toHaveCount(0);
+    const plot = await rail(page).getByTestId("chart-plot").boundingBox();
+    await page.mouse.move(
+      (plot?.x ?? 0) + (plot?.width ?? 0) / 3,
+      (plot?.y ?? 0) + (plot?.height ?? 0) / 2,
+    );
+    await expect(latest).toBeVisible();
+    const before = await block(page).boundingBox();
+    await latest.click();
+    await expect(latest).toHaveCount(0);
+    await expect(reading).toBeVisible();
+    const after = await block(page).boundingBox();
+    expect(after?.height).toBe(before?.height);
   });
 });

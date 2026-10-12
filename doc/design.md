@@ -74,7 +74,7 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 
 | Screen | What defines it |
 |---|---|
-| Section detail | A chart card at the top of the pane (closed: the chart and one options button; open: reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide); History opens over the pane |
+| Section detail | The chart: from 1280 the reading block at the card's foot and the plot in the rail beside it, below that a card at the top of the pane (reading, period, plot; on a phone the chart with an options button that opens reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide); History opens over the pane |
 | Search | Tabs Name, Area, Region; a Filters sheet (country, grade, Water now); the chosen levels live in the `water` URL param |
 | Map region mode | The search panel (a peek sheet on a phone, the card on desktop) with the region field, level chips, and "Part of" naming the parents of a picked region; the regions stay visible on the map |
 | Logs | Two panes on desktop; the date is a picker field |
@@ -179,7 +179,7 @@ The reasons and the work plan are in [plans/wide-canvas.md](plans/wide-canvas.md
 
 | Card | Width | Used for |
 |---|---|---|
-| Detail | 38% of the window, 420 to 720, drag the grip to resize (remembered) | the map page's search, river and section panel |
+| Detail | 26% of the window, 340 to 440 (360 under 1280); drag the grip to resize, 340 to 560 and never leaving the rail's plot under 480 (remembered per device) | the map page's search, river and section panel |
 | List | 20%, 300 to 380 | the list of logs, trips or proposals |
 | Side | 25%, 400 to 600 | the open log, trip, proposal, and a trip's members |
 
@@ -191,12 +191,36 @@ The reasons and the work plan are in [plans/wide-canvas.md](plans/wide-canvas.md
   grey subtitle, actions at the right and a close button. Where the panel in
   the card has its own header (the search panel, a log), that is the card's
   header and the card draws none.
-- **Chart dock.** From 1280 wide the chart sits along the foot of the free map
-  area between the cards, 180 to 260 tall and as long as the room allows. Below
-  1280 it is the first block of the detail card.
-- **Free area.** The part of the map no card or dock covers. The map frames
-  the subject inside it, and the zoom keys, compass, layer toggle and
-  attribution sit at its corners, never over a card.
+- **Reading rail.** From 1280 wide and 600 tall, a section (or a picked gauge)
+  with a gauge shows the rail. The detail card runs the full height (16px from
+  the app bar and the foot), and its foot is the reading block, as tall as the
+  rail. The chart continues to the right as the rest of the rail, starting at
+  the card's edge: one surface, one hairline, a concave fillet where the rail's
+  top meets the card. The rail is 22% of the window height, 184 to 248, and
+  floats 16px from the right and the foot. The card's order from the top:
+  header, tabs, scroll area (strip, count, rows; the river-state slot takes the
+  spare room), the docked action, the reading block. The reading block holds
+  the gauge name (a picker with several gauges), the options button, the level
+  with its unit, a dot and the level word, the trend ("High, falling 24 cm in
+  24 h": newest reading against the one 24 h earlier, within 3 h; a change of
+  3% of the high threshold, 1 unit without one, counts) and the time, and the
+  period (24h, 7d, 30d, 1y). A reading older than 3 h or three gauge
+  intervals shows "No recent reading" with no level word or trend. The plot has
+  threshold labels in an 84px right gutter, the latest point as a ringed dot
+  and the credit line under it; pointing at it replaces the reading until
+  "Latest". The options (which reading, the threshold lines, closing a picked
+  gauge) are a 300px popover over the map. Without a gauge there is no rail and
+  the card ends in a 64px row "No gauge for this section" with "Link a gauge"
+  (signed in; it opens the New feature form, where the gauge is chosen). Below
+  1280, or under 600 tall, there is no rail: the card is 360 wide, hugs its
+  content and the chart (reading, period, a 128px plot, the credit) is its
+  first block. The open tab and its scroll survive crossing 1280.
+- **Free area.** The part of the map no card or rail covers. The map frames
+  the subject inside it, and the zoom keys, compass and layer key form
+  one stack 16px from the right and the top, and the attribution sits 8px above
+  the rail (24px from the foot without one), never over a card. The layer key
+  is one 44px button; its 272px popover opens to its left with Section, River,
+  Features and Satellite.
 - **Sections on the map.** The subject of a screen is teal (the open log's
   sections, a proposed line); context is a dim line you cannot click (other
   logged sections, the stored line a proposal replaces).

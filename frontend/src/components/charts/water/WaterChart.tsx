@@ -3,7 +3,7 @@ import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { fromForRange } from "./chartTime";
-import SeriesChart from "./SeriesChart";
+import SeriesChart, { type ScrubPoint } from "./SeriesChart";
 import { activeMeasurementType, seriesGroups } from "./series";
 import type { DescentSpan, TimeRange } from "./types";
 
@@ -25,6 +25,9 @@ export interface WaterChartProps {
   selectedFeature?: { name: string; type: string } | null;
   /** Room kept above the plot for text laid over it, in px. */
   headroom?: number;
+  /** The reading rail's look and its pointer reading. */
+  rail?: boolean;
+  onScrub?: (point: ScrubPoint | null) => void;
 }
 
 /** One chart per gauge series of the charted measurement. The controls
@@ -39,6 +42,8 @@ export default function WaterChart({
   preferredFeatureId,
   selectedFeature,
   headroom,
+  rail,
+  onScrub,
 }: WaterChartProps) {
   const from = useMemo(() => fromForRange(timeRange), [timeRange]);
   const activeType = activeMeasurementType(ranges, measurementType);
@@ -85,6 +90,8 @@ export default function WaterChart({
               showThresholds={showThresholds}
               descentSpans={descentSpans}
               headroom={headroom}
+              rail={rail}
+              onScrub={onScrub}
             />
           </Box>
         </Box>

@@ -2,8 +2,9 @@ import { expect, type Page, test } from "@playwright/test";
 import { appReady, FIX } from "../support/fixture";
 
 // WP16b: the map page (/) on the shared canvas. From md the detail card floats
-// over the one full-window map, the chart docks along its foot from 1280, and
-// the selected section is kept inside the free area. The phone is unchanged.
+// over the one full-window map; from 1280 its foot is the reading block and the
+// chart continues it as a rail along the window foot. The selected section is
+// kept inside the free area; the phone is unchanged.
 
 /** Corners of the "Upper Test" section line (seed.sql). */
 const SW: [number, number] = [11.0, 47.0];
@@ -16,6 +17,8 @@ type MapLike = {
 };
 
 const section = `/?waterway=${FIX.waterway}&section=${FIX.sections.upper}`;
+// "Lower Test" has nine features, so its list needs the card's full height.
+const longSection = `/?waterway=${FIX.waterway}&section=${FIX.sections.lower}`;
 const card = (page: Page) => page.getByTestId("canvas-card-detail");
 
 async function open(
@@ -75,9 +78,9 @@ test.describe("map page on the canvas", () => {
   test.skip(({ isMobile }) => isMobile, "wide screens only");
 
   for (const [width, cardWidth] of [
-    [1280, 486],
-    [1440, 547],
-    [1920, 720],
+    [1280, 340],
+    [1440, 374],
+    [1920, 440],
   ]) {
     test(`the section sits inside the free area at ${width}`, async ({
       page,
@@ -117,41 +120,46 @@ test.describe("map page on the canvas", () => {
     await expect(page.locator(".maplibregl-map")).toHaveCount(1);
   });
 
-  for (const [width, height, expectedHeight] of [
-    [1280, 720, 180],
+  for (const [width, height, rail] of [
+    [1280, 720, 184],
+    [1440, 900, 198],
     [1920, 1080, 238],
   ]) {
-    test(`the chart docks at the foot from card edge + 16 to window edge - 16 at ${width}`, async ({
+    test(`the card runs the full height and the rail continues its foot at ${width}`, async ({
       page,
     }) => {
-      await open(page, { width, height });
+      await open(page, { width, height }, longSection);
       const dock = await box(page.getByTestId("chart-dock"));
       const c = await box(card(page));
-      expect(Math.abs(dock.x - (c.x + c.width + 16))).toBeLessThanOrEqual(1);
+      expect(Math.abs(c.y - 72)).toBeLessThanOrEqual(1);
+      expect(Math.abs(c.y + c.height - (height - 16))).toBeLessThanOrEqual(1);
+      expect(Math.abs(dock.x - (c.x + c.width))).toBeLessThanOrEqual(1);
       expect(Math.abs(dock.x + dock.width - (width - 16))).toBeLessThanOrEqual(
         1,
       );
-      expect(dock.height).toBeLessThanOrEqual(260);
-      expect(Math.abs(dock.height - expectedHeight)).toBeLessThanOrEqual(1);
-      await expect(
-        page.getByTestId("chart-dock").getByTestId("chart-card"),
-      ).toBeVisible();
+      expect(Math.abs(dock.height - rail)).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(dock.y + dock.height - (height - 16)),
+      ).toBeLessThanOrEqual(1);
+      const block = await box(card(page).getByTestId("reading-block"));
+      expect(Math.abs(block.height - rail)).toBeLessThanOrEqual(1);
+      await expect(page.getByTestId("chart-plot")).toBeVisible();
       await expectSectionInFreeArea(page);
     });
   }
 
-  test("the dock is longer at 1920 than at 1280, not taller than 260", async ({
+  test("the rail is longer at 1920 than at 1280, never taller than 248", async ({
     page,
   }) => {
-    await open(page, { width: 1280, height: 900 });
+    await open(page, { width: 1280, height: 900 }, longSection);
     const narrow = await box(page.getByTestId("chart-dock"));
-    await open(page, { width: 1920, height: 900 });
+    await open(page, { width: 1920, height: 900 }, longSection);
     const wide = await box(page.getByTestId("chart-dock"));
     expect(wide.width).toBeGreaterThan(narrow.width);
-    expect(wide.height).toBeLessThanOrEqual(260);
+    expect(wide.height).toBeLessThanOrEqual(248);
   });
 
-  test("a river with no section selected has no dock", async ({ page }) => {
+  test("a river with no section selected has no rail", async ({ page }) => {
     await open(
       page,
       { width: 1440, height: 900 },
@@ -160,7 +168,27 @@ test.describe("map page on the canvas", () => {
     await expect(page.getByTestId("chart-dock")).toHaveCount(0);
   });
 
-  test("under 1280 the chart is the first block of the card", async ({
+  test("a section without a gauge has no rail and a foot row", async ({
+    page,
+  }) => {
+    await open(
+      page,
+      { width: 1440, height: 900 },
+      `/?waterway=${FIX.waterway}&section=${FIX.sections.empty}`,
+    );
+    await expect(page.getByTestId("chart-dock")).toHaveCount(0);
+    const row = card(page).getByTestId("no-gauge");
+    await expect(row).toContainText("No gauge for this section");
+    await expect(
+      row.getByRole("button", { name: "Link a gauge" }),
+    ).toBeVisible();
+    const r = await box(row);
+    const c = await box(card(page));
+    expect(Math.abs(r.height - 64)).toBeLessThanOrEqual(1);
+    expect(Math.abs(r.y + r.height - (c.y + c.height))).toBeLessThanOrEqual(1);
+  });
+
+  test("under 1280 the chart is the first block of a card that hugs its content", async ({
     page,
   }) => {
     await open(page, { width: 1024, height: 800 });
@@ -168,26 +196,67 @@ test.describe("map page on the canvas", () => {
     const chart = await box(card(page).getByTestId("chart-card"));
     const features = await box(card(page).getByText("2 features"));
     expect(chart.y).toBeLessThan(features.y);
+    const c = await box(card(page));
+    expect(Math.abs(c.width - 360)).toBeLessThanOrEqual(1);
     await expectSectionInFreeArea(page);
   });
 
-  test("the logs tab gives the dock back its space", async ({ page }) => {
-    await open(page, { width: 1440, height: 900 });
-    await card(page).getByRole("tab", { name: "Logs" }).click();
-    await expect(page.getByTestId("chart-dock")).toHaveCount(0);
-  });
-
-  test("the layer toggle and zoom keys sit in the free area, clear of the card", async ({
+  test("a window under 600 tall has no rail even when wide", async ({
     page,
   }) => {
-    for (const width of [1280, 1440]) {
-      await open(page, { width, height: 800 });
-      const toggle = await box(page.getByTestId("map-layer-toggle"));
-      const c = await box(card(page));
-      expect(toggle.x).toBeGreaterThanOrEqual(c.x + c.width);
-      const zoom = await box(page.locator(".maplibregl-ctrl-top-right"));
-      expect(zoom.x).toBeGreaterThanOrEqual(c.x + c.width);
-    }
+    await open(page, { width: 1440, height: 560 });
+    await expect(page.getByTestId("chart-dock")).toHaveCount(0);
+    await expect(card(page).getByTestId("chart-card")).toBeVisible();
+  });
+
+  test("the logs tab keeps the rail", async ({ page }) => {
+    await open(page, { width: 1440, height: 900 }, longSection);
+    await card(page).getByRole("tab", { name: "Logs" }).click();
+    await expect(page.getByTestId("chart-dock")).toBeVisible();
+    await expect(card(page).getByTestId("reading-block")).toBeVisible();
+  });
+
+  test("the chart options open as a 300px popover over the map and leave the plot alone", async ({
+    page,
+  }) => {
+    await open(page, { width: 1440, height: 900 }, longSection);
+    const before = await box(page.getByTestId("chart-plot"));
+    await card(page).getByRole("button", { name: "Chart options" }).click();
+    const pop = page.getByRole("dialog", { name: "Chart options" });
+    await expect(pop).toBeVisible();
+    const p = await box(pop);
+    const dock = await box(page.getByTestId("chart-dock"));
+    expect(Math.abs(p.width - 300)).toBeLessThanOrEqual(1);
+    expect(p.y + p.height).toBeLessThanOrEqual(dock.y);
+    const during = await box(page.getByTestId("chart-plot"));
+    expect(during.height).toBe(before.height);
+    await page.keyboard.press("Escape");
+    await expect(pop).toBeHidden();
+  });
+
+  test("the layer toggle is one key under the compass and opens a popover to its left", async ({
+    page,
+  }) => {
+    await open(page, { width: 1440, height: 900 });
+    const key = page.getByTestId("map-layer-button");
+    const k = await box(key);
+    const c = await box(card(page));
+    expect(k.x).toBeGreaterThanOrEqual(c.x + c.width);
+    expect(Math.abs(k.x + k.width - (1440 - 16))).toBeLessThanOrEqual(1);
+    expect(Math.abs(k.width - 44)).toBeLessThanOrEqual(1);
+    const compass = await box(
+      page.getByRole("button", { name: "Reset bearing to north" }),
+    );
+    expect(k.y).toBeGreaterThan(compass.y + compass.height);
+    await expect(page.getByTestId("map-layer-toggle")).toHaveCount(0);
+    await key.click();
+    const pop = await box(page.getByTestId("map-layer-toggle"));
+    expect(pop.x + pop.width).toBeLessThanOrEqual(k.x);
+    expect(Math.abs(pop.width - 272)).toBeLessThanOrEqual(24);
+    await page.getByRole("button", { name: "Satellite" }).click();
+    await expect(
+      page.getByRole("button", { name: "Satellite" }),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 
   test("the card shows one header, the panel's own", async ({ page }) => {

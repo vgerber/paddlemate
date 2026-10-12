@@ -111,24 +111,47 @@ export default function ResizeGrip({
       onKeyUp={onKeyUp}
       sx={{
         position: "absolute",
-        top: 0,
-        bottom: 0,
+        top: "50%",
+        transform: "translateY(-50%)",
         [side === "left" ? "right" : "left"]: 0,
         width: canvas.gripHit,
-        minHeight: tokens.touch.min,
+        height: tokens.touch.min,
         display: "grid",
-        placeItems: "center",
+        // The pill hugs the card's edge so it stays off the rows.
+        placeItems: side === "left" ? "center end" : "center start",
         cursor: "col-resize",
         touchAction: "none",
         outline: "none",
+        // A pill with two grip lines, so it reads as a handle and not as the
+        // card's scrollbar.
         "& > span": {
           width: canvas.gripBar.w,
           height: canvas.gripBar.h,
+          boxSizing: "border-box",
           borderRadius: `${tokens.radii.pill}px`,
-          bgcolor: tokens.outlineVariant,
-          transition: transition("background-color", { duration: "fast" }),
+          bgcolor: tokens.surfaceLowest,
+          border: `1px solid ${tokens.outline}`,
+          boxShadow: tokens.elevation.e1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "3px",
+          color: tokens.outline,
+          transition: transition(["border-color", "color"], {
+            duration: "fast",
+          }),
+          "&::before, &::after": {
+            content: '""',
+            width: 2,
+            height: 16,
+            borderRadius: `${tokens.radii.pill}px`,
+            bgcolor: "currentColor",
+          },
         },
-        "&:hover > span, &:focus-visible > span": { bgcolor: tokens.primary },
+        "&:hover > span, &:focus-visible > span, &:active > span": {
+          color: tokens.primary,
+          borderColor: tokens.primary,
+        },
       }}
     >
       <span />

@@ -10,7 +10,8 @@ import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import { useNavigate } from "@tanstack/react-router";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useCallback, useRef, useState } from "react";
+import { useMoreBelow } from "@/components/canvas/useMoreBelow";
 import DockedAction from "@/components/DockedAction";
 import PanelHeader from "@/components/PanelHeader";
 import type { EditsFilter } from "@/components/provenance/EditsTimeline";
@@ -62,6 +63,12 @@ interface WaterwayBrowsePanelProps {
   /** The chart card, shown at the top of the tabs it belongs to (the section's
    * Features, the river's Sections and Gauges). */
   chart?: ReactNode;
+  /** The foot of the card on a wide screen: the reading block beside the
+   * rail, or the note that the section has no gauge. Shown on every tab. */
+  foot?: ReactNode;
+  /** The river-state block under the features list. It takes the pane's
+   * spare room (at least 96px) and scrolls with the list when that is long. */
+  riverState?: ReactNode;
   /** Everything the section feature timeline needs - passed through as one
    * group instead of loose props. */
   featureTimeline?: {
@@ -112,6 +119,8 @@ export default function WaterwayBrowsePanel({
   onMobileMapToggle,
   mobileMapActive,
   chart,
+  foot,
+  riverState,
   featureTimeline,
 }: WaterwayBrowsePanelProps) {
   const navigate = useNavigate();
@@ -243,6 +252,16 @@ export default function WaterwayBrowsePanel({
     enabled: !isLoading,
   });
 
+  // The swipe hook owns the pane's ref; the fade reads the same element.
+  const [pane, setPaneEl] = useState<HTMLElement | null>(null);
+  const swipePaneRef = useRef(swipe.paneProps.ref);
+  swipePaneRef.current = swipe.paneProps.ref;
+  const setPane = useCallback((el: HTMLElement | null) => {
+    swipePaneRef.current(el);
+    setPaneEl(el);
+  }, []);
+  const moreBelow = useMoreBelow(pane);
+
   const headerTabs = inFeatures
     ? {
         progress: swipe.progress,
@@ -327,9 +346,23 @@ export default function WaterwayBrowsePanel({
           <Box
             data-testid="tab-pane"
             {...swipe.paneProps}
+            ref={setPane}
             sx={{
               flex: 1,
               overflowY: "auto",
+              // The spare room goes to the river state, so the list's own
+              // blocks keep their height.
+              ...(inFeatures &&
+                sectionDetailTab === "features" && {
+                  display: "flex",
+                  flexDirection: "column",
+                  "& > *": { flexShrink: 0 },
+                }),
+              // A fade over the last 20px says more is below.
+              ...(moreBelow && {
+                maskImage:
+                  "linear-gradient(to bottom, #000 calc(100% - 20px), transparent)",
+              }),
               // Overscroll at the list edge must not chain into a document
               // bounce - that drags the fixed overlay and shows the map
               // behind it (the body-level rule alone does not stop chaining
@@ -344,7 +377,7 @@ export default function WaterwayBrowsePanel({
                 (inFeatures &&
                   (sectionDetailTab === "features" ||
                     sectionDetailTab === "logs"))
-                  ? { xs: 9, md: 1 }
+                  ? { xs: 9, md: 0 }
                   : 1,
             }}
           >
@@ -374,20 +407,30 @@ export default function WaterwayBrowsePanel({
                   mapPin={noteMapPin}
                 />
               ) : (
-                <FeatureTimeline
-                  section={selectedSection}
-                  proposals={featureTimeline?.proposals ?? []}
-                  showProposed={featureTimeline?.showProposed ?? false}
-                  onFeatureClick={featureTimeline?.onFeatureClick}
-                  onEditFeature={featureTimeline?.onEditFeature}
-                  activeFeatureId={featureTimeline?.activeFeatureId}
-                  onActiveFeatureChange={featureTimeline?.onActiveFeatureChange}
-                  onFoldedChange={featureTimeline?.onFoldedChange}
-                  onOpenHistory={(filter) => {
-                    setEditsFilter({ sectionId: selectedSection.id, filter });
-                    onSectionDetailTabChange("sources");
-                  }}
-                />
+                <>
+                  <FeatureTimeline
+                    section={selectedSection}
+                    proposals={featureTimeline?.proposals ?? []}
+                    showProposed={featureTimeline?.showProposed ?? false}
+                    onFeatureClick={featureTimeline?.onFeatureClick}
+                    onEditFeature={featureTimeline?.onEditFeature}
+                    activeFeatureId={featureTimeline?.activeFeatureId}
+                    onActiveFeatureChange={
+                      featureTimeline?.onActiveFeatureChange
+                    }
+                    onFoldedChange={featureTimeline?.onFoldedChange}
+                    onOpenHistory={(filter) => {
+                      setEditsFilter({ sectionId: selectedSection.id, filter });
+                      onSectionDetailTabChange("sources");
+                    }}
+                  />
+                  <Box
+                    data-testid="river-state-slot"
+                    sx={{ flex: 1, minHeight: riverState ? 96 : 0 }}
+                  >
+                    {riverState}
+                  </Box>
+                </>
               )
             ) : tab === "sections" ? (
               <SectionsList
@@ -462,6 +505,7 @@ export default function WaterwayBrowsePanel({
               onClick={() => onSuggestModeChange("feature")}
             />
           ))}
+        {!isLoading && foot}
       </Box>
     </>
   );
