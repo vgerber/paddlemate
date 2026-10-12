@@ -155,6 +155,11 @@ describe("dock", () => {
     });
   });
 
+  test("grows by the open options row", () => {
+    const placed = layoutCards([detail(486)], 1280);
+    expect(dockRect(placed, 1280, 800, 44).height).toBe(180 + 44);
+  });
+
   test("stops at a right card", () => {
     const placed = layoutCards([detail(486), side()], 1920);
     const dock = dockRect(placed, 1920, 1080);

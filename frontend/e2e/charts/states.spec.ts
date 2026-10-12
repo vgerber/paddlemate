@@ -76,3 +76,29 @@ test("options open in the dock keep the plot tall and chips natural", async ({
   expect(plot?.height ?? 0).toBeGreaterThan(100);
   expect(before).not.toBeNull();
 });
+
+test("options open grow the dock by their row and keep the plot's height", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "dock is a desktop layout");
+  await gotoSection(page, "lower");
+  const dock = page.getByTestId("chart-dock");
+  await expect(dock.getByTestId("latest-dot")).toBeVisible();
+  const plotOf = async () =>
+    (await dock.locator("svg").first().boundingBox())?.height ?? 0;
+  const closed = {
+    dock: (await dock.boundingBox())?.height ?? 0,
+    plot: await plotOf(),
+  };
+  await dock.getByLabel("Chart options").click();
+  await expect(dock.getByTestId("chart-option-chip").first()).toBeVisible();
+  await expect
+    .poll(async () => (await dock.boundingBox())?.height ?? 0)
+    .toBeGreaterThan(closed.dock + 20);
+  expect(Math.abs((await plotOf()) - closed.plot)).toBeLessThanOrEqual(2);
+  // The dock stays on the window's foot, so the grown part came from above.
+  const box = await dock.boundingBox();
+  expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBe(
+    (page.viewportSize()?.height ?? 0) - 16,
+  );
+});
