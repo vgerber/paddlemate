@@ -42,6 +42,12 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 - Fields are filled (the theme's default variant): the label sits inside the
   field at the top, the value beneath it, a 1px inset line that becomes a 2px
   accent ring on focus. Dates and times use `PickerField` (`components/descents/descent-form/`): the app's own format on top of the browser's native picker, not free text.
+- **Guide, do not bombard.** A screen shows what the user is looking at and the
+  one next step; everything else waits until it is asked for. Per panel: one
+  primary action, one overflow menu for the rest, no settings icon beside it.
+  A control appears only when it can do something here (a level/flow choice
+  only for a gauge that measures both, a compass only once the map is
+  rotated). Before adding a visible control, remove one or put it in the menu.
 - One screen, one primary action: a bottom-right FAB on a phone, a full-width
   **docked** button at the foot of the list pane on desktop. Bottom-right of the
   *content*, not the window.

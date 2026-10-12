@@ -299,10 +299,26 @@ export default function RiverState({
     <Box
       ref={ref}
       data-testid="river-state"
-      sx={{ height: "100%", minHeight: 0, overflow: "hidden" }}
+      sx={{
+        height: "100%",
+        minHeight: 0,
+        overflow: "hidden",
+        mx: 0.5,
+        pb: 1.5,
+      }}
     >
       {fit.rows > 0 && (
-        <Box sx={{ bgcolor: tokens.surface }}>
+        // A card of its own, like the features card above, running to the
+        // card's foot so the spare room reads as one panel, not bare ground.
+        <Box
+          sx={{
+            height: "100%",
+            overflow: "hidden",
+            bgcolor: tokens.surface,
+            borderRadius: `${tokens.radii.md}px`,
+            boxShadow: tokens.elevation.e1,
+          }}
+        >
           {none ? (
             <NoneRow />
           ) : (

@@ -23,12 +23,18 @@ import LoadingBox from "@/components/states/LoadingBox";
 import SectionListItem from "@/components/waterway/SectionListItem";
 import SectionLogsList from "@/components/waterway/SectionLogsList";
 import FeatureTimeline from "@/components/waterway/section-details";
+import {
+  gradeLabel,
+  sectionGradeOf,
+} from "@/components/waterway/section-details/grade";
+import { sectionLengthM } from "@/components/waterway/section-details/utils";
 import type {
   Feature,
   Proposal,
   SectionWithFeatures,
   WaterRangeWithStatus,
 } from "@/lib/api";
+import { lineCoords } from "@/lib/geo";
 import { useSectionDescentCounts } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
@@ -325,7 +331,7 @@ export default function WaterwayBrowsePanel({
           }
           subtitle={
             inFeatures
-              ? (waterway?.name ?? "")
+              ? sectionSubtitle(waterway?.name ?? "", selectedSection)
               : (waterway?.waterway_type ?? "")
           }
           onBack={inFeatures ? onSectionDeselect : onBack}
@@ -543,4 +549,19 @@ function SectionsList({
       ))}
     </List>
   );
+}
+
+/** "Pitze · Grade III (IV) · 5.8 km": the river, the section's own grade when
+ * one range covers most of it (that range is not listed as a feature), and
+ * its length. */
+function sectionSubtitle(river: string, section: SectionWithFeatures): string {
+  const grade = sectionGradeOf(section);
+  const km = sectionLengthM(lineCoords(section.location) ?? []) / 1000;
+  return [
+    river,
+    grade && `Grade ${gradeLabel(grade)}`,
+    km > 0 && `${km.toFixed(1)} km`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }

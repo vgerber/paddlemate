@@ -2,8 +2,9 @@ import { useNavigate } from "@tanstack/react-router";
 import WaterwaySearchPanel from "@/components/search/WaterwaySearchPanel";
 import SuggestFeaturePanel from "@/components/waterway/SuggestFeaturePanel";
 import SuggestWaterwayPanel from "@/components/waterway/SuggestWaterwayPanel";
+import RiverState from "@/components/waterway/section-details/RiverState";
 import WaterwayBrowsePanel from "@/components/waterway/WaterwayBrowsePanel";
-import MapCharts from "./MapCharts";
+import MapCharts, { useChartPlacement } from "./MapCharts";
 import type { MapPageState } from "./useMapPageState";
 
 interface SidebarContentProps {
@@ -34,6 +35,8 @@ export default function SidebarContent({
   sheet,
 }: SidebarContentProps) {
   const navigate = useNavigate();
+  // The river state fills the card only where the card runs to the rail.
+  const railed = useChartPlacement(state) === "rail";
   const {
     selectedWaterwayId,
     selectedSectionId,
@@ -217,6 +220,20 @@ export default function SidebarContent({
       mobileMapActive={mobileMapActive}
       chart={<MapCharts state={state} slot="pane" />}
       foot={<MapCharts state={state} slot="foot" />}
+      riverState={
+        railed && selectedWaterwayId != null && selectedSectionId != null ? (
+          <RiverState
+            waterwayId={selectedWaterwayId}
+            sectionId={selectedSectionId}
+            onOpen={(tab) => {
+              if (tab === "features" && !showProposedFeatures) {
+                toggleShowProposedFeatures();
+              }
+              setSectionDetailTab(tab);
+            }}
+          />
+        ) : undefined
+      }
       featureTimeline={{
         onFeatureClick: setFocusedPoint,
         onEditFeature: startEditFeature,

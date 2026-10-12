@@ -21,12 +21,10 @@ import { theme } from "@/lib/theme";
 import { FeatureStrip } from "./FeatureStrip";
 import { FeatureNode } from "./RangeBand";
 import { countLabel, featureNumbers, splitBaseGrade, stripShown } from "./rows";
-import SectionFacts from "./SectionFacts";
 import type { ComputedFeature } from "./types";
 import {
   buildTree,
   computeExtent,
-  defaultRangeFeature,
   featureName,
   proposalToComputedFeature,
   sectionLengthM,
@@ -203,11 +201,6 @@ export default function FeatureTimeline({
         minWidth: 0,
       }}
     >
-      <SectionFacts
-        waterwayId={section.waterway_id}
-        sectionId={section.id}
-        preferredFeatureId={defaultRangeFeature(section)?.id}
-      />
       {(showCount || gradeActions.length > 0) && (
         <Box
           sx={{
