@@ -1,5 +1,5 @@
 import List from "@mui/material/List";
-import Typography from "@mui/material/Typography";
+import EmptyState from "@/components/states/EmptyState";
 import type { SectionWithFeatures } from "@/lib/api";
 import { matchedFeatureName } from "@/lib/sectionMatch";
 import SearchSectionRow from "./SearchSectionRow";
@@ -27,15 +27,7 @@ export default function SectionList({
   searchName,
 }: SectionListProps) {
   if (sections.length === 0) {
-    return (
-      <Typography
-        color="textSecondary"
-        variant="body2"
-        sx={{ textAlign: "center", py: 4 }}
-      >
-        No sections found.
-      </Typography>
-    );
+    return <EmptyState title="No sections found." py={4} />;
   }
 
   return (

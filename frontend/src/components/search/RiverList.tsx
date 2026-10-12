@@ -5,7 +5,7 @@ import Chip from "@mui/material/Chip";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
-import Typography from "@mui/material/Typography";
+import EmptyState from "@/components/states/EmptyState";
 import type { WaterwayListItem } from "@/lib/api";
 import { humanize } from "@/lib/format";
 import ListGroupHeader from "./ListGroupHeader";
@@ -134,13 +134,10 @@ export default function RiverList({
             <PendingRiverItems pendingRivers={pendingRivers} />
           </List>
         )}
-        <Typography
-          color="textSecondary"
-          variant="body2"
-          sx={{ textAlign: "center", py: pendingRivers.length > 0 ? 2 : 4 }}
-        >
-          No rivers found.
-        </Typography>
+        <EmptyState
+          title="No rivers found."
+          py={pendingRivers.length > 0 ? 2 : 4}
+        />
         {onProposeRiver && searchName && (
           <Button
             onClick={onProposeRiver}

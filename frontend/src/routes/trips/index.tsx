@@ -5,8 +5,8 @@ import Fab from "@mui/material/Fab";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import ListPaneHeader from "@/components/ListPaneHeader";
-import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
+import QueryStates from "@/components/states/QueryStates";
 import SignInGate from "@/components/states/SignInGate";
 import { fabSx } from "@/components/trip-page/TripFab";
 import TripRow from "@/components/trips/TripRow";
@@ -35,8 +35,10 @@ function TripsPage() {
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
 
   // A trip is invite-only, so the listing is simply the caller's trips.
-  const { data, isLoading } = useTrips({}, isAuthenticated);
-  const { data: selectedTrip } = useTrip(isDesktop ? (selected ?? null) : null);
+  const tripsQuery = useTrips({}, isAuthenticated);
+  const { data, isLoading } = tripsQuery;
+  const selectedQuery = useTrip(isDesktop ? (selected ?? null) : null);
+  const selectedTrip = selectedQuery.data;
   const trips = data?.items ?? [];
 
   const openTrip = (id: number) => {
@@ -64,39 +66,35 @@ function TripsPage() {
   }
 
   const list = (
-    <>
-      {isLoading ? (
-        <LoadingBox size={40} pt={6} />
-      ) : trips.length === 0 ? (
-        <EmptyState
-          icon={
-            <LuggageOutlinedIcon
-              sx={{ fontSize: 48, color: "text.disabled" }}
-            />
-          }
-          title="No trips yet."
-          py={8}
-        />
-      ) : (
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: { xs: 1, md: 0 },
-            p: { xs: 1.5, md: 0 },
-          }}
-        >
-          {trips.map((t) => (
-            <TripRow
-              key={t.id}
-              trip={t}
-              selected={isDesktop && t.id === selected}
-              onSelect={() => openTrip(t.id)}
-            />
-          ))}
-        </Box>
-      )}
-    </>
+    <QueryStates
+      query={tripsQuery}
+      count={trips.length}
+      errorFallback="Could not load your trips."
+      loadingSize={40}
+      py={8}
+      empty={{
+        icon: <LuggageOutlinedIcon />,
+        title: "No trips yet.",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: { xs: 1, md: 0 },
+          p: { xs: 1.5, md: 0 },
+        }}
+      >
+        {trips.map((t) => (
+          <TripRow
+            key={t.id}
+            trip={t}
+            selected={isDesktop && t.id === selected}
+            onSelect={() => openTrip(t.id)}
+          />
+        ))}
+      </Box>
+    </QueryStates>
   );
 
   if (!isDesktop) {
@@ -136,6 +134,7 @@ function TripsPage() {
       count={trips.length}
       loading={isLoading}
       trip={selectedTrip ?? null}
+      opening={selected != null ? selectedQuery : undefined}
       creating={creating === true}
       editing={edit === true}
       onNew={() =>

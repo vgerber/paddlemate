@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
 import DockedAction from "@/components/DockedAction";
 import EmptyState from "@/components/states/EmptyState";
+import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import UnderlineTabs from "@/components/UnderlineTabs";
 import type { FavoriteSection, SectionWithFeatures } from "@/lib/api";
@@ -30,6 +31,11 @@ import {
 } from "./useWaterwaySearchFilters";
 
 const { tokens } = theme;
+
+/** "Rivers (3)"; a zero count is dropped rather than shown. */
+function countedLabel(label: string, count: number | string): string {
+  return count === 0 ? label : `${label} (${count})`;
+}
 
 const MODES: SearchMode[] = ["name", "area", "region"];
 
@@ -107,6 +113,7 @@ export default function WaterwaySearchPanel({
     hasNextPage,
     fetchNextPage,
     error,
+    refetch,
   } = useWaterways(filters);
 
   // Without filters the query is disabled, but keepPreviousData still hands
@@ -188,7 +195,10 @@ export default function WaterwaySearchPanel({
   const listingRegions =
     mode === "region" &&
     (!searchFilters.region || isListingRegions(searchFilters.regionQuery));
-  const showResults = hasFilters && !listingRegions;
+  // A failed search with nothing in hand shows the note alone: no tabs, no
+  // counts, no "nothing found".
+  const failed = error != null && waterways.length === 0;
+  const showResults = hasFilters && !listingRegions && !failed;
 
   // The region list needs room: lift the sheet while one is being typed.
   const typingRegion = isListingRegions(searchFilters.regionQuery);
@@ -200,13 +210,16 @@ export default function WaterwaySearchPanel({
   const resultTabs = [
     {
       value: "sections" as ListView,
-      label: `Sections (${sectionsPending ? "…" : visibleSections.length})`,
+      label: countedLabel(
+        "Sections",
+        sectionsPending ? "…" : visibleSections.length,
+      ),
     },
     // The server total, not the number loaded: paging in more results must
     // not look like the search found more.
     {
       value: "rivers" as ListView,
-      label: `Rivers (${total + pendingRivers.length})`,
+      label: countedLabel("Rivers", total + pendingRivers.length),
     },
   ];
 
@@ -278,14 +291,13 @@ export default function WaterwaySearchPanel({
           }}
         >
           {isLoading && <LoadingBox />}
-          {error && (
-            <Typography
-              color="error"
-              variant="body2"
-              sx={{ px: { xs: 1, md: 2 }, py: 1 }}
-            >
-              Failed to load rivers.
-            </Typography>
+          {failed && !listingRegions && (
+            <ErrorState
+              error={error}
+              fallback="Could not load rivers."
+              onRetry={() => refetch()}
+              py={4}
+            />
           )}
           {listingRegions && (
             <Box sx={{ px: { xs: 1, md: 2 }, pt: 1 }}>
