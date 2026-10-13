@@ -128,6 +128,7 @@ export default function SocialPanel() {
       <TextField
         sx={{ mx: { md: 1.5 }, mt: { md: 1.5 }, width: { md: "auto" } }}
         placeholder="Find users…"
+        hiddenLabel
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         size="small"

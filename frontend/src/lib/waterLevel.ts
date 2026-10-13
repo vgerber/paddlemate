@@ -40,6 +40,14 @@ export const levelConfig = {
   { label: string; color: string; bgcolor: string; border?: string }
 >;
 
+/** The level's colour as ink on a light ground (a chart line, a word on the
+ * plot). High's text colour is white for its solid pill, so its ink is the
+ * pill colour itself. */
+export function levelInk(level: Exclude<WaterLevel, "empty">): string {
+  const t = theme.tokens.levels[level];
+  return level === "high" ? t.bg : t.text;
+}
+
 /** True when the range has at least one threshold configured. */
 export function isCalibrated(r: WaterRangeWithStatus): boolean {
   return r.range_low != null || r.range_medium != null || r.range_high != null;

@@ -39,9 +39,6 @@ interface FloatingCardProps {
   resizable?: boolean;
   /** Full height between the margins; otherwise as tall as its content. */
   fullHeight?: boolean;
-  /** The card's foot continues into the reading rail on its right, so its
-   * lower right corner is square. */
-  joinedRail?: boolean;
   /** Folded first when the cards cover too much; higher stays open longer. */
   priority?: number;
 }
@@ -62,7 +59,6 @@ export default function FloatingCard({
   screen = "default",
   resizable = kind === "detail",
   fullHeight = false,
-  joinedRail = false,
   priority = canvas.cards[kind].priority,
 }: FloatingCardProps) {
   useLayoutEffect(() => {
@@ -97,45 +93,60 @@ export default function FloatingCard({
         maxHeight: `calc(100% - ${2 * canvas.margin}px)`,
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden",
         pointerEvents: "auto",
         bgcolor: tokens.surfaceLowest,
         borderRadius: `${tokens.radii.lg}px`,
-        borderBottomRightRadius: joinedRail && !collapsed ? 0 : undefined,
         boxShadow: tokens.elevation.e2,
       }}
     >
-      {collapsed ? (
-        <ButtonBase
-          aria-expanded={false}
-          onClick={() => layout.pin(id)}
-          sx={{
-            height: canvas.headerHeight,
-            minHeight: tokens.touch.min,
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            "&:focus-visible": { outline: `2px solid ${tokens.primary}` },
-          }}
-        >
-          <CardHeader title={title} subtitle={subtitle} />
-        </ButtonBase>
-      ) : (
-        <>
-          {!selfHeaded && (
-            <Box sx={{ flexShrink: 0, minHeight: canvas.headerHeight }}>
-              <CardHeader
-                title={title}
-                subtitle={subtitle}
-                actions={actions}
-                onClose={onClose}
-              />
+      {/* Clips the content to the corners; the resize tab sits outside it,
+          on the card's edge. */}
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          borderRadius: "inherit",
+        }}
+      >
+        {collapsed ? (
+          <ButtonBase
+            aria-expanded={false}
+            onClick={() => layout.pin(id)}
+            sx={{
+              height: canvas.headerHeight,
+              minHeight: tokens.touch.min,
+              width: "100%",
+              display: "flex",
+              justifyContent: "flex-start",
+              textAlign: "left",
+              "&:focus-visible": { outline: `2px solid ${tokens.primary}` },
+            }}
+          >
+            <CardHeader title={title} subtitle={subtitle} />
+          </ButtonBase>
+        ) : (
+          <>
+            {!selfHeaded && (
+              <Box sx={{ flexShrink: 0, minHeight: canvas.headerHeight }}>
+                <CardHeader
+                  title={title}
+                  subtitle={subtitle}
+                  actions={actions}
+                  onClose={onClose}
+                />
+              </Box>
+            )}
+            <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+              {children}
             </Box>
-          )}
-          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-            {children}
-          </Box>
+          </>
+        )}
+      </Box>
+      {!collapsed && (
+        <>
           {bounds && (
             <ResizeGrip
               side={side}

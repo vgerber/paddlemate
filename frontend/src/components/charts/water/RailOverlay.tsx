@@ -2,6 +2,7 @@ import type { JSX } from "react";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { formatReading } from "@/lib/format";
 import { theme } from "@/lib/theme";
+import { levelInk } from "@/lib/waterLevel";
 import { pointTime } from "./chartTime";
 import { clampLabelX, clampReadoutX, spreadWords } from "./railGeometry";
 import { levelAt } from "./series";
@@ -54,9 +55,6 @@ export interface RailOverlayProps {
   /** The newest reading, drawn as the ring dot. */
   latest: RailPoint | null;
   stale: boolean;
-  /** The curve comes down into the newest reading, so its value reads
-   * better under the dot. */
-  falling: boolean;
   /** The point the pointer picked; it stays marked until cleared. */
   marker: RailPoint | null;
   /** True while the pointer is over the plot: the readout shows. */
@@ -76,7 +74,6 @@ export default function RailOverlay({
   unit,
   latest,
   stale,
-  falling,
   marker,
   hovering,
 }: RailOverlayProps) {
@@ -103,7 +100,7 @@ export default function RailOverlay({
   let readout: JSX.Element | null = null;
   let readoutBox: { x0: number; x1: number; y0: number; y1: number } | null =
     null;
-  if (marker && hovering) {
+  if (marker) {
     const mx = x(marker.time);
     const my = y(marker.value);
     const lv = level(marker.value);
@@ -127,9 +124,7 @@ export default function RailOverlay({
           fill={tokens.onSurface}
           {...halo}
         >
-          {lv && (
-            <tspan fill={tokens.levels[lv.key].text}>{`${lv.word}, `}</tspan>
-          )}
+          {lv && <tspan fill={levelInk(lv.key)}>{`${lv.word}, `}</tspan>}
           {value}
         </text>
         <text
@@ -170,7 +165,6 @@ export default function RailOverlay({
 
   const lx = latest ? x(latest.time) : 0;
   const ly = latest ? y(latest.value) : 0;
-  const lbelow = ly - top < 24 || (falling && ly + 24 < plotBottom);
   const dotColor = stale ? tokens.outline : tokens.chartSeries;
 
   return (
@@ -195,7 +189,7 @@ export default function RailOverlay({
               y={wordYs[i]}
               fontSize={WORD_SIZE}
               fontWeight={600}
-              fill={tokens.levels[l.key].text}
+              fill={levelInk(l.key)}
               {...halo}
             >
               {l.word}
@@ -216,20 +210,6 @@ export default function RailOverlay({
         />
       )}
       {latest && dot(lx, ly, dotColor, "latest-dot")}
-      {latest && !hovering && (
-        <text
-          data-testid="latest-value"
-          x={lx + DOT_R}
-          y={lbelow ? ly + 21 : ly - 11}
-          textAnchor="end"
-          fontSize={13}
-          fontWeight={600}
-          fill={stale ? tokens.onSurfaceVariant : tokens.onSurface}
-          {...halo}
-        >
-          {formatReading(latest.value, unit)}
-        </text>
-      )}
       {marker &&
         dot(
           Math.max(x(marker.time), DOT_R + 2),
