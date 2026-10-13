@@ -244,6 +244,42 @@ impl BrowseTier {
         }
     }
 
+    /// Tier for a `kinds` value of the outlines route. Countries are not a
+    /// choice there.
+    pub fn from_kind(raw: &str) -> Option<Self> {
+        match raw {
+            "state" => Some(BrowseTier::States),
+            "range" => Some(BrowseTier::Ranges),
+            "district" => Some(BrowseTier::Districts),
+            "valley" => Some(BrowseTier::Valleys),
+            _ => None,
+        }
+    }
+
+    /// The name used in `kinds` and `hidden_kinds`.
+    pub fn kind_name(self) -> &'static str {
+        match self {
+            BrowseTier::Countries => "country",
+            BrowseTier::States => "state",
+            BrowseTier::Ranges => "range",
+            BrowseTier::Districts => "district",
+            BrowseTier::Valleys => "valley",
+        }
+    }
+
+    /// Widest viewport, in degrees, at which a kind asked for by name is
+    /// still drawn. Beyond it the outlines are a thicket (or cost too much
+    /// to assemble) and the app is told to zoom in.
+    pub fn max_span(self) -> f64 {
+        match self {
+            BrowseTier::Countries => 0.0,
+            BrowseTier::States => 12.0,
+            BrowseTier::Ranges => 8.0,
+            BrowseTier::Districts => 6.0,
+            BrowseTier::Valleys => 3.0,
+        }
+    }
+
     /// The value stored in `region_tiles.tier`.
     pub fn as_str(self) -> &'static str {
         match self {

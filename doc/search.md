@@ -179,6 +179,19 @@ index on `search_key(name)` (`%>` with the same threshold as river names,
 from 4 characters), and `country_names` holds English names and aliases per
 ISO code. The migration does not change `search_key`, so no `REINDEX`.
 
+`/geo/region-outlines` picks one kind by viewport width on its own (states
+4-12 degrees, ranges 1.5-4, districts 0.8-1.5, valleys below). The region
+level chips send `kinds=` instead (comma list of `valley,district,range,state`):
+those kinds come back, each only while the viewport is no wider than its limit
+(`BrowseTier::max_span`: valley 3, district 6, range 8, state 12 degrees). A
+kind over its limit is omitted and named in `hidden_kinds`, so the app can say
+"Zoom in to see districts". An unknown kind is a 400. The background OSM fill
+and `region_tiles` work per kind either way, and `filling` is true while any
+requested kind still has ground missing. Each kind returns at most
+`BROWSE_LIMIT` (120) outlines, thinned to about a pixel of the viewport
+(span / 1500) so a Europe-wide state view is under 1 MB and answers in about
+0.7 s.
+
 The country borders in `/geo/region-outlines` clip the boundary line to the
 viewport; the neighbour on the far side comes from `country_borders`, one row
 per country pair holding the stretch of border between them. A trigger on

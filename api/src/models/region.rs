@@ -133,4 +133,8 @@ pub struct RegionOutlineList {
     /// True while ground in the viewport is still being fetched from OSM.
     /// Ask again shortly for the regions that are not in yet.
     pub filling: bool,
+    /// Requested `kinds` left out because the viewport is wider than they
+    /// can be drawn at. Always empty without `kinds`.
+    #[serde(default)]
+    pub hidden_kinds: Vec<String>,
 }

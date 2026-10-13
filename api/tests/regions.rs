@@ -232,3 +232,50 @@ async fn europe_wide_view_answers_with_borders(pool: PgPool) {
     assert_eq!(countries.len(), 40);
     assert_eq!(countries[1]["neighbours"].as_array().unwrap().len(), 2);
 }
+
+fn outline_names(body: &Value) -> Vec<String> {
+    let mut found = names(&body["regions"]);
+    found.sort();
+    found
+}
+
+#[sqlx::test]
+async fn kinds_param_picks_the_levels(pool: PgPool) {
+    world(&pool).await;
+    let app = app(pool);
+    // A one degree view would pick districts on its own.
+    let view = "bbox=46.0,9.0,47.0,10.0";
+    let (_, body) = get(&app, &format!("/geo/region-outlines?{view}&kinds=range,valley")).await;
+    assert_eq!(outline_names(&body), ["Alpen", "Otztal"]);
+    assert!(body["hidden_kinds"].as_array().unwrap().is_empty());
+    let (_, body) = get(&app, &format!("/geo/region-outlines?{view}&kinds=state")).await;
+    assert_eq!(outline_names(&body), ["Sliver", "Tirol"]);
+    let (_, body) = get(&app, &format!("/geo/region-outlines?{view}")).await;
+    assert_eq!(outline_names(&body), ["Imst"]);
+}
+
+#[sqlx::test]
+async fn kind_past_its_span_is_hidden_and_listed(pool: PgPool) {
+    world(&pool).await;
+    let app = app(pool);
+    // Four degrees wide: valleys give up at 3, districts and states do not.
+    let (status, body) = get(
+        &app,
+        "/geo/region-outlines?bbox=45.0,7.0,49.0,11.0&kinds=valley,district,state",
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["hidden_kinds"], serde_json::json!(["valley"]));
+    assert_eq!(outline_names(&body), ["Imst", "Sliver", "Tirol"]);
+}
+
+#[sqlx::test]
+async fn unknown_kind_is_rejected(pool: PgPool) {
+    let app = app(pool);
+    for kinds in ["lake", "valley,country", ""] {
+        let uri = format!("/geo/region-outlines?bbox=46,9,47,10&kinds={kinds}");
+        let (status, body) = get(&app, &uri).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST, "{kinds}");
+        assert_eq!(body["error"]["target"], "kinds");
+    }
+}
