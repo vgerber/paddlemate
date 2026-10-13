@@ -73,8 +73,12 @@ base map's roads fade to 40% and their names, shields and one-way arrows are hid
   region much smaller than the view (under about 0.3% of it) waits until you
   zoom in, because it is a speck you could neither read nor hit.
   Searching by name works too, and tolerates the same misspellings as river
-  names, so `otztal` finds `Ötztal`. The picker names each region's country
-  first, so a list of valley names still tells you where you are.
+  names, so `otztal` finds `Ötztal` and `Tirool` finds `Tirol`. An English
+  country name (`Austria`, `Switzerland`) lists that country's regions, states
+  first, after any region whose own name matches. The picker names each
+  region's country first, so a list of valley names still tells you where you
+  are. A range that straddles a border is labelled with the country holding
+  most of its area.
 
 Country borders stay drawn over everything else at every zoom, so the map
 always says which country you are looking at. They are a dash-dot line over a
@@ -166,6 +170,22 @@ results. Only long-lived databases are affected; a fresh database (CI, new dev
 checkout) rebuilds its indexes from the current function and looks healthy,
 which is why no runtime check can catch it. `api/tests/migration_rules.rs`
 enforces the rule in `cargo test`.
+
+### Region search and borders
+
+Regions are not waterways, so they are searched in `query::regions::search`
+rather than through `searchable_names`: `idx_regions_name_trgm` is a trigram
+index on `search_key(name)` (`%>` with the same threshold as river names,
+from 4 characters), and `country_names` holds English names and aliases per
+ISO code. The migration does not change `search_key`, so no `REINDEX`.
+
+The country borders in `/geo/region-outlines` clip the boundary line to the
+viewport; the neighbour on the far side comes from `country_borders`, one row
+per country pair holding the stretch of border between them. A trigger on
+`regions` keeps it current whenever a country row is inserted, changed or
+deleted (`refresh_country_borders`). A distance test against whole country
+polygons took about a minute at Europe scale; the lookup answers in well
+under a second at any span.
 
 ### How the region map is drawn
 

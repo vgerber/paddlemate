@@ -149,9 +149,18 @@ const BBOX_COLUMNS: &str = "ST_XMin(drawn) AS west, ST_YMin(drawn) AS south, \
 /// of it and win the click. Envelope area covers lines too.
 const BY_SIZE: &str = "ORDER BY ST_Area(ST_Envelope(geom)) DESC, name";
 
+/// Fuzzy matching starts at this many characters, as in the river search.
+const FUZZY_MIN_CHARS: usize = 4;
+
+/// Countries whose English name matches the search term `$1`.
+const COUNTRY_MATCH: &str = "SELECT cn.country FROM country_names cn
+     WHERE public.search_key(cn.name) LIKE public.search_key($1) || '%'
+        OR ($5 AND public.search_key(cn.name) %> public.search_key($1))";
+
 /// Imported regions matching a name fragment, most specific kind first.
 /// Diacritics and common misspellings fold the same way as the river search,
-/// so "Otztal" finds "Ötztal".
+/// so "Otztal" finds "Ötztal" and "Tirool" finds "Tirol". An English country
+/// name ("Austria") lists the regions of that country, after name matches.
 pub async fn search(
     pool: &PgPool,
     name: Option<&str>,
@@ -160,18 +169,34 @@ pub async fn search(
     limit: i64,
 ) -> Result<Vec<Region>, sqlx::Error> {
     let drawn = drawn_geom();
-    let ranking = "ORDER BY (public.search_key(name) = public.search_key(COALESCE($1, name))) DESC, \
-                   array_position(ARRAY['valley', 'district', 'state', 'range'], kind), name";
+    let fuzzy = name.is_some_and(|n| n.chars().count() >= FUZZY_MIN_CHARS);
+    // Tier 0 exact, 1 contains, 2 only the country matched, 3 misspelt.
+    // Within the country tier the larger kinds lead: thirty valleys would
+    // say little about a country.
+    let ranking = "ORDER BY tier,
+                   array_position(CASE WHEN tier = 2
+                                       THEN ARRAY['state', 'range', 'district', 'valley']
+                                       ELSE ARRAY['valley', 'district', 'state', 'range'] END, kind),
+                   name";
     let rows = sqlx::query(&format!(
         "SELECT id, name, kind, country, parents, {BBOX_COLUMNS}
          FROM (
-             SELECT id, name, kind, country, {drawn} AS drawn, {PARENTS_SQL}
-             FROM regions r
-             WHERE kind <> 'country'
-               AND ($1::text IS NULL
-                    OR public.search_key(name) LIKE '%' || public.search_key($1) || '%')
-               AND ($2::text IS NULL OR kind = $2)
-               AND ($3::text IS NULL OR country = $3)
+             SELECT id, name, kind, country, {drawn} AS drawn, {PARENTS_SQL}, tier
+             FROM (
+                 SELECT r.*,
+                        CASE WHEN $1::text IS NULL OR public.search_key(r.name) = public.search_key($1) THEN 0
+                             WHEN public.search_key(r.name) LIKE '%' || public.search_key($1) || '%' THEN 1
+                             WHEN r.country IN ({COUNTRY_MATCH}) THEN 2
+                             ELSE 3 END AS tier
+                 FROM regions r
+                 WHERE r.kind <> 'country'
+                   AND ($1::text IS NULL
+                        OR public.search_key(r.name) LIKE '%' || public.search_key($1) || '%'
+                        OR ($5 AND public.search_key(r.name) %> public.search_key($1))
+                        OR r.country IN ({COUNTRY_MATCH}))
+                   AND ($2::text IS NULL OR r.kind = $2)
+                   AND ($3::text IS NULL OR r.country = $3)
+             ) r
              {ranking}
              LIMIT $4
          ) matched
@@ -181,6 +206,7 @@ pub async fn search(
     .bind(kind.map(RegionKind::as_str))
     .bind(country.map(str::to_uppercase))
     .bind(limit)
+    .bind(fuzzy)
     .fetch_all(pool)
     .await?;
     rows.iter().map(to_region).collect()
@@ -332,19 +358,21 @@ pub async fn assign_countries(
     bbox: (f64, f64, f64, f64),
 ) -> Result<u64, sqlx::Error> {
     let (south, west, north, east) = bbox;
-    // ST_PointOnSurface is on the geometry itself for a line as well as a
-    // polygon, so a valley following a border is placed by a point that is
-    // really in the valley.
+    // The country sharing the most area (or line length, for a valley) wins,
+    // so a range straddling a border is labelled by where most of it lies,
+    // not by whichever side its centre point happens to fall on.
     let done = sqlx::query(
         "UPDATE regions r
-         SET country = c.country
-         FROM regions c
+         SET country = (
+             SELECT c.country FROM regions c
+             WHERE c.kind = 'country' AND c.country IS NOT NULL
+               AND c.geom && r.geom AND ST_Intersects(c.geom, r.geom)
+             ORDER BY ST_Area(ST_Intersection(c.geom, r.geom))
+                    + ST_Length(ST_Intersection(c.geom, r.geom)) DESC, c.country
+             LIMIT 1)
          WHERE r.country IS NULL
            AND r.kind <> 'country'
-           AND r.geom && ST_MakeEnvelope($1, $2, $3, $4, 4326)
-           AND c.kind = 'country'
-           AND c.country IS NOT NULL
-           AND ST_Contains(c.geom, ST_PointOnSurface(r.geom))",
+           AND r.geom && ST_MakeEnvelope($1, $2, $3, $4, 4326)",
     )
     .bind(west)
     .bind(south)
@@ -355,17 +383,16 @@ pub async fn assign_countries(
     Ok(done.rows_affected())
 }
 
-/// How close (degrees, about a kilometre) another country's area must come to
-/// a border line to count as the country on its far side. Outlines are
-/// simplified separately, so a shared border does not coincide exactly.
-const NEIGHBOUR_RADIUS_DEG: f64 = 0.01;
-
 /// Country borders crossing a viewport.
 ///
 /// Only the piece of each boundary that is actually in view is returned:
 /// whole a country is hundreds of kilobytes, and clipped to a viewport it is
 /// under a kilobyte. Clipping the boundary line rather than the polygon
 /// keeps the edge of the screen from looking like a border.
+///
+/// The country on the far side comes from `country_borders`, kept up to date
+/// by a trigger on `regions`; a distance test against whole country
+/// polygons took a minute at Europe scale.
 pub async fn country_borders(
     pool: &PgPool,
     bbox: (f64, f64, f64, f64),
@@ -377,11 +404,10 @@ pub async fn country_borders(
         "WITH box AS (SELECT ST_MakeEnvelope($1, $2, $3, $4, 4326) AS g)
          SELECT b.name, b.country, b.line,
                 ST_AsGeoJSON(ST_SimplifyPreserveTopology(b.line, $5)) AS geometry,
-                ARRAY(SELECT o.country FROM regions o
-                      WHERE o.kind = 'country' AND o.country IS NOT NULL
-                        AND o.country <> b.country
-                        AND ST_DWithin(o.geom, b.line, $6)
-                      ORDER BY o.country) AS neighbours
+                ARRAY(SELECT n.neighbour::text FROM country_borders n, box
+                      WHERE n.country = b.country AND n.line && box.g
+                        AND ST_Intersects(n.line, box.g)
+                      ORDER BY n.neighbour) AS neighbours
          FROM (SELECT r.name, r.country,
                       ST_Intersection(ST_Boundary(r.geom), box.g) AS line
                FROM regions r, box
@@ -395,7 +421,6 @@ pub async fn country_borders(
     .bind(east)
     .bind(north)
     .bind(tolerance)
-    .bind(NEIGHBOUR_RADIUS_DEG)
     .fetch_all(pool)
     .await?;
     rows.iter()

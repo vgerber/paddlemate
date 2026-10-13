@@ -156,3 +156,79 @@ async fn border_far_from_any_country_has_no_neighbour(pool: PgPool) {
     assert_eq!(at["country"], "AT");
     assert!(at["neighbours"].as_array().unwrap().is_empty());
 }
+
+fn names(body: &Value) -> Vec<String> {
+    body.as_array()
+        .unwrap()
+        .iter()
+        .map(|r| r["name"].as_str().unwrap().to_owned())
+        .collect()
+}
+
+#[sqlx::test]
+async fn search_tolerates_misspellings(pool: PgPool) {
+    world(&pool).await;
+    let app = app(pool);
+    // "Tirool" has an extra letter, "Otztall" a doubled one.
+    let (_, body) = get(&app, "/geo/regions?q=Tirool").await;
+    assert_eq!(names(&body), ["Tirol"]);
+    let (_, body) = get(&app, "/geo/regions?q=Otztall").await;
+    assert_eq!(names(&body), ["Otztal"]);
+    // Short terms stay exact, so noise does not flood a two-letter search.
+    let (_, body) = get(&app, "/geo/regions?q=Tx").await;
+    assert!(names(&body).is_empty());
+}
+
+#[sqlx::test]
+async fn search_finds_regions_by_english_country_name(pool: PgPool) {
+    world(&pool).await;
+    square(&pool, "Piemonte", "state", "IT", [10.2, 46.0, 10.8, 47.0]).await;
+    let app = app(pool);
+    let (_, body) = get(&app, "/geo/regions?q=Austria").await;
+    let found = names(&body);
+    assert!(found.contains(&"Tirol".to_string()) && !found.contains(&"Piemonte".to_string()));
+    // States lead, valleys come last.
+    assert_eq!(found, ["Sliver", "Tirol", "Alpen", "Imst", "Otztal"]);
+    // A typo of the country name still finds it.
+    let (_, body) = get(&app, "/geo/regions?q=Austrria").await;
+    assert!(names(&body).contains(&"Tirol".to_string()));
+    // The English name finds the Italian regions.
+    let (_, body) = get(&app, "/geo/regions?q=Italy").await;
+    assert_eq!(names(&body), ["Piemonte"]);
+}
+
+#[sqlx::test]
+async fn borders_follow_country_changes(pool: PgPool) {
+    world(&pool).await;
+    let pairs = |pool: PgPool| async move {
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM country_borders")
+            .fetch_one(&pool)
+            .await
+            .unwrap()
+    };
+    assert_eq!(pairs(pool.clone()).await, 2);
+    sqlx::query("DELETE FROM regions WHERE name = 'IT'")
+        .execute(&pool)
+        .await
+        .unwrap();
+    assert_eq!(pairs(pool.clone()).await, 0);
+}
+
+#[sqlx::test]
+async fn europe_wide_view_answers_with_borders(pool: PgPool) {
+    // A ring of countries side by side, queried at the widest span the
+    // browse view allows; the lookup must not depend on span or count.
+    for i in 0..40 {
+        let x = f64::from(i) * 0.7;
+        let code = format!("{}{}", (b'A' + (i / 26) as u8) as char, (b'A' + (i % 26) as u8) as char);
+        square(&pool, &code, "country", &code, [x, 40.0, x + 0.7, 52.0]).await;
+    }
+    let app = app(pool);
+    let started = std::time::Instant::now();
+    let (status, body) = get(&app, "/geo/region-outlines?bbox=-80,-180,80,180").await;
+    assert_eq!(status, StatusCode::OK);
+    assert!(started.elapsed() < std::time::Duration::from_secs(1));
+    let countries = body["countries"].as_array().unwrap();
+    assert_eq!(countries.len(), 40);
+    assert_eq!(countries[1]["neighbours"].as_array().unwrap().len(), 2);
+}
