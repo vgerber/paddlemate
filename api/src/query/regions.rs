@@ -255,17 +255,29 @@ pub async fn in_bbox(
 ) -> Result<Vec<RegionOutline>, sqlx::Error> {
     let (south, west, north, east) = bbox;
     let drawn = drawn_geom();
+    // Stored outlines are far finer than a screen: a Europe-wide state view
+    // was 5 MB of vertices. Thin them to about a pixel of the viewport.
+    let tolerance = (east - west).max(north - south) / 1500.0;
     let kinds: Vec<&str> = kinds.iter().copied().map(RegionKind::as_str).collect();
+    // Overlaps are found on the thinned shapes, which is what is drawn.
     let rows = sqlx::query(&format!(
-        "SELECT {OUTLINE_COLUMNS}, {BBOX_COLUMNS}
-         FROM (
-             SELECT id, name, kind, country, {drawn} AS drawn
-             FROM regions
-             WHERE kind = ANY($1)
-               AND geom && ST_MakeEnvelope($2, $3, $4, $5, 4326)
-             {BY_SIZE}
-             LIMIT $6
-         ) visible"
+        "WITH visible AS MATERIALIZED (
+             SELECT id, name, kind, country, rank,
+                    ST_SimplifyPreserveTopology({drawn}, $7) AS drawn
+             FROM (
+                 SELECT *, ROW_NUMBER() OVER ({BY_SIZE}) AS rank FROM regions
+                 WHERE kind = ANY($1)
+                   AND geom && ST_MakeEnvelope($2, $3, $4, $5, 4326)
+                 {BY_SIZE}
+                 LIMIT $6
+             ) picked
+         )
+         SELECT {OUTLINE_COLUMNS}, {BBOX_COLUMNS},
+                ARRAY(SELECT o.id FROM visible o
+                      WHERE o.id > v.id AND o.drawn && v.drawn
+                        AND ST_Intersects(o.drawn, v.drawn)) AS overlaps
+         FROM visible v
+         ORDER BY rank"
     ))
     .bind(&kinds)
     .bind(west)
@@ -273,39 +285,27 @@ pub async fn in_bbox(
     .bind(east)
     .bind(north)
     .bind(limit)
+    .bind(tolerance)
     .fetch_all(pool)
     .await?;
+    let pairs: Vec<(i64, i64)> = rows
+        .iter()
+        .map(|row| {
+            let id: i64 = row.try_get("id")?;
+            let overlaps: Vec<i64> = row.try_get("overlaps")?;
+            Ok(overlaps.into_iter().map(move |other| (id, other)))
+        })
+        .collect::<Result<Vec<_>, sqlx::Error>>()?
+        .into_iter()
+        .flatten()
+        .collect();
     let mut outlines: Vec<RegionOutline> = rows.iter().map(to_outline).collect::<Result<_, _>>()?;
     let ids: Vec<i64> = outlines.iter().map(|region| region.id).collect();
-    let indexes = palette_indexes(&ids, &overlapping_pairs(pool, &ids).await?);
+    let indexes = palette_indexes(&ids, &pairs);
     for region in &mut outlines {
         region.palette_index = indexes.get(&region.id).copied().unwrap_or(0);
     }
     Ok(outlines)
-}
-
-/// Pairs of regions that overlap on screen, as drawn. A valley is drawn as
-/// the corridor around its line, so two valleys whose lines never touch can
-/// still share ground.
-async fn overlapping_pairs(pool: &PgPool, ids: &[i64]) -> Result<Vec<(i64, i64)>, sqlx::Error> {
-    if ids.len() < 2 {
-        return Ok(vec![]);
-    }
-    let drawn = drawn_geom();
-    let rows = sqlx::query(&format!(
-        "WITH drawn AS (
-             SELECT id, {drawn} AS geom FROM regions WHERE id = ANY($1)
-         )
-         SELECT a.id AS left_id, b.id AS right_id
-         FROM drawn a JOIN drawn b ON a.id < b.id
-         WHERE a.geom && b.geom AND ST_Intersects(a.geom, b.geom)"
-    ))
-    .bind(ids)
-    .fetch_all(pool)
-    .await?;
-    rows.iter()
-        .map(|row| Ok((row.try_get("left_id")?, row.try_get("right_id")?)))
-        .collect()
 }
 
 /// Give overlapping regions different palette indexes, so the map can colour
