@@ -152,9 +152,8 @@ function edges(placements: Placement[], windowWidth: number) {
   return { left, right };
 }
 
-/** Where the rail sits: it continues the left card's foot, so it starts at
- * the card's edge (no gap) and runs to the leftmost right card minus a
- * margin. */
+/** Where the rail sits: beside the left card's foot, one panel gutter from
+ * its edge, and running to the leftmost right card minus a margin. */
 export function dockRect(
   placements: Placement[],
   windowWidth: number,
@@ -162,7 +161,7 @@ export function dockRect(
 ): DockRect {
   const e = edges(placements, windowWidth);
   const m = canvas.margin;
-  const left = e.left > 0 ? e.left : m;
+  const left = e.left > 0 ? e.left + canvas.panel.gutter : m;
   const right = e.right < windowWidth ? e.right - m : windowWidth - m;
   return {
     left,

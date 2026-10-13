@@ -21,6 +21,7 @@ import { humanize } from "@/lib/format";
 import { useGaugeReadings } from "@/lib/hooks/useGauges";
 import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
+import { levelInk } from "@/lib/waterLevel";
 import { pointTime } from "./chartTime";
 import RailOverlay, {
   RAIL_AXIS,
@@ -40,9 +41,6 @@ const CHART_MARGIN = { top: 6, right: 12, bottom: 4, left: 0 };
 /** Radius of the latest reading's dot, and the gap the threshold labels keep
  * from it. The labels end this far short of the plot's right edge. */
 const DOT_RADIUS = 5;
-/** How far back the rail looks to tell whether the curve falls into the
- * newest reading, in px. */
-const LABEL_SPAN_PX = 50;
 const LABEL_GAP = DOT_RADIUS + 10;
 
 /** The rail's plot runs edge to edge: no margins but the headroom. */
@@ -160,14 +158,13 @@ function thresholdLines(r: WaterRangeWithStatus, rail: boolean) {
       }
     />
   );
-  const { low, medium, high } = tokens.levels;
   return [
     r.range_low != null &&
-      line("low", r.range_low, low.text, `L ${r.range_low}`),
+      line("low", r.range_low, levelInk("low"), `L ${r.range_low}`),
     r.range_medium != null &&
-      line("medium", r.range_medium, medium.text, `M ${r.range_medium}`),
+      line("medium", r.range_medium, levelInk("medium"), `M ${r.range_medium}`),
     r.range_high != null &&
-      line("high", r.range_high, high.text, `H ${r.range_high}`),
+      line("high", r.range_high, levelInk("high"), `H ${r.range_high}`),
   ].filter((l): l is JSX.Element => l !== false);
 }
 
@@ -401,18 +398,6 @@ export default function SeriesChart({
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   };
   const latestRail = rail ? lastPoint : null;
-  // The curve a label's width back from the newest reading, to see which
-  // way it arrives.
-  const falling = (() => {
-    if (!lastPoint || !size) return false;
-    const back =
-      lastPoint.time -
-      (LABEL_SPAN_PX * (plotExtent[1] - plotExtent[0])) / size.width;
-    const before = allValues.length
-      ? chartData.find((d) => d.time >= back && d.value !== null)
-      : undefined;
-    return before?.value != null && before.value > lastPoint.value;
-  })();
   const staleLatest =
     lastPoint != null &&
     isStale(
@@ -620,7 +605,6 @@ export default function SeriesChart({
           unit={series.unit}
           latest={latestRail}
           stale={staleLatest}
-          falling={falling}
           marker={marker}
           hovering={inside}
         />

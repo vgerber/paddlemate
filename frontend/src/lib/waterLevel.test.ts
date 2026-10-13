@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { isCalibrated, LEVEL_ORDER, levelConfig, maxLevel } from "./waterLevel";
+import { theme } from "@/lib/theme";
+import {
+  isCalibrated,
+  LEVEL_ORDER,
+  levelConfig,
+  levelInk,
+  maxLevel,
+} from "./waterLevel";
 
 type Range = Parameters<typeof isCalibrated>[0];
 
@@ -40,5 +47,16 @@ describe("isCalibrated", () => {
 
   test("false with no thresholds", () => {
     expect(isCalibrated(range({}))).toBe(false);
+  });
+});
+
+describe("levelInk", () => {
+  test("uses the pill colour for high, whose text is white", () => {
+    expect(levelInk("high")).toBe(theme.tokens.levels.high.bg);
+    expect(levelInk("high")).not.toBe("#ffffff");
+  });
+  test("uses the text colour for low and medium", () => {
+    expect(levelInk("low")).toBe(theme.tokens.levels.low.text);
+    expect(levelInk("medium")).toBe(theme.tokens.levels.medium.text);
   });
 });

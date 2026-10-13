@@ -7,11 +7,10 @@ import PeriodMenu from "@/components/charts/PeriodMenu";
 import ReadingBlock, {
   type ReadingView,
 } from "@/components/charts/ReadingBlock";
-import { pointTime, typeLabel } from "@/components/charts/water/chartTime";
+import { typeLabel } from "@/components/charts/water/chartTime";
 import type { ScrubPoint } from "@/components/charts/water/SeriesChart";
 import {
   activeMeasurementType,
-  levelAt,
   measurementTypesOf,
   readingPerType,
 } from "@/components/charts/water/series";
@@ -19,7 +18,7 @@ import type { TimeRange } from "@/components/charts/water/types";
 import WaterChart from "@/components/charts/water/WaterChart";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { dockHeight } from "@/lib/canvasLayout";
-import { formatTime } from "@/lib/format";
+import { formatTime, timeAgo } from "@/lib/format";
 import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
 import type { WaterLevel } from "@/lib/waterLevel";
@@ -86,26 +85,18 @@ export interface ReadingChartProps {
   footer?: ReactNode;
 }
 
-/** The reading view for the charted range: when the newest reading (or the
- * scrubbed one) was taken and its level, or "No recent reading" when it is
- * too old to say. */
+/** The reading view for the charted range: the newest reading, when it was
+ * taken and how long ago, and its level, or "No recent reading" when it is
+ * too old to say. A hovered point shows in the plot, not here. */
 function useReadingView(
   charted: WaterRangeWithStatus | undefined,
-  scrub: ScrubPoint | null,
 ): ReadingView | null {
   if (!charted) return null;
+  const unit = charted.series.unit;
   const levelWord = (level: WaterLevel) => {
     const word = LEVEL_WORD[level];
     return word ? { word, color: tokens.levels[level].marker } : undefined;
   };
-  if (scrub) {
-    return {
-      time: pointTime(scrub.time),
-      level: levelWord(levelAt(scrub.value, charted)),
-      stale: false,
-      scrubbing: true,
-    };
-  }
   const latest = charted.latest_reading;
   const stale = isStale(
     latest?.measured_at,
@@ -115,15 +106,19 @@ function useReadingView(
   if (stale || !latest) {
     return {
       time: latest ? readingTime(latest.measured_at, false) : "",
+      age: latest ? timeAgo(latest.measured_at) : "",
+      value: latest?.value ?? null,
+      unit,
       stale: true,
-      scrubbing: false,
     };
   }
   return {
     time: readingTime(latest.measured_at, false),
+    age: timeAgo(latest.measured_at),
+    value: latest.value,
+    unit,
     level: levelWord(charted.level),
     stale: false,
-    scrubbing: false,
   };
 }
 
@@ -166,7 +161,7 @@ export default function ReadingChart(props: ReadingChartProps) {
   const charted = readingPerType(own, preferredFeatureId).find(
     (r) => r.type === type,
   )?.range;
-  const view = useReadingView(charted, scrub);
+  const view = useReadingView(charted);
   const railHeight = dockHeight(windowHeight);
   const types = measurementTypesOf(own).map((t) => ({
     type: t,
@@ -186,7 +181,6 @@ export default function ReadingChart(props: ReadingChartProps) {
         setGaugeChoice(id);
       }}
       view={view}
-      onLatest={() => setScrub(null)}
       measurement={{
         types,
         type,
@@ -198,6 +192,9 @@ export default function ReadingChart(props: ReadingChartProps) {
       onDismiss={onDismiss}
       period={rail ? { value: timeRange, onChange: changeRange } : undefined}
       inset={rail ? RAIL_INSET : INLINE_INSET}
+      numberSize={
+        rail ? Math.round(Math.min(80, Math.max(56, railHeight * 0.32))) : 36
+      }
     />
   );
 

@@ -149,11 +149,11 @@ describe("rail", () => {
     expect(dockMode(1920, 600)).toBe("dock");
   });
 
-  test("starts at the card's edge and ends 16px short of the window", () => {
+  test("starts a gutter from the card and ends 16px short of the window", () => {
     const placed = layoutCards([detail(486)], 1280);
     expect(dockRect(placed, 1280, 800)).toEqual({
-      left: 502,
-      width: 1280 - 502 - 16,
+      left: 510,
+      width: 1280 - 510 - 16,
       height: 184,
     });
   });

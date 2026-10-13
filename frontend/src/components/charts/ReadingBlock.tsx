@@ -18,10 +18,14 @@ const { tokens } = theme;
 export interface ReadingView {
   /** "18:48" or "Oct 10, 14:00"; empty when there is no reading at all. */
   time: string;
+  /** "12m ago", beside the time. */
+  age: string;
+  /** The reading shown: the latest, or the hovered point. */
+  value: number | null;
+  unit: string;
   /** Level word and its dot colour; absent while stale or uncalibrated. */
   level?: { word: string; color: string };
   stale: boolean;
-  scrubbing: boolean;
 }
 
 interface ReadingBlockProps {
@@ -29,7 +33,6 @@ interface ReadingBlockProps {
   gaugeId: number | null;
   onGauge: (id: number) => void;
   view: ReadingView | null;
-  onLatest: () => void;
   /** The Level or Flow choice; only for a gauge that measures both. */
   measurement?: {
     types: { type: string; label: string }[];
@@ -43,6 +46,8 @@ interface ReadingBlockProps {
   period?: { value: TimeRange; onChange: (range: TimeRange) => void };
   /** Side padding in px: the text line the block keeps. */
   inset?: number;
+  /** The reading's size: larger on the rail, where the block is tall. */
+  numberSize?: number;
 }
 
 function GaugeName({
@@ -158,68 +163,73 @@ function Measurement({
   );
 }
 
-function Level({
-  view,
-  onLatest,
-}: {
-  view: ReadingView;
-  onLatest: () => void;
-}) {
+function Level({ view, size }: { view: ReadingView; size: number }) {
   return (
-    <Box
-      data-testid="chart-reading"
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        minHeight: tokens.touch.min,
-        minWidth: 0,
-      }}
-    >
-      {view.level ? (
+    <Box data-testid="chart-reading" sx={{ minWidth: 0 }}>
+      <Box
+        sx={{ display: "flex", alignItems: "baseline", gap: 1.25, minWidth: 0 }}
+      >
         <Box
           component="span"
-          data-testid="reading-level"
-          sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}
+          data-testid="reading-value"
+          sx={{ whiteSpace: "nowrap" }}
         >
-          <Box
-            aria-hidden
-            sx={{
-              width: 10,
-              height: 10,
-              borderRadius: "50%",
-              bgcolor: view.level.color,
-            }}
-          />
           <Typography
             component="span"
-            sx={{ fontSize: "0.875rem", fontWeight: 600 }}
+            sx={{
+              fontSize: size,
+              lineHeight: 1,
+              fontWeight: 600,
+              fontVariantNumeric: "tabular-nums",
+              color: view.stale ? tokens.onSurfaceVariant : tokens.onSurface,
+            }}
           >
-            {view.level.word}
+            {view.value == null ? "-" : Number(view.value.toFixed(1))}
           </Typography>
+          {view.value != null && (
+            <Typography
+              component="span"
+              sx={{
+                ml: 0.75,
+                fontSize: "0.9375rem",
+                color: tokens.onSurfaceVariant,
+              }}
+            >
+              {view.unit}
+            </Typography>
+          )}
         </Box>
-      ) : (
-        <Typography
-          component="span"
-          sx={{ fontSize: "0.875rem", color: tokens.onSurfaceVariant }}
-        >
-          {view.stale ? "No recent reading" : ""}
-        </Typography>
-      )}
-      {view.scrubbing && (
-        <ButtonBase
-          onClick={onLatest}
-          sx={{
-            minHeight: tokens.touch.min,
-            px: 0.5,
-            fontSize: "0.75rem",
-            fontWeight: 600,
-            color: tokens.primary,
-          }}
-        >
-          Latest
-        </ButtonBase>
-      )}
+        {view.level ? (
+          <Box
+            component="span"
+            data-testid="reading-level"
+            sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}
+          >
+            <Box
+              aria-hidden
+              sx={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                bgcolor: view.level.color,
+              }}
+            />
+            <Typography
+              component="span"
+              sx={{ fontSize: "0.875rem", fontWeight: 600 }}
+            >
+              {view.level.word}
+            </Typography>
+          </Box>
+        ) : (
+          <Typography
+            component="span"
+            sx={{ fontSize: "0.875rem", color: tokens.onSurfaceVariant }}
+          >
+            {view.stale ? "No recent reading" : ""}
+          </Typography>
+        )}
+      </Box>
     </Box>
   );
 }
@@ -232,11 +242,11 @@ export default function ReadingBlock({
   gaugeId,
   onGauge,
   view,
-  onLatest,
   measurement,
   onDismiss,
   period,
   inset = 24,
+  numberSize = 36,
 }: ReadingBlockProps) {
   return (
     <Box
@@ -247,33 +257,25 @@ export default function ReadingBlock({
         display: "flex",
         flexDirection: "column",
         px: `${inset}px`,
-        pb: 1,
+        pt: 1,
+        pb: 2.5,
         minWidth: 0,
       }}
     >
       <Box
         sx={{
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-start",
           justifyContent: "space-between",
           gap: 1,
-          minHeight: tokens.touch.min,
-          // The close box ends 12px from the edge.
+          // The trailing boxes end 12px from the edge.
           mr: -1.5,
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "baseline",
-            gap: 1,
-            minWidth: 0,
-          }}
-        >
+        <Box sx={{ minWidth: 0, pt: 0.5 }}>
           <GaugeName gauges={gauges} gaugeId={gaugeId} onGauge={onGauge} />
           {view?.time && (
             <Typography
-              component="span"
               data-testid="reading-time"
               sx={{
                 fontSize: "0.75rem",
@@ -282,14 +284,12 @@ export default function ReadingBlock({
                 whiteSpace: "nowrap",
               }}
             >
-              {view.time}
+              {view.age ? `${view.time} · ${view.age}` : view.time}
             </Typography>
           )}
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          {measurement && measurement.types.length > 1 && (
-            <Measurement {...measurement} />
-          )}
+          {period && <PeriodMenu {...period} />}
           {onDismiss && (
             <IconButton
               aria-label="Close gauge chart"
@@ -305,13 +305,22 @@ export default function ReadingBlock({
           )}
         </Box>
       </Box>
-      {view && <Level view={view} onLatest={onLatest} />}
-      {period && (
-        <>
-          <Box sx={{ flex: 1, minHeight: 8 }} />
-          <PeriodMenu {...period} />
-        </>
-      )}
+      {/* Room for an outlook line once there are forecasts; the number below
+          keeps its place. */}
+      <Box sx={{ flex: 1, minHeight: 8 }} />
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          gap: 1,
+        }}
+      >
+        {view && <Level view={view} size={numberSize} />}
+        {measurement && measurement.types.length > 1 && (
+          <Measurement {...measurement} />
+        )}
+      </Box>
     </Box>
   );
 }

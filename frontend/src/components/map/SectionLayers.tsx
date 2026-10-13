@@ -42,9 +42,11 @@ export default function SectionLayers({
   const hasHighlight = highlighted != null && highlighted.length > 0;
   // Plain layers skip the ghosts, so a ghost can neither be clicked nor
   // double-drawn.
-  const plain: Filter | undefined = hasGhost
+  // An unset filter is passed to MapLibre as undefined and fails its
+  // validation, so "no ghosts" is an explicit match-all.
+  const plain: Filter = hasGhost
     ? ["!", inIds(ghost, byId)]
-    : undefined;
+    : ["boolean", true];
   const plainEndpoints: Filter | undefined = hasGhost
     ? ["!", inIds(ghost, bySection)]
     : undefined;

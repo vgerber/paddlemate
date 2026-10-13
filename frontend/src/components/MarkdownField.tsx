@@ -196,6 +196,8 @@ export default function MarkdownField({
           minRows={minRows}
           fullWidth
           size="small"
+          // No label: without this the filled field keeps an empty label row.
+          hiddenLabel
         />
       )}
 

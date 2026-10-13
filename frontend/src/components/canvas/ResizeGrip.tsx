@@ -7,8 +7,10 @@ const { tokens } = theme;
 const { canvas } = tokens;
 
 /** Bar height while hovered, focused or dragged. */
-const BAR_ACTIVE = 56;
 const STEP = 16;
+
+const dots = (color: string) =>
+  `radial-gradient(circle, ${color} 1.5px, transparent 1.75px) content-box 0 0 / 6px 6px repeat, ${tokens.surfaceLowest}`;
 const STEP_BIG = 64;
 
 interface ResizeGripProps {
@@ -117,10 +119,13 @@ export default function ResizeGrip({
       data-dragging={dragging || undefined}
       sx={{
         position: "absolute",
-        top: 0,
-        bottom: 0,
-        [side === "left" ? "right" : "left"]: 0,
-        width: canvas.gripHit,
+        top: "50%",
+        // Centred on the card's edge, half over the map.
+        [side === "left" ? "right" : "left"]: -canvas.gripHit.w / 2,
+        width: canvas.gripHit.w,
+        height: canvas.gripHit.h,
+        transform: "translateY(-50%)",
+        zIndex: 1,
         display: "grid",
         placeItems: "center",
         cursor: "col-resize",
@@ -128,31 +133,22 @@ export default function ResizeGrip({
         outline: "none",
         opacity: width <= min || width >= max ? 0.4 : 1,
         transition: transition(["opacity"], { duration: "fast" }),
-        // The line the card's edge shows while it is being dragged.
-        "&::after": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          [side === "left" ? "right" : "left"]: 0,
-          width: 2,
-          bgcolor: tokens.primary,
-          opacity: 0,
-          transition: transition(["opacity"], { duration: "fast" }),
-        },
-        "&[data-dragging]::after": { opacity: 1 },
         "& > span": {
           width: canvas.gripBar.w,
           height: canvas.gripBar.h,
           borderRadius: `${tokens.radii.pill}px`,
-          bgcolor: `${tokens.outline}${alphas.border}`,
-          transition: transition(["height", "background-color"], {
-            duration: "fast",
-          }),
+          // A soft edge; the shadow and the dots carry the tab.
+          boxShadow: `${tokens.elevation.e2}, inset 0 0 0 1px ${tokens.outline}${alphas.hairline}`,
+          // Two columns of three dots over the tab's fill; the dots layer is
+          // held to the content box, the fill covers the whole tab.
+          background: dots(tokens.onSurfaceVariant),
+          padding: "15px 1px",
+          boxSizing: "border-box",
+          transition: transition(["box-shadow"], { duration: "fast" }),
         },
         "&:hover > span, &:focus-visible > span, &[data-dragging] > span": {
-          height: BAR_ACTIVE,
-          bgcolor: tokens.primary,
+          background: dots(tokens.primary),
+          boxShadow: `${tokens.elevation.e2}, inset 0 0 0 2px ${tokens.primary}`,
         },
         "&:focus-visible > span": {
           outline: `2px solid ${tokens.primary}`,

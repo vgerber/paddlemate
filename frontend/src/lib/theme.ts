@@ -210,8 +210,9 @@ const tokens = {
     sideMaxFrac: 0.45,
     freeMin: { w: 240, h: 200 },
     headerHeight: 56,
-    gripHit: 12,
-    gripBar: { w: 4, h: 40 },
+    // The resize tab on a card's edge: 14 x 48 to look at, 44 x 64 to hit.
+    gripHit: { w: 44, h: 64 },
+    gripBar: { w: 14, h: 48 },
     // The section panel's spacing system: 8 between the card ground and a
     // card, 16 inside a card, text on a 24 line, hit boxes end 12 from the
     // edge, rows 56, a header of 56 + 48.
@@ -628,15 +629,32 @@ export const theme = createTheme({
           },
           "&.Mui-disabled": { backgroundColor: tokens.surfaceHigh },
         },
-        input: {
-          padding: "25px 14px 8px",
-          height: "auto",
-          "&.MuiInputBase-inputSizeSmall": {
-            paddingTop: 22,
-            paddingBottom: 6,
-          },
-        },
-        multiline: { padding: "25px 14px 8px" },
+        // The top padding is the label's row; a field without a label
+        // (`hiddenLabel`) has none, or it opens with an empty band.
+        input: ({ ownerState }) =>
+          ownerState.multiline
+            ? // A multiline field pads its root; the textarea adds none.
+              { padding: 0 }
+            : ownerState.hiddenLabel
+              ? {
+                  padding: "12px 14px",
+                  height: "auto",
+                  "&.MuiInputBase-inputSizeSmall": {
+                    paddingTop: 8.5,
+                    paddingBottom: 8.5,
+                  },
+                }
+              : {
+                  padding: "25px 14px 8px",
+                  height: "auto",
+                  "&.MuiInputBase-inputSizeSmall": {
+                    paddingTop: 22,
+                    paddingBottom: 6,
+                  },
+                },
+        multiline: ({ ownerState }) => ({
+          padding: ownerState.hiddenLabel ? "12px 14px" : "25px 14px 8px",
+        }),
         adornedStart: { paddingLeft: 14 },
       },
     },

@@ -1,6 +1,5 @@
 import Box from "@mui/material/Box";
 import { useDockMode } from "@/components/canvas/CanvasContext";
-import { useLayout } from "@/components/canvas/canvasStore";
 import FloatingCard from "@/components/canvas/FloatingCard";
 import { theme } from "@/lib/theme";
 import SidebarContent from "./SidebarContent";
@@ -18,11 +17,10 @@ function cardTitle(state: MapPageState): string {
 
 /** The map page's detail card on the canvas: search, river, section,
  * features, notes and sources, in the one panel the phone shows full screen.
- * From 1280 it runs the full height and its foot (the reading block) goes on
- * into the rail; narrower it hugs its content and the chart leads it. */
+ * From 1280 it runs the full height, its foot the reading block beside the
+ * rail; narrower it hugs its content and the chart leads it. */
 export default function MapDetailCard({ state }: { state: MapPageState }) {
   const wide = useDockMode() === "dock";
-  const railed = useLayout((s) => s.dock != null);
   return (
     <FloatingCard
       id="detail"
@@ -33,7 +31,6 @@ export default function MapDetailCard({ state }: { state: MapPageState }) {
       title={cardTitle(state)}
       selfHeaded
       fullHeight={wide}
-      joinedRail={railed}
     >
       <Box
         data-testid="side-panel"

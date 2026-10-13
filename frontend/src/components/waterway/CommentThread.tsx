@@ -48,7 +48,11 @@ const menuItemSx = {
 const composerSx = (open: boolean) =>
   ({
     "& .MuiInputBase-input": { fontSize: { xs: "1rem", md: "0.8125rem" } },
-    "& .MuiInputBase-inputSizeSmall": { py: { xs: "12px", md: "8.5px" } },
+    ...(open
+      ? {}
+      : {
+          "& .MuiInputBase-inputSizeSmall": { py: { xs: "12px", md: "8.5px" } },
+        }),
     "& .MuiInputBase-root": { pr: 0.5, minHeight: 48 },
     // Only the icons follow the box as it grows; the text keeps its own
     // alignment, which is what centres it on a single line.
@@ -302,6 +306,7 @@ export default function CommentThread({
           />
           <TextField
             size="small"
+            hiddenLabel
             placeholder={
               sectionScope == null ? "Add a note" : "Add a note on this section"
             }
