@@ -66,6 +66,7 @@ docker compose --profile auth up -d --force-recreate keycloak
 |---|---|---|
 | Users | pinned UUIDs | the five above, plus the club `9001` "Innsbruck Paddlers" (Vincent owner, Mara admin, the rest members) |
 | Follows | - | Vincent and Mara follow each other, Tobias follows Vincent, Aoife's request is still `pending` |
+| Starred sections | - | Vincent stars Upper Test (9101) and Wenns - Arzl (9171), Mara stars Lower Test (9102); the search panel lists them with an empty name search |
 | Waterway "Test River" | 9001 | river |
 | Sections | 9101-9107 | each with put_in + take_out features (9511-9572) at its line ends, like a normal entry |
 | Whitewater features | 9523/9543/9553 | difficulty III / II / IV-V on sections 9102/9104/9105, spanning put-in to take-out - difficulty chip in the section list |

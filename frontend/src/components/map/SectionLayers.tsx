@@ -166,61 +166,63 @@ export default function SectionLayers({
             "line-opacity": 1,
           }}
         />
+        {/* Each layer is a direct child: Source hands its id to its children
+            and a fragment would take it instead of the layers. */}
         {hasGhost && (
-          <>
-            <Layer
-              id="sections-ghost-casing"
-              beforeId="section-endpoints-dot"
-              type="line"
-              filter={inIds(ghost, byId)}
-              layout={{ "line-cap": "round", "line-join": "round" }}
-              paint={{
-                "line-color": tokens.mapSectionLineCasing,
-                "line-width": 7,
-                "line-opacity": 0.6,
-              }}
-            />
-            <Layer
-              id="sections-ghost-line"
-              beforeId="section-endpoints-dot"
-              type="line"
-              filter={inIds(ghost, byId)}
-              layout={{ "line-cap": "round", "line-join": "round" }}
-              paint={{
-                "line-color": tokens.mapSectionGhost,
-                "line-width": 4,
-                "line-opacity": 1,
-              }}
-            />
-          </>
+          <Layer
+            id="sections-ghost-casing"
+            beforeId="section-endpoints-dot"
+            type="line"
+            filter={inIds(ghost, byId)}
+            layout={{ "line-cap": "round", "line-join": "round" }}
+            paint={{
+              "line-color": tokens.mapSectionLineCasing,
+              "line-width": 7,
+              "line-opacity": 0.6,
+            }}
+          />
+        )}
+        {hasGhost && (
+          <Layer
+            id="sections-ghost-line"
+            beforeId="section-endpoints-dot"
+            type="line"
+            filter={inIds(ghost, byId)}
+            layout={{ "line-cap": "round", "line-join": "round" }}
+            paint={{
+              "line-color": tokens.mapSectionGhost,
+              "line-width": 4,
+              "line-opacity": 1,
+            }}
+          />
         )}
         {hasHighlight && (
-          <>
-            <Layer
-              id="sections-highlight-casing"
-              beforeId="section-endpoints-dot"
-              type="line"
-              filter={inIds(highlighted, byId)}
-              layout={{ "line-cap": "round", "line-join": "round" }}
-              paint={{
-                "line-color": tokens.mapSectionLineCasing,
-                "line-width": 9,
-                "line-opacity": 0.9,
-              }}
-            />
-            <Layer
-              id="sections-highlight-line"
-              beforeId="section-endpoints-dot"
-              type="line"
-              filter={inIds(highlighted, byId)}
-              layout={{ "line-cap": "round", "line-join": "round" }}
-              paint={{
-                "line-color": tokens.mapSectionHighlight,
-                "line-width": 5,
-                "line-opacity": 1,
-              }}
-            />
-          </>
+          <Layer
+            id="sections-highlight-casing"
+            beforeId="section-endpoints-dot"
+            type="line"
+            filter={inIds(highlighted, byId)}
+            layout={{ "line-cap": "round", "line-join": "round" }}
+            paint={{
+              "line-color": tokens.mapSectionLineCasing,
+              "line-width": 9,
+              "line-opacity": 0.9,
+            }}
+          />
+        )}
+        {hasHighlight && (
+          <Layer
+            id="sections-highlight-line"
+            beforeId="section-endpoints-dot"
+            type="line"
+            filter={inIds(highlighted, byId)}
+            layout={{ "line-cap": "round", "line-join": "round" }}
+            paint={{
+              "line-color": tokens.mapSectionHighlight,
+              "line-width": 5,
+              "line-opacity": 1,
+            }}
+          />
         )}
         <Layer
           id="sections-line-selected-casing"

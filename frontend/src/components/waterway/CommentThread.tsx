@@ -175,7 +175,15 @@ export default function CommentThread({
       }}
     >
       <Box
-        sx={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden" }}
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+          // A scroller is its own touch-action boundary: without pan-y a
+          // sideways tab swipe that starts here is cancelled.
+          touchAction: "pan-y",
+        }}
       >
         <QueryStates
           query={thread}

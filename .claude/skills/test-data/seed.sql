@@ -890,6 +890,14 @@ INSERT INTO notification_reads (user_id, read_until) VALUES
 ON CONFLICT (user_id) DO UPDATE SET read_until = EXCLUDED.read_until;
 
 
+-- Starred sections, so the search panel's "Starred sections" list (shown
+-- with an empty name search) has something to show when signed in as Vincent.
+INSERT INTO user_section_favorites (user_id, section_id) VALUES
+  (:'vincent', 9101),
+  (:'vincent', 9171),
+  (:'mara',    9102)
+ON CONFLICT DO NOTHING;
+
 -- The explicit 9xxx ids above bypass the id sequences. Bump them past the
 -- fixture range so rows created through the app get higher ids - otherwise
 -- they sort before the fixture rows (breaking "first range wins" defaults)
