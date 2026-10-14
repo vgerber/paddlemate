@@ -45,6 +45,10 @@ const PLACE_NAME = ["coalesce", ["get", "name_en"], ["get", "name"]];
 export function applyCalmStyle(map: MapLibreMap) {
   for (const layer of map.getStyle()?.layers ?? []) {
     const { id } = layer;
+    // The app's own layers (regions, sections, markers) carry their own paint.
+    if ("source" in layer && map.getSource(layer.source)?.type === "geojson") {
+      continue;
+    }
     if (id === "background") {
       map.setPaintProperty(id, "background-color", tokens.mapGround);
     } else if (HIDDEN.test(id)) {

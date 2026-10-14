@@ -69,7 +69,7 @@ export const SOLO_POINT: [number, number] = [11.6, 46.9];
 const COUNTRY = {
   country: "AT",
   name: "Austria",
-  neighbours: [] as string[],
+  neighbours: ["DE", "IT"],
   geometry: {
     type: "LineString",
     coordinates: [

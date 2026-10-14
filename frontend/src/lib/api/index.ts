@@ -469,9 +469,10 @@ export const regionsApi = {
   inView: async (
     bbox: [number, number, number, number],
     signal?: AbortSignal,
+    kinds?: string,
   ) => {
     const { data } = await client.GET("/api/v1/geo/region-outlines", {
-      params: { query: { bbox: bbox.join(",") } },
+      params: { query: { bbox: bbox.join(","), kinds } },
       signal,
     });
     return assertData(data);

@@ -35,6 +35,10 @@ export type RouteSearch = {
   region?: number;
 };
 
+/** Every level the region chips offer; asked for together so the map can draw
+ * districts and ranges at the zoom where they fit. */
+const ALL_REGION_KINDS = ["valley", "district", "range", "state"];
+
 export function useMapPageState(search: RouteSearch) {
   const {
     waterway: selectedWaterwayId,
@@ -231,6 +235,7 @@ export function useMapPageState(search: RouteSearch) {
     mode === "region" && mapBounds
       ? [mapBounds.south, mapBounds.west, mapBounds.north, mapBounds.east]
       : undefined,
+    regionLevel ? [regionLevel] : ALL_REGION_KINDS,
   );
   const selectRegion = useCallback(
     (regionId: number) =>
@@ -448,6 +453,7 @@ export function useMapPageState(search: RouteSearch) {
     regionChoices: regionsInView.regions,
     countryBorders: regionsInView.countries,
     regionsLoading: regionsInView.loading,
+    regionsHiddenKinds: regionsInView.hiddenKinds,
     selectRegion,
     regionLevel,
     setRegionLevel,

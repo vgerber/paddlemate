@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import MapGL, {
   AttributionControl,
   Layer,
@@ -6,6 +6,7 @@ import MapGL, {
   Marker,
   NavigationControl,
   Source,
+  useMap,
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type {
@@ -25,13 +26,14 @@ import LabelModeToggle from "./LabelModeToggle";
 import MapCompass from "./MapCompass";
 import MapNumberMarker from "./MapNumberMarker";
 import MarkerHit from "./MarkerHit";
-import { addMapImages } from "./mapIcons";
+import { addMapImages, answerMissingIcons } from "./mapIcons";
 import { buildSectionsGeoJSON } from "./mapLayers";
 import { LIBERTY_STYLE, SATELLITE_STYLE } from "./mapStyles";
 import NoteMarkers, { type NotePin } from "./NoteMarkers";
 import PickModeButtons from "./PickModeButtons";
 import RangeRingLayers, { type RangeRing } from "./RangeRingLayers";
 import RegionChoicePopup from "./RegionChoicePopup";
+import RegionHiddenNote from "./RegionHiddenNote";
 import RegionLayers from "./RegionLayers";
 import type { Bbox } from "./regionGeometry";
 import SectionLayers from "./SectionLayers";
@@ -60,6 +62,13 @@ const { tokens } = theme;
 
 /** Hands the MapLibre instance to browser tests, so they can read the paint
  * and data the map really draws. Development builds only. */
+/** Mounts as the map's first child, before its style adds any layer. */
+function MissingIconGuard() {
+  const { current: map } = useMap();
+  useEffect(() => (map ? answerMissingIcons(map.getMap()) : undefined), [map]);
+  return null;
+}
+
 function exposeMapForTests(map: MapRef | null) {
   if (import.meta.env.DEV && map) {
     Object.assign(window, { __paddlemateMap: map.getMap() });
@@ -105,10 +114,6 @@ export interface MapChrome {
   waterwayNames?: Record<number, string>;
   labelMode?: "section" | "river";
   onLabelModeChange?: (mode: "section" | "river") => void;
-  /** Extra px to add to the bottom offset of map controls (satellite/label toggle) so they clear any bottom strip. */
-  controlsBottomOffset?: number;
-  /** Anchor the map controls to the top instead of the bottom (e.g. when the bottom is covered by a panel). */
-  controlsAnchor?: "top" | "bottom";
   /** For maps embedded in scrollable pages: page scroll passes over the map;
    * zooming needs Ctrl/Cmd+scroll (or two fingers on touch). */
   cooperativeGestures?: boolean;
@@ -193,6 +198,8 @@ export interface MapRegions {
   choices?: RegionOutline[] | null;
   picked?: RegionOutline | null;
   borders?: CountryBorder[] | null;
+  /** Kinds in view too wide to draw; the map says so and how to see them. */
+  hiddenKinds?: string[];
   onSelect?: (regionId: number) => void;
 }
 
@@ -271,6 +278,7 @@ export default function WaterwayMap({
     choices: regionChoices,
     picked: regionOutline,
     borders: countryBorders,
+    hiddenKinds: hiddenRegionKinds,
     onSelect: onRegionSelect,
   } = regions;
   const {
@@ -294,8 +302,6 @@ export default function WaterwayMap({
     waterwayNames,
     labelMode = "section",
     onLabelModeChange,
-    controlsBottomOffset = 0,
-    controlsAnchor,
     attributionPosition = "bottom-right",
     cooperativeGestures,
     inset,
@@ -307,17 +313,19 @@ export default function WaterwayMap({
   const [showFeatureNames, setShowFeatureNames] = useState(true);
   const [viewBounds, setViewBounds] = useState<Bbox | null>(null);
   const [litRegionId, setLitRegionId] = useState<number | null>(null);
+  const [overRegion, setOverRegion] = useState(false);
   useControlInset(mapRef, mapLoaded, inset);
-  useMutedBaseMap(
-    mapRef,
-    mapLoaded,
-    regionChoices != null,
-    satellite ? "satellite" : "liberty",
-  );
+  // The calm restyle goes first: it sets road opacity, which muting lowers.
   useCalmBaseMap(
     mapRef,
     mapLoaded,
     !satellite,
+    satellite ? "satellite" : "liberty",
+  );
+  useMutedBaseMap(
+    mapRef,
+    mapLoaded,
+    regionChoices != null,
     satellite ? "satellite" : "liberty",
   );
   const { handleMapLoad } = useMapCameraEffects({
@@ -439,11 +447,10 @@ export default function WaterwayMap({
               ? setShowFeatureNames
               : undefined
           }
-          bottomOffset={controlsBottomOffset}
-          anchor={controlsAnchor}
           inset={inset}
         />
       )}
+      {hiddenRegionKinds && <RegionHiddenNote kinds={hiddenRegionKinds} />}
       <MapGL
         ref={mapRef}
         // Rendered as a child instead, so it can be compact and placed in a
@@ -454,6 +461,19 @@ export default function WaterwayMap({
         style={{ width: "100%", height: "100%" }}
         mapStyle={satellite ? SATELLITE_STYLE : LIBERTY_STYLE}
         onClick={handleClick}
+        // A region is clickable wherever it is drawn; say so with the cursor.
+        cursor={
+          overRegion && onRegionSelect && !pickMode && !onAreaCircleChange
+            ? "pointer"
+            : undefined
+        }
+        onMouseMove={(e) =>
+          setOverRegion(
+            e.features?.some((f) => f.layer.id === "region-browse-fill") ??
+              false,
+          )
+        }
+        onMouseLeave={() => setOverRegion(false)}
         onLoad={() => {
           exposeMapForTests(mapRef.current);
           handleMapLoad();
@@ -467,6 +487,7 @@ export default function WaterwayMap({
           "region-browse-fill",
         ]}
       >
+        <MissingIconGuard />
         <NavigationControl position="top-right" showCompass={false} />
         {!minimal && <MapCompass inset={inset} />}
         <AttributionControl compact position={attributionPosition} />

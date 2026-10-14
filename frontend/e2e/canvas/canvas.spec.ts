@@ -135,27 +135,27 @@ test.describe("canvas foundation", () => {
     await expect(grip).toHaveAttribute("aria-valuemin", "340");
     await expect(grip).toHaveAttribute("aria-valuemax", "560");
     const g = await box(grip);
-    expect(g.width).toBe(12);
+    // A 44 x 64 hit box centred on the card's edge, holding a 14 x 48 tab.
+    expect(g.width).toBe(44);
+    expect(g.height).toBe(64);
     const c = await box(card(page));
-    expect(g.height).toBe(c.height);
-    expect(Math.abs(g.x + g.width - (c.x + c.width))).toBeLessThanOrEqual(1);
+    expect(Math.abs(g.x + g.width / 2 - (c.x + c.width))).toBeLessThanOrEqual(
+      1,
+    );
     const bar = grip.locator("> span");
-    expect((await box(bar)).width).toBe(4);
-    expect((await box(bar)).height).toBe(40);
+    expect((await box(bar)).width).toBe(14);
+    expect((await box(bar)).height).toBe(48);
     await grip.hover();
-    await expect.poll(async () => (await box(bar)).height).toBe(56);
-    await expect(bar).toHaveCSS("background-color", "rgb(14, 116, 144)");
-    await expect(grip).toHaveCSS("opacity", "1");
+    await expect(bar).toHaveCSS("box-shadow", /rgb\(14, 116, 144\)/);
+    // The default width is the minimum, so the handle is dimmed.
+    await expect(grip).toHaveCSS("opacity", "0.4");
     const g2 = await box(grip);
     await page.mouse.move(g2.x + g2.width / 2, g2.y + g2.height / 2);
     await page.mouse.down();
     await page.mouse.move(g2.x + g2.width / 2 + 60, g2.y + g2.height / 2, {
       steps: 6,
     });
-    // While dragging, a 2px teal line runs along the card's edge.
-    expect(
-      await grip.evaluate((el) => getComputedStyle(el, "::after").opacity),
-    ).toBe("1");
+    await expect(grip).toHaveAttribute("data-dragging", "true");
     await page.mouse.up();
     await expect
       .poll(async () => Math.round((await box(card(page))).width))
@@ -173,9 +173,11 @@ test.describe("canvas foundation", () => {
   test("a drag stops at the limits", async ({ page }) => {
     await openDemo(page, { width: 1280, height: 800 });
     const g = await box(page.getByRole("separator", { name: "Resize panel" }));
-    await page.mouse.move(g.x + 10, g.y + 100);
+    await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
     await page.mouse.down();
-    await page.mouse.move(g.x + 10 + 600, g.y + 100, { steps: 4 });
+    await page.mouse.move(g.x + g.width / 2 + 600, g.y + g.height / 2, {
+      steps: 4,
+    });
     await page.mouse.up();
     await expect
       .poll(async () => Math.round((await box(card(page))).width))
@@ -230,7 +232,7 @@ test.describe("canvas foundation", () => {
     await page.keyboard.press("Shift+ArrowLeft");
     await expect
       .poll(async () => Math.round((await box(card(page))).width))
-      .toBe(Math.round(before + 16 - 64));
+      .toBe(Math.max(340, Math.round(before + 16 - 64)));
     await page.keyboard.press("End");
     await expect
       .poll(async () => Math.round((await box(card(page))).width))
@@ -266,9 +268,11 @@ test.describe("canvas foundation", () => {
     await openDemo(page, { width: 1280, height: 800 });
     await expectSubjectInFreeArea(page);
     const g = await box(page.getByRole("separator", { name: "Resize panel" }));
-    await page.mouse.move(g.x + 10, g.y + 100);
+    await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
     await page.mouse.down();
-    await page.mouse.move(g.x + 10 + 40, g.y + 100, { steps: 8 });
+    await page.mouse.move(g.x + g.width / 2 + 40, g.y + g.height / 2, {
+      steps: 8,
+    });
     await expectSubjectInFreeArea(page);
     await page.mouse.up();
     await expectSubjectInFreeArea(page);
@@ -286,25 +290,23 @@ test.describe("canvas foundation", () => {
     await expect(page.locator(".maplibregl-map")).toHaveCount(1);
   });
 
-  test("two cards at 1024 fold the second to its header", async ({ page }) => {
-    await openDemo(page, { width: 1024, height: 800 }, "detail,list");
+  test("two cards that would cover over 70% fold the second to its header", async ({
+    page,
+  }) => {
+    await openDemo(page, { width: 900, height: 800 }, "detail,list");
     const list = card(page, "list");
-    await expect(list).toHaveAttribute("data-collapsed", "true");
+    await expect(list.and(page.locator("[data-collapsed]"))).toHaveCount(1);
     const header = list.getByRole("button", { expanded: false });
     expect(Math.round((await box(list)).height)).toBe(56);
     expect((await box(header)).height).toBeGreaterThanOrEqual(44);
-    await expect(card(page, "detail")).not.toHaveAttribute(
-      "data-collapsed",
-      "true",
-    );
+    await expect(card(page, "detail")).not.toHaveAttribute("data-collapsed");
     expect(Math.round((await box(card(page, "detail"))).width)).toBe(360);
 
     await header.click();
-    await expect(list).not.toHaveAttribute("data-collapsed", "true");
-    await expect(card(page, "detail")).toHaveAttribute(
-      "data-collapsed",
-      "true",
-    );
+    await expect(list).not.toHaveAttribute("data-collapsed");
+    await expect(
+      card(page, "detail").and(page.locator("[data-collapsed]")),
+    ).toHaveCount(1);
     expect(Math.round((await box(list)).width)).toBe(300);
   });
 
@@ -343,7 +345,8 @@ test.describe("canvas foundation", () => {
       const dock = await box(page.getByTestId("chart-dock"));
       expect(Math.abs(dock.height - expected)).toBeLessThanOrEqual(1);
       const b = await box(card(page));
-      expect(Math.abs(dock.x - (b.x + b.width))).toBeLessThanOrEqual(1);
+      // The rail starts one 8px gap past the card edge.
+      expect(Math.abs(dock.x - (b.x + b.width + 8))).toBeLessThanOrEqual(1);
       expect(Math.abs(dock.x + dock.width - (width - 16))).toBeLessThanOrEqual(
         1,
       );
@@ -387,15 +390,15 @@ test.describe("canvas foundation", () => {
     expect(renders).toBe(0);
   });
 
-  test("a real screen is unchanged: no canvas host, its own map", async ({
+  test("the map page is the canvas with one map; list screens have no host", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/");
     await appReady(page);
-    await expect(page.getByTestId("canvas-host")).toHaveCount(0);
+    await expect(page.getByTestId("canvas-host")).toHaveCount(1);
     await expect(page.locator(".maplibregl-map")).toHaveCount(1);
-    await page.goto("/logs");
+    await page.goto("/trips");
     await expect(page.getByTestId("canvas-host")).toHaveCount(0);
   });
 });

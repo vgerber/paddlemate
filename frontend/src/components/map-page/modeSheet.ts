@@ -11,11 +11,6 @@ export function modeSheetPeek(mode: SheetMode): number {
   return PEEK_CONTENT[mode] + theme.tokens.chrome.bottomNav;
 }
 
-/** How far the map's own controls sit above the screen edge to clear it. */
-export function modeSheetClearance(mode: SheetMode): number {
-  return modeSheetPeek(mode) + 12;
-}
-
 interface SheetInput {
   isMobile: boolean;
   isAreaMode: boolean;

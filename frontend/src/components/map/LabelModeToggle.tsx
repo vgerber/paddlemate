@@ -20,9 +20,8 @@ interface LabelModeToggleProps {
    * handler is omitted, the toggle is hidden. */
   featureNames?: boolean;
   onFeatureNamesChange?: (v: boolean) => void;
-  bottomOffset?: number;
-  anchor?: "top" | "bottom";
-  /** Free-area edges on a canvas screen; replaces the corner offsets. */
+  /** Free-area edges on a canvas screen; without it the key sits in the
+   * map's own top-right corner stack. */
   inset?: MapPadding;
 }
 
@@ -154,10 +153,10 @@ function LayerPaper(props: PaperProps) {
   return <Paper data-testid="map-layer-toggle" {...props} />;
 }
 
-/** On a canvas screen the layer choices are one key in the control stack, under
- * the compass, and open in a 272px popover to its left. */
+/** The layer choices are one key in the control stack, under the zoom group,
+ * and open in a 272px popover to its left. */
 function LayerKey(
-  props: Parameters<typeof Choices>[0] & { inset: MapPadding },
+  props: Parameters<typeof Choices>[0] & { inset?: MapPadding },
 ) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const { inset, ...choices } = props;
@@ -221,41 +220,8 @@ function LayerKey(
   );
 }
 
-/** Map layer controls: a floating key card with what section labels say,
- * feature-name visibility, and the satellite base layer; on a canvas screen
- * (`inset` given) one key in the control stack with a popover. */
-export default function LabelModeToggle({
-  bottomOffset = 0,
-  anchor = "bottom",
-  inset,
-  ...choices
-}: LabelModeToggleProps) {
-  if (inset) return <LayerKey {...choices} inset={inset} />;
-  const edge = { xs: 10, md: 24 };
-  return (
-    <Box
-      data-testid="map-layer-toggle"
-      sx={{
-        position: "absolute",
-        ...(anchor === "top"
-          ? { top: { xs: 14, md: 24 }, left: edge }
-          : {
-              bottom: {
-                xs: 14 + bottomOffset,
-                md: 24 + bottomOffset,
-              },
-              left: edge,
-            }),
-        zIndex: 10,
-        display: "grid",
-        gap: 1,
-        p: "10px",
-        borderRadius: `${tokens.radii.md}px`,
-        boxShadow: tokens.elevation.e2,
-        bgcolor: tokens.surface,
-      }}
-    >
-      <Choices {...choices} />
-    </Box>
-  );
+/** Map layer controls: one 44px key under the zoom group that opens what
+ * section labels say, feature-name visibility and the satellite base layer. */
+export default function LabelModeToggle(props: LabelModeToggleProps) {
+  return <LayerKey {...props} />;
 }

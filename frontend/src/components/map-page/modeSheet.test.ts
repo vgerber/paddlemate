@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { modeSheetClearance, modeSheetMode, modeSheetPeek } from "./modeSheet";
+import { modeSheetMode, modeSheetPeek } from "./modeSheet";
 
 const base = {
   isMobile: true,
@@ -36,8 +36,7 @@ describe("modeSheetMode", () => {
 });
 
 describe("peek", () => {
-  test("controls clear the peek, and the region peek is taller", () => {
-    expect(modeSheetClearance("area")).toBeGreaterThan(modeSheetPeek("area"));
+  test("the region peek is taller", () => {
     expect(modeSheetPeek("region")).toBeGreaterThan(modeSheetPeek("area"));
   });
 });

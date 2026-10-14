@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { SectionWithFeatures } from "@/lib/api";
 import { buildMapScene, type MapSceneInput, sceneSubject } from "./mapScene";
-import { modeSheetClearance } from "./modeSheet";
 
 const section = (
   id: number,
@@ -75,6 +74,7 @@ function input(over: Partial<MapSceneInput> = {}): MapSceneInput {
     setLabelMode: noop,
     visibleAreaCircle: null,
     drawnRegions: [],
+    regionsHiddenKinds: [],
     mapFeatures: undefined,
     proposedFeatures: undefined,
     notePins: [],
@@ -212,24 +212,13 @@ describe("buildMapScene", () => {
     expect(scene.regions?.onSelect).toBeUndefined();
   });
 
-  test("a phone lifts the controls above its strip, a wide screen leaves them to the canvas", () => {
+  test("a phone's attribution goes top left, a wide screen's bottom right", () => {
     const phone = buildMapScene(
       input({ isMobile: true, isMobileMapView: true }),
     );
-    expect(phone.chrome?.controlsBottomOffset).toBe(60);
     expect(phone.chrome?.attributionPosition).toBe("top-left");
     const wide = buildMapScene(input());
-    expect(wide.chrome?.controlsBottomOffset).toBe(0);
     expect(wide.chrome?.attributionPosition).toBe("bottom-right");
-  });
-
-  test("the area and region sheets lift the controls over their peek", () => {
-    const area = buildMapScene(input({ isMobile: true, isAreaMode: true }));
-    const region = buildMapScene(input({ isMobile: true, isRegionMode: true }));
-    expect(area.chrome?.controlsBottomOffset).toBe(modeSheetClearance("area"));
-    expect(region.chrome?.controlsBottomOffset).toBe(
-      modeSheetClearance("region"),
-    );
   });
 
   test("placing a note pin routes map clicks to the pin", () => {
