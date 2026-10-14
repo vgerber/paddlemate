@@ -218,28 +218,32 @@ The reasons and the work plan are in [plans/wide-canvas.md](plans/wide-canvas.md
 - **Reading rail.** From 1280 wide and 600 tall, a section (or a picked gauge)
   with a gauge shows the rail. The detail card runs the full height (16px from
   the app bar and the foot), and its foot is the reading block, as tall as the
-  rail. The chart continues to the right as the rest of the rail, starting at
-  the card's edge: one surface, one hairline, a concave fillet where the rail's
-  top meets the card. The rail is 22% of the window height, 184 to 248, and
-  floats 16px from the right and the foot. The card's order from the top:
-  header, tabs, scroll area (strip, count, rows; the river-state slot takes the
-  spare room), the docked action, the reading block. The reading block holds
-  the gauge name with the time of the newest reading (a picker with several
-  gauges), at the right the Level | Flow choice (only for a gauge that measures
-  both) and a close mark (only for a gauge picked from the map), a dot and the
-  level word, and the period as one quiet text button ("Last 7 days") that
-  opens a four-item menu upward. It has no big number and no trend: the value
-  stands at the line's right end, and a trend comes back with predictions. A
-  reading older than 3 h or three gauge intervals shows "No recent reading"
-  with no level word, and its dot is grey. The plot runs edge to edge with no
-  grid and a 2px line: threshold words (Low, Medium, High; the number is in the
-  tooltip) stand on the lines at the plot's left, no gutter, thresholds are
-  always drawn; the latest point is a ringed dot 8px short of the right edge
-  with its value beside it; the credit line is under it. Pointing at the plot
-  shows a hairline, a ring dot and a readout ("High, 78.8 cm" with the time)
-  and the block says the hovered time and level with "Latest"; leaving keeps
-  the point as a dashed hairline until "Latest". The axis steps 6 h (24h), 2
-  days (7d), 5 days (30d) or 2 months (year, with the year at January). Without
+  rail. The chart is its own card beside it, 8px from the card's edge, on the
+  same foot line and with the same corners. The rail is 22% of the window
+  height, 184 to 248, and floats 16px from the right and the foot. The card's
+  order from the top: header, tabs, scroll area (strip, count, rows; the
+  river-state card hugs its rows below them), the docked action, the reading
+  block. The reading block is a stat tile: top left the gauge name (a picker
+  with several gauges) with the time and age of the newest reading ("19:55 ·
+  10m ago"), top right the period as one quiet text button ("Last 7 days")
+  that opens a four-item menu, and a close mark only for a gauge picked from
+  the map; at the foot the latest value, large (56 to 80px with the rail
+  height, weight 600), its unit, and the level dot and word on its baseline,
+  with the Level | Flow choice at the right only for a gauge that measures
+  both. The space between holds a future outlook line, so the number never
+  moves; there is no trend until there are predictions. A reading older than
+  3 h or three gauge intervals shows "No recent reading" with no level word,
+  and its dot is grey. The plot runs edge to edge with no grid and a 2px line:
+  threshold words (Low, Medium, High; the number is in the tooltip) stand on
+  the lines at the plot's left, no gutter, thresholds are always drawn; the
+  latest point is a ringed dot 8px short of the right edge; the credit line is
+  under it. Pointing at or tapping the plot shows a hairline, a ring dot and a
+  readout ("High, 78.8 cm" with the time) in the plot only; the values pane
+  keeps the latest reading, and the point stays marked until the period or
+  the gauge changes. The axis steps 6 h (24h), 2 days (7d), 5 days (30d) or 2
+  months (year, with the year at January). The card's resize handle is a
+  14x48 tab with grip dots on its edge, half over the map (44x64 to hit),
+  teal on hover. Without
   a gauge there is no rail and
   the card ends in a 64px row "No gauge for this section" with "Link a gauge"
   (signed in; it opens the New feature form, where the gauge is chosen). Below

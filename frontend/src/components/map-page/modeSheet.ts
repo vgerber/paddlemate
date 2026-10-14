@@ -2,7 +2,7 @@ import { theme } from "@/lib/theme";
 
 /** What the area and region searches show above the bottom navigation while
  * their sheet rests at the peek: handle, mode tabs, the mode's own control. */
-const PEEK_CONTENT = { area: 214, region: 262 } as const;
+const PEEK_CONTENT = { area: 204, region: 252 } as const;
 
 export type SheetMode = keyof typeof PEEK_CONTENT;
 

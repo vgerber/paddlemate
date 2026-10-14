@@ -1121,7 +1121,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Regions overlapping a viewport, with their boundaries, for drawing region mode on the map. Which kinds come back depends on how much ground the viewport covers: states at country zoom, districts and mountain ranges in between, valleys at river zoom. Ground the server has not seen before is fetched from OSM in the background, which takes seconds for a boundary the size of a district - `filling` says that is happening and the request should be repeated shortly for the rest. An empty region list with `filling` false means the map is zoomed too far out to draw regions; the country borders still come back, clipped to the viewport, so the map can always say which country you are looking at. */
+        /** @description Regions overlapping a viewport, with their boundaries, for drawing region mode on the map. Without `kinds`, which kind comes back depends on how much ground the viewport covers: states at country zoom, districts and mountain ranges in between, valleys at river zoom. With `kinds` (comma list of valley, district, range, state) exactly those kinds come back, each up to a limit on the viewport width (valley 3, district 6, range 8, state 12 degrees); a kind past its limit is left out and named in `hidden_kinds`, so the app can ask for a closer zoom. Ground the server has not seen before is fetched from OSM in the background, which takes seconds for a boundary the size of a district - `filling` says that is happening and the request should be repeated shortly for the rest. An empty region list with `filling` false means the map is zoomed too far out to draw regions; the country borders still come back, clipped to the viewport, so the map can always say which country you are looking at. */
         get: operations["list_region_outlines"];
         put?: never;
         post?: never;
@@ -1524,6 +1524,12 @@ export interface components {
         BrowseQuery: {
             /** @description Viewport to draw regions for, as "south,west,north,east". */
             bbox: string;
+            /**
+             * @description Comma separated kinds to draw (`valley`, `district`, `range`,
+             *      `state`) instead of the one the viewport size picks. A kind the
+             *      viewport is too wide for is left out and named in `hidden_kinds`.
+             */
+            kinds?: string | null;
         };
         /**
          * @description Water-range thresholds submitted together with a new feature (create
@@ -3034,6 +3040,12 @@ export interface components {
              *      Ask again shortly for the regions that are not in yet.
              */
             filling: boolean;
+            /**
+             * @description Requested `kinds` left out because the viewport is wider than they
+             *      can be drawn at. Always empty without `kinds`.
+             * @default []
+             */
+            hidden_kinds?: string[];
             regions: components["schemas"]["RegionOutline"][];
         };
         RegionPath: {
@@ -4177,11 +4189,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-11T18:22:24.863811843Z",
-                     *         "expires_at": "2027-01-09T18:22:24.863814243Z",
+                     *         "created_at": "2026-10-14T15:19:51.819835182Z",
+                     *         "expires_at": "2027-01-12T15:19:51.819837312Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-11T18:22:24.863817133Z",
+                     *         "last_used_at": "2026-10-14T15:19:51.819839862Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4212,8 +4224,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-11T18:22:24.863951253Z",
-                     *       "expires_at": "2027-01-09T18:22:24.863951663Z",
+                     *       "created_at": "2026-10-14T15:19:51.820722816Z",
+                     *       "expires_at": "2027-01-12T15:19:51.820723306Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -7867,6 +7879,12 @@ export interface operations {
             query: {
                 /** @description Viewport to draw regions for, as "south,west,north,east". */
                 bbox: string;
+                /**
+                 * @description Comma separated kinds to draw (`valley`, `district`, `range`,
+                 *      `state`) instead of the one the viewport size picks. A kind the
+                 *      viewport is too wide for is left out and named in `hidden_kinds`.
+                 */
+                kinds?: string | null;
             };
             header?: never;
             path?: never;
@@ -7883,7 +7901,7 @@ export interface operations {
                     "application/json": components["schemas"]["RegionOutlineList"];
                 };
             };
-            /** @description Bad bbox */
+            /** @description Bad bbox or unknown kind */
             400: {
                 headers: {
                     [name: string]: unknown;

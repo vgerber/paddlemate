@@ -94,10 +94,8 @@ export function useRegionsInView(
   return {
     regions: drawn,
     countries: data?.countries ?? [],
-    // Typed by hand until the API client is regenerated with hidden_kinds.
     /** Kinds asked for that the viewport is too wide to draw. */
-    hiddenKinds:
-      (data as { hidden_kinds?: string[] } | undefined)?.hidden_kinds ?? [],
+    hiddenKinds: data?.hidden_kinds ?? [],
     /** True while the map is still waiting for regions to draw, for at most
      * GIVE_UP_MS per wait. */
     loading: waiting && !gaveUp,
