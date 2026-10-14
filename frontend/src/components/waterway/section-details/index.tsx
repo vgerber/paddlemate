@@ -188,7 +188,14 @@ export default function FeatureTimeline({
 
       <Box
         data-testid="features-scroll"
-        sx={{ flex: "0 1 auto", minHeight: 0, overflowY: { md: "auto" } }}
+        sx={{
+          flex: "0 1 auto",
+          minHeight: 0,
+          overflowY: { md: "auto" },
+          // A scroller is its own touch-action boundary: without this a tab
+          // swipe that starts on the list is taken as a scroll and cancelled.
+          touchAction: "pan-y",
+        }}
       >
         {tree.length > 0 && (
           <Box sx={{ pb: 1 }}>
