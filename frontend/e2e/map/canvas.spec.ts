@@ -9,6 +9,9 @@ import { appReady, FIX } from "../support/fixture";
 /** Corners of the "Upper Test" section line (seed.sql). */
 const SW: [number, number] = [11.0, 47.0];
 const NE: [number, number] = [11.01, 47.01];
+/** Corners of the "Lower Test" section line, the one with a gauge and rail. */
+const LOWER_SW: [number, number] = [11.01, 47.01];
+const LOWER_NE: [number, number] = [11.02, 47.02];
 
 type MapLike = {
   isMoving(): boolean;
@@ -43,7 +46,10 @@ async function box(locator: ReturnType<Page["locator"]>) {
   return b;
 }
 
-async function expectSectionInFreeArea(page: Page) {
+async function expectSectionInFreeArea(
+  page: Page,
+  corners: readonly [[number, number], [number, number]] = [SW, NE],
+) {
   await expect
     .poll(
       async () => {
@@ -51,15 +57,12 @@ async function expectSectionInFreeArea(page: Page) {
           .getByTestId("canvas-host")
           .getAttribute("data-free");
         const [x, y, w, h] = (raw ?? "").split(",").map(Number);
-        const pts = await page.evaluate(
-          ([sw, ne]) => {
-            const map = (window as unknown as { __paddlemateMap?: MapLike })
-              .__paddlemateMap;
-            if (!map || map.isMoving()) return null;
-            return { sw: map.project(sw), ne: map.project(ne) };
-          },
-          [SW, NE] as const,
-        );
+        const pts = await page.evaluate(([sw, ne]) => {
+          const map = (window as unknown as { __paddlemateMap?: MapLike })
+            .__paddlemateMap;
+          if (!map || map.isMoving()) return null;
+          return { sw: map.project(sw), ne: map.project(ne) };
+        }, corners);
         if (!pts) return "moving";
         const slack = 2;
         const inside =
@@ -110,9 +113,7 @@ test.describe("map page on the canvas", () => {
     page,
   }) => {
     await open(page, { width: 1280, height: 800 }, "/");
-    await expect(
-      card(page).getByRole("heading", { name: "Search" }).first(),
-    ).toBeVisible();
+    await expect(card(page).getByRole("tab", { name: "Name" })).toBeVisible();
     await page.goto(`/?waterway=${FIX.waterway}`);
     await expect(
       card(page).getByRole("heading", { name: "Test River" }),
@@ -133,7 +134,8 @@ test.describe("map page on the canvas", () => {
       const c = await box(card(page));
       expect(Math.abs(c.y - 72)).toBeLessThanOrEqual(1);
       expect(Math.abs(c.y + c.height - (height - 16))).toBeLessThanOrEqual(1);
-      expect(Math.abs(dock.x - (c.x + c.width))).toBeLessThanOrEqual(1);
+      // The rail starts one 8px gap past the card edge.
+      expect(Math.abs(dock.x - (c.x + c.width + 8))).toBeLessThanOrEqual(1);
       expect(Math.abs(dock.x + dock.width - (width - 16))).toBeLessThanOrEqual(
         1,
       );
@@ -144,7 +146,7 @@ test.describe("map page on the canvas", () => {
       const block = await box(card(page).getByTestId("reading-block"));
       expect(Math.abs(block.height - rail)).toBeLessThanOrEqual(1);
       await expect(page.getByTestId("chart-plot")).toBeVisible();
-      await expectSectionInFreeArea(page);
+      await expectSectionInFreeArea(page, [LOWER_SW, LOWER_NE]);
     });
   }
 
@@ -216,22 +218,18 @@ test.describe("map page on the canvas", () => {
     await expect(card(page).getByTestId("reading-block")).toBeVisible();
   });
 
-  test("the chart options open as a 300px popover over the map and leave the plot alone", async ({
+  test("the period menu opens over the map and leaves the plot alone", async ({
     page,
   }) => {
     await open(page, { width: 1440, height: 900 }, longSection);
     const before = await box(page.getByTestId("chart-plot"));
-    await card(page).getByRole("button", { name: "Chart options" }).click();
-    const pop = page.getByRole("dialog", { name: "Chart options" });
-    await expect(pop).toBeVisible();
-    const p = await box(pop);
-    const dock = await box(page.getByTestId("chart-dock"));
-    expect(Math.abs(p.width - 300)).toBeLessThanOrEqual(1);
-    expect(p.y + p.height).toBeLessThanOrEqual(dock.y);
+    await page.getByRole("button", { name: "Chart period" }).click();
+    const menu = page.getByRole("menu");
+    await expect(menu).toBeVisible();
     const during = await box(page.getByTestId("chart-plot"));
     expect(during.height).toBe(before.height);
     await page.keyboard.press("Escape");
-    await expect(pop).toBeHidden();
+    await expect(menu).toBeHidden();
   });
 
   test("the layer toggle is one key under the zoom group and opens a popover to its left", async ({
@@ -256,6 +254,10 @@ test.describe("map page on the canvas", () => {
     await page.evaluate(() => window.__paddlemateMap?.setBearing(0));
     await expect(page.getByTestId("map-layer-toggle")).toHaveCount(0);
     await key.click();
+    await expect(page.getByTestId("map-layer-toggle")).toHaveCSS(
+      "transform",
+      "none",
+    );
     const pop = await box(page.getByTestId("map-layer-toggle"));
     expect(pop.x + pop.width).toBeLessThanOrEqual(k.x);
     expect(Math.abs(pop.width - 272)).toBeLessThanOrEqual(24);
@@ -267,9 +269,7 @@ test.describe("map page on the canvas", () => {
 
   test("the card shows one header, the panel's own", async ({ page }) => {
     await open(page, { width: 1440, height: 800 });
-    await expect(
-      card(page).getByRole("heading", { name: "Search" }),
-    ).toHaveCount(1);
+    await expect(card(page).getByRole("tablist")).toHaveCount(1);
   });
 });
 

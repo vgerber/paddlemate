@@ -8,7 +8,6 @@ import type {
 import type { Feature, SectionWithFeatures } from "@/lib/api";
 import { lineCoords } from "@/lib/geo";
 import { circleBounds } from "./areaFrame";
-import { modeSheetClearance, modeSheetMode } from "./modeSheet";
 import type { MapPageState } from "./useMapPageState";
 
 /** The part of the page state the map draws and reacts to. */
@@ -29,6 +28,7 @@ const SCENE_KEYS = [
   "isRegionMode",
   "regionOutline",
   "countryBorders",
+  "regionsHiddenKinds",
   "selectRegion",
   "sectionLevels",
   "searchSectionLevels",
@@ -158,7 +158,6 @@ export function buildMapScene(input: MapSceneInput): MapScene {
     notePinPlacing,
   } = input;
   const riverOpen = selectedWaterwayId != null;
-  const sheetMode = modeSheetMode(input);
 
   return {
     sections: riverOpen ? input.sections : input.filteredSearchSections,
@@ -187,6 +186,8 @@ export function buildMapScene(input: MapSceneInput): MapScene {
       choices: riverOpen || !input.isRegionMode ? null : input.drawnRegions,
       picked: riverOpen ? null : input.regionOutline,
       borders: input.countryBorders,
+      hiddenKinds:
+        riverOpen || !input.isRegionMode ? undefined : input.regionsHiddenKinds,
       onSelect: riverOpen ? undefined : input.selectRegion,
     },
     sectionLevels: riverOpen ? input.sectionLevels : input.searchSectionLevels,
@@ -227,12 +228,6 @@ export function buildMapScene(input: MapSceneInput): MapScene {
       waterwayNames: input.waterwayNames,
       labelMode: input.labelMode,
       onLabelModeChange: input.setLabelMode,
-      controlsBottomOffset: sheetMode
-        ? modeSheetClearance(sheetMode)
-        : isMobile && input.isMobileMapView
-          ? 60
-          : 0,
-      controlsAnchor: isMobile && suggestMode === "feature" ? "top" : undefined,
       attributionPosition: isMobile ? "top-left" : "bottom-right",
     },
     subject: sceneSubject(input),

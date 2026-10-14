@@ -12,9 +12,6 @@ type MapLike = {
   project(lngLat: [number, number]): { x: number; y: number };
 };
 
-const mapOf = () =>
-  (window as unknown as { __paddlemateMap?: MapLike }).__paddlemateMap;
-
 async function waitForCircle(page: Page) {
   await expect(page).toHaveURL(/lat=.+&lon=.+&radius=10/);
   await page.waitForFunction(() => {
@@ -38,7 +35,13 @@ async function circleCentre(page: Page) {
   );
 }
 
-const zoom = (page: Page) => page.evaluate(() => mapOf()?.getZoom() ?? 0);
+const zoom = (page: Page) =>
+  page.evaluate(
+    () =>
+      (
+        window as unknown as { __paddlemateMap?: MapLike }
+      ).__paddlemateMap?.getZoom() ?? 0,
+  );
 
 test.describe("the area circle", () => {
   test("on a desktop the circle is centred in the free area", async ({

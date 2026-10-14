@@ -38,7 +38,8 @@ export function useMutedBaseMap(
         }
       }
     };
-    if (map.isStyleLoaded()) apply();
+    // isStyleLoaded() is false while tiles load, so it cannot gate this.
+    if (map.getStyle()) apply();
     map.on("style.load", apply);
     return () => {
       map.off("style.load", apply);
