@@ -9,21 +9,20 @@ import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
 import { factLabelSx } from "@/components/Fact";
+import LevelDots from "@/components/LevelDots";
 import MarkdownText from "@/components/MarkdownText";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import { stayKind } from "@/components/trips/stayKinds";
-import WaterLevelChip from "@/components/WaterLevelChip";
-import type { TripSection, TripStay } from "@/lib/api";
+import type { TripStay } from "@/lib/api";
 import { dateRange } from "@/lib/format";
 import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
-import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
+import { useSectionDotLevels } from "@/lib/hooks/useWaterStatus";
 import { durations } from "@/lib/motion";
 import { alphas, fonts, theme } from "@/lib/theme";
 import { baseColors, baseNumbers } from "@/lib/tripRange";
-import { LEVEL_ORDER, type WaterLevel } from "@/lib/waterLevel";
 import BasesMap from "./BasesMap";
 import TripCandidates from "./TripCandidates";
 import WatchList from "./WatchList";
@@ -131,24 +130,6 @@ export default function TripStays({
   );
 }
 
-/** The run on the watch list whose water is highest, if any has a level. */
-function wettestSection(
-  sections: TripSection[],
-  levels: Record<number, WaterLevel>,
-): TripSection | null {
-  let best: TripSection | null = null;
-  for (const s of sections) {
-    const level = levels[s.section_id];
-    if (!level || s.waterway_id == null) continue;
-    if (
-      !best ||
-      LEVEL_ORDER.indexOf(level) > LEVEL_ORDER.indexOf(levels[best.section_id])
-    )
-      best = s;
-  }
-  return best;
-}
-
 function StayRow({
   stay,
   color,
@@ -187,8 +168,14 @@ function StayRow({
         })),
     [stay.sections],
   );
-  const { levels } = useSectionLevels(pairs);
-  const wettest = wettestSection(stay.sections, levels);
+  const dotLevels = useSectionDotLevels(pairs);
+  const dotNames = useMemo(
+    () =>
+      stay.sections
+        .filter((s) => s.waterway_id != null)
+        .map((s) => s.section_name ?? "A run"),
+    [stay.sections],
+  );
 
   // One control per row: a row of bare icons is clutter and names nothing.
   const actions: RowAction[] = [];
@@ -223,8 +210,8 @@ function StayRow({
         overflow: "hidden",
       }}
     >
-      {/* Closed, a base is its name, when it runs, and the water level of
-          its wettest run; the list itself is what opening it is for. */}
+      {/* Closed, a base is its name, when it runs, and a dot per run on
+          its watch list; the list itself is what opening it is for. */}
       <ListItemButton
         onClick={onToggle}
         aria-expanded={isOpen}
@@ -281,12 +268,7 @@ function StayRow({
               </Typography>
             )}
           </Box>
-          {wettest && (
-            <WaterLevelChip
-              waterwayId={wettest.waterway_id ?? null}
-              sectionId={wettest.section_id}
-            />
-          )}
+          <LevelDots levels={dotLevels} names={dotNames} />
           <Chip label={label} size="small" variant="outlined" />
           <RowMenu actions={actions} label="Base actions" />
         </Box>
