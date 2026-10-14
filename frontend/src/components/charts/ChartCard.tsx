@@ -28,7 +28,11 @@ const CLOSED_HEADROOM = 6;
 // The phone height gives way on short screens but never below 160px (a taller chart pushes the strip under the FAB at 320px), so the
 // threshold labels keep clear of each other at 320px wide.
 const heights = {
-  base: { xs: "clamp(160px, 24vh, 210px)", md: "clamp(200px, 26vh, 340px)" },
+  // The phone's base grows by the free room the pane measured (--chart-extra).
+  base: {
+    xs: "calc(clamp(160px, 24vh, 210px) + var(--chart-extra, 0px))",
+    md: "clamp(200px, 26vh, 340px)",
+  },
   tall: { xs: 340, md: "clamp(280px, 42vh, 520px)" },
 } as const;
 
@@ -135,6 +139,8 @@ export default function ChartCard({
         // The pane has no side padding; every list in it sets its own 12px.
         mx: 1.5,
         mt: 1.5,
+        // The panel's gutter to the card below; from md the pane's gap does it.
+        mb: { xs: `${tokens.canvas.panel.gutter}px`, md: 0 },
         flexShrink: 0,
         bgcolor: tokens.surface,
         borderRadius: `${tokens.radii.md}px`,

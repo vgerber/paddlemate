@@ -9,6 +9,7 @@ import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useCallback, useRef, useState } from "react";
 import { useMoreBelow } from "@/components/canvas/useMoreBelow";
@@ -29,6 +30,7 @@ import {
 } from "@/components/waterway/section-details/grade";
 import { useGradeActions } from "@/components/waterway/section-details/useGradeActions";
 import { sectionLengthM } from "@/components/waterway/section-details/utils";
+import { useChartGrow } from "@/components/waterway/useChartGrow";
 import type {
   Feature,
   Proposal,
@@ -282,6 +284,8 @@ export default function WaterwayBrowsePanel({
     setPaneEl(el);
   }, []);
   const moreBelow = useMoreBelow(pane);
+  const phone = useMediaQuery(theme.breakpoints.down("md"), { noSsr: true });
+  useChartGrow(pane, phone && inFeatures && sectionDetailTab === "features");
 
   const headerTabs = inFeatures
     ? {
