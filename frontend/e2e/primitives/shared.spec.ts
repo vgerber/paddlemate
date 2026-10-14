@@ -151,7 +151,7 @@ test.describe("empty state", () => {
 
 test.describe("labels", () => {
   test("fact labels and form headings are sentence case", async ({ page }) => {
-    await page.goto("/settings?group=account");
+    await page.goto("/settings?group=language");
     const labels = page.locator(
       '[data-testid="fact-label"]:visible, [data-testid="form-section-label"]:visible',
     );
@@ -177,7 +177,7 @@ test.describe("labels", () => {
   });
 
   test("a form heading is 15px and semibold", async ({ page }) => {
-    await page.goto("/settings?group=account");
+    await page.goto("/settings?group=language");
     const heading = page.getByTestId("form-section-label").first();
     await expect(heading).toBeVisible();
     expect(await computed(heading, "font-size")).toBe("15px");
