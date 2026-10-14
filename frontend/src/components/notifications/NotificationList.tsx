@@ -107,7 +107,7 @@ export default function NotificationList({
   };
 
   return (
-    <Box sx={cards ? { display: "grid", gap: 1, p: 2 } : undefined}>
+    <Box sx={cards ? { display: "grid", gap: 1, p: 1.5 } : undefined}>
       {data.items.map((e) => (
         <NotificationRow
           key={e.id}
