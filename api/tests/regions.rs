@@ -11,6 +11,8 @@ use axum::{
 };
 use moka::future::Cache;
 use paddlemate_api::{
+    models::region::RegionKind,
+    query,
     routes::geo::geo_routes,
     state::{AppState, KeycloakState},
 };
@@ -278,4 +280,43 @@ async fn unknown_kind_is_rejected(pool: PgPool) {
         assert_eq!(status, StatusCode::BAD_REQUEST, "{kinds}");
         assert_eq!(body["error"]["target"], "kinds");
     }
+}
+
+#[sqlx::test]
+async fn every_range_in_view_is_returned_past_the_old_cap(pool: PgPool) {
+    for i in 0..200 {
+        let x = 9.0 + f64::from(i % 20) * 0.04;
+        let y = 46.0 + f64::from(i / 20) * 0.04;
+        square(&pool, &format!("R{i}"), "range", "AT", [x, y, x + 0.03, y + 0.03]).await;
+    }
+    let app = app(pool);
+    let (_, body) = get(&app, "/geo/region-outlines?bbox=45.9,8.9,46.5,10.0&kinds=range").await;
+    assert_eq!(body["regions"].as_array().unwrap().len(), 200);
+}
+
+#[sqlx::test]
+async fn cap_keeps_what_is_most_inside_the_view(pool: PgPool) {
+    // Huge overall, but only a corner of it is in view.
+    square(&pool, "Giant", "range", "AT", [5.0, 40.0, 9.05, 46.05]).await;
+    square(&pool, "Inside", "range", "AT", [9.2, 46.2, 9.4, 46.4]).await;
+    let found = query::regions::in_bbox(&pool, (46.0, 9.0, 47.0, 10.0), &[RegionKind::Range], 1)
+        .await
+        .unwrap();
+    let found: Vec<_> = found.iter().map(|r| r.name.as_str()).collect();
+    assert_eq!(found, ["Inside"]);
+}
+
+#[sqlx::test]
+async fn range_beside_the_view_is_not_returned(pool: PgPool) {
+    // Its bounding box covers the view, the area itself does not.
+    sqlx::query(
+        "INSERT INTO regions (name, kind, country, geom) VALUES ('Diagonal', 'range', 'AT',
+         ST_GeomFromText('POLYGON((8.0 45.0, 11.0 48.0, 11.0 47.5, 8.5 45.0, 8.0 45.0))', 4326))",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+    let app = app(pool);
+    let (_, body) = get(&app, "/geo/region-outlines?bbox=45.0,9.5,45.5,10.0&kinds=range").await;
+    assert!(outline_names(&body).is_empty());
 }

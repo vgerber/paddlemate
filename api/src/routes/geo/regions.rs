@@ -27,7 +27,7 @@ use crate::{
     error::{ApiError, ErrorResponse},
     models::region::{Region, RegionKind, RegionOutline, RegionOutlineList},
     query,
-    regions::{self, BROWSE_LIMIT, BrowseTier},
+    regions::{self, BrowseTier},
     state::AppState,
 };
 
@@ -161,7 +161,7 @@ pub async fn list_region_outlines(
             Ok(pending) => filling |= pending,
             Err(err) => return ApiError::from_db("listing region outlines", err).into_response(),
         }
-        match query::regions::in_bbox(&state.pg_pool, bbox, tier.kinds(), BROWSE_LIMIT).await {
+        match query::regions::in_bbox(&state.pg_pool, bbox, tier.kinds(), tier.limit()).await {
             Ok(found) => regions.extend(found),
             Err(err) => return ApiError::from_db("listing region outlines", err).into_response(),
         }
