@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { SwipeTrack } from "@/lib/hooks/useSwipeTabs";
 import { theme } from "@/lib/theme";
 import UnderlineTabs from "./UnderlineTabs";
 
@@ -25,8 +26,7 @@ interface PanelHeaderProps<T extends string> {
     onChange: (t: T) => void;
     options: { value: T; label: string }[];
     /** Swipe state from `useSwipeTabs`, so the underline follows a drag. */
-    progress?: number;
-    dragging?: boolean;
+    track?: SwipeTrack;
     /** `gestureProps` from `useSwipeTabs`, so a swipe can start on the bar. */
     gesture?: HTMLAttributes<HTMLElement>;
   };
@@ -121,8 +121,7 @@ export default function PanelHeader<T extends string>({
             value={tabs.value}
             onChange={tabs.onChange}
             items={tabs.options}
-            progress={tabs.progress}
-            dragging={tabs.dragging}
+            track={tabs.track}
           />
         </Box>
       )}

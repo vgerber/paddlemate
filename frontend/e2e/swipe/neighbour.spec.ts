@@ -6,7 +6,10 @@ import { Finger } from "../support/finger";
 
 test.use({ hasTouch: true });
 
-const GHOST = "[data-testid=swipe-ghost]";
+// Neighbours are parked offscreen ahead of time; the one being dragged in is
+// marked active.
+const GHOST = "[data-testid=swipe-ghost][data-active]";
+const PARKED = "[data-testid=swipe-ghost]";
 
 /** Drags left from 80% of `selector` by half its width and keeps the finger
  * down. The caller releases it. */
@@ -157,5 +160,16 @@ test.describe("the next tab is there while swiping", () => {
     await f.moveBy(box.width * 0.3);
     await expect(page.locator(GHOST)).toHaveCount(0);
     await f.up();
+  });
+
+  test("the neighbours are mounted before the finger moves", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop", "touch layouts only");
+    await page.goto("/trips/9001");
+    await expect(page.getByTestId("trip-pane")).toBeVisible();
+    // Parked offscreen once the page is idle, with nothing active yet.
+    await expect(page.locator(PARKED)).toHaveCount(1);
+    await expect(page.locator(GHOST)).toHaveCount(0);
   });
 });

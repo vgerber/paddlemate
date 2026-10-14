@@ -234,8 +234,7 @@ function LogsList({
         tabs={{
           value: tab,
           onChange: onTabChange,
-          progress: swipe.progress,
-          dragging: swipe.dragging,
+          track: swipe.track,
           gesture: swipe.gestureProps,
           options: [
             { value: "mine", label: "My logs" },
