@@ -113,6 +113,38 @@ test.describe("the next tab is there while swiping", () => {
     );
   });
 
+  test("trip tabs: Bases sits beside Plan mid-swipe", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop", "touch layouts only");
+    await page.goto("/trips/9001");
+    await expect(page.getByRole("tab", { name: "Bases" })).toBeVisible();
+    await expect(page.getByTestId("trip-pane")).toBeVisible();
+    const { f } = await dragHalf(page, "[data-testid=trip-pane]");
+    await expectGhostFilled(page, page.viewportSize()?.width ?? 400);
+    await page.screenshot({ path: info.outputPath("trip-mid-swipe.png") });
+    await f.up();
+    await expect(page.getByRole("tab", { name: "Bases" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await expect(page.locator(GHOST)).toHaveCount(0);
+  });
+
+  test("the first trip tab has no neighbour to the left", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop", "touch layouts only");
+    await page.goto("/trips/9001");
+    await expect(page.getByTestId("trip-pane")).toBeVisible();
+    const box = await page.getByTestId("trip-pane").boundingBox();
+    if (!box) throw new Error("no pane");
+    const f = await Finger.down(page, box.x + box.width * 0.4, box.y + 100);
+    await f.moveBy(box.width * 0.3);
+    await expect(page.locator(GHOST)).toHaveCount(0);
+    await f.up();
+  });
+
   test("the first tab has no neighbour to the left", async ({ page }, info) => {
     test.skip(info.project.name === "desktop", "touch layouts only");
     await page.goto("/?waterway=9001&section=9101");
