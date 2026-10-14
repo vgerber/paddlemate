@@ -73,23 +73,66 @@ export function useSwipeTabs({
   const busy = useRef(false);
   const timer = useRef<number | undefined>(undefined);
   const entering = useRef(false);
+  const ghostEl = useRef<HTMLElement | null>(null);
+  const sideRef = useRef<-1 | 0 | 1>(0);
+  const offsetRef = useRef(0);
+  const ghostMode = useRef(false);
+  const [side, setSideState] = useState<-1 | 0 | 1>(0);
+  const setSide = useCallback((next: -1 | 0 | 1) => {
+    sideRef.current = next;
+    setSideState(next);
+  }, []);
   const [progress, setProgress] = useState(0);
   const [dragging, setDragging] = useState(false);
 
-  const place = useCallback((x: number, ms?: number) => {
+  const placeGhost = useCallback((ms?: number) => {
+    const g = ghostEl.current;
     const el = paneRef.current;
-    if (!el) return;
-    el.style.transition =
+    if (!g || !el) return;
+    const x = offsetRef.current + sideRef.current * el.offsetWidth;
+    g.style.transition =
       ms === undefined
         ? "none"
         : transition("transform", { ms, easing: "easeInOut" });
-    el.style.transform = x === 0 ? "" : `translate3d(${x}px,0,0)`;
+    g.style.transform = `translate3d(${x}px,0,0)`;
   }, []);
+
+  const ghostRef = useCallback(
+    (el: HTMLElement | null) => {
+      ghostEl.current = el;
+      if (el) placeGhost();
+    },
+    [placeGhost],
+  );
+
+  const place = useCallback(
+    (x: number, ms?: number) => {
+      const el = paneRef.current;
+      if (!el) return;
+      el.style.transition =
+        ms === undefined
+          ? "none"
+          : transition("transform", { ms, easing: "easeInOut" });
+      el.style.transform = x === 0 ? "" : `translate3d(${x}px,0,0)`;
+      offsetRef.current = x;
+      placeGhost(ms);
+    },
+    [placeGhost],
+  );
 
   // The new pane fades in once the index has changed.
   // biome-ignore lint/correctness/useExhaustiveDependencies: index is the trigger
   useLayoutEffect(() => {
     const el = paneRef.current;
+    if (ghostMode.current) {
+      // The ghost already showed the new pane; swap without a fade.
+      ghostMode.current = false;
+      entering.current = false;
+      place(0);
+      setSide(0);
+      return;
+    }
+    setSide(0);
     if (!entering.current || !el) return;
     entering.current = false;
     const ms = prefersReducedMotion() ? REDUCED_FADE_MS / 2 : durations.instant;
@@ -106,11 +149,13 @@ export function useSwipeTabs({
     drag.current = null;
     busy.current = false;
     entering.current = false;
+    ghostMode.current = false;
     place(0);
     if (paneRef.current) paneRef.current.style.opacity = "";
+    setSide(0);
     setProgress(0);
     setDragging(false);
-  }, [place]);
+  }, [place, setSide]);
 
   const onPointerDown = (e: PointerEvent<HTMLElement>) => {
     if (!enabled || busy.current || e.pointerType === "mouse") return;
@@ -140,6 +185,8 @@ export function useSwipeTabs({
     if (d.lock !== "horizontal") return;
     d.offset = dragOffset(dx, index > 0, index < count - 1);
     d.samples.push({ x: e.clientX, t: e.timeStamp });
+    const want = d.offset > 0 ? -1 : d.offset < 0 ? 1 : sideRef.current;
+    if (want !== sideRef.current) setSide(want);
     place(d.offset);
     setProgress(dragProgress(d.offset, paneRef.current?.offsetWidth ?? 0));
   };
@@ -171,12 +218,16 @@ export function useSwipeTabs({
     const dir = target > index ? 1 : -1;
     const el = paneRef.current;
     const reduced = prefersReducedMotion();
+    const withGhost = !reduced && sideRef.current === dir;
     const commit = () => {
       entering.current = true;
       busy.current = false;
-      place(0);
-      // Hold the pane empty until the new index paints, then it fades in.
-      if (el) el.style.opacity = "0";
+      ghostMode.current = withGhost;
+      if (!withGhost) {
+        place(0);
+        // Hold the pane empty until the new index paints, then it fades in.
+        if (el) el.style.opacity = "0";
+      }
       setProgress(0);
       onIndexChange(target);
       // If the index never changes, do not leave the pane blank.
@@ -218,6 +269,8 @@ export function useSwipeTabs({
     progress,
     dragging,
     gestureProps,
+    side,
+    ghostRef,
     paneProps: {
       ref: (el: HTMLElement | null) => {
         paneRef.current = el;

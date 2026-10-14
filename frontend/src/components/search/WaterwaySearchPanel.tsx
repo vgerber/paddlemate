@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
 import DockedAction from "@/components/DockedAction";
+import { SwipeGhost } from "@/components/SwipeGhost";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -250,6 +251,49 @@ export default function WaterwaySearchPanel({
   const shownCount =
     listView === "rivers" ? visibleRivers.length : visibleSections.length;
 
+  const idle =
+    favorites.length > 0 || recentRivers.length > 0 ? (
+      <>
+        {favorites.length > 0 && (
+          <>
+            <ListGroupHeader
+              icon={<StarIcon sx={{ fontSize: 14 }} />}
+              label="Starred sections"
+            />
+            <SectionList
+              sections={favoriteSections}
+              selectedSectionId={selectedSectionId}
+              waterwayNames={Object.fromEntries(
+                favorites.map((f) => [f.waterway_id, f.waterway_name]),
+              )}
+              onSectionClick={onSectionClick}
+              favoritedIds={favoritedIds}
+              onToggleFavorite={onToggleFavorite}
+            />
+          </>
+        )}
+        <Box
+          sx={
+            favorites.length > 0 && recentRivers.length > 0
+              ? {
+                  mt: 1.5,
+                  borderTop: "1px solid",
+                  borderColor: "divider",
+                }
+              : undefined
+          }
+        >
+          <RecentRiverList rivers={recentRivers} onSelect={onSelect} />
+        </Box>
+      </>
+    ) : (
+      <EmptyState
+        icon={<SearchOutlinedIcon />}
+        title="Type a name, country or difficulty to search"
+        py={4}
+      />
+    );
+
   return (
     <Box
       sx={{
@@ -270,164 +314,158 @@ export default function WaterwaySearchPanel({
       />
 
       <Box
-        {...swipe.paneProps}
-        data-testid="search-pane"
         sx={{
           flex: 1,
           minHeight: 0,
+          position: "relative",
           display: "flex",
           flexDirection: "column",
-          overflow: "hidden",
+          overflowX: "clip",
         }}
       >
-        <SearchControls
-          filters={searchFilters}
-          total={listView === "rivers" ? riverCount : visibleSections.length}
-          areaCircle={areaCircle}
-          areaLocked={areaLocked}
-          onAreaCircleChange={onAreaCircleChange}
-          onAreaLockedChange={onAreaLockedChange}
-          onRadiusPreview={onRadiusPreview}
-          listingRegions={listingRegions}
-          regionBrowse={regionBrowse}
-        />
-
-        {showResults && (
-          <Box sx={{ px: 2, flexShrink: 0 }}>
-            <UnderlineTabs
-              value={listView}
-              onChange={setListView}
-              items={resultTabs}
-            />
-          </Box>
-        )}
-
         <Box
+          {...swipe.paneProps}
+          data-testid="search-pane"
           sx={{
             flex: 1,
-            overflowY: "auto",
-            overscrollBehavior: "contain",
-            // A scroller starts its own touch-action boundary: without this
-            // a sideways swipe is taken as a pan and the pane never sees it.
-            touchAction: "pan-y",
-            px: { xs: 1.5, md: 0 },
-            pt: 0.5,
-            pb: 1,
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
           }}
         >
-          {(isLoading || (showResults && !settled && shownCount === 0)) && (
-            <LoadingBox />
-          )}
-          {failed && !listingRegions && (
-            <ErrorState
-              error={error}
-              fallback="Could not load rivers."
-              onRetry={() => refetch()}
-              py={4}
-            />
-          )}
-          {listingRegions && (
-            <Box sx={{ px: { xs: 1, md: 2 }, pt: 1 }}>
-              <RegionSuggestions
-                query={searchFilters.regionQuery}
-                onPick={(picked) => {
-                  searchFilters.setRegion(picked);
-                  searchFilters.setRegionQuery("");
-                  // The results need the room; the map stays one drag away.
-                  sheet?.onState("open");
-                }}
+          <SearchControls
+            filters={searchFilters}
+            total={listView === "rivers" ? riverCount : visibleSections.length}
+            areaCircle={areaCircle}
+            areaLocked={areaLocked}
+            onAreaCircleChange={onAreaCircleChange}
+            onAreaLockedChange={onAreaLockedChange}
+            onRadiusPreview={onRadiusPreview}
+            listingRegions={listingRegions}
+            regionBrowse={regionBrowse}
+          />
+
+          {showResults && (
+            <Box sx={{ px: 2, flexShrink: 0 }}>
+              <UnderlineTabs
+                value={listView}
+                onChange={setListView}
+                items={resultTabs}
               />
             </Box>
           )}
-          {noInput &&
-            (favorites.length > 0 || recentRivers.length > 0 ? (
-              <>
-                {favorites.length > 0 && (
-                  <>
-                    <ListGroupHeader
-                      icon={<StarIcon sx={{ fontSize: 14 }} />}
-                      label="Starred sections"
-                    />
-                    <SectionList
-                      sections={favoriteSections}
-                      selectedSectionId={selectedSectionId}
-                      waterwayNames={Object.fromEntries(
-                        favorites.map((f) => [f.waterway_id, f.waterway_name]),
-                      )}
-                      onSectionClick={onSectionClick}
-                      favoritedIds={favoritedIds}
-                      onToggleFavorite={onToggleFavorite}
-                    />
-                  </>
-                )}
-                <Box
-                  sx={
-                    favorites.length > 0 && recentRivers.length > 0
-                      ? {
-                          mt: 1.5,
-                          borderTop: "1px solid",
-                          borderColor: "divider",
-                        }
-                      : undefined
-                  }
-                >
-                  <RecentRiverList rivers={recentRivers} onSelect={onSelect} />
-                </Box>
-              </>
-            ) : (
-              <EmptyState
-                icon={<SearchOutlinedIcon />}
-                title="Type a name, country or difficulty to search"
+
+          <Box
+            sx={{
+              flex: 1,
+              overflowY: "auto",
+              overscrollBehavior: "contain",
+              // A scroller starts its own touch-action boundary: without this
+              // a sideways swipe is taken as a pan and the pane never sees it.
+              touchAction: "pan-y",
+              px: { xs: 1.5, md: 0 },
+              pt: 0.5,
+              pb: 1,
+            }}
+          >
+            {(isLoading || (showResults && !settled && shownCount === 0)) && (
+              <LoadingBox />
+            )}
+            {failed && !listingRegions && (
+              <ErrorState
+                error={error}
+                fallback="Could not load rivers."
+                onRetry={() => refetch()}
                 py={4}
               />
-            ))}
-          {showResults &&
-            !isLoading &&
-            (settled || shownCount > 0) &&
-            listView === "rivers" && (
-              <RiverList
-                waterways={visibleRivers}
-                isLoading={isLoading}
-                hasNextPage={mode === "name" && (hasNextPage ?? false)}
-                isFetchingNextPage={isFetchingNextPage}
-                onSelect={onSelect}
-                onLoadMore={fetchNextPage}
-                pendingRivers={pendingRivers}
-                searchName={mode === "name" ? searchName : undefined}
-                onProposeRiver={
-                  onProposeRiver && mode === "name" && searchName
-                    ? () => onProposeRiver(searchName)
-                    : undefined
-                }
-              />
             )}
-          {showResults &&
-            settled &&
-            listView === "sections" &&
-            unknownShown > 0 && (
-              <Typography
-                role="status"
-                variant="caption"
-                color="textSecondary"
-                sx={{ display: "block", px: { xs: 1, md: 2 }, pt: 1 }}
-              >
-                {unknownShown === 1
-                  ? "Water level unknown for 1 section."
-                  : `Water level unknown for ${unknownShown} sections.`}
-              </Typography>
+            {listingRegions && (
+              <Box sx={{ px: { xs: 1, md: 2 }, pt: 1 }}>
+                <RegionSuggestions
+                  query={searchFilters.regionQuery}
+                  onPick={(picked) => {
+                    searchFilters.setRegion(picked);
+                    searchFilters.setRegionQuery("");
+                    // The results need the room; the map stays one drag away.
+                    sheet?.onState("open");
+                  }}
+                />
+              </Box>
             )}
-          {showResults &&
-            (settled || shownCount > 0) &&
-            listView === "sections" && (
-              <SectionList
-                sections={visibleSections}
-                selectedSectionId={selectedSectionId}
-                waterwayNames={waterwayNames}
-                onSectionClick={onSectionClick}
-                searchName={mode === "name" ? searchName : undefined}
-              />
-            )}
+            {noInput && idle}
+            {showResults &&
+              !isLoading &&
+              (settled || shownCount > 0) &&
+              listView === "rivers" && (
+                <RiverList
+                  waterways={visibleRivers}
+                  isLoading={isLoading}
+                  hasNextPage={mode === "name" && (hasNextPage ?? false)}
+                  isFetchingNextPage={isFetchingNextPage}
+                  onSelect={onSelect}
+                  onLoadMore={fetchNextPage}
+                  pendingRivers={pendingRivers}
+                  searchName={mode === "name" ? searchName : undefined}
+                  onProposeRiver={
+                    onProposeRiver && mode === "name" && searchName
+                      ? () => onProposeRiver(searchName)
+                      : undefined
+                  }
+                />
+              )}
+            {showResults &&
+              settled &&
+              listView === "sections" &&
+              unknownShown > 0 && (
+                <Typography
+                  role="status"
+                  variant="caption"
+                  color="textSecondary"
+                  sx={{ display: "block", px: { xs: 1, md: 2 }, pt: 1 }}
+                >
+                  {unknownShown === 1
+                    ? "Water level unknown for 1 section."
+                    : `Water level unknown for ${unknownShown} sections.`}
+                </Typography>
+              )}
+            {showResults &&
+              (settled || shownCount > 0) &&
+              listView === "sections" && (
+                <SectionList
+                  sections={visibleSections}
+                  selectedSectionId={selectedSectionId}
+                  waterwayNames={waterwayNames}
+                  onSectionClick={onSectionClick}
+                  searchName={mode === "name" ? searchName : undefined}
+                />
+              )}
+          </Box>
         </Box>
+        <SwipeGhost
+          swipe={swipe}
+          index={MODES.indexOf(mode)}
+          count={MODES.length}
+          sx={() => ({ display: "flex", flexDirection: "column" })}
+        >
+          {(i) => (
+            <>
+              <SearchControls
+                filters={{ ...searchFilters, mode: MODES[i] }}
+                total={0}
+                areaCircle={areaCircle}
+                areaLocked={areaLocked}
+                listingRegions={false}
+                regionBrowse={regionBrowse}
+              />
+              {MODES[i] === "name" && (
+                <Box sx={{ flex: 1, px: { xs: 1.5, md: 0 }, pt: 0.5 }}>
+                  {searchName ? <LoadingBox /> : idle}
+                </Box>
+              )}
+            </>
+          )}
+        </SwipeGhost>
       </Box>
 
       {/* Entry point for proposing a river; prefills the suggest panel with

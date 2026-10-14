@@ -21,6 +21,7 @@ import MyLogsPanel from "@/components/logs-page/MyLogsPanel";
 import SocialPanel from "@/components/logs-page/SocialPanel";
 import { useLogsScene } from "@/components/logs-page/useLogsScene";
 import PanelHeader from "@/components/PanelHeader";
+import { SwipeGhost } from "@/components/SwipeGhost";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
 import { useMyDescents } from "@/lib/hooks/useDescents";
@@ -190,6 +191,24 @@ function LogsPage() {
   );
 }
 
+const paneSx = { p: { xs: 1.5, md: 0 } };
+
+function LogsTabBody({
+  tab,
+  onOpen,
+  selectedId,
+}: {
+  tab: LogsTab;
+  onOpen: (id: number) => void;
+  selectedId?: number;
+}) {
+  return tab === "mine" ? (
+    <MyLogsPanel onOpen={onOpen} selectedId={selectedId} />
+  ) : (
+    <SocialPanel />
+  );
+}
+
 function LogsList({
   tab,
   onTabChange,
@@ -224,12 +243,18 @@ function LogsList({
           ],
         }}
       />
-      <Box {...swipe.paneProps} sx={{ p: { xs: 1.5, md: 0 } }}>
-        {tab === "mine" ? (
-          <MyLogsPanel onOpen={onOpen} selectedId={selectedId} />
-        ) : (
-          <SocialPanel />
-        )}
+      <Box sx={{ position: "relative", overflowX: "clip" }}>
+        <Box {...swipe.paneProps} sx={paneSx}>
+          <LogsTabBody tab={tab} onOpen={onOpen} selectedId={selectedId} />
+        </Box>
+        <SwipeGhost
+          swipe={swipe}
+          index={TABS.indexOf(tab)}
+          count={TABS.length}
+          sx={() => paneSx}
+        >
+          {(i) => <LogsTabBody tab={TABS[i]} onOpen={onOpen} />}
+        </SwipeGhost>
       </Box>
     </>
   );

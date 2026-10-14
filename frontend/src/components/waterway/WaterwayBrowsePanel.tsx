@@ -18,6 +18,7 @@ import PanelHeader from "@/components/PanelHeader";
 import type { EditsFilter } from "@/components/provenance/EditsTimeline";
 import SourcesTab from "@/components/provenance/SourcesTab";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
+import { SwipeGhost } from "@/components/SwipeGhost";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -252,9 +253,127 @@ export default function WaterwayBrowsePanel({
       </>
     ) : undefined;
 
-  const chartTab = inFeatures
-    ? sectionDetailTab === "features"
-    : tab === "sections" || tab === "gauges";
+  const chartTab = (t: string) =>
+    inFeatures ? t === "features" : t === "sections" || t === "gauges";
+  const tabNames: readonly string[] = inFeatures ? SECTION_TABS : RIVER_TABS;
+  const current = inFeatures ? sectionDetailTab : tab;
+  const swipeIndex = tabNames.indexOf(current);
+  const paneSx = (t: string, live: boolean) => ({
+    flex: 1,
+    overflowY: "auto",
+    // From md every tab of a section is one well: 8 round, 8 between
+    // cards. Below it the cards keep their own insets; the river's
+    // lists run edge to edge.
+    // On a phone only the features tab is a column (the river state
+    // takes the spare room).
+    display: {
+      xs: inFeatures && t === "features" ? "flex" : "block",
+      md: "flex",
+    },
+    flexDirection: "column",
+    gap: { md: `${panel.gutter}px` },
+    "& > *": { flexShrink: 0 },
+    // The features card takes the pane's room and its list scrolls
+    // inside it.
+    "& > [data-testid='features-card']": { flexShrink: { md: 1 } },
+    // A fade over the last 20px says more is below.
+    ...(live &&
+      moreBelow && {
+        maskImage:
+          "linear-gradient(to bottom, #000 calc(100% - 20px), transparent)",
+      }),
+    // Overscroll at the list edge must not chain into a document
+    // bounce - that drags the fixed overlay and shows the map
+    // behind it (the body-level rule alone does not stop chaining
+    // that starts inside a scroller).
+    overscrollBehavior: "contain",
+    py: 1,
+    ...(inFeatures && { p: { md: `${panel.gutter}px` } }),
+    // Leave room so a floating button never covers the last row.
+    // Desktop docks its actions in the row below the list, so only
+    // the panel's own FAB and the mobile speed dial need it.
+    pb:
+      showNewSectionFab || (inFeatures && (t === "features" || t === "logs"))
+        ? { xs: 9, md: inFeatures ? `${panel.gutter}px` : 0 }
+        : 1,
+  });
+  const paneBody = (t: string) => (
+    <>
+      {!isLoading && chartTab(t) && chart}
+      {isLoading ? (
+        <LoadingBox size={22} />
+      ) : inFeatures ? (
+        t === "logs" ? (
+          <SectionLogsList sectionId={selectedSection.id} />
+        ) : t === "sources" ? (
+          <SourcesTab
+            section={selectedSection}
+            filter={
+              editsFilter.sectionId === selectedSection.id
+                ? editsFilter.filter
+                : null
+            }
+            onFilterChange={(filter) =>
+              setEditsFilter({ sectionId: selectedSection.id, filter })
+            }
+            onEditFeature={featureTimeline?.onEditFeature}
+          />
+        ) : t === "notes" ? (
+          <CommentThread
+            waterwayId={waterwayId}
+            sectionId={selectedSection.id}
+            mapPin={noteMapPin}
+          />
+        ) : (
+          <>
+            <FeatureTimeline
+              section={selectedSection}
+              proposals={featureTimeline?.proposals ?? []}
+              showProposed={featureTimeline?.showProposed ?? false}
+              onFeatureClick={featureTimeline?.onFeatureClick}
+              onEditFeature={featureTimeline?.onEditFeature}
+              activeFeatureId={featureTimeline?.activeFeatureId}
+              onActiveFeatureChange={featureTimeline?.onActiveFeatureChange}
+              onOpenHistory={(filter) => {
+                setEditsFilter({ sectionId: selectedSection.id, filter });
+                onSectionDetailTabChange("sources");
+              }}
+            />
+            <Box
+              data-testid="river-state-slot"
+              sx={{
+                flex: "1 1 0",
+                mx: { xs: 1.5, md: 0 },
+                minHeight: { xs: riverState ? 96 : 0, md: 0 },
+              }}
+            >
+              {riverState}
+            </Box>
+          </>
+        )
+      ) : t === "sections" ? (
+        <SectionsList
+          sections={sections}
+          waterwayId={waterwayId}
+          selectedSectionId={selectedSectionId}
+          onSectionClick={onSectionClick}
+          descentCounts={descentCounts}
+        />
+      ) : t === "notes" ? (
+        <CommentThread
+          waterwayId={waterwayId}
+          sections={sections}
+          mapPin={noteMapPin}
+        />
+      ) : (
+        <GaugesList
+          gaugeRanges={gaugeRanges}
+          selectedGaugeId={selectedGaugeId}
+          onGaugeSelect={onGaugeSelect}
+        />
+      )}
+    </>
+  );
 
   const showNewSectionFab =
     isAuthenticated &&
@@ -373,127 +492,18 @@ export default function WaterwayBrowsePanel({
             data-testid="tab-pane"
             {...swipe.paneProps}
             ref={setPane}
-            sx={{
-              flex: 1,
-              overflowY: "auto",
-              // From md every tab of a section is one well: 8 round, 8 between
-              // cards. Below it the cards keep their own insets; the river's
-              // lists run edge to edge.
-              // On a phone only the features tab is a column (the river state
-              // takes the spare room).
-              display: {
-                xs:
-                  inFeatures && sectionDetailTab === "features"
-                    ? "flex"
-                    : "block",
-                md: "flex",
-              },
-              flexDirection: "column",
-              gap: { md: `${panel.gutter}px` },
-              "& > *": { flexShrink: 0 },
-              // The features card takes the pane's room and its list scrolls
-              // inside it.
-              "& > [data-testid='features-card']": { flexShrink: { md: 1 } },
-              // A fade over the last 20px says more is below.
-              ...(moreBelow && {
-                maskImage:
-                  "linear-gradient(to bottom, #000 calc(100% - 20px), transparent)",
-              }),
-              // Overscroll at the list edge must not chain into a document
-              // bounce - that drags the fixed overlay and shows the map
-              // behind it (the body-level rule alone does not stop chaining
-              // that starts inside a scroller).
-              overscrollBehavior: "contain",
-              py: 1,
-              ...(inFeatures && { p: { md: `${panel.gutter}px` } }),
-              // Leave room so a floating button never covers the last row.
-              // Desktop docks its actions in the row below the list, so only
-              // the panel's own FAB and the mobile speed dial need it.
-              pb:
-                showNewSectionFab ||
-                (inFeatures &&
-                  (sectionDetailTab === "features" ||
-                    sectionDetailTab === "logs"))
-                  ? { xs: 9, md: inFeatures ? `${panel.gutter}px` : 0 }
-                  : 1,
-            }}
+            sx={paneSx(current, true)}
           >
-            {!isLoading && chartTab && chart}
-            {isLoading ? (
-              <LoadingBox size={22} />
-            ) : inFeatures ? (
-              sectionDetailTab === "logs" ? (
-                <SectionLogsList sectionId={selectedSection.id} />
-              ) : sectionDetailTab === "sources" ? (
-                <SourcesTab
-                  section={selectedSection}
-                  filter={
-                    editsFilter.sectionId === selectedSection.id
-                      ? editsFilter.filter
-                      : null
-                  }
-                  onFilterChange={(filter) =>
-                    setEditsFilter({ sectionId: selectedSection.id, filter })
-                  }
-                  onEditFeature={featureTimeline?.onEditFeature}
-                />
-              ) : sectionDetailTab === "notes" ? (
-                <CommentThread
-                  waterwayId={waterwayId}
-                  sectionId={selectedSection.id}
-                  mapPin={noteMapPin}
-                />
-              ) : (
-                <>
-                  <FeatureTimeline
-                    section={selectedSection}
-                    proposals={featureTimeline?.proposals ?? []}
-                    showProposed={featureTimeline?.showProposed ?? false}
-                    onFeatureClick={featureTimeline?.onFeatureClick}
-                    onEditFeature={featureTimeline?.onEditFeature}
-                    activeFeatureId={featureTimeline?.activeFeatureId}
-                    onActiveFeatureChange={
-                      featureTimeline?.onActiveFeatureChange
-                    }
-                    onOpenHistory={(filter) => {
-                      setEditsFilter({ sectionId: selectedSection.id, filter });
-                      onSectionDetailTabChange("sources");
-                    }}
-                  />
-                  <Box
-                    data-testid="river-state-slot"
-                    sx={{
-                      flex: "1 1 0",
-                      mx: { xs: 1.5, md: 0 },
-                      minHeight: { xs: riverState ? 96 : 0, md: 0 },
-                    }}
-                  >
-                    {riverState}
-                  </Box>
-                </>
-              )
-            ) : tab === "sections" ? (
-              <SectionsList
-                sections={sections}
-                waterwayId={waterwayId}
-                selectedSectionId={selectedSectionId}
-                onSectionClick={onSectionClick}
-                descentCounts={descentCounts}
-              />
-            ) : tab === "notes" ? (
-              <CommentThread
-                waterwayId={waterwayId}
-                sections={sections}
-                mapPin={noteMapPin}
-              />
-            ) : (
-              <GaugesList
-                gaugeRanges={gaugeRanges}
-                selectedGaugeId={selectedGaugeId}
-                onGaugeSelect={onGaugeSelect}
-              />
-            )}
+            {paneBody(current)}
           </Box>
+          <SwipeGhost
+            swipe={swipe}
+            index={swipeIndex}
+            count={tabNames.length}
+            sx={(i) => paneSx(tabNames[i], false)}
+          >
+            {(i) => paneBody(tabNames[i])}
+          </SwipeGhost>
 
           {showNewSectionFab && (
             <Fab
