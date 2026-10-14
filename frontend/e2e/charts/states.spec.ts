@@ -84,7 +84,8 @@ test("the period menu opens over the map and leaves the plot alone", async ({
   await page.getByRole("button", { name: "Chart period" }).click();
   const menu = page.getByRole("menu");
   await expect(menu.getByRole("menuitem")).toHaveCount(4);
-  expect((await menu.boundingBox())?.width).toBe(200);
+  // The menu grows in; wait for its full width.
+  await expect.poll(async () => (await menu.boundingBox())?.width).toBe(200);
   expect((await dock.boundingBox())?.height ?? 0).toBe(closed.dock);
   expect(Math.abs((await plotOf()) - closed.plot)).toBeLessThanOrEqual(1);
   await page.keyboard.press("Escape");

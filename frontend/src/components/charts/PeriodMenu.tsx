@@ -83,7 +83,8 @@ export default function PeriodMenu({
                 setAnchor(null);
               }}
               sx={{
-                minHeight: tokens.touch.min,
+                // MUI's own sm+ min-height wins over a plain one.
+                "&&": { minHeight: tokens.touch.min },
                 justifyContent: "space-between",
                 fontSize: "0.875rem",
                 fontWeight: on ? 600 : 400,

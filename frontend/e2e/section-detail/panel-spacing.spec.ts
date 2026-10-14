@@ -73,7 +73,9 @@ test.describe("panel spacing", () => {
       els.map((e) => Math.round(e.getBoundingClientRect().height)),
     ))
       expect(h).toBe(56);
-    await expect(card.getByRole("button")).toHaveCount(0);
+    await expect(
+      card.locator('button, [role="button"]:not([data-row])'),
+    ).toHaveCount(0);
     const count = await card.getByTestId("features-count").boundingBox();
     expect(Math.round(count?.height ?? 0)).toBe(48);
   });
@@ -109,9 +111,15 @@ test.describe("panel spacing", () => {
     await expect(state.locator('[data-testid="ChevronRightIcon"]')).toHaveCount(
       0,
     );
-    const slot = await vis(page, "river-state-slot").boundingBox();
-    const card = await state.locator("> div").first().boundingBox();
-    expect(card?.height ?? 0).toBeLessThan((slot?.height ?? 0) - 40);
+    // The card is as tall as its rows and caption, not stretched to the slot.
+    const card = state.locator("> div").first();
+    const parts = await card
+      .locator("> *")
+      .evaluateAll((els) =>
+        els.reduce((sum, e) => sum + e.getBoundingClientRect().height, 0),
+      );
+    const box = await card.boundingBox();
+    expect(Math.abs((box?.height ?? 0) - parts)).toBeLessThan(2);
   });
 });
 

@@ -482,6 +482,13 @@ test.describe("reading block and rail", () => {
     >;
   }
 
+  /** The menu grows in; measure it once it stopped. */
+  async function settled(locator: Locator) {
+    await expect
+      .poll(async () => (await locator.boundingBox())?.height ?? 0)
+      .toBeGreaterThanOrEqual(44);
+  }
+
   async function pointAt(page: Page, fraction: number) {
     const b = await boxOf(plot(page));
     await page.mouse.move(b.x + b.width * fraction, b.y + b.height / 2);
@@ -548,6 +555,8 @@ test.describe("reading block and rail", () => {
     const button = block(page).getByRole("button", { name: "Chart period" });
     await expect(button).toContainText("Last 7 days");
     await expectTouchTargets(button);
+    // The open menu hides the page from the tree: measure the trigger first.
+    const trigger = await boxOf(button);
     await button.click();
     const items = page.getByRole("menuitem");
     await expect(items).toHaveText([
@@ -556,9 +565,9 @@ test.describe("reading block and rail", () => {
       "Last 30 days",
       "Last year",
     ]);
+    await settled(items.first());
     await expectTouchTargets(items);
     const menu = await boxOf(page.getByRole("menu"));
-    const trigger = await boxOf(button);
     expect(menu.y + menu.height).toBeLessThanOrEqual(trigger.y);
     await items.nth(2).click();
     await expect(button).toContainText("Last 30 days");
@@ -576,7 +585,7 @@ test.describe("reading block and rail", () => {
     ).toHaveCount(0);
     await expect(rail(page).locator(".recharts-cartesian-grid")).toHaveCount(0);
     const line = rail(page).locator(".recharts-area-curve").first();
-    expect(await computed(line, "stroke-width")).toBe("2px");
+    await expect(line).toHaveCSS("stroke-width", "2px");
   });
 
   test("the plot runs edge to edge in the rail", async ({ page }) => {
@@ -592,15 +601,20 @@ test.describe("reading block and rail", () => {
     );
   });
 
-  test("the latest dot sits inside the plot, with its value beside it", async ({
+  test("the latest dot sits inside the plot; the values pane holds the value", async ({
     page,
   }) => {
     await openRail(page);
     const p = await boxOf(plot(page));
     const dot = await boxOf(rail(page).getByTestId("latest-dot"));
     expect(dot.x + dot.width).toBeLessThanOrEqual(p.x + p.width);
-    await expect(rail(page).getByTestId("latest-value")).toHaveText(
-      /^\d+(\.\d)? cm$/,
+    // The number is in the values pane with its time and age, not beside the dot.
+    await expect(rail(page).getByTestId("latest-value")).toHaveCount(0);
+    await expect(block(page).getByTestId("reading-value")).toHaveText(
+      /^\d+(\.\d)?\s*cm$/,
+    );
+    await expect(block(page).getByTestId("reading-time")).toContainText(
+      /\d{2}:\d{2} · /,
     );
   });
 
@@ -662,26 +676,28 @@ test.describe("reading block and rail", () => {
     );
   });
 
-  test("pointing shows the readout and Latest; leaving keeps the point until Latest", async ({
+  test("pointing shows the readout in the plot; the values pane stays on the latest", async ({
     page,
   }) => {
     await openRail(page);
-    const latest = block(page).getByRole("button", { name: "Latest" });
-    await expect(latest).toHaveCount(0);
+    const value = block(page).getByTestId("reading-value");
+    const latestText = await value.innerText();
+    await expect(
+      block(page).getByRole("button", { name: "Latest" }),
+    ).toHaveCount(0);
     await pointAt(page, 1 / 3);
-    await expect(latest).toBeVisible();
     const readout = rail(page).getByTestId("chart-readout");
     await expect(readout).toContainText(/\d+(\.\d)? cm/);
     await expect(readout).toContainText(/, \d{2}:\d{2}/);
+    await expect(value).toHaveText(latestText);
     const before = await boxOf(block(page));
-    // Off the plot: the readout goes, the point and the block's time stay.
+    // Off the plot: the point and its readout stay, the line turns dashed.
     await page.mouse.move(5, 300);
-    await expect(readout).toHaveCount(0);
-    await expect(latest).toBeVisible();
-    await expect(rail(page).getByTestId("chart-marker-line")).toHaveCount(1);
-    await latest.click();
-    await expect(latest).toHaveCount(0);
-    await expect(rail(page).getByTestId("chart-marker-line")).toHaveCount(0);
+    await expect(readout).toHaveCount(1);
+    const marker = rail(page).getByTestId("chart-marker-line");
+    await expect(marker).toHaveCount(1);
+    await expect(marker).toHaveAttribute("stroke-dasharray", "4 4");
+    await expect(value).toHaveText(latestText);
     expect((await boxOf(block(page))).height).toBe(before.height);
   });
 
@@ -713,7 +729,23 @@ test.describe("reading block and rail", () => {
     await expect(rail(page).getByTestId("latest-dot")).toBeVisible();
     const choice = block(page).getByRole("group", { name: "Reading" });
     await expect(choice.getByRole("button")).toHaveText(["Level", "Flow"]);
-    await expectTouchTargets(choice.getByRole("button"));
+    // The key is 32px to look at; its ::after takes the rest of the 44px.
+    for (const key of await choice.getByRole("button").all()) {
+      const hit = await key.evaluate((el) => ({
+        w: el.getBoundingClientRect().width,
+        h:
+          el.getBoundingClientRect().height +
+          2 *
+            Math.max(
+              0,
+              (Number.parseFloat(getComputedStyle(el, "::after").height) -
+                el.getBoundingClientRect().height) /
+                2,
+            ),
+      }));
+      expect(hit.w).toBeGreaterThanOrEqual(44);
+      expect(hit.h).toBeGreaterThanOrEqual(44);
+    }
     await choice.getByRole("button", { name: "Flow" }).click();
     await expect(choice.getByRole("button", { name: "Flow" })).toHaveAttribute(
       "aria-pressed",

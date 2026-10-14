@@ -59,14 +59,12 @@ test.describe("features card", () => {
     }
   });
 
-  test("the facts row states the level and thresholds on a desktop card", async ({
+  test("the card holds no level facts, they live on the chart", async ({
     page,
-  }, info) => {
-    test.skip(info.project.name !== "desktop", "facts are a desktop block");
+  }) => {
     await openFeatures(page);
-    const facts = card(page).getByTestId("section-facts");
-    await expect(facts).toContainText("Level now");
-    await expect(facts).toContainText("L 60 \u00b7 M 80 \u00b7 H 120");
+    await expect(page.getByTestId("section-facts")).toHaveCount(0);
+    await expect(card(page)).not.toContainText("Level now");
   });
 
   test("text is sentence case with km in lower case", async ({ page }) => {
@@ -283,7 +281,10 @@ test.describe("features card", () => {
   }) => {
     await openFeatures(page);
     await expect(card(page).getByTestId("features-fold")).toHaveCount(0);
-    await expect(card(page).getByRole("button")).toHaveCount(0);
+    // The rows are the only buttons: a row is a ButtonBase div.
+    await expect(
+      card(page).locator('button, [role="button"]:not([data-row])'),
+    ).toHaveCount(0);
   });
 });
 
@@ -408,7 +409,9 @@ test.describe("design gaps", () => {
     expect(disc?.width).toBe(28);
     const head = await name("Slot Machine").boundingBox();
     const member = await name("Big Hole").boundingBox();
-    expect((member?.x ?? 0) - (head?.x ?? 0)).toBe(24);
+    // The band indents its members by 24, and a member row has its own 12 of
+    // left padding before the rail.
+    expect((member?.x ?? 0) - (head?.x ?? 0)).toBe(36);
     await expect(
       card(page).getByRole("button", { name: "More actions" }),
     ).toHaveCount(0);
