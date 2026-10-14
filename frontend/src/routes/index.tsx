@@ -7,7 +7,10 @@ import MapPane from "@/components/map-page/MapPane";
 import MobileOverlay from "@/components/map-page/MobileOverlay";
 import { useMapPageState } from "@/components/map-page/useMapPageState";
 import { useMapScene } from "@/components/map-page/useMapScene";
-import { parseWaterLevels } from "@/components/search/waterParam";
+import {
+  formatWaterLevels,
+  parseWaterLevels,
+} from "@/components/search/waterParam";
 import { PANEL_HEIGHT } from "@/lib/theme";
 
 export const Route = createFileRoute("/")({
@@ -36,7 +39,8 @@ export const Route = createFileRoute("/")({
     lon: search.lon != null ? Number(search.lon) : undefined,
     radius: search.radius != null ? Number(search.radius) : undefined,
     region: search.region != null ? Number(search.region) : undefined,
-    water: parseWaterLevels(search.water),
+    // Kept as the comma string the app writes; the search hook parses it.
+    water: formatWaterLevels(parseWaterLevels(search.water) ?? []),
   }),
   component: Home,
 });

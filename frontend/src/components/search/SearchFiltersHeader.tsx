@@ -1,5 +1,4 @@
 import CloseIcon from "@mui/icons-material/Close";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import Box from "@mui/material/Box";
@@ -10,7 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BottomSheet from "@/components/BottomSheet";
 import ChipRow from "@/components/ChipRow";
 import PanelHeader from "@/components/PanelHeader";
@@ -107,16 +106,19 @@ export default function SearchFiltersHeader({
           </IconButton>
         )}
       </Box>
-      <PanelHeader
-        tabs={{
-          value: filters.mode,
-          onChange: filters.setMode,
-          options: MODES,
-          progress: swipe.progress,
-          dragging: swipe.dragging,
-          gesture: swipe.gestureProps,
-        }}
-      />
+      {/* The sheet's handle row already holds 44px; pull the tabs up under it. */}
+      <Box sx={{ mt: sheet ? -1 : 0 }}>
+        <PanelHeader
+          tabs={{
+            value: filters.mode,
+            onChange: filters.setMode,
+            options: MODES,
+            progress: swipe.progress,
+            dragging: swipe.dragging,
+            gesture: swipe.gestureProps,
+          }}
+        />
+      </Box>
     </Box>
   );
 }
@@ -141,7 +143,7 @@ function SearchField({
       slotProps={{
         htmlInput: { "aria-label": label },
         input: {
-          sx: { pr: 0.5, "& input": { py: 1.75 } },
+          sx: { pr: 0.5, minHeight: 56, "& input": { py: 1.75 } },
           startAdornment: (
             <SearchIcon
               sx={{ mr: 1, color: tokens.onSurfaceVariant }}
@@ -169,18 +171,22 @@ function FilterChip({
   onClick,
   onDelete,
   plain = false,
+  testId,
 }: {
+  testId?: string;
   label: string;
   set: boolean;
-  onClick: () => void;
+  /** Absent for a chip that only shows a value and can be removed. */
+  onClick?: () => void;
   onDelete?: () => void;
-  /** No chevron: the chip toggles instead of opening something. */
+  /** A toggle inside the sheet rather than a summary chip. */
   plain?: boolean;
 }) {
   return (
     <Chip
+      data-testid={testId}
       variant="outlined"
-      clickable
+      clickable={onClick != null}
       onClick={onClick}
       onDelete={onDelete}
       aria-pressed={plain ? set : undefined}
@@ -188,6 +194,15 @@ function FilterChip({
       // A toggle in the sheet is the thing being tapped: full touch height.
       sx={{
         height: tokens.touch.min,
+        // The X is a touch target of its own.
+        "& .MuiChip-deleteIcon": {
+          position: "relative",
+          zIndex: 1,
+          m: 0,
+          mr: 0.5,
+          p: 1.25,
+          boxSizing: "content-box",
+        },
         ...(!set &&
           !plain && {
             bgcolor: tokens.surface,
@@ -195,20 +210,17 @@ function FilterChip({
             boxShadow: tokens.elevation.e1,
           }),
       }}
-      label={
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
-          {label}
-          {!onDelete && !plain && (
-            <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
-          )}
-        </Box>
-      }
+      label={label}
     />
   );
 }
 
+/** The filter a chip was tapped for; the sheet scrolls to its field. */
+type FilterField = "grade" | "country" | "water";
+
 interface FiltersSheetProps {
   open: boolean;
+  field: FilterField | null;
   onClose: () => void;
   filters: WaterwaySearchFilters;
   total: number;
@@ -218,7 +230,15 @@ function FiltersBody({
   filters,
   total,
   onClose,
+  field,
 }: Omit<FiltersSheetProps, "open">) {
+  const refs = useRef<Partial<Record<FilterField, HTMLElement | null>>>({});
+  const slot = (name: FilterField) => (el: HTMLElement | null) => {
+    refs.current[name] = el;
+  };
+  useEffect(() => {
+    if (field) refs.current[field]?.scrollIntoView({ block: "nearest" });
+  }, [field]);
   const { mode, country, minDiff, maxDiff } = filters;
   const hasAny =
     country !== "" ||
@@ -241,26 +261,43 @@ function FiltersBody({
         >
           Filters
         </Typography>
-        <Button
-          onClick={() => {
-            filters.setMinDiff("");
-            filters.setMaxDiff("");
-            filters.setCountry("");
-            filters.clearWater();
-          }}
-          disabled={!hasAny}
-        >
-          Reset
-        </Button>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Button
+            onClick={() => {
+              filters.setMinDiff("");
+              filters.setMaxDiff("");
+              filters.setCountry("");
+              filters.clearWater();
+            }}
+            disabled={!hasAny}
+          >
+            Reset
+          </Button>
+          <IconButton
+            aria-label="Close"
+            onClick={onClose}
+            sx={{
+              width: tokens.touch.min,
+              height: tokens.touch.min,
+              mr: -1,
+              color: tokens.onSurfaceVariant,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </Box>
-      <DifficultySelect
-        minDiff={minDiff}
-        maxDiff={maxDiff}
-        onMinChange={filters.setMinDiff}
-        onMaxChange={filters.setMaxDiff}
-      />
+      <Box ref={slot("grade")}>
+        <DifficultySelect
+          minDiff={minDiff}
+          maxDiff={maxDiff}
+          onMinChange={filters.setMinDiff}
+          onMaxChange={filters.setMaxDiff}
+        />
+      </Box>
       {mode !== "region" && (
         <TextField
+          ref={slot("country")}
           label="Country"
           placeholder="AT"
           value={country}
@@ -268,7 +305,7 @@ function FiltersBody({
           slotProps={{ htmlInput: { maxLength: 2 } }}
         />
       )}
-      <Box>
+      <Box ref={slot("water")}>
         <Typography
           variant="body2"
           component="span"
@@ -308,7 +345,13 @@ function FiltersBody({
 
 /** The one Filters sheet: a bottom sheet on a phone, a dialog beside the
  * map on a desktop. */
-function FiltersSheet({ open, onClose, filters, total }: FiltersSheetProps) {
+function FiltersSheet({
+  open,
+  onClose,
+  filters,
+  total,
+  field,
+}: FiltersSheetProps) {
   const desktop = useMediaQuery(theme.breakpoints.up("md"));
   if (desktop) {
     return (
@@ -320,7 +363,12 @@ function FiltersSheet({ open, onClose, filters, total }: FiltersSheetProps) {
         slotProps={{ paper: { "aria-label": "Filters" } }}
       >
         <Box sx={{ pt: 2 }}>
-          <FiltersBody filters={filters} total={total} onClose={onClose} />
+          <FiltersBody
+            filters={filters}
+            total={total}
+            onClose={onClose}
+            field={open ? field : null}
+          />
         </Box>
       </Dialog>
     );
@@ -331,7 +379,12 @@ function FiltersSheet({ open, onClose, filters, total }: FiltersSheetProps) {
       onStateChange={(s) => s === "open" || onClose()}
       label="Filters"
     >
-      <FiltersBody filters={filters} total={total} onClose={onClose} />
+      <FiltersBody
+        filters={filters}
+        total={total}
+        onClose={onClose}
+        field={open ? field : null}
+      />
     </BottomSheet>
   );
 }
@@ -365,9 +418,17 @@ export function SearchControls({
   regionBrowse,
 }: SearchControlsProps) {
   const { mode, country, minDiff, maxDiff, region } = filters;
+  const [sheetField, setSheetField] = useState<FilterField | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const grade = gradeSummary(minDiff, maxDiff);
-  const open = () => setSheetOpen(true);
+  const open = (field: FilterField) => () => {
+    setSheetField(field);
+    setSheetOpen(true);
+  };
+  const waterLabel =
+    filters.water.length > 0
+      ? `Water ${filters.water.join(", ")}`
+      : "Water now";
 
   return (
     // Spacing: 16px gutter, 12px above the controls, 6px between the field
@@ -419,32 +480,45 @@ export function SearchControls({
           {mode === "region" && region && (
             <FilterChip
               label={region.name}
+              testId="region-chip"
               set
-              onClick={() => filters.setRegionQuery(region.name)}
               onDelete={() => filters.setRegion(null)}
             />
           )}
           <FilterChip
             label={grade ? `Grade ${grade}` : "Grade"}
             set={grade !== ""}
-            onClick={open}
+            onClick={open("grade")}
+            onDelete={
+              grade !== ""
+                ? () => {
+                    filters.setMinDiff("");
+                    filters.setMaxDiff("");
+                  }
+                : undefined
+            }
           />
           {mode !== "region" && (
             <FilterChip
               label={country || "Country"}
               set={country !== ""}
-              onClick={open}
+              onClick={open("country")}
+              onDelete={
+                country !== "" ? () => filters.setCountry("") : undefined
+              }
             />
           )}
           <FilterChip
-            label="Water now"
+            label={waterLabel}
             set={filters.water.length > 0}
-            onClick={open}
+            onClick={open("water")}
+            onDelete={filters.water.length > 0 ? filters.clearWater : undefined}
           />
         </ChipRow>
       )}
       <FiltersSheet
         open={sheetOpen}
+        field={sheetField}
         onClose={() => setSheetOpen(false)}
         filters={filters}
         total={total}

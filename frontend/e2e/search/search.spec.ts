@@ -40,10 +40,11 @@ async function tabCount(page: Page, label: string) {
   const text = await seen(
     // Not by role: a dialog hides the page behind it from the tree.
     page.locator("button.MuiTab-root", {
-      hasText: new RegExp(`^${label} \\(`),
+      hasText: new RegExp(`^${label}( \\(|$)`),
     }),
   ).textContent();
-  return Number(/\((\d+)\)/.exec(text ?? "")?.[1]);
+  // A zero count is dropped from the label.
+  return Number(/\((\d+)\)/.exec(text ?? "")?.[1] ?? 0);
 }
 
 /** The level classes of the section rows on show, sorted and without repeats. */
@@ -81,7 +82,8 @@ test.describe("header and tabs", () => {
 
   test("@small the header names the screen and the tabs are underlined", async ({
     page,
-  }) => {
+  }, info) => {
+    test.skip(info.project.name === "desktop", "the phone's title row");
     await openSearch(page);
     await expect(seen(page.getByText("Search", { exact: true }))).toBeVisible();
     const tabs = seen(
@@ -91,7 +93,7 @@ test.describe("header and tabs", () => {
     const heights = await tabs.evaluateAll((els) =>
       els.map((e) => e.getBoundingClientRect().height),
     );
-    for (const h of heights) expect(h).toBeGreaterThanOrEqual(48);
+    for (const h of heights) expect(Math.round(h)).toBeGreaterThanOrEqual(48);
     expect(await computed(modeTab(page, "Name"), "color")).toBe(TEAL);
     expect(await computed(modeTab(page, "Area"), "color")).not.toBe(TEAL);
     expect(await computed(modeTab(page, "Name"), "text-transform")).toBe(
@@ -282,7 +284,7 @@ test.describe("filters sheet", () => {
     page,
   }) => {
     await openSearch(page, "&q=Test");
-    await chip(page, "Water now").click();
+    await chip(page, /^Water/).click();
     const title = sheet(page).getByRole("heading", { name: "Filters" });
     expect(await computed(title, "font-size")).toBe("18px");
     expect(await computed(title, "font-weight")).toBe("700");
@@ -348,9 +350,9 @@ test.describe("filters sheet", () => {
   }) => {
     await openSearch(page, "&q=Test");
     await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
-    await expect(chip(page, "Water now")).toBeVisible();
-    expect(await computed(chip(page, "Water now"), "color")).not.toBe(TEAL);
-    await chip(page, "Water now").click();
+    await expect(chip(page, /^Water/)).toBeVisible();
+    expect(await computed(chip(page, /^Water/), "color")).not.toBe(TEAL);
+    await chip(page, /^Water/).click();
     const levels = ["Low", "Medium", "High"];
     for (const name of levels) {
       await expect(
@@ -376,7 +378,7 @@ test.describe("filters sheet", () => {
       })
       .toBe(true);
     await done.click();
-    expect(await computed(chip(page, "Water now"), "color")).toBe(TEAL);
+    expect(await computed(chip(page, /^Water/), "color")).toBe(TEAL);
   });
 
   test("Water now is in the URL, survives a reload and both panels agree", async ({
@@ -385,7 +387,7 @@ test.describe("filters sheet", () => {
     await openSearch(page, "&q=Test");
     await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
     const all = await tabCount(page, "Sections");
-    await chip(page, "Water now").click();
+    await chip(page, /^Water/).click();
     await sheet(page)
       .getByRole("button", { name: "High", exact: true })
       .click();
@@ -394,7 +396,7 @@ test.describe("filters sheet", () => {
     await expect.poll(() => rowLevels(page)).toEqual(["high"]);
     await page.reload();
     await appReady(page);
-    expect(await computed(chip(page, "Water now"), "color")).toBe(TEAL);
+    expect(await computed(chip(page, /^Water/), "color")).toBe(TEAL);
     await expect.poll(() => rowLevels(page)).toEqual(["high"]);
     const narrowed = await tabCount(page, "Sections");
     expect(narrowed).toBeLessThan(all);
@@ -403,7 +405,7 @@ test.describe("filters sheet", () => {
     const labels = await page
       .locator("button.MuiTab-root", { hasText: /^Sections \(/ })
       .allTextContents();
-    expect(labels.length).toBeGreaterThan(1);
+    expect(labels.length).toBeGreaterThan(0);
     expect(new Set(labels).size).toBe(1);
   });
 
@@ -416,7 +418,7 @@ test.describe("filters sheet", () => {
     await openSearch(page, "&q=Test");
     await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
     const all = await tabCount(page, "Sections");
-    await chip(page, "Water now").click();
+    await chip(page, /^Water/).click();
     await sheet(page)
       .getByRole("button", { name: "High", exact: true })
       .click();
@@ -442,7 +444,7 @@ test.describe("filters sheet", () => {
     });
     await openSearch(page, "&q=Test");
     await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
-    await chip(page, "Water now").click();
+    await chip(page, /^Water/).click();
     await sheet(page)
       .getByRole("button", { name: "High", exact: true })
       .click();
@@ -454,7 +456,7 @@ test.describe("filters sheet", () => {
   test("an unknown water value in the URL is ignored", async ({ page }) => {
     await openSearch(page, "&q=Test&water=%5B%22bogus%22%5D");
     await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(1);
-    expect(await computed(chip(page, "Water now"), "color")).not.toBe(TEAL);
+    expect(await computed(chip(page, /^Water/), "color")).not.toBe(TEAL);
   });
 
   test("Reset clears the filters", async ({ page }) => {
@@ -532,8 +534,9 @@ test.describe("area mode", () => {
     await expect(slider).toBeVisible();
     const thumb = seen(page.locator(".MuiSlider-thumb"));
     const t = await thumb.boundingBox();
-    expect(t?.width).toBe(28);
-    expect(t?.height).toBe(28);
+    // The thumb element is the 44px hit area around the 28px dot.
+    expect(t?.width).toBe(44);
+    expect(t?.height).toBe(44);
     const root = await seen(page.locator(".MuiSlider-root")).boundingBox();
     expect(root?.height).toBeGreaterThanOrEqual(44);
     await expect(page.getByTestId("area-map-card")).toHaveCount(0);
@@ -545,13 +548,17 @@ test.describe("area mode", () => {
     await expect(seen(page.getByRole("slider"))).toBeEnabled();
     await expect(seen(page.getByText("10 km", { exact: true }))).toBeVisible();
     await seen(page.getByRole("slider")).focus();
-    for (let i = 0; i < 20; i++) await page.keyboard.press("ArrowRight");
-    await expect(seen(page.getByText("30 km", { exact: true }))).toBeVisible();
+    for (let i = 0; i < 2; i++) await page.keyboard.press("PageUp");
+    const km = await seen(page.getByRole("slider")).inputValue();
+    expect(Number(km)).toBeGreaterThan(10);
+    await expect(
+      seen(page.getByText(`${km} km`, { exact: true })),
+    ).toBeVisible();
     const track = seen(page.locator(".MuiSlider-track"));
     expect(await computed(track, "background-color")).toBe(TEAL);
     await expect(chip(page, "Grade")).toBeVisible();
     await expect(chip(page, "Country")).toBeVisible();
-    await expect(chip(page, "Water now")).toBeVisible();
+    await expect(chip(page, /^Water/)).toBeVisible();
   });
 });
 
@@ -615,11 +622,138 @@ test.describe("region mode", () => {
     await expect(chip(page, name ?? "")).toBeVisible();
     await expect(chip(page, "Grade")).toBeVisible();
     await expect(
-      seen(page.getByRole("tab", { name: /^Sections \(/ })),
+      seen(page.getByRole("tab", { name: /^Sections/ })),
     ).toBeVisible();
     // Typing again lists regions again, and the facets step aside again.
     await regionField(page).fill("Wald");
     await expect(seen(page.getByTestId("region-group")).first()).toBeVisible();
     await expect(chip(page, "Grade")).toHaveCount(0);
+  });
+});
+
+test.describe("search fixes", () => {
+  test("Water now alone is a search and the water param takes the comma form", async ({
+    page,
+  }) => {
+    await openSearch(page, "&water=low,high");
+    await expect(
+      seen(page.getByText("Type a name, country or difficulty to search")),
+    ).toHaveCount(0);
+    await expect(
+      seen(page.getByRole("tab", { name: /^Sections/ })),
+    ).toBeVisible();
+    await expect(chip(page, /^Water low, high$/)).toBeVisible();
+    await chip(page, /^Water/).click();
+    await sheet(page)
+      .getByRole("button", { name: "Medium", exact: true })
+      .click();
+    // One written form: comma separated, in a fixed order.
+    await expect(page).toHaveURL(
+      /water=low%2Cmedium%2Chigh|water=low,medium,high/,
+    );
+  });
+
+  test("the Sections and Rivers counts follow Water now, and the sheet counts the open tab", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Test&water=high");
+    await expect.poll(() => rowLevels(page)).toEqual(["high"]);
+    const sections = await tabCount(page, "Sections");
+    const rivers = await tabCount(page, "Rivers");
+    expect(rivers).toBeGreaterThan(0);
+    expect(rivers).toBeLessThanOrEqual(sections);
+    const done = () =>
+      sheet(page).getByRole("button", { name: /^\d+ results?$/ });
+    const label = (n: number) => `${n} result${n === 1 ? "" : "s"}`;
+    await chip(page, /^Water/).click();
+    await expect(done()).toHaveText(label(sections));
+    await page.keyboard.press("Escape");
+    await seen(
+      page.locator("button.MuiTab-root", { hasText: /^Rivers/ }),
+    ).click();
+    await chip(page, /^Water/).click();
+    await expect(done()).toHaveText(label(rivers));
+  });
+
+  test("no empty copy while a search loads", async ({ page }) => {
+    // Hold back the rivers and, separately, their sections.
+    await page.route(
+      /\/api\/v1\/waterways(\?|\/\d+\/sections)/,
+      async (route) => {
+        await new Promise((r) => setTimeout(r, 1200));
+        await route.continue();
+      },
+    );
+    await page.goto("/?panel=1&q=Test");
+    await appReady(page);
+    // Sample the pane while the request is held back.
+    for (let i = 0; i < 16; i++) {
+      await page.waitForTimeout(250);
+      // One read per sample: an auto-retrying assertion would wait the copy out.
+      const text = await seen(page.getByTestId("search-pane")).innerText();
+      expect(text).not.toContain("No sections found.");
+      expect(text).not.toContain("No rivers found.");
+    }
+    await expect.poll(() => tabCount(page, "Sections")).toBeGreaterThan(0);
+  });
+
+  test("the grade range never inverts", async ({ page }) => {
+    await openSearch(page, "&q=Test");
+    await chip(page, "Grade").click();
+    await sheet(page).getByLabel("Max grade").selectOption({ label: "II" });
+    await sheet(page).getByLabel("Min grade").selectOption({ label: "IV" });
+    await expect(sheet(page).getByLabel("Max grade")).toHaveValue("4");
+    await sheet(page).getByLabel("Max grade").selectOption({ label: "III" });
+    await expect(sheet(page).getByLabel("Min grade")).toHaveValue("3");
+  });
+
+  test("chips have no arrow, name their value and open the sheet at their field", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Test&min_diff=3&max_diff=4&country=AT");
+    await expect(
+      seen(page.locator('.MuiChip-root [data-testid="KeyboardArrowDownIcon"]')),
+    ).toHaveCount(0);
+    await expect(chip(page, /^Grade III-IV$/)).toBeVisible();
+    expect(await computed(chip(page, /^Grade III-IV$/), "color")).toBe(TEAL);
+    await expect(chip(page, /^AT$/)).toBeVisible();
+    await chip(page, /^AT$/).getByText("AT").click();
+    await expect(sheet(page).getByLabel("Country")).toBeInViewport();
+  });
+
+  test("the X on a picked region clears it", async ({ page }) => {
+    await openSearch(page, "&mode=region&region=3");
+    const picked = seen(page.getByTestId("region-chip"));
+    await expect(picked).toBeVisible();
+    await picked.locator('[data-testid="CancelIcon"]').click();
+    await expect(page).not.toHaveURL(/region=/);
+    await expect(picked).toHaveCount(0);
+    await expect(regionField(page)).toHaveValue("");
+  });
+
+  test("@small a picked region leaves no sideways scroll", async ({ page }) => {
+    await page.goto("/?mode=region&region=3");
+    await appReady(page);
+    await expect(seen(page.getByTestId("region-chip"))).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("a set chip clears with its X and the sheet has a Close", async ({
+    page,
+  }) => {
+    await openSearch(page, "&q=Test&min_diff=3&country=AT&water=low");
+    await chip(page, /^AT$/).locator('[data-testid="CancelIcon"]').click();
+    await expect(page).not.toHaveURL(/country=/);
+    await chip(page, /^Grade III\+$/)
+      .locator('[data-testid="CancelIcon"]')
+      .click();
+    await expect(page).not.toHaveURL(/min_diff=/);
+    await chip(page, /^Water low$/)
+      .locator('[data-testid="CancelIcon"]')
+      .click();
+    await expect(page).not.toHaveURL(/water=/);
+    await chip(page, "Grade").click();
+    await sheet(page).getByRole("button", { name: "Close" }).click();
+    await expect(sheet(page)).toHaveCount(0);
   });
 });

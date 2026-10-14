@@ -5,6 +5,7 @@ import type { AreaCircle } from "@/lib/geo";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useRegionOutline } from "@/lib/hooks/useRegions";
 import type { WaterLevel } from "@/lib/waterLevel";
+import { formatWaterLevels, parseWaterLevels } from "./waterParam";
 
 export type SearchMode = "name" | "area" | "region";
 
@@ -51,7 +52,7 @@ export function useWaterwaySearchFilters(
     max_diff?: number;
     mode?: "area" | "region";
     region?: number;
-    water?: WaterLevel[];
+    water?: string;
   };
 
   // Mode and region live in the URL rather than in state: clicking a region
@@ -68,6 +69,9 @@ export function useWaterwaySearchFilters(
         search: (prev) => ({
           ...prev,
           mode: next === "name" ? undefined : next,
+          // Name is the full-screen list on a phone; without panel the
+          // search would fall back to the bare map.
+          panel: next === "name" ? true : prev.panel,
           region: next === "region" ? prev.region : undefined,
           ...(next === "area"
             ? {}
@@ -93,16 +97,19 @@ export function useWaterwaySearchFilters(
   const [regionQuery, setRegionQuery] = useState("");
   // In the URL like grade and country, so a reload keeps it and both mounted
   // panels (sidebar and phone overlay) read the same value.
-  const water = useMemo(() => urlSearch.water ?? [], [urlSearch.water]);
+  const water = useMemo(
+    () => parseWaterLevels(urlSearch.water) ?? [],
+    [urlSearch.water],
+  );
   const toggleWater = useCallback(
     (level: WaterLevel) =>
       navigate({
         search: (prev) => {
-          const current = prev.water ?? [];
+          const current = parseWaterLevels(prev.water) ?? [];
           const next = current.includes(level)
             ? current.filter((l) => l !== level)
             : [...current, level];
-          return { ...prev, water: next.length > 0 ? next : undefined };
+          return { ...prev, water: formatWaterLevels(next) };
         },
         replace: true,
       }),
@@ -118,8 +125,25 @@ export function useWaterwaySearchFilters(
   );
   const [name, setName] = useState(urlSearch.q ?? "");
   const [country, setCountry] = useState(urlSearch.country ?? "");
-  const [minDiff, setMinDiff] = useState<number | "">(urlSearch.min_diff ?? "");
-  const [maxDiff, setMaxDiff] = useState<number | "">(urlSearch.max_diff ?? "");
+  const [minDiff, setMinDiffRaw] = useState<number | "">(
+    urlSearch.min_diff ?? "",
+  );
+  const [maxDiff, setMaxDiffRaw] = useState<number | "">(
+    urlSearch.max_diff ?? "",
+  );
+  // The range never inverts: moving one end past the other drags it along.
+  const setMinDiff = useCallback((next: number | "") => {
+    setMinDiffRaw(next);
+    setMaxDiffRaw((max) =>
+      next !== "" && max !== "" && max < next ? next : max,
+    );
+  }, []);
+  const setMaxDiff = useCallback((next: number | "") => {
+    setMaxDiffRaw(next);
+    setMinDiffRaw((min) =>
+      next !== "" && min !== "" && min > next ? next : min,
+    );
+  }, []);
   // The URL carries the id only; the outline query is what names it, and the
   // map needs it anyway - one request serves the picker and the boundary.
   const { data: regionOutline } = useRegionOutline(regionId);
@@ -157,11 +181,19 @@ export function useWaterwaySearchFilters(
         per_page: 100,
       };
     }
-    // No criteria - don't fetch all.
-    if (!searchName && !debouncedCountry && minDiff === "" && maxDiff === "") {
+    // No criteria - don't fetch all. Water now counts: the levels are applied
+    // to the sections of whatever rivers come back.
+    if (
+      !searchName &&
+      !debouncedCountry &&
+      minDiff === "" &&
+      maxDiff === "" &&
+      water.length === 0
+    ) {
       return null;
     }
     return {
+      per_page: water.length > 0 && !searchName ? 100 : undefined,
       name: searchName || undefined,
       country: debouncedCountry || undefined,
       min_difficulty: minDiff !== "" ? minDiff : undefined,
@@ -175,6 +207,7 @@ export function useWaterwaySearchFilters(
     debouncedCountry,
     minDiff,
     maxDiff,
+    water,
   ]);
 
   // Sync filter state to URL

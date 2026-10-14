@@ -127,7 +127,6 @@ export default function WaterwaySearchPanel({
   // The server decides what matches: it also searches translations and rapid
   // names, tolerates misspellings, and folds characters the browser cannot.
   // Re-filtering here could only drop rows it deliberately returned.
-  const visibleRivers = waterways;
 
   // Own pending river proposals - shown as disabled "pending approval" entries
   const pendingRivers = usePendingRiverProposals(searchName, mode === "name");
@@ -153,7 +152,7 @@ export default function WaterwaySearchPanel({
         : [],
     [water, allSections],
   );
-  const { levels, unknown } = useSectionLevels(levelPairs);
+  const { statuses, levels, unknown } = useSectionLevels(levelPairs);
   // Only sections known to be at a chosen level are listed. The ones whose
   // level could not be read are left out and counted in a note, so the list
   // never claims a level it cannot show.
@@ -170,6 +169,16 @@ export default function WaterwaySearchPanel({
   const unknownShown =
     water.length > 0 ? allSections.filter((s) => unknown.has(s.id)).length : 0;
 
+  // With Water now on, a river counts when one of its sections is at a chosen
+  // level, so the Rivers tab agrees with the Sections tab.
+  const visibleRivers = useMemo(() => {
+    if (water.length === 0) return waterways;
+    const ids = new Set(visibleSections.map((s) => s.waterway_id));
+    return waterways.filter((w) => ids.has(w.id));
+  }, [water, waterways, visibleSections]);
+  const riverCount =
+    water.length > 0 ? visibleRivers.length : total + pendingRivers.length;
+
   useEffect(() => {
     onWaterwaysChange?.(waterways.map((w) => w.id));
   }, [waterways, onWaterwaysChange]);
@@ -180,10 +189,14 @@ export default function WaterwaySearchPanel({
 
   // Area and region searches draw every hit on the map, so pull all pages
   useEffect(() => {
-    if (mode !== "name" && hasNextPage && !isFetchingNextPage) {
+    if (
+      (mode !== "name" || water.length > 0) &&
+      hasNextPage &&
+      !isFetchingNextPage
+    ) {
       fetchNextPage();
     }
-  }, [mode, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [mode, water, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Favorites lack the localization arrays of SectionWithFeatures; fill
   // them so the list renders without lying about the type.
@@ -219,11 +232,16 @@ export default function WaterwaySearchPanel({
     // not look like the search found more.
     {
       value: "rivers" as ListView,
-      label: countedLabel("Rivers", total + pendingRivers.length),
+      label: countedLabel("Rivers", riverCount),
     },
   ];
 
   const noInput = !hasFilters && mode === "name";
+  // Empty copy is for a finished search only.
+  const settled =
+    !isLoading && !sectionsPending && !statuses.some((q) => q.isPending);
+  const shownCount =
+    listView === "rivers" ? visibleRivers.length : visibleSections.length;
 
   return (
     <Box
@@ -257,7 +275,7 @@ export default function WaterwaySearchPanel({
       >
         <SearchControls
           filters={searchFilters}
-          total={water.length > 0 ? visibleSections.length : total}
+          total={listView === "rivers" ? riverCount : visibleSections.length}
           areaCircle={areaCircle}
           areaLocked={areaLocked}
           onAreaCircleChange={onAreaCircleChange}
@@ -290,7 +308,9 @@ export default function WaterwaySearchPanel({
             pb: 1,
           }}
         >
-          {isLoading && <LoadingBox />}
+          {(isLoading || (showResults && !settled && shownCount === 0)) && (
+            <LoadingBox />
+          )}
           {failed && !listingRegions && (
             <ErrorState
               error={error}
@@ -306,7 +326,8 @@ export default function WaterwaySearchPanel({
                 onPick={(picked) => {
                   searchFilters.setRegion(picked);
                   searchFilters.setRegionQuery("");
-                  sheet?.onState("peek");
+                  // The results need the room; the map stays one drag away.
+                  sheet?.onState("open");
                 }}
               />
             </Box>
@@ -353,44 +374,52 @@ export default function WaterwaySearchPanel({
                 py={4}
               />
             ))}
-          {showResults && listView === "rivers" && (
-            <RiverList
-              waterways={visibleRivers}
-              isLoading={isLoading}
-              hasNextPage={mode === "name" && (hasNextPage ?? false)}
-              isFetchingNextPage={isFetchingNextPage}
-              onSelect={onSelect}
-              onLoadMore={fetchNextPage}
-              pendingRivers={pendingRivers}
-              searchName={mode === "name" ? searchName : undefined}
-              onProposeRiver={
-                onProposeRiver && mode === "name" && searchName
-                  ? () => onProposeRiver(searchName)
-                  : undefined
-              }
-            />
-          )}
-          {showResults && listView === "sections" && unknownShown > 0 && (
-            <Typography
-              role="status"
-              variant="caption"
-              color="textSecondary"
-              sx={{ display: "block", px: { xs: 1, md: 2 }, pt: 1 }}
-            >
-              {unknownShown === 1
-                ? "Water level unknown for 1 section."
-                : `Water level unknown for ${unknownShown} sections.`}
-            </Typography>
-          )}
-          {showResults && listView === "sections" && (
-            <SectionList
-              sections={visibleSections}
-              selectedSectionId={selectedSectionId}
-              waterwayNames={waterwayNames}
-              onSectionClick={onSectionClick}
-              searchName={mode === "name" ? searchName : undefined}
-            />
-          )}
+          {showResults &&
+            !isLoading &&
+            (settled || shownCount > 0) &&
+            listView === "rivers" && (
+              <RiverList
+                waterways={visibleRivers}
+                isLoading={isLoading}
+                hasNextPage={mode === "name" && (hasNextPage ?? false)}
+                isFetchingNextPage={isFetchingNextPage}
+                onSelect={onSelect}
+                onLoadMore={fetchNextPage}
+                pendingRivers={pendingRivers}
+                searchName={mode === "name" ? searchName : undefined}
+                onProposeRiver={
+                  onProposeRiver && mode === "name" && searchName
+                    ? () => onProposeRiver(searchName)
+                    : undefined
+                }
+              />
+            )}
+          {showResults &&
+            settled &&
+            listView === "sections" &&
+            unknownShown > 0 && (
+              <Typography
+                role="status"
+                variant="caption"
+                color="textSecondary"
+                sx={{ display: "block", px: { xs: 1, md: 2 }, pt: 1 }}
+              >
+                {unknownShown === 1
+                  ? "Water level unknown for 1 section."
+                  : `Water level unknown for ${unknownShown} sections.`}
+              </Typography>
+            )}
+          {showResults &&
+            (settled || shownCount > 0) &&
+            listView === "sections" && (
+              <SectionList
+                sections={visibleSections}
+                selectedSectionId={selectedSectionId}
+                waterwayNames={waterwayNames}
+                onSectionClick={onSectionClick}
+                searchName={mode === "name" ? searchName : undefined}
+              />
+            )}
         </Box>
       </Box>
 
