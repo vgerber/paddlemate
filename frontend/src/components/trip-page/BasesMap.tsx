@@ -3,6 +3,7 @@ import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import { factLabelSx } from "@/components/Fact";
 import WaterwayMap from "@/components/map/Map";
+import { useIsSwipeGhost } from "@/components/SwipeGhost";
 import { theme } from "@/lib/theme";
 import { rangeBounds } from "@/lib/tripRange";
 import { useBasesScene } from "./useBasesScene";
@@ -23,6 +24,7 @@ export default function BasesMap({
   isMember: boolean;
 }) {
   const { ranges, rings, watched, isEmpty } = useBasesScene(tripId, isMember);
+  const ghost = useIsSwipeGhost();
   const focusBounds = useMemo(() => rangeBounds(ranges), [ranges]);
 
   // Nothing placed yet is the normal state early on, and an empty map says
@@ -46,13 +48,24 @@ export default function BasesMap({
           position: "relative",
         }}
       >
-        <WaterwayMap
-          sections={watched}
-          rings={rings}
-          camera={{ focusBounds }}
-          // The tab scrolls past the map, so zoom needs Ctrl/two fingers.
-          chrome={{ cooperativeGestures: true }}
-        />
+        {/* A map never mounts in a swipe preview. */}
+        {ghost ? (
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              bgcolor: theme.tokens.surfaceLow,
+            }}
+          />
+        ) : (
+          <WaterwayMap
+            sections={watched}
+            rings={rings}
+            camera={{ focusBounds }}
+            // The tab scrolls past the map, so zoom needs Ctrl/two fingers.
+            chrome={{ cooperativeGestures: true }}
+          />
+        )}
       </Box>
       <Typography
         sx={{ ...factLabelSx, fontSize: "0.8125rem", fontWeight: 400 }}

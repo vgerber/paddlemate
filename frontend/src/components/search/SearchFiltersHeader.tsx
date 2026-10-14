@@ -14,6 +14,7 @@ import BottomSheet from "@/components/BottomSheet";
 import ChipRow from "@/components/ChipRow";
 import PanelHeader from "@/components/PanelHeader";
 import type { AreaCircle } from "@/lib/geo";
+import type { SwipeTrack } from "@/lib/hooks/useSwipeTabs";
 import { theme } from "@/lib/theme";
 import type { WaterLevel } from "@/lib/waterLevel";
 import AreaControls from "./AreaControls";
@@ -44,8 +45,7 @@ interface SearchFiltersHeaderProps {
   filters: WaterwaySearchFilters;
   /** Swipe state from `useSwipeTabs`, so the underline follows a drag. */
   swipe: {
-    progress: number;
-    dragging: boolean;
+    track: SwipeTrack;
     gestureProps: React.HTMLAttributes<HTMLElement>;
   };
   onClose?: () => void;
@@ -115,8 +115,7 @@ export default function SearchFiltersHeader({
             value: filters.mode,
             onChange: filters.setMode,
             options: MODES,
-            progress: swipe.progress,
-            dragging: swipe.dragging,
+            track: swipe.track,
             gesture: swipe.gestureProps,
           }}
         />

@@ -1,10 +1,12 @@
 import ChartCard from "@/components/charts/ChartCard";
+import { ChartSkeleton } from "@/components/charts/ChartStatus";
 import { useChartPanelState } from "@/components/charts/chartState";
 import ReadingChart, {
   type ChartPlacement,
 } from "@/components/charts/ReadingChart";
 import WaterChart from "@/components/charts/water/WaterChart";
 import { GaugeAttributions } from "@/components/GaugeAttribution";
+import { useIsSwipeGhost } from "@/components/SwipeGhost";
 import type { WaterRangeWithStatus } from "@/lib/api";
 
 interface GaugeChartPanelProps {
@@ -22,6 +24,7 @@ export default function GaugeChartPanel({
   onClose,
   placement,
 }: GaugeChartPanelProps) {
+  const ghost = useIsSwipeGhost();
   const { timeRange, setTimeRange, measurementType, setMeasurementType } =
     useChartPanelState();
 
@@ -51,15 +54,19 @@ export default function GaugeChartPanel({
       onDismiss={onClose}
       footer={footer}
     >
-      {(headroom) => (
-        <WaterChart
-          ranges={ranges}
-          showThresholds={false}
-          timeRange={timeRange}
-          measurementType={measurementType}
-          headroom={headroom}
-        />
-      )}
+      {(headroom) =>
+        ghost ? (
+          <ChartSkeleton />
+        ) : (
+          <WaterChart
+            ranges={ranges}
+            showThresholds={false}
+            timeRange={timeRange}
+            measurementType={measurementType}
+            headroom={headroom}
+          />
+        )
+      }
     </ChartCard>
   );
 }

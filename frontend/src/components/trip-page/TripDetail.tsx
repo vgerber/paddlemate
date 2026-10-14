@@ -265,8 +265,7 @@ export default function TripDetail({
           value: tab,
           onChange: setTab,
           options: tabs.map((t) => ({ value: t.value, label: t.label })),
-          progress: swipe.progress,
-          dragging: swipe.dragging,
+          track: swipe.track,
           gesture: swipe.gestureProps,
         }}
       />

@@ -3,8 +3,8 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
-  useState,
 } from "react";
 import {
   css,
@@ -35,6 +35,21 @@ interface Options {
 /** Elements that keep their own horizontal gesture (a chip row, a slider, a
  * zoomed chart) opt out with this attribute. */
 export const NO_SWIPE_ATTR = "data-no-swipe";
+
+/** What a swipe tells its listeners, with no React render in between: `down`
+ * a finger landed, `move` it is dragging, `settle` it let go and the pane is
+ * animating to `progress`, `done` the tabs have the final state. `progress` is
+ * -1 to 1, positive toward the next tab. */
+export interface SwipeEvent {
+  phase: "down" | "move" | "settle" | "done";
+  progress: number;
+}
+
+/** A swipe's progress as a subscription: the tab bar and the neighbour panes
+ * follow it by writing to the DOM, so a drag never re-renders the screen. */
+export interface SwipeTrack {
+  subscribe: (listener: (e: SwipeEvent) => void) => () => void;
+}
 
 /** Time for the old pane to leave the rest of its way: `instant` for a short
  * hop to `fast` for a full width. The new pane's `instant` fade starts only
@@ -67,43 +82,56 @@ export function useSwipeTabs({
     x0: number;
     y0: number;
     lock: Lock;
+    width: number;
     offset: number;
     samples: Sample[];
   } | null>(null);
   const busy = useRef(false);
   const timer = useRef<number | undefined>(undefined);
   const entering = useRef(false);
-  const ghostEl = useRef<HTMLElement | null>(null);
+  const ghostEls = useRef<Record<string, HTMLElement | null>>({});
   const sideRef = useRef<-1 | 0 | 1>(0);
   const offsetRef = useRef(0);
   const ghostMode = useRef(false);
-  const [side, setSideState] = useState<-1 | 0 | 1>(0);
-  const setSide = useCallback((next: -1 | 0 | 1) => {
-    sideRef.current = next;
-    setSideState(next);
-  }, []);
-  const [progress, setProgress] = useState(0);
-  const [dragging, setDragging] = useState(false);
-
-  const placeGhost = useCallback((ms?: number) => {
-    const g = ghostEl.current;
-    const el = paneRef.current;
-    if (!g || !el) return;
-    const x = offsetRef.current + sideRef.current * el.offsetWidth;
-    g.style.transition =
-      ms === undefined
-        ? "none"
-        : transition("transform", { ms, easing: "easeInOut" });
-    g.style.transform = `translate3d(${x}px,0,0)`;
-  }, []);
-
-  const ghostRef = useCallback(
-    (el: HTMLElement | null) => {
-      ghostEl.current = el;
-      if (el) placeGhost();
-    },
-    [placeGhost],
+  const listeners = useRef(new Set<(e: SwipeEvent) => void>());
+  const track = useMemo<SwipeTrack>(
+    () => ({
+      subscribe: (fn) => {
+        listeners.current.add(fn);
+        return () => {
+          listeners.current.delete(fn);
+        };
+      },
+    }),
+    [],
   );
+  const emit = useCallback((e: SwipeEvent) => {
+    for (const fn of listeners.current) fn(e);
+  }, []);
+
+  // Percent offsets are of the ghost's own width, which is the pane's, so no
+  // layout read is needed while the finger moves.
+  const placeGhosts = useCallback((ms?: number) => {
+    for (const key of ["-1", "1"]) {
+      const g = ghostEls.current[key];
+      if (!g) continue;
+      g.style.transition =
+        ms === undefined
+          ? "none"
+          : transition("transform", { ms, easing: "easeInOut" });
+      g.style.transform = `translate3d(calc(${offsetRef.current}px + ${Number(key) * 100}%),0,0)`;
+      if (sideRef.current === Number(key)) g.setAttribute("data-active", "");
+      else g.removeAttribute("data-active");
+    }
+  }, []);
+
+  const ghostRef = useMemo(() => {
+    const make = (side: -1 | 1) => (el: HTMLElement | null) => {
+      ghostEls.current[String(side)] = el;
+      if (el) placeGhosts();
+    };
+    return { "-1": make(-1), "1": make(1) };
+  }, [placeGhosts]);
 
   const place = useCallback(
     (x: number, ms?: number) => {
@@ -115,9 +143,9 @@ export function useSwipeTabs({
           : transition("transform", { ms, easing: "easeInOut" });
       el.style.transform = x === 0 ? "" : `translate3d(${x}px,0,0)`;
       offsetRef.current = x;
-      placeGhost(ms);
+      placeGhosts(ms);
     },
-    [placeGhost],
+    [placeGhosts],
   );
 
   // The new pane fades in once the index has changed.
@@ -129,10 +157,14 @@ export function useSwipeTabs({
       ghostMode.current = false;
       entering.current = false;
       place(0);
-      setSide(0);
+      sideRef.current = 0;
+      placeGhosts();
+      emit({ phase: "done", progress: 0 });
       return;
     }
-    setSide(0);
+    sideRef.current = 0;
+    placeGhosts();
+    emit({ phase: "done", progress: 0 });
     if (!entering.current || !el) return;
     entering.current = false;
     const ms = prefersReducedMotion() ? REDUCED_FADE_MS / 2 : durations.instant;
@@ -150,12 +182,11 @@ export function useSwipeTabs({
     busy.current = false;
     entering.current = false;
     ghostMode.current = false;
+    sideRef.current = 0;
     place(0);
     if (paneRef.current) paneRef.current.style.opacity = "";
-    setSide(0);
-    setProgress(0);
-    setDragging(false);
-  }, [place, setSide]);
+    emit({ phase: "done", progress: 0 });
+  }, [place, emit]);
 
   const onPointerDown = (e: PointerEvent<HTMLElement>) => {
     if (!enabled || busy.current || e.pointerType === "mouse") return;
@@ -166,9 +197,11 @@ export function useSwipeTabs({
       x0: e.clientX,
       y0: e.clientY,
       lock: "pending",
+      width: 0,
       offset: 0,
       samples: [{ x: e.clientX, t: e.timeStamp }],
     };
+    emit({ phase: "down", progress: 0 });
   };
 
   const onPointerMove = (e: PointerEvent<HTMLElement>) => {
@@ -179,16 +212,15 @@ export function useSwipeTabs({
       d.lock = lockDirection(dx, e.clientY - d.y0);
       if (d.lock === "horizontal") {
         e.currentTarget.setPointerCapture(e.pointerId);
-        setDragging(true);
+        d.width = paneRef.current?.offsetWidth ?? 0;
       }
     }
     if (d.lock !== "horizontal") return;
     d.offset = dragOffset(dx, index > 0, index < count - 1);
     d.samples.push({ x: e.clientX, t: e.timeStamp });
-    const want = d.offset > 0 ? -1 : d.offset < 0 ? 1 : sideRef.current;
-    if (want !== sideRef.current) setSide(want);
+    sideRef.current = d.offset > 0 ? -1 : d.offset < 0 ? 1 : sideRef.current;
     place(d.offset);
-    setProgress(dragProgress(d.offset, paneRef.current?.offsetWidth ?? 0));
+    emit({ phase: "move", progress: dragProgress(d.offset, d.width) });
   };
 
   const onPointerUp = (e: PointerEvent<HTMLElement>) => {
@@ -196,7 +228,7 @@ export function useSwipeTabs({
     if (!d || e.pointerId !== d.id) return;
     drag.current = null;
     if (d.lock !== "horizontal") return;
-    const width = paneRef.current?.offsetWidth ?? 0;
+    const width = d.width;
     d.samples.push({ x: e.clientX, t: e.timeStamp });
     const target = targetIndex(
       index,
@@ -205,11 +237,10 @@ export function useSwipeTabs({
       releaseVelocity(d.samples),
       width,
     );
-    setDragging(false);
 
     if (target === index) {
       busy.current = true;
-      setProgress(0);
+      emit({ phase: "settle", progress: 0 });
       place(0, settleDuration(d.offset, width));
       timer.current = window.setTimeout(reset, settleDuration(d.offset, width));
       return;
@@ -228,7 +259,6 @@ export function useSwipeTabs({
         // Hold the pane empty until the new index paints, then it fades in.
         if (el) el.style.opacity = "0";
       }
-      setProgress(0);
       onIndexChange(target);
       // If the index never changes, do not leave the pane blank.
       timer.current = window.setTimeout(() => {
@@ -236,7 +266,7 @@ export function useSwipeTabs({
       }, durations.slow);
     };
     busy.current = true;
-    setProgress(dir);
+    emit({ phase: "settle", progress: dir });
     if (reduced) {
       const half = REDUCED_FADE_MS / 2;
       if (el) {
@@ -266,10 +296,8 @@ export function useSwipeTabs({
   };
 
   return {
-    progress,
-    dragging,
+    track,
     gestureProps,
-    side,
     ghostRef,
     paneProps: {
       ref: (el: HTMLElement | null) => {

@@ -408,8 +408,7 @@ export default function WaterwayBrowsePanel({
 
   const headerTabs = inFeatures
     ? {
-        progress: swipe.progress,
-        dragging: swipe.dragging,
+        track: swipe.track,
         gesture: swipe.gestureProps,
         value: sectionDetailTab as string,
         onChange: (t: string) =>
@@ -422,8 +421,7 @@ export default function WaterwayBrowsePanel({
         ],
       }
     : {
-        progress: swipe.progress,
-        dragging: swipe.dragging,
+        track: swipe.track,
         gesture: swipe.gestureProps,
         value: tab as string,
         onChange: (t: string) => onTabChange(t as DetailTab),

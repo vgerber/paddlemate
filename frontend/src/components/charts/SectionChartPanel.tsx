@@ -7,6 +7,7 @@ import ReadingChart, {
 } from "@/components/charts/ReadingChart";
 import WaterChart from "@/components/charts/water/WaterChart";
 import { GaugeAttributions } from "@/components/GaugeAttribution";
+import { useIsSwipeGhost } from "@/components/SwipeGhost";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
 
 interface SectionChartPanelProps {
@@ -41,6 +42,7 @@ export default function SectionChartPanel({
     error,
     refetch,
   } = useWaterStatus(waterwayId, sectionId);
+  const ghost = useIsSwipeGhost();
   const { timeRange, setTimeRange, measurementType, setMeasurementType } =
     useChartPanelState();
 
@@ -83,7 +85,7 @@ export default function SectionChartPanel({
         {(headroom) =>
           isError ? (
             <ChartError error={error} onRetry={() => refetch()} />
-          ) : isLoading ? (
+          ) : isLoading || ghost ? (
             <ChartSkeleton />
           ) : (
             <WaterChart
