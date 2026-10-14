@@ -305,6 +305,15 @@ impl BrowseTier {
         }
     }
 
+    /// Most outlines of this tier returned for one viewport.
+    pub fn limit(self) -> i64 {
+        match self {
+            BrowseTier::Ranges => RANGE_LIMIT,
+            _ => BROWSE_LIMIT,
+        }
+    }
+
+    /// Kinds of region this tier draws.
     pub fn kinds(self) -> &'static [RegionKind] {
         match self {
             BrowseTier::Countries => &[RegionKind::Country],
@@ -475,9 +484,13 @@ pub async fn store_outline(
     .await
 }
 
-/// Most regions drawn for one viewport. Past this the map is a thicket of
-/// outlines and the answer is to zoom in.
-pub const BROWSE_LIMIT: i64 = 120;
+/// Most regions drawn for one viewport of a tier. Past this the map is a
+/// thicket of outlines and the answer is to zoom in.
+const BROWSE_LIMIT: i64 = 120;
+
+/// Mountain ranges are few and large: the Alps hold about 190 in an
+/// eight degree view, and cutting at 120 dropped the small groups.
+const RANGE_LIMIT: i64 = 300;
 
 /// Most tiles one request will fetch. A viewport at the state tier can be
 /// two dozen tiles short, and fetching their union as one box means asking

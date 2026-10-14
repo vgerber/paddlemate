@@ -245,7 +245,8 @@ pub async fn fetch(pool: &PgPool, id: i64) -> Result<Option<RegionOutline>, sqlx
 }
 
 /// Every stored region of the given kinds overlapping a viewport, largest
-/// first. Reads only what is already imported; filling the viewport from OSM
+/// first. When more than `limit` overlap, the ones with the most ground
+/// inside the viewport are kept, not the ones that are biggest overall. Reads only what is already imported; filling the viewport from OSM
 /// is the browse module's job.
 pub async fn in_bbox(
     pool: &PgPool,
@@ -265,11 +266,16 @@ pub async fn in_bbox(
              SELECT id, name, kind, country, rank,
                     ST_SimplifyPreserveTopology({drawn}, $7) AS drawn
              FROM (
-                 SELECT *, ROW_NUMBER() OVER ({BY_SIZE}) AS rank FROM regions
-                 WHERE kind = ANY($1)
-                   AND geom && ST_MakeEnvelope($2, $3, $4, $5, 4326)
-                 {BY_SIZE}
-                 LIMIT $6
+                 SELECT *, ROW_NUMBER() OVER ({BY_SIZE}) AS rank FROM (
+                     SELECT * FROM regions
+                     WHERE kind = ANY($1)
+                       AND geom && ST_MakeEnvelope($2, $3, $4, $5, 4326)
+                       AND (match_radius_m > 0
+                            OR ST_Intersects(geom, ST_MakeEnvelope($2, $3, $4, $5, 4326)))
+                     ORDER BY ST_Area(ST_Intersection(ST_Envelope(geom),
+                                      ST_MakeEnvelope($2, $3, $4, $5, 4326))) DESC, name
+                     LIMIT $6
+                 ) cut
              ) picked
          )
          SELECT {OUTLINE_COLUMNS}, {BBOX_COLUMNS},

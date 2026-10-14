@@ -202,7 +202,10 @@ kind over its limit is omitted and named in `hidden_kinds`, so the app can say
 "Zoom in to see districts". An unknown kind is a 400. The background OSM fill
 and `region_tiles` work per kind either way, and `filling` is true while any
 requested kind still has ground missing. Each kind returns at most
-`BROWSE_LIMIT` (120) outlines, thinned to about a pixel of the viewport
+120 outlines (ranges 300, `BrowseTier::limit`) - past that the ones with the
+most ground inside the viewport win, not the biggest overall; shapes whose
+bounding box overlaps the viewport but whose area does not are left out.
+Outlines are thinned to about a pixel of the viewport
 (span / 1500) so a Europe-wide state view is under 1 MB and answers in about
 0.7 s.
 
