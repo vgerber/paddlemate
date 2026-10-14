@@ -176,6 +176,9 @@ export default function BottomSheet({
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
             sx={{
+              // Above content that is pulled up under the handle's foot.
+              position: "relative",
+              zIndex: 1,
               touchAction: "none",
               cursor: "grab",
               flexShrink: 0,

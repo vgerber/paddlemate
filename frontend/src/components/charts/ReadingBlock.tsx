@@ -102,7 +102,7 @@ function GaugeName({
               onGauge(g.id);
               setAnchor(null);
             }}
-            sx={{ minHeight: tokens.touch.min }}
+            sx={{ "&&": { minHeight: tokens.touch.min } }}
           >
             {g.name}
           </MenuItem>

@@ -106,8 +106,10 @@ export default function SearchFiltersHeader({
           </IconButton>
         )}
       </Box>
-      {/* The sheet's handle row already holds 44px; pull the tabs up under it. */}
-      <Box sx={{ mt: sheet ? -1 : 0 }}>
+      {/* The handle row holds 44px and keeps them (it stacks above); the tabs
+          slide up under its foot so the labels start about 20px below the
+          bar, the panel's 8/16/24 rhythm, not 30. */}
+      <Box sx={{ mt: sheet ? "-18px" : 0 }}>
         <PanelHeader
           tabs={{
             value: filters.mode,
