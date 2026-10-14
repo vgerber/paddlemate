@@ -99,10 +99,10 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 | Screen | What defines it |
 |---|---|
 | Section detail | The chart: from 1280 the reading block at the card's foot and the plot in the rail beside it, below that a card at the top of the pane (reading, plot, the credit and the period; on a phone the chart with an options button that opens reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide; hidden for no rows, a single row, or put-in and take-out only); a graded range over 80% or more of the run is the section's grade, so it leaves the rows, strip and count (`sectionGrade` in `section-details/grade.ts`, shown in the card subtitle), with the hardest harder stretch in brackets; the count line reads "n features · m proposed"; a section with nothing but a grade reads "No rapids, hazards or access points yet."; the river state block (hazard, last paddled, latest note, open proposals) fills the card's spare room as a card that hugs its rows; the section's history opens from the Sources tab, a feature's from its open row |
-| Search | Tabs Name, Area, Region; a Filters sheet (country, grade, Water now); the chosen levels live in the `water` URL param |
+| Search | Tabs Name, Area, Region; the empty Name view lists starred sections and recent rivers, each river ending in `LevelDots` for its sections; a Filters sheet (country, grade, Water now); the chosen levels live in the `water` URL param |
 | Map region mode | The search panel (a peek sheet on a phone, the card on desktop) with the region field, level chips, and "Part of" naming the parents of a picked region; the regions stay visible on the map |
 | Logs | Two panes on desktop; the date is a picker field |
-| Trips | Plan, Bases, Members and Logs tabs; the Plan pins a week strip with a dot on days that have runs and opens to a month; its days read in three states - past quiet (sunk ground, no shadow, grey heading), today ringed in teal, upcoming white with a hairline outline; bases and candidate bases; admins get Add member and the trip actions |
+| Trips | Plan, Bases, Members and Logs tabs; the Plan pins a week strip with a dot on days that have runs and opens to a month; its days read in three states - past quiet (sunk ground, no shadow, grey heading), today ringed in teal, upcoming white with a hairline outline; bases and candidate bases (a closed base ends in a `LevelDots` row, one dot per run on its watch list); admins get Add member and the trip actions |
 | Proposals | The diff shows the before struck through next to the after; reviewing opens a dialog |
 | Settings | Two panes on desktop; Profile, Inbox and Tools on a phone; an access token is shown once, when made |
 
@@ -114,7 +114,10 @@ Components for each live in the matching folder under `frontend/src/components/`
   selected state, the primary action, the picked region on the map.
 - **Water levels** are reserved for meaning and never decorate: low green,
   medium amber, high red (a solid fill with white text, the loudest thing on a
-  row), empty grey with a hollow dot. Levels are token *pairs*:
+  row), empty grey with a hollow dot. `LevelDots` is one 8px dot per section in
+  those colours: grey filled is unknown (no gauge, no thresholds, or a reading
+  older than a day), a grey ring is too low; the row carries one label such as
+  "2 of 4 sections running". Levels are token *pairs*:
   `levels.<x>.marker` for map geometry, `levels.<x>.text`/`bg` for chips. Inside
   a chart card the level reading is neutral: the thresholds already show it.
 - **Map feature markers** use the Okabe-Ito colorblind-safe palette.

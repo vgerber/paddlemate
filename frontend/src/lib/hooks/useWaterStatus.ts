@@ -1,6 +1,7 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { waterStatusApi } from "@/lib/api";
+import { type DotLevel, dotLevel } from "@/lib/levelDots";
 import { createLimiter } from "@/lib/limiter";
 import { maxLevel, type WaterLevel } from "@/lib/waterLevel";
 import { waterwayKeys } from "./useWaterways";
@@ -84,4 +85,13 @@ export function useSectionLevels(
     return { levels: map, unknown: unknownIds };
   }, [statuses, pairs]);
   return { statuses, levels, unknown };
+}
+
+/** One dot level per pair, in order, from the same cached statuses the chips
+ * use. A section still being asked is unknown until it answers. */
+export function useSectionDotLevels(
+  pairs: { waterwayId: number; sectionId: number }[],
+): DotLevel[] {
+  const statuses = useSectionWaterStatuses(pairs);
+  return statuses.map((q) => dotLevel(q.data));
 }
