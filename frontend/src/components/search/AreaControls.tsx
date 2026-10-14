@@ -62,7 +62,20 @@ export default function AreaControls({
             flex: 1,
             // 28px to look at, a 44px band to hit.
             py: `${(tokens.touch.min - 4) / 2}px`,
-            "& .MuiSlider-thumb": { width: 28, height: 28 },
+            // The thumb element is the 44px hit area; the dot is its ::after.
+            "& .MuiSlider-thumb": {
+              width: tokens.touch.min,
+              height: tokens.touch.min,
+              bgcolor: "transparent",
+              boxShadow: "none",
+              "&::after": {
+                width: 28,
+                height: 28,
+                bgcolor: tokens.primary,
+              },
+              "&:hover::after, &.Mui-focusVisible::after, &.Mui-active::after":
+                { boxShadow: `0 0 0 8px ${tokens.primary}29` },
+            },
           }}
         />
         <Typography

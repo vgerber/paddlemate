@@ -42,8 +42,22 @@ only match exactly.
 
 The search screen has three tabs: **Name**, **Area** and **Region**. A
 **Filters** sheet holds country, grade and **Water now** (low, medium, high).
-The chosen water levels are kept in the URL (`water`), so a filtered search can
-be linked or reloaded.
+The chosen water levels are kept in the URL (`water=low,high`; the JSON array
+form is read too), so a filtered search can be linked or reloaded. Water now on
+its own is a search: it lists the sections at those levels across all rivers.
+
+- A filter chip shows no arrow. Once set it is teal and names its value
+  ("Grade III-IV", "AT", "Water low, high"); a tap opens the Filters sheet
+  scrolled to that filter's field.
+- The grade range never inverts: moving Min above Max (or Max below Min) moves
+  the other end with it.
+- Each result tab has one count, and with Water now on both tabs count what is
+  at those levels. The sheet's "N results" button counts the open tab.
+- Empty copy ("No sections found.") appears only after a finished search; while
+  a search or its sections load, a spinner shows alone.
+- A picked region is a chip with an X that clears it (URL, outline and
+  results); editing is a tap on the region field. On a phone a pick opens the
+  sheet to show the results.
 
 ## Searching by place
 
