@@ -43,6 +43,7 @@ export default function SidebarContent({
     setSelectedWaterwayId,
     setSelectedSectionId,
     setSearchWaterwayIds,
+    setShownSearchSections,
     handleAreaCircleChange,
     handleSectionClick,
     handleGaugeSelect,
@@ -113,6 +114,7 @@ export default function SidebarContent({
           setSuggestMode("waterway");
         }}
         onWaterwaysChange={setSearchWaterwayIds}
+        onShownSectionsChange={setShownSearchSections}
         areaCircle={areaCircle}
         onAreaCircleChange={handleAreaCircleChange}
         areaLocked={areaLocked}

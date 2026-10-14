@@ -49,6 +49,7 @@ its own is a search: it lists the sections at those levels across all rivers.
 - A filter chip shows no arrow. Once set it is teal and names its value
   ("Grade III-IV", "AT", "Water low, high"); a tap opens the Filters sheet
   scrolled to that filter's field.
+- While any filter is set the map draws only the sections the list shows (grade, country, Water now, name scope), with their put-in and take-out markers; an open river always draws in full. Clearing the filters draws everything again.
 - The grade range never inverts: moving Min above Max (or Max below Min) moves
   the other end with it.
 - Each result tab has one count, and with Water now on both tabs count what is

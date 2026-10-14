@@ -42,6 +42,8 @@ const MODES: SearchMode[] = ["name", "area", "region"];
 interface WaterwaySearchPanelProps {
   onSelect: (waterwayId: number) => void;
   onWaterwaysChange?: (ids: number[]) => void;
+  /** The sections the list shows, for the map to draw the same ones. */
+  onShownSectionsChange?: (sections: SectionWithFeatures[]) => void;
   areaCircle?: AreaCircle | null;
   onAreaCircleChange?: (circle: AreaCircle | null) => void;
   areaLocked?: boolean;
@@ -72,6 +74,7 @@ interface WaterwaySearchPanelProps {
 export default function WaterwaySearchPanel({
   onSelect,
   onWaterwaysChange,
+  onShownSectionsChange,
   areaCircle,
   onAreaCircleChange,
   areaLocked,
@@ -182,6 +185,10 @@ export default function WaterwaySearchPanel({
   useEffect(() => {
     onWaterwaysChange?.(waterways.map((w) => w.id));
   }, [waterways, onWaterwaysChange]);
+
+  useEffect(() => {
+    onShownSectionsChange?.(visibleSections);
+  }, [visibleSections, onShownSectionsChange]);
 
   useEffect(() => {
     onLoadingChange?.(isLoading);

@@ -15,7 +15,7 @@ const SCENE_KEYS = [
   "selectedWaterwayId",
   "selectedSectionId",
   "sections",
-  "filteredSearchSections",
+  "mapSearchSections",
   "suggestMode",
   "suggestGaugePins",
   "gaugePins",
@@ -100,7 +100,7 @@ type SubjectInput = Pick<
   | "selectedWaterwayId"
   | "selectedSectionId"
   | "sections"
-  | "filteredSearchSections"
+  | "mapSearchSections"
   | "visibleAreaCircle"
   | "regionOutline"
 >;
@@ -141,9 +141,9 @@ export function sceneSubject(input: SubjectInput): MapSubject | null {
       ],
     };
   }
-  const results = boundsOf(input.filteredSearchSections);
+  const results = boundsOf(input.mapSearchSections);
   if (!results) return null;
-  const ids = input.filteredSearchSections.map((s) => s.id);
+  const ids = input.mapSearchSections.map((s) => s.id);
   return { key: `results:${ids.join(",")}`, bounds: results };
 }
 
@@ -160,7 +160,7 @@ export function buildMapScene(input: MapSceneInput): MapScene {
   const riverOpen = selectedWaterwayId != null;
 
   return {
-    sections: riverOpen ? input.sections : input.filteredSearchSections,
+    sections: riverOpen ? input.sections : input.mapSearchSections,
     features: input.mapFeatures,
     selectedSectionId,
     onSectionClick: suggestMode ? undefined : input.handleSectionClick,

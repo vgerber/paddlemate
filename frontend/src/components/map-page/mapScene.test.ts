@@ -39,7 +39,7 @@ function input(over: Partial<MapSceneInput> = {}): MapSceneInput {
     selectedWaterwayId: undefined,
     selectedSectionId: undefined,
     sections: [upper, lower],
-    filteredSearchSections: [found],
+    mapSearchSections: [found],
     suggestMode: null,
     suggestGaugePins: [],
     gaugePins: [],
@@ -165,7 +165,7 @@ describe("sceneSubject", () => {
 
   test("the key changes with the results", () => {
     const a = sceneSubject(input());
-    const b = sceneSubject(input({ filteredSearchSections: [found, upper] }));
+    const b = sceneSubject(input({ mapSearchSections: [found, upper] }));
     expect(a?.key).not.toBe(b?.key);
   });
 });

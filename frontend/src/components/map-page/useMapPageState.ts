@@ -7,7 +7,11 @@ import type {
   SectionDetailTab,
   SuggestMode,
 } from "@/components/waterway/types";
-import { type Feature, proposalsApi } from "@/lib/api";
+import {
+  type Feature,
+  proposalsApi,
+  type SectionWithFeatures,
+} from "@/lib/api";
 import { useFavorites } from "@/lib/hooks/useFavorites";
 import { useFilteredSections } from "@/lib/hooks/useFilteredSections";
 import { useGaugeData } from "@/lib/hooks/useGaugeData";
@@ -60,6 +64,23 @@ export function useMapPageState(search: RouteSearch) {
     useState<SectionDetailTab>("features");
   const [selectedGaugeId, setSelectedGaugeId] = useState<number | null>(null);
   const [searchWaterwayIds, setSearchWaterwayIds] = useState<number[]>([]);
+  // The sections the search panel lists, after its own matching (name scope,
+  // Water now). Null until a panel reports; the map then draws all results.
+  const [shownSearchSections, setShownRaw] = useState<
+    SectionWithFeatures[] | null
+  >(null);
+  // Same sections, same state: the panel recomputes its list on many renders.
+  const setShownSearchSections = useCallback(
+    (next: SectionWithFeatures[]) =>
+      setShownRaw((prev) =>
+        prev &&
+        prev.length === next.length &&
+        prev.every((s, i) => s === next[i])
+          ? prev
+          : next,
+      ),
+    [],
+  );
   const [labelMode, setLabelMode] = useState<"section" | "river">("section");
   const [areaLocked, setAreaLocked] = useState(false);
   // The level chips narrow which regions the map draws.
@@ -351,6 +372,15 @@ export function useMapPageState(search: RouteSearch) {
     maxDiff: max_diff,
   });
 
+  // What the map draws of the search: the panel's list, plus the open section.
+  const mapSearchSections = useMemo(() => {
+    if (!shownSearchSections) return filteredSearchSections;
+    const open = filteredSearchSections.find((s) => s.id === selectedSectionId);
+    return open && !shownSearchSections.includes(open)
+      ? [...shownSearchSections, open]
+      : shownSearchSections;
+  }, [shownSearchSections, filteredSearchSections, selectedSectionId]);
+
   const sectionIds = useMemo(() => sections.map((s) => s.id), [sections]);
   const shouldFetchGauges = selectedWaterwayId != null;
   const sectionPairs = useMemo(
@@ -382,12 +412,12 @@ export function useMapPageState(search: RouteSearch) {
   const searchSectionPairs = useMemo(
     () =>
       selectedWaterwayId == null
-        ? filteredSearchSections.slice(0, 60).map((s) => ({
+        ? mapSearchSections.slice(0, 60).map((s) => ({
             waterwayId: s.waterway_id,
             sectionId: s.id,
           }))
         : [],
-    [selectedWaterwayId, filteredSearchSections],
+    [selectedWaterwayId, mapSearchSections],
   );
   const { levels: searchSectionLevels } = useSectionLevels(searchSectionPairs);
 
@@ -471,6 +501,8 @@ export function useMapPageState(search: RouteSearch) {
     setSelectedGaugeId,
     searchWaterwayIds,
     setSearchWaterwayIds,
+    shownSearchSections,
+    setShownSearchSections,
     labelMode,
     setLabelMode,
     areaLocked,
@@ -527,6 +559,7 @@ export function useMapPageState(search: RouteSearch) {
     // Data
     sections,
     filteredSearchSections,
+    mapSearchSections,
     waterwayNames,
     isAreaSearchLoading,
     areSearchSectionsPending,
