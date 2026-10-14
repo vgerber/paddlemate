@@ -32,7 +32,14 @@ export default function SectionLogsList({ sectionId }: SectionLogsListProps) {
       }}
       errorFallback="Could not load the logs."
     >
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          mx: { xs: 1.5, md: 0 },
+        }}
+      >
         {descents.map((descent) => (
           <Box
             key={descent.id}

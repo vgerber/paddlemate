@@ -9,7 +9,7 @@ export const Route = createFileRoute("/tools/")({
 
 function ToolsPage() {
   return (
-    <Box sx={{ maxWidth: 880, mx: "auto", px: 2, py: 3 }}>
+    <Box sx={{ maxWidth: 880, mx: "auto", px: { xs: 1.5, md: 2 }, py: 3 }}>
       <Typography variant="h6" sx={{ fontSize: "1.5rem", fontWeight: 700 }}>
         Tools
       </Typography>

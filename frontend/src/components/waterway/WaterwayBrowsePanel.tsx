@@ -464,6 +464,7 @@ export default function WaterwayBrowsePanel({
                     data-testid="river-state-slot"
                     sx={{
                       flex: "1 1 0",
+                      mx: { xs: 1.5, md: 0 },
                       minHeight: { xs: riverState ? 96 : 0, md: 0 },
                     }}
                   >

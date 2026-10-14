@@ -134,6 +134,9 @@ export default function FeatureTimeline({
     <Box
       data-testid="features-card"
       sx={{
+        // On a phone the card keeps the 12 side margin of every card; from md
+        // the pane's gutter does it.
+        mx: { xs: 1.5, md: 0 },
         bgcolor: tokens.surface,
         borderRadius: `${tokens.radii.md}px`,
         boxShadow: tokens.elevation.e1,
