@@ -157,10 +157,10 @@ function SuggestSectionPage() {
           putIn,
           takeOut,
           onPickPutIn: onSectionStep
-            ? (lat, lon) => wizard.setPutIn({ lat, lon })
+            ? ([lon, lat]) => wizard.setPutIn({ lat, lon })
             : undefined,
           onPickTakeOut: onSectionStep
-            ? (lat, lon) => wizard.setTakeOut({ lat, lon })
+            ? ([lon, lat]) => wizard.setTakeOut({ lat, lon })
             : undefined,
         }}
         drawing={{
@@ -169,11 +169,8 @@ function SuggestSectionPage() {
           placingFeature: onFeaturesStep && featurePickActive,
           onMapClick:
             onFeaturesStep && featurePickActive
-              ? (lng, lat) =>
-                  wizard.setFeatureVertices((vertices) => [
-                    ...vertices,
-                    { lng, lat },
-                  ])
+              ? (point) =>
+                  wizard.setFeatureVertices((vertices) => [...vertices, point])
               : undefined,
           featureVertices:
             onFeaturesStep && wizard.featureVertices.length > 0

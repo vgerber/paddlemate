@@ -20,6 +20,7 @@ import {
   type Bbox,
   type Bounds,
   circleGeoJSON,
+  type LngLat,
   type ViewBounds,
 } from "@/lib/geo";
 import { theme } from "@/lib/theme";
@@ -84,8 +85,8 @@ function exposeMapForTests(map: MapRef | null) {
 export interface MapPicking {
   putIn?: { lat: number; lon: number } | null;
   takeOut?: { lat: number; lon: number } | null;
-  onPickPutIn?: (lat: number, lon: number) => void;
-  onPickTakeOut?: (lat: number, lon: number) => void;
+  onPickPutIn?: (point: LngLat) => void;
+  onPickTakeOut?: (point: LngLat) => void;
   selectedSectionIds?: Set<number>;
   onSectionToggle?: (id: number) => void;
 }
@@ -93,11 +94,11 @@ export interface MapPicking {
 /** Geometry being drafted on the map: feature vertices under construction
  * and the preview/highlight lines of a section in progress. */
 export interface MapDrawing {
-  featureVertices?: { lng: number; lat: number }[];
+  featureVertices?: LngLat[];
   featureGeomType?: "Point" | "LineString" | "Polygon";
   /** Route map clicks to `onMapClick` instead of section selection. */
   placingFeature?: boolean;
-  onMapClick?: (lng: number, lat: number) => void;
+  onMapClick?: (point: LngLat) => void;
   sectionPreviewCoords?: [number, number][];
   /** Sections drawn in a state other than the plain river line. */
   sectionStates?: MapSectionStates;
@@ -660,11 +661,11 @@ export default function WaterwayMap({
             geomType={featureGeomType}
           />
         )}
-        {featureVertices?.map((v, i) => (
+        {featureVertices?.map(([lng, lat], i) => (
           <MapNumberMarker
-            key={`fv-${v.lat},${v.lng}`}
-            lat={v.lat}
-            lon={v.lng}
+            key={`fv-${lat},${lng}`}
+            lat={lat}
+            lon={lng}
             num={i + 1}
           />
         ))}

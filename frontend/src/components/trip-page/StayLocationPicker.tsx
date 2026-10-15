@@ -65,8 +65,8 @@ export default function StayLocationPicker({ tripId, point, onChange }: Props) {
           sections={sections}
           drawing={{
             placingFeature: true,
-            onMapClick: (lng, lat) => onChange({ lat, lon: lng }),
-            featureVertices: point ? [{ lng: point.lon, lat: point.lat }] : [],
+            onMapClick: ([lon, lat]) => onChange({ lat, lon }),
+            featureVertices: point ? [[point.lon, point.lat]] : [],
             featureGeomType: "Point",
           }}
           camera={{ focusedPoint, focusBounds }}

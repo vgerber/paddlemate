@@ -165,7 +165,7 @@ export default function SuggestFeatureForm({
         coordinates: sectionLine.map((v) => [v.lng, v.lat] as [number, number]),
       };
     }
-    const coords = vertices.map((v) => [v.lng, v.lat] as [number, number]);
+    const coords = vertices;
     if (geomType === "Point") return { type: "Point", coordinates: coords[0] };
     if (geomType === "LineString")
       return { type: "LineString", coordinates: coords };

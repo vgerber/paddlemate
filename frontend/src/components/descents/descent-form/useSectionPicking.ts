@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { SectionWithFeatures } from "@/lib/api";
 import { toPseudoSection } from "@/lib/descents";
+import type { LngLat } from "@/lib/geo";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import {
   coordsFromStrings,
@@ -78,9 +79,9 @@ export function useSectionPicking(
     sectionsForMap: mapSections.length > 0 ? mapSections : formSectionsForMap,
     putIn: coordsFromStrings(form.put_in_lat, form.put_in_lon),
     takeOut: coordsFromStrings(form.take_out_lat, form.take_out_lon),
-    pickPutIn: (lat: number, lon: number) =>
+    pickPutIn: ([lon, lat]: LngLat) =>
       onChange({ put_in_lat: lat.toFixed(6), put_in_lon: lon.toFixed(6) }),
-    pickTakeOut: (lat: number, lon: number) =>
+    pickTakeOut: ([lon, lat]: LngLat) =>
       onChange({ take_out_lat: lat.toFixed(6), take_out_lon: lon.toFixed(6) }),
   };
 }

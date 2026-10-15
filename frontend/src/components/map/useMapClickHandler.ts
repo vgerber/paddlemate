@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { MapLayerMouseEvent } from "react-map-gl/maplibre";
-import type { AreaCircle } from "@/lib/geo";
+import { type AreaCircle, DEFAULT_RADIUS_KM, type LngLat } from "@/lib/geo";
 import type { PickMode } from "./PickModeButtons";
 import type { RegionChoice } from "./RegionChoicePopup";
 
@@ -30,12 +30,12 @@ function regionsUnder(event: MapLayerMouseEvent): RegionChoice[] {
 }
 
 interface MapClickHandlerOptions {
-  onPickPutIn?: (lat: number, lon: number) => void;
-  onPickTakeOut?: (lat: number, lon: number) => void;
+  onPickPutIn?: (point: LngLat) => void;
+  onPickTakeOut?: (point: LngLat) => void;
   areaCircle?: AreaCircle | null;
   onAreaCircleChange?: (circle: AreaCircle | null) => void;
   placingFeature?: boolean;
-  onMapClick?: (lng: number, lat: number) => void;
+  onMapClick?: (point: LngLat) => void;
   onSectionToggle?: (id: number) => void;
   onSectionClick?: (id: number) => void;
   onRegionSelect?: (regionId: number) => void;
@@ -67,9 +67,9 @@ export function useMapClickHandler({
   const handleClick = (e: MapLayerMouseEvent) => {
     setRegionMenu(null);
     if (pickMode) {
-      const { lng, lat } = e.lngLat;
-      if (pickMode === "put-in") onPickPutIn?.(lat, lng);
-      else onPickTakeOut?.(lat, lng);
+      const point: LngLat = [e.lngLat.lng, e.lngLat.lat];
+      if (pickMode === "put-in") onPickPutIn?.(point);
+      else onPickTakeOut?.(point);
       setPickMode(null);
       return;
     }
@@ -77,7 +77,7 @@ export function useMapClickHandler({
       onAreaCircleChange({
         lat: e.lngLat.lat,
         lon: e.lngLat.lng,
-        radiusKm: areaCircle?.radiusKm ?? 20,
+        radiusKm: areaCircle?.radiusKm ?? DEFAULT_RADIUS_KM,
       });
       return;
     }
@@ -88,7 +88,7 @@ export function useMapClickHandler({
         f.layer.id === "sections-line-hitbox",
     );
     if (placingFeature && onMapClick) {
-      onMapClick(e.lngLat.lng, e.lngLat.lat);
+      onMapClick([e.lngLat.lng, e.lngLat.lat]);
       return;
     }
     if (sectionFeature?.id !== undefined) {

@@ -232,7 +232,7 @@ describe("buildMapScene", () => {
       }),
     );
     expect(scene.drawing?.placingFeature).toBe(true);
-    scene.drawing?.onMapClick?.(11, 48);
+    scene.drawing?.onMapClick?.([11, 48]);
     expect(pins).toEqual([[11, 48]]);
   });
 

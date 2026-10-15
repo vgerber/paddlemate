@@ -1,4 +1,5 @@
 import { Layer, Source } from "react-map-gl/maplibre";
+import type { LngLat } from "@/lib/geo";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -92,7 +93,7 @@ export function FeatureDraftLayer({
   vertices,
   geomType,
 }: {
-  vertices: { lng: number; lat: number }[];
+  vertices: LngLat[];
   geomType?: "Point" | "LineString" | "Polygon";
 }) {
   if (vertices.length < 2) return null;
@@ -102,16 +103,11 @@ export function FeatureDraftLayer({
         type: "Feature" as const,
         geometry: {
           type: "Polygon" as const,
-          coordinates: [
-            [
-              ...vertices.map((v) => [v.lng, v.lat]),
-              [vertices[0].lng, vertices[0].lat],
-            ],
-          ],
+          coordinates: [[...vertices, vertices[0]]],
         },
         properties: {},
       }
-    : emptyLine(vertices.map((v) => [v.lng, v.lat] as [number, number]));
+    : emptyLine(vertices);
 
   return (
     <Source id="feature-draft" type="geojson" data={data}>

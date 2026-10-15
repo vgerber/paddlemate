@@ -9,6 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import type { LngLat } from "@/lib/geo";
 import { alphas, theme } from "@/lib/theme";
 import {
   type GeometryPicking,
@@ -19,8 +20,8 @@ import { useMapVerb } from "./useMapVerb";
 
 const { tokens } = theme;
 
-const coordLabel = (v: { lng: number; lat: number }) =>
-  `${v.lat.toFixed(5)}, ${v.lng.toFixed(5)}`;
+const coordLabel = ([lng, lat]: LngLat) =>
+  `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 
 function pointsLabel(count: number, min: number): string {
   const noun = `point${count === 1 ? "" : "s"}`;
@@ -156,7 +157,7 @@ export default function SuggestFeatureGeometry({
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
               {vertices.map((v, i) => (
                 <PointChip
-                  key={`${v.lat},${v.lng}`}
+                  key={`${v[1]},${v[0]}`}
                   testId={isPoint ? "placed-point" : "placed-vertex"}
                   label={coordLabel(v)}
                   index={isPoint ? undefined : i}

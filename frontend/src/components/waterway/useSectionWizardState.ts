@@ -67,9 +67,7 @@ export function useSectionWizardState(
 
   // Step 3: features (drafted with the shared feature form, drawn on the map)
   const [draftFeatures, setDraftFeatures] = useState<SectionFeatureDraft[]>([]);
-  const [featureVertices, setFeatureVertices] = useState<
-    { lng: number; lat: number }[]
-  >([]);
+  const [featureVertices, setFeatureVertices] = useState<LngLat[]>([]);
   const [featureGeomType, setFeatureGeomType] = useState<GeomType>("Point");
   const [featurePickActive, setFeaturePickActive] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);

@@ -197,8 +197,8 @@ export function buildMapScene(input: MapSceneInput): MapScene {
       onMapClick: input.featurePickingActive
         ? input.handleMapPick
         : notePinPlacing
-          ? (lng, lat) => {
-              input.setNotePin([lng, lat]);
+          ? (point) => {
+              input.setNotePin(point);
               input.setNotePinPlacing(false);
             }
           : undefined,
