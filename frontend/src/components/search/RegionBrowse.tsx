@@ -6,7 +6,6 @@ import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
 import ChipRow from "@/components/ChipRow";
 import {
-  LEVELS,
   partOf,
   partOfChips,
   rangesHiddenByNesting,
@@ -15,6 +14,7 @@ import {
 import { useMapVerb } from "@/components/waterway/useMapVerb";
 import type { RegionOutline } from "@/lib/api";
 import { useRegionSearch } from "@/lib/hooks/useRegions";
+import { REGION_KINDS } from "@/lib/regionKinds";
 import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -109,7 +109,7 @@ export default function RegionBrowse({
               : `${verb} a region on the map, or search one by name.`}
           </Typography>
           <ChipRow>
-            {LEVELS.map(({ kind, label }) => (
+            {REGION_KINDS.map(({ kind, label }) => (
               <RegionChip
                 key={kind}
                 label={label}

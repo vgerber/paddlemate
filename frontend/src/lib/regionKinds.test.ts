@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { hiddenKindsLabel } from "./regionKinds";
+import { hiddenKindsLabel, regionKindLabel } from "./regionKinds";
 
 describe("hiddenKindsLabel", () => {
   test("names one or two kinds", () => {
@@ -17,5 +17,12 @@ describe("hiddenKindsLabel", () => {
     expect(hiddenKindsLabel(["valley", "district", "range", "state"])).toBe(
       "regions",
     );
+  });
+});
+
+describe("regionKindLabel", () => {
+  test("names a browsed kind and no other", () => {
+    expect(regionKindLabel("range")).toBe("Mountain ranges");
+    expect(regionKindLabel("country")).toBeUndefined();
   });
 });

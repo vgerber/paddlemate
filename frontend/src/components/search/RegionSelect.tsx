@@ -5,6 +5,7 @@ import { regionContext } from "@/components/map/regionGeometry";
 import type { Region, RegionKind } from "@/lib/api";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useRegionSearch } from "@/lib/hooks/useRegions";
+import { REGION_KINDS } from "@/lib/regionKinds";
 import { theme } from "@/lib/theme";
 import ListGroupHeader from "./ListGroupHeader";
 import { flatRowSx } from "./RiverRow";
@@ -13,10 +14,7 @@ const { tokens } = theme;
 
 /** Group order: what a paddler names a place by, smallest first. */
 const GROUPS: { kind: RegionKind; label: string }[] = [
-  { kind: "valley", label: "Valleys" },
-  { kind: "district", label: "Districts" },
-  { kind: "range", label: "Mountain ranges" },
-  { kind: "state", label: "States" },
+  ...REGION_KINDS,
   { kind: "country", label: "Countries" },
 ];
 

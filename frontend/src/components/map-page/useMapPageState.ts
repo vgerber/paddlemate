@@ -21,6 +21,7 @@ import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
 import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { pushRecentWaterway } from "@/lib/recentWaterways";
+import { ALL_REGION_KINDS } from "@/lib/regionKinds";
 import { DEFAULT_RADIUS_KM, defaultAreaCircle } from "./areaFrame";
 import { modeSheetMode, modeSheetPeek } from "./modeSheet";
 import { useFeaturePicker } from "./useFeaturePicker";
@@ -41,7 +42,6 @@ export type RouteSearch = {
 
 /** Every level the region chips offer; asked for together so the map can draw
  * districts and ranges at the zoom where they fit. */
-const ALL_REGION_KINDS = ["valley", "district", "range", "state"];
 
 export function useMapPageState(search: RouteSearch) {
   const {

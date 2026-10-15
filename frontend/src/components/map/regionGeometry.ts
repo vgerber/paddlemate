@@ -3,6 +3,7 @@
 
 import polylabel from "polylabel";
 import type { RegionRef } from "@/lib/api";
+import { regionKindLabel } from "@/lib/regionKinds";
 
 /** [west, south, east, north] */
 export type Bbox = readonly [number, number, number, number];
@@ -19,18 +20,6 @@ export const MIN_VIEW_SHARE = 0.003;
 
 /** A range holding at least this many other ranges is not drawn. */
 export const MAX_NESTED_RANGES = 2;
-
-/** The levels regions come in, in the order the level chips show them. */
-export const LEVELS = [
-  { kind: "valley", label: "Valleys" },
-  { kind: "district", label: "Districts" },
-  { kind: "range", label: "Mountain ranges" },
-  { kind: "state", label: "States" },
-] as const;
-
-const KIND_LABELS: Record<string, string> = Object.fromEntries(
-  LEVELS.map((level) => [level.kind, level.label]),
-);
 
 /** Where a region lies, as "Tirol, AT": the state when it has one, else its
  * most specific larger region, then the country code. `parents` come most
@@ -51,7 +40,7 @@ export function regionSubtitle(
   kind: string,
   parents?: readonly RegionRef[],
 ): string {
-  return [regionContext(country, parents), KIND_LABELS[kind]]
+  return [regionContext(country, parents), regionKindLabel(kind)]
     .filter(Boolean)
     .join(" · ");
 }
