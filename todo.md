@@ -4,25 +4,28 @@ State on 2026-10-15. Delete this file when the overhaul has landed on `main`.
 
 ## Where the work is
 
-| Branch | Holds | State |
-|---|---|---|
-| `ui-overhaul` | the pushed overhaul up to 8607914 | behind `integrate-2b` by about 180 commits |
-| `integrate-2b` (worktree `.claude/worktrees/integrate-2b`) | every round since: wide-screen canvas and reading rail, calm borderless chart, values pane, one header menu, panel spacing, river state, grade rules, region search fixes (migration 0050), level dots, map follows the filters, phone margins, swipe preview and smooth swipe | gates green (tsc, biome, 467 bun tests); not yet merged into `ui-overhaul` |
-| `review-w1-1015` (worktree `.claude/worktrees/review-w1`) | review wave 1: one source for the current level, level colours, section grade, log title, reading time, geometry | 8 commits on top of `integrate-2b` 8dc2d0a; gates and specs not run yet |
+`ui-overhaul` holds everything (merged 2026-10-15, not pushed): the wide-screen
+canvas and reading rail, the calm borderless chart, the values pane, one header
+menu, panel spacing, river state, grade rules, the region search fixes
+(migration 0050), level dots, the map following the filters, phone margins,
+the swipe preview and smooth swipe, and review wave 1 (one source for the
+current level, level colours, section grade, log title, reading time,
+geometry). Gates green: tsc, biome, 485 bun tests. The full Playwright run and
+the Opus review have not been done on the merged result.
 
 Reviews, briefs, designs and test notes are in `.claude/handoffs/ui-work/` (git-ignored): `review/*.md`, `design/*.html`, `search-test/`.
 
 ## Next, in order
 
-1. Gate `review-w1-1015` (tsc, biome, bun test, the affected specs) and merge it into `integrate-2b`.
+1. Push `ui-overhaul` once the user OKs it.
 2. Review wave 2, four agents in parallel on separate files (findings in `review/*.md`):
    - Theme and shared pieces: small buttons and toggles at 44px; one active-tab rule in `routes/__root.tsx`; `PanelBottomBar` drops the dead `leftIcon`; shared busy, segmented-control and marker-shadow pieces; tidy `theme.ts` (aliases, unused tokens, raw colours, radii off the scale); one shared `useSession` store.
    - Trips, logs, proposals: errors shown once (`meta.errorHandledLocally`); trip actions in one list (`TripFab`); confirm dialogs that wait and catch; the inbox's `EmptyState`; one way back; load errors not silent (`useFollows`, `useTripTimeline`); one vote control; one open-row style.
    - Search and waterway: the `routes/waterways/$waterwayId.tsx` stub; the double submit in `SuggestFeatureForm`; the copied `flatRowSx`, recent-river row, three timeline rails and the hand-rolled menu in `CoordsInfo`; Sources and history errors with Retry; the notes field's touch targets and 13px text; dead code; plurals.
    - Map, canvas, charts: the dead features-fold state; three-branch ternaries as sub-components; the gauge marker's 44px hit area; split `useMapPageState`; dead exports; cards using `PanelHeader`.
 3. Review wave 3: shared e2e helpers and mocks, no casts in specs and tests, no `waitForTimeout`, fewer MUI class selectors.
-4. One full Playwright run on `integrate-2b` (phone, desktop, small). About 20 failures were reported but not checked against the base: trips (week strip, day labels, today ring, card radius, trip panel), logs (headings, wrapped pill, detail, canvas cards), sections and search flat-row radius, proposals (6, `map-layer-toggle` selectors). Fix or update each.
-5. Opus review of the combined diff (AGENTS.md "Agent workflow"), then fast-forward `ui-overhaul` to `integrate-2b` and push.
+4. One full Playwright run on `ui-overhaul` (phone, desktop, small). About 20 failures were reported but not checked against the base: trips (week strip, day labels, today ring, card radius, trip panel), logs (headings, wrapped pill, detail, canvas cards), sections and search flat-row radius, proposals (6, `map-layer-toggle` selectors). Fix or update each.
+5. Opus review of the combined diff (AGENTS.md "Agent workflow"), then merge `ui-overhaul` into `main` with the user's OK.
 6. Update the design system (https://claude.ai/artifact/E8VZQSwJmQhnfLGuPrK585) for the 8px rail gap, the dotted resize tab and the stat-tile values pane; log decisions in the control room (https://claude.ai/artifact/H7yXYXDMdwq9oJwiMWrZhC).
 
 ## Decided but not built
