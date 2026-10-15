@@ -1,6 +1,6 @@
 /** Shared display formatting for dates, durations, readings and enum keys. */
 
-import { format, isSameMonth, isSameYear, parseISO } from "date-fns";
+import { format, isSameDay, isSameMonth, isSameYear, parseISO } from "date-fns";
 
 /** A calendar day ("2026-09-01") is a day, not an instant: `new Date` reads
  * it as UTC midnight, which is still the 31st anywhere west of UTC.
@@ -67,6 +67,20 @@ export function timeAgo(iso: string): string {
  */
 export function clockTime(time: string): string {
   return time.slice(0, 5);
+}
+
+/** A reading's moment with its day: "Oct 9, 16:48". */
+export function dayTime(iso: string): string {
+  const day = new Date(iso).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+  return `${day}, ${formatTime(iso)}`;
+}
+
+/** When a reading was taken: the time for today's, else day and time. */
+export function readingTime(iso: string, now: Date = new Date()): string {
+  return isSameDay(new Date(iso), now) ? formatTime(iso) : dayTime(iso);
 }
 
 /** "Thu, 03 Sept 2026 · 19:30", dropping the time until somebody sets one. */

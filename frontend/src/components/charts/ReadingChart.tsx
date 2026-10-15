@@ -18,7 +18,7 @@ import type { TimeRange } from "@/components/charts/water/types";
 import WaterChart from "@/components/charts/water/WaterChart";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { dockHeight } from "@/lib/canvasLayout";
-import { formatTime, timeAgo } from "@/lib/format";
+import { readingTime, timeAgo } from "@/lib/format";
 import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
 import {
@@ -45,18 +45,6 @@ const INLINE_INSET = 16;
 /** Padding above and below the rail's plot: with the axis row and the source
  * line they leave the plot rail height minus 54. */
 const RAIL_PAD = 18;
-
-/** Today's readings show their time, older ones their date and time. */
-function readingTime(iso: string, withDate: boolean): string {
-  const d = new Date(iso);
-  const today = d.toDateString() === new Date().toDateString();
-  if (today && !withDate) return formatTime(iso);
-  const day = d.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-  return `${day}, ${formatTime(iso)}`;
-}
 
 /** Where a chart sits: the phone's own card, the rail from 1280, or the
  * first block of the detail card in between. */
@@ -109,7 +97,7 @@ function useReadingView(
   );
   if (stale || !latest) {
     return {
-      time: latest ? readingTime(latest.measured_at, false) : "",
+      time: latest ? readingTime(latest.measured_at) : "",
       age: latest ? timeAgo(latest.measured_at) : "",
       value: latest?.value ?? null,
       unit,
@@ -117,7 +105,7 @@ function useReadingView(
     };
   }
   return {
-    time: readingTime(latest.measured_at, false),
+    time: readingTime(latest.measured_at),
     age: timeAgo(latest.measured_at),
     value: latest.value,
     unit,

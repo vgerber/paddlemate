@@ -16,7 +16,7 @@ import {
 } from "@/components/charts/water/series";
 import type { TimeRange } from "@/components/charts/water/types";
 import type { WaterRangeWithStatus } from "@/lib/api";
-import { formatDate, formatReading, formatTime } from "@/lib/format";
+import { formatReading, readingTime } from "@/lib/format";
 import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -35,13 +35,6 @@ const heights = {
   },
   tall: { xs: 340, md: "clamp(280px, 42vh, 520px)" },
 } as const;
-
-/** Today's readings show their time, older ones their date. */
-function readingTime(iso: string): string {
-  return new Date(iso).toDateString() === new Date().toDateString()
-    ? formatTime(iso)
-    : formatDate(iso);
-}
 
 const chipSx = (on: boolean) =>
   ({
