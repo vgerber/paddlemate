@@ -6,6 +6,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import GradeTag from "@/components/waterway/GradeTag";
+import { sectionGradeText } from "@/components/waterway/section-details/grade";
 import type { SectionWithFeatures } from "@/lib/api";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
@@ -25,14 +26,6 @@ interface SearchSectionRowProps {
   matchedFeature?: string;
 }
 
-function sectionGrade(section: SectionWithFeatures): string | undefined {
-  const whitewater = section.features?.find(
-    (f) => f.feature_type === "whitewater",
-  );
-  const meta = whitewater?.metadata as Record<string, unknown> | null;
-  return meta?.difficulty as string | undefined;
-}
-
 /** A search result as the design draws it: the section's name over its river
  * and grade, the level pill at the right spanning both lines. */
 export default function SearchSectionRow({
@@ -44,7 +37,7 @@ export default function SearchSectionRow({
   onToggleFavorite,
   matchedFeature,
 }: SearchSectionRowProps) {
-  const grade = sectionGrade(section);
+  const grade = sectionGradeText(section);
   return (
     <ListItemButton
       data-testid="search-section-row"

@@ -1,3 +1,5 @@
+import { sectionGradeText } from "@/components/waterway/section-details/grade";
+import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type {
   CountryBorder,
   Feature,
@@ -48,13 +50,6 @@ function nearestPointOnPolyline(
     }
   }
   return best;
-}
-
-/** Feature difficulty from metadata, if set. */
-function featureDifficulty(f: Feature): string | undefined {
-  return (f.metadata as Record<string, unknown> | null)?.difficulty as
-    | string
-    | undefined;
 }
 
 /** Map label: "Name III+", name or difficulty alone, or "" when neither.
@@ -109,9 +104,7 @@ export function buildSectionLabelsGeoJSON(
         [0, 0],
       );
       const mid = [sum[0] / coords.length, sum[1] / coords.length];
-      const ww = s.features?.find((f) => f.feature_type === "whitewater");
-      const diff = (ww?.metadata as Record<string, unknown> | undefined)
-        ?.difficulty as string | undefined;
+      const diff = sectionGradeText(s);
       const sectionName = localizedName(s.name, s.names, language);
       const riverName = waterwayNames?.[s.waterway_id] ?? sectionName;
       const label =

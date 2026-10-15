@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { type ReactNode, type RefObject, useEffect, useState } from "react";
 import LanguagePicker from "@/components/LanguagePicker";
+import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type {
   Feature,
   FeatureType,
@@ -126,11 +127,9 @@ export default function SuggestFeatureForm({
       )
     : null;
   const [useSectionLine, setUseSectionLine] = useState(false);
-  const [difficulty, setDifficulty] = useState(() => {
-    const d = (editFeature?.metadata as Record<string, unknown> | null)
-      ?.difficulty;
-    return typeof d === "string" ? d : "";
-  });
+  const [difficulty, setDifficulty] = useState(
+    () => (editFeature && featureDifficulty(editFeature)) ?? "",
+  );
 
   const { data: riverGauges } = useWaterwayGauges(waterwayId ?? null);
   const gaugePicker = useGaugePicker({ gaugeRanges, riverGauges, nearPoint });

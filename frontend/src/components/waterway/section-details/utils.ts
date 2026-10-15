@@ -20,7 +20,7 @@ export function sentence(text: string): string {
 }
 
 /** Difficulty grade from feature metadata, or null. */
-export function featureDifficulty(f: Feature): string | null {
+export function featureDifficulty(f: { metadata?: unknown }): string | null {
   const d = (f.metadata as Record<string, unknown> | null)?.difficulty;
   return typeof d === "string" && d ? d : null;
 }

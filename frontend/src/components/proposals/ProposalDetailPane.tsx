@@ -5,6 +5,7 @@ import ProposalDiffTable from "@/components/proposals/ProposalDiffTable";
 import FeatureRow from "@/components/waterway/FeatureRow";
 import {
   computeExtent,
+  featureDifficulty,
   toPseudoFeature,
 } from "@/components/waterway/section-details/utils";
 import type { Feature, FeatureType, Proposal } from "@/lib/api";
@@ -256,10 +257,7 @@ export default function ProposalDetailPane({
                 key={`${feature.feature_type}-${index}`}
                 featureType={feature.feature_type}
                 name={feature.name}
-                difficulty={
-                  (feature.metadata as Record<string, unknown> | null)
-                    ?.difficulty as string | undefined
-                }
+                difficulty={featureDifficulty(feature) ?? undefined}
                 description={feature.description}
                 gaugeName={
                   (feature.water_ranges?.length ?? 0) > 0

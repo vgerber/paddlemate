@@ -14,6 +14,7 @@ import { sectionPlace } from "@/lib/format";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
 import GradeTag from "./GradeTag";
+import { sectionGradeText } from "./section-details/grade";
 
 const { tokens } = theme;
 
@@ -50,11 +51,7 @@ export default function SectionListItem({
   matchedFeature,
   riverName,
 }: SectionListItemProps) {
-  const difficulty = (() => {
-    const ww = section.features?.find((f) => f.feature_type === "whitewater");
-    const meta = ww?.metadata as Record<string, unknown> | null | undefined;
-    return meta?.difficulty as string | undefined;
-  })();
+  const grade = sectionGradeText(section);
 
   // Only a list that mixes rivers names the place (river first: it tells two
   // "Upper" runs apart). Inside one river's own list the row is just a name.
@@ -183,7 +180,7 @@ export default function SectionListItem({
             },
           }}
         >
-          {difficulty && <GradeTag grade={difficulty} />}
+          {grade && <GradeTag grade={grade} />}
         </Box>
 
         <Box sx={{ gridArea: "c", justifySelf: "end", alignSelf: "center" }}>

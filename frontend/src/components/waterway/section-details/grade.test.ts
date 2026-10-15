@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { baseSpan, gradeLabel, gradeRank, sectionGrade } from "./grade";
+import type { SectionWithFeatures } from "@/lib/api";
+import {
+  baseSpan,
+  gradeLabel,
+  gradeRank,
+  sectionGrade,
+  sectionGradeText,
+} from "./grade";
 
 const span = (grade: string, startKm: number, endKm: number) => ({
   grade,
@@ -58,5 +65,37 @@ describe("gradeRank", () => {
     expect(gradeRank("III-")).toBeLessThan(gradeRank("III"));
     expect(gradeRank("III")).toBeLessThan(gradeRank("III+"));
     expect(gradeRank("III+")).toBeLessThan(gradeRank("IV"));
+  });
+});
+
+describe("sectionGradeText", () => {
+  const line = {
+    type: "LineString",
+    coordinates: [
+      [10, 50],
+      [10, 50.05],
+    ],
+  };
+  const ww = (grade: string, coordinates: number[][]) => ({
+    feature_type: "whitewater",
+    metadata: { difficulty: grade },
+    location: { type: "LineString", coordinates },
+  });
+  const section = (features: unknown[]) =>
+    ({ location: line, features }) as unknown as SectionWithFeatures;
+
+  test("a range over the whole run gives the grade", () => {
+    expect(sectionGradeText(section([ww("III", line.coordinates)]))).toBe(
+      "III",
+    );
+  });
+
+  test("a short stretch alone does not grade the section", () => {
+    const short = [
+      [10, 50],
+      [10, 50.005],
+    ];
+    expect(sectionGradeText(section([ww("IV", short)]))).toBeNull();
+    expect(sectionGradeText(section([]))).toBeNull();
   });
 });

@@ -104,3 +104,10 @@ export function sectionGradeOf(
 export function gradeLabel(grade: SectionGrade): string {
   return grade.harder ? `${grade.base} (${grade.harder})` : grade.base;
 }
+
+/** The grade a section shows wherever it is named: lists, map labels and the
+ * panel subtitle, or null when it has none. */
+export function sectionGradeText(section: SectionWithFeatures): string | null {
+  const grade = sectionGradeOf(section);
+  return grade ? gradeLabel(grade) : null;
+}

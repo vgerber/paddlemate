@@ -25,10 +25,7 @@ import LoadingBox from "@/components/states/LoadingBox";
 import SectionListItem from "@/components/waterway/SectionListItem";
 import SectionLogsList from "@/components/waterway/SectionLogsList";
 import FeatureTimeline from "@/components/waterway/section-details";
-import {
-  gradeLabel,
-  sectionGradeOf,
-} from "@/components/waterway/section-details/grade";
+import { sectionGradeText } from "@/components/waterway/section-details/grade";
 import { useGradeActions } from "@/components/waterway/section-details/useGradeActions";
 import { sectionLengthM } from "@/components/waterway/section-details/utils";
 import { useChartGrow } from "@/components/waterway/useChartGrow";
@@ -591,13 +588,9 @@ function SectionsList({
  * one range covers most of it (that range is not listed as a feature), and
  * its length. */
 function sectionSubtitle(river: string, section: SectionWithFeatures): string {
-  const grade = sectionGradeOf(section);
+  const grade = sectionGradeText(section);
   const km = sectionLengthM(lineCoords(section.location) ?? []) / 1000;
-  return [
-    river,
-    grade && `Grade ${gradeLabel(grade)}`,
-    km > 0 && `${km.toFixed(1)} km`,
-  ]
+  return [river, grade && `Grade ${grade}`, km > 0 && `${km.toFixed(1)} km`]
     .filter(Boolean)
     .join(" · ");
 }

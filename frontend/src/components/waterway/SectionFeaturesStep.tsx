@@ -5,6 +5,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
 import { useMemo, useRef, useState } from "react";
 import { PUT_IN_COLOR, TAKE_OUT_COLOR } from "@/components/map/LocationPin";
+import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type { Feature } from "@/lib/api";
 import { distanceAlongLineM } from "@/lib/geo";
 import type { Coordinate } from "@/lib/riverSnap";
@@ -154,7 +155,7 @@ export default function SectionFeaturesStep({
             key={`${feature.feature_type}-${index}`}
             featureType={feature.feature_type}
             name={feature.name}
-            difficulty={feature.metadata.difficulty as string | undefined}
+            difficulty={featureDifficulty(feature) ?? undefined}
             gaugeName={feature.gauge_name}
             locationType={feature.location.type}
             extent={draftExtents[index]}
