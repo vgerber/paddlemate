@@ -1,4 +1,5 @@
 import type { components } from "@/lib/api/schema";
+import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
 
 export type WaterLevel = components["schemas"]["WaterLevel"];
@@ -51,4 +52,29 @@ export function levelInk(level: Exclude<WaterLevel, "empty">): string {
 /** True when the range has at least one threshold configured. */
 export function isCalibrated(r: WaterRangeWithStatus): boolean {
   return r.range_low != null || r.range_medium != null || r.range_high != null;
+}
+
+/** The ranges that say what the water does now: calibrated, with a reading
+ * that is not stale. */
+export function freshRanges(
+  ranges: WaterRangeWithStatus[],
+  now: number = Date.now(),
+): WaterRangeWithStatus[] {
+  return ranges.filter(
+    (r) =>
+      isCalibrated(r) &&
+      r.latest_reading != null &&
+      !isStale(r.latest_reading.measured_at, now, r.gauge.fetch_interval_secs),
+  );
+}
+
+/** The level a section shows now: the worst across its fresh calibrated
+ * ranges, or null when there is nothing trustworthy to say (the backend's
+ * "empty" for a silent gauge would read as too low to paddle). */
+export function currentLevel(
+  ranges: WaterRangeWithStatus[],
+  now: number = Date.now(),
+): WaterLevel | null {
+  const fresh = freshRanges(ranges, now);
+  return fresh.length ? maxLevel(fresh.map((r) => r.level)) : null;
 }

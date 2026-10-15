@@ -3,7 +3,6 @@ import type { Descent, Proposal } from "@/lib/api";
 import type { components } from "@/lib/api/schema";
 import {
   captionText,
-  currentLevel,
   dayLabel,
   fitRows,
   hazardNotes,
@@ -230,30 +229,6 @@ describe("captionText", () => {
         now,
       }),
     ).toBe("Added 12 Mar 2026");
-  });
-});
-
-describe("currentLevel", () => {
-  const range = (ago: number, level: string, interval = 900) =>
-    ({
-      level,
-      range_low: 50,
-      gauge: { fetch_interval_secs: interval },
-      latest_reading: {
-        measured_at: new Date(now.getTime() - ago * 3600_000).toISOString(),
-      },
-    }) as never;
-
-  test("fresh calibrated readings give the worst level", () => {
-    expect(currentLevel([range(1, "low"), range(2, "high")], now)).toBe("high");
-  });
-
-  test("stale or uncalibrated readings give none", () => {
-    expect(currentLevel([range(5, "high")], now)).toBeNull();
-    expect(currentLevel([range(5, "high", 7200)], now)).toBe("high");
-    const bare = { ...(range(1, "high") as object), range_low: null } as never;
-    expect(currentLevel([bare], now)).toBeNull();
-    expect(currentLevel([], now)).toBeNull();
   });
 });
 

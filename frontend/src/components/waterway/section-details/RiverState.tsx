@@ -15,10 +15,10 @@ import { useSectionWithFeatures } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
 import { theme } from "@/lib/theme";
+import { currentLevel } from "@/lib/waterLevel";
 import {
   CAPTION_PX,
   captionText,
-  currentLevel,
   fitRows,
   hazardNotes,
   hazardRow,
@@ -248,7 +248,7 @@ export default function RiverState({
       paddled: paddledRow(last.data?.items[0], {
         sectionId,
         viewerId: user?.id ?? null,
-        level: currentLevel(water.data?.ranges ?? [], now),
+        level: currentLevel(water.data?.ranges ?? [], now.getTime()),
         thisYear: year.data?.total ?? 0,
         now,
       }),

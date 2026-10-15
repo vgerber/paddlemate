@@ -21,7 +21,7 @@ import { dockHeight } from "@/lib/canvasLayout";
 import { formatTime, timeAgo } from "@/lib/format";
 import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
-import type { WaterLevel } from "@/lib/waterLevel";
+import { currentLevel, type WaterLevel } from "@/lib/waterLevel";
 
 const { tokens } = theme;
 
@@ -93,9 +93,11 @@ function useReadingView(
 ): ReadingView | null {
   if (!charted) return null;
   const unit = charted.series.unit;
-  const levelWord = (level: WaterLevel) => {
-    const word = LEVEL_WORD[level];
-    return word ? { word, color: tokens.levels[level].marker } : undefined;
+  const levelWord = (level: WaterLevel | null) => {
+    const word = level && LEVEL_WORD[level];
+    return level && word
+      ? { word, color: tokens.levels[level].marker }
+      : undefined;
   };
   const latest = charted.latest_reading;
   const stale = isStale(
@@ -117,7 +119,7 @@ function useReadingView(
     age: timeAgo(latest.measured_at),
     value: latest.value,
     unit,
-    level: levelWord(charted.level),
+    level: levelWord(currentLevel([charted])),
     stale: false,
   };
 }

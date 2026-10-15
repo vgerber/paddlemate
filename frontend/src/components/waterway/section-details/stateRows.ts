@@ -11,15 +11,9 @@ import type { components } from "@/lib/api/schema";
 import { categoryColor, categoryLabel } from "@/lib/comments";
 import { formatReading } from "@/lib/format";
 import { proposalTitle } from "@/lib/proposals";
-import {
-  isCalibrated,
-  LEVEL_ORDER,
-  maxLevel,
-  type WaterLevel,
-} from "@/lib/waterLevel";
+import { LEVEL_ORDER, type WaterLevel } from "@/lib/waterLevel";
 
 type Comment = components["schemas"]["Comment"];
-type WaterRange = components["schemas"]["WaterRangeWithStatus"];
 type Snapshot = components["schemas"]["SectionWaterSnapshot"];
 
 export const ROW_PX = 56;
@@ -31,7 +25,6 @@ export const HAZARD_DAYS = 90;
 export const SKELETON_DELAY_MS = 150;
 
 const HAZARD_CATEGORIES: CommentCategory[] = ["urgent", "danger_temporary"];
-const HOUR_MS = 3600 * 1000;
 
 export type StateTab = "notes" | "logs" | "features";
 
@@ -114,21 +107,6 @@ export function noteRow(
     when: dayLabel(top.created_at, now),
     opens: "notes",
   };
-}
-
-/** The level the section has right now, or null when no calibrated gauge has
- * a fresh reading. Stale means older than max(3 h, 3 gauge intervals). */
-export function currentLevel(
-  ranges: WaterRange[],
-  now: Date,
-): WaterLevel | null {
-  const fresh = ranges.filter((r) => {
-    const at = r.latest_reading?.measured_at;
-    if (!at || !isCalibrated(r)) return false;
-    const limit = Math.max(3 * HOUR_MS, 3 * 1000 * r.gauge.fetch_interval_secs);
-    return now.getTime() - parseISO(at).getTime() <= limit;
-  });
-  return fresh.length ? maxLevel(fresh.map((r) => r.level)) : null;
 }
 
 /** The snapshot to quote for a log: the most severe level it recorded for

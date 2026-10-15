@@ -1,8 +1,5 @@
 import type { WaterRangeWithStatus } from "@/lib/api";
-import type { WaterLevel } from "@/lib/waterLevel";
-
-const isCalibrated = (r: WaterRangeWithStatus) =>
-  r.range_low != null || r.range_medium != null || r.range_high != null;
+import { isCalibrated, type WaterLevel } from "@/lib/waterLevel";
 
 /** Distinct measurement types present in the ranges, in order of appearance. */
 export function measurementTypesOf(ranges: WaterRangeWithStatus[]): string[] {

@@ -1,6 +1,5 @@
 import type { components } from "@/lib/api/schema";
-import { isStale } from "@/lib/staleness";
-import { isCalibrated, maxLevel, type WaterLevel } from "@/lib/waterLevel";
+import { currentLevel, type WaterLevel } from "@/lib/waterLevel";
 
 type WaterStatus = components["schemas"]["SectionWaterStatus"];
 
@@ -15,14 +14,7 @@ export function dotLevel(
   now: number = Date.now(),
 ): DotLevel {
   if (!status) return "unknown";
-  const fresh = status.ranges.filter(
-    (r) =>
-      isCalibrated(r) &&
-      r.latest_reading != null &&
-      !isStale(r.latest_reading.measured_at, now, r.gauge.fetch_interval_secs),
-  );
-  if (fresh.length === 0) return "unknown";
-  return maxLevel(fresh.map((r) => r.level));
+  return currentLevel(status.ranges, now) ?? "unknown";
 }
 
 /** How many dots of each level there are. */
