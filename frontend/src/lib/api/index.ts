@@ -1,3 +1,4 @@
+import type { ViewBounds } from "@/lib/geo";
 import { ApiError, client, postForm } from "./client";
 import type { components, operations } from "./schema.d.ts";
 
@@ -32,8 +33,10 @@ export type PaginatedResponse =
 /** A waterway in search results, carrying which text matched the query. */
 export type WaterwayListItem = components["schemas"]["WaterwayListItem"];
 export type MatchSource = components["schemas"]["MatchSource"];
-export type CreateFeatureInput = components["schemas"]["CreateFeatureBody"];
-export type UpdateFeatureInput = components["schemas"]["UpdateFeatureBody"];
+export type CreateFeatureInput =
+  components["schemas"]["Proposable_for_CreateFeatureBody"];
+export type UpdateFeatureInput =
+  components["schemas"]["Proposable_for_UpdateFeatureBody"];
 export type SectionWaterStatus = components["schemas"]["SectionWaterStatus"];
 export type WaterRangeWithStatus =
   components["schemas"]["WaterRangeWithStatus"];
@@ -93,6 +96,7 @@ export type PushSubscriptionEntry = components["schemas"]["PushSubscription"];
 export type CreatePushSubscriptionRequest =
   components["schemas"]["CreatePushSubscriptionRequest"];
 export type Region = components["schemas"]["Region"];
+export type RegionRef = components["schemas"]["RegionRef"];
 export type RegionKind = components["schemas"]["RegionKind"];
 export type RegionOutline = components["schemas"]["RegionOutline"];
 export type CountryBorder = components["schemas"]["CountryBorder"];
@@ -126,7 +130,9 @@ export const waterwaysApi = {
     });
     return assertData(data);
   },
-  create: async (body: components["schemas"]["CreateWaterwayBody"]) => {
+  create: async (
+    body: components["schemas"]["Proposable_for_CreateWaterwayBody"],
+  ) => {
     const { data } = await client.POST("/api/v1/waterways", { body });
     // 201 (admin, Waterway) or 202 (proposal); client throws ApiError on 409.
     return assertData(data);
@@ -160,7 +166,7 @@ export const sectionsApi = {
   },
   create: async (
     waterwayId: number,
-    body: components["schemas"]["CreateSectionBody"],
+    body: components["schemas"]["Proposable_for_CreateSectionBody"],
   ) => {
     const { data } = await client.POST(
       "/api/v1/waterways/{waterway_id}/sections",
@@ -392,6 +398,10 @@ export const mediaApi = {
   },
 };
 
+/** The view box in the API's "south,west,north,east" order. */
+const viewParam = (v: ViewBounds) =>
+  `${v.south},${v.west},${v.north},${v.east}`;
+
 /** Line parameter format shared by the geographic lookups. */
 const lineParam = (line: [number, number][]) =>
   line.map(([lon, lat]) => `${lon},${lat}`).join(";");
@@ -403,7 +413,7 @@ export const waterwayGeometryApi = {
   get: async (
     waterwayId: number,
     kind?: "centerline" | "bank",
-    bbox?: { south: number; west: number; north: number; east: number },
+    bbox?: ViewBounds,
     signal?: AbortSignal,
   ) => {
     const { data } = await client.GET(
@@ -413,9 +423,7 @@ export const waterwayGeometryApi = {
           path: { waterway_id: waterwayId },
           query: {
             kind,
-            bbox: bbox
-              ? `${bbox.south},${bbox.west},${bbox.north},${bbox.east}`
-              : undefined,
+            bbox: bbox ? viewParam(bbox) : undefined,
           },
         },
         signal,
@@ -461,12 +469,9 @@ export const regionsApi = {
   /** Every region in a viewport, for drawing region mode on the map. The
    * server fetches ground it has not seen from OSM in the background, so a
    * list that comes back `filling` is not the whole picture yet. */
-  inView: async (
-    bbox: [number, number, number, number],
-    signal?: AbortSignal,
-  ) => {
+  inView: async (view: ViewBounds, signal?: AbortSignal, kinds?: string) => {
     const { data } = await client.GET("/api/v1/geo/region-outlines", {
-      params: { query: { bbox: bbox.join(",") } },
+      params: { query: { bbox: viewParam(view), kinds } },
       signal,
     });
     return assertData(data);

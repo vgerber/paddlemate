@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { transition } from "@/lib/motion";
 import {
   dragHeight,
@@ -123,7 +124,12 @@ export default function BottomSheet({
     onStateChange(next);
   };
 
-  return (
+  // In a portal on the body, after the app root: the bottom nav shares this
+  // z-index, and a later sibling wins the tie, so an open sheet and its scrim
+  // cover the nav. Dialogs and menus opened from the sheet are later still.
+  // Not MUI's Portal: it mounts its children a pass late, after the focus
+  // effect above has looked for the sheet.
+  return createPortal(
     <>
       {state === "open" && (
         <Box
@@ -170,6 +176,9 @@ export default function BottomSheet({
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
             sx={{
+              // Above content that is pulled up under the handle's foot.
+              position: "relative",
+              zIndex: 1,
               touchAction: "none",
               cursor: "grab",
               flexShrink: 0,
@@ -193,6 +202,7 @@ export default function BottomSheet({
           </Box>
         </Box>
       </FocusTrap>
-    </>
+    </>,
+    document.body,
   );
 }

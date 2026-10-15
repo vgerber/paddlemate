@@ -1,30 +1,43 @@
-import AddIcon from "@mui/icons-material/Add";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import type { ReactNode } from "react";
+import { theme } from "@/lib/theme";
+
+const { tokens } = theme;
 
 /** A pane's primary action on desktop: one filled button across the foot of
  * the pane, docked below the list so it never floats over the last row. The
  * same place and the same look in every pane, so "add" is always found in
- * one spot. Phones keep their FAB, so this renders from `md` up only. */
+ * one spot. Label only, no icon. Phones keep their FAB, so this renders from
+ * `md` up only. */
 export default function DockedAction({
   label,
   onClick,
-  icon = <AddIcon />,
+  inset,
 }: {
   label: string;
   onClick: () => void;
-  icon?: ReactNode;
+  /** Space in px on the sides and below, none above, where the pane's own
+   * gutter supplies it. Omitted: 12px all round. */
+  inset?: number;
 }) {
   return (
     <Box
       sx={{
         display: { xs: "none", md: "flex" },
-        p: 1.5,
+        p: inset === undefined ? 1.5 : `0 ${inset}px ${inset}px`,
         flexShrink: 0,
       }}
     >
-      <Button variant="contained" fullWidth startIcon={icon} onClick={onClick}>
+      <Button
+        variant="contained"
+        fullWidth
+        onClick={onClick}
+        sx={{
+          borderRadius: `${tokens.radii.sm + 2}px`,
+          fontSize: "0.9375rem",
+          lineHeight: 1.4,
+        }}
+      >
         {label}
       </Button>
     </Box>

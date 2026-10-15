@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { type ReactNode, type RefObject, useEffect, useState } from "react";
 import LanguagePicker from "@/components/LanguagePicker";
+import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type {
   Feature,
   FeatureType,
@@ -17,6 +18,8 @@ import { preferredLanguage } from "@/lib/languagePreference";
 import FormSection from "./FormSection";
 import GaugeRangePicker from "./GaugeRangePicker";
 import { type GeometryPicking, minVerticesFor } from "./geometryPicking";
+import ProposalNoteField from "./ProposalNoteField";
+import { proposalNoteValue } from "./proposalNote";
 import SuggestFeatureGeometry from "./SuggestFeatureGeometry";
 import SuggestFeatureTypeGrid from "./SuggestFeatureTypeGrid";
 
@@ -107,6 +110,7 @@ export default function SuggestFeatureForm({
       ""
     );
   });
+  const [note, setNote] = useState("");
   const [featureType, setFeatureType] = useState<FeatureType>(
     () => editFeature?.feature_type ?? "whitewater",
   );
@@ -123,11 +127,9 @@ export default function SuggestFeatureForm({
       )
     : null;
   const [useSectionLine, setUseSectionLine] = useState(false);
-  const [difficulty, setDifficulty] = useState(() => {
-    const d = (editFeature?.metadata as Record<string, unknown> | null)
-      ?.difficulty;
-    return typeof d === "string" ? d : "";
-  });
+  const [difficulty, setDifficulty] = useState(
+    () => (editFeature && featureDifficulty(editFeature)) ?? "",
+  );
 
   const { data: riverGauges } = useWaterwayGauges(waterwayId ?? null);
   const gaugePicker = useGaugePicker({ gaugeRanges, riverGauges, nearPoint });
@@ -163,7 +165,7 @@ export default function SuggestFeatureForm({
         coordinates: sectionLine.map((v) => [v.lng, v.lat] as [number, number]),
       };
     }
-    const coords = vertices.map((v) => [v.lng, v.lat] as [number, number]);
+    const coords = vertices;
     if (geomType === "Point") return { type: "Point", coordinates: coords[0] };
     if (geomType === "LineString")
       return { type: "LineString", coordinates: coords };
@@ -222,6 +224,7 @@ export default function SuggestFeatureForm({
             name: name.trim() || null,
             description: description.trim() || null,
             water_ranges: waterRanges,
+            proposal_note: proposalNoteValue(note),
           },
         },
         { onSuccess: () => onSubmitted?.() },
@@ -236,6 +239,7 @@ export default function SuggestFeatureForm({
           name: name.trim() || null,
           description: description.trim() || null,
           water_ranges: waterRanges,
+          proposal_note: proposalNoteValue(note),
         },
         { onSuccess: () => onSubmitted?.() },
       );
@@ -260,6 +264,19 @@ export default function SuggestFeatureForm({
         <SuggestFeatureTypeGrid
           value={featureType}
           onChange={setFeatureType}
+          disabled={submitting}
+        />
+      </FormSection>
+
+      <FormSection
+        label="Location"
+        hint="Place it on the map: a point, a line or an area."
+      >
+        <SuggestFeatureGeometry
+          geometry={geometry}
+          sectionLine={sectionLine}
+          useSectionLine={useSectionLine}
+          onUseSectionLineChange={setUseSectionLine}
           disabled={submitting}
         />
       </FormSection>
@@ -305,18 +322,13 @@ export default function SuggestFeatureForm({
         <GaugeRangePicker picker={gaugePicker} />
       </FormSection>
 
-      <FormSection
-        label="Location"
-        hint="Place it on the map: a point, a line or an area."
-      >
-        <SuggestFeatureGeometry
-          geometry={geometry}
-          sectionLine={sectionLine}
-          useSectionLine={useSectionLine}
-          onUseSectionLineChange={setUseSectionLine}
+      {!onDraft && (
+        <ProposalNoteField
+          value={note}
+          onChange={setNote}
           disabled={submitting}
         />
-      </FormSection>
+      )}
 
       {submitError && <Alert severity="error">{submitError}</Alert>}
     </Box>

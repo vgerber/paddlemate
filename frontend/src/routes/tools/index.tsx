@@ -9,11 +9,14 @@ export const Route = createFileRoute("/tools/")({
 
 function ToolsPage() {
   return (
-    <Box sx={{ maxWidth: 880, mx: "auto", px: 2, py: 3 }}>
+    <Box sx={{ maxWidth: 880, mx: "auto", px: { xs: 1.5, md: 2 }, py: 3 }}>
       <Typography variant="h6" sx={{ fontSize: "1.5rem", fontWeight: 700 }}>
         Tools
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+      <Typography
+        color="textSecondary"
+        sx={{ mb: 2.5, fontSize: "0.9375rem", lineHeight: "20px" }}
+      >
         Utilities for exploring and maintaining Paddlemate's data.
       </Typography>
       <ToolsList />

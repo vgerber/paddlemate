@@ -24,7 +24,7 @@ export default function ErrorFallback({ error }: { error: unknown }) {
         <ErrorOutlineIcon />
       </StateTile>
       <Typography variant="h6">Something went wrong</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+      <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
         {apiErrorMessage(error, "An unexpected error occurred.")}
       </Typography>
       <Button variant="contained" onClick={() => window.location.reload()}>

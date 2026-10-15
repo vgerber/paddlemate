@@ -27,6 +27,20 @@ Each section is a line on the map with a put-in and a take-out. Sections carry:
   in the section view, and shaded bands on the gauge chart.
 - Comments and favorites.
 
+### The section view
+
+Opening a section shows a chart card at the top (the charted reading and
+period, with one button for the options) and four tabs below it:
+
+- **Features** - a strip of the run (grade bar, ranges, each feature as its
+  icon) above the list. Ranges are soft bands that fold and name what they
+  hide; a portage keeps a dashed rail.
+- **Logs** - descents on this section.
+- **Notes** - notes and photos as cards.
+- **Sources** - where the data came from (see Internals, provenance). A
+  row of the section opens its change history over the pane, and an open
+  feature row has a "History" action for that feature.
+
 ## Features
 
 | Type | Meaning |

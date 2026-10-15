@@ -16,7 +16,7 @@ export function StateTile({ children }: { children: ReactNode }) {
         width: 48,
         height: 48,
         borderRadius: `${tokens.radii.md}px`,
-        bgcolor: `${tokens.primary}${alphas.hover}`,
+        bgcolor: `${tokens.primary}${alphas.wash}`,
         color: tokens.primary,
         display: "grid",
         placeItems: "center",
@@ -36,11 +36,16 @@ export default function EmptyState({
   title,
   caption,
   py = 6,
+  pt = py,
+  pb = py,
 }: {
   icon?: ReactNode;
   title: string;
   caption?: string;
   py?: number;
+  /** Override the top or bottom of `py`. */
+  pt?: number;
+  pb?: number;
 }) {
   return (
     <Box
@@ -50,20 +55,25 @@ export default function EmptyState({
         flexDirection: "column",
         alignItems: "center",
         gap: 0.75,
-        py,
+        pt,
+        pb,
         px: 2,
         textAlign: "center",
       }}
     >
       <StateTile>{icon}</StateTile>
       <Typography
-        variant="body1"
-        sx={{ fontWeight: 600, color: "text.primary" }}
+        variant="body2"
+        sx={{
+          fontSize: "0.875rem",
+          lineHeight: "20px",
+          color: "text.secondary",
+        }}
       >
         {title}
       </Typography>
       {caption && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="textSecondary">
           {caption}
         </Typography>
       )}

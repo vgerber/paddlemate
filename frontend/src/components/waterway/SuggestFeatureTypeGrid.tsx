@@ -7,8 +7,11 @@ import { labelSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
-/** "put_in" -> "Put in". */
+/** "put_in" -> "Put-in", "take_out" -> "Take-out" (one spelling with the
+ * wizard's other screens). */
 function typeLabel(type: FeatureType): string {
+  if (type === "put_in") return "Put-in";
+  if (type === "take_out") return "Take-out";
   const text = humanize(type);
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
@@ -48,6 +51,7 @@ export default function SuggestFeatureTypeGrid({
             onClick={() => onChange(type)}
             sx={{
               ...labelSx,
+              fontSize: "0.8125rem",
               minHeight: 64,
               minWidth: tokens.touch.min,
               display: "flex",

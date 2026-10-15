@@ -1,44 +1,39 @@
-import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
+import { desktopFlatRow } from "@/components/canvas/flatRow";
 import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
+import { descentRivers, descentTitle } from "@/lib/descents";
 import { durationLabel, formatDate, formatTime, timeAgo } from "@/lib/format";
-import { theme } from "@/lib/theme";
+import { transition } from "@/lib/motion";
+import { alphas, theme } from "@/lib/theme";
 import { levelAtTime } from "./levelAtTime";
 
 const { tokens } = theme;
 
 const VISIBILITY = {
-  private: { icon: LockOutlinedIcon, label: "Private" },
-  shared: { icon: GroupOutlinedIcon, label: "Shared" },
-  public: { icon: PublicOutlinedIcon, label: "Public" },
+  private: "Private",
+  shared: "Shared",
+  public: "Public",
 } as const;
 
-/** Who can see a log: an icon and one plain word. */
+/** Who can see a log: one plain word. */
 export function VisibilityTag({
   type,
 }: {
   type: Descent["visibility"]["type"];
 }) {
-  const { icon: Icon, label } = VISIBILITY[type];
   return (
     <Box
       component="span"
       sx={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 0.5,
         flexShrink: 0,
         color: "text.secondary",
         fontSize: "0.75rem",
         fontWeight: 500,
       }}
     >
-      <Icon sx={{ fontSize: 14 }} />
-      {label}
+      {VISIBILITY[type]}
     </Box>
   );
 }
@@ -52,6 +47,9 @@ interface DescentCardProps {
   flush?: boolean;
   /** Marks the row the desktop detail pane is showing. */
   selected?: boolean;
+  /** From the desktop split up the row is flat on a floating card, as the
+   * other desktop lists are; phones keep the shadowed card. */
+  flatFromMd?: boolean;
 }
 
 const line = { display: "block", minWidth: 0 } as const;
@@ -62,23 +60,18 @@ export default function DescentCard({
   showAuthor,
   flush,
   selected,
+  flatFromMd,
 }: DescentCardProps) {
   const sections = descent.sections
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order);
-  const waterwayNames = [
-    ...new Set(sections.map((s) => s.waterway_name).filter(Boolean)),
-  ] as string[];
+  const waterwayNames = descentRivers(descent);
   const sectionNames = sections
     .map((s) => s.section_name)
     .filter(Boolean) as string[];
 
   const dateStr = formatDate(descent.start_time);
-  const title =
-    descent.name ||
-    (waterwayNames.length > 0 ? waterwayNames.join(" / ") : null) ||
-    (sectionNames.length > 0 ? sectionNames.join(", ") : null) ||
-    dateStr;
+  const title = descentTitle(descent);
   const duration = durationLabel(descent.start_time, descent.end_time);
   const level = levelAtTime(descent.sections);
   const meta = [dateStr, formatTime(descent.start_time), duration]
@@ -96,9 +89,9 @@ export default function DescentCard({
   return (
     <ButtonBase
       data-testid="descent-card"
+      aria-current={selected || undefined}
       component={onClick ? "button" : "div"}
       onClick={onClick}
-      focusRipple
       sx={{
         display: "grid",
         gridTemplateColumns: "minmax(0, 1fr) auto",
@@ -125,6 +118,11 @@ export default function DescentCard({
                 : tokens.elevation.e1,
             }),
         ...(flush && selected && { bgcolor: "action.selected" }),
+        ...(flatFromMd && !flush && desktopFlatRow),
+        transition: transition("background-color", { duration: "instant" }),
+        "&:active": onClick
+          ? { bgcolor: `${tokens.primary}${alphas.wash}` }
+          : undefined,
       }}
     >
       <Box
@@ -205,6 +203,11 @@ export default function DescentCard({
           fontWeight: 500,
           color: "text.secondary",
           justifySelf: "end",
+          // On the date line when the pill wraps above it.
+          alignSelf: "end",
+          minHeight: 24,
+          display: "flex",
+          alignItems: "center",
         }}
       >
         {timeAgo(descent.start_time)}

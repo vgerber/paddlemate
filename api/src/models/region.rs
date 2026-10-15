@@ -58,6 +58,20 @@ pub struct Region {
     pub country: Option<String>,
     /// Outline bounding box as [west, south, east, north].
     pub bbox: Option<[f64; 4]>,
+    /// The larger regions this one lies in, most specific first (district,
+    /// state, country), for showing "Tirol, AT". Found by containment of a
+    /// point on the region; mountain ranges list only their country. Empty
+    /// for regions derived live from OSM.
+    #[serde(default)]
+    pub parents: Vec<RegionRef>,
+}
+
+/// A region named by a child's parent chain.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct RegionRef {
+    pub id: i64,
+    pub name: String,
+    pub kind: RegionKind,
 }
 
 impl Region {
@@ -69,6 +83,7 @@ impl Region {
             kind,
             country: None,
             bbox: None,
+            parents: vec![],
         }
     }
 }
@@ -98,6 +113,12 @@ pub struct CountryBorder {
     pub name: String,
     /// ISO 3166-1 alpha-2 code.
     pub country: String,
+    /// ISO codes of the other imported countries whose ground lies against
+    /// this line inside the viewport, so the map can label the line
+    /// "AT | IT". Derived from the country polygons: a neighbour is one
+    /// whose area comes within about a kilometre of the clipped line.
+    /// Empty where the other side is not imported or is sea.
+    pub neighbours: Vec<String>,
     /// The boundary line, clipped to the viewport and simplified for it.
     pub geometry: Geometry,
 }
@@ -112,4 +133,8 @@ pub struct RegionOutlineList {
     /// True while ground in the viewport is still being fetched from OSM.
     /// Ask again shortly for the regions that are not in yet.
     pub filling: bool,
+    /// Requested `kinds` left out because the viewport is wider than they
+    /// can be drawn at. Always empty without `kinds`.
+    #[serde(default)]
+    pub hidden_kinds: Vec<String>,
 }

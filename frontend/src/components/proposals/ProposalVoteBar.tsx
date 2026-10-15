@@ -3,7 +3,6 @@ import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
 import Box from "@mui/material/Box";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import type { Proposal } from "@/lib/api";
 import { formatDate } from "@/lib/format";
@@ -33,9 +32,6 @@ export default function ProposalVoteBar({ proposal }: { proposal: Proposal }) {
         display: "flex",
         alignItems: "center",
         gap: 1.5,
-        pt: 1.5,
-        borderTop: "1px solid",
-        borderColor: `${tokens.outlineVariant}55`,
       }}
     >
       <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -43,6 +39,11 @@ export default function ProposalVoteBar({ proposal }: { proposal: Proposal }) {
           Proposed by {proposerName(proposal, user?.id)} ·{" "}
           {formatDate(proposal.created_at)}
         </Typography>
+        {!isAuthenticated && (
+          <Typography sx={{ ...labelSx, color: "text.disabled" }} noWrap>
+            Sign in to vote
+          </Typography>
+        )}
         {reviewed && (
           <Typography sx={{ ...labelSx, color: "text.disabled" }} noWrap>
             {reviewed}
@@ -50,61 +51,56 @@ export default function ProposalVoteBar({ proposal }: { proposal: Proposal }) {
         )}
       </Box>
 
-      <Tooltip
-        title={!isAuthenticated ? "Sign in to vote" : ""}
-        placement="top"
-      >
-        <span>
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            disabled={!isAuthenticated}
-            value={proposal.user_vote ?? null}
-            onChange={(_, next) => handleVote(next as 1 | -1 | null)}
+      <span>
+        <ToggleButtonGroup
+          size="small"
+          exclusive
+          disabled={!isAuthenticated}
+          value={proposal.user_vote ?? null}
+          onChange={(_, next) => handleVote(next as 1 | -1 | null)}
+          sx={{
+            "& .MuiToggleButton-root": {
+              minWidth: tokens.touch.min,
+              minHeight: tokens.touch.min,
+              px: 1.25,
+              gap: 0.5,
+              fontFamily: fonts.label,
+              fontSize: "0.8125rem",
+              color: "text.secondary",
+              borderColor: `${tokens.outlineVariant}55`,
+            },
+          }}
+        >
+          <ToggleButton
+            value={1}
+            aria-label="Upvote proposal"
             sx={{
-              "& .MuiToggleButton-root": {
-                minWidth: tokens.touch.min,
-                minHeight: tokens.touch.min,
-                px: 1.25,
-                gap: 0.5,
-                fontFamily: fonts.label,
-                fontSize: "0.8125rem",
-                color: "text.secondary",
-                borderColor: `${tokens.outlineVariant}55`,
+              "&.Mui-selected": {
+                color: tokens.success,
+                bgcolor: `${tokens.success}14`,
+                "&:hover": { bgcolor: `${tokens.success}1f` },
               },
             }}
           >
-            <ToggleButton
-              value={1}
-              aria-label="Upvote proposal"
-              sx={{
-                "&.Mui-selected": {
-                  color: tokens.success,
-                  bgcolor: `${tokens.success}14`,
-                  "&:hover": { bgcolor: `${tokens.success}1f` },
-                },
-              }}
-            >
-              <ThumbUpOutlinedIcon sx={{ fontSize: 16 }} />
-              {proposal.upvotes}
-            </ToggleButton>
-            <ToggleButton
-              value={-1}
-              aria-label="Downvote proposal"
-              sx={{
-                "&.Mui-selected": {
-                  color: tokens.error,
-                  bgcolor: `${tokens.error}14`,
-                  "&:hover": { bgcolor: `${tokens.error}1f` },
-                },
-              }}
-            >
-              <ThumbDownOutlinedIcon sx={{ fontSize: 16 }} />
-              {proposal.downvotes}
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </span>
-      </Tooltip>
+            <ThumbUpOutlinedIcon sx={{ fontSize: 16 }} />
+            {proposal.upvotes}
+          </ToggleButton>
+          <ToggleButton
+            value={-1}
+            aria-label="Downvote proposal"
+            sx={{
+              "&.Mui-selected": {
+                color: tokens.error,
+                bgcolor: `${tokens.error}14`,
+                "&:hover": { bgcolor: `${tokens.error}1f` },
+              },
+            }}
+          >
+            <ThumbDownOutlinedIcon sx={{ fontSize: 16 }} />
+            {proposal.downvotes}
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </span>
     </Box>
   );
 }

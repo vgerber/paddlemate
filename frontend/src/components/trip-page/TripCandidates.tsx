@@ -4,9 +4,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import ThumbDownOutlinedIcon from "@mui/icons-material/ThumbDownOutlined";
 import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import ButtonBase from "@mui/material/ButtonBase";
-import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
 import { type ReactNode, useState } from "react";
@@ -14,8 +12,8 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { factLabelSx } from "@/components/Fact";
 import MarkdownText from "@/components/MarkdownText";
 import RowMenu from "@/components/RowMenu";
+import RolePill from "@/components/trips/RolePill";
 import { stayKind } from "@/components/trips/stayKinds";
-import FormSection from "@/components/waterway/FormSection";
 import type { TripStay, TripStayCandidate } from "@/lib/api";
 import { dateRange } from "@/lib/format";
 import {
@@ -64,7 +62,18 @@ export default function TripCandidates({
   if (candidates.length === 0) return null;
 
   return (
-    <FormSection label={`Up for a vote (${candidates.length})`}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+      <Typography
+        data-testid="form-section-label"
+        sx={{
+          fontFamily: fonts.label,
+          fontSize: "0.875rem",
+          fontWeight: 600,
+          color: "text.secondary",
+        }}
+      >
+        {`Up for a vote (${candidates.length})`}
+      </Typography>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         {candidates.map((candidate) => (
           <CandidateRow
@@ -110,7 +119,7 @@ export default function TripCandidates({
         }}
         onCancel={() => setConfirming(null)}
       />
-    </FormSection>
+    </Box>
   );
 }
 
@@ -125,6 +134,8 @@ function SupportBar({ up, down }: { up: number; down: number }) {
         sx={{
           flex: 1,
           height: 6,
+          borderRadius: "3px",
+          overflow: "hidden",
           bgcolor: `${tokens.outlineVariant}55`,
           display: "flex",
         }}
@@ -133,7 +144,14 @@ function SupportBar({ up, down }: { up: number; down: number }) {
             water levels, so a vote does not borrow red and green. */}
         <Box sx={{ width: `${share}%`, bgcolor: tokens.primary }} />
       </Box>
-      <Typography sx={{ ...factLabelSx, flexShrink: 0 }}>
+      <Typography
+        sx={{
+          ...factLabelSx,
+          fontSize: "0.8125rem",
+          fontWeight: 400,
+          flexShrink: 0,
+        }}
+      >
         {cast === 0 ? "No votes yet" : `${up} for · ${down} against`}
       </Typography>
     </Box>
@@ -163,7 +181,7 @@ function CandidateRow({
 }) {
   const vote = useVoteCandidate(tripId);
   const withdraw = useWithdrawCandidate(tripId);
-  const { label, Icon } = stayKind(candidate.kind);
+  const { label } = stayKind(candidate.kind);
   const near = nearestWatched(candidate, stays);
   const mine = candidate.proposed_by === viewerId;
 
@@ -178,6 +196,15 @@ function CandidateRow({
   const objectors = naming(-1);
 
   const actions = [];
+  // Accepting is the admin's call; it sits in the menu so the card keeps to
+  // the vote and who is on which side.
+  if (isAdmin) {
+    actions.push({
+      label: "Make this a base",
+      icon: <CheckIcon fontSize="small" />,
+      onClick: onAccept,
+    });
+  }
   // Anyone on the trip may correct a suggestion - the wrong price, a dead
   // link, the dates it is actually free. It belongs to the trip, not to
   // whoever typed it first.
@@ -200,8 +227,7 @@ function CandidateRow({
       data-testid="candidate-row"
       sx={{
         borderRadius: `${tokens.radii.md}px`,
-        bgcolor: tokens.surface,
-        boxShadow: tokens.elevation.e1,
+        bgcolor: tokens.surfaceHigh,
         overflow: "hidden",
       }}
     >
@@ -223,7 +249,6 @@ function CandidateRow({
             textAlign: "left",
           }}
         >
-          <Icon sx={{ fontSize: 18, color: "text.disabled" }} />
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography
               noWrap
@@ -238,7 +263,8 @@ function CandidateRow({
             <Typography
               sx={{
                 ...factLabelSx,
-                color: candidate.arrival ? "primary.main" : "text.disabled",
+                fontSize: "0.8125rem",
+                fontWeight: 400,
               }}
             >
               {candidate.arrival
@@ -246,22 +272,27 @@ function CandidateRow({
                 : "No dates yet"}
             </Typography>
           </Box>
-          <Chip label={label} size="small" variant="outlined" />
+          <RolePill>{label}</RolePill>
         </ButtonBase>
         <RowMenu actions={actions} label={`Actions for ${candidate.name}`} />
       </Box>
 
       <Box sx={{ px: 1.5, pb: 1 }}>
         <SupportBar up={candidate.upvotes} down={candidate.downvotes} />
-        {(supporters.length > 0 || objectors.length > 0) && (
-          <Typography sx={{ ...factLabelSx, mt: 0.5, display: "block" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
+          <Typography
+            sx={{
+              ...factLabelSx,
+              fontSize: "0.8125rem",
+              fontWeight: 400,
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
             {supporters.length > 0 && `For: ${supporters.join(", ")}`}
             {supporters.length > 0 && objectors.length > 0 && "  ·  "}
             {objectors.length > 0 && `Against: ${objectors.join(", ")}`}
           </Typography>
-        )}
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
           <VoteButton
             label={`Vote for ${candidate.name}`}
             icon={<ThumbUpOutlinedIcon sx={{ fontSize: 18 }} />}
@@ -289,15 +320,6 @@ function CandidateRow({
               })
             }
           />
-          <Box sx={{ flex: 1 }} />
-          {isAdmin && (
-            <Button
-              startIcon={<CheckIcon fontSize="small" />}
-              onClick={onAccept}
-            >
-              Make this a base
-            </Button>
-          )}
         </Box>
       </Box>
 

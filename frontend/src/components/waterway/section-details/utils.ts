@@ -20,7 +20,7 @@ export function sentence(text: string): string {
 }
 
 /** Difficulty grade from feature metadata, or null. */
-export function featureDifficulty(f: Feature): string | null {
+export function featureDifficulty(f: { metadata?: unknown }): string | null {
   const d = (f.metadata as Record<string, unknown> | null)?.difficulty;
   return typeof d === "string" && d ? d : null;
 }
@@ -36,6 +36,11 @@ export function featureName(f: Feature): string {
       ? "WW"
       : sentence(humanize(f.feature_type)));
   return diff ? `${name} ${diff}` : name;
+}
+
+/** Length of the section line in metres; 0 for a degenerate line. */
+export function sectionLengthM(line: [number, number][]): number {
+  return line.length < 2 ? 0 : distanceAlongLineM(line[line.length - 1], line);
 }
 
 /** Tolerance (m) when detecting that a zone spans the whole section. */

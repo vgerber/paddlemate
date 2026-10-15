@@ -416,7 +416,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Every source and contributor behind a river, its sections and its features */
+        /** @description Every source and contributor behind a river, its sections and its features; with `section_id`, only those behind that section and its features */
         get: operations["get_waterway_sources"];
         put?: never;
         post?: never;
@@ -1121,7 +1121,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Regions overlapping a viewport, with their boundaries, for drawing region mode on the map. Which kinds come back depends on how much ground the viewport covers: states at country zoom, districts and mountain ranges in between, valleys at river zoom. Ground the server has not seen before is fetched from OSM in the background, which takes seconds for a boundary the size of a district - `filling` says that is happening and the request should be repeated shortly for the rest. An empty region list with `filling` false means the map is zoomed too far out to draw regions; the country borders still come back, clipped to the viewport, so the map can always say which country you are looking at. */
+        /** @description Regions overlapping a viewport, with their boundaries, for drawing region mode on the map. Without `kinds`, which kind comes back depends on how much ground the viewport covers: states at country zoom, districts and mountain ranges in between, valleys at river zoom. With `kinds` (comma list of valley, district, range, state) exactly those kinds come back, each up to a limit on the viewport width (valley 3, district 6, range 8, state 12 degrees); a kind past its limit is left out and named in `hidden_kinds`, so the app can ask for a closer zoom. Ground the server has not seen before is fetched from OSM in the background, which takes seconds for a boundary the size of a district - `filling` says that is happening and the request should be repeated shortly for the rest. An empty region list with `filling` false means the map is zoomed too far out to draw regions; the country borders still come back, clipped to the viewport, so the map can always say which country you are looking at. */
         get: operations["list_region_outlines"];
         put?: never;
         post?: never;
@@ -1524,6 +1524,12 @@ export interface components {
         BrowseQuery: {
             /** @description Viewport to draw regions for, as "south,west,north,east". */
             bbox: string;
+            /**
+             * @description Comma separated kinds to draw (`valley`, `district`, `range`,
+             *      `state`) instead of the one the viewport size picks. A kind the
+             *      viewport is too wide for is left out and named in `hidden_kinds`.
+             */
+            kinds?: string | null;
         };
         /**
          * @description Water-range thresholds submitted together with a new feature (create
@@ -1659,6 +1665,14 @@ export interface components {
             /** @description The boundary line, clipped to the viewport and simplified for it. */
             geometry: components["schemas"]["Geometry"];
             name: string;
+            /**
+             * @description ISO codes of the other imported countries whose ground lies against
+             *      this line inside the viewport, so the map can label the line
+             *      "AT | IT". Derived from the country polygons: a neighbour is one
+             *      whose area comes within about a kilometre of the clipped line.
+             *      Empty where the other side is not imported or is sea.
+             */
+            neighbours: string[];
         };
         CreateCommentRequest: {
             body: string;
@@ -1752,37 +1766,6 @@ export interface components {
             endpoint: string;
             keys: components["schemas"]["PushSubscriptionKeys"];
         };
-        /**
-         * @description Payload for creating a section together with its localized texts and
-         *      features - one reviewable unit for the proposal workflow.
-         */
-        CreateSectionBody: {
-            description?: string | null;
-            country?: string | null;
-            /**
-             * @description Features created together with the section
-             * @default []
-             */
-            features?: components["schemas"]["CreateFeatureBody"][];
-            /** @description GeoJSON LineString geometry */
-            location: components["schemas"]["Geometry"];
-            name: string;
-            /**
-             * @description Legacy single-region field, still accepted so proposals stored before
-             *      the regions array keep applying. Folded into `regions` on use.
-             */
-            region?: string | null;
-            /**
-             * @description Region names, most specific first (valley, district, state, range).
-             * @default []
-             */
-            regions?: string[];
-            /**
-             * @description Localized names/descriptions created together with the section
-             * @default []
-             */
-            translations?: components["schemas"]["SectionTranslationBody"][];
-        };
         CreateSeriesRequest: {
             label?: string | null;
             measurement_type: components["schemas"]["MeasurementType"];
@@ -1846,10 +1829,6 @@ export interface components {
             range_medium: number;
             /** Format: int64 */
             series_id: number;
-        };
-        CreateWaterwayBody: {
-            description?: string | null;
-            name: string;
         };
         /** @description A logged paddling descent. */
         Descent: {
@@ -2390,6 +2369,8 @@ export interface components {
              * @description Set when the step is the outcome of a proposal
              */
             proposal_id?: number | null;
+            /** @description The submitter's note on that proposal, if they left one */
+            proposal_note?: string | null;
             reviewer?: components["schemas"]["HistoryUser"] | null;
             /** @description Set for an import */
             source?: components["schemas"]["HistorySource"] | null;
@@ -2806,6 +2787,123 @@ export interface components {
             lon?: number | null;
             name?: string | null;
         };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
+        Proposable_for_CreateFeatureBody: {
+            description?: string | null;
+            feature_type: components["schemas"]["FeatureType"];
+            /** @description Language tag for name/description, stored lowercase (default: "en") */
+            lang_code?: string | null;
+            /** @description GeoJSON geometry (Point, LineString, or Polygon) */
+            location: components["schemas"]["Geometry"];
+            /** @default {} */
+            metadata?: unknown;
+            name?: string | null;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+            /**
+             * @description Gauge thresholds created together with the feature
+             * @default []
+             */
+            water_ranges?: components["schemas"]["FeatureWaterRangeBody"][];
+        };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
+        Proposable_for_CreateSectionBody: {
+            description?: string | null;
+            country?: string | null;
+            /**
+             * @description Features created together with the section
+             * @default []
+             */
+            features?: components["schemas"]["CreateFeatureBody"][];
+            /** @description GeoJSON LineString geometry */
+            location: components["schemas"]["Geometry"];
+            name: string;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+            /**
+             * @description Legacy single-region field, still accepted so proposals stored before
+             *      the regions array keep applying. Folded into `regions` on use.
+             */
+            region?: string | null;
+            /**
+             * @description Region names, most specific first (valley, district, state, range).
+             * @default []
+             */
+            regions?: string[];
+            /**
+             * @description Localized names/descriptions created together with the section
+             * @default []
+             */
+            translations?: components["schemas"]["SectionTranslationBody"][];
+        };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
+        Proposable_for_CreateWaterwayBody: {
+            description?: string | null;
+            name: string;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+        };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
+        Proposable_for_UpdateFeatureBody: {
+            /** @description New description in `lang_code`; omit to leave descriptions unchanged */
+            description?: string | null;
+            feature_type?: components["schemas"]["FeatureType"] | null;
+            /** @description Language tag for name/description, stored lowercase (default: "en") */
+            lang_code?: string | null;
+            location?: components["schemas"]["Geometry"] | null;
+            metadata?: unknown;
+            /** @description New name in `lang_code`; omit to leave names unchanged */
+            name?: string | null;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+            /**
+             * @description Gauge thresholds upserted together with the update
+             * @default []
+             */
+            water_ranges?: components["schemas"]["FeatureWaterRangeBody"][];
+        };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
+        Proposable_for_UpdateSectionBody: {
+            description?: string | null;
+            country?: string | null;
+            location?: components["schemas"]["Geometry"] | null;
+            name?: string | null;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+            /** @description Region names, most specific first; `None` keeps the current list. */
+            regions?: string[] | null;
+        };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
+        Proposable_for_UpdateWaterwayBody: {
+            description?: string | null;
+            name?: string | null;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+        };
         Proposal: {
             /** Format: date-time */
             created_at: string;
@@ -2832,6 +2930,8 @@ export interface components {
             submitted_by: string;
             /** @description Username of the submitter; null when the account no longer exists */
             submitted_by_name?: string | null;
+            /** @description The submitter's own note on why they propose this, if they gave one */
+            submitter_note?: string | null;
             /** Format: date-time */
             updated_at: string;
             /** Format: int64 */
@@ -2892,6 +2992,14 @@ export interface components {
             id?: number | null;
             kind: components["schemas"]["RegionKind"];
             name: string;
+            /**
+             * @description The larger regions this one lies in, most specific first (district,
+             *      state, country), for showing "Tirol, AT". Found by containment of a
+             *      point on the region; mountain ranges list only their country. Empty
+             *      for regions derived live from OSM.
+             * @default []
+             */
+            parents?: components["schemas"]["RegionRef"][];
         };
         /**
          * @description How specific a region name is. Ordered most specific first, which is also
@@ -2932,6 +3040,12 @@ export interface components {
              *      Ask again shortly for the regions that are not in yet.
              */
             filling: boolean;
+            /**
+             * @description Requested `kinds` left out because the viewport is wider than they
+             *      can be drawn at. Always empty without `kinds`.
+             * @default []
+             */
+            hidden_kinds?: string[];
             regions: components["schemas"]["RegionOutline"][];
         };
         RegionPath: {
@@ -2953,6 +3067,13 @@ export interface components {
              *      and common misspellings match too.
              */
             q?: string | null;
+        };
+        /** @description A region named by a child's parent chain. */
+        RegionRef: {
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["RegionKind"];
+            name: string;
         };
         ReplaceTripSectionsRequest: {
             sections: components["schemas"]["TripSectionInput"][];
@@ -3134,6 +3255,15 @@ export interface components {
              */
             entries: number;
             source: components["schemas"]["HistorySource"];
+        };
+        /** @description Query parameters of the sources view. */
+        SourcesQuery: {
+            /**
+             * Format: int64
+             * @description Count only this section's entries (its own and its features'), and
+             *      only the contributors behind them. Must belong to the waterway.
+             */
+            section_id?: number | null;
         };
         /**
          * @description What kind of step this is.
@@ -3435,22 +3565,6 @@ export interface components {
             /** @default null */
             category?: components["schemas"]["CommentCategory"] | null;
         };
-        UpdateFeatureBody: {
-            /** @description New description in `lang_code`; omit to leave descriptions unchanged */
-            description?: string | null;
-            feature_type?: components["schemas"]["FeatureType"] | null;
-            /** @description Language tag for name/description, stored lowercase (default: "en") */
-            lang_code?: string | null;
-            location?: components["schemas"]["Geometry"] | null;
-            metadata?: unknown;
-            /** @description New name in `lang_code`; omit to leave names unchanged */
-            name?: string | null;
-            /**
-             * @description Gauge thresholds upserted together with the update
-             * @default []
-             */
-            water_ranges?: components["schemas"]["FeatureWaterRangeBody"][];
-        };
         UpdateFollowerBody: {
             /** @description Only "accepted" is supported. Reject a request by deleting the follow. */
             status: components["schemas"]["FollowStatus"];
@@ -3473,14 +3587,6 @@ export interface components {
             description?: string | null;
             name?: string | null;
         };
-        UpdateSectionBody: {
-            description?: string | null;
-            country?: string | null;
-            location?: components["schemas"]["Geometry"] | null;
-            name?: string | null;
-            /** @description Region names, most specific first; `None` keeps the current list. */
-            regions?: string[] | null;
-        };
         UpdateSeriesRequest: {
             label?: string | null;
             measurement_type: components["schemas"]["MeasurementType"];
@@ -3493,10 +3599,6 @@ export interface components {
             range_low: number;
             /** Format: double */
             range_medium: number;
-        };
-        UpdateWaterwayBody: {
-            description?: string | null;
-            name?: string | null;
         };
         UpsertDescriptionBody: {
             description: string;
@@ -4087,11 +4189,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-11T10:27:52.351562598Z",
-                     *         "expires_at": "2027-01-09T10:27:52.351565048Z",
+                     *         "created_at": "2026-10-14T15:19:51.819835182Z",
+                     *         "expires_at": "2027-01-12T15:19:51.819837312Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-11T10:27:52.351571378Z",
+                     *         "last_used_at": "2026-10-14T15:19:51.819839862Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4122,8 +4224,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-11T10:27:52.351685777Z",
-                     *       "expires_at": "2027-01-09T10:27:52.351686207Z",
+                     *       "created_at": "2026-10-14T15:19:51.820722816Z",
+                     *       "expires_at": "2027-01-12T15:19:51.820723306Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -4839,9 +4941,14 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateWaterwayBody"];
+                "application/json": components["schemas"]["Proposable_for_CreateWaterwayBody"];
             };
         };
         responses: {
@@ -4922,9 +5029,14 @@ export interface operations {
             };
             cookie?: never;
         };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateWaterwayBody"];
+                "application/json": components["schemas"]["Proposable_for_UpdateWaterwayBody"];
             };
         };
         responses: {
@@ -5148,7 +5260,13 @@ export interface operations {
     };
     get_waterway_sources: {
         parameters: {
-            query?: never;
+            query?: {
+                /**
+                 * @description Count only this section's entries (its own and its features'), and
+                 *      only the contributors behind them. Must belong to the waterway.
+                 */
+                section_id?: number | null;
+            };
             header?: never;
             path: {
                 waterway_id: number;
@@ -5166,7 +5284,7 @@ export interface operations {
                     "application/json": components["schemas"]["WaterwaySources"];
                 };
             };
-            /** @description Waterway not found */
+            /** @description Waterway not found, or the section is not in it */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -5586,12 +5704,13 @@ export interface operations {
             cookie?: never;
         };
         /**
-         * @description Payload for creating a section together with its localized texts and
-         *      features - one reviewable unit for the proposal workflow.
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
          */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateSectionBody"];
+                "application/json": components["schemas"]["Proposable_for_CreateSectionBody"];
             };
         };
         responses: {
@@ -5901,9 +6020,14 @@ export interface operations {
             };
             cookie?: never;
         };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateSectionBody"];
+                "application/json": components["schemas"]["Proposable_for_UpdateSectionBody"];
             };
         };
         responses: {
@@ -6003,12 +6127,13 @@ export interface operations {
             cookie?: never;
         };
         /**
-         * @description Payload for creating a feature - used by the feature endpoint, by bundled
-         *      section-create payloads, and inside proposals.
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
          */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateFeatureBody"];
+                "application/json": components["schemas"]["Proposable_for_CreateFeatureBody"];
             };
         };
         responses: {
@@ -6070,9 +6195,14 @@ export interface operations {
             };
             cookie?: never;
         };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateFeatureBody"];
+                "application/json": components["schemas"]["Proposable_for_UpdateFeatureBody"];
             };
         };
         responses: {
@@ -7749,6 +7879,12 @@ export interface operations {
             query: {
                 /** @description Viewport to draw regions for, as "south,west,north,east". */
                 bbox: string;
+                /**
+                 * @description Comma separated kinds to draw (`valley`, `district`, `range`,
+                 *      `state`) instead of the one the viewport size picks. A kind the
+                 *      viewport is too wide for is left out and named in `hidden_kinds`.
+                 */
+                kinds?: string | null;
             };
             header?: never;
             path?: never;
@@ -7765,7 +7901,7 @@ export interface operations {
                     "application/json": components["schemas"]["RegionOutlineList"];
                 };
             };
-            /** @description Bad bbox */
+            /** @description Bad bbox or unknown kind */
             400: {
                 headers: {
                     [name: string]: unknown;

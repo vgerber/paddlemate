@@ -21,7 +21,7 @@ export default function MarkdownText({ children }: { children: string }) {
       remarkPlugins={[remarkGfm]}
       components={{
         p: ({ children }) => (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
             {children}
           </Typography>
         ),
@@ -56,7 +56,7 @@ export default function MarkdownText({ children }: { children: string }) {
           <Typography
             component="ul"
             variant="body2"
-            color="text.secondary"
+            color="textSecondary"
             sx={{ pl: 2.5, my: 0.5 }}
           >
             {children}
@@ -66,7 +66,7 @@ export default function MarkdownText({ children }: { children: string }) {
           <Typography
             component="ol"
             variant="body2"
-            color="text.secondary"
+            color="textSecondary"
             sx={{ pl: 2.5, my: 0.5 }}
           >
             {children}

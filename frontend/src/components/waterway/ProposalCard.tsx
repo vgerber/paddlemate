@@ -56,7 +56,7 @@ export default function ProposalCard({
       )}
 
       {proposal.review_note && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" color="textSecondary">
           Note: {proposal.review_note}
         </Typography>
       )}

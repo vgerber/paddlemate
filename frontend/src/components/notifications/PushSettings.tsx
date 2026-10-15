@@ -13,6 +13,33 @@ import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
+/** Calm tokens and a 44px hit area; MUI's switch is 38px with black tracks. */
+const switchSx = {
+  width: 58,
+  height: tokens.touch.min,
+  p: "15px 12px",
+  "& .MuiSwitch-switchBase": {
+    p: "12px",
+    "&.Mui-checked": { transform: "translateX(14px)" },
+  },
+  "& .MuiSwitch-thumb": {
+    width: 20,
+    height: 20,
+    color: tokens.surfaceLowest,
+    boxShadow: tokens.elevation.e1,
+  },
+  "& .MuiSwitch-switchBase + .MuiSwitch-track": {
+    borderRadius: tokens.radii.pill,
+    backgroundColor: tokens.outline,
+    opacity: 1,
+  },
+  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+    backgroundColor: tokens.primary,
+    opacity: 1,
+  },
+  "& .MuiSwitch-switchBase.Mui-disabled + .MuiSwitch-track": { opacity: 0.5 },
+} as const;
+
 /** Push on this device: the phone buzzes when a trip's plans change, even
  * with the app closed. Per device, because each browser subscribes itself. */
 export default function PushSettings() {
@@ -48,7 +75,7 @@ export default function PushSettings() {
           <Typography
             data-testid="push-hint"
             variant="body2"
-            color="text.secondary"
+            color="textSecondary"
           >
             Who joins or leaves, bases added, moved or decided, and when people
             arrive. Votes and edits only show under the bell.
@@ -57,6 +84,7 @@ export default function PushSettings() {
         {supported && (
           <Switch
             checked={on}
+            sx={switchSx}
             disabled={isLoading || setPush.isPending}
             onChange={(_, checked) => setPush.mutate(checked)}
             slotProps={{ input: { "aria-label": "Push on this device" } }}
@@ -66,7 +94,7 @@ export default function PushSettings() {
       <Typography
         data-testid="push-device-state"
         variant="body2"
-        color="text.secondary"
+        color="textSecondary"
       >
         {deviceState}
       </Typography>

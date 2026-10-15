@@ -4,18 +4,16 @@ import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import DockedAction from "@/components/DockedAction";
 import ListPaneHeader from "@/components/ListPaneHeader";
-import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
+import QueryStates from "@/components/states/QueryStates";
 import SignInGate from "@/components/states/SignInGate";
-import TripDetail from "@/components/trip-page/TripDetail";
 import { fabSx } from "@/components/trip-page/TripFab";
-import TripForm from "@/components/trips/TripForm";
 import TripRow from "@/components/trips/TripRow";
+import TripsCanvas from "@/components/trips/TripsCanvas";
 import { useSession } from "@/lib/hooks/useSession";
 import { useTrip, useTrips } from "@/lib/hooks/useTrips";
-import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/trips/")({
   // All optional, so /trips is always a valid link.
@@ -37,8 +35,10 @@ function TripsPage() {
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
 
   // A trip is invite-only, so the listing is simply the caller's trips.
-  const { data, isLoading } = useTrips({}, isAuthenticated);
-  const { data: selectedTrip } = useTrip(isDesktop ? (selected ?? null) : null);
+  const tripsQuery = useTrips({}, isAuthenticated);
+  const { data, isLoading } = tripsQuery;
+  const selectedQuery = useTrip(isDesktop ? (selected ?? null) : null);
+  const selectedTrip = selectedQuery.data;
   const trips = data?.items ?? [];
 
   const openTrip = (id: number) => {
@@ -66,41 +66,44 @@ function TripsPage() {
   }
 
   const list = (
-    <>
-      {isLoading ? (
-        <LoadingBox size={40} pt={6} />
-      ) : trips.length === 0 ? (
-        <EmptyState
-          icon={
-            <LuggageOutlinedIcon
-              sx={{ fontSize: 48, color: "text.disabled" }}
-            />
-          }
-          title="No trips yet."
-          py={8}
-        />
-      ) : (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1, p: 1.5 }}>
-          {trips.map((t) => (
-            <TripRow
-              key={t.id}
-              trip={t}
-              selected={isDesktop && t.id === selected}
-              onSelect={() => openTrip(t.id)}
-            />
-          ))}
-        </Box>
-      )}
-    </>
+    <QueryStates
+      query={tripsQuery}
+      count={trips.length}
+      errorFallback="Could not load your trips."
+      loadingSize={40}
+      py={8}
+      empty={{
+        icon: <LuggageOutlinedIcon />,
+        title: "No trips yet.",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: { xs: 1, md: 0 },
+          p: { xs: 1.5, md: 0 },
+        }}
+      >
+        {trips.map((t) => (
+          <TripRow
+            key={t.id}
+            trip={t}
+            selected={isDesktop && t.id === selected}
+            onSelect={() => openTrip(t.id)}
+          />
+        ))}
+      </Box>
+    </QueryStates>
   );
 
   if (!isDesktop) {
     return (
       <>
-        {/* No header above it on a phone, so the list brings its own top
-            gap - the rows' 16px inset, so the first one is not pinned to
-            the edge of the screen. */}
-        <Box sx={{ maxWidth: 720, mx: "auto" }}>{list}</Box>
+        <Box sx={{ maxWidth: 720, mx: "auto" }}>
+          <ListPaneHeader count={trips.length} loading={isLoading} />
+          {list}
+        </Box>
         <Fab
           color="secondary"
           onClick={() => navigate({ to: "/trips/new" })}
@@ -113,130 +116,41 @@ function TripsPage() {
     );
   }
 
-  // Desktop: the trip list beside the open trip, so moving between a week's
-  // plan and the others never costs a navigation round trip.
+  // Desktop: the trip list and the open trip float over the map, which
+  // draws the trip's bases and watch lists.
+  const closeTrip = () =>
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        selected: undefined,
+        edit: undefined,
+        new: undefined,
+      }),
+    });
+
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          md: "320px minmax(0, 1fr)",
-          lg: "420px minmax(0, 1fr)",
-        },
-        height: PANEL_HEIGHT,
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
-          bgcolor: theme.tokens.surfaceLow,
-          borderRight: "1px solid",
-          borderColor: `${theme.tokens.outlineVariant}55`,
-        }}
-      >
-        <ListPaneHeader
-          count={trips.length}
-          noun={{ one: "trip", other: "trips" }}
-          loading={isLoading}
-        />
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
-        <DockedAction
-          label="New trip"
-          onClick={() =>
-            navigate({
-              search: (prev) => ({ ...prev, new: true, selected: undefined }),
-            })
-          }
-        />
-      </Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
-          px: 2,
-          pt: 1.5,
-        }}
-      >
-        {creating ? (
-          <Box
-            sx={{
-              maxWidth: 880,
-              flex: 1,
-              minHeight: 0,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <TripForm
-              onSave={(id) =>
-                navigate({
-                  search: (prev) => ({
-                    ...prev,
-                    new: undefined,
-                    selected: id,
-                  }),
-                })
-              }
-              onCancel={() =>
-                navigate({ search: (prev) => ({ ...prev, new: undefined }) })
-              }
-            />
-          </Box>
-        ) : selectedTrip ? (
-          <Box
-            sx={{
-              position: "relative",
-              maxWidth: 880,
-              flex: 1,
-              minHeight: 0,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <TripDetail
-              trip={selectedTrip}
-              embedded
-              editing={edit === true}
-              onEditingChange={(v) =>
-                navigate({
-                  search: (prev) => ({ ...prev, edit: v || undefined }),
-                })
-              }
-              onClose={() =>
-                navigate({
-                  search: (prev) => ({
-                    ...prev,
-                    selected: undefined,
-                    edit: undefined,
-                  }),
-                })
-              }
-              onDeleted={() =>
-                navigate({
-                  search: (prev) => ({
-                    ...prev,
-                    selected: undefined,
-                    edit: undefined,
-                  }),
-                })
-              }
-            />
-          </Box>
-        ) : (
-          <EmptyState
-            icon={
-              <LuggageOutlinedIcon
-                sx={{ fontSize: 56, color: "text.disabled" }}
-              />
-            }
-            title="Pick a trip to open its plan."
-            py={10}
-          />
-        )}
-      </Box>
-    </Box>
+    <TripsCanvas
+      list={list}
+      count={trips.length}
+      loading={isLoading}
+      trip={selectedTrip ?? null}
+      opening={selected != null ? selectedQuery : undefined}
+      creating={creating === true}
+      editing={edit === true}
+      onNew={() =>
+        navigate({
+          search: (prev) => ({ ...prev, new: true, selected: undefined }),
+        })
+      }
+      onEditingChange={(v) =>
+        navigate({ search: (prev) => ({ ...prev, edit: v || undefined }) })
+      }
+      onClose={closeTrip}
+      onSaved={(id) =>
+        navigate({
+          search: (prev) => ({ ...prev, new: undefined, selected: id }),
+        })
+      }
+    />
   );
 }

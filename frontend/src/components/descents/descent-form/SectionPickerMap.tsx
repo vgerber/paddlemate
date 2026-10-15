@@ -1,70 +1,47 @@
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import WaterwayMap from "@/components/map/Map";
-import type { SectionWithFeatures } from "@/lib/api";
 import { theme } from "@/lib/theme";
+import type { SectionPicking } from "./useSectionPicking";
 
 const { tokens } = theme;
 
 interface Props {
-  sections: SectionWithFeatures[];
-  selectedIds: Set<number>;
-  putIn: { lat: number; lon: number } | null;
-  takeOut: { lat: number; lon: number } | null;
-  onSectionToggle: (section: SectionWithFeatures) => void;
-  onPickPutIn: (lat: number, lon: number) => void;
-  onPickTakeOut: (lat: number, lon: number) => void;
+  picking: SectionPicking;
+  /** Fill the pane it sits in instead of a fixed height. */
+  fill?: boolean;
+  /** Show the picks without letting a click change them. */
+  readOnly?: boolean;
 }
 
 /** Map for toggling sections and picking put-in/take-out points. */
-export default function SectionPickerMap({
-  sections,
-  selectedIds,
-  putIn,
-  takeOut,
-  onSectionToggle,
-  onPickPutIn,
-  onPickTakeOut,
-}: Props) {
+export default function SectionPickerMap({ picking, fill, readOnly }: Props) {
+  const { sectionsForMap: sections, selectedIds, putIn, takeOut } = picking;
   return (
     <Box
       sx={{
-        height: 380,
+        height: fill ? "100%" : 380,
         borderRadius: `${tokens.radii.md}px`,
         overflow: "hidden",
         position: "relative",
+        ...(fill && { boxShadow: tokens.elevation.e1 }),
       }}
     >
-      {sections.length === 0 && (
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            pointerEvents: "none",
-            zIndex: 1,
-          }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            Search a waterway to see its sections
-          </Typography>
-        </Box>
-      )}
       <WaterwayMap
         sections={sections}
         picking={{
           selectedSectionIds: selectedIds,
-          onSectionToggle: (id) => {
-            const section = sections.find((s) => s.id === id);
-            if (section) onSectionToggle(section);
-          },
+          onSectionToggle: readOnly
+            ? undefined
+            : (id) => {
+                const section = sections.find((s) => s.id === id);
+                if (section) picking.toggleSection(section);
+              },
           putIn,
           takeOut,
-          onPickPutIn,
-          onPickTakeOut,
+          onPickPutIn: readOnly ? undefined : picking.pickPutIn,
+          onPickTakeOut: readOnly ? undefined : picking.pickTakeOut,
         }}
+        chrome={{ minimal: true }}
       />
     </Box>
   );

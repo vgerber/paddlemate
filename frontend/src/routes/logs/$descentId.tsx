@@ -1,6 +1,7 @@
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
+import type { SxProps, Theme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -11,6 +12,8 @@ import DescentForm from "@/components/descents/DescentForm";
 import PanelHeader from "@/components/PanelHeader";
 import RowMenu from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
+import MissingState from "@/components/states/MissingState";
+import { descentTitle } from "@/lib/descents";
 import { formatDate } from "@/lib/format";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
@@ -37,7 +40,12 @@ function LogDetailPage() {
   // From md up this renders in the logs pane, where the list beside it
   // already names the log and carries the way back.
   const embedded = useMediaQuery(theme.breakpoints.up("md"));
-  const { data: descent, isLoading } = useDescent(Number(descentId));
+  const {
+    data: descent,
+    isLoading,
+    error,
+    refetch,
+  } = useDescent(Number(descentId));
   const deleteDescent = useDeleteDescent();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -55,10 +63,13 @@ function LogDetailPage() {
 
   if (!descent) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
-        <Typography variant="body2" color="text.disabled">
-          Log not found.
-        </Typography>
+      <Box sx={embedded ? undefined : { maxWidth: 720, mx: "auto" }}>
+        {!embedded && <PanelHeader title="Log" onBack={() => history.back()} />}
+        <MissingState
+          error={error}
+          notFound="Log not found."
+          onRetry={() => refetch()}
+        />
       </Box>
     );
   }
@@ -66,8 +77,8 @@ function LogDetailPage() {
   const isOwner = user != null && user.id === descent.user_id;
 
   // The edit form carries a bottom bar, which needs a floor to sit on.
-  const formShellSx = embedded
-    ? { height: "100%" }
+  const formShellSx: SxProps<Theme> = embedded
+    ? { flex: 1, display: "flex", flexDirection: "column" }
     : { maxWidth: 720, mx: "auto" };
 
   if (edit && isOwner) {
@@ -83,12 +94,7 @@ function LogDetailPage() {
     );
   }
 
-  const title =
-    descent.name ||
-    [
-      ...new Set(descent.sections.map((s) => s.waterway_name).filter(Boolean)),
-    ].join(" / ") ||
-    "Descent";
+  const title = descentTitle(descent);
   const subtitle = [
     descent.username,
     formatDate(descent.start_time),
@@ -97,34 +103,62 @@ function LogDetailPage() {
     .filter(Boolean)
     .join(" · ");
 
+  const menu = isOwner ? (
+    <RowMenu
+      actions={[
+        {
+          label: "Edit",
+          icon: <EditOutlinedIcon />,
+          onClick: () => setEdit(true),
+        },
+        {
+          label: "Delete",
+          icon: <DeleteOutlinedIcon />,
+          danger: true,
+          onClick: () => setConfirmDelete(true),
+        },
+      ]}
+    />
+  ) : undefined;
+
   return (
     <Box sx={embedded ? undefined : { maxWidth: 720, mx: "auto" }}>
-      <PanelHeader
-        title={title}
-        subtitle={subtitle}
-        onBack={embedded ? undefined : () => history.back()}
-        actionButton={
-          isOwner ? (
-            <RowMenu
-              actions={[
-                {
-                  label: "Edit",
-                  icon: <EditOutlinedIcon />,
-                  onClick: () => setEdit(true),
-                },
-                {
-                  label: "Delete",
-                  icon: <DeleteOutlinedIcon />,
-                  danger: true,
-                  onClick: () => setConfirmDelete(true),
-                },
-              ]}
-            />
-          ) : undefined
-        }
-      />
-      <Box sx={{ px: 2, py: 2 }}>
-        <DescentDetail descent={descent} />
+      {embedded ? (
+        // The pane is one card: the header and the body share its padding
+        // and no rule divides them.
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 1,
+            px: 3.5,
+            pt: 2.5,
+          }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="h3" noWrap>
+              {title}
+            </Typography>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              sx={{ fontSize: "0.8125rem", lineHeight: "18px" }}
+            >
+              {subtitle}
+            </Typography>
+          </Box>
+          {menu}
+        </Box>
+      ) : (
+        <PanelHeader
+          title={title}
+          subtitle={subtitle}
+          onBack={() => history.back()}
+          actionButton={menu}
+        />
+      )}
+      <Box sx={embedded ? { px: 3.5, py: 2.5 } : { px: 2, py: 2 }}>
+        <DescentDetail descent={descent} showMap={!embedded} />
       </Box>
       <ConfirmDialog
         open={confirmDelete}

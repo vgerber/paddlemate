@@ -1,4 +1,8 @@
-import type { SectionWaterSnapshot, SectionWithFeatures } from "@/lib/api";
+import type {
+  Descent,
+  SectionWaterSnapshot,
+  SectionWithFeatures,
+} from "@/lib/api";
 
 /** One snapshot per gauge series - older descents stored one per feature
  * range, which would repeat the same reading. */
@@ -30,4 +34,30 @@ export function toPseudoSection(input: {
     created_at: "",
     updated_at: "",
   } as SectionWithFeatures;
+}
+
+/** The river names of a log in section order, each once. */
+export function descentRivers(descent: Pick<Descent, "sections">): string[] {
+  const names = [...descent.sections]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((s) => s.waterway_name)
+    .filter(Boolean) as string[];
+  return [...new Set(names)];
+}
+
+/** What a log is called everywhere: its own name, else its rivers, else its
+ * sections, else "Descent". */
+export function descentTitle(
+  descent: Pick<Descent, "name" | "sections">,
+): string {
+  const sections = [...descent.sections]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((s) => s.section_name)
+    .filter(Boolean);
+  return (
+    descent.name ||
+    descentRivers(descent).join(" / ") ||
+    sections.join(", ") ||
+    "Descent"
+  );
 }

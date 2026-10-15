@@ -1,4 +1,3 @@
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import ReplayIcon from "@mui/icons-material/Replay";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -9,8 +8,10 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { PUT_IN_COLOR, TAKE_OUT_COLOR } from "@/components/map/LocationPin";
-import NumberBadge from "@/components/NumberBadge";
 import FormSection from "@/components/waterway/FormSection";
+import SectionPointCard from "@/components/waterway/SectionPointCard";
+import { fmtKm } from "@/components/waterway/section-details/utils";
+import { distanceAlongLineM } from "@/lib/geo";
 import type { useRiverSnap } from "@/lib/hooks/useRiverSnap";
 import { theme } from "@/lib/theme";
 import { useMapVerb } from "./useMapVerb";
@@ -31,6 +32,10 @@ interface SectionLineStepProps {
   onLineSourceChange: (source: "snap" | "straight") => void;
   /** True when the picked points look upstream-ordered. */
   orderWrong: boolean;
+  /** The line the section will use, for its length. */
+  finalCoords: [number, number][] | null;
+  /** The river lookup ran past its time limit. */
+  lookupStalled: boolean;
 }
 
 /** The instruction for the next point to pick, in the device's own verb. */
@@ -42,63 +47,6 @@ export function pickHint(
   if (!putIn) return `${verb} the map to set the put-in`;
   if (!takeOut) return `${verb} the map to set the take-out`;
   return "Both points are set";
-}
-
-/** One picked (or still missing) access point as a calm chip: numbered
- * badge, name, coordinates and a 44px clear control. */
-function PointChip({
-  num,
-  color,
-  name,
-  slug,
-  coords,
-  onClear,
-}: {
-  num: number;
-  color: string;
-  name: string;
-  slug: string;
-  coords: { lat: number; lon: number } | null;
-  onClear: () => void;
-}) {
-  return (
-    <Box
-      data-testid={coords ? `picked-${slug}` : `unpicked-${slug}`}
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 1,
-        pl: 1.5,
-        minHeight: tokens.touch.min,
-        borderRadius: `${tokens.radii.sm}px`,
-        bgcolor: coords ? tokens.primaryContainer : tokens.surfaceLow,
-        color: coords ? tokens.onPrimaryContainer : tokens.onSurfaceVariant,
-      }}
-    >
-      <NumberBadge num={num} color={color} size={20} />
-      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-        {name}
-      </Typography>
-      <Typography variant="body2" noWrap sx={{ flex: 1, minWidth: 0 }}>
-        {coords
-          ? `${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}`
-          : "not set"}
-      </Typography>
-      {coords && (
-        <IconButton
-          aria-label={`Clear ${slug}`}
-          onClick={onClear}
-          sx={{
-            color: "inherit",
-            width: tokens.touch.min,
-            height: tokens.touch.min,
-          }}
-        >
-          <DeleteOutlinedIcon fontSize="small" />
-        </IconButton>
-      )}
-    </Box>
-  );
 }
 
 /** Section-line step of the suggest-section wizard: the next point to pick,
@@ -114,14 +62,18 @@ export default function SectionLineStep({
   snapActive,
   onLineSourceChange,
   orderWrong,
+  finalCoords,
+  lookupStalled,
 }: SectionLineStepProps) {
   const verb = useMapVerb();
   const hasLocation = putIn != null && takeOut != null;
   const snapInProgress =
     snap.status === "searching" || snap.status === "routing";
 
-  const lookupHint =
-    snap.riverLookup === "searching"
+  const lookupBusy = snap.riverLookup === "searching" && !lookupStalled;
+  const lookupHint = lookupStalled
+    ? `Not found on OpenStreetMap - ${verb.toLowerCase()} the map to place your points freely.`
+    : snap.riverLookup === "searching"
       ? `Searching for ${waterwayName ?? "the river"} on OpenStreetMap...`
       : snap.riverLookup === "found"
         ? "The river course is highlighted on the map."
@@ -130,6 +82,10 @@ export default function SectionLineStep({
           : snap.riverLookup === "zoomed-out"
             ? "Zoom in to preview the river course."
             : null;
+  const lengthM =
+    finalCoords && finalCoords.length >= 2
+      ? distanceAlongLineM(finalCoords[finalCoords.length - 1], finalCoords)
+      : null;
 
   return (
     <>
@@ -140,30 +96,32 @@ export default function SectionLineStep({
         }
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <PointChip
+          <SectionPointCard
             num={1}
             color={PUT_IN_COLOR}
             name="Put-in"
-            slug="put-in"
-            coords={putIn}
-            onClear={onClearPutIn}
+            testId={putIn ? "picked-put-in" : "unpicked-put-in"}
+            detail={putIn ? fmtKm(0) : "Not set"}
+            clearLabel="Clear put-in"
+            onClear={putIn ? onClearPutIn : undefined}
           />
-          <PointChip
+          <SectionPointCard
             num={2}
             color={TAKE_OUT_COLOR}
             name="Take-out"
-            slug="take-out"
-            coords={takeOut}
-            onClear={onClearTakeOut}
+            testId={takeOut ? "picked-take-out" : "unpicked-take-out"}
+            detail={takeOut && lengthM != null ? fmtKm(lengthM) : "Not set"}
+            clearLabel="Clear take-out"
+            onClear={takeOut ? onClearTakeOut : undefined}
           />
         </Box>
         {lookupHint && (
           <Typography
             variant="body2"
-            color="text.secondary"
+            color="textSecondary"
             sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
           >
-            {snap.riverLookup === "searching" && <CircularProgress size={12} />}
+            {lookupBusy && <CircularProgress size={12} />}
             {lookupHint}
           </Typography>
         )}
@@ -210,7 +168,7 @@ export default function SectionLineStep({
             }}
           >
             <ToggleButton value="snap" disabled={snap.status !== "done"}>
-              {snapInProgress && (
+              {snapInProgress && !lookupStalled && (
                 <CircularProgress size={12} color="inherit" sx={{ mr: 0.75 }} />
               )}
               Snapped course

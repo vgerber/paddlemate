@@ -1,10 +1,12 @@
+import type { LngLat } from "@/lib/geo";
+
 export type GeomType = "Point" | "LineString" | "Polygon";
 
 /** Map-driven geometry drawing state, owned by the page/panel that owns the
  * map. Passed as one object so form components stay decoupled from the map
  * wiring. */
 export interface GeometryPicking {
-  vertices: { lng: number; lat: number }[];
+  vertices: LngLat[];
   geomType: GeomType;
   pickingActive: boolean;
   onGeomTypeChange: (t: GeomType) => void;

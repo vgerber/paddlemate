@@ -7,28 +7,52 @@ import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { factLabelSx } from "@/components/Fact";
 import EmptyState from "@/components/states/EmptyState";
+import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { Trip } from "@/lib/api";
+import { descentTitle } from "@/lib/descents";
 import { formatDate, todayIso } from "@/lib/format";
-import { useTripTimeline } from "@/lib/hooks/useTrips";
+import { useTripDescents } from "@/lib/hooks/useDescents";
+import {
+  useTripMembers,
+  useTripStays,
+  useTripTimeline,
+} from "@/lib/hooks/useTrips";
 import { durations } from "@/lib/motion";
 import { alphas, fonts, theme } from "@/lib/theme";
 import {
   type PaddledRiver,
   paddledByRiver,
+  runCounts,
   type TripDay,
 } from "@/lib/tripTimeline";
 import DayDetail, { type DayActions } from "./DayDetail";
-import { eventKey, eventLabels } from "./eventLabels";
+import {
+  EVENT_ICON_COLUMN,
+  EventIcon,
+  EventText,
+  eventKey,
+  eventLabels,
+} from "./eventLabels";
 import PlanCalendar from "./PlanCalendar";
 import { dayAtScroll } from "./planWeek";
+import { TripMembersSummary, TripStaysSummary } from "./TripSummary";
+import TripWeek from "./TripWeek";
 
 const { tokens } = theme;
+
+/** Days before the start have no number of their own. */
+function dayLabel(day: number): string {
+  return day < 1 ? "Before" : `Day ${day}`;
+}
+
+// Ink at 22%: the month's veil over the list. alphas has no step this light.
+const MONTH_SCRIM = "38";
 
 /**
  * The trip as it runs: the week pinned above, one card per day below, with
  * who turned up, where the group was based and what got paddled. Days before
- * the start count backwards, so an early arrival reads as Day -1.
+ * the start count backwards, so an early arrival reads as "Before".
  *
  * A day is the unit you act on, and it opens where it sits: the plan stays on
  * screen around it, so moving between days costs nothing.
@@ -38,26 +62,38 @@ export default function TripTimeline({
   openDay,
   onToggleDay,
   actions,
+  wide = false,
+  membersBelow = false,
 }: {
   trip: Trip;
   /** The day currently expanded, if any. */
   openDay: string | null;
   onToggleDay: (date: string) => void;
   actions: DayActions;
+  /** The desktop card: the days as a row of cells, with the stays above the
+   * list. */
+  wide?: boolean;
+  /** With `wide`, the members as initials under the list. */
+  membersBelow?: boolean;
 }) {
   const { days, isLoading } = useTripTimeline(trip);
+  // The same three fetches the timeline is built from (deduped): a failed
+  // one must not read as an empty plan.
+  const loadFailed = [
+    useTripMembers(trip.id),
+    useTripStays(trip.id),
+    useTripDescents(trip.id),
+  ].find((q) => q.isError && !q.data);
   const today = todayIso();
   const scroller = useRef<HTMLDivElement>(null);
   const [current, setCurrent] = useState<string | null>(null);
+  const [monthOpen, setMonthOpen] = useState(false);
   // After a jump the list may not be able to scroll the day all the way to
   // the top; the jump stays the current day until the reader scrolls again.
   const jumped = useRef(false);
 
   const planned = useMemo(() => new Set(days.map((d) => d.date)), [days]);
-  const withEntries = useMemo(
-    () => new Set(days.filter((d) => d.events.length > 0).map((d) => d.date)),
-    [days],
-  );
+  const runs = useMemo(() => runCounts(days), [days]);
   const shown = current ?? days[0]?.date ?? today;
 
   const jumpTo = useCallback((date: string) => {
@@ -100,6 +136,17 @@ export default function TripTimeline({
 
   if (isLoading) return <LoadingBox size={40} pt={6} />;
 
+  if (loadFailed) {
+    return (
+      <ErrorState
+        error={loadFailed.error}
+        fallback="Could not load the plan."
+        onRetry={() => loadFailed.refetch()}
+        py={6}
+      />
+    );
+  }
+
   if (days.length === 0) {
     return (
       <EmptyState
@@ -113,17 +160,47 @@ export default function TripTimeline({
 
   return (
     <Box
-      sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+      sx={{
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        flex: 1,
+        minHeight: 0,
+      }}
     >
-      <PlanCalendar
-        current={shown}
-        today={today}
-        from={trip.start_date}
-        to={trip.end_date ?? null}
-        planned={planned}
-        withEntries={withEntries}
-        onPick={jumpTo}
-      />
+      {monthOpen && (
+        <Box
+          data-testid="month-scrim"
+          onClick={() => setMonthOpen(false)}
+          sx={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 1,
+            bgcolor: `${tokens.onSurface}${MONTH_SCRIM}`,
+          }}
+        />
+      )}
+      {wide ? (
+        <TripWeek
+          dates={days.map((d) => d.date)}
+          runs={runs}
+          current={shown}
+          today={today}
+          onPick={jumpTo}
+        />
+      ) : (
+        <PlanCalendar
+          current={shown}
+          today={today}
+          from={trip.start_date}
+          to={trip.end_date ?? null}
+          planned={planned}
+          runs={runs}
+          open={monthOpen}
+          onOpenChange={setMonthOpen}
+          onPick={jumpTo}
+        />
+      )}
       <Box
         ref={scroller}
         data-testid="plan-scroll"
@@ -140,9 +217,10 @@ export default function TripTimeline({
           gap: 1,
           p: 1.5,
           // Leave room so the FAB never covers the last day.
-          pb: 12,
+          pb: { xs: 12, md: 1.5 },
         }}
       >
+        {wide && <TripStaysSummary tripId={trip.id} />}
         {days.map((day) => (
           <DayEntry
             key={day.date}
@@ -153,6 +231,7 @@ export default function TripTimeline({
             onToggle={() => onToggleDay(day.date)}
           />
         ))}
+        {wide && membersBelow && <TripMembersSummary tripId={trip.id} />}
       </Box>
     </Box>
   );
@@ -171,9 +250,11 @@ function DayEntry({
   actions: DayActions;
   onToggle: () => void;
 }) {
-  // A day still ahead is a plan, not a record: it sits outlined, not raised.
+  // Three states: a day behind is quiet (sunk, no shadow, grey heading), today
+  // wears the ring, and a day still ahead is white and outlined.
   const planned = day.date > today;
   const isToday = day.date === today;
+  const past = day.date < today;
   const plans = day.events.filter((e) => e.kind !== "paddled");
   const { rivers, unsectioned } = paddledByRiver(day.events);
 
@@ -194,7 +275,7 @@ function DayEntry({
         }
       }}
       aria-expanded={isOpen}
-      aria-label={`Day ${day.day}, ${formatDate(day.date)}`}
+      aria-label={`${dayLabel(day.day)}, ${formatDate(day.date)}`}
       sx={{
         flexShrink: 0,
         cursor: "pointer",
@@ -202,12 +283,12 @@ function DayEntry({
         px: 1.75,
         py: 1.5,
         borderRadius: `${tokens.radii.md}px`,
-        bgcolor: planned ? "transparent" : tokens.surface,
+        bgcolor: past ? tokens.surfaceLow : tokens.surfaceLowest,
         boxShadow: isToday
           ? `inset 0 0 0 2px ${tokens.primary}, ${tokens.elevation.e1}`
           : planned
             ? `inset 0 0 0 1px ${tokens.outlineVariant}`
-            : tokens.elevation.e1,
+            : "none",
         outlineOffset: 2,
         ...(isOpen ? { bgcolor: `${tokens.primary}${alphas.tint}` } : {}),
       }}
@@ -220,9 +301,10 @@ function DayEntry({
             fontSize: 15,
             fontWeight: 700,
             flex: 1,
+            color: past ? "text.secondary" : "text.primary",
           }}
         >
-          Day {day.day}
+          {dayLabel(day.day)}
           {isToday && (
             <Box
               component="span"
@@ -255,7 +337,9 @@ function DayEntry({
       <Collapse in={!isOpen} timeout={durations.base}>
         <Stack direction="column" sx={{ gap: 1, mt: 1 }}>
           {day.events.length === 0 && (
-            <Typography sx={factLabelSx}>Rest</Typography>
+            <Typography sx={{ ...factLabelSx, pl: `${EVENT_ICON_COLUMN}px` }}>
+              Rest
+            </Typography>
           )}
 
           {plans.map((event) => {
@@ -277,8 +361,8 @@ function DayEntry({
           {unsectioned.map((descent) => (
             <EventLine
               key={`paddled-${descent.id}`}
-              icon={<DirectionsBoatOutlinedIcon sx={{ fontSize: 14 }} />}
-              title={descent.name ?? "A descent"}
+              icon={<DirectionsBoatOutlinedIcon />}
+              title={descentTitle(descent)}
               detail={`Paddled by ${descent.username ?? "a member"}`}
             />
           ))}
@@ -294,16 +378,16 @@ function DayEntry({
 
 function RiverLine({ river }: { river: PaddledRiver }) {
   return (
-    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-      <Box sx={{ color: "text.disabled", pt: "2px", flexShrink: 0 }}>
-        <DirectionsBoatOutlinedIcon sx={{ fontSize: 14 }} />
-      </Box>
+    <Box sx={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+      <EventIcon>
+        <DirectionsBoatOutlinedIcon />
+      </EventIcon>
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="body2">{river.name}</Typography>
+        <EventText kind="title">{river.name}</EventText>
         {river.sections.map((section) => (
-          <Typography key={section.sectionId} sx={factLabelSx}>
+          <EventText key={section.sectionId} kind="detail">
             {section.name} · {section.paddlers.join(", ")}
-          </Typography>
+          </EventText>
         ))}
       </Box>
     </Box>
@@ -320,13 +404,11 @@ function EventLine({
   detail: string;
 }) {
   return (
-    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-      <Box sx={{ color: "text.disabled", pt: "2px", flexShrink: 0 }}>
-        {icon}
-      </Box>
+    <Box sx={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+      <EventIcon>{icon}</EventIcon>
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="body2">{title}</Typography>
-        <Typography sx={factLabelSx}>{detail}</Typography>
+        <EventText kind="title">{title}</EventText>
+        <EventText kind="detail">{detail}</EventText>
       </Box>
     </Box>
   );

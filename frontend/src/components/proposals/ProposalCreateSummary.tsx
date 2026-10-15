@@ -1,72 +1,49 @@
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import Fact from "@/components/Fact";
+import { sentence } from "@/components/waterway/section-details/utils";
 import { humanize } from "@/lib/format";
 import { CREATE_HIDDEN_KEYS, isDisplayable, shortValue } from "@/lib/proposals";
-import { fonts } from "@/lib/theme";
 
-/** Compact summary of a create proposal: clamped description plus the
- * displayable proposed fields as label-value pairs. */
+/** Fields whose value names a kind and reads as a word ("Rapid"). */
+const KIND_KEYS = new Set(["feature_type"]);
+
+/** The displayable proposed fields of a create proposal as labelled facts.
+ * Metadata is flattened into one fact per entry ("Difficulty III"). The
+ * description is the detail pane's own row, so it is not repeated here. */
 export default function ProposalCreateSummary({
   proposed,
 }: {
   proposed: Record<string, unknown>;
 }) {
-  return (
-    <>
-      {typeof proposed.description === "string" && proposed.description && (
-        <Typography
-          sx={{
-            fontSize: "0.75rem",
-            color: "text.secondary",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-          }}
-        >
-          {proposed.description}
-        </Typography>
-      )}
+  const facts: { label: string; value: string }[] = [];
+  for (const [k, v] of Object.entries(proposed)) {
+    if (CREATE_HIDDEN_KEYS.has(k) || k === "description" || !isDisplayable(v)) {
+      continue;
+    }
+    if (k === "metadata" && typeof v === "object" && !Array.isArray(v)) {
+      for (const [mk, mv] of Object.entries(v as Record<string, unknown>)) {
+        if (isDisplayable(mv) && typeof mv !== "object") {
+          facts.push({ label: humanize(mk), value: String(mv) });
+        }
+      }
+      continue;
+    }
+    const text = shortValue(k, v);
+    facts.push({
+      label: humanize(k),
+      value: KIND_KEYS.has(k) ? humanize(text) : text,
+    });
+  }
+  if (facts.length === 0) return null;
 
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "baseline",
-          columnGap: 1.5,
-          rowGap: 0.25,
-          flexWrap: "wrap",
-        }}
-      >
-        {Object.entries(proposed)
-          .filter(
-            ([k, v]) =>
-              !CREATE_HIDDEN_KEYS.has(k) &&
-              k !== "description" &&
-              isDisplayable(v),
-          )
-          .map(([k, v]) => (
-            <Typography
-              key={k}
-              sx={{ fontSize: "0.75rem", color: "text.secondary" }}
-            >
-              <Box
-                component="span"
-                sx={{
-                  color: "text.disabled",
-                  fontFamily: fonts.label,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                  fontSize: "0.625rem",
-                  mr: 0.5,
-                }}
-              >
-                {humanize(k)}
-              </Box>
-              {shortValue(k, v)}
-            </Typography>
-          ))}
-      </Box>
-    </>
+  return (
+    <Box
+      data-testid="create-facts"
+      sx={{ display: "flex", flexWrap: "wrap", columnGap: 3, rowGap: 1.5 }}
+    >
+      {facts.map(({ label, value }) => (
+        <Fact key={label} label={sentence(label)} value={sentence(value)} />
+      ))}
+    </Box>
   );
 }

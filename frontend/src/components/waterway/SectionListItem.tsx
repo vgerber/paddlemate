@@ -6,12 +6,15 @@ import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
+import { desktopFlatRow } from "@/components/canvas/flatRow";
 import { cardRowSx } from "@/components/search/RiverRow";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import type { SectionWithFeatures } from "@/lib/api";
 import { sectionPlace } from "@/lib/format";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
+import GradeTag from "./GradeTag";
+import { sectionGradeText } from "./section-details/grade";
 
 const { tokens } = theme;
 
@@ -48,17 +51,15 @@ export default function SectionListItem({
   matchedFeature,
   riverName,
 }: SectionListItemProps) {
-  const difficulty = (() => {
-    const ww = section.features?.find((f) => f.feature_type === "whitewater");
-    const meta = ww?.metadata as Record<string, unknown> | null | undefined;
-    return meta?.difficulty as string | undefined;
-  })();
+  const grade = sectionGradeText(section);
 
-  // The river first: in a mixed list it is what tells two "Upper" runs apart,
-  // and it matters more than which district they are in.
-  const place = [riverName, ...sectionPlace(section.country, section.regions)]
-    .filter(Boolean)
-    .join(" · ");
+  // Only a list that mixes rivers names the place (river first: it tells two
+  // "Upper" runs apart). Inside one river's own list the row is just a name.
+  const place = riverName
+    ? [riverName, ...sectionPlace(section.country, section.regions)]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
 
   const isRivermap = section.features?.some(
     (f) => f.created_by === "rivermap-import",
@@ -71,17 +72,19 @@ export default function SectionListItem({
   return (
     // Each row is its own container, so the stacked layout follows the width
     // the row is given wherever it is listed.
-    <Box sx={{ containerType: "inline-size", mb: 0.75 }}>
+    <Box sx={{ containerType: "inline-size", mb: { xs: 1, md: 0 } }}>
       <ListItemButton
         selected={selected}
         onClick={() => onClick(section.id)}
         sx={{
           ...cardRowSx,
+          ...desktopFlatRow,
           display: "grid",
           alignItems: "center",
+          minHeight: 56,
           columnGap: 1,
           rowGap: 0.5,
-          gridTemplateColumns: `minmax(0, 1fr) 36px 46px 96px${star}`,
+          gridTemplateColumns: `minmax(0, 1fr) 30px 46px 74px${star}`,
           gridTemplateAreas: `"n k g c${star2}"`,
           [`@container (max-width: ${STACK_BELOW}px)`]: {
             gridTemplateColumns: `auto auto minmax(0, 1fr) auto${star}`,
@@ -93,9 +96,9 @@ export default function SectionListItem({
       >
         <Box sx={{ gridArea: "n", minWidth: 0 }}>
           <Typography
-            variant="body2"
+            variant="body1"
             sx={{
-              fontWeight: 600,
+              fontWeight: 500,
               overflow: "hidden",
               display: "-webkit-box",
               WebkitBoxOrient: "vertical",
@@ -110,7 +113,7 @@ export default function SectionListItem({
           {place && (
             <Typography
               variant="caption"
-              color="text.secondary"
+              color="textSecondary"
               noWrap
               sx={{ display: "block" }}
             >
@@ -120,7 +123,7 @@ export default function SectionListItem({
           {matchedFeature && (
             <Typography
               variant="caption"
-              color="text.disabled"
+              color="textDisabled"
               noWrap
               sx={{ display: "block" }}
             >
@@ -151,8 +154,8 @@ export default function SectionListItem({
             alignItems: "center",
             gap: 0.25,
             color: "text.secondary",
-            fontSize: "0.75rem",
-            fontWeight: 600,
+            fontSize: "0.8125rem",
+            fontWeight: 500,
             [`@container (max-width: ${STACK_BELOW}px)`]: {
               justifySelf: "start",
             },
@@ -177,7 +180,7 @@ export default function SectionListItem({
             },
           }}
         >
-          {difficulty && <Chip label={difficulty} size="small" />}
+          {grade && <GradeTag grade={grade} />}
         </Box>
 
         <Box sx={{ gridArea: "c", justifySelf: "end", alignSelf: "center" }}>

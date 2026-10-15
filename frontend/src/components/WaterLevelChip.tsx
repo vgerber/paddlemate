@@ -5,9 +5,10 @@ import { formatReading } from "@/lib/format";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
 import { theme } from "@/lib/theme";
 import {
+  currentLevel,
+  freshRanges,
   isCalibrated,
   levelConfig,
-  maxLevel,
   type WaterLevel,
 } from "@/lib/waterLevel";
 
@@ -121,10 +122,11 @@ export default function WaterLevelChip({
     );
   }
 
-  // Calibrated but no current reading (silent or never-polled gauge): the
-  // backend's level would read as "empty" (= too low to paddle), which is
+  // Calibrated but no fresh reading (silent, stale or never-polled gauge):
+  // the backend's level would read as "empty" (= too low to paddle), which is
   // misleading when the truth is "unknown" - show a neutral dash instead.
-  if (calibrated.every((r) => r.latest_reading == null)) {
+  const level = currentLevel(calibrated);
+  if (level === null) {
     return (
       <LevelPill level="none" dot={false} title="No current reading">
         –
@@ -132,14 +134,11 @@ export default function WaterLevelChip({
     );
   }
 
-  const computedLevel = maxLevel(calibrated.map((r) => r.level));
-  const cfg = levelConfig[computedLevel];
-  // Reading from the range that determined the level, if it has one
-  const source =
-    calibrated.find(
-      (r) => r.level === computedLevel && r.latest_reading != null,
-    ) ?? calibrated.find((r) => r.latest_reading != null);
+  // Reading from the range that determined the level
+  const source = freshRanges(calibrated).find((r) => r.level === level);
   const reading = source ? readingLabel(source) : null;
 
-  return <LevelPill level={computedLevel}>{reading ?? cfg.label}</LevelPill>;
+  return (
+    <LevelPill level={level}>{reading ?? levelConfig[level].label}</LevelPill>
+  );
 }

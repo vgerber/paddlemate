@@ -41,8 +41,8 @@ export default function InviteLinks({ tripId }: { tripId: number }) {
       hint="Anyone with the link can join until it expires - share it in your group chat."
       action={
         <Button
-          size="small"
           variant="outlined"
+          sx={{ minHeight: theme.tokens.touch.min }}
           disabled={create.isPending}
           onClick={() => create.mutate(undefined, { onSuccess: setFresh })}
         >
@@ -68,7 +68,7 @@ export default function InviteLinks({ tripId }: { tripId: number }) {
             <Typography variant="body2">
               Works until {formatDate(invite.expires_at)}
             </Typography>
-            <Typography variant="caption" color="text.disabled">
+            <Typography variant="caption" color="textDisabled">
               By {invite.created_by_username} ·{" "}
               {invite.uses === 1 ? "1 joined" : `${invite.uses} joined`}
             </Typography>
@@ -126,15 +126,15 @@ function FreshLink({ invite }: { invite: TripInviteCreated }) {
         gap: 1,
         p: 1.5,
         borderRadius: `${theme.tokens.radii.md}px`,
-        bgcolor: theme.tokens.surface,
-        boxShadow: theme.tokens.elevation.e1,
+        bgcolor: theme.tokens.surfaceHigh,
       }}
     >
       <Typography
+        noWrap
         sx={{
-          fontSize: "0.9375rem",
-          fontWeight: 600,
-          wordBreak: "break-all",
+          fontSize: "0.8125rem",
+          lineHeight: "18px",
+          color: "text.secondary",
           userSelect: "all",
         }}
       >
@@ -142,7 +142,8 @@ function FreshLink({ invite }: { invite: TripInviteCreated }) {
       </Typography>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Button
-          variant="outlined"
+          variant="contained"
+          sx={{ flex: 1, minHeight: theme.tokens.touch.min }}
           startIcon={
             copied ? (
               <DoneIcon fontSize="small" />
@@ -158,6 +159,12 @@ function FreshLink({ invite }: { invite: TripInviteCreated }) {
         {canShare && (
           <IconButton
             aria-label="Share link"
+            sx={{
+              width: theme.tokens.touch.min,
+              height: theme.tokens.touch.min,
+              borderRadius: `${theme.tokens.radii.sm}px`,
+              bgcolor: theme.tokens.surface,
+            }}
             onClick={() =>
               navigator
                 .share({ title: "Join the trip", url })
@@ -169,7 +176,7 @@ function FreshLink({ invite }: { invite: TripInviteCreated }) {
           </IconButton>
         )}
       </Box>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" color="textSecondary">
         Copy it now - it is shown only once. Works until{" "}
         {formatDate(invite.expires_at)}.
       </Typography>

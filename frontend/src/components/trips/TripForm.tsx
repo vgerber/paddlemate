@@ -23,6 +23,9 @@ import {
 
 interface Props {
   trip?: Trip;
+  /** Beside a list, where the pane is the form's floor. Otherwise a phone
+   * gets the whole screen, bottom nav included, as the log form does. */
+  embedded?: boolean;
   onSave: (id: number) => void;
   onCancel: () => void;
 }
@@ -32,7 +35,12 @@ interface Props {
  * always has somewhere for its watch list to hang off; editing leaves the
  * itinerary to the Bases tab, which is where it keeps moving.
  */
-export default function TripForm({ trip, onSave, onCancel }: Props) {
+export default function TripForm({
+  trip,
+  embedded = false,
+  onSave,
+  onCancel,
+}: Props) {
   const [form, setForm] = useState<TripFormState>(() =>
     trip ? initFromTrip(trip) : defaultTripForm(),
   );
@@ -71,13 +79,31 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
   }
 
   return (
-    <>
+    <Box
+      sx={
+        embedded
+          ? { display: "contents" }
+          : {
+              position: { xs: "fixed", md: "static" },
+              inset: { xs: 0 },
+              // Over the bottom nav (1300), like the log form's bar.
+              zIndex: 1350,
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              bgcolor: "background.default",
+            }
+      }
+    >
       <Box
         sx={{
           flex: 1,
           minHeight: 0,
           overflowY: "auto",
-          px: 2,
+          // The fields keep the log form's 720px column in a wide pane; the
+          // scrollbar stays at the pane's edge.
+          px: embedded ? "max(16px, calc((100% - 720px) / 2))" : 2,
           py: 2,
           display: "flex",
           flexDirection: "column",
@@ -110,22 +136,30 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
           label="When it runs"
           hint="The window the trip covers. Leave the end open if you do not know yet - members set their own dates separately."
         >
-          <TextField
-            label="Starts"
-            type="date"
-            value={form.start_date}
-            onChange={(e) => patch({ start_date: e.target.value })}
-            fullWidth
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <TextField
-            label="Ends (optional)"
-            type="date"
-            value={form.end_date}
-            onChange={(e) => patch({ end_date: e.target.value })}
-            fullWidth
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+              gap: 1.5,
+            }}
+          >
+            <TextField
+              label="Starts"
+              type="date"
+              value={form.start_date}
+              onChange={(e) => patch({ start_date: e.target.value })}
+              fullWidth
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+            <TextField
+              label="Ends (optional)"
+              type="date"
+              value={form.end_date}
+              onChange={(e) => patch({ end_date: e.target.value })}
+              fullWidth
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+          </Box>
         </FormSection>
 
         {!trip && (
@@ -181,6 +215,6 @@ export default function TripForm({ trip, onSave, onCancel }: Props) {
           </RoundActionButton>
         }
       />
-    </>
+    </Box>
   );
 }

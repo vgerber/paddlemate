@@ -7,7 +7,12 @@ import type {
   SectionDetailTab,
   SuggestMode,
 } from "@/components/waterway/types";
-import { type Feature, proposalsApi } from "@/lib/api";
+import {
+  type Feature,
+  proposalsApi,
+  type SectionWithFeatures,
+} from "@/lib/api";
+import { type Bounds, DEFAULT_RADIUS_KM, type ViewBounds } from "@/lib/geo";
 import { useFavorites } from "@/lib/hooks/useFavorites";
 import { useFilteredSections } from "@/lib/hooks/useFilteredSections";
 import { useGaugeData } from "@/lib/hooks/useGaugeData";
@@ -17,6 +22,9 @@ import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
 import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { pushRecentWaterway } from "@/lib/recentWaterways";
+import { ALL_REGION_KINDS } from "@/lib/regionKinds";
+import { defaultAreaCircle } from "./areaFrame";
+import { modeSheetMode, modeSheetPeek } from "./modeSheet";
 import { useFeaturePicker } from "./useFeaturePicker";
 import { useMobilePanelState } from "./useMobilePanelState";
 
@@ -32,6 +40,9 @@ export type RouteSearch = {
   mode?: "area" | "region";
   region?: number;
 };
+
+/** Every level the region chips offer; asked for together so the map can draw
+ * districts and ranges at the zoom where they fit. */
 
 export function useMapPageState(search: RouteSearch) {
   const {
@@ -54,8 +65,27 @@ export function useMapPageState(search: RouteSearch) {
     useState<SectionDetailTab>("features");
   const [selectedGaugeId, setSelectedGaugeId] = useState<number | null>(null);
   const [searchWaterwayIds, setSearchWaterwayIds] = useState<number[]>([]);
+  // The sections the search panel lists, after its own matching (name scope,
+  // Water now). Null until a panel reports; the map then draws all results.
+  const [shownSearchSections, setShownRaw] = useState<
+    SectionWithFeatures[] | null
+  >(null);
+  // Same sections, same state: the panel recomputes its list on many renders.
+  const setShownSearchSections = useCallback(
+    (next: SectionWithFeatures[]) =>
+      setShownRaw((prev) =>
+        prev &&
+        prev.length === next.length &&
+        prev.every((s, i) => s === next[i])
+          ? prev
+          : next,
+      ),
+    [],
+  );
   const [labelMode, setLabelMode] = useState<"section" | "river">("section");
   const [areaLocked, setAreaLocked] = useState(false);
+  // The level chips narrow which regions the map draws.
+  const [regionLevel, setRegionLevel] = useState<string | null>(null);
   const { favorites, favoritedIds, toggle: toggleFavorite } = useFavorites();
 
   // Feature suggestion: pick geometry vertices from the map
@@ -99,9 +129,7 @@ export function useMapPageState(search: RouteSearch) {
   );
   // Bounding box the camera should fit (e.g. a gauge-backed river's stations
   // in the suggest-river panel): [[minLon, minLat], [maxLon, maxLat]].
-  const [focusBounds, setFocusBounds] = useState<
-    [[number, number], [number, number]] | null
-  >(null);
+  const [focusBounds, setFocusBounds] = useState<Bounds | null>(null);
   // Catalog stations of the river being suggested, shown as neutral map pins
   // while the suggest-river panel is open.
   const [suggestGaugePins, setSuggestGaugePins] = useState<GaugePin[]>([]);
@@ -112,17 +140,12 @@ export function useMapPageState(search: RouteSearch) {
   );
 
   // Current map viewport bounds (used for OSM lookups in suggest flows)
-  const [mapBounds, setMapBoundsRaw] = useState<{
-    south: number;
-    west: number;
-    north: number;
-    east: number;
-  } | null>(null);
+  const [mapBounds, setMapBoundsRaw] = useState<ViewBounds | null>(null);
   // Keep the previous reference for identical bounds - the map reports on
   // every moveend (including camera-effect fitBounds), and a fresh object
   // for unchanged bounds would re-render the whole page in a loop.
   const setMapBounds = useCallback(
-    (b: { south: number; west: number; north: number; east: number }) =>
+    (b: ViewBounds) =>
       setMapBoundsRaw((prev) =>
         prev &&
         prev.south === b.south &&
@@ -224,9 +247,8 @@ export function useMapPageState(search: RouteSearch) {
   // drawn and clickable, so a region can be found by looking rather than by
   // knowing its name.
   const regionsInView = useRegionsInView(
-    mode === "region" && mapBounds
-      ? [mapBounds.south, mapBounds.west, mapBounds.north, mapBounds.east]
-      : undefined,
+    mode === "region" && mapBounds ? mapBounds : undefined,
+    regionLevel ? [regionLevel] : ALL_REGION_KINDS,
   );
   const selectRegion = useCallback(
     (regionId: number) =>
@@ -251,6 +273,29 @@ export function useMapPageState(search: RouteSearch) {
     },
     [navigate],
   );
+
+  // The circle is there from the moment area search opens: at the middle of
+  // the map that is in view, above a phone's sheet. A tap moves it from there.
+  const sheetMode = modeSheetMode({
+    isMobile,
+    isAreaMode,
+    isRegionMode: mode === "region",
+    selectedWaterwayId,
+    suggestMode,
+  });
+  const needsCircle =
+    isAreaMode &&
+    selectedWaterwayId == null &&
+    suggestMode == null &&
+    areaCircle == null;
+  useEffect(() => {
+    if (!needsCircle || !mapBounds) return;
+    const covered =
+      sheetMode === "area" ? modeSheetPeek("area") / window.innerHeight : 0;
+    setAreaCircle(
+      defaultAreaCircle(mapBounds, radius ?? DEFAULT_RADIUS_KM, covered),
+    );
+  }, [needsCircle, mapBounds, radius, sheetMode, setAreaCircle]);
 
   /** Reset live preview then commit to URL. Used when area changes from a panel. */
   const handleAreaCircleChange = useCallback(
@@ -319,6 +364,15 @@ export function useMapPageState(search: RouteSearch) {
     maxDiff: max_diff,
   });
 
+  // What the map draws of the search: the panel's list, plus the open section.
+  const mapSearchSections = useMemo(() => {
+    if (!shownSearchSections) return filteredSearchSections;
+    const open = filteredSearchSections.find((s) => s.id === selectedSectionId);
+    return open && !shownSearchSections.includes(open)
+      ? [...shownSearchSections, open]
+      : shownSearchSections;
+  }, [shownSearchSections, filteredSearchSections, selectedSectionId]);
+
   const sectionIds = useMemo(() => sections.map((s) => s.id), [sections]);
   const shouldFetchGauges = selectedWaterwayId != null;
   const sectionPairs = useMemo(
@@ -350,12 +404,12 @@ export function useMapPageState(search: RouteSearch) {
   const searchSectionPairs = useMemo(
     () =>
       selectedWaterwayId == null
-        ? filteredSearchSections.slice(0, 60).map((s) => ({
+        ? mapSearchSections.slice(0, 60).map((s) => ({
             waterwayId: s.waterway_id,
             sectionId: s.id,
           }))
         : [],
-    [selectedWaterwayId, filteredSearchSections],
+    [selectedWaterwayId, mapSearchSections],
   );
   const { levels: searchSectionLevels } = useSectionLevels(searchSectionPairs);
 
@@ -421,7 +475,10 @@ export function useMapPageState(search: RouteSearch) {
     regionChoices: regionsInView.regions,
     countryBorders: regionsInView.countries,
     regionsLoading: regionsInView.loading,
+    regionsHiddenKinds: regionsInView.hiddenKinds,
     selectRegion,
+    regionLevel,
+    setRegionLevel,
     // Navigation helpers
     setSelectedWaterwayId,
     setSelectedSectionId,
@@ -436,6 +493,8 @@ export function useMapPageState(search: RouteSearch) {
     setSelectedGaugeId,
     searchWaterwayIds,
     setSearchWaterwayIds,
+    shownSearchSections,
+    setShownSearchSections,
     labelMode,
     setLabelMode,
     areaLocked,
@@ -492,6 +551,7 @@ export function useMapPageState(search: RouteSearch) {
     // Data
     sections,
     filteredSearchSections,
+    mapSearchSections,
     waterwayNames,
     isAreaSearchLoading,
     areSearchSectionsPending,

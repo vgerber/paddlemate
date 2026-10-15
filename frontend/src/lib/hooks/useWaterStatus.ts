@@ -1,8 +1,9 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { waterStatusApi } from "@/lib/api";
+import { type DotLevel, dotLevel } from "@/lib/levelDots";
 import { createLimiter } from "@/lib/limiter";
-import { maxLevel, type WaterLevel } from "@/lib/waterLevel";
+import { currentLevel, type WaterLevel } from "@/lib/waterLevel";
 import { waterwayKeys } from "./useWaterways";
 
 /** Matches the gauge reader poll interval. */
@@ -63,9 +64,10 @@ export function useAllSectionWaterStatus(
   );
 }
 
-/** Water statuses plus a sectionId -> most severe level map, for coloring
+/** Water statuses plus a sectionId -> current level map, for coloring
  * section lines and list chips. `unknown` holds the sections whose request
- * failed or came back without a level; they have no entry in `levels`, and
+ * failed or came back without a current level (no gauge, uncalibrated or
+ * stale); they have no entry in `levels`, and
  * sections still being asked are in neither. */
 export function useSectionLevels(
   pairs: { waterwayId: number; sectionId: number }[],
@@ -77,11 +79,20 @@ export function useSectionLevels(
     statuses.forEach((q, i) => {
       if (pairs[i] == null) return;
       const { sectionId } = pairs[i];
-      if (q.data?.ranges.length) {
-        map[sectionId] = maxLevel(q.data.ranges.map((r) => r.level));
-      } else if (!q.isPending) unknownIds.add(sectionId);
+      const level = q.data ? currentLevel(q.data.ranges) : null;
+      if (level) map[sectionId] = level;
+      else if (!q.isPending) unknownIds.add(sectionId);
     });
     return { levels: map, unknown: unknownIds };
   }, [statuses, pairs]);
   return { statuses, levels, unknown };
+}
+
+/** One dot level per pair, in order, from the same cached statuses the chips
+ * use. A section still being asked is unknown until it answers. */
+export function useSectionDotLevels(
+  pairs: { waterwayId: number; sectionId: number }[],
+): DotLevel[] {
+  const statuses = useSectionWaterStatuses(pairs);
+  return statuses.map((q) => dotLevel(q.data));
 }

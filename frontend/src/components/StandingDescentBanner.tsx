@@ -1,6 +1,8 @@
+import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import ButtonBase from "@mui/material/ButtonBase";
+import IconButton from "@mui/material/IconButton";
 import type { SxProps } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
@@ -42,8 +44,7 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
           boxShadow: tokens.elevation.e2,
           display: "flex",
           alignItems: "center",
-          flexWrap: "wrap",
-          columnGap: 1.5,
+          columnGap: { xs: 1, sm: 1.5 },
           m: 1,
           pl: 2,
           pr: 1,
@@ -76,7 +77,7 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
           })
         }
         sx={{
-          flex: "1 1 96px",
+          flex: "1 1 0",
           minWidth: 0,
           minHeight: tokens.touch.min,
           justifyContent: "flex-start",
@@ -108,11 +109,11 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
       >
         {elapsed(current.startTime)}
       </Typography>
-      <Box sx={{ display: "flex", gap: 0.5 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
         <Button
           variant="contained"
           color="primary"
-          sx={{ minHeight: tokens.touch.min, textTransform: "none" }}
+          sx={{ minHeight: tokens.touch.min, textTransform: "none", px: 2 }}
           onClick={() => {
             const { waterwayId, sectionId, startTime } = current;
             discard();
@@ -124,16 +125,17 @@ export default function StandingDescentBanner({ sx }: { sx?: SxProps }) {
         >
           Finish
         </Button>
-        <Button
-          sx={{
-            minHeight: tokens.touch.min,
-            color: "text.secondary",
-            textTransform: "none",
-          }}
+        <IconButton
+          aria-label="Discard"
           onClick={discard}
+          sx={{
+            width: tokens.touch.min,
+            height: tokens.touch.min,
+            color: "text.secondary",
+          }}
         >
-          Discard
-        </Button>
+          <CloseIcon sx={{ fontSize: 22 }} />
+        </IconButton>
       </Box>
     </Box>
   );

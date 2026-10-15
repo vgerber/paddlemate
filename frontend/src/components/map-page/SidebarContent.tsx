@@ -2,8 +2,9 @@ import { useNavigate } from "@tanstack/react-router";
 import WaterwaySearchPanel from "@/components/search/WaterwaySearchPanel";
 import SuggestFeaturePanel from "@/components/waterway/SuggestFeaturePanel";
 import SuggestWaterwayPanel from "@/components/waterway/SuggestWaterwayPanel";
+import RiverState from "@/components/waterway/section-details/RiverState";
 import WaterwayBrowsePanel from "@/components/waterway/WaterwayBrowsePanel";
-import MapCharts from "./MapCharts";
+import MapCharts, { useChartPlacement } from "./MapCharts";
 import type { MapPageState } from "./useMapPageState";
 
 interface SidebarContentProps {
@@ -16,6 +17,8 @@ interface SidebarContentProps {
   onMobileMapToggle?: () => void;
   /** Mobile only: true when map view is active (icon shown as highlighted) */
   mobileMapActive?: boolean;
+  /** Phone: the search rests in the area/region peek sheet. */
+  sheet?: { onState: (state: "peek" | "open") => void };
 }
 
 /**
@@ -29,14 +32,18 @@ export default function SidebarContent({
   onClose,
   onMobileMapToggle,
   mobileMapActive,
+  sheet,
 }: SidebarContentProps) {
   const navigate = useNavigate();
+  // The river state fills the card only where the card runs to the rail.
+  const railed = useChartPlacement(state) === "rail";
   const {
     selectedWaterwayId,
     selectedSectionId,
     setSelectedWaterwayId,
     setSelectedSectionId,
     setSearchWaterwayIds,
+    setShownSearchSections,
     handleAreaCircleChange,
     handleSectionClick,
     handleGaugeSelect,
@@ -74,12 +81,17 @@ export default function SidebarContent({
     setSelectedFeatureId,
     showProposedFeatures,
     toggleShowProposedFeatures,
-    setFeaturesFolded,
     featureProposals,
     suggestWaterwayName,
     setSuggestWaterwayName,
     setFocusBounds,
     setSuggestGaugePins,
+    regionOutline,
+    regionChoices,
+    regionsLoading,
+    regionLevel,
+    setRegionLevel,
+    selectRegion,
   } = state;
 
   if (suggestMode === "waterway") {
@@ -102,6 +114,7 @@ export default function SidebarContent({
           setSuggestMode("waterway");
         }}
         onWaterwaysChange={setSearchWaterwayIds}
+        onShownSectionsChange={setShownSearchSections}
         areaCircle={areaCircle}
         onAreaCircleChange={handleAreaCircleChange}
         areaLocked={areaLocked}
@@ -118,6 +131,15 @@ export default function SidebarContent({
         onLoadingChange={setIsSearchPanelLoading}
         onMapModeActivate={onMapModeActivate}
         onClose={onClose}
+        sheet={sheet}
+        regionBrowse={{
+          picked: regionOutline,
+          choices: regionChoices,
+          loading: regionsLoading && !regionOutline,
+          level: regionLevel,
+          onLevelChange: setRegionLevel,
+          onPick: selectRegion,
+        }}
       />
     );
   }
@@ -197,7 +219,22 @@ export default function SidebarContent({
       }}
       onMobileMapToggle={onMobileMapToggle}
       mobileMapActive={mobileMapActive}
-      chart={<MapCharts state={state} />}
+      chart={<MapCharts state={state} slot="pane" />}
+      foot={<MapCharts state={state} slot="foot" />}
+      riverState={
+        railed && selectedWaterwayId != null && selectedSectionId != null ? (
+          <RiverState
+            waterwayId={selectedWaterwayId}
+            sectionId={selectedSectionId}
+            onOpen={(tab) => {
+              if (tab === "features" && !showProposedFeatures) {
+                toggleShowProposedFeatures();
+              }
+              setSectionDetailTab(tab);
+            }}
+          />
+        ) : undefined
+      }
       featureTimeline={{
         onFeatureClick: setFocusedPoint,
         onEditFeature: startEditFeature,
@@ -206,7 +243,6 @@ export default function SidebarContent({
         showProposed: showProposedFeatures,
         onToggleProposed: toggleShowProposedFeatures,
         proposals: featureProposals,
-        onFoldedChange: setFeaturesFolded,
       }}
     />
   );

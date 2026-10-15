@@ -8,7 +8,9 @@ import { alphas, theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
 import { ProposalDetail } from "./ProposalDetail";
 import {
+  DISC,
   IconDisc,
+  NumberDisc,
   RAIL_COL,
   RailLine,
   type RailShape,
@@ -25,6 +27,7 @@ import {
 } from "./utils";
 
 const { tokens } = theme;
+const { panel } = tokens.canvas;
 
 /** What every row of the list shares. */
 export interface RowContext {
@@ -35,6 +38,8 @@ export interface RowContext {
   onDeleteItem?: (item: ComputedFeature) => void;
   /** Opens the feature's history. Not offered for a proposal: it has none. */
   onHistoryItem?: (item: ComputedFeature) => void;
+  /** The number each feature carries (see `featureNumbers`). */
+  numbers?: ReadonlyMap<number, number>;
   /** Features with a pending delete proposal. */
   pendingDeleteIds?: Set<number>;
 }
@@ -52,6 +57,7 @@ export function PendingDeleteMarker() {
 export const kmSx = {
   flexShrink: 0,
   fontSize: "0.8125rem",
+  fontWeight: 500,
   color: tokens.onSurfaceVariant,
   fontVariantNumeric: "tabular-nums",
   whiteSpace: "nowrap",
@@ -74,6 +80,7 @@ export function FeatureListRow({
   const isActive = ctx.activeId === item.feature.id;
   const type = item.feature.feature_type;
   const asRange = item.isZone && !isProposal;
+  const n = ctx.numbers?.get(item.feature.id);
 
   return (
     <ButtonBase
@@ -90,8 +97,13 @@ export function FeatureListRow({
         textAlign: "left",
         minHeight: ROW_MIN,
         gap: 1,
-        pr: 1.5,
+        pl: 1.5,
+        pr: `${panel.inner}px`,
         bgcolor: isActive ? `${tokens.primary}${alphas.tint}` : "transparent",
+        // The selected row's 2px teal ring, drawn inside so it never shifts.
+        outline: isActive ? `2px solid ${tokens.primary}` : "none",
+        outlineOffset: -2,
+        borderRadius: `${tokens.radii.row}px`,
       }}
     >
       <Box
@@ -102,12 +114,14 @@ export function FeatureListRow({
           display: "flex",
           justifyContent: "center",
           alignItems: "flex-start",
-          pt: `${(ROW_MIN - 32) / 2}px`,
+          pt: `${(ROW_MIN - (asRange ? DISC + 4 : DISC)) / 2}px`,
         }}
       >
         <RailLine {...rail} />
         {asRange ? (
-          <RangeTile type={type} open={false} foldable={false} />
+          <RangeTile type={type} open={false} foldable={false} n={n} />
+        ) : n != null && !isProposal ? (
+          <NumberDisc n={n} />
         ) : (
           <IconDisc type={type} hollow={isProposal} />
         )}
@@ -117,49 +131,58 @@ export function FeatureListRow({
         sx={{
           flex: 1,
           minWidth: 0,
-          py: 0.75,
           opacity: isProposal ? 0.6 : 1,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-          <Box
-            sx={{
-              flex: 1,
-              minWidth: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: 0.5,
-            }}
-          >
-            <Typography
-              component="span"
-              sx={{ fontWeight: 600, fontSize: "0.9375rem", minWidth: 0 }}
+        <Box
+          sx={{
+            minHeight: ROW_MIN,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+            <Box
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+              }}
             >
-              {featureName(item.feature)}
+              <Typography
+                component="span"
+                sx={{ fontWeight: 500, fontSize: "0.9375rem", minWidth: 0 }}
+              >
+                {featureName(item.feature)}
+              </Typography>
+              {ctx.pendingDeleteIds?.has(item.feature.id) && (
+                <PendingDeleteMarker />
+              )}
+            </Box>
+            <Typography component="span" data-km sx={kmSx}>
+              {item.isZone
+                ? fmtKmSpan(item.startM, item.endM)
+                : fmtKm(item.distM)}
             </Typography>
-            {ctx.pendingDeleteIds?.has(item.feature.id) && (
-              <PendingDeleteMarker />
-            )}
           </Box>
-          <Typography component="span" data-km sx={kmSx}>
-            {item.isZone
-              ? fmtKmSpan(item.startM, item.endM)
-              : fmtKm(item.distM)}
-          </Typography>
+          {typeLabel && (
+            <Typography
+              sx={{ fontSize: "0.8125rem", color: tokens.onSurfaceVariant }}
+            >
+              {typeLabel}
+            </Typography>
+          )}
         </Box>
-        {typeLabel && (
-          <Typography
-            sx={{ fontSize: "0.8125rem", color: tokens.onSurfaceVariant }}
-          >
-            {typeLabel}
-          </Typography>
-        )}
         {desc && (
           <Typography
             sx={{
               fontSize: "0.8125rem",
               color: tokens.onSurfaceVariant,
               mt: 0.5,
+              pb: 0.75,
             }}
           >
             {desc}

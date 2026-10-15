@@ -13,8 +13,7 @@ import TextField from "@mui/material/TextField";
 import { useRef, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import ImageLightbox from "@/components/ImageLightbox";
-import EmptyState from "@/components/states/EmptyState";
-import LoadingBox from "@/components/states/LoadingBox";
+import QueryStates from "@/components/states/QueryStates";
 import SignInGate from "@/components/states/SignInGate";
 import type { CommentCategory, Media, SectionWithFeatures } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
@@ -49,8 +48,12 @@ const menuItemSx = {
 const composerSx = (open: boolean) =>
   ({
     "& .MuiInputBase-input": { fontSize: { xs: "1rem", md: "0.8125rem" } },
-    "& .MuiInputBase-inputSizeSmall": { py: { xs: "12px", md: "8.5px" } },
-    "& .MuiInputBase-root": { pr: 0.5 },
+    ...(open
+      ? {}
+      : {
+          "& .MuiInputBase-inputSizeSmall": { py: { xs: "12px", md: "8.5px" } },
+        }),
+    "& .MuiInputBase-root": { pr: 0.5, minHeight: 48 },
     // Only the icons follow the box as it grows; the text keeps its own
     // alignment, which is what centres it on a single line.
     "& .MuiInputAdornment-positionEnd": {
@@ -101,8 +104,8 @@ export default function CommentThread({
     sectionScope == null ? null : waterwayId,
     sectionScope,
   );
-  const { data: comments, isLoading } =
-    sectionScope == null ? riverThread : sectionThread;
+  const thread = sectionScope == null ? riverThread : sectionThread;
+  const comments = thread.data;
 
   const createComment = useCreateComment(waterwayId, sectionScope);
   const deleteComment = useDeleteComment(waterwayId);
@@ -172,17 +175,27 @@ export default function CommentThread({
       }}
     >
       <Box
-        sx={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden" }}
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+          // A scroller is its own touch-action boundary: without pan-y a
+          // sideways tab swipe that starts here is cancelled.
+          touchAction: "pan-y",
+        }}
       >
-        {isLoading ? (
-          <LoadingBox size={22} />
-        ) : !comments || comments.length === 0 ? (
-          <EmptyState
-            title="No notes on this river yet."
-            caption="Hazards, conditions and access - anything worth knowing before putting on."
-          />
-        ) : (
-          comments.map((comment) => (
+        <QueryStates
+          query={thread}
+          count={comments?.length ?? 0}
+          empty={{
+            title: "No notes on this river yet.",
+            caption:
+              "Hazards, conditions and access - anything worth knowing before putting on.",
+          }}
+          errorFallback="Could not load the notes."
+        >
+          {comments?.map((comment) => (
             <CommentRow
               key={comment.id}
               comment={comment}
@@ -208,8 +221,8 @@ export default function CommentThread({
                   : undefined
               }
             />
-          ))
-        )}
+          ))}
+        </QueryStates>
       </Box>
 
       {!isAuthenticated ? (
@@ -220,8 +233,10 @@ export default function CommentThread({
         <Box
           sx={{
             flexShrink: 0,
-            pt: 1.25,
-            mt: 0.5,
+            px: { xs: 1.5, md: 0 },
+            pt: { xs: 1.25, md: 1 },
+            pb: { xs: 1.5, md: 0 },
+            mt: { xs: 0.5, md: 0 },
             borderTop: "1px solid",
             borderColor: `${tokens.outlineVariant}55`,
             display: "flex",
@@ -299,6 +314,7 @@ export default function CommentThread({
           />
           <TextField
             size="small"
+            hiddenLabel
             placeholder={
               sectionScope == null ? "Add a note" : "Add a note on this section"
             }

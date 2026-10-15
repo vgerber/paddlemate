@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { HistoryStep } from "@/lib/api";
 import {
+  changeValue,
   fieldLabel,
   inOrder,
   isGeometryChange,
@@ -34,56 +35,76 @@ describe("stepHeadline", () => {
       stepHeadline({ ...base, kind: "imported", actor: null, source }),
     ).toBe("Imported from Rivermap");
   });
-  test("a creation names the user", () => {
-    expect(stepHeadline({ ...base, kind: "created" })).toBe("Added by mara");
+  test("an origin without a source says so", () => {
+    expect(stepHeadline({ ...base, kind: "imported", actor: null })).toBe(
+      "Origin not recorded",
+    );
+    expect(stepHeadline({ ...base, kind: "created", actor: null })).toBe(
+      "Origin not recorded",
+    );
+  });
+  test("a creation is added, the user is the by-line's", () => {
+    expect(stepHeadline({ ...base, kind: "created" })).toBe("Added");
   });
   test("an edit and an accepted proposal both say changed", () => {
-    expect(stepHeadline(base)).toBe("Changed by mara");
+    expect(stepHeadline(base)).toBe("Changed");
     expect(stepHeadline({ ...base, kind: "proposal_accepted" })).toBe(
-      "Changed by mara",
+      "Changed",
     );
   });
   test("a deletion says so", () => {
-    expect(stepHeadline({ ...base, kind: "deleted" })).toBe("Deleted by mara");
-    expect(stepHeadline({ ...base, kind: "deleted", actor: null })).toBe(
-      "Deleted",
-    );
+    expect(stepHeadline({ ...base, kind: "deleted" })).toBe("Deleted");
   });
 });
 
+const text = (parts: { text: string }[]) => parts.map((p) => p.text).join("");
+
 describe("stepByline", () => {
-  test("names the reviewer of an accepted proposal", () => {
-    expect(
-      stepByline({
-        ...base,
-        kind: "proposal_accepted",
-        proposal_id: 7,
-        reviewer: { user_id: "r", username: "vincent" },
-      }),
-    ).toBe("approved by vincent");
+  const reviewer = { user_id: "r", username: "vincent" };
+  test("an accepted proposal names who proposed and who approved", () => {
+    const parts = stepByline({
+      ...base,
+      kind: "proposal_accepted",
+      proposal_id: 7,
+      reviewer,
+    });
+    expect(text(parts)).toBe("Proposed by mara, approved by vincent");
+    expect(parts.filter((p) => p.name).map((p) => p.text)).toEqual([
+      "mara",
+      "vincent",
+    ]);
   });
-  test("a deleting proposal names its reviewer too", () => {
+  test("a deleting proposal names both too", () => {
     expect(
-      stepByline({
-        ...base,
-        kind: "deleted",
-        proposal_id: 7,
-        reviewer: { user_id: "r", username: "vincent" },
-      }),
-    ).toBe("approved by vincent");
+      text(stepByline({ ...base, kind: "deleted", proposal_id: 7, reviewer })),
+    ).toBe("Proposed by mara, approved by vincent");
   });
-  test("is empty otherwise", () => {
-    expect(stepByline(base)).toBeNull();
+  test("a direct edit names the user", () => {
+    expect(text(stepByline(base))).toBe("by mara");
+  });
+  test("an import has no by-line", () => {
+    expect(stepByline({ ...base, kind: "imported", actor: null })).toEqual([]);
   });
 });
 
 describe("fieldLabel", () => {
   test("sentence case from the api name", () => {
-    expect(fieldLabel("feature_type")).toBe("Feature type");
+    expect(fieldLabel("feature_type")).toBe("Type");
+    expect(fieldLabel("water_range_9401")).toBe("Water range 9401");
     expect(fieldLabel("name")).toBe("Name");
   });
   test("location reads as position", () => {
     expect(fieldLabel("location")).toBe("Position");
+  });
+});
+
+describe("changeValue", () => {
+  test("an enum value reads as a word", () => {
+    expect(changeValue("feature_type", "rapid")).toBe("Rapid");
+    expect(changeValue("feature_type", "put_in")).toBe("Put in");
+  });
+  test("other values stay as written", () => {
+    expect(changeValue("name", "old weir")).toBe("old weir");
   });
 });
 

@@ -84,7 +84,7 @@ function InvitePage() {
           {trip.invited_by} invited you to
         </Typography>
         <Typography variant="h6">{trip.name}</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{ color: "text.secondary" }}>
           {dateRange(trip.start_date, trip.end_date)}
         </Typography>
       </Box>
@@ -138,7 +138,7 @@ function JoinAction({
           component="button"
           type="button"
           variant="body2"
-          color="text.secondary"
+          sx={{ color: "text.secondary" }}
           onClick={onSignup}
         >
           New here? Create an account
@@ -150,7 +150,7 @@ function JoinAction({
   if (alreadyMember) {
     return (
       <>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{ color: "text.secondary" }}>
           You are already on this trip.
         </Typography>
         <Button variant="contained" color="secondary" onClick={onOpen}>

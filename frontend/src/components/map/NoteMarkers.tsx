@@ -68,27 +68,39 @@ export default function NoteMarkers({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: selected ? 26 : 22,
-                height: selected ? 26 : 22,
-                background: selected ? pin.color : tokens.surfaceLowest,
-                border: selected
-                  ? `2px solid ${tokens.white}`
-                  : `2px solid ${pin.color}`,
-                // Map-marker legibility shadow (documented token exception)
-                boxShadow: selected
-                  ? "0 0 0 2px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.6)"
-                  : "0 1px 4px rgba(0,0,0,0.5)",
+                width: tokens.touch.min,
+                height: tokens.touch.min,
+                background: "transparent",
+                border: "none",
                 cursor: "pointer",
                 padding: 0,
-                transition: "width 0.1s, height 0.1s",
               }}
             >
-              <ChatBubbleIcon
-                sx={{
-                  fontSize: selected ? 14 : 12,
-                  color: selected ? tokens.surfaceLowest : pin.color,
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: selected ? 26 : 22,
+                  height: selected ? 26 : 22,
+                  background: selected ? pin.color : tokens.surfaceLowest,
+                  border: selected
+                    ? `2px solid ${tokens.white}`
+                    : `2px solid ${pin.color}`,
+                  // Map-marker legibility shadow (documented token exception)
+                  boxShadow: selected
+                    ? "0 0 0 2px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.6)"
+                    : "0 1px 4px rgba(0,0,0,0.5)",
+                  transition: "width 0.1s, height 0.1s",
                 }}
-              />
+              >
+                <ChatBubbleIcon
+                  sx={{
+                    fontSize: selected ? 14 : 12,
+                    color: selected ? tokens.surfaceLowest : pin.color,
+                  }}
+                />
+              </span>
             </button>
           </Marker>
         );
@@ -99,7 +111,7 @@ export default function NoteMarkers({
           longitude={openPin.lon}
           latitude={openPin.lat}
           anchor="bottom"
-          offset={26}
+          offset={40}
           closeButton={false}
           onClose={() => onSelect(null)}
         >

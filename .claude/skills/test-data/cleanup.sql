@@ -17,12 +17,18 @@ DELETE FROM groups WHERE id BETWEEN 9001 AND 9099;
 DELETE FROM comments WHERE id BETWEEN 9900 AND 9999;
 DELETE FROM proposal_votes WHERE proposal_id BETWEEN 9700 AND 9799;
 DELETE FROM proposals WHERE id BETWEEN 9700 AND 9799;
+DELETE FROM user_section_favorites WHERE section_id BETWEEN 9000 AND 9999;
 DELETE FROM descents WHERE id BETWEEN 9200 AND 9299;
 DELETE FROM feature_water_ranges WHERE id BETWEEN 9600 AND 9699;
 DELETE FROM gauge_readings WHERE series_id BETWEEN 9400 AND 9499;
 DELETE FROM gauge_series WHERE id BETWEEN 9400 AND 9499;
 DELETE FROM gauges WHERE id BETWEEN 9300 AND 9399;
-DELETE FROM sources WHERE id IN ('9901', '9902');
+DELETE FROM gauge_catalog WHERE provider = 'fixture';
+-- History has no foreign keys to its entities, so it goes by river id.
+DELETE FROM entity_history WHERE waterway_id BETWEEN 9001 AND 9099;
+DELETE FROM notification_reads
+ WHERE user_id IN (:'vincent', :'mara', :'tobi', :'aoife', :'jonas');
+DELETE FROM sources WHERE id IN ('9901', '9902', '9903');
 DELETE FROM features WHERE id BETWEEN 9500 AND 9599;
 DELETE FROM water_sections WHERE id BETWEEN 9100 AND 9199;
 DELETE FROM waterways WHERE id BETWEEN 9001 AND 9099;

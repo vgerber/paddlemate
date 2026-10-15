@@ -1,26 +1,31 @@
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import TextField from "@mui/material/TextField";
 import ChipRow from "@/components/ChipRow";
 import VisibilityPicker from "@/components/VisibilityPicker";
 import FormSection from "@/components/waterway/FormSection";
+import { theme } from "@/lib/theme";
 import { type StepProps, toDatetimeLocal } from "./model";
+import PickerField from "./PickerField";
 
 /** Step 3: title, note, visibility, and delayed publishing. */
 export default function StepDetails({ form, onChange }: StepProps) {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <FormSection
-        label="Title and note"
-        hint="Leave the title blank to use the section and waterway name."
+        label="Details"
+        hint="A title and a note for yourself and whoever may read the log."
       >
         <TextField
           label="Title"
+          placeholder="Leave blank to use section / waterway name"
           value={form.name}
           onChange={(e) => onChange({ name: e.target.value })}
           fullWidth
-          slotProps={{ htmlInput: { maxLength: 255 } }}
+          slotProps={{
+            htmlInput: { maxLength: 255 },
+            inputLabel: { shrink: true },
+          }}
         />
         <TextField
           label="Note"
@@ -32,7 +37,7 @@ export default function StepDetails({ form, onChange }: StepProps) {
         />
       </FormSection>
 
-      <FormSection label="Who can see it" hint="Private logs are only yours.">
+      <FormSection label="Visibility" hint="Who can see this log.">
         <VisibilityPicker
           hideLabel
           value={{
@@ -54,14 +59,7 @@ export default function StepDetails({ form, onChange }: StepProps) {
 
       <FormSection
         label="Publish after"
-        hint="Optional. The log stays hidden from others until then."
-        action={
-          form.visible_from ? (
-            <Button onClick={() => onChange({ visible_from: "" })}>
-              Clear
-            </Button>
-          ) : undefined
-        }
+        hint="Optional. Hold the log back until a later time."
       >
         <ChipRow>
           {[
@@ -72,6 +70,7 @@ export default function StepDetails({ form, onChange }: StepProps) {
             <Chip
               key={days}
               label={label}
+              sx={{ height: theme.tokens.touch.min }}
               onClick={() => {
                 const d = new Date();
                 d.setDate(d.getDate() + days);
@@ -80,13 +79,13 @@ export default function StepDetails({ form, onChange }: StepProps) {
             />
           ))}
         </ChipRow>
-        <TextField
+        <PickerField
+          kind="datetime-local"
           label="Publish after"
-          type="datetime-local"
           value={form.visible_from}
-          onChange={(e) => onChange({ visible_from: e.target.value })}
-          fullWidth
-          slotProps={{ inputLabel: { shrink: true } }}
+          onChange={(v) => onChange({ visible_from: v })}
+          onClear={() => onChange({ visible_from: "" })}
+          helperText="The log stays hidden from others until then."
         />
       </FormSection>
     </Box>

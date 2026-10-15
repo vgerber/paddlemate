@@ -132,6 +132,28 @@ pub fn client() -> &'static reqwest::Client {
     })
 }
 
+/// Longest piece of an undecodable reply that is logged.
+const LOGGED_REPLY_CHARS: usize = 200;
+
+/// The start of a reply, for the log.
+fn reply_start(body: &str) -> String {
+    body.chars().take(LOGGED_REPLY_CHARS).collect()
+}
+
+/// Decode an Overpass reply. A reply that does not decode (the server
+/// answers 200 with an HTML or runtime-error page when it is overloaded) is
+/// logged with its first characters, so the cause is visible.
+fn decode_response(body: &str, url: &str) -> anyhow::Result<OverpassResponse> {
+    serde_json::from_str(body).map_err(|err| {
+        tracing::warn!(
+            "Overpass reply from {url} did not decode ({err}), {} bytes, starts: {:?}",
+            body.len(),
+            reply_start(body)
+        );
+        anyhow::Error::from(err)
+    })
+}
+
 /// Run one query against the mirrors in order, returning the first success.
 pub async fn run_query(client: &reqwest::Client, query: &str) -> anyhow::Result<OverpassResponse> {
     let mut last_error = None;
@@ -139,7 +161,8 @@ pub async fn run_query(client: &reqwest::Client, query: &str) -> anyhow::Result<
         let result = async {
             let resp = client.post(url).body(query.to_string()).send().await?;
             let resp = resp.error_for_status()?;
-            Ok::<_, anyhow::Error>(resp.json::<OverpassResponse>().await?)
+            let body = resp.text().await?;
+            decode_response(&body, url)
         }
         .await;
         match result {
@@ -282,6 +305,22 @@ out geom qt;"#,
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn undecodable_reply_is_an_error_and_start_is_bounded() {
+        let html = format!("<html>{}", "x".repeat(500));
+        assert!(decode_response(&html, "http://test").is_err());
+        assert_eq!(reply_start(&html).chars().count(), LOGGED_REPLY_CHARS);
+        let wide = "\u{f6}".repeat(300);
+        assert_eq!(reply_start(&wide).chars().count(), LOGGED_REPLY_CHARS);
+        assert_eq!(reply_start("short"), "short");
+    }
+
+    #[test]
+    fn decodes_a_valid_reply() {
+        let ok = decode_response(r#"{"elements": []}"#, "http://test").unwrap();
+        assert!(ok.elements.is_empty());
+    }
 
     #[test]
     fn escapes_regex_metacharacters() {

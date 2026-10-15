@@ -1,5 +1,4 @@
 import CloseIcon from "@mui/icons-material/Close";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import Box from "@mui/material/Box";
@@ -7,20 +6,22 @@ import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BottomSheet from "@/components/BottomSheet";
 import ChipRow from "@/components/ChipRow";
 import PanelHeader from "@/components/PanelHeader";
 import type { AreaCircle } from "@/lib/geo";
-import { alphas, theme } from "@/lib/theme";
+import type { SwipeTrack } from "@/lib/hooks/useSwipeTabs";
+import { theme } from "@/lib/theme";
 import type { WaterLevel } from "@/lib/waterLevel";
 import AreaControls from "./AreaControls";
 import DifficultySelect from "./DifficultySelect";
 import { gradeSummary } from "./gradeSummary";
+import RegionBrowse, { type RegionBrowseProps } from "./RegionBrowse";
+import { isListingRegions, RegionHint } from "./RegionSelect";
 import type {
   SearchMode,
   WaterwaySearchFilters,
@@ -44,11 +45,12 @@ interface SearchFiltersHeaderProps {
   filters: WaterwaySearchFilters;
   /** Swipe state from `useSwipeTabs`, so the underline follows a drag. */
   swipe: {
-    progress: number;
-    dragging: boolean;
+    track: SwipeTrack;
     gestureProps: React.HTMLAttributes<HTMLElement>;
   };
   onClose?: () => void;
+  /** In the phone's peek sheet: the tabs only, the sheet's handle is the title. */
+  sheet?: boolean;
 }
 
 /** The panel header: the title and the underlined Name, Area and Region
@@ -57,18 +59,31 @@ export default function SearchFiltersHeader({
   filters,
   swipe,
   onClose,
+  sheet = false,
 }: SearchFiltersHeaderProps) {
   // The design sets the title at panel-title size, larger than the title
   // PanelHeader draws, so the title row is drawn here and PanelHeader keeps
   // the tab bar.
   return (
-    <Box sx={{ flexShrink: 0 }}>
+    <Box
+      sx={{
+        flexShrink: 0,
+        bgcolor: tokens.surface,
+        // One shadow under the title and the tabs together, on the grey
+        // ground of a phone; the desktop card is white already.
+        boxShadow: { xs: tokens.elevation.e1, md: "none" },
+        position: "relative",
+        zIndex: 1,
+        "& > *:last-child": { boxShadow: "none" },
+      }}
+    >
       <Box
         sx={{
-          display: "flex",
+          // The desktop card draws the title in its own header.
+          display: sheet ? "none" : { xs: "flex", md: "none" },
           alignItems: "center",
           gap: 1,
-          px: 1.5,
+          px: 2,
           minHeight: 56,
         }}
       >
@@ -83,7 +98,7 @@ export default function SearchFiltersHeader({
               display: { xs: "flex", md: "none" },
               width: tokens.touch.min,
               height: tokens.touch.min,
-              mr: -0.75,
+              mr: -1.25,
               color: tokens.onSurfaceVariant,
             }}
           >
@@ -91,43 +106,50 @@ export default function SearchFiltersHeader({
           </IconButton>
         )}
       </Box>
-      <PanelHeader
-        tabs={{
-          value: filters.mode,
-          onChange: filters.setMode,
-          options: MODES,
-          progress: swipe.progress,
-          dragging: swipe.dragging,
-          gesture: swipe.gestureProps,
-        }}
-      />
+      {/* The handle row holds 44px and keeps them (it stacks above); the tabs
+          slide up under its foot so the labels start about 20px below the
+          bar, the panel's 8/16/24 rhythm, not 30. */}
+      <Box sx={{ mt: sheet ? "-18px" : 0 }}>
+        <PanelHeader
+          tabs={{
+            value: filters.mode,
+            onChange: filters.setMode,
+            options: MODES,
+            track: swipe.track,
+            gesture: swipe.gestureProps,
+          }}
+        />
+      </Box>
     </Box>
   );
 }
 
-/** One field, 52px: the name search or the region search. */
+/** One filled field with a magnifier and the label as placeholder: the name search or the region search. */
 function SearchField({
   value,
   onChange,
-  placeholder,
+  label,
 }: {
   value: string;
   onChange: (value: string) => void;
-  placeholder: string;
+  label: string;
 }) {
   return (
     <TextField
       fullWidth
-      placeholder={placeholder}
+      hiddenLabel
+      placeholder={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       slotProps={{
+        htmlInput: { "aria-label": label },
         input: {
-          sx: { height: 52, pr: 0.5 },
+          sx: { pr: 0.5, minHeight: 56, "& input": { py: 1.75 } },
           startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon sx={{ color: tokens.onSurfaceVariant }} />
-            </InputAdornment>
+            <SearchIcon
+              sx={{ mr: 1, color: tokens.onSurfaceVariant }}
+              fontSize="small"
+            />
           ),
           endAdornment: value ? (
             <IconButton
@@ -150,45 +172,56 @@ function FilterChip({
   onClick,
   onDelete,
   plain = false,
+  testId,
 }: {
+  testId?: string;
   label: string;
   set: boolean;
-  onClick: () => void;
+  /** Absent for a chip that only shows a value and can be removed. */
+  onClick?: () => void;
   onDelete?: () => void;
-  /** No chevron: the chip toggles instead of opening something. */
+  /** A toggle inside the sheet rather than a summary chip. */
   plain?: boolean;
 }) {
   return (
     <Chip
+      data-testid={testId}
       variant="outlined"
-      clickable
+      clickable={onClick != null}
       onClick={onClick}
       onDelete={onDelete}
       aria-pressed={plain ? set : undefined}
       color={set ? "primary" : "default"}
-      label={
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
-          {label}
-          {!onDelete && !plain && (
-            <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
-          )}
-        </Box>
-      }
-      sx={
-        set
-          ? {
-              bgcolor: `${tokens.primary}${alphas.wash}`,
-              borderColor: tokens.primary,
-              borderWidth: 1.5,
-            }
-          : undefined
-      }
+      // A toggle in the sheet is the thing being tapped: full touch height.
+      sx={{
+        height: tokens.touch.min,
+        // The X is a touch target of its own.
+        "& .MuiChip-deleteIcon": {
+          position: "relative",
+          zIndex: 1,
+          m: 0,
+          mr: 0.5,
+          p: 1.25,
+          boxSizing: "content-box",
+        },
+        ...(!set &&
+          !plain && {
+            bgcolor: tokens.surface,
+            borderColor: "transparent",
+            boxShadow: tokens.elevation.e1,
+          }),
+      }}
+      label={label}
     />
   );
 }
 
+/** The filter a chip was tapped for; the sheet scrolls to its field. */
+type FilterField = "grade" | "country" | "water";
+
 interface FiltersSheetProps {
   open: boolean;
+  field: FilterField | null;
   onClose: () => void;
   filters: WaterwaySearchFilters;
   total: number;
@@ -198,7 +231,15 @@ function FiltersBody({
   filters,
   total,
   onClose,
+  field,
 }: Omit<FiltersSheetProps, "open">) {
+  const refs = useRef<Partial<Record<FilterField, HTMLElement | null>>>({});
+  const slot = (name: FilterField) => (el: HTMLElement | null) => {
+    refs.current[name] = el;
+  };
+  useEffect(() => {
+    if (field) refs.current[field]?.scrollIntoView({ block: "nearest" });
+  }, [field]);
   const { mode, country, minDiff, maxDiff } = filters;
   const hasAny =
     country !== "" ||
@@ -214,29 +255,50 @@ function FiltersBody({
           justifyContent: "space-between",
         }}
       >
-        <Typography variant="h6" component="h2" sx={{ fontWeight: 700 }}>
+        <Typography
+          variant="h6"
+          component="h2"
+          sx={{ fontWeight: 700, fontSize: "1.125rem" }}
+        >
           Filters
         </Typography>
-        <Button
-          onClick={() => {
-            filters.setMinDiff("");
-            filters.setMaxDiff("");
-            filters.setCountry("");
-            filters.clearWater();
-          }}
-          disabled={!hasAny}
-        >
-          Reset
-        </Button>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Button
+            onClick={() => {
+              filters.setMinDiff("");
+              filters.setMaxDiff("");
+              filters.setCountry("");
+              filters.clearWater();
+            }}
+            disabled={!hasAny}
+          >
+            Reset
+          </Button>
+          <IconButton
+            aria-label="Close"
+            onClick={onClose}
+            sx={{
+              width: tokens.touch.min,
+              height: tokens.touch.min,
+              mr: -1,
+              color: tokens.onSurfaceVariant,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </Box>
-      <DifficultySelect
-        minDiff={minDiff}
-        maxDiff={maxDiff}
-        onMinChange={filters.setMinDiff}
-        onMaxChange={filters.setMaxDiff}
-      />
-      {mode === "name" && (
+      <Box ref={slot("grade")}>
+        <DifficultySelect
+          minDiff={minDiff}
+          maxDiff={maxDiff}
+          onMinChange={filters.setMinDiff}
+          onMaxChange={filters.setMaxDiff}
+        />
+      </Box>
+      {mode !== "region" && (
         <TextField
+          ref={slot("country")}
           label="Country"
           placeholder="AT"
           value={country}
@@ -244,12 +306,12 @@ function FiltersBody({
           slotProps={{ htmlInput: { maxLength: 2 } }}
         />
       )}
-      <Box>
+      <Box ref={slot("water")}>
         <Typography
           variant="body2"
           component="span"
           sx={{ display: "block", mb: 0.75, fontWeight: 600 }}
-          color="text.secondary"
+          color="textSecondary"
         >
           Water now
         </Typography>
@@ -284,7 +346,13 @@ function FiltersBody({
 
 /** The one Filters sheet: a bottom sheet on a phone, a dialog beside the
  * map on a desktop. */
-function FiltersSheet({ open, onClose, filters, total }: FiltersSheetProps) {
+function FiltersSheet({
+  open,
+  onClose,
+  filters,
+  total,
+  field,
+}: FiltersSheetProps) {
   const desktop = useMediaQuery(theme.breakpoints.up("md"));
   if (desktop) {
     return (
@@ -296,7 +364,12 @@ function FiltersSheet({ open, onClose, filters, total }: FiltersSheetProps) {
         slotProps={{ paper: { "aria-label": "Filters" } }}
       >
         <Box sx={{ pt: 2 }}>
-          <FiltersBody filters={filters} total={total} onClose={onClose} />
+          <FiltersBody
+            filters={filters}
+            total={total}
+            onClose={onClose}
+            field={open ? field : null}
+          />
         </Box>
       </Dialog>
     );
@@ -307,7 +380,12 @@ function FiltersSheet({ open, onClose, filters, total }: FiltersSheetProps) {
       onStateChange={(s) => s === "open" || onClose()}
       label="Filters"
     >
-      <FiltersBody filters={filters} total={total} onClose={onClose} />
+      <FiltersBody
+        filters={filters}
+        total={total}
+        onClose={onClose}
+        field={open ? field : null}
+      />
     </BottomSheet>
   );
 }
@@ -320,14 +398,14 @@ interface SearchControlsProps {
   onAreaCircleChange?: (circle: AreaCircle | null) => void;
   onAreaLockedChange?: (locked: boolean) => void;
   onRadiusPreview?: (radiusKm: number) => void;
-  /** Phone only: leave the panel for the map behind it. */
-  onShowMap?: () => void;
   /** Regions are being listed, so the facets step aside. */
   listingRegions: boolean;
+  /** The map's regions, for the level chips and "Part of". */
+  regionBrowse?: RegionBrowseProps;
 }
 
-/** What the active mode searches with - the name field, the map card with
- * its radius, or the region field - and under it the chips that summarize the
+/** What the active mode searches with - the name field, the radius, or the
+ * region field - and under it the chips that summarize the
  * filters. A chip opens the Filters sheet. */
 export function SearchControls({
   filters,
@@ -337,21 +415,40 @@ export function SearchControls({
   onAreaCircleChange,
   onAreaLockedChange,
   onRadiusPreview,
-  onShowMap,
   listingRegions,
+  regionBrowse,
 }: SearchControlsProps) {
   const { mode, country, minDiff, maxDiff, region } = filters;
+  const [sheetField, setSheetField] = useState<FilterField | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const grade = gradeSummary(minDiff, maxDiff);
-  const open = () => setSheetOpen(true);
+  const open = (field: FilterField) => () => {
+    setSheetField(field);
+    setSheetOpen(true);
+  };
+  const waterLabel =
+    filters.water.length > 0
+      ? `Water ${filters.water.join(", ")}`
+      : "Water now";
 
   return (
-    <Box sx={{ px: 2, pt: 1.5, pb: 0.5, flexShrink: 0 }}>
+    // Spacing: 16px gutter, 12px above the controls, 6px between the field
+    // and the chips (plus the chip row's own 6px), 6px below.
+    <Box
+      sx={{
+        px: 2,
+        pt: 1.5,
+        pb: 0.75,
+        flexShrink: 0,
+        display: "grid",
+        gap: 0.75,
+      }}
+    >
       {mode === "name" && (
         <SearchField
           value={filters.name}
           onChange={filters.setName}
-          placeholder="Search rivers or sections…"
+          label="Name"
         />
       )}
       {mode === "area" && (
@@ -363,47 +460,66 @@ export function SearchControls({
             areaCircle && onAreaCircleChange?.({ ...areaCircle, radiusKm: r })
           }
           onRadiusPreview={onRadiusPreview}
-          onShowMap={onShowMap}
         />
       )}
       {mode === "region" && (
-        <SearchField
-          value={filters.regionQuery}
-          onChange={filters.setRegionQuery}
-          placeholder="Search regions…"
-        />
+        <>
+          <SearchField
+            value={filters.regionQuery}
+            onChange={filters.setRegionQuery}
+            label="Search regions…"
+          />
+          {regionBrowse && !isListingRegions(filters.regionQuery) ? (
+            <RegionBrowse {...regionBrowse} />
+          ) : (
+            <RegionHint />
+          )}
+        </>
       )}
       {!listingRegions && (mode !== "region" || region) && (
         <ChipRow>
           {mode === "region" && region && (
             <FilterChip
               label={region.name}
+              testId="region-chip"
               set
-              onClick={() => filters.setRegionQuery(region.name)}
               onDelete={() => filters.setRegion(null)}
             />
           )}
           <FilterChip
             label={grade ? `Grade ${grade}` : "Grade"}
             set={grade !== ""}
-            onClick={open}
+            onClick={open("grade")}
+            onDelete={
+              grade !== ""
+                ? () => {
+                    filters.setMinDiff("");
+                    filters.setMaxDiff("");
+                  }
+                : undefined
+            }
           />
-          {mode === "name" && (
+          {mode !== "region" && (
             <FilterChip
               label={country || "Country"}
               set={country !== ""}
-              onClick={open}
+              onClick={open("country")}
+              onDelete={
+                country !== "" ? () => filters.setCountry("") : undefined
+              }
             />
           )}
           <FilterChip
-            label="Water now"
+            label={waterLabel}
             set={filters.water.length > 0}
-            onClick={open}
+            onClick={open("water")}
+            onDelete={filters.water.length > 0 ? filters.clearWater : undefined}
           />
         </ChipRow>
       )}
       <FiltersSheet
         open={sheetOpen}
+        field={sheetField}
         onClose={() => setSheetOpen(false)}
         filters={filters}
         total={total}

@@ -5,7 +5,7 @@ import GaugeAttribution from "@/components/GaugeAttribution";
 import EmptyState from "@/components/states/EmptyState";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { formatReading } from "@/lib/format";
-import { theme } from "@/lib/theme";
+import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -50,10 +50,12 @@ export default function GaugesList({
               px: 1.75,
               py: 1.25,
               textAlign: "left",
-              bgcolor: tokens.surface,
+              bgcolor: selected
+                ? `${tokens.primary}${alphas.wash}`
+                : tokens.surface,
               borderRadius: `${tokens.radii.md}px`,
               boxShadow: selected
-                ? `${tokens.elevation.e1}, inset 0 0 0 2px ${tokens.primary}`
+                ? `${tokens.elevation.e1}, inset 3px 0 0 ${tokens.primary}`
                 : tokens.elevation.e1,
             }}
           >
@@ -70,7 +72,7 @@ export default function GaugesList({
                   "",
                 )}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="textSecondary">
                 {range.gauge.name}
               </Typography>
               <GaugeAttribution source={range.source} />

@@ -2,8 +2,11 @@
 
 The rules that keep every screen looking like the same product. This is the
 calm design: light, soft, readable outdoors. The theme (`frontend/src/lib/theme.ts`)
-already carries its tokens; screens move to the rest of it one feature at a
-time, as listed in [plans/ui-overhaul.md](plans/ui-overhaul.md).
+carries the tokens and the component-wide rules.
+
+The token and component reference for the app is the design system artifact
+(private): https://claude.ai/artifact/E8VZQSwJmQhnfLGuPrK585. This page holds
+the rules; the artifact shows the pieces.
 
 ## Character
 
@@ -14,8 +17,9 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 
 ## Layout
 
-- **Desktop** has a fixed top AppBar with text navigation; **mobile** has no
-  top bar and a fixed bottom navigation, the current section as a soft pill.
+- **Desktop** has a fixed top AppBar (56px) with text navigation; **mobile** has
+  no top bar and a fixed bottom navigation (64px, plus the safe area) with Map,
+  Logs, Trips and Profile, the current one as a soft pill (`tokens.chrome`).
   Pages never add their own app-level chrome.
 - Detail content lives in a panel: a card panel beside the list on desktop, a
   full-screen overlay on mobile. Panels open with one header pattern: back
@@ -29,11 +33,36 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   system back gesture. A chart that is zoomed, a chip row, a slider and the map
   keep their own horizontal gestures. Wizard steps do not swipe. Tabs keep their
   roles and arrow keys; swiping is never the only way.
+- **Spacing in the section panel** (`tokens.canvas.panel`, from `md`): the
+  well under the header has 8 on all sides and 8 between cards, on every tab;
+  inside a card text sits 16 from the edge (24 from the panel's edge), a hit
+  box ends 12 from the edge, a row is 56 high and the header 104 (a 56 title
+  row with the back box at +12 and the title text at +64, then a 48 tab row
+  whose first label starts on the 24 line). Cards carry no outer margin of
+  their own; the well supplies it. A docked action sits on the card edges
+  (`DockedAction` with `inset`), 8 below the last card. Other panes keep
+  their own inset until they move to this system.
+- **One header menu, grouped.** The section's actions sit in one overflow menu
+  in the header, in groups with a hairline between (`groupStart` on a
+  `RowAction`): the section (favorite, start and log descent), then its grade
+  (edit, delete), then the view (show proposed features, Features tab only).
+  An action the tab already offers as its docked button (Log descent on Logs)
+  is left out of the menu. A card inside the panel has no menu of its own.
 - Two panes side by side separate by surface level (the list on the ground, the
   detail on cards), not by a hard border.
-- Multi-step forms have no top header. Their chrome is a fixed bottom bar:
-  cancel or back on the left, title with step progress as subtitle, one round
+- Multi-step forms have no top header. Their chrome is a fixed bottom bar
+  (`PanelBottomBar`): Cancel on the first step and Back after it on the left,
+  the title with the step as subtitle and a bar of step segments, one round
   primary-action button on the right.
+- Fields are filled (the theme's default variant): the label sits inside the
+  field at the top, the value beneath it, a 1px inset line that becomes a 2px
+  accent ring on focus. Dates and times use `PickerField` (`components/descents/descent-form/`): the app's own format on top of the browser's native picker, not free text.
+- **Guide, do not bombard.** A screen shows what the user is looking at and the
+  one next step; everything else waits until it is asked for. Per panel: one
+  primary action, one overflow menu for the rest, no settings icon beside it.
+  A control appears only when it can do something here (a level/flow choice
+  only for a gauge that measures both, a compass only once the map is
+  rotated). Before adding a visible control, remove one or put it in the menu.
 - One screen, one primary action: a bottom-right FAB on a phone, a full-width
   **docked** button at the foot of the list pane on desktop. Bottom-right of the
   *content*, not the window.
@@ -41,20 +70,43 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   action. A finished flow ends the same way.
 - Forms are built from labelled blocks (`FormSection`): a heading, one hint line
   saying what the block is for, and an optional action in the heading.
-- **Rows** are cards with the soft shadow, not bordered boxes; a selected card
-  gets a 2px teal ring. A row's actions are one overflow menu (`RowMenu`).
+- **Rows** are cards with the soft shadow, not bordered boxes. The open row in
+  every list (trip, proposal, gauge, settings, river) gets the teal wash and
+  the 3px inset bar of `canvas/flatRow.ts`. A row's actions are one overflow menu (`RowMenu`).
+  Inside a panel card a row is a plain 56px row, a dimmed rule between rows,
+  and the whole row is the target: no chevron at the right (the river state
+  rows). A card hugs its rows; the ground below it stays plain.
 - **Filters** are chips under the search field: teal when set, one tap opens a
   sheet with the exact fields. The search screen has the header and tabs like
   every other screen (Name, Area, Region), results lead with Sections.
 - **Sheets** have a peek and an open height; a picked region or a pick in
   progress opens as a peek so the map keeps its room.
-- **Pinned** elements (the Plan's week calendar, a search field) stay under the
+- **Pinned** elements (the Plan's week strip, a search field) stay under the
   tab bar while the list scrolls beneath them.
+- **Desktop is a map with cards.** From 768px (the theme's `md`) the map fills
+  the window and the screen floats over it as cards: a list card, the open item
+  beside it, the open item in the URL. Logs, Trips, Proposals and the map page
+  work this way; Settings is a centred page without a map. See "Map as the
+  canvas" below.
 - Inline alerts are quiet notes: a tinted ground, severity carried by the icon.
   The filled variant is reserved for the global error snackbar.
 - Do not repeat what a filter already says; secondary counts drop out when zero.
 - A choice between two states is a small segmented control; a decision that
   commits something (approve, reject) is a labelled button in its own row.
+
+## Screens
+
+| Screen | What defines it |
+|---|---|
+| Section detail | The chart: from 1280 the reading block at the card's foot and the plot in the rail beside it, below that a card at the top of the pane (reading, plot, the credit and the period; on a phone the chart with an options button that opens reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide; hidden for no rows, a single row, or put-in and take-out only); a graded range over 80% or more of the run is the section's grade, so it leaves the rows, strip and count (`sectionGrade` in `section-details/grade.ts`, shown in the card subtitle), with the hardest harder stretch in brackets; the count line reads "n features · m proposed"; a section with nothing but a grade reads "No rapids, hazards or access points yet."; the river state block (hazard, last paddled, latest note, open proposals) fills the card's spare room as a card that hugs its rows; the section's history opens from the Sources tab, a feature's from its open row |
+| Search | Tabs Name, Area, Region; the empty Name view lists starred sections and recent rivers, each river ending in `LevelDots` for its sections; a Filters sheet (country, grade, Water now); the chosen levels live in the `water` URL param |
+| Map region mode | The search panel (a peek sheet on a phone, the card on desktop) with the region field, level chips, and "Part of" naming the parents of a picked region; the regions stay visible on the map |
+| Logs | Two panes on desktop; the date is a picker field |
+| Trips | Plan, Bases, Members and Logs tabs; the Plan pins a week strip with a dot on days that have runs and opens to a month; its days read in three states - past quiet (sunk ground, no shadow, grey heading), today ringed in teal, upcoming white with a hairline outline; bases and candidate bases (a closed base ends in a `LevelDots` row, one dot per run on its watch list); admins get Add member and the trip actions |
+| Proposals | The diff shows the before struck through next to the after; reviewing opens a dialog |
+| Settings | Two panes on desktop; Profile, Inbox and Tools on a phone; an access token is shown once, when made |
+
+Components for each live in the matching folder under `frontend/src/components/`.
 
 ## Color
 
@@ -62,7 +114,10 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   selected state, the primary action, the picked region on the map.
 - **Water levels** are reserved for meaning and never decorate: low green,
   medium amber, high red (a solid fill with white text, the loudest thing on a
-  row), empty grey with a hollow dot. Levels are token *pairs*:
+  row), empty grey with a hollow dot. `LevelDots` is one 8px dot per section in
+  those colours: grey filled is unknown (no gauge, no thresholds, or a reading
+  older than 3 h or three gauge intervals, the same rule as the reading block), a grey ring is too low; the row carries one label such as
+  "2 of 4 sections running". Levels are token *pairs*:
   `levels.<x>.marker` for map geometry, `levels.<x>.text`/`bg` for chips. Inside
   a chart card the level reading is neutral: the thresholds already show it.
 - **Map feature markers** use the Okabe-Ito colorblind-safe palette.
@@ -70,6 +125,14 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   component-wide rules from the theme's `styleOverrides`.
 - Transparency uses the six named alpha steps from `alphas` (`tint 5%`,
   `wash 8%`, `hover 12%`, `hairline 33%`, `border 60%`, `scrim 80%`).
+- Contrast floors, checked by [`contrast.test.ts`](../frontend/src/lib/contrast.test.ts)
+  against the tokens in `theme.ts`: text and its ground reach 4.5:1 (body and
+  secondary ink on every surface; teal, green and red text on the three light
+  grounds; chip text on its wash); marks and controls reach 3:1 on white or
+  the surface (level and feature markers, put-in and take-out, the teal focus
+  ring, the `outline` edge of an input at rest - the hairline `outlineVariant`
+  is decoration only). Chips and level pills use the paired text/background
+  tokens rather than a tint of the marker color.
 - The ground is `surfaceLow`, cards are `surface`, a quiet inset inside a card
   is `surfaceHigh`.
 
@@ -84,7 +147,7 @@ UI picks the nearest step. Numbers use tabular figures.
 
 ## Shape and elevation
 
-Radii from `tokens.radii`: 6 (small tags), 10 (buttons), 14 (cards), 16 (sheets
+Radii from `tokens.radii`: 6 (small tags), 10 (buttons), 12 (range bands), 14 (cards), 16 (sheets
 and the FAB), 20 (dialogs), pill (chips and level pills). Elevation from
 `tokens.elevation`: `e1` a card at rest, `e2` a floating panel, popover or map
 control, `e3` the accent glow under the primary action. A circle is
@@ -123,7 +186,8 @@ beside the name.
 The base map is light. Labels are ink on a white halo; region names are their
 own quiet type; the selected line and the picked region are teal; sections are
 a clear blue. Region boundaries are one thin grey line in one ink, each edge
-drawn once, with no per-region colors; ranges that hold two or more others in
+drawn once, with no per-region colors; names sit at the visual centre of each
+region; ranges that hold two or more others in
 view are not drawn; valleys are soft bands. The country is named once, at the
 border, and in the picker.
 
@@ -131,3 +195,73 @@ border, and in the picker.
 
 Sentence case, plain words, no em dashes (a plain hyphen). Reuse the app's own
 strings; a new word is agreed first.
+
+## Map as the canvas
+
+From 768px wide, on the map page, Logs, Trips and Proposals, one map fills the
+window under the app bar and the content floats over it in cards. The map
+always shows what you are looking at: the open log, the trip's bases, the
+proposed change. Below 768px nothing changes; the phone keeps its own screens.
+The reasons and the work plan are in [plans/wide-canvas.md](plans/wide-canvas.md).
+
+| Card | Width | Used for |
+|---|---|---|
+| Detail | 26% of the window, 340 to 440 (360 under 1280); drag the grip to resize, 340 to 560 and never leaving the rail's plot under 480 (remembered per device) | the map page's search, river and section panel |
+| List | 20%, 300 to 380 | the list of logs, trips or proposals |
+| Side | 25%, 400 to 600 | the open log, trip, proposal, and a trip's members |
+
+- **Budget.** Open cards cover at most 55% of the window, or 70% when a list
+  card is among them (so a list and an open item both fit at 1280, and a
+  trip's members card fits at 1600 and up). Past that the lowest priority card
+  folds to its header; tapping the header opens it and folds another.
+- **Header.** Each card has one header, supplied by its screen: a title, a
+  grey subtitle, actions at the right and a close button. Where the panel in
+  the card has its own header (the search panel, a log), that is the card's
+  header and the card draws none.
+- **Reading rail.** From 1280 wide and 600 tall, a section (or a picked gauge)
+  with a gauge shows the rail. The detail card runs the full height (16px from
+  the app bar and the foot), and its foot is the reading block, as tall as the
+  rail. The chart is its own card beside it, 8px from the card's edge, on the
+  same foot line and with the same corners. The rail is 22% of the window
+  height, 184 to 248, and floats 16px from the right and the foot. The card's
+  order from the top: header, tabs, scroll area (strip, count, rows; the
+  river-state card hugs its rows below them), the docked action, the reading
+  block. The reading block is a stat tile: top left the gauge name (a picker
+  with several gauges) with the time and age of the newest reading ("19:55 ·
+  10m ago"), top right the period as one quiet text button ("Last 7 days")
+  that opens a four-item menu, and a close mark only for a gauge picked from
+  the map; at the foot the latest value, large (56 to 80px with the rail
+  height, weight 600), its unit, and the level dot and word on its baseline,
+  with the Level | Flow choice at the right only for a gauge that measures
+  both. The space between holds a future outlook line, so the number never
+  moves; there is no trend until there are predictions. A reading older than
+  3 h or three gauge intervals shows "No recent reading" with no level word,
+  and its dot is grey. The plot runs edge to edge with no grid and a 2px line:
+  threshold words (Low, Medium, High; the number is in the tooltip) stand on
+  the lines at the plot's left, no gutter, thresholds are always drawn; the
+  latest point is a ringed dot 8px short of the right edge; the credit line is
+  under it. Pointing at or tapping the plot shows a hairline, a ring dot and a
+  readout ("High, 78.8 cm" with the time) in the plot only; the values pane
+  keeps the latest reading, and the point stays marked until the period or
+  the gauge changes. The axis steps 6 h (24h), 2 days (7d), 5 days (30d) or 2
+  months (year, with the year at January). The card's resize handle is a
+  14x48 tab with grip dots on its edge, half over the map (44x64 to hit),
+  teal on hover. Without
+  a gauge there is no rail and
+  the card ends in a 64px row "No gauge for this section" with "Link a gauge"
+  (signed in; it opens the New feature form, where the gauge is chosen). Below
+  1280, or under 600 tall, there is no rail: the card is 360 wide, hugs its
+  content and the chart (reading, period, a 128px plot, the credit) is its
+  first block (the plot full card width, the period beside the credit). The
+  open tab and its scroll survive crossing 1280.
+- **Free area.** The part of the map no card or rail covers. The map frames
+  the subject inside it, and the zoom keys, compass and layer key form
+  one stack 16px from the right and the top, and the attribution sits 8px above
+  the rail (24px from the foot without one), never over a card. The layer key
+  is one 44px button; its 272px popover opens to its left with Section, River,
+  Features and Satellite.
+- **Sections on the map.** The subject of a screen is teal (the open log's
+  sections, a proposed line); context is a dim line you cannot click (other
+  logged sections, the stored line a proposal replaces).
+- **Forms with their own map** (logging a descent) leave the canvas and use the
+  whole page, so only one map is ever drawn.

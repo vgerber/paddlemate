@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import PushSettings from "@/components/notifications/PushSettings";
 import PanelHeader from "@/components/PanelHeader";
 import { theme } from "@/lib/theme";
@@ -17,7 +18,7 @@ function SettingsSection({ group }: { group: GroupId }) {
 }
 
 /** One open section. On a phone it is the overlay, with a back arrow in the
- * panel header; on a desktop the pane beside the list already carries the
+ * panel header; on a desktop the column beside the nav already carries the
  * way back, so it opens with a bold title instead. */
 export default function SettingsDetail({
   group,
@@ -30,7 +31,7 @@ export default function SettingsDetail({
 }) {
   const title = groupLabel(group);
   const body = (
-    <Box sx={{ maxWidth: 640 }}>
+    <Box sx={overlay ? { maxWidth: 640 } : undefined}>
       <SettingsSection group={group} />
     </Box>
   );
@@ -58,9 +59,26 @@ export default function SettingsDetail({
   }
 
   return (
-    <Box data-testid="settings-detail" sx={{ minHeight: 0, overflowY: "auto" }}>
-      <PanelHeader title={title} />
-      <Box sx={{ px: 4, py: 3 }}>{body}</Box>
+    <Box
+      data-testid="settings-detail"
+      sx={{ minHeight: 0, overflowY: "auto", py: 2 }}
+    >
+      <Box
+        sx={{
+          p: 3,
+          bgcolor: tokens.surfaceLowest,
+          borderRadius: `${tokens.radii.lg}px`,
+          boxShadow: tokens.elevation.e1,
+        }}
+      >
+        <Typography
+          component="h2"
+          sx={{ fontSize: "1.125rem", fontWeight: 700, mb: 2 }}
+        >
+          {title}
+        </Typography>
+        {body}
+      </Box>
     </Box>
   );
 }

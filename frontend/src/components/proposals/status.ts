@@ -37,6 +37,7 @@ export function proposerName(
 
 /** Fields that are plumbing, not content, in an update's before/after rows. */
 export const DIFF_HIDDEN_KEYS = new Set([
+  "id",
   "geometry",
   "water_ranges",
   "location",

@@ -10,6 +10,7 @@ import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
+import { PANEL_HEIGHT, theme } from "@/lib/theme";
 import {
   buildPayload,
   copyFromDescent,
@@ -19,9 +20,13 @@ import {
   makeDraft,
   toDatetimeLocal,
 } from "./descent-form/model";
+import SectionPickerMap from "./descent-form/SectionPickerMap";
 import StepDetails from "./descent-form/StepDetails";
 import StepSections from "./descent-form/StepSections";
 import StepWhen from "./descent-form/StepWhen";
+import { useSectionPicking } from "./descent-form/useSectionPicking";
+
+const { tokens } = theme;
 
 const STEPS = ["When", "Sections", "Details"];
 
@@ -34,8 +39,7 @@ interface Props {
   initialTripId?: number;
   onSave: (id: number) => void;
   onCancel: () => void;
-  /** Rendered inside a detail pane rather than the whole window, so the
-   * bottom bar sticks to the form's own column instead of the viewport. */
+  /** Wide screen: the steps in a left pane with the map beside them. */
   embedded?: boolean;
 }
 
@@ -88,33 +92,51 @@ export default function DescentForm({
     setForm((prev) => ({ ...prev, ...update }));
   }
 
+  const picking = useSectionPicking(
+    form,
+    patch,
+    initialSection?.waterwayId ?? null,
+  );
+
   const isLast = step === STEPS.length - 1;
   const isBusy = createDescent.isPending || patchDescent.isPending;
 
-  return (
-    <Box
-      sx={{
-        maxWidth: 720,
-        mx: "auto",
-        px: 2,
-        py: 3,
-        // Clear the fixed bottom bar so the last field stays reachable.
-        pb: embedded ? 2 : "calc(88px + env(safe-area-inset-bottom))",
-        // In a pane the column fills the height so the bar has a floor to
-        // sit on, instead of trailing whatever the current step is tall.
-        ...(embedded && {
-          minHeight: "100%",
-          display: "flex",
-          flexDirection: "column",
-        }),
-      }}
-    >
+  const bar = (
+    <PanelBottomBar
+      leftIcon={step === 0 ? <CloseIcon /> : <ArrowBackIcon />}
+      onLeftClick={step === 0 ? onCancel : () => setStep((s) => s - 1)}
+      leftLabel={step === 0 ? "Cancel" : "Back"}
+      leftDisabled={isBusy}
+      title={descent ? "Edit descent" : "Log descent"}
+      subtitle={`Step ${step + 1} of ${STEPS.length} · ${STEPS[step]}`}
+      steps={{ n: step + 1, of: STEPS.length }}
+      action={
+        <RoundActionButton
+          onClick={isLast ? handleSave : () => setStep((s) => s + 1)}
+          disabled={isBusy}
+          ariaLabel={isLast ? "Save" : "Next"}
+        >
+          {isBusy ? (
+            <CircularProgress size={20} color="inherit" />
+          ) : isLast ? (
+            <CheckIcon fontSize="small" />
+          ) : (
+            <ArrowForwardIcon fontSize="small" />
+          )}
+        </RoundActionButton>
+      }
+    />
+  );
+
+  const steps = (
+    <>
       {step === 0 && <StepWhen form={form} onChange={patch} />}
       {step === 1 && (
         <StepSections
           form={form}
           onChange={patch}
-          initialWaterwayId={initialSection?.waterwayId}
+          picking={picking}
+          mapBeside={embedded}
         />
       )}
       {step === 2 && <StepDetails form={form} onChange={patch} />}
@@ -124,56 +146,76 @@ export default function DescentForm({
           {saveError}
         </Alert>
       )}
+    </>
+  );
+
+  // Wide screen: the steps and their bar in a left pane, the map beside it
+  // on every step so it never shifts.
+  if (embedded) {
+    return (
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "400px minmax(0, 1fr)",
+          height: PANEL_HEIGHT.md,
+          bgcolor: tokens.surfaceLow,
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            bgcolor: tokens.surface,
+            borderRight: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2 }}>
+            {steps}
+          </Box>
+          {bar}
+        </Box>
+        <Box sx={{ minWidth: 0, minHeight: 0, p: 1.5 }}>
+          <SectionPickerMap picking={picking} readOnly={step !== 1} fill />
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
+    <Box>
+      <Box
+        sx={{
+          maxWidth: 720,
+          mx: "auto",
+          width: "100%",
+          boxSizing: "border-box",
+          px: 2,
+          py: 3,
+          // Clear the fixed bottom bar so the last field stays reachable.
+          pb: "calc(88px + env(safe-area-inset-bottom))",
+        }}
+      >
+        {steps}
+      </Box>
 
       {/* Bottom bar - pinned to the viewport bottom, above the mobile
           bottom navigation (zIndex 1300); same pattern as the section and
-          feature wizards. Centring on the viewport would straddle the list
-          pane, so beside a list it sticks to the form column instead. */}
+          feature wizards. */}
       <Box
-        sx={
-          embedded
-            ? {
-                position: "sticky",
-                bottom: 0,
-                mt: "auto",
-                zIndex: 2,
-                bgcolor: "background.paper",
-              }
-            : {
-                position: "fixed",
-                bottom: 0,
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "100%",
-                maxWidth: 720,
-                zIndex: 1350,
-                bgcolor: "background.paper",
-              }
-        }
+        sx={{
+          position: "fixed",
+          bottom: 0,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "100%",
+          maxWidth: 720,
+          zIndex: 1350,
+          bgcolor: "background.paper",
+        }}
       >
-        <PanelBottomBar
-          leftIcon={step === 0 ? <CloseIcon /> : <ArrowBackIcon />}
-          onLeftClick={step === 0 ? onCancel : () => setStep((s) => s - 1)}
-          leftLabel={step === 0 ? "Cancel" : "Back"}
-          leftDisabled={isBusy}
-          title={descent ? "Edit descent" : "Log descent"}
-          subtitle={`Step ${step + 1} of ${STEPS.length} · ${STEPS[step]}`}
-          action={
-            <RoundActionButton
-              onClick={isLast ? handleSave : () => setStep((s) => s + 1)}
-              disabled={isBusy}
-              ariaLabel={isLast ? "Save" : "Next"}
-            >
-              {isBusy ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : isLast ? (
-                <CheckIcon fontSize="small" />
-              ) : (
-                <ArrowForwardIcon fontSize="small" />
-              )}
-            </RoundActionButton>
-          }
-        />
+        {bar}
       </Box>
     </Box>
   );

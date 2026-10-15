@@ -1,15 +1,16 @@
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import WaterLevelChip from "@/components/WaterLevelChip";
+import GradeTag from "@/components/waterway/GradeTag";
+import { sectionGradeText } from "@/components/waterway/section-details/grade";
 import type { SectionWithFeatures } from "@/lib/api";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
-import { cardRowSx } from "./RiverRow";
+import { listRowSx } from "./RiverRow";
 
 const { tokens } = theme;
 
@@ -25,14 +26,6 @@ interface SearchSectionRowProps {
   matchedFeature?: string;
 }
 
-function sectionGrade(section: SectionWithFeatures): string | undefined {
-  const whitewater = section.features?.find(
-    (f) => f.feature_type === "whitewater",
-  );
-  const meta = whitewater?.metadata as Record<string, unknown> | null;
-  return meta?.difficulty as string | undefined;
-}
-
 /** A search result as the design draws it: the section's name over its river
  * and grade, the level pill at the right spanning both lines. */
 export default function SearchSectionRow({
@@ -44,15 +37,14 @@ export default function SearchSectionRow({
   onToggleFavorite,
   matchedFeature,
 }: SearchSectionRowProps) {
-  const grade = sectionGrade(section);
+  const grade = sectionGradeText(section);
   return (
     <ListItemButton
       data-testid="search-section-row"
       selected={selected}
       onClick={() => onClick(section.id)}
       sx={{
-        ...cardRowSx,
-        mb: 0.75,
+        ...listRowSx,
         minHeight: 64,
         display: "grid",
         gridTemplateColumns: onToggleFavorite
@@ -83,18 +75,18 @@ export default function SearchSectionRow({
       >
         <Typography
           variant="body2"
-          color="text.secondary"
+          color="textSecondary"
           noWrap
           sx={{ minWidth: 0 }}
         >
           {riverName}
         </Typography>
-        {grade && <Chip label={grade} size="small" />}
+        {grade && <GradeTag grade={grade} />}
       </Box>
       {matchedFeature && (
         <Typography
           variant="caption"
-          color="text.disabled"
+          color="textDisabled"
           noWrap
           sx={{ gridColumn: 1 }}
         >

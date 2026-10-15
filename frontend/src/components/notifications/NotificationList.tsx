@@ -1,10 +1,12 @@
+import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import EmptyState from "@/components/states/EmptyState";
+import { StateTile } from "@/components/states/EmptyState";
+import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { TripEvent } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
@@ -13,18 +15,23 @@ import {
   useNotifications,
   useRefreshNotifications,
 } from "@/lib/hooks/useNotifications";
-import { fonts, theme } from "@/lib/theme";
+import { alphas, fonts, theme } from "@/lib/theme";
 
 /** What changed on the caller's trips, newest first. Opening it marks
  * everything shown read; the entries that were new keep their dot until the
  * list is opened again. */
 export default function NotificationList({
   onOpenTrip,
+  cards,
 }: {
+  /** Rows as cards on the ground, like the other phone lists; the popover
+   * keeps them flat on its own surface. */
+  cards?: boolean;
   /** Called after navigating to a trip, e.g. to close a popover. */
   onOpenTrip?: () => void;
 }) {
-  const { data, isLoading } = useNotifications(true);
+  const query = useNotifications(true);
+  const { data, isLoading } = query;
   const refresh = useRefreshNotifications();
   // The count beside the bell may predate this list - changes read on
   // another device, a trip left, old ones pruned. Opening shows both fresh.
@@ -45,13 +52,44 @@ export default function NotificationList({
   }, [newest, hasUnread, mutate]);
 
   if (isLoading) return <LoadingBox size={28} pt={3} />;
+  if (query.isError && !data) {
+    return (
+      <ErrorState
+        error={query.error}
+        fallback="Could not load your notifications."
+        onRetry={() => query.refetch()}
+        py={5}
+      />
+    );
+  }
   if (!data?.items.length) {
     return (
-      <EmptyState
-        title="Nothing new"
-        caption="Changes others make to your trips show up here."
-        py={4}
-      />
+      <Box
+        data-testid="empty-state"
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 0.75,
+          pt: 7.5,
+          pb: 4,
+          px: 2,
+          textAlign: "center",
+        }}
+      >
+        <StateTile>
+          <NotificationsNoneOutlinedIcon />
+        </StateTile>
+        <Typography sx={{ fontSize: "1rem", fontWeight: 600 }}>
+          Nothing new
+        </Typography>
+        <Typography
+          color="textSecondary"
+          sx={{ fontSize: "0.875rem", lineHeight: "20px" }}
+        >
+          Changes others make to your trips show up here.
+        </Typography>
+      </Box>
     );
   }
 
@@ -69,9 +107,14 @@ export default function NotificationList({
   };
 
   return (
-    <Box>
+    <Box sx={cards ? { display: "grid", gap: 1, p: 1.5 } : undefined}>
       {data.items.map((e) => (
-        <NotificationRow key={e.id} event={e} onClick={() => open(e)} />
+        <NotificationRow
+          key={e.id}
+          event={e}
+          card={cards}
+          onClick={() => open(e)}
+        />
       ))}
     </Box>
   );
@@ -79,9 +122,11 @@ export default function NotificationList({
 
 function NotificationRow({
   event,
+  card,
   onClick,
 }: {
   event: TripEvent;
+  card?: boolean;
   onClick: () => void;
 }) {
   return (
@@ -90,9 +135,20 @@ function NotificationRow({
       sx={{
         alignItems: "flex-start",
         gap: 1.25,
-        borderBottom: "1px solid",
-        borderColor: `${theme.tokens.outlineVariant}55`,
         py: 1.25,
+        ...(card
+          ? {
+              bgcolor: theme.tokens.surface,
+              borderRadius: `${theme.tokens.radii.md}px`,
+              boxShadow: theme.tokens.elevation.e1,
+              px: 1.75,
+            }
+          : {
+              "&:not(:last-of-type)": {
+                borderBottom: "1px solid",
+                borderColor: `${theme.tokens.outlineVariant}${alphas.hairline}`,
+              },
+            }),
       }}
     >
       <Box
@@ -108,17 +164,22 @@ function NotificationRow({
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography
           sx={{
-            fontSize: "0.8125rem",
-            fontWeight: event.unread ? 600 : 400,
+            fontSize: "0.875rem",
+            lineHeight: "20px",
+            fontWeight: event.unread ? 600 : 500,
           }}
         >
           {event.text}
         </Typography>
         <Typography
-          variant="caption"
-          color="text.disabled"
+          color="textSecondary"
           noWrap
-          sx={{ display: "block", fontFamily: fonts.label }}
+          sx={{
+            display: "block",
+            fontFamily: fonts.label,
+            fontSize: "0.8125rem",
+            lineHeight: "18px",
+          }}
         >
           {event.trip_name} · {timeAgo(event.created_at)}
         </Typography>

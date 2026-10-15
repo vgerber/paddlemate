@@ -13,9 +13,7 @@ import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
 import ToolsList from "@/components/ToolsList";
 import { useSession } from "@/lib/hooks/useSession";
-import { alphas, PANEL_HEIGHT, theme } from "@/lib/theme";
-
-const { tokens } = theme;
+import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
 type PhoneTab = "profile" | "inbox" | "tools";
 
@@ -34,7 +32,10 @@ export const Route = createFileRoute("/settings")({
 });
 
 const Version = () => (
-  <Typography variant="caption" color="text.disabled">
+  <Typography
+    color="textSecondary"
+    sx={{ fontSize: "0.8125rem", fontWeight: 500 }}
+  >
     v{__COMMIT_HASH__}
   </Typography>
 );
@@ -74,15 +75,15 @@ function SettingsPage() {
         {tab === "profile" && (
           <>
             <SettingsList onOpen={open} />
-            <Box sx={{ px: 2, py: 1 }}>
+            <Box sx={{ px: 2, pt: 1.75, pb: 1 }}>
               <Version />
             </Box>
           </>
         )}
         {/* The inbox is a list, edge to edge like every other list. */}
-        {tab === "inbox" && <NotificationList />}
+        {tab === "inbox" && <NotificationList cards />}
         {tab === "tools" && (
-          <Box sx={{ px: 2, py: 3 }}>
+          <Box sx={{ px: 1.5, py: 3 }}>
             <ToolsList />
           </Box>
         )}
@@ -101,33 +102,41 @@ function SettingsPage() {
 
   return (
     <Box
+      data-testid="settings-page"
       sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          md: "320px minmax(0, 1fr)",
-          lg: "420px minmax(0, 1fr)",
-        },
+        display: "flex",
+        justifyContent: "center",
+        gap: 4,
+        px: 4,
         height: PANEL_HEIGHT,
+        bgcolor: "background.default",
       }}
     >
       <Box
         sx={{
+          width: 240,
+          flexShrink: 0,
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
-          bgcolor: tokens.surfaceLow,
-          borderRight: "1px solid",
-          borderColor: `${tokens.outlineVariant}${alphas.hairline}`,
+          pt: 2,
         }}
       >
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-          <SettingsList selected={openGroup} onOpen={open} />
-        </Box>
-        <Box sx={{ px: 2, py: 1, flexShrink: 0 }}>
+        <SettingsList selected={openGroup} onOpen={open} />
+        <Box sx={{ px: 2, pt: 1.75, pb: 1, flexShrink: 0 }}>
           <Version />
         </Box>
       </Box>
-      <Box sx={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <Box
+        sx={{
+          width: 720,
+          minWidth: 0,
+          flexShrink: 1,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+        }}
+      >
         <SettingsDetail
           group={openGroup}
           overlay={false}

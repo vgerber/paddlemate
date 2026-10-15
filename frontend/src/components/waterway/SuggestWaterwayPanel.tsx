@@ -2,7 +2,6 @@ import CenterFocusStrongIcon from "@mui/icons-material/CenterFocusStrong";
 import CheckIcon from "@mui/icons-material/Check";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import CloseIcon from "@mui/icons-material/Close";
-import WaterIcon from "@mui/icons-material/Water";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -14,12 +13,13 @@ import ListItemText from "@mui/material/ListItemText";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
-import ChipRow from "@/components/ChipRow";
 import type { GaugePin } from "@/components/map/GaugeMarkers";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import EmptyState from "@/components/states/EmptyState";
 import SignInGate from "@/components/states/SignInGate";
 import FormSection from "@/components/waterway/FormSection";
+import ProposalNoteField from "@/components/waterway/ProposalNoteField";
+import { proposalNoteValue } from "@/components/waterway/proposalNote";
 import type { CatalogRiver } from "@/lib/api";
 import { ApiError, apiErrorMessage } from "@/lib/api/client";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
@@ -85,6 +85,7 @@ export default function SuggestWaterwayPanel({
 
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState("");
+  const [note, setNote] = useState("");
 
   // Gauge-backed river suggestions: rivers the gauge catalog knows by name.
   // The exact match ranks first server-side, so it is always present.
@@ -216,7 +217,11 @@ export default function SuggestWaterwayPanel({
     // server compares case-insensitively rather than ignoring diacritics,
     // could refuse a name the server would have accepted.
     createWaterway.mutate(
-      { name: trimmed, description: description.trim() || null },
+      {
+        name: trimmed,
+        description: description.trim() || null,
+        proposal_note: proposalNoteValue(note),
+      },
       {
         onSuccess: () => setSubmitted(true),
         onError: (err) => {
@@ -281,17 +286,18 @@ export default function SuggestWaterwayPanel({
                 label="Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
+                slotProps={{ htmlInput: { "aria-required": true } }}
                 fullWidth
               />
             </FormSection>
 
             {exactGaugeMatch && riverGauges.length > 0 && (
               <Box
+                data-testid="river-gauges"
                 sx={{
                   bgcolor: tokens.surface,
                   borderRadius: `${tokens.radii.md}px`,
-                  boxShadow: tokens.elevation.e1,
+                  boxShadow: `inset 0 0 0 1px ${tokens.outlineVariant}`,
                   overflow: "hidden",
                 }}
               >
@@ -305,7 +311,14 @@ export default function SuggestWaterwayPanel({
                     pt: 0.5,
                   }}
                 >
-                  <WaterIcon sx={{ fontSize: 16, color: tokens.success }} />
+                  <Box
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      bgcolor: tokens.outline,
+                    }}
+                  />
                   <Typography
                     sx={{ ...labelSx, flex: 1 }}
                     title="Live water levels can be linked to this river's sections"
@@ -318,6 +331,7 @@ export default function SuggestWaterwayPanel({
                     <IconButton
                       aria-label="Show all on map"
                       title="Show all on map"
+                      sx={{ width: tokens.touch.min, height: tokens.touch.min }}
                       onClick={() => onFocusBounds?.(matchedBounds)}
                     >
                       <CenterFocusStrongIcon sx={{ fontSize: 16 }} />
@@ -338,20 +352,24 @@ export default function SuggestWaterwayPanel({
                         ])
                       }
                       title="Show on map"
-                      sx={{ minHeight: tokens.touch.min, px: 1.5 }}
+                      sx={{
+                        minHeight: tokens.touch.min,
+                        px: 1.5,
+                        borderTop: "1px solid",
+                        borderColor: tokens.outlineVariant,
+                      }}
                     >
                       <ListItemText
                         primary={g.name || `Station ${g.station_id}`}
-                        secondary={
-                          g.params && g.params.length > 0
-                            ? `${g.provider} · ${g.params.join(", ")}`
-                            : g.provider
-                        }
-                        slotProps={{
-                          primary: { variant: "body2" },
-                          secondary: { variant: "caption" },
-                        }}
+                        slotProps={{ primary: { variant: "body2" } }}
                       />
+                      <Typography
+                        variant="caption"
+                        color="textSecondary"
+                        data-testid="gauge-params"
+                      >
+                        {g.params?.join(", ")}
+                      </Typography>
                       <CenterFocusStrongIcon
                         sx={{ fontSize: 16, color: "text.disabled", ml: 1 }}
                       />
@@ -365,7 +383,10 @@ export default function SuggestWaterwayPanel({
                     sx={{
                       ...labelSx,
                       minHeight: tokens.touch.min,
-                      color: "text.secondary",
+                      color: tokens.primary,
+                      borderTop: "1px solid",
+                      borderColor: tokens.outlineVariant,
+                      borderRadius: 0,
                     }}
                   >
                     {showAllGauges
@@ -381,7 +402,7 @@ export default function SuggestWaterwayPanel({
                 label="Similar rivers with gauges"
                 hint="Pick one to use its exact name."
               >
-                <ChipRow>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
                   {suggestionChips.map((r) => (
                     <Chip
                       data-testid="similar-river"
@@ -390,9 +411,10 @@ export default function SuggestWaterwayPanel({
                       label={`${r.river}${r.country ? ` (${r.country})` : ""}`}
                       title={`${r.gauge_count} gauge${r.gauge_count === 1 ? "" : "s"} in the catalog`}
                       onClick={() => setName(r.river)}
+                      sx={{ maxWidth: "100%" }}
                     />
                   ))}
-                </ChipRow>
+                </Box>
               </FormSection>
             )}
 
@@ -409,6 +431,8 @@ export default function SuggestWaterwayPanel({
                 fullWidth
               />
             </FormSection>
+
+            <ProposalNoteField value={note} onChange={setNote} />
 
             {submitError && <Alert severity="error">{submitError}</Alert>}
           </>

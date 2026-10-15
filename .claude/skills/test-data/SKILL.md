@@ -40,7 +40,7 @@ this data. All have the password `paddle`; only Vincent is a `server_admin`.
 | `vincent` | Vincent Local | the admin you normally sign in as; owns the club, two logs and the trip |
 | `mara` | Mara Lindqvist | co-admin of the trip, owns a public and a **private** log in it, and a private trip of her own |
 | `tobi` | Tobias Reiner | trip member who joins late and leaves early |
-| `aoife` | Aoife Byrne | trip member with no dates set; owns the club-shared log |
+| `aoife` | Aoife Byrne | trip member who has said when she arrives (tomorrow, 14:00) but not when she leaves; owns the club-shared log |
 | `jonas` | Jonas Weber | in the club but **not** on the trip: sees it, has not joined |
 
 Signing in as somebody other than Vincent is how you check what a non-admin,
@@ -66,15 +66,21 @@ docker compose --profile auth up -d --force-recreate keycloak
 |---|---|---|
 | Users | pinned UUIDs | the five above, plus the club `9001` "Innsbruck Paddlers" (Vincent owner, Mara admin, the rest members) |
 | Follows | - | Vincent and Mara follow each other, Tobias follows Vincent, Aoife's request is still `pending` |
+| Starred sections | - | Vincent stars Upper Test (9101) and Wenns - Arzl (9171), Mara stars Lower Test (9102); the search panel lists them with an empty name search |
 | Waterway "Test River" | 9001 | river |
 | Sections | 9101-9107 | each with put_in + take_out features (9511-9572) at its line ends, like a normal entry |
 | Whitewater features | 9523/9543/9553 | difficulty III / II / IV-V on sections 9102/9104/9105, spanning put-in to take-out - difficulty chip in the section list |
 | Extra features on Lower Test | 9524-9529 | rapid "Slot Machine" (III+), hole "Big Hole", weir "Altes Wehr", strainer, portage, bridge - 9102 is the feature-rich section for timeline/map/delete testing |
+| Catalog gauges "Test Creek Upper/Lower" | provider `fixture`, 9801, 9802 | river "Test Creek" (no waterway): typing it in the New river form shows the "2 gauges on Test Creek" card |
 | Gauge "Test Gauge" + series | 9301 / 9401, 9402 | water_level in cm; 9401 has a week of 2-hourly sinusoidal readings (55-115, latest ~85), 9402 has none |
 | Water ranges | 9601-9608 | thresholds around the ~85 cm reading so the section list shows every chip variant (see below); section defaults sit on the whitewater features; 9607/9608 sit on the Lower Test rapid/hole (same series as the 9601 default) so selecting them in the timeline swaps the chart thresholds |
 | Descents | 9201-9204 | see below; all owned by the first user |
 | Notes (comments) | 9901-9906 | one per interesting category on Test River, plus a section note and a `merged` one a client should fold away |
-| Proposals | 9701-9709 | one per review case, placed so the review map has context (see below) |
+| Proposals | 9701-9718 | one per review case, placed so the review map has context (see below) |
+| History | - | `entity_history` steps on Test River, Upper/Lower Test and Lower Test's features (see below) |
+| Sources | 9903 | "Tirol Canoe Association" guide (CC BY-SA), next to 9901/9902 and the migration's `import:rivermap` |
+| Lower Test notes | 9906-9913 | one note in each category: urgent, temporary/cleared/permanent hazard, conditions, regulations, logistics, calibration (outdated) |
+| Trip events + read marks | - | the bell for Vincent and Mara (see below) |
 | API token `pm_testtoken123` | name `test-data` | for authed curl: `-H "X-Api-Key: pm_testtoken123"` |
 
 Proposals (on `/proposals`, newest first; the review pane draws each one
@@ -94,6 +100,56 @@ rather than stacked on one point):
 - 9707 river create "Proposed Test Creek" - no geometry, the no-context case
 - 9708 approved / 9709 rejected - so the status tabs are not empty
 - Votes on 9701 (+1), 9703 (+1), 9704 (-1) so the list shows tallies
+- 9710 pending feature update on the whitewater zone 9523 by Mara: name,
+  description (strings), difficulty (nested metadata), length_km (nested
+  number) and a moved line; votes 2 for, 1 against (mixed)
+- 9711 pending section update on Lower Test by Tobias: name, description, a
+  regions list, river km numbers, a reshaped line; no votes
+- 9712 pending delete of the strainer 9527 by Aoife; 4 votes for (clear)
+- 9715 pending river update (description only, no geometry) by Jonas
+- 9713 rejected feature update on the weir with a review note; 3 votes against
+- 9714 / 9717 / 9718 approved (section update, rapid grade, delete of the
+  gone strainer 9595), each with a reviewer (Vincent); these are the proposals
+  the history below links to
+- Every update and delete carries `original_data`, so before/after shows.
+  Submitters are spread over Mara, Tobias, Aoife and Jonas.
+
+History (`entity_history`; times relative to NOW), for the provenance views
+and the Sources tab of `/?waterway=9001`:
+
+- River 9001: imported from Rivermap, edited by Mara and Vincent
+- Upper Test 9101: imported, renamed by Tobias
+- Lower Test 9102: imported, edited by Vincent and Mara (country, regions,
+  name, a location move), then a `proposal_accepted` step (9714, reviewer
+  Vincent); Empty Test 9103 is `created` by Aoife
+- Features on 9102: the whitewater zone 9523 and rapid 9524 (imported,
+  named, a proposal-accepted grade 9717, a move, a gauge-sourced water range
+  from source 9901), Big Hole 9525 and the portage/bridge imported from
+  source 9903, weir 9526 and strainer 9527 created by users
+- Feature 9595 no longer exists but its history is readable: created by
+  Jonas, described by Tobias, `deleted` through proposal 9718. Open it at
+  `/api/v1/waterways/9001/sections/9102/features/9595/history`
+- The Sources tab for 9001 counts Rivermap 7, 9903 three, 9901 one, and lists
+  all five paddlers as contributors (Vincent 6, Mara 5, Tobias 5, Aoife 2,
+  Jonas 1)
+
+The bell (`/users/me/notifications`): Vincent has 13 listed trip events from
+others on the Oetztal week, 5 unread (newer than his read mark, 26 hours
+ago) and 8 read, the older ones spanning two weeks for an "earlier" group.
+Three events are deliberately not listed for him: a vote (live only), one of
+his own, and one on Mara's other trip. Mara has a read mark 5 days back and
+two events by Vincent, one unread. Trip members are back-dated to 20 days so
+old events count. Inserting events fires the API's `trip_events` notify, so
+a running API may push for them if a browser is subscribed.
+
+Trip day with many entries: yesterday carries four more logs (9209-9212, four
+people, Test River's two sections, Tumpen and Imster Schlucht) on top of the
+two days before it, so a `/trips?selected=9001` day lists several runs over
+several rivers.
+
+Media: not seeded. Photos are files under `MEDIA_DIR` addressed by
+`storage_key`, which SQL cannot create, and the daily sweep deletes files no
+row points at; add photos by uploading through the app.
 
 Descents (times relative to NOW at seed time), spread across the crew so
 "mine" and "someone else's" both have content:
@@ -133,7 +189,8 @@ Trips:
   timeline has days behind it (solid dots) and ahead of it (hollow). Members:
   Vincent + Mara (admins), Tobias, Aoife. Vincent arrives a day early (19:30),
   which is the timeline's **Day -1**; Mara knows the day she leaves but not
-  the hour, which is the half-settled state the UI has to read well.
+  the hour, which is the half-settled state the UI has to read well. Aoife arrives
+  tomorrow with no departure, so tomorrow is a day with **only an arrival**.
 
   **Four bases**, one of each interesting shape and each in its **own
   valley**: 1 the camp in the Oetztal (Laengenfeld), 2 the hotel in the

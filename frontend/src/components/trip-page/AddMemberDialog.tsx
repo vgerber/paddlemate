@@ -2,24 +2,24 @@ import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
 import ListItemButton from "@mui/material/ListItemButton";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useMemo, useState } from "react";
+import BottomSheet from "@/components/BottomSheet";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
+import MemberAvatar from "@/components/trips/MemberAvatar";
 import FormSection from "@/components/waterway/FormSection";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useAllUsers } from "@/lib/hooks/useFollows";
 import { useAddTripMember } from "@/lib/hooks/useTrips";
-import { alphas, theme } from "@/lib/theme";
+import { alphas, BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
 
 import InviteLinks from "./InviteLinks";
 
@@ -30,6 +30,8 @@ const { tokens } = theme;
  * here by name. A trip is invite-only, so these are the only ways in - and
  * both are an admin's to use, which is why it hangs off the members tab rather than
  * offering itself to everyone who can see the trip.
+ *
+ * A bottom sheet on a phone, a dialog beside the list on a desktop.
  */
 export default function AddMemberDialog({
   tripId,
@@ -43,21 +45,92 @@ export default function AddMemberDialog({
   open: boolean;
   onClose: () => void;
 }) {
-  const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
+  const phone = useMediaQuery(theme.breakpoints.down("md"), { noSsr: true });
+  const body = (
+    <AddMemberBody tripId={tripId} memberIds={memberIds} open={open} />
+  );
+
+  if (phone) {
+    return (
+      <BottomSheet
+        state={open ? "open" : "closed"}
+        // There is no peek for a form: anything but open closes it.
+        onStateChange={(next) => next !== "open" && onClose()}
+        label="Add a member"
+      >
+        <Box sx={{ px: 2, pb: `calc(${BOTTOM_NAV_SPACE} + 16px)` }}>
+          <Typography
+            component="h2"
+            sx={{
+              fontFamily: fonts.label,
+              fontSize: 18,
+              lineHeight: "24px",
+              fontWeight: 700,
+            }}
+          >
+            Add a member
+          </Typography>
+          <Typography
+            color="textSecondary"
+            sx={{ fontSize: "0.875rem", lineHeight: "20px", mb: 2 }}
+          >
+            Send a link, or add someone already here
+          </Typography>
+          {body}
+        </Box>
+      </BottomSheet>
+    );
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+      <Box sx={{ px: 3, pt: 2.5 }}>
+        <Typography
+          component="h2"
+          sx={{
+            fontFamily: fonts.label,
+            fontSize: 18,
+            lineHeight: "24px",
+            fontWeight: 700,
+          }}
+        >
+          Add a member
+        </Typography>
+        <Typography
+          color="textSecondary"
+          sx={{ fontSize: "0.875rem", lineHeight: "20px" }}
+        >
+          Send a link, or add someone already here
+        </Typography>
+      </Box>
+      <DialogContent>{body}</DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose}>Close</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function AddMemberBody({
+  tripId,
+  memberIds,
+  open,
+}: {
+  tripId: number;
+  memberIds: string[];
+  open: boolean;
+}) {
   const [search, setSearch] = useState("");
   const query = useDebouncedValue(search, 200);
   const { data: users, isLoading } = useAllUsers(open);
   const addMember = useAddTripMember(tripId);
-  const [picked, setPicked] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleAdd() {
-    if (!picked) return;
+  // Tapping a name is the whole action, as the hint says.
+  async function handleAdd(userId: string) {
     setError(null);
     try {
-      await addMember.mutateAsync(picked);
-      setPicked(null);
-      onClose();
+      await addMember.mutateAsync(userId);
     } catch (err) {
       setError(apiErrorMessage(err, "Adding failed. Please try again."));
     }
@@ -72,79 +145,58 @@ export default function AddMemberDialog({
   }, [users, memberIds, query]);
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="xs"
-      fullScreen={fullScreen}
-    >
-      <DialogTitle sx={{ fontWeight: 600 }}>Add a member</DialogTitle>
-      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        <InviteLinks tripId={tripId} />
-        <FormSection
-          label="Already on Paddlemate"
-          hint="Added straight away - no link needed."
-        >
-          <TextField
-            label="Search people"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            fullWidth
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <InviteLinks tripId={tripId} />
+      <FormSection
+        label="Already on Paddlemate"
+        hint="Added straight away - no link needed."
+      >
+        <TextField
+          label="Search people"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          fullWidth
+        />
+        {isLoading ? (
+          <LoadingBox size={40} pt={4} />
+        ) : candidates.length === 0 ? (
+          <EmptyState
+            icon={
+              <PersonAddOutlinedIcon
+                sx={{ fontSize: 48, color: "text.disabled" }}
+              />
+            }
+            title={
+              query
+                ? "Nobody by that name."
+                : "Everybody is already on the trip."
+            }
           />
-          {isLoading ? (
-            <LoadingBox size={40} pt={4} />
-          ) : candidates.length === 0 ? (
-            <EmptyState
-              icon={
-                <PersonAddOutlinedIcon
-                  sx={{ fontSize: 48, color: "text.disabled" }}
-                />
-              }
-              title={
-                query
-                  ? "Nobody by that name."
-                  : "Everybody is already on the trip."
-              }
-            />
-          ) : (
-            <Box>
-              {candidates.map((user) => (
-                <ListItemButton
-                  key={user.id}
-                  data-testid="user-pick"
-                  selected={user.id === picked}
-                  disabled={addMember.isPending}
-                  onClick={() => setPicked(user.id)}
-                  sx={{
-                    minHeight: tokens.touch.min,
-                    borderBottom: "1px solid",
-                    borderColor: `${tokens.outlineVariant}${alphas.hairline}`,
-                  }}
-                >
-                  <Typography variant="body2">{user.username}</Typography>
-                </ListItemButton>
-              ))}
-            </Box>
-          )}
-        </FormSection>
-        {error && <Alert severity="error">{error}</Alert>}
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} disabled={addMember.isPending}>
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          disabled={!picked || addMember.isPending}
-          onClick={handleAdd}
-          startIcon={
-            addMember.isPending ? <CircularProgress size={16} /> : undefined
-          }
-        >
-          Add to trip
-        </Button>
-      </DialogActions>
-    </Dialog>
+        ) : (
+          <Box>
+            {candidates.map((user) => (
+              <ListItemButton
+                key={user.id}
+                data-testid="user-pick"
+                disabled={addMember.isPending}
+                onClick={() => handleAdd(user.id)}
+                sx={{
+                  minHeight: tokens.touch.min,
+                  gap: 1.5,
+                  borderBottom: "1px solid",
+                  borderColor: `${tokens.outlineVariant}${alphas.hairline}`,
+                }}
+              >
+                <MemberAvatar name={user.username} size={32} />
+                <Typography sx={{ fontSize: "0.9375rem" }}>
+                  {user.username}
+                </Typography>
+              </ListItemButton>
+            ))}
+          </Box>
+        )}
+      </FormSection>
+      {error && <Alert severity="error">{error}</Alert>}
+    </Box>
   );
 }

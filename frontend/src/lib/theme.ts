@@ -33,7 +33,7 @@ const tokens = {
   primary: "#0e7490",
   onPrimary: "#ffffff",
   primaryDark: "#0b5d74",
-  primaryContainer: "#d9edf2",
+  primaryContainer: "#e0f2f6",
   onPrimaryContainer: "#0b5d74",
 
   // Success - the calm "low" green, also palette.success
@@ -46,7 +46,7 @@ const tokens = {
   // The keys stay so existing consumers keep resolving.
   tertiary: "#0e7490",
   tertiaryFixed: "#0e7490",
-  tertiaryContainer: "#d9edf2",
+  tertiaryContainer: "#e0f2f6",
   onTertiaryContainer: "#0b5d74",
   onTertiary: "#ffffff",
 
@@ -69,7 +69,7 @@ const tokens = {
   levels: {
     empty: {
       label: "E",
-      marker: "#9aa5ab",
+      marker: "#89969d",
       text: "#5b676e",
       bg: "transparent",
       border: "rgba(91,103,110,0.45)",
@@ -82,9 +82,9 @@ const tokens = {
     },
     medium: {
       label: "M",
-      marker: "#ff9800",
-      text: "#8f5b00",
-      bg: "rgba(143,91,0,0.15)",
+      marker: "#d57f00",
+      text: "#855400",
+      bg: "rgba(133,84,0,0.15)",
     },
     high: {
       label: "H",
@@ -101,13 +101,13 @@ const tokens = {
     hole: "#D55E00",
     siphon: "#D55E00",
     strainer: "#D55E00",
-    waterfall: "#56B4E9",
-    freestyle_spot: "#F0E442",
+    waterfall: "#1F9CE2",
+    freestyle_spot: "#A0960D",
     put_in: "#0072B2",
     take_out: "#D55E00",
-    portage: "#E69F00",
-    weir: "#E69F00",
-    dam: "#E69F00",
+    portage: "#C48800",
+    weir: "#C48800",
+    dam: "#C48800",
     obstacle: "#CC79A7",
     bridge: "#58666d",
   },
@@ -121,14 +121,27 @@ const tokens = {
   mapSectionLine: "#2b88c8",
   mapSectionLineCasing: "#ffffff",
   mapSelectedLine: "#0e7490",
+  // A section drawn as the subject of a screen, and one drawn only as context.
+  mapSectionHighlight: "#0e7490",
+  mapSectionGhost: "#c4d3dc",
   mapAreaCircle: "#0e7490",
   mapLabelText: "#1f2b31",
   mapLabelHalo: "#ffffff",
   // Country borders on the region browse map. Drawn over everything with a
   // pale casing under a dark line, so the border reads on the light base map
   // and on satellite imagery alike.
-  mapCountryBorder: "#101418",
-  mapCountryBorderCasing: "#f2f4f6",
+  mapCountryBorder: "#3a454b",
+  mapCountryBorderCasing: "#ffffff",
+  // The calm base map: warm ground, soft greens, pale water. Rivers and
+  // sections share the pale blue so the teal selection is the one accent.
+  mapGround: "#f3f2ec",
+  mapGreen: "#e3ebd6",
+  mapWater: "#d3e5f0",
+  mapRiver: "#b5d5ec",
+  mapRoad: "#dcd8cb",
+  // Gauge coverage: the tracked share is a deeper blue than the sections.
+  gaugeTracked: "#236d98",
+  gaugeUntracked: "#9aa5aa",
 
   // Region browse layer. Neighbouring regions take different entries so the
   // eye can tell where one ends, the way an atlas colours countries. Okabe
@@ -147,9 +160,10 @@ const tokens = {
   chartSeries: "#0e7490",
   chartGrid: "rgba(31,43,49,0.08)",
 
-  // Corner radii in px: small chips and tags, buttons and inputs, cards,
-  // sheets and the FAB, dialogs, and the pill for chips and pills.
-  radii: { xs: 6, sm: 10, md: 14, lg: 16, xl: 20, pill: 999 },
+  // Corner radii in px: small chips and tags, buttons and inputs, range bands
+  // and selected rows, cards, sheets and the FAB, dialogs, and the pill for
+  // chips and pills.
+  radii: { xs: 6, sm: 10, row: 12, md: 14, lg: 16, xl: 20, pill: 999 },
 
   // Three elevation steps: a card at rest, a floating panel or popover, and
   // the accent glow under the primary action.
@@ -178,6 +192,57 @@ const tokens = {
   // Chrome: the desktop app bar and the phone bottom nav (before the safe
   // area), the one place these heights are said.
   chrome: { appBar: 56, bottomNav: 64 },
+
+  // Canvas: from `md` up the map fills the window under the app bar and the
+  // content floats in cards over it. Card widths are a share of the window
+  // clamped to a range; a resizable card may be dragged within `resize`. All
+  // expanded cards together cover at most `coverMax` of the width. The reading
+  // rail is `dock.vh` of the window height clamped to the dock range, from
+  // `dock.from` wide and `dock.minWindowHeight` tall; otherwise the chart is the
+  // detail card's first block.
+  canvas: {
+    margin: 16,
+    freeMargin: 32,
+    // One detail card (the map page) may cover 55%; with a list card beside
+    // the open item the cards may cover 70%.
+    coverMax: 0.55,
+    coverMaxList: 0.7,
+    sideMaxFrac: 0.45,
+    freeMin: { w: 240, h: 200 },
+    headerHeight: 56,
+    // The resize tab on a card's edge: 14 x 48 to look at, 44 x 64 to hit.
+    gripHit: { w: 44, h: 64 },
+    gripBar: { w: 14, h: 48 },
+    // The section panel's spacing system: 8 between the card ground and a
+    // card, 16 inside a card, text on a 24 line, hit boxes end 12 from the
+    // edge, rows 56, a header of 56 + 48.
+    panel: {
+      gutter: 8,
+      inner: 16,
+      line: 24,
+      hit: 44,
+      hitEdge: 12,
+      row: 56,
+      headerRow: 56,
+      tabRow: 48,
+    },
+    dock: { min: 184, max: 248, vh: 0.22, from: 1280, minWindowHeight: 600 },
+    cards: {
+      detail: {
+        frac: 0.26,
+        min: 340,
+        max: 440,
+        // Under `dock.from` the card is this wide (no rail beside it).
+        narrow: 360,
+        priority: 3,
+        // The card never takes more than `maxPx`, nor leaves the rail's
+        // plot less than `minPlot`.
+        resize: { min: 340, maxFrac: 0.45, maxPx: 560, minPlot: 480 },
+      },
+      list: { frac: 0.2, min: 300, max: 380, priority: 1, resize: null },
+      side: { frac: 0.25, min: 400, max: 600, priority: 2, resize: null },
+    },
+  },
 } as const;
 
 /** Font stacks used across the app: one family, weights carry the hierarchy. */
@@ -197,6 +262,20 @@ const shadows = [
   elevation.e1,
   ...Array.from({ length: 23 }, () => elevation.e2),
 ] as unknown as Shadows;
+
+/** The only alpha suffixes to append to a token (\`\${token}\${alphas.x}\`):
+ * tint for row washes, wash for selected grounds, hover on top of them,
+ * strong for an avatar tile,
+ * hairline for rules, border for control outlines, scrim over imagery. */
+export const alphas = {
+  tint: "0d",
+  wash: "14",
+  hover: "1f",
+  strong: "2e",
+  hairline: "55",
+  border: "99",
+  scrim: "cc",
+} as const;
 
 export const theme = createTheme({
   tokens,
@@ -409,6 +488,19 @@ export const theme = createTheme({
       },
     },
 
+    // No ripple: press is a wash on the row, focus a visible teal ring.
+    MuiButtonBase: {
+      defaultProps: { disableRipple: true },
+      styleOverrides: {
+        root: {
+          "&.Mui-focusVisible, &:focus-visible": {
+            outline: `2px solid ${tokens.primary}`,
+            outlineOffset: -2,
+          },
+        },
+      },
+    },
+
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
@@ -481,6 +573,12 @@ export const theme = createTheme({
           fontWeight: 600,
           fontSize: "0.8125rem",
           height: 32,
+          // A set filter: teal ring and a wash, not just teal text.
+          "&.MuiChip-outlinedPrimary": {
+            backgroundColor: `${tokens.primary}${alphas.wash}`,
+            borderColor: tokens.primary,
+            borderWidth: 1.5,
+          },
           // 32px to look at, 44px to hit.
           "&.MuiChip-clickable::after": {
             content: '""',
@@ -493,7 +591,72 @@ export const theme = createTheme({
     },
 
     MuiTextField: {
-      defaultProps: { variant: "outlined" },
+      defaultProps: { variant: "filled" },
+    },
+
+    MuiFormControl: {
+      defaultProps: { variant: "filled" },
+    },
+
+    // The calm field: the label always sits inside at the top, the value
+    // beneath it, a 1px inset outline that becomes a 2px accent ring on focus.
+    MuiFilledInput: {
+      defaultProps: { disableUnderline: true },
+      styleOverrides: {
+        root: {
+          borderRadius: radii.sm + 2,
+          backgroundColor: tokens.surface,
+          // The rest edge is the only boundary of the control: outline
+          // clears the 3:1 floor, outlineVariant (a hairline) does not.
+          boxShadow: `inset 0 0 0 1px ${tokens.outline}`,
+          overflow: "hidden",
+          // 16px: anything smaller makes iOS zoom the page on focus.
+          fontSize: "1rem",
+          transition: `box-shadow ${motion.fast}ms ${motion.easeOut}`,
+          "&:hover": {
+            backgroundColor: tokens.surface,
+            boxShadow: `inset 0 0 0 1px ${tokens.onSurfaceVariant}`,
+          },
+          "&.Mui-focused": {
+            backgroundColor: tokens.surface,
+            boxShadow: `inset 0 0 0 2px ${tokens.primary}`,
+          },
+          "&.Mui-error": {
+            boxShadow: `inset 0 0 0 1px ${tokens.error}`,
+          },
+          "&.Mui-error.Mui-focused": {
+            boxShadow: `inset 0 0 0 2px ${tokens.error}`,
+          },
+          "&.Mui-disabled": { backgroundColor: tokens.surfaceHigh },
+        },
+        // The top padding is the label's row; a field without a label
+        // (`hiddenLabel`) has none, or it opens with an empty band.
+        input: ({ ownerState }) =>
+          ownerState.multiline
+            ? // A multiline field pads its root; the textarea adds none.
+              { padding: 0 }
+            : ownerState.hiddenLabel
+              ? {
+                  padding: "12px 14px",
+                  height: "auto",
+                  "&.MuiInputBase-inputSizeSmall": {
+                    paddingTop: 8.5,
+                    paddingBottom: 8.5,
+                  },
+                }
+              : {
+                  padding: "25px 14px 8px",
+                  height: "auto",
+                  "&.MuiInputBase-inputSizeSmall": {
+                    paddingTop: 22,
+                    paddingBottom: 6,
+                  },
+                },
+        multiline: ({ ownerState }) => ({
+          padding: ownerState.hiddenLabel ? "12px 14px" : "25px 14px 8px",
+        }),
+        adornedStart: { paddingLeft: 14 },
+      },
     },
 
     MuiOutlinedInput: {
@@ -501,13 +664,12 @@ export const theme = createTheme({
         root: {
           borderRadius: radii.sm + 2,
           backgroundColor: tokens.surface,
-          // 16px: anything smaller makes iOS zoom the page on focus.
           fontSize: "1rem",
           "& .MuiOutlinedInput-notchedOutline": {
-            borderColor: tokens.outlineVariant,
+            borderColor: tokens.outline,
           },
           "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: tokens.outline,
+            borderColor: tokens.onSurfaceVariant,
           },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
             borderColor: tokens.primary,
@@ -518,8 +680,18 @@ export const theme = createTheme({
     },
 
     MuiInputLabel: {
+      defaultProps: { shrink: true },
       styleOverrides: {
         root: { letterSpacing: 0, textTransform: "none" },
+        filled: {
+          fontSize: "1rem",
+          fontWeight: 500,
+          color: tokens.onSurfaceVariant,
+          // Pinned inside the field at 12px, never a placeholder.
+          transform: "translate(14px, 7px) scale(0.75)",
+          "&.Mui-focused": { color: tokens.primary },
+          "&.Mui-error": { color: tokens.error },
+        },
       },
     },
 
@@ -533,6 +705,8 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           minHeight: tokens.touch.row,
+          transition: `background-color ${motion.instant}ms ${motion.easeOut}`,
+          "&:active": { backgroundColor: `${tokens.primary}${alphas.wash}` },
           "&.Mui-selected": {
             backgroundColor: `${tokens.primary}1f`,
             "&:hover": { backgroundColor: `${tokens.primary}29` },
@@ -721,18 +895,6 @@ export const theme = createTheme({
     },
   },
 });
-
-/** The only alpha suffixes to append to a token (\`\${token}\${alphas.x}\`):
- * tint for row washes, wash for selected grounds, hover on top of them,
- * hairline for rules, border for control outlines, scrim over imagery. */
-export const alphas = {
-  tint: "0d",
-  wash: "14",
-  hover: "1f",
-  hairline: "55",
-  border: "99",
-  scrim: "cc",
-} as const;
 
 /** Height of a full-screen panel: the window less the desktop app bar, or
  * less the mobile bottom nav and its safe area. A panel that pins a bottom

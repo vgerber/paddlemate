@@ -25,6 +25,7 @@ import { Route as LogsNewRouteImport } from './routes/logs/new'
 import { Route as LogsDescentIdRouteImport } from './routes/logs/$descentId'
 import { Route as InviteTokenRouteImport } from './routes/invite/$token'
 import { Route as DevPrimitivesRouteImport } from './routes/dev/primitives'
+import { Route as DevCanvasRouteImport } from './routes/dev/canvas'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AdminProposalsIndexRouteImport } from './routes/admin/proposals/index'
 
@@ -108,6 +109,11 @@ const DevPrimitivesRoute = DevPrimitivesRouteImport.update({
   path: '/dev/primitives',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevCanvasRoute = DevCanvasRouteImport.update({
+  id: '/dev/canvas',
+  path: '/dev/canvas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/logs': typeof LogsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dev/canvas': typeof DevCanvasRoute
   '/dev/primitives': typeof DevPrimitivesRoute
   '/invite/$token': typeof InviteTokenRoute
   '/logs/$descentId': typeof LogsDescentIdRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/logs': typeof LogsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dev/canvas': typeof DevCanvasRoute
   '/dev/primitives': typeof DevPrimitivesRoute
   '/invite/$token': typeof InviteTokenRoute
   '/logs/$descentId': typeof LogsDescentIdRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/logs': typeof LogsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dev/canvas': typeof DevCanvasRoute
   '/dev/primitives': typeof DevPrimitivesRoute
   '/invite/$token': typeof InviteTokenRoute
   '/logs/$descentId': typeof LogsDescentIdRoute
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/logs'
     | '/settings'
     | '/auth/callback'
+    | '/dev/canvas'
     | '/dev/primitives'
     | '/invite/$token'
     | '/logs/$descentId'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/logs'
     | '/settings'
     | '/auth/callback'
+    | '/dev/canvas'
     | '/dev/primitives'
     | '/invite/$token'
     | '/logs/$descentId'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/logs'
     | '/settings'
     | '/auth/callback'
+    | '/dev/canvas'
     | '/dev/primitives'
     | '/invite/$token'
     | '/logs/$descentId'
@@ -248,6 +260,7 @@ export interface RootRouteChildren {
   LogsRoute: typeof LogsRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  DevCanvasRoute: typeof DevCanvasRoute
   DevPrimitivesRoute: typeof DevPrimitivesRoute
   InviteTokenRoute: typeof InviteTokenRoute
   ProposalsProposalIdRoute: typeof ProposalsProposalIdRoute
@@ -376,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevPrimitivesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/canvas': {
+      id: '/dev/canvas'
+      path: '/dev/canvas'
+      fullPath: '/dev/canvas'
+      preLoaderRoute: typeof DevCanvasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -410,6 +430,7 @@ const rootRouteChildren: RootRouteChildren = {
   LogsRoute: LogsRouteWithChildren,
   SettingsRoute: SettingsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  DevCanvasRoute: DevCanvasRoute,
   DevPrimitivesRoute: DevPrimitivesRoute,
   InviteTokenRoute: InviteTokenRoute,
   ProposalsProposalIdRoute: ProposalsProposalIdRoute,

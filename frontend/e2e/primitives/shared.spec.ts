@@ -56,9 +56,9 @@ test.describe("level pills", () => {
     await openSectionList(page);
     const medium = pill(page, "Lower Test");
     await expect(medium).toHaveAttribute("data-level", "medium");
-    expect(await computed(medium, "color")).toBe("rgb(143, 91, 0)");
+    expect(await computed(medium, "color")).toBe("rgb(133, 84, 0)");
     expect(await computed(medium, "background-color")).toBe(
-      "rgba(143, 91, 0, 0.15)",
+      "rgba(133, 84, 0, 0.15)",
     );
   });
 
@@ -130,17 +130,10 @@ test.describe("empty state", () => {
   test("is an icon in a soft teal tile and one line", async ({
     page,
   }, info) => {
-    await page.goto("/settings");
-    // The fixture user has no notifications: the phone has an Inbox tab, the
-    // desktop a bell.
-    if (info.project.name === "desktop") {
-      await page
-        .getByRole("banner")
-        .getByRole("button", { name: "Notifications" })
-        .click();
-    } else {
-      await page.getByRole("tab", { name: "Inbox" }).click();
-    }
+    // The reseeded fixture has an inbox, so the empty detail pane beside a
+    // desktop list is the one empty state left to look at.
+    test.skip(info.project.name !== "desktop", "empty panes are desktop");
+    await page.goto("/proposals");
     const empty = page.getByTestId("empty-state");
     await expect(empty).toBeVisible();
     const tile = empty.getByTestId("empty-state-tile");
@@ -158,7 +151,7 @@ test.describe("empty state", () => {
 
 test.describe("labels", () => {
   test("fact labels and form headings are sentence case", async ({ page }) => {
-    await page.goto("/settings?group=account");
+    await page.goto("/settings?group=language");
     const labels = page.locator(
       '[data-testid="fact-label"]:visible, [data-testid="form-section-label"]:visible',
     );
@@ -184,7 +177,7 @@ test.describe("labels", () => {
   });
 
   test("a form heading is 15px and semibold", async ({ page }) => {
-    await page.goto("/settings?group=account");
+    await page.goto("/settings?group=language");
     const heading = page.getByTestId("form-section-label").first();
     await expect(heading).toBeVisible();
     expect(await computed(heading, "font-size")).toBe("15px");

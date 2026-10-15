@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { riverSegmentsApi, waterwayGeometryApi } from "@/lib/api";
+import type { LngLat, ViewBounds } from "@/lib/geo";
 import {
-  type BoundingBox,
-  type Coordinate,
   distanceInMeters,
   distanceToLineInMeters,
   nearestPointOnLine,
@@ -41,23 +40,23 @@ type GeoPoint = { lat: number; lon: number };
 
 interface NamedRiverCache {
   waterwayId: number;
-  boundingBox: BoundingBox;
-  ways: Coordinate[][];
+  boundingBox: ViewBounds;
+  ways: LngLat[][];
 }
 
 interface RiverNetworkCache {
   waterwayId: number;
   /** Corridor the network was fetched for: `radiusMeters` around `line`. */
-  line: Coordinate[];
+  line: LngLat[];
   radiusMeters: number;
-  ways: Coordinate[][];
+  ways: LngLat[][];
 }
 
 /**
  * Bounding box around both points, padded by half the larger span (the river
  * can bow far out of the raw point box) but at least ~5 km.
  */
-function paddedBoundingBox(a: GeoPoint, b: GeoPoint): BoundingBox {
+function paddedBoundingBox(a: GeoPoint, b: GeoPoint): ViewBounds {
   const latitudeSpan = Math.abs(a.lat - b.lat);
   const longitudeSpan =
     Math.abs(a.lon - b.lon) * Math.cos((a.lat * Math.PI) / 180);
@@ -70,7 +69,7 @@ function paddedBoundingBox(a: GeoPoint, b: GeoPoint): BoundingBox {
   };
 }
 
-function boundingBoxContains(box: BoundingBox, point: GeoPoint): boolean {
+function boundingBoxContains(box: ViewBounds, point: GeoPoint): boolean {
   // Margin so points near the edge force a refetch
   const margin = 0.02;
   return (
@@ -81,10 +80,7 @@ function boundingBoxContains(box: BoundingBox, point: GeoPoint): boolean {
   );
 }
 
-function boundingBoxContainsBox(
-  outer: BoundingBox,
-  inner: BoundingBox,
-): boolean {
+function boundingBoxContainsBox(outer: ViewBounds, inner: ViewBounds): boolean {
   return (
     inner.south >= outer.south &&
     inner.north <= outer.north &&
@@ -94,7 +90,7 @@ function boundingBoxContainsBox(
 }
 
 /** The union of a bounding box and the envelope of the given ways. */
-function boxCoveringWays(box: BoundingBox, ways: Coordinate[][]): BoundingBox {
+function boxCoveringWays(box: ViewBounds, ways: LngLat[][]): ViewBounds {
   let { south, north, west, east } = box;
   for (const way of ways) {
     for (const [lon, lat] of way) {
@@ -111,9 +107,9 @@ function boxCoveringWays(box: BoundingBox, ways: Coordinate[][]): BoundingBox {
  * read-through fill; the browser never queries Overpass). */
 async function fetchRiverWays(
   waterwayId: number,
-  bbox?: BoundingBox,
+  bbox?: ViewBounds,
   signal?: AbortSignal,
-): Promise<Coordinate[][]> {
+): Promise<LngLat[][]> {
   const doc = await waterwayGeometryApi.get(
     waterwayId,
     "centerline",
@@ -122,7 +118,7 @@ async function fetchRiverWays(
   );
   return doc.elements.flatMap((element) =>
     element.geometry.type === "LineString"
-      ? [element.geometry.coordinates as Coordinate[]]
+      ? [element.geometry.coordinates as LngLat[]]
       : [],
   );
 }
@@ -144,21 +140,21 @@ export function useRiverSnap(
   waterwayName: string,
   putIn: GeoPoint | null,
   takeOut: GeoPoint | null,
-  viewBounds?: BoundingBox | null,
+  viewBounds?: ViewBounds | null,
   waterwayId?: number | null,
 ): {
   status: RiverSnapStatus;
-  snappedCoords: Coordinate[] | null;
+  snappedCoords: LngLat[] | null;
   /** The named river's course, for highlighting on the map. */
-  river: Coordinate[] | null;
+  river: LngLat[] | null;
   riverLookup: RiverLookupStatus;
   /** True when the snapped line continues onto another river. */
   crossedConfluence: boolean;
   retry: () => void;
 } {
   const [status, setStatus] = useState<RiverSnapStatus>("idle");
-  const [snappedCoords, setSnappedCoords] = useState<Coordinate[] | null>(null);
-  const [river, setRiver] = useState<Coordinate[] | null>(null);
+  const [snappedCoords, setSnappedCoords] = useState<LngLat[] | null>(null);
+  const [river, setRiver] = useState<LngLat[] | null>(null);
   const [riverLookup, setRiverLookup] = useState<RiverLookupStatus>("idle");
   const [crossedConfluence, setCrossedConfluence] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
@@ -259,7 +255,7 @@ export function useRiverSnap(
       setRiverLookup("searching");
       // Fetch well beyond the viewport so panning keeps hitting the cache
       const padding = viewSpan;
-      const fetchBox: BoundingBox = {
+      const fetchBox: ViewBounds = {
         south: viewBounds.south - padding,
         north: viewBounds.north + padding,
         west: viewBounds.west - padding,
@@ -354,8 +350,8 @@ export function useRiverSnap(
         : null;
       let viaNetwork = false;
 
-      const putInCoordinate: Coordinate = [currentPutIn.lon, currentPutIn.lat];
-      const takeOutCoordinate: Coordinate = [
+      const putInCoordinate: LngLat = [currentPutIn.lon, currentPutIn.lat];
+      const takeOutCoordinate: LngLat = [
         currentTakeOut.lon,
         currentTakeOut.lat,
       ];
@@ -374,7 +370,7 @@ export function useRiverSnap(
         // the corridor only needs to cover the connectors between it and
         // the off-river points (or the straight line between the points
         // when the named river wasn't found at all).
-        const corridor: Coordinate[] = namedRiver
+        const corridor: LngLat[] = namedRiver
           ? [
               putInCoordinate,
               nearestPointOnLine(namedRiver, putInCoordinate),
@@ -415,7 +411,7 @@ export function useRiverSnap(
             );
             const ways = segments.flatMap((geometry) =>
               geometry.type === "LineString"
-                ? [geometry.coordinates as Coordinate[]]
+                ? [geometry.coordinates as LngLat[]]
                 : [],
             );
             network = { waterwayId, line: corridor, radiusMeters, ways };

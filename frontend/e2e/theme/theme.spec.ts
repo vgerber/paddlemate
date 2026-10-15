@@ -60,16 +60,32 @@ test.describe("theme tokens", () => {
       "rgb(14, 116, 144)",
     );
 
-    // The selected tab (phone) and the selected list row (desktop) are drawn
-    // from palette.primary, a different token from the action above, so each
-    // guards its own value. A row uses a translucent wash: compare channels.
+    // The selected tab (phone) and the selected list row (desktop, a white
+    // card with a teal ring) are drawn from palette.primary, a different
+    // token from the action above, so each guards its own value.
     await page.goto("/settings");
-    const selected = page.locator(
-      ".MuiTabs-indicator:visible, .MuiListItemButton-root.Mui-selected:visible",
+    const tab = page.locator(".MuiTabs-indicator:visible");
+    if (await tab.count()) {
+      expect(await computed(tab, "background-color")).toBe("rgb(14, 116, 144)");
+    } else {
+      const row = page.locator(".MuiListItemButton-root.Mui-selected:visible");
+      await expect(row.first()).toBeVisible();
+      expect(await computed(row, "box-shadow")).toContain("rgb(14, 116, 144)");
+    }
+  });
+
+  test("secondary text computes to ink2 on two screens", async ({ page }) => {
+    await page.goto("/tools");
+    const tool = page.getByText(
+      "Review and submit river and section proposals",
     );
-    await expect(selected.first()).toBeVisible();
-    const colour = await computed(selected, "background-color");
-    expect(colour.match(/\d+/g)?.slice(0, 3).join(",")).toBe("14,116,144");
+    await expect(tool.first()).toBeVisible();
+    expect(await computed(tool, "color")).toBe("rgb(88, 102, 109)");
+
+    await page.goto("/settings");
+    const hint = page.getByTestId("settings-list").locator("p").nth(1);
+    await expect(hint).toBeVisible();
+    expect(await computed(hint, "color")).toBe("rgb(88, 102, 109)");
   });
 
   test("reduced motion collapses transitions", async ({ page }) => {

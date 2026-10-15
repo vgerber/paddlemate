@@ -4,10 +4,14 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { SwipeTrack } from "@/lib/hooks/useSwipeTabs";
 import { theme } from "@/lib/theme";
 import UnderlineTabs from "./UnderlineTabs";
 
 const { tokens } = theme;
+const { panel } = tokens.canvas;
+
+const backIconSx = { fontSize: 22, color: "text.primary" } as const;
 
 interface PanelHeaderProps<T extends string> {
   /** Omitted where the panel is already named beside it - a desktop detail
@@ -22,8 +26,7 @@ interface PanelHeaderProps<T extends string> {
     onChange: (t: T) => void;
     options: { value: T; label: string }[];
     /** Swipe state from `useSwipeTabs`, so the underline follows a drag. */
-    progress?: number;
-    dragging?: boolean;
+    track?: SwipeTrack;
     /** `gestureProps` from `useSwipeTabs`, so a swipe can start on the bar. */
     gesture?: HTMLAttributes<HTMLElement>;
   };
@@ -43,11 +46,15 @@ export default function PanelHeader<T extends string>({
   return (
     <Box
       sx={{
-        px: 1.5,
-        pt: 1.5,
-        pb: tabs ? 0 : 1,
-        borderBottom: "1px solid",
-        borderColor: "divider",
+        // A titled header is the section panel's 56 + 48 from md; the tab
+        // bar alone keeps its 16 inset.
+        px: { xs: 2, md: title ? 0 : 2 },
+        pt: { xs: title ? 1.5 : 0, md: 0 },
+        pb: { xs: tabs ? 0 : 1, md: tabs ? 0 : 1 },
+        bgcolor: tokens.surface,
+        boxShadow: tokens.elevation.e1,
+        position: "relative",
+        zIndex: 1,
         flexShrink: 0,
       }}
     >
@@ -57,7 +64,12 @@ export default function PanelHeader<T extends string>({
             display: "flex",
             alignItems: "center",
             gap: 1,
-            mb: tabs ? 0.75 : 0,
+            mb: { xs: tabs ? 0.75 : 0, md: 0 },
+            // From md the title row is one 56 row: back box at +12, title
+            // text at +64, the last action box ends 12 from the edge.
+            minHeight: { md: panel.headerRow },
+            pl: { md: `${panel.hitEdge}px` },
+            pr: { md: `${panel.hitEdge}px` },
           }}
         >
           {onBack && (
@@ -66,14 +78,14 @@ export default function PanelHeader<T extends string>({
               sx={{
                 width: tokens.touch.min,
                 height: tokens.touch.min,
-                ml: -0.75,
+                ml: { xs: -0.75, md: 0 },
               }}
-              aria-label={backIcon === "close" ? "Cancel" : "Back"}
+              aria-label={backIcon === "close" ? "Close" : "Back"}
             >
               {backIcon === "close" ? (
-                <CloseIcon fontSize="small" />
+                <CloseIcon sx={backIconSx} />
               ) : (
-                <ArrowBackIcon fontSize="small" />
+                <ArrowBackIcon sx={backIconSx} />
               )}
             </IconButton>
           )}
@@ -82,7 +94,11 @@ export default function PanelHeader<T extends string>({
               {title}
             </Typography>
             {subtitle && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                sx={{ fontSize: "0.8125rem", lineHeight: "18px" }}
+              >
                 {subtitle}
               </Typography>
             )}
@@ -92,13 +108,20 @@ export default function PanelHeader<T extends string>({
       )}
 
       {tabs && (
-        <Box {...tabs.gesture} sx={{ touchAction: "pan-y" }}>
+        <Box
+          {...tabs.gesture}
+          sx={{
+            touchAction: "pan-y",
+            // The first label starts on the 24 line (tab padding is 4).
+            pl: { md: title ? `${panel.line - 4}px` : 0 },
+            minHeight: { md: title ? panel.tabRow : undefined },
+          }}
+        >
           <UnderlineTabs
             value={tabs.value}
             onChange={tabs.onChange}
             items={tabs.options}
-            progress={tabs.progress}
-            dragging={tabs.dragging}
+            track={tabs.track}
           />
         </Box>
       )}

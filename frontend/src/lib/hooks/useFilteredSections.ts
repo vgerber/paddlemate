@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type { SectionWithFeatures } from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
 import { haversineKm, lineCoords, parseDifficulty } from "@/lib/geo";
@@ -41,9 +42,7 @@ export function useFilteredSections(
       result = result.filter((s) => {
         const ww = s.features?.find((f) => f.feature_type === "whitewater");
         const diff = parseDifficulty(
-          (ww?.metadata as Record<string, unknown> | undefined)?.difficulty as
-            | string
-            | undefined,
+          (ww && featureDifficulty(ww)) || undefined,
         );
         if (diff == null) return true;
         return diff >= minG && diff <= maxG;

@@ -92,7 +92,7 @@ export default function PickModeButtons({
           num={1}
           label="Put-in"
           active={pickMode === "put-in"}
-          activeColor={tokens.putIn}
+          activeColor={tokens.primary}
           onClick={() => onToggle("put-in")}
         />
       )}
@@ -101,7 +101,7 @@ export default function PickModeButtons({
           num={2}
           label="Take-out"
           active={pickMode === "take-out"}
-          activeColor={tokens.takeOut}
+          activeColor={tokens.primary}
           onClick={() => onToggle("take-out")}
         />
       )}

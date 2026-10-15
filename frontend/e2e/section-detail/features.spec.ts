@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import {
   computed,
   expectNoHorizontalOverflow,
@@ -21,38 +21,50 @@ async function openFeatures(page: Page) {
   await expect(card(page)).toBeVisible();
 }
 
-/** Re-open the card the way the app leaves it: expanded, nothing folded. */
-async function ensureExpanded(page: Page) {
-  const fold = card(page).getByTestId("features-fold");
-  if ((await fold.getAttribute("aria-expanded")) === "false")
-    await fold.click();
-}
-
 test.describe("features card", () => {
-  test("the header counts the features from the data", async ({ page }) => {
+  test("the header counts the features, the base grade not among them", async ({
+    page,
+  }) => {
     await openFeatures(page);
     await expect(card(page).getByTestId("features-count")).toHaveText(
-      "9 features",
+      /^8 features/,
     );
   });
 
-  test("every row carries the icon of its type", async ({ page }) => {
+  test("access points carry the icon of their type, the rest a number", async ({
+    page,
+  }) => {
     await openFeatures(page);
-    for (const [name, type] of [
-      ["Put in", "put_in"],
-      ["Slot Machine", "rapid"],
-      ["Big Hole", "hole"],
-      ["Altes Wehr", "weir"],
-      ["Portage", "portage"],
-      ["Strainer", "strainer"],
-      ["Bridge", "bridge"],
-      ["Take out", "take_out"],
+    for (const [name, type, n] of [
+      ["Put in", "put_in", null],
+      ["Slot Machine", "rapid", 1],
+      ["Big Hole", "hole", 2],
+      ["Altes Wehr", "weir", 3],
+      ["Portage", "portage", 4],
+      ["Strainer", "strainer", 5],
+      ["Bridge", "bridge", 6],
+      ["Take out", "take_out", null],
     ] as const) {
       const r = row(page, name);
       await expect(r, `${name} row`).toHaveAttribute("data-type", type);
-      const paths = await r.locator("svg path").count();
-      expect(paths, `${name} icon drawn`).toBeGreaterThan(0);
+      if (n == null) {
+        const paths = await r.locator("svg path").count();
+        expect(paths, `${name} icon drawn`).toBeGreaterThan(0);
+      } else {
+        await expect(
+          r.locator("[data-pin-number]"),
+          `${name} number`,
+        ).toHaveAttribute("data-pin-number", String(n));
+      }
     }
+  });
+
+  test("the card holds no level facts, they live on the chart", async ({
+    page,
+  }) => {
+    await openFeatures(page);
+    await expect(page.getByTestId("section-facts")).toHaveCount(0);
+    await expect(card(page)).not.toContainText("Level now");
   });
 
   test("text is sentence case with km in lower case", async ({ page }) => {
@@ -89,7 +101,7 @@ test.describe("features card", () => {
     );
   });
 
-  test("a grade over the whole run has no row, the strip shows it", async ({
+  test("the base grade has no row and no mark on the strip", async ({
     page,
   }) => {
     await openFeatures(page);
@@ -97,7 +109,7 @@ test.describe("features card", () => {
     await expect(
       card(page).locator("[data-row]").filter({ hasText: "WW III" }),
     ).toHaveCount(0);
-    await expect(card(page).getByTestId("strip-grade")).toHaveText("WW III");
+    await expect(card(page).getByTestId("strip-grade")).toHaveCount(0);
   });
 
   test("no closing rows: each range has one row", async ({ page }) => {
@@ -131,9 +143,7 @@ test.describe("features card", () => {
     await expect(hole).toBeVisible();
   });
 
-  test("the strip draws each feature as an icon disc and never folds", async ({
-    page,
-  }) => {
+  test("the strip draws each feature as an icon disc", async ({ page }) => {
     await openFeatures(page);
     const strip = card(page).getByTestId("features-strip");
     await expect(strip).toBeVisible();
@@ -147,12 +157,6 @@ test.describe("features card", () => {
       strip.locator('[data-range][data-type="portage"]'),
     ).toHaveAttribute("stroke-dasharray", /\d/);
 
-    const fold = card(page).getByTestId("features-fold");
-    await fold.click();
-    await expect(fold).toHaveAttribute("aria-expanded", "false");
-    await expect(strip).toBeVisible();
-    await expect(card(page).locator("[data-row]")).toHaveCount(0);
-    await fold.click();
     await expect(card(page).locator("[data-row]")).toHaveCount(8);
   });
 
@@ -167,7 +171,9 @@ test.describe("features card", () => {
     expect(await computed(plain, "border-left-style")).toBe("solid");
   });
 
-  test("rows are at least 48px and the fold chevron 44px", async ({ page }) => {
+  test("rows are 56px on a desktop, at least 48px on a phone", async ({
+    page,
+  }, info) => {
     await openFeatures(page);
     const heights = await card(page)
       .locator("[data-row]")
@@ -175,15 +181,15 @@ test.describe("features card", () => {
         els.map((el) => Math.round(el.getBoundingClientRect().height)),
       );
     expect(heights.length).toBe(8);
-    expect(Math.min(...heights), "row heights").toBeGreaterThanOrEqual(48);
-    await expectTouchTargets(card(page).getByTestId("features-fold"), 44);
+    expect(Math.min(...heights), "row heights").toBeGreaterThanOrEqual(
+      info.project.name === "desktop" ? 56 : 48,
+    );
   });
 
   test("the rail runs behind the icon discs, never through them", async ({
     page,
   }) => {
     await openFeatures(page);
-    await ensureExpanded(page);
     const discs = card(page).locator("[data-row] [data-row-disc]");
     const n = await discs.count();
     expect(n).toBeGreaterThanOrEqual(6);
@@ -263,20 +269,22 @@ test.describe("features card", () => {
     await openFeatures(page);
     const icons = page
       .getByRole("button", {
-        name: /View on map|Show proposed features|Hide proposed features|favorites/,
+        name: /View on map|Section actions/,
       })
       .filter({ visible: true });
     expect(await icons.count()).toBeGreaterThan(0);
     await expectTouchTargets(icons);
   });
 
-  test("the fold chevron is a labelled button", async ({ page }) => {
+  test("the card has no fold chevron and no menu of its own", async ({
+    page,
+  }) => {
     await openFeatures(page);
-    const fold: Locator = card(page).getByTestId("features-fold");
-    await expect(fold).toHaveAttribute("aria-expanded", "true");
-    await expect(fold).toHaveAttribute("aria-label", "Fold features");
-    await fold.click();
-    await expect(fold).toHaveAttribute("aria-label", "Show features");
+    await expect(card(page).getByTestId("features-fold")).toHaveCount(0);
+    // The rows are the only buttons: a row is a ButtonBase div.
+    await expect(
+      card(page).locator('button, [role="button"]:not([data-row])'),
+    ).toHaveCount(0);
   });
 });
 
@@ -302,7 +310,7 @@ test.describe("notes", () => {
     expect(await computed(note, "background-color")).toBe("rgb(255, 255, 255)");
     expect(
       await computed(note.getByTestId("note-dot"), "background-color"),
-    ).toBe("rgb(255, 152, 0)");
+    ).toBe("rgb(133, 84, 0)");
     const meta = note.getByText(/ago|just now|\d+ ?[a-z]/i).last();
     expect(await computed(meta, "font-size")).toBe("12px");
     expect(await computed(meta, "color")).toBe("rgb(124, 138, 144)");
@@ -331,7 +339,11 @@ test.describe("notes", () => {
 test.describe("chart height", () => {
   test("the chart opens the Features pane, above the list, and the list stays readable @small", async ({
     page,
-  }) => {
+  }, info) => {
+    test.skip(
+      info.project.name === "desktop",
+      "the desktop's chart is the rail",
+    );
     await openFeatures(page);
     const chart = page.getByTestId("chart-card").filter({ visible: true });
     await expect(chart).toBeVisible();
@@ -360,30 +372,15 @@ test.describe("chart height", () => {
       );
     }
   });
-
-  test("folding the features list makes the chart taller and opening restores it", async ({
-    page,
-  }) => {
-    await openFeatures(page);
-    const chart = page.getByTestId("chart-card").filter({ visible: true });
-    await expect(chart).toBeVisible();
-    const height = async () =>
-      Math.round((await chart.boundingBox())?.height ?? 0);
-    const base = await height();
-    const fold = card(page).getByTestId("features-fold");
-    await fold.click();
-    await expect.poll(height).toBeGreaterThan(base);
-    await fold.click();
-    await expect.poll(height).toBe(base);
-  });
 });
 
 test.describe("whole-run grade", () => {
   test("its edit and delete live in the header menu", async ({ page }) => {
     await openFeatures(page);
     await expect(row(page, "WW III")).toHaveCount(0);
-    await card(page)
-      .getByRole("button", { name: "Feature list actions" })
+    await page
+      .getByRole("button", { name: "Section actions" })
+      .filter({ visible: true })
       .click();
     await expect(
       page.getByRole("menuitem", { name: "Edit grade" }),
@@ -392,5 +389,72 @@ test.describe("whole-run grade", () => {
       page.getByRole("menuitem", { name: "Delete grade" }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
+  });
+});
+
+test.describe("design gaps", () => {
+  test("rows follow the calm rail: weights, disc, indent, no band menu", async ({
+    page,
+  }) => {
+    await openFeatures(page);
+    const name = (n: string) => row(page, n).locator("span").first();
+    expect(await computed(name("Put in"), "font-weight")).toBe("500");
+    expect(
+      await computed(row(page, "Put in").locator("[data-km]"), "font-weight"),
+    ).toBe("500");
+    expect(await computed(name("Slot Machine"), "font-weight")).toBe("600");
+    const disc = await row(page, "Put in")
+      .locator("[data-row-disc]")
+      .boundingBox();
+    expect(disc?.width).toBe(28);
+    const head = await name("Slot Machine").boundingBox();
+    const member = await name("Big Hole").boundingBox();
+    // The band indents its members by 24, and a member row has its own 12 of
+    // left padding before the rail.
+    expect((member?.x ?? 0) - (head?.x ?? 0)).toBe(36);
+    await expect(
+      card(page).getByRole("button", { name: "More actions" }),
+    ).toHaveCount(0);
+  });
+
+  test("the header holds the count and nothing else", async ({ page }) => {
+    await openFeatures(page);
+    const count = card(page).getByTestId("features-count");
+    expect(await computed(count, "font-size")).toBe("13px");
+    await expect(count.locator("button")).toHaveCount(0);
+  });
+
+  test("a picked row shows 44px coordinate buttons in secondary ink", async ({
+    page,
+  }) => {
+    await openFeatures(page);
+    await row(page, "Altes Wehr").click();
+    const open = card(page).getByTitle("Open in Google Maps");
+    await expectTouchTargets(open);
+    expect(await computed(open, "color")).toBe("rgb(88, 102, 109)");
+    await row(page, "Altes Wehr").click();
+  });
+});
+
+test.describe("features card seams", () => {
+  test("the selected row carries a 2px teal ring", async ({ page }) => {
+    await openFeatures(page);
+    const r = row(page, "Altes Wehr");
+    expect(await computed(r, "outline-style")).toBe("none");
+    await r.click();
+    expect(await computed(r, "outline-width")).toBe("2px");
+    expect(await computed(r, "outline-style")).toBe("solid");
+    expect(await computed(r, "outline-color")).toBe("rgb(14, 116, 144)");
+    await r.click();
+  });
+
+  test("a point's icon is 18px in its disc, a range band has a 12px radius", async ({
+    page,
+  }) => {
+    await openFeatures(page);
+    const icon = row(page, "Put in").locator("[data-row-disc] svg");
+    expect(await computed(icon, "width")).toBe("18px");
+    const band = card(page).locator("[data-band]").first();
+    expect(await computed(band, "border-top-left-radius")).toBe("12px");
   });
 });

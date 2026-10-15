@@ -1,3 +1,5 @@
+import { sectionGradeText } from "@/components/waterway/section-details/grade";
+import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type {
   CountryBorder,
   Feature,
@@ -50,20 +52,19 @@ function nearestPointOnPolyline(
   return best;
 }
 
-/** Feature difficulty from metadata, if set. */
-function featureDifficulty(f: Feature): string | undefined {
-  return (f.metadata as Record<string, unknown> | null)?.difficulty as
-    | string
-    | undefined;
-}
-
-/** Map label: "Name (III+)", name or difficulty alone, or "" when neither.
+/** Map label: "Name III+", name or difficulty alone, or "" when neither.
  * Features have no untagged name, so the first stored name is the fallback
  * when no translation matches the reader's language. */
+/** The humanised type, sentence case, for a feature with no name of its own. */
+function typeLabel(f: Feature): string {
+  const text = humanize(f.feature_type);
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 function featureLabel(f: Feature, language: string): string {
   const name = localizedName(f.names[0]?.name ?? "", f.names, language);
   const difficulty = featureDifficulty(f);
-  if (name) return difficulty ? `${name} (${difficulty})` : name;
+  if (name) return difficulty ? `${name} ${difficulty}` : name;
   return difficulty ?? "";
 }
 
@@ -103,9 +104,7 @@ export function buildSectionLabelsGeoJSON(
         [0, 0],
       );
       const mid = [sum[0] / coords.length, sum[1] / coords.length];
-      const ww = s.features?.find((f) => f.feature_type === "whitewater");
-      const diff = (ww?.metadata as Record<string, unknown> | undefined)
-        ?.difficulty as string | undefined;
+      const diff = sectionGradeText(s);
       const sectionName = localizedName(s.name, s.names, language);
       const riverName = waterwayNames?.[s.waterway_id] ?? sectionName;
       const label =
@@ -259,7 +258,7 @@ export function buildPointFeaturesGeoJSON(
           properties: {
             id: f.id,
             feature_type: f.feature_type,
-            label: featureLabel(f, language) || humanize(f.feature_type),
+            label: featureLabel(f, language) || typeLabel(f),
             color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
           },
           geometry: f.location,
@@ -305,12 +304,12 @@ export function buildLineFeatureLabelsGeoJSON(
     features: features.flatMap((f) => {
       const loc = f.location;
       if (loc.type !== "LineString" && loc.type !== "Polygon") return [];
+      // An unnamed one still gets its point, which carries the pin number.
       const label = featureLabel(f, language);
-      if (!label) return [];
       return [
         {
           type: "Feature" as const,
-          properties: { label },
+          properties: { id: f.id, label },
           geometry: {
             type: "Point" as const,
             coordinates: representativePoint(loc),
@@ -361,7 +360,7 @@ export function buildProposedPointFeaturesGeoJSON(
           id: f.id,
           properties: {
             id: f.id,
-            label: featureLabel(f, language) || humanize(f.feature_type),
+            label: featureLabel(f, language) || typeLabel(f),
             color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
           },
           geometry: f.location,
@@ -511,7 +510,11 @@ export function buildCountryBordersGeoJSON(
     type: "FeatureCollection",
     features: (borders ?? []).map((border) => ({
       type: "Feature",
-      properties: { country: border.country },
+      properties: {
+        country: border.country,
+        // Empty where the far side is sea or not imported: no label then.
+        neighbour: border.neighbours.join(" "),
+      },
       geometry: border.geometry as GeoJSON.Geometry,
     })),
   };

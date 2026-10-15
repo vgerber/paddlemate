@@ -1,208 +1,51 @@
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
-import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import SearchIcon from "@mui/icons-material/Search";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import CircularProgress from "@mui/material/CircularProgress";
 import Fab from "@mui/material/Fab";
-import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { useEffect, useMemo, useState } from "react";
-import WaterwayMap, { type NotePin, type PointPin } from "@/components/map/Map";
-import RegionSheet, {
-  REGION_SHEET_CLEARANCE,
-} from "@/components/map/RegionSheet";
-import { partOf, rangesHiddenByNesting } from "@/components/map/regionGeometry";
+import { useMemo } from "react";
+import type { MapScene } from "@/components/canvas/scene";
+import WaterwayMap from "@/components/map/Map";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
-import AreaControls from "@/components/search/AreaControls";
-import {
-  proposalToPseudoFeature,
-  spansWholeSection,
-} from "@/components/waterway/section-details/utils";
-import { categoryColor, categoryLabel } from "@/lib/comments";
-import { timeAgo } from "@/lib/format";
-import { lineCoords, pointCoords } from "@/lib/geo";
-import { useWaterwayComments } from "@/lib/hooks/useComments";
 import { localizedName } from "@/lib/localization";
-import { theme } from "@/lib/theme";
+import { levelMarkerColor } from "@/lib/waterLevel";
+import { modeSheetMode, modeSheetPeek } from "./modeSheet";
 import SectionSpeedDial from "./SectionSpeedDial";
 import type { MapPageState } from "./useMapPageState";
 
 interface MapPaneProps {
   state: MapPageState;
+  /** The map to draw, from `useMapScene`. */
+  scene: MapScene;
   onOpenMobilePanel: () => void;
 }
 
 /**
- * Full-height map container with:
- * - WaterwayMap
- * - Mobile area strip (area mode, no waterway selected)
- * - Mobile search FAB (all other cases)
+ * The phone's full-height map container with:
+ * - WaterwayMap, drawing the page's scene
+ * - The area and region sheet is drawn over it by MobileOverlay
+ * - Mobile search FAB (outside area and region search)
+ * Wide screens draw the same scene on the canvas host instead.
  */
-export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
+export default function MapPane({
+  state,
+  scene,
+  onOpenMobilePanel,
+}: MapPaneProps) {
   const {
     selectedWaterwayId,
     selectedSectionId,
     sections,
     filteredSearchSections,
-    suggestMode,
-    suggestGaugePins,
-    handleSectionClick,
-    gaugePins,
-    selectedGaugeId,
-    handleGaugeClick,
-    areaCircle,
-    regionOutline,
-    regionChoices,
-    countryBorders,
-    regionsLoading,
-    selectRegion,
-    setAreaCircle,
-    previewRadius,
-    setPreviewRadius,
-    areaLocked,
-    setAreaLocked,
     waterwayNames,
-    labelMode,
-    setLabelMode,
     sectionLevels,
-    searchSectionLevels,
-    sectionPreviewCoords,
-    featureVertices,
-    featureGeomType,
-    featurePickingActive,
-    handleMapPick,
-    focusedPoint,
-    focusBounds,
-    isAreaMode,
-    isRegionMode,
-    isMobile,
     isAreaSearchLoading,
     isMobileMapView,
     toggleMobileMapView,
-    showProposedFeatures,
-    featureProposals,
-    setMapBounds,
-    detailTab,
-    sectionDetailTab,
-    notePin,
-    setNotePin,
-    notePinPlacing,
-    setNotePinPlacing,
-    selectedNoteId,
-    setSelectedNoteId,
-    setDetailTab,
-    setSectionDetailTab,
-    setSelectedSectionId,
-    exitMapView,
   } = state;
-
-  // A notes tab is in view: the river overview or one section's thread.
-  const notesActive =
-    selectedWaterwayId != null &&
-    (selectedSectionId == null
-      ? detailTab === "notes"
-      : sectionDetailTab === "notes");
-
-  // Note markers are on the map whenever a river is open, not only on the
-  // notes tab - a pinned hazard is map content, and clicking one is how the
-  // notes tab opens. The river overview feeds them (cache shared with the
-  // thread); in section view only other sections' notes are dropped.
-  const showNoteMarkers = selectedWaterwayId != null && suggestMode == null;
-  const riverNotes = useWaterwayComments(
-    showNoteMarkers ? (selectedWaterwayId ?? null) : null,
-    true,
-  );
-  const noteComments = (riverNotes.data ?? []).filter(
-    (comment) =>
-      selectedSectionId == null ||
-      comment.entity_type === "waterway" ||
-      comment.entity_id === selectedSectionId,
-  );
-
-  /** Open the thread a note lives in, with the note selected. */
-  const openNoteInThread = (id: number) => {
-    setSelectedNoteId(id);
-    const note = riverNotes.data?.find((comment) => comment.id === id);
-    if (
-      selectedSectionId != null &&
-      note?.entity_type === "water_section" &&
-      note.entity_id === selectedSectionId
-    ) {
-      setSectionDetailTab("notes");
-    } else if (selectedSectionId != null) {
-      // The note belongs to the river or another section - the overview is
-      // where it can actually be read and highlighted.
-      setSelectedSectionId(undefined);
-      setDetailTab("notes");
-    } else {
-      setDetailTab("notes");
-    }
-    // On mobile the panel is hidden while browsing the map; bring it back.
-    exitMapView();
-  };
-
-  /** Marker click. Mobile only opens the popup - the full-height panel
-   * would cover the map and the popup with it; the popup's own "Open in
-   * notes" does the navigating. Desktop shows panel and map side by side,
-   * so it can do both at once. */
-  const handleNoteMarkerSelect = (id: number | null) => {
-    if (isMobile || id == null) {
-      setSelectedNoteId(id);
-      return;
-    }
-    openNoteInThread(id);
-  };
-
-  const notePins: NotePin[] = showNoteMarkers
-    ? noteComments.flatMap((comment) => {
-        const coords = comment.location ? pointCoords(comment.location) : null;
-        if (!coords) return [];
-        return [
-          {
-            id: comment.id,
-            lon: coords[0],
-            lat: coords[1],
-            color:
-              categoryColor(comment.category) ?? theme.tokens.onSurfaceVariant,
-            categoryLabel: categoryLabel(comment.category),
-            body: comment.body,
-            author: comment.author_name ?? undefined,
-            age: timeAgo(comment.created_at),
-          },
-        ];
-      })
-    : [];
-  const draftPin: PointPin[] =
-    notesActive && notePin
-      ? [
-          {
-            id: "note-draft",
-            lon: notePin[0],
-            lat: notePin[1],
-            color: theme.tokens.tertiary,
-            title: "New note location",
-            emphasis: true,
-          },
-        ]
-      : [];
-
-  // Leaving the notes tab abandons any half-placed pin.
-  useEffect(() => {
-    if (!notesActive) {
-      setNotePinPlacing(false);
-      setNotePin(null);
-      setSelectedNoteId(null);
-    }
-  }, [notesActive, setNotePinPlacing, setNotePin, setSelectedNoteId]);
-
-  const LEVEL_COLORS: Record<string, string> = {
-    empty: theme.tokens.levels.empty.marker,
-    low: theme.tokens.levels.low.marker,
-    medium: theme.tokens.levels.medium.marker,
-    high: theme.tokens.levels.high.marker,
-  };
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId);
   const sectionName = selectedSection
@@ -213,83 +56,32 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
   const sectionLevel =
     selectedSectionId != null ? sectionLevels[selectedSectionId] : undefined;
 
-  // Stable identity - feeds the map's area fitBounds effect, which must not
-  // refire on unrelated re-renders (see useMapPageState.areaCircle).
-  const visibleAreaCircle = useMemo(
+  // Area and region are searched by looking at the map, so their sheet
+  // rests over it and the map frames what it shows above the sheet.
+  const sheetMode = modeSheetMode(state);
+  const camera = useMemo(
     () =>
-      selectedWaterwayId == null && isAreaMode
-        ? previewRadius != null && areaCircle != null
-          ? { ...areaCircle, radiusKm: previewRadius }
-          : areaCircle
-        : null,
-    [selectedWaterwayId, isAreaMode, previewRadius, areaCircle],
+      sheetMode
+        ? {
+            ...scene.camera,
+            padding: {
+              top: 64,
+              left: 24,
+              right: 24,
+              bottom: modeSheetPeek(sheetMode) + 16,
+            },
+          }
+        : scene.camera,
+    [scene.camera, sheetMode],
   );
 
-  // Area and region are both searched by touching the map, so on a phone -
-  // where the panel covers it - the mode keeps a strip of its own: what is
-  // picked, and the way back to the results.
-  const showAreaStrip = isMobile && isAreaMode && selectedWaterwayId == null;
-  const showRegionStrip =
-    isMobile && isRegionMode && selectedWaterwayId == null;
-  const showModeStrip = showAreaStrip || showRegionStrip;
-
-  // The level chips narrow what the map draws; "part of" and the ranges the
-  // map left out are read from everything in view.
-  const [regionLevel, setRegionLevel] = useState<string | null>(null);
-  const drawnRegions = useMemo(
-    () =>
-      regionLevel
-        ? regionChoices.filter((r) => r.kind === regionLevel)
-        : regionChoices,
-    [regionChoices, regionLevel],
-  );
-  const regionParents = useMemo(
-    () => (regionOutline ? partOf(regionChoices, regionOutline) : []),
-    [regionChoices, regionOutline],
-  );
-  const hiddenRanges = useMemo(
-    () => rangesHiddenByNesting(regionChoices, regionOutline?.id),
-    [regionChoices, regionOutline?.id],
-  );
-
-  // Line features spanning (nearly) the whole section (e.g. the whitewater
-  // zone) would just redraw the section line - keep them in the timeline
-  // but off the map.
-  const mapFeatures = useMemo(() => {
-    if (!selectedSection) return undefined;
-    const line = lineCoords(selectedSection.location);
-    if (!line) return selectedSection.features;
-    return selectedSection.features.filter((f) => !spansWholeSection(f, line));
-  }, [selectedSection]);
-
-  // Stable identity - inline mapping in JSX would rebuild the array every
-  // render and defeat the map's GeoJSON memoization.
-  const proposedFeatures = useMemo(
-    () =>
-      showProposedFeatures
-        ? featureProposals
-            .map(proposalToPseudoFeature)
-            .filter((f) => f !== null)
-        : undefined,
-    [showProposedFeatures, featureProposals],
-  );
+  // The phone keeps the old fits: the subject belongs to the canvas camera.
+  const { subject: _subject, camera: _camera, ...mapProps } = scene;
 
   const resultsBadge = isAreaSearchLoading ? (
     <CircularProgress size={10} color="inherit" />
   ) : (
     filteredSearchSections.length || null
-  );
-
-  const resultsButton = (
-    <Badge badgeContent={resultsBadge} color="secondary" max={99}>
-      <IconButton
-        aria-label="Open search panel"
-        onClick={onOpenMobilePanel}
-        sx={{ color: "text.primary" }}
-      >
-        <FormatListBulletedIcon />
-      </IconButton>
-    </Badge>
   );
 
   return (
@@ -302,7 +94,14 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
       }}
     >
       {/* Map */}
-      <Box sx={{ flex: 1, minHeight: 0, position: "relative" }}>
+      <Box
+        data-testid="map-card"
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          position: "relative",
+        }}
+      >
         {/* Descent banner - mobile only, floats over the map when overlay is closed */}
         <StandingDescentBanner
           sx={{
@@ -310,149 +109,14 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
             position: "absolute",
             top: 0,
             left: 0,
-            right: 0,
+            // Clear of the zoom and compass keys down the right edge.
+            right: 64,
             zIndex: 10,
           }}
         />
-        <WaterwayMap
-          sections={
-            selectedWaterwayId != null ? sections : filteredSearchSections
-          }
-          features={mapFeatures}
-          selectedSectionId={selectedSectionId}
-          onSectionClick={suggestMode ? undefined : handleSectionClick}
-          gauges={{
-            pins:
-              suggestMode === "waterway" && suggestGaugePins.length > 0
-                ? suggestGaugePins
-                : gaugePins,
-            selectedId: selectedGaugeId,
-            onClick: suggestMode === "waterway" ? undefined : handleGaugeClick,
-          }}
-          area={{
-            circle: visibleAreaCircle,
-            locked: areaLocked,
-            onChange:
-              isAreaMode && selectedWaterwayId == null && !areaLocked
-                ? setAreaCircle
-                : undefined,
-          }}
-          regions={{
-            // A selected river takes the map over; the regions it was found
-            // through would only be clutter behind it.
-            choices:
-              selectedWaterwayId != null || !isRegionMode ? null : drawnRegions,
-            picked: selectedWaterwayId != null ? null : regionOutline,
-            borders: countryBorders,
-            onSelect: selectedWaterwayId != null ? undefined : selectRegion,
-          }}
-          sectionLevels={
-            selectedWaterwayId != null ? sectionLevels : searchSectionLevels
-          }
-          camera={{
-            focusedPoint,
-            focusBounds,
-            // The mobile sheet (suggest mode, note-pin placing) covers the
-            // canvas from 45% down; pad focus moves so targets stay above it.
-            focusPaddingBottom:
-              isMobile && (suggestMode != null || notePinPlacing)
-                ? Math.round(window.innerHeight * 0.55)
-                : 0,
-            onBoundsChange: setMapBounds,
-          }}
-          proposedFeatures={proposedFeatures}
-          pointPins={draftPin.length > 0 ? draftPin : undefined}
-          notes={{
-            pins: notePins.length > 0 ? notePins : undefined,
-            selectedId: selectedNoteId,
-            onSelect: handleNoteMarkerSelect,
-            onOpenThread: isMobile ? openNoteInThread : undefined,
-          }}
-          drawing={{
-            sectionPreviewCoords: sectionPreviewCoords ?? undefined,
-            featureVertices,
-            featureGeomType,
-            placingFeature: featurePickingActive || notePinPlacing,
-            onMapClick: featurePickingActive
-              ? handleMapPick
-              : notePinPlacing
-                ? (lng, lat) => {
-                    setNotePin([lng, lat]);
-                    setNotePinPlacing(false);
-                  }
-                : undefined,
-          }}
-          chrome={{
-            waterwayNames,
-            labelMode,
-            onLabelModeChange: setLabelMode,
-            controlsBottomOffset:
-              isMobile && (showModeStrip || isMobileMapView)
-                ? showRegionStrip
-                  ? REGION_SHEET_CLEARANCE
-                  : 60
-                : 0,
-            controlsAnchor:
-              isMobile && suggestMode === "feature" ? "top" : undefined,
-            attributionPosition: isMobile ? "top-left" : "bottom-right",
-          }}
-        />
+        <WaterwayMap {...mapProps} camera={camera} />
 
-        {showRegionStrip && (
-          <RegionSheet
-            picked={regionOutline}
-            loading={regionsLoading && !regionOutline}
-            level={regionLevel}
-            onLevelChange={setRegionLevel}
-            parents={regionParents}
-            hiddenRanges={hiddenRanges}
-            onPick={selectRegion}
-            action={resultsButton}
-          />
-        )}
-
-        {/* Area strip - mobile, no waterway selected */}
-        {showAreaStrip ? (
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              bgcolor: "background.paper",
-              borderTop: "1px solid",
-              borderColor: "divider",
-              px: 2,
-              // Room for the results badge, which anchors above the button
-              // and poked out over the map at a tighter padding.
-              py: 1,
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-              zIndex: 1100,
-            }}
-          >
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              {areaCircle ? (
-                <AreaControls
-                  areaCircle={areaCircle}
-                  locked={areaLocked}
-                  onLockedChange={setAreaLocked}
-                  onRadiusPreview={(km) => setPreviewRadius(km)}
-                  onRadiusChange={(km) => {
-                    setPreviewRadius(null);
-                    setAreaCircle({ ...areaCircle, radiusKm: km });
-                  }}
-                />
-              ) : (
-                <Typography variant="caption" color="text.secondary">
-                  Tap and drag on the map to draw a search area
-                </Typography>
-              )}
-            </Box>
-            {resultsButton}
-          </Box>
-        ) : showRegionStrip ? null : isMobileMapView ? (
+        {sheetMode ? null : isMobileMapView ? (
           /* Map-view mini header - shown when the detail overlay is toggled away */
           <>
             <SectionSpeedDial
@@ -482,13 +146,13 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
                 zIndex: 1100,
               }}
             >
-              {sectionLevel && LEVEL_COLORS[sectionLevel] && (
+              {sectionLevel && (
                 <Box
                   sx={{
                     width: 8,
                     height: 8,
                     borderRadius: "50%",
-                    bgcolor: LEVEL_COLORS[sectionLevel],
+                    bgcolor: levelMarkerColor(sectionLevel),
                     flexShrink: 0,
                   }}
                 />
@@ -502,7 +166,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
                   {sectionName ?? waterwayName ?? ""}
                 </Typography>
                 {sectionName && waterwayName && (
-                  <Typography variant="caption" color="text.secondary" noWrap>
+                  <Typography variant="caption" color="textSecondary" noWrap>
                     {waterwayName}
                   </Typography>
                 )}
@@ -529,7 +193,7 @@ export default function MapPane({ state, onOpenMobilePanel }: MapPaneProps) {
                 aria-label="Open search panel"
                 onClick={onOpenMobilePanel}
               >
-                <FilterAltIcon />
+                <SearchIcon />
               </Fab>
             </Badge>
           </Box>

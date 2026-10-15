@@ -10,11 +10,19 @@ import {
 import type { SectionFeatureDraft } from "@/components/waterway/SuggestFeatureForm";
 import { toPseudoFeature } from "@/components/waterway/section-details/utils";
 import { type Feature, regionsApi, type SectionWithFeatures } from "@/lib/api";
-import { downstreamDot, lineCoords } from "@/lib/geo";
+import {
+  downstreamDot,
+  type LngLat,
+  lineCoords,
+  type ViewBounds,
+} from "@/lib/geo";
 import { useRiverSnap } from "@/lib/hooks/useRiverSnap";
-import type { BoundingBox, Coordinate } from "@/lib/riverSnap";
 
 export const WIZARD_STEPS = ["Naming", "Section", "Features"] as const;
+
+/** How long the OSM lookup may run before the step says it found nothing and
+ * lets the user place points freely. */
+export const LOOKUP_TIMEOUT_MS = 8000;
 
 /** All state of the three-step suggest-section wizard: naming, the picked
  * section line (with OSM snap), and drafted features with map drawing. */
@@ -34,7 +42,7 @@ export function useSectionWizardState(
     null,
   );
   const [lineSource, setLineSource] = useState<"snap" | "straight">("snap");
-  const [mapBounds, setMapBounds] = useState<BoundingBox | null>(null);
+  const [mapBounds, setMapBounds] = useState<ViewBounds | null>(null);
   const snap = useRiverSnap(
     waterwayName,
     putIn,
@@ -43,11 +51,23 @@ export function useSectionWizardState(
     waterwayId,
   );
 
+  const lookupBusy =
+    snap.riverLookup === "searching" ||
+    snap.status === "searching" ||
+    snap.status === "routing";
+  const [lookupStalled, setLookupStalled] = useState(false);
+  useEffect(() => {
+    if (!lookupBusy) {
+      setLookupStalled(false);
+      return;
+    }
+    const timer = setTimeout(() => setLookupStalled(true), LOOKUP_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [lookupBusy]);
+
   // Step 3: features (drafted with the shared feature form, drawn on the map)
   const [draftFeatures, setDraftFeatures] = useState<SectionFeatureDraft[]>([]);
-  const [featureVertices, setFeatureVertices] = useState<
-    { lng: number; lat: number }[]
-  >([]);
+  const [featureVertices, setFeatureVertices] = useState<LngLat[]>([]);
   const [featureGeomType, setFeatureGeomType] = useState<GeomType>("Point");
   const [featurePickActive, setFeaturePickActive] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -103,7 +123,7 @@ export function useSectionWizardState(
     setRegionInfoState((prev) => ({ ...prev, ...patch }));
   };
 
-  const finalCoords: Coordinate[] | null = useMemo(
+  const finalCoords: LngLat[] | null = useMemo(
     () =>
       lineSource === "snap" &&
       snap.snappedCoords &&
@@ -120,7 +140,7 @@ export function useSectionWizardState(
 
   // Derive once per line when the features step is reached - three sample
   // points (start, middle, end) are all the server needs.
-  const derivedForCoords = useRef<Coordinate[] | null>(null);
+  const derivedForCoords = useRef<LngLat[] | null>(null);
   useEffect(() => {
     if (step !== 2 || !finalCoords || finalCoords.length < 2) return;
     if (derivedForCoords.current === finalCoords) return;
@@ -210,6 +230,7 @@ export function useSectionWizardState(
     setLineSource,
     setMapBounds,
     snap,
+    lookupStalled,
     draftFeatures,
     setDraftFeatures,
     featureVertices,

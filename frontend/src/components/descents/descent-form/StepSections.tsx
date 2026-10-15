@@ -1,26 +1,19 @@
 import Box from "@mui/material/Box";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect } from "react";
 import LocationPin, {
   PUT_IN_COLOR,
   TAKE_OUT_COLOR,
 } from "@/components/map/LocationPin";
 import SectionAdder from "@/components/search/SectionAdder";
-import FormSection from "@/components/waterway/FormSection";
-import type { SectionWithFeatures } from "@/lib/api";
-import { toPseudoSection } from "@/lib/descents";
-import { useWaterway } from "@/lib/hooks/useWaterways";
-import {
-  coordsFromStrings,
-  makeDraft,
-  type SectionDraft,
-  type SectionLocation,
-  type StepProps,
-} from "./model";
+import type { SectionLocation, StepProps } from "./model";
 import SectionDraftList from "./SectionDraftList";
 import SectionPickerMap from "./SectionPickerMap";
+import type { SectionPicking } from "./useSectionPicking";
 
 interface Props extends StepProps {
-  initialWaterwayId?: number | null;
+  picking: SectionPicking;
+  /** The map is drawn beside the steps instead of inside this one. */
+  mapBeside?: boolean;
 }
 
 /** Step 2: waterway search, section picking on the map, section order,
@@ -28,18 +21,18 @@ interface Props extends StepProps {
 export default function StepSections({
   form,
   onChange,
-  initialWaterwayId = null,
+  picking,
+  mapBeside,
 }: Props) {
-  const [selectedWaterwayId, setSelectedWaterwayId] = useState<number | null>(
-    initialWaterwayId,
-  );
-  const { data: selectedWaterway } = useWaterway(selectedWaterwayId);
-
-  const mapSections = useMemo<SectionWithFeatures[]>(
-    () => selectedWaterway?.sections ?? [],
-    [selectedWaterway],
-  );
-  const selectedIds = new Set(form.sections.map((s) => s.section_id));
+  const {
+    selectedWaterwayId,
+    setSelectedWaterwayId,
+    mapSections,
+    selectedIds,
+    addSection,
+    putIn,
+    takeOut,
+  } = picking;
 
   // Auto-derive put-in/take-out from section geometry whenever sections change
   const sectionIds = form.sections.map((s) => s.section_id).join(",");
@@ -63,120 +56,69 @@ export default function StepSections({
     });
   }, [sectionIds]);
 
-  function addSection(section: SectionWithFeatures) {
-    if (selectedIds.has(section.id)) return;
-    onChange({
-      sections: [
-        ...form.sections,
-        makeDraft(section, form.sections.length + 1),
-      ],
-    });
-  }
-
-  function toggleSection(section: SectionWithFeatures) {
-    if (selectedIds.has(section.id)) {
-      onChange({
-        sections: form.sections.filter((s) => s.section_id !== section.id),
-      });
-    } else {
-      addSection(section);
-    }
-  }
-
-  // Edited descents carry section geometry in the form itself; fall back to
-  // that when no waterway is loaded so the map still shows the route.
-  const formSectionsForMap = useMemo(
-    () =>
-      form.sections
-        .filter(
-          (s): s is SectionDraft & { location: SectionLocation } =>
-            !!s.location,
-        )
-        .map((s) =>
-          toPseudoSection({
-            id: s.section_id,
-            name: s.display_name,
-            location: s.location as SectionWithFeatures["location"],
-          }),
-        ),
-    [form.sections],
-  );
-  const sectionsForMap =
-    mapSections.length > 0 ? mapSections : formSectionsForMap;
-
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      <FormSection
-        label="Sections"
-        hint="Search a waterway, then tap its sections on the map in paddled order."
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+      }}
+    >
+      <SectionAdder
+        waterwayId={selectedWaterwayId}
+        onWaterwayChange={setSelectedWaterwayId}
+        sections={mapSections}
+        addedIds={selectedIds}
+        onAdd={addSection}
       >
-        <SectionAdder
-          waterwayId={selectedWaterwayId}
-          onWaterwayChange={setSelectedWaterwayId}
-          sections={mapSections}
-          addedIds={selectedIds}
-          onAdd={addSection}
+        <Box
+          data-testid="sections-map-block"
+          sx={{
+            // SectionAdder puts the search first; the map and the picked
+            // list lead and the search follows them.
+            order: -1,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+          }}
         >
-          <SectionPickerMap
-            sections={sectionsForMap}
-            selectedIds={selectedIds}
-            putIn={coordsFromStrings(form.put_in_lat, form.put_in_lon)}
-            takeOut={coordsFromStrings(form.take_out_lat, form.take_out_lon)}
-            onSectionToggle={toggleSection}
-            onPickPutIn={(lat, lon) =>
-              onChange({
-                put_in_lat: lat.toFixed(6),
-                put_in_lon: lon.toFixed(6),
-              })
-            }
-            onPickTakeOut={(lat, lon) =>
-              onChange({
-                take_out_lat: lat.toFixed(6),
-                take_out_lon: lon.toFixed(6),
-              })
-            }
+          {!mapBeside && <SectionPickerMap picking={picking} />}
+          <SectionDraftList
+            sections={form.sections}
+            onChange={(sections) => onChange({ sections })}
           />
-        </SectionAdder>
-
-        <SectionDraftList
-          sections={form.sections}
-          onChange={(sections) => onChange({ sections })}
-        />
-      </FormSection>
-
-      <FormSection
-        label="Put in and take out"
-        hint="Set from the sections; tap the map to move them."
-      >
-        <Box sx={{ display: "flex", gap: 1.5 }}>
-          <LocationPin
-            num={1}
-            color={PUT_IN_COLOR}
-            title="Put in"
-            coords={coordsFromStrings(form.put_in_lat, form.put_in_lon)}
-            label={form.put_in_label}
-            onClear={() =>
-              onChange({ put_in_lat: "", put_in_lon: "", put_in_label: "" })
-            }
-            onLabelChange={(v) => onChange({ put_in_label: v })}
-          />
-          <LocationPin
-            num={2}
-            color={TAKE_OUT_COLOR}
-            title="Take out"
-            coords={coordsFromStrings(form.take_out_lat, form.take_out_lon)}
-            label={form.take_out_label}
-            onClear={() =>
-              onChange({
-                take_out_lat: "",
-                take_out_lon: "",
-                take_out_label: "",
-              })
-            }
-            onLabelChange={(v) => onChange({ take_out_label: v })}
-          />
+          {(form.sections.length > 0 || putIn || takeOut) && (
+            <Box sx={{ display: "flex", gap: 1.5 }}>
+              <LocationPin
+                num={1}
+                color={PUT_IN_COLOR}
+                title="Put in"
+                coords={putIn}
+                label={form.put_in_label}
+                onClear={() =>
+                  onChange({ put_in_lat: "", put_in_lon: "", put_in_label: "" })
+                }
+                onLabelChange={(v) => onChange({ put_in_label: v })}
+              />
+              <LocationPin
+                num={2}
+                color={TAKE_OUT_COLOR}
+                title="Take out"
+                coords={takeOut}
+                label={form.take_out_label}
+                onClear={() =>
+                  onChange({
+                    take_out_lat: "",
+                    take_out_lon: "",
+                    take_out_label: "",
+                  })
+                }
+                onLabelChange={(v) => onChange({ take_out_label: v })}
+              />
+            </Box>
+          )}
         </Box>
-      </FormSection>
+      </SectionAdder>
     </Box>
   );
 }

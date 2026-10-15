@@ -1,14 +1,19 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { fieldLabel } from "@/components/provenance/steps";
-import { diffObjects, shortValue } from "@/lib/proposals";
+import { diffObjects, isEmptyValue, shortValue } from "@/lib/proposals";
 import { labelSx, theme } from "@/lib/theme";
 import { DIFF_HIDDEN_KEYS } from "./status";
 
 const { tokens } = theme;
 
-/** An update as rows: the field, what it was, what it becomes. Renders
- * nothing when the visible fields are unchanged. */
+const rowSx = { fontSize: "0.8125rem", lineHeight: "18px" } as const;
+const headSx = { ...labelSx, color: "text.secondary" } as const;
+
+/** An update as a Before / After table, one row per field: the old value
+ * struck through, the new one in the accent. A value that was not there reads
+ * "none" before, one that is gone "removed" after. Renders nothing when the
+ * visible fields are unchanged. */
 export default function ProposalDiffTable({
   original,
   proposed,
@@ -23,62 +28,77 @@ export default function ProposalDiffTable({
 
   return (
     <Box
+      data-testid="diff-table"
       sx={{
-        bgcolor: tokens.surfaceHigh,
-        borderRadius: `${tokens.radii.sm}px`,
-        px: 1.5,
-        py: 0.5,
+        display: "grid",
+        gridTemplateColumns: "76px minmax(0, 1fr) minmax(0, 1fr)",
+        columnGap: 1.5,
+        rowGap: 1,
       }}
     >
-      {diffs.map(({ key, from, to }) => (
-        <Box
-          key={key}
-          data-testid="diff-row"
-          sx={{
-            py: 1,
-            "&:not(:last-of-type)": {
-              borderBottom: "1px solid",
-              borderColor: `${tokens.outlineVariant}55`,
-            },
-          }}
-        >
-          <Typography sx={labelSx}>{fieldLabel(key)}</Typography>
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "baseline",
-              columnGap: 1,
-            }}
-          >
+      <Box sx={{ display: "contents" }}>
+        <span />
+        <Typography sx={headSx}>Before</Typography>
+        <Typography sx={headSx}>After</Typography>
+      </Box>
+      {diffs.map(({ key, from, to }) => {
+        const added = isEmptyValue(from);
+        const removed = isEmptyValue(to);
+        return (
+          <Box key={key} data-testid="diff-row" sx={{ display: "contents" }}>
             <Typography
-              data-testid="diff-before"
-              variant="body2"
+              data-testid="diff-key"
               sx={{
-                color: "text.disabled",
-                textDecoration: "line-through",
+                ...rowSx,
+                color: "text.secondary",
                 overflowWrap: "anywhere",
               }}
             >
-              {shortValue(key, from)}
+              {fieldLabel(key)}
             </Typography>
-            <Typography
-              variant="body2"
-              sx={{ color: "text.disabled" }}
-              aria-hidden
-            >
-              to
-            </Typography>
-            <Typography
-              data-testid="diff-after"
-              variant="body2"
-              sx={{ overflowWrap: "anywhere" }}
-            >
-              {shortValue(key, to)}
-            </Typography>
+            {added ? (
+              <Typography
+                data-testid="diff-note"
+                sx={{ ...rowSx, color: "text.secondary" }}
+              >
+                none
+              </Typography>
+            ) : (
+              <Typography
+                data-testid="diff-before"
+                sx={{
+                  ...rowSx,
+                  color: "text.secondary",
+                  textDecoration: "line-through",
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {shortValue(key, from)}
+              </Typography>
+            )}
+            {removed ? (
+              <Typography
+                data-testid="diff-note"
+                sx={{ ...rowSx, color: "text.secondary" }}
+              >
+                removed
+              </Typography>
+            ) : (
+              <Typography
+                data-testid="diff-after"
+                sx={{
+                  ...rowSx,
+                  color: tokens.primary,
+                  fontWeight: 600,
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {shortValue(key, to)}
+              </Typography>
+            )}
           </Box>
-        </Box>
-      ))}
+        );
+      })}
     </Box>
   );
 }

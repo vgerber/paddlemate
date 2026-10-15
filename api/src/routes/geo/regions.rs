@@ -27,7 +27,7 @@ use crate::{
     error::{ApiError, ErrorResponse},
     models::region::{Region, RegionKind, RegionOutline, RegionOutlineList},
     query,
-    regions::{self, BROWSE_LIMIT, BrowseTier},
+    regions::{self, BrowseTier},
     state::AppState,
 };
 
@@ -87,6 +87,26 @@ doc_fn!(list_regions_docs, op =>
 pub struct BrowseQuery {
     /// Viewport to draw regions for, as "south,west,north,east".
     pub bbox: String,
+    /// Comma separated kinds to draw (`valley`, `district`, `range`,
+    /// `state`) instead of the one the viewport size picks. A kind the
+    /// viewport is too wide for is left out and named in `hidden_kinds`.
+    pub kinds: Option<String>,
+}
+
+/// Parse a `kinds` list into tiers, most specific first, without repeats.
+fn parse_kinds(raw: &str) -> Option<Vec<BrowseTier>> {
+    let mut tiers = vec![];
+    for part in raw.split(',').map(str::trim).filter(|p| !p.is_empty()) {
+        let tier = BrowseTier::from_kind(part)?;
+        if !tiers.contains(&tier) {
+            tiers.push(tier);
+        }
+    }
+    if tiers.is_empty() {
+        return None;
+    }
+    tiers.sort_by_key(|tier| tier.max_span().to_bits());
+    Some(tiers)
 }
 
 pub async fn list_region_outlines(
@@ -100,6 +120,21 @@ pub async fn list_region_outlines(
     };
     let (south, west, north, east) = bbox;
 
+    let chosen = match query.kinds.as_deref() {
+        None => None,
+        Some(raw) => match parse_kinds(raw) {
+            Some(tiers) => Some(tiers),
+            None => {
+                return ApiError::validation(
+                    "kinds must be a comma list of valley, district, range, state",
+                )
+                .with_target("kinds")
+                .into_response();
+            }
+        },
+    };
+    let span = (east - west).max(north - south);
+
     // Country borders come back at every zoom, including one too wide to
     // draw regions at - they are what tells you where you are looking.
     let countries = match query::regions::country_borders(&state.pg_pool, bbox).await {
@@ -109,34 +144,41 @@ pub async fn list_region_outlines(
 
     // Zoomed out past every tier there is no region worth drawing, which is
     // an empty list rather than an error.
-    let Some(tier) = BrowseTier::for_span((east - west).max(north - south)) else {
-        return Json(RegionOutlineList {
-            regions: vec![],
-            countries,
-            filling: false,
-        })
-        .into_response();
+    let (tiers, hidden_kinds) = match chosen {
+        Some(tiers) => {
+            let (shown, hidden): (Vec<_>, Vec<_>) =
+                tiers.into_iter().partition(|tier| span <= tier.max_span());
+            let hidden = hidden.iter().map(|t| t.kind_name().to_owned()).collect();
+            (shown, hidden)
+        }
+        None => (BrowseTier::for_span(span).into_iter().collect(), vec![]),
     };
 
-    let filling = match regions::ensure_browse_fill(&state.pg_pool, tier, bbox).await {
-        Ok(filling) => filling,
-        Err(err) => return ApiError::from_db("listing region outlines", err).into_response(),
-    };
-    match query::regions::in_bbox(&state.pg_pool, bbox, tier.kinds(), BROWSE_LIMIT).await {
-        Ok(regions) => Json(RegionOutlineList {
-            regions,
-            countries,
-            filling,
-        })
-        .into_response(),
-        Err(err) => ApiError::from_db("listing region outlines", err).into_response(),
+    let mut filling = false;
+    let mut regions = vec![];
+    for tier in tiers {
+        match regions::ensure_browse_fill(&state.pg_pool, tier, bbox).await {
+            Ok(pending) => filling |= pending,
+            Err(err) => return ApiError::from_db("listing region outlines", err).into_response(),
+        }
+        match query::regions::in_bbox(&state.pg_pool, bbox, tier.kinds(), tier.limit()).await {
+            Ok(found) => regions.extend(found),
+            Err(err) => return ApiError::from_db("listing region outlines", err).into_response(),
+        }
     }
+    Json(RegionOutlineList {
+        regions,
+        countries,
+        filling,
+        hidden_kinds,
+    })
+    .into_response()
 }
 
 doc_fn!(list_region_outlines_docs, op =>
-    op.description("Regions overlapping a viewport, with their boundaries, for drawing region mode on the map. Which kinds come back depends on how much ground the viewport covers: states at country zoom, districts and mountain ranges in between, valleys at river zoom. Ground the server has not seen before is fetched from OSM in the background, which takes seconds for a boundary the size of a district - `filling` says that is happening and the request should be repeated shortly for the rest. An empty region list with `filling` false means the map is zoomed too far out to draw regions; the country borders still come back, clipped to the viewport, so the map can always say which country you are looking at.")
+    op.description("Regions overlapping a viewport, with their boundaries, for drawing region mode on the map. Without `kinds`, which kind comes back depends on how much ground the viewport covers: states at country zoom, districts and mountain ranges in between, valleys at river zoom. With `kinds` (comma list of valley, district, range, state) exactly those kinds come back, each up to a limit on the viewport width (valley 3, district 6, range 8, state 12 degrees); a kind past its limit is left out and named in `hidden_kinds`, so the app can ask for a closer zoom. Ground the server has not seen before is fetched from OSM in the background, which takes seconds for a boundary the size of a district - `filling` says that is happening and the request should be repeated shortly for the rest. An empty region list with `filling` false means the map is zoomed too far out to draw regions; the country borders still come back, clipped to the viewport, so the map can always say which country you are looking at.")
         .response::<200, Json<RegionOutlineList>>()
-        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Bad bbox"))
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Bad bbox or unknown kind"))
         .tag("Geo")
 );
 

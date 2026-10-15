@@ -38,9 +38,31 @@ case.
 Search starts at 2 characters. Typo tolerance starts at 4, so very short terms
 only match exactly.
 
+## Filters and tabs
+
+The search screen has three tabs: **Name**, **Area** and **Region**. A
+**Filters** sheet holds country, grade and **Water now** (low, medium, high).
+The chosen water levels are kept in the URL (`water=low,high`; the JSON array
+form is read too), so a filtered search can be linked or reloaded. Water now on
+its own is a search: it lists the sections at those levels across all rivers.
+
+- A filter chip shows no arrow. Once set it is teal and names its value
+  ("Grade III-IV", "AT", "Water low, high"); a tap opens the Filters sheet
+  scrolled to that filter's field.
+- While any filter is set the map draws only the sections the list shows (grade, country, Water now, name scope), with their put-in and take-out markers; an open river always draws in full. Clearing the filters draws everything again.
+- The grade range never inverts: moving Min above Max (or Max below Min) moves
+  the other end with it.
+- Each result tab has one count, and with Water now on both tabs count what is
+  at those levels. The sheet's "N results" button counts the open tab.
+- Empty copy ("No sections found.") appears only after a finished search; while
+  a search or its sections load, a spinner shows alone.
+- A picked region is a chip with an X that clears it (URL, outline and
+  results); editing is a tap on the region field. On a phone a pick opens the
+  sheet to show the results.
+
 ## Searching by place
 
-The panel's mode switch offers two ways to search without typing a name:
+Area and Region are the two ways to search without typing a name:
 
 - **Area** — click the map to drop a centre, then set a radius. Rivers with a
   section inside the circle are listed.
@@ -52,7 +74,10 @@ The panel's mode switch offers two ways to search without typing a name:
   down at river level. The map stays quiet so the picked region is the only
   thing that stands out: every boundary is one thin grey line, so an edge two
   regions share reads once, with a faint fill inside that only has to catch
-  your click. Each region has one name, set at its visual centre - the
+  your click. Picking a region opens a sheet with its name, the kind of region, the rivers
+in it and, under "Part of", the larger regions it sits in; before a pick the
+sheet holds chips to limit the map to one kind of region. In region mode the
+base map's roads fade to 40% and their names, shields and one-way arrows are hidden, until you leave region mode. Each region has one name, set at its visual centre - the
   point deepest inside its shape, not the middle of its bounding box. A
   valley has no outline, so it is a soft band along the valley floor. Clicking
   ground that several regions share lists them and lets you say which you
@@ -63,8 +88,12 @@ The panel's mode switch offers two ways to search without typing a name:
   region much smaller than the view (under about 0.3% of it) waits until you
   zoom in, because it is a speck you could neither read nor hit.
   Searching by name works too, and tolerates the same misspellings as river
-  names, so `otztal` finds `Ötztal`. The picker names each region's country
-  first, so a list of valley names still tells you where you are.
+  names, so `otztal` finds `Ötztal` and `Tirool` finds `Tirol`. An English
+  country name (`Austria`, `Switzerland`) lists that country's regions, states
+  first, after any region whose own name matches. The picker names each
+  region's country first, so a list of valley names still tells you where you
+  are. A range that straddles a border is labelled with the country holding
+  most of its area.
 
 Country borders stay drawn over everything else at every zoom, so the map
 always says which country you are looking at. They are a dash-dot line over a
@@ -157,6 +186,38 @@ checkout) rebuilds its indexes from the current function and looks healthy,
 which is why no runtime check can catch it. `api/tests/migration_rules.rs`
 enforces the rule in `cargo test`.
 
+### Region search and borders
+
+Regions are not waterways, so they are searched in `query::regions::search`
+rather than through `searchable_names`: `idx_regions_name_trgm` is a trigram
+index on `search_key(name)` (`%>` with the same threshold as river names,
+from 4 characters), and `country_names` holds English names and aliases per
+ISO code. The migration does not change `search_key`, so no `REINDEX`.
+
+`/geo/region-outlines` picks one kind by viewport width on its own (states
+4-12 degrees, ranges 1.5-4, districts 0.8-1.5, valleys below). The region
+level chips send `kinds=` instead (comma list of `valley,district,range,state`):
+those kinds come back, each only while the viewport is no wider than its limit
+(`BrowseTier::max_span`: valley 3, district 6, range 8, state 12 degrees). A
+kind over its limit is omitted and named in `hidden_kinds`, so the app can say
+"Zoom in to see districts". An unknown kind is a 400. The background OSM fill
+and `region_tiles` work per kind either way, and `filling` is true while any
+requested kind still has ground missing. Each kind returns at most
+120 outlines (ranges 300, `BrowseTier::limit`) - past that the ones with the
+most ground inside the viewport win, not the biggest overall; shapes whose
+bounding box overlaps the viewport but whose area does not are left out.
+Outlines are thinned to about a pixel of the viewport
+(span / 1500) so a Europe-wide state view is under 1 MB and answers in about
+0.7 s.
+
+The country borders in `/geo/region-outlines` clip the boundary line to the
+viewport; the neighbour on the far side comes from `country_borders`, one row
+per country pair holding the stretch of border between them. A trigger on
+`regions` keeps it current whenever a country row is inserted, changed or
+deleted (`refresh_country_borders`). A distance test against whole country
+polygons took about a minute at Europe scale; the lookup answers in well
+under a second at any span.
+
 ### How the region map is drawn
 
 The rules live in `frontend/src/components/map/regionGeometry.ts` (pure, tested
@@ -168,7 +229,8 @@ in `regionGeometry.test.ts`) and the layers in `RegionLayers.tsx` and
 | A range holding `MAX_NESTED_RANGES` (2) or more other ranges is not drawn; bounding boxes stand in until the API answers containment | `visibleRegions` |
 | A region under `MIN_VIEW_SHARE` (0.003) of the view area is not drawn | `visibleRegions` |
 | The picked region is never hidden by either rule, and has its own source so panning it out of the viewport does not remove it | `visibleRegions`, `RegionLayers` |
-| One label per region at the pole of inaccessibility of its biggest part, or the middle of its longest line; computed with the `polylabel` library, cached per geometry | `labelPoint` |
+| Road lines (not rail) fade to `MUTED_ROAD_OPACITY` (0.4), road names, shields and one-way arrows are hidden, only while region mode is on; restored after, reapplied after a style swap | `useMutedBaseMap.ts` |
+| One label per region at the pole of inaccessibility of its biggest part, or the middle of its longest line; computed with the `polylabel` library, cached per geometry; 12px `onSurfaceVariant` on a white halo, the picked one 13px bold teal | `labelPoint` |
 | Every boundary: 1px `onSurfaceVariant` line, fill at 4% opacity (not for valleys) | `region-browse-line`, `region-browse-fill` |
 | Valleys: a 14px blurred line band at 14% opacity, no outline | `region-valley-band` |
 | Picked region: `mapSelectedLine` fill at 12% and a 2.5px line, label in the same colour; a region whose row has focus in the choice card is lit the same way | `region-picked-*`, `region-lit-*` |

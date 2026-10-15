@@ -1,12 +1,17 @@
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import LanguagePicker from "@/components/LanguagePicker";
 import FormSection from "@/components/waterway/FormSection";
 import { preferredLanguage } from "@/lib/languagePreference";
 import { languageOptions } from "@/lib/languages";
+import { theme } from "@/lib/theme";
+import ProposalNoteField from "./ProposalNoteField";
+
+const { tokens } = theme;
 
 export interface SectionTranslationDraft {
   /** Stable across language changes, so editing a row does not remount it. */
@@ -22,6 +27,8 @@ export interface SectionNamingValue {
   name: string;
   description: string;
   translations: SectionTranslationDraft[];
+  /** Optional note for the reviewers. */
+  note: string;
 }
 
 /** Fresh naming state; the primary language defaults to the reader's.
@@ -33,6 +40,7 @@ export function createInitialNaming(): SectionNamingValue {
     name: "",
     description: "",
     translations: [],
+    note: "",
   };
 }
 
@@ -80,20 +88,13 @@ export default function SectionNamingForm({
         label="Name this section"
         hint="How paddlers refer to this stretch - shown in search and on the map."
       >
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <LanguagePicker
-            value={value.langCode}
-            onChange={(langCode) => onChange({ ...value, langCode })}
-            exclude={value.translations.map((t) => t.langCode)}
-          />
-          <TextField
-            label="Name"
-            value={value.name}
-            onChange={(e) => onChange({ ...value, name: e.target.value })}
-            required
-            fullWidth
-          />
-        </Box>
+        <TextField
+          label="Name"
+          value={value.name}
+          onChange={(e) => onChange({ ...value, name: e.target.value })}
+          slotProps={{ htmlInput: { "aria-required": true } }}
+          fullWidth
+        />
 
         <TextField
           label="Description"
@@ -105,83 +106,91 @@ export default function SectionNamingForm({
         />
       </FormSection>
 
-      {
-        <FormSection
-          label="Translations"
-          hint="Optional - the name in other languages."
-          action={
-            <IconButton
-              aria-label="Add translation"
-              onClick={() =>
-                onChange({
-                  ...value,
-                  translations: [
-                    ...value.translations,
-                    {
-                      id: crypto.randomUUID(),
-                      langCode: nextFreeLanguage(),
-                      name: "",
-                      description: "",
-                    },
-                  ],
-                })
-              }
-            >
-              <AddIcon fontSize="small" />
-            </IconButton>
-          }
-        >
-          {value.translations.map((translation, index) => (
-            <Box
-              key={translation.id}
-              sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-            >
-              <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-                <LanguagePicker
-                  value={translation.langCode}
-                  onChange={(langCode) =>
-                    updateTranslation(index, { langCode })
-                  }
-                  exclude={usedLanguages.filter(
-                    (lc) => lc !== translation.langCode,
-                  )}
-                />
-                <TextField
-                  label="Name"
-                  value={translation.name}
-                  onChange={(e) =>
-                    updateTranslation(index, { name: e.target.value })
-                  }
-                  fullWidth
-                />
-                <IconButton
-                  aria-label="Remove translation"
-                  onClick={() =>
-                    onChange({
-                      ...value,
-                      translations: value.translations.filter(
-                        (_, i) => i !== index,
-                      ),
-                    })
-                  }
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </Box>
+      <FormSection
+        label="Translations"
+        hint="Optional - the name in other languages."
+        action={
+          <Button
+            startIcon={<AddIcon />}
+            sx={{ minHeight: tokens.touch.min }}
+            onClick={() =>
+              onChange({
+                ...value,
+                translations: [
+                  ...value.translations,
+                  {
+                    id: crypto.randomUUID(),
+                    langCode: nextFreeLanguage(),
+                    name: "",
+                    description: "",
+                  },
+                ],
+              })
+            }
+          >
+            Add translation
+          </Button>
+        }
+      >
+        <LanguagePicker
+          label="Language of the name above"
+          value={value.langCode}
+          onChange={(langCode) => onChange({ ...value, langCode })}
+          exclude={value.translations.map((t) => t.langCode)}
+        />
+        {value.translations.map((translation, index) => (
+          <Box
+            key={translation.id}
+            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+          >
+            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+              <LanguagePicker
+                value={translation.langCode}
+                onChange={(langCode) => updateTranslation(index, { langCode })}
+                exclude={usedLanguages.filter(
+                  (lc) => lc !== translation.langCode,
+                )}
+              />
               <TextField
-                label="Description"
-                multiline
-                minRows={2}
-                value={translation.description}
+                label="Name"
+                value={translation.name}
                 onChange={(e) =>
-                  updateTranslation(index, { description: e.target.value })
+                  updateTranslation(index, { name: e.target.value })
                 }
                 fullWidth
               />
+              <IconButton
+                aria-label="Remove translation"
+                onClick={() =>
+                  onChange({
+                    ...value,
+                    translations: value.translations.filter(
+                      (_, i) => i !== index,
+                    ),
+                  })
+                }
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
             </Box>
-          ))}
-        </FormSection>
-      }
+            <TextField
+              label="Description"
+              multiline
+              minRows={2}
+              value={translation.description}
+              onChange={(e) =>
+                updateTranslation(index, { description: e.target.value })
+              }
+              fullWidth
+            />
+          </Box>
+        ))}
+      </FormSection>
+
+      <ProposalNoteField
+        value={value.note}
+        onChange={(note) => onChange({ ...value, note })}
+      />
     </Box>
   );
 }

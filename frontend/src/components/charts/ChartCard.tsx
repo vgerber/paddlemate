@@ -16,7 +16,7 @@ import {
 } from "@/components/charts/water/series";
 import type { TimeRange } from "@/components/charts/water/types";
 import type { WaterRangeWithStatus } from "@/lib/api";
-import { formatDate, formatReading, formatTime } from "@/lib/format";
+import { formatReading, readingTime } from "@/lib/format";
 import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -25,23 +25,22 @@ const { tokens } = theme;
 const OUTLINE_HEADROOM = 46;
 const CLOSED_HEADROOM = 6;
 
-// The phone height gives way on short screens, so a 568px phone still shows
-// the start of the features list under the chart.
+// The phone height gives way on short screens but never below 160px (a taller chart pushes the strip under the FAB at 320px), so the
+// threshold labels keep clear of each other at 320px wide.
 const heights = {
-  base: { xs: "clamp(140px, 24vh, 210px)", md: "clamp(200px, 26vh, 340px)" },
+  // The phone's base grows by the free room the pane measured (--chart-extra).
+  base: {
+    xs: "calc(clamp(160px, 24vh, 210px) + var(--chart-extra, 0px))",
+    md: "clamp(200px, 26vh, 340px)",
+  },
   tall: { xs: 340, md: "clamp(280px, 42vh, 520px)" },
 } as const;
-
-/** Today's readings show their time, older ones their date. */
-function readingTime(iso: string): string {
-  return new Date(iso).toDateString() === new Date().toDateString()
-    ? formatTime(iso)
-    : formatDate(iso);
-}
 
 const chipSx = (on: boolean) =>
   ({
     border: "none",
+    height: tokens.touch.min,
+    borderRadius: `${tokens.radii.pill}px`,
     bgcolor: "transparent",
     color: "text.primary",
     fontVariantNumeric: "tabular-nums",
@@ -61,6 +60,8 @@ interface ChartCardProps {
   /** Lets the chart grow taller, for when nothing else is competing for the
    * space (the features list is folded). */
   tall?: boolean;
+  /** A short card, for a chart that is still loading or failed to load. */
+  short?: boolean;
   /** Offered in the open options when the card shows a picked gauge. */
   onDismiss?: () => void;
   /** Under the chart, e.g. the gauge credit. */
@@ -69,7 +70,7 @@ interface ChartCardProps {
   children: (headroom: number) => ReactNode;
 }
 
-/** The chart card. Closed it is the chart edge to edge with a faint outline
+/** The phone's chart card. Closed it is the chart edge to edge with a faint outline
  * (the charted reading, its time and the period) and one options button;
  * open, the options sit above the chart: which reading, which period. */
 export default function ChartCard({
@@ -80,6 +81,7 @@ export default function ChartCard({
   onMeasurementTypeChange,
   preferredFeatureId,
   tall = false,
+  short = false,
   onDismiss,
   footer,
   children,
@@ -104,12 +106,34 @@ export default function ChartCard({
     ? formatReading(latest.value, charted?.series.unit ?? "")
     : typeLabel(type ?? "");
 
+  const closeButton = (
+    <IconButton
+      ref={closeRef}
+      aria-label="Close chart options"
+      aria-expanded
+      onClick={() => {
+        toggled.current = true;
+        setOpen(false);
+      }}
+      sx={{
+        width: tokens.touch.min,
+        height: tokens.touch.min,
+        color: "text.secondary",
+      }}
+    >
+      <ExpandLessIcon />
+    </IconButton>
+  );
+
   return (
     <Box
       data-testid="chart-card"
       sx={{
+        // The pane has no side padding; every list in it sets its own 12px.
         mx: 1.5,
         mt: 1.5,
+        // The panel's gutter to the card below; from md the pane's gap does it.
+        mb: { xs: `${tokens.canvas.panel.gutter}px`, md: 0 },
         flexShrink: 0,
         bgcolor: tokens.surface,
         borderRadius: `${tokens.radii.md}px`,
@@ -120,13 +144,14 @@ export default function ChartCard({
       {open && (
         <Box
           sx={{
-            display: "grid",
-            gap: 1.25,
-            px: 1.75,
-            pt: 1.5,
-            pb: 1.25,
+            flexShrink: 0,
             borderBottom: "1px solid",
             borderColor: "divider",
+            px: 1.75,
+            display: "grid",
+            gap: 1.25,
+            pt: 1.5,
+            pb: 1.25,
           }}
         >
           <Box
@@ -135,6 +160,7 @@ export default function ChartCard({
               gridTemplateColumns: "minmax(0, 1fr) 44px",
               alignItems: "center",
               mr: -1.25,
+              order: 0,
             }}
           >
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
@@ -158,24 +184,9 @@ export default function ChartCard({
                 />
               ))}
             </Box>
-            <IconButton
-              ref={closeRef}
-              aria-label="Close chart options"
-              aria-expanded
-              onClick={() => {
-                toggled.current = true;
-                setOpen(false);
-              }}
-              sx={{
-                width: tokens.touch.min,
-                height: tokens.touch.min,
-                color: "text.secondary",
-              }}
-            >
-              <ExpandLessIcon />
-            </IconButton>
+            {closeButton}
           </Box>
-          <Box sx={{ display: "flex", gap: 0.5 }}>
+          <Box sx={{ display: "flex", gap: 0.5, order: 1 }}>
             {TIME_RANGE_OPTIONS.map((o) => (
               <Chip
                 key={o.value}
@@ -187,19 +198,27 @@ export default function ChartCard({
                 onClick={() => onTimeRangeChange(o.value)}
                 sx={{
                   ...chipSx(o.value === timeRange),
-                  flex: 1,
+                  // Stretch to share a phone's width; natural size from md.
+                  flex: { xs: 1, md: "0 0 auto" },
                   minWidth: 0,
-                  "& .MuiChip-label": { px: 0.5 },
+                  "& .MuiChip-label": { px: { xs: 0.5, md: 1.5 } },
                 }}
               />
             ))}
           </Box>
           {charted && (
-            <Box sx={{ display: "flex", alignItems: "center", mr: -1.25 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                mr: -1.25,
+                order: 2,
+              }}
+            >
               <Typography
                 variant="body2"
-                color="text.secondary"
-                sx={{ flex: 1, minWidth: 0 }}
+                noWrap
+                sx={{ flex: 1, minWidth: 0, color: "text.secondary" }}
               >
                 {charted.gauge.name}
                 {latest && ` · ${readingTime(latest.measured_at)}`}
@@ -225,7 +244,7 @@ export default function ChartCard({
       <Box
         sx={{
           position: "relative",
-          height: tall ? heights.tall : heights.base,
+          height: short ? 120 : tall ? heights.tall : heights.base,
         }}
       >
         {children(open ? CLOSED_HEADROOM : OUTLINE_HEADROOM)}

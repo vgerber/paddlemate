@@ -1,10 +1,12 @@
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
+import EmptyState from "@/components/states/EmptyState";
+import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import TripDetail from "@/components/trip-page/TripDetail";
 import { useTrip } from "@/lib/hooks/useTrips";
-import { PANEL_HEIGHT } from "@/lib/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/trips/$tripId")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -19,18 +21,36 @@ function TripDetailPage() {
   const navigate = useNavigate();
   const { tripId } = Route.useParams();
   const { edit } = Route.useSearch();
-  const { data: trip, isLoading } = useTrip(Number(tripId));
+  const tripQuery = useTrip(Number(tripId));
+  const { data: trip, isLoading } = tripQuery;
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"), { noSsr: true });
+
+  // Desktop shows the trip beside the list; this address stays a valid link.
+  if (isDesktop) {
+    return (
+      <Navigate
+        to="/trips"
+        search={{ selected: Number(tripId), edit: edit || undefined }}
+        replace
+      />
+    );
+  }
 
   if (isLoading) return <LoadingBox size={40} pt={8} />;
 
   if (!trip) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
-        <Typography variant="body2" color="text.disabled">
-          Trip not found.
-        </Typography>
-      </Box>
-    );
+    // A failed load keeps its own message; only a clean miss is "not found".
+    if (tripQuery.isError) {
+      return (
+        <ErrorState
+          error={tripQuery.error}
+          fallback="Could not load this trip."
+          onRetry={() => tripQuery.refetch()}
+          py={8}
+        />
+      );
+    }
+    return <EmptyState title="Trip not found." py={8} />;
   }
 
   return (

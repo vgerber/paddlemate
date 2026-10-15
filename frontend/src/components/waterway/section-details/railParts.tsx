@@ -8,10 +8,10 @@ import { theme } from "@/lib/theme";
 const { tokens } = theme;
 
 /** Height of the first line of a row: the disc is centred on it. */
-export const ROW_MIN = tokens.touch.row;
-export const DISC = 32;
+export const ROW_MIN = tokens.canvas.panel.row;
+export const DISC = 28;
 /** Width of the rail column. */
-export const RAIL_COL = 40;
+export const RAIL_COL = 36;
 
 export interface RailShape {
   /** The line continues up to the previous row. */
@@ -44,6 +44,32 @@ export function RailLine({ top, bottom, dashed }: RailShape) {
   );
 }
 
+/** The number a feature carries on its row and its map pin. */
+export function NumberDisc({ n, size = DISC }: { n: number; size?: number }) {
+  return (
+    <Box
+      data-row-disc
+      data-pin-number={n}
+      sx={{
+        position: "relative",
+        zIndex: 1,
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        bgcolor: tokens.primary,
+        color: tokens.onPrimary,
+        display: "grid",
+        placeItems: "center",
+        flexShrink: 0,
+        fontSize: "0.75rem",
+        fontWeight: 600,
+      }}
+    >
+      {n}
+    </Box>
+  );
+}
+
 /** A point feature's icon in a white disc on the rail. */
 export function IconDisc({
   type,
@@ -69,7 +95,7 @@ export function IconDisc({
         flexShrink: 0,
       }}
     >
-      <FeatureTypeIcon type={type} size={20} />
+      <FeatureTypeIcon type={type} size={18} />
     </Box>
   );
 }
@@ -79,10 +105,13 @@ export function RangeTile({
   type,
   open,
   foldable,
+  n,
 }: {
   type: FeatureType;
   open: boolean;
   foldable: boolean;
+  /** Its number, in place of the type icon. */
+  n?: number;
 }) {
   return (
     <Box
@@ -100,7 +129,11 @@ export function RangeTile({
         flexShrink: 0,
       }}
     >
-      <FeatureTypeIcon type={type} size={20} />
+      {n != null ? (
+        <NumberDisc n={n} size={DISC} />
+      ) : (
+        <FeatureTypeIcon type={type} size={20} />
+      )}
       {foldable && (
         <Box
           aria-hidden="true"
@@ -108,8 +141,8 @@ export function RangeTile({
             position: "absolute",
             right: -6,
             bottom: -6,
-            width: 18,
-            height: 18,
+            width: 16,
+            height: 16,
             borderRadius: "50%",
             bgcolor: tokens.surface,
             border: `1.5px solid ${tokens.primaryContainer}`,
@@ -120,7 +153,7 @@ export function RangeTile({
         >
           <ExpandMoreIcon
             sx={{
-              fontSize: 14,
+              fontSize: 12,
               transform: open ? "none" : "rotate(-90deg)",
               transition: `transform ${css.fast} ${css.easeOut}`,
             }}

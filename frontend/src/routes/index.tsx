@@ -1,10 +1,16 @@
 import Box from "@mui/material/Box";
 import { createFileRoute } from "@tanstack/react-router";
-import DesktopSidebar from "@/components/map-page/DesktopSidebar";
+import { useCanvasScene } from "@/components/canvas/CanvasContext";
+import CanvasLayout from "@/components/canvas/CanvasLayout";
+import MapDetailCard from "@/components/map-page/MapDetailCard";
 import MapPane from "@/components/map-page/MapPane";
 import MobileOverlay from "@/components/map-page/MobileOverlay";
 import { useMapPageState } from "@/components/map-page/useMapPageState";
-import { parseWaterLevels } from "@/components/search/waterParam";
+import { useMapScene } from "@/components/map-page/useMapScene";
+import {
+  formatWaterLevels,
+  parseWaterLevels,
+} from "@/components/search/waterParam";
 import { PANEL_HEIGHT } from "@/lib/theme";
 
 export const Route = createFileRoute("/")({
@@ -33,7 +39,8 @@ export const Route = createFileRoute("/")({
     lon: search.lon != null ? Number(search.lon) : undefined,
     radius: search.radius != null ? Number(search.radius) : undefined,
     region: search.region != null ? Number(search.region) : undefined,
-    water: parseWaterLevels(search.water),
+    // Kept as the comma string the app writes; the search hook parses it.
+    water: formatWaterLevels(parseWaterLevels(search.water) ?? []),
   }),
   component: Home,
 });
@@ -41,6 +48,18 @@ export const Route = createFileRoute("/")({
 function Home() {
   const search = Route.useSearch();
   const state = useMapPageState(search);
+  const scene = useMapScene(state);
+  // From md the canvas host draws the scene behind the cards; on a phone the
+  // map pane below draws the same scene.
+  useCanvasScene(scene);
+
+  if (!state.isMobile) {
+    return (
+      <CanvasLayout>
+        <MapDetailCard state={state} />
+      </CanvasLayout>
+    );
+  }
 
   return (
     <>
@@ -51,9 +70,9 @@ function Home() {
           overflow: "hidden",
         }}
       >
-        <DesktopSidebar state={state} />
         <MapPane
           state={state}
+          scene={scene}
           onOpenMobilePanel={() => state.setIsMobilePanelOpen(true)}
         />
       </Box>

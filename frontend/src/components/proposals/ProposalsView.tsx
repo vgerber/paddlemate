@@ -1,21 +1,26 @@
 import FilterListIcon from "@mui/icons-material/FilterList";
-import HowToVoteOutlinedIcon from "@mui/icons-material/HowToVoteOutlined";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
-import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
-import InputLabel from "@mui/material/InputLabel";
+import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import ChipRow from "@/components/ChipRow";
+import { useCanvasScene } from "@/components/canvas/CanvasContext";
+import CanvasLayout from "@/components/canvas/CanvasLayout";
+import FloatingCard from "@/components/canvas/FloatingCard";
 import ListPaneHeader from "@/components/ListPaneHeader";
-import ProposalDetailView from "@/components/proposals/ProposalDetailView";
+import PanelHeader from "@/components/PanelHeader";
 import ProposalRow from "@/components/proposals/ProposalRow";
+import ProposalSideCard from "@/components/proposals/ProposalSideCard";
+import { useProposalScene } from "@/components/proposals/useProposalScene";
 import EmptyState from "@/components/states/EmptyState";
-import LoadingBox from "@/components/states/LoadingBox";
+import QueryStates from "@/components/states/QueryStates";
 import UnderlineTabs from "@/components/UnderlineTabs";
 import type {
   ProposalEntityType,
@@ -23,8 +28,10 @@ import type {
   ProposalStatus,
 } from "@/lib/api";
 import { useProposals } from "@/lib/hooks/useProposals";
-import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import { STATUS_LABEL } from "./status";
+
+const { tokens } = theme;
 
 const STATUS_TABS = (["pending", "approved", "rejected"] as const).map(
   (value) => ({ value, label: STATUS_LABEL[value] }),
@@ -44,9 +51,8 @@ const OPERATION_TABS: { value: ProposalOperation | ""; label: string }[] = [
   { value: "delete", label: "Delete" },
 ];
 
-/** One filter dimension as a compact dropdown. Two of them sit side by
- * side, which stays one row however many options a dimension gains. */
-function FilterSelect({
+/** One filter dimension as a chip: teal once set, one tap opens its menu. */
+function FilterChip({
   id,
   label,
   options,
@@ -59,27 +65,42 @@ function FilterSelect({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const current = options.find((o) => o.value === value);
   return (
-    <FormControl size="small" sx={{ flex: 1, minWidth: 0 }}>
-      <InputLabel id={`${id}-label`}>{label}</InputLabel>
-      <Select
-        labelId={`${id}-label`}
-        label={label}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        sx={{ fontSize: "0.75rem" }}
+    <>
+      <Chip
+        data-testid={id}
+        variant="outlined"
+        clickable
+        color={value ? "primary" : "default"}
+        onClick={(e) => setAnchor(e.currentTarget)}
+        label={
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+            {value ? `${label}: ${current?.label}` : label}
+            <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
+          </Box>
+        }
+      />
+      <Menu
+        anchorEl={anchor}
+        open={anchor !== null}
+        onClose={() => setAnchor(null)}
       >
         {options.map((option) => (
           <MenuItem
             key={option.label}
-            value={option.value}
-            sx={{ fontSize: "0.75rem" }}
+            selected={option.value === value}
+            onClick={() => {
+              onChange(option.value);
+              setAnchor(null);
+            }}
           >
             {option.label}
           </MenuItem>
         ))}
-      </Select>
-    </FormControl>
+      </Menu>
+    </>
   );
 }
 
@@ -112,29 +133,43 @@ export default function ProposalsView({
   adminMode,
 }: ProposalsViewProps) {
   const navigate = useNavigate();
+  const router = useRouter();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const hasActiveFilters = entityType != null || operation != null;
   const [filtersOpen, setFiltersOpen] = useState(hasActiveFilters);
-  const { data: proposals, isLoading } = useProposals({
+  const query = useProposals({
     status,
     entity_type: entityType,
     operation,
   });
+  const { data: proposals, isLoading } = query;
 
-  const selected = proposals?.find((p) => p.id === selectedId);
+  // The phone reaches the list through the Tools tab, so back goes there.
+  const goBack = () => {
+    if (window.history.length > 1) router.history.back();
+    else router.navigate({ to: "/settings", search: {} });
+  };
+
+  // The canvas map draws the open proposal; the scene is set on a phone too,
+  // where no host is mounted and it is ignored.
+  const open = useProposalScene(isDesktop ? selectedId : undefined);
+  useCanvasScene(open.scene);
 
   const list = (
     <>
       <ListPaneHeader
         count={proposals?.length ?? 0}
-        noun={{ one: "proposal", other: "proposals" }}
         loading={isLoading}
         actions={
           <IconButton
-            size="small"
             onClick={() => setFiltersOpen((v) => !v)}
             aria-label={filtersOpen ? "Hide filters" : "Show filters"}
             title={filtersOpen ? "Hide filters" : "Show filters"}
+            sx={{
+              width: tokens.touch.min,
+              height: tokens.touch.min,
+              mr: -1.25,
+            }}
           >
             <Badge
               color="primary"
@@ -157,46 +192,51 @@ export default function ProposalsView({
 
       {/* Filters - collapsed by default so the list is what you land on */}
       <Collapse in={filtersOpen}>
-        <Box sx={{ display: "flex", gap: 1, px: 2, py: 1.5 }}>
-          <FilterSelect
-            id="proposal-entity"
-            label="Type"
-            options={ENTITY_TABS}
-            value={entityType ?? ""}
-            onChange={(v) =>
-              onEntityTypeChange((v || undefined) as ProposalEntityType)
-            }
-          />
-
-          {onOperationChange && (
-            <FilterSelect
-              id="proposal-operation"
-              label="Action"
-              options={OPERATION_TABS}
-              value={operation ?? ""}
+        <Box sx={{ px: 2 }}>
+          <ChipRow>
+            <FilterChip
+              id="proposal-entity"
+              label="Type"
+              options={ENTITY_TABS}
+              value={entityType ?? ""}
               onChange={(v) =>
-                onOperationChange((v || undefined) as ProposalOperation)
+                onEntityTypeChange((v || undefined) as ProposalEntityType)
               }
             />
-          )}
+
+            {onOperationChange && (
+              <FilterChip
+                id="proposal-operation"
+                label="Action"
+                options={OPERATION_TABS}
+                value={operation ?? ""}
+                onChange={(v) =>
+                  onOperationChange((v || undefined) as ProposalOperation)
+                }
+              />
+            )}
+          </ChipRow>
         </Box>
       </Collapse>
 
       {/* List */}
-      {isLoading ? (
-        <LoadingBox size={40} py={6} />
-      ) : !proposals || proposals.length === 0 ? (
-        <EmptyState
-          icon={
-            <HowToVoteOutlinedIcon
-              sx={{ fontSize: 56, color: "text.disabled" }}
-            />
-          }
-          title={`No ${status} proposals.`}
-        />
-      ) : (
-        <Box sx={{ py: 0.75 }}>
-          {proposals.map((p) => (
+      <QueryStates
+        query={query}
+        count={proposals?.length ?? 0}
+        empty={{ title: `No ${status} proposals.` }}
+        errorFallback="Could not load proposals."
+        loadingSize={40}
+        py={6}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: { xs: 1, md: 0 },
+            p: { xs: 1.5, md: 0 },
+          }}
+        >
+          {proposals?.map((p) => (
             <ProposalRow
               key={p.id}
               proposal={p}
@@ -212,54 +252,59 @@ export default function ProposalsView({
             />
           ))}
         </Box>
-      )}
+      </QueryStates>
     </>
   );
 
   if (!isDesktop) {
-    return <Box sx={{ maxWidth: 720, mx: "auto" }}>{list}</Box>;
-  }
-
-  // Desktop: a scannable list beside the full proposal, so reviewing a
-  // queue never costs a navigation round-trip.
-  return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          md: "320px minmax(0, 1fr)",
-          lg: "420px minmax(0, 1fr)",
-        },
-        height: PANEL_HEIGHT,
-      }}
-    >
-      <Box
-        sx={{
-          overflowY: "auto",
-          bgcolor: theme.tokens.surfaceLow,
-          borderRight: "1px solid",
-          borderColor: `${theme.tokens.outlineVariant}55`,
-        }}
-      >
+    return (
+      <Box sx={{ maxWidth: 720, mx: "auto" }}>
+        <PanelHeader title="Proposals" onBack={goBack} />
         {list}
       </Box>
-      <Box data-testid="proposal-pane" sx={{ overflowY: "auto" }}>
-        <Box sx={{ maxWidth: 880 }}>
-          {selected ? (
-            <ProposalDetailView proposal={selected} adminMode={adminMode} />
-          ) : (
-            <EmptyState
-              icon={
-                <HowToVoteOutlinedIcon
-                  sx={{ fontSize: 56, color: "text.disabled" }}
-                />
-              }
-              title="Select a proposal to review it."
-              py={10}
-            />
-          )}
-        </Box>
-      </Box>
-    </Box>
+    );
+  }
+
+  // Desktop: the list and the open proposal float over the map, which draws
+  // the change itself, so reviewing a queue never costs a navigation.
+  return (
+    <CanvasLayout>
+      <FloatingCard
+        id="list"
+        side="left"
+        kind="list"
+        screen="proposals"
+        title="Proposals"
+        // An empty or failed list keeps the pane's height instead of
+        // shrinking to its note.
+        fullHeight={!proposals?.length}
+        selfHeaded
+      >
+        <Box data-testid="proposal-list">{list}</Box>
+      </FloatingCard>
+      {selectedId == null && (
+        <FloatingCard
+          id="proposal"
+          side="right"
+          kind="side"
+          screen="proposals"
+          title="Proposal"
+          selfHeaded
+        >
+          <EmptyState title="Select a proposal to review it." py={4} />
+        </FloatingCard>
+      )}
+      {selectedId != null && (
+        <ProposalSideCard
+          proposal={open.proposal}
+          loading={open.isLoading}
+          error={open.error}
+          onRetry={() => open.refetch()}
+          adminMode={adminMode}
+          listStatus={status}
+          onClose={() => onSelect?.(undefined)}
+        />
+      )}
+    </CanvasLayout>
   );
 }

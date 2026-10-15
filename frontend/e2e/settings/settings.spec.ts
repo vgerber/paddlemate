@@ -26,7 +26,6 @@ test.describe("settings layout", () => {
     await page.goto("/settings");
     const list = page.getByTestId("settings-list");
     await expect(list).toBeVisible();
-    expect(await computed(list, "background-color")).toBe("rgb(238, 242, 243)");
     for (const [, label] of GROUPS) {
       await expect(list.getByRole("button", { name: label })).toBeVisible();
     }
@@ -46,6 +45,30 @@ test.describe("settings layout", () => {
 
     await page.goto("/settings?group=notifications");
     await expect(title(page, "Notifications")).toBeVisible();
+  });
+
+  test("desktop: 240 nav and 720 column, centred, no map", async ({ page }) => {
+    test.skip(!isDesktop(page), "two columns start at md");
+    for (const [w, h] of [
+      [1280, 800],
+      [1440, 900],
+      [1920, 1080],
+    ]) {
+      await page.setViewportSize({ width: w, height: h });
+      await page.goto("/settings");
+      const nav = await page.getByTestId("settings-list").boundingBox();
+      const col = await page.getByTestId("settings-detail").boundingBox();
+      expect(nav?.width).toBeCloseTo(240, 0);
+      expect(col?.width).toBeCloseTo(720, 0);
+      expect((col?.x ?? 0) - ((nav?.x ?? 0) + (nav?.width ?? 0))).toBeCloseTo(
+        32,
+        0,
+      );
+      const left = nav?.x ?? 0;
+      const right = w - ((col?.x ?? 0) + (col?.width ?? 0));
+      expect(Math.abs(left - right)).toBeLessThanOrEqual(2);
+      await expect(page.locator(".maplibregl-map")).toHaveCount(0);
+    }
   });
 
   test("phone: a list that opens each section as an overlay", async ({
@@ -94,7 +117,7 @@ test.describe("settings layout", () => {
     await expect(input).toBeVisible();
     expect(await computed(input, "font-size")).toBe("16px");
     const field = input.locator(
-      "xpath=ancestor::div[contains(@class,'MuiOutlinedInput-root')]",
+      "xpath=ancestor::div[contains(@class,'MuiInputBase-root')]",
     );
     expect((await field.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   });
@@ -198,7 +221,9 @@ test.describe("signed out", () => {
   }) => {
     await page.goto("/settings");
     await expect(page.getByText("Sign in to access settings")).toBeVisible();
-    const signIn = page.getByRole("button", { name: "Sign in", exact: true });
+    const signIn = page
+      .getByRole("main")
+      .getByRole("button", { name: "Sign in", exact: true });
     await expect(signIn).toBeVisible();
     expect(await computed(signIn, "text-transform")).toBe("none");
     expect(await computed(signIn, "background-color")).toBe(

@@ -43,7 +43,7 @@ export default function WatchList({ sections, onSelect }: Props) {
 
   if (ordered.length === 0) {
     return (
-      <Typography variant="body2" color="text.disabled" sx={{ px: 2, py: 1 }}>
+      <Typography variant="body2" color="textDisabled" sx={{ px: 2, py: 1 }}>
         Nothing on the list yet.
       </Typography>
     );

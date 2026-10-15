@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { dayTime } from "@/lib/format";
 import type { TimeRange } from "./types";
 
 export const TIME_RANGE_OPTIONS: { value: TimeRange; label: string }[] = [
@@ -65,4 +66,9 @@ export function fromForRange(range: TimeRange): string {
 
 export function typeLabel(t: string): string {
   return t === "water_level" ? "Level" : t === "discharge" ? "Flow" : t;
+}
+
+/** A point's time as the charts say it: "Oct 9, 16:48". */
+export function pointTime(ts: number): string {
+  return dayTime(new Date(ts).toISOString());
 }

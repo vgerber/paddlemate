@@ -6,6 +6,7 @@ import {
   expectTouchTargets,
   gotoSection,
 } from "../support/fixture";
+import { keepUnread } from "../support/notifications";
 
 // The app shell as the calm design draws it: a white app bar on desktop, a
 // bottom nav with a soft pill on a phone, a side panel on desktop and a
@@ -115,6 +116,7 @@ test.describe("desktop app bar", () => {
   test("the bell opens a floating card with the card radius and e2 shadow", async ({
     page,
   }) => {
+    await keepUnread(page);
     await page.goto("/tools");
     await appBar(page)
       .getByRole("button", { name: /notifications/i })
@@ -122,7 +124,9 @@ test.describe("desktop app bar", () => {
     const card = page.locator(".MuiPopover-paper");
     await expect(card).toBeVisible();
     await expect(card.getByText("Trip changes")).toBeVisible();
-    expect(await computed(card, "border-radius")).toBe("14px");
+    // Six pixels clear of the bar, not overlapping it.
+    await expect.poll(async () => (await card.boundingBox())?.y).toBe(62);
+    expect(await computed(card, "border-radius")).toBe("16px");
     expect(await computed(card, "box-shadow")).toBe(E2);
     const rows = card.getByRole("button");
     const empty = card.getByTestId("empty-state");
@@ -131,7 +135,7 @@ test.describe("desktop app bar", () => {
     await expect(card).toBeHidden();
   });
 
-  test("a section opens in the side panel beside the map, without a hard border", async ({
+  test("a section opens in the floating panel over the map, without a hard border", async ({
     page,
   }) => {
     await gotoSection(page, "lower");
@@ -143,7 +147,7 @@ test.describe("desktop app bar", () => {
       "rgb(238, 242, 243)",
     );
     const box = await panel.boundingBox();
-    expect(box?.x).toBe(0);
+    expect(box?.x).toBe(16);
     expect(box?.width).toBeGreaterThanOrEqual(400);
     await expect(
       panel.getByRole("button", { name: "Back" }).first(),
@@ -188,7 +192,7 @@ test.describe("phone bottom navigation", () => {
     await expect(current).toHaveAttribute("aria-current", "page");
     const pill = current.getByTestId("nav-pill");
     expect(await computed(pill, "color")).toBe(TEAL);
-    expect(await computed(pill, "background-color")).toBe("rgb(217, 237, 242)");
+    expect(await computed(pill, "background-color")).toBe("rgb(224, 242, 246)");
     expect(await computed(pill, "border-radius")).toBe("999px");
     const other = nav.getByRole("link", { name: "Trips" });
     await expect(other).not.toHaveAttribute("aria-current", "page");

@@ -3,11 +3,14 @@ import type { SectionNamingValue } from "./SectionNamingForm";
 import type { SectionFeatureDraft } from "./SuggestFeatureForm";
 import { buildSectionPayload } from "./sectionPayload";
 
-const naming = (overrides: Partial<SectionNamingValue> = {}) => ({
+const naming = (
+  overrides: Partial<SectionNamingValue> = {},
+): SectionNamingValue => ({
   langCode: "en",
   name: "  Lower Test  ",
   description: "",
   translations: [],
+  note: "",
   ...overrides,
 });
 
@@ -38,7 +41,18 @@ describe("buildSectionPayload", () => {
     expect(body.regions).toEqual(["Ötztal", "Tirol"]);
     expect(body.country).toBeNull();
     expect(body.description).toBeNull();
+    expect(body.proposal_note).toBeNull();
     expect(body.location).toEqual({ type: "LineString", coordinates: LINE });
+  });
+
+  test("sends the trimmed note as proposal_note", () => {
+    const body = buildSectionPayload(
+      naming({ note: "  Checked on site  " }),
+      REGION,
+      LINE,
+      [],
+    );
+    expect(body.proposal_note).toBe("Checked on site");
   });
 
   test("stores the primary naming as a tagged translation too", () => {

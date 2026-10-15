@@ -28,6 +28,8 @@
  * shortest path through the river network from put-in to take-out.
  */
 
+import type { LngLat } from "@/lib/geo";
+
 /** Rough conversion at mid latitudes; fine for the distances involved here. */
 const METERS_PER_DEGREE = 111_320;
 
@@ -44,18 +46,8 @@ const MAX_BRIDGEABLE_GAP_DEGREES = 5e-4;
 /** Maximum distance (m) a point may be from the network to attach to it. */
 const MAX_ATTACH_DISTANCE_METERS = 300;
 
-/** [longitude, latitude] pair, matching the GeoJSON axis order. */
-export type Coordinate = [number, number];
-
-export interface BoundingBox {
-  south: number;
-  west: number;
-  north: number;
-  east: number;
-}
-
 /** Approximate distance in meters between two coordinates. */
-export function distanceInMeters(a: Coordinate, b: Coordinate): number {
+export function distanceInMeters(a: LngLat, b: LngLat): number {
   const cosineLatitude = Math.cos((a[1] * Math.PI) / 180);
   const deltaX = (b[0] - a[0]) * cosineLatitude;
   const deltaY = b[1] - a[1];
@@ -63,10 +55,7 @@ export function distanceInMeters(a: Coordinate, b: Coordinate): number {
 }
 
 /** Minimum distance in meters from `point` to the polyline `line`. */
-export function distanceToLineInMeters(
-  line: Coordinate[],
-  point: Coordinate,
-): number {
+export function distanceToLineInMeters(line: LngLat[], point: LngLat): number {
   const cosineLatitude = Math.cos((point[1] * Math.PI) / 180);
   let best = Number.POSITIVE_INFINITY;
   for (let i = 0; i < line.length - 1; i++) {
@@ -82,12 +71,9 @@ export function distanceToLineInMeters(
 }
 
 /** The point on polyline `line` closest to `point`. */
-export function nearestPointOnLine(
-  line: Coordinate[],
-  point: Coordinate,
-): Coordinate {
+export function nearestPointOnLine(line: LngLat[], point: LngLat): LngLat {
   const cosineLatitude = Math.cos((point[1] * Math.PI) / 180);
-  let best: { distance: number; projected: Coordinate } = {
+  let best: { distance: number; projected: LngLat } = {
     distance: Number.POSITIVE_INFINITY,
     projected: line[0],
   };
@@ -109,11 +95,11 @@ export function nearestPointOnLine(
  * scaled degrees.
  */
 function projectPointOnSegment(
-  a: Coordinate,
-  b: Coordinate,
-  point: Coordinate,
+  a: LngLat,
+  b: LngLat,
+  point: LngLat,
   cosineLatitude: number,
-): { distance: number; projected: Coordinate } {
+): { distance: number; projected: LngLat } {
   const startX = a[0] * cosineLatitude;
   const startY = a[1];
   const deltaX = b[0] * cosineLatitude - startX;
@@ -143,20 +129,20 @@ function projectPointOnSegment(
 }
 
 /** Segment length in degrees (only used for comparisons and ratios). */
-function segmentLength(a: Coordinate, b: Coordinate): number {
+function segmentLength(a: LngLat, b: LngLat): number {
   const deltaX = b[0] - a[0];
   const deltaY = b[1] - a[1];
   return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 }
 
-function coordinatesMatch(a: Coordinate, b: Coordinate): boolean {
+function coordinatesMatch(a: LngLat, b: LngLat): boolean {
   return (
     Math.abs(a[0] - b[0]) < ENDPOINT_MATCH_EPSILON &&
     Math.abs(a[1] - b[1]) < ENDPOINT_MATCH_EPSILON
   );
 }
 
-function endpointDistance(a: Coordinate, b: Coordinate): number {
+function endpointDistance(a: LngLat, b: LngLat): number {
   return Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2);
 }
 
@@ -164,7 +150,7 @@ function endpointDistance(a: Coordinate, b: Coordinate): number {
 // Stitching way fragments into one polyline
 // ---------------------------------------------------------------------------
 
-function chainLength(chain: Coordinate[]): number {
+function chainLength(chain: LngLat[]): number {
   let length = 0;
   for (let i = 0; i < chain.length - 1; i++) {
     length += segmentLength(chain[i], chain[i + 1]);
@@ -180,10 +166,10 @@ function chainLength(chain: Coordinate[]): number {
  * small connector segment across it.
  */
 function growChain(
-  seed: Coordinate[],
-  fragments: Coordinate[][],
+  seed: LngLat[],
+  fragments: LngLat[][],
   tolerance: number,
-): Coordinate[] {
+): LngLat[] {
   let chain = seed;
   let changed = true;
   while (changed && fragments.length > 0) {
@@ -237,25 +223,25 @@ function growChain(
  *      interrupted at confluences by splits, renames or unnamed pieces.
  *   3. Return the geographically longest chain.
  */
-export function stitchWays(ways: Coordinate[][]): Coordinate[] | null {
+export function stitchWays(ways: LngLat[][]): LngLat[] | null {
   if (ways.length === 0) return null;
 
   const fragments = ways.map((way) => [...way]);
-  const chains: Coordinate[][] = [];
+  const chains: LngLat[][] = [];
   while (fragments.length > 0) {
     const seed = fragments.shift();
     if (!seed) break;
     chains.push(growChain(seed, fragments, ENDPOINT_MATCH_EPSILON));
   }
 
-  const merged: Coordinate[][] = [];
+  const merged: LngLat[][] = [];
   while (chains.length > 0) {
     const seed = chains.shift();
     if (!seed) break;
     merged.push(growChain(seed, chains, MAX_BRIDGEABLE_GAP_DEGREES));
   }
 
-  let longest: Coordinate[] | null = null;
+  let longest: LngLat[] | null = null;
   let longestLength = 0;
   for (const chain of merged) {
     const length = chainLength(chain);
@@ -277,10 +263,10 @@ export function stitchWays(ways: Coordinate[][]): Coordinate[] | null {
  * two points are too close together on the line.
  */
 export function snapSection(
-  river: Coordinate[],
+  river: LngLat[],
   putIn: { lat: number; lon: number },
   takeOut: { lat: number; lon: number },
-): Coordinate[] | null {
+): LngLat[] | null {
   const putInPosition = normalizedPositionOnLine(river, [putIn.lon, putIn.lat]);
   const takeOutPosition = normalizedPositionOnLine(river, [
     takeOut.lon,
@@ -303,10 +289,7 @@ export function snapSection(
  * Return the normalized position [0..1] along `line` of the point on it
  * closest to `point`.
  */
-function normalizedPositionOnLine(
-  line: Coordinate[],
-  point: Coordinate,
-): number {
+function normalizedPositionOnLine(line: LngLat[], point: LngLat): number {
   let bestDistanceSquared = Number.POSITIVE_INFINITY;
   let bestPosition = 0;
   let traveled = 0;
@@ -351,10 +334,10 @@ function normalizedPositionOnLine(
  * `startFraction` and `endFraction` (start < end, both in [0..1]).
  */
 function extractLineBetween(
-  line: Coordinate[],
+  line: LngLat[],
   startFraction: number,
   endFraction: number,
-): Coordinate[] | null {
+): LngLat[] | null {
   const cumulativeLengths: number[] = [0];
   for (let i = 0; i < line.length - 1; i++) {
     cumulativeLengths.push(
@@ -366,7 +349,7 @@ function extractLineBetween(
 
   const startDistance = startFraction * totalLength;
   const endDistance = endFraction * totalLength;
-  const result: Coordinate[] = [];
+  const result: LngLat[] = [];
 
   for (let i = 0; i < line.length - 1; i++) {
     const segmentStart = cumulativeLengths[i];
@@ -425,13 +408,13 @@ function extractLineBetween(
  * point is too far from the network or no path exists.
  */
 export function routeSection(
-  ways: Coordinate[][],
+  ways: LngLat[][],
   putIn: { lat: number; lon: number },
   takeOut: { lat: number; lon: number },
-): Coordinate[] | null {
+): LngLat[] | null {
   if (ways.length === 0) return null;
   const cosineLatitude = Math.cos((putIn.lat * Math.PI) / 180);
-  const metersBetween = (a: Coordinate, b: Coordinate) => {
+  const metersBetween = (a: LngLat, b: LngLat) => {
     const deltaX = (b[0] - a[0]) * cosineLatitude;
     const deltaY = b[1] - a[1];
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY) * METERS_PER_DEGREE;
@@ -439,9 +422,9 @@ export function routeSection(
 
   // Graph nodes: one per unique vertex coordinate
   const nodeIdByKey = new Map<string, number>();
-  const nodeCoordinates: Coordinate[] = [];
+  const nodeCoordinates: LngLat[] = [];
   const adjacency: Array<Array<[number, number]>> = [];
-  const nodeId = (coordinate: Coordinate) => {
+  const nodeId = (coordinate: LngLat) => {
     const key = `${coordinate[0]},${coordinate[1]}`;
     let id = nodeIdByKey.get(key);
     if (id === undefined) {
@@ -482,9 +465,7 @@ export function routeSection(
   }
 
   // Attach a point to its nearest segment via a virtual node
-  const attach = (
-    point: Coordinate,
-  ): { id: number; segmentKey: string } | null => {
+  const attach = (point: LngLat): { id: number; segmentKey: string } | null => {
     let best = {
       distance: Number.POSITIVE_INFINITY,
       segmentKey: "",
@@ -620,7 +601,7 @@ export function routeSection(
 
   if (!Number.isFinite(distances[end.id])) return null;
 
-  const path: Coordinate[] = [];
+  const path: LngLat[] = [];
   for (let node = end.id; node !== -1; node = previousNode[node]) {
     path.push(nodeCoordinates[node]);
   }

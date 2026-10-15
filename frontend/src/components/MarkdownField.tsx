@@ -181,7 +181,7 @@ export default function MarkdownField({
           {value.trim() ? (
             <MarkdownText>{value}</MarkdownText>
           ) : (
-            <Typography variant="body2" color="text.disabled">
+            <Typography variant="body2" color="textDisabled">
               Nothing to preview yet.
             </Typography>
           )}
@@ -196,6 +196,8 @@ export default function MarkdownField({
           minRows={minRows}
           fullWidth
           size="small"
+          // No label: without this the filled field keeps an empty label row.
+          hiddenLabel
         />
       )}
 

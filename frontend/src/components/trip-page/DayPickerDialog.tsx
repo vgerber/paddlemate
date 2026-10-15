@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import PanelBottomBar from "@/components/PanelBottomBar";
 import type { Trip } from "@/lib/api";
 import { useTripTimeline } from "@/lib/hooks/useTrips";
+import { runCounts } from "@/lib/tripTimeline";
 import DayCalendar from "./DayCalendar";
 
 /**
@@ -24,17 +25,14 @@ export default function DayPickerDialog({
   onClose: () => void;
 }) {
   const { days } = useTripTimeline(trip);
-  const inUse = useMemo(
-    () => new Set(days.filter((d) => d.events.length > 0).map((d) => d.date)),
-    [days],
-  );
+  const runs = useMemo(() => runCounts(days), [days]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogContent>
         <Typography
           variant="caption"
-          color="text.secondary"
+          color="textSecondary"
           sx={{ display: "block", pb: 1 }}
         >
           A dot marks a day that already has something on it. Any day works,
@@ -42,7 +40,7 @@ export default function DayPickerDialog({
         </Typography>
         <DayCalendar
           selected={null}
-          inUse={inUse}
+          runs={runs}
           from={trip.start_date}
           to={trip.end_date ?? null}
           onSelect={onSelect}

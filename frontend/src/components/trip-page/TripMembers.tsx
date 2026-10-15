@@ -1,5 +1,6 @@
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
+import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import Box from "@mui/material/Box";
@@ -10,8 +11,9 @@ import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { factLabelSx } from "@/components/Fact";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
-import LoadingBox from "@/components/states/LoadingBox";
+import QueryStates from "@/components/states/QueryStates";
 import MemberAvatar from "@/components/trips/MemberAvatar";
+import RolePill from "@/components/trips/RolePill";
 import type { TripMember, TripMemberRole } from "@/lib/api";
 import { clockTime, dateRange } from "@/lib/format";
 import {
@@ -19,7 +21,7 @@ import {
   useRemoveTripMember,
   useTripMembers,
 } from "@/lib/hooks/useTrips";
-import { alphas, fonts, labelSx, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -40,31 +42,39 @@ export default function TripMembers({
   isAdmin,
   onEditAttendance,
 }: Props) {
-  const { data: members, isLoading } = useTripMembers(tripId);
+  const membersQuery = useTripMembers(tripId);
+  const members = membersQuery.data;
   const patchMember = usePatchTripMember(tripId);
   const removeMember = useRemoveTripMember(tripId);
   const navigate = useNavigate();
   const [confirmRemove, setConfirmRemove] = useState<TripMember | null>(null);
 
-  if (isLoading) return <LoadingBox size={40} pt={6} />;
-
   const leaving = confirmRemove?.user_id === viewerId;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      {(members ?? []).map((m) => (
-        <MemberRow
-          key={m.user_id}
-          member={m}
-          isSelf={m.user_id === viewerId}
-          isAdmin={isAdmin}
-          onRoleChange={(role) =>
-            patchMember.mutate({ userId: m.user_id, body: { role } })
-          }
-          onEditAttendance={() => onEditAttendance(m)}
-          onRemove={() => setConfirmRemove(m)}
-        />
-      ))}
+      <QueryStates
+        query={membersQuery}
+        count={members?.length ?? 0}
+        errorFallback="Could not load the members."
+        loadingSize={40}
+        py={6}
+        empty={{ icon: <GroupOutlinedIcon />, title: "No members yet." }}
+      >
+        {(members ?? []).map((m) => (
+          <MemberRow
+            key={m.user_id}
+            member={m}
+            isSelf={m.user_id === viewerId}
+            isAdmin={isAdmin}
+            onRoleChange={(role) =>
+              patchMember.mutate({ userId: m.user_id, body: { role } })
+            }
+            onEditAttendance={() => onEditAttendance(m)}
+            onRemove={() => setConfirmRemove(m)}
+          />
+        ))}
+      </QueryStates>
 
       <ConfirmDialog
         open={confirmRemove !== null}
@@ -212,6 +222,8 @@ function MemberRow({
           <Typography
             sx={{
               ...factLabelSx,
+              fontSize: "0.8125rem",
+              fontWeight: 400,
               fontVariantNumeric: "tabular-nums",
               color: attendance ? "text.secondary" : "text.disabled",
             }}
@@ -222,18 +234,9 @@ function MemberRow({
         </Box>
       </ButtonBase>
 
-      <Typography
-        data-testid="member-role"
-        sx={{
-          ...labelSx,
-          px: 1,
-          py: 0.25,
-          borderRadius: `${tokens.radii.pill}px`,
-          bgcolor: `${tokens.primary}${alphas.tint}`,
-        }}
-      >
+      <RolePill testId="member-role">
         {member.role === "admin" ? "Admin" : "Member"}
-      </Typography>
+      </RolePill>
       <RowMenu actions={actions} label={`Actions for ${member.username}`} />
     </Box>
   );

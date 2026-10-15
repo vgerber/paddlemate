@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 import { useEffect } from "react";
 import type { MapRef } from "react-map-gl/maplibre";
+import { applyCalmStyle } from "./calmStyle";
 
 const ROAD_LINE = /^(road|bridge|tunnel)_(?!.*rail)/;
 const ROAD_LABEL = /^(highway-|road_shield|road_one_way)/;
@@ -30,12 +31,15 @@ export function useMutedBaseMap(
           }
           map.setPaintProperty(layer.id, "line-opacity", MUTED_ROAD_OPACITY);
         } else if (layer.type === "symbol" && ROAD_LABEL.test(layer.id)) {
+          if (map.getLayoutProperty(layer.id, "visibility") === "none")
+            continue;
           labels.add(layer.id);
           map.setLayoutProperty(layer.id, "visibility", "none");
         }
       }
     };
-    if (map.isStyleLoaded()) apply();
+    // isStyleLoaded() is false while tiles load, so it cannot gate this.
+    if (map.getStyle()) apply();
     map.on("style.load", apply);
     return () => {
       map.off("style.load", apply);
@@ -52,4 +56,29 @@ export function useMutedBaseMap(
       }
     };
   }, [mapRef, ready, active, styleKey]);
+}
+
+/** Restyles the vector base map to the calm look at every zoom (see
+ * `applyCalmStyle`). Runs after every style load, so it also covers the swap
+ * back from satellite. */
+export function useCalmBaseMap(
+  mapRef: RefObject<MapRef | null>,
+  ready: boolean,
+  enabled: boolean,
+  styleKey: string,
+) {
+  // styleKey only re-runs the effect when the base style is swapped.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: see above
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || !ready || !enabled) return;
+    const apply = () => applyCalmStyle(map);
+    // isStyleLoaded() is false while tiles load, so it cannot gate this: the
+    // style JSON being there is enough to restyle its layers.
+    apply();
+    map.on("style.load", apply);
+    return () => {
+      map.off("style.load", apply);
+    };
+  }, [mapRef, ready, enabled, styleKey]);
 }

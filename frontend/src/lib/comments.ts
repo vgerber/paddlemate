@@ -10,15 +10,15 @@ export const CATEGORY_META: Record<
   CommentCategory,
   { label: string; color?: string }
 > = {
-  // levels.high.color, not levels.high.marker: the marker red measures
-  // 4.44:1 as text on surface, a hair under the 4.5 AA floor.
-  urgent: { label: "Urgent", color: tokens.levels.high.text },
-  danger_temporary: { label: "Hazard", color: tokens.levels.medium.marker },
+  // Text tokens, not the saturated map markers: the marker hues fall under
+  // the 4.5 AA floor as text on surface.
+  urgent: { label: "Urgent", color: tokens.error },
+  danger_temporary: { label: "Hazard", color: tokens.error },
   danger_permanent: {
     label: "Permanent hazard",
-    color: tokens.levels.medium.marker,
+    color: tokens.levels.medium.text,
   },
-  danger_cleared: { label: "Hazard cleared", color: tokens.levels.low.marker },
+  danger_cleared: { label: "Hazard cleared", color: tokens.levels.low.text },
   calibration: { label: "Gauge" },
   difficulty: { label: "Difficulty" },
   current_conditions: { label: "Conditions" },

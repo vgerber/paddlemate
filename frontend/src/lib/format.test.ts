@@ -3,11 +3,13 @@ import {
   clockTime,
   dateAndTime,
   dateRange,
+  dayTime,
   durationLabel,
   formatDate,
   formatReading,
   formatTime,
   humanize,
+  readingTime,
   sectionPlace,
   timeAgo,
   todayIso,
@@ -171,5 +173,20 @@ describe("calendar days", () => {
     // Built from local parts, so this holds in every timezone the suite runs
     // in - run it with TZ=America/New_York to see it bite.
     expect(formatDate("2026-06-01")).toBe("01 Jun 2026");
+  });
+});
+
+describe("readingTime", () => {
+  const now = new Date(2026, 9, 14, 20, 0);
+
+  test("today's reading is just the time", () => {
+    const at = new Date(2026, 9, 14, 8, 5).toISOString();
+    expect(readingTime(at, now)).toBe(formatTime(at));
+  });
+
+  test("an older reading adds its day", () => {
+    const at = new Date(2026, 9, 9, 16, 48).toISOString();
+    expect(readingTime(at, now)).toBe(dayTime(at));
+    expect(dayTime(at)).toEndWith(", 16:48");
   });
 });

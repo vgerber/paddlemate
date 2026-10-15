@@ -1,7 +1,16 @@
+import type { ExpressionSpecification } from "maplibre-gl";
+import { useMemo } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
 import { theme } from "@/lib/theme";
+import { useFeatureNumbers } from "./featureNumbers";
 
 const { tokens } = theme;
+
+const EMPTY: ReadonlyMap<number, number> = new Map();
+
+/** A numbered pin is the design's 26px disc with its white ring. */
+const PIN_R = 11;
+const HAS_NUM: ExpressionSpecification = ["has", "num"];
 
 interface FeatureGeoJSONLayersProps {
   lines: GeoJSON.FeatureCollection;
@@ -10,13 +19,30 @@ interface FeatureGeoJSONLayersProps {
   points: GeoJSON.FeatureCollection;
   showNames: boolean;
   /** Proposed (pending) features render like confirmed markers but with a
-   * white ring/casing (confirmed use a dark one), which also keeps them
-   * visible on satellite imagery. */
+   * wider casing and a dashed line. */
   proposed?: boolean;
 }
 
+/** The collection with each feature's number (matching its row in the card)
+ * in its properties. */
+function withNumbers(
+  fc: GeoJSON.FeatureCollection,
+  numbers: ReadonlyMap<number, number>,
+): GeoJSON.FeatureCollection {
+  if (numbers.size === 0) return fc;
+  return {
+    ...fc,
+    features: fc.features.map((f) => {
+      const num = numbers.get(Number(f.properties?.id));
+      return num == null ? f : { ...f, properties: { ...f.properties, num } };
+    }),
+  };
+}
+
 /** The four-source stack for feature markers (lines, line labels, line
- * endpoints, points) - one implementation for confirmed and proposed. */
+ * endpoints, points) - one implementation for confirmed and proposed.
+ * Confirmed features carry the number of their row in the card; proposals
+ * have none. */
 export default function FeatureGeoJSONLayers({
   lines,
   lineLabels,
@@ -25,26 +51,55 @@ export default function FeatureGeoJSONLayers({
   showNames,
   proposed = false,
 }: FeatureGeoJSONLayersProps) {
+  const open = useFeatureNumbers();
+  const numbers = proposed ? EMPTY : open;
+  const numberedPoints = useMemo(
+    () => withNumbers(points, numbers),
+    [points, numbers],
+  );
+  const numberedLabels = useMemo(
+    () => withNumbers(lineLabels, numbers),
+    [lineLabels, numbers],
+  );
+
   const p = proposed ? "proposed-feature" : "feature";
-  const ringColor = proposed ? tokens.white : tokens.background;
+  const ringColor = tokens.white;
   const lineOffset: ["*", ["get", "stack"], number] = [
     "*",
     ["get", "stack"],
     proposed ? 7 : 5,
   ];
-  const labelLayout = (offset: number) => ({
+  const labelLayout = (
+    anchor: "left" | "center",
+    offset: [number, number],
+    numberedOffset: [number, number],
+  ) => ({
     "text-field": ["get", "label"] as ["get", string],
-    "text-size": 11,
-    "text-font": ["Noto Sans Regular"],
-    "text-anchor": "top" as const,
-    "text-offset": [0, offset] as [number, number],
+    "text-size": 12,
+    "text-font": ["Noto Sans Bold"],
+    "text-anchor": anchor,
+    "text-offset": [
+      "case",
+      HAS_NUM,
+      ["literal", numberedOffset],
+      ["literal", offset],
+    ] as ExpressionSpecification,
+    "text-justify": "left" as const,
     visibility: (showNames ? "visible" : "none") as "visible" | "none",
   });
   const labelPaint = {
     "text-color": tokens.mapLabelText,
     "text-halo-color": tokens.mapLabelHalo,
-    "text-halo-width": 1.5,
+    "text-halo-width": 2,
   };
+  const numberLayout = {
+    "text-field": ["to-string", ["get", "num"]] as ExpressionSpecification,
+    "text-size": 12,
+    "text-font": ["Noto Sans Bold"],
+    "text-allow-overlap": true,
+    "text-ignore-placement": true,
+  };
+  const numberPaint = { "text-color": tokens.onPrimary };
 
   return (
     <>
@@ -83,15 +138,6 @@ export default function FeatureGeoJSONLayers({
         />
       </Source>
 
-      <Source id={`${p}-line-labels`} type="geojson" data={lineLabels}>
-        <Layer
-          id={`${p}-lines-label`}
-          type="symbol"
-          layout={labelLayout(0.6)}
-          paint={labelPaint}
-        />
-      </Source>
-
       <Source id={`${p}-line-endpoints`} type="geojson" data={lineEndpoints}>
         <Layer
           id={`${p}-line-endpoints-circle`}
@@ -105,21 +151,55 @@ export default function FeatureGeoJSONLayers({
         />
       </Source>
 
-      <Source id={`${p}-points`} type="geojson" data={points}>
+      <Source id={`${p}-line-labels`} type="geojson" data={numberedLabels}>
         <Layer
-          id={`${p}-points-circle`}
+          id={`${p}-lines-pin`}
           type="circle"
+          filter={HAS_NUM}
           paint={{
-            "circle-radius": 7,
-            "circle-color": ["get", "color"],
-            "circle-stroke-width": proposed ? 2.5 : 2,
+            "circle-radius": PIN_R,
+            "circle-color": tokens.primary,
+            "circle-stroke-width": 2.5,
             "circle-stroke-color": ringColor,
           }}
         />
         <Layer
+          id={`${p}-lines-pin-number`}
+          type="symbol"
+          filter={HAS_NUM}
+          layout={numberLayout}
+          paint={numberPaint}
+        />
+        <Layer
+          id={`${p}-lines-label`}
+          type="symbol"
+          layout={labelLayout("center", [0, 0.6], [0, 1.8])}
+          paint={labelPaint}
+        />
+      </Source>
+
+      <Source id={`${p}-points`} type="geojson" data={numberedPoints}>
+        <Layer
+          id={`${p}-points-circle`}
+          type="circle"
+          paint={{
+            "circle-radius": ["case", HAS_NUM, PIN_R, 3.5],
+            "circle-color": ["case", HAS_NUM, tokens.primary, ["get", "color"]],
+            "circle-stroke-width": 2.5,
+            "circle-stroke-color": ringColor,
+          }}
+        />
+        <Layer
+          id={`${p}-points-number`}
+          type="symbol"
+          filter={HAS_NUM}
+          layout={numberLayout}
+          paint={numberPaint}
+        />
+        <Layer
           id={`${p}-points-label`}
           type="symbol"
-          layout={labelLayout(0.9)}
+          layout={labelLayout("left", [0.9, 0], [1.5, 0])}
           paint={labelPaint}
         />
       </Source>

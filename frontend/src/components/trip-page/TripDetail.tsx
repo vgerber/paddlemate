@@ -1,8 +1,12 @@
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import PanelHeader from "@/components/PanelHeader";
+import RowMenu from "@/components/RowMenu";
+import { SwipeGhost } from "@/components/SwipeGhost";
 import TripForm from "@/components/trips/TripForm";
 import type { Descent, Trip, TripMember, TripStay } from "@/lib/api";
 import { dateRange } from "@/lib/format";
@@ -21,7 +25,7 @@ import DayPickerDialog from "./DayPickerDialog";
 import LinkDescentDialog from "./LinkDescentDialog";
 import StayDialog from "./StayDialog";
 import StaySectionsDialog from "./StaySectionsDialog";
-import TripFab from "./TripFab";
+import TripFab, { TripDock } from "./TripFab";
 import TripLogs from "./TripLogs";
 import TripMembers from "./TripMembers";
 import TripStays from "./TripStays";
@@ -42,9 +46,13 @@ interface Props {
   onEditingChange: (editing: boolean) => void;
   /** Leaving the trip: back on mobile, deselect in the desktop two-pane. */
   onClose: () => void;
-  /** Rendered beside the trips list, which holds the way back - so the panel
-   * keeps its title and drops only the back arrow. */
+  /** Rendered in the canvas card, which brings no title row of its own. */
   embedded?: boolean;
+  /** The canvas draws the bases behind the cards, so the Bases tab drops its
+   * inline map. */
+  canvasMap?: boolean;
+  /** The members have a card of their own, so the Members tab goes. */
+  membersCard?: boolean;
   onDeleted: () => void;
 }
 
@@ -63,6 +71,8 @@ export default function TripDetail({
   onClose,
   onDeleted,
   embedded = false,
+  canvasMap = false,
+  membersCard = false,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSession();
@@ -71,7 +81,10 @@ export default function TripDetail({
   const deleteStay = useDeleteTripStay(trip.id);
   const linkDescent = useLinkDescentToTrip(trip.id);
 
-  const [tab, setTab] = useState<TripTab>("plan");
+  const [openTab, setTab] = useState<TripTab>("plan");
+  const tabs = membersCard ? TABS.filter((t) => t.value !== "members") : TABS;
+  // The members card appearing under an open Members tab falls back to Plan.
+  const tab = tabs.some((t) => t.value === openTab) ? openTab : "plan";
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [addingMember, setAddingMember] = useState(false);
   const [proposing, setProposing] = useState(false);
@@ -93,11 +106,11 @@ export default function TripDetail({
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [pickingDay, setPickingDay] = useState(false);
 
-  const tabIndex = TABS.findIndex((t) => t.value === tab);
+  const tabIndex = tabs.findIndex((t) => t.value === tab);
   const swipe = useSwipeTabs({
     index: tabIndex,
-    count: TABS.length,
-    onIndexChange: (i) => setTab(TABS[i].value),
+    count: tabs.length,
+    onIndexChange: (i) => setTab(tabs[i].value),
     enabled: !editing,
   });
 
@@ -110,6 +123,7 @@ export default function TripDetail({
     return (
       <TripForm
         trip={trip}
+        embedded={embedded}
         onSave={() => onEditingChange(false)}
         onCancel={() => onEditingChange(false)}
       />
@@ -152,82 +166,146 @@ export default function TripDetail({
     onDeleteStay: setConfirmDeleteStay,
   };
 
+  const paneSx = () => ({
+    flex: 1,
+    minHeight: 0,
+    display: "flex",
+    flexDirection: "column",
+  });
+
+  const paneBody = (t: TripTab) => {
+    if (t === "plan") {
+      return (
+        <TripTimeline
+          trip={trip}
+          openDay={openDay}
+          onToggleDay={(date) =>
+            setOpenDay((current) => (current === date ? null : date))
+          }
+          actions={dayActions}
+          wide={canvasMap}
+          membersBelow={!membersCard}
+        />
+      );
+    }
+    return (
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          overscrollBehavior: "contain",
+          touchAction: "pan-y",
+          px: 1.5,
+          py: 1.5,
+          // Leave room so the FAB never covers the last row.
+          pb: { xs: 12, md: 2 },
+        }}
+      >
+        {t === "bases" && (
+          <TripStays
+            tripId={trip.id}
+            isMember={isMember}
+            isAdmin={isAdmin}
+            viewerId={viewerId}
+            showMap={!canvasMap}
+            onLogSection={newLog}
+            {...stayActions}
+          />
+        )}
+        {t === "members" && (
+          <TripMembers
+            tripId={trip.id}
+            viewerId={viewerId}
+            isAdmin={isAdmin}
+            onEditAttendance={(member) => setAttendanceFor({ member })}
+          />
+        )}
+        {t === "logs" && (
+          <TripLogs
+            tripId={trip.id}
+            viewerId={viewerId}
+            isMember={isMember}
+            onOpen={openLog}
+            onCopy={copyLog}
+            onUnlink={setConfirmUnlink}
+          />
+        )}
+      </Box>
+    );
+  };
+
   return (
     <>
       <PanelHeader
         title={trip.name}
         subtitle={dateRange(trip.start_date, trip.end_date)}
-        onBack={embedded ? undefined : onClose}
+        onBack={onClose}
+        actionButton={
+          isAdmin ? (
+            <RowMenu
+              label="Trip actions"
+              actions={[
+                {
+                  label: "Edit trip",
+                  icon: <EditOutlinedIcon />,
+                  onClick: () => onEditingChange(true),
+                },
+                {
+                  label: "Delete trip",
+                  icon: <DeleteOutlinedIcon />,
+                  danger: true,
+                  onClick: () => setConfirmDelete(true),
+                },
+              ]}
+            />
+          ) : undefined
+        }
         tabs={{
           value: tab,
           onChange: setTab,
-          options: TABS.map((t) => ({ value: t.value, label: t.label })),
-          progress: swipe.progress,
-          dragging: swipe.dragging,
+          options: tabs.map((t) => ({ value: t.value, label: t.label })),
+          track: swipe.track,
           gesture: swipe.gestureProps,
         }}
       />
 
       <Box
-        data-testid="trip-pane"
-        {...swipe.paneProps}
-        sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+        sx={{
+          position: "relative",
+          overflowX: "clip",
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
-        {tab === "plan" ? (
-          <TripTimeline
-            trip={trip}
-            openDay={openDay}
-            onToggleDay={(date) =>
-              setOpenDay((current) => (current === date ? null : date))
-            }
-            actions={dayActions}
-          />
-        ) : (
-          <Box
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              overflowY: "auto",
-              overscrollBehavior: "contain",
-              touchAction: "pan-y",
-              px: 1.5,
-              py: 1.5,
-              // Leave room so the FAB never covers the last row.
-              pb: 12,
-            }}
-          >
-            {tab === "bases" && (
-              <TripStays
-                tripId={trip.id}
-                isMember={isMember}
-                isAdmin={isAdmin}
-                viewerId={viewerId}
-                onLogSection={newLog}
-                {...stayActions}
-              />
-            )}
-            {tab === "members" && (
-              <TripMembers
-                tripId={trip.id}
-                viewerId={viewerId}
-                isAdmin={isAdmin}
-                onEditAttendance={(member) => setAttendanceFor({ member })}
-              />
-            )}
-            {tab === "logs" && (
-              <TripLogs
-                tripId={trip.id}
-                viewerId={viewerId}
-                isMember={isMember}
-                onOpen={openLog}
-                onCopy={copyLog}
-                onUnlink={setConfirmUnlink}
-              />
-            )}
-          </Box>
-        )}
+        <Box data-testid="trip-pane" {...swipe.paneProps} sx={paneSx()}>
+          {paneBody(tab)}
+        </Box>
+        <SwipeGhost
+          swipe={swipe}
+          index={tabIndex}
+          count={tabs.length}
+          sx={() => paneSx()}
+        >
+          {(i) => paneBody(tabs[i].value)}
+        </SwipeGhost>
       </Box>
 
+      <TripDock
+        tab={tab}
+        isMember={isMember}
+        isAdmin={isAdmin}
+        hasSelf={self !== null}
+        onAddMember={() => setAddingMember(true)}
+        onAddDay={() => setPickingDay(true)}
+        onAddStay={() => setStayEditor("new")}
+        onProposeStay={() => setProposing(true)}
+        onEditAttendance={() => self && setAttendanceFor({ member: self })}
+        onLinkLog={() => setLinking(true)}
+        onNewLog={() => newLog()}
+      />
       <TripFab
         tab={tab}
         isMember={isMember}
@@ -240,8 +318,6 @@ export default function TripDetail({
         onEditAttendance={() => self && setAttendanceFor({ member: self })}
         onLinkLog={() => setLinking(true)}
         onNewLog={() => newLog()}
-        onEdit={() => onEditingChange(true)}
-        onDelete={() => setConfirmDelete(true)}
       />
 
       {pickingDay && (

@@ -4,8 +4,9 @@ import ButtonBase from "@mui/material/ButtonBase";
 import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import type { GeoJSONSource } from "maplibre-gl";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import MapGL, {
   Layer,
   type MapLayerMouseEvent,
@@ -16,6 +17,9 @@ import MapGL, {
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { LIBERTY_STYLE } from "@/components/map/mapStyles";
+import { useCalmBaseMap } from "@/components/map/useMutedBaseMap";
+import EmptyState from "@/components/states/EmptyState";
+import ErrorState from "@/components/states/ErrorState";
 import type { GaugeMapState } from "@/lib/api";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
 import { labelSx, theme } from "@/lib/theme";
@@ -42,13 +46,13 @@ const STATES: {
   {
     key: "fetched",
     label: "Tracked",
-    color: tokens.mapSectionLine,
+    color: tokens.gaugeTracked,
     help: "We collect its data, but no section uses it yet",
   },
   {
     key: "available",
     label: "Untracked",
-    color: tokens.outline,
+    color: tokens.gaugeUntracked,
     help: "A known station we don't collect yet - can be added",
   },
 ];
@@ -68,9 +72,16 @@ interface ClusterInfo {
  * clustered into donut charts; legend rows toggle each state. */
 export default function GaugeCatalogMap() {
   const mapRef = useRef<MapRef>(null);
-  const { data: points, isLoading, isError } = useGaugeMap();
+  const { data: points, isLoading, isError, error, refetch } = useGaugeMap();
+  const [mapLoaded, setMapLoaded] = useState(false);
+  useCalmBaseMap(mapRef, mapLoaded, true, "liberty");
   const [hidden, setHidden] = useState<Set<GaugeMapState>>(new Set());
   const [selected, setSelected] = useState<MapGroup | null>(null);
+  // On a phone the legend starts folded to a chip so it does not cover the map.
+  const phone = !useMediaQuery(theme.breakpoints.up("md"));
+  const [legendOpen, setLegendOpen] = useState<boolean | null>(null);
+  const noData = isError || (!isLoading && !points?.length);
+  const expanded = legendOpen ?? !phone;
   const [clusters, setClusters] = useState<ClusterInfo[]>([]);
   // Signature of the last cluster set, so frequent render events only trigger a
   // React update when the clusters actually changed.
@@ -172,7 +183,10 @@ export default function GaugeCatalogMap() {
         mapStyle={LIBERTY_STYLE}
         interactiveLayerIds={[POINT_LAYER]}
         onClick={handleClick}
-        onLoad={refreshClusters}
+        onLoad={() => {
+          setMapLoaded(true);
+          refreshClusters();
+        }}
         onIdle={refreshClusters}
       >
         <NavigationControl position="top-right" />
@@ -214,8 +228,8 @@ export default function GaugeCatalogMap() {
                 "used",
                 tokens.success,
                 "fetched",
-                tokens.mapSectionLine,
-                tokens.outline,
+                tokens.gaugeTracked,
+                tokens.gaugeUntracked,
               ],
               "circle-stroke-width": 1,
               "circle-stroke-color": tokens.surface,
@@ -298,82 +312,143 @@ export default function GaugeCatalogMap() {
       </MapGL>
 
       {/* Legend + per-state filter (bottom-left, mirrors LabelModeToggle). */}
-      <Box
-        data-testid="gauge-legend"
-        sx={{
-          position: "absolute",
-          bottom: 14,
-          left: 10,
-          zIndex: 10,
-          width: 220,
-          maxWidth: "calc(100% - 20px)",
-          bgcolor: tokens.surface,
-          borderRadius: `${tokens.radii.md}px`,
-          boxShadow: tokens.elevation.e2,
-          overflow: "hidden",
-          py: 0.5,
-        }}
-      >
-        <Typography sx={{ ...labelSx, display: "block", px: 1.5, pt: 0.75 }}>
-          Gauges
-        </Typography>
-        {STATES.map((s) => {
-          const off = hidden.has(s.key);
-          return (
+      {!noData && (
+        <Box
+          data-testid="gauge-legend"
+          sx={{
+            position: "absolute",
+            bottom: 14,
+            left: 10,
+            zIndex: 10,
+            width: expanded ? 250 : "auto",
+            maxWidth: "calc(100% - 20px)",
+            bgcolor: tokens.surface,
+            borderRadius: `${tokens.radii.md}px`,
+            boxShadow: tokens.elevation.e2,
+            overflow: "hidden",
+            display: "grid",
+            gap: "10px",
+            p: expanded ? "12px 14px" : 0,
+          }}
+        >
+          {phone && !expanded ? (
             <ButtonBase
-              key={s.key}
-              onClick={() => toggle(s.key)}
-              title={`Click to ${off ? "show" : "hide"}`}
+              onClick={() => setLegendOpen(true)}
+              aria-expanded={false}
               sx={{
-                display: "flex",
-                alignItems: "flex-start",
                 gap: 1,
-                width: "100%",
-                minHeight: tokens.touch.min,
                 px: 1.5,
-                py: 0.75,
-                textAlign: "left",
-                opacity: off ? 0.45 : 1,
+                minHeight: tokens.touch.min,
+                fontSize: "0.875rem",
+                fontWeight: 600,
               }}
             >
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  bgcolor: s.color,
-                  flexShrink: 0,
-                  mt: 0.35,
-                }}
-              />
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                  <Typography
-                    variant="caption"
-                    sx={{ flex: 1, fontWeight: 600 }}
-                  >
-                    {s.label}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {counts[s.key].toLocaleString()}
-                  </Typography>
-                </Box>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{
-                    display: "block",
-                    fontSize: "0.75rem",
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {s.help}
-                </Typography>
+              Gauges
+              <Box sx={{ display: "flex", gap: 0.5 }}>
+                {STATES.map((s) => (
+                  <Box
+                    key={s.key}
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      bgcolor: s.color,
+                    }}
+                  />
+                ))}
               </Box>
             </ButtonBase>
-          );
-        })}
-      </Box>
+          ) : (
+            <>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Typography
+                  sx={{ flex: 1, fontSize: "0.875rem", fontWeight: 700 }}
+                >
+                  Gauges
+                </Typography>
+                {phone && (
+                  <IconButton
+                    aria-label="Fold the legend"
+                    aria-expanded
+                    onClick={() => setLegendOpen(false)}
+                    sx={{
+                      m: -1.5,
+                      width: tokens.touch.min,
+                      height: tokens.touch.min,
+                    }}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                )}
+              </Box>
+              {STATES.map((s) => {
+                const off = hidden.has(s.key);
+                return (
+                  <ButtonBase
+                    key={s.key}
+                    onClick={() => toggle(s.key)}
+                    title={`Click to ${off ? "show" : "hide"}`}
+                    sx={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 1,
+                      width: "100%",
+                      minHeight: tokens.touch.min,
+                      textAlign: "left",
+                      opacity: off ? 0.45 : 1,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: "50%",
+                        bgcolor: s.color,
+                        flexShrink: 0,
+                        mt: "5px",
+                      }}
+                    />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "baseline", gap: 1 }}
+                      >
+                        <Typography
+                          sx={{
+                            flex: 1,
+                            fontSize: "0.875rem",
+                            lineHeight: "20px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {s.label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: "0.8125rem",
+                            fontWeight: 600,
+                            color: tokens.onSurfaceVariant,
+                          }}
+                        >
+                          {counts[s.key].toLocaleString()}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        sx={{
+                          fontSize: "0.8125rem",
+                          lineHeight: "18px",
+                          color: tokens.onSurfaceVariant,
+                        }}
+                      >
+                        {s.help}
+                      </Typography>
+                    </Box>
+                  </ButtonBase>
+                );
+              })}
+            </>
+          )}
+        </Box>
+      )}
 
       {/* Detail card: the merged location and every gauge reported there. */}
       {selected && (
@@ -452,7 +527,7 @@ export default function GaugeCatalogMap() {
                     </Typography>
                     <Typography
                       variant="caption"
-                      color="text.secondary"
+                      color="textSecondary"
                       sx={{ display: "block" }}
                     >
                       {m.provider} · {meta.label}
@@ -491,25 +566,44 @@ export default function GaugeCatalogMap() {
         </Box>
       )}
       {isError && (
-        <Box
-          sx={{
-            position: "absolute",
-            top: 14,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 10,
-            bgcolor: tokens.surface,
-            borderRadius: `${tokens.radii.pill}px`,
-            boxShadow: tokens.elevation.e2,
-            px: 1.5,
-            py: 0.75,
-          }}
-        >
-          <Typography variant="caption" color="error">
-            Could not load the gauge map.
-          </Typography>
-        </Box>
+        <GaugeMapNote>
+          <ErrorState
+            error={error}
+            fallback="Could not load the gauge map."
+            onRetry={() => refetch()}
+          />
+        </GaugeMapNote>
       )}
+      {!isLoading && !isError && groups.length === 0 && (
+        <GaugeMapNote>
+          <EmptyState
+            title="No gauges to show"
+            caption="None are mapped yet."
+          />
+        </GaugeMapNote>
+      )}
+    </Box>
+  );
+}
+
+/** A state note floating over the map: the map has nothing to show, so the
+ * legend gives way to it. */
+function GaugeMapNote({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      sx={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: 10,
+        width: "min(320px, calc(100% - 32px))",
+        bgcolor: tokens.surface,
+        borderRadius: `${tokens.radii.md}px`,
+        boxShadow: tokens.elevation.e2,
+      }}
+    >
+      {children}
     </Box>
   );
 }
@@ -578,17 +672,14 @@ function DonutCluster({
   const r = total >= 1000 ? 26 : total >= 100 ? 22 : total >= 30 ? 18 : 15;
   const r0 = Math.round(r * 0.62);
   const w = r * 2;
-  const segments = STATES.map((s) => ({
-    key: s.key,
-    color: s.color,
-    value: counts[s.key],
-  })).filter((s) => s.value > 0);
-
+  // Only the gauges we collect from are drawn as arcs; the untracked share is
+  // left as the bare disc, so grey never dominates the map.
   let cum = 0;
-  const slices = segments.map((s) => {
+  const slices = STATES.flatMap((s) => {
     const start = cum / total;
-    cum += s.value;
-    return { key: s.key, color: s.color, start, end: cum / total };
+    cum += counts[s.key];
+    if (s.key === "available" || counts[s.key] === 0) return [];
+    return [{ key: s.key, color: s.color, start, end: cum / total }];
   });
 
   return (
@@ -601,23 +692,29 @@ function DonutCluster({
     >
       <title>{`${total} gauges`}</title>
       <g transform={`translate(${r}, ${r})`}>
-        {slices.length === 1 ? (
-          <circle r={r} fill={slices[0].color} />
-        ) : (
-          slices.map((s) => (
+        <circle
+          r={r}
+          fill={tokens.surface}
+          stroke={tokens.outlineVariant}
+          strokeWidth={1}
+        />
+        {slices.map((s) =>
+          s.end - s.start > 0.999 ? (
+            <circle key={s.key} r={r} fill={s.color} />
+          ) : (
             <path
               key={s.key}
               d={donutSegment(s.start, s.end, r, r0)}
               fill={s.color}
             />
-          ))
+          ),
         )}
         <circle r={r0} fill={tokens.surface} />
         <text
           textAnchor="middle"
           dominantBaseline="central"
           fontSize={total >= 1000 ? 10 : 11}
-          fontWeight={600}
+          fontWeight={700}
           fill={tokens.onSurface}
         >
           {abbrev(total)}

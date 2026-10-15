@@ -37,7 +37,7 @@ export default function FormSection({
           {hint && (
             <Typography
               variant="body2"
-              color="text.secondary"
+              color="textSecondary"
               sx={{ display: "block" }}
             >
               {hint}

@@ -1,7 +1,12 @@
+import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import Typography from "@mui/material/Typography";
-import { theme } from "@/lib/theme";
+import Paper, { type PaperProps } from "@mui/material/Paper";
+import Popover from "@mui/material/Popover";
+import { type ReactNode, useState } from "react";
+import { alphas, theme } from "@/lib/theme";
+import type { MapPadding } from "./Map";
+import { BELOW_ZOOM, stackOffset } from "./MapCompass";
 
 const { tokens } = theme;
 
@@ -15,116 +20,208 @@ interface LabelModeToggleProps {
    * handler is omitted, the toggle is hidden. */
   featureNames?: boolean;
   onFeatureNamesChange?: (v: boolean) => void;
-  bottomOffset?: number;
-  anchor?: "top" | "bottom";
+  /** Free-area edges on a canvas screen; without it the key sits in the
+   * map's own top-right corner stack. */
+  inset?: MapPadding;
 }
 
-const captionSx = {
-  px: 1.5,
-  pt: 1,
-  pb: 0.25,
-  fontSize: "0.75rem",
-  fontWeight: 600,
-  color: tokens.onSurfaceVariant,
-  lineHeight: 1.4,
-} as const;
+/** A recessed track holding cells; the set ones are white pills. */
+function Track({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        gap: "2px",
+        p: "2px",
+        bgcolor: tokens.surfaceLow,
+        border: `1px solid ${tokens.outlineVariant}`,
+        borderRadius: `${tokens.radii.sm}px`,
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
 
-const rule = `1px solid ${tokens.outlineVariant}`;
+function Cell({
+  active,
+  title,
+  onClick,
+  flex,
+  children,
+}: {
+  active: boolean;
+  title: string;
+  onClick: () => void;
+  flex?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <ButtonBase
+      onClick={onClick}
+      title={title}
+      aria-pressed={active}
+      sx={{
+        flex: flex ? 1 : "0 1 auto",
+        px: 1.5,
+        minHeight: tokens.touch.min,
+        whiteSpace: "nowrap",
+        fontSize: "0.8125rem",
+        fontWeight: active ? 600 : 500,
+        color: active ? tokens.onSurface : tokens.onSurfaceVariant,
+        bgcolor: active ? tokens.surface : "transparent",
+        boxShadow: active ? tokens.elevation.e1 : "none",
+        borderRadius: `${tokens.radii.sm - 2}px`,
+        "&:hover": { bgcolor: active ? tokens.surface : tokens.surfaceHighest },
+      }}
+    >
+      {children}
+    </ButtonBase>
+  );
+}
 
-/** Map layer controls: what section labels say, feature-name visibility,
- * and the satellite base layer. A white floating group like the zoom
- * buttons, every button a full touch target. */
-export default function LabelModeToggle({
+/** The layer choices: what section labels say, feature-name visibility and
+ * the satellite base layer. */
+function Choices({
   labelMode,
   onChange,
   satellite,
   onSatelliteChange,
   featureNames,
   onFeatureNamesChange,
-  bottomOffset = 0,
-  anchor = "bottom",
-}: LabelModeToggleProps) {
-  const btn = (active: boolean) =>
-    ({
-      px: 1.5,
-      minHeight: tokens.touch.min,
-      whiteSpace: "nowrap",
-      fontSize: "0.8125rem",
-      fontWeight: active ? 600 : 500,
-      color: active ? tokens.onPrimaryContainer : tokens.onSurface,
-      bgcolor: active ? tokens.primaryContainer : "transparent",
-      "&:hover": {
-        bgcolor: active ? tokens.primaryContainer : tokens.surfaceHigh,
-      },
-    }) as const;
-
-  const showLabelsGroup = onChange || onFeatureNamesChange;
-
+}: Pick<
+  LabelModeToggleProps,
+  | "labelMode"
+  | "onChange"
+  | "satellite"
+  | "onSatelliteChange"
+  | "featureNames"
+  | "onFeatureNamesChange"
+>) {
   return (
-    <Box
-      data-testid="map-layer-toggle"
-      sx={{
-        position: "absolute",
-        ...(anchor === "top" ? { top: 14 } : { bottom: 14 + bottomOffset }),
-        left: 10,
-        zIndex: 10,
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        borderRadius: `${tokens.radii.sm}px`,
-        boxShadow: tokens.elevation.e2,
-        bgcolor: tokens.surface,
-      }}
-    >
-      {showLabelsGroup && (
-        <>
-          <Typography sx={captionSx}>Labels</Typography>
+    <>
+      {(onChange || onFeatureNamesChange) && (
+        <Track>
           {onChange && (
-            <Box sx={{ display: "flex" }}>
-              <ButtonBase
-                onClick={() => onChange("section")}
+            <>
+              <Cell
+                flex
+                active={labelMode === "section"}
                 title="Label sections with their own name"
-                sx={{ ...btn(labelMode === "section"), flex: 1 }}
+                onClick={() => onChange("section")}
               >
                 Section
-              </ButtonBase>
-              <ButtonBase
-                onClick={() => onChange("river")}
+              </Cell>
+              <Cell
+                flex
+                active={labelMode === "river"}
                 title="Label sections with their river's name"
-                sx={{
-                  ...btn(labelMode === "river"),
-                  flex: 1,
-                  borderLeft: rule,
-                }}
+                onClick={() => onChange("river")}
               >
                 River
-              </ButtonBase>
-            </Box>
+              </Cell>
+            </>
           )}
           {onFeatureNamesChange && (
-            <ButtonBase
-              onClick={() => onFeatureNamesChange(!featureNames)}
+            <Cell
+              flex
+              active={!!featureNames}
               title="Show names of rapids, put-ins and other features"
-              sx={{
-                ...btn(!!featureNames),
-                ...(onChange ? { borderTop: rule } : {}),
-              }}
+              onClick={() => onFeatureNamesChange(!featureNames)}
             >
               Features
-            </ButtonBase>
+            </Cell>
           )}
-        </>
+        </Track>
       )}
+      <Track>
+        <Cell
+          flex
+          active={satellite}
+          title="Satellite base map"
+          onClick={() => onSatelliteChange(!satellite)}
+        >
+          Satellite
+        </Cell>
+      </Track>
+    </>
+  );
+}
+
+/** The popover's surface, named for tests and for the toggle's design. */
+function LayerPaper(props: PaperProps) {
+  return <Paper data-testid="map-layer-toggle" {...props} />;
+}
+
+/** The layer choices are one key in the control stack, under the zoom group,
+ * and open in a 272px popover to its left. */
+function LayerKey(
+  props: Parameters<typeof Choices>[0] & { inset?: MapPadding },
+) {
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const { inset, ...choices } = props;
+  const { top, right } = stackOffset(inset);
+  const open = anchor != null;
+  return (
+    <>
       <ButtonBase
-        onClick={() => onSatelliteChange(!satellite)}
-        title="Satellite base map"
+        data-testid="map-layer-button"
+        aria-label="Map layers"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={(e) => setAnchor(open ? null : e.currentTarget)}
         sx={{
-          ...btn(satellite),
-          ...(showLabelsGroup ? { borderTop: rule } : {}),
+          position: "absolute",
+          zIndex: 2,
+          top: top + BELOW_ZOOM,
+          right,
+          width: tokens.touch.min,
+          height: tokens.touch.min,
+          borderRadius: `${tokens.radii.sm}px`,
+          bgcolor: open ? `${tokens.primary}${alphas.wash}` : tokens.surface,
+          color: open ? tokens.primary : tokens.onSurface,
+          boxShadow: open
+            ? `${tokens.elevation.e2}, inset 0 0 0 2px ${tokens.primary}`
+            : tokens.elevation.e2,
         }}
       >
-        Satellite
+        <LayersOutlinedIcon />
       </ButtonBase>
-    </Box>
+      <Popover
+        open={open}
+        anchorEl={anchor}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: "top", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        // The popover sits 8px left of the key, level with its top.
+        marginThreshold={8}
+        disableScrollLock
+        slots={{ paper: LayerPaper }}
+        slotProps={{
+          paper: {
+            role: "dialog",
+            "aria-label": "Map layers",
+            sx: {
+              width: 272,
+              ml: -1,
+              display: "grid",
+              gap: 1,
+              p: "10px",
+              bgcolor: tokens.surface,
+              borderRadius: `${tokens.radii.md}px`,
+              boxShadow: tokens.elevation.e2,
+            },
+          },
+        }}
+      >
+        <Choices {...choices} />
+      </Popover>
+    </>
   );
+}
+
+/** Map layer controls: one 44px key under the zoom group that opens what
+ * section labels say, feature-name visibility and the satellite base layer. */
+export default function LabelModeToggle(props: LabelModeToggleProps) {
+  return <LayerKey {...props} />;
 }

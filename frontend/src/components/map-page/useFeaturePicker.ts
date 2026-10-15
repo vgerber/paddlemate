@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import type { Feature } from "@/lib/api";
-import { lineCoords, pointCoords } from "@/lib/geo";
+import { type LngLat, lineCoords, pointCoords } from "@/lib/geo";
 
 export type FeatureGeomType = "Point" | "LineString" | "Polygon";
 
@@ -10,9 +10,7 @@ export function useFeaturePicker() {
   const [featurePickingActive, setFeaturePickingActive] = useState(false);
   const [featureGeomType, setFeatureGeomType] =
     useState<FeatureGeomType>("Point");
-  const [featureVertices, setFeatureVertices] = useState<
-    { lng: number; lat: number }[]
-  >([]);
+  const [featureVertices, setFeatureVertices] = useState<LngLat[]>([]);
   // Feature being edited in the suggest-feature panel; null = creating new.
   const [editFeature, setEditFeature] = useState<Feature | null>(null);
 
@@ -24,19 +22,16 @@ export function useFeaturePicker() {
     const line = lineCoords(loc);
     if (point) {
       setFeatureGeomType("Point");
-      setFeatureVertices([{ lng: point[0], lat: point[1] }]);
+      setFeatureVertices([point]);
     } else if (line) {
       setFeatureGeomType("LineString");
-      setFeatureVertices(line.map(([lng, lat]) => ({ lng, lat })));
+      setFeatureVertices(line);
     } else if (loc.type === "Polygon") {
       const ring = (loc.coordinates as [number, number][][])[0] ?? [];
       setFeatureGeomType("Polygon");
       setFeatureVertices(
         // Drop the closing vertex; the picker re-closes the ring on submit.
-        ring.slice(0, Math.max(ring.length - 1, 0)).map(([lng, lat]) => ({
-          lng,
-          lat,
-        })),
+        ring.slice(0, Math.max(ring.length - 1, 0)),
       );
     }
     setFeaturePickingActive(false);
@@ -44,9 +39,9 @@ export function useFeaturePicker() {
   }, []);
 
   const handleMapPick = useCallback(
-    (lng: number, lat: number) => {
+    (point: LngLat) => {
       if (featurePickingActive) {
-        setFeatureVertices((prev) => [...prev, { lng, lat }]);
+        setFeatureVertices((prev) => [...prev, point]);
       }
     },
     [featurePickingActive],
