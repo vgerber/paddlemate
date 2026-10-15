@@ -116,7 +116,7 @@ Components for each live in the matching folder under `frontend/src/components/`
   medium amber, high red (a solid fill with white text, the loudest thing on a
   row), empty grey with a hollow dot. `LevelDots` is one 8px dot per section in
   those colours: grey filled is unknown (no gauge, no thresholds, or a reading
-  older than a day), a grey ring is too low; the row carries one label such as
+  older than 3 h or three gauge intervals, the same rule as the reading block), a grey ring is too low; the row carries one label such as
   "2 of 4 sections running". Levels are token *pairs*:
   `levels.<x>.marker` for map geometry, `levels.<x>.text`/`bg` for chips. Inside
   a chart card the level reading is neutral: the thresholds already show it.

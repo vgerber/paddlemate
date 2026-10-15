@@ -1,13 +1,11 @@
 import type { components } from "@/lib/api/schema";
+import { isStale } from "@/lib/staleness";
 import { isCalibrated, maxLevel, type WaterLevel } from "@/lib/waterLevel";
 
 type WaterStatus = components["schemas"]["SectionWaterStatus"];
 
 /** A dot is a level, or "unknown" when there is nothing trustworthy to say. */
 export type DotLevel = WaterLevel | "unknown";
-
-/** A reading older than this no longer says what the water does now. */
-export const STALE_READING_MS = 24 * 60 * 60 * 1000;
 
 /** The level a section's dot shows. No gauge, no thresholds, no reading or a
  * stale one is unknown - the backend's "empty" for a silent gauge would read
@@ -21,7 +19,7 @@ export function dotLevel(
     (r) =>
       isCalibrated(r) &&
       r.latest_reading != null &&
-      now - Date.parse(r.latest_reading.measured_at) <= STALE_READING_MS,
+      !isStale(r.latest_reading.measured_at, now, r.gauge.fetch_interval_secs),
   );
   if (fresh.length === 0) return "unknown";
   return maxLevel(fresh.map((r) => r.level));

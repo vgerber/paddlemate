@@ -15,6 +15,7 @@ function status(
     ranges: [
       {
         level,
+        gauge: { fetch_interval_secs: 900 },
         range_low: calibrated ? 10 : null,
         latest_reading: measured
           ? { measured_at: measured, series_id: 1, value: 5 }

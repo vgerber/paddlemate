@@ -303,10 +303,10 @@ puts it on the day before anywhere west of Greenwich. Display strings stay on
 `toLocaleDateString` via `lib/format.ts`.
 
 Shared UI: `ConfirmDialog` (every confirmation - never `window.confirm`),
-`components/states/` (`LoadingBox`, `EmptyState`, `SignInGate`,
-`ErrorFallback`), `WaterLevelChip`, `search/RiverRow`,
-`charts/ChartPanelShell`. Do not hand-roll a spinner box, confirm dialog or
-sign-in gate.
+`components/states/` (`LoadingBox`, `EmptyState`, `ErrorState`,
+`QueryStates`, `SignInGate`, `ErrorFallback`), `WaterLevelChip`,
+`LevelDots`, `search/RiverRow`, `SwipeGhost`. Do not hand-roll a spinner
+box, empty or error state, confirm dialog or sign-in gate.
 
 A screen is assembled from these, not from raw MUI - they are what make a new
 feature look like the product rather than like MUI:
