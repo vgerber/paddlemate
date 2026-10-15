@@ -13,6 +13,7 @@ import PanelHeader from "@/components/PanelHeader";
 import RowMenu from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
 import MissingState from "@/components/states/MissingState";
+import { descentTitle } from "@/lib/descents";
 import { formatDate } from "@/lib/format";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
@@ -93,12 +94,7 @@ function LogDetailPage() {
     );
   }
 
-  const title =
-    descent.name ||
-    [
-      ...new Set(descent.sections.map((s) => s.waterway_name).filter(Boolean)),
-    ].join(" / ") ||
-    "Descent";
+  const title = descentTitle(descent);
   const subtitle = [
     descent.username,
     formatDate(descent.start_time),

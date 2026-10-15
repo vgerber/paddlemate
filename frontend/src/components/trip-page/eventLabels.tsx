@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { stayKind } from "@/components/trips/stayKinds";
 import { ArrivalIcon, DepartureIcon } from "@/components/trips/TripIcons";
+import { descentRivers, descentTitle } from "@/lib/descents";
 import { clockTime, formatTime } from "@/lib/format";
 import type { TripEvent } from "@/lib/tripTimeline";
 
@@ -98,22 +99,14 @@ export function eventLabels(event: TripEvent): {
   }
 
   const { descent } = event;
-  const ordered = [...descent.sections].sort(
-    (a, b) => a.sort_order - b.sort_order,
-  );
-  const sections = ordered
-    .map((s) => s.section_name)
-    .filter(Boolean)
-    .join(" · ");
   // Which river is not decoration here: the day list mixes them, and two
   // valleys can both have an "Oberlauf".
-  const rivers = [
-    ...new Set(ordered.map((s) => s.waterway_name).filter(Boolean)),
-  ].join(" / ");
+  const title = descentTitle(descent);
+  const rivers = descentRivers(descent).join(" / ");
 
   return {
     icon: <DirectionsBoatOutlinedIcon />,
-    title: sections || descent.name || "A descent",
-    detail: `${rivers ? `${rivers} · ` : ""}Paddled by ${descent.username ?? "a member"} · ${formatTime(descent.start_time)}`,
+    title,
+    detail: `${rivers && rivers !== title ? `${rivers} · ` : ""}Paddled by ${descent.username ?? "a member"} · ${formatTime(descent.start_time)}`,
   };
 }

@@ -3,6 +3,7 @@ import ButtonBase from "@mui/material/ButtonBase";
 import { desktopFlatRow } from "@/components/canvas/flatRow";
 import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
+import { descentRivers, descentTitle } from "@/lib/descents";
 import { durationLabel, formatDate, formatTime, timeAgo } from "@/lib/format";
 import { transition } from "@/lib/motion";
 import { alphas, theme } from "@/lib/theme";
@@ -64,19 +65,13 @@ export default function DescentCard({
   const sections = descent.sections
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order);
-  const waterwayNames = [
-    ...new Set(sections.map((s) => s.waterway_name).filter(Boolean)),
-  ] as string[];
+  const waterwayNames = descentRivers(descent);
   const sectionNames = sections
     .map((s) => s.section_name)
     .filter(Boolean) as string[];
 
   const dateStr = formatDate(descent.start_time);
-  const title =
-    descent.name ||
-    (waterwayNames.length > 0 ? waterwayNames.join(" / ") : null) ||
-    (sectionNames.length > 0 ? sectionNames.join(", ") : null) ||
-    dateStr;
+  const title = descentTitle(descent);
   const duration = durationLabel(descent.start_time, descent.end_time);
   const level = levelAtTime(descent.sections);
   const meta = [dateStr, formatTime(descent.start_time), duration]

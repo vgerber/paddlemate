@@ -10,6 +10,7 @@ import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { Trip } from "@/lib/api";
+import { descentTitle } from "@/lib/descents";
 import { formatDate, todayIso } from "@/lib/format";
 import { useTripDescents } from "@/lib/hooks/useDescents";
 import {
@@ -361,7 +362,7 @@ function DayEntry({
             <EventLine
               key={`paddled-${descent.id}`}
               icon={<DirectionsBoatOutlinedIcon />}
-              title={descent.name ?? "A descent"}
+              title={descentTitle(descent)}
               detail={`Paddled by ${descent.username ?? "a member"}`}
             />
           ))}
