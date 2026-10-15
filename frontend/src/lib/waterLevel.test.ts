@@ -4,9 +4,11 @@ import {
   currentLevel,
   freshRanges,
   isCalibrated,
+  LEVEL_MARKER_MATCH,
   LEVEL_ORDER,
   levelConfig,
   levelInk,
+  levelMarkerColor,
   maxLevel,
 } from "./waterLevel";
 
@@ -95,5 +97,18 @@ describe("currentLevel", () => {
     expect(freshRanges([range(5, "high"), range(1, "low")], now)).toHaveLength(
       1,
     );
+  });
+});
+
+describe("levelMarkerColor", () => {
+  test("is the theme marker hue of each level", () => {
+    for (const level of LEVEL_ORDER) {
+      expect(levelMarkerColor(level)).toBe(theme.tokens.levels[level].marker);
+    }
+  });
+
+  test("the map expression falls back to the empty hue", () => {
+    expect(LEVEL_MARKER_MATCH.at(-1)).toBe(levelMarkerColor("empty"));
+    expect(LEVEL_MARKER_MATCH).toContain(levelMarkerColor("high"));
   });
 });

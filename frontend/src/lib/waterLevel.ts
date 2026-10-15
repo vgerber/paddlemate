@@ -1,3 +1,4 @@
+import type { ExpressionSpecification } from "maplibre-gl";
 import type { components } from "@/lib/api/schema";
 import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
@@ -78,3 +79,23 @@ export function currentLevel(
   const fresh = freshRanges(ranges, now);
   return fresh.length ? maxLevel(fresh.map((r) => r.level)) : null;
 }
+
+/** The level's saturated hue for map geometry, dots and legends (text uses
+ * `levelConfig`). */
+export function levelMarkerColor(level: WaterLevel): string {
+  return theme.tokens.levels[level].marker;
+}
+
+/** A MapLibre expression colouring a feature by its `level` property
+ * (unset or unknown reads as empty). */
+export const LEVEL_MARKER_MATCH: ExpressionSpecification = [
+  "match",
+  ["get", "level"],
+  "low",
+  levelMarkerColor("low"),
+  "medium",
+  levelMarkerColor("medium"),
+  "high",
+  levelMarkerColor("high"),
+  levelMarkerColor("empty"),
+];

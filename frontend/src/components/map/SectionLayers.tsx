@@ -1,6 +1,7 @@
 import type { ExpressionSpecification } from "maplibre-gl";
 import { Layer, Source } from "react-map-gl/maplibre";
 import { theme } from "@/lib/theme";
+import { LEVEL_MARKER_MATCH } from "@/lib/waterLevel";
 
 const { tokens } = theme;
 
@@ -87,17 +88,7 @@ export default function SectionLayers({
           }}
           paint={{
             "circle-radius": ["interpolate", ["linear"], ["zoom"], 7, 3, 10, 5],
-            "circle-color": [
-              "match",
-              ["get", "level"],
-              "low",
-              tokens.levels.low.marker,
-              "medium",
-              tokens.levels.medium.marker,
-              "high",
-              tokens.levels.high.marker,
-              tokens.levels.empty.marker,
-            ],
+            "circle-color": LEVEL_MARKER_MATCH,
             "circle-opacity": 1,
             "circle-stroke-width": 1,
             "circle-stroke-color": tokens.background,

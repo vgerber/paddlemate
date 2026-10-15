@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import { type DotLevel, dotsLabel } from "@/lib/levelDots";
 import { theme } from "@/lib/theme";
+import { levelMarkerColor } from "@/lib/waterLevel";
 
 const { tokens } = theme;
 
@@ -10,9 +11,9 @@ const MAX_DOTS = 12;
 function dotSx(level: DotLevel) {
   if (level === "unknown") return { bgcolor: `${tokens.outline}80` };
   if (level === "empty") {
-    return { border: `2px solid ${tokens.levels.empty.marker}` };
+    return { border: `2px solid ${levelMarkerColor("empty")}` };
   }
-  return { bgcolor: tokens.levels[level].marker };
+  return { bgcolor: levelMarkerColor(level) };
 }
 
 /** One small dot per section, coloured by its level, so a closed row answers

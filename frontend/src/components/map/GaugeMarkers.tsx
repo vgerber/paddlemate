@@ -4,15 +4,9 @@ import { useState } from "react";
 import { Marker, Popup } from "react-map-gl/maplibre";
 import type { components } from "@/lib/api/schema";
 import { labelSx, theme } from "@/lib/theme";
+import { levelMarkerColor } from "@/lib/waterLevel";
 
 type WaterLevel = components["schemas"]["WaterLevel"];
-
-const LEVEL_COLORS: Record<WaterLevel, string> = {
-  empty: theme.tokens.levels.empty.marker,
-  low: theme.tokens.levels.low.marker,
-  medium: theme.tokens.levels.medium.marker,
-  high: theme.tokens.levels.high.marker,
-};
 
 export interface GaugePin {
   id: number;
@@ -50,7 +44,7 @@ export default function GaugeMarkers({
         const isSelected = selectedId === pin.id;
         const emphasized = isSelected || pin.highlighted;
         const color = pin.level
-          ? LEVEL_COLORS[pin.level]
+          ? levelMarkerColor(pin.level)
           : pin.highlighted
             ? theme.tokens.primary
             : theme.tokens.outline;

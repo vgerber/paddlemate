@@ -11,7 +11,7 @@ import type { MapScene } from "@/components/canvas/scene";
 import WaterwayMap from "@/components/map/Map";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import { localizedName } from "@/lib/localization";
-import { theme } from "@/lib/theme";
+import { levelMarkerColor } from "@/lib/waterLevel";
 import { modeSheetMode, modeSheetPeek } from "./modeSheet";
 import SectionSpeedDial from "./SectionSpeedDial";
 import type { MapPageState } from "./useMapPageState";
@@ -46,13 +46,6 @@ export default function MapPane({
     isMobileMapView,
     toggleMobileMapView,
   } = state;
-
-  const LEVEL_COLORS: Record<string, string> = {
-    empty: theme.tokens.levels.empty.marker,
-    low: theme.tokens.levels.low.marker,
-    medium: theme.tokens.levels.medium.marker,
-    high: theme.tokens.levels.high.marker,
-  };
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId);
   const sectionName = selectedSection
@@ -153,13 +146,13 @@ export default function MapPane({
                 zIndex: 1100,
               }}
             >
-              {sectionLevel && LEVEL_COLORS[sectionLevel] && (
+              {sectionLevel && (
                 <Box
                   sx={{
                     width: 8,
                     height: 8,
                     borderRadius: "50%",
-                    bgcolor: LEVEL_COLORS[sectionLevel],
+                    bgcolor: levelMarkerColor(sectionLevel),
                     flexShrink: 0,
                   }}
                 />

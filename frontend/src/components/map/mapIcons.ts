@@ -1,14 +1,12 @@
 import type { MapRef } from "react-map-gl/maplibre";
 import { theme } from "@/lib/theme";
+import {
+  LEVEL_ORDER,
+  levelMarkerColor,
+  type WaterLevel,
+} from "@/lib/waterLevel";
 
 const { tokens } = theme;
-
-export const LEVEL_COLORS: Record<string, string> = {
-  empty: tokens.levels.empty.marker,
-  low: tokens.levels.low.marker,
-  medium: tokens.levels.medium.marker,
-  high: tokens.levels.high.marker,
-};
 
 const PUT_IN_ARROW =
   "M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z";
@@ -17,8 +15,8 @@ const TAKE_OUT_ARROW =
 
 /** Put-in and take-out: a disc in the water level's colour with a white ring
  * and an arrow. Empty is a hollow ring: a white disc, grey ring and arrow. */
-const makeMarkerSvg = (level: string, path: string) => {
-  const color = LEVEL_COLORS[level];
+const makeMarkerSvg = (level: WaterLevel, path: string) => {
+  const color = levelMarkerColor(level);
   const hollow = level === "empty";
   const disc = hollow
     ? `<circle cx="13" cy="13" r="10.5" fill="${tokens.white}" stroke="${color}" stroke-width="3"/>`
@@ -29,7 +27,7 @@ const makeMarkerSvg = (level: string, path: string) => {
 /** Register the per-level put-in/take-out marker icons with the map. */
 export function addMapImages(map: ReturnType<MapRef["getMap"]> | undefined) {
   if (!map) return;
-  for (const level of Object.keys(LEVEL_COLORS)) {
+  for (const level of LEVEL_ORDER) {
     for (const [id, svg] of [
       [`put-in-icon-${level}`, makeMarkerSvg(level, PUT_IN_ARROW)],
       [`take-out-icon-${level}`, makeMarkerSvg(level, TAKE_OUT_ARROW)],
