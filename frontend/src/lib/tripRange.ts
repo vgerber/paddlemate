@@ -1,5 +1,12 @@
 import type { TripSection, TripStay } from "@/lib/api";
-import { haversineKm, lineCoords, pointCoords } from "@/lib/geo";
+import {
+  type Bounds,
+  circleBounds,
+  haversineKm,
+  lineCoords,
+  mergeBounds,
+  pointCoords,
+} from "@/lib/geo";
 import { theme } from "@/lib/theme";
 
 /** A placed base and how far it reaches. */
@@ -81,23 +88,11 @@ export function baseRanges(stays: TripStay[]): BaseRange[] {
 }
 
 /** The box holding every ring, so the map can open on all of them at once. */
-export function rangeBounds(
-  ranges: BaseRange[],
-): [[number, number], [number, number]] | null {
-  if (ranges.length === 0) return null;
-  // A degree of latitude is ~111km everywhere; longitude shrinks with it.
-  const lons: number[] = [];
-  const lats: number[] = [];
-  for (const r of ranges) {
-    const dLat = r.radiusKm / 111;
-    const dLon = dLat / Math.max(0.05, Math.cos((r.lat * Math.PI) / 180));
-    lons.push(r.lon - dLon, r.lon + dLon);
-    lats.push(r.lat - dLat, r.lat + dLat);
-  }
-  return [
-    [Math.min(...lons), Math.min(...lats)],
-    [Math.max(...lons), Math.max(...lats)],
-  ];
+export function rangeBounds(ranges: BaseRange[]): Bounds | null {
+  return ranges.reduce<Bounds | null>(
+    (box, r) => mergeBounds(box, circleBounds(r)),
+    null,
+  );
 }
 
 /**

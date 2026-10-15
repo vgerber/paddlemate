@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import { factLabelSx } from "@/components/Fact";
 import WaterwayMap from "@/components/map/Map";
+import { boundsOf, lineCoords } from "@/lib/geo";
 import { useTripStays } from "@/lib/hooks/useTrips";
 import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";
 import { fonts, theme } from "@/lib/theme";
@@ -47,18 +48,7 @@ export default function StayLocationPicker({ tripId, point, onChange }: Props) {
   );
   const focusBounds = useMemo(() => {
     if (point || sections.length === 0) return null;
-    const coords = sections.flatMap((s) =>
-      s.location.type === "LineString"
-        ? (s.location.coordinates as number[][])
-        : [],
-    );
-    if (coords.length === 0) return null;
-    const lons = coords.map((c) => c[0]);
-    const lats = coords.map((c) => c[1]);
-    return [
-      [Math.min(...lons), Math.min(...lats)],
-      [Math.max(...lons), Math.max(...lats)],
-    ] as [[number, number], [number, number]];
+    return boundsOf(sections.flatMap((s) => lineCoords(s.location) ?? []));
   }, [point, sections]);
 
   return (

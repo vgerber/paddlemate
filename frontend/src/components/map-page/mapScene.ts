@@ -6,8 +6,13 @@ import type {
   PointPin,
 } from "@/components/map/Map";
 import type { Feature, SectionWithFeatures } from "@/lib/api";
-import { lineCoords } from "@/lib/geo";
-import { circleBounds } from "./areaFrame";
+import {
+  type Bounds,
+  bboxToBounds,
+  boundsOf,
+  circleBounds,
+  lineCoords,
+} from "@/lib/geo";
 import type { MapPageState } from "./useMapPageState";
 
 /** The part of the page state the map draws and reacts to. */
@@ -72,27 +77,8 @@ export interface MapSceneInput extends SceneState {
   onOpenThread: ((id: number) => void) | undefined;
 }
 
-type Bounds = [[number, number], [number, number]];
-
-function boundsOf(sections: SectionWithFeatures[]): Bounds | null {
-  let west = Infinity;
-  let south = Infinity;
-  let east = -Infinity;
-  let north = -Infinity;
-  for (const s of sections) {
-    for (const [lon, lat] of lineCoords(s.location) ?? []) {
-      west = Math.min(west, lon);
-      east = Math.max(east, lon);
-      south = Math.min(south, lat);
-      north = Math.max(north, lat);
-    }
-  }
-  return west > east
-    ? null
-    : [
-        [west, south],
-        [east, north],
-      ];
+function sectionBounds(sections: SectionWithFeatures[]): Bounds | null {
+  return boundsOf(sections.flatMap((s) => lineCoords(s.location) ?? []));
 }
 
 type SubjectInput = Pick<
@@ -112,11 +98,11 @@ export function sceneSubject(input: SubjectInput): MapSubject | null {
   const { selectedWaterwayId, selectedSectionId, sections } = input;
   if (selectedWaterwayId != null) {
     const section = sections.find((s) => s.id === selectedSectionId);
-    const bounds = section && boundsOf([section]);
+    const bounds = section && sectionBounds([section]);
     if (section && bounds) {
       return { key: `section:${section.id}`, bounds };
     }
-    const river = boundsOf(sections);
+    const river = sectionBounds(sections);
     return river
       ? {
           key: `river:${selectedWaterwayId}:${sections.length}`,
@@ -132,16 +118,9 @@ export function sceneSubject(input: SubjectInput): MapSubject | null {
   }
   const region = input.regionOutline;
   if (region) {
-    const [west, south, east, north] = region.bbox;
-    return {
-      key: `region:${region.id}`,
-      bounds: [
-        [west, south],
-        [east, north],
-      ],
-    };
+    return { key: `region:${region.id}`, bounds: bboxToBounds(region.bbox) };
   }
-  const results = boundsOf(input.mapSearchSections);
+  const results = sectionBounds(input.mapSearchSections);
   if (!results) return null;
   const ids = input.mapSearchSections.map((s) => s.id);
   return { key: `results:${ids.join(",")}`, bounds: results };

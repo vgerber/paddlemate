@@ -1,3 +1,4 @@
+import type { ViewBounds } from "@/lib/geo";
 import { ApiError, client, postForm } from "./client";
 import type { components, operations } from "./schema.d.ts";
 
@@ -397,6 +398,10 @@ export const mediaApi = {
   },
 };
 
+/** The view box in the API's "south,west,north,east" order. */
+const viewParam = (v: ViewBounds) =>
+  `${v.south},${v.west},${v.north},${v.east}`;
+
 /** Line parameter format shared by the geographic lookups. */
 const lineParam = (line: [number, number][]) =>
   line.map(([lon, lat]) => `${lon},${lat}`).join(";");
@@ -408,7 +413,7 @@ export const waterwayGeometryApi = {
   get: async (
     waterwayId: number,
     kind?: "centerline" | "bank",
-    bbox?: { south: number; west: number; north: number; east: number },
+    bbox?: ViewBounds,
     signal?: AbortSignal,
   ) => {
     const { data } = await client.GET(
@@ -418,9 +423,7 @@ export const waterwayGeometryApi = {
           path: { waterway_id: waterwayId },
           query: {
             kind,
-            bbox: bbox
-              ? `${bbox.south},${bbox.west},${bbox.north},${bbox.east}`
-              : undefined,
+            bbox: bbox ? viewParam(bbox) : undefined,
           },
         },
         signal,
@@ -466,13 +469,9 @@ export const regionsApi = {
   /** Every region in a viewport, for drawing region mode on the map. The
    * server fetches ground it has not seen from OSM in the background, so a
    * list that comes back `filling` is not the whole picture yet. */
-  inView: async (
-    bbox: [number, number, number, number],
-    signal?: AbortSignal,
-    kinds?: string,
-  ) => {
+  inView: async (view: ViewBounds, signal?: AbortSignal, kinds?: string) => {
     const { data } = await client.GET("/api/v1/geo/region-outlines", {
-      params: { query: { bbox: bbox.join(","), kinds } },
+      params: { query: { bbox: viewParam(view), kinds } },
       signal,
     });
     return assertData(data);

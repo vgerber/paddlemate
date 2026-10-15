@@ -3,10 +3,8 @@
 
 import polylabel from "polylabel";
 import type { RegionRef } from "@/lib/api";
+import type { Bbox } from "@/lib/geo";
 import { regionKindLabel } from "@/lib/regionKinds";
-
-/** [west, south, east, north] */
-export type Bbox = readonly [number, number, number, number];
 
 export interface DrawableRegion {
   id: number;

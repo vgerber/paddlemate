@@ -5,6 +5,7 @@ import type {
   RegionOutline,
   SectionWithFeatures,
 } from "@/lib/api";
+import type { Bbox } from "@/lib/geo";
 import { useLanguage } from "@/lib/languagePreference";
 import {
   buildCountryBordersGeoJSON,
@@ -23,7 +24,7 @@ import {
   buildSectionLabelsGeoJSON,
   buildSectionsGeoJSON,
 } from "./mapLayers";
-import { type Bbox, visibleRegions } from "./regionGeometry";
+import { visibleRegions } from "./regionGeometry";
 
 interface UseMapSourcesInput {
   sections?: SectionWithFeatures[];

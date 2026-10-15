@@ -2,7 +2,13 @@ import type { Dispatch, RefObject, SetStateAction } from "react";
 import { useCallback, useEffect, useRef } from "react";
 import type { MapRef } from "react-map-gl/maplibre";
 import type { SectionWithFeatures } from "@/lib/api";
-import { type AreaCircle, lineCoords } from "@/lib/geo";
+import {
+  type AreaCircle,
+  type Bounds,
+  boundsOf,
+  circleBounds,
+  lineCoords,
+} from "@/lib/geo";
 import type { MapPadding, MapSubject } from "./Map";
 
 interface UseMapCameraEffectsParams {
@@ -18,7 +24,7 @@ interface UseMapCameraEffectsParams {
   /** A region is the search area, so the camera belongs to it rather than to
    * the rivers found inside it. */
   regionFocused?: boolean;
-  focusBounds?: [[number, number], [number, number]] | null;
+  focusBounds?: Bounds | null;
   /** Extra bottom padding (px) for focus moves when an overlay covers the
    * lower part of the canvas (mobile suggest panel). */
   focusPaddingBottom?: number;
@@ -94,21 +100,11 @@ export function useMapCameraEffects({
     if (areaCircle || regionFocused || hasSubject) return;
     const map = mapRef.current;
     if (!map || !mapLoaded || !sections?.length || areaLocked) return;
-    const coords: number[][] = [];
-    for (const s of sections) {
-      const line = lineCoords(s.location);
-      if (line) coords.push(...line);
-    }
-    if (!coords.length) return;
-    const lngs = coords.map((c) => c[0]);
-    const lats = coords.map((c) => c[1]);
-    map.fitBounds(
-      [
-        [Math.min(...lngs), Math.min(...lats)],
-        [Math.max(...lngs), Math.max(...lats)],
-      ],
-      { padding: paddingRef.current ?? 60, duration: 800 },
+    const bounds = boundsOf(
+      sections.flatMap((s) => lineCoords(s.location) ?? []),
     );
+    if (!bounds) return;
+    map.fitBounds(bounds, { padding: paddingRef.current ?? 60, duration: 800 });
   }, [
     sections,
     mapLoaded,
@@ -123,17 +119,10 @@ export function useMapCameraEffects({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !areaCircle) return;
-    const latDelta = areaCircle.radiusKm / 111;
-    const cosLat = Math.cos((areaCircle.lat * Math.PI) / 180);
-    const lonDelta =
-      areaCircle.radiusKm / (111 * Math.max(0.01, Math.abs(cosLat)));
-    map.fitBounds(
-      [
-        [areaCircle.lon - lonDelta, areaCircle.lat - latDelta],
-        [areaCircle.lon + lonDelta, areaCircle.lat + latDelta],
-      ],
-      { padding: paddingRef.current ?? 60, duration: 800 },
-    );
+    map.fitBounds(circleBounds(areaCircle), {
+      padding: paddingRef.current ?? 60,
+      duration: 800,
+    });
   }, [areaCircle, mapLoaded, mapRef]);
 
   // Fit bounds to selected section
@@ -142,17 +131,9 @@ export function useMapCameraEffects({
     if (hasSubject) return;
     if (!map || !mapLoaded || !selectedSectionId || !sections?.length) return;
     const section = sections.find((s) => s.id === selectedSectionId);
-    const line = lineCoords(section?.location);
-    if (!line?.length) return;
-    const lngs = line.map((c) => c[0]);
-    const lats = line.map((c) => c[1]);
-    map.fitBounds(
-      [
-        [Math.min(...lngs), Math.min(...lats)],
-        [Math.max(...lngs), Math.max(...lats)],
-      ],
-      { padding: paddingRef.current ?? 80, duration: 600 },
-    );
+    const bounds = boundsOf(lineCoords(section?.location) ?? []);
+    if (!bounds) return;
+    map.fitBounds(bounds, { padding: paddingRef.current ?? 80, duration: 600 });
   }, [selectedSectionId, sections, mapLoaded, hasSubject, mapRef]);
 
   // Fly to a focused feature point

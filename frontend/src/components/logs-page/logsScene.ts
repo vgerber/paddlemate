@@ -2,19 +2,9 @@ import type { MapScene } from "@/components/canvas/scene";
 import type { MapSubject } from "@/components/map/Map";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { toPseudoSection } from "@/lib/descents";
-import { lineCoords } from "@/lib/geo";
+import { boundsOf, type LngLat, lineCoords } from "@/lib/geo";
 
-type Coord = [number, number];
-
-function boundsOf(points: Coord[]): MapSubject["bounds"] | null {
-  if (points.length === 0) return null;
-  const lons = points.map((p) => p[0]);
-  const lats = points.map((p) => p[1]);
-  return [
-    [Math.min(...lons), Math.min(...lats)],
-    [Math.max(...lons), Math.max(...lats)],
-  ];
-}
+type Coord = LngLat;
 
 /** The open log's sections end to end, as one line. */
 export function routeCoords(descent: Descent): Coord[] {

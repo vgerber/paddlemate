@@ -1,7 +1,13 @@
 import { useMemo } from "react";
 import type { RangeRing } from "@/components/map/Map";
 import type { SectionWithFeatures } from "@/lib/api";
-import { lineCoords, pointCoords } from "@/lib/geo";
+import {
+  type Bounds,
+  boundsOf,
+  lineCoords,
+  mergeBounds,
+  pointCoords,
+} from "@/lib/geo";
 import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
 import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";
 import { theme } from "@/lib/theme";
@@ -12,8 +18,6 @@ import {
   baseRanges,
   rangeBounds,
 } from "@/lib/tripRange";
-
-type Bounds = [[number, number], [number, number]];
 
 export interface BasesScene {
   ranges: BaseRange[];
@@ -26,18 +30,6 @@ export interface BasesScene {
   bounds: Bounds | null;
   /** Nothing to draw: no base placed and no candidate pointed at. */
   isEmpty: boolean;
-}
-
-function extend(box: Bounds | null, lon: number, lat: number): Bounds {
-  return box
-    ? [
-        [Math.min(box[0][0], lon), Math.min(box[0][1], lat)],
-        [Math.max(box[1][0], lon), Math.max(box[1][1], lat)],
-      ]
-    : [
-        [lon, lat],
-        [lon, lat],
-      ];
 }
 
 /** What a trip's bases put on a map: the rings, the sections on the watch
@@ -111,18 +103,17 @@ export function useBasesScene(
     return [...real, ...proposed];
   }, [ranges, colors, numbers, candidates]);
 
-  const bounds = useMemo(() => {
-    let box = rangeBounds(ranges);
-    for (const ring of rings) {
-      if (ring.proposed) box = extend(box, ring.lon, ring.lat);
-    }
-    for (const section of watched) {
-      for (const [lon, lat] of lineCoords(section.location) ?? []) {
-        box = extend(box, lon, lat);
-      }
-    }
-    return box;
-  }, [ranges, rings, watched]);
+  const bounds = useMemo(
+    () =>
+      mergeBounds(
+        rangeBounds(ranges),
+        boundsOf([
+          ...rings.filter((r) => r.proposed).map((r) => [r.lon, r.lat]),
+          ...watched.flatMap((s) => lineCoords(s.location) ?? []),
+        ]),
+      ),
+    [ranges, rings, watched],
+  );
 
   return { ranges, rings, watched, bounds, isEmpty: rings.length === 0 };
 }

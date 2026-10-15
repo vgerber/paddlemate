@@ -10,9 +10,13 @@ import {
 import type { SectionFeatureDraft } from "@/components/waterway/SuggestFeatureForm";
 import { toPseudoFeature } from "@/components/waterway/section-details/utils";
 import { type Feature, regionsApi, type SectionWithFeatures } from "@/lib/api";
-import { downstreamDot, lineCoords } from "@/lib/geo";
+import {
+  downstreamDot,
+  type LngLat,
+  lineCoords,
+  type ViewBounds,
+} from "@/lib/geo";
 import { useRiverSnap } from "@/lib/hooks/useRiverSnap";
-import type { BoundingBox, Coordinate } from "@/lib/riverSnap";
 
 export const WIZARD_STEPS = ["Naming", "Section", "Features"] as const;
 
@@ -38,7 +42,7 @@ export function useSectionWizardState(
     null,
   );
   const [lineSource, setLineSource] = useState<"snap" | "straight">("snap");
-  const [mapBounds, setMapBounds] = useState<BoundingBox | null>(null);
+  const [mapBounds, setMapBounds] = useState<ViewBounds | null>(null);
   const snap = useRiverSnap(
     waterwayName,
     putIn,
@@ -121,7 +125,7 @@ export function useSectionWizardState(
     setRegionInfoState((prev) => ({ ...prev, ...patch }));
   };
 
-  const finalCoords: Coordinate[] | null = useMemo(
+  const finalCoords: LngLat[] | null = useMemo(
     () =>
       lineSource === "snap" &&
       snap.snappedCoords &&
@@ -138,7 +142,7 @@ export function useSectionWizardState(
 
   // Derive once per line when the features step is reached - three sample
   // points (start, middle, end) are all the server needs.
-  const derivedForCoords = useRef<Coordinate[] | null>(null);
+  const derivedForCoords = useRef<LngLat[] | null>(null);
   useEffect(() => {
     if (step !== 2 || !finalCoords || finalCoords.length < 2) return;
     if (derivedForCoords.current === finalCoords) return;

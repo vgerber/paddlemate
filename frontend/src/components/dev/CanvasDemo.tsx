@@ -8,11 +8,12 @@ import {
 import CanvasLayout from "@/components/canvas/CanvasLayout";
 import ChartDock from "@/components/canvas/ChartDock";
 import FloatingCard from "@/components/canvas/FloatingCard";
+import type { Bounds } from "@/lib/geo";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
-const BOUNDS: [[number, number], [number, number]] = [
+const BOUNDS: Bounds = [
   [11.0, 47.6],
   [12.6, 48.4],
 ];

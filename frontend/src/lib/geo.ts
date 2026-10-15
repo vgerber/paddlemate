@@ -64,6 +64,77 @@ export interface AreaCircle {
   radiusKm: number;
 }
 
+/** The radius a search circle starts at. */
+export const DEFAULT_RADIUS_KM = 10;
+
+/** [longitude, latitude], the GeoJSON axis order. */
+export type LngLat = [number, number];
+
+/** The one box type: [[west, south], [east, north]], what the map fits. */
+export type Bounds = [LngLat, LngLat];
+
+/** The same box as the API sends a region's: [west, south, east, north]. */
+export type Bbox = readonly [number, number, number, number];
+
+/** The same box as the map reports its view. */
+export interface ViewBounds {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+}
+
+/** A region's box (the API types it as a plain number list). */
+export function bboxToBounds(bbox: readonly number[]): Bounds {
+  const [west, south, east, north] = bbox;
+  return [
+    [west, south],
+    [east, north],
+  ];
+}
+
+/** The box holding every coordinate, or null for none. */
+export function boundsOf(
+  coords: readonly (readonly number[])[],
+): Bounds | null {
+  if (coords.length === 0) return null;
+  let west = Infinity;
+  let south = Infinity;
+  let east = -Infinity;
+  let north = -Infinity;
+  for (const [lon, lat] of coords) {
+    west = Math.min(west, lon);
+    east = Math.max(east, lon);
+    south = Math.min(south, lat);
+    north = Math.max(north, lat);
+  }
+  return [
+    [west, south],
+    [east, north],
+  ];
+}
+
+/** The box holding both boxes; a null box is skipped. */
+export function mergeBounds(a: Bounds | null, b: Bounds | null): Bounds | null {
+  if (!a || !b) return a ?? b;
+  return [
+    [Math.min(a[0][0], b[0][0]), Math.min(a[0][1], b[0][1])],
+    [Math.max(a[1][0], b[1][0]), Math.max(a[1][1], b[1][1])],
+  ];
+}
+
+/** The box that frames a circle (a degree of latitude is about 111 km;
+ * longitude degrees shrink with the cosine of the latitude). */
+export function circleBounds(circle: AreaCircle): Bounds {
+  const latDelta = circle.radiusKm / 111;
+  const cosLat = Math.cos((circle.lat * Math.PI) / 180);
+  const lonDelta = circle.radiusKm / (111 * Math.max(0.01, Math.abs(cosLat)));
+  return [
+    [circle.lon - lonDelta, circle.lat - latDelta],
+    [circle.lon + lonDelta, circle.lat + latDelta],
+  ];
+}
+
 interface AnyGeometry {
   type: string;
   coordinates: unknown;

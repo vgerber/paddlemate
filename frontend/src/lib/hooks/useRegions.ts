@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { RegionOutline } from "@/lib/api";
 import { regionsApi } from "@/lib/api";
+import type { ViewBounds } from "@/lib/geo";
 
 export const regionKeys = {
   all: ["regions"] as const,
@@ -55,20 +56,22 @@ export function useRegionOutline(regionId: number | undefined) {
  * blank the map for the ten seconds a cold fill takes - so the last set that
  * had something in it stays on screen until the real one arrives. */
 export function useRegionsInView(
-  bbox: [number, number, number, number] | undefined,
+  view: ViewBounds | undefined,
   kinds?: string[],
 ) {
   const kindsKey = kinds?.join(",");
-  const key = [bbox?.map((v) => v.toFixed(3)).join(","), kindsKey].join("|");
+  const key = [
+    view &&
+      [view.south, view.west, view.north, view.east]
+        .map((v) => v.toFixed(3))
+        .join(","),
+    kindsKey,
+  ].join("|");
   const query = useQuery({
     queryKey: regionKeys.view(key),
     queryFn: ({ signal }) =>
-      regionsApi.inView(
-        bbox as [number, number, number, number],
-        signal,
-        kindsKey,
-      ),
-    enabled: bbox != null,
+      regionsApi.inView(view as ViewBounds, signal, kindsKey),
+    enabled: view != null,
     staleTime: VIEW_STALE_MS,
     placeholderData: (previous) => previous,
     refetchInterval: (query) =>
@@ -82,7 +85,7 @@ export function useRegionsInView(
     if (!data.filling || data.regions.length > 0) setDrawn(data.regions);
   }, [data]);
 
-  const waiting = (data?.filling ?? false) || (query.isPending && bbox != null);
+  const waiting = (data?.filling ?? false) || (query.isPending && view != null);
   const [gaveUp, setGaveUp] = useState(false);
   useEffect(() => {
     setGaveUp(false);

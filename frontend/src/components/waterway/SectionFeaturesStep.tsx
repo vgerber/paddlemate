@@ -7,8 +7,7 @@ import { useMemo, useRef, useState } from "react";
 import { PUT_IN_COLOR, TAKE_OUT_COLOR } from "@/components/map/LocationPin";
 import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type { Feature } from "@/lib/api";
-import { distanceAlongLineM } from "@/lib/geo";
-import type { Coordinate } from "@/lib/riverSnap";
+import { distanceAlongLineM, type LngLat } from "@/lib/geo";
 import { theme } from "@/lib/theme";
 import FeatureRow from "./FeatureRow";
 import FormSection from "./FormSection";
@@ -23,7 +22,7 @@ const { tokens } = theme;
 
 interface SectionFeaturesStepProps {
   /** The section line the features belong to. */
-  finalCoords: Coordinate[] | null;
+  finalCoords: LngLat[] | null;
   /** Reference point for the gauge search. */
   nearPoint?: { lat: number; lon: number };
   draftFeatures: SectionFeatureDraft[];

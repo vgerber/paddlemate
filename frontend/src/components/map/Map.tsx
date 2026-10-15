@@ -15,8 +15,13 @@ import type {
   RegionOutline,
   SectionWithFeatures,
 } from "@/lib/api";
-import type { AreaCircle } from "@/lib/geo";
-import { circleGeoJSON } from "@/lib/geo";
+import {
+  type AreaCircle,
+  type Bbox,
+  type Bounds,
+  circleGeoJSON,
+  type ViewBounds,
+} from "@/lib/geo";
 import { theme } from "@/lib/theme";
 import CountryBorderLayer from "./CountryBorderLayer";
 import DraftLayers, { FeatureDraftLayer } from "./DraftLayers";
@@ -35,7 +40,6 @@ import RangeRingLayers, { type RangeRing } from "./RangeRingLayers";
 import RegionChoicePopup from "./RegionChoicePopup";
 import RegionHiddenNote from "./RegionHiddenNote";
 import RegionLayers from "./RegionLayers";
-import type { Bbox } from "./regionGeometry";
 import SectionLayers from "./SectionLayers";
 import { useControlInset } from "./useControlInset";
 import { useMapCameraEffects } from "./useMapCameraEffects";
@@ -137,7 +141,7 @@ export interface MapChrome {
 export interface MapSubject {
   key: string;
   /** [[minLon, minLat], [maxLon, maxLat]] */
-  bounds: [[number, number], [number, number]];
+  bounds: Bounds;
   maxZoom?: number;
 }
 
@@ -157,17 +161,12 @@ export interface MapCamera {
   /** [lng, lat] to fly to and highlight; set by clicking a feature in the panel. */
   focusedPoint?: [number, number] | null;
   /** [[minLon, minLat], [maxLon, maxLat]] box to fit (e.g. a river's gauges). */
-  focusBounds?: [[number, number], [number, number]] | null;
+  focusBounds?: Bounds | null;
   /** Extra bottom padding (px) for focus moves when an overlay covers the
    * lower part of the canvas (mobile suggest panel). */
   focusPaddingBottom?: number;
   /** Reports the current viewport bounds (on load and after each move). */
-  onBoundsChange?: (bounds: {
-    south: number;
-    west: number;
-    north: number;
-    east: number;
-  }) => void;
+  onBoundsChange?: (bounds: ViewBounds) => void;
 }
 
 /** Notes pinned to the water, and which one is open. */

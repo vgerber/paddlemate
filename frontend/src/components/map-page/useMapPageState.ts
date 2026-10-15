@@ -12,6 +12,7 @@ import {
   proposalsApi,
   type SectionWithFeatures,
 } from "@/lib/api";
+import { type Bounds, DEFAULT_RADIUS_KM, type ViewBounds } from "@/lib/geo";
 import { useFavorites } from "@/lib/hooks/useFavorites";
 import { useFilteredSections } from "@/lib/hooks/useFilteredSections";
 import { useGaugeData } from "@/lib/hooks/useGaugeData";
@@ -22,7 +23,7 @@ import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { pushRecentWaterway } from "@/lib/recentWaterways";
 import { ALL_REGION_KINDS } from "@/lib/regionKinds";
-import { DEFAULT_RADIUS_KM, defaultAreaCircle } from "./areaFrame";
+import { defaultAreaCircle } from "./areaFrame";
 import { modeSheetMode, modeSheetPeek } from "./modeSheet";
 import { useFeaturePicker } from "./useFeaturePicker";
 import { useMobilePanelState } from "./useMobilePanelState";
@@ -128,9 +129,7 @@ export function useMapPageState(search: RouteSearch) {
   );
   // Bounding box the camera should fit (e.g. a gauge-backed river's stations
   // in the suggest-river panel): [[minLon, minLat], [maxLon, maxLat]].
-  const [focusBounds, setFocusBounds] = useState<
-    [[number, number], [number, number]] | null
-  >(null);
+  const [focusBounds, setFocusBounds] = useState<Bounds | null>(null);
   // Catalog stations of the river being suggested, shown as neutral map pins
   // while the suggest-river panel is open.
   const [suggestGaugePins, setSuggestGaugePins] = useState<GaugePin[]>([]);
@@ -141,17 +140,12 @@ export function useMapPageState(search: RouteSearch) {
   );
 
   // Current map viewport bounds (used for OSM lookups in suggest flows)
-  const [mapBounds, setMapBoundsRaw] = useState<{
-    south: number;
-    west: number;
-    north: number;
-    east: number;
-  } | null>(null);
+  const [mapBounds, setMapBoundsRaw] = useState<ViewBounds | null>(null);
   // Keep the previous reference for identical bounds - the map reports on
   // every moveend (including camera-effect fitBounds), and a fresh object
   // for unchanged bounds would re-render the whole page in a loop.
   const setMapBounds = useCallback(
-    (b: { south: number; west: number; north: number; east: number }) =>
+    (b: ViewBounds) =>
       setMapBoundsRaw((prev) =>
         prev &&
         prev.south === b.south &&
@@ -253,9 +247,7 @@ export function useMapPageState(search: RouteSearch) {
   // drawn and clickable, so a region can be found by looking rather than by
   // knowing its name.
   const regionsInView = useRegionsInView(
-    mode === "region" && mapBounds
-      ? [mapBounds.south, mapBounds.west, mapBounds.north, mapBounds.east]
-      : undefined,
+    mode === "region" && mapBounds ? mapBounds : undefined,
     regionLevel ? [regionLevel] : ALL_REGION_KINDS,
   );
   const selectRegion = useCallback(
