@@ -5,9 +5,7 @@ use crate::models::waterway::{
 };
 use crate::query::history::{self, Op, Scope, Via};
 
-/// Shortest query that may match approximately. Below this a single typo
-/// leaves too few correct characters for trigram scoring to mean anything.
-const FUZZY_MIN_CHARS: usize = 4;
+use super::FUZZY_MIN_CHARS;
 
 /// Case-insensitive check whether a waterway with this name already exists.
 pub async fn name_exists(pool: &PgPool, name: &str) -> Result<bool, sqlx::Error> {

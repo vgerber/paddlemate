@@ -21,7 +21,8 @@ export type ProposalOperation = components["schemas"]["ProposalOperation"];
 export type ProposalStatus = components["schemas"]["ProposalStatus"];
 export type HistoryStep = components["schemas"]["HistoryStep"];
 export type HistoryChange = components["schemas"]["HistoryChange"];
-export type HistoryPage = components["schemas"]["HistoryPage"];
+export type HistoryPage =
+  components["schemas"]["PaginatedResponse_for_HistoryStep"];
 export type HistorySource = components["schemas"]["HistorySource"];
 export type HistoryUser = components["schemas"]["HistoryUser"];
 export type StepKind = components["schemas"]["StepKind"];

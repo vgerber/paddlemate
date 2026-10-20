@@ -43,7 +43,7 @@ Reviews, briefs, designs and test notes are in `.claude/handoffs/ui-work/` (git-
 
 ## Later (overhaul plan)
 
-Dark mode, motion, the 320px sweep, line icons, numbered feature markers, an API for the history of deleted features.
+Dark mode, motion, the 320px sweep, line icons, numbered feature markers. The API now serves the history of deleted rivers, sections and features (the existing `.../history` routes answer 200 for them); the app does not show it yet.
 
 ## Environment notes
 

@@ -399,7 +399,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description History of a river, oldest step first */
+        /** @description History of a river, oldest step first; readable after the river was deleted */
         get: operations["get_waterway_history"];
         put?: never;
         post?: never;
@@ -433,7 +433,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description History of a section, oldest step first */
+        /** @description History of a section, oldest step first; readable after the section was deleted */
         get: operations["get_section_history"];
         put?: never;
         post?: never;
@@ -450,7 +450,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description History of a feature, oldest step first; readable after the feature was deleted */
+        /** @description History of a feature, oldest step first; readable after the feature, or its section or river, was deleted */
         get: operations["get_feature_history"];
         put?: never;
         post?: never;
@@ -2320,18 +2320,6 @@ export interface components {
             before?: string | null;
             field: string;
         };
-        HistoryPage: {
-            /** @description Steps, oldest first */
-            items: components["schemas"]["HistoryStep"][];
-            /** Format: int64 */
-            page: number;
-            /** Format: int64 */
-            per_page: number;
-            /** Format: int64 */
-            total: number;
-            /** Format: int64 */
-            total_pages: number;
-        };
         /** @description Query parameters of a history listing. */
         HistoryQuery: {
             /**
@@ -2574,6 +2562,17 @@ export interface components {
         OsmElementKind: "centerline" | "bank";
         PaginatedResponse_for_Descent: {
             items: components["schemas"]["Descent"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            per_page: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            total_pages: number;
+        };
+        PaginatedResponse_for_HistoryStep: {
+            items: components["schemas"]["HistoryStep"][];
             /** Format: int64 */
             page: number;
             /** Format: int64 */
@@ -3045,7 +3044,7 @@ export interface components {
              *      can be drawn at. Always empty without `kinds`.
              * @default []
              */
-            hidden_kinds?: string[];
+            hidden_kinds?: components["schemas"]["RegionKind"][];
             regions: components["schemas"]["RegionOutline"][];
         };
         RegionPath: {
@@ -4189,11 +4188,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-14T15:19:51.819835182Z",
-                     *         "expires_at": "2027-01-12T15:19:51.819837312Z",
+                     *         "created_at": "2026-10-20T20:13:02.738847103Z",
+                     *         "expires_at": "2027-01-18T20:13:02.738849273Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-14T15:19:51.819839862Z",
+                     *         "last_used_at": "2026-10-20T20:13:02.738858023Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4224,8 +4223,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-14T15:19:51.820722816Z",
-                     *       "expires_at": "2027-01-12T15:19:51.820723306Z",
+                     *       "created_at": "2026-10-20T20:13:02.738978833Z",
+                     *       "expires_at": "2027-01-18T20:13:02.738979253Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -5244,10 +5243,10 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HistoryPage"];
+                    "application/json": components["schemas"]["PaginatedResponse_for_HistoryStep"];
                 };
             };
-            /** @description Waterway not found */
+            /** @description Waterway never existed */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -5317,10 +5316,10 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HistoryPage"];
+                    "application/json": components["schemas"]["PaginatedResponse_for_HistoryStep"];
                 };
             };
-            /** @description Section not found in this waterway */
+            /** @description Section never existed in this waterway */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -5354,7 +5353,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HistoryPage"];
+                    "application/json": components["schemas"]["PaginatedResponse_for_HistoryStep"];
                 };
             };
             /** @description Feature never existed in this section */
@@ -7832,7 +7831,7 @@ export interface operations {
                     "application/json": components["schemas"]["Region"][];
                 };
             };
-            /** @description Bad line */
+            /** @description Bad line, name or country */
             400: {
                 headers: {
                     [name: string]: unknown;
