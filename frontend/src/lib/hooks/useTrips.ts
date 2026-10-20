@@ -121,6 +121,7 @@ export function useAddTripMember(id: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (userId: string) => tripsApi.addMember(id, userId),
+    meta: { errorHandledLocally: true },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: tripKeys.members(id) });
       qc.invalidateQueries({ queryKey: tripKeys.detail(id) });
@@ -139,6 +140,7 @@ export function usePatchTripMember(id: number) {
       userId: string;
       body: PatchTripMemberRequest;
     }) => tripsApi.updateMember(id, userId, body),
+    meta: { errorHandledLocally: true },
     onSuccess: () => qc.invalidateQueries({ queryKey: tripKeys.detail(id) }),
   });
 }
@@ -204,6 +206,7 @@ export function useReplaceStaySections(id: number) {
       stayId: number;
       sections: TripSectionInput[];
     }) => tripsApi.replaceStaySections(id, stayId, sections),
+    meta: { errorHandledLocally: true },
     onSuccess: () => qc.invalidateQueries({ queryKey: tripKeys.stays(id) }),
   });
 }
@@ -267,10 +270,12 @@ export function useTripCandidates(id: number | null, enabled = true) {
 function useCandidateMutation<TArgs>(
   id: number,
   fn: (args: TArgs) => Promise<unknown>,
+  meta?: Record<string, unknown>,
 ) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
+    meta,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: tripKeys.candidates(id) });
       qc.invalidateQueries({ queryKey: tripKeys.stays(id) });
@@ -283,8 +288,11 @@ function useCandidateMutation<TArgs>(
 }
 
 export function useProposeCandidate(id: number) {
-  return useCandidateMutation(id, (body: CreateTripStayCandidateRequest) =>
-    tripsApi.proposeCandidate(id, body),
+  return useCandidateMutation(
+    id,
+    (body: CreateTripStayCandidateRequest) =>
+      tripsApi.proposeCandidate(id, body),
+    { errorHandledLocally: true },
   );
 }
 
@@ -310,6 +318,7 @@ export function usePatchCandidate(id: number) {
       body: PatchTripStayCandidateRequest;
       version?: string;
     }) => tripsApi.patchCandidate(id, candidateId, body, version),
+    { errorHandledLocally: true },
   );
 }
 

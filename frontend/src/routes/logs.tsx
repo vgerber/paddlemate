@@ -20,6 +20,7 @@ import ListPaneHeader from "@/components/ListPaneHeader";
 import MyLogsPanel from "@/components/logs-page/MyLogsPanel";
 import SocialPanel from "@/components/logs-page/SocialPanel";
 import { useLogsScene } from "@/components/logs-page/useLogsScene";
+import { fabSx } from "@/components/PaneFab";
 import PanelHeader from "@/components/PanelHeader";
 import { SwipeGhost } from "@/components/SwipeGhost";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -27,7 +28,7 @@ import SignInGate from "@/components/states/SignInGate";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
 import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
-import { BOTTOM_NAV_SPACE, PANEL_HEIGHT, theme } from "@/lib/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -113,11 +114,7 @@ function LogsPage() {
             color="secondary"
             aria-label="Log descent"
             onClick={onNew}
-            sx={{
-              position: "fixed",
-              bottom: `calc(${BOTTOM_NAV_SPACE} + 16px)`,
-              right: 16,
-            }}
+            sx={fabSx}
           >
             <AddIcon />
           </Fab>

@@ -1,19 +1,18 @@
 import CheckIcon from "@mui/icons-material/Check";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import ThumbDownOutlinedIcon from "@mui/icons-material/ThumbDownOutlined";
-import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { factLabelSx } from "@/components/Fact";
 import MarkdownText from "@/components/MarkdownText";
 import RowMenu from "@/components/RowMenu";
 import RolePill from "@/components/trips/RolePill";
 import { stayKind } from "@/components/trips/stayKinds";
+import VoteButton from "@/components/VoteButton";
 import type { TripStay, TripStayCandidate } from "@/lib/api";
 import { dateRange } from "@/lib/format";
 import {
@@ -22,7 +21,7 @@ import {
   useWithdrawCandidate,
 } from "@/lib/hooks/useTrips";
 import { durations } from "@/lib/motion";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 import { nearestWatched } from "@/lib/tripRange";
 import StayDialog from "./StayDialog";
 
@@ -113,9 +112,9 @@ export default function TripCandidates({
         confirmLabel="Make it a base"
         pendingLabel="Adding…"
         pending={accept.isPending}
-        onConfirm={async () => {
-          if (confirming) await accept.mutateAsync(confirming);
-          setConfirming(null);
+        onConfirm={() => {
+          if (!confirming) return;
+          accept.mutate(confirming, { onSuccess: () => setConfirming(null) });
         }}
         onCancel={() => setConfirming(null)}
       />
@@ -181,6 +180,7 @@ function CandidateRow({
 }) {
   const vote = useVoteCandidate(tripId);
   const withdraw = useWithdrawCandidate(tripId);
+  const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
   const { label } = stayKind(candidate.kind);
   const near = nearestWatched(candidate, stays);
   const mine = candidate.proposed_by === viewerId;
@@ -217,175 +217,150 @@ function CandidateRow({
     actions.push({
       label: mine ? "Withdraw" : "Remove",
       icon: <DeleteOutlinedIcon fontSize="small" />,
-      onClick: () => withdraw.mutate(candidate.id),
+      onClick: () => setConfirmingWithdraw(true),
       danger: true,
     });
   }
 
   return (
-    <Box
-      data-testid="candidate-row"
-      sx={{
-        borderRadius: `${tokens.radii.md}px`,
-        bgcolor: tokens.surfaceHigh,
-        overflow: "hidden",
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "center", pr: 0.5 }}>
-        <ButtonBase
-          onClick={onToggle}
-          aria-expanded={isOpen}
-          aria-label={`${candidate.name}, ${candidate.upvotes} for, ${candidate.downvotes} against`}
-          sx={{
-            flex: 1,
-            minWidth: 0,
-            minHeight: tokens.touch.row,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-            gap: 1,
-            px: 1.5,
-            py: 1,
-            textAlign: "left",
-          }}
-        >
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography
-              noWrap
-              sx={{
-                fontFamily: fonts.label,
-                fontWeight: 600,
-                fontSize: "0.9375rem",
-              }}
-            >
-              {candidate.name}
-            </Typography>
+    <>
+      <Box
+        data-testid="candidate-row"
+        sx={{
+          borderRadius: `${tokens.radii.md}px`,
+          bgcolor: tokens.surfaceHigh,
+          overflow: "hidden",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", pr: 0.5 }}>
+          <ButtonBase
+            onClick={onToggle}
+            aria-expanded={isOpen}
+            aria-label={`${candidate.name}, ${candidate.upvotes} for, ${candidate.downvotes} against`}
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              minHeight: tokens.touch.row,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              gap: 1,
+              px: 1.5,
+              py: 1,
+              textAlign: "left",
+            }}
+          >
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                noWrap
+                sx={{
+                  fontFamily: fonts.label,
+                  fontWeight: 600,
+                  fontSize: "0.9375rem",
+                }}
+              >
+                {candidate.name}
+              </Typography>
+              <Typography
+                sx={{
+                  ...factLabelSx,
+                  fontSize: "0.8125rem",
+                  fontWeight: 400,
+                }}
+              >
+                {candidate.arrival
+                  ? dateRange(candidate.arrival, candidate.departure)
+                  : "No dates yet"}
+              </Typography>
+            </Box>
+            <RolePill>{label}</RolePill>
+          </ButtonBase>
+          <RowMenu actions={actions} label={`Actions for ${candidate.name}`} />
+        </Box>
+
+        <Box sx={{ px: 1.5, pb: 1 }}>
+          <SupportBar up={candidate.upvotes} down={candidate.downvotes} />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
             <Typography
               sx={{
                 ...factLabelSx,
                 fontSize: "0.8125rem",
                 fontWeight: 400,
+                flex: 1,
+                minWidth: 0,
               }}
             >
-              {candidate.arrival
-                ? dateRange(candidate.arrival, candidate.departure)
-                : "No dates yet"}
+              {supporters.length > 0 && `For: ${supporters.join(", ")}`}
+              {supporters.length > 0 && objectors.length > 0 && "  ·  "}
+              {objectors.length > 0 && `Against: ${objectors.join(", ")}`}
+            </Typography>
+            <VoteButton
+              direction="up"
+              label={`Vote for ${candidate.name}`}
+              count={candidate.upvotes}
+              pressed={candidate.viewer_vote === 1}
+              disabled={vote.isPending}
+              // Pressing your own vote again takes it back.
+              onClick={() =>
+                vote.mutate({
+                  candidateId: candidate.id,
+                  vote: candidate.viewer_vote === 1 ? null : 1,
+                })
+              }
+            />
+            <VoteButton
+              direction="down"
+              label={`Vote against ${candidate.name}`}
+              count={candidate.downvotes}
+              pressed={candidate.viewer_vote === -1}
+              disabled={vote.isPending}
+              onClick={() =>
+                vote.mutate({
+                  candidateId: candidate.id,
+                  vote: candidate.viewer_vote === -1 ? null : -1,
+                })
+              }
+            />
+          </Box>
+        </Box>
+
+        <Collapse in={isOpen} timeout={durations.base} unmountOnExit>
+          <Box sx={{ px: 1.5, pb: 1.5 }}>
+            <Typography sx={{ ...factLabelSx, display: "block" }}>
+              Put up by {candidate.proposed_by_username}
+            </Typography>
+
+            {candidate.description && (
+              <Box sx={{ mt: 0.5 }}>
+                <MarkdownText>{candidate.description}</MarkdownText>
+              </Box>
+            )}
+
+            {/* The number that decides it: a bed is only a good base if the
+              water the group came for is near it. */}
+            <Typography sx={{ ...factLabelSx, mt: 0.5, display: "block" }}>
+              {near
+                ? `${near.km.toFixed(1)} km to ${near.name}${near.river ? ` on the ${near.river}` : ""}`
+                : "No location yet, so no distance to go on"}
             </Typography>
           </Box>
-          <RolePill>{label}</RolePill>
-        </ButtonBase>
-        <RowMenu actions={actions} label={`Actions for ${candidate.name}`} />
+        </Collapse>
       </Box>
-
-      <Box sx={{ px: 1.5, pb: 1 }}>
-        <SupportBar up={candidate.upvotes} down={candidate.downvotes} />
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
-          <Typography
-            sx={{
-              ...factLabelSx,
-              fontSize: "0.8125rem",
-              fontWeight: 400,
-              flex: 1,
-              minWidth: 0,
-            }}
-          >
-            {supporters.length > 0 && `For: ${supporters.join(", ")}`}
-            {supporters.length > 0 && objectors.length > 0 && "  ·  "}
-            {objectors.length > 0 && `Against: ${objectors.join(", ")}`}
-          </Typography>
-          <VoteButton
-            label={`Vote for ${candidate.name}`}
-            icon={<ThumbUpOutlinedIcon sx={{ fontSize: 18 }} />}
-            count={candidate.upvotes}
-            pressed={candidate.viewer_vote === 1}
-            disabled={vote.isPending}
-            // Pressing your own vote again takes it back.
-            onClick={() =>
-              vote.mutate({
-                candidateId: candidate.id,
-                vote: candidate.viewer_vote === 1 ? null : 1,
-              })
-            }
-          />
-          <VoteButton
-            label={`Vote against ${candidate.name}`}
-            icon={<ThumbDownOutlinedIcon sx={{ fontSize: 18 }} />}
-            count={candidate.downvotes}
-            pressed={candidate.viewer_vote === -1}
-            disabled={vote.isPending}
-            onClick={() =>
-              vote.mutate({
-                candidateId: candidate.id,
-                vote: candidate.viewer_vote === -1 ? null : -1,
-              })
-            }
-          />
-        </Box>
-      </Box>
-
-      <Collapse in={isOpen} timeout={durations.base} unmountOnExit>
-        <Box sx={{ px: 1.5, pb: 1.5 }}>
-          <Typography sx={{ ...factLabelSx, display: "block" }}>
-            Put up by {candidate.proposed_by_username}
-          </Typography>
-
-          {candidate.description && (
-            <Box sx={{ mt: 0.5 }}>
-              <MarkdownText>{candidate.description}</MarkdownText>
-            </Box>
-          )}
-
-          {/* The number that decides it: a bed is only a good base if the
-              water the group came for is near it. */}
-          <Typography sx={{ ...factLabelSx, mt: 0.5, display: "block" }}>
-            {near
-              ? `${near.km.toFixed(1)} km to ${near.name}${near.river ? ` on the ${near.river}` : ""}`
-              : "No location yet, so no distance to go on"}
-          </Typography>
-        </Box>
-      </Collapse>
-    </Box>
-  );
-}
-
-function VoteButton({
-  label,
-  icon,
-  count,
-  pressed,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  icon: ReactNode;
-  count: number;
-  pressed: boolean;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <ButtonBase
-      aria-label={label}
-      aria-pressed={pressed}
-      disabled={disabled}
-      onClick={onClick}
-      sx={{
-        minWidth: tokens.touch.min,
-        minHeight: tokens.touch.min,
-        gap: 0.75,
-        px: 1.5,
-        borderRadius: `${tokens.radii.sm}px`,
-        border: "1px solid",
-        borderColor: pressed ? tokens.primary : tokens.outlineVariant,
-        bgcolor: pressed ? `${tokens.primary}${alphas.tint}` : "transparent",
-        color: pressed ? tokens.primary : tokens.onSurfaceVariant,
-        fontFamily: fonts.label,
-        fontWeight: 600,
-        fontSize: "0.8125rem",
-      }}
-    >
-      {icon}
-      {count}
-    </ButtonBase>
+      <ConfirmDialog
+        open={confirmingWithdraw}
+        title={mine ? "Withdraw this suggestion?" : "Remove this suggestion?"}
+        body={`"${candidate.name}" and its votes are dropped from the trip.`}
+        confirmLabel={mine ? "Withdraw" : "Remove"}
+        pendingLabel={mine ? "Withdrawing…" : "Removing…"}
+        color="error"
+        pending={withdraw.isPending}
+        onConfirm={() =>
+          withdraw.mutate(candidate.id, {
+            onSuccess: () => setConfirmingWithdraw(false),
+          })
+        }
+        onCancel={() => setConfirmingWithdraw(false)}
+      />
+    </>
   );
 }
