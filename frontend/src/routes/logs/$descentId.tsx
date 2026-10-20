@@ -16,6 +16,7 @@ import MissingState from "@/components/states/MissingState";
 import { descentTitle } from "@/lib/descents";
 import { formatDate } from "@/lib/format";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
+import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useSession } from "@/lib/hooks/useSession";
 import { theme } from "@/lib/theme";
 
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/logs/$descentId")({
 
 function LogDetailPage() {
   const navigate = useNavigate();
+  const goBack = useGoBack(() => navigate({ to: "/logs", replace: true }));
   const { descentId } = Route.useParams();
   const { edit } = Route.useSearch();
   const { user } = useSession();
@@ -64,7 +66,7 @@ function LogDetailPage() {
   if (!descent) {
     return (
       <Box sx={embedded ? undefined : { maxWidth: 720, mx: "auto" }}>
-        {!embedded && <PanelHeader title="Log" onBack={() => history.back()} />}
+        {!embedded && <PanelHeader title="Log" onBack={goBack} />}
         <MissingState
           error={error}
           notFound="Log not found."
@@ -153,7 +155,7 @@ function LogDetailPage() {
         <PanelHeader
           title={title}
           subtitle={subtitle}
-          onBack={() => history.back()}
+          onBack={goBack}
           actionButton={menu}
         />
       )}

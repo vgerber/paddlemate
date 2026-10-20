@@ -5,6 +5,7 @@ import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import TripDetail from "@/components/trip-page/TripDetail";
+import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useTrip } from "@/lib/hooks/useTrips";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/trips/$tripId")({
  * direct link. Desktop opens the same view beside the list instead. */
 function TripDetailPage() {
   const navigate = useNavigate();
+  const goBack = useGoBack(() => navigate({ to: "/trips", replace: true }));
   const { tripId } = Route.useParams();
   const { edit } = Route.useSearch();
   const tripQuery = useTrip(Number(tripId));
@@ -75,7 +77,7 @@ function TripDetailPage() {
             replace: true,
           })
         }
-        onClose={() => history.back()}
+        onClose={goBack}
         onDeleted={() => navigate({ to: "/trips", replace: true })}
       />
     </Box>

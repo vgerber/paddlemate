@@ -3,6 +3,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import LoadingBox from "@/components/states/LoadingBox";
 import TripForm from "@/components/trips/TripForm";
+import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useSession } from "@/lib/hooks/useSession";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/trips/new")({
 
 function NewTripPage() {
   const navigate = useNavigate();
+  const goBack = useGoBack(() => navigate({ to: "/trips", replace: true }));
   const { isAuthenticated, isLoading } = useSession();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"), { noSsr: true });
 
@@ -39,7 +41,7 @@ function NewTripPage() {
             replace: true,
           })
         }
-        onCancel={() => history.back()}
+        onCancel={goBack}
       />
     </Box>
   );

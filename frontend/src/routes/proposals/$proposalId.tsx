@@ -16,6 +16,7 @@ import type {
   ProposalOperation,
   ProposalStatus,
 } from "@/lib/api";
+import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useProposal } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
 import { theme } from "@/lib/theme";
@@ -81,21 +82,17 @@ function ProposalPage() {
   } = useProposal(Number(proposalId));
   const { isAdmin } = useSession();
 
-  const goBack = () => {
-    if (window.history.length > 1) {
-      router.history.back();
-    } else {
-      router.navigate({
-        to: "/proposals",
-        search: {
-          status: "pending",
-          entity_type: undefined,
-          operation: undefined,
-          selected: undefined,
-        },
-      });
-    }
-  };
+  const goBack = useGoBack(() =>
+    router.navigate({
+      to: "/proposals",
+      search: {
+        status: "pending",
+        entity_type: undefined,
+        operation: undefined,
+        selected: undefined,
+      },
+    }),
+  );
 
   return (
     <Box sx={{ maxWidth: 720, mx: "auto" }}>
