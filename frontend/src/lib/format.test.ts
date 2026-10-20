@@ -11,6 +11,7 @@ import {
   humanize,
   readingTime,
   sectionPlace,
+  sentenceCase,
   timeAgo,
   todayIso,
 } from "./format";
@@ -188,5 +189,13 @@ describe("readingTime", () => {
     const at = new Date(2026, 9, 9, 16, 48).toISOString();
     expect(readingTime(at, now)).toBe(dayTime(at));
     expect(dayTime(at)).toEndWith(", 16:48");
+  });
+});
+
+describe("sentenceCase", () => {
+  test("capitalises the first letter only", () => {
+    expect(sentenceCase("put in")).toBe("Put in");
+    expect(sentenceCase("Weir")).toBe("Weir");
+    expect(sentenceCase("")).toBe("");
   });
 });

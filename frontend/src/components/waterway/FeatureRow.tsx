@@ -3,13 +3,12 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { humanize } from "@/lib/format";
+import { humanize, sentenceCase } from "@/lib/format";
 import { labelSx } from "@/lib/theme";
 import {
   FULL_SECTION_TOLERANCE_M,
   fmtKm,
   fmtKmSpan,
-  sentence,
 } from "./section-details/utils";
 
 /** Position along the section line - the subset of ComputedFeature the row
@@ -98,7 +97,9 @@ export default function FeatureRow({
             {detail}
           </Typography>
         )}
-        <Typography sx={labelSx}>{sentence(humanize(featureType))}</Typography>
+        <Typography sx={labelSx}>
+          {sentenceCase(humanize(featureType))}
+        </Typography>
         {description && (
           <Typography variant="caption" color="textSecondary">
             {description}

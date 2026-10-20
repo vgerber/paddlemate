@@ -25,16 +25,11 @@ import { theme } from "@/lib/theme";
 import {
   currentLevel,
   levelMarkerColor,
+  levelWord,
   type WaterLevel,
 } from "@/lib/waterLevel";
 
 const { tokens } = theme;
-
-const LEVEL_WORD: Partial<Record<WaterLevel, string>> = {
-  low: "Low",
-  medium: "Medium",
-  high: "High",
-};
 
 /** The plot of the inline card, in px (the rail's follows its height). The
  * phone's grows by the free room the pane measured (--chart-extra). */
@@ -84,9 +79,9 @@ function useReadingView(
 ): ReadingView | null {
   if (!charted) return null;
   const unit = charted.series.unit;
-  const levelWord = (level: WaterLevel | null) => {
-    const word = level && LEVEL_WORD[level];
-    return level && word ? { word, color: levelMarkerColor(level) } : undefined;
+  const levelView = (level: WaterLevel | null) => {
+    if (!level || level === "empty") return undefined;
+    return { word: levelWord(level), color: levelMarkerColor(level) };
   };
   const latest = charted.latest_reading;
   const stale = isStale(
@@ -108,7 +103,7 @@ function useReadingView(
     age: timeAgo(latest.measured_at),
     value: latest.value,
     unit,
-    level: levelWord(currentLevel([charted])),
+    level: levelView(currentLevel([charted])),
     stale: false,
   };
 }

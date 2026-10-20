@@ -17,7 +17,7 @@ import {
 } from "recharts";
 import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
 import type { GaugeReading, WaterRangeWithStatus } from "@/lib/api";
-import { humanize } from "@/lib/format";
+import { humanize, sentenceCase } from "@/lib/format";
 import { useGaugeReadings } from "@/lib/hooks/useGauges";
 import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
@@ -89,11 +89,6 @@ export function dayTicks([from, to]: [number, number], target = 4): number[] {
     ticks.push(d.getTime());
   }
   return ticks;
-}
-
-function typeCaption(type: string): string {
-  const text = humanize(type);
-  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function formatTick(v: number): string {
@@ -632,7 +627,7 @@ export default function SeriesChart({
               component="span"
               sx={{ fontWeight: 400, color: "text.secondary" }}
             >
-              {` · ${typeCaption(selectedFeature.type)}`}
+              {` · ${sentenceCase(humanize(selectedFeature.type))}`}
             </Box>
           </Typography>
         </Box>

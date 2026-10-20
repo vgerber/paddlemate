@@ -8,12 +8,9 @@ import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { DotKind } from "@/components/TimelineRail";
-import {
-  featureName,
-  sentence,
-} from "@/components/waterway/section-details/utils";
+import { featureName } from "@/components/waterway/section-details/utils";
 import type { HistoryStep, SectionWithFeatures } from "@/lib/api";
-import { formatDate, humanize } from "@/lib/format";
+import { formatDate, humanize, sentenceCase } from "@/lib/format";
 import { useSession } from "@/lib/hooks/useSession";
 import { localizedName } from "@/lib/localization";
 import { labelSx, theme } from "@/lib/theme";
@@ -50,7 +47,7 @@ export function sectionEntries(section: SectionWithFeatures): EntryRef[] {
         kind: "feature",
         id: f.id,
         name: featureName(f),
-        label: sentence(humanize(f.feature_type)),
+        label: sentenceCase(humanize(f.feature_type)),
       }),
     ),
   ];

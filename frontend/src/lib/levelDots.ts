@@ -1,4 +1,5 @@
 import type { components } from "@/lib/api/schema";
+import { plural } from "@/lib/format";
 import { currentLevel, type WaterLevel } from "@/lib/waterLevel";
 
 type WaterStatus = components["schemas"]["SectionWaterStatus"];
@@ -36,11 +37,10 @@ export function dotsLabel(levels: DotLevel[]): string {
   if (levels.length === 0) return "";
   const c = countLevels(levels);
   const running = c.low + c.medium + c.high;
-  const noun = levels.length === 1 ? "section" : "sections";
   const parts = (["low", "medium", "high"] as const)
     .filter((l) => c[l] > 0)
     .map((l) => `${c[l]} ${l}`);
-  const head = `${running} of ${levels.length} ${noun} running`;
+  const head = `${running} of ${plural(levels.length, "section")} running`;
   const tail = [
     parts.join(", "),
     c.empty > 0 ? `${c.empty} too low` : "",
