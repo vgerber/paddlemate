@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Skeleton from "@mui/material/Skeleton";
 import Typography from "@mui/material/Typography";
+import type { ReactNode } from "react";
 import { apiErrorMessage } from "@/lib/api/client";
 import { theme } from "@/lib/theme";
 
@@ -64,4 +65,29 @@ export function ChartError({
       </Button>
     </Box>
   );
+}
+
+export interface ChartLoad {
+  isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+  refetch: () => void;
+}
+
+/** The plot area: the error note, the skeleton, or the chart. `pending`
+ * holds the skeleton for a reason beyond the load (a swipe in flight). */
+export function ChartBody({
+  load,
+  pending = false,
+  children,
+}: {
+  load?: ChartLoad;
+  pending?: boolean;
+  children: ReactNode;
+}) {
+  if (load?.isError) {
+    return <ChartError error={load.error} onRetry={load.refetch} />;
+  }
+  if (load?.isLoading || pending) return <ChartSkeleton />;
+  return children;
 }

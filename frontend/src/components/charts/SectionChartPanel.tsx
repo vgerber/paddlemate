@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import ChartCard from "@/components/charts/ChartCard";
-import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
+import { ChartBody } from "@/components/charts/ChartStatus";
 import { useChartPanelState } from "@/components/charts/chartState";
 import ReadingChart, {
   type ChartPlacement,
@@ -67,35 +67,32 @@ export default function SectionChartPanel({
     );
   }
   return (
-    <>
-      <ChartCard
-        ranges={ranges}
-        timeRange={timeRange}
-        onTimeRangeChange={setTimeRange}
-        measurementType={measurementType}
-        onMeasurementTypeChange={setMeasurementType}
-        preferredFeatureId={preferredFeatureId}
-        short={isLoading || isError}
-        footer={footer}
-      >
-        {(headroom) =>
-          isError ? (
-            <ChartError error={error} onRetry={() => refetch()} />
-          ) : isLoading || ghost ? (
-            <ChartSkeleton />
-          ) : (
-            <WaterChart
-              ranges={ranges}
-              selectedFeatureId={selectedFeatureId}
-              selectedFeature={selectedFeature}
-              preferredFeatureId={preferredFeatureId}
-              timeRange={timeRange}
-              measurementType={measurementType}
-              headroom={headroom}
-            />
-          )
-        }
-      </ChartCard>
-    </>
+    <ChartCard
+      ranges={ranges}
+      timeRange={timeRange}
+      onTimeRangeChange={setTimeRange}
+      measurementType={measurementType}
+      onMeasurementTypeChange={setMeasurementType}
+      preferredFeatureId={preferredFeatureId}
+      short={isLoading || isError}
+      footer={footer}
+    >
+      {(headroom) => (
+        <ChartBody
+          load={{ isLoading, isError, error, refetch }}
+          pending={ghost}
+        >
+          <WaterChart
+            ranges={ranges}
+            selectedFeatureId={selectedFeatureId}
+            selectedFeature={selectedFeature}
+            preferredFeatureId={preferredFeatureId}
+            timeRange={timeRange}
+            measurementType={measurementType}
+            headroom={headroom}
+          />
+        </ChartBody>
+      )}
+    </ChartCard>
   );
 }

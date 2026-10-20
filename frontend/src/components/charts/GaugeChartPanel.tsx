@@ -1,5 +1,5 @@
 import ChartCard from "@/components/charts/ChartCard";
-import { ChartSkeleton } from "@/components/charts/ChartStatus";
+import { ChartBody } from "@/components/charts/ChartStatus";
 import { useChartPanelState } from "@/components/charts/chartState";
 import ReadingChart, {
   type ChartPlacement,
@@ -51,10 +51,8 @@ export default function GaugeChartPanel({
       onDismiss={onClose}
       footer={footer}
     >
-      {(headroom) =>
-        ghost ? (
-          <ChartSkeleton />
-        ) : (
+      {(headroom) => (
+        <ChartBody pending={ghost}>
           <WaterChart
             ranges={ranges}
             showThresholds={false}
@@ -62,8 +60,8 @@ export default function GaugeChartPanel({
             measurementType={measurementType}
             headroom={headroom}
           />
-        )
-      }
+        </ChartBody>
+      )}
     </ChartCard>
   );
 }
