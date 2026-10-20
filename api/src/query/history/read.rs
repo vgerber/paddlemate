@@ -1,7 +1,12 @@
 use chrono::{DateTime, Utc};
-use sqlx::{PgPool, Row, postgres::PgRow};
+use sqlx::{
+    PgPool, Postgres, Row,
+    postgres::{PgArguments, PgRow},
+    query::Query,
+    types::Json,
+};
 
-use super::Scope;
+use super::{EntityKind, Scope};
 use crate::models::history::{
     Contributor, HistoryChange, HistorySource, HistoryStep, HistoryUser, SourceEntries, StepKind,
     WaterwaySources,
@@ -30,12 +35,15 @@ fn source(row: &PgRow) -> HistorySource {
     }
 }
 
-fn step(row: &PgRow) -> HistoryStep {
-    let changes: serde_json::Value = row.get("changes");
-    HistoryStep {
+fn step(row: &PgRow) -> Result<HistoryStep, sqlx::Error> {
+    let kind: String = row.try_get("kind")?;
+    let kind = StepKind::parse(&kind)
+        .ok_or_else(|| sqlx::Error::Decode(format!("unknown step kind {kind:?}").into()))?;
+    let Json(changes): Json<Vec<HistoryChange>> = row.try_get("changes")?;
+    Ok(HistoryStep {
         id: row.get("id"),
         at: row.get("at"),
-        kind: StepKind::from_db(&row.get::<String, _>("kind")),
+        kind,
         actor: user(row, "actor_user_id", "actor_name"),
         source: row
             .get::<Option<String>, _>("source_id")
@@ -44,24 +52,58 @@ fn step(row: &PgRow) -> HistoryStep {
         proposal_id: row.get("proposal_id"),
         proposal_note: row.get("proposal_note"),
         reviewer: user(row, "reviewer_user_id", "reviewer_name"),
-        changes: serde_json::from_value::<Vec<HistoryChange>>(changes).unwrap_or_default(),
-    }
+        changes,
+    })
 }
 
-/// Whether the entity has any recorded step, found through its parents.
-pub async fn entity_has_steps(pool: &PgPool, scope: &Scope) -> Result<bool, sqlx::Error> {
-    let row = sqlx::query(
-        "SELECT EXISTS (SELECT 1 FROM entity_history \
-         WHERE entity_kind = $1 AND entity_id = $2 AND waterway_id = $3 \
-           AND section_id IS NOT DISTINCT FROM $4)",
+/// Matches one entity through all its parents, binds `$1` to `$4`.
+const SCOPE_WHERE: &str = "h.entity_kind = $1 AND h.entity_id = $2 AND h.waterway_id = $3 \
+     AND h.section_id IS NOT DISTINCT FROM $4";
+
+fn bind_scope<'q>(
+    query: Query<'q, Postgres, PgArguments>,
+    scope: &Scope,
+) -> Query<'q, Postgres, PgArguments> {
+    query
+        .bind(scope.kind.as_str())
+        .bind(scope.id)
+        .bind(scope.waterway_id)
+        .bind(scope.section_id)
+}
+
+/// Whether the entity is known: it has a recorded step (also after it was
+/// deleted) or it still exists without one (made by a bulk import). Found
+/// through its parents, so an id under another parent's path is unknown.
+pub async fn is_known(pool: &PgPool, scope: &Scope) -> Result<bool, sqlx::Error> {
+    let steps = bind_scope(
+        sqlx::query(&format!(
+            "SELECT EXISTS (SELECT 1 FROM entity_history h WHERE {SCOPE_WHERE})"
+        )),
+        scope,
     )
-    .bind(scope.kind.as_str())
-    .bind(scope.id)
-    .bind(scope.waterway_id)
-    .bind(scope.section_id)
     .fetch_one(pool)
     .await?;
-    Ok(row.get(0))
+    if steps.get(0) {
+        return Ok(true);
+    }
+    let live = match scope.kind {
+        EntityKind::Waterway => {
+            sqlx::query("SELECT EXISTS (SELECT 1 FROM waterways WHERE id = $1)").bind(scope.id)
+        }
+        EntityKind::Section => sqlx::query(
+            "SELECT EXISTS (SELECT 1 FROM water_sections WHERE id = $1 AND waterway_id = $2)",
+        )
+        .bind(scope.id)
+        .bind(scope.waterway_id),
+        EntityKind::Feature => sqlx::query(
+            "SELECT EXISTS (SELECT 1 FROM features f JOIN water_sections s ON s.id = f.section_id \
+             WHERE f.id = $1 AND f.section_id = $2 AND s.waterway_id = $3)",
+        )
+        .bind(scope.id)
+        .bind(scope.section_id)
+        .bind(scope.waterway_id),
+    };
+    Ok(live.fetch_one(pool).await?.get(0))
 }
 
 /// One page of the entity's steps, oldest first, and the total count. The
@@ -73,47 +115,43 @@ pub async fn list_steps(
     page: i64,
     per_page: i64,
 ) -> Result<(Vec<HistoryStep>, i64), sqlx::Error> {
-    let total: i64 = sqlx::query(
-        "SELECT count(*) FROM entity_history \
-         WHERE entity_kind = $1 AND entity_id = $2 AND waterway_id = $3 \
-           AND section_id IS NOT DISTINCT FROM $4",
+    let total: i64 = bind_scope(
+        sqlx::query(&format!(
+            "SELECT count(*) FROM entity_history h WHERE {SCOPE_WHERE}"
+        )),
+        scope,
     )
-    .bind(scope.kind.as_str())
-    .bind(scope.id)
-    .bind(scope.waterway_id)
-    .bind(scope.section_id)
     .fetch_one(pool)
     .await?
     .get(0);
 
-    let rows = sqlx::query(
-        "SELECT h.id, h.at, h.kind, h.proposal_id, h.changes, \
-                au.id AS actor_user_id, au.username AS actor_name, \
-                ru.id AS reviewer_user_id, ru.username AS reviewer_name, \
-                s.id AS source_id, s.name AS source_name, \
-                COALESCE(s.short_name, s.name) AS source_short_name, \
-                s.website AS source_website, s.license_name AS source_license_name, \
-                s.license_url AS source_license_url, pr.submitter_note AS proposal_note \
-         FROM entity_history h \
-         LEFT JOIN users au ON au.id = h.actor_id \
-         LEFT JOIN users ru ON ru.id = h.reviewer_id \
-         LEFT JOIN sources s ON s.id = h.source_id \
-         LEFT JOIN proposals pr ON pr.id = h.proposal_id \
-         WHERE h.entity_kind = $1 AND h.entity_id = $2 AND h.waterway_id = $3 \
-           AND h.section_id IS NOT DISTINCT FROM $4 \
-         ORDER BY h.at, h.id \
-         LIMIT $5 OFFSET $6",
+    let rows = bind_scope(
+        sqlx::query(&format!(
+            "SELECT h.id, h.at, h.kind, h.proposal_id, h.changes, \
+                    au.id AS actor_user_id, au.username AS actor_name, \
+                    ru.id AS reviewer_user_id, ru.username AS reviewer_name, \
+                    s.id AS source_id, s.name AS source_name, \
+                    COALESCE(s.short_name, s.name) AS source_short_name, \
+                    s.website AS source_website, s.license_name AS source_license_name, \
+                    s.license_url AS source_license_url, pr.submitter_note AS proposal_note \
+             FROM entity_history h \
+             LEFT JOIN users au ON au.id = h.actor_id \
+             LEFT JOIN users ru ON ru.id = h.reviewer_id \
+             LEFT JOIN sources s ON s.id = h.source_id \
+             LEFT JOIN proposals pr ON pr.id = h.proposal_id \
+             WHERE {SCOPE_WHERE} \
+             ORDER BY h.at, h.id \
+             LIMIT $5 OFFSET $6"
+        )),
+        scope,
     )
-    .bind(scope.kind.as_str())
-    .bind(scope.id)
-    .bind(scope.waterway_id)
-    .bind(scope.section_id)
     .bind(per_page)
     .bind((page - 1) * per_page)
     .fetch_all(pool)
     .await?;
 
-    Ok((rows.iter().map(step).collect(), total))
+    let steps = rows.iter().map(step).collect::<Result<_, _>>()?;
+    Ok((steps, total))
 }
 
 /// Every source and contributor named by a river's history, including its

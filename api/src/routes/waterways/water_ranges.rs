@@ -64,8 +64,7 @@ pub async fn create_water_range(
         Ok(true) => {}
         Ok(false) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error validating feature ownership: {}", err);
-            return ApiError::internal().into_response();
+            return ApiError::from_db("Error validating feature ownership", &err).into_response();
         }
     }
 

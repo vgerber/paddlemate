@@ -87,7 +87,10 @@ pub async fn create_section(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path(waterway_id): Path<WaterwayId>,
-    Json(Proposable { mut body, proposal_note }): Json<Proposable<CreateSectionBody>>,
+    Json(Proposable {
+        mut body,
+        proposal_note,
+    }): Json<Proposable<CreateSectionBody>>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
@@ -117,8 +120,7 @@ pub async fn create_section(
         let mut tx = match app.pg_pool.begin().await {
             Ok(tx) => tx,
             Err(err) => {
-                tracing::error!("Error starting transaction: {}", err);
-                return ApiError::internal().into_response();
+                return ApiError::from_db("Error starting transaction", &err).into_response();
             }
         };
         let section = sections::create_section_bundle(
@@ -136,15 +138,9 @@ pub async fn create_section(
                     app.region_wake.notify_waiters();
                     (StatusCode::CREATED, Json(section)).into_response()
                 }
-                Err(err) => {
-                    tracing::error!("Error committing section: {}", err);
-                    ApiError::internal().into_response()
-                }
+                Err(err) => ApiError::from_db("Error committing section", &err).into_response(),
             },
-            Err(err) => {
-                tracing::error!("Error creating section: {}", err);
-                ApiError::internal().into_response()
-            }
+            Err(err) => ApiError::from_db("Error creating section", &err).into_response(),
         };
     }
 
@@ -162,10 +158,7 @@ pub async fn create_section(
     .await
     {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
-        Err(err) => {
-            tracing::error!("Error submitting section proposal: {}", err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error submitting section proposal", &err).into_response(),
     }
 }
 
@@ -184,7 +177,10 @@ pub async fn update_section(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id)): Path<(WaterwayId, SectionId)>,
-    Json(Proposable { body, proposal_note }): Json<Proposable<UpdateSectionBody>>,
+    Json(Proposable {
+        body,
+        proposal_note,
+    }): Json<Proposable<UpdateSectionBody>>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
@@ -230,8 +226,7 @@ pub async fn update_section(
     {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error submitting section update proposal: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error submitting section update proposal", &err).into_response()
         }
     }
 }
@@ -289,8 +284,7 @@ pub async fn delete_section(
     {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error submitting section delete proposal: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error submitting section delete proposal", &err).into_response()
         }
     }
 }

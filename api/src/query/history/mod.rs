@@ -3,16 +3,19 @@
 //!
 //! Retention: the history is the audit trail, so it is kept for as long as the
 //! data it explains. There is no cleanup job and no cascade from the entity; a
-//! deleted feature's history stays readable. Each step is bounded instead (see
+//! deleted entity's history stays readable, also when the river or section it
+//! hung off was deleted (that delete records a step for each child). Each step is bounded instead (see
 //! `record::MAX_CHANGES` and `record::MAX_VALUE_CHARS`).
 
 mod read;
 mod record;
 mod snapshot;
+mod track;
 
-pub use read::{entity_has_steps, list_steps, list_waterway_sources};
+pub use read::{is_known, list_steps, list_waterway_sources};
 pub use record::{Op, Via, diff, record};
 pub use snapshot::{State, scope_of, snapshot};
+pub use track::{tracked_delete, tracked_edit};
 
 /// The kind of entity a history belongs to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

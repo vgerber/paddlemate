@@ -285,16 +285,13 @@ async fn waterway_writes_leave_steps(pool: PgPool) {
     )
     .await;
     assert_eq!(r.status, StatusCode::NO_CONTENT);
-    let deleted: i64 = sqlx::query_scalar(
-        "SELECT count(*) FROM entity_history WHERE entity_kind = 'waterway' AND entity_id = $1 AND kind = 'deleted'",
-    )
-    .bind(id)
-    .fetch_one(&pool)
-    .await
-    .unwrap();
-    assert_eq!(deleted, 1);
+    // The river is gone, its history is not.
+    let h = get(&app, &format!("/waterways/{id}/history")).await;
+    assert_eq!(h.status, StatusCode::OK);
+    assert_eq!(kinds(&h.body), ["created", "edited", "deleted"]);
+    // The sources view needs a live river.
     assert_eq!(
-        get(&app, &format!("/waterways/{id}/history")).await.status,
+        get(&app, &format!("/waterways/{id}/sources")).await.status,
         StatusCode::NOT_FOUND
     );
 }
@@ -336,14 +333,9 @@ async fn section_writes_leave_steps(pool: PgPool) {
     )
     .await;
     assert_eq!(r.status, StatusCode::NO_CONTENT);
-    let deleted: i64 = sqlx::query_scalar(
-        "SELECT count(*) FROM entity_history WHERE entity_kind = 'section' AND entity_id = $1 AND kind = 'deleted'",
-    )
-    .bind(s)
-    .fetch_one(&pool)
-    .await
-    .unwrap();
-    assert_eq!(deleted, 1);
+    let h = get(&app, &format!("/waterways/{w}/sections/{s}/history")).await;
+    assert_eq!(h.status, StatusCode::OK);
+    assert_eq!(kinds(&h.body), ["created", "edited", "deleted"]);
 }
 
 #[sqlx::test]
@@ -903,7 +895,11 @@ async fn sources_view_can_be_scoped_to_one_section(pool: PgPool) {
     assert_eq!(r.body["sources"][0]["entries"], 3);
 
     // A section of another river is not reachable through this one.
-    let r = get(&app, &format!("/waterways/{w}/sources?section_id={foreign}")).await;
+    let r = get(
+        &app,
+        &format!("/waterways/{w}/sources?section_id={foreign}"),
+    )
+    .await;
     assert_eq!(r.status, StatusCode::NOT_FOUND);
 }
 
@@ -1120,4 +1116,126 @@ async fn the_backfill_gives_old_rows_a_first_step(pool: PgPool) {
         changes[1],
         json!({ "field": "name", "before": "S2", "after": "S2 new" })
     );
+}
+
+async fn approve(app: &Router, proposal: i64) {
+    let r = call(
+        app,
+        Method::PATCH,
+        &format!("/proposals/{proposal}"),
+        Who::Admin,
+        Some(json!({ "status": "approved" })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+}
+
+#[sqlx::test]
+async fn deleting_a_parent_leaves_a_step_for_each_child(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let other = make_waterway(&app, "Lech").await;
+    let s1 = make_section(&app, w, "Upper", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let s2 = make_section(&app, w, "Lower", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let f1 = make_feature(&app, w, s1, "Weir").await;
+    let f2 = make_feature(&app, w, s2, "Ramp").await;
+
+    // A section deleted by an accepted proposal: its feature gets a step that
+    // carries the proposal, and stays readable through the old path.
+    let r = call(
+        &app,
+        Method::DELETE,
+        &format!("/waterways/{w}/sections/{s1}"),
+        Who::User("mara-1"),
+        None,
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::ACCEPTED);
+    let pid = r.body["id"].as_i64().unwrap();
+    approve(&app, pid).await;
+    let path = format!("/waterways/{w}/sections/{s1}/features/{f1}/history");
+    let h = get(&app, &path).await;
+    assert_eq!(kinds(&h.body), ["created", "deleted"]);
+    assert_eq!(h.body["items"][1]["proposal_id"], pid);
+    let h = get(&app, &format!("/waterways/{w}/sections/{s1}/history")).await;
+    assert_eq!(kinds(&h.body), ["created", "deleted"]);
+    // Not through another parent's path.
+    for path in [
+        format!("/waterways/{other}/sections/{s1}/features/{f1}/history"),
+        format!("/waterways/{w}/sections/{s2}/features/{f1}/history"),
+        format!("/waterways/{other}/sections/{s1}/history"),
+    ] {
+        assert_eq!(
+            get(&app, &path).await.status,
+            StatusCode::NOT_FOUND,
+            "{path}"
+        );
+    }
+
+    // A river deleted by an admin: sections and features under it get steps.
+    let r = call(
+        &app,
+        Method::DELETE,
+        &format!("/waterways/{w}"),
+        Who::Admin,
+        None,
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NO_CONTENT);
+    let h = get(&app, &format!("/waterways/{w}/sections/{s2}/history")).await;
+    assert_eq!(kinds(&h.body), ["created", "deleted"]);
+    let h = get(
+        &app,
+        &format!("/waterways/{w}/sections/{s2}/features/{f2}/history"),
+    )
+    .await;
+    assert_eq!(kinds(&h.body), ["created", "deleted"]);
+    // The sibling river is untouched.
+    let h = get(&app, &format!("/waterways/{other}/history")).await;
+    assert_eq!(kinds(&h.body), ["created"]);
+}
+
+#[sqlx::test]
+async fn an_accepted_edit_waits_for_the_row_lock(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let r = call(
+        &app,
+        Method::PUT,
+        &format!("/waterways/{w}"),
+        Who::User("mara-1"),
+        Some(json!({ "description": "From mara" })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::ACCEPTED);
+    let pid = r.body["id"].as_i64().unwrap();
+
+    // A concurrent edit holds the row. The approval must wait for it and take
+    // its result as the before state, or the recorded change would be wrong.
+    let mut tx = pool.begin().await.unwrap();
+    sqlx::query("UPDATE waterways SET description = 'Concurrent' WHERE id = $1")
+        .bind(w)
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    let waiting = tokio::spawn({
+        let app = app.clone();
+        async move { approve(&app, pid).await }
+    });
+    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    assert!(!waiting.is_finished(), "approval did not wait for the lock");
+    tx.commit().await.unwrap();
+    waiting.await.unwrap();
+
+    let h = get(&app, &format!("/waterways/{w}/history")).await;
+    let step = &h.body["items"][1];
+    assert_eq!(step["kind"], "proposal_accepted");
+    assert_eq!(change(step, "description")["before"], "Concurrent");
+    assert_eq!(change(step, "description")["after"], "From mara");
 }

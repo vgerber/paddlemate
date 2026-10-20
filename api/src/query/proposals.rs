@@ -9,7 +9,7 @@ use crate::models::{
     },
     water_section::CreateSectionBody,
 };
-use crate::query::history::{self, EntityKind, Op, Scope, State, Via};
+use crate::query::history::{self, EntityKind, Via};
 use crate::query::{features, gauges, sections, waterways};
 
 /// Proposals submitted before language tags were normalized at the API
@@ -83,11 +83,12 @@ fn row_to_proposal(row: &PgRow) -> Proposal {
         proposed_data: row.get("proposed_data"),
         original_data: row.get("original_data"),
         submitted_by: row.get("submitted_by"),
-        // Only the listing queries join the names in; see `with_names`.
-        submitted_by_name: row.try_get("submitted_by_name").ok().flatten(),
+        // The listing queries join the names in (`row_to_proposal_full`);
+        // RETURNING rows get them from `with_names`.
+        submitted_by_name: None,
         status: parse_status(&row.get::<String, _>("status")),
         reviewed_by: row.get("reviewed_by"),
-        reviewed_by_name: row.try_get("reviewed_by_name").ok().flatten(),
+        reviewed_by_name: None,
         review_note: row.get("review_note"),
         submitter_note: row.get("submitter_note"),
         created_at: row.get("created_at"),
@@ -119,6 +120,8 @@ fn row_to_proposal_full(row: &PgRow) -> Proposal {
     p.upvotes = row.get("upvotes");
     p.downvotes = row.get("downvotes");
     p.user_vote = row.get("user_vote");
+    p.submitted_by_name = row.get("submitted_by_name");
+    p.reviewed_by_name = row.get("reviewed_by_name");
     p
 }
 
@@ -470,50 +473,16 @@ pub async fn review_proposal(
         .map(Some)
 }
 
-/// The entity's place and state before an accepted proposal changes it, or
-/// None when it is already gone.
-async fn begin_edit(
-    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-    kind: EntityKind,
-    id: i64,
-) -> Result<Option<(Scope, State)>, sqlx::Error> {
-    let Some(scope) = history::scope_of(tx, kind, id).await? else {
-        return Ok(None);
-    };
-    Ok(history::snapshot(tx, &scope)
-        .await?
-        .map(|before| (scope, before)))
-}
-
-/// Record the edit that followed `begin_edit`, in the same transaction.
-async fn finish_edit(
-    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-    tracked: Option<(Scope, State)>,
-    via: &Via<'_>,
-) -> Result<(), sqlx::Error> {
-    if let Some((scope, before)) = tracked {
-        let after = history::snapshot(tx, &scope).await?.unwrap_or_default();
-        history::record(tx, &scope, Op::Edit, via, &before, &after).await?;
-    }
-    Ok(())
-}
-
-/// Delete an entity an accepted proposal removes, and record it.
+/// Delete an entity an accepted proposal removes, and record it. Nothing
+/// happens when it is already gone.
 async fn delete_tracked(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     kind: EntityKind,
-    table: &str,
     id: i64,
     via: &Via<'_>,
 ) -> Result<(), sqlx::Error> {
-    let scope = history::scope_of(tx, kind, id).await?;
-    sqlx::query(&format!("DELETE FROM {table} WHERE id = $1"))
-        .bind(id)
-        .execute(&mut **tx)
-        .await?;
-    if let Some(scope) = scope {
-        let empty = State::new();
-        history::record(tx, &scope, Op::Delete, via, &empty, &empty).await?;
+    if let Some(scope) = history::scope_of(tx, kind, id).await? {
+        history::tracked_delete(tx, &scope, via).await?;
     }
     Ok(())
 }
@@ -554,7 +523,7 @@ async fn apply_proposal(
 
         (ProposalEntityType::Waterway, ProposalOperation::Delete) => {
             if let Some(id) = proposal.entity_id {
-                delete_tracked(tx, EntityKind::Waterway, "waterways", id, &via).await?;
+                delete_tracked(tx, EntityKind::Waterway, id, &via).await?;
             }
         }
 
@@ -586,9 +555,12 @@ async fn apply_proposal(
                             .collect()
                     })
                     .or_else(|| data["region"].as_str().map(|r| vec![r.to_owned()]));
-                let tracked = begin_edit(tx, EntityKind::Section, id).await?;
-                sqlx::query(
-                    r#"UPDATE water_sections
+                let Some(scope) = history::scope_of(tx, EntityKind::Section, id).await? else {
+                    return Ok(());
+                };
+                history::tracked_edit(tx, &scope, &via, async |conn| {
+                    sqlx::query(
+                        r#"UPDATE water_sections
                        SET name        = COALESCE($1, name),
                            description = COALESCE($2, description),
                            regions     = COALESCE($3, regions),
@@ -596,22 +568,23 @@ async fn apply_proposal(
                            location    = COALESCE(ST_GeomFromGeoJSON($5), location),
                            updated_at  = NOW()
                        WHERE id = $6"#,
-                )
-                .bind(data["name"].as_str())
-                .bind(data["description"].as_str())
-                .bind(regions)
-                .bind(data["country"].as_str())
-                .bind(location.as_deref())
-                .bind(id)
-                .execute(&mut **tx)
+                    )
+                    .bind(data["name"].as_str())
+                    .bind(data["description"].as_str())
+                    .bind(regions)
+                    .bind(data["country"].as_str())
+                    .bind(location.as_deref())
+                    .bind(id)
+                    .execute(conn)
+                    .await
+                })
                 .await?;
-                finish_edit(tx, tracked, &via).await?;
             }
         }
 
         (ProposalEntityType::WaterSection, ProposalOperation::Delete) => {
             if let Some(id) = proposal.entity_id {
-                delete_tracked(tx, EntityKind::Section, "water_sections", id, &via).await?;
+                delete_tracked(tx, EntityKind::Section, id, &via).await?;
             }
         }
 
@@ -626,97 +599,103 @@ async fn apply_proposal(
 
         (ProposalEntityType::Feature, ProposalOperation::Update) => {
             if let Some(id) = proposal.entity_id {
-                let tracked = begin_edit(tx, EntityKind::Feature, id).await?;
-                // Apply water ranges if included in the delta. Each range names
-                // its gauge by an existing series_id or by a catalog reference
-                // resolved-or-created here (same path as create_feature_bundle).
-                if let Some(ranges) = data.get("water_ranges").and_then(|v| v.as_array()) {
-                    for range in ranges {
-                        let body: crate::models::gauge::FeatureWaterRangeBody =
-                            match serde_json::from_value(range.clone()) {
-                                Ok(b) => b,
-                                Err(e) => {
-                                    tracing::warn!(
-                                        "Proposal {} has an unparseable water range: {e}",
-                                        proposal.id
-                                    );
-                                    continue;
-                                }
-                            };
-                        let series_id =
-                            crate::query::features::resolve_range_series(tx, &body).await?;
-                        gauges::upsert_feature_water_range_partial(
-                            &mut **tx,
-                            id,
-                            series_id,
-                            body.range_low,
-                            body.range_medium,
-                            body.range_high,
-                        )
-                        .await?;
+                let Some(scope) = history::scope_of(tx, EntityKind::Feature, id).await? else {
+                    return Ok(());
+                };
+                history::tracked_edit(tx, &scope, &via, async |conn| {
+                    // Apply water ranges if included in the delta. Each range names
+                    // its gauge by an existing series_id or by a catalog reference
+                    // resolved-or-created here (same path as create_feature_bundle).
+                    if let Some(ranges) = data.get("water_ranges").and_then(|v| v.as_array()) {
+                        for range in ranges {
+                            let body: crate::models::gauge::FeatureWaterRangeBody =
+                                match serde_json::from_value(range.clone()) {
+                                    Ok(b) => b,
+                                    Err(e) => {
+                                        tracing::warn!(
+                                            "Proposal {} has an unparseable water range: {e}",
+                                            proposal.id
+                                        );
+                                        continue;
+                                    }
+                                };
+                            let series_id =
+                                crate::query::features::resolve_range_series(&mut *conn, &body)
+                                    .await?;
+                            gauges::upsert_feature_water_range_partial(
+                                &mut *conn,
+                                id,
+                                series_id,
+                                body.range_low,
+                                body.range_medium,
+                                body.range_high,
+                            )
+                            .await?;
+                        }
                     }
-                }
 
-                // Apply name/description if included in the delta
-                let lang = data["lang_code"].as_str().unwrap_or(DEFAULT_LANG_CODE);
-                let lang = normalize_lang_code(lang).unwrap_or_else(|_| {
-                    tracing::warn!(
-                        "Proposal {} carries an invalid lang_code; applying as {}",
-                        proposal.id,
-                        DEFAULT_LANG_CODE
-                    );
-                    DEFAULT_LANG_CODE.to_string()
-                });
-                if let Some(name) = data["name"]
-                    .as_str()
-                    .map(str::trim)
-                    .filter(|s| !s.is_empty())
-                {
-                    features::upsert_name(&mut **tx, id, &lang, name).await?;
-                }
-                if let Some(description) = data["description"]
-                    .as_str()
-                    .map(str::trim)
-                    .filter(|s| !s.is_empty())
-                {
-                    features::upsert_description(&mut **tx, id, &lang, description).await?;
-                }
+                    // Apply name/description if included in the delta
+                    let lang = data["lang_code"].as_str().unwrap_or(DEFAULT_LANG_CODE);
+                    let lang = normalize_lang_code(lang).unwrap_or_else(|_| {
+                        tracing::warn!(
+                            "Proposal {} carries an invalid lang_code; applying as {}",
+                            proposal.id,
+                            DEFAULT_LANG_CODE
+                        );
+                        DEFAULT_LANG_CODE.to_string()
+                    });
+                    if let Some(name) = data["name"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                    {
+                        features::upsert_name(&mut *conn, id, &lang, name).await?;
+                    }
+                    if let Some(description) = data["description"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                    {
+                        features::upsert_description(&mut *conn, id, &lang, description).await?;
+                    }
 
-                let feature_type = data["feature_type"].as_str();
-                let location = if data["location"].is_null() {
-                    None
-                } else {
-                    Some(
-                        serde_json::to_string(&data["location"])
-                            .map_err(|e| sqlx::Error::Decode(e.into()))?,
-                    )
-                };
-                let metadata = if data["metadata"].is_null() {
-                    None
-                } else {
-                    data.get("metadata").cloned()
-                };
-                sqlx::query(
-                    r#"UPDATE features
+                    let feature_type = data["feature_type"].as_str();
+                    let location = if data["location"].is_null() {
+                        None
+                    } else {
+                        Some(
+                            serde_json::to_string(&data["location"])
+                                .map_err(|e| sqlx::Error::Decode(e.into()))?,
+                        )
+                    };
+                    let metadata = if data["metadata"].is_null() {
+                        None
+                    } else {
+                        data.get("metadata").cloned()
+                    };
+                    sqlx::query(
+                        r#"UPDATE features
                        SET feature_type = COALESCE($1::feature_type, feature_type),
                            metadata     = COALESCE($2, metadata),
                            location     = COALESCE(ST_GeomFromGeoJSON($3), location),
                            updated_at   = NOW()
                        WHERE id = $4"#,
-                )
-                .bind(feature_type)
-                .bind(metadata)
-                .bind(location.as_deref())
-                .bind(id)
-                .execute(&mut **tx)
+                    )
+                    .bind(feature_type)
+                    .bind(metadata)
+                    .bind(location.as_deref())
+                    .bind(id)
+                    .execute(&mut *conn)
+                    .await?;
+                    Ok(())
+                })
                 .await?;
-                finish_edit(tx, tracked, &via).await?;
             }
         }
 
         (ProposalEntityType::Feature, ProposalOperation::Delete) => {
             if let Some(id) = proposal.entity_id {
-                delete_tracked(tx, EntityKind::Feature, "features", id, &via).await?;
+                delete_tracked(tx, EntityKind::Feature, id, &via).await?;
             }
         }
     }
