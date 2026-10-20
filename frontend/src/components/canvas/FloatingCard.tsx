@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import { type ReactNode, useLayoutEffect } from "react";
+import PanelHeader from "@/components/PanelHeader";
 import type { CardSide } from "@/lib/canvasLayout";
 import {
   type CardKind,
@@ -9,7 +10,6 @@ import {
   writeCardFrac,
 } from "@/lib/cardWidth";
 import { theme } from "@/lib/theme";
-import CardHeader from "./CardHeader";
 import { layout, useLayout } from "./canvasStore";
 import ResizeGrip from "./ResizeGrip";
 
@@ -125,17 +125,18 @@ export default function FloatingCard({
               "&:focus-visible": { outline: `2px solid ${tokens.primary}` },
             }}
           >
-            <CardHeader title={title} subtitle={subtitle} />
+            <PanelHeader title={title} subtitle={subtitle} />
           </ButtonBase>
         ) : (
           <>
             {!selfHeaded && (
               <Box sx={{ flexShrink: 0, minHeight: canvas.headerHeight }}>
-                <CardHeader
+                <PanelHeader
                   title={title}
                   subtitle={subtitle}
-                  actions={actions}
-                  onClose={onClose}
+                  actionButton={actions}
+                  onBack={onClose}
+                  backIcon="close"
                 />
               </Box>
             )}
@@ -145,25 +146,21 @@ export default function FloatingCard({
           </>
         )}
       </Box>
-      {!collapsed && (
-        <>
-          {bounds && (
-            <ResizeGrip
-              side={side}
-              width={width}
-              min={bounds.min}
-              max={bounds.max}
-              label="Resize panel"
-              onLive={(w) => layout.setLive({ id, width: w })}
-              onCommit={(w) => {
-                const frac = w / layout.get().viewport.w;
-                writeCardFrac(screen, id, frac);
-                layout.setFrac(id, frac);
-                layout.setLive(null);
-              }}
-            />
-          )}
-        </>
+      {!collapsed && bounds && (
+        <ResizeGrip
+          side={side}
+          width={width}
+          min={bounds.min}
+          max={bounds.max}
+          label="Resize panel"
+          onLive={(w) => layout.setLive({ id, width: w })}
+          onCommit={(w) => {
+            const frac = w / layout.get().viewport.w;
+            writeCardFrac(screen, id, frac);
+            layout.setFrac(id, frac);
+            layout.setLive(null);
+          }}
+        />
       )}
     </Box>
   );

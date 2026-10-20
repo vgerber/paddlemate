@@ -7,6 +7,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
+import { Segment, SegmentTrack } from "@/components/canvas/SegmentedControl";
 import PeriodMenu from "@/components/charts/PeriodMenu";
 import type { TimeRange } from "@/components/charts/water/types";
 import { theme } from "@/lib/theme";
@@ -118,48 +119,18 @@ function Measurement({
   onType,
 }: NonNullable<ReadingBlockProps["measurement"]>) {
   return (
-    <Box
-      role="group"
-      aria-label="Reading"
-      sx={{
-        display: "flex",
-        gap: "2px",
-        p: "2px",
-        bgcolor: tokens.surfaceLow,
-        borderRadius: `${tokens.radii.sm}px`,
-      }}
-    >
-      {types.map((t) => {
-        const on = t.type === type;
-        return (
-          <ButtonBase
-            key={t.type}
-            aria-pressed={on}
-            onClick={() => onType(t.type)}
-            sx={{
-              position: "relative",
-              minWidth: tokens.touch.min,
-              height: 32,
-              px: 1.5,
-              fontSize: "0.8125rem",
-              fontWeight: on ? 600 : 500,
-              color: on ? tokens.onSurface : tokens.onSurfaceVariant,
-              bgcolor: on ? tokens.surface : "transparent",
-              boxShadow: on ? tokens.elevation.e1 : "none",
-              borderRadius: `${tokens.radii.sm - 2}px`,
-              // The key is 32px to look at and 44px to hit.
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                inset: "-6px 0",
-              },
-            }}
-          >
-            {t.label}
-          </ButtonBase>
-        );
-      })}
-    </Box>
+    <SegmentTrack label="Reading">
+      {types.map((t) => (
+        <Segment
+          key={t.type}
+          compact
+          active={t.type === type}
+          onClick={() => onType(t.type)}
+        >
+          {t.label}
+        </Segment>
+      ))}
+    </SegmentTrack>
   );
 }
 

@@ -1,9 +1,9 @@
 import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
-import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Paper, { type PaperProps } from "@mui/material/Paper";
 import Popover from "@mui/material/Popover";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
+import { Segment, SegmentTrack } from "@/components/canvas/SegmentedControl";
 import { alphas, theme } from "@/lib/theme";
 import type { MapPadding } from "./Map";
 import { BELOW_ZOOM, stackOffset } from "./MapCompass";
@@ -23,61 +23,6 @@ interface LabelModeToggleProps {
   /** Free-area edges on a canvas screen; without it the key sits in the
    * map's own top-right corner stack. */
   inset?: MapPadding;
-}
-
-/** A recessed track holding cells; the set ones are white pills. */
-function Track({ children }: { children: ReactNode }) {
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        gap: "2px",
-        p: "2px",
-        bgcolor: tokens.surfaceLow,
-        border: `1px solid ${tokens.outlineVariant}`,
-        borderRadius: `${tokens.radii.sm}px`,
-      }}
-    >
-      {children}
-    </Box>
-  );
-}
-
-function Cell({
-  active,
-  title,
-  onClick,
-  flex,
-  children,
-}: {
-  active: boolean;
-  title: string;
-  onClick: () => void;
-  flex?: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <ButtonBase
-      onClick={onClick}
-      title={title}
-      aria-pressed={active}
-      sx={{
-        flex: flex ? 1 : "0 1 auto",
-        px: 1.5,
-        minHeight: tokens.touch.min,
-        whiteSpace: "nowrap",
-        fontSize: "0.8125rem",
-        fontWeight: active ? 600 : 500,
-        color: active ? tokens.onSurface : tokens.onSurfaceVariant,
-        bgcolor: active ? tokens.surface : "transparent",
-        boxShadow: active ? tokens.elevation.e1 : "none",
-        borderRadius: `${tokens.radii.sm - 2}px`,
-        "&:hover": { bgcolor: active ? tokens.surface : tokens.surfaceHighest },
-      }}
-    >
-      {children}
-    </ButtonBase>
-  );
 }
 
 /** The layer choices: what section labels say, feature-name visibility and
@@ -101,49 +46,49 @@ function Choices({
   return (
     <>
       {(onChange || onFeatureNamesChange) && (
-        <Track>
+        <SegmentTrack bordered>
           {onChange && (
             <>
-              <Cell
-                flex
+              <Segment
+                fill
                 active={labelMode === "section"}
                 title="Label sections with their own name"
                 onClick={() => onChange("section")}
               >
                 Section
-              </Cell>
-              <Cell
-                flex
+              </Segment>
+              <Segment
+                fill
                 active={labelMode === "river"}
                 title="Label sections with their river's name"
                 onClick={() => onChange("river")}
               >
                 River
-              </Cell>
+              </Segment>
             </>
           )}
           {onFeatureNamesChange && (
-            <Cell
-              flex
+            <Segment
+              fill
               active={!!featureNames}
               title="Show names of rapids, put-ins and other features"
               onClick={() => onFeatureNamesChange(!featureNames)}
             >
               Features
-            </Cell>
+            </Segment>
           )}
-        </Track>
+        </SegmentTrack>
       )}
-      <Track>
-        <Cell
-          flex
+      <SegmentTrack bordered>
+        <Segment
+          fill
           active={satellite}
           title="Satellite base map"
           onClick={() => onSatelliteChange(!satellite)}
         >
           Satellite
-        </Cell>
-      </Track>
+        </Segment>
+      </SegmentTrack>
     </>
   );
 }
