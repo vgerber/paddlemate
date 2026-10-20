@@ -251,9 +251,14 @@ export function useTripTimeline(trip: Trip) {
     [trip.start_date, trip.end_date, members.data, stays.data, descents.data],
   );
 
+  // A failed fetch must not read as an empty plan.
+  const failed = [members, stays, descents].find((q) => q.isError && !q.data);
+
   return {
     days,
     isLoading: members.isLoading || stays.isLoading || descents.isLoading,
+    error: failed?.error ?? null,
+    refetch: () => failed?.refetch(),
   };
 }
 

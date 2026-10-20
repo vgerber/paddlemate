@@ -12,12 +12,7 @@ import LoadingBox from "@/components/states/LoadingBox";
 import type { Trip } from "@/lib/api";
 import { descentTitle } from "@/lib/descents";
 import { formatDate, todayIso } from "@/lib/format";
-import { useTripDescents } from "@/lib/hooks/useDescents";
-import {
-  useTripMembers,
-  useTripStays,
-  useTripTimeline,
-} from "@/lib/hooks/useTrips";
+import { useTripTimeline } from "@/lib/hooks/useTrips";
 import { durations } from "@/lib/motion";
 import { alphas, fonts, theme } from "@/lib/theme";
 import {
@@ -76,14 +71,7 @@ export default function TripTimeline({
   /** With `wide`, the members as initials under the list. */
   membersBelow?: boolean;
 }) {
-  const { days, isLoading } = useTripTimeline(trip);
-  // The same three fetches the timeline is built from (deduped): a failed
-  // one must not read as an empty plan.
-  const loadFailed = [
-    useTripMembers(trip.id),
-    useTripStays(trip.id),
-    useTripDescents(trip.id),
-  ].find((q) => q.isError && !q.data);
+  const { days, isLoading, error, refetch } = useTripTimeline(trip);
   const today = todayIso();
   const scroller = useRef<HTMLDivElement>(null);
   const [current, setCurrent] = useState<string | null>(null);
@@ -136,12 +124,12 @@ export default function TripTimeline({
 
   if (isLoading) return <LoadingBox size={40} pt={6} />;
 
-  if (loadFailed) {
+  if (error) {
     return (
       <ErrorState
-        error={loadFailed.error}
+        error={error}
         fallback="Could not load the plan."
-        onRetry={() => loadFailed.refetch()}
+        onRetry={refetch}
         py={6}
       />
     );
