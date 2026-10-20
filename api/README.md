@@ -141,6 +141,13 @@ and returned wherever the proposal is, so it is readable by whoever may read
 the proposal, and by anyone in the history step of an accepted one. Delete
 proposals take no body and so no note.
 
+Region outlines: `GET /geo/region-outlines?bbox=` takes an optional `kinds`
+(comma list of `valley`, `district`, `range`, `state`; anything else is a 400
+with target `kinds`). Each requested kind comes back only while the viewport is
+no wider than its limit (valley 3, district 6, range 8, state 12 degrees); a
+kind past it is named in `hidden_kinds`. Without `kinds` one kind is chosen by
+the viewport width. At most 120 outlines per kind (300 for ranges).
+
 Regions: `GET /geo/regions?q=` results carry `parents`, the regions each one
 lies in (district, state, country; a range lists only its country), found by
 containment of a point on the region, at most one per kind. The `countries`
@@ -170,8 +177,8 @@ Proposal responses carry `submitted_by_name` and `reviewed_by_name`.
 
 Two authentication methods are supported:
 
-- **Keycloak JWT** — Bearer token via `Authorization` header
-- **API Token** — `X-Api-Key: pm_<token>` header
+- **Keycloak JWT** - Bearer token via `Authorization` header
+- **API Token** - `X-Api-Key: pm_<token>` header
 
 Server admin privileges are granted via the `server_admin` Keycloak realm role.
 
@@ -192,7 +199,7 @@ Used by the frontend for PKCE login.
 Used by the API backend to look up usernames via the Keycloak Admin REST API.
 
 1. Create a client with **Client authentication** ON (confidential)
-2. Enable **Service accounts roles** — this grants the `client_credentials` flow
+2. Enable **Service accounts roles** - this grants the `client_credentials` flow
 3. Go to the **Service accounts roles** tab → **Assign role**
    - Change filter to **"Filter by clients"**
    - Search for `realm-management` and assign the **`view-users`** role
