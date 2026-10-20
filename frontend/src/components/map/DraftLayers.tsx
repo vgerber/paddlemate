@@ -39,7 +39,7 @@ export default function DraftLayers({
           id="river-highlight-line"
           type="line"
           paint={{
-            "line-color": tokens.tertiary,
+            "line-color": tokens.primary,
             "line-width": 3,
             "line-opacity": 0.45,
             "line-dasharray": [2, 2],
@@ -76,7 +76,7 @@ export default function DraftLayers({
           id="section-preview-line"
           type="line"
           paint={{
-            "line-color": tokens.tertiary,
+            "line-color": tokens.primary,
             "line-width": sectionPreviewCoords ? 5 : 2,
             ...(sectionPreviewCoords ? {} : { "line-dasharray": [4, 3] }),
           }}
@@ -116,7 +116,7 @@ export function FeatureDraftLayer({
           id="feature-draft-fill"
           type="fill"
           paint={{
-            "fill-color": tokens.tertiary,
+            "fill-color": tokens.primary,
             "fill-opacity": 0.2,
           }}
         />
@@ -125,7 +125,7 @@ export function FeatureDraftLayer({
         id="feature-draft-line"
         type="line"
         paint={{
-          "line-color": tokens.tertiary,
+          "line-color": tokens.primary,
           "line-width": 2,
           "line-dasharray": [3, 2],
         }}

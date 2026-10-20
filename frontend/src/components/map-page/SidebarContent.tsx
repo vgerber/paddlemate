@@ -9,8 +9,6 @@ import type { MapPageState } from "./useMapPageState";
 
 interface SidebarContentProps {
   state: MapPageState;
-  /** Mobile only: close the overlay when area mode is activated */
-  onMapModeActivate?: () => void;
   /** Mobile only: close the overlay */
   onClose?: () => void;
   /** Mobile only: toggles between map view and detail view */
@@ -28,7 +26,6 @@ interface SidebarContentProps {
  */
 export default function SidebarContent({
   state,
-  onMapModeActivate,
   onClose,
   onMobileMapToggle,
   mobileMapActive,
@@ -129,7 +126,6 @@ export default function SidebarContent({
         onToggleFavorite={toggleFavorite}
         onRadiusPreview={setPreviewRadius}
         onLoadingChange={setIsSearchPanelLoading}
-        onMapModeActivate={onMapModeActivate}
         onClose={onClose}
         sheet={sheet}
         regionBrowse={{

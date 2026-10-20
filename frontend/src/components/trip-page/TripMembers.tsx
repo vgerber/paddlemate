@@ -203,7 +203,7 @@ function MemberRow({
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             sx={{
-              fontFamily: fonts.label,
+              fontFamily: fonts.body,
               fontWeight: 600,
               fontSize: "0.9375rem",
             }}

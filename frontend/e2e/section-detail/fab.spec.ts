@@ -28,10 +28,6 @@ test.describe("floating action button", () => {
     page,
   }, info) => {
     test.skip(info.project.name === "desktop", "no button from md up");
-    // Known limitation: the calmer chart card (reading head and foot row) is
-    // about 30px taller than the old one, so at 320x568 the strip's last
-    // disc sits under the button. test.fail keeps the symptom visible.
-    test.fail(info.project.name === "small", "strip under the FAB at 320x568");
     await gotoSection(page, "lower");
     const fab = seen(page.getByRole("button", { name: "New feature" }));
     await expect(fab).toBeVisible();

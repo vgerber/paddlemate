@@ -2,7 +2,7 @@ import type { JSX } from "react";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { formatReading } from "@/lib/format";
 import { theme } from "@/lib/theme";
-import { levelInk } from "@/lib/waterLevel";
+import { levelInk, levelWord } from "@/lib/waterLevel";
 import { pointTime } from "./chartTime";
 import { clampLabelX, clampReadoutX, spreadWords } from "./railGeometry";
 import { levelAt } from "./series";
@@ -30,9 +30,9 @@ const halo = {
 } as const;
 
 const LEVELS = [
-  { key: "high", word: "High", from: "range_high" },
-  { key: "medium", word: "Medium", from: "range_medium" },
-  { key: "low", word: "Low", from: "range_low" },
+  { key: "high", from: "range_high" },
+  { key: "medium", from: "range_medium" },
+  { key: "low", from: "range_low" },
 ] as const;
 
 export interface RailPoint {
@@ -106,7 +106,7 @@ export default function RailOverlay({
     const lv = level(marker.value);
     const value = formatReading(marker.value, unit);
     const time = pointTime(marker.time);
-    const text = lv ? `${lv.word}, ${value}` : value;
+    const text = lv ? `${levelWord(lv.key)}, ${value}` : value;
     const half =
       Math.max(text.length * READOUT_CHAR, time.length * READOUT_TIME_CHAR) / 2;
     const cx = clampReadoutX(mx, half, width);
@@ -124,7 +124,9 @@ export default function RailOverlay({
           fill={tokens.onSurface}
           {...halo}
         >
-          {lv && <tspan fill={levelInk(lv.key)}>{`${lv.word}, `}</tspan>}
+          {lv && (
+            <tspan fill={levelInk(lv.key)}>{`${levelWord(lv.key)}, `}</tspan>
+          )}
           {value}
         </text>
         <text
@@ -180,9 +182,9 @@ export default function RailOverlay({
       }}
     >
       {lines.map((l, i) =>
-        overlaps(wordYs[i], l.word) ? null : (
+        overlaps(wordYs[i], levelWord(l.key)) ? null : (
           <g key={l.key}>
-            <title>{`${l.word} from ${l.v} ${unit}`}</title>
+            <title>{`${levelWord(l.key)} from ${l.v} ${unit}`}</title>
             <text
               data-testid="threshold-label"
               x={WORD_X}
@@ -192,7 +194,7 @@ export default function RailOverlay({
               fill={levelInk(l.key)}
               {...halo}
             >
-              {l.word}
+              {levelWord(l.key)}
             </text>
           </g>
         ),

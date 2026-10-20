@@ -122,6 +122,11 @@ export function humanize(key: string): string {
   return key.replace(/_/g, " ");
 }
 
+/** First letter upper case, the rest as given: "put in" -> "Put in". */
+export function sentenceCase(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /** Gauge reading with unit, trimmed of trailing zeros: "85.4 cm". */
 export function formatReading(value: number, unit: string): string {
   return `${Number(value.toFixed(1))} ${unit}`;

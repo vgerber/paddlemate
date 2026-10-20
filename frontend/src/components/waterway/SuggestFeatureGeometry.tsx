@@ -195,7 +195,7 @@ export default function SuggestFeatureGeometry({
                 width: "100%",
                 minHeight: 48,
                 gap: 1,
-                borderRadius: `${tokens.radii.sm + 2}px`,
+                borderRadius: `${tokens.radii.row}px`,
                 bgcolor: `${tokens.primary}${alphas.hover}`,
                 color: tokens.primary,
                 fontSize: "0.875rem",

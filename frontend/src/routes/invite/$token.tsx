@@ -131,7 +131,7 @@ function JoinAction({
   if (!signedIn) {
     return (
       <>
-        <Button variant="contained" color="secondary" onClick={onLogin}>
+        <Button variant="contained" color="primary" onClick={onLogin}>
           Sign in to join
         </Button>
         <Link
@@ -153,7 +153,7 @@ function JoinAction({
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           You are already on this trip.
         </Typography>
-        <Button variant="contained" color="secondary" onClick={onOpen}>
+        <Button variant="contained" color="primary" onClick={onOpen}>
           Open trip
         </Button>
       </>
@@ -163,7 +163,7 @@ function JoinAction({
   return (
     <Button
       variant="contained"
-      color="secondary"
+      color="primary"
       onClick={onJoin}
       disabled={joining}
     >

@@ -42,6 +42,13 @@ export const levelConfig = {
   { label: string; color: string; bgcolor: string; border?: string }
 >;
 
+const LEVEL_WORDS = { low: "Low", medium: "Medium", high: "High" } as const;
+
+/** The level as a word: "Low", "Medium", "High". */
+export function levelWord(level: Exclude<WaterLevel, "empty">): string {
+  return LEVEL_WORDS[level];
+}
+
 /** The level's colour as ink on a light ground (a chart line, a word on the
  * plot). High's text colour is white for its solid pill, so its ink is the
  * pill colour itself. */

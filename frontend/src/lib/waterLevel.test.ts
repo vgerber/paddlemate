@@ -9,6 +9,7 @@ import {
   levelConfig,
   levelInk,
   levelMarkerColor,
+  levelWord,
   maxLevel,
 } from "./waterLevel";
 
@@ -110,5 +111,13 @@ describe("levelMarkerColor", () => {
   test("the map expression falls back to the empty hue", () => {
     expect(LEVEL_MARKER_MATCH.at(-1)).toBe(levelMarkerColor("empty"));
     expect(LEVEL_MARKER_MATCH).toContain(levelMarkerColor("high"));
+  });
+});
+
+describe("levelWord", () => {
+  test("is the capitalised level", () => {
+    expect(levelWord("low")).toBe("Low");
+    expect(levelWord("medium")).toBe("Medium");
+    expect(levelWord("high")).toBe("High");
   });
 });

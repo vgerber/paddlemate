@@ -157,7 +157,7 @@ function NotificationRow({
           noWrap
           sx={{
             display: "block",
-            fontFamily: fonts.label,
+            fontFamily: fonts.body,
             fontSize: "0.8125rem",
             lineHeight: "18px",
           }}

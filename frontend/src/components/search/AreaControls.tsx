@@ -96,7 +96,7 @@ export default function AreaControls({
               onClick={() => onLockedChange(!locked)}
               disabled={!areaCircle}
               aria-label={locked ? "Unlock area" : "Lock area"}
-              color={locked ? "default" : "secondary"}
+              color={locked ? "default" : "primary"}
               sx={{ width: tokens.touch.min, height: tokens.touch.min }}
             >
               {locked ? <LockIcon /> : <LockOpenIcon />}

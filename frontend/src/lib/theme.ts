@@ -49,10 +49,6 @@ const tokens = {
   onSuccessContainer: "#154f3a",
   onSuccess: "#ffffff",
 
-  // The old lime call to action is gone, the accent does that job now. Map
-  // layers and stars still read this key; it is the same teal.
-  tertiary: teal,
-
   // Error
   error,
   errorDark: "#8e2b32",
@@ -157,10 +153,21 @@ const tokens = {
   chartSeries: teal,
   chartGrid: "rgba(31,43,49,0.08)",
 
-  // Corner radii in px: small chips and tags, buttons and inputs, range bands
+  // Corner radii in px: small chips and tags, a segment inside a segmented
+  // control, buttons and inputs, range bands
   // and selected rows, cards, sheets and the FAB, dialogs, and the pill for
   // chips and pills.
-  radii: { bar: 3, xs: 6, sm: 10, row: 12, md: 14, lg: 16, xl: 20, pill: 999 },
+  radii: {
+    bar: 3,
+    xs: 6,
+    segment: 8,
+    sm: 10,
+    row: 12,
+    md: 14,
+    lg: 16,
+    xl: 20,
+    pill: 999,
+  },
 
   // Elevation steps: a card at rest, a floating panel or popover, the accent
   // glow under the primary action, and the shadow under a map marker.
@@ -170,6 +177,8 @@ const tokens = {
     e3: `0 4px 14px ${teal}40`,
     // The legibility halo under a map marker or label sitting on imagery.
     marker: "0 1px 4px rgba(0,0,0,0.5)",
+    // The same halo with a ring, for the selected marker.
+    markerRaised: "0 0 0 2px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.6)",
   },
 
   // Motion: the scale from the motion notes. Arrivals ease out, travel
@@ -249,9 +258,6 @@ const tokens = {
 
 /** Font stacks used across the app: one family, weights carry the hierarchy. */
 export const fonts = {
-  // Aliases of body, kept until the remaining callers move to `body`.
-  label: '"Figtree Variable", "Figtree", system-ui, sans-serif',
-  mono: '"Figtree Variable", "Figtree", system-ui, sans-serif',
   body: '"Figtree Variable", "Figtree", system-ui, sans-serif',
 } as const;
 
@@ -291,13 +297,6 @@ export const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: tokens.primary,
-      dark: tokens.primaryDark,
-      contrastText: tokens.onPrimary,
-    },
-    // The accent is also the call to action now, so `color="secondary"`
-    // still resolves; it is the same teal.
-    secondary: {
       main: tokens.primary,
       dark: tokens.primaryDark,
       contrastText: tokens.onPrimary,
@@ -525,13 +524,6 @@ export const theme = createTheme({
       variants: [
         {
           props: { variant: "contained", color: "primary" },
-          style: {
-            boxShadow: elevation.e3,
-            "&:hover": { boxShadow: elevation.e3 },
-          },
-        },
-        {
-          props: { variant: "contained", color: "secondary" },
           style: {
             boxShadow: elevation.e3,
             "&:hover": { boxShadow: elevation.e3 },

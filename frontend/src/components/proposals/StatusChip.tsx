@@ -26,7 +26,7 @@ export default function StatusChip({ status }: { status: ProposalStatus }) {
         borderRadius: `${tokens.radii.pill}px`,
         bgcolor: tone.bg,
         color: tone.fg,
-        fontFamily: fonts.label,
+        fontFamily: fonts.body,
         fontWeight: 600,
         fontSize: "0.75rem",
         flexShrink: 0,

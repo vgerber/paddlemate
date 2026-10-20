@@ -200,7 +200,7 @@ export default function SectionListItem({
             }}
           >
             {isFavorite ? (
-              <StarIcon fontSize="small" sx={{ color: tokens.tertiary }} />
+              <StarIcon fontSize="small" sx={{ color: tokens.primary }} />
             ) : (
               <StarBorderIcon fontSize="small" />
             )}

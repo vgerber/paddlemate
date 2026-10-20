@@ -2,7 +2,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
-import { openRowSx } from "@/components/openRow";
+import { openRowSx } from "@/components/canvas/flatRow";
 import { theme } from "@/lib/theme";
 import { GROUPS, type GroupId } from "./groups";
 

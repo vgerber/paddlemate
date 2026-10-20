@@ -6,7 +6,8 @@ import type { components } from "@/lib/api/schema";
 import { transition } from "@/lib/motion";
 import { labelSx, theme } from "@/lib/theme";
 import { levelMarkerColor } from "@/lib/waterLevel";
-import { MARKER_SHADOW, MARKER_SHADOW_RAISED } from "./markerStyle";
+
+const { tokens } = theme;
 
 type WaterLevel = components["schemas"]["WaterLevel"];
 
@@ -86,7 +87,9 @@ export default function GaugeMarkers({
                   border: isSelected
                     ? `3px solid ${theme.tokens.white}`
                     : `2px solid ${theme.tokens.background}`,
-                  boxShadow: isSelected ? MARKER_SHADOW_RAISED : MARKER_SHADOW,
+                  boxShadow: isSelected
+                    ? tokens.elevation.markerRaised
+                    : tokens.elevation.marker,
                   transition: transition(["width", "height"], {
                     duration: "instant",
                   }),

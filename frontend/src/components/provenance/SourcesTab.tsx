@@ -402,7 +402,7 @@ export default function SourcesTab({
         <Typography
           sx={{
             ...smallSx,
-            fontFamily: fonts.label,
+            fontFamily: fonts.body,
             color: "text.secondary",
             px: 2,
             pb: 1,

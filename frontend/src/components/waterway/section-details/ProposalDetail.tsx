@@ -9,7 +9,7 @@ import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import type { Proposal } from "@/lib/api";
-import { humanize } from "@/lib/format";
+import { humanize, sentenceCase } from "@/lib/format";
 import {
   useDeleteProposal,
   useUnvoteProposal,
@@ -18,8 +18,6 @@ import {
 import { useSession } from "@/lib/hooks/useSession";
 import { theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
-
-import { sentence } from "./utils";
 
 const { tokens } = theme;
 
@@ -155,7 +153,7 @@ export function ProposalDetail({ proposal, coords, featureType }: Props) {
           color: tokens.outline,
         }}
       >
-        {sentence(humanize(featureType))}
+        {sentenceCase(humanize(featureType))}
       </Typography>
       <CoordsInfo
         coords={coords}

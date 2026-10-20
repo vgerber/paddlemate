@@ -36,7 +36,6 @@ import MarkerHit from "./MarkerHit";
 import { addMapImages, answerMissingIcons } from "./mapIcons";
 import { buildSectionsGeoJSON } from "./mapLayers";
 import { LIBERTY_STYLE, SATELLITE_STYLE } from "./mapStyles";
-import { MARKER_SHADOW } from "./markerStyle";
 import NoteMarkers, { type NotePin } from "./NoteMarkers";
 import PickModeButtons from "./PickModeButtons";
 import RangeRingLayers, { type RangeRing } from "./RangeRingLayers";
@@ -571,7 +570,7 @@ export default function WaterwayMap({
                   border: `2px solid ${theme.tokens.surfaceLowest}`,
                   boxShadow: pin.emphasis
                     ? `0 0 0 3px ${pin.color}55`
-                    : MARKER_SHADOW,
+                    : tokens.elevation.marker,
                 }}
               />
             </MarkerHit>
@@ -628,7 +627,7 @@ export default function WaterwayMap({
             <Layer
               id="sections-picker-sel-line"
               type="line"
-              paint={{ "line-color": tokens.tertiary, "line-width": 5 }}
+              paint={{ "line-color": tokens.primary, "line-width": 5 }}
             />
           </Source>
         )}
@@ -680,7 +679,7 @@ export default function WaterwayMap({
                   borderRadius: "50%",
                   background: tokens.mapAreaCircle,
                   border: `2px solid ${tokens.white}`,
-                  boxShadow: MARKER_SHADOW,
+                  boxShadow: tokens.elevation.marker,
                 }}
               />
             </MarkerHit>

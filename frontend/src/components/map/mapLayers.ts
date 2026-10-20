@@ -6,7 +6,7 @@ import type {
   RegionOutline,
   SectionWithFeatures,
 } from "@/lib/api";
-import { humanize } from "@/lib/format";
+import { humanize, sentenceCase } from "@/lib/format";
 import { lineCoords, pointCoords, representativePoint } from "@/lib/geo";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
@@ -54,8 +54,7 @@ function nearestPointOnPolyline(
 
 /** The humanised type, sentence case, for a feature with no name of its own. */
 function typeLabel(f: Feature): string {
-  const text = humanize(f.feature_type);
-  return text.charAt(0).toUpperCase() + text.slice(1);
+  return sentenceCase(humanize(f.feature_type));
 }
 
 /** Map label: "Name III+", name or difficulty alone, or "" when neither.

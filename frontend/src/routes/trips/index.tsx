@@ -105,7 +105,7 @@ function TripsPage() {
           {list}
         </Box>
         <Fab
-          color="secondary"
+          color="primary"
           onClick={() => navigate({ to: "/trips/new" })}
           aria-label="New trip"
           sx={fabSx}

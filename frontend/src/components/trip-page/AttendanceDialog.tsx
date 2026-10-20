@@ -1,8 +1,6 @@
 import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
@@ -156,7 +154,6 @@ export default function AttendanceDialog({
         {saveError && <Alert severity="error">{saveError}</Alert>}
       </DialogContent>
       <PanelBottomBar
-        leftIcon={<CloseIcon />}
         onLeftClick={onClose}
         leftLabel="Close"
         leftDisabled={patchMember.isPending}
@@ -165,14 +162,11 @@ export default function AttendanceDialog({
         action={
           <RoundActionButton
             onClick={handleSave}
-            disabled={invalid || patchMember.isPending}
+            disabled={invalid}
+            busy={patchMember.isPending}
             ariaLabel="Save your dates"
           >
-            {patchMember.isPending ? (
-              <CircularProgress size={22} />
-            ) : (
-              <CheckIcon />
-            )}
+            <CheckIcon />
           </RoundActionButton>
         }
       />

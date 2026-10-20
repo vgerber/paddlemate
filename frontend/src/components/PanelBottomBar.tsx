@@ -61,9 +61,6 @@ export default function PanelBottomBar({
   steps,
   action,
 }: {
-  /** @deprecated Not drawn: the bar shows `leftLabel` as text. Callers drop
-   * it; the prop goes once the last one has. */
-  leftIcon?: ReactNode;
   onLeftClick: () => void;
   leftLabel: string;
   leftDisabled?: boolean;

@@ -1,7 +1,5 @@
 import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
-import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import MenuItem from "@mui/material/MenuItem";
@@ -248,7 +246,6 @@ export default function StayDialog({
         )}
       </DialogContent>
       <PanelBottomBar
-        leftIcon={<CloseIcon />}
         onLeftClick={onClose}
         leftLabel="Close"
         leftDisabled={isBusy}
@@ -274,10 +271,11 @@ export default function StayDialog({
         action={
           <RoundActionButton
             onClick={handleSave}
-            disabled={isBusy || problem !== null}
+            disabled={problem !== null}
+            busy={isBusy}
             ariaLabel="Save base"
           >
-            {isBusy ? <CircularProgress size={22} /> : <CheckIcon />}
+            <CheckIcon />
           </RoundActionButton>
         }
       />

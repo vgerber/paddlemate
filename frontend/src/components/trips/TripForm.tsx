@@ -1,8 +1,6 @@
 import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import { useEffect, useRef, useState } from "react";
@@ -199,7 +197,6 @@ export default function TripForm({
       </Box>
 
       <PanelBottomBar
-        leftIcon={<CloseIcon />}
         onLeftClick={onCancel}
         leftLabel="Cancel"
         leftDisabled={isBusy}
@@ -208,10 +205,11 @@ export default function TripForm({
         action={
           <RoundActionButton
             onClick={handleSave}
-            disabled={isBusy || problem !== null}
+            disabled={problem !== null}
+            busy={isBusy}
             ariaLabel="Save trip"
           >
-            {isBusy ? <CircularProgress size={22} /> : <CheckIcon />}
+            <CheckIcon />
           </RoundActionButton>
         }
       />

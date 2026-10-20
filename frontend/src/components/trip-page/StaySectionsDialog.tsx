@@ -1,8 +1,6 @@
 import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import Typography from "@mui/material/Typography";
@@ -106,7 +104,6 @@ export default function StaySectionsDialog({
         {saveError && <Alert severity="error">{saveError}</Alert>}
       </DialogContent>
       <PanelBottomBar
-        leftIcon={<CloseIcon />}
         onLeftClick={onClose}
         leftLabel="Close"
         leftDisabled={replaceSections.isPending}
@@ -115,14 +112,10 @@ export default function StaySectionsDialog({
         action={
           <RoundActionButton
             onClick={handleSave}
-            disabled={replaceSections.isPending}
+            busy={replaceSections.isPending}
             ariaLabel="Save the watch list"
           >
-            {replaceSections.isPending ? (
-              <CircularProgress size={22} />
-            ) : (
-              <CheckIcon />
-            )}
+            <CheckIcon />
           </RoundActionButton>
         }
       />

@@ -1,7 +1,6 @@
 import Box from "@mui/material/Box";
 import Fact from "@/components/Fact";
-import { sentence } from "@/components/waterway/section-details/utils";
-import { humanize } from "@/lib/format";
+import { humanize, sentenceCase } from "@/lib/format";
 import { CREATE_HIDDEN_KEYS, isDisplayable, shortValue } from "@/lib/proposals";
 
 /** Fields whose value names a kind and reads as a word ("Rapid"). */
@@ -42,7 +41,11 @@ export default function ProposalCreateSummary({
       sx={{ display: "flex", flexWrap: "wrap", columnGap: 3, rowGap: 1.5 }}
     >
       {facts.map(({ label, value }) => (
-        <Fact key={label} label={sentence(label)} value={sentence(value)} />
+        <Fact
+          key={label}
+          label={sentenceCase(label)}
+          value={sentenceCase(value)}
+        />
       ))}
     </Box>
   );

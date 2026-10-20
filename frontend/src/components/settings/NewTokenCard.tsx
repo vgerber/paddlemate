@@ -41,7 +41,7 @@ export default function NewTokenCard({
           sx={{
             flex: 1,
             minWidth: 0,
-            fontFamily: fonts.mono,
+            fontFamily: fonts.body,
             fontSize: "0.875rem",
             wordBreak: "break-all",
           }}

@@ -5,7 +5,6 @@ import Typography from "@mui/material/Typography";
 import { Marker, Popup } from "react-map-gl/maplibre";
 import { transition } from "@/lib/motion";
 import { labelSx, theme } from "@/lib/theme";
-import { MARKER_SHADOW, MARKER_SHADOW_RAISED } from "./markerStyle";
 
 const { tokens } = theme;
 
@@ -90,7 +89,9 @@ export default function NoteMarkers({
                     ? `2px solid ${tokens.white}`
                     : `2px solid ${pin.color}`,
                   // Map-marker legibility shadow (documented token exception)
-                  boxShadow: selected ? MARKER_SHADOW_RAISED : MARKER_SHADOW,
+                  boxShadow: selected
+                    ? tokens.elevation.markerRaised
+                    : tokens.elevation.marker,
                   transition: transition(["width", "height"], {
                     duration: "instant",
                   }),

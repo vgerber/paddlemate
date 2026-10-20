@@ -1,7 +1,6 @@
 import CenterFocusStrongIcon from "@mui/icons-material/CenterFocusStrong";
 import CheckIcon from "@mui/icons-material/Check";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
-import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -439,7 +438,6 @@ export default function SuggestWaterwayPanel({
         )}
       </Box>
       <PanelBottomBar
-        leftIcon={<CloseIcon />}
         onLeftClick={onClose}
         leftLabel={submitted ? "Close" : "Cancel"}
         title={submitted ? "River submitted" : "New river"}

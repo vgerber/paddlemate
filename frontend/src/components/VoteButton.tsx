@@ -39,7 +39,7 @@ export default function VoteButton({
         borderColor: pressed ? tokens.primary : tokens.outlineVariant,
         bgcolor: pressed ? `${tokens.primary}${alphas.tint}` : "transparent",
         color: pressed ? tokens.primary : tokens.onSurfaceVariant,
-        fontFamily: fonts.label,
+        fontFamily: fonts.body,
         fontWeight: 600,
         fontSize: "0.8125rem",
         "&.Mui-disabled": { opacity: 0.5 },

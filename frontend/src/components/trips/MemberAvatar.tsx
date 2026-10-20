@@ -27,7 +27,7 @@ export default function MemberAvatar({
         placeItems: "center",
         bgcolor: `${tokens.primary}${alphas.wash}`,
         color: tokens.primary,
-        fontFamily: fonts.label,
+        fontFamily: fonts.body,
         fontWeight: 600,
         fontSize: size < 30 ? "0.6875rem" : "0.875rem",
         boxShadow: ring ? `0 0 0 2px ${tokens.surface}` : undefined,

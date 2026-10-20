@@ -62,7 +62,7 @@ export default function TripWeek({
               boxShadow: `inset 0 0 0 ${on ? 2 : 1}px ${
                 on ? tokens.primary : tokens.outlineVariant
               }`,
-              fontFamily: fonts.label,
+              fontFamily: fonts.body,
             }}
           >
             <Typography

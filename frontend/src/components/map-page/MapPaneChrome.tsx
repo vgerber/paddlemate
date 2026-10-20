@@ -94,8 +94,8 @@ function SearchFab({ badge, onOpen }: SearchFabProps) {
         right: 16,
       }}
     >
-      <Badge badgeContent={badge} color="secondary" max={99}>
-        <Fab color="secondary" aria-label="Open search panel" onClick={onOpen}>
+      <Badge badgeContent={badge} color="primary" max={99}>
+        <Fab color="primary" aria-label="Open search panel" onClick={onOpen}>
           <SearchIcon />
         </Fab>
       </Badge>

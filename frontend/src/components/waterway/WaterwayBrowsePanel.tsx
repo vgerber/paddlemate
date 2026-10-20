@@ -174,7 +174,7 @@ export default function WaterwayBrowsePanel({
     own.push({
       label: starred ? "Remove favorite" : "Add favorite",
       icon: starred ? (
-        <StarIcon fontSize="small" sx={{ color: tokens.tertiary }} />
+        <StarIcon fontSize="small" sx={{ color: tokens.primary }} />
       ) : (
         <StarBorderIcon fontSize="small" />
       ),
@@ -526,7 +526,7 @@ export default function WaterwayBrowsePanel({
 
           {showNewSectionFab && (
             <Fab
-              color="secondary"
+              color="primary"
               aria-label="New section"
               title="New section"
               onClick={() => onSuggestModeChange("section")}
