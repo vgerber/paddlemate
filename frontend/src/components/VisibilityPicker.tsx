@@ -72,7 +72,7 @@ export default function VisibilityPicker({
                 onClick={() => onChange({ type: t })}
                 sx={{
                   minHeight: tokens.touch.min,
-                  borderRadius: `${tokens.radii.sm + 2}px`,
+                  borderRadius: `${tokens.radii.row}px`,
                   bgcolor: tokens.surface,
                   fontWeight: 600,
                   fontSize: "0.9375rem",

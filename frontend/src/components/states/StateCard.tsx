@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { theme } from "@/lib/theme";
-import { StateTile } from "./EmptyState";
+import StateTile from "./StateTile";
 
 const { tokens } = theme;
 

@@ -30,7 +30,7 @@ export default function ImageLightbox({
       maxWidth={false}
       // Above the app's own overlays: MUI modals default to 1300, but the
       // mobile sheet and suggest chrome sit at 1350.
-      sx={{ zIndex: 1400 }}
+      sx={{ zIndex: theme.zIndex.modal + 100 }}
       slotProps={{
         paper: {
           sx: {

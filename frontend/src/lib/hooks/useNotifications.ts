@@ -7,7 +7,7 @@ import {
 import { EventSourceParserStream } from "eventsource-parser/stream";
 import { useCallback, useEffect } from "react";
 import { type LiveEvent, notificationsApi } from "@/lib/api";
-import { rawRequest } from "@/lib/api/client";
+import { authorizedTarget } from "@/lib/api/client";
 import { descentKeys } from "./useDescents";
 import { tripKeys } from "./useTrips";
 
@@ -83,7 +83,9 @@ export function useLiveTripEvents(enabled: boolean) {
     let opened = false;
 
     const listen = async () => {
-      const { url, headers } = await rawRequest("/api/v1/users/me/events");
+      const { url, headers } = await authorizedTarget(
+        "/api/v1/users/me/events",
+      );
       headers.set("Accept", "text/event-stream");
       const res = await fetch(url, { headers, signal: abort.signal });
       if (!res.ok || !res.body) throw new Error(`stream: ${res.status}`);

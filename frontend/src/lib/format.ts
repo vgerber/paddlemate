@@ -2,10 +2,7 @@
 
 import { format, isSameDay, isSameMonth, isSameYear, parseISO } from "date-fns";
 
-/** A calendar day ("2026-09-01") is a day, not an instant: `new Date` reads
- * it as UTC midnight, which is still the 31st anywhere west of UTC.
- * `parseISO` reads it as local midnight; timestamps keep their instant. */
-const toDate = parseISO;
+const LOCALE = "en-GB";
 
 /** Today as a calendar day in the viewer's own timezone, "2026-09-01". */
 export function todayIso(now: Date = new Date()): string {
@@ -16,7 +13,7 @@ export function formatDate(
   iso: string,
   opts: { weekday?: boolean } = {},
 ): string {
-  return toDate(iso).toLocaleDateString("en-GB", {
+  return parseISO(iso).toLocaleDateString(LOCALE, {
     ...(opts.weekday ? { weekday: "short" as const } : {}),
     day: "2-digit",
     month: "short",
@@ -25,7 +22,7 @@ export function formatDate(
 }
 
 export function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-GB", {
+  return new Date(iso).toLocaleTimeString(LOCALE, {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -59,7 +56,6 @@ export function timeAgo(iso: string): string {
   return `${Math.floor(days / 365)}y ago`;
 }
 
-/** snake_case enum key to a human label: "put_in" -> "put in". */
 /**
  * A clock time from the API, trimmed to the hour and minute: "19:30". The
  * value carries no zone - it is local to wherever the trip is - so it is
@@ -89,6 +85,19 @@ export function dateAndTime(date: string, time?: string | null): string {
   return time ? `${day} · ${clockTime(time)}` : day;
 }
 
+function rangeHead(
+  a: Date,
+  sameYear: boolean,
+  sameMonth: boolean,
+  start: string,
+): string {
+  if (sameMonth) return a.toLocaleDateString(LOCALE, { day: "2-digit" });
+  if (sameYear) {
+    return a.toLocaleDateString(LOCALE, { day: "2-digit", month: "short" });
+  }
+  return formatDate(start);
+}
+
 /**
  * A trip's span: "01 - 08 Jun 2026", collapsing the parts both ends share.
  * An open-ended trip reads "from 01 Jun 2026".
@@ -97,19 +106,18 @@ export function dateRange(start: string, end?: string | null): string {
   if (!end) return `from ${formatDate(start)}`;
   if (start === end) return formatDate(start);
 
-  const a = toDate(start);
-  const b = toDate(end);
+  // A calendar day is a day, not an instant: `parseISO` reads it as local
+  // midnight where `new Date` would read UTC midnight, still the day before
+  // anywhere west of UTC.
+  const a = parseISO(start);
+  const b = parseISO(end);
   const sameYear = isSameYear(a, b);
   const sameMonth = isSameMonth(a, b);
 
-  const head = sameMonth
-    ? a.toLocaleDateString("en-GB", { day: "2-digit" })
-    : sameYear
-      ? a.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
-      : formatDate(start);
-  return `${head} - ${formatDate(end)}`;
+  return `${rangeHead(a, sameYear, sameMonth, start)} - ${formatDate(end)}`;
 }
 
+/** snake_case enum key to a human label: "put_in" -> "put in". */
 export function humanize(key: string): string {
   return key.replace(/_/g, " ");
 }

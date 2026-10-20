@@ -33,7 +33,7 @@ export default function DockedAction({
         fullWidth
         onClick={onClick}
         sx={{
-          borderRadius: `${tokens.radii.sm + 2}px`,
+          borderRadius: `${tokens.radii.row}px`,
           fontSize: "0.9375rem",
           lineHeight: 1.4,
         }}

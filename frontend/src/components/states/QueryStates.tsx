@@ -19,7 +19,7 @@ export default function QueryStates({
   count,
   empty,
   errorFallback,
-  loadingSize = 22,
+  loadingSize,
   py,
   children,
 }: {
@@ -27,6 +27,7 @@ export default function QueryStates({
   count: number;
   empty: { title: string; caption?: string; icon?: ReactNode };
   errorFallback?: string;
+  /** Spinner size; defaults to the shared `LoadingBox` size. */
   loadingSize?: number;
   py?: number;
   children: ReactNode;
@@ -36,7 +37,7 @@ export default function QueryStates({
     isError: query.isError,
     count,
   });
-  if (state === "loading") return <LoadingBox size={loadingSize} />;
+  if (state === "loading") return <LoadingBox size={loadingSize} py={py} />;
   if (state === "error") {
     return (
       <ErrorState

@@ -1,5 +1,6 @@
 import createClient from "openapi-fetch";
 import { getUserManager, type User } from "@/lib/auth";
+import { renewSession } from "@/lib/sessionStore";
 import type { paths } from "./schema.d.ts";
 
 // Paths in the generated schema already include /api/v1, so baseUrl must be the origin only.
@@ -56,28 +57,15 @@ async function toApiError(response: Response): Promise<ApiError> {
 
 export const client = createClient<paths>({ baseUrl: API_BASE });
 
-// A single in-flight silent renew shared by concurrent requests, so an expired
-// token triggers one refresh rather than a stampede.
-let renewing: Promise<User | null> | null = null;
-
 /** The current user with a valid access token. `getUser()` returns the stored
  * user even when its access token has expired (oidc-client-ts does not refresh
- * on read), which is what caused signed-in requests to 401. If the token is
- * expired we refresh once via the refresh token before using it; if that fails
- * we proceed unauthenticated rather than send a known-stale token. */
+ * on read), so an expired one is renewed first, through the session's single
+ * renewal. If that fails we proceed unauthenticated rather than send a
+ * known-stale token. */
 async function activeUser(): Promise<User | null> {
-  const um = getUserManager();
-  const user = await um.getUser();
+  const user = await getUserManager().getUser();
   if (!user?.expired) return user;
-  if (!renewing) {
-    renewing = um
-      .signinSilent()
-      .catch(() => null)
-      .finally(() => {
-        renewing = null;
-      });
-  }
-  return renewing;
+  return renewSession();
 }
 
 // Inject the Bearer token on every request when the user is signed in.
@@ -99,7 +87,7 @@ client.use({
 
 /** The API's origin and the caller's bearer header, for the requests the
  * typed client cannot make: a file upload, a live event stream. */
-export async function rawRequest(path: string): Promise<{
+export async function authorizedTarget(path: string): Promise<{
   url: string;
   headers: Headers;
 }> {
@@ -114,7 +102,7 @@ export async function rawRequest(path: string): Promise<{
 /** Multipart POST. The typed client cannot express a file upload; this
  * still reports failures as the same ApiError everything else does. */
 export async function postForm<T>(path: string, form: FormData): Promise<T> {
-  const { url, headers } = await rawRequest(path);
+  const { url, headers } = await authorizedTarget(path);
   const response = await fetch(url, {
     method: "POST",
     body: form,

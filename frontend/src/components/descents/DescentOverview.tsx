@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Fact, { factLabelSx, valueSx } from "@/components/Fact";
+import Fact, { factLabelSx, factValueSx } from "@/components/Fact";
 import TimelineRail from "@/components/TimelineRail";
 import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
@@ -28,7 +28,7 @@ function Stop({
     <Box data-testid="log-stop" sx={{ display: "flex", gap: 1.5 }}>
       <TimelineRail isLast={isLast} />
       <Box sx={{ pb: isLast ? 0 : 1.5, minWidth: 0 }}>
-        <Typography sx={valueSx}>{title}</Typography>
+        <Typography sx={factValueSx}>{title}</Typography>
         <Typography sx={{ ...factLabelSx, fontWeight: 400 }}>
           {[when, place].filter(Boolean).join(" · ")}
         </Typography>

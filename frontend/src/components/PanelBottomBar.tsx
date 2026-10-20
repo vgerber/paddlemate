@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
+import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
@@ -7,22 +8,25 @@ import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
-/** The round primary-action button used in panel bottom bars. */
+/** The round primary-action button used in panel bottom bars. While `busy`
+ * it shows a spinner in place of its icon and ignores clicks. */
 export function RoundActionButton({
   onClick,
   disabled,
+  busy,
   ariaLabel,
   children,
 }: {
   onClick: () => void;
   disabled?: boolean;
+  busy?: boolean;
   ariaLabel: string;
   children: ReactNode;
 }) {
   return (
     <IconButton
       onClick={onClick}
-      disabled={disabled}
+      disabled={disabled || busy}
       aria-label={ariaLabel}
       sx={{
         width: 52,
@@ -39,7 +43,7 @@ export function RoundActionButton({
         },
       }}
     >
-      {children}
+      {busy ? <CircularProgress size={22} color="inherit" /> : children}
     </IconButton>
   );
 }
@@ -57,8 +61,8 @@ export default function PanelBottomBar({
   steps,
   action,
 }: {
-  /** Not drawn: the bar shows `leftLabel` as text. Accepted so a caller can
-   * keep passing the icon it had. */
+  /** @deprecated Not drawn: the bar shows `leftLabel` as text. Callers drop
+   * it; the prop goes once the last one has. */
   leftIcon?: ReactNode;
   onLeftClick: () => void;
   leftLabel: string;
@@ -128,7 +132,7 @@ export default function PanelBottomBar({
                 sx={{
                   width: 18,
                   height: 4,
-                  borderRadius: `${tokens.radii.xs / 3}px`,
+                  borderRadius: `${tokens.radii.bar}px`,
                   bgcolor: i < steps.n ? tokens.primary : tokens.outlineVariant,
                 }}
               />

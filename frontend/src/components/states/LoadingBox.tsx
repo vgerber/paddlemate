@@ -5,8 +5,8 @@ import { theme } from "@/lib/theme";
 
 const { motion } = theme.tokens;
 
-/** Centered loading spinner for panel and page bodies. It waits 150 ms before
- * it shows, so a fast answer never flashes one. */
+/** Centered loading spinner for panel and page bodies. It waits
+ * `SPINNER_DELAY_MS` before it shows, so a fast answer never flashes one. */
 export default function LoadingBox({
   size = 24,
   py = 4,
