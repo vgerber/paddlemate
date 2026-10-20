@@ -14,3 +14,7 @@ api/media/
 frontend/test-results/
 frontend/playwright-report/
 frontend/e2e/.auth/
+# Playwright storage state written outside e2e/.auth (an unset path variable
+# resolves to "undefined/").
+frontend/undefined/
+**/auth.json
