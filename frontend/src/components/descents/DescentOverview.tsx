@@ -26,7 +26,7 @@ function Stop({
     : formatTime(iso);
   return (
     <Box data-testid="log-stop" sx={{ display: "flex", gap: 1.5 }}>
-      <TimelineRail isLast={isLast} />
+      <TimelineRail isLast={isLast} dotTop={6} />
       <Box sx={{ pb: isLast ? 0 : 1.5, minWidth: 0 }}>
         <Typography sx={factValueSx}>{title}</Typography>
         <Typography sx={{ ...factLabelSx, fontWeight: 400 }}>

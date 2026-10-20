@@ -13,7 +13,7 @@ import IconButton from "@mui/material/IconButton";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import EmptyState from "@/components/states/EmptyState";
+import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type {
   Feature,
@@ -22,8 +22,7 @@ import type {
   SectionWithFeatures,
   WaterwaySources,
 } from "@/lib/api";
-import { apiErrorMessage } from "@/lib/api/client";
-import { formatDate } from "@/lib/format";
+import { formatDate, plural } from "@/lib/format";
 import { useWaterwayMedia } from "@/lib/hooks/useComments";
 import { useWaterwayGauges } from "@/lib/hooks/useGauges";
 import { useSession } from "@/lib/hooks/useSession";
@@ -149,10 +148,6 @@ function ExternalLink({ href, children }: { href: string; children: string }) {
       {children}
     </Link>
   );
-}
-
-function count(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
 }
 
 function times(n: number): string {
@@ -369,11 +364,10 @@ export default function SourcesTab({
   if (sources.isLoading) return <LoadingBox size={28} py={4} />;
   if (sources.error) {
     return (
-      <EmptyState
-        title={apiErrorMessage(
-          sources.error,
-          "The sources could not be loaded.",
-        )}
+      <ErrorState
+        error={sources.error}
+        fallback="The sources could not be loaded."
+        onRetry={() => sources.refetch()}
       />
     );
   }
@@ -384,8 +378,8 @@ export default function SourcesTab({
   const photos = (media.data ?? []).filter((m) => m.kind === "photo").length;
   const videos = (media.data ?? []).filter((m) => m.kind === "video").length;
   const mediaLine = [
-    photos > 0 ? count(photos, "photo", "photos") : null,
-    videos > 0 ? count(videos, "video", "videos") : null,
+    photos > 0 ? plural(photos, "photo") : null,
+    videos > 0 ? plural(videos, "video") : null,
   ]
     .filter(Boolean)
     .join(", ");

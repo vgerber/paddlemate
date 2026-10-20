@@ -7,6 +7,8 @@ import { useRegionOutline } from "@/lib/hooks/useRegions";
 import type { WaterLevel } from "@/lib/waterLevel";
 import { formatWaterLevels, parseWaterLevels } from "./waterParam";
 
+export type ListView = "rivers" | "sections";
+
 export type SearchMode = "name" | "area" | "region";
 
 export interface WaterwaySearchFilters {

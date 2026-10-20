@@ -9,7 +9,7 @@ import {
 import type { CommentCategory, Descent, Proposal } from "@/lib/api";
 import type { components } from "@/lib/api/schema";
 import { categoryColor, categoryLabel } from "@/lib/comments";
-import { formatReading } from "@/lib/format";
+import { formatReading, plural } from "@/lib/format";
 import { proposalTitle } from "@/lib/proposals";
 import { LEVEL_ORDER, type WaterLevel } from "@/lib/waterLevel";
 
@@ -103,7 +103,7 @@ export function noteRow(
   return {
     key: "note",
     title: top.body,
-    detail: `${author(top)} · ${ok.length} ${ok.length === 1 ? "note" : "notes"}`,
+    detail: `${author(top)} · ${plural(ok.length, "note")}`,
     when: dayLabel(top.created_at, now),
     opens: "notes",
   };
@@ -159,9 +159,7 @@ export function paddledRow(
       : (descent.username ?? "someone");
   const parts = [
     levelText(descent, opts.sectionId, opts.level),
-    opts.thisYear > 0
-      ? `${opts.thisYear} ${opts.thisYear === 1 ? "log" : "logs"} this year`
-      : "",
+    opts.thisYear > 0 ? `${plural(opts.thisYear, "log")} this year` : "",
   ].filter(Boolean);
   return {
     key: "paddled",
@@ -180,7 +178,7 @@ export function proposalRow(proposals: Proposal[], now: Date): StateRow | null {
   )[0];
   return {
     key: "proposal",
-    title: `${proposals.length} open ${proposals.length === 1 ? "proposal" : "proposals"}`,
+    title: plural(proposals.length, "open proposal"),
     detail: proposalTitle(newest),
     when: dayLabel(newest.created_at, now),
     opens: "features",

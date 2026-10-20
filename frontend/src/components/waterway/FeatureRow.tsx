@@ -5,7 +5,12 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { humanize } from "@/lib/format";
 import { labelSx } from "@/lib/theme";
-import { fmtKm, fmtKmSpan, sentence } from "./section-details/utils";
+import {
+  FULL_SECTION_TOLERANCE_M,
+  fmtKm,
+  fmtKmSpan,
+  sentence,
+} from "./section-details/utils";
 
 /** Position along the section line - the subset of ComputedFeature the row
  * needs, so callers can also pass hand-built extents (e.g. endpoints). */
@@ -35,9 +40,6 @@ interface FeatureRowProps {
    * remove button next to rows that have one. */
   trailing?: ReactNode;
 }
-
-/** Tolerance (m) when detecting that a zone spans the whole section. */
-const FULL_SECTION_TOLERANCE_M = 50;
 
 /** One feature in a compact list row: name (difficulty) over the type label,
  * placement + km position on the right, optional remove action. Shared by

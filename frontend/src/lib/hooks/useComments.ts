@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type CommentCategory,
-  type CommentStatus,
   commentsApi,
   type MediaKind,
   mediaApi,
@@ -87,24 +86,6 @@ export function useCreateComment(waterwayId: number, sectionId: number | null) {
   });
 }
 
-export function useUpdateComment(waterwayId: number) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      commentId,
-      ...input
-    }: {
-      commentId: number;
-      body: string;
-      category?: CommentCategory;
-    }) => commentsApi.update(waterwayId, commentId, input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: commentKeys.lists() });
-    },
-    meta: { errorHandledLocally: true },
-  });
-}
-
 export function useDeleteComment(waterwayId: number) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -113,22 +94,6 @@ export function useDeleteComment(waterwayId: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: commentKeys.lists() });
       queryClient.invalidateQueries({ queryKey: mediaKeys.lists() });
-    },
-  });
-}
-
-export function useModerateComment(waterwayId: number) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      commentId,
-      status,
-    }: {
-      commentId: number;
-      status: CommentStatus;
-    }) => commentsApi.moderate(waterwayId, commentId, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: commentKeys.lists() });
     },
   });
 }

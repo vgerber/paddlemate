@@ -22,6 +22,7 @@ import ProposalNoteField from "@/components/waterway/ProposalNoteField";
 import { proposalNoteValue } from "@/components/waterway/proposalNote";
 import type { CatalogRiver } from "@/lib/api";
 import { ApiError, apiErrorMessage } from "@/lib/api/client";
+import { plural } from "@/lib/format";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import {
   useCatalogGaugeSearch,
@@ -323,8 +324,7 @@ export default function SuggestWaterwayPanel({
                     sx={{ ...labelSx, flex: 1 }}
                     title="Live water levels can be linked to this river's sections"
                   >
-                    {riverGauges.length} gauge
-                    {riverGauges.length === 1 ? "" : "s"} on "{matchedRiverName}
+                    {plural(riverGauges.length, "gauge")} on "{matchedRiverName}
                     "
                   </Typography>
                   {matchedBounds && (
@@ -409,7 +409,7 @@ export default function SuggestWaterwayPanel({
                       key={`${r.river}|${r.country ?? ""}`}
                       variant="outlined"
                       label={`${r.river}${r.country ? ` (${r.country})` : ""}`}
-                      title={`${r.gauge_count} gauge${r.gauge_count === 1 ? "" : "s"} in the catalog`}
+                      title={`${plural(r.gauge_count, "gauge")} in the catalog`}
                       onClick={() => setName(r.river)}
                       sx={{ maxWidth: "100%" }}
                     />

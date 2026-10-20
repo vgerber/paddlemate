@@ -16,7 +16,6 @@ import { Route as TripsIndexRouteImport } from './routes/trips/index'
 import { Route as ToolsIndexRouteImport } from './routes/tools/index'
 import { Route as ProposalsIndexRouteImport } from './routes/proposals/index'
 import { Route as WaterwaysSuggestSectionRouteImport } from './routes/waterways/suggest-section'
-import { Route as WaterwaysWaterwayIdRouteImport } from './routes/waterways/$waterwayId'
 import { Route as TripsNewRouteImport } from './routes/trips/new'
 import { Route as TripsTripIdRouteImport } from './routes/trips/$tripId'
 import { Route as ToolsGaugeCatalogRouteImport } from './routes/tools/gauge-catalog'
@@ -62,11 +61,6 @@ const ProposalsIndexRoute = ProposalsIndexRouteImport.update({
 const WaterwaysSuggestSectionRoute = WaterwaysSuggestSectionRouteImport.update({
   id: '/waterways/suggest-section',
   path: '/waterways/suggest-section',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WaterwaysWaterwayIdRoute = WaterwaysWaterwayIdRouteImport.update({
-  id: '/waterways/$waterwayId',
-  path: '/waterways/$waterwayId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TripsNewRoute = TripsNewRouteImport.update({
@@ -139,7 +133,6 @@ export interface FileRoutesByFullPath {
   '/tools/gauge-catalog': typeof ToolsGaugeCatalogRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/new': typeof TripsNewRoute
-  '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
   '/waterways/suggest-section': typeof WaterwaysSuggestSectionRoute
   '/proposals/': typeof ProposalsIndexRoute
   '/tools/': typeof ToolsIndexRoute
@@ -160,7 +153,6 @@ export interface FileRoutesByTo {
   '/tools/gauge-catalog': typeof ToolsGaugeCatalogRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/new': typeof TripsNewRoute
-  '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
   '/waterways/suggest-section': typeof WaterwaysSuggestSectionRoute
   '/proposals': typeof ProposalsIndexRoute
   '/tools': typeof ToolsIndexRoute
@@ -182,7 +174,6 @@ export interface FileRoutesById {
   '/tools/gauge-catalog': typeof ToolsGaugeCatalogRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/new': typeof TripsNewRoute
-  '/waterways/$waterwayId': typeof WaterwaysWaterwayIdRoute
   '/waterways/suggest-section': typeof WaterwaysSuggestSectionRoute
   '/proposals/': typeof ProposalsIndexRoute
   '/tools/': typeof ToolsIndexRoute
@@ -205,7 +196,6 @@ export interface FileRouteTypes {
     | '/tools/gauge-catalog'
     | '/trips/$tripId'
     | '/trips/new'
-    | '/waterways/$waterwayId'
     | '/waterways/suggest-section'
     | '/proposals/'
     | '/tools/'
@@ -226,7 +216,6 @@ export interface FileRouteTypes {
     | '/tools/gauge-catalog'
     | '/trips/$tripId'
     | '/trips/new'
-    | '/waterways/$waterwayId'
     | '/waterways/suggest-section'
     | '/proposals'
     | '/tools'
@@ -247,7 +236,6 @@ export interface FileRouteTypes {
     | '/tools/gauge-catalog'
     | '/trips/$tripId'
     | '/trips/new'
-    | '/waterways/$waterwayId'
     | '/waterways/suggest-section'
     | '/proposals/'
     | '/tools/'
@@ -267,7 +255,6 @@ export interface RootRouteChildren {
   ToolsGaugeCatalogRoute: typeof ToolsGaugeCatalogRoute
   TripsTripIdRoute: typeof TripsTripIdRoute
   TripsNewRoute: typeof TripsNewRoute
-  WaterwaysWaterwayIdRoute: typeof WaterwaysWaterwayIdRoute
   WaterwaysSuggestSectionRoute: typeof WaterwaysSuggestSectionRoute
   ProposalsIndexRoute: typeof ProposalsIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
@@ -324,13 +311,6 @@ declare module '@tanstack/react-router' {
       path: '/waterways/suggest-section'
       fullPath: '/waterways/suggest-section'
       preLoaderRoute: typeof WaterwaysSuggestSectionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/waterways/$waterwayId': {
-      id: '/waterways/$waterwayId'
-      path: '/waterways/$waterwayId'
-      fullPath: '/waterways/$waterwayId'
-      preLoaderRoute: typeof WaterwaysWaterwayIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trips/new': {
@@ -437,7 +417,6 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsGaugeCatalogRoute: ToolsGaugeCatalogRoute,
   TripsTripIdRoute: TripsTripIdRoute,
   TripsNewRoute: TripsNewRoute,
-  WaterwaysWaterwayIdRoute: WaterwaysWaterwayIdRoute,
   WaterwaysSuggestSectionRoute: WaterwaysSuggestSectionRoute,
   ProposalsIndexRoute: ProposalsIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,

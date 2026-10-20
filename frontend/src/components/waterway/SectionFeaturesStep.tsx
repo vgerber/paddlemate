@@ -7,6 +7,7 @@ import { useMemo, useRef, useState } from "react";
 import { PUT_IN_COLOR, TAKE_OUT_COLOR } from "@/components/map/LocationPin";
 import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type { Feature } from "@/lib/api";
+import { plural } from "@/lib/format";
 import { distanceAlongLineM, type LngLat } from "@/lib/geo";
 import { theme } from "@/lib/theme";
 import FeatureRow from "./FeatureRow";
@@ -126,7 +127,7 @@ export default function SectionFeaturesStep({
         label="On this section"
         hint={
           draftFeatures.length > 0
-            ? `${draftFeatures.length} feature${draftFeatures.length === 1 ? "" : "s"} added, plus the access points.`
+            ? `${plural(draftFeatures.length, "feature")} added, plus the access points.`
             : "The access points come from your line; rapids and hazards are optional."
         }
       >

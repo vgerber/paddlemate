@@ -4,13 +4,13 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
+import { listRowSx } from "@/components/canvas/flatRow";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import GradeTag from "@/components/waterway/GradeTag";
 import { sectionGradeText } from "@/components/waterway/section-details/grade";
 import type { SectionWithFeatures } from "@/lib/api";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
-import { listRowSx } from "./RiverRow";
 
 const { tokens } = theme;
 

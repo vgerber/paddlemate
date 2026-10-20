@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
+import { flatRowSx } from "@/components/canvas/flatRow";
 import { regionContext } from "@/components/map/regionGeometry";
 import type { Region, RegionKind } from "@/lib/api";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
@@ -8,7 +9,6 @@ import { useRegionSearch } from "@/lib/hooks/useRegions";
 import { REGION_KINDS } from "@/lib/regionKinds";
 import { theme } from "@/lib/theme";
 import ListGroupHeader from "./ListGroupHeader";
-import { flatRowSx } from "./RiverRow";
 
 const { tokens } = theme;
 
@@ -88,7 +88,7 @@ export default function RegionSuggestions({
                   borderRadius: `${tokens.radii.md}px`,
                   bgcolor: tokens.surface,
                   boxShadow: tokens.elevation.e1,
-                  [theme.breakpoints.up("md")]: flatRowSx,
+                  [theme.breakpoints.up("md")]: { ...flatRowSx, px: 2 },
                 }}
               >
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>

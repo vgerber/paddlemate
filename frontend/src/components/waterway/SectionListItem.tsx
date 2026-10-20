@@ -6,11 +6,10 @@ import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
-import { desktopFlatRow } from "@/components/canvas/flatRow";
-import { cardRowSx } from "@/components/search/RiverRow";
+import { cardRowSx, desktopFlatRow } from "@/components/canvas/flatRow";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import type { SectionWithFeatures } from "@/lib/api";
-import { sectionPlace } from "@/lib/format";
+import { plural, sectionPlace } from "@/lib/format";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
 import GradeTag from "./GradeTag";
@@ -143,9 +142,7 @@ export default function SectionListItem({
         <Box
           data-testid="boat-count"
           title={
-            descentCount
-              ? `Paddled ${descentCount} ${descentCount === 1 ? "time" : "times"}`
-              : undefined
+            descentCount ? `Paddled ${plural(descentCount, "time")}` : undefined
           }
           sx={{
             gridArea: "k",

@@ -190,12 +190,11 @@ test.describe("name mode", () => {
     await expect(seen(page.getByText("Recent rivers"))).toBeVisible();
     const row = seen(page.getByTestId("recent-river")).first();
     expect(await computed(row.getByText("Test River"), "font-size")).toBe(
-      "15px",
+      "13px",
     );
     expect(await computed(row.getByText("Test River"), "font-weight")).toBe(
-      "500",
+      "600",
     );
-    await expect(row.getByText("river", { exact: true })).toBeVisible();
     await expect(
       seen(page.getByText("Recent rivers")).locator("svg"),
     ).toHaveCount(0);

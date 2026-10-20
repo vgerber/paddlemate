@@ -23,6 +23,8 @@ import ErrorState from "@/components/states/ErrorState";
 import type { GaugeMapState } from "@/lib/api";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
 import { labelSx, theme } from "@/lib/theme";
+import { DonutCluster } from "./DonutCluster";
+import { STATES, stateMeta } from "./gaugeStates";
 import { groupByProximity, type MapGroup } from "./groupByProximity";
 import { toFeatureCollection } from "./toFeatureCollection";
 
@@ -30,35 +32,6 @@ const { tokens } = theme;
 
 const SOURCE_ID = "gauge-points-src";
 const POINT_LAYER = "gauge-points";
-
-const STATES: {
-  key: GaugeMapState;
-  label: string;
-  color: string;
-  help: string;
-}[] = [
-  {
-    key: "used",
-    label: "On a section",
-    color: tokens.success,
-    help: "Shows a run's water level",
-  },
-  {
-    key: "fetched",
-    label: "Tracked",
-    color: tokens.gaugeTracked,
-    help: "We collect its data, but no section uses it yet",
-  },
-  {
-    key: "available",
-    label: "Untracked",
-    color: tokens.gaugeUntracked,
-    help: "A known station we don't collect yet - can be added",
-  },
-];
-
-const stateMeta = (state: GaugeMapState) =>
-  STATES.find((s) => s.key === state) ?? STATES[2];
 
 interface ClusterInfo {
   id: number;
@@ -605,121 +578,5 @@ function GaugeMapNote({ children }: { children: ReactNode }) {
     >
       {children}
     </Box>
-  );
-}
-
-/** Abbreviate a cluster total the way MapLibre's point_count_abbreviated does. */
-function abbrev(n: number): string {
-  if (n >= 10000) return `${Math.round(n / 1000)}k`;
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-  return String(n);
-}
-
-/** SVG donut-arc path for a slice from `start` to `end` (both fractions of the
- * whole), centered at the origin, between inner radius `r0` and outer `r`. */
-function donutSegment(
-  start: number,
-  end: number,
-  r: number,
-  r0: number,
-): string {
-  const a0 = 2 * Math.PI * start - Math.PI / 2;
-  const a1 = 2 * Math.PI * (end - 1e-6) - Math.PI / 2;
-  const x0 = Math.cos(a0);
-  const y0 = Math.sin(a0);
-  const x1 = Math.cos(a1);
-  const y1 = Math.sin(a1);
-  const large = end - start > 0.5 ? 1 : 0;
-  return [
-    "M",
-    r0 * x0,
-    r0 * y0,
-    "L",
-    r * x0,
-    r * y0,
-    "A",
-    r,
-    r,
-    0,
-    large,
-    1,
-    r * x1,
-    r * y1,
-    "L",
-    r0 * x1,
-    r0 * y1,
-    "A",
-    r0,
-    r0,
-    0,
-    large,
-    0,
-    r0 * x0,
-    r0 * y0,
-    "Z",
-  ].join(" ");
-}
-
-/** A cluster rendered as a donut: one slice per state, sized by its share, with
- * the total in the center. A single-state cluster becomes a solid ring. */
-function DonutCluster({
-  counts,
-  total,
-}: {
-  counts: Record<GaugeMapState, number>;
-  total: number;
-}) {
-  const r = total >= 1000 ? 26 : total >= 100 ? 22 : total >= 30 ? 18 : 15;
-  const r0 = Math.round(r * 0.62);
-  const w = r * 2;
-  // Only the gauges we collect from are drawn as arcs; the untracked share is
-  // left as the bare disc, so grey never dominates the map.
-  let cum = 0;
-  const slices = STATES.flatMap((s) => {
-    const start = cum / total;
-    cum += counts[s.key];
-    if (s.key === "available" || counts[s.key] === 0) return [];
-    return [{ key: s.key, color: s.color, start, end: cum / total }];
-  });
-
-  return (
-    <svg
-      width={w}
-      height={w}
-      viewBox={`0 0 ${w} ${w}`}
-      style={{ display: "block", cursor: "pointer" }}
-      aria-label={`${total} gauges`}
-    >
-      <title>{`${total} gauges`}</title>
-      <g transform={`translate(${r}, ${r})`}>
-        <circle
-          r={r}
-          fill={tokens.surface}
-          stroke={tokens.outlineVariant}
-          strokeWidth={1}
-        />
-        {slices.map((s) =>
-          s.end - s.start > 0.999 ? (
-            <circle key={s.key} r={r} fill={s.color} />
-          ) : (
-            <path
-              key={s.key}
-              d={donutSegment(s.start, s.end, r, r0)}
-              fill={s.color}
-            />
-          ),
-        )}
-        <circle r={r0} fill={tokens.surface} />
-        <text
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontSize={total >= 1000 ? 10 : 11}
-          fontWeight={700}
-          fill={tokens.onSurface}
-        >
-          {abbrev(total)}
-        </text>
-      </g>
-    </svg>
   );
 }

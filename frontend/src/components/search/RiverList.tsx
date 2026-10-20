@@ -5,11 +5,12 @@ import Chip from "@mui/material/Chip";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
+import { listRowSx } from "@/components/canvas/flatRow";
 import EmptyState from "@/components/states/EmptyState";
 import type { WaterwayListItem } from "@/lib/api";
 import { humanize } from "@/lib/format";
 import ListGroupHeader from "./ListGroupHeader";
-import RiverRow, { listRowSx } from "./RiverRow";
+import RiverRow from "./RiverRow";
 
 interface PendingRiver {
   id: number;

@@ -9,6 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import { plural } from "@/lib/format";
 import type { LngLat } from "@/lib/geo";
 import { alphas, theme } from "@/lib/theme";
 import {
@@ -24,10 +25,10 @@ const coordLabel = ([lng, lat]: LngLat) =>
   `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 
 function pointsLabel(count: number, min: number): string {
-  const noun = `point${count === 1 ? "" : "s"}`;
   if (count === 0) return `At least ${min} points needed`;
-  if (count < min) return `${count} ${noun} - ${min - count} more needed`;
-  return `${count} ${noun} placed`;
+  if (count < min)
+    return `${plural(count, "point")} - ${min - count} more needed`;
+  return `${plural(count, "point")} placed`;
 }
 
 /** A picked point as a calm chip row with a 44px remove control. */

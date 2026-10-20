@@ -23,3 +23,27 @@ export const flatRowSx = {
 export const desktopFlatRow = {
   [theme.breakpoints.up("md")]: flatRowSx,
 } as const;
+
+/** The card every list row is drawn as on a phone: a white surface on the
+ * grey ground with the soft rest shadow. A selected row takes the accent
+ * wash. */
+export const cardRowSx = {
+  bgcolor: tokens.surface,
+  borderRadius: `${tokens.radii.md}px`,
+  boxShadow: tokens.elevation.e1,
+  minHeight: 52,
+  px: 1.75,
+  py: 1,
+  "&:hover": { bgcolor: tokens.surfaceHigh },
+  "&.Mui-selected": {
+    bgcolor: tokens.primaryContainer,
+    "&:hover": { bgcolor: tokens.primaryContainer },
+  },
+} as const;
+
+/** A list row that is a card on a phone and flat inside the desktop card. */
+export const listRowSx = {
+  ...cardRowSx,
+  mb: 0.75,
+  [theme.breakpoints.up("md")]: { ...flatRowSx, px: 2 },
+} as const;

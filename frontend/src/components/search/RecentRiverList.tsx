@@ -1,13 +1,11 @@
 import List from "@mui/material/List";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
 import { useMemo } from "react";
 import LevelDots from "@/components/LevelDots";
 import { useSectionDotLevels } from "@/lib/hooks/useWaterStatus";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import type { RecentWaterway } from "@/lib/recentWaterways";
 import ListGroupHeader from "./ListGroupHeader";
-import { listRowSx } from "./RiverRow";
+import RiverRow from "./RiverRow";
 
 interface RecentRiverListProps {
   rivers: RecentWaterway[];
@@ -45,23 +43,13 @@ export default function RecentRiverList({
       <ListGroupHeader label="Recent rivers" />
       <List dense disablePadding>
         {rivers.map((river) => (
-          <ListItemButton
+          <RiverRow
             key={river.id}
-            data-testid="recent-river"
+            testId="recent-river"
+            name={river.name}
             onClick={() => onSelect(river.id)}
-            sx={{ ...listRowSx, gap: 1 }}
-          >
-            <ListItemText
-              primary={river.name}
-              secondary="river"
-              sx={{ my: 0, minWidth: 0 }}
-              slotProps={{
-                primary: { variant: "body1", sx: { fontWeight: 500 } },
-                secondary: { variant: "body2", color: "textSecondary" },
-              }}
-            />
-            <RiverDots waterwayId={river.id} />
-          </ListItemButton>
+            trailing={<RiverDots waterwayId={river.id} />}
+          />
         ))}
       </List>
     </>

@@ -188,7 +188,10 @@ test.describe("history mount", () => {
     await gotoSection(page, "lower");
     const card = page.getByTestId("features-card").filter({ visible: true });
     await card.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
-    await card.getByRole("button", { name: "More actions" }).first().click();
+    await card
+      .getByRole("button", { name: "More actions", exact: true })
+      .first()
+      .click();
     await page.getByRole("menuitem", { name: "History" }).click();
     await expect(page.getByTestId("history-step").first()).toBeVisible();
   });
@@ -470,7 +473,10 @@ test.describe("history of a feature", () => {
     await gotoSection(page, "lower");
     const list = page.getByTestId("features-card").filter({ visible: true });
     await list.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
-    await list.getByRole("button", { name: "More actions" }).first().click();
+    await list
+      .getByRole("button", { name: "More actions", exact: true })
+      .first()
+      .click();
     await page.getByRole("menuitem", { name: "History" }).click();
     await expect(header(page)).toContainText("Altes Wehr");
     await expect(header(page)).toContainText("Weir");
