@@ -11,6 +11,7 @@ use axum::{
 };
 use moka::future::Cache;
 use paddlemate_api::{
+    layers::rejection::envelope_rejections,
     models::region::RegionKind,
     query,
     routes::geo::geo_routes,
@@ -21,7 +22,24 @@ use sqlx::PgPool;
 use tokio::sync::{Notify, RwLock};
 use tower::ServiceExt;
 
-fn app(pool: PgPool) -> Router {
+/// Marks the ground the tests browse as already fetched, so no request starts
+/// a fill and the tests never reach Overpass.
+async fn cover_tiles(pool: &PgPool) {
+    sqlx::query(
+        "INSERT INTO region_tiles (tier, x, y)
+         SELECT t.tier, x, y
+         FROM (VALUES ('countries', 8.0), ('states', 4.0), ('ranges', 2.0),
+                      ('districts', 1.0), ('valleys', 0.25)) AS t(tier, size),
+              generate_series(floor(0 / t.size)::int, floor(16 / t.size)::int) AS x,
+              generate_series(floor(40 / t.size)::int, floor(52 / t.size)::int) AS y",
+    )
+    .execute(pool)
+    .await
+    .unwrap();
+}
+
+async fn app(pool: PgPool) -> Router {
+    cover_tiles(&pool).await;
     let state = AppState {
         pg_pool: pool,
         keycloak_config: KeycloakState {
@@ -41,6 +59,7 @@ fn app(pool: PgPool) -> Router {
     let mut api = OpenApi::default();
     ApiRouter::new()
         .nest_api_service("/geo", geo_routes(state))
+        .layer(axum::middleware::from_fn(envelope_rejections))
         .finish_api(&mut api)
 }
 
@@ -49,7 +68,10 @@ async fn get(app: &Router, uri: &str) -> (StatusCode, Value) {
     let res = app.clone().oneshot(req).await.unwrap();
     let status = res.status();
     let bytes = to_bytes(res.into_body(), usize::MAX).await.unwrap();
-    (status, serde_json::from_slice(&bytes).unwrap_or(Value::Null))
+    (
+        status,
+        serde_json::from_slice(&bytes).unwrap_or(Value::Null),
+    )
 }
 
 /// A square region from (x0, y0) to (x1, y1).
@@ -91,7 +113,7 @@ async fn world(pool: &PgPool) {
 #[sqlx::test]
 async fn search_lists_the_parent_chain(pool: PgPool) {
     world(&pool).await;
-    let app = app(pool);
+    let app = app(pool).await;
 
     let (status, body) = get(&app, "/geo/regions?q=imst").await;
     assert_eq!(status, StatusCode::OK);
@@ -129,15 +151,12 @@ async fn search_lists_the_parent_chain(pool: PgPool) {
 #[sqlx::test]
 async fn border_names_the_country_on_the_other_side(pool: PgPool) {
     world(&pool).await;
-    let app = app(pool);
+    let app = app(pool).await;
     let (status, body) = get(&app, "/geo/region-outlines?bbox=46.5,9.5,47.5,10.5").await;
     assert_eq!(status, StatusCode::OK);
     let countries = body["countries"].as_array().unwrap();
     let neighbours = |code: &str| -> Vec<String> {
-        countries
-            .iter()
-            .find(|c| c["country"] == code)
-            .unwrap()["neighbours"]
+        countries.iter().find(|c| c["country"] == code).unwrap()["neighbours"]
             .as_array()
             .unwrap()
             .iter()
@@ -152,7 +171,7 @@ async fn border_names_the_country_on_the_other_side(pool: PgPool) {
 async fn border_far_from_any_country_has_no_neighbour(pool: PgPool) {
     square(&pool, "AT", "country", "AT", [9.0, 46.0, 10.0, 48.0]).await;
     square(&pool, "FR", "country", "FR", [0.0, 46.0, 1.0, 48.0]).await;
-    let app = app(pool);
+    let app = app(pool).await;
     let (_, body) = get(&app, "/geo/region-outlines?bbox=46.5,9.5,47.5,10.5").await;
     let at = &body["countries"][0];
     assert_eq!(at["country"], "AT");
@@ -170,7 +189,7 @@ fn names(body: &Value) -> Vec<String> {
 #[sqlx::test]
 async fn search_tolerates_misspellings(pool: PgPool) {
     world(&pool).await;
-    let app = app(pool);
+    let app = app(pool).await;
     // "Tirool" has an extra letter, "Otztall" a doubled one.
     let (_, body) = get(&app, "/geo/regions?q=Tirool").await;
     assert_eq!(names(&body), ["Tirol"]);
@@ -185,7 +204,7 @@ async fn search_tolerates_misspellings(pool: PgPool) {
 async fn search_finds_regions_by_english_country_name(pool: PgPool) {
     world(&pool).await;
     square(&pool, "Piemonte", "state", "IT", [10.2, 46.0, 10.8, 47.0]).await;
-    let app = app(pool);
+    let app = app(pool).await;
     let (_, body) = get(&app, "/geo/regions?q=Austria").await;
     let found = names(&body);
     assert!(found.contains(&"Tirol".to_string()) && !found.contains(&"Piemonte".to_string()));
@@ -222,10 +241,14 @@ async fn europe_wide_view_answers_with_borders(pool: PgPool) {
     // browse view allows; the lookup must not depend on span or count.
     for i in 0..40 {
         let x = f64::from(i) * 0.7;
-        let code = format!("{}{}", (b'A' + (i / 26) as u8) as char, (b'A' + (i % 26) as u8) as char);
+        let code = format!(
+            "{}{}",
+            (b'A' + (i / 26) as u8) as char,
+            (b'A' + (i % 26) as u8) as char
+        );
         square(&pool, &code, "country", &code, [x, 40.0, x + 0.7, 52.0]).await;
     }
-    let app = app(pool);
+    let app = app(pool).await;
     let started = std::time::Instant::now();
     let (status, body) = get(&app, "/geo/region-outlines?bbox=-80,-180,80,180").await;
     assert_eq!(status, StatusCode::OK);
@@ -244,22 +267,27 @@ fn outline_names(body: &Value) -> Vec<String> {
 #[sqlx::test]
 async fn kinds_param_picks_the_levels(pool: PgPool) {
     world(&pool).await;
-    let app = app(pool);
+    let app = app(pool).await;
     // A one degree view would pick districts on its own.
     let view = "bbox=46.0,9.0,47.0,10.0";
-    let (_, body) = get(&app, &format!("/geo/region-outlines?{view}&kinds=range,valley")).await;
+    let (_, body) = get(
+        &app,
+        &format!("/geo/region-outlines?{view}&kinds=range,valley"),
+    )
+    .await;
     assert_eq!(outline_names(&body), ["Alpen", "Otztal"]);
     assert!(body["hidden_kinds"].as_array().unwrap().is_empty());
     let (_, body) = get(&app, &format!("/geo/region-outlines?{view}&kinds=state")).await;
     assert_eq!(outline_names(&body), ["Sliver", "Tirol"]);
     let (_, body) = get(&app, &format!("/geo/region-outlines?{view}")).await;
     assert_eq!(outline_names(&body), ["Imst"]);
+    assert_eq!(body["filling"], false);
 }
 
 #[sqlx::test]
 async fn kind_past_its_span_is_hidden_and_listed(pool: PgPool) {
     world(&pool).await;
-    let app = app(pool);
+    let app = app(pool).await;
     // Four degrees wide: valleys give up at 3, districts and states do not.
     let (status, body) = get(
         &app,
@@ -273,7 +301,7 @@ async fn kind_past_its_span_is_hidden_and_listed(pool: PgPool) {
 
 #[sqlx::test]
 async fn unknown_kind_is_rejected(pool: PgPool) {
-    let app = app(pool);
+    let app = app(pool).await;
     for kinds in ["lake", "valley,country", ""] {
         let uri = format!("/geo/region-outlines?bbox=46,9,47,10&kinds={kinds}");
         let (status, body) = get(&app, &uri).await;
@@ -287,10 +315,21 @@ async fn every_range_in_view_is_returned_past_the_old_cap(pool: PgPool) {
     for i in 0..200 {
         let x = 9.0 + f64::from(i % 20) * 0.04;
         let y = 46.0 + f64::from(i / 20) * 0.04;
-        square(&pool, &format!("R{i}"), "range", "AT", [x, y, x + 0.03, y + 0.03]).await;
+        square(
+            &pool,
+            &format!("R{i}"),
+            "range",
+            "AT",
+            [x, y, x + 0.03, y + 0.03],
+        )
+        .await;
     }
-    let app = app(pool);
-    let (_, body) = get(&app, "/geo/region-outlines?bbox=45.9,8.9,46.5,10.0&kinds=range").await;
+    let app = app(pool).await;
+    let (_, body) = get(
+        &app,
+        "/geo/region-outlines?bbox=45.9,8.9,46.5,10.0&kinds=range",
+    )
+    .await;
     assert_eq!(body["regions"].as_array().unwrap().len(), 200);
 }
 
@@ -316,7 +355,117 @@ async fn range_beside_the_view_is_not_returned(pool: PgPool) {
     .execute(&pool)
     .await
     .unwrap();
-    let app = app(pool);
-    let (_, body) = get(&app, "/geo/region-outlines?bbox=45.0,9.5,45.5,10.0&kinds=range").await;
+    let app = app(pool).await;
+    let (_, body) = get(
+        &app,
+        "/geo/region-outlines?bbox=45.0,9.5,45.5,10.0&kinds=range",
+    )
+    .await;
     assert!(outline_names(&body).is_empty());
+}
+
+fn long(n: usize) -> String {
+    "a".repeat(n)
+}
+
+#[sqlx::test]
+async fn search_term_is_bounded(pool: PgPool) {
+    let app = app(pool).await;
+    let (status, _) = get(&app, &format!("/geo/regions?q={}", long(100))).await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, body) = get(&app, &format!("/geo/regions?q={}", long(101))).await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(body["error"]["target"], "q");
+    // Padding does not count, so a trimmed 100 still passes.
+    let (status, _) = get(&app, &format!("/geo/regions?q=%20{}%20", long(100))).await;
+    assert_eq!(status, StatusCode::OK);
+}
+
+#[sqlx::test]
+async fn country_filter_must_be_a_code(pool: PgPool) {
+    let app = app(pool).await;
+    let (status, _) = get(&app, "/geo/regions?q=imst&country=AT").await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, body) = get(&app, "/geo/regions?q=imst&country=AUT").await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(body["error"]["target"], "country");
+}
+
+#[sqlx::test]
+async fn malformed_query_gets_the_error_envelope(pool: PgPool) {
+    let app = app(pool).await;
+    let (status, body) = get(&app, "/geo/region-outlines").await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(body["error"]["code"], "validation_failed");
+    assert_eq!(body["error"]["target"], "bbox");
+    let (status, body) = get(&app, "/geo/regions?kind=bogus").await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(body["error"]["code"], "validation_failed");
+    let (status, body) = get(&app, "/geo/regions/abc").await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(body["error"]["code"], "validation_failed");
+}
+
+/// Insert a country square in its own open transaction and keep it open.
+async fn store_country(pool: &PgPool, code: &str, west: f64) -> sqlx::Result<()> {
+    let mut tx = pool.begin().await?;
+    sqlx::query(
+        "INSERT INTO regions (name, kind, country, geom)
+         VALUES ($1, 'country', $1, ST_MakeEnvelope($2, 46, $3, 48, 4326))",
+    )
+    .bind(code)
+    .bind(west)
+    .bind(west + 1.0)
+    .execute(&mut *tx)
+    .await?;
+    // Give the other writer time to start its own refresh.
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    tx.commit().await
+}
+
+#[sqlx::test]
+async fn concurrent_country_stores_both_land(pool: PgPool) {
+    for round in 0..10 {
+        let (a, b) = (format!("A{round}"), format!("B{round}"));
+        let (first, second) = tokio::join!(
+            store_country(&pool, &a, 9.0 + f64::from(round) * 3.0),
+            store_country(&pool, &b, 10.0 + f64::from(round) * 3.0),
+        );
+        first.unwrap();
+        second.unwrap();
+        let pairs: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM country_borders WHERE country IN ($1, $2)")
+                .bind(&a)
+                .bind(&b)
+                .fetch_one(&pool)
+                .await
+                .unwrap();
+        assert_eq!(pairs, 2, "round {round}");
+    }
+}
+
+#[sqlx::test]
+async fn unchanged_outline_leaves_borders_alone(pool: PgPool) {
+    world(&pool).await;
+    let stamp = |pool: PgPool| async move {
+        sqlx::query_scalar::<_, String>(
+            "SELECT string_agg(xmin::text, ',' ORDER BY country, neighbour) FROM country_borders",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap()
+    };
+    let before = stamp(pool.clone()).await;
+    sqlx::query("UPDATE regions SET geom = geom, country = country WHERE kind = 'country'")
+        .execute(&pool)
+        .await
+        .unwrap();
+    assert_eq!(stamp(pool.clone()).await, before);
+    sqlx::query(
+        "UPDATE regions SET geom = ST_MakeEnvelope(9, 46, 10.1, 48, 4326) WHERE name = 'AT'",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+    assert_ne!(stamp(pool).await, before);
 }

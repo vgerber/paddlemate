@@ -148,12 +148,22 @@ no wider than its limit (valley 3, district 6, range 8, state 12 degrees); a
 kind past it is named in `hidden_kinds`. Without `kinds` one kind is chosen by
 the viewport width. At most 120 outlines per kind (300 for ranges).
 
-Regions: `GET /geo/regions?q=` results carry `parents`, the regions each one
+Ground the server has not stored yet is fetched from OSM in the background,
+at most 32 tiles at once across all callers. When that queue is full a request
+claims nothing and still answers `filling: true`, so the client asks again.
+
+Regions: `q` is at most 100 characters and `country` a two letter code (400
+with that target otherwise). `GET /geo/regions?q=` results carry `parents`, the regions each one
 lies in (district, state, country; a range lists only its country), found by
 containment of a point on the region, at most one per kind. The `countries`
 of `GET /geo/region-outlines` carry `neighbours`, the ISO codes of the other
 imported countries whose area comes within about a kilometre of the clipped
 border line, so the map can label a line "AT | IT".
+
+Errors: a query string, path or body that axum rejects before a handler runs
+(`GET /geo/region-outlines` without `bbox`, `?page=abc`, `?kind=bogus`) comes
+back as the usual envelope, 400 with code `validation_failed`, through the
+`envelope_rejections` layer. `target` is set when the rejection names a field.
 
 Children are looked up inside their parents: a feature id reached through
 another section's path answers 404. Source ids are strings, as in the `sources`
