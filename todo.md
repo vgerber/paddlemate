@@ -30,6 +30,7 @@ the agents were stopped; finish them), plus the earlier code reviews.
 
 ## Next, in order
 
+0. Fix first (from `review/features-on-map.md`, partial): tapping a feature on the map (point, line, put-in, take-out) deselects the open section instead of opening the feature, on desktop, phone and 320: `useMapClickHandler.ts` only handles section hit layers. On a phone, a feature opened from the list is focused under the full-screen overlay and the collapsed bar does not name it (`map-page/MobileOverlay.tsx`, `MapPane.tsx`). Minor: the open feature is not in the URL, only a ring shows (not the line), desktop centres on the window instead of the free area, the FAB covers a row's km at 320. Not yet checked: signed out, 320 and edge taps, note markers over pins, closing a feature, polygon features.
 1. Finish wave 3 and merge it.
 2. Finish the accessibility audit and the features-on-map test (both read only), then one fix wave from them and from `perf.md`:
    - perf: lazy-load the map and chart libraries (-376 kB on logs, settings, trips), `autoCodeSplitting` in the router plugin, the markdown pipeline out of the React chunk, shorten the chart's data chain and preconnect to the tile server, remove the N+1 requests on trips, notes history and river state, profile the Notes tab's long tasks.
