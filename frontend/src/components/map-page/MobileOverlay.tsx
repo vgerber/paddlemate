@@ -96,7 +96,6 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
           <StandingDescentBanner />
           <SidebarContent
             state={state}
-            onMapModeActivate={closeOverlay}
             onClose={closeOverlay}
             onMobileMapToggle={toggleMobileMapView}
             mobileMapActive={isMobileMapView}

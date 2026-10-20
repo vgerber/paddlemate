@@ -59,8 +59,6 @@ interface WaterwaySearchPanelProps {
   favorites?: FavoriteSection[];
   favoritedIds?: Set<number>;
   onToggleFavorite?: (id: number) => void;
-  /** Not used by the panel any more; kept so callers need not change. */
-  onMapModeActivate?: () => void;
   onClose?: () => void;
   onRadiusPreview?: (radiusKm: number) => void;
   onLoadingChange?: (loading: boolean) => void;
