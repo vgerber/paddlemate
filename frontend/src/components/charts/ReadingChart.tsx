@@ -16,6 +16,7 @@ import {
 } from "@/components/charts/water/series";
 import type { TimeRange } from "@/components/charts/water/types";
 import WaterChart from "@/components/charts/water/WaterChart";
+import { useIsSwipeGhost } from "@/components/SwipeGhost";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { dockHeight } from "@/lib/canvasLayout";
 import { readingTime, timeAgo } from "@/lib/format";
@@ -35,8 +36,10 @@ const LEVEL_WORD: Partial<Record<WaterLevel, string>> = {
   high: "High",
 };
 
-/** The plot of the inline card, in px (the rail's follows its height). */
+/** The plot of the inline card, in px (the rail's follows its height). The
+ * phone's grows by the free room the pane measured (--chart-extra). */
 const INLINE_PLOT = 128;
+const PHONE_PLOT = "calc(clamp(96px, 19vh, 112px) + var(--chart-extra, 0px))";
 const SOURCE_LINE = 18;
 /** Side padding of the reading block: the rail's text line and the inline
  * card's. */
@@ -52,8 +55,9 @@ export type ChartPlacement = "phone" | "rail" | "inline";
 
 export interface ReadingChartProps {
   /** "rail": reading block in the detail card's foot, plot in the rail.
-   * "inline": both as the detail card's first block. */
-  placement: Exclude<ChartPlacement, "phone">;
+   * "inline": both as the detail card's first block. "phone": the same
+   * card with the phone's head, its plot growing into free height. */
+  placement: ChartPlacement;
   ranges: WaterRangeWithStatus[];
   /** Loading and failure of the data; absent when the ranges are in hand. */
   status?: ChartLoad;
@@ -127,8 +131,10 @@ export default function ReadingChart(props: ReadingChartProps) {
     footer,
   } = props;
   const rail = placement === "rail";
+  const phone = placement === "phone";
   const [gaugeChoice, setGaugeChoice] = useState<number | null>(null);
   const [scrub, setScrub] = useState<ScrubPoint | null>(null);
+  const ghost = useIsSwipeGhost();
   const windowHeight = useLayout((s) => s.viewport.h);
 
   const gauges = useMemo(() => {
@@ -178,6 +184,7 @@ export default function ReadingChart(props: ReadingChartProps) {
       }}
       onDismiss={onDismiss}
       period={rail ? { value: timeRange, onChange: changeRange } : undefined}
+      phone={phone}
       inset={rail ? RAIL_INSET : INLINE_INSET}
       numberSize={
         rail ? Math.round(Math.min(80, Math.max(56, railHeight * 0.32))) : 36
@@ -186,7 +193,7 @@ export default function ReadingChart(props: ReadingChartProps) {
   );
 
   const plotBody = (
-    <ChartBody load={status}>
+    <ChartBody load={status} pending={ghost}>
       <WaterChart
         ranges={own}
         rail
@@ -252,6 +259,8 @@ export default function ReadingChart(props: ReadingChartProps) {
       sx={{
         mx: 1.5,
         mt: 1.5,
+        // The panel's gutter to the card below.
+        mb: phone ? `${tokens.canvas.panel.gutter}px` : 0,
         flexShrink: 0,
         bgcolor: tokens.surface,
         borderRadius: `${tokens.radii.md}px`,
@@ -259,10 +268,10 @@ export default function ReadingChart(props: ReadingChartProps) {
         overflow: "hidden",
       }}
     >
-      <Box sx={{ pt: 0.5 }}>{block}</Box>
+      <Box sx={{ pt: phone ? 0 : 0.5 }}>{block}</Box>
       <Box
         data-testid="chart-plot"
-        sx={{ height: INLINE_PLOT, position: "relative" }}
+        sx={{ height: phone ? PHONE_PLOT : INLINE_PLOT, position: "relative" }}
       >
         {plotBody}
       </Box>
