@@ -9,6 +9,7 @@ import {
   languageOption,
   languageOptions,
 } from "@/lib/languages";
+import { theme } from "@/lib/theme";
 
 interface LanguagePickerProps {
   value: string;
@@ -80,7 +81,11 @@ export default function LanguagePicker({
       size={size}
       disableClearable
       autoHighlight
-      slotProps={overlay ? { popper: { sx: { zIndex: 1500 } } } : undefined}
+      slotProps={
+        overlay
+          ? { popper: { sx: { zIndex: theme.zIndex.tooltip } } }
+          : undefined
+      }
       sx={{ minWidth: 170 }}
     />
   );

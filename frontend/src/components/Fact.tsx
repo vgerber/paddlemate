@@ -11,8 +11,8 @@ export const factLabelSx = {
 } as const;
 
 /** The value line of a fact block. */
-export const valueSx = {
-  fontFamily: fonts.label,
+export const factValueSx = {
+  fontFamily: fonts.body,
   fontSize: "1rem",
   lineHeight: "22px",
   fontWeight: 600,
@@ -34,7 +34,7 @@ export default function Fact({
       <Typography data-testid="fact-label" sx={factLabelSx}>
         {label}
       </Typography>
-      <Typography sx={valueSx} component="div">
+      <Typography sx={factValueSx} component="div">
         {value}
       </Typography>
       {caption && (

@@ -4,7 +4,7 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import Fact, { valueSx } from "@/components/Fact";
+import Fact, { factValueSx } from "@/components/Fact";
 import WaterwayMap from "@/components/map/Map";
 import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
@@ -201,7 +201,7 @@ export default function DescentDetail({
                   <Box
                     component="span"
                     sx={{
-                      ...valueSx,
+                      ...factValueSx,
                       display: "flex",
                       alignItems: "center",
                       gap: 0.5,
@@ -214,7 +214,10 @@ export default function DescentDetail({
                     {index + 1}
                   </Box>
                   <Box component="span" sx={{ display: "block", minWidth: 0 }}>
-                    <Box component="span" sx={{ ...valueSx, fontWeight: 600 }}>
+                    <Box
+                      component="span"
+                      sx={{ ...factValueSx, fontWeight: 600 }}
+                    >
                       {s.section_name ?? `Section #${s.section_id}`}
                     </Box>{" "}
                     {s.waterway_name && (

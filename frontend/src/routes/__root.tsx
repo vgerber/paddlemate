@@ -37,6 +37,7 @@ import {
 import { useSession } from "@/lib/hooks/useSession";
 import { useLanguage } from "@/lib/languagePreference";
 import { transition } from "@/lib/motion";
+import { activeNav, DESKTOP_NAV, PHONE_NAV } from "@/lib/nav";
 import { shouldRetryQuery } from "@/lib/retry";
 import { alphas, BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
 
@@ -46,7 +47,7 @@ const navLinkSx = {
   display: "inline-flex",
   alignItems: "center",
   minHeight: tokens.touch.min,
-  fontFamily: fonts.label,
+  fontFamily: fonts.body,
   fontSize: "0.875rem",
   fontWeight: 600,
   color: "text.secondary",
@@ -110,12 +111,8 @@ function Layout() {
     useSession();
   useLiveTripEvents(isAuthenticated);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const activeTo = activeNav(DESKTOP_NAV, pathname);
   // Full-bleed map pages: the main world map and the gauge coverage map.
-  // Proposals are reached from Tools, so the nav keeps Tools lit there.
-  const inTools =
-    pathname.startsWith("/tools") ||
-    pathname.startsWith("/proposals") ||
-    pathname.startsWith("/admin/proposals");
   const isMapPage = pathname === "/" || pathname === "/tools/gauge-catalog";
 
   return (
@@ -135,12 +132,9 @@ function Layout() {
         <Toolbar
           sx={{
             gap: 0.5,
-            px: { xs: 2.5, sm: 2.5 },
+            px: 2.5,
             // MUI's own sm-up min height would win over a plain value.
-            minHeight: {
-              xs: tokens.chrome.appBar,
-              sm: tokens.chrome.appBar,
-            },
+            minHeight: { xs: tokens.chrome.appBar, sm: tokens.chrome.appBar },
           }}
         >
           <Typography
@@ -151,7 +145,7 @@ function Layout() {
               display: "inline-flex",
               alignItems: "center",
               minHeight: tokens.touch.min,
-              fontFamily: fonts.label,
+              fontFamily: fonts.body,
               fontSize: "1.125rem",
               fontWeight: 700,
               color: "primary.main",
@@ -162,29 +156,23 @@ function Layout() {
           </Typography>
           <Box
             sx={{
-              display: { xs: "none", md: "flex" },
+              display: "flex",
               alignItems: "center",
               gap: 0.5,
               ml: 2.5,
             }}
           >
-            <Box component={Link} to="/" sx={navLinkSx}>
-              Map
-            </Box>
-            <Box component={Link} to="/logs" sx={navLinkSx}>
-              Logs
-            </Box>
-            <Box component={Link} to="/trips" sx={navLinkSx}>
-              Trips
-            </Box>
-            <Box
-              component={Link}
-              to="/tools"
-              aria-current={inTools ? "page" : undefined}
-              sx={navLinkSx}
-            >
-              Tools
-            </Box>
+            {DESKTOP_NAV.map(({ to, label }) => (
+              <Box
+                key={to}
+                component={Link}
+                to={to}
+                aria-current={activeTo === to ? "page" : undefined}
+                sx={navLinkSx}
+              >
+                {label}
+              </Box>
+            ))}
           </Box>
           <Box sx={{ flex: 1 }} />
           {!isLoading &&
@@ -197,19 +185,17 @@ function Layout() {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Button
                   variant="text"
-                  color="secondary"
                   size="small"
                   onClick={signup}
-                  sx={{ fontSize: "0.875rem", minHeight: tokens.touch.min }}
+                  sx={{ fontSize: "0.875rem" }}
                 >
                   Create account
                 </Button>
                 <Button
                   variant="contained"
-                  color="secondary"
                   size="small"
                   onClick={login}
-                  sx={{ fontSize: "0.875rem", minHeight: tokens.touch.min }}
+                  sx={{ fontSize: "0.875rem" }}
                 >
                   Sign in
                 </Button>
@@ -237,7 +223,7 @@ function Layout() {
             bottom: { md: 16 },
             m: { md: 0 },
             width: { md: 380 },
-            zIndex: { md: 1200 },
+            zIndex: { md: theme.zIndex.drawer },
           }}
         />
         <CanvasHost />
@@ -251,32 +237,17 @@ function Layout() {
   );
 }
 
-const NAV_ITEMS = [
-  { to: "/", label: "Map", icon: MapOutlinedIcon },
-  { to: "/logs", label: "Logs", icon: DirectionsBoatOutlinedIcon },
-  { to: "/trips", label: "Trips", icon: LuggageOutlinedIcon },
-  { to: "/settings", label: "Profile", icon: AccountCircleOutlinedIcon },
-] as const;
-
-/** Which bottom nav item a path belongs to; Tools and proposals live under
- * Profile on a phone. */
-function activeNavItem(pathname: string) {
-  if (pathname === "/") return "/";
-  if (pathname.startsWith("/logs")) return "/logs";
-  if (pathname.startsWith("/trips")) return "/trips";
-  if (
-    pathname.startsWith("/settings") ||
-    pathname.startsWith("/proposals") ||
-    pathname.startsWith("/tools")
-  )
-    return "/settings";
-  return null;
-}
+const PHONE_ICONS: Record<string, typeof MapOutlinedIcon> = {
+  "/": MapOutlinedIcon,
+  "/logs": DirectionsBoatOutlinedIcon,
+  "/trips": LuggageOutlinedIcon,
+  "/settings": AccountCircleOutlinedIcon,
+};
 
 function BottomNav({ signedIn }: { signedIn: boolean }) {
   const { data: notifications } = useNotificationState(signedIn);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const active = activeNavItem(pathname);
+  const active = activeNav(PHONE_NAV, pathname);
 
   return (
     <Box
@@ -291,12 +262,13 @@ function BottomNav({ signedIn }: { signedIn: boolean }) {
         height: tokens.chrome.bottomNav,
         boxSizing: "content-box",
         pb: "env(safe-area-inset-bottom)",
-        zIndex: 1300,
+        zIndex: theme.zIndex.modal,
         bgcolor: tokens.surfaceLowest,
         boxShadow: tokens.elevation.e1,
       }}
     >
-      {NAV_ITEMS.map(({ to, label, icon: Icon }) => {
+      {PHONE_NAV.map(({ to, label }) => {
+        const Icon = PHONE_ICONS[to];
         const current = active === to;
         return (
           <Box
@@ -314,7 +286,7 @@ function BottomNav({ signedIn }: { signedIn: boolean }) {
               justifyContent: "center",
               gap: 0.25,
               textDecoration: "none",
-              fontFamily: fonts.label,
+              fontFamily: fonts.body,
               fontSize: "0.75rem",
               fontWeight: 600,
               color: current ? "text.primary" : "text.secondary",
@@ -368,7 +340,7 @@ function UserMenu({
         size="small"
         onClick={(e) => setAnchor(e.currentTarget)}
         sx={{
-          fontFamily: fonts.label,
+          fontFamily: fonts.body,
           fontSize: "0.875rem",
           fontWeight: 500,
           color: "text.secondary",

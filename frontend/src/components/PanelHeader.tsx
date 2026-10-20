@@ -50,7 +50,7 @@ export default function PanelHeader<T extends string>({
         // bar alone keeps its 16 inset.
         px: { xs: 2, md: title ? 0 : 2 },
         pt: { xs: title ? 1.5 : 0, md: 0 },
-        pb: { xs: tabs ? 0 : 1, md: tabs ? 0 : 1 },
+        pb: tabs ? 0 : 1,
         bgcolor: tokens.surface,
         boxShadow: tokens.elevation.e1,
         position: "relative",
