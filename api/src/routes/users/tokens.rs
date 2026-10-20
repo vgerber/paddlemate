@@ -134,9 +134,7 @@ pub async fn list_tokens(
                 .collect();
             Json(tokens).into_response()
         }
-        Err(err) => {
-            ApiError::from_db("Error listing API tokens", err).into_response()
-        }
+        Err(err) => ApiError::from_db("Error listing API tokens", err).into_response(),
     }
 }
 
@@ -189,9 +187,7 @@ pub async fn revoke_token(
                 StatusCode::NO_CONTENT.into_response()
             }
         }
-        Err(err) => {
-            ApiError::from_db("Error revoking API token", err).into_response()
-        }
+        Err(err) => ApiError::from_db("Error revoking API token", err).into_response(),
     }
 }
 

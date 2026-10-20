@@ -53,7 +53,8 @@ pub async fn create_feature(
         Ok(true) => {}
         Ok(false) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            return ApiError::from_db(&format!("Error verifying section {}", section_id), err).into_response();
+            return ApiError::from_db(&format!("Error verifying section {section_id}"), err)
+                .into_response();
         }
     }
 
@@ -204,9 +205,8 @@ pub async fn update_feature(
                 Json(feature).into_response()
             }
             Ok(None) => ApiError::not_found("Not found").into_response(),
-            Err(err) => {
-                ApiError::from_db(&format!("Error updating feature {}", feature_id), err).into_response()
-            }
+            Err(err) => ApiError::from_db(&format!("Error updating feature {feature_id}"), err)
+                .into_response(),
         };
     }
 
@@ -272,9 +272,8 @@ pub async fn delete_feature(
         {
             Ok(true) => StatusCode::NO_CONTENT.into_response(),
             Ok(false) => ApiError::not_found("Not found").into_response(),
-            Err(err) => {
-                ApiError::from_db(&format!("Error deleting feature {}", feature_id), err).into_response()
-            }
+            Err(err) => ApiError::from_db(&format!("Error deleting feature {feature_id}"), err)
+                .into_response(),
         };
     }
 
@@ -335,15 +334,18 @@ pub async fn upsert_feature_name(
         Ok(true) => {}
         Ok(false) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            return ApiError::from_db(&format!("Error checking feature {}", feature_id), err).into_response();
+            return ApiError::from_db(&format!("Error checking feature {feature_id}"), err)
+                .into_response();
         }
     }
 
     match features::upsert_name(&app.pg_pool, feature_id, &lang_code, &body.name).await {
         Ok(name) => Json(name).into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error upserting name for feature {}", feature_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error upserting name for feature {feature_id}"),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -384,9 +386,11 @@ pub async fn delete_feature_name(
     {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error deleting name for feature {}", feature_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error deleting name for feature {feature_id}"),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -428,7 +432,8 @@ pub async fn upsert_feature_description(
         Ok(true) => {}
         Ok(false) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            return ApiError::from_db(&format!("Error checking feature {}", feature_id), err).into_response();
+            return ApiError::from_db(&format!("Error checking feature {feature_id}"), err)
+                .into_response();
         }
     }
 
@@ -436,9 +441,11 @@ pub async fn upsert_feature_description(
         .await
     {
         Ok(desc) => Json(desc).into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error upserting description for feature {}", feature_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error upserting description for feature {feature_id}"),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -479,9 +486,11 @@ pub async fn delete_feature_description(
     {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error deleting description for feature {}", feature_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error deleting description for feature {feature_id}"),
+            err,
+        )
+        .into_response(),
     }
 }
 

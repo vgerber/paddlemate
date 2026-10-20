@@ -71,7 +71,11 @@ pub async fn list_favorites(
             match features::fetch_features_for_section(&app.pg_pool, meta.id).await {
                 Ok(f) => f,
                 Err(err) => {
-                    return ApiError::from_db(&format!("Error fetching features for section {}", meta.id), err).into_response();
+                    return ApiError::from_db(
+                        &format!("Error fetching features for section {}", meta.id),
+                        err,
+                    )
+                    .into_response();
                 }
             };
         result.push(FavoriteSectionResponse {
@@ -143,9 +147,7 @@ pub async fn remove_favorite(
 
     match favorites::remove_section_favorite(&app.pg_pool, user_id, path.section_id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(err) => {
-            ApiError::from_db("Error removing favorite", err).into_response()
-        }
+        Err(err) => ApiError::from_db("Error removing favorite", err).into_response(),
     }
 }
 

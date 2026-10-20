@@ -65,9 +65,11 @@ pub async fn list_waterway_comments(
             comments::resolve_author_names(&app, &mut list).await;
             Json(list).into_response()
         }
-        Err(err) => {
-            ApiError::from_db(&format!("Error listing comments for river {}", waterway_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error listing comments for river {waterway_id}"),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -124,9 +126,11 @@ pub async fn create_waterway_comment(
                 .unwrap_or_default();
             (StatusCode::CREATED, Json(comment)).into_response()
         }
-        Err(err) => {
-            ApiError::from_db(&format!("Error creating comment on river {}", waterway_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error creating comment on river {waterway_id}"),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -161,7 +165,7 @@ pub async fn update_waterway_comment(
         Ok(Some(comment)) => Json(comment).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            ApiError::from_db(&format!("Error updating comment {}", comment_id), err).into_response()
+            ApiError::from_db(&format!("Error updating comment {comment_id}"), err).into_response()
         }
     }
 }
@@ -206,7 +210,7 @@ pub async fn delete_waterway_comment(
         }
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            ApiError::from_db(&format!("Error deleting comment {}", comment_id), err).into_response()
+            ApiError::from_db(&format!("Error deleting comment {comment_id}"), err).into_response()
         }
     }
 }
@@ -236,9 +240,8 @@ pub async fn moderate_waterway_comment(
     match comments::moderate_comment(&app.pg_pool, comment_id, body.status).await {
         Ok(Some(comment)) => Json(comment).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error moderating comment {}", comment_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(&format!("Error moderating comment {comment_id}"), err)
+            .into_response(),
     }
 }
 
@@ -261,9 +264,11 @@ pub async fn list_section_comments(
             comments::resolve_author_names(&app, &mut list).await;
             Json(list).into_response()
         }
-        Err(err) => {
-            ApiError::from_db(&format!("Error listing comments for section {}", section_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error listing comments for section {section_id}"),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -321,9 +326,11 @@ pub async fn create_section_comment(
                 .unwrap_or_default();
             (StatusCode::CREATED, Json(comment)).into_response()
         }
-        Err(err) => {
-            ApiError::from_db(&format!("Error creating comment on section {}", section_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error creating comment on section {section_id}"),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -359,7 +366,7 @@ pub async fn update_section_comment(
         Ok(Some(comment)) => Json(comment).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            ApiError::from_db(&format!("Error updating comment {}", comment_id), err).into_response()
+            ApiError::from_db(&format!("Error updating comment {comment_id}"), err).into_response()
         }
     }
 }
@@ -395,7 +402,7 @@ pub async fn delete_section_comment(
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            ApiError::from_db(&format!("Error deleting comment {}", comment_id), err).into_response()
+            ApiError::from_db(&format!("Error deleting comment {comment_id}"), err).into_response()
         }
     }
 }
@@ -419,9 +426,11 @@ pub async fn list_feature_comments(
             comments::resolve_author_names(&app, &mut list).await;
             Json(list).into_response()
         }
-        Err(err) => {
-            ApiError::from_db(&format!("Error listing comments for feature {}", feature_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error listing comments for feature {feature_id}"),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -459,9 +468,11 @@ pub async fn create_feature_comment(
     .await
     {
         Ok(comment) => (StatusCode::CREATED, Json(comment)).into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error creating comment on feature {}", feature_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error creating comment on feature {feature_id}"),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -497,7 +508,7 @@ pub async fn update_feature_comment(
         Ok(Some(comment)) => Json(comment).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            ApiError::from_db(&format!("Error updating comment {}", comment_id), err).into_response()
+            ApiError::from_db(&format!("Error updating comment {comment_id}"), err).into_response()
         }
     }
 }
@@ -533,7 +544,7 @@ pub async fn delete_feature_comment(
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            ApiError::from_db(&format!("Error deleting comment {}", comment_id), err).into_response()
+            ApiError::from_db(&format!("Error deleting comment {comment_id}"), err).into_response()
         }
     }
 }

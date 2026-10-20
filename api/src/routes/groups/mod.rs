@@ -50,9 +50,7 @@ pub async fn list_groups(
 
     match groups::list_groups_for_user(&app.pg_pool, token.user_id()).await {
         Ok(list) => Json(list).into_response(),
-        Err(err) => {
-            ApiError::from_db("Error listing groups", err).into_response()
-        }
+        Err(err) => ApiError::from_db("Error listing groups", err).into_response(),
     }
 }
 
@@ -106,7 +104,8 @@ pub async fn create_group(
     )
     .await
     {
-        return ApiError::from_db(&format!("Error adding owner to group {}", group.id), err).into_response();
+        return ApiError::from_db(&format!("Error adding owner to group {}", group.id), err)
+            .into_response();
     }
 
     (StatusCode::CREATED, Json(group)).into_response()
@@ -135,7 +134,7 @@ pub async fn get_group(
         // Return 404 for non-members to avoid leaking group existence
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            ApiError::from_db(&format!("Error fetching group {}", group_id), err).into_response()
+            ApiError::from_db(&format!("Error fetching group {group_id}"), err).into_response()
         }
     }
 }
@@ -182,7 +181,7 @@ pub async fn update_group(
         Ok(Some(group)) => Json(group).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            ApiError::from_db(&format!("Error updating group {}", group_id), err).into_response()
+            ApiError::from_db(&format!("Error updating group {group_id}"), err).into_response()
         }
     }
 }
@@ -217,7 +216,7 @@ pub async fn delete_group(
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            ApiError::from_db(&format!("Error deleting group {}", group_id), err).into_response()
+            ApiError::from_db(&format!("Error deleting group {group_id}"), err).into_response()
         }
     }
 }

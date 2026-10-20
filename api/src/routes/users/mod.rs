@@ -157,9 +157,7 @@ async fn list_users(
                 .collect::<Vec<_>>(),
         )
         .into_response(),
-        Err(err) => {
-            ApiError::from_db("Error listing users", err).into_response()
-        }
+        Err(err) => ApiError::from_db("Error listing users", err).into_response(),
     }
 }
 

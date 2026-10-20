@@ -111,10 +111,10 @@ async fn trip_link_error(app: &AppState, trip_id: Option<i64>, user_id: &str) ->
     match trips::member_role(&app.pg_pool, trip_id, user_id).await {
         Ok(Some(_)) => None,
         Ok(None) => Some(ApiError::forbidden("Not a member of that trip").into_response()),
-        Err(err) => {
-            tracing::error!("Error checking trip {} membership: {}", trip_id, err);
-            Some(ApiError::internal().into_response())
-        }
+        Err(err) => Some(
+            ApiError::from_db(&format!("Error checking trip {trip_id} membership"), err)
+                .into_response(),
+        ),
     }
 }
 
@@ -146,9 +146,7 @@ pub async fn list_descents(
 
     match descents::list_descents_for_viewer(&app.pg_pool, viewer_id.as_deref(), filters).await {
         Ok(list) => Json(list).into_response(),
-        Err(err) => {
-            ApiError::from_db("Error listing descents", err).into_response()
-        }
+        Err(err) => ApiError::from_db("Error listing descents", err).into_response(),
     }
 }
 
@@ -215,9 +213,7 @@ pub async fn create_descent(
         Err(ref err) if db_constraint_response(err).is_some() => {
             db_constraint_response(err).unwrap()
         }
-        Err(err) => {
-            ApiError::from_db("Error creating descent", err).into_response()
-        }
+        Err(err) => ApiError::from_db("Error creating descent", err).into_response(),
     }
 }
 
@@ -241,7 +237,7 @@ pub async fn get_descent(
         Ok(Some(d)) => Json(d).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            ApiError::from_db(&format!("Error fetching descent {}", descent_id), err).into_response()
+            ApiError::from_db(&format!("Error fetching descent {descent_id}"), err).into_response()
         }
     }
 }
@@ -340,7 +336,7 @@ pub async fn patch_descent(
             db_constraint_response(err).unwrap()
         }
         Err(err) => {
-            ApiError::from_db(&format!("Error patching descent {}", descent_id), err).into_response()
+            ApiError::from_db(&format!("Error patching descent {descent_id}"), err).into_response()
         }
     }
 }
@@ -370,7 +366,7 @@ pub async fn delete_descent(
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            ApiError::from_db(&format!("Error deleting descent {}", descent_id), err).into_response()
+            ApiError::from_db(&format!("Error deleting descent {descent_id}"), err).into_response()
         }
     }
 }

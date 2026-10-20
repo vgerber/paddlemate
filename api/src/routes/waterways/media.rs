@@ -55,9 +55,8 @@ pub async fn list_waterway_media(
     .await
     {
         Ok(list) => Json(list).into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error listing media for river {}", waterway_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(&format!("Error listing media for river {waterway_id}"), err)
+            .into_response(),
     }
 }
 
@@ -212,8 +211,7 @@ async fn store_upload(
             if let Some(stored) = &stored {
                 media::delete_image(&stored.storage_key).await;
             }
-            tracing::error!("Error storing media for {entity_id}: {err}");
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error storing media for {entity_id}"), err).into_response()
         }
     }
 }
@@ -241,9 +239,11 @@ pub async fn list_section_media(
     .await
     {
         Ok(list) => Json(list).into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error listing media for section {}", section_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error listing media for section {section_id}"),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -305,7 +305,7 @@ pub async fn delete_waterway_media(
         }
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            ApiError::from_db(&format!("Error deleting media {}", media_id), err).into_response()
+            ApiError::from_db(&format!("Error deleting media {media_id}"), err).into_response()
         }
     }
 }

@@ -37,7 +37,8 @@ pub async fn get_section(
         Ok(Some(s)) => s,
         Ok(None) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            return ApiError::from_db(&format!("Error fetching section {}", section_id), err).into_response();
+            return ApiError::from_db(&format!("Error fetching section {section_id}"), err)
+                .into_response();
         }
     };
 
@@ -67,9 +68,11 @@ pub async fn get_section(
             })
             .into_response()
         }
-        (Err(err), _, _) | (_, Err(err), _) | (_, _, Err(err)) => {
-            ApiError::from_db(&format!("Error fetching details for section {}", section_id), err).into_response()
-        }
+        (Err(err), _, _) | (_, Err(err), _) | (_, _, Err(err)) => ApiError::from_db(
+            &format!("Error fetching details for section {section_id}"),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -202,9 +205,8 @@ pub async fn update_section(
         {
             Ok(Some(section)) => Json(section).into_response(),
             Ok(None) => ApiError::not_found("Not found").into_response(),
-            Err(err) => {
-                ApiError::from_db(&format!("Error updating section {}", section_id), err).into_response()
-            }
+            Err(err) => ApiError::from_db(&format!("Error updating section {section_id}"), err)
+                .into_response(),
         };
     }
 
@@ -260,9 +262,8 @@ pub async fn delete_section(
         {
             Ok(true) => StatusCode::NO_CONTENT.into_response(),
             Ok(false) => ApiError::not_found("Not found").into_response(),
-            Err(err) => {
-                ApiError::from_db(&format!("Error deleting section {}", section_id), err).into_response()
-            }
+            Err(err) => ApiError::from_db(&format!("Error deleting section {section_id}"), err)
+                .into_response(),
         };
     }
 
@@ -306,9 +307,11 @@ pub async fn list_section_descent_counts(
         .await
     {
         Ok(counts) => Json(counts).into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error counting descents for waterway {}", path.waterway_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error counting descents for waterway {}", path.waterway_id),
+            err,
+        )
+        .into_response(),
     }
 }
 

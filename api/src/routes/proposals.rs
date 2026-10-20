@@ -112,9 +112,11 @@ pub async fn get_proposal(
             Json(p).into_response()
         }
         Ok(None) => ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error fetching proposal {}", path.proposal_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error fetching proposal {}", path.proposal_id),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -216,9 +218,11 @@ pub async fn vote_proposal(
     match proposals::vote_proposal(&app.pg_pool, path.proposal_id, token.user_id(), body.vote).await
     {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error voting on proposal {}", path.proposal_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error voting on proposal {}", path.proposal_id),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -244,9 +248,11 @@ pub async fn unvote_proposal(
 
     match proposals::unvote_proposal(&app.pg_pool, path.proposal_id, token.user_id()).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error removing vote on proposal {}", path.proposal_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error removing vote on proposal {}", path.proposal_id),
+            err,
+        )
+        .into_response(),
     }
 }
 
@@ -279,7 +285,11 @@ pub async fn delete_proposal(
         Ok(Some(p)) => p,
         Ok(None) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            return ApiError::from_db(&format!("Error fetching proposal {} for delete", path.proposal_id), err).into_response();
+            return ApiError::from_db(
+                &format!("Error fetching proposal {} for delete", path.proposal_id),
+                err,
+            )
+            .into_response();
         }
     };
 
@@ -297,9 +307,11 @@ pub async fn delete_proposal(
     match proposals::delete_proposal(&app.pg_pool, path.proposal_id).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            ApiError::from_db(&format!("Error deleting proposal {}", path.proposal_id), err).into_response()
-        }
+        Err(err) => ApiError::from_db(
+            &format!("Error deleting proposal {}", path.proposal_id),
+            err,
+        )
+        .into_response(),
     }
 }
 
