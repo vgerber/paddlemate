@@ -41,14 +41,9 @@ impl StepKind {
         }
     }
 
-    pub fn from_db(s: &str) -> Self {
-        match s {
-            "imported" => StepKind::Imported,
-            "proposal_accepted" => StepKind::ProposalAccepted,
-            "edited" => StepKind::Edited,
-            "deleted" => StepKind::Deleted,
-            _ => StepKind::Created,
-        }
+    /// The step kind stored in the database, None for an unknown name.
+    pub fn parse(s: &str) -> Option<Self> {
+        serde_json::from_value(serde_json::Value::String(s.to_string())).ok()
     }
 }
 
@@ -97,16 +92,6 @@ pub struct HistoryStep {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct HistoryPage {
-    /// Steps, oldest first
-    pub items: Vec<HistoryStep>,
-    pub total: i64,
-    pub page: i64,
-    pub per_page: i64,
-    pub total_pages: i64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct SourceEntries {
     pub source: HistorySource,
     /// Number of steps that name this source
@@ -126,4 +111,24 @@ pub struct Contributor {
 pub struct WaterwaySources {
     pub sources: Vec<SourceEntries>,
     pub contributors: Vec<Contributor>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn step_kind_names_match_serde() {
+        for kind in [
+            StepKind::Imported,
+            StepKind::Created,
+            StepKind::ProposalAccepted,
+            StepKind::Edited,
+            StepKind::Deleted,
+        ] {
+            assert_eq!(StepKind::parse(kind.as_str()), Some(kind));
+            assert_eq!(serde_json::to_value(kind).unwrap(), kind.as_str());
+        }
+        assert_eq!(StepKind::parse("bogus"), None);
+    }
 }

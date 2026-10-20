@@ -84,40 +84,33 @@ pub async fn update_waterway_in(
     via: &Via<'_>,
 ) -> Result<Option<Waterway>, sqlx::Error> {
     let scope = Scope::waterway(waterway_id);
-    // The row lock keeps the before state true until this transaction ends.
-    sqlx::query("SELECT id FROM waterways WHERE id = $1 FOR UPDATE")
-        .bind(waterway_id)
-        .fetch_optional(&mut *conn)
+    history::tracked_edit(conn, &scope, via, async |conn| {
+        let r = sqlx::query!(
+            r#"
+            UPDATE waterways
+            SET
+                name = COALESCE($1, name),
+                description = COALESCE($2, description),
+                updated_at = NOW()
+            WHERE id = $3
+            RETURNING id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at
+            "#,
+            name,
+            description,
+            waterway_id
+        )
+        .fetch_one(conn)
         .await?;
-    let Some(before) = history::snapshot(conn, &scope).await? else {
-        return Ok(None);
-    };
-    let r = sqlx::query!(
-        r#"
-        UPDATE waterways
-        SET
-            name = COALESCE($1, name),
-            description = COALESCE($2, description),
-            updated_at = NOW()
-        WHERE id = $3
-        RETURNING id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at
-        "#,
-        name,
-        description,
-        waterway_id
-    )
-    .fetch_one(&mut *conn)
-    .await?;
-    let after = history::snapshot(conn, &scope).await?.unwrap_or_default();
-    history::record(conn, &scope, Op::Edit, via, &before, &after).await?;
-    Ok(Some(Waterway {
-        id: r.id,
-        waterway_type: r.waterway_type,
-        name: r.name,
-        description: r.description,
-        created_at: r.created_at,
-        updated_at: r.updated_at,
-    }))
+        Ok(Waterway {
+            id: r.id,
+            waterway_type: r.waterway_type,
+            name: r.name,
+            description: r.description,
+            created_at: r.created_at,
+            updated_at: r.updated_at,
+        })
+    })
+    .await
 }
 
 pub async fn update_waterway(
@@ -140,18 +133,7 @@ pub async fn delete_waterway_in(
     waterway_id: WaterwayId,
     via: &Via<'_>,
 ) -> Result<bool, sqlx::Error> {
-    let deleted = sqlx::query("DELETE FROM waterways WHERE id = $1")
-        .bind(waterway_id)
-        .execute(&mut *conn)
-        .await?
-        .rows_affected()
-        > 0;
-    if deleted {
-        let scope = Scope::waterway(waterway_id);
-        let empty = Default::default();
-        history::record(conn, &scope, Op::Delete, via, &empty, &empty).await?;
-    }
-    Ok(deleted)
+    history::tracked_delete(conn, &Scope::waterway(waterway_id), via).await
 }
 
 pub async fn delete_waterway(

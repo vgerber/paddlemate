@@ -222,73 +222,55 @@ pub async fn update_feature(
 ) -> Result<Option<Feature>, sqlx::Error> {
     let scope = Scope::feature(waterway_id, section_id, feature_id);
     let mut tx = pool.begin().await?;
-    // The row lock keeps the before state true until this transaction ends.
-    sqlx::query("SELECT id FROM features WHERE id = $1 AND section_id = $2 FOR UPDATE")
-        .bind(feature_id)
-        .bind(section_id)
-        .fetch_optional(&mut *tx)
-        .await?;
-    let Some(before) = history::snapshot(&mut tx, &scope).await? else {
-        return Ok(None);
-    };
-
-    let r = sqlx::query!(
-        r#"
-        UPDATE features
-        SET
-            feature_type = COALESCE($1, feature_type),
-            metadata = COALESCE($2, metadata),
-            location = COALESCE(ST_GeomFromGeoJSON($3), location),
-            updated_at = NOW()
-        WHERE id = $4 AND section_id = $5
-          AND $5 IN (SELECT id FROM water_sections WHERE waterway_id = $6)
-        RETURNING id, section_id, feature_type AS "feature_type: FeatureType",
-                  metadata, created_by, ST_AsGeoJSON(location) AS location, created_at, updated_at
-        "#,
-        edit.feature_type as Option<FeatureType>,
-        edit.metadata,
-        edit.location_json,
-        feature_id,
-        section_id,
-        waterway_id
-    )
-    .fetch_one(&mut *tx)
-    .await?;
-
-    if let Some(name) = edit.name.map(str::trim).filter(|s| !s.is_empty()) {
-        upsert_name(&mut *tx, feature_id, edit.lang_code, name).await?;
-    }
-    if let Some(description) = edit.description.map(str::trim).filter(|s| !s.is_empty()) {
-        upsert_description(&mut *tx, feature_id, edit.lang_code, description).await?;
-    }
-    for range in edit.water_ranges {
-        // Resolve a catalog reference (creating + activating a gauge) or
-        // pass through an existing series_id, then upsert the range.
-        let series_id = resolve_range_series(&mut tx, range).await?;
-        crate::query::gauges::upsert_feature_water_range_partial(
-            &mut *tx,
+    let r = history::tracked_edit(&mut tx, &scope, &Via::direct(actor), async |conn| {
+        let r = sqlx::query!(
+            r#"
+            UPDATE features
+            SET
+                feature_type = COALESCE($1, feature_type),
+                metadata = COALESCE($2, metadata),
+                location = COALESCE(ST_GeomFromGeoJSON($3), location),
+                updated_at = NOW()
+            WHERE id = $4 AND section_id = $5
+              AND $5 IN (SELECT id FROM water_sections WHERE waterway_id = $6)
+            RETURNING id, section_id, feature_type AS "feature_type: FeatureType",
+                      metadata, created_by, ST_AsGeoJSON(location) AS location, created_at, updated_at
+            "#,
+            edit.feature_type as Option<FeatureType>,
+            edit.metadata,
+            edit.location_json,
             feature_id,
-            series_id,
-            range.range_low,
-            range.range_medium,
-            range.range_high,
+            section_id,
+            waterway_id
         )
+        .fetch_one(&mut *conn)
         .await?;
-    }
 
-    let after = history::snapshot(&mut tx, &scope)
-        .await?
-        .unwrap_or_default();
-    history::record(
-        &mut tx,
-        &scope,
-        Op::Edit,
-        &Via::direct(actor),
-        &before,
-        &after,
-    )
+        if let Some(name) = edit.name.map(str::trim).filter(|s| !s.is_empty()) {
+            upsert_name(&mut *conn, feature_id, edit.lang_code, name).await?;
+        }
+        if let Some(description) = edit.description.map(str::trim).filter(|s| !s.is_empty()) {
+            upsert_description(&mut *conn, feature_id, edit.lang_code, description).await?;
+        }
+        for range in edit.water_ranges {
+            // Resolve a catalog reference (creating + activating a gauge) or
+            // pass through an existing series_id, then upsert the range.
+            let series_id = resolve_range_series(&mut *conn, range).await?;
+            crate::query::gauges::upsert_feature_water_range_partial(
+                &mut *conn,
+                feature_id,
+                series_id,
+                range.range_low,
+                range.range_medium,
+                range.range_high,
+            )
+            .await?;
+        }
+        Ok(r)
+    })
     .await?;
     tx.commit().await?;
+    let Some(r) = r else { return Ok(None) };
 
     let (names, descriptions) =
         tokio::join!(fetch_names(pool, r.id), fetch_descriptions(pool, r.id));
@@ -317,32 +299,8 @@ pub async fn delete_feature(
     actor: &str,
 ) -> Result<bool, sqlx::Error> {
     let mut tx = pool.begin().await?;
-    let deleted = sqlx::query!(
-        r#"
-        DELETE FROM features
-        WHERE id = $1 AND section_id = $2
-          AND $2 IN (SELECT id FROM water_sections WHERE waterway_id = $3)
-        RETURNING id
-        "#,
-        feature_id,
-        section_id,
-        waterway_id
-    )
-    .fetch_optional(&mut *tx)
-    .await?
-    .is_some();
-    if deleted {
-        let empty = Default::default();
-        history::record(
-            &mut tx,
-            &Scope::feature(waterway_id, section_id, feature_id),
-            Op::Delete,
-            &Via::direct(actor),
-            &empty,
-            &empty,
-        )
-        .await?;
-    }
+    let scope = Scope::feature(waterway_id, section_id, feature_id);
+    let deleted = history::tracked_delete(&mut tx, &scope, &Via::direct(actor)).await?;
     tx.commit().await?;
     Ok(deleted)
 }

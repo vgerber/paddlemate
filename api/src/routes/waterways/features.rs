@@ -34,7 +34,10 @@ pub async fn create_feature(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id)): Path<(WaterwayId, SectionId)>,
-    Json(Proposable { mut body, proposal_note }): Json<Proposable<CreateFeatureBody>>,
+    Json(Proposable {
+        mut body,
+        proposal_note,
+    }): Json<Proposable<CreateFeatureBody>>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
@@ -71,8 +74,7 @@ pub async fn create_feature(
         let mut tx = match app.pg_pool.begin().await {
             Ok(tx) => tx,
             Err(err) => {
-                tracing::error!("Error starting transaction: {}", err);
-                return ApiError::internal().into_response();
+                return ApiError::from_db("Error starting transaction", &err).into_response();
             }
         };
         let feature = features::create_feature_bundle(
@@ -89,15 +91,9 @@ pub async fn create_feature(
                     app.gauge_wake.notify_waiters();
                     (StatusCode::CREATED, Json(feature)).into_response()
                 }
-                Err(err) => {
-                    tracing::error!("Error committing feature: {}", err);
-                    ApiError::internal().into_response()
-                }
+                Err(err) => ApiError::from_db("Error committing feature", &err).into_response(),
             },
-            Err(err) => {
-                tracing::error!("Error creating feature: {}", err);
-                ApiError::internal().into_response()
-            }
+            Err(err) => ApiError::from_db("Error creating feature", &err).into_response(),
         };
     }
 
@@ -116,10 +112,7 @@ pub async fn create_feature(
     .await
     {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
-        Err(err) => {
-            tracing::error!("Error submitting feature proposal: {}", err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error submitting feature proposal", &err).into_response(),
     }
 }
 
@@ -155,7 +148,10 @@ pub async fn update_feature(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id, feature_id)): Path<(WaterwayId, SectionId, i64)>,
-    Json(Proposable { body, proposal_note }): Json<Proposable<UpdateFeatureBody>>,
+    Json(Proposable {
+        body,
+        proposal_note,
+    }): Json<Proposable<UpdateFeatureBody>>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
@@ -240,8 +236,7 @@ pub async fn update_feature(
     {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error submitting feature update proposal: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error submitting feature update proposal", &err).into_response()
         }
     }
 }
@@ -300,8 +295,7 @@ pub async fn delete_feature(
     {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error submitting feature delete proposal: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error submitting feature delete proposal", &err).into_response()
         }
     }
 }

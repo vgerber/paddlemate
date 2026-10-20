@@ -73,10 +73,7 @@ pub async fn list_proposals(
 
     match proposals::list_proposals(&app.pg_pool, filters, viewer_id.as_deref()).await {
         Ok(list) => Json(list).into_response(),
-        Err(err) => {
-            tracing::error!("Error listing proposals: {}", err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error listing proposals", &err).into_response(),
     }
 }
 

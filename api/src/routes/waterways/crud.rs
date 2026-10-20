@@ -20,7 +20,7 @@ use crate::{
         water_section::SectionWithFeatures,
         waterway::{
             PaginatedResponse, Waterway, WaterwayFilters, WaterwayId, WaterwayListItem,
-            WaterwayType, WaterwayWithSections, page_bounds,
+            WaterwayType, WaterwayWithSections, page_bounds, total_pages,
         },
     },
     query::{
@@ -42,13 +42,10 @@ pub async fn list_waterways(
             total,
             page,
             per_page,
-            total_pages: (total + per_page - 1) / per_page,
+            total_pages: total_pages(total, per_page),
         })
         .into_response(),
-        Err(err) => {
-            tracing::error!("Error listing waterways: {}", err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error listing waterways", &err).into_response(),
     }
 }
 
@@ -190,7 +187,10 @@ pub struct CreateWaterwayBody {
 pub async fn create_waterway(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Json(Proposable { body, proposal_note }): Json<Proposable<CreateWaterwayBody>>,
+    Json(Proposable {
+        body,
+        proposal_note,
+    }): Json<Proposable<CreateWaterwayBody>>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
@@ -210,8 +210,7 @@ pub async fn create_waterway(
         }
         Ok(false) => {}
         Err(err) => {
-            tracing::error!("Error checking waterway name: {}", err);
-            return ApiError::internal().into_response();
+            return ApiError::from_db("Error checking waterway name", &err).into_response();
         }
     }
 
@@ -229,10 +228,7 @@ pub async fn create_waterway(
             Err(err) if crate::query::is_unique_violation(&err) => {
                 ApiError::conflict("A waterway with this name already exists").into_response()
             }
-            Err(err) => {
-                tracing::error!("Error creating waterway: {}", err);
-                ApiError::internal().into_response()
-            }
+            Err(err) => ApiError::from_db("Error creating waterway", &err).into_response(),
         };
     }
 
@@ -249,10 +245,7 @@ pub async fn create_waterway(
     .await
     {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
-        Err(err) => {
-            tracing::error!("Error submitting waterway proposal: {}", err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error submitting waterway proposal", &err).into_response(),
     }
 }
 
@@ -276,7 +269,10 @@ pub async fn update_waterway(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path(waterway_id): Path<WaterwayId>,
-    Json(Proposable { body, proposal_note }): Json<Proposable<UpdateWaterwayBody>>,
+    Json(Proposable {
+        body,
+        proposal_note,
+    }): Json<Proposable<UpdateWaterwayBody>>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
@@ -322,8 +318,7 @@ pub async fn update_waterway(
     {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error submitting waterway update proposal: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error submitting waterway update proposal", &err).into_response()
         }
     }
 }
@@ -376,8 +371,7 @@ pub async fn delete_waterway(
     {
         Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
         Err(err) => {
-            tracing::error!("Error submitting waterway delete proposal: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error submitting waterway delete proposal", &err).into_response()
         }
     }
 }

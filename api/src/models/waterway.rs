@@ -131,6 +131,11 @@ pub fn page_bounds(page: Option<i64>, per_page: Option<i64>, default_per_page: i
     )
 }
 
+/// Pages needed for `total` rows at `per_page` each.
+pub fn total_pages(total: i64, per_page: i64) -> i64 {
+    (total + per_page - 1) / per_page
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct PaginatedResponse<T: JsonSchema> {
     pub items: Vec<T>,

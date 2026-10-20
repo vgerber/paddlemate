@@ -61,50 +61,32 @@ pub async fn update_section(
         .map(|g| serde_json::to_string(g).expect("valid geometry"));
     let scope = Scope::section(waterway_id, section_id);
     let mut tx = pool.begin().await?;
-    // The row lock keeps the before state true until this transaction ends.
-    sqlx::query("SELECT id FROM water_sections WHERE id = $1 AND waterway_id = $2 FOR UPDATE")
+    let section = history::tracked_edit(&mut tx, &scope, &Via::direct(actor), async |conn| {
+        sqlx::query(&format!(
+            "UPDATE water_sections
+             SET name        = COALESCE($1, name),
+                 description = COALESCE($2, description),
+                 regions     = COALESCE($3, regions),
+                 country     = COALESCE($4, country),
+                 location    = COALESCE(ST_GeomFromGeoJSON($5), location),
+                 updated_at  = NOW()
+             WHERE id = $6 AND waterway_id = $7
+             RETURNING {SECTION_COLS}"
+        ))
+        .bind(&body.name)
+        .bind(&body.description)
+        .bind(&body.regions)
+        .bind(&body.country)
+        .bind(location_json.as_deref())
         .bind(section_id)
         .bind(waterway_id)
-        .fetch_optional(&mut *tx)
-        .await?;
-    let Some(before) = history::snapshot(&mut tx, &scope).await? else {
-        return Ok(None);
-    };
-    let section = sqlx::query(&format!(
-        "UPDATE water_sections
-         SET name        = COALESCE($1, name),
-             description = COALESCE($2, description),
-             regions     = COALESCE($3, regions),
-             country     = COALESCE($4, country),
-             location    = COALESCE(ST_GeomFromGeoJSON($5), location),
-             updated_at  = NOW()
-         WHERE id = $6 AND waterway_id = $7
-         RETURNING {SECTION_COLS}"
-    ))
-    .bind(&body.name)
-    .bind(&body.description)
-    .bind(&body.regions)
-    .bind(&body.country)
-    .bind(location_json.as_deref())
-    .bind(section_id)
-    .bind(waterway_id)
-    .fetch_one(&mut *tx)
-    .await
-    .and_then(|r| row_to_section(&r))?;
-    let after = history::snapshot(&mut tx, &scope)
-        .await?
-        .unwrap_or_default();
-    history::record(
-        &mut tx,
-        &scope,
-        Op::Edit,
-        &Via::direct(actor),
-        &before,
-        &after,
-    )
+        .fetch_one(conn)
+        .await
+        .and_then(|r| row_to_section(&r))
+    })
     .await?;
     tx.commit().await?;
-    Ok(Some(section))
+    Ok(section)
 }
 
 pub async fn delete_section(
@@ -114,24 +96,8 @@ pub async fn delete_section(
     actor: &str,
 ) -> Result<bool, sqlx::Error> {
     let mut tx = pool.begin().await?;
-    let result = sqlx::query("DELETE FROM water_sections WHERE id = $1 AND waterway_id = $2")
-        .bind(section_id)
-        .bind(waterway_id)
-        .execute(&mut *tx)
-        .await?;
-    let deleted = result.rows_affected() > 0;
-    if deleted {
-        let empty = Default::default();
-        history::record(
-            &mut tx,
-            &Scope::section(waterway_id, section_id),
-            Op::Delete,
-            &Via::direct(actor),
-            &empty,
-            &empty,
-        )
-        .await?;
-    }
+    let scope = Scope::section(waterway_id, section_id);
+    let deleted = history::tracked_delete(&mut tx, &scope, &Via::direct(actor)).await?;
     tx.commit().await?;
     Ok(deleted)
 }

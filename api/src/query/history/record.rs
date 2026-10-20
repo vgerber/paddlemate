@@ -1,6 +1,6 @@
 use sqlx::PgConnection;
 
-use super::{Scope, snapshot::State};
+use super::{EntityKind, Scope, snapshot::State};
 use crate::models::history::{HistoryChange, StepKind};
 
 /// Most fields one step lists. Matches the table's check constraint.
@@ -104,7 +104,7 @@ pub fn diff(before: &State, after: &State) -> Vec<HistoryChange> {
         .into_iter()
         .take(MAX_CHANGES)
         .map(|f| HistoryChange {
-            field: f.clone(),
+            field: clip(f),
             before: shown(f, before.get(f)),
             after: shown(f, after.get(f)),
         })
@@ -146,15 +146,68 @@ pub async fn record(
     .bind(via.actor)
     .bind(via.proposal.map(|p| p.proposal_id))
     .bind(via.proposal.map(|p| p.reviewer_id))
-    .bind(serde_json::to_value(changes).expect("serializable changes"))
+    .bind(sqlx::types::Json(&changes))
     .execute(&mut *conn)
     .await?;
+    Ok(())
+}
+
+/// Write a `deleted` step for every section and feature that goes with the
+/// entity (its section's features, a river's sections and their features).
+/// Call it before the delete, while the children can still be found.
+pub async fn record_children(
+    conn: &mut PgConnection,
+    scope: &Scope,
+    via: &Via<'_>,
+) -> Result<(), sqlx::Error> {
+    const COLS: &str = "(entity_kind, entity_id, waterway_id, section_id, kind, actor_id, \
+                        proposal_id, reviewer_id)";
+    let (sections_of, features_of) = match scope.kind {
+        EntityKind::Feature => return Ok(()),
+        EntityKind::Waterway => (
+            Some("FROM water_sections s WHERE s.waterway_id = $1"),
+            "FROM features f JOIN water_sections s ON s.id = f.section_id \
+             WHERE s.waterway_id = $1",
+        ),
+        EntityKind::Section => (
+            None,
+            "FROM features f JOIN water_sections s ON s.id = f.section_id WHERE s.id = $1",
+        ),
+    };
+    let mut statements = vec![format!(
+        "INSERT INTO entity_history {COLS} \
+         SELECT 'feature', f.id, s.waterway_id, s.id, $2, $3, $4, $5 {features_of}"
+    )];
+    if let Some(from) = sections_of {
+        statements.push(format!(
+            "INSERT INTO entity_history {COLS} \
+             SELECT 'section', s.id, s.waterway_id, s.id, $2, $3, $4, $5 {from}"
+        ));
+    }
+    let parent = scope.id;
+    for sql in statements {
+        sqlx::query(&sql)
+            .bind(parent)
+            .bind(via.kind(Op::Delete).as_str())
+            .bind(via.actor)
+            .bind(via.proposal.map(|p| p.proposal_id))
+            .bind(via.proposal.map(|p| p.reviewer_id))
+            .execute(&mut *conn)
+            .await?;
+    }
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn diff_clips_long_field_names() {
+        let key = "k".repeat(MAX_VALUE_CHARS * 50);
+        let changes = diff(&State::new(), &state(&[(&key, "v")]));
+        assert_eq!(changes[0].field.chars().count(), MAX_VALUE_CHARS);
+    }
 
     fn state(pairs: &[(&str, &str)]) -> State {
         pairs
