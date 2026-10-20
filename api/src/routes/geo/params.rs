@@ -5,6 +5,35 @@ use crate::error::ApiError;
 /// Longest accepted line, in points.
 const MAX_LINE_POINTS: usize = 50;
 
+/// Longest name fragment a search accepts. Matching cost grows with the
+/// length, and no region name comes near it.
+const MAX_SEARCH_CHARS: usize = 100;
+
+/// Trim a `q` search term and bound it; an empty one means no name filter.
+pub fn parse_search_name(raw: Option<&str>) -> Result<Option<&str>, ApiError> {
+    let Some(name) = raw.map(str::trim).filter(|q| !q.is_empty()) else {
+        return Ok(None);
+    };
+    if name.chars().count() > MAX_SEARCH_CHARS {
+        return Err(ApiError::validation(format!(
+            "q must be at most {MAX_SEARCH_CHARS} characters"
+        ))
+        .with_target("q"));
+    }
+    Ok(Some(name))
+}
+
+/// Check a `country` filter is a two letter code.
+pub fn parse_country(raw: Option<&str>) -> Result<Option<&str>, ApiError> {
+    match raw.filter(|code| !code.is_empty()) {
+        Some(code) if code.len() != 2 || !code.is_ascii() => Err(ApiError::validation(
+            "country must be a two letter ISO 3166-1 code",
+        )
+        .with_target("country")),
+        other => Ok(other),
+    }
+}
+
 /// Parse a "lon,lat;lon,lat;..." line parameter into coordinate pairs.
 pub fn parse_line(raw: &str) -> Result<Vec<(f64, f64)>, ApiError> {
     let points: Option<Vec<(f64, f64)>> = raw

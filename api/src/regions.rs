@@ -28,11 +28,13 @@ use std::time::Duration;
 use sqlx::PgPool;
 use tokio::sync::Notify;
 
-use crate::models::region::{Region, RegionKind};
+use crate::models::region::{Region, RegionKind, RegionOutline};
 use crate::overpass::{
     Element, FETCH_LOCK, OverpassResponse, client, escape_overpass_literal, run_query,
 };
-use crate::query::regions::{RegionImport, assign_countries, mark_tiles, missing_tiles, upsert};
+use crate::query::regions::{
+    RegionImport, assign_countries, in_bbox, mark_tiles, missing_tiles, upsert,
+};
 
 const VALLEY_RADIUS_M: u32 = 2_000;
 pub const REQUEST_GAP: Duration = Duration::from_secs(1);
@@ -244,26 +246,25 @@ impl BrowseTier {
         }
     }
 
-    /// Tier for a `kinds` value of the outlines route. Countries are not a
-    /// choice there.
-    pub fn from_kind(raw: &str) -> Option<Self> {
-        match raw {
-            "state" => Some(BrowseTier::States),
-            "range" => Some(BrowseTier::Ranges),
-            "district" => Some(BrowseTier::Districts),
-            "valley" => Some(BrowseTier::Valleys),
-            _ => None,
+    /// Tier drawing a kind asked for by name. Countries are not a choice.
+    pub fn for_kind(kind: RegionKind) -> Option<Self> {
+        match kind {
+            RegionKind::State => Some(BrowseTier::States),
+            RegionKind::Range => Some(BrowseTier::Ranges),
+            RegionKind::District => Some(BrowseTier::Districts),
+            RegionKind::Valley => Some(BrowseTier::Valleys),
+            RegionKind::Country => None,
         }
     }
 
-    /// The name used in `kinds` and `hidden_kinds`.
-    pub fn kind_name(self) -> &'static str {
+    /// The kind this tier draws.
+    pub fn kind(self) -> RegionKind {
         match self {
-            BrowseTier::Countries => "country",
-            BrowseTier::States => "state",
-            BrowseTier::Ranges => "range",
-            BrowseTier::Districts => "district",
-            BrowseTier::Valleys => "valley",
+            BrowseTier::Countries => RegionKind::Country,
+            BrowseTier::States => RegionKind::State,
+            BrowseTier::Ranges => RegionKind::Range,
+            BrowseTier::Districts => RegionKind::District,
+            BrowseTier::Valleys => RegionKind::Valley,
         }
     }
 
@@ -310,17 +311,6 @@ impl BrowseTier {
         match self {
             BrowseTier::Ranges => RANGE_LIMIT,
             _ => BROWSE_LIMIT,
-        }
-    }
-
-    /// Kinds of region this tier draws.
-    pub fn kinds(self) -> &'static [RegionKind] {
-        match self {
-            BrowseTier::Countries => &[RegionKind::Country],
-            BrowseTier::States => &[RegionKind::State],
-            BrowseTier::Ranges => &[RegionKind::Range],
-            BrowseTier::Districts => &[RegionKind::District],
-            BrowseTier::Valleys => &[RegionKind::Valley],
         }
     }
 }
@@ -505,6 +495,31 @@ const MAX_TILES_PER_FILL: usize = 4;
 static FILLING: LazyLock<Mutex<HashSet<(BrowseTier, i32, i32)>>> =
     LazyLock::new(|| Mutex::new(HashSet::new()));
 
+/// Most tiles claimed by fills at any moment, across all callers. Fetches run
+/// one at a time, so a longer queue only holds memory and stored tiles; a
+/// request that finds the queue full claims nothing and still answers
+/// `filling`, so the client asks again once there is room.
+const MAX_FILLING_TILES: usize = 32;
+
+/// Claim up to `room` of the missing tiles that no fill holds yet.
+fn claim_tiles(
+    filling: &mut HashSet<(BrowseTier, i32, i32)>,
+    tier: BrowseTier,
+    missing: &[(i32, i32)],
+    room: usize,
+) -> Vec<(i32, i32)> {
+    let mut claimed = vec![];
+    for &(x, y) in missing {
+        if claimed.len() >= room {
+            break;
+        }
+        if filling.insert((tier, x, y)) {
+            claimed.push((x, y));
+        }
+    }
+    claimed
+}
+
 /// Make sure a viewport's regions are on their way, and say whether any are
 /// still missing. Assembling boundaries takes long enough that the fetch
 /// runs detached: the caller answers from what is stored and asks again.
@@ -538,14 +553,12 @@ pub async fn ensure_browse_fill(
                 |(x, y): &(i32, i32)| (f64::from(*x) - cx).powi(2) + (f64::from(*y) - cy).powi(2);
             d(a).total_cmp(&d(b))
         });
-        let claimed: Vec<(i32, i32)> = {
+        let claimed = {
             let mut filling = FILLING.lock().expect("fill set is not poisoned");
-            missing
-                .iter()
-                .copied()
-                .filter(|(x, y)| filling.insert((tier, *x, *y)))
-                .take(MAX_TILES_PER_FILL)
-                .collect()
+            let room = MAX_FILLING_TILES
+                .saturating_sub(filling.len())
+                .min(MAX_TILES_PER_FILL);
+            claim_tiles(&mut filling, tier, &missing, room)
         };
         if !claimed.is_empty() {
             work.push((tier, claimed));
@@ -580,6 +593,106 @@ pub async fn ensure_browse_fill(
         });
     }
     Ok(pending)
+}
+
+/// The tiers a `kinds` list may name, most specific first.
+pub const CHOOSABLE_TIERS: [BrowseTier; 4] = [
+    BrowseTier::Valleys,
+    BrowseTier::Districts,
+    BrowseTier::Ranges,
+    BrowseTier::States,
+];
+
+/// The kinds a `kinds` list may name, as the comma list the API documents.
+pub fn choosable_kinds() -> String {
+    let names: Vec<&str> = CHOOSABLE_TIERS
+        .iter()
+        .map(|tier| tier.kind().as_str())
+        .collect();
+    names.join(", ")
+}
+
+/// The widest viewport per choosable kind, as the API documents it.
+pub fn span_limits() -> String {
+    let limits: Vec<String> = CHOOSABLE_TIERS
+        .iter()
+        .map(|tier| format!("{} {}", tier.kind().as_str(), tier.max_span()))
+        .collect();
+    limits.join(", ")
+}
+
+/// Parse a `kinds` list into tiers, most specific first, without repeats.
+/// The error is the message for the 400.
+pub fn parse_kinds(raw: &str) -> Result<Vec<BrowseTier>, String> {
+    let mut tiers = vec![];
+    for part in raw.split(',').map(str::trim).filter(|p| !p.is_empty()) {
+        let tier = RegionKind::parse(part).and_then(BrowseTier::for_kind);
+        let Some(tier) = tier else {
+            return Err(format!(
+                "kinds must be a comma list of {}",
+                choosable_kinds()
+            ));
+        };
+        if !tiers.contains(&tier) {
+            tiers.push(tier);
+        }
+    }
+    if tiers.is_empty() {
+        return Err(format!(
+            "kinds must be a comma list of {}",
+            choosable_kinds()
+        ));
+    }
+    tiers.sort_by(|a, b| a.max_span().total_cmp(&b.max_span()));
+    Ok(tiers)
+}
+
+/// The tiers to draw for a viewport span, and the asked-for kinds the span is
+/// too wide for. Without a choice the span picks one tier, or none when the
+/// map is zoomed out past every tier.
+pub fn tiers_for_span(
+    chosen: Option<Vec<BrowseTier>>,
+    span: f64,
+) -> (Vec<BrowseTier>, Vec<RegionKind>) {
+    match chosen {
+        Some(tiers) => {
+            let (shown, hidden): (Vec<_>, Vec<_>) =
+                tiers.into_iter().partition(|tier| span <= tier.max_span());
+            (shown, hidden.iter().map(|tier| tier.kind()).collect())
+        }
+        None => (BrowseTier::for_span(span).into_iter().collect(), vec![]),
+    }
+}
+
+/// What a viewport shows: the stored regions, whether more are on their way,
+/// and the kinds left out for being too wide.
+pub struct Browse {
+    pub regions: Vec<RegionOutline>,
+    pub filling: bool,
+    pub hidden: Vec<RegionKind>,
+}
+
+/// Regions of the chosen tiers (or the one the span picks) overlapping a
+/// viewport, starting a background fill for any ground not stored yet.
+pub async fn browse(
+    pool: &PgPool,
+    bbox: (f64, f64, f64, f64),
+    chosen: Option<Vec<BrowseTier>>,
+) -> Result<Browse, sqlx::Error> {
+    let (south, west, north, east) = bbox;
+    let span = (east - west).max(north - south);
+    let (tiers, hidden) = tiers_for_span(chosen, span);
+    let mut filling = false;
+    let mut regions = vec![];
+    for tier in tiers {
+        filling |= ensure_browse_fill(pool, tier, bbox).await?;
+        regions.extend(in_bbox(pool, bbox, &[tier.kind()], tier.limit()).await?);
+    }
+    Ok(Browse {
+        regions,
+        filling,
+        hidden,
+    })
 }
 
 /// Fetch the tier's regions for a set of tiles from OSM and store them.
@@ -1080,5 +1193,58 @@ mod tests {
         assert_eq!(out.ranges, vec!["Stubaier Alpen"]);
         assert_eq!(out.valleys, vec!["Oetztal"]);
         assert_eq!(out.countries, vec!["AT"]);
+    }
+
+    #[test]
+    fn kinds_parse_sorted_and_deduplicated() {
+        let tiers = parse_kinds("state, valley,state,range").unwrap();
+        assert_eq!(
+            tiers,
+            [BrowseTier::Valleys, BrowseTier::Ranges, BrowseTier::States]
+        );
+    }
+
+    #[test]
+    fn kinds_reject_unknown_empty_and_country() {
+        for raw in ["", " , ", "lake", "valley,country", "Valley"] {
+            let err = parse_kinds(raw).unwrap_err();
+            assert!(err.contains("valley, district, range, state"), "{raw}");
+        }
+    }
+
+    #[test]
+    fn wide_views_hide_the_kinds_they_are_too_wide_for() {
+        let chosen = parse_kinds("valley,district,state").unwrap();
+        let (shown, hidden) = tiers_for_span(Some(chosen), 4.0);
+        assert_eq!(shown, [BrowseTier::Districts, BrowseTier::States]);
+        assert_eq!(hidden, [RegionKind::Valley]);
+    }
+
+    #[test]
+    fn no_choice_lets_the_span_pick_one_tier() {
+        assert_eq!(
+            tiers_for_span(None, 1.0),
+            (vec![BrowseTier::Districts], vec![])
+        );
+        assert_eq!(tiers_for_span(None, 20.0), (vec![], vec![]));
+    }
+
+    #[test]
+    fn a_full_queue_claims_nothing() {
+        let mut filling = HashSet::new();
+        let tiles = [(1, 1), (2, 2), (3, 3)];
+        assert_eq!(
+            claim_tiles(&mut filling, BrowseTier::Valleys, &tiles, 2).len(),
+            2
+        );
+        assert_eq!(filling.len(), 2);
+        // No room left: nothing is claimed and nothing is held.
+        assert!(claim_tiles(&mut filling, BrowseTier::Valleys, &tiles, 0).is_empty());
+        assert_eq!(filling.len(), 2);
+        // A tile already held is not claimed twice.
+        assert_eq!(
+            claim_tiles(&mut filling, BrowseTier::Valleys, &tiles, 5),
+            [(3, 3)]
+        );
     }
 }
