@@ -10,7 +10,7 @@ use crate::models::{
     },
     gauge::{SectionWaterSnapshot, WaterLevel, WaterRangeWithStatus},
     visibility::Visibility,
-    waterway::PaginatedResponse,
+    waterway::{PaginatedResponse, total_pages},
 };
 
 use super::gauges::water_status_for_section_at;
@@ -840,13 +840,13 @@ pub async fn list_descents_for_viewer(
 
     hide_foreign_trips(pool, viewer_id, &mut descents).await?;
 
-    let total_pages = (total + filters.per_page - 1) / filters.per_page;
+    let pages = total_pages(total, filters.per_page);
     Ok(PaginatedResponse {
         items: descents,
         total,
         page: filters.page,
         per_page: filters.per_page,
-        total_pages,
+        total_pages: pages,
     })
 }
 

@@ -21,7 +21,7 @@ use chrono::{DateTime, Utc};
 
 use crate::models::{
     trip::{CreateTripRequest, PatchTripRequest, Trip, TripId, TripMemberRole},
-    waterway::PaginatedResponse,
+    waterway::{PaginatedResponse, total_pages},
 };
 
 /// What a guarded or versioned write came to. Routes map each arm to one
@@ -225,7 +225,7 @@ fn finish_list(
         total,
         page: filters.page,
         per_page: filters.per_page,
-        total_pages: (total + filters.per_page - 1) / filters.per_page,
+        total_pages: total_pages(total, filters.per_page),
     })
 }
 
