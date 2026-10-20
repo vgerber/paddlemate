@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import BottomSheet from "@/components/BottomSheet";
 import ChipRow from "@/components/ChipRow";
 import PanelHeader from "@/components/PanelHeader";
+import { plural } from "@/lib/format";
 import type { AreaCircle } from "@/lib/geo";
 import type { SwipeTrack } from "@/lib/hooks/useSwipeTabs";
 import { theme } from "@/lib/theme";
@@ -338,7 +339,7 @@ function FiltersBody({
         onClick={onClose}
         sx={{ height: 52, borderRadius: `${tokens.radii.md}px` }}
       >
-        {total === 1 ? "1 result" : `${total} results`}
+        {plural(total, "result")}
       </Button>
     </Box>
   );

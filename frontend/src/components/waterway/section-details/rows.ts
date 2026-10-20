@@ -1,4 +1,5 @@
 import type { SectionWithFeatures } from "@/lib/api";
+import { plural } from "@/lib/format";
 import { lineCoords } from "@/lib/geo";
 import { baseSpan, gradeSpans } from "./grade";
 import type { ComputedFeature, TreeNode } from "./types";
@@ -64,7 +65,7 @@ export function stripShown(rows: ComputedFeature[]): boolean {
 
 /** "9 features · 2 proposed": approved rows, then pending ones trailing. */
 export function countLabel(approved: number, proposed: number): string {
-  const noun = `${approved} ${approved === 1 ? "feature" : "features"}`;
+  const noun = plural(approved, "feature");
   if (approved === 0) return `${proposed} proposed`;
   return proposed > 0 ? `${noun} · ${proposed} proposed` : noun;
 }

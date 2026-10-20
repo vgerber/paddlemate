@@ -3,15 +3,12 @@ import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import DoneIcon from "@mui/icons-material/Done";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import HistoryIcon from "@mui/icons-material/History";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import IconButton from "@mui/material/IconButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import RowMenu, { type RowAction } from "@/components/RowMenu";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { theme } from "@/lib/theme";
 
@@ -46,8 +43,37 @@ export function CoordsInfo({
 }: Props) {
   const [lng, lat] = coords;
   const { copied, copy } = useCopyToClipboard();
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const url = `https://www.google.com/maps?q=${lat},${lng}`;
+
+  const menuActions: RowAction[] = [
+    {
+      label: "Copy coordinates",
+      icon: copied ? <DoneIcon /> : <ContentCopyOutlinedIcon />,
+      onClick: () => copy(`${lat.toFixed(5)}, ${lng.toFixed(5)}`),
+    },
+  ];
+  if (onHistory) {
+    menuActions.push({
+      label: "History",
+      icon: <HistoryIcon />,
+      onClick: onHistory,
+    });
+  }
+  if (onEdit) {
+    menuActions.push({
+      label: "Edit feature",
+      icon: <EditOutlinedIcon />,
+      onClick: onEdit,
+    });
+  }
+  if (onDelete) {
+    menuActions.push({
+      label: "Delete feature",
+      icon: <DeleteOutlinedIcon />,
+      onClick: onDelete,
+      danger: true,
+    });
+  }
 
   return (
     <Stack
@@ -77,86 +103,7 @@ export function CoordsInfo({
         <OpenInNewIcon fontSize="small" />
       </IconButton>
       {actions}
-      <IconButton
-        title="More actions"
-        onClick={(e) => {
-          e.stopPropagation();
-          setMenuAnchor(e.currentTarget);
-        }}
-        sx={touchSx}
-      >
-        <MoreVertIcon fontSize="small" />
-      </IconButton>
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={() => setMenuAnchor(null)}
-        // The menu portal is a React child of the entry's ButtonBase - stop
-        // clicks from toggling the entry.
-        onClick={(e) => e.stopPropagation()}
-      >
-        <MenuItem
-          sx={{ py: 1.25 }}
-          onClick={() => {
-            copy(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-            setMenuAnchor(null);
-          }}
-        >
-          <ListItemIcon>
-            {copied ? (
-              <DoneIcon fontSize="small" />
-            ) : (
-              <ContentCopyOutlinedIcon fontSize="small" />
-            )}
-          </ListItemIcon>
-          Copy coordinates
-        </MenuItem>
-        {onHistory && (
-          <MenuItem
-            sx={{ py: 1.25 }}
-            onClick={() => {
-              setMenuAnchor(null);
-              onHistory();
-            }}
-          >
-            <ListItemIcon>
-              <HistoryIcon fontSize="small" />
-            </ListItemIcon>
-            History
-          </MenuItem>
-        )}
-        {onEdit && (
-          <MenuItem
-            sx={{ py: 1.25 }}
-            onClick={() => {
-              setMenuAnchor(null);
-              onEdit();
-            }}
-          >
-            <ListItemIcon>
-              <EditOutlinedIcon fontSize="small" />
-            </ListItemIcon>
-            Edit feature
-          </MenuItem>
-        )}
-        {onDelete && (
-          <MenuItem
-            onClick={() => {
-              setMenuAnchor(null);
-              onDelete();
-            }}
-            sx={{ py: 1.25, color: tokens.error }}
-          >
-            <ListItemIcon>
-              <DeleteOutlinedIcon
-                fontSize="small"
-                sx={{ color: tokens.error }}
-              />
-            </ListItemIcon>
-            Delete feature
-          </MenuItem>
-        )}
-      </Menu>
+      <RowMenu actions={menuActions} />
     </Stack>
   );
 }

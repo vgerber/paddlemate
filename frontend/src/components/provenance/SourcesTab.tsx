@@ -22,7 +22,7 @@ import type {
   SectionWithFeatures,
   WaterwaySources,
 } from "@/lib/api";
-import { formatDate } from "@/lib/format";
+import { formatDate, plural } from "@/lib/format";
 import { useWaterwayMedia } from "@/lib/hooks/useComments";
 import { useWaterwayGauges } from "@/lib/hooks/useGauges";
 import { useSession } from "@/lib/hooks/useSession";
@@ -148,10 +148,6 @@ function ExternalLink({ href, children }: { href: string; children: string }) {
       {children}
     </Link>
   );
-}
-
-function count(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
 }
 
 function times(n: number): string {
@@ -382,8 +378,8 @@ export default function SourcesTab({
   const photos = (media.data ?? []).filter((m) => m.kind === "photo").length;
   const videos = (media.data ?? []).filter((m) => m.kind === "video").length;
   const mediaLine = [
-    photos > 0 ? count(photos, "photo", "photos") : null,
-    videos > 0 ? count(videos, "video", "videos") : null,
+    photos > 0 ? plural(photos, "photo") : null,
+    videos > 0 ? plural(videos, "video") : null,
   ]
     .filter(Boolean)
     .join(", ");

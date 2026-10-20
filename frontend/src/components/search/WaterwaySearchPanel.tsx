@@ -17,7 +17,6 @@ import { useWaterways } from "@/lib/hooks/useWaterways";
 import { readRecentWaterways } from "@/lib/recentWaterways";
 import { theme } from "@/lib/theme";
 import ListGroupHeader from "./ListGroupHeader";
-import type { ListView } from "./ListViewToggle";
 import RecentRiverList from "./RecentRiverList";
 import type { RegionBrowseProps } from "./RegionBrowse";
 import RegionSuggestions, { isListingRegions } from "./RegionSelect";
@@ -26,6 +25,7 @@ import SearchFiltersHeader, { SearchControls } from "./SearchFiltersHeader";
 import SectionList from "./SectionList";
 import { usePendingRiverProposals } from "./usePendingRiverProposals";
 import { useVisibleSections } from "./useVisibleSections";
+import type { ListView } from "./useWaterwaySearchFilters";
 import {
   type SearchMode,
   useWaterwaySearchFilters,

@@ -130,3 +130,9 @@ export function sectionPlace(
   const narrowest = (regions ?? []).slice(0, 2).reverse();
   return [country, ...narrowest].filter((part): part is string => !!part);
 }
+
+/** "1 gauge", "3 gauges": the count and its noun. Pass `many` for an
+ * irregular plural. */
+export function plural(n: number, one: string, many = `${one}s`): string {
+  return `${n} ${n === 1 ? one : many}`;
+}
