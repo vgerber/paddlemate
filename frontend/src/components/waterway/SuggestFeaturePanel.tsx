@@ -1,5 +1,4 @@
 import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import { useRef, useState } from "react";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
@@ -74,7 +73,6 @@ export default function SuggestFeaturePanel({
         />
       </Box>
       <PanelBottomBar
-        leftIcon={<CloseIcon />}
         onLeftClick={handleClose}
         leftLabel="Cancel"
         title={selectedSection?.name ?? waterway?.name ?? "…"}

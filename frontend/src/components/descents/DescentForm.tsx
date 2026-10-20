@@ -1,7 +1,5 @@
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -103,7 +101,6 @@ export default function DescentForm({
 
   const bar = (
     <PanelBottomBar
-      leftIcon={step === 0 ? <CloseIcon /> : <ArrowBackIcon />}
       onLeftClick={step === 0 ? onCancel : () => setStep((s) => s - 1)}
       leftLabel={step === 0 ? "Cancel" : "Back"}
       leftDisabled={isBusy}

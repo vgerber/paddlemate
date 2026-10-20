@@ -1,4 +1,3 @@
-import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
@@ -54,7 +53,6 @@ export default function LinkDescentDialog({ tripId, open, onClose }: Props) {
         )}
       </DialogContent>
       <PanelBottomBar
-        leftIcon={<CloseIcon />}
         onLeftClick={onClose}
         leftLabel="Close"
         title="Link a log"

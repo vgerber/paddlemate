@@ -1,4 +1,3 @@
-import CloseIcon from "@mui/icons-material/Close";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import Typography from "@mui/material/Typography";
@@ -47,7 +46,6 @@ export default function DayPickerDialog({
         />
       </DialogContent>
       <PanelBottomBar
-        leftIcon={<CloseIcon />}
         onLeftClick={onClose}
         leftLabel="Close"
         title="Add a day"

@@ -1,5 +1,4 @@
 import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -156,7 +155,6 @@ export default function AttendanceDialog({
         {saveError && <Alert severity="error">{saveError}</Alert>}
       </DialogContent>
       <PanelBottomBar
-        leftIcon={<CloseIcon />}
         onLeftClick={onClose}
         leftLabel="Close"
         leftDisabled={patchMember.isPending}

@@ -1,8 +1,6 @@
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckIcon from "@mui/icons-material/Check";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
-import CloseIcon from "@mui/icons-material/Close";
 import MapIcon from "@mui/icons-material/Map";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -271,7 +269,6 @@ function SuggestSectionPage() {
 
   const barNode = (
     <PanelBottomBar
-      leftIcon={step === 0 || submitted ? <CloseIcon /> : <ArrowBackIcon />}
       onLeftClick={
         step === 0 || submitted ? backToMap : () => wizard.setStep(step - 1)
       }

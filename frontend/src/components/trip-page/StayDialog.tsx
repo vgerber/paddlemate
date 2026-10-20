@@ -1,5 +1,4 @@
 import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
@@ -248,7 +247,6 @@ export default function StayDialog({
         )}
       </DialogContent>
       <PanelBottomBar
-        leftIcon={<CloseIcon />}
         onLeftClick={onClose}
         leftLabel="Close"
         leftDisabled={isBusy}
