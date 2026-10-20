@@ -17,7 +17,7 @@ interface MobileOverlayProps {
 
 /**
  * Full-screen overlay shown on mobile when the panel is open.
- * Sits above the map (z-index 1200), below the app bar, above the bottom nav.
+ * Sits above the map (z-index 1200, or 1350 as a suggest sheet), below the app bar, above the bottom nav.
  */
 export default function MobileOverlay({ state }: MobileOverlayProps) {
   const {
@@ -103,7 +103,6 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
           />
         </Box>
 
-        {/* Speed Dial - section-specific actions on mobile */}
         <SectionSpeedDial
           state={state}
           sx={{

@@ -46,7 +46,6 @@ const SCENE_KEYS = [
   "setNotePin",
   "setNotePinPlacing",
   "selectedNoteId",
-  "sectionPreviewCoords",
   "featureVertices",
   "featureGeomType",
   "featurePickingActive",
@@ -190,7 +189,6 @@ export function buildMapScene(input: MapSceneInput): MapScene {
       onOpenThread: input.onOpenThread,
     },
     drawing: {
-      sectionPreviewCoords: input.sectionPreviewCoords ?? undefined,
       featureVertices: input.featureVertices,
       featureGeomType: input.featureGeomType,
       placingFeature: input.featurePickingActive || notePinPlacing,

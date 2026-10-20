@@ -1,5 +1,5 @@
 import ChartCard from "@/components/charts/ChartCard";
-import { ChartSkeleton } from "@/components/charts/ChartStatus";
+import { ChartBody } from "@/components/charts/ChartStatus";
 import { useChartPanelState } from "@/components/charts/chartState";
 import ReadingChart, {
   type ChartPlacement,
@@ -11,7 +11,6 @@ import type { WaterRangeWithStatus } from "@/lib/api";
 
 interface GaugeChartPanelProps {
   ranges: WaterRangeWithStatus[];
-  tall?: boolean;
   onClose: () => void;
   /** Where the chart sits; the phone keeps its own card. */
   placement: ChartPlacement;
@@ -20,7 +19,6 @@ interface GaugeChartPanelProps {
 /** The chart card of one picked gauge; its options can close it. */
 export default function GaugeChartPanel({
   ranges,
-  tall,
   onClose,
   placement,
 }: GaugeChartPanelProps) {
@@ -50,14 +48,11 @@ export default function GaugeChartPanel({
       onTimeRangeChange={setTimeRange}
       measurementType={measurementType}
       onMeasurementTypeChange={setMeasurementType}
-      tall={tall}
       onDismiss={onClose}
       footer={footer}
     >
-      {(headroom) =>
-        ghost ? (
-          <ChartSkeleton />
-        ) : (
+      {(headroom) => (
+        <ChartBody pending={ghost}>
           <WaterChart
             ranges={ranges}
             showThresholds={false}
@@ -65,8 +60,8 @@ export default function GaugeChartPanel({
             measurementType={measurementType}
             headroom={headroom}
           />
-        )
-      }
+        </ChartBody>
+      )}
     </ChartCard>
   );
 }

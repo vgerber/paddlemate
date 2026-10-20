@@ -5,7 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useSession } from "@/lib/hooks/useSession";
 import type { MapPageState } from "./useMapPageState";
 
-interface Props {
+interface SectionSpeedDialProps {
   state: MapPageState;
   sx?: SxProps;
 }
@@ -16,7 +16,7 @@ interface Props {
  * MapPane (map view). Everything else a section can do is in the detail
  * header's menu.
  */
-export default function SectionSpeedDial({ state, sx }: Props) {
+export default function SectionSpeedDial({ state, sx }: SectionSpeedDialProps) {
   const {
     selectedSectionId,
     selectedWaterwayId,

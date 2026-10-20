@@ -1,6 +1,7 @@
 import { Marker } from "react-map-gl/maplibre";
 import { theme } from "@/lib/theme";
 import MarkerHit from "./MarkerHit";
+import { MARKER_SHADOW } from "./markerStyle";
 
 const { tokens } = theme;
 
@@ -39,7 +40,7 @@ export default function MapNumberMarker({
             fontSize: 11,
             fontWeight: 700,
             border: `2px solid ${tokens.surface}`,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.6)",
+            boxShadow: MARKER_SHADOW,
             pointerEvents: "none",
           }}
         >

@@ -11,11 +11,11 @@ export const TIME_RANGE_OPTIONS: { value: TimeRange; label: string }[] = [
   { value: "1y", label: "1Y" },
 ];
 
-const LS_KEY = "chart-time-range";
+const STORAGE_KEY = "chart-time-range";
 
 function readStoredTimeRange(): TimeRange {
   try {
-    const v = localStorage.getItem(LS_KEY);
+    const v = localStorage.getItem(STORAGE_KEY);
     if (TIME_RANGE_OPTIONS.some((o) => o.value === v)) return v as TimeRange;
   } catch {
     // Private mode / blocked storage: fall through to the default.
@@ -28,7 +28,7 @@ export function useChartTimeRange(): [TimeRange, (r: TimeRange) => void] {
   const [timeRange, setTimeRangeRaw] = useState<TimeRange>(readStoredTimeRange);
   const setTimeRange = useCallback((r: TimeRange) => {
     try {
-      localStorage.setItem(LS_KEY, r);
+      localStorage.setItem(STORAGE_KEY, r);
     } catch {
       // Private mode / blocked storage: state still updates for the session.
     }

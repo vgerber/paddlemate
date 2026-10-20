@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { MapLayerMouseEvent } from "react-map-gl/maplibre";
 import { type AreaCircle, DEFAULT_RADIUS_KM, type LngLat } from "@/lib/geo";
+import { REGION_FILL_LAYER, SECTION_HIT_LAYERS } from "./layerIds";
 import type { PickMode } from "./PickModeButtons";
 import type { RegionChoice } from "./RegionChoicePopup";
 
@@ -17,7 +18,7 @@ interface RegionMenu {
 function regionsUnder(event: MapLayerMouseEvent): RegionChoice[] {
   const options: RegionChoice[] = [];
   for (const feature of event.features ?? []) {
-    if (feature.layer.id !== "region-browse-fill") continue;
+    if (feature.layer.id !== REGION_FILL_LAYER) continue;
     const { id, label, sub } = feature.properties ?? {};
     if (typeof id !== "number" || options.some((o) => o.id === id)) continue;
     options.push({
@@ -81,11 +82,8 @@ export function useMapClickHandler({
       });
       return;
     }
-    const sectionFeature = e.features?.find(
-      (f) =>
-        f.layer.id === "sections-line" ||
-        f.layer.id === "sections-line-casing" ||
-        f.layer.id === "sections-line-hitbox",
+    const sectionFeature = e.features?.find((f) =>
+      SECTION_HIT_LAYERS.includes(f.layer.id),
     );
     if (placingFeature && onMapClick) {
       onMapClick([e.lngLat.lng, e.lngLat.lat]);

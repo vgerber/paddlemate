@@ -64,7 +64,6 @@ function input(over: Partial<MapSceneInput> = {}): MapSceneInput {
     setNotePin: noop,
     setNotePinPlacing: noop,
     selectedNoteId: null,
-    sectionPreviewCoords: null,
     featureVertices: [],
     featureGeomType: "Point",
     featurePickingActive: false,

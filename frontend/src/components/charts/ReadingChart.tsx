@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import { type ReactNode, useMemo, useState } from "react";
 import ChartDock from "@/components/canvas/ChartDock";
 import { useLayout } from "@/components/canvas/canvasStore";
-import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
+import { ChartBody, type ChartLoad } from "@/components/charts/ChartStatus";
 import PeriodMenu from "@/components/charts/PeriodMenu";
 import ReadingBlock, {
   type ReadingView,
@@ -56,12 +56,7 @@ export interface ReadingChartProps {
   placement: Exclude<ChartPlacement, "phone">;
   ranges: WaterRangeWithStatus[];
   /** Loading and failure of the data; absent when the ranges are in hand. */
-  status?: {
-    isLoading: boolean;
-    isError: boolean;
-    error: unknown;
-    refetch: () => void;
-  };
+  status?: ChartLoad;
   timeRange: TimeRange;
   onTimeRangeChange: (range: TimeRange) => void;
   measurementType: string | null;
@@ -190,24 +185,22 @@ export default function ReadingChart(props: ReadingChartProps) {
     />
   );
 
-  const plotBody = status?.isError ? (
-    <ChartError error={status.error} onRetry={status.refetch} />
-  ) : status?.isLoading ? (
-    <ChartSkeleton />
-  ) : (
-    <WaterChart
-      ranges={own}
-      rail
-      onScrub={setScrub}
-      marker={scrub}
-      showThresholds={thresholdsAvailable}
-      timeRange={timeRange}
-      measurementType={measurementType}
-      selectedFeatureId={selectedFeatureId}
-      selectedFeature={selectedFeature}
-      preferredFeatureId={preferredFeatureId}
-      headroom={rail ? 6 : 10}
-    />
+  const plotBody = (
+    <ChartBody load={status}>
+      <WaterChart
+        ranges={own}
+        rail
+        onScrub={setScrub}
+        marker={scrub}
+        showThresholds={thresholdsAvailable}
+        timeRange={timeRange}
+        measurementType={measurementType}
+        selectedFeatureId={selectedFeatureId}
+        selectedFeature={selectedFeature}
+        preferredFeatureId={preferredFeatureId}
+        headroom={rail ? 6 : 10}
+      />
+    </ChartBody>
   );
   const source = (
     <Box sx={{ height: SOURCE_LINE, minWidth: 0, overflow: "hidden" }}>

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import ChartCard from "@/components/charts/ChartCard";
-import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
+import { ChartBody } from "@/components/charts/ChartStatus";
 import { useChartPanelState } from "@/components/charts/chartState";
 import ReadingChart, {
   type ChartPlacement,
@@ -20,8 +20,6 @@ interface SectionChartPanelProps {
   selectedFeature?: { name: string; type: string } | null;
   /** Feature owning the section's default thresholds (whitewater). */
   preferredFeatureId?: number | null;
-  /** Lets the chart grow taller (the features list is folded). */
-  tall?: boolean;
   /** Where the chart sits; the phone keeps its own card. */
   placement: ChartPlacement;
 }
@@ -32,7 +30,6 @@ export default function SectionChartPanel({
   selectedFeatureId,
   selectedFeature,
   preferredFeatureId,
-  tall,
   placement,
 }: SectionChartPanelProps) {
   const {
@@ -70,36 +67,32 @@ export default function SectionChartPanel({
     );
   }
   return (
-    <>
-      <ChartCard
-        ranges={ranges}
-        timeRange={timeRange}
-        onTimeRangeChange={setTimeRange}
-        measurementType={measurementType}
-        onMeasurementTypeChange={setMeasurementType}
-        preferredFeatureId={preferredFeatureId}
-        tall={tall}
-        short={isLoading || isError}
-        footer={footer}
-      >
-        {(headroom) =>
-          isError ? (
-            <ChartError error={error} onRetry={() => refetch()} />
-          ) : isLoading || ghost ? (
-            <ChartSkeleton />
-          ) : (
-            <WaterChart
-              ranges={ranges}
-              selectedFeatureId={selectedFeatureId}
-              selectedFeature={selectedFeature}
-              preferredFeatureId={preferredFeatureId}
-              timeRange={timeRange}
-              measurementType={measurementType}
-              headroom={headroom}
-            />
-          )
-        }
-      </ChartCard>
-    </>
+    <ChartCard
+      ranges={ranges}
+      timeRange={timeRange}
+      onTimeRangeChange={setTimeRange}
+      measurementType={measurementType}
+      onMeasurementTypeChange={setMeasurementType}
+      preferredFeatureId={preferredFeatureId}
+      short={isLoading || isError}
+      footer={footer}
+    >
+      {(headroom) => (
+        <ChartBody
+          load={{ isLoading, isError, error, refetch }}
+          pending={ghost}
+        >
+          <WaterChart
+            ranges={ranges}
+            selectedFeatureId={selectedFeatureId}
+            selectedFeature={selectedFeature}
+            preferredFeatureId={preferredFeatureId}
+            timeRange={timeRange}
+            measurementType={measurementType}
+            headroom={headroom}
+          />
+        </ChartBody>
+      )}
+    </ChartCard>
   );
 }

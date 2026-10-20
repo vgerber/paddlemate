@@ -8,6 +8,7 @@ import MapGL, {
   Source,
   useMap,
 } from "react-map-gl/maplibre";
+import { REGION_FILL_LAYER, SECTION_HIT_LAYERS } from "./layerIds";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type {
   CountryBorder,
@@ -35,6 +36,7 @@ import MarkerHit from "./MarkerHit";
 import { addMapImages, answerMissingIcons } from "./mapIcons";
 import { buildSectionsGeoJSON } from "./mapLayers";
 import { LIBERTY_STYLE, SATELLITE_STYLE } from "./mapStyles";
+import { MARKER_SHADOW } from "./markerStyle";
 import NoteMarkers, { type NotePin } from "./NoteMarkers";
 import PickModeButtons from "./PickModeButtons";
 import RangeRingLayers, { type RangeRing } from "./RangeRingLayers";
@@ -65,8 +67,6 @@ export interface PointPin {
 
 const { tokens } = theme;
 
-/** Hands the MapLibre instance to browser tests, so they can read the paint
- * and data the map really draws. Development builds only. */
 /** Mounts as the map's first child, before its style adds any layer. */
 function MissingIconGuard() {
   const { current: map } = useMap();
@@ -74,6 +74,8 @@ function MissingIconGuard() {
   return null;
 }
 
+/** Hands the MapLibre instance to browser tests, so they can read the paint
+ * and data the map really draws. Development builds only. */
 function exposeMapForTests(map: MapRef | null) {
   if (import.meta.env.DEV && map) {
     Object.assign(window, { __paddlemateMap: map.getMap() });
@@ -469,8 +471,7 @@ export default function WaterwayMap({
         }
         onMouseMove={(e) =>
           setOverRegion(
-            e.features?.some((f) => f.layer.id === "region-browse-fill") ??
-              false,
+            e.features?.some((f) => f.layer.id === REGION_FILL_LAYER) ?? false,
           )
         }
         onMouseLeave={() => setOverRegion(false)}
@@ -480,12 +481,7 @@ export default function WaterwayMap({
           reportBounds();
         }}
         onMoveEnd={reportBounds}
-        interactiveLayerIds={[
-          "sections-line",
-          "sections-line-casing",
-          "sections-line-hitbox",
-          "region-browse-fill",
-        ]}
+        interactiveLayerIds={[...SECTION_HIT_LAYERS, REGION_FILL_LAYER]}
       >
         <MissingIconGuard />
         <NavigationControl position="top-right" showCompass={false} />
@@ -575,7 +571,7 @@ export default function WaterwayMap({
                   border: `2px solid ${theme.tokens.surfaceLowest}`,
                   boxShadow: pin.emphasis
                     ? `0 0 0 3px ${pin.color}55`
-                    : "0 1px 2px rgba(0,0,0,0.5)",
+                    : MARKER_SHADOW,
                 }}
               />
             </MarkerHit>
@@ -614,7 +610,6 @@ export default function WaterwayMap({
           />
         </Source>
 
-        {/* Selected sections overlay for picker mode */}
         {selectedSectionIds && selectedSectionIds.size > 0 && (
           <Source
             id="sections-picker-sel"
@@ -685,7 +680,7 @@ export default function WaterwayMap({
                   borderRadius: "50%",
                   background: tokens.mapAreaCircle,
                   border: `2px solid ${tokens.white}`,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
+                  boxShadow: MARKER_SHADOW,
                 }}
               />
             </MarkerHit>

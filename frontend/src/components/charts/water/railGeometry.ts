@@ -29,7 +29,7 @@ export function insetExtent(
 }
 
 /** Axis ticks for a period within [from, to]: 24h every 6 hours, 7d every
- * second day, 30d every fifth day, a year every second month. */
+ * second day, 1m every fifth day, a year every second month. */
 export function axisTicks(
   period: TimeRange,
   [from, to]: [number, number],
