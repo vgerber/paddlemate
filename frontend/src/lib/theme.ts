@@ -170,6 +170,8 @@ const tokens = {
     e3: `0 4px 14px ${teal}40`,
     // The legibility halo under a map marker or label sitting on imagery.
     marker: "0 1px 4px rgba(0,0,0,0.5)",
+    // The same halo with a ring, for the selected marker.
+    markerRaised: "0 0 0 2px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.6)",
   },
 
   // Motion: the scale from the motion notes. Arrivals ease out, travel
