@@ -22,7 +22,7 @@ export default function ProposalCardHeader({
       <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
         <Typography
           sx={{
-            fontFamily: fonts.label,
+            fontFamily: fonts.body,
             fontWeight: 700,
             fontSize: "0.9rem",
             flex: 1,
@@ -54,7 +54,7 @@ export default function ProposalCardHeader({
         sx={{
           fontSize: "0.6875rem",
           color: "text.disabled",
-          fontFamily: fonts.label,
+          fontFamily: fonts.body,
         }}
       >
         {ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type} ·{" "}

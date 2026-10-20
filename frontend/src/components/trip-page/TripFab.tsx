@@ -94,7 +94,7 @@ export default function TripFab(props: TripActionContext) {
     const [only] = actions;
     return (
       <Fab
-        color="secondary"
+        color="primary"
         onClick={only.onClick}
         aria-label={only.label}
         sx={fabSx}
@@ -110,7 +110,7 @@ export default function TripFab(props: TripActionContext) {
       icon={<SpeedDialIcon openIcon={<CloseIcon />} />}
       // The action corner is one colour across the panel's tabs; a dial
       // that defaulted to cyan turned it into a per-tab change.
-      FabProps={{ color: "secondary" }}
+      FabProps={{ color: "primary" }}
       sx={fabSx}
     >
       {actions.map((a) => (

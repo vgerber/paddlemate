@@ -63,7 +63,7 @@ export default function ProposalRow({
       <Typography
         noWrap
         sx={{
-          fontFamily: fonts.label,
+          fontFamily: fonts.body,
           fontWeight: 600,
           fontSize: "0.9375rem",
           lineHeight: "20px",

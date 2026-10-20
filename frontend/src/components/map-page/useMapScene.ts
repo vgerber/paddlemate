@@ -158,7 +158,7 @@ export function useMapScene(state: MapPageState) {
               id: "note-draft",
               lon: notePin[0],
               lat: notePin[1],
-              color: theme.tokens.tertiary,
+              color: theme.tokens.primary,
               title: "New note location",
               emphasis: true,
             },

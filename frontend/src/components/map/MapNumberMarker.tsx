@@ -10,7 +10,7 @@ export default function MapNumberMarker({
   lat,
   lon,
   num,
-  color = tokens.tertiary,
+  color = tokens.primary,
 }: {
   lat: number;
   lon: number;

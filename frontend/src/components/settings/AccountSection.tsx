@@ -24,7 +24,7 @@ export default function AccountSection() {
             <Box
               component="span"
               sx={{
-                fontFamily: fonts.mono,
+                fontFamily: fonts.body,
                 fontSize: "0.875rem",
                 fontWeight: 500,
                 wordBreak: "break-all",

@@ -236,7 +236,7 @@ function StayRow({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontFamily: fonts.label,
+              fontFamily: fonts.body,
               fontSize: "0.75rem",
               fontWeight: 700,
               flexShrink: 0,
@@ -248,7 +248,7 @@ function StayRow({
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography
               sx={{
-                fontFamily: fonts.label,
+                fontFamily: fonts.body,
                 fontWeight: 600,
                 fontSize: "0.8125rem",
               }}
@@ -259,7 +259,7 @@ function StayRow({
             {stay.arrival && (
               <Typography
                 sx={{
-                  fontFamily: fonts.label,
+                  fontFamily: fonts.body,
                   fontSize: "0.75rem",
                   color: "primary.main",
                 }}

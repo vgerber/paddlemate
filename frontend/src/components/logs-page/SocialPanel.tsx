@@ -52,7 +52,7 @@ function PersonRow({
         sx={{
           flex: 1,
           minWidth: 0,
-          fontFamily: fonts.label,
+          fontFamily: fonts.body,
           fontWeight: 600,
           fontSize: "0.9375rem",
         }}

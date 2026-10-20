@@ -117,7 +117,7 @@ export default function RangeRingLayers({ rings }: { rings: RangeRing[] }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontFamily: fonts.label,
+              fontFamily: fonts.body,
               fontSize: 12,
               fontWeight: 700,
               boxShadow: tokens.elevation.marker,

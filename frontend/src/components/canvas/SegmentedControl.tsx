@@ -69,7 +69,7 @@ export function Segment({
         color: active ? tokens.onSurface : tokens.onSurfaceVariant,
         bgcolor: active ? tokens.surface : "transparent",
         boxShadow: active ? tokens.elevation.e1 : "none",
-        borderRadius: `${tokens.radii.sm - 2}px`,
+        borderRadius: `${tokens.radii.segment}px`,
         "&:hover": { bgcolor: active ? tokens.surface : tokens.surfaceHighest },
         ...(compact && {
           "&::after": { content: '""', position: "absolute", inset: "-6px 0" },

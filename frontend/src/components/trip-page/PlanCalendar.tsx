@@ -193,7 +193,7 @@ export function MonthView({
           <ChevronLeftIcon />
         </IconButton>
         <Typography
-          sx={{ fontFamily: fonts.label, fontWeight: 600, fontSize: 15 }}
+          sx={{ fontFamily: fonts.body, fontWeight: 600, fontSize: 15 }}
         >
           {format(cursor, "MMMM yyyy")}
         </Typography>
@@ -386,7 +386,7 @@ function DayCell({
           borderRadius: "50%",
           display: "grid",
           placeItems: "center",
-          fontFamily: fonts.label,
+          fontFamily: fonts.body,
           fontSize: 15,
           fontWeight: current ? 700 : 500,
           fontVariantNumeric: "tabular-nums",

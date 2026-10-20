@@ -285,7 +285,7 @@ function DayEntry({
         <Typography
           component="span"
           sx={{
-            fontFamily: fonts.label,
+            fontFamily: fonts.body,
             fontSize: 15,
             fontWeight: 700,
             flex: 1,
@@ -311,7 +311,7 @@ function DayEntry({
         <Typography
           component="span"
           sx={{
-            fontFamily: fonts.label,
+            fontFamily: fonts.body,
             fontSize: 13,
             fontWeight: 500,
             color: "text.secondary",

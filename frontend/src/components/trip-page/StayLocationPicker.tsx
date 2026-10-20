@@ -80,7 +80,7 @@ export default function StayLocationPicker({ tripId, point, onChange }: Props) {
           <>
             <Typography
               sx={{
-                fontFamily: fonts.mono,
+                fontFamily: fonts.body,
                 fontSize: "0.75rem",
                 color: theme.tokens.outline,
                 flex: 1,

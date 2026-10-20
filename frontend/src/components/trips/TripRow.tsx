@@ -54,7 +54,7 @@ export default function TripRow({
       <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
         <Typography
           sx={{
-            fontFamily: fonts.label,
+            fontFamily: fonts.body,
             fontWeight: 600,
             fontSize: "1rem",
             flex: 1,

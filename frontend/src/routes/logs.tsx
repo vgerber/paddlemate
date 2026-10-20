@@ -111,7 +111,7 @@ function LogsPage() {
         <Box sx={{ maxWidth: 720, mx: "auto" }}>{list}</Box>
         {tab === "mine" && (
           <Fab
-            color="secondary"
+            color="primary"
             aria-label="Log descent"
             onClick={onNew}
             sx={fabSx}

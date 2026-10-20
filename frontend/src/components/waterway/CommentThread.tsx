@@ -358,7 +358,7 @@ export default function CommentThread({
                           ...composerIconSx,
                           color:
                             mapPin.placing || mapPin.pin
-                              ? tokens.tertiary
+                              ? tokens.primary
                               : "text.disabled",
                         }}
                       >
@@ -394,7 +394,7 @@ export default function CommentThread({
                       disabled={!body.trim() || createComment.isPending}
                       sx={{
                         ...composerIconSx,
-                        color: tokens.tertiary,
+                        color: tokens.primary,
                         "&.Mui-disabled": { color: "text.disabled" },
                       }}
                     >

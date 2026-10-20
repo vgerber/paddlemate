@@ -62,7 +62,7 @@ export default function AddMemberDialog({
           <Typography
             component="h2"
             sx={{
-              fontFamily: fonts.label,
+              fontFamily: fonts.body,
               fontSize: 18,
               lineHeight: "24px",
               fontWeight: 700,
@@ -88,7 +88,7 @@ export default function AddMemberDialog({
         <Typography
           component="h2"
           sx={{
-            fontFamily: fonts.label,
+            fontFamily: fonts.body,
             fontSize: 18,
             lineHeight: "24px",
             fontWeight: 700,

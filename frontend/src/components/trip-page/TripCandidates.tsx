@@ -65,7 +65,7 @@ export default function TripCandidates({
       <Typography
         data-testid="form-section-label"
         sx={{
-          fontFamily: fonts.label,
+          fontFamily: fonts.body,
           fontSize: "0.875rem",
           fontWeight: 600,
           color: "text.secondary",
@@ -254,7 +254,7 @@ function CandidateRow({
               <Typography
                 noWrap
                 sx={{
-                  fontFamily: fonts.label,
+                  fontFamily: fonts.body,
                   fontWeight: 600,
                   fontSize: "0.9375rem",
                 }}

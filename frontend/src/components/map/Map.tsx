@@ -627,7 +627,7 @@ export default function WaterwayMap({
             <Layer
               id="sections-picker-sel-line"
               type="line"
-              paint={{ "line-color": tokens.tertiary, "line-width": 5 }}
+              paint={{ "line-color": tokens.primary, "line-width": 5 }}
             />
           </Source>
         )}
