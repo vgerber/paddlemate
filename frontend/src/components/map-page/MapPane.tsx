@@ -1,19 +1,12 @@
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import SearchIcon from "@mui/icons-material/Search";
-import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
 import CircularProgress from "@mui/material/CircularProgress";
-import Fab from "@mui/material/Fab";
-import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import type { MapScene } from "@/components/canvas/scene";
 import WaterwayMap from "@/components/map/Map";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import { localizedName } from "@/lib/localization";
-import { levelMarkerColor } from "@/lib/waterLevel";
+import MapPaneChrome from "./MapPaneChrome";
 import { modeSheetMode, modeSheetPeek } from "./modeSheet";
-import SectionSpeedDial from "./SectionSpeedDial";
 import type { MapPageState } from "./useMapPageState";
 
 interface MapPaneProps {
@@ -93,7 +86,6 @@ export default function MapPane({
         overflow: "hidden",
       }}
     >
-      {/* Map */}
       <Box
         data-testid="map-card"
         sx={{
@@ -102,7 +94,6 @@ export default function MapPane({
           position: "relative",
         }}
       >
-        {/* Descent banner - mobile only, floats over the map when overlay is closed */}
         <StandingDescentBanner
           sx={{
             display: { xs: "flex", md: "none" },
@@ -116,88 +107,17 @@ export default function MapPane({
         />
         <WaterwayMap {...mapProps} camera={camera} />
 
-        {sheetMode ? null : isMobileMapView ? (
-          /* Map-view mini header - shown when the detail overlay is toggled away */
-          <>
-            <SectionSpeedDial
-              state={state}
-              sx={{
-                position: "absolute",
-                bottom: "calc(60px + 16px)",
-                right: 16,
-                display: { xs: "flex", md: "none" },
-              }}
-            />
-            <ButtonBase
-              onClick={toggleMobileMapView}
-              sx={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                display: { xs: "flex", md: "none" },
-                bgcolor: "background.paper",
-                borderTop: "1px solid",
-                borderColor: "divider",
-                px: 2,
-                py: 1,
-                alignItems: "center",
-                gap: 1.5,
-                zIndex: 1100,
-              }}
-            >
-              {sectionLevel && (
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    bgcolor: levelMarkerColor(sectionLevel),
-                    flexShrink: 0,
-                  }}
-                />
-              )}
-              <Box sx={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-                <Typography
-                  variant="subtitle2"
-                  noWrap
-                  sx={{ fontWeight: 700, lineHeight: 1.3 }}
-                >
-                  {sectionName ?? waterwayName ?? ""}
-                </Typography>
-                {sectionName && waterwayName && (
-                  <Typography variant="caption" color="textSecondary" noWrap>
-                    {waterwayName}
-                  </Typography>
-                )}
-              </Box>
-              <KeyboardArrowUpIcon
-                fontSize="small"
-                sx={{ color: "action.active", flexShrink: 0 }}
-              />
-            </ButtonBase>
-          </>
-        ) : (
-          /* Search FAB - mobile only */
-          <Box
-            sx={{
-              display: { xs: "block", md: "none" },
-              position: "absolute",
-              bottom: 16,
-              right: 16,
-            }}
-          >
-            <Badge badgeContent={resultsBadge} color="secondary" max={99}>
-              <Fab
-                color="secondary"
-                aria-label="Open search panel"
-                onClick={onOpenMobilePanel}
-              >
-                <SearchIcon />
-              </Fab>
-            </Badge>
-          </Box>
-        )}
+        <MapPaneChrome
+          state={state}
+          sheetMode={sheetMode != null}
+          mapView={isMobileMapView}
+          resultsBadge={resultsBadge}
+          sectionName={sectionName}
+          waterwayName={waterwayName}
+          level={sectionLevel}
+          onOpen={toggleMobileMapView}
+          onOpenSearch={onOpenMobilePanel}
+        />
       </Box>
     </Box>
   );
