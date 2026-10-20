@@ -20,8 +20,6 @@ interface SectionChartPanelProps {
   selectedFeature?: { name: string; type: string } | null;
   /** Feature owning the section's default thresholds (whitewater). */
   preferredFeatureId?: number | null;
-  /** Lets the chart grow taller (the features list is folded). */
-  tall?: boolean;
   /** Where the chart sits; the phone keeps its own card. */
   placement: ChartPlacement;
 }
@@ -32,7 +30,6 @@ export default function SectionChartPanel({
   selectedFeatureId,
   selectedFeature,
   preferredFeatureId,
-  tall,
   placement,
 }: SectionChartPanelProps) {
   const {
@@ -78,7 +75,6 @@ export default function SectionChartPanel({
         measurementType={measurementType}
         onMeasurementTypeChange={setMeasurementType}
         preferredFeatureId={preferredFeatureId}
-        tall={tall}
         short={isLoading || isError}
         footer={footer}
       >

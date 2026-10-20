@@ -33,7 +33,6 @@ const heights = {
     xs: "calc(clamp(160px, 24vh, 210px) + var(--chart-extra, 0px))",
     md: "clamp(200px, 26vh, 340px)",
   },
-  tall: { xs: 340, md: "clamp(280px, 42vh, 520px)" },
 } as const;
 
 const chipSx = (on: boolean) =>
@@ -59,7 +58,6 @@ interface ChartCardProps {
   preferredFeatureId?: number | null;
   /** Lets the chart grow taller, for when nothing else is competing for the
    * space (the features list is folded). */
-  tall?: boolean;
   /** A short card, for a chart that is still loading or failed to load. */
   short?: boolean;
   /** Offered in the open options when the card shows a picked gauge. */
@@ -80,7 +78,6 @@ export default function ChartCard({
   measurementType,
   onMeasurementTypeChange,
   preferredFeatureId,
-  tall = false,
   short = false,
   onDismiss,
   footer,
@@ -244,7 +241,7 @@ export default function ChartCard({
       <Box
         sx={{
           position: "relative",
-          height: short ? 120 : tall ? heights.tall : heights.base,
+          height: short ? 120 : heights.base,
         }}
       >
         {children(open ? CLOSED_HEADROOM : OUTLINE_HEADROOM)}

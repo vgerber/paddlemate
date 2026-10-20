@@ -86,25 +86,17 @@ function MapChart({
   const {
     selectedWaterwayId,
     selectedSectionId,
-    sectionDetailTab,
     sections,
     selectedGaugeId,
     setSelectedGaugeId,
     selectedGaugeRanges,
     selectedFeatureId,
-    featuresFolded,
   } = state;
-  // Folding the features list hands its height to the chart.
-  const tall =
-    featuresFolded &&
-    selectedSectionId != null &&
-    sectionDetailTab === "features";
 
   if (selectedGaugeId != null && selectedGaugeRanges.length > 0) {
     return (
       <GaugeChartPanel
         ranges={selectedGaugeRanges}
-        tall={tall}
         placement={placement}
         onClose={() => setSelectedGaugeId(null)}
       />
@@ -123,7 +115,6 @@ function MapChart({
     <SectionChartPanel
       waterwayId={selectedWaterwayId}
       sectionId={selectedSectionId}
-      tall={tall}
       placement={placement}
       selectedFeatureId={selectedFeatureId}
       selectedFeature={
