@@ -9,7 +9,7 @@ River (waterway)
 ```
 
 A **river** is the whole waterway. A **section** is a named, paddleable stretch
-of it — "Wellerbrücke", "Ötz Stadtstrecke" — with its own difficulty, water
+of it - "Wellerbrücke", "Ötz Stadtstrecke" - with its own difficulty, water
 status and logbook. A **feature** is a point, line or area on a section: a
 rapid, a weir to portage, the put-in.
 
@@ -17,29 +17,51 @@ rapid, a weir to portage, the put-in.
 
 Each section is a line on the map with a put-in and a take-out. Sections carry:
 
-- **Difficulty** — the whitewater grade (I–VI), shown in map labels and
+- **Difficulty** - the whitewater grade (I-VI), shown in map labels and
   filterable in search.
-- **Water status** — `empty | low | medium | high`, derived from a live gauge
-  (below). Colors the access markers and the chip in the section list.
-- **Translations** — names and descriptions per language, see
+- **Water status** - `empty | low | medium | high`, derived from a live gauge
+  (below). Colors the access markers, the chip in the section list and the
+  level dots on river rows, recent rivers and a trip's bases.
+- **Translations** - names and descriptions per language, see
   [translations](translations.md).
-- **Logs (descents)** — who paddled it and when; shown as a count badge, a list
+- **Logs (descents)** - who paddled it and when; shown as a count badge, a list
   in the section view, and shaded bands on the gauge chart.
 - Comments and favorites.
 
 ### The section view
 
-Opening a section shows a chart card at the top (the charted reading and
-period, with one button for the options) and four tabs below it:
+Opening a section shows the gauge chart at the top and four tabs below it:
 
-- **Features** - a strip of the run (grade bar, ranges, each feature as its
-  icon) above the list. Ranges are soft bands that fold and name what they
-  hide; a portage keeps a dashed rail.
+- **Features** - a strip of the run (each feature as its icon, the grade
+  ranges as bands) above the list, and the river state under the rows. A
+  range with members folds in the list and names what it hides; a portage
+  keeps a dashed rail. The strip is left out when there is nothing to place:
+  no rows, a single row, or only put-in and take-out.
 - **Logs** - descents on this section.
 - **Notes** - notes and photos as cards.
 - **Sources** - where the data came from (see Internals, provenance). A
   row of the section opens its change history over the pane, and an open
   feature row has a "History" action for that feature.
+
+The **section grade** is read off the grade ranges: a range covering 80% or
+more of the run is the section's grade and is shown in the card subtitle
+instead of as a row. The hardest stretch harder than it follows in brackets,
+as guidebooks write it ("III (IV)"). The feature count reads "n features · m
+proposed" and a section with only a grade says "No rapids, hazards or access
+points yet."
+
+The **river state** block lists what a paddler wants before going: the latest
+urgent or temporary hazard note (up to 90 days old), the last descent, the
+newest note and the open proposals. Each row opens its tab.
+
+On a phone the chart is the top card with an options button for the reading
+and the period. On a wide screen (1280 or more wide and 600 tall) it is a
+rail beside the section card: a values pane with the latest reading, its age
+("10m ago") and level, and a borderless plot with Low, Medium and High written
+on the threshold lines; pointing at the plot shows that value in the plot,
+while the values pane keeps the latest. A reading older than 3 hours or three
+gauge intervals reads "No recent reading" and the section's level dot turns
+grey. The layout rules are in [design](design.md).
 
 ## Features
 
@@ -52,14 +74,14 @@ period, with one button for the options) and four tabs below it:
 | `portage` | Carry around |
 | `freestyle_spot` | Play spot |
 
-Features are named per language, and rapid names are searchable — typing a
+Features are named per language, and rapid names are searchable - typing a
 famous rapid finds its river (see [search](search.md)).
 
 ## Water levels
 
 Gauges are measurement stations fetched from the agencies' public services
 (one reader per agency in `api/river-gauge/`). A feature can define per-gauge
-**water ranges** — the readings at which it is low, medium or high — and the
+**water ranges** - the readings at which it is low, medium or high - and the
 latest reading classified against those ranges is the section's water status.
 The section view charts the readings and overlays your descents, so you can
 see the level you paddled at.
@@ -68,7 +90,7 @@ see the level you paddled at.
 
 When adding a section, the gauge picker searches **all available gauges across
 every provider**, not just the ones already fetched. That works via a
-`gauge_catalog` table — one lightweight row per station (name, river, params,
+`gauge_catalog` table - one lightweight row per station (name, river, params,
 PostGIS point) synced from each reader's `list_stations()` by the
 `sync_gauge_catalog` binary (run on a schedule; shipped in the API image).
 The catalog holds no readings and is not polled.
@@ -79,7 +101,7 @@ catalog reference (`gauge_ref` = provider + station_id + param), and the apply
 path (`resolve_or_create_series_for_ref`, hit by both direct creates and
 proposal approvals) creates the `gauges` + `gauge_series` rows and marks the
 gauge active. A background supervisor in `readers/mod.rs` then starts fetching
-it **without an app restart** — each provider loop re-reads its active gauges
+it **without an app restart** - each provider loop re-reads its active gauges
 every cycle, the supervisor spawns a loop for a provider that gains its first
 gauge, and a `Notify` cuts the inter-cycle sleep short so a freshly linked
 gauge is polled within seconds. The picker recommends gauges already used on
@@ -128,7 +150,7 @@ Standing decisions on attribution, so they are not re-litigated:
 
 ## Who can change what
 
-All community edits — new rivers, sections, features, translations — go
+All community edits - new rivers, sections, features, translations - go
 through **proposals**: submitted, reviewed and voted on before they are
 applied. A proposal is reviewed on the map against what already exists: a
 proposed feature is drawn on its section alongside that section's other
@@ -193,11 +215,13 @@ find your river? Add it").
   - The browse layer fills itself. `GET /geo/region-outlines?bbox=` answers
     with the regions overlapping a viewport and fetches whatever ground it
     has not seen before from OSM in the background, keyed by the tiles in
-    `region_tiles`. One kind per tier, chosen by the viewport width
+    `region_tiles`. Without `kinds`, one kind per tier, chosen by the viewport width
     (`BrowseTier` in `api/src/regions.rs`): states above 4°, mountain ranges
     down to 1.5°, districts to 0.8°, valleys below that, nothing above 12°.
-    Two kinds at once would stack a range over the districts it contains and
-    leave neither readable. The response's `filling` flag says a fetch is
+    The app passes `kinds` (all four, or the one a level chip picked); each
+    kind is then returned only while the viewport is within its span limit
+    (valley 3°, district 6°, range 8°, state 12°) and a kind over its limit is
+    named in `hidden_kinds`. Fills and `region_tiles` stay per kind. The response's `filling` flag says a fetch is
     still running and the client should ask again - assembling a district
     boundary takes seconds, so the request never waits for it.
   - Each outline carries a `palette_index`, a small number chosen so that no

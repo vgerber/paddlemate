@@ -1,7 +1,7 @@
 # Search
 
-Find a river by any name it goes by — its own name, a section, a translated
-name, or a famous rapid — spelled the way you remember it.
+Find a river by any name it goes by - its own name, a section, a translated
+name, or a famous rapid - spelled the way you remember it.
 
 ## What you can type
 
@@ -18,18 +18,25 @@ name, or a famous rapid — spelled the way you remember it.
 Names in non-Latin scripts (e.g. Cyrillic) are matched as written, ignoring
 case.
 
+## Before you type
+
+The empty Name view lists your **starred sections** (favorites, set with "Add favorite" in a
+section's menu, are per account) and the **recent rivers** you opened on
+this device. A river row ends in level dots, one 8px dot per section in the
+level colours; grey is unknown (no gauge, no thresholds or a stale reading).
+
 ## How results are presented
 
 - Results are ordered by how well they match: an exact name first, then names
   starting with the term, then names containing it, then approximate matches.
 - Approximate matches appear under a **Similar names** divider, so a typo
   correction is never mistaken for an exact hit.
-- Under each name is where it is — country, then the most telling regions it
+- Under each name is where it is - country, then the most telling regions it
   lies in, e.g. `AT · Bezirk Imst · Ötztal`. A river name on its own rarely
   says which of the world's rivers it is. Sections read the same way, so both
   tabs answer "where" the same.
 - When a river matched through something other than its own name, the row also
-  says why — e.g. `Rapid: Wellerbrücke - Riesenschlucht` or
+  says why - e.g. `Rapid: Wellerbrücke - Riesenschlucht` or
   `DE name: Teufelsstrom`.
 - The **Sections** tab lists the sections that matched; if a river matched by
   its own name, all of its sections are shown. A section that matched through
@@ -64,36 +71,38 @@ its own is a search: it lists the sections at those levels across all rivers.
 
 Area and Region are the two ways to search without typing a name:
 
-- **Area** — click the map to drop a centre, then set a radius. Rivers with a
+- **Area** - click the map to drop a centre, then set a radius. Rivers with a
   section inside the circle are listed.
-- **Region** — switch to region mode and the map becomes the picker: every
-  valley, district, state and mountain range in view is outlined and
-  labelled, and clicking one lists the rivers reaching into it. You see one
-  kind at a time, following the zoom - states when you are looking at a
-  country, then mountain ranges and districts, then valleys once you are
-  down at river level. The map stays quiet so the picked region is the only
+- **Region** - switch to region mode and the map becomes the picker: the
+  valleys, districts, mountain ranges and states in view are outlined and
+  labelled, and clicking one lists the rivers reaching into it. Under the
+  search field, level chips (Valleys, Districts, Mountain ranges, States) limit
+  the map to one kind; with none set, every kind is drawn at once. Each kind
+  appears only while the view is no wider than it can read (about 3 degrees
+  for valleys, 6 for districts, 8 for mountain ranges, 12 for states); past that the map says "Zoom in to see
+  districts" instead. The map stays quiet so the picked region is the only
   thing that stands out: every boundary is one thin grey line, so an edge two
   regions share reads once, with a faint fill inside that only has to catch
-  your click. Picking a region opens a sheet with its name, the kind of region, the rivers
-in it and, under "Part of", the larger regions it sits in; before a pick the
-sheet holds chips to limit the map to one kind of region. In region mode the
-base map's roads fade to 40% and their names, shields and one-way arrows are hidden, until you leave region mode. Each region has one name, set at its visual centre - the
-  point deepest inside its shape, not the middle of its bounding box. A
-  valley has no outline, so it is a soft band along the valley floor. Clicking
-  ground that several regions share lists them and lets you say which you
-  meant; each row names the country and the kind of region. The region you
-  picked is the only thing drawn in teal, with its name; the rest stay grey.
-  Two rules keep the map readable. A mountain range that holds two or more
-  other ranges is left out, since they already show the same ground. And a
-  region much smaller than the view (under about 0.3% of it) waits until you
-  zoom in, because it is a speck you could neither read nor hit.
-  Searching by name works too, and tolerates the same misspellings as river
-  names, so `otztal` finds `Ötztal` and `Tirool` finds `Tirol`. An English
-  country name (`Austria`, `Switzerland`) lists that country's regions, states
-  first, after any region whose own name matches. The picker names each
-  region's country first, so a list of valley names still tells you where you
-  are. A range that straddles a border is labelled with the country holding
-  most of its area.
+  your click. Picking a region opens a sheet with its name, the kind of
+  region, the rivers in it and, under "Part of", the larger regions it sits
+  in. In region mode the base map's roads fade to 40% and their names, shields
+  and one-way arrows are hidden, until you leave region mode. Each region has
+  one name, set at its visual centre - the point deepest inside its shape, not
+  the middle of its bounding box. A valley has no outline, so it is a soft
+  band along the valley floor. Clicking ground that several regions share
+  lists them and lets you say which you meant; each row names the country and
+  the kind of region. The region you picked is the only thing drawn in teal,
+  with its name; the rest stay grey. Two rules keep the map readable. A
+  mountain range that holds two or more other ranges is left out, since they
+  already show the same ground. And a region much smaller than the view (under
+  about 0.3% of it) waits until you zoom in, because it is a speck you could
+  neither read nor hit. Searching by name works too, and tolerates the same
+  misspellings as river names, so `otztal` finds `Ötztal` and `Tirool` finds
+  `Tirol`. An English country name (`Austria`, `Switzerland`) lists that
+  country's regions, states first, after any region whose own name matches.
+  The picker names each region's country first, so a list of valley names
+  still tells you where you are. A range that straddles a border is labelled
+  with the country holding most of its area.
 
 Country borders stay drawn over everything else at every zoom, so the map
 always says which country you are looking at. They are a dash-dot line over a
@@ -121,7 +130,7 @@ later visit.
 
 | Variable | Default | Meaning |
 | -------- | ------- | ------- |
-| `SEARCH_WORD_SIMILARITY_THRESHOLD` | `0.5` | How close a misspelling must be to count, 0–1. Lower finds more, with more noise. |
+| `SEARCH_WORD_SIMILARITY_THRESHOLD` | `0.5` | How close a misspelling must be to count, 0-1. Lower finds more, with more noise. |
 
 Set on the API; no deploy needed to change it.
 `scripts/tune_search_threshold.sql` measures recall and noise across candidate
@@ -149,7 +158,7 @@ New searchable sources are added to this view, not to the query.
 Stored names and the query both pass through `public.search_key`: lowercase,
 diacritics removed (`unaccent`), German digraphs folded (`ss`→`s`, `oe`→`o`,
 `ue`→`u`, `ae`→`a`). Applied to both sides it can only merge spellings, never
-hide a match. Punctuation and non-Latin characters are left alone — a
+hide a match. Punctuation and non-Latin characters are left alone - a
 `[^a-z0-9]` whitelist would erase Cyrillic names.
 
 The normalization exists three times and must agree:
@@ -162,8 +171,8 @@ The normalization exists three times and must agree:
 
 ### Ranking
 
-`api/src/query/waterways.rs::search` ranks each waterway's best match by tier —
-exact (0), prefix (1), substring (2), fuzzy (3) — then by source specificity
+`api/src/query/waterways.rs::search` ranks each waterway's best match by tier -
+exact (0), prefix (1), substring (2), fuzzy (3) - then by source specificity
 (waterway > section > translation > rapid), then trigram similarity. Rows carry
 `matched_name`, `matched_source`, `matched_lang`, `matched_section_name` and
 `fuzzy` for the frontend. Each row also carries `place`: the country of its
@@ -179,7 +188,7 @@ one per name source. They are *expression* indexes on `search_key(name)`: the
 index stores the function's **output at write time**, not the formula.
 
 Therefore **a migration that changes `search_key` must `REINDEX` those four
-indexes in the same migration** — otherwise existing rows keep the old
+indexes in the same migration** - otherwise existing rows keep the old
 normalization while new rows get the new one, and searches silently miss
 results. Only long-lived databases are affected; a fresh database (CI, new dev
 checkout) rebuilds its indexes from the current function and looks healthy,
@@ -194,10 +203,10 @@ index on `search_key(name)` (`%>` with the same threshold as river names,
 from 4 characters), and `country_names` holds English names and aliases per
 ISO code. The migration does not change `search_key`, so no `REINDEX`.
 
-`/geo/region-outlines` picks one kind by viewport width on its own (states
-4-12 degrees, ranges 1.5-4, districts 0.8-1.5, valleys below). The region
-level chips send `kinds=` instead (comma list of `valley,district,range,state`):
-those kinds come back, each only while the viewport is no wider than its limit
+`/geo/region-outlines` without `kinds` picks one kind by viewport width (states
+4-12 degrees, ranges 1.5-4, districts 0.8-1.5, valleys below). The app always
+sends `kinds=` (comma list of `valley,district,range,state`): all four, or the
+one a level chip chose. Those kinds come back, each only while the viewport is no wider than its limit
 (`BrowseTier::max_span`: valley 3, district 6, range 8, state 12 degrees). A
 kind over its limit is omitted and named in `hidden_kinds`, so the app can say
 "Zoom in to see districts". An unknown kind is a 400. The background OSM fill
