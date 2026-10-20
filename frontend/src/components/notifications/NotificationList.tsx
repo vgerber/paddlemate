@@ -5,9 +5,9 @@ import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
+import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
-import StateTile from "@/components/states/StateTile";
 import type { TripEvent } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
 import {
@@ -64,32 +64,13 @@ export default function NotificationList({
   }
   if (!data?.items.length) {
     return (
-      <Box
-        data-testid="empty-state"
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 0.75,
-          pt: 7.5,
-          pb: 4,
-          px: 2,
-          textAlign: "center",
-        }}
-      >
-        <StateTile>
-          <NotificationsNoneOutlinedIcon />
-        </StateTile>
-        <Typography sx={{ fontSize: "1rem", fontWeight: 600 }}>
-          Nothing new
-        </Typography>
-        <Typography
-          color="textSecondary"
-          sx={{ fontSize: "0.875rem", lineHeight: "20px" }}
-        >
-          Changes others make to your trips show up here.
-        </Typography>
-      </Box>
+      <EmptyState
+        icon={<NotificationsNoneOutlinedIcon />}
+        title="Nothing new"
+        caption="Changes others make to your trips show up here."
+        pt={7.5}
+        pb={4}
+      />
     );
   }
 

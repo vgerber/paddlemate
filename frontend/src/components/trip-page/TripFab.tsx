@@ -6,21 +6,12 @@ import Fab from "@mui/material/Fab";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
+import type { ReactNode } from "react";
 import DockedAction from "@/components/DockedAction";
-import { BOTTOM_NAV_SPACE } from "@/lib/theme";
+import { fabSx } from "@/components/PaneFab";
 import type { TripTab } from "./TripDetail";
 
-/** On a phone, the screen's corner above the bottom nav. From `md` up the
- * primary action is docked at the foot of the pane instead (`TripDock`), so
- * the button never floats over the content it adds to. */
-export const fabSx = {
-  position: "fixed" as const,
-  bottom: `calc(${BOTTOM_NAV_SPACE} + 16px)`,
-  right: 16,
-  display: { xs: "flex", md: "none" },
-};
-
-interface Actions {
+export interface TripActionContext {
   tab: TripTab;
   isMember: boolean;
   isAdmin: boolean;
@@ -34,32 +25,57 @@ interface Actions {
   onNewLog: () => void;
 }
 
-/** What the tab's docked buttons say and do, top to bottom. The same
- * decisions the phone's FAB makes, so the two never offer different things. */
-function dockedActions(p: Actions): { label: string; onClick: () => void }[] {
+interface TripAction {
+  label: string;
+  icon: ReactNode;
+  onClick: () => void;
+}
+
+/** What the tab offers, top to bottom. The desktop dock and the phone's FAB
+ * both render this list, so they never offer different things. */
+function tripActions(p: TripActionContext): TripAction[] {
   if (p.tab === "plan" && p.isMember)
-    return [{ label: "Add a day", onClick: p.onAddDay }];
+    return [{ label: "Add a day", icon: <AddIcon />, onClick: p.onAddDay }];
+  // An admin adds a base outright; everyone else puts one up for the group.
   if (p.tab === "bases" && p.isMember)
     return p.isAdmin
-      ? [{ label: "Add base", onClick: p.onAddStay }]
-      : [{ label: "Propose a base", onClick: p.onProposeStay }];
+      ? [{ label: "Add base", icon: <AddIcon />, onClick: p.onAddStay }]
+      : [
+          {
+            label: "Propose a base",
+            icon: <AddIcon />,
+            onClick: p.onProposeStay,
+          },
+        ];
+  // A trip is invite-only, so filling it is the admin's job on this tab.
+  // Everyone else's one action here is their own dates.
   if (p.tab === "members" && p.isAdmin)
-    return [{ label: "Add member", onClick: p.onAddMember }];
+    return [{ label: "Add member", icon: <AddIcon />, onClick: p.onAddMember }];
   if (p.tab === "members" && p.isMember && p.hasSelf)
-    return [{ label: "Set your dates", onClick: p.onEditAttendance }];
+    return [
+      {
+        label: "Set your dates",
+        icon: <EditCalendarOutlinedIcon />,
+        onClick: p.onEditAttendance,
+      },
+    ];
   if (p.tab === "logs" && p.isMember)
     return [
-      { label: "Log a descent", onClick: p.onNewLog },
-      { label: "Link an existing log", onClick: p.onLinkLog },
+      { label: "Log a descent", icon: <AddIcon />, onClick: p.onNewLog },
+      {
+        label: "Link an existing log",
+        icon: <LinkOutlinedIcon />,
+        onClick: p.onLinkLog,
+      },
     ];
   return [];
 }
 
 /** The tab's actions at the foot of the detail pane, desktop only. */
-export function TripDock(props: Actions) {
+export function TripDock(props: TripActionContext) {
   return (
     <>
-      {dockedActions(props).map((a) => (
+      {tripActions(props).map((a) => (
         <DockedAction key={a.label} label={a.label} onClick={a.onClick} />
       ))}
     </>
@@ -67,118 +83,44 @@ export function TripDock(props: Actions) {
 }
 
 /**
- * One screen, one primary action. Each tab has an obvious thing to do, so the
- * FAB does it directly; only where several actions genuinely share the spot
- * does it open a menu.
+ * One screen, one primary action: a single action is the FAB itself, and only
+ * where several share the spot does it open a menu.
  */
-function PrimaryFab({
-  tab,
-  isMember,
-  isAdmin,
-  hasSelf,
-  onAddMember,
-  onAddDay,
-  onAddStay,
-  onProposeStay,
-  onEditAttendance,
-  onLinkLog,
-  onNewLog,
-}: {
-  tab: TripTab;
-  isMember: boolean;
-  isAdmin: boolean;
-  hasSelf: boolean;
-  onAddMember: () => void;
-  onAddDay: () => void;
-  onAddStay: () => void;
-  onProposeStay: () => void;
-  onEditAttendance: () => void;
-  onLinkLog: () => void;
-  onNewLog: () => void;
-}) {
-  if (tab === "plan" && isMember) {
+export default function TripFab(props: TripActionContext) {
+  const actions = tripActions(props);
+  if (actions.length === 0) return null;
+
+  if (actions.length === 1) {
+    const [only] = actions;
     return (
       <Fab
         color="secondary"
-        onClick={onAddDay}
-        aria-label="Add a day"
+        onClick={only.onClick}
+        aria-label={only.label}
         sx={fabSx}
       >
-        <AddIcon />
+        {only.icon}
       </Fab>
     );
   }
 
-  // An admin adds a base outright; everyone else puts one up for the group.
-  // One action each, so neither needs a menu.
-  if (tab === "bases" && isMember) {
-    return (
-      <Fab
-        color="secondary"
-        onClick={isAdmin ? onAddStay : onProposeStay}
-        aria-label={isAdmin ? "Add base" : "Propose a base"}
-        sx={fabSx}
-      >
-        <AddIcon />
-      </Fab>
-    );
-  }
-
-  // A trip is invite-only, so filling it is the admin's job on this tab.
-  // Everyone else's one action here is their own dates.
-  if (tab === "members" && isAdmin) {
-    return (
-      <Fab
-        color="secondary"
-        onClick={onAddMember}
-        aria-label="Add member"
-        sx={fabSx}
-      >
-        <AddIcon />
-      </Fab>
-    );
-  }
-
-  if (tab === "members" && isMember && hasSelf) {
-    return (
-      <Fab
-        color="secondary"
-        onClick={onEditAttendance}
-        aria-label="Set your dates"
-        sx={fabSx}
-      >
-        <EditCalendarOutlinedIcon />
-      </Fab>
-    );
-  }
-
-  if (tab === "logs" && isMember) {
-    return (
-      <SpeedDial
-        ariaLabel="Log actions"
-        icon={<SpeedDialIcon openIcon={<CloseIcon />} />}
-        // The action corner is one colour across the panel's tabs; a dial
-        // that defaulted to cyan turned it into a per-tab change.
-        FabProps={{ color: "secondary" }}
-        sx={fabSx}
-      >
+  return (
+    <SpeedDial
+      ariaLabel="Log actions"
+      icon={<SpeedDialIcon openIcon={<CloseIcon />} />}
+      // The action corner is one colour across the panel's tabs; a dial
+      // that defaulted to cyan turned it into a per-tab change.
+      FabProps={{ color: "secondary" }}
+      sx={fabSx}
+    >
+      {actions.map((a) => (
         <SpeedDialAction
-          icon={<AddIcon />}
-          slotProps={{ tooltip: { title: "Log a descent" } }}
-          onClick={onNewLog}
+          key={a.label}
+          icon={a.icon}
+          slotProps={{ tooltip: { title: a.label } }}
+          onClick={a.onClick}
         />
-        <SpeedDialAction
-          icon={<LinkOutlinedIcon />}
-          slotProps={{ tooltip: { title: "Link an existing log" } }}
-          onClick={onLinkLog}
-        />
-      </SpeedDial>
-    );
-  }
-
-  return null;
-}
-
-export default function TripFab(actions: Actions) {
-  return <PrimaryFab {...actions} />;
+      ))}
+    </SpeedDial>
+  );
 }

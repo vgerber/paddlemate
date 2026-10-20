@@ -4,6 +4,7 @@ import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import DescentForm from "@/components/descents/DescentForm";
 import LoadingBox from "@/components/states/LoadingBox";
 import { useDescent } from "@/lib/hooks/useDescents";
+import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useSectionWithFeatures } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
 import { theme } from "@/lib/theme";
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/logs/new")({
 
 function NewLogPage() {
   const navigate = useNavigate();
+  const goBack = useGoBack(() => navigate({ to: "/logs", replace: true }));
   const { waterwayId, sectionId, startTime, tripId, copyDescentId } =
     Route.useSearch();
   const { isAuthenticated, isLoading: sessionLoading } = useSession();
@@ -79,7 +81,7 @@ function NewLogPage() {
             replace: true,
           })
         }
-        onCancel={() => history.back()}
+        onCancel={goBack}
       />
     </Box>
   );

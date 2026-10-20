@@ -8,28 +8,18 @@ import {
   featureDifficulty,
   toPseudoFeature,
 } from "@/components/waterway/section-details/utils";
-import type { Feature, FeatureType, Proposal } from "@/lib/api";
+import type { Proposal } from "@/lib/api";
 import { distanceAlongLineM, lineCoords, representativePoint } from "@/lib/geo";
 import { useWaterway } from "@/lib/hooks/useWaterways";
-import { labelSx, theme } from "@/lib/theme";
+import {
+  proposalRecord,
+  proposedFeatures,
+  proposedLocation,
+  proposedTranslations,
+} from "@/lib/proposals";
+import { alphas, labelSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
-
-interface BundledFeatureData {
-  feature_type: FeatureType;
-  metadata?: Record<string, unknown> | null;
-  location: Feature["location"];
-  name?: string | null;
-  description?: string | null;
-  lang_code?: string | null;
-  water_ranges?: Array<{ series_id: number }> | null;
-}
-
-interface TranslationData {
-  lang_code: string;
-  name?: string | null;
-  description?: string | null;
-}
 
 const paneLabelSx = { ...labelSx, color: "text.disabled" } as const;
 
@@ -43,40 +33,13 @@ export default function ProposalDetailPane({
   /** False on the canvas, where the screen's own map draws the change. */
   showMap?: boolean;
 }) {
-  const data = (proposal.proposed_data ?? {}) as Record<string, unknown>;
+  const data = proposalRecord(proposal.proposed_data);
 
-  const location = data.location as Feature["location"] | undefined;
-  const sectionLine =
-    location?.type === "LineString"
-      ? (location.coordinates as [number, number][])
-      : undefined;
-
-  // Bundled section features, or the proposal's own feature geometry
-  const bundled = Array.isArray(data.features)
-    ? (data.features as BundledFeatureData[])
-    : [];
-  const ownFeature =
-    proposal.entity_type === "feature" && location && data.feature_type
-      ? [
-          {
-            feature_type: data.feature_type as FeatureType,
-            metadata: data.metadata as Record<string, unknown> | null,
-            location,
-            name: data.name as string | null,
-            // The Description row below already says it.
-            description: null,
-            lang_code: data.lang_code as string | null,
-            water_ranges: (data.water_ranges ??
-              null) as BundledFeatureData["water_ranges"],
-          },
-        ]
-      : [];
-  const featureData = [...bundled, ...ownFeature];
+  const location = proposedLocation(data);
+  const sectionLine = lineCoords(location) ?? undefined;
+  const featureData = proposedFeatures(proposal);
   const pseudoFeatures = featureData.map(toPseudoFeature);
-
-  const translations = Array.isArray(data.translations)
-    ? (data.translations as TranslationData[])
-    : [];
+  const translations = proposedTranslations(data);
 
   const detailRows: Array<[string, string]> = [];
   if (typeof data.description === "string" && data.description) {
@@ -135,10 +98,9 @@ export default function ProposalDetailPane({
     ? distanceAlongLineM(measureLine[measureLine.length - 1], measureLine)
     : undefined;
 
-  const original = proposal.original_data as
-    | Record<string, unknown>
-    | null
-    | undefined;
+  const original = proposal.original_data
+    ? proposalRecord(proposal.original_data)
+    : null;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -248,7 +210,7 @@ export default function ProposalDetailPane({
               // The card draws the edge; rows only keep a rule between them.
               "& > *": { border: "none" },
               "& > * + *": {
-                borderTop: `1px solid ${tokens.outlineVariant}55`,
+                borderTop: `1px solid ${tokens.outlineVariant}${alphas.hairline}`,
               },
             }}
           >

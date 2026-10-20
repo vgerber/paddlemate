@@ -141,7 +141,7 @@ test.describe("notification settings and tokens", () => {
 });
 
 test.describe("inbox", () => {
-  test("empty: a bell tile, 60px below the tabs, 16px title", async ({
+  test("empty: a bell tile, 60px below the tabs, the shared empty state", async ({
     page,
   }) => {
     test.skip(isDesktop(page), "the inbox is a tab on a phone");
@@ -155,10 +155,9 @@ test.describe("inbox", () => {
     ).toBeVisible();
     expect(await computed(empty, "padding-top")).toBe("60px");
     const title = empty.getByText("Nothing new", { exact: true });
-    expect(await computed(title, "font-size")).toBe("16px");
-    expect(await computed(title, "font-weight")).toBe("600");
+    expect(await computed(title, "font-size")).toBe("14px");
     const caption = empty.getByText(/Changes others make/);
-    expect(await computed(caption, "font-size")).toBe("14px");
+    expect(await computed(caption, "font-size")).toBe("13px");
     expect(await computed(caption, "color")).toBe(SECONDARY);
   });
 

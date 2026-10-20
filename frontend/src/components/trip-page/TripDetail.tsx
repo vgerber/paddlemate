@@ -25,7 +25,7 @@ import DayPickerDialog from "./DayPickerDialog";
 import LinkDescentDialog from "./LinkDescentDialog";
 import StayDialog from "./StayDialog";
 import StaySectionsDialog from "./StaySectionsDialog";
-import TripFab, { TripDock } from "./TripFab";
+import TripFab, { type TripActionContext, TripDock } from "./TripFab";
 import TripLogs from "./TripLogs";
 import TripMembers from "./TripMembers";
 import TripStays from "./TripStays";
@@ -136,6 +136,20 @@ export default function TripDetail({
       search: { waterwayId, sectionId, tripId: trip.id },
     });
 
+  const tripActions: TripActionContext = {
+    tab,
+    isMember,
+    isAdmin,
+    hasSelf: self !== null,
+    onAddMember: () => setAddingMember(true),
+    onAddDay: () => setPickingDay(true),
+    onAddStay: () => setStayEditor("new"),
+    onProposeStay: () => setProposing(true),
+    onEditAttendance: () => self && setAttendanceFor({ member: self }),
+    onLinkLog: () => setLinking(true),
+    onNewLog: () => newLog(),
+  };
+
   const openLog = (descent: Descent) =>
     navigate({
       to: "/logs/$descentId",
@@ -166,12 +180,12 @@ export default function TripDetail({
     onDeleteStay: setConfirmDeleteStay,
   };
 
-  const paneSx = () => ({
+  const paneSx = {
     flex: 1,
     minHeight: 0,
     display: "flex",
     flexDirection: "column",
-  });
+  } as const;
 
   const paneBody = (t: TripTab) => {
     if (t === "plan") {
@@ -280,45 +294,21 @@ export default function TripDetail({
           flexDirection: "column",
         }}
       >
-        <Box data-testid="trip-pane" {...swipe.paneProps} sx={paneSx()}>
+        <Box data-testid="trip-pane" {...swipe.paneProps} sx={paneSx}>
           {paneBody(tab)}
         </Box>
         <SwipeGhost
           swipe={swipe}
           index={tabIndex}
           count={tabs.length}
-          sx={() => paneSx()}
+          sx={() => paneSx}
         >
           {(i) => paneBody(tabs[i].value)}
         </SwipeGhost>
       </Box>
 
-      <TripDock
-        tab={tab}
-        isMember={isMember}
-        isAdmin={isAdmin}
-        hasSelf={self !== null}
-        onAddMember={() => setAddingMember(true)}
-        onAddDay={() => setPickingDay(true)}
-        onAddStay={() => setStayEditor("new")}
-        onProposeStay={() => setProposing(true)}
-        onEditAttendance={() => self && setAttendanceFor({ member: self })}
-        onLinkLog={() => setLinking(true)}
-        onNewLog={() => newLog()}
-      />
-      <TripFab
-        tab={tab}
-        isMember={isMember}
-        isAdmin={isAdmin}
-        hasSelf={self !== null}
-        onAddMember={() => setAddingMember(true)}
-        onAddDay={() => setPickingDay(true)}
-        onAddStay={() => setStayEditor("new")}
-        onProposeStay={() => setProposing(true)}
-        onEditAttendance={() => self && setAttendanceFor({ member: self })}
-        onLinkLog={() => setLinking(true)}
-        onNewLog={() => newLog()}
-      />
+      <TripDock {...tripActions} />
+      <TripFab {...tripActions} />
 
       {pickingDay && (
         <DayPickerDialog
@@ -392,10 +382,14 @@ export default function TripDetail({
         title="Delete base?"
         body={`"${confirmDeleteStay?.name}" and its watch list will be removed.`}
         confirmLabel="Delete"
+        pendingLabel="Deleting…"
         color="error"
+        pending={deleteStay.isPending}
         onConfirm={() => {
-          if (confirmDeleteStay) deleteStay.mutate(confirmDeleteStay.id);
-          setConfirmDeleteStay(null);
+          if (!confirmDeleteStay) return;
+          deleteStay.mutate(confirmDeleteStay.id, {
+            onSuccess: () => setConfirmDeleteStay(null),
+          });
         }}
         onCancel={() => setConfirmDeleteStay(null)}
       />
@@ -404,11 +398,14 @@ export default function TripDetail({
         title="Unlink this log?"
         body="It stays in your logs, just no longer credited to the trip."
         confirmLabel="Unlink"
+        pendingLabel="Unlinking…"
+        pending={linkDescent.isPending}
         onConfirm={() => {
-          if (confirmUnlink) {
-            linkDescent.mutate({ id: confirmUnlink.id, trip_id: null });
-          }
-          setConfirmUnlink(null);
+          if (!confirmUnlink) return;
+          linkDescent.mutate(
+            { id: confirmUnlink.id, trip_id: null },
+            { onSuccess: () => setConfirmUnlink(null) },
+          );
         }}
         onCancel={() => setConfirmUnlink(null)}
       />
@@ -420,10 +417,7 @@ export default function TripDetail({
         pendingLabel="Deleting…"
         color="error"
         pending={deleteTrip.isPending}
-        onConfirm={async () => {
-          await deleteTrip.mutateAsync(trip.id);
-          onDeleted();
-        }}
+        onConfirm={() => deleteTrip.mutate(trip.id, { onSuccess: onDeleted })}
         onCancel={() => setConfirmDelete(false)}
       />
     </>

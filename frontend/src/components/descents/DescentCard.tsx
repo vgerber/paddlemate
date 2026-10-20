@@ -1,21 +1,16 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import { desktopFlatRow } from "@/components/canvas/flatRow";
+import { openRowSx } from "@/components/openRow";
 import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
-import { descentRivers, descentTitle } from "@/lib/descents";
+import { descentRivers, descentTitle, VISIBILITY_LABELS } from "@/lib/descents";
 import { durationLabel, formatDate, formatTime, timeAgo } from "@/lib/format";
 import { transition } from "@/lib/motion";
 import { alphas, theme } from "@/lib/theme";
 import { levelAtTime } from "./levelAtTime";
 
 const { tokens } = theme;
-
-const VISIBILITY = {
-  private: "Private",
-  shared: "Shared",
-  public: "Public",
-} as const;
 
 /** Who can see a log: one plain word. */
 export function VisibilityTag({
@@ -33,7 +28,7 @@ export function VisibilityTag({
         fontWeight: 500,
       }}
     >
-      {VISIBILITY[type]}
+      {VISIBILITY_LABELS[type]}
     </Box>
   );
 }
@@ -103,7 +98,7 @@ export default function DescentCard({
         boxSizing: "border-box",
         minHeight: 56,
         px: flush ? 0 : 1.75,
-        py: flush ? 1.5 : 1.5,
+        py: 1.5,
         font: "inherit",
         color: "text.primary",
         cursor: onClick ? "pointer" : "default",
@@ -113,11 +108,9 @@ export default function DescentCard({
               bgcolor: tokens.surface,
               border: 0,
               borderRadius: `${tokens.radii.md}px`,
-              boxShadow: selected
-                ? `${tokens.elevation.e1}, 0 0 0 2px ${tokens.primary}`
-                : tokens.elevation.e1,
+              boxShadow: tokens.elevation.e1,
             }),
-        ...(flush && selected && { bgcolor: "action.selected" }),
+        ...openRowSx(selected, flush),
         ...(flatFromMd && !flush && desktopFlatRow),
         transition: transition("background-color", { duration: "instant" }),
         "&:active": onClick

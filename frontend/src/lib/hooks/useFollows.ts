@@ -4,16 +4,16 @@ import { useSession } from "./useSession";
 
 export const followKeys = {
   all: ["follows"] as const,
-  following: ["follows", "following"] as const,
-  followers: ["follows", "followers"] as const,
-  pending: ["follows", "pending"] as const,
-  allUsers: ["follows", "users"] as const,
+  following: () => [...followKeys.all, "following"] as const,
+  followers: () => [...followKeys.all, "followers"] as const,
+  pending: () => [...followKeys.all, "pending"] as const,
+  allUsers: () => [...followKeys.all, "users"] as const,
 };
 
 /** Every user with their follow relation, for the social search list. */
 export function useAllUsers(enabled: boolean) {
   return useQuery({
-    queryKey: followKeys.allUsers,
+    queryKey: followKeys.allUsers(),
     queryFn: () => followsApi.listAll(),
     enabled,
   });
@@ -23,20 +23,20 @@ export function useFollows() {
   const { isAuthenticated } = useSession();
   const qc = useQueryClient();
 
-  const { data: following = [], isLoading: followingLoading } = useQuery({
-    queryKey: followKeys.following,
+  const followingQuery = useQuery({
+    queryKey: followKeys.following(),
     queryFn: () => followsApi.listFollowing(),
     enabled: isAuthenticated,
   });
 
-  const { data: followers = [], isLoading: followersLoading } = useQuery({
-    queryKey: followKeys.followers,
+  const followersQuery = useQuery({
+    queryKey: followKeys.followers(),
     queryFn: () => followsApi.listFollowers(),
     enabled: isAuthenticated,
   });
 
-  const { data: pendingRequests = [], isLoading: pendingLoading } = useQuery({
-    queryKey: followKeys.pending,
+  const pendingQuery = useQuery({
+    queryKey: followKeys.pending(),
     queryFn: () => followsApi.listPendingRequests(),
     enabled: isAuthenticated,
   });
@@ -56,11 +56,17 @@ export function useFollows() {
     onSuccess: () => qc.invalidateQueries({ queryKey: followKeys.all }),
   });
 
+  const queries = [followingQuery, followersQuery, pendingQuery];
+  // A failed load must not read as "not following anyone yet".
+  const failed = queries.find((q) => q.isError && !q.data);
+
   return {
-    following,
-    followers,
-    pendingRequests,
-    isLoading: followingLoading || followersLoading || pendingLoading,
+    following: followingQuery.data ?? [],
+    followers: followersQuery.data ?? [],
+    pendingRequests: pendingQuery.data ?? [],
+    isLoading: queries.some((q) => q.isLoading),
+    error: failed?.error ?? null,
+    refetch: () => Promise.all(queries.map((q) => q.refetch())),
     follow,
     unfollow,
     accept,

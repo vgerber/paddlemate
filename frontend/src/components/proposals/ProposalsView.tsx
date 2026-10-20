@@ -27,6 +27,7 @@ import type {
   ProposalOperation,
   ProposalStatus,
 } from "@/lib/api";
+import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useProposals } from "@/lib/hooks/useProposals";
 import { theme } from "@/lib/theme";
 import { STATUS_LABEL } from "./status";
@@ -145,10 +146,9 @@ export default function ProposalsView({
   const { data: proposals, isLoading } = query;
 
   // The phone reaches the list through the Tools tab, so back goes there.
-  const goBack = () => {
-    if (window.history.length > 1) router.history.back();
-    else router.navigate({ to: "/settings", search: {} });
-  };
+  const goBack = useGoBack(() =>
+    router.navigate({ to: "/settings", search: {} }),
+  );
 
   // The canvas map draws the open proposal; the scene is set on a phone too,
   // where no host is mounted and it is ignored.

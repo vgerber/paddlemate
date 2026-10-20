@@ -2,7 +2,8 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
-import { alphas, theme } from "@/lib/theme";
+import { openRowSx } from "@/components/openRow";
+import { theme } from "@/lib/theme";
 import { GROUPS, type GroupId } from "./groups";
 
 const { tokens } = theme;
@@ -33,14 +34,11 @@ export default function SettingsList({
           selected={g.id === selected}
           onClick={() => onOpen(g.id)}
           sx={{
-            borderRadius: `${tokens.radii.sm + 2}px`,
+            borderRadius: `${tokens.radii.row}px`,
             gap: 1,
             py: 1.25,
             px: 1.75,
-            "&.Mui-selected, &.Mui-selected:hover": {
-              bgcolor: `${tokens.primary}${alphas.wash}`,
-              boxShadow: `inset 3px 0 0 ${tokens.primary}, ${tokens.elevation.e1}`,
-            },
+            "&.Mui-selected, &.Mui-selected:hover": openRowSx(true),
             "&.Mui-focusVisible": {
               outline: `2px solid ${tokens.primary}`,
               outlineOffset: 2,

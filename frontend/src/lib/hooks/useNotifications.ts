@@ -143,6 +143,16 @@ async function currentSubscription(): Promise<globalThis.PushSubscription | null
   return registration.pushManager.getSubscription();
 }
 
+/** Drops this browser's push subscription, on the server and locally. */
+async function unsubscribeThisDevice(
+  sub: globalThis.PushSubscription,
+): Promise<void> {
+  const known = await notificationsApi.pushSubscriptions();
+  const mine = known.find((s) => s.endpoint === sub.endpoint);
+  if (mine) await notificationsApi.unsubscribePush(mine.id);
+  await sub.unsubscribe();
+}
+
 /** A base64url key as bytes. `Uint8Array.fromBase64` does this, but iPhones
  * before iOS 18.2 lack it, and push is most wanted on phones. */
 function keyBytes(base64url: string): Uint8Array<ArrayBuffer> {
@@ -180,11 +190,7 @@ export async function forgetThisDevice(): Promise<void> {
   const forget = async () => {
     const registration = await navigator.serviceWorker.getRegistration();
     const sub = await registration?.pushManager.getSubscription();
-    if (!sub) return;
-    const known = await notificationsApi.pushSubscriptions();
-    const mine = known.find((s) => s.endpoint === sub.endpoint);
-    if (mine) await notificationsApi.unsubscribePush(mine.id);
-    await sub.unsubscribe();
+    if (sub) await unsubscribeThisDevice(sub);
   };
   await Promise.race([
     forget().catch(() => undefined),
@@ -221,11 +227,7 @@ export function useSetPush(publicKey: string | undefined) {
         return;
       }
       const sub = await currentSubscription();
-      if (!sub) return;
-      const known = await notificationsApi.pushSubscriptions();
-      const mine = known.find((s) => s.endpoint === sub.endpoint);
-      if (mine) await notificationsApi.unsubscribePush(mine.id);
-      await sub.unsubscribe();
+      if (sub) await unsubscribeThisDevice(sub);
     },
     // The settings panel shows the failure beside the switch.
     meta: { errorHandledLocally: true },

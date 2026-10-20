@@ -6,7 +6,12 @@ import ProposalDetailPane from "@/components/proposals/ProposalDetailPane";
 import ProposalReviewControls from "@/components/proposals/ProposalReviewControls";
 import ProposalVoteBar from "@/components/proposals/ProposalVoteBar";
 import type { Proposal, ProposalStatus } from "@/lib/api";
-import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
+import {
+  ENTITY_LABEL,
+  OP_LABEL,
+  proposalRecord,
+  proposalTitle,
+} from "@/lib/proposals";
 import { BOTTOM_NAV_SPACE, labelSx, theme } from "@/lib/theme";
 import StatusChip from "./StatusChip";
 
@@ -33,11 +38,10 @@ export default function ProposalDetailView({
    * review controls sit at its foot instead of scrolling with the text. */
   docked?: boolean;
 }) {
-  const proposed = proposal.proposed_data as Record<string, unknown>;
-  const original = proposal.original_data as
-    | Record<string, unknown>
-    | null
-    | undefined;
+  const proposed = proposalRecord(proposal.proposed_data);
+  const original = proposal.original_data
+    ? proposalRecord(proposal.original_data)
+    : null;
   const kind = `${OP_LABEL[proposal.operation] ?? proposal.operation} · ${ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type}`;
 
   return (
@@ -102,7 +106,7 @@ export default function ProposalDetailView({
           <Typography sx={{ fontSize: "0.8125rem", color: "text.secondary" }}>
             Deletion request
             {original
-              ? `: "${(original.name as string | undefined) ?? ""}"`
+              ? `: "${typeof original.name === "string" ? original.name : ""}"`
               : ""}
           </Typography>
         )}

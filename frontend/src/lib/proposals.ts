@@ -1,4 +1,4 @@
-import type { Proposal, ProposalStatus } from "@/lib/api";
+import type { Feature, FeatureType, Proposal, ProposalStatus } from "@/lib/api";
 import { humanize } from "@/lib/format";
 
 export const STATUS_COLOR: Record<
@@ -119,4 +119,85 @@ export function proposalTitle(proposal: Proposal): string {
     | undefined;
   if (featureType) return humanize(featureType);
   return ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type;
+}
+
+type Geometry = Feature["location"];
+
+/** A feature as a proposal carries it: bundled in a section proposal, or the
+ * proposal's own fields on a feature proposal. */
+export interface ProposedFeatureData {
+  feature_type: FeatureType;
+  metadata?: Record<string, unknown> | null;
+  location: Geometry;
+  name?: string | null;
+  description?: string | null;
+  lang_code?: string | null;
+  water_ranges?: Array<{ series_id: number }> | null;
+}
+
+export interface ProposedTranslation {
+  lang_code: string;
+  name?: string | null;
+  description?: string | null;
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function isGeometry(v: unknown): v is Geometry {
+  return isRecord(v) && typeof v.type === "string" && "coordinates" in v;
+}
+
+function isFeatureData(v: unknown): v is ProposedFeatureData {
+  return (
+    isRecord(v) && typeof v.feature_type === "string" && isGeometry(v.location)
+  );
+}
+
+/** The untyped JSON of a proposal, as a record. */
+export function proposalRecord(data: unknown): Record<string, unknown> {
+  return isRecord(data) ? data : {};
+}
+
+/** The place a proposal puts something, if it carries one. */
+export function proposedLocation(
+  data: Record<string, unknown>,
+): Geometry | undefined {
+  return isGeometry(data.location) ? data.location : undefined;
+}
+
+/** Everything a proposal says about the features it adds: those bundled in a
+ * section proposal, or the proposal's own fields when it is one feature. */
+export function proposedFeatures(
+  proposal: Pick<Proposal, "entity_type" | "proposed_data">,
+): ProposedFeatureData[] {
+  const data = proposalRecord(proposal.proposed_data);
+  const bundled = Array.isArray(data.features)
+    ? data.features.filter(isFeatureData)
+    : [];
+  const location = proposedLocation(data);
+  if (proposal.entity_type !== "feature" || !location) return bundled;
+  if (typeof data.feature_type !== "string") return bundled;
+  const own: ProposedFeatureData = {
+    feature_type: data.feature_type as FeatureType,
+    metadata: isRecord(data.metadata) ? data.metadata : null,
+    location,
+    name: typeof data.name === "string" ? data.name : null,
+    lang_code: typeof data.lang_code === "string" ? data.lang_code : null,
+    water_ranges: Array.isArray(data.water_ranges)
+      ? (data.water_ranges as ProposedFeatureData["water_ranges"])
+      : null,
+  };
+  return [...bundled, own];
+}
+
+export function proposedTranslations(
+  data: Record<string, unknown>,
+): ProposedTranslation[] {
+  if (!Array.isArray(data.translations)) return [];
+  return data.translations.filter(
+    (t): t is ProposedTranslation =>
+      isRecord(t) && typeof t.lang_code === "string",
+  );
 }

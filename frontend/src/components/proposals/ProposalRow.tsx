@@ -2,10 +2,11 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import { desktopFlatRow } from "@/components/canvas/flatRow";
+import { openRowSx } from "@/components/openRow";
 import type { Proposal } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
 import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -49,11 +50,9 @@ export default function ProposalRow({
         py: 1.5,
         minHeight: 64,
         borderRadius: `${tokens.radii.md}px`,
-        bgcolor: selected ? `${tokens.primary}${alphas.wash}` : tokens.surface,
-        // The open row takes the teal wash and a 3px bar at its left edge.
-        boxShadow: selected
-          ? `inset 3px 0 0 ${tokens.primary}, ${tokens.elevation.e1}`
-          : tokens.elevation.e1,
+        bgcolor: tokens.surface,
+        boxShadow: tokens.elevation.e1,
+        ...openRowSx(selected),
         ...desktopFlatRow,
         "&.Mui-focusVisible": {
           outline: `2px solid ${tokens.primary}`,

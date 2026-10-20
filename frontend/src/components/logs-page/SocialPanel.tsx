@@ -10,6 +10,7 @@ import Typography from "@mui/material/Typography";
 import { type ReactNode, useState } from "react";
 import { flatRowSx } from "@/components/canvas/flatRow";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
+import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import MemberAvatar from "@/components/trips/MemberAvatar";
 import { useAllUsers, useFollows } from "@/lib/hooks/useFollows";
@@ -106,6 +107,8 @@ export default function SocialPanel() {
     followers,
     pendingRequests,
     isLoading: followsLoading,
+    error: followsError,
+    refetch: refetchFollows,
     follow,
     unfollow,
     accept,
@@ -115,10 +118,9 @@ export default function SocialPanel() {
   const { data: allUsers = [], isLoading: usersLoading } =
     useAllUsers(isAuthenticated);
 
-  const filtered = search.trim()
-    ? allUsers.filter((u) =>
-        u.username.toLowerCase().includes(search.toLowerCase()),
-      )
+  const term = search.trim().toLowerCase();
+  const filtered = term
+    ? allUsers.filter((u) => u.username.toLowerCase().includes(term))
     : [];
 
   return (
@@ -144,7 +146,7 @@ export default function SocialPanel() {
         }}
       />
 
-      {search.trim() && (
+      {term && (
         <Group title="Results">
           {usersLoading && <LoadingBox size={24} pt={1} />}
           {!usersLoading && filtered.length === 0 && quiet("No users found.")}
@@ -177,9 +179,15 @@ export default function SocialPanel() {
         </Group>
       )}
 
-      {followsLoading ? (
-        <LoadingBox size={24} pt={2} />
-      ) : (
+      {followsLoading && <LoadingBox size={24} pt={2} />}
+      {!followsLoading && followsError && (
+        <ErrorState
+          error={followsError}
+          fallback="Could not load your follows."
+          onRetry={refetchFollows}
+        />
+      )}
+      {!followsLoading && !followsError && (
         <>
           {pendingRequests.length > 0 && (
             <Group title={`Pending requests (${pendingRequests.length})`}>

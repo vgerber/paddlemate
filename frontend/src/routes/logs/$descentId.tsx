@@ -13,17 +13,12 @@ import PanelHeader from "@/components/PanelHeader";
 import RowMenu from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
 import MissingState from "@/components/states/MissingState";
-import { descentTitle } from "@/lib/descents";
+import { descentTitle, VISIBILITY_LABELS } from "@/lib/descents";
 import { formatDate } from "@/lib/format";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
+import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useSession } from "@/lib/hooks/useSession";
 import { theme } from "@/lib/theme";
-
-const VISIBILITY_LABELS = {
-  private: "Private",
-  shared: "Shared",
-  public: "Public",
-} as const;
 
 export const Route = createFileRoute("/logs/$descentId")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -34,6 +29,7 @@ export const Route = createFileRoute("/logs/$descentId")({
 
 function LogDetailPage() {
   const navigate = useNavigate();
+  const goBack = useGoBack(() => navigate({ to: "/logs", replace: true }));
   const { descentId } = Route.useParams();
   const { edit } = Route.useSearch();
   const { user } = useSession();
@@ -64,7 +60,7 @@ function LogDetailPage() {
   if (!descent) {
     return (
       <Box sx={embedded ? undefined : { maxWidth: 720, mx: "auto" }}>
-        {!embedded && <PanelHeader title="Log" onBack={() => history.back()} />}
+        {!embedded && <PanelHeader title="Log" onBack={goBack} />}
         <MissingState
           error={error}
           notFound="Log not found."
@@ -153,7 +149,7 @@ function LogDetailPage() {
         <PanelHeader
           title={title}
           subtitle={subtitle}
-          onBack={() => history.back()}
+          onBack={goBack}
           actionButton={menu}
         />
       )}
