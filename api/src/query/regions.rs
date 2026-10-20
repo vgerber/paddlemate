@@ -93,7 +93,6 @@ fn to_region(row: &PgRow) -> Result<Region, sqlx::Error> {
         ]),
         parents: match row.try_get::<Option<Json<Vec<RegionRef>>>, _>("parents") {
             Ok(parents) => parents.map(|p| p.0).unwrap_or_default(),
-            Err(sqlx::Error::ColumnNotFound(_)) => vec![],
             Err(err) => return Err(err),
         },
     })
@@ -242,7 +241,7 @@ const OUTLINE_COLUMNS: &str = "id, name, kind, country, ST_AsGeoJSON(drawn) AS g
 pub async fn fetch(pool: &PgPool, id: i64) -> Result<Option<RegionOutline>, sqlx::Error> {
     let drawn = drawn_geom();
     let row = sqlx::query(&format!(
-        "SELECT {OUTLINE_COLUMNS}, {BBOX_COLUMNS}
+        "SELECT {OUTLINE_COLUMNS}, {BBOX_COLUMNS}, NULL::jsonb AS parents
          FROM (
              SELECT id, name, kind, country, {drawn} AS drawn
              FROM regions WHERE id = $1
@@ -288,7 +287,7 @@ pub async fn in_bbox(
                  ) cut
              ) picked
          )
-         SELECT {OUTLINE_COLUMNS}, {BBOX_COLUMNS},
+         SELECT {OUTLINE_COLUMNS}, {BBOX_COLUMNS}, NULL::jsonb AS parents,
                 ARRAY(SELECT o.id FROM visible o
                       WHERE o.id > v.id AND o.drawn && v.drawn
                         AND ST_Intersects(o.drawn, v.drawn)) AS overlaps

@@ -61,8 +61,7 @@ pub async fn list_favorites(
     let metas = match favorites::list_section_favorites(&app.pg_pool, user_id).await {
         Ok(rows) => rows,
         Err(err) => {
-            tracing::error!("Error listing favorites: {}", err);
-            return ApiError::internal().into_response();
+            return ApiError::from_db("Error listing favorites", err).into_response();
         }
     };
 
@@ -72,8 +71,11 @@ pub async fn list_favorites(
             match features::fetch_features_for_section(&app.pg_pool, meta.id).await {
                 Ok(f) => f,
                 Err(err) => {
-                    tracing::error!("Error fetching features for section {}: {}", meta.id, err);
-                    return ApiError::internal().into_response();
+                    return ApiError::from_db(
+                        &format!("Error fetching features for section {}", meta.id),
+                        err,
+                    )
+                    .into_response();
                 }
             };
         result.push(FavoriteSectionResponse {
@@ -119,8 +121,7 @@ pub async fn add_favorite(
             if msg.contains("foreign key") {
                 return ApiError::not_found("Not found").into_response();
             }
-            tracing::error!("Error adding favorite: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error adding favorite", err).into_response()
         }
     }
 }
@@ -146,10 +147,7 @@ pub async fn remove_favorite(
 
     match favorites::remove_section_favorite(&app.pg_pool, user_id, path.section_id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(err) => {
-            tracing::error!("Error removing favorite: {}", err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error removing favorite", err).into_response(),
     }
 }
 

@@ -72,10 +72,7 @@ pub async fn list_followers(
 
     match followers {
         Ok(users) => Json(users as Vec<User>).into_response(),
-        Err(err) => {
-            tracing::error!("Error listing followers: {}", err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error listing followers", err).into_response(),
     }
 }
 
@@ -101,10 +98,7 @@ pub async fn list_following(
 
     match follows::list_following(&app.pg_pool, user_id).await {
         Ok(users) => Json(users as Vec<User>).into_response(),
-        Err(err) => {
-            tracing::error!("Error listing following: {}", err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error listing following", err).into_response(),
     }
 }
 
@@ -137,8 +131,7 @@ pub async fn follow_user(
             if msg.contains("foreign key") {
                 return ApiError::not_found("Not found").into_response();
             }
-            tracing::error!("Error following user: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error following user", err).into_response()
         }
     }
 }
@@ -167,10 +160,7 @@ pub async fn delete_follow(
     // a request the caller sent and never got answered.
     match follows::delete_follow(&app.pg_pool, user_id, &path.target_id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(err) => {
-            tracing::error!("Error removing follow: {}", err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error removing follow", err).into_response(),
     }
 }
 
@@ -200,10 +190,7 @@ pub async fn update_follower(
     match follows::accept_follow(&app.pg_pool, &path.follower_id, user_id).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            tracing::error!("Error accepting follow request: {}", err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error accepting follow request", err).into_response(),
     }
 }
 
