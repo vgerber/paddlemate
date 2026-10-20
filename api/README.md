@@ -118,13 +118,20 @@ first. All four routes are public, like the entries themselves.
 
 | Route | Returns |
 |---|---|
-| `GET /waterways/{id}/history` | steps of the river |
-| `GET /waterways/{id}/sections/{section_id}/history` | steps of the section |
-| `GET /waterways/{id}/sections/{section_id}/features/{feature_id}/history` | steps of the feature, also after it was deleted (the feature itself answers 404) |
+| `GET /waterways/{id}/history` | steps of the river, also after it was deleted |
+| `GET /waterways/{id}/sections/{section_id}/history` | steps of the section, also after it (or its river) was deleted |
+| `GET /waterways/{id}/sections/{section_id}/features/{feature_id}/history` | steps of the feature, also after it (or its section or river) was deleted |
 | `GET /waterways/{id}/sources` | every source (with its step count) and contributor (with step count and last step) for the river, its sections and features; `?section_id=` narrows both to that section and its features (404 when the section is not in this river) |
 
+A deleted entity keeps its history under the path it had; the entity itself
+answers 404. An id that never existed under that path, or exists under another
+parent, answers 404. Deleting a river or section writes a `deleted` step for
+each section and feature that goes with it. The app reads a removed feature's
+history from the feature route above with the ids it still holds.
+The `sources` view needs a live river.
+
 History routes page with `page` and `per_page` (default 50, max 100) and
-return `items`, `page`, `per_page`, `total`, `total_pages`. A step has `kind`
+return `items`, `page`, `per_page`, `total`, `total_pages` (schema `PaginatedResponse_for_HistoryStep`). A step has `kind`
 (`imported`, `created`, `proposal_accepted`, `edited`, `deleted`), `at`,
 `actor` and `reviewer` (id and username only), `source` (imports),
 `proposal_id`, `proposal_note` (the submitter's note on that proposal, if any)
@@ -169,7 +176,7 @@ binaries and the separate translation endpoints (`.../names/{lang}`,
 
 Retention: history is the audit trail and is kept for as long as the data. There
 is no cleanup and no cascade from the entity; each step is bounded instead (32
-fields, 200 characters per value).
+fields, 200 characters per field name or value).
 
 Proposal responses carry `submitted_by_name` and `reviewed_by_name`.
 
