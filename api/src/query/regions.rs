@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use sqlx::{PgPool, Row, postgres::PgRow, types::Json};
 
+use super::FUZZY_MIN_CHARS;
 use crate::models::{
     geometry::Geometry,
     region::{CountryBorder, Region, RegionKind, RegionOutline, RegionRef},
@@ -145,12 +146,21 @@ fn drawn_geom() -> String {
 const BBOX_COLUMNS: &str = "ST_XMin(drawn) AS west, ST_YMin(drawn) AS south, \
                             ST_XMax(drawn) AS east, ST_YMax(drawn) AS north";
 
+/// Simplification tolerance is the viewport width over this many pixels, so
+/// a drawn outline loses about a pixel of detail. Outlines are drawn in a
+/// card narrower than the full screen, hence fewer pixels than borders.
+const OUTLINE_PIXELS: f64 = 1500.0;
+
+/// The same for country borders, which are drawn across a screen about this
+/// many pixels wide.
+const BORDER_PIXELS: f64 = 1000.0;
+
+/// Finest tolerance for a border, in degrees (a few meters).
+const MIN_TOLERANCE_DEG: f64 = 0.00005;
+
 /// Order that puts the largest region first, so the small ones draw on top
 /// of it and win the click. Envelope area covers lines too.
 const BY_SIZE: &str = "ORDER BY ST_Area(ST_Envelope(geom)) DESC, name";
-
-/// Fuzzy matching starts at this many characters, as in the river search.
-const FUZZY_MIN_CHARS: usize = 4;
 
 /// Countries whose English name matches the search term `$1`.
 const COUNTRY_MATCH: &str = "SELECT cn.country FROM country_names cn
@@ -258,7 +268,7 @@ pub async fn in_bbox(
     let drawn = drawn_geom();
     // Stored outlines are far finer than a screen: a Europe-wide state view
     // was 5 MB of vertices. Thin them to about a pixel of the viewport.
-    let tolerance = (east - west).max(north - south) / 1500.0;
+    let tolerance = (east - west).max(north - south) / OUTLINE_PIXELS;
     let kinds: Vec<&str> = kinds.iter().copied().map(RegionKind::as_str).collect();
     // Overlaps are found on the thinned shapes, which is what is drawn.
     let rows = sqlx::query(&format!(
@@ -405,10 +415,10 @@ pub async fn country_borders(
 ) -> Result<Vec<CountryBorder>, sqlx::Error> {
     let (south, west, north, east) = bbox;
     // A pixel's worth of detail on a screen about a thousand pixels wide.
-    let tolerance = ((east - west) / 1000.0).max(0.00005);
+    let tolerance = ((east - west) / BORDER_PIXELS).max(MIN_TOLERANCE_DEG);
     let rows = sqlx::query(
         "WITH box AS (SELECT ST_MakeEnvelope($1, $2, $3, $4, 4326) AS g)
-         SELECT b.name, b.country, b.line,
+         SELECT b.name, b.country,
                 ST_AsGeoJSON(ST_SimplifyPreserveTopology(b.line, $5)) AS geometry,
                 ARRAY(SELECT n.neighbour::text FROM country_borders n, box
                       WHERE n.country = b.country AND n.line && box.g

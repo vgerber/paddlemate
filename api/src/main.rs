@@ -321,6 +321,9 @@ async fn main() {
         .nest_api_service(&base_url, api_v1)
         .finish_api_with(&mut api, api_docs)
         .layer(Extension(Arc::new(api)))
+        .layer(middleware::from_fn(
+            paddlemate_api::layers::rejection::envelope_rejections,
+        ))
         .merge(media);
 
     // Applied inside CORS on purpose: a rejected request still needs the CORS

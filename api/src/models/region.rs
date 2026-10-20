@@ -136,5 +136,5 @@ pub struct RegionOutlineList {
     /// Requested `kinds` left out because the viewport is wider than they
     /// can be drawn at. Always empty without `kinds`.
     #[serde(default)]
-    pub hidden_kinds: Vec<String>,
+    pub hidden_kinds: Vec<RegionKind>,
 }
