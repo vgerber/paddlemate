@@ -110,11 +110,6 @@ export function useMapPageState(search: RouteSearch) {
     [featurePicker.seedFromFeature],
   );
 
-  // Preview line drawn on the map (e.g. OSM river highlight in suggest flows)
-  const [sectionPreviewCoords, setSectionPreviewCoords] = useState<
-    [number, number][] | null
-  >(null);
-
   const [suggestMode, setSuggestMode] = useState<SuggestMode | null>(null);
   // Name prefill for the "suggest new river" panel (from the search field)
   const [suggestWaterwayName, setSuggestWaterwayName] = useState("");
@@ -452,7 +447,6 @@ export function useMapPageState(search: RouteSearch) {
 
   /** Clears all suggest/feature-picking state (called when suggestMode is set to null). */
   const clearSuggestState = useCallback(() => {
-    setSectionPreviewCoords(null);
     setSuggestWaterwayName("");
     featurePicker.reset();
   }, [featurePicker.reset]);
@@ -506,8 +500,6 @@ export function useMapPageState(search: RouteSearch) {
     setFeatureVertices,
     editFeature,
     startEditFeature,
-    sectionPreviewCoords,
-    setSectionPreviewCoords,
     suggestMode,
     setSuggestMode,
     suggestWaterwayName,

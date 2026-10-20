@@ -54,16 +54,6 @@ export function useSectionWaterStatuses(
   });
 }
 
-/** Water status for every section of one waterway. */
-export function useAllSectionWaterStatus(
-  waterwayId: number,
-  sectionIds: number[],
-) {
-  return useSectionWaterStatuses(
-    sectionIds.map((sectionId) => ({ waterwayId, sectionId })),
-  );
-}
-
 /** Water statuses plus a sectionId -> current level map, for coloring
  * section lines and list chips. `unknown` holds the sections whose request
  * failed or came back without a current level (no gauge, uncalibrated or

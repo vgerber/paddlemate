@@ -29,7 +29,3 @@ export function useWindowSize(): Viewport {
   }, []);
   return size;
 }
-
-export function useWindowWidth(): number {
-  return useWindowSize().w;
-}

@@ -43,19 +43,3 @@ export function useCanvasLayout(): CanvasLayoutInfo {
   const windowWidth = useLayout((s) => s.viewport.w);
   return { free, dockMode: mode, windowWidth };
 }
-
-/** How much the open cards cover against what they may cover, and which are
- * folded to their header to stay inside the budget. */
-export function useCoverBudget(): {
-  used: number;
-  limit: number;
-  collapsedIds: string[];
-} {
-  const used = useLayout((s) => s.used);
-  const limit = useLayout((s) => s.limit);
-  const placements = useLayout((s) => s.placements);
-  const collapsedIds = [...placements.values()]
-    .filter((p) => p.collapsed)
-    .map((p) => p.id);
-  return { used, limit, collapsedIds };
-}
