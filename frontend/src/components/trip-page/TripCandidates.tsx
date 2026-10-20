@@ -133,7 +133,7 @@ function SupportBar({ up, down }: { up: number; down: number }) {
         sx={{
           flex: 1,
           height: 6,
-          borderRadius: "3px",
+          borderRadius: `${tokens.radii.xs}px`,
           overflow: "hidden",
           bgcolor: `${tokens.outlineVariant}${alphas.hairline}`,
           display: "flex",

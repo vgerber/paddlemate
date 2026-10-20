@@ -180,12 +180,12 @@ export default function TripDetail({
     onDeleteStay: setConfirmDeleteStay,
   };
 
-  const paneSx = () => ({
+  const paneSx = {
     flex: 1,
     minHeight: 0,
     display: "flex",
     flexDirection: "column",
-  });
+  } as const;
 
   const paneBody = (t: TripTab) => {
     if (t === "plan") {
@@ -294,14 +294,14 @@ export default function TripDetail({
           flexDirection: "column",
         }}
       >
-        <Box data-testid="trip-pane" {...swipe.paneProps} sx={paneSx()}>
+        <Box data-testid="trip-pane" {...swipe.paneProps} sx={paneSx}>
           {paneBody(tab)}
         </Box>
         <SwipeGhost
           swipe={swipe}
           index={tabIndex}
           count={tabs.length}
-          sx={() => paneSx()}
+          sx={() => paneSx}
         >
           {(i) => paneBody(tabs[i].value)}
         </SwipeGhost>

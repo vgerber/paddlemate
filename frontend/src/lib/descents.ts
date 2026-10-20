@@ -61,3 +61,10 @@ export function descentTitle(
     "Descent"
   );
 }
+
+/** How a log's audience reads, by visibility type. */
+export const VISIBILITY_LABELS = {
+  private: "Private",
+  shared: "Shared",
+  public: "Public",
+} as const;

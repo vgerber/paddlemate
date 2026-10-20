@@ -4,19 +4,13 @@ import { desktopFlatRow } from "@/components/canvas/flatRow";
 import { openRowSx } from "@/components/openRow";
 import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
-import { descentRivers, descentTitle } from "@/lib/descents";
+import { descentRivers, descentTitle, VISIBILITY_LABELS } from "@/lib/descents";
 import { durationLabel, formatDate, formatTime, timeAgo } from "@/lib/format";
 import { transition } from "@/lib/motion";
 import { alphas, theme } from "@/lib/theme";
 import { levelAtTime } from "./levelAtTime";
 
 const { tokens } = theme;
-
-const VISIBILITY = {
-  private: "Private",
-  shared: "Shared",
-  public: "Public",
-} as const;
 
 /** Who can see a log: one plain word. */
 export function VisibilityTag({
@@ -34,7 +28,7 @@ export function VisibilityTag({
         fontWeight: 500,
       }}
     >
-      {VISIBILITY[type]}
+      {VISIBILITY_LABELS[type]}
     </Box>
   );
 }

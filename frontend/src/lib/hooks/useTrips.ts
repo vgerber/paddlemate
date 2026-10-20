@@ -123,7 +123,6 @@ export function useAddTripMember(id: number) {
     mutationFn: (userId: string) => tripsApi.addMember(id, userId),
     meta: { errorHandledLocally: true },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: tripKeys.members(id) });
       qc.invalidateQueries({ queryKey: tripKeys.detail(id) });
       qc.invalidateQueries({ queryKey: tripKeys.lists() });
     },

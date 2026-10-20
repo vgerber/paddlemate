@@ -13,18 +13,12 @@ import PanelHeader from "@/components/PanelHeader";
 import RowMenu from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
 import MissingState from "@/components/states/MissingState";
-import { descentTitle } from "@/lib/descents";
+import { descentTitle, VISIBILITY_LABELS } from "@/lib/descents";
 import { formatDate } from "@/lib/format";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
 import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useSession } from "@/lib/hooks/useSession";
 import { theme } from "@/lib/theme";
-
-const VISIBILITY_LABELS = {
-  private: "Private",
-  shared: "Shared",
-  public: "Public",
-} as const;
 
 export const Route = createFileRoute("/logs/$descentId")({
   validateSearch: (search: Record<string, unknown>) => ({
