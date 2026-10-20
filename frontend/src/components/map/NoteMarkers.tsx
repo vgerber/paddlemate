@@ -3,7 +3,9 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { Marker, Popup } from "react-map-gl/maplibre";
+import { transition } from "@/lib/motion";
 import { labelSx, theme } from "@/lib/theme";
+import { MARKER_SHADOW, MARKER_SHADOW_RAISED } from "./markerStyle";
 
 const { tokens } = theme;
 
@@ -88,10 +90,10 @@ export default function NoteMarkers({
                     ? `2px solid ${tokens.white}`
                     : `2px solid ${pin.color}`,
                   // Map-marker legibility shadow (documented token exception)
-                  boxShadow: selected
-                    ? "0 0 0 2px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.6)"
-                    : "0 1px 4px rgba(0,0,0,0.5)",
-                  transition: "width 0.1s, height 0.1s",
+                  boxShadow: selected ? MARKER_SHADOW_RAISED : MARKER_SHADOW,
+                  transition: transition(["width", "height"], {
+                    duration: "instant",
+                  }),
                 }}
               >
                 <ChatBubbleIcon

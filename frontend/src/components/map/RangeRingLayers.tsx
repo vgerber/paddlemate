@@ -1,6 +1,7 @@
 import { Layer, Marker, Source } from "react-map-gl/maplibre";
 import { circleGeoJSON } from "@/lib/geo";
 import { fonts, theme } from "@/lib/theme";
+import { MARKER_SHADOW } from "./markerStyle";
 
 const { tokens } = theme;
 
@@ -113,14 +114,14 @@ export default function RangeRingLayers({ rings }: { rings: RangeRing[] }) {
               color: ring.proposed ? ring.color : tokens.white,
               border: ring.proposed
                 ? `2px dashed ${ring.color}`
-                : "2px solid white",
+                : `2px solid ${tokens.surfaceLowest}`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontFamily: fonts.label,
               fontSize: 12,
               fontWeight: 700,
-              boxShadow: "0 1px 4px rgba(0,0,0,0.6)",
+              boxShadow: MARKER_SHADOW,
               pointerEvents: "none",
             }}
           >

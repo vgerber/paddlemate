@@ -3,8 +3,10 @@ import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { Marker, Popup } from "react-map-gl/maplibre";
 import type { components } from "@/lib/api/schema";
+import { transition } from "@/lib/motion";
 import { labelSx, theme } from "@/lib/theme";
 import { levelMarkerColor } from "@/lib/waterLevel";
+import { MARKER_SHADOW, MARKER_SHADOW_RAISED } from "./markerStyle";
 
 type WaterLevel = components["schemas"]["WaterLevel"];
 
@@ -64,21 +66,33 @@ export default function GaugeMarkers({
                   : onClick?.(pin)
               }
               style={{
-                width: emphasized ? 18 : 14,
-                height: emphasized ? 18 : 14,
-                borderRadius: "50%",
-                background: color,
-                border: isSelected
-                  ? `3px solid ${theme.tokens.white}`
-                  : `2px solid ${theme.tokens.background}`,
-                boxShadow: isSelected
-                  ? `0 0 0 2px ${theme.tokens.background}, 0 2px 6px rgba(0,0,0,0.6)`
-                  : "0 1px 4px rgba(0,0,0,0.5)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: theme.tokens.touch.min,
+                height: theme.tokens.touch.min,
+                background: "transparent",
+                border: "none",
                 cursor: "pointer",
-                transition: "width 0.1s, height 0.1s",
                 padding: 0,
               }}
-            />
+            >
+              <span
+                style={{
+                  width: emphasized ? 18 : 14,
+                  height: emphasized ? 18 : 14,
+                  borderRadius: "50%",
+                  background: color,
+                  border: isSelected
+                    ? `3px solid ${theme.tokens.white}`
+                    : `2px solid ${theme.tokens.background}`,
+                  boxShadow: isSelected ? MARKER_SHADOW_RAISED : MARKER_SHADOW,
+                  transition: transition(["width", "height"], {
+                    duration: "instant",
+                  }),
+                }}
+              />
+            </button>
           </Marker>
         );
       })}
