@@ -294,61 +294,68 @@ export default function WaterwayBrowsePanel({
         ? { xs: 9, md: inFeatures ? `${panel.gutter}px` : 0 }
         : 1,
   });
-  const paneBody = (t: string) => (
-    <>
-      {!isLoading && chartTab(t) && chart}
-      {isLoading ? (
-        <LoadingBox size={22} />
-      ) : inFeatures ? (
-        t === "logs" ? (
-          <SectionLogsList sectionId={selectedSection.id} />
-        ) : t === "sources" ? (
-          <SourcesTab
-            section={selectedSection}
-            filter={
-              editsFilter.sectionId === selectedSection.id
-                ? editsFilter.filter
-                : null
-            }
-            onFilterChange={(filter) =>
-              setEditsFilter({ sectionId: selectedSection.id, filter })
-            }
-            onEditFeature={featureTimeline?.onEditFeature}
-          />
-        ) : t === "notes" ? (
-          <CommentThread
-            waterwayId={waterwayId}
-            sectionId={selectedSection.id}
-            mapPin={noteMapPin}
-          />
-        ) : (
-          <>
-            <FeatureTimeline
-              section={selectedSection}
-              proposals={featureTimeline?.proposals ?? []}
-              showProposed={featureTimeline?.showProposed ?? false}
-              onFeatureClick={featureTimeline?.onFeatureClick}
-              onEditFeature={featureTimeline?.onEditFeature}
-              activeFeatureId={featureTimeline?.activeFeatureId}
-              onActiveFeatureChange={featureTimeline?.onActiveFeatureChange}
-              onOpenHistory={(filter) => {
-                setEditsFilter({ sectionId: selectedSection.id, filter });
-                onSectionDetailTabChange("sources");
-              }}
-            />
-            <Box
-              data-testid="river-state-slot"
-              sx={{
-                flex: "1 1 0",
-                mx: { xs: 1.5, md: 0 },
-                minHeight: { xs: riverState ? 96 : 0, md: 0 },
-              }}
-            >
-              {riverState}
-            </Box>
-          </>
-        )
-      ) : t === "sections" ? (
+  /** The open section's tabs. */
+  const sectionPane = (t: string) => {
+    if (!selectedSection) return null;
+    if (t === "logs") return <SectionLogsList sectionId={selectedSection.id} />;
+    if (t === "sources") {
+      return (
+        <SourcesTab
+          section={selectedSection}
+          filter={
+            editsFilter.sectionId === selectedSection.id
+              ? editsFilter.filter
+              : null
+          }
+          onFilterChange={(filter) =>
+            setEditsFilter({ sectionId: selectedSection.id, filter })
+          }
+          onEditFeature={featureTimeline?.onEditFeature}
+        />
+      );
+    }
+    if (t === "notes") {
+      return (
+        <CommentThread
+          waterwayId={waterwayId}
+          sectionId={selectedSection.id}
+          mapPin={noteMapPin}
+        />
+      );
+    }
+    return (
+      <>
+        <FeatureTimeline
+          section={selectedSection}
+          proposals={featureTimeline?.proposals ?? []}
+          showProposed={featureTimeline?.showProposed ?? false}
+          onFeatureClick={featureTimeline?.onFeatureClick}
+          onEditFeature={featureTimeline?.onEditFeature}
+          activeFeatureId={featureTimeline?.activeFeatureId}
+          onActiveFeatureChange={featureTimeline?.onActiveFeatureChange}
+          onOpenHistory={(filter) => {
+            setEditsFilter({ sectionId: selectedSection.id, filter });
+            onSectionDetailTabChange("sources");
+          }}
+        />
+        <Box
+          data-testid="river-state-slot"
+          sx={{
+            flex: "1 1 0",
+            mx: { xs: 1.5, md: 0 },
+            minHeight: { xs: riverState ? 96 : 0, md: 0 },
+          }}
+        >
+          {riverState}
+        </Box>
+      </>
+    );
+  };
+
+  /** The river's tabs. */
+  const riverPane = (t: string) => {
+    if (t === "sections") {
+      return (
         <SectionsList
           sections={sections}
           waterwayId={waterwayId}
@@ -356,18 +363,35 @@ export default function WaterwayBrowsePanel({
           onSectionClick={onSectionClick}
           descentCounts={descentCounts}
         />
-      ) : t === "notes" ? (
+      );
+    }
+    if (t === "notes") {
+      return (
         <CommentThread
           waterwayId={waterwayId}
           sections={sections}
           mapPin={noteMapPin}
         />
+      );
+    }
+    return (
+      <GaugesList
+        gaugeRanges={gaugeRanges}
+        selectedGaugeId={selectedGaugeId}
+        onGaugeSelect={onGaugeSelect}
+      />
+    );
+  };
+
+  const paneBody = (t: string) => (
+    <>
+      {!isLoading && chartTab(t) && chart}
+      {isLoading ? (
+        <LoadingBox size={22} />
+      ) : inFeatures ? (
+        sectionPane(t)
       ) : (
-        <GaugesList
-          gaugeRanges={gaugeRanges}
-          selectedGaugeId={selectedGaugeId}
-          onGaugeSelect={onGaugeSelect}
-        />
+        riverPane(t)
       )}
     </>
   );
