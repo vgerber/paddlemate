@@ -5,13 +5,14 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
 import EmptyState from "@/components/states/EmptyState";
+import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
+import type { DotKind } from "@/components/TimelineRail";
 import {
   featureName,
   sentence,
 } from "@/components/waterway/section-details/utils";
 import type { HistoryStep, SectionWithFeatures } from "@/lib/api";
-import { apiErrorMessage } from "@/lib/api/client";
 import { formatDate, humanize } from "@/lib/format";
 import { useSession } from "@/lib/hooks/useSession";
 import { localizedName } from "@/lib/localization";
@@ -24,7 +25,6 @@ import {
   sameEntry,
 } from "./editsFeed";
 import HistoryChanges from "./HistoryChanges";
-import type { DotKind } from "./HistoryRail";
 import ProposalStep, { ReviewNote } from "./ProposalStep";
 import StepRow, { Byline, smallSx } from "./StepRow";
 import { stepByline, stepHeadline } from "./steps";
@@ -274,11 +274,10 @@ export default function EditsTimeline({
   if (histories.isLoading) return <LoadingBox size={28} py={4} />;
   if (histories.error) {
     return (
-      <EmptyState
-        title={apiErrorMessage(
-          histories.error,
-          "The history could not be loaded.",
-        )}
+      <ErrorState
+        error={histories.error}
+        fallback="The history could not be loaded."
+        onRetry={histories.refetch}
       />
     );
   }

@@ -2,8 +2,8 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import StatusChip from "@/components/proposals/StatusChip";
+import TimelineRail, { type DotKind } from "@/components/TimelineRail";
 import type { ProposalStatus } from "@/lib/api";
-import HistoryRail, { type DotKind } from "./HistoryRail";
 import type { BylinePart } from "./steps";
 
 export const smallSx = { fontSize: "0.8125rem", lineHeight: "18px" } as const;
@@ -73,7 +73,7 @@ export default function StepRow({
         pr: 2,
       }}
     >
-      <HistoryRail kind={kind} first={first} last={last} />
+      <TimelineRail kind={kind} isFirst={first} isLast={last} />
       <Box sx={{ minWidth: 0, pt: 0.75, pb: 1.75 }}>
         {lead}
         <Typography

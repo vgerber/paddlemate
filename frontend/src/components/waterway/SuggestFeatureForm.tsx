@@ -145,9 +145,10 @@ export default function SuggestFeatureForm({
   }, [geomType, vertices.length, pickingActive, onStopPick]);
 
   const canSubmit =
+    !submitting &&
+    gaugePicker.thresholdError == null &&
     ((useSectionLine && geomType === "LineString" && !!sectionLine) ||
-      (vertices.length >= minVerticesFor(geomType) && !submitting)) &&
-    gaugePicker.thresholdError == null;
+      vertices.length >= minVerticesFor(geomType));
 
   // No dependency list: keep the parent's submit ref pointing at the latest
   // handleSubmit

@@ -34,12 +34,12 @@ const { tokens } = theme;
 
 /** The page's control scale - MUI's own runs bigger than everything here. */
 const selectSx = {
-  "& .MuiInputBase-input": { fontSize: { xs: "1rem", md: "0.8125rem" } },
-  "& .MuiInputBase-inputSizeSmall": { py: { xs: "12px", md: "8.5px" } },
+  "& .MuiInputBase-input": { fontSize: "1rem" },
+  "& .MuiInputBase-inputSizeSmall": { py: "12px" },
 } as const;
 const menuItemSx = {
-  fontSize: { xs: "0.9rem", md: "0.8125rem" },
-  minHeight: { xs: 44, md: 32 },
+  fontSize: "1rem",
+  minHeight: tokens.touch.min,
 } as const;
 /** The composer at thumb size on a phone, panel size on desktop. 16px on
  * mobile is deliberate: anything smaller makes iOS zoom the page on focus.
@@ -47,11 +47,11 @@ const menuItemSx = {
  * line the icons belong in the middle of it. */
 const composerSx = (open: boolean) =>
   ({
-    "& .MuiInputBase-input": { fontSize: { xs: "1rem", md: "0.8125rem" } },
+    "& .MuiInputBase-input": { fontSize: "1rem" },
     ...(open
       ? {}
       : {
-          "& .MuiInputBase-inputSizeSmall": { py: { xs: "12px", md: "8.5px" } },
+          "& .MuiInputBase-inputSizeSmall": { py: "12px" },
         }),
     "& .MuiInputBase-root": { pr: 0.5, minHeight: 48 },
     // Only the icons follow the box as it grows; the text keeps its own
@@ -63,10 +63,11 @@ const composerSx = (open: boolean) =>
     },
   }) as const;
 
-/** Touch targets: a phone needs the full 40px, a mouse does not. */
+/** Icon buttons keep the 44px touch box at every width. */
 const composerIconSx = {
-  p: { xs: 1, md: 0.5 },
-  "& .MuiSvgIcon-root": { fontSize: { xs: 20, md: 17 } },
+  width: tokens.touch.min,
+  height: tokens.touch.min,
+  "& .MuiSvgIcon-root": { fontSize: 20 },
 } as const;
 
 /** Notes on a river: the thread, and a composer that can carry photos.

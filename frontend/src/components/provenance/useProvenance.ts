@@ -77,6 +77,9 @@ export function useEntryHistories(targets: HistoryTarget[]) {
       data: results.map((r) => r.data?.items),
       isLoading: results.some((r) => r.isLoading),
       error: results.find((r) => r.error)?.error ?? null,
+      refetch: () => {
+        for (const r of results) if (r.error) r.refetch();
+      },
     }),
   });
 }

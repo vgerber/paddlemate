@@ -13,7 +13,7 @@ import IconButton from "@mui/material/IconButton";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import EmptyState from "@/components/states/EmptyState";
+import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type {
   Feature,
@@ -22,7 +22,6 @@ import type {
   SectionWithFeatures,
   WaterwaySources,
 } from "@/lib/api";
-import { apiErrorMessage } from "@/lib/api/client";
 import { formatDate } from "@/lib/format";
 import { useWaterwayMedia } from "@/lib/hooks/useComments";
 import { useWaterwayGauges } from "@/lib/hooks/useGauges";
@@ -369,11 +368,10 @@ export default function SourcesTab({
   if (sources.isLoading) return <LoadingBox size={28} py={4} />;
   if (sources.error) {
     return (
-      <EmptyState
-        title={apiErrorMessage(
-          sources.error,
-          "The sources could not be loaded.",
-        )}
+      <ErrorState
+        error={sources.error}
+        fallback="The sources could not be loaded."
+        onRetry={() => sources.refetch()}
       />
     );
   }

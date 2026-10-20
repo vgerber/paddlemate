@@ -1,66 +1,79 @@
 import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
+/** How an entry's dot reads: filled for a change that happened (or a plain
+ * stop), hollow grey for where the entry began, hollow teal for something
+ * not yet real. */
+export type DotKind = "done" | "origin" | "pending" | "gone";
+
+const DOT = 12;
+
+function dotSx(kind: DotKind, top: number) {
+  const hollow = kind === "origin" || kind === "pending";
+  const color = {
+    done: tokens.primary,
+    pending: tokens.primary,
+    origin: tokens.onSurfaceVariant,
+    gone: tokens.onSurfaceVariant,
+  }[kind];
+  return {
+    position: "relative",
+    zIndex: 1,
+    mt: `${top}px`,
+    width: DOT,
+    height: DOT,
+    boxSizing: "border-box",
+    borderRadius: "50%",
+    border: `2px solid ${color}`,
+    bgcolor: hollow ? tokens.surface : color,
+    // The halo keeps the line from touching the dot.
+    outline: `3px solid ${tokens.surface}`,
+  } as const;
+}
+
 /** The left rail of a timeline entry: a dot on the entry's first line and a
- * connector down to the next one. `hollow` marks something not yet real - a
- * proposed feature, a planned day. */
+ * connector up to the previous entry and down to the next one. `dotTop` is
+ * where the dot starts below the top of the entry. */
 export default function TimelineRail({
+  kind = "done",
+  isFirst = true,
   isLast = false,
-  hollow = false,
+  dotTop = 12,
 }: {
+  kind?: DotKind;
+  isFirst?: boolean;
   isLast?: boolean;
-  hollow?: boolean;
+  dotTop?: number;
 }) {
+  const lineEnd = dotTop + DOT / 2;
   return (
-    <Stack
-      direction="column"
+    <Box
+      aria-hidden
       sx={{
-        width: 16,
+        position: "relative",
+        display: "grid",
+        justifyItems: "center",
+        alignContent: "start",
+        minWidth: 16,
         flexShrink: 0,
-        // Centers the 10px dot on the first text line.
-        pt: "7px",
-        alignItems: "center",
-        alignSelf: "stretch",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          left: "calc(50% - 1px)",
+          width: 2,
+          top: isFirst ? `${lineEnd}px` : 0,
+          bottom: isLast ? `calc(100% - ${lineEnd}px)` : 0,
+          bgcolor: tokens.outlineVariant,
+        },
       }}
     >
       <Box
-        sx={
-          hollow
-            ? {
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                border: `2px solid ${tokens.outline}`,
-                bgcolor: tokens.surface,
-                flexShrink: 0,
-                mb: "4px",
-              }
-            : {
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                bgcolor: tokens.primary,
-                flexShrink: 0,
-                mb: "4px",
-              }
-        }
+        data-testid="history-dot"
+        data-kind={kind}
+        sx={dotSx(kind, dotTop)}
       />
-      {!isLast && (
-        <Box
-          sx={{
-            width: 2,
-            flex: 1,
-            minHeight: 20,
-            bgcolor: tokens.outlineVariant,
-            borderRadius: `${tokens.radii.pill}px`,
-            mt: "4px",
-            mb: "4px",
-          }}
-        />
-      )}
-    </Stack>
+    </Box>
   );
 }
