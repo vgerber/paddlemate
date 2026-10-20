@@ -1,13 +1,9 @@
 import { useMemo } from "react";
-import ChartCard from "@/components/charts/ChartCard";
-import { ChartBody } from "@/components/charts/ChartStatus";
 import { useChartPanelState } from "@/components/charts/chartState";
 import ReadingChart, {
   type ChartPlacement,
 } from "@/components/charts/ReadingChart";
-import WaterChart from "@/components/charts/water/WaterChart";
 import { GaugeAttributions } from "@/components/GaugeAttribution";
-import { useIsSwipeGhost } from "@/components/SwipeGhost";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
 
 interface SectionChartPanelProps {
@@ -20,7 +16,7 @@ interface SectionChartPanelProps {
   selectedFeature?: { name: string; type: string } | null;
   /** Feature owning the section's default thresholds (whitewater). */
   preferredFeatureId?: number | null;
-  /** Where the chart sits; the phone keeps its own card. */
+  /** Where the chart sits. */
   placement: ChartPlacement;
 }
 
@@ -39,7 +35,6 @@ export default function SectionChartPanel({
     error,
     refetch,
   } = useWaterStatus(waterwayId, sectionId);
-  const ghost = useIsSwipeGhost();
   const { timeRange, setTimeRange, measurementType, setMeasurementType } =
     useChartPanelState();
 
@@ -48,51 +43,20 @@ export default function SectionChartPanel({
     [waterStatus?.ranges],
   );
   const footer = <GaugeAttributions sources={ranges.map((r) => r.source)} />;
-  if (placement !== "phone") {
-    return (
-      <ReadingChart
-        placement={placement}
-        ranges={ranges}
-        status={{ isLoading, isError, error, refetch }}
-        timeRange={timeRange}
-        onTimeRangeChange={setTimeRange}
-        measurementType={measurementType}
-        onMeasurementTypeChange={setMeasurementType}
-        preferredFeatureId={preferredFeatureId}
-        selectedFeatureId={selectedFeatureId}
-        selectedFeature={selectedFeature}
-        thresholdsAvailable
-        footer={footer}
-      />
-    );
-  }
   return (
-    <ChartCard
+    <ReadingChart
+      placement={placement}
       ranges={ranges}
+      status={{ isLoading, isError, error, refetch }}
       timeRange={timeRange}
       onTimeRangeChange={setTimeRange}
       measurementType={measurementType}
       onMeasurementTypeChange={setMeasurementType}
       preferredFeatureId={preferredFeatureId}
-      short={isLoading || isError}
+      selectedFeatureId={selectedFeatureId}
+      selectedFeature={selectedFeature}
+      thresholdsAvailable
       footer={footer}
-    >
-      {(headroom) => (
-        <ChartBody
-          load={{ isLoading, isError, error, refetch }}
-          pending={ghost}
-        >
-          <WaterChart
-            ranges={ranges}
-            selectedFeatureId={selectedFeatureId}
-            selectedFeature={selectedFeature}
-            preferredFeatureId={preferredFeatureId}
-            timeRange={timeRange}
-            measurementType={measurementType}
-            headroom={headroom}
-          />
-        </ChartBody>
-      )}
-    </ChartCard>
+    />
   );
 }

@@ -8,12 +8,10 @@ import {
   gotoSection,
 } from "../support/fixture";
 
-// WP5: the phone's chart card that opens, the gauge cards and the credit line
+// WP5: the phone's chart card, the gauge cards and the credit line
 // (doc/plans/ui-overhaul/calm-design.html, "A chart that opens for its
 // options"), and the desktop's reading block and rail. The fixture gauge reads
 // about 85 cm with thresholds 60/80/120.
-
-const PERIODS = ["24h", "7d", "1M", "3M", "6M", "1Y"];
 
 function card(page: Page) {
   return page.locator('[data-testid="chart-card"]:visible').first();
@@ -38,30 +36,97 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test.describe("closed card", () => {
+test.describe("phone card", () => {
   test.skip(({ isMobile }) => !isMobile, "the phone's chart card");
-  test("shows the reading, its time and the period, and one 44px button", async ({
+
+  const withFlow = async (page: Page) => {
+    await page.route(/\/water-status$/, async (route) => {
+      const res = await route.fetch();
+      const body = await res.json();
+      const level = body.ranges[0];
+      if (!level) return route.fulfill({ response: res, json: body });
+      body.ranges = [
+        ...body.ranges,
+        {
+          ...level,
+          id: 99001,
+          series: {
+            ...level.series,
+            id: 99401,
+            measurement_type: "discharge",
+            unit: "m3/s",
+          },
+          range_low: null,
+          range_medium: null,
+          range_high: null,
+          latest_reading: {
+            ...level.latest_reading,
+            series_id: 99401,
+            value: 12.4,
+          },
+        },
+      ];
+      await route.fulfill({ response: res, json: body });
+    });
+    await page.route(/\/series\/99401\/readings/, (route) =>
+      route.fulfill({ json: [] }),
+    );
+  };
+
+  test("the head shows the latest reading, its level and when", async ({
     page,
   }) => {
     await openSection(page);
-    const outline = card(page).getByTestId("chart-outline");
-    await expect(outline).toContainText(/^\d+(\.\d)? cm/);
-    await expect(outline).toContainText(/\d{2}:\d{2} · 7d$/);
-    const button = card(page).getByRole("button", { name: "Chart options" });
-    await expect(button).toHaveAttribute("aria-expanded", "false");
-    await expectTouchTargets(button);
-    // Closed means no options: no period chips.
-    await expect(card(page).getByRole("button", { name: "1M" })).toHaveCount(0);
+    const head = card(page).getByTestId("reading-block");
+    await expect(head.getByTestId("reading-value")).toContainText(
+      /^\d+(\.\d)?\s*cm$/,
+    );
+    await expect(head.getByTestId("reading-level")).toContainText(
+      /Low|Medium|High/,
+    );
+    await expect(head.getByTestId("reading-time")).toContainText(
+      /^\d{2}:\d{2} · .+ago$/,
+    );
   });
 
-  test("the reading is neutral ink, not a level color", async ({ page }) => {
+  test("the old controls are gone: no sliders, pill, chips or H 70 labels", async ({
+    page,
+  }) => {
     await openSection(page);
-    const value = card(page).getByTestId("chart-reading");
-    expect(await computed(value, "color")).toBe("rgb(31, 43, 49)");
-    await expect(card(page).locator("[data-level]")).toHaveCount(0);
+    await expect(
+      card(page).getByRole("button", { name: "Chart options" }),
+    ).toHaveCount(0);
+    await expect(card(page).getByTestId("chart-outline")).toHaveCount(0);
+    await expect(card(page).getByTestId("chart-option-chip")).toHaveCount(0);
+    await expect(card(page)).not.toContainText(/\b[HML] \d/);
   });
 
-  test("the credit is one small grey line, links the same grey", async ({
+  test("thresholds are always drawn as the words Low, Medium, High", async ({
+    page,
+  }) => {
+    await openSection(page);
+    await expect(card(page).getByTestId("threshold-label")).toHaveText([
+      "High",
+      "Medium",
+      "Low",
+    ]);
+  });
+
+  test("the period is one quiet text button that opens the four-item menu", async ({
+    page,
+  }) => {
+    await openSection(page);
+    const period = card(page).getByRole("button", { name: "Chart period" });
+    await expect(period).toContainText("Last 7 days");
+    await expectTouchTargets(period);
+    await period.click();
+    const menu = page.getByRole("menu");
+    await expect(menu.getByRole("menuitem")).toHaveCount(4);
+    await menu.getByRole("menuitem", { name: "Last 30 days" }).click();
+    await expect(period).toContainText("Last 30 days");
+  });
+
+  test("the credit sits left of the period, one small grey line", async ({
     page,
   }) => {
     await openSection(page);
@@ -71,8 +136,14 @@ test.describe("closed card", () => {
     expect(await computed(credit, "color")).toBe("rgb(88, 102, 109)");
     const link = credit.getByRole("link").first();
     expect(await computed(link, "color")).toBe("rgb(88, 102, 109)");
-    const h = (await credit.boundingBox())?.height ?? 0;
-    expect(h, "one line").toBeLessThanOrEqual(20);
+    const c = (await credit.boundingBox()) as NonNullable<
+      Awaited<ReturnType<typeof credit.boundingBox>>
+    >;
+    const p = (await card(page)
+      .getByRole("button", { name: "Chart period" })
+      .boundingBox()) as typeof c;
+    expect(c.x, "credit at the left, period at the right").toBeLessThan(p.x);
+    expect(c.height, "one line").toBeLessThanOrEqual(20);
   });
 
   test("the credit's links are 44px to hit", async ({ page }) => {
@@ -99,8 +170,6 @@ test.describe("closed card", () => {
     page,
   }) => {
     await openSection(page);
-    await expect(card(page).getByTestId("threshold-label")).toHaveCount(3);
-    // Read every box in one pass: the chart may redraw between two reads.
     const { dot, labels } = await card(page).evaluate((el) => {
       const rect = (e: Element) => {
         const r = e.getBoundingClientRect();
@@ -116,38 +185,53 @@ test.describe("closed card", () => {
     });
     expect(dot, "latest dot drawn").not.toBeNull();
     const d = dot as NonNullable<typeof dot>;
-    expect(labels).toHaveLength(3);
     for (const b of labels) {
-      const apart =
-        b.x + b.w <= d.x ||
-        d.x + d.w <= b.x ||
-        b.y + b.h <= d.y ||
-        d.y + d.h <= b.y;
-      expect(apart, `${b.text} overlaps the dot`).toBe(true);
       expect(b.x + b.w, `${b.text} ends before the dot`).toBeLessThan(d.x);
     }
   });
 
-  test("the plot starts below the outline, so it never covers the line", async ({
+  test("a tap shows that point's value in the plot; the head stays", async ({
     page,
   }) => {
     await openSection(page);
-    const outline = await card(page).getByTestId("chart-outline").boundingBox();
-    // The plot starts `data-plot-top` px into the chart: the line cannot
-    // rise above it.
-    const plotTop = await card(page)
-      .locator("[data-plot-top]")
-      .first()
-      .evaluate(
-        (el) =>
-          el.getBoundingClientRect().y +
-          Number(el.getAttribute("data-plot-top")),
-      );
-    expect(outline).not.toBeNull();
-    const o = outline as NonNullable<typeof outline>;
-    expect(plotTop, "plot top is below the outline").toBeGreaterThanOrEqual(
-      o.y + o.height - 1,
+    const value = card(page).getByTestId("reading-value");
+    const latest = await value.innerText();
+    const plot = (await card(page)
+      .getByTestId("chart-plot")
+      .boundingBox()) as NonNullable<
+      Awaited<ReturnType<ReturnType<typeof card>["boundingBox"]>>
+    >;
+    await page.mouse.click(plot.x + plot.width / 3, plot.y + plot.height / 2);
+    await expect(card(page).getByTestId("chart-readout")).toContainText(
+      /\d+(\.\d)? cm/,
     );
+    await expect(value).toHaveText(latest);
+  });
+
+  test("a section's card has no close mark and no gauge name for one gauge", async ({
+    page,
+  }) => {
+    await openSection(page);
+    await expect(
+      card(page).getByRole("button", { name: "Close gauge chart" }),
+    ).toHaveCount(0);
+    await expect(
+      card(page).getByRole("button", { name: /^Gauge:/ }),
+    ).toHaveCount(0);
+    await expect(
+      card(page).getByRole("group", { name: "Reading" }),
+    ).toHaveCount(0);
+  });
+
+  test("a gauge with flow offers Level | Flow, and Flow switches the head", async ({
+    page,
+  }) => {
+    await withFlow(page);
+    await openSection(page);
+    const choice = card(page).getByRole("group", { name: "Reading" });
+    await expect(choice.getByRole("button")).toHaveText(["Level", "Flow"]);
+    await choice.getByRole("button", { name: "Flow" }).click();
+    await expect(card(page).getByTestId("reading-value")).toContainText("12.4");
   });
 
   test("the chart fills the card edge to edge", async ({ page }) => {
@@ -161,144 +245,14 @@ test.describe("closed card", () => {
     expect(svg.x).toBeLessThanOrEqual(c.x + 1);
     expect(svg.x + svg.width).toBeGreaterThanOrEqual(c.x + c.width - 1);
   });
-});
 
-test.describe("open card", () => {
-  test.skip(({ isMobile }) => !isMobile, "the phone's chart card");
-  test("lists the reading and all six periods, each 44px to hit", async ({
-    page,
-  }) => {
+  test("the section screen never scrolls sideways @small", async ({ page }) => {
     await openSection(page);
-    await card(page).getByRole("button", { name: "Chart options" }).click();
-    const chips = card(page).getByTestId("chart-option-chip");
-    await expect(chips).toHaveCount(1 + PERIODS.length);
-    for (const p of PERIODS) {
-      await expect(
-        card(page).getByRole("button", { name: p, exact: true }),
-      ).toBeVisible();
-    }
-    // The chip's drawn height is 32px; the hit area is the pseudo element.
-    const hits = await chips.evaluateAll((els) =>
-      els.map((el) => {
-        const r = el.getBoundingClientRect();
-        const after = getComputedStyle(el, "::after");
-        const inset = (v: string) => Number.parseFloat(v) || 0;
-        return (
-          r.height + Math.abs(inset(after.top)) + Math.abs(inset(after.bottom))
-        );
-      }),
-    );
-    for (const h of hits) expect(h).toBeGreaterThanOrEqual(44);
-    await expect(
-      card(page).getByRole("button", { name: /^\d+(\.\d)? cm$/ }),
-    ).toHaveAttribute("aria-pressed", "true");
-    await expect(card(page)).toContainText("Test Gauge");
-    await expect(
-      card(page).getByRole("button", { name: "Close chart options" }),
-    ).toBeVisible();
-  });
-
-  test("choosing a period updates the outline; the chevron closes", async ({
-    page,
-  }) => {
-    await openSection(page);
-    await card(page).getByRole("button", { name: "Chart options" }).click();
-    await card(page).getByRole("button", { name: "1M", exact: true }).click();
-    await card(page)
-      .getByRole("button", { name: "Close chart options" })
-      .click();
-    await expect(card(page).getByTestId("chart-outline")).toContainText(
-      /· 1M$/,
-    );
-    await expect(
-      card(page).getByRole("button", { name: "Chart options" }),
-    ).toHaveAttribute("aria-expanded", "false");
-  });
-
-  test("the keyboard never loses focus to the page when it opens and closes", async ({
-    page,
-  }) => {
-    await openSection(page);
-    const active = () =>
-      page.evaluate(
-        () =>
-          document.activeElement?.getAttribute("aria-label") ??
-          document.activeElement?.tagName,
-      );
-    await card(page).getByRole("button", { name: "Chart options" }).focus();
-    await page.keyboard.press("Enter");
-    await expect.poll(active).toBe("Close chart options");
-    await page.keyboard.press("Enter");
-    await expect.poll(active).toBe("Chart options");
-  });
-
-  test("a gauge with flow offers both readings", async ({ page }) => {
-    await page.route(/\/water-status$/, async (route) => {
-      const res = await route.fetch();
-      const body = await res.json();
-      const level = body.ranges[0];
-      if (!level) return route.fulfill({ response: res, json: body });
-      const flow = {
-        ...level,
-        id: 99001,
-        series: {
-          ...level.series,
-          id: 99401,
-          measurement_type: "discharge",
-          unit: "m³/s",
-        },
-        range_low: null,
-        range_medium: null,
-        range_high: null,
-        latest_reading: {
-          ...level.latest_reading,
-          series_id: 99401,
-          value: 12.4,
-        },
-      };
-      body.ranges = [...body.ranges, flow];
-      await route.fulfill({ response: res, json: body });
-    });
-    await page.route(/\/series\/99401\/readings/, (route) =>
-      route.fulfill({ json: [] }),
-    );
-    await openSection(page);
-    await card(page).getByRole("button", { name: "Chart options" }).click();
-    const flow = card(page).getByRole("button", { name: "12.4 m³/s" });
-    await expect(flow).toBeVisible();
-    await flow.click();
-    await expect(flow).toHaveAttribute("aria-pressed", "true");
-    await card(page)
-      .getByRole("button", { name: "Close chart options" })
-      .click();
-    await expect(card(page).getByTestId("chart-reading")).toHaveText(
-      "12.4 m³/s",
-    );
-  });
-});
-
-test.describe("layout", () => {
-  test.skip(({ isMobile }) => !isMobile, "the phone's chart card");
-  test("the section screen never scrolls sideways, open or closed @small", async ({
-    page,
-  }) => {
-    await openSection(page);
-    await expectNoHorizontalOverflow(page);
-    await card(page).getByRole("button", { name: "Chart options" }).click();
-    await expect(
-      card(page).getByRole("button", { name: "1Y", exact: true }),
-    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
     const c = (await card(page).boundingBox()) as NonNullable<
       Awaited<ReturnType<ReturnType<typeof card>["boundingBox"]>>
     >;
-    // The card clips its own overflow, so check what is inside it too.
-    const chips = await card(page)
-      .getByTestId("chart-option-chip")
-      .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right));
-    for (const right of chips) expect(right).toBeLessThanOrEqual(c.x + c.width);
-    const viewport = page.viewportSize()?.width ?? 0;
-    expect(c.x + c.width).toBeLessThanOrEqual(viewport);
+    expect(c.x + c.width).toBeLessThanOrEqual(page.viewportSize()?.width ?? 0);
   });
 });
 
@@ -425,16 +379,11 @@ test.describe("gauge coverage design", () => {
 
 test.describe("design gaps", () => {
   test.skip(({ isMobile }) => !isMobile, "the phone's chart card");
-  test("the card sits 12px from the edge and the options chips are 44px", async ({
-    page,
-  }, info) => {
+  test("the card sits 12px from the edge", async ({ page }, info) => {
     test.skip(info.project.name === "desktop", "phone margins");
     await openSection(page);
     const box = await card(page).boundingBox();
     expect(box?.x).toBe(12);
-    await card(page).getByRole("button", { name: "Chart options" }).click();
-    const chips = card(page).getByTestId("chart-option-chip");
-    await expectTouchTargets(chips);
   });
 
   test("the area fades to nothing and no descent bar is drawn", async ({
@@ -451,16 +400,13 @@ test.describe("design gaps", () => {
     expect(marks, "only threshold bands, no descent bar").toBe(0);
   });
 
-  test("the plot keeps 160px of height on a small screen @small", async ({
+  test("the plot keeps 96px of height on a small screen @small", async ({
     page,
   }, info) => {
     test.skip(info.project.name === "desktop", "phone height");
     await openSection(page);
-    const plot = await card(page)
-      .getByTestId("latest-dot")
-      .locator("xpath=ancestor::*[contains(@class,'recharts-wrapper')]")
-      .boundingBox();
-    expect(plot?.height).toBeGreaterThanOrEqual(160);
+    const plot = await card(page).getByTestId("chart-plot").boundingBox();
+    expect(plot?.height).toBeGreaterThanOrEqual(96);
   });
 });
 
