@@ -30,7 +30,7 @@ export default function MapCharts({
 }) {
   const placement = useChartPlacement(state);
   const { isAuthenticated } = useSession();
-  const { selectedWaterwayId, selectedSectionId, selectedGaugeRanges } = state;
+  const { selectedWaterwayId, selectedSectionId } = state;
   const status = useWaterStatus(
     selectedWaterwayId ?? null,
     selectedSectionId ?? null,
@@ -38,8 +38,7 @@ export default function MapCharts({
   const railed = placement === "rail";
   if (railed !== (slot === "foot")) return null;
   if (!hasChart(state, railed)) return null;
-  const picked =
-    state.selectedGaugeId != null && selectedGaugeRanges.length > 0;
+  const picked = hasPickedGauge(state);
   // A section without a gauge has nothing to chart.
   const noGauge =
     !picked && status.isSuccess && status.data.ranges.length === 0;
@@ -56,23 +55,22 @@ export default function MapCharts({
   return <MapChart state={state} placement={placement} />;
 }
 
+/** A gauge is picked and has readings to chart. */
+function hasPickedGauge(state: MapPageState): boolean {
+  return state.selectedGaugeId != null && state.selectedGaugeRanges.length > 0;
+}
+
 /** Whether the page has a chart to show. The rail follows every section tab;
  * elsewhere the logs, notes and sources tabs replace the chart with their
  * list. */
 export function hasChart(state: MapPageState, railed = false): boolean {
-  const {
-    selectedWaterwayId,
-    selectedSectionId,
-    detailTab,
-    sectionDetailTab,
-    selectedGaugeId,
-    selectedGaugeRanges,
-  } = state;
+  const { selectedWaterwayId, selectedSectionId, detailTab, sectionDetailTab } =
+    state;
   if (!railed && selectedSectionId != null && sectionDetailTab !== "features") {
     return false;
   }
   if (selectedSectionId == null && detailTab === "notes") return false;
-  if (selectedGaugeId != null && selectedGaugeRanges.length > 0) return true;
+  if (hasPickedGauge(state)) return true;
   return selectedSectionId != null && selectedWaterwayId != null;
 }
 
@@ -87,13 +85,12 @@ function MapChart({
     selectedWaterwayId,
     selectedSectionId,
     sections,
-    selectedGaugeId,
     setSelectedGaugeId,
     selectedGaugeRanges,
     selectedFeatureId,
   } = state;
 
-  if (selectedGaugeId != null && selectedGaugeRanges.length > 0) {
+  if (hasPickedGauge(state)) {
     return (
       <GaugeChartPanel
         ranges={selectedGaugeRanges}

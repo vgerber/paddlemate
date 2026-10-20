@@ -6,7 +6,7 @@ import { alphas, theme } from "@/lib/theme";
 const { tokens } = theme;
 const { canvas } = tokens;
 
-/** Bar height while hovered, focused or dragged. */
+/** Keyboard step in px. */
 const STEP = 16;
 
 const dots = (color: string) =>

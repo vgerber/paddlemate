@@ -67,8 +67,6 @@ export interface PointPin {
 
 const { tokens } = theme;
 
-/** Hands the MapLibre instance to browser tests, so they can read the paint
- * and data the map really draws. Development builds only. */
 /** Mounts as the map's first child, before its style adds any layer. */
 function MissingIconGuard() {
   const { current: map } = useMap();
@@ -76,6 +74,8 @@ function MissingIconGuard() {
   return null;
 }
 
+/** Hands the MapLibre instance to browser tests, so they can read the paint
+ * and data the map really draws. Development builds only. */
 function exposeMapForTests(map: MapRef | null) {
   if (import.meta.env.DEV && map) {
     Object.assign(window, { __paddlemateMap: map.getMap() });
@@ -610,7 +610,6 @@ export default function WaterwayMap({
           />
         </Source>
 
-        {/* Selected sections overlay for picker mode */}
         {selectedSectionIds && selectedSectionIds.size > 0 && (
           <Source
             id="sections-picker-sel"

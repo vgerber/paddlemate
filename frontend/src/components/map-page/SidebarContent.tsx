@@ -23,7 +23,7 @@ interface SidebarContentProps {
 
 /**
  * Routes between WaterwaySearchPanel, WaterwayBrowsePanel, SuggestWaterwayPanel,
- * and SuggestFeaturePanel based on current state. Shared by DesktopSidebar and
+ * and SuggestFeaturePanel based on current state. Shared by MapDetailCard, SearchSheet and
  * MobileOverlay. (Suggesting a section navigates to its own page.)
  */
 export default function SidebarContent({

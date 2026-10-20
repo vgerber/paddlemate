@@ -228,8 +228,8 @@ export default function SeriesChart({
       return rawX.map((t, i) => ({ time: t, value: rawY[i] }));
 
     const intervals = rawX.slice(1).map((t, i) => t - rawX[i]);
-    const sorted_intervals = [...intervals].sort((a, b) => a - b);
-    const median = sorted_intervals[Math.floor(sorted_intervals.length / 2)];
+    const sortedIntervals = [...intervals].sort((a, b) => a - b);
+    const median = sortedIntervals[Math.floor(sortedIntervals.length / 2)];
     const gapThreshold = median * 5;
 
     const out: { time: number; value: number | null }[] = [

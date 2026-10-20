@@ -52,15 +52,15 @@ function nearestPointOnPolyline(
   return best;
 }
 
-/** Map label: "Name III+", name or difficulty alone, or "" when neither.
- * Features have no untagged name, so the first stored name is the fallback
- * when no translation matches the reader's language. */
 /** The humanised type, sentence case, for a feature with no name of its own. */
 function typeLabel(f: Feature): string {
   const text = humanize(f.feature_type);
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+/** Map label: "Name III+", name or difficulty alone, or "" when neither.
+ * Features have no untagged name, so the first stored name is the fallback
+ * when no translation matches the reader's language. */
 function featureLabel(f: Feature, language: string): string {
   const name = localizedName(f.names[0]?.name ?? "", f.names, language);
   const difficulty = featureDifficulty(f);
