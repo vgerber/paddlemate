@@ -1,51 +1,59 @@
 # UI overhaul: to do
 
-State on 2026-10-15. Delete this file when the overhaul has landed on `main`.
+State on 2026-10-20 evening. Delete this file when the overhaul has landed on `main`.
 
 ## Where the work is
 
-`ui-overhaul` holds everything (merged 2026-10-15, not pushed): the wide-screen
-canvas and reading rail, the calm borderless chart, the values pane, one header
-menu, panel spacing, river state, grade rules, the region search fixes
-(migration 0050), level dots, the map following the filters, phone margins,
-the swipe preview and smooth swipe, and review wave 1 (one source for the
-current level, level colours, section grade, log title, reading time,
-geometry). Gates green: tsc, biome, 485 bun tests. The full Playwright run and
-the Opus review have not been done on the merged result.
+`ui-overhaul` (checked out in the main repo; not pushed since fcc25a6) holds
+everything: the wide-screen canvas and reading rail, the calm borderless
+chart, the values pane, one header menu, panel spacing, river state, grade
+rules, region search (migrations 0050, 0051), level dots, the map following
+the filters, phone margins, the smooth swipe, the calm phone chart card,
+review waves 1 and 2, the frontend follow-up pass, the API security and
+history fixes (deleted history readable, one tracked write path, error
+envelope for bad query params, region search bounded, fill cap), the API
+leftovers, the docs pass and the layers popover fix.
 
-Reviews, briefs, designs and test notes are in `.claude/handoffs/ui-work/` (git-ignored): `review/*.md`, `design/*.html`, `search-test/`.
+Gates green on the merge: tsc, biome, 499 bun tests; cargo check, clippy 0
+warnings, 128 API tests. The local database has migrations up to 0051.
+
+Still out of `ui-overhaul`:
+
+| Branch / worktree | Holds | State |
+|---|---|---|
+| `w3-specs-1020` (`.claude/worktrees/w3-specs`) | wave 3: shared e2e helpers, no casts, no fixed waits, fewer MUI selectors | stopped at session end; continue from `.claude/handoffs/2026-10-20-wave3-specs.md` if it wrote one, else from the branch's commits |
+| `plan-trip-places-1020` (`.claude/worktrees/plan-trip-places`) | `doc/plans/trip-places.md`: pasting addresses, coordinates and map links into trip bases | plan only; waits for the answers below |
+
+Reports (git-ignored, `.claude/handoffs/ui-work/review/`): `perf.md` and
+`deploy.md` (done), `a11y.md` and `features-on-map.md` (partial or missing if
+the agents were stopped; finish them), plus the earlier code reviews.
 
 ## Next, in order
 
-1. Push `ui-overhaul` once the user OKs it.
-2. Review wave 2, four agents in parallel on separate files (findings in `review/*.md`):
-   - Theme and shared pieces: small buttons and toggles at 44px; one active-tab rule in `routes/__root.tsx`; `PanelBottomBar` drops the dead `leftIcon`; shared busy, segmented-control and marker-shadow pieces; tidy `theme.ts` (aliases, unused tokens, raw colours, radii off the scale); one shared `useSession` store.
-   - Trips, logs, proposals: errors shown once (`meta.errorHandledLocally`); trip actions in one list (`TripFab`); confirm dialogs that wait and catch; the inbox's `EmptyState`; one way back; load errors not silent (`useFollows`, `useTripTimeline`); one vote control; one open-row style.
-   - Search and waterway: the `routes/waterways/$waterwayId.tsx` stub; the double submit in `SuggestFeatureForm`; the copied `flatRowSx`, recent-river row, three timeline rails and the hand-rolled menu in `CoordsInfo`; Sources and history errors with Retry; the notes field's touch targets and 13px text; dead code; plurals.
-   - Map, canvas, charts: the dead features-fold state; three-branch ternaries as sub-components; the gauge marker's 44px hit area; split `useMapPageState`; dead exports; cards using `PanelHeader`.
-3. Review wave 3: shared e2e helpers and mocks, no casts in specs and tests, no `waitForTimeout`, fewer MUI class selectors.
-4. One full Playwright run on `ui-overhaul` (phone, desktop, small). About 20 failures were reported but not checked against the base: trips (week strip, day labels, today ring, card radius, trip panel), logs (headings, wrapped pill, detail, canvas cards), sections and search flat-row radius, proposals (6, `map-layer-toggle` selectors). Fix or update each.
-5. Opus review of the combined diff (AGENTS.md "Agent workflow"), then merge `ui-overhaul` into `main` with the user's OK.
-6. Update the design system (https://claude.ai/artifact/E8VZQSwJmQhnfLGuPrK585) for the 8px rail gap, the dotted resize tab and the stat-tile values pane; log decisions in the control room (https://claude.ai/artifact/H7yXYXDMdwq9oJwiMWrZhC).
+1. Finish wave 3 and merge it.
+2. Finish the accessibility audit and the features-on-map test (both read only), then one fix wave from them and from `perf.md`:
+   - perf: lazy-load the map and chart libraries (-376 kB on logs, settings, trips), `autoCodeSplitting` in the router plugin, the markdown pipeline out of the React chunk, shorten the chart's data chain and preconnect to the tile server, remove the N+1 requests on trips, notes history and river state, profile the Notes tab's long tasks.
+3. One full Playwright run on `ui-overhaul` (phone, desktop, small). Known failures to sort: trips (week strip, day labels, today ring, card radius, trip panel; likely fixture date drift), panel-spacing header menu groups, provenance "an empty history says so", logs headings and canvas cards, settings row padding, proposals selectors.
+4. Opus review of the combined diff (AGENTS.md "Agent workflow"), then push `ui-overhaul` and merge into `main` with the user's OK, following `deploy.md` (RUN_MIGRATIONS=false, migrate as its own step, then `derive_section_regions` and `import_region_outlines`; check the four VITE_* values; set CORS_ALLOWED_ORIGINS; document DISABLE_GAUGE_READERS, BASE_URL, PORT and KEYCLOAK_* in AGENTS.md).
+5. Delete `doc/plans/wide-canvas.md` and `doc/plans/ui-overhaul.md` (and its folder) when the work is on `main`.
+
+## Waiting on the user
+
+- Trip places plan: (1) production geocoder: self-host a Photon extract on the NAS, or public Photon behind the cache; (2) store and show `place_label` (a migration); (3) "Where it is" second, above Dates; (4) which cut items to keep: Plus Codes, OSM node links, "use my location", Google consent-page short links.
+- Open questions: keep the picked area across Name/Area/Region; move the seven regions whose country changes under the overlap rule; fetch `natural=mountain_range` ranges (about 28 in the Alps); the valley cap of 120.
 
 ## Decided but not built
 
-- Region picking: one kind at a time following the zoom, a segmented control instead of the chips, valleys as a thin line with a light fill, a tap preview with "Pick" on a phone (`design/region-pick.html`).
-- Phone chart card without its sliders icon (`design/panel-details.html`, item 4).
-
-## Open questions
-
-- Keep the picked area when switching between Name, Area and Region?
-- Move the seven regions whose country changes under the new overlap rule?
-- Clear a pointed chart point when the pointer leaves?
-- Fetch `natural=mountain_range` ranges (about 28 in the Alps)? Valleys stay capped at 120.
-- What the self-hosted Overpass (nas-1:5569) returns when a reply fails to decode: the API now logs its first 200 characters.
+- Region picking: one kind at a time, a segmented control instead of the chips, valleys as a thin line with a light fill, a tap preview with "Pick" on a phone (`.claude/handoffs/ui-work/design/region-pick.html`).
+- Showing the history of deleted rivers, sections and features in the app (the API serves it on the existing `.../history` routes).
+- The rest of the review `should` findings (about half per area, in `review/*.md`).
 
 ## Later (overhaul plan)
 
-Dark mode, motion, the 320px sweep, line icons, numbered feature markers. The API now serves the history of deleted rivers, sections and features (the existing `.../history` routes answer 200 for them); the app does not show it yet.
+Dark mode, motion, the 320px sweep, line icons, numbered feature markers.
 
 ## Environment notes
 
-- The machine reboots now and then: restart Postgres, Keycloak, the API (from `integrate-2b/api`) and Vite with `CHOKIDAR_USEPOLLING=1` (the dev-services skill), then reseed the fixture.
+- The machine reboots now and then: start Postgres and Keycloak, then the API and Vite from the main repo checkout (the dev-services skill; Vite with `CHOKIDAR_USEPOLLING=1 VITE_API_URL=http://localhost:3000 bunx vite --port 5174`), then reseed the fixture. Run `bun install` after pulling new frontend dependencies.
 - Agents' commits are sometimes refused by the permission check; the lead commits after the user's OK.
+- `.vscode/settings.json` has a local change nobody here made; leave it.
