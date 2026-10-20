@@ -2,11 +2,12 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import { desktopFlatRow } from "@/components/canvas/flatRow";
+import { openRowSx } from "@/components/openRow";
 import { tripStanding } from "@/components/trip-page/planWeek";
 import type { Trip } from "@/lib/api";
 import { dateRange, todayIso } from "@/lib/format";
 import { useTripMembers } from "@/lib/hooks/useTrips";
-import { alphas, fonts, labelSx, theme } from "@/lib/theme";
+import { fonts, labelSx, theme } from "@/lib/theme";
 import MemberAvatar from "./MemberAvatar";
 import RolePill from "./RolePill";
 
@@ -44,10 +45,9 @@ export default function TripRow({
         textAlign: "left",
         p: 1.75,
         borderRadius: `${tokens.radii.md}px`,
-        bgcolor: selected ? `${tokens.primary}${alphas.wash}` : tokens.surface,
-        boxShadow: selected
-          ? `inset 3px 0 0 ${tokens.primary}, ${tokens.elevation.e1}`
-          : tokens.elevation.e1,
+        bgcolor: tokens.surface,
+        boxShadow: tokens.elevation.e1,
+        ...openRowSx(selected),
         ...desktopFlatRow,
       }}
     >
