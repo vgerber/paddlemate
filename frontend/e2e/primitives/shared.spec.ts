@@ -136,7 +136,7 @@ test.describe("empty state", () => {
     await page.goto("/proposals");
     const empty = page.getByTestId("empty-state");
     await expect(empty).toBeVisible();
-    const tile = empty.getByTestId("empty-state-tile");
+    const tile = empty.getByTestId("state-tile");
     await expect(tile).toBeVisible();
     expect(await computed(tile, "width")).toBe("48px");
     expect(await computed(tile, "height")).toBe("48px");

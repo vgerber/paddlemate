@@ -5,9 +5,9 @@ import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { StateTile } from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
+import StateTile from "@/components/states/StateTile";
 import type { TripEvent } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
 import {

@@ -212,7 +212,7 @@ test.describe("name mode", () => {
     await expect(empty).toContainText(
       "Type a name, country or difficulty to search",
     );
-    await expect(seen(page.getByTestId("empty-state-tile"))).toBeVisible();
+    await expect(seen(page.getByTestId("state-tile"))).toBeVisible();
     await expect(seen(page.getByTestId("recent-river"))).toHaveCount(0);
   });
 
