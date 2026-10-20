@@ -56,8 +56,7 @@ pub async fn list_waterway_media(
     {
         Ok(list) => Json(list).into_response(),
         Err(err) => {
-            tracing::error!("Error listing media for river {}: {}", waterway_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error listing media for river {}", waterway_id), err).into_response()
         }
     }
 }
@@ -243,8 +242,7 @@ pub async fn list_section_media(
     {
         Ok(list) => Json(list).into_response(),
         Err(err) => {
-            tracing::error!("Error listing media for section {}: {}", section_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error listing media for section {}", section_id), err).into_response()
         }
     }
 }
@@ -307,8 +305,7 @@ pub async fn delete_waterway_media(
         }
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error deleting media {}: {}", media_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error deleting media {}", media_id), err).into_response()
         }
     }
 }

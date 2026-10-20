@@ -74,8 +74,7 @@ pub async fn create_token(
             if err.to_string().contains("duplicate key") {
                 return ApiError::conflict("A token with this name already exists").into_response();
             }
-            tracing::error!("Error creating API token: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error creating API token", err).into_response()
         }
     }
 }
@@ -136,8 +135,7 @@ pub async fn list_tokens(
             Json(tokens).into_response()
         }
         Err(err) => {
-            tracing::error!("Error listing API tokens: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error listing API tokens", err).into_response()
         }
     }
 }
@@ -192,8 +190,7 @@ pub async fn revoke_token(
             }
         }
         Err(err) => {
-            tracing::error!("Error revoking API token: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error revoking API token", err).into_response()
         }
     }
 }

@@ -78,8 +78,7 @@ pub async fn get_waterway_geometry(
         Ok(Some(doc)) => Json(doc).into_response(),
         Ok(None) => ApiError::not_found("No cached OSM geometry").into_response(),
         Err(err) => {
-            tracing::error!("Error fetching OSM geometry for {}: {}", waterway_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error fetching OSM geometry for {}", waterway_id), err).into_response()
         }
     }
 }
@@ -105,8 +104,7 @@ pub async fn delete_waterway_geometry(
     match osm_geometry::delete_elements(&app.pg_pool, waterway_id).await {
         Ok(_) => StatusCode::NO_CONTENT.into_response(),
         Err(err) => {
-            tracing::error!("Error deleting OSM geometry for {}: {}", waterway_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error deleting OSM geometry for {}", waterway_id), err).into_response()
         }
     }
 }

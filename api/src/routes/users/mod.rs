@@ -158,8 +158,7 @@ async fn list_users(
         )
         .into_response(),
         Err(err) => {
-            tracing::error!("Error listing users: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error listing users", err).into_response()
         }
     }
 }

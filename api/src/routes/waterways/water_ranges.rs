@@ -25,12 +25,7 @@ pub async fn list_water_ranges(
     match gauges::list_feature_water_ranges(&app.pg_pool, path.feature_id).await {
         Ok(list) => Json(list).into_response(),
         Err(err) => {
-            tracing::error!(
-                "Error listing water ranges for feature {}: {}",
-                path.feature_id,
-                err
-            );
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error listing water ranges for feature {}", path.feature_id), err).into_response()
         }
     }
 }
@@ -80,12 +75,7 @@ pub async fn create_water_range(
     {
         Ok(range) => (StatusCode::CREATED, Json(range)).into_response(),
         Err(err) => {
-            tracing::error!(
-                "Error creating water range for feature {}: {}",
-                path.feature_id,
-                err
-            );
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error creating water range for feature {}", path.feature_id), err).into_response()
         }
     }
 }
@@ -124,8 +114,7 @@ pub async fn update_water_range(
         Ok(Some(range)) => Json(range).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error updating water range {}: {}", path.range_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error updating water range {}", path.range_id), err).into_response()
         }
     }
 }
@@ -154,8 +143,7 @@ pub async fn delete_water_range(
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error deleting water range {}: {}", path.range_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error deleting water range {}", path.range_id), err).into_response()
         }
     }
 }

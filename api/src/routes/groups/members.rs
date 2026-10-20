@@ -50,16 +50,14 @@ pub async fn list_members(
         Ok(true) => {}
         Ok(false) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error checking membership in group {}: {}", group_id, err);
-            return ApiError::internal().into_response();
+            return ApiError::from_db(&format!("Error checking membership in group {}", group_id), err).into_response();
         }
     }
 
     match groups::fetch_members(&app.pg_pool, group_id).await {
         Ok(members) => Json(members).into_response(),
         Err(err) => {
-            tracing::error!("Error fetching members for group {}: {}", group_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error fetching members for group {}", group_id), err).into_response()
         }
     }
 }
@@ -100,8 +98,7 @@ pub async fn add_member(
         Ok(Some(GroupMemberRole::Owner | GroupMemberRole::Admin)) => {}
         Ok(_) => return ApiError::forbidden("Not permitted").into_response(),
         Err(err) => {
-            tracing::error!("Error checking role in group {}: {}", group_id, err);
-            return ApiError::internal().into_response();
+            return ApiError::from_db(&format!("Error checking role in group {}", group_id), err).into_response();
         }
     }
 
@@ -133,8 +130,7 @@ pub async fn add_member(
     {
         Ok(member) => (StatusCode::CREATED, Json(member)).into_response(),
         Err(err) => {
-            tracing::error!("Error adding member to group {}: {}", group_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error adding member to group {}", group_id), err).into_response()
         }
     }
 }
@@ -170,8 +166,7 @@ pub async fn set_member_role(
         Ok(Some(GroupMemberRole::Owner)) => {}
         Ok(_) => return ApiError::forbidden("Not permitted").into_response(),
         Err(err) => {
-            tracing::error!("Error checking role in group {}: {}", group_id, err);
-            return ApiError::internal().into_response();
+            return ApiError::from_db(&format!("Error checking role in group {}", group_id), err).into_response();
         }
     }
 
@@ -184,8 +179,7 @@ pub async fn set_member_role(
         Ok(Some(member)) => Json(member).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error setting role in group {}: {}", group_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error setting role in group {}", group_id), err).into_response()
         }
     }
 }
@@ -219,8 +213,7 @@ pub async fn remove_member(
             Ok(Some(GroupMemberRole::Owner | GroupMemberRole::Admin)) => {}
             Ok(_) => return ApiError::forbidden("Not permitted").into_response(),
             Err(err) => {
-                tracing::error!("Error checking role in group {}: {}", group_id, err);
-                return ApiError::internal().into_response();
+                return ApiError::from_db(&format!("Error checking role in group {}", group_id), err).into_response();
             }
         }
     }
@@ -234,8 +227,7 @@ pub async fn remove_member(
         Ok(None) => return ApiError::not_found("Not found").into_response(),
         Ok(_) => {}
         Err(err) => {
-            tracing::error!("Error checking target role in group {}: {}", group_id, err);
-            return ApiError::internal().into_response();
+            return ApiError::from_db(&format!("Error checking target role in group {}", group_id), err).into_response();
         }
     }
 
@@ -243,8 +235,7 @@ pub async fn remove_member(
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error removing member from group {}: {}", group_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error removing member from group {}", group_id), err).into_response()
         }
     }
 }

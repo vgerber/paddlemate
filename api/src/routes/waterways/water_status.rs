@@ -20,12 +20,7 @@ pub async fn get_section_water_status(
     match gauges::water_status_for_section(&app.pg_pool, path.section_id).await {
         Ok(status) => Json(status).into_response(),
         Err(err) => {
-            tracing::error!(
-                "Error fetching water status for section {}: {}",
-                path.section_id,
-                err
-            );
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error fetching water status for section {}", path.section_id), err).into_response()
         }
     }
 }

@@ -38,8 +38,7 @@ pub async fn list_gauges(State(app): State<AppState>) -> impl IntoApiResponse {
     match gauges::list_gauges(&app.pg_pool, false).await {
         Ok(list) => Json(list).into_response(),
         Err(err) => {
-            tracing::error!("Error listing gauges: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error listing gauges", err).into_response()
         }
     }
 }
@@ -70,8 +69,7 @@ pub async fn search_gauges(
     match gauges::search_gauges(&app.pg_pool, q, query.lat, query.lon, limit).await {
         Ok(list) => Json(list).into_response(),
         Err(err) => {
-            tracing::error!("Error searching gauges: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error searching gauges", err).into_response()
         }
     }
 }
@@ -120,8 +118,7 @@ pub async fn search_gauge_catalog(
     {
         Ok(list) => Json(list).into_response(),
         Err(err) => {
-            tracing::error!("Error searching gauge catalog: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error searching gauge catalog", err).into_response()
         }
     }
 }
@@ -149,8 +146,7 @@ pub async fn search_catalog_rivers(
     match gauges::search_catalog_rivers(&app.pg_pool, q, limit).await {
         Ok(list) => Json(list).into_response(),
         Err(err) => {
-            tracing::error!("Error searching catalog rivers: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error searching catalog rivers", err).into_response()
         }
     }
 }
@@ -165,8 +161,7 @@ pub async fn list_gauge_map(State(app): State<AppState>) -> impl IntoApiResponse
     match gauges::list_gauge_map(&app.pg_pool).await {
         Ok(list) => Json(list).into_response(),
         Err(err) => {
-            tracing::error!("Error building gauge map: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error building gauge map", err).into_response()
         }
     }
 }
@@ -185,8 +180,7 @@ pub async fn get_gauge(
         Ok(Some(g)) => Json(g).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error fetching gauge {}: {}", gauge_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error fetching gauge {}", gauge_id), err).into_response()
         }
     }
 }
@@ -208,8 +202,7 @@ pub async fn list_readings(
     match gauges::fetch_readings(&app.pg_pool, series_id, q.from, q.to, limit).await {
         Ok(list) => Json(list).into_response(),
         Err(err) => {
-            tracing::error!("Error fetching readings for series {}: {}", series_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error fetching readings for series {}", series_id), err).into_response()
         }
     }
 }
@@ -230,12 +223,7 @@ pub async fn get_latest_reading(
         Ok(Some(r)) => Json(r).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!(
-                "Error fetching latest reading for series {}: {}",
-                series_id,
-                err
-            );
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error fetching latest reading for series {}", series_id), err).into_response()
         }
     }
 }
@@ -281,8 +269,7 @@ pub async fn create_gauge(
     {
         Ok(g) => (StatusCode::CREATED, Json(g)).into_response(),
         Err(err) => {
-            tracing::error!("Error creating gauge: {}", err);
-            ApiError::internal().into_response()
+            ApiError::from_db("Error creating gauge", err).into_response()
         }
     }
 }
@@ -329,8 +316,7 @@ pub async fn update_gauge(
         Ok(Some(g)) => Json(g).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error updating gauge {}: {}", gauge_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error updating gauge {}", gauge_id), err).into_response()
         }
     }
 }
@@ -363,8 +349,7 @@ pub async fn delete_gauge(
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error deleting gauge {}: {}", gauge_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error deleting gauge {}", gauge_id), err).into_response()
         }
     }
 }
@@ -410,8 +395,7 @@ pub async fn create_series(
     {
         Ok(s) => (StatusCode::CREATED, Json(s)).into_response(),
         Err(err) => {
-            tracing::error!("Error creating series for gauge {}: {}", gauge_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error creating series for gauge {}", gauge_id), err).into_response()
         }
     }
 }
@@ -457,8 +441,7 @@ pub async fn update_series(
         Ok(Some(s)) => Json(s).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error updating series {}: {}", series_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error updating series {}", series_id), err).into_response()
         }
     }
 }
@@ -491,8 +474,7 @@ pub async fn delete_series(
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error deleting series {}: {}", series_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error deleting series {}", series_id), err).into_response()
         }
     }
 }

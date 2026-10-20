@@ -64,8 +64,7 @@ pub async fn list_waterway_gauges(
     match query_gauges::list_waterway_gauges(&app.pg_pool, waterway_id).await {
         Ok(gauges) => Json(gauges).into_response(),
         Err(err) => {
-            tracing::error!("Error listing gauges for waterway {}: {}", waterway_id, err);
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error listing gauges for waterway {}", waterway_id), err).into_response()
         }
     }
 }
@@ -91,8 +90,7 @@ pub async fn get_waterway(
         Ok(Some(r)) => r,
         Ok(None) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
-            tracing::error!("Error fetching waterway {}: {}", waterway_id, err);
-            return ApiError::internal().into_response();
+            return ApiError::from_db(&format!("Error fetching waterway {}", waterway_id), err).into_response();
         }
     };
 
@@ -140,12 +138,7 @@ pub async fn get_waterway(
             let sections = match sections {
                 Ok(sections) => sections,
                 Err(err) => {
-                    tracing::error!(
-                        "Invalid section geometry for waterway {}: {}",
-                        waterway_id,
-                        err
-                    );
-                    return ApiError::internal().into_response();
+                    return ApiError::from_db(&format!("Invalid section geometry for waterway {}", waterway_id), err).into_response();
                 }
             };
             Json(WaterwayWithSections {
@@ -160,12 +153,7 @@ pub async fn get_waterway(
             .into_response()
         }
         (Err(err), _, _, _) | (_, Err(err), _, _) | (_, _, Err(err), _) | (_, _, _, Err(err)) => {
-            tracing::error!(
-                "Error fetching sections for waterway {}: {}",
-                waterway_id,
-                err
-            );
-            ApiError::internal().into_response()
+            ApiError::from_db(&format!("Error fetching sections for waterway {}", waterway_id), err).into_response()
         }
     }
 }
@@ -298,8 +286,7 @@ pub async fn update_waterway(
             Ok(Some(waterway)) => Json(waterway).into_response(),
             Ok(None) => ApiError::not_found("Not found").into_response(),
             Err(err) => {
-                tracing::error!("Error updating waterway {}: {}", waterway_id, err);
-                ApiError::internal().into_response()
+                ApiError::from_db(&format!("Error updating waterway {}", waterway_id), err).into_response()
             }
         };
     }
@@ -352,8 +339,7 @@ pub async fn delete_waterway(
             Ok(true) => StatusCode::NO_CONTENT.into_response(),
             Ok(false) => ApiError::not_found("Not found").into_response(),
             Err(err) => {
-                tracing::error!("Error deleting waterway {}: {}", waterway_id, err);
-                ApiError::internal().into_response()
+                ApiError::from_db(&format!("Error deleting waterway {}", waterway_id), err).into_response()
             }
         };
     }
