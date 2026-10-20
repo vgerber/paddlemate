@@ -1,8 +1,7 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
-import { desktopFlatRow } from "@/components/canvas/flatRow";
-import { openRowSx } from "@/components/openRow";
+import { desktopFlatRow, openRowSx } from "@/components/canvas/flatRow";
 import { tripStanding } from "@/components/trip-page/planWeek";
 import type { Trip } from "@/lib/api";
 import { dateRange, todayIso } from "@/lib/format";

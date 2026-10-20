@@ -2,6 +2,19 @@ import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
+/** The open row of a list: a teal wash and a 3px bar at the left edge, on top
+ * of the row card's own shadow unless the list owns the ground (`flat`). One
+ * look for trip, proposal, settings, log and flat rows. */
+export function openRowSx(selected = false, flat = false) {
+  if (!selected) return {};
+  return {
+    bgcolor: `${tokens.primary}${alphas.wash}`,
+    boxShadow: flat
+      ? `inset 3px 0 0 ${tokens.primary}`
+      : `inset 3px 0 0 ${tokens.primary}, ${tokens.elevation.e1}`,
+  };
+}
+
 /** A list row inside a floating card, which is already a white surface:
  * no card of its own, a dimmed rule under it, and the open row a teal wash
  * with a 3px bar at its left edge. Phones keep their shadowed row cards, so
@@ -14,8 +27,7 @@ export const flatRowSx = {
   borderBottom: `1px solid ${tokens.outlineVariant}${alphas.hairline}`,
   "&:hover": { bgcolor: tokens.surfaceLow },
   "&.Mui-selected, &[aria-current='true']": {
-    bgcolor: `${tokens.primary}${alphas.wash}`,
-    boxShadow: `inset 3px 0 0 ${tokens.primary}`,
+    ...openRowSx(true, true),
     "&:hover": { bgcolor: `${tokens.primary}${alphas.wash}` },
   },
 } as const;

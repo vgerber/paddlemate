@@ -1,8 +1,7 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
-import { desktopFlatRow } from "@/components/canvas/flatRow";
-import { openRowSx } from "@/components/openRow";
+import { desktopFlatRow, openRowSx } from "@/components/canvas/flatRow";
 import type { Proposal } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
 import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
