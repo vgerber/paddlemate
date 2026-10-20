@@ -2,6 +2,8 @@ import type { ExpressionSpecification } from "maplibre-gl";
 import { Layer, Source } from "react-map-gl/maplibre";
 import { theme } from "@/lib/theme";
 
+import { REGION_FILL_LAYER } from "./layerIds";
+
 const { tokens } = theme;
 
 const NOT_VALLEY: ExpressionSpecification = ["!=", ["get", "kind"], "valley"];
@@ -34,7 +36,7 @@ export default function RegionLayers({
     <>
       <Source id="region-browse" type="geojson" data={choices}>
         <Layer
-          id="region-browse-fill"
+          id={REGION_FILL_LAYER}
           type="fill"
           filter={NOT_VALLEY}
           paint={{

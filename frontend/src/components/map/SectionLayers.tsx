@@ -3,6 +3,12 @@ import { Layer, Source } from "react-map-gl/maplibre";
 import { theme } from "@/lib/theme";
 import { LEVEL_MARKER_MATCH } from "@/lib/waterLevel";
 
+import {
+  SECTION_CASING_LAYER,
+  SECTION_HITBOX_LAYER,
+  SECTION_LINE_LAYER,
+} from "./layerIds";
+
 const { tokens } = theme;
 
 interface SectionLayersProps {
@@ -124,7 +130,7 @@ export default function SectionLayers({
 
       <Source id="sections" type="geojson" data={sections}>
         <Layer
-          id="sections-line-hitbox"
+          id={SECTION_HITBOX_LAYER}
           beforeId="section-endpoints-dot"
           filter={plain}
           type="line"
@@ -135,7 +141,7 @@ export default function SectionLayers({
           }}
         />
         <Layer
-          id="sections-line-casing"
+          id={SECTION_CASING_LAYER}
           beforeId="section-endpoints-dot"
           filter={plain}
           type="line"
@@ -146,7 +152,7 @@ export default function SectionLayers({
           }}
         />
         <Layer
-          id="sections-line"
+          id={SECTION_LINE_LAYER}
           beforeId="section-endpoints-dot"
           filter={plain}
           type="line"

@@ -8,6 +8,7 @@ import MapGL, {
   Source,
   useMap,
 } from "react-map-gl/maplibre";
+import { REGION_FILL_LAYER, SECTION_HIT_LAYERS } from "./layerIds";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type {
   CountryBorder,
@@ -470,8 +471,7 @@ export default function WaterwayMap({
         }
         onMouseMove={(e) =>
           setOverRegion(
-            e.features?.some((f) => f.layer.id === "region-browse-fill") ??
-              false,
+            e.features?.some((f) => f.layer.id === REGION_FILL_LAYER) ?? false,
           )
         }
         onMouseLeave={() => setOverRegion(false)}
@@ -481,12 +481,7 @@ export default function WaterwayMap({
           reportBounds();
         }}
         onMoveEnd={reportBounds}
-        interactiveLayerIds={[
-          "sections-line",
-          "sections-line-casing",
-          "sections-line-hitbox",
-          "region-browse-fill",
-        ]}
+        interactiveLayerIds={[...SECTION_HIT_LAYERS, REGION_FILL_LAYER]}
       >
         <MissingIconGuard />
         <NavigationControl position="top-right" showCompass={false} />
