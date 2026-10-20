@@ -2,7 +2,6 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckIcon from "@mui/icons-material/Check";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import { useState } from "react";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
@@ -110,12 +109,10 @@ export default function DescentForm({
       action={
         <RoundActionButton
           onClick={isLast ? handleSave : () => setStep((s) => s + 1)}
-          disabled={isBusy}
+          busy={isBusy}
           ariaLabel={isLast ? "Save" : "Next"}
         >
-          {isBusy ? (
-            <CircularProgress size={20} color="inherit" />
-          ) : isLast ? (
+          {isLast ? (
             <CheckIcon fontSize="small" />
           ) : (
             <ArrowForwardIcon fontSize="small" />

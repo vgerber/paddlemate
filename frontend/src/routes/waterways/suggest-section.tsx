@@ -4,7 +4,6 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlin
 import MapIcon from "@mui/icons-material/Map";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -290,7 +289,8 @@ function SuggestSectionPage() {
                 ? () => wizard.setStep(step + 1)
                 : handleSubmit
           }
-          disabled={!submitted && (!wizard.canProceed || submitting)}
+          disabled={!submitted && !wizard.canProceed}
+          busy={submitting}
           ariaLabel={
             submitted
               ? "Back to map"
@@ -299,9 +299,7 @@ function SuggestSectionPage() {
                 : "Suggest section"
           }
         >
-          {submitting ? (
-            <CircularProgress size={20} color="inherit" />
-          ) : submitted ? (
+          {submitted ? (
             <MapIcon fontSize="small" />
           ) : step < WIZARD_STEPS.length - 1 ? (
             <ArrowForwardIcon fontSize="small" />
