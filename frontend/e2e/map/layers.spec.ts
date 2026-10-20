@@ -23,3 +23,19 @@ for (const path of screens) {
     expect(errors).toEqual([]);
   });
 }
+
+test("the layers popover opens beside its key", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop", "desktop control stack");
+  await page.goto("/?waterway=9001&section=9101");
+  const key = page.getByTestId("map-layer-button");
+  await key.click();
+  const pop = page.getByTestId("map-layer-toggle");
+  await expect(pop).toBeVisible();
+  const k = await key.boundingBox();
+  const p = await pop.boundingBox();
+  if (!k || !p) throw new Error("no layout");
+  // To the key's left, level with its top, not in the window's corner.
+  expect(Math.abs(p.y - k.y)).toBeLessThan(4);
+  expect(k.x - (p.x + p.width)).toBeGreaterThanOrEqual(0);
+  expect(k.x - (p.x + p.width)).toBeLessThan(16);
+});

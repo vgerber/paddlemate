@@ -348,7 +348,7 @@ The rules, built in `components/canvas/` (plan and reasons:
   which keeps its own screens. A route that has its own picker map (the log
   form) leaves `canvasRoutes.ts` so only one map draws.
 - **Cards.** A route renders `FloatingCard`s inside `CanvasLayout`. Kinds and
-  widths live in `tokens.canvas.cards`: `detail` 38% (420-720, resizable),
+  widths live in `tokens.canvas.cards`: `detail` 26% (340-440, resizable; 360 below 1280),
   `list` 20% (300-380), `side` 25% (400-600). The cards may cover 55% of the
   window, or 70% when a list card is among them; beyond that the lowest
   priority card folds to its header. The map page alone uses a `detail` card.

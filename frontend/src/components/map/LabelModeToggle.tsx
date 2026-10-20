@@ -1,6 +1,5 @@
 import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
 import ButtonBase from "@mui/material/ButtonBase";
-import Paper, { type PaperProps } from "@mui/material/Paper";
 import Popover from "@mui/material/Popover";
 import { useState } from "react";
 import { Segment, SegmentTrack } from "@/components/canvas/SegmentedControl";
@@ -93,10 +92,8 @@ function Choices({
   );
 }
 
-/** The popover's surface, named for tests and for the toggle's design. */
-function LayerPaper(props: PaperProps) {
-  return <Paper data-testid="map-layer-toggle" {...props} />;
-}
+// Spread in, so the slot props type takes the data attribute.
+const PAPER_TEST_ID = { "data-testid": "map-layer-toggle" };
 
 /** The layer choices are one key in the control stack, under the zoom group,
  * and open in a 272px popover to its left. */
@@ -141,9 +138,11 @@ function LayerKey(
         // The popover sits 8px left of the key, level with its top.
         marginThreshold={8}
         disableScrollLock
-        slots={{ paper: LayerPaper }}
+        // Props only: a replaced paper slot loses the popover paper's
+        // absolute position, and the popover lands in the window's corner.
         slotProps={{
           paper: {
+            ...PAPER_TEST_ID,
             role: "dialog",
             "aria-label": "Map layers",
             sx: {
