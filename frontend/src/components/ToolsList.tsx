@@ -82,7 +82,7 @@ export default function ToolsList() {
                 height: 40,
                 display: "grid",
                 placeItems: "center",
-                borderRadius: `${tokens.radii.sm + 2}px`,
+                borderRadius: `${tokens.radii.row}px`,
                 bgcolor: `${tokens.primary}${alphas.hover}`,
                 color: tokens.primary,
               }}

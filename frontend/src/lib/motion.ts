@@ -25,10 +25,10 @@ export const css = {
 } as const;
 
 /** How long a spinner waits before it shows, so a fast answer never flashes one. */
-export const SPINNER_DELAY_MS = 150;
+export const SPINNER_DELAY_MS = motion.spinnerDelay;
 
 /** The cross-fade that replaces movement under reduced motion, out and in. */
-export const REDUCED_FADE_MS = 140;
+export const REDUCED_FADE_MS = motion.reducedFade;
 
 export function prefersReducedMotion(): boolean {
   return (

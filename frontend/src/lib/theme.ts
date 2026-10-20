@@ -14,6 +14,13 @@ declare module "@mui/material/styles" {
 // Material 3 roles the app already used, so a value change re-skins every
 // consumer; only the new groups at the end (radii, elevation, motion, touch)
 // are additions.
+const teal = "#0e7490";
+const error = "#b4373f";
+const orange = "#D55E00";
+const blue = "#0072B2";
+const amber = "#C48800";
+const appBarHeight = 56;
+
 const tokens = {
   // Surfaces: the ground is the grey every screen sits on, a surface is a
   // white card on it, surfaceHigh a quiet inset inside a card.
@@ -30,7 +37,7 @@ const tokens = {
 
   // Primary - teal: the one accent. Interactive elements, the selected
   // state, the primary call to action of a flow.
-  primary: "#0e7490",
+  primary: teal,
   onPrimary: "#ffffff",
   primaryDark: "#0b5d74",
   primaryContainer: "#e0f2f6",
@@ -42,16 +49,13 @@ const tokens = {
   onSuccessContainer: "#154f3a",
   onSuccess: "#ffffff",
 
-  // Tertiary: the lime call to action is gone, the accent does that job now.
-  // The keys stay so existing consumers keep resolving.
-  tertiary: "#0e7490",
-  tertiaryFixed: "#0e7490",
-  tertiaryContainer: "#e0f2f6",
-  onTertiaryContainer: "#0b5d74",
-  onTertiary: "#ffffff",
+  // The old lime call to action is gone, the accent does that job now. Map
+  // layers and stars still read this key; it is the same teal.
+  tertiary: teal,
 
   // Error
-  error: "#b4373f",
+  error,
+  errorDark: "#8e2b32",
   errorContainer: "#f7dcde",
 
   // Borders
@@ -90,7 +94,7 @@ const tokens = {
       label: "H",
       marker: "#e5483f",
       text: "#ffffff",
-      bg: "#b4373f",
+      bg: error,
     },
   },
 
@@ -98,33 +102,33 @@ const tokens = {
   featureColors: {
     whitewater: "#CC79A7",
     rapid: "#009E73",
-    hole: "#D55E00",
-    siphon: "#D55E00",
-    strainer: "#D55E00",
+    hole: orange,
+    siphon: orange,
+    strainer: orange,
     waterfall: "#1F9CE2",
     freestyle_spot: "#A0960D",
-    put_in: "#0072B2",
-    take_out: "#D55E00",
-    portage: "#C48800",
-    weir: "#C48800",
-    dam: "#C48800",
+    put_in: blue,
+    take_out: orange,
+    portage: amber,
+    weir: amber,
+    dam: amber,
     obstacle: "#CC79A7",
     bridge: "#58666d",
   },
 
   // Put-in / take-out picking (same hues as featureColors.put_in/take_out)
-  putIn: "#0072B2",
-  takeOut: "#D55E00",
+  putIn: blue,
+  takeOut: orange,
 
   // Map rendering. The base map is light: labels are ink on a white halo,
   // the selected line is the accent, sections are a clear blue.
   mapSectionLine: "#2b88c8",
   mapSectionLineCasing: "#ffffff",
-  mapSelectedLine: "#0e7490",
+  mapSelectedLine: teal,
   // A section drawn as the subject of a screen, and one drawn only as context.
-  mapSectionHighlight: "#0e7490",
+  mapSectionHighlight: teal,
   mapSectionGhost: "#c4d3dc",
-  mapAreaCircle: "#0e7490",
+  mapAreaCircle: teal,
   mapLabelText: "#1f2b31",
   mapLabelHalo: "#ffffff",
   // Country borders on the region browse map. Drawn over everything with a
@@ -147,30 +151,25 @@ const tokens = {
   // eye can tell where one ends, the way an atlas colours countries. Okabe
   // and Ito hues like featureColors. The region-map rework replaces this
   // with one neutral line; until then it stays.
-  mapRegionPalette: [
-    "#0072B2",
-    "#D55E00",
-    "#009E73",
-    "#CC79A7",
-    "#E69F00",
-    "#56B4E9",
-  ],
+  mapRegionPalette: [blue, orange, "#009E73", "#CC79A7", "#E69F00", "#56B4E9"],
 
   // Charts
-  chartSeries: "#0e7490",
+  chartSeries: teal,
   chartGrid: "rgba(31,43,49,0.08)",
 
   // Corner radii in px: small chips and tags, buttons and inputs, range bands
   // and selected rows, cards, sheets and the FAB, dialogs, and the pill for
   // chips and pills.
-  radii: { xs: 6, sm: 10, row: 12, md: 14, lg: 16, xl: 20, pill: 999 },
+  radii: { bar: 3, xs: 6, sm: 10, row: 12, md: 14, lg: 16, xl: 20, pill: 999 },
 
-  // Three elevation steps: a card at rest, a floating panel or popover, and
-  // the accent glow under the primary action.
+  // Elevation steps: a card at rest, a floating panel or popover, the accent
+  // glow under the primary action, and the shadow under a map marker.
   elevation: {
     e1: "0 1px 2px rgba(31,43,49,0.08), 0 1px 1px rgba(31,43,49,0.04)",
     e2: "0 8px 24px rgba(31,43,49,0.12), 0 2px 6px rgba(31,43,49,0.08)",
-    e3: "0 4px 14px rgba(14,116,144,0.25)",
+    e3: `0 4px 14px ${teal}40`,
+    // The legibility halo under a map marker or label sitting on imagery.
+    marker: "0 1px 4px rgba(0,0,0,0.5)",
   },
 
   // Motion: the scale from the motion notes. Arrivals ease out, travel
@@ -181,6 +180,10 @@ const tokens = {
     fast: 160,
     base: 260,
     slow: 360,
+    // How long a spinner waits before it shows, and the cross-fade that
+    // replaces movement under reduced motion.
+    spinnerDelay: 150,
+    reducedFade: 140,
     easeOut: "cubic-bezier(0.2, 0.8, 0.2, 1)",
     easeInOut: "cubic-bezier(0.4, 0, 0.2, 1)",
     easeIn: "cubic-bezier(0.4, 0, 1, 1)",
@@ -191,7 +194,7 @@ const tokens = {
 
   // Chrome: the desktop app bar and the phone bottom nav (before the safe
   // area), the one place these heights are said.
-  chrome: { appBar: 56, bottomNav: 64 },
+  chrome: { appBar: appBarHeight, bottomNav: 64 },
 
   // Canvas: from `md` up the map fills the window under the app bar and the
   // content floats in cards over it. Card widths are a share of the window
@@ -209,7 +212,7 @@ const tokens = {
     coverMaxList: 0.7,
     sideMaxFrac: 0.45,
     freeMin: { w: 240, h: 200 },
-    headerHeight: 56,
+    headerHeight: appBarHeight,
     // The resize tab on a card's edge: 14 x 48 to look at, 44 x 64 to hit.
     gripHit: { w: 44, h: 64 },
     gripBar: { w: 14, h: 48 },
@@ -220,10 +223,9 @@ const tokens = {
       gutter: 8,
       inner: 16,
       line: 24,
-      hit: 44,
       hitEdge: 12,
       row: 56,
-      headerRow: 56,
+      headerRow: appBarHeight,
       tabRow: 48,
     },
     dock: { min: 184, max: 248, vh: 0.22, from: 1280, minWindowHeight: 600 },
@@ -247,10 +249,10 @@ const tokens = {
 
 /** Font stacks used across the app: one family, weights carry the hierarchy. */
 export const fonts = {
+  // Aliases of body, kept until the remaining callers move to `body`.
   label: '"Figtree Variable", "Figtree", system-ui, sans-serif',
-  body: '"Figtree Variable", "Figtree", system-ui, sans-serif',
-  // No monospace in the calm language; numbers use tabular figures instead.
   mono: '"Figtree Variable", "Figtree", system-ui, sans-serif',
+  body: '"Figtree Variable", "Figtree", system-ui, sans-serif',
 } as const;
 
 const { radii, elevation, motion } = tokens;
@@ -261,7 +263,7 @@ const shadows = [
   "none",
   elevation.e1,
   ...Array.from({ length: 23 }, () => elevation.e2),
-] as unknown as Shadows;
+] as Shadows;
 
 /** The only alpha suffixes to append to a token (\`\${token}\${alphas.x}\`):
  * tint for row washes, wash for selected grounds, hover on top of them,
@@ -296,13 +298,13 @@ export const theme = createTheme({
     // The accent is also the call to action now, so `color="secondary"`
     // still resolves; it is the same teal.
     secondary: {
-      main: tokens.tertiary,
+      main: tokens.primary,
       dark: tokens.primaryDark,
-      contrastText: tokens.onTertiary,
+      contrastText: tokens.onPrimary,
     },
     error: {
       main: tokens.error,
-      dark: "#8e2b32",
+      dark: tokens.errorDark,
       contrastText: tokens.white,
     },
     // Amber for pending/incomplete states, aligned with the medium water
@@ -328,10 +330,10 @@ export const theme = createTheme({
     divider: tokens.outlineVariant,
     action: {
       active: tokens.onSurfaceVariant,
-      hover: "rgba(14, 116, 144, 0.08)",
-      selected: "rgba(14, 116, 144, 0.12)",
+      hover: `${tokens.primary}${alphas.wash}`,
+      selected: `${tokens.primary}${alphas.hover}`,
       selectedOpacity: 0.12,
-      focus: "rgba(14, 116, 144, 0.12)",
+      focus: `${tokens.primary}${alphas.hover}`,
     },
   },
 
@@ -346,13 +348,13 @@ export const theme = createTheme({
       standard: motion.base,
       complex: motion.slow,
       enteringScreen: motion.base,
-      leavingScreen: 180,
+      leavingScreen: motion.fast,
     },
     easing: {
       easeInOut: motion.easeInOut,
       easeOut: motion.easeOut,
       easeIn: motion.easeIn,
-      sharp: "cubic-bezier(0.4, 0, 0.6, 1)",
+      sharp: motion.easeInOut,
     },
   },
 
@@ -433,7 +435,7 @@ export const theme = createTheme({
         ".maplibregl-ctrl.maplibregl-ctrl-group": {
           backgroundColor: tokens.surface,
           border: "none",
-          borderRadius: radii.sm + 2,
+          borderRadius: radii.row,
           boxShadow: elevation.e2,
           overflow: "hidden",
         },
@@ -511,7 +513,7 @@ export const theme = createTheme({
           fontWeight: 600,
           textTransform: "none",
         },
-        sizeSmall: { minHeight: 36, paddingInline: 12 },
+        sizeSmall: { minHeight: tokens.touch.min, paddingInline: 12 },
         outlined: {
           borderWidth: 1,
           borderColor: tokens.outlineVariant,
@@ -604,7 +606,7 @@ export const theme = createTheme({
       defaultProps: { disableUnderline: true },
       styleOverrides: {
         root: {
-          borderRadius: radii.sm + 2,
+          borderRadius: radii.row,
           backgroundColor: tokens.surface,
           // The rest edge is the only boundary of the control: outline
           // clears the 3:1 floor, outlineVariant (a hairline) does not.
@@ -662,7 +664,7 @@ export const theme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: radii.sm + 2,
+          borderRadius: radii.row,
           backgroundColor: tokens.surface,
           fontSize: "1rem",
           "& .MuiOutlinedInput-notchedOutline": {
@@ -708,8 +710,8 @@ export const theme = createTheme({
           transition: `background-color ${motion.instant}ms ${motion.easeOut}`,
           "&:active": { backgroundColor: `${tokens.primary}${alphas.wash}` },
           "&.Mui-selected": {
-            backgroundColor: `${tokens.primary}1f`,
-            "&:hover": { backgroundColor: `${tokens.primary}29` },
+            backgroundColor: `${tokens.primary}${alphas.hover}`,
+            "&:hover": { backgroundColor: `${tokens.primary}${alphas.strong}` },
           },
         },
       },
@@ -718,7 +720,10 @@ export const theme = createTheme({
     MuiTabs: {
       styleOverrides: {
         root: { minHeight: tokens.touch.row },
-        indicator: { height: 3, borderRadius: "3px 3px 0 0" },
+        indicator: {
+          height: 3,
+          borderRadius: `${radii.bar}px ${radii.bar}px 0 0`,
+        },
       },
     },
 
@@ -741,14 +746,14 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           padding: 3,
-          borderRadius: radii.sm + 2,
+          borderRadius: radii.row,
           backgroundColor: tokens.surfaceHigh,
           boxShadow: `inset 0 0 0 1px ${tokens.outlineVariant}`,
         },
         grouped: {
           border: 0,
           margin: 0,
-          borderRadius: `${radii.sm - 1}px !important`,
+          borderRadius: `${radii.sm}px !important`,
         },
       },
     },
@@ -756,7 +761,7 @@ export const theme = createTheme({
     MuiToggleButton: {
       styleOverrides: {
         root: {
-          minHeight: tokens.touch.min - 6,
+          minHeight: tokens.touch.min,
           fontWeight: 600,
           textTransform: "none",
           color: tokens.onSurfaceVariant,
@@ -773,7 +778,7 @@ export const theme = createTheme({
     MuiTooltip: {
       styleOverrides: {
         tooltip: {
-          borderRadius: radii.xs + 2,
+          borderRadius: radii.xs,
           backgroundColor: tokens.onSurface,
           color: tokens.white,
           fontSize: "0.75rem",
@@ -811,7 +816,7 @@ export const theme = createTheme({
     MuiAlert: {
       styleOverrides: {
         root: {
-          borderRadius: radii.sm + 2,
+          borderRadius: radii.row,
           padding: "8px 12px",
           fontSize: "0.8125rem",
           lineHeight: 1.5,
@@ -869,7 +874,7 @@ export const theme = createTheme({
 
     MuiLinearProgress: {
       styleOverrides: {
-        root: { borderRadius: 3 },
+        root: { borderRadius: radii.bar },
       },
     },
 
@@ -910,7 +915,7 @@ export const BOTTOM_NAV_SPACE = `calc(${tokens.chrome.bottomNav}px + env(safe-ar
 /** The app's standard small label: 12px, semibold, sentence case. Spread into
  * sx and override size or color where a variant is needed. */
 export const labelSx = {
-  fontFamily: fonts.label,
+  fontFamily: fonts.body,
   fontWeight: 600,
   letterSpacing: 0,
   fontSize: "0.75rem",
