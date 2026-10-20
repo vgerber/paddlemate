@@ -18,7 +18,7 @@ import {
   useDeleteTripInvite,
   useTripInvites,
 } from "@/lib/hooks/useTrips";
-import { theme } from "@/lib/theme";
+import { alphas, theme } from "@/lib/theme";
 
 const inviteUrl = (token: string) =>
   `${window.location.origin}/invite/${token}`;
@@ -61,7 +61,7 @@ export default function InviteLinks({ tripId }: { tripId: number }) {
             gap: 1,
             py: 0.75,
             borderBottom: "1px solid",
-            borderColor: `${theme.tokens.outlineVariant}55`,
+            borderColor: `${theme.tokens.outlineVariant}${alphas.hairline}`,
           }}
         >
           <Box sx={{ flex: 1, minWidth: 0 }}>

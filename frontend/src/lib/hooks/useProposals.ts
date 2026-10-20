@@ -4,7 +4,7 @@ import {
   type ProposalFilters,
   proposalsApi,
   type ReviewRequest,
-} from "../api";
+} from "@/lib/api";
 
 export const proposalKeys = {
   all: ["proposals"] as const,
@@ -22,10 +22,12 @@ export function useProposals(filters: ProposalFilters = {}) {
   });
 }
 
-export function useProposal(id: number) {
+/** A null id waits: the proposal open beside a list may be none. */
+export function useProposal(id: number | null) {
   return useQuery({
-    queryKey: proposalKeys.detail(id),
-    queryFn: () => proposalsApi.get(id),
+    queryKey: proposalKeys.detail(id ?? 0),
+    queryFn: () => proposalsApi.get(id ?? 0),
+    enabled: id !== null,
   });
 }
 

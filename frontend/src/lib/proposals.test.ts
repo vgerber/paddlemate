@@ -4,7 +4,10 @@ import {
   diffObjects,
   isDisplayable,
   isEmptyValue,
+  proposalRecord,
   proposalTitle,
+  proposedFeatures,
+  proposedLocation,
   shortValue,
 } from "./proposals";
 
@@ -134,5 +137,39 @@ describe("isEmptyValue", () => {
     }
     expect(isEmptyValue(["a"])).toBe(false);
     expect(isEmptyValue(0)).toBe(false);
+  });
+});
+
+describe("reading proposed data", () => {
+  const point = { type: "Point" as const, coordinates: [1, 2] };
+
+  test("proposalRecord turns anything but an object into {}", () => {
+    expect(proposalRecord(null)).toEqual({});
+    expect(proposalRecord([1])).toEqual({});
+    expect(proposalRecord({ a: 1 })).toEqual({ a: 1 });
+  });
+
+  test("proposedLocation needs a geometry", () => {
+    expect(proposedLocation({ location: point })).toEqual(point);
+    expect(proposedLocation({ location: "x" })).toBeUndefined();
+  });
+
+  test("a feature proposal reads its own fields", () => {
+    const got = proposedFeatures({
+      entity_type: "feature",
+      proposed_data: { feature_type: "rapid", location: point, name: "R" },
+    } as Proposal);
+    expect(got).toHaveLength(1);
+    expect(got[0].name).toBe("R");
+  });
+
+  test("a section proposal reads only well-formed bundled features", () => {
+    const got = proposedFeatures({
+      entity_type: "water_section",
+      proposed_data: {
+        features: [{ feature_type: "weir", location: point }, { bad: true }],
+      },
+    } as Proposal);
+    expect(got).toHaveLength(1);
   });
 });

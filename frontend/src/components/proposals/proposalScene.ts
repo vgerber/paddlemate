@@ -1,24 +1,16 @@
 import type { MapScene } from "@/components/canvas/scene";
 import type { MapSubject } from "@/components/map/Map";
 import { toPseudoFeature } from "@/components/waterway/section-details/utils";
-import type {
-  Feature,
-  FeatureType,
-  Proposal,
-  SectionWithFeatures,
-} from "@/lib/api";
+import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
 import { lineCoords } from "@/lib/geo";
+import {
+  proposalRecord,
+  proposedFeatures,
+  proposedLocation,
+} from "@/lib/proposals";
 
 type Geometry = Feature["location"];
 type Position = [number, number];
-
-interface ProposedFeature {
-  feature_type: FeatureType;
-  metadata?: Record<string, unknown> | null;
-  location: Geometry;
-  name?: string | null;
-  lang_code?: string | null;
-}
 
 /** Longest zoom the subject fit may reach; a lone point would otherwise fill
  * the screen with one tile. */
@@ -67,12 +59,12 @@ function proposalMap(
   proposal: Proposal,
   sections: SectionWithFeatures[] | undefined,
 ): ProposalMap {
-  const data = (proposal.proposed_data ?? {}) as Record<string, unknown>;
-  const original = (proposal.original_data ?? {}) as Record<string, unknown>;
-  const location = data.location as Geometry | undefined;
+  const data = proposalRecord(proposal.proposed_data);
+  const original = proposalRecord(proposal.original_data);
+  const location = proposedLocation(data);
   // The proposal carries the old place itself, so the map can frame the change
   // even before (or without) the river's own data.
-  const storedLocation = (original.location as Geometry | undefined) ?? null;
+  const storedLocation = proposedLocation(original) ?? null;
   const deleting = proposal.operation === "delete";
   const entityId = proposal.entity_id;
 
@@ -84,8 +76,9 @@ function proposalMap(
     const stored = parent?.features.find((f) => f.id === entityId);
     const proposed: Feature[] = [];
     if (!deleting) {
-      if (location && data.feature_type) {
-        proposed.push(toPseudoFeature(data as unknown as ProposedFeature, 0));
+      const own = proposedFeatures(proposal)[0];
+      if (own) {
+        proposed.push(toPseudoFeature(own, 0));
       } else if (stored) {
         // A rename or a metadata change: the feature stays where it is.
         proposed.push({ ...stored, id: -proposal.id });
@@ -100,9 +93,7 @@ function proposalMap(
     };
   }
 
-  const bundled = Array.isArray(data.features)
-    ? (data.features as ProposedFeature[])
-    : [];
+  const bundled = proposedFeatures(proposal);
   const stored =
     proposal.entity_type === "water_section"
       ? sections?.find((s) => s.id === entityId)

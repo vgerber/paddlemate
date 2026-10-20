@@ -21,7 +21,7 @@ import {
   useWithdrawCandidate,
 } from "@/lib/hooks/useTrips";
 import { durations } from "@/lib/motion";
-import { fonts, theme } from "@/lib/theme";
+import { alphas, fonts, theme } from "@/lib/theme";
 import { nearestWatched } from "@/lib/tripRange";
 import StayDialog from "./StayDialog";
 
@@ -135,7 +135,7 @@ function SupportBar({ up, down }: { up: number; down: number }) {
           height: 6,
           borderRadius: "3px",
           overflow: "hidden",
-          bgcolor: `${tokens.outlineVariant}55`,
+          bgcolor: `${tokens.outlineVariant}${alphas.hairline}`,
           display: "flex",
         }}
       >
