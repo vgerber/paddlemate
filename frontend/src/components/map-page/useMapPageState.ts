@@ -19,12 +19,14 @@ import { modeSheetMode, modeSheetPeek } from "./modeSheet";
 import { useFeaturePicker } from "./useFeaturePicker";
 import { useMobilePanelState } from "./useMobilePanelState";
 import { useNotePin } from "./useNotePin";
+import { useOpenFeature } from "./useOpenFeature";
 import { useRegionBrowse } from "./useRegionBrowse";
 import { useSearchResults } from "./useSearchResults";
 
 export type RouteSearch = {
   waterway?: number;
   section?: number;
+  feature?: number;
   lat?: number;
   lon?: number;
   radius?: number;
@@ -39,6 +41,7 @@ export function useMapPageState(search: RouteSearch) {
   const {
     waterway: selectedWaterwayId,
     section: selectedSectionId,
+    feature: featureParam,
     panel,
     lat,
     lon,
@@ -96,9 +99,6 @@ export function useMapPageState(search: RouteSearch) {
   const [suggestGaugePins, setSuggestGaugePins] = useState<GaugePin[]>([]);
   // Feature highlighted in the section's feature timeline; the chart panel
   // brings this feature's water ranges to the front.
-  const [selectedFeatureId, setSelectedFeatureId] = useState<number | null>(
-    null,
-  );
 
   // Current map viewport bounds (used for OSM lookups in suggest flows)
   const [mapBounds, setMapBoundsRaw] = useState<ViewBounds | null>(null);
@@ -231,7 +231,12 @@ export function useMapPageState(search: RouteSearch) {
       setSectionDetailTab("features");
       setSelectedGaugeId(null);
       navigate({
-        search: (prev) => ({ ...prev, waterway: id, section: undefined }),
+        search: (prev) => ({
+          ...prev,
+          waterway: id,
+          section: undefined,
+          feature: undefined,
+        }),
       });
     },
     [navigate],
@@ -240,8 +245,9 @@ export function useMapPageState(search: RouteSearch) {
   const setSelectedSectionId = useCallback(
     (id: number | undefined) => {
       setSectionDetailTab("features");
-      setSelectedFeatureId(null);
-      navigate({ search: (prev) => ({ ...prev, section: id }) });
+      navigate({
+        search: (prev) => ({ ...prev, section: id, feature: undefined }),
+      });
     },
     [navigate],
   );
@@ -251,6 +257,20 @@ export function useMapPageState(search: RouteSearch) {
     () => selectedWaterway?.sections ?? [],
     [selectedWaterway],
   );
+
+  const setFeatureParam = useCallback(
+    (id: number | undefined) =>
+      navigate({ search: (prev) => ({ ...prev, feature: id }), replace: true }),
+    [navigate],
+  );
+  const featureOpen = useOpenFeature({
+    featureParam,
+    section: sections.find((s) => s.id === selectedSectionId),
+    setFocusedPoint,
+    setFeaturesTab: () => setSectionDetailTab("features"),
+    setFeatureParam,
+  });
+  const { selectedFeatureId, setSelectedFeatureId } = featureOpen;
 
   // Remember opened rivers for the "recent" list in the search panel
   const selectedWaterwayName = selectedWaterway?.name;
@@ -399,6 +419,8 @@ export function useMapPageState(search: RouteSearch) {
     setSuggestGaugePins,
     selectedFeatureId,
     setSelectedFeatureId,
+    openFeatureFromMap: featureOpen.openFromMap,
+    selectedFeature: featureOpen.selectedFeature,
     showProposedFeatures,
     toggleShowProposedFeatures,
     featureProposals,

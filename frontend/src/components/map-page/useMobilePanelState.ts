@@ -35,6 +35,7 @@ export function useMobilePanelState(
             panel: undefined,
             waterway: undefined,
             section: undefined,
+            feature: undefined,
           }),
         });
       }

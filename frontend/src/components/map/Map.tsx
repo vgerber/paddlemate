@@ -8,7 +8,11 @@ import MapGL, {
   Source,
   useMap,
 } from "react-map-gl/maplibre";
-import { REGION_FILL_LAYER, SECTION_HIT_LAYERS } from "./layerIds";
+import {
+  FEATURE_HIT_LAYERS,
+  REGION_FILL_LAYER,
+  SECTION_HIT_LAYERS,
+} from "./layerIds";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type {
   CountryBorder,
@@ -207,6 +211,10 @@ export interface MapRegions {
 export interface WaterwayMapProps {
   sections?: SectionWithFeatures[];
   features?: Feature[];
+  /** The open feature: drawn heavier along its line. */
+  selectedFeatureId?: number | null;
+  /** A tap on a confirmed feature; it wins over the section beneath it. */
+  onFeatureClick?: (id: number) => void;
   selectedSectionId?: number | null;
   onSectionClick?: (id: number) => void;
   sectionLevels?: Record<number, string>;
@@ -242,6 +250,8 @@ const NO_ENDPOINTS: GeoJSON.FeatureCollection = {
 export default function WaterwayMap({
   sections,
   features,
+  selectedFeatureId,
+  onFeatureClick,
   selectedSectionId,
   onSectionClick,
   sectionLevels,
@@ -386,6 +396,7 @@ export default function WaterwayMap({
       onAreaCircleChange,
       placingFeature,
       onMapClick,
+      onFeatureClick,
       onSectionToggle: picking.onSectionToggle,
       onSectionClick,
       onRegionSelect,
@@ -480,7 +491,11 @@ export default function WaterwayMap({
           reportBounds();
         }}
         onMoveEnd={reportBounds}
-        interactiveLayerIds={[...SECTION_HIT_LAYERS, REGION_FILL_LAYER]}
+        interactiveLayerIds={[
+          ...(onFeatureClick ? FEATURE_HIT_LAYERS : []),
+          ...SECTION_HIT_LAYERS,
+          REGION_FILL_LAYER,
+        ]}
       >
         <MissingIconGuard />
         <NavigationControl position="top-right" showCompass={false} />
@@ -528,6 +543,7 @@ export default function WaterwayMap({
           lineEndpoints={lineEndpointsGeoJSON}
           points={pointsGeoJSON}
           showNames={showFeatureNames}
+          selectedId={selectedFeatureId}
         />
 
         <DraftLayers

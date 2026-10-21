@@ -4,6 +4,7 @@
 export const EMPTY_MAP_SEARCH = {
   waterway: undefined,
   section: undefined,
+  feature: undefined,
   q: undefined,
   country: undefined,
   min_diff: undefined,

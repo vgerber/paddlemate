@@ -17,6 +17,7 @@ export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>) => ({
     waterway: search.waterway ? Number(search.waterway) : undefined,
     section: search.section ? Number(search.section) : undefined,
+    feature: search.feature ? Number(search.feature) : undefined,
     q: typeof search.q === "string" ? search.q || undefined : undefined,
     country:
       typeof search.country === "string"

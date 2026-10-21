@@ -18,6 +18,8 @@ interface FeatureGeoJSONLayersProps {
   lineEndpoints: GeoJSON.FeatureCollection;
   points: GeoJSON.FeatureCollection;
   showNames: boolean;
+  /** The open feature; a line is drawn heavier along its course. */
+  selectedId?: number | null;
   /** Proposed (pending) features render like confirmed markers but with a
    * wider casing and a dashed line. */
   proposed?: boolean;
@@ -49,6 +51,7 @@ export default function FeatureGeoJSONLayers({
   lineEndpoints,
   points,
   showNames,
+  selectedId = null,
   proposed = false,
 }: FeatureGeoJSONLayersProps) {
   const open = useFeatureNumbers();
@@ -126,6 +129,19 @@ export default function FeatureGeoJSONLayers({
             }}
           />
         )}
+        {selectedId != null && (
+          <Layer
+            id={`${p}-lines-selected`}
+            type="line"
+            filter={["==", ["get", "id"], selectedId]}
+            paint={{
+              "line-color": tokens.primary,
+              "line-width": 6,
+              "line-opacity": 0.85,
+              "line-offset": lineOffset,
+            }}
+          />
+        )}
         <Layer
           id={`${p}-lines-layer`}
           type="line"
@@ -136,6 +152,18 @@ export default function FeatureGeoJSONLayers({
             "line-offset": lineOffset,
           }}
         />
+        {!proposed && (
+          <Layer
+            id="feature-lines-hitbox"
+            type="line"
+            paint={{
+              "line-color": tokens.primary,
+              "line-opacity": 0,
+              "line-width": 22,
+              "line-offset": lineOffset,
+            }}
+          />
+        )}
       </Source>
 
       <Source id={`${p}-line-endpoints`} type="geojson" data={lineEndpoints}>
@@ -189,6 +217,17 @@ export default function FeatureGeoJSONLayers({
             "circle-stroke-color": ringColor,
           }}
         />
+        {!proposed && (
+          <Layer
+            id="feature-points-hitbox"
+            type="circle"
+            paint={{
+              "circle-radius": 18,
+              "circle-color": tokens.primary,
+              "circle-opacity": 0,
+            }}
+          />
+        )}
         <Layer
           id={`${p}-points-number`}
           type="symbol"
