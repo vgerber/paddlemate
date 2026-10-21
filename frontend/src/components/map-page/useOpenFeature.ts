@@ -6,8 +6,6 @@ interface OpenFeatureOptions {
   /** The `feature` search param. */
   featureParam: number | undefined;
   section: SectionWithFeatures | undefined;
-  isMobile: boolean;
-  enterMapView: () => void;
   setFocusedPoint: (
     update: (prev: [number, number] | null) => [number, number] | null,
   ) => void;
@@ -22,8 +20,6 @@ interface OpenFeatureOptions {
 export function useOpenFeature({
   featureParam,
   section,
-  isMobile,
-  enterMapView,
   setFocusedPoint,
   setFeaturesTab,
   setFeatureParam,
@@ -59,16 +55,6 @@ export function useOpenFeature({
     [selectedFeatureId, setFeaturesTab, setSelectedFeatureId],
   );
 
-  /** A row: on a phone the overlay would hide the feature, so show the map. */
-  const openFromList = useCallback(
-    (id: number | null) => {
-      setSelectedFeatureId(id);
-      if (id != null && isMobile && section?.features.some((f) => f.id === id))
-        enterMapView();
-    },
-    [setSelectedFeatureId, isMobile, section, enterMapView],
-  );
-
   const shownId = useRef<number | null>(null);
   useEffect(() => {
     const id = selectedFeature?.id ?? null;
@@ -89,6 +75,5 @@ export function useOpenFeature({
     selectedFeature,
     setSelectedFeatureId,
     openFromMap,
-    openFromList,
   };
 }

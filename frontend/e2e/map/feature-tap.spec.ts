@@ -167,14 +167,16 @@ test.describe("tapping a feature on the map", () => {
 });
 
 test.describe("opening a feature from the list", () => {
-  test("a phone shows the map and names the feature in the bar", async ({
+  test("a phone keeps the list and names the feature on the map", async ({
     page,
     isMobile,
   }) => {
     test.skip(!isMobile, "phone layout");
     await openMap(page);
     await page.locator("[data-row]").filter({ hasText: "Big Hole" }).click();
-    await expect(page.getByTestId("mobile-overlay")).toBeHidden();
+    await expect(holeRow(page)).toHaveCount(1);
+    await expect(page.getByTestId("mobile-overlay")).toBeVisible();
+    await showMap(page, true);
     const bar = page.getByRole("button", { name: /Big Hole/ });
     await expect(bar).toBeVisible();
     await expect(bar).toContainText("Lower Test");

@@ -134,7 +134,6 @@ export function useMapPageState(search: RouteSearch) {
     isMobilePanelOpen,
     setIsMobilePanelOpen,
     exitMapView,
-    enterMapView,
   } = useMobilePanelState(panel, selectedWaterwayId);
 
   const [previewRadius, setPreviewRadius] = useState<number | null>(null);
@@ -267,8 +266,6 @@ export function useMapPageState(search: RouteSearch) {
   const featureOpen = useOpenFeature({
     featureParam,
     section: sections.find((s) => s.id === selectedSectionId),
-    isMobile,
-    enterMapView,
     setFocusedPoint,
     setFeaturesTab: () => setSectionDetailTab("features"),
     setFeatureParam,
@@ -423,7 +420,6 @@ export function useMapPageState(search: RouteSearch) {
     selectedFeatureId,
     setSelectedFeatureId,
     openFeatureFromMap: featureOpen.openFromMap,
-    openFeatureFromList: featureOpen.openFromList,
     selectedFeature: featureOpen.selectedFeature,
     showProposedFeatures,
     toggleShowProposedFeatures,
