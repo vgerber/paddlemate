@@ -77,6 +77,15 @@ grey. The layout rules are in [design](design.md).
 Features are named per language, and rapid names are searchable - typing a
 famous rapid finds its river (see [search](search.md)).
 
+A feature opens from its row in the list or by tapping it on the map: a
+point, a numbered pin, the put-in or take-out marker, or a line. A point or
+pin wins over a line, and a feature wins over the section line under it; the
+section stays open. The map highlights the feature (a line along its whole
+course) and frames it beside the panel. The open feature is kept in the
+address (`?feature=<id>`), so a reload or a shared link opens it again; tapping
+it again closes it. In area or region search, a tap on the map picks the area
+or region and never opens a feature.
+
 ## Water levels
 
 Gauges are measurement stations fetched from the agencies' public services
