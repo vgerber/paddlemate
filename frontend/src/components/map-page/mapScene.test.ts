@@ -38,6 +38,8 @@ function input(over: Partial<MapSceneInput> = {}): MapSceneInput {
   return {
     selectedWaterwayId: undefined,
     selectedSectionId: undefined,
+    selectedFeatureId: null,
+    openFeatureFromMap: noop,
     sections: [upper, lower],
     mapSearchSections: [found],
     suggestMode: null,
@@ -237,5 +239,24 @@ describe("buildMapScene", () => {
 
   test("carries the subject for the canvas camera", () => {
     expect(buildMapScene(input()).subject?.key).toBe("results:3");
+  });
+
+  test("a feature tap opens the feature, except while suggesting", () => {
+    const opened: number[] = [];
+    const openFeatureFromMap = (id: number) => opened.push(id);
+    const scene = buildMapScene(
+      input({ selectedSectionId: 1, selectedFeatureId: 7, openFeatureFromMap }),
+    );
+    expect(scene.selectedFeatureId).toBe(7);
+    scene.onFeatureClick?.(7);
+    expect(opened).toEqual([7]);
+    const suggesting = buildMapScene(
+      input({
+        selectedSectionId: 1,
+        suggestMode: "feature",
+        openFeatureFromMap,
+      }),
+    );
+    expect(suggesting.onFeatureClick).toBeUndefined();
   });
 });

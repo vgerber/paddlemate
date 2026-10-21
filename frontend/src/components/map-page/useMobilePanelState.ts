@@ -35,6 +35,7 @@ export function useMobilePanelState(
             panel: undefined,
             waterway: undefined,
             section: undefined,
+            feature: undefined,
           }),
         });
       }
@@ -49,7 +50,11 @@ export function useMobilePanelState(
   /** Bring the overlay back without touching the URL (e.g. suggest mode). */
   const exitMapView = useCallback(() => setIsMobileMapViewRaw(false), []);
 
+  /** Hide the overlay to show the map (a feature opened from the list). */
+  const enterMapView = useCallback(() => setIsMobileMapViewRaw(true), []);
+
   return {
+    enterMapView,
     isMobile,
     isMobileMapView,
     toggleMobileMapView,

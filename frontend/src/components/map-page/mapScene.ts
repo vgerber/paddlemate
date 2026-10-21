@@ -19,6 +19,8 @@ import type { MapPageState } from "./useMapPageState";
 const SCENE_KEYS = [
   "selectedWaterwayId",
   "selectedSectionId",
+  "selectedFeatureId",
+  "openFeatureFromMap",
   "sections",
   "mapSearchSections",
   "suggestMode",
@@ -141,6 +143,11 @@ export function buildMapScene(input: MapSceneInput): MapScene {
     sections: riverOpen ? input.sections : input.mapSearchSections,
     features: input.mapFeatures,
     selectedSectionId,
+    selectedFeatureId: input.selectedFeatureId,
+    onFeatureClick:
+      suggestMode || selectedSectionId == null
+        ? undefined
+        : input.openFeatureFromMap,
     onSectionClick: suggestMode ? undefined : input.handleSectionClick,
     gauges: {
       pins:

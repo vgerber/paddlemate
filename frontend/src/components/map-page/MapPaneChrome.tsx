@@ -16,6 +16,8 @@ import type { MapPageState } from "./useMapPageState";
 
 interface SelectionBarProps {
   sectionName?: string;
+  /** The open feature, named first when there is one. */
+  featureName?: string;
   waterwayName?: string;
   level?: WaterLevel;
   onOpen: () => void;
@@ -24,6 +26,7 @@ interface SelectionBarProps {
 /** The phone's bar at the foot of the map; opens the detail overlay again. */
 function SelectionBar({
   sectionName,
+  featureName,
   waterwayName,
   level,
   onOpen,
@@ -63,11 +66,13 @@ function SelectionBar({
           noWrap
           sx={{ fontWeight: 700, lineHeight: 1.3 }}
         >
-          {sectionName ?? waterwayName ?? ""}
+          {featureName ?? sectionName ?? waterwayName ?? ""}
         </Typography>
-        {sectionName && waterwayName && (
+        {(featureName ? sectionName : sectionName && waterwayName) && (
           <Typography variant="caption" color="textSecondary" noWrap>
-            {waterwayName}
+            {featureName
+              ? [sectionName, waterwayName].filter(Boolean).join(" - ")
+              : waterwayName}
           </Typography>
         )}
       </Box>

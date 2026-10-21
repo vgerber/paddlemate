@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import type { MapScene } from "@/components/canvas/scene";
 import WaterwayMap from "@/components/map/Map";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
+import { featureName } from "@/components/waterway/section-details/utils";
 import { localizedName } from "@/lib/localization";
 import MapPaneChrome from "./MapPaneChrome";
 import { modeSheetMode, modeSheetPeek } from "./modeSheet";
@@ -38,6 +39,7 @@ export default function MapPane({
     isAreaSearchLoading,
     isMobileMapView,
     toggleMobileMapView,
+    selectedFeature,
   } = state;
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId);
@@ -113,6 +115,7 @@ export default function MapPane({
           mapView={isMobileMapView}
           resultsBadge={resultsBadge}
           sectionName={sectionName}
+          featureName={selectedFeature && featureName(selectedFeature)}
           waterwayName={waterwayName}
           level={sectionLevel}
           onOpen={toggleMobileMapView}
