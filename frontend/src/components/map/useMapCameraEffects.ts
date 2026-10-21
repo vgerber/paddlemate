@@ -143,6 +143,8 @@ export function useMapCameraEffects({
     map.flyTo({
       center: focusedPoint,
       zoom: Math.max(map.getZoom(), 14),
+      // Centre it in the free area beside the cards, not the whole window.
+      ...(paddingRef.current && { padding: paddingRef.current }),
       duration: 600,
     });
   }, [focusedPoint, mapLoaded, mapRef]);

@@ -5,6 +5,7 @@ import { LEVEL_MARKER_MATCH } from "@/lib/waterLevel";
 
 import {
   SECTION_CASING_LAYER,
+  SECTION_ENDPOINT_ICON_LAYER,
   SECTION_HITBOX_LAYER,
   SECTION_LINE_LAYER,
 } from "./layerIds";
@@ -102,7 +103,7 @@ export default function SectionLayers({
           }}
         />
         <Layer
-          id="section-endpoints-icon"
+          id={SECTION_ENDPOINT_ICON_LAYER}
           type="symbol"
           filter={withEndpoints(
             selectedSectionId != null
