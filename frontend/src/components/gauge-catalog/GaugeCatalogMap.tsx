@@ -15,7 +15,6 @@ import MapGL, {
   NavigationControl,
   Source,
 } from "react-map-gl/maplibre";
-import "maplibre-gl/dist/maplibre-gl.css";
 import { LIBERTY_STYLE } from "@/components/map/mapStyles";
 import { useCalmBaseMap } from "@/components/map/useMutedBaseMap";
 import EmptyState from "@/components/states/EmptyState";

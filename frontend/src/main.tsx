@@ -7,6 +7,9 @@ import ErrorFallback from "./components/states/ErrorFallback";
 import { theme } from "./lib/theme";
 import { routeTree } from "./routeTree.gen";
 import "@fontsource-variable/figtree";
+// Loaded up front, not with the lazy map: it must precede index.css and the
+// emotion styles it is overridden by.
+import "maplibre-gl/dist/maplibre-gl.css";
 import "./index.css";
 
 const router = createRouter({
