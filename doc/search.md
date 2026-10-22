@@ -75,12 +75,22 @@ Area and Region are the two ways to search without typing a name:
   section inside the circle are listed.
 - **Region** - switch to region mode and the map becomes the picker: the
   valleys, districts, mountain ranges and states in view are outlined and
-  labelled, and clicking one lists the rivers reaching into it. Under the
-  search field, level chips (Valleys, Districts, Mountain ranges, States) limit
-  the map to one kind; with none set, every kind is drawn at once. Each kind
-  appears only while the view is no wider than it can read (about 3 degrees
-  for valleys, 6 for districts, 8 for mountain ranges, 12 for states); past that the map says "Zoom in to see
-  districts" instead. The map stays quiet so the picked region is the only
+  labelled, and clicking one lists the rivers reaching into it. One kind is
+  drawn at a time, named in a segmented control under the search field
+  (Valleys, Districts, Ranges, States), so what a click picks is always
+  visible. Until you choose one, the zoom does: states from a country view,
+  districts for a region, valleys from river level (ranges only when asked
+  for). Tapping a segment pins that kind, tapping it again goes back to
+  following the zoom, and a pick keeps its kind. Each kind appears only while
+  the view is no wider than it can read (about 3 degrees for valleys, 6 for
+  districts, 8 for mountain ranges, 12 for states); past that the map and the
+  panel say "Zoom in to see districts" instead. Under the control, "Valleys
+  in view (n)" (or the kind in use) lists every region of that kind that
+  meets the view by name, also the ones the map thins out, and a row picks
+  it. On a phone a tap first lights the region and the sheet shows its name,
+  kind and a "Pick" button; a second tap on it, or Pick, picks it, and a tap
+  on bare map clears the light. On a desktop the region under the pointer
+  gets a dark outline and a tag with its name and kind, and a click picks. The map stays quiet so the picked region is the only
   thing that stands out: every boundary is one thin grey line, so an edge two
   regions share reads once, with a faint fill inside that only has to catch
   your click. Picking a region opens a sheet with its name, the kind of
@@ -88,8 +98,9 @@ Area and Region are the two ways to search without typing a name:
   in. In region mode the base map's roads fade to 40% and their names, shields
   and one-way arrows are hidden, until you leave region mode. Each region has
   one name, set at its visual centre - the point deepest inside its shape, not
-  the middle of its bounding box. A valley has no outline, so it is a soft
-  band along the valley floor. Clicking ground that several regions share
+  the middle of its bounding box. A valley is outlined like the rest, as a
+  narrow corridor along its floor, and a tap within about 10 pixels of it
+  counts. Clicking ground that several regions share
   lists them and lets you say which you meant; each row names the country and
   the kind of region. The region you picked is the only thing drawn in teal,
   with its name; the rest stay grey. Two rules keep the map readable. A
@@ -205,8 +216,8 @@ ISO code. The migration does not change `search_key`, so no `REINDEX`.
 
 `/geo/region-outlines` without `kinds` picks one kind by viewport width (states
 4-12 degrees, ranges 1.5-4, districts 0.8-1.5, valleys below). The app always
-sends `kinds=` (comma list of `valley,district,range,state`): all four, or the
-one a level chip chose. Those kinds come back, each only while the viewport is no wider than its limit
+sends `kinds=` (comma list of `valley,district,range,state`): the one kind the
+segmented control or the zoom chose. Those kinds come back, each only while the viewport is no wider than its limit
 (`BrowseTier::max_span`: valley 3, district 6, range 8, state 12 degrees). A
 kind over its limit is omitted and named in `hidden_kinds`, so the app can say
 "Zoom in to see districts". An unknown kind is a 400. The background OSM fill
