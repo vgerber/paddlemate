@@ -2,7 +2,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
-import { openRowSx } from "@/components/canvas/flatRow";
+import { openRowSx, phoneRowPad } from "@/components/canvas/flatRow";
 import { theme } from "@/lib/theme";
 import { GROUPS, type GroupId } from "./groups";
 
@@ -38,6 +38,7 @@ export default function SettingsList({
             gap: 1,
             py: 1.25,
             px: 1.75,
+            ...phoneRowPad,
             "&.Mui-selected, &.Mui-selected:hover": openRowSx(true),
             "&.Mui-focusVisible": {
               outline: `2px solid ${tokens.primary}`,

@@ -47,7 +47,7 @@ export default function ListPaneHeader({
           // at the same place.
           minHeight: tokens.touch.min,
           boxSizing: "border-box",
-          px: 2,
+          px: { xs: `${tokens.phone.line}px`, md: 2 },
         },
         ...(Array.isArray(sx) ? sx : [sx]),
       ]}

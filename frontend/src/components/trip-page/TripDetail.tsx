@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { fabRoom } from "@/components/PaneFab";
 import PanelHeader from "@/components/PanelHeader";
 import RowMenu from "@/components/RowMenu";
 import { SwipeGhost } from "@/components/SwipeGhost";
@@ -213,7 +214,7 @@ export default function TripDetail({
           px: 1.5,
           py: 1.5,
           // Leave room so the FAB never covers the last row.
-          pb: { xs: 12, md: 2 },
+          pb: { ...fabRoom, md: 2 },
         }}
       >
         {t === "bases" && (

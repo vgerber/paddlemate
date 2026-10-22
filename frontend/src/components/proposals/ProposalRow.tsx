@@ -1,7 +1,11 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
-import { desktopFlatRow, openRowSx } from "@/components/canvas/flatRow";
+import {
+  desktopFlatRow,
+  openRowSx,
+  phoneRowPad,
+} from "@/components/canvas/flatRow";
 import type { Proposal } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
 import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
@@ -46,6 +50,7 @@ export default function ProposalRow({
         textAlign: "left",
         width: "100%",
         px: "14px",
+        ...phoneRowPad,
         py: 1.5,
         minHeight: 64,
         borderRadius: `${tokens.radii.md}px`,

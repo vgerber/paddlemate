@@ -1,7 +1,11 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
-import { desktopFlatRow, openRowSx } from "@/components/canvas/flatRow";
+import {
+  desktopFlatRow,
+  openRowSx,
+  phoneRowPad,
+} from "@/components/canvas/flatRow";
 import { tripStanding } from "@/components/trip-page/planWeek";
 import type { Trip } from "@/lib/api";
 import { dateRange, todayIso } from "@/lib/format";
@@ -43,6 +47,7 @@ export default function TripRow({
         width: "100%",
         textAlign: "left",
         p: 1.75,
+        ...phoneRowPad,
         borderRadius: `${tokens.radii.md}px`,
         bgcolor: tokens.surface,
         boxShadow: tokens.elevation.e1,

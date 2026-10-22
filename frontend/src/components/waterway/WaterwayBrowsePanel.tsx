@@ -14,6 +14,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useCallback, useRef, useState } from "react";
 import { useMoreBelow } from "@/components/canvas/useMoreBelow";
 import DockedAction from "@/components/DockedAction";
+import { fabRoom } from "@/components/PaneFab";
 import PanelHeader from "@/components/PanelHeader";
 import type { EditsFilter } from "@/components/provenance/EditsTimeline";
 import SourcesTab from "@/components/provenance/SourcesTab";
@@ -291,7 +292,7 @@ export default function WaterwayBrowsePanel({
     // the panel's own FAB and the mobile speed dial need it.
     pb:
       showNewSectionFab || (inFeatures && (t === "features" || t === "logs"))
-        ? { xs: 9, md: inFeatures ? `${panel.gutter}px` : 0 }
+        ? { ...fabRoom, md: inFeatures ? `${panel.gutter}px` : 0 }
         : 1,
   });
   /** The open section's tabs. */

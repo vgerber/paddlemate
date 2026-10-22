@@ -5,7 +5,9 @@ import Collapse from "@mui/material/Collapse";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { phoneRowPad } from "@/components/canvas/flatRow";
 import { factLabelSx } from "@/components/Fact";
+import { fabRoom } from "@/components/PaneFab";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -205,7 +207,7 @@ export default function TripTimeline({
           gap: 1,
           p: 1.5,
           // Leave room so the FAB never covers the last day.
-          pb: { xs: 12, md: 1.5 },
+          pb: { ...fabRoom, md: 1.5 },
         }}
       >
         {wide && <TripStaysSummary tripId={trip.id} />}
@@ -269,6 +271,7 @@ function DayEntry({
         cursor: "pointer",
         textAlign: "left",
         px: 1.75,
+        ...phoneRowPad,
         py: 1.5,
         borderRadius: `${tokens.radii.md}px`,
         bgcolor: past ? tokens.surfaceLow : tokens.surfaceLowest,

@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { phoneRowPad } from "@/components/canvas/flatRow";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -123,6 +124,7 @@ function NotificationRow({
               borderRadius: `${theme.tokens.radii.md}px`,
               boxShadow: theme.tokens.elevation.e1,
               px: 1.75,
+              ...phoneRowPad,
             }
           : {
               "&:not(:last-of-type)": {

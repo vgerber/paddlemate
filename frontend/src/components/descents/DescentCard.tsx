@@ -1,6 +1,10 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import { desktopFlatRow, openRowSx } from "@/components/canvas/flatRow";
+import {
+  desktopFlatRow,
+  openRowSx,
+  phoneRowPad,
+} from "@/components/canvas/flatRow";
 import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
 import { descentRivers, descentTitle, VISIBILITY_LABELS } from "@/lib/descents";
@@ -97,6 +101,7 @@ export default function DescentCard({
         boxSizing: "border-box",
         minHeight: 56,
         px: flush ? 0 : 1.75,
+        ...(flush ? {} : phoneRowPad),
         py: 1.5,
         font: "inherit",
         color: "text.primary",
