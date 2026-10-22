@@ -15,7 +15,7 @@ import { theme } from "@/lib/theme";
  * around it, tight spacing, and no headings large enough to compete with the
  * panel's own.
  */
-export default function MarkdownText({ children }: { children: string }) {
+export default function MarkdownRender({ children }: { children: string }) {
   return (
     <Markdown
       remarkPlugins={[remarkGfm]}
