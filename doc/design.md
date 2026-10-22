@@ -42,6 +42,25 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   their own; the well supplies it. A docked action sits on the card edges
   (`DockedAction` with `inset`), 8 below the last card. Other panes keep
   their own inset until they move to this system.
+- **The phone grid** (`tokens.phone`, below `md`; the counterpart of the panel
+  spacing above, one token set per layout). A card sits 12 from the screen
+  edge and 8 from the next card; text sits 16 inside it, so every text starts
+  on **one 28 line** and every value ends on the mirrored line, 28 from the
+  right edge. A screen without cards (headers, tabs, a list's count line, a
+  form) uses the same 28 line. In the header the back arrow's icon is on the
+  28 line and the title on the 68 line; the last action icon ends on the right
+  line, and the first tab label starts on the 28 line. A row's icon is 28 wide
+  with 12 after it, so names start on the **68 line**. A trailing control (a
+  `RowMenu`, a chevron) is a 44 box that hangs 10 past the row's padding
+  (`trailSlotSx`), so its icon ends on the right line; rows of one list all
+  render it, a control or an empty spacer, so their values end on one line.
+  **One surface rule:** a phone list is cards on the grey ground (rows are
+  `cardRowSx` cards, groups `phoneCardSx` cards), as the section panel is; a
+  screen is an exception only when a card would hide its structure, and says
+  so here. A scrolling list ends with `fabRoom` (88: the FAB's 56 and 16 around
+  it) as bottom padding instead of narrowing single rows or strips, so the
+  chart, the feature strip and the rows all use the full card width. Checked by
+  `e2e/layout/phone-grid.spec.ts`.
 - **One header menu, grouped.** The section's actions sit in one overflow menu
   in the header, in groups with a hairline between (`groupStart` on a
   `RowAction`): the section (favorite, start and log descent), then its grade
