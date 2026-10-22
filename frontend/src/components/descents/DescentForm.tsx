@@ -1,5 +1,3 @@
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import CheckIcon from "@mui/icons-material/Check";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import { useState } from "react";
@@ -7,6 +5,7 @@ import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
+import { ConfirmIcon, ForwardIcon } from "@/lib/icons";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
 import {
   buildPayload,
@@ -113,9 +112,9 @@ export default function DescentForm({
           ariaLabel={isLast ? "Save" : "Next"}
         >
           {isLast ? (
-            <CheckIcon fontSize="small" />
+            <ConfirmIcon fontSize="small" />
           ) : (
-            <ArrowForwardIcon fontSize="small" />
+            <ForwardIcon fontSize="small" />
           )}
         </RoundActionButton>
       }

@@ -1,10 +1,9 @@
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { type ReactNode, useMemo, useState } from "react";
 import type { RowAction } from "@/components/RowMenu";
 import type { Feature, SectionWithFeatures } from "@/lib/api";
 import { lineCoords } from "@/lib/geo";
 import { useSession } from "@/lib/hooks/useSession";
+import { DeleteIcon, EditIcon } from "@/lib/icons";
 import { DeleteFeatureDialog } from "./DeleteFeatureDialog";
 import { splitBaseGrade } from "./rows";
 import { computeExtent, sectionLengthM } from "./utils";
@@ -31,14 +30,14 @@ export function useGradeActions(
   if (grade && isAuthenticated && onEditFeature) {
     actions.push({
       label: "Edit grade",
-      icon: <EditOutlinedIcon fontSize="small" />,
+      icon: <EditIcon fontSize="small" />,
       onClick: () => onEditFeature(grade.feature),
     });
   }
   if (grade && isAuthenticated) {
     actions.push({
       label: "Delete grade",
-      icon: <DeleteOutlinedIcon fontSize="small" />,
+      icon: <DeleteIcon fontSize="small" />,
       danger: true,
       onClick: () => setTarget(grade.feature),
     });

@@ -1,4 +1,3 @@
-import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -13,6 +12,7 @@ import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
 import ToolsList from "@/components/ToolsList";
 import { useSession } from "@/lib/hooks/useSession";
+import { AccountIcon } from "@/lib/icons";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
 type PhoneTab = "profile" | "inbox" | "tools";
@@ -53,10 +53,7 @@ function SettingsPage() {
 
   if (!isAuthenticated) {
     return (
-      <SignInGate
-        icon={<AccountCircleOutlinedIcon />}
-        title="Sign in to access settings"
-      />
+      <SignInGate icon={<AccountIcon />} title="Sign in to access settings" />
     );
   }
 

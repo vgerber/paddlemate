@@ -1,5 +1,3 @@
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
-import EventNoteOutlinedIcon from "@mui/icons-material/EventNoteOutlined";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
 import Stack from "@mui/material/Stack";
@@ -15,6 +13,7 @@ import type { Trip } from "@/lib/api";
 import { descentTitle } from "@/lib/descents";
 import { formatDate, todayIso } from "@/lib/format";
 import { useTripTimeline } from "@/lib/hooks/useTrips";
+import { EventNoteIcon, LogIcon } from "@/lib/icons";
 import { durations } from "@/lib/motion";
 import { alphas, fonts, theme } from "@/lib/theme";
 import {
@@ -141,7 +140,7 @@ export default function TripTimeline({
   if (days.length === 0) {
     return (
       <EmptyState
-        icon={<EventNoteOutlinedIcon />}
+        icon={<EventNoteIcon />}
         title="Nothing on the plan yet."
         caption="Add a day to say when you arrive, where you are based, or what you paddled."
         py={6}
@@ -356,7 +355,7 @@ function DayEntry({
           {unsectioned.map((descent) => (
             <EventLine
               key={`paddled-${descent.id}`}
-              icon={<DirectionsBoatOutlinedIcon />}
+              icon={<LogIcon />}
               title={descentTitle(descent)}
               detail={`Paddled by ${descent.username ?? "a member"}`}
             />
@@ -375,7 +374,7 @@ function RiverLine({ river }: { river: PaddledRiver }) {
   return (
     <Box sx={{ display: "flex", alignItems: "flex-start", gap: EVENT_GAP }}>
       <EventIcon>
-        <DirectionsBoatOutlinedIcon />
+        <LogIcon />
       </EventIcon>
       <Box sx={{ minWidth: 0 }}>
         <EventText kind="title">{river.name}</EventText>

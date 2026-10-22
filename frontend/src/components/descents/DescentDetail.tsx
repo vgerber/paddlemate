@@ -1,4 +1,3 @@
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
@@ -16,6 +15,7 @@ import {
   formatReading,
   formatTime,
 } from "@/lib/format";
+import { LogIcon } from "@/lib/icons";
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
 import { alphas, labelSx, theme } from "@/lib/theme";
 import { levelConfig } from "@/lib/waterLevel";
@@ -244,9 +244,7 @@ export default function DescentDetail({
                       fontSize: "0.8125rem",
                     }}
                   >
-                    {!showMap && (
-                      <DirectionsBoatOutlinedIcon sx={{ fontSize: 18 }} />
-                    )}
+                    {!showMap && <LogIcon sx={{ fontSize: 18 }} />}
                     {index + 1}
                   </Box>
                   <Box component="span" sx={{ display: "block", minWidth: 0 }}>

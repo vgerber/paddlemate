@@ -1,5 +1,3 @@
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Collapse from "@mui/material/Collapse";
@@ -7,6 +5,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { addMonths, format, parseISO, startOfMonth } from "date-fns";
 import { type PointerEvent, useRef, useState } from "react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
 import { css, durations } from "@/lib/motion";
 import { alphas, fonts, theme } from "@/lib/theme";
 import { monthGrid } from "@/lib/tripTimeline";

@@ -1,4 +1,3 @@
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
@@ -6,6 +5,7 @@ import { stayKind } from "@/components/trips/stayKinds";
 import { ArrivalIcon, DepartureIcon } from "@/components/trips/TripIcons";
 import { descentRivers, descentTitle } from "@/lib/descents";
 import { clockTime, formatTime } from "@/lib/format";
+import { LogIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import type { TripEvent } from "@/lib/tripTimeline";
 
@@ -115,7 +115,7 @@ export function eventLabels(event: TripEvent): {
   const rivers = descentRivers(descent).join(" / ");
 
   return {
-    icon: <DirectionsBoatOutlinedIcon />,
+    icon: <LogIcon />,
     title,
     detail: `${rivers && rivers !== title ? `${rivers} · ` : ""}Paddled by ${descent.username ?? "a member"} · ${formatTime(descent.start_time)}`,
   };

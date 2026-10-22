@@ -1,6 +1,5 @@
-import ThumbDownOutlinedIcon from "@mui/icons-material/ThumbDownOutlined";
-import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
 import ButtonBase from "@mui/material/ButtonBase";
+import { ThumbDownIcon, ThumbUpIcon } from "@/lib/icons";
 import { alphas, fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -22,7 +21,7 @@ export default function VoteButton({
   disabled?: boolean;
   onClick: () => void;
 }) {
-  const Icon = direction === "up" ? ThumbUpOutlinedIcon : ThumbDownOutlinedIcon;
+  const Icon = direction === "up" ? ThumbUpIcon : ThumbDownIcon;
   return (
     <ButtonBase
       aria-label={label}

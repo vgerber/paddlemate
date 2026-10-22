@@ -1,8 +1,8 @@
-import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
 import ButtonBase from "@mui/material/ButtonBase";
 import Popover from "@mui/material/Popover";
 import { useState } from "react";
 import { Segment, SegmentTrack } from "@/components/canvas/SegmentedControl";
+import { LayersIcon } from "@/lib/icons";
 import { alphas, theme } from "@/lib/theme";
 import type { MapPadding } from "./Map";
 import { BELOW_ZOOM, stackOffset } from "./MapCompass";
@@ -127,7 +127,7 @@ function LayerKey(
             : tokens.elevation.e2,
         }}
       >
-        <LayersOutlinedIcon />
+        <LayersIcon />
       </ButtonBase>
       <Popover
         open={open}

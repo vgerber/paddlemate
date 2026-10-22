@@ -1,8 +1,8 @@
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import { openRowSx, phoneRowPad } from "@/components/canvas/flatRow";
+import { ChevronRightIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import { GROUPS, type GroupId } from "./groups";
 

@@ -1,4 +1,3 @@
-import CheckIcon from "@mui/icons-material/Check";
 import Alert from "@mui/material/Alert";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
@@ -19,6 +18,7 @@ import {
   usePatchTripStay,
   useProposeCandidate,
 } from "@/lib/hooks/useTrips";
+import { ConfirmIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import StayLocationPicker, { type StayPoint } from "./StayLocationPicker";
 
@@ -275,7 +275,7 @@ export default function StayDialog({
             busy={isBusy}
             ariaLabel="Save base"
           >
-            <CheckIcon />
+            <ConfirmIcon />
           </RoundActionButton>
         }
       />

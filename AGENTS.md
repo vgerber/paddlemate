@@ -295,6 +295,7 @@ Component files are not util modules; cross-cutting helpers live in `lib/`:
 | `lib/descents.ts` | `uniqueSnapshotsBySeries`, `toPseudoSection` |
 | `lib/geo.ts` | geometry math plus `lineCoords`/`pointCoords` narrowing |
 | `lib/mapSearch.ts` | `EMPTY_MAP_SEARCH` (the map route's full search shape) |
+| `lib/icons.ts` | every icon, one export per idea; never import `@mui/icons-material` elsewhere |
 
 Date arithmetic - parsing a day, stepping days, counting them, month grids -
 goes through `date-fns` (`parseISO`, `addDays`, `differenceInCalendarDays`),

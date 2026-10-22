@@ -1,9 +1,9 @@
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import Box from "@mui/material/Box";
 import { useMemo } from "react";
 import DescentCard from "@/components/descents/DescentCard";
 import QueryStates from "@/components/states/QueryStates";
 import { useMyDescents } from "@/lib/hooks/useDescents";
+import { LogIcon } from "@/lib/icons";
 import GroupHead from "./GroupHead";
 
 /** The signed-in user's own descents, grouped by month. */
@@ -38,7 +38,7 @@ export default function MyLogsPanel({
       query={query}
       count={descents.length}
       empty={{
-        icon: <DirectionsBoatOutlinedIcon />,
+        icon: <LogIcon />,
         title: "No descents logged yet.",
       }}
       errorFallback="Could not load your logs."

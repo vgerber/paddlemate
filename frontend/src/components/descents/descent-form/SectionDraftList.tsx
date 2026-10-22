@@ -1,9 +1,7 @@
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
+import { DeleteIcon, MoveDownIcon, MoveUpIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import type { SectionDraft } from "./model";
 
@@ -33,7 +31,7 @@ export default function SectionDraftList({ sections, onChange }: Props) {
         ? [
             {
               label: "Move up",
-              icon: <ArrowUpwardIcon />,
+              icon: <MoveUpIcon />,
               onClick: () => moveSection(i, -1),
             },
           ]
@@ -42,14 +40,14 @@ export default function SectionDraftList({ sections, onChange }: Props) {
         ? [
             {
               label: "Move down",
-              icon: <ArrowDownwardIcon />,
+              icon: <MoveDownIcon />,
               onClick: () => moveSection(i, 1),
             },
           ]
         : []),
       {
         label: "Remove",
-        icon: <DeleteOutlinedIcon />,
+        icon: <DeleteIcon />,
         danger: true,
         onClick: () => onChange(sections.filter((_, j) => j !== i)),
       },

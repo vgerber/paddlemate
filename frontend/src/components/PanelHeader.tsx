@@ -1,10 +1,9 @@
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { SwipeTrack } from "@/lib/hooks/useSwipeTabs";
+import { BackIcon, CloseIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import UnderlineTabs from "./UnderlineTabs";
 
@@ -92,7 +91,7 @@ export default function PanelHeader<T extends string>({
               {backIcon === "close" ? (
                 <CloseIcon sx={backIconSx} />
               ) : (
-                <ArrowBackIcon sx={backIconSx} />
+                <BackIcon sx={backIconSx} />
               )}
             </IconButton>
           )}

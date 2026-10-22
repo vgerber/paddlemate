@@ -1,8 +1,3 @@
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
-import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
-import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
-import LuggageOutlinedIcon from "@mui/icons-material/LuggageOutlined";
-import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
@@ -20,18 +15,25 @@ import {
   useNotifications,
   useRefreshNotifications,
 } from "@/lib/hooks/useNotifications";
+import {
+  BaseIcon,
+  LogIcon,
+  MembersIcon,
+  NotificationsIcon,
+  TripIcon,
+} from "@/lib/icons";
 import { alphas, fonts, theme } from "@/lib/theme";
 
 const { phone } = theme.tokens;
 
 /** The icon the app uses for the thing that changed. */
 function KindIcon({ kind }: { kind: TripEvent["kind"] }) {
-  if (kind.startsWith("member_")) return <GroupOutlinedIcon />;
+  if (kind.startsWith("member_")) return <MembersIcon />;
   if (kind.startsWith("stay_") || kind.startsWith("candidate_")) {
-    return <HotelOutlinedIcon />;
+    return <BaseIcon />;
   }
-  if (kind === "log_linked") return <DirectionsBoatOutlinedIcon />;
-  return <LuggageOutlinedIcon />;
+  if (kind === "log_linked") return <LogIcon />;
+  return <TripIcon />;
 }
 
 /** What changed on the caller's trips, newest first. Opening it marks
@@ -82,7 +84,7 @@ export default function NotificationList({
   if (!data?.items.length) {
     return (
       <EmptyState
-        icon={<NotificationsNoneOutlinedIcon />}
+        icon={<NotificationsIcon />}
         title="Nothing new"
         caption="Changes others make to your trips show up here."
         pt={7.5}

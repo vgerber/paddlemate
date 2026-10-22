@@ -1,7 +1,3 @@
-import FormatBoldIcon from "@mui/icons-material/FormatBold";
-import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
-import LinkIcon from "@mui/icons-material/Link";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -10,6 +6,12 @@ import Typography from "@mui/material/Typography";
 import { useRef, useState } from "react";
 import { factLabelSx } from "@/components/Fact";
 import MarkdownText from "@/components/MarkdownText";
+import {
+  FormatBoldIcon,
+  FormatItalicIcon,
+  FormatListIcon,
+  LinkIcon,
+} from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -134,7 +136,7 @@ export default function MarkdownField({
     {
       key: "list",
       title: "Bulleted list",
-      icon: <FormatListBulletedIcon fontSize="small" />,
+      icon: <FormatListIcon fontSize="small" />,
       run: () => apply((v, s, e) => prefixLines(v, s, e, "- ")),
     },
   ];

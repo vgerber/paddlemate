@@ -1,11 +1,10 @@
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import SearchIcon from "@mui/icons-material/Search";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Fab from "@mui/material/Fab";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import { CollapseIcon, SearchIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import { levelMarkerColor, type WaterLevel } from "@/lib/waterLevel";
 import SectionSpeedDial from "./SectionSpeedDial";
@@ -76,7 +75,7 @@ function SelectionBar({
           </Typography>
         )}
       </Box>
-      <KeyboardArrowUpIcon
+      <CollapseIcon
         fontSize="small"
         sx={{ color: "action.active", flexShrink: 0 }}
       />

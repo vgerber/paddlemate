@@ -1,9 +1,9 @@
-import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { humanize, sentenceCase } from "@/lib/format";
+import { CloseIcon } from "@/lib/icons";
 import { labelSx } from "@/lib/theme";
 import {
   FULL_SECTION_TOLERANCE_M,

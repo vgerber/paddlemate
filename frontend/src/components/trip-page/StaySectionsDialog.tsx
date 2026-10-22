@@ -1,4 +1,3 @@
-import CheckIcon from "@mui/icons-material/Check";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
@@ -15,6 +14,7 @@ import type { SectionWithFeatures, TripStay } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useReplaceStaySections } from "@/lib/hooks/useTrips";
 import { useWaterway } from "@/lib/hooks/useWaterways";
+import { ConfirmIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 interface Props {
@@ -115,7 +115,7 @@ export default function StaySectionsDialog({
             busy={replaceSections.isPending}
             ariaLabel="Save the watch list"
           >
-            <CheckIcon />
+            <ConfirmIcon />
           </RoundActionButton>
         }
       />

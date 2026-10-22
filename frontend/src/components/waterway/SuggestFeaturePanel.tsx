@@ -1,10 +1,10 @@
-import CheckIcon from "@mui/icons-material/Check";
 import Box from "@mui/material/Box";
 import { useRef, useState } from "react";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Feature, WaterRangeWithStatus } from "@/lib/api";
 import { lineCoords } from "@/lib/geo";
 import { useWaterway } from "@/lib/hooks/useWaterways";
+import { ConfirmIcon } from "@/lib/icons";
 import type { GeometryPicking } from "./geometryPicking";
 import SuggestFeatureForm from "./SuggestFeatureForm";
 
@@ -83,7 +83,7 @@ export default function SuggestFeaturePanel({
             disabled={!canSubmit}
             ariaLabel="Submit"
           >
-            <CheckIcon fontSize="small" />
+            <ConfirmIcon fontSize="small" />
           </RoundActionButton>
         }
       />

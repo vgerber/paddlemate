@@ -1,10 +1,10 @@
-import OpenInFullOutlinedIcon from "@mui/icons-material/OpenInFullOutlined";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import type { Proposal } from "@/lib/api";
+import { OpenFullIcon } from "@/lib/icons";
 import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
 import { fonts } from "@/lib/theme";
 import StatusChip from "./StatusChip";
@@ -45,7 +45,7 @@ export default function ProposalCardHeader({
             }
             sx={{ flexShrink: 0, mt: -0.5 }}
           >
-            <OpenInFullOutlinedIcon sx={{ fontSize: "0.9rem" }} />
+            <OpenFullIcon sx={{ fontSize: "0.9rem" }} />
           </IconButton>
         </Tooltip>
       </Box>

@@ -1,5 +1,3 @@
-import CloseIcon from "@mui/icons-material/Close";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import ButtonBase from "@mui/material/ButtonBase";
@@ -11,6 +9,7 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { plural } from "@/lib/format";
 import type { LngLat } from "@/lib/geo";
+import { CloseIcon, PlaceIcon } from "@/lib/icons";
 import { alphas, theme } from "@/lib/theme";
 import {
   type GeometryPicking,
@@ -57,7 +56,7 @@ function PointChip({
         borderRadius: `${tokens.radii.sm}px`,
       }}
     >
-      <LocationOnIcon sx={{ fontSize: 18, flexShrink: 0 }} />
+      <PlaceIcon sx={{ fontSize: 18, flexShrink: 0 }} />
       <Typography variant="body2" sx={{ flex: 1, fontWeight: 600 }}>
         {index != null && `${index + 1}. `}
         {label}

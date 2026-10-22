@@ -1,5 +1,3 @@
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
@@ -7,6 +5,7 @@ import type { ReactNode } from "react";
 import { ArrivalIcon, DepartureIcon } from "@/components/trips/TripIcons";
 import FormSection from "@/components/waterway/FormSection";
 import type { Descent, TripMember, TripStay } from "@/lib/api";
+import { LogIcon, PlaceIcon } from "@/lib/icons";
 import { alphas, theme } from "@/lib/theme";
 import type { TripDay, TripEvent } from "@/lib/tripTimeline";
 import {
@@ -95,12 +94,12 @@ export default function DayDetail({
               />
             )}
             <AddRow
-              icon={<PlaceOutlinedIcon fontSize="small" />}
+              icon={<PlaceIcon fontSize="small" />}
               label="Base the group here"
               onClick={() => actions.onAddStay(day.date)}
             />
             <AddRow
-              icon={<DirectionsBoatOutlinedIcon fontSize="small" />}
+              icon={<LogIcon fontSize="small" />}
               label="Log a descent"
               onClick={actions.onNewLog}
             />

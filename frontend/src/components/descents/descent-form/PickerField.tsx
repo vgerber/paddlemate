@@ -1,10 +1,10 @@
-import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import type { ChangeEvent } from "react";
 import { formatDate } from "@/lib/format";
+import { CloseIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;

@@ -1,10 +1,10 @@
-import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { Media } from "@/lib/api";
+import { CloseIcon } from "@/lib/icons";
 import { alphas, labelSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
