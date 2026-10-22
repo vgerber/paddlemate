@@ -193,7 +193,7 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
       </Box>
 
       <Collapse in={open} timeout={durations.base} unmountOnExit>
-        <Box sx={{ pl: 3 }}>
+        <Box sx={{ pl: { xs: 3.5, md: 3 } }}>
           {node.nested.map((child, i) => (
             <FeatureNode
               key={child.item.feature.id}
