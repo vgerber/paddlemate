@@ -9,6 +9,7 @@ import FormSection from "@/components/waterway/FormSection";
 import type { Trip, TripStayKind } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateTrip, usePatchTrip } from "@/lib/hooks/useTrips";
+import { theme } from "@/lib/theme";
 import { STAY_KINDS } from "./stayKinds";
 import {
   buildCreatePayload,
@@ -101,7 +102,9 @@ export default function TripForm({
           overflowY: "auto",
           // The fields keep the log form's 720px column in a wide pane; the
           // scrollbar stays at the pane's edge.
-          px: embedded ? "max(16px, calc((100% - 720px) / 2))" : 2,
+          px: embedded
+            ? "max(16px, calc((100% - 720px) / 2))"
+            : { xs: `${theme.tokens.phone.line}px`, md: 2 },
           py: 2,
           display: "flex",
           flexDirection: "column",

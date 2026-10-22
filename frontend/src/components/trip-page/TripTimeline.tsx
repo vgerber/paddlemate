@@ -275,11 +275,7 @@ function DayEntry({
         ...phoneRowPad,
         py: 1.5,
         borderRadius: `${tokens.radii.md}px`,
-        bgcolor: past
-          ? { xs: tokens.surfaceLowest, md: tokens.surfaceLow }
-          : tokens.surfaceLowest,
-        // On a phone every day is a card on the ground, so a past day keeps
-        // the rest shadow its desktop twin lacks.
+        bgcolor: past ? tokens.surfaceLow : tokens.surfaceLowest,
         boxShadow: isToday
           ? `inset 0 0 0 2px ${tokens.primary}, ${tokens.elevation.e1}`
           : planned
@@ -287,7 +283,7 @@ function DayEntry({
                 xs: `inset 0 0 0 1px ${tokens.outlineVariant}, ${tokens.elevation.e1}`,
                 md: `inset 0 0 0 1px ${tokens.outlineVariant}`,
               }
-            : { xs: tokens.elevation.e1, md: "none" },
+            : "none",
         outlineOffset: 2,
         ...(isOpen ? { bgcolor: `${tokens.primary}${alphas.tint}` } : {}),
       }}

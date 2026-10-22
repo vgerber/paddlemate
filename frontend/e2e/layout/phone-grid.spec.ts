@@ -202,8 +202,10 @@ test.describe("phone grid @small", () => {
       NAME_LINE,
       "plan row name",
     );
-    const shadow = await day.evaluate((el) => getComputedStyle(el).boxShadow);
-    expect(shadow, "a day is a card on the ground").not.toBe("none");
+    const radius = await day.evaluate(
+      (el) => getComputedStyle(el).borderRadius,
+    );
+    expect(radius, "a day keeps the card shape").not.toBe("0px");
   });
 
   test("trip week strip sits on the lines", async ({ page, viewport }) => {
