@@ -34,6 +34,7 @@ import { inOrder, ORIGIN_UNKNOWN, stepHeadline } from "./steps";
 import { useHistory, useSources } from "./useProvenance";
 
 const { tokens } = theme;
+const { phone } = tokens;
 
 const ODBL_URL = "https://opendatacommons.org/licenses/odbl/";
 
@@ -65,8 +66,8 @@ function SourceRow({
     <>
       <Box
         sx={{
-          width: 36,
-          height: 36,
+          width: { xs: phone.icon, md: 36 },
+          height: { xs: phone.icon, md: 36 },
           borderRadius: `${tokens.radii.sm}px`,
           bgcolor: `${tokens.primary}${alphas.wash}`,
           color: tokens.primary,
@@ -102,7 +103,9 @@ function SourceRow({
         )}
       </Box>
       {onOpen ? (
-        <ChevronRightIcon sx={{ fontSize: 20, color: "text.secondary" }} />
+        <ChevronRightIcon
+          sx={{ fontSize: { xs: 24, md: 20 }, color: "text.secondary" }}
+        />
       ) : (
         <span />
       )}
@@ -110,14 +113,22 @@ function SourceRow({
   );
   const rowSx = {
     display: "grid",
-    gridTemplateColumns: "36px minmax(0, 1fr) 20px",
-    columnGap: 1.5,
+    // Phone: the 28 icon column, names on the 68 line, and the chevron in
+    // the 44 trailing slot that hangs past the padding (a spacer when the
+    // row opens nothing), so values end on one line.
+    gridTemplateColumns: {
+      xs: `${phone.icon}px minmax(0, 1fr) ${tokens.touch.min}px`,
+      md: "36px minmax(0, 1fr) 20px",
+    },
+    columnGap: { xs: `${phone.iconGap}px`, md: 1.5 },
+    justifyItems: "stretch",
     alignItems: "center",
     width: "100%",
     minHeight: 72,
     py: 1,
     pl: 2,
-    pr: 1.5,
+    pr: { xs: `${phone.inner - phone.trailInset}px`, md: 1.5 },
+    "& > :last-child": { justifySelf: "center" },
   } as const;
   return (
     <Box

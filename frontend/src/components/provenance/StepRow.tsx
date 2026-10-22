@@ -4,7 +4,10 @@ import type { ReactNode } from "react";
 import StatusChip from "@/components/proposals/StatusChip";
 import TimelineRail, { type DotKind } from "@/components/TimelineRail";
 import type { ProposalStatus } from "@/lib/api";
+import { theme } from "@/lib/theme";
 import type { BylinePart } from "./steps";
+
+const { phone } = theme.tokens;
 
 export const smallSx = { fontSize: "0.8125rem", lineHeight: "18px" } as const;
 
@@ -67,9 +70,14 @@ export default function StepRow({
       data-testid={testId}
       sx={{
         display: "grid",
-        gridTemplateColumns: "32px minmax(0, 1fr)",
-        columnGap: 1,
-        pl: 1.5,
+        // On a phone the rail is the 28 icon column and the text starts on
+        // the 68 line, like a row with an icon.
+        gridTemplateColumns: {
+          xs: `${phone.icon}px minmax(0, 1fr)`,
+          md: "32px minmax(0, 1fr)",
+        },
+        columnGap: { xs: `${phone.iconGap}px`, md: 1 },
+        pl: { xs: `${phone.inner}px`, md: 1.5 },
         pr: 2,
       }}
     >
