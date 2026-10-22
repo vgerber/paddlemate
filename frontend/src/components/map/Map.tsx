@@ -3,7 +3,6 @@ import MapGL, {
   AttributionControl,
   Layer,
   type MapRef,
-  Marker,
   NavigationControl,
   Source,
   useMap,
@@ -29,6 +28,7 @@ import {
   type ViewBounds,
 } from "@/lib/geo";
 import { theme } from "@/lib/theme";
+import AccessibleMarker from "./AccessibleMarker";
 import CountryBorderLayer from "./CountryBorderLayer";
 import DraftLayers, { FeatureDraftLayer } from "./DraftLayers";
 import FeatureGeoJSONLayers from "./FeatureGeoJSONLayers";
@@ -569,7 +569,7 @@ export default function WaterwayMap({
         {rings && rings.length > 0 && <RangeRingLayers rings={rings} />}
 
         {(pointPins ?? []).map((pin) => (
-          <Marker
+          <AccessibleMarker
             key={pin.id}
             longitude={pin.lon}
             latitude={pin.lat}
@@ -590,7 +590,7 @@ export default function WaterwayMap({
                 }}
               />
             </MarkerHit>
-          </Marker>
+          </AccessibleMarker>
         ))}
 
         {notePins && notePins.length > 0 && (
@@ -681,7 +681,7 @@ export default function WaterwayMap({
         ))}
 
         {areaCircle && (
-          <Marker
+          <AccessibleMarker
             longitude={areaCircle.lon}
             latitude={areaCircle.lat}
             anchor="center"
@@ -699,11 +699,11 @@ export default function WaterwayMap({
                 }}
               />
             </MarkerHit>
-          </Marker>
+          </AccessibleMarker>
         )}
 
         {focusedPoint && (
-          <Marker
+          <AccessibleMarker
             longitude={focusedPoint[0]}
             latitude={focusedPoint[1]}
             anchor="center"
@@ -721,7 +721,7 @@ export default function WaterwayMap({
                 }}
               />
             </MarkerHit>
-          </Marker>
+          </AccessibleMarker>
         )}
       </MapGL>
 

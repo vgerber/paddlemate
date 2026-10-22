@@ -2,9 +2,10 @@ import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
-import { Marker, Popup } from "react-map-gl/maplibre";
+import { Popup } from "react-map-gl/maplibre";
 import { transition } from "@/lib/motion";
 import { labelSx, theme } from "@/lib/theme";
+import AccessibleMarker from "./AccessibleMarker";
 
 const { tokens } = theme;
 
@@ -44,7 +45,7 @@ export default function NoteMarkers({
       {pins.map((pin) => {
         const selected = pin.id === selectedId;
         return (
-          <Marker
+          <AccessibleMarker
             key={pin.id}
             longitude={pin.lon}
             latitude={pin.lat}
@@ -105,7 +106,7 @@ export default function NoteMarkers({
                 />
               </span>
             </button>
-          </Marker>
+          </AccessibleMarker>
         );
       })}
 

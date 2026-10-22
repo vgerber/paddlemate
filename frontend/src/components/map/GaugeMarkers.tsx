@@ -1,11 +1,12 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import { Marker, Popup } from "react-map-gl/maplibre";
+import { Popup } from "react-map-gl/maplibre";
 import type { components } from "@/lib/api/schema";
 import { transition } from "@/lib/motion";
 import { labelSx, theme } from "@/lib/theme";
 import { levelMarkerColor } from "@/lib/waterLevel";
+import AccessibleMarker from "./AccessibleMarker";
 
 const { tokens } = theme;
 
@@ -52,7 +53,7 @@ export default function GaugeMarkers({
             ? theme.tokens.primary
             : theme.tokens.outline;
         return (
-          <Marker
+          <AccessibleMarker
             key={pin.id}
             longitude={pin.lon}
             latitude={pin.lat}
@@ -96,7 +97,7 @@ export default function GaugeMarkers({
                 }}
               />
             </button>
-          </Marker>
+          </AccessibleMarker>
         );
       })}
 

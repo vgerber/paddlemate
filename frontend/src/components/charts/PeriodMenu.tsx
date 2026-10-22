@@ -10,7 +10,7 @@ import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
-const LABELS: Record<TimeRange, string> = {
+export const PERIOD_LABELS: Record<TimeRange, string> = {
   "24h": "Last 24 hours",
   "7d": "Last 7 days",
   "1m": "Last 30 days",
@@ -59,7 +59,7 @@ export default function PeriodMenu({
           bgcolor: open ? `${tokens.primary}${alphas.wash}` : "transparent",
         }}
       >
-        {LABELS[value]}
+        {PERIOD_LABELS[value]}
         <Chevron sx={{ fontSize: 16 }} />
       </ButtonBase>
       <Menu
@@ -91,7 +91,7 @@ export default function PeriodMenu({
                 color: on ? tokens.primary : "inherit",
               }}
             >
-              {LABELS[p]}
+              {PERIOD_LABELS[p]}
               {on && <CheckIcon sx={{ fontSize: 18 }} />}
             </MenuItem>
           );
