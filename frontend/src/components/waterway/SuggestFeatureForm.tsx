@@ -15,6 +15,7 @@ import { useGaugePicker } from "@/lib/hooks/useGaugePicker";
 import { useWaterwayGauges } from "@/lib/hooks/useGauges";
 import { useCreateFeature, useUpdateFeature } from "@/lib/hooks/useSections";
 import { preferredLanguage } from "@/lib/languagePreference";
+import { theme } from "@/lib/theme";
 import FormSection from "./FormSection";
 import GaugeRangePicker from "./GaugeRangePicker";
 import { type GeometryPicking, minVerticesFor } from "./geometryPicking";
@@ -22,6 +23,8 @@ import ProposalNoteField from "./ProposalNoteField";
 import { proposalNoteValue } from "./proposalNote";
 import SuggestFeatureGeometry from "./SuggestFeatureGeometry";
 import SuggestFeatureTypeGrid from "./SuggestFeatureTypeGrid";
+
+const { tokens } = theme;
 
 /** A feature built by the form without being submitted to the API - used by
  * the suggest-section wizard, where features travel inside the section
@@ -250,7 +253,7 @@ export default function SuggestFeatureForm({
   return (
     <Box
       sx={{
-        px: 1.5,
+        px: { xs: `${tokens.phone.line}px`, md: 1.5 },
         pt: 1.5,
         pb: 1.5,
         display: "flex",

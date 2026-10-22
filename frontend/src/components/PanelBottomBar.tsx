@@ -77,7 +77,7 @@ export default function PanelBottomBar({
           "minmax(64px, 1fr) minmax(0, 2fr) minmax(64px, 1fr)",
         alignItems: "center",
         minHeight: 76,
-        px: 2,
+        px: { xs: `${tokens.phone.line}px`, md: 2 },
         pb: "env(safe-area-inset-bottom)",
         bgcolor: tokens.surface,
         borderTop: "1px solid",

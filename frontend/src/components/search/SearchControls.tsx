@@ -105,7 +105,7 @@ export default function SearchControls({
     // and the chips (plus the chip row's own 6px), 6px below.
     <Box
       sx={{
-        px: 2,
+        px: { xs: `${tokens.phone.line}px`, md: 2 },
         pt: 1.5,
         pb: 0.75,
         flexShrink: 0,

@@ -162,6 +162,8 @@ export default function UnderlineTabs<T extends string>({
           // swipe that starts on the bar is taken as a sideways scroll.
           "& .MuiTabs-scroller": { touchAction: "pan-y" },
           "& .MuiTabs-list": { gap: 2.5 },
+          // A short label sits at the tab's left edge, on the grid line.
+          "& .MuiTab-root": { minWidth: 0 },
         }}
       >
         {items.map((item, i) => (

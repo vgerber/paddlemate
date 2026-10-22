@@ -185,7 +185,7 @@ export default function DescentForm({
           mx: "auto",
           width: "100%",
           boxSizing: "border-box",
-          px: 2,
+          px: { xs: `${tokens.phone.line}px`, md: 2 },
           py: 3,
           // Clear the fixed bottom bar so the last field stays reachable.
           pb: "calc(88px + env(safe-area-inset-bottom))",

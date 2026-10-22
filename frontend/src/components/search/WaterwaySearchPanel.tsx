@@ -346,7 +346,12 @@ export default function WaterwaySearchPanel({
           />
 
           {showResults && (
-            <Box sx={{ px: 2, flexShrink: 0 }}>
+            <Box
+              sx={{
+                px: { xs: `${tokens.phone.line - 4}px`, md: 2 },
+                flexShrink: 0,
+              }}
+            >
               <UnderlineTabs
                 value={listView}
                 onChange={setListView}
@@ -380,7 +385,7 @@ export default function WaterwaySearchPanel({
               />
             )}
             {listingRegions && (
-              <Box sx={{ px: { xs: 1, md: 2 }, pt: 1 }}>
+              <Box sx={{ px: { xs: `${tokens.phone.inner}px`, md: 2 }, pt: 1 }}>
                 <RegionSuggestions
                   query={searchFilters.regionQuery}
                   onPick={(picked) => {
@@ -421,7 +426,11 @@ export default function WaterwaySearchPanel({
                   role="status"
                   variant="caption"
                   color="textSecondary"
-                  sx={{ display: "block", px: { xs: 1, md: 2 }, pt: 1 }}
+                  sx={{
+                    display: "block",
+                    px: { xs: `${tokens.phone.inner}px`, md: 2 },
+                    pt: 1,
+                  }}
                 >
                   {unknownShown === 1
                     ? "Water level unknown for 1 section."

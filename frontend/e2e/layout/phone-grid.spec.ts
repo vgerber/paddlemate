@@ -422,3 +422,88 @@ test.describe("phone grid, river and section @small", () => {
     );
   });
 });
+
+/** The element's own box edges, for a field whose border sits on a line. */
+async function boxOf(loc: Locator) {
+  await loc.first().waitFor({ state: "visible" });
+  const b = await loc.first().boundingBox();
+  if (!b) throw new Error("no box");
+  return { left: b.x, right: b.x + b.width };
+}
+
+async function expectBar(page: Page, action: string, name: string) {
+  await expectLeft(
+    page.getByRole("button", { name: "Cancel", exact: true }),
+    LINE,
+    `${name} cancel`,
+  );
+  const { right } = await boxOf(
+    page.getByRole("button", { name: action, exact: true }),
+  );
+  expect(
+    Math.abs(right - ((await viewportWidth(page)) - LINE)),
+    `${name} action ends on the right line`,
+  ).toBeLessThanOrEqual(TOLERANCE);
+}
+
+async function expectField(page: Page, field: Locator, name: string) {
+  const { left, right } = await boxOf(field);
+  expect(Math.abs(left - LINE), `${name} starts on 28`).toBeLessThanOrEqual(
+    TOLERANCE,
+  );
+  expect(
+    Math.abs(right - ((await viewportWidth(page)) - LINE)),
+    `${name} ends on the right line`,
+  ).toBeLessThanOrEqual(TOLERANCE);
+}
+
+test.describe("phone grid forms and sheets @small", () => {
+  test("log form fields and bottom bar", async ({ page }) => {
+    await page.goto("/logs/new");
+    await expectField(
+      page,
+      page
+        .getByLabel("Date", { exact: true })
+        .locator("xpath=ancestor::*[contains(@class,'MuiInputBase-root')][1]"),
+      "date field",
+    );
+    await expectBar(page, "Next", "log form");
+  });
+
+  test("section wizard fields and bottom bar", async ({ page }) => {
+    await page.goto("/waterways/suggest-section?waterway=9001");
+    await expectLeft(byId(page, "form-section-label"), LINE, "form heading");
+    await expectField(
+      page,
+      page
+        .getByLabel("Name", { exact: true })
+        .locator("xpath=ancestor::*[contains(@class,'MuiInputBase-root')][1]"),
+      "name field",
+    );
+    await expectBar(page, "Next", "section wizard");
+  });
+
+  test("search panel controls sit on the 28 line", async ({ page }) => {
+    await page.goto("/?panel=1");
+    await appReady(page);
+    await expectLeft(tab(page, "Name"), LINE, "mode tabs");
+    await expectField(
+      page,
+      page
+        .getByRole("textbox", { name: "Name", exact: true })
+        .locator("xpath=ancestor::*[contains(@class,'MuiInputBase-root')][1]"),
+      "search field",
+    );
+  });
+
+  test("search sheet controls sit on the 28 line", async ({ page }) => {
+    await page.goto("/?mode=area");
+    await appReady(page);
+    await expectLeft(tab(page, "Name"), LINE, "sheet tabs");
+    await expectLeft(
+      page.getByText(/the map to move the search center/),
+      LINE,
+      "area hint",
+    );
+  });
+});

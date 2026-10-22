@@ -247,7 +247,7 @@ export default function SuggestWaterwayPanel({
         sx={{
           flex: 1,
           overflowY: "auto",
-          px: 1.5,
+          px: { xs: `${tokens.phone.line}px`, md: 1.5 },
           pt: 1.5,
           pb: 1.5,
           display: "flex",
@@ -353,7 +353,7 @@ export default function SuggestWaterwayPanel({
                       title="Show on map"
                       sx={{
                         minHeight: tokens.touch.min,
-                        px: 1.5,
+                        px: { xs: 0, md: 1.5 },
                         borderTop: "1px solid",
                         borderColor: tokens.outlineVariant,
                       }}
