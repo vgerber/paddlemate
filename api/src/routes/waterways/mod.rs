@@ -84,6 +84,13 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
             ),
         )
         .api_route(
+            "/{waterway_id}/sections/{section_id}/deleted-features",
+            get_with(
+                history::list_deleted_features,
+                history::list_deleted_features_docs,
+            ),
+        )
+        .api_route(
             "/{waterway_id}/sections/{section_id}/features/{feature_id}/history",
             get_with(
                 history::get_feature_history,

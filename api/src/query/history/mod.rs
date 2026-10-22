@@ -7,11 +7,13 @@
 //! hung off was deleted (that delete records a step for each child). Each step is bounded instead (see
 //! `record::MAX_CHANGES` and `record::MAX_VALUE_CHARS`).
 
+mod deleted;
 mod read;
 mod record;
 mod snapshot;
 mod track;
 
+pub use deleted::list_deleted_features;
 pub use read::{is_known, list_steps, list_waterway_sources};
 pub use record::{Op, Via, diff, record};
 pub use snapshot::{State, scope_of, snapshot};

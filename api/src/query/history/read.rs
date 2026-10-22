@@ -15,7 +15,7 @@ use crate::models::history::{
 /// Most sources or contributors the sources view lists.
 const MAX_LISTED: i64 = 200;
 
-fn user(row: &PgRow, id_col: &str, name_col: &str) -> Option<HistoryUser> {
+pub(super) fn user(row: &PgRow, id_col: &str, name_col: &str) -> Option<HistoryUser> {
     let username: Option<String> = row.get(name_col);
     let user_id: Option<String> = row.get(id_col);
     Some(HistoryUser {

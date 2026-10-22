@@ -9,7 +9,7 @@ use crate::{
     doc_fn,
     error::{ApiError, ErrorResponse},
     models::{
-        history::{HistoryQuery, HistoryStep, SourcesQuery, WaterwaySources},
+        history::{DeletedFeature, HistoryQuery, HistoryStep, SourcesQuery, WaterwaySources},
         path_params::{FeaturePath, SectionPath, WaterwayPath},
         waterway::{PaginatedResponse, page_bounds, total_pages},
     },
@@ -125,6 +125,43 @@ doc_fn!(get_feature_history_docs, op =>
         .description("History of a feature, oldest step first; readable after the feature, or its section or river, was deleted")
         .response::<200, Json<PaginatedResponse<HistoryStep>>>()
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Feature never existed in this section"))
+        .tag("History")
+);
+
+pub async fn list_deleted_features(
+    State(app): State<AppState>,
+    Path(SectionPath {
+        waterway_id,
+        section_id,
+    }): Path<SectionPath>,
+    Query(query): Query<HistoryQuery>,
+) -> impl IntoApiResponse {
+    let scope = Scope::section(waterway_id, section_id);
+    if let Err(err) = require_known(&app, &scope).await {
+        return err.into_response();
+    }
+    let (page, per_page) = page_bounds(query.page, query.per_page, DEFAULT_PER_PAGE);
+    match history::list_deleted_features(&app.pg_pool, waterway_id, section_id, page, per_page)
+        .await
+    {
+        Ok((items, total)) => Json(PaginatedResponse {
+            items,
+            total,
+            page,
+            per_page,
+            total_pages: total_pages(total, per_page),
+        })
+        .into_response(),
+        Err(err) => ApiError::from_db("Error listing deleted features", &err).into_response(),
+    }
+}
+
+doc_fn!(list_deleted_features_docs, op =>
+    op.input::<Path<SectionPath>>()
+        .input::<Query<HistoryQuery>>()
+        .description("Features deleted from a section, newest deletion first; readable after the section was deleted")
+        .response::<200, Json<PaginatedResponse<DeletedFeature>>>()
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Section never existed in this waterway"))
         .tag("History")
 );
 
