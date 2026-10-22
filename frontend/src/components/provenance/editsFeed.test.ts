@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { HistoryStep, Proposal } from "@/lib/api";
 import {
   type EntryRef,
+  goneEntries,
   mergeEdits,
   resolveProposals,
   sameEntry,
@@ -152,5 +153,53 @@ describe("sameEntry", () => {
   test("compares kind and id", () => {
     expect(sameEntry(hole, { ...hole, name: "x" })).toBe(true);
     expect(sameEntry(hole, section)).toBe(false);
+  });
+});
+
+describe("goneEntries", () => {
+  const removal = (over: Record<string, unknown> = {}) =>
+    proposal(9, {
+      entity_id: 8,
+      operation: "delete",
+      status: "approved",
+      original_data: { section_id: 1, feature_type: "weir" },
+      ...over,
+    });
+
+  test("an approved delete of an unlisted feature is a gone entry", () => {
+    expect(goneEntries(1, [removal()], [section, hole])).toEqual([
+      {
+        kind: "feature",
+        id: 8,
+        name: "Weir",
+        label: "Deleted feature",
+        gone: true,
+      },
+    ]);
+  });
+
+  test("its own name wins over the type", () => {
+    const [entry] = goneEntries(
+      1,
+      [removal({ original_data: { section_id: 1, name: "Big weir" } })],
+      [section],
+    );
+    expect(entry.name).toBe("Big weir");
+  });
+
+  test("open, rejected, listed and non-delete proposals are ignored", () => {
+    const others = [
+      removal({ status: "pending" }),
+      removal({ status: "rejected" }),
+      removal({ entity_id: 7 }),
+      removal({ operation: "update" }),
+      removal({ entity_type: "water_section" }),
+      removal({ original_data: { section_id: 2 } }),
+    ];
+    expect(goneEntries(1, others, [section, hole])).toEqual([]);
+  });
+
+  test("one entry per feature", () => {
+    expect(goneEntries(1, [removal(), removal()], [section])).toHaveLength(1);
   });
 });

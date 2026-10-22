@@ -28,10 +28,7 @@ import { useWaterwayGauges } from "@/lib/hooks/useGauges";
 import { useSession } from "@/lib/hooks/useSession";
 import { licenseLink } from "@/lib/license";
 import { alphas, fonts, labelSx, theme } from "@/lib/theme";
-import EditsTimeline, {
-  type EditsFilter,
-  sectionEntries,
-} from "./EditsTimeline";
+import EditsTimeline, { type EditsFilter, useEntries } from "./EditsTimeline";
 import { smallSx } from "./StepRow";
 import { inOrder, ORIGIN_UNKNOWN, stepHeadline } from "./steps";
 import { useHistory, useSources } from "./useProvenance";
@@ -254,7 +251,7 @@ function FilterHeader({
   onBack: () => void;
   onEdit?: (feature: Feature) => void;
 }) {
-  const entry = sectionEntries(section).find(
+  const entry = useEntries(section).find(
     (e) => e.kind === filter.kind && e.id === filter.id,
   );
   const feature =

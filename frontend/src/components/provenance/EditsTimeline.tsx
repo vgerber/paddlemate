@@ -17,6 +17,7 @@ import { labelSx, theme } from "@/lib/theme";
 import {
   type EditItem,
   type EntryRef,
+  goneEntries,
   mergeEdits,
   resolveProposals,
   sameEntry,
@@ -26,7 +27,11 @@ import ProposalStep, { ReviewNote } from "./ProposalStep";
 import StepRow, { Byline, smallSx } from "./StepRow";
 import { stepByline, stepHeadline } from "./steps";
 import type { HistoryTarget } from "./types";
-import { useEntryHistories, useSectionProposals } from "./useProvenance";
+import {
+  useEntryHistories,
+  useRemovedFeatureProposals,
+  useSectionProposals,
+} from "./useProvenance";
 
 const { tokens } = theme;
 
@@ -51,6 +56,16 @@ export function sectionEntries(section: SectionWithFeatures): EntryRef[] {
       }),
     ),
   ];
+}
+
+/** The live entries plus the features deleted since, whose history is still
+ * there to open. */
+export function useEntries(section: SectionWithFeatures): EntryRef[] {
+  const removed = useRemovedFeatureProposals();
+  return useMemo(() => {
+    const live = sectionEntries(section);
+    return [...live, ...goneEntries(section.id, removed.data ?? [], live)];
+  }, [section, removed.data]);
 }
 
 function targetOf(
@@ -237,7 +252,7 @@ export default function EditsTimeline({
 }) {
   const { isAdmin } = useSession();
   const [showRejected, setShowRejected] = useState(false);
-  const everything = useMemo(() => sectionEntries(section), [section]);
+  const everything = useEntries(section);
   const shown = useMemo(
     () =>
       filter
@@ -247,13 +262,15 @@ export default function EditsTimeline({
   );
   const histories = useEntryHistories(shown.map((e) => targetOf(section, e)));
   const proposals = useSectionProposals(section.id);
+  const removed = useRemovedFeatureProposals();
 
   const resolved = useMemo(
     () =>
-      resolveProposals(proposals.data ?? [], everything).filter(
-        (p) => !filter || shown.some((e) => sameEntry(e, p.entry)),
-      ),
-    [proposals.data, everything, filter, shown],
+      resolveProposals(
+        [...(proposals.data ?? []), ...(removed.data ?? [])],
+        everything,
+      ).filter((p) => !filter || shown.some((e) => sameEntry(e, p.entry))),
+    [proposals.data, removed.data, everything, filter, shown],
   );
   const { items, rejected } = useMemo(
     () =>

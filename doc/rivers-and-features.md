@@ -42,6 +42,10 @@ Opening a section shows the gauge chart at the top and four tabs below it:
 - **Sources** - where the data came from (see Internals, provenance). A
   row of the section opens its change history over the pane, and an open
   feature row has a "History" action for that feature.
+  A feature removed through an approved delete proposal stays in "All
+  edits": its "Deleted" step names it ("Deleted feature") and opens its
+  history. A feature an admin deleted directly leaves no proposal to find it
+  by and is not listed.
 
 The **section grade** is read off the grade ranges: a range covering 80% or
 more of the run is the section's grade and is shown in the card subtitle

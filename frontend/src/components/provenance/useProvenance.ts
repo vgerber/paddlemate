@@ -94,6 +94,21 @@ export function useSectionProposals(sectionId: number) {
   });
 }
 
+const removedFilters: ProposalFilters = {
+  entity_type: "feature",
+  operation: "delete",
+  status: "approved",
+};
+
+/** Approved feature deletions, whichever section they were in: the section
+ * filter of the proposal list matches live features only. */
+export function useRemovedFeatureProposals() {
+  return useQuery({
+    queryKey: proposalKeys.list(removedFilters),
+    queryFn: () => proposalsApi.list(removedFilters),
+  });
+}
+
 /** Sources and contributors of a river, or of one section and its features. */
 export function useSources(waterwayId: number, sectionId?: number) {
   return useQuery({

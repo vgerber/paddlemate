@@ -1,4 +1,5 @@
 import type { HistoryStep, Proposal } from "@/lib/api";
+import { humanize, sentenceCase } from "@/lib/format";
 import { inOrder } from "./steps";
 
 /** The entry an edit belongs to: the section itself or one of its features.
@@ -10,6 +11,8 @@ export interface EntryRef {
   name: string;
   /** "Hole", or "Section" */
   label: string;
+  /** Deleted since; it is no longer in the section, only its history is. */
+  gone?: boolean;
 }
 
 export function sameEntry(a: EntryRef, b: EntryRef): boolean {
@@ -42,6 +45,46 @@ export interface EntryHistory {
 export interface EntryProposal {
   entry: EntryRef;
   proposal: Proposal;
+}
+
+/** Features of one section removed through an approved delete proposal, as
+ * entries whose history can still be opened. The API lists no deleted
+ * features and the section filter of proposals only knows live ones; the
+ * proposal's own data still names the section and holds the id. A removal an
+ * admin made directly leaves no proposal and is not found here. */
+export function goneEntries(
+  sectionId: number,
+  proposals: Proposal[],
+  live: EntryRef[],
+): EntryRef[] {
+  const gone: EntryRef[] = [];
+  for (const p of proposals) {
+    if (p.entity_type !== "feature" || p.operation !== "delete") continue;
+    if (p.status !== "approved" || p.entity_id == null) continue;
+    const id = p.entity_id;
+    if ([...live, ...gone].some((e) => e.kind === "feature" && e.id === id)) {
+      continue;
+    }
+    const data = p.original_data as {
+      section_id?: unknown;
+      name?: unknown;
+      feature_type?: unknown;
+    } | null;
+    if (data?.section_id !== sectionId) continue;
+    const type =
+      typeof data?.feature_type === "string"
+        ? sentenceCase(humanize(data.feature_type))
+        : "Feature";
+    const name = typeof data?.name === "string" && data.name ? data.name : type;
+    gone.push({
+      kind: "feature",
+      id,
+      name,
+      label: "Deleted feature",
+      gone: true,
+    });
+  }
+  return gone;
 }
 
 /** Ties a proposal to the entry it is about. Anything about an entry that is
