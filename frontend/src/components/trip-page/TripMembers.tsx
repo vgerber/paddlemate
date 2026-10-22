@@ -9,6 +9,7 @@ import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { trailSlotSx } from "@/components/canvas/flatRow";
 import { factLabelSx } from "@/components/Fact";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import QueryStates from "@/components/states/QueryStates";
@@ -24,6 +25,7 @@ import {
 import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
+const { phone } = tokens;
 
 interface Props {
   tripId: number;
@@ -175,8 +177,9 @@ function MemberRow({
         alignItems: "center",
         gap: 1.25,
         minHeight: 56,
-        pl: 1.5,
-        pr: 0.5,
+        // A phone card pads 16, so text starts on the 28 line.
+        pl: { xs: 2, md: 1.5 },
+        pr: { xs: 2, md: 0.5 },
         borderRadius: `${tokens.radii.md}px`,
         bgcolor: tokens.surface,
         boxShadow: tokens.elevation.e1,
@@ -193,13 +196,13 @@ function MemberRow({
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-start",
-          gap: 1.25,
+          gap: { xs: `${phone.iconGap}px`, md: 1.25 },
           py: 1,
           textAlign: "left",
           "&.Mui-disabled": { opacity: 1 },
         }}
       >
-        <MemberAvatar name={member.username} />
+        <MemberAvatar name={member.username} phoneSize={phone.icon} />
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             sx={{
@@ -237,7 +240,12 @@ function MemberRow({
       <RolePill testId="member-role">
         {member.role === "admin" ? "Admin" : "Member"}
       </RolePill>
-      <RowMenu actions={actions} label={`Actions for ${member.username}`} />
+      {actions.length > 0 ? (
+        <RowMenu actions={actions} label={`Actions for ${member.username}`} />
+      ) : (
+        // Keeps the role pill on the same line as the rows that have a menu.
+        <Box sx={{ ...trailSlotSx, display: { xs: "flex", md: "none" } }} />
+      )}
     </Box>
   );
 }
