@@ -5,7 +5,14 @@ import { theme } from "@/lib/theme";
 const { tokens } = theme;
 
 // MapLibre is the largest dependency; routes without a map never download it.
-const WaterwayMap = lazy(() => import("./Map"));
+const loadMap = () => import("./Map");
+const WaterwayMap = lazy(loadMap);
+
+/** Starts the download early, for a route that is certain to draw a map, so
+ * it runs beside the route's own code instead of after it. */
+export function preloadMap() {
+  void loadMap();
+}
 
 /** The map's stand-in while MapLibre loads: the ground colour at the map's
  * full size, so the layout holds still when the canvas arrives. */

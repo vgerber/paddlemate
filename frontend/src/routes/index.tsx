@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCanvasScene } from "@/components/canvas/CanvasContext";
 import CanvasLayout from "@/components/canvas/CanvasLayout";
+import { preloadMap } from "@/components/map/LazyMap";
 import MapDetailCard from "@/components/map-page/MapDetailCard";
 import MapPane from "@/components/map-page/MapPane";
 import MobileOverlay from "@/components/map-page/MobileOverlay";
@@ -14,6 +15,7 @@ import {
 import { PANEL_HEIGHT } from "@/lib/theme";
 
 export const Route = createFileRoute("/")({
+  loader: preloadMap,
   validateSearch: (search: Record<string, unknown>) => ({
     waterway: search.waterway ? Number(search.waterway) : undefined,
     section: search.section ? Number(search.section) : undefined,

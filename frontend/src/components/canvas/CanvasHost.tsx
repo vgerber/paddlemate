@@ -1,6 +1,7 @@
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useRouterState } from "@tanstack/react-router";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
+import { preloadMap } from "@/components/map/LazyMap";
 import { theme } from "@/lib/theme";
 import { isGeographyRoute } from "./canvasRoutes";
 import { useScene } from "./canvasStore";
@@ -18,6 +19,10 @@ export default function CanvasHost() {
     select: (s) => s.location.search as Record<string, unknown>,
   });
   const scene = useScene();
+  const onCanvas = wide && isGeographyRoute(pathname, search);
+  useEffect(() => {
+    if (onCanvas) preloadMap();
+  }, [onCanvas]);
   if (!wide || !isGeographyRoute(pathname, search) || !scene) return null;
   return (
     <Suspense fallback={null}>
