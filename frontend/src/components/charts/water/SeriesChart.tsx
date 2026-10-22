@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { addDays, differenceInCalendarDays, startOfDay } from "date-fns";
-import type { JSX } from "react";
+import type { JSX, KeyboardEvent } from "react";
 import { useLayoutEffect, useMemo, useState } from "react";
 import {
   Area,
@@ -16,13 +16,15 @@ import {
   YAxis,
 } from "recharts";
 import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
+import { PERIOD_LABELS } from "@/components/charts/PeriodMenu";
 import type { GaugeReading, WaterRangeWithStatus } from "@/lib/api";
 import { humanize, sentenceCase } from "@/lib/format";
 import { useGaugeReadings } from "@/lib/hooks/useGauges";
 import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
 import { levelInk } from "@/lib/waterLevel";
-import { pointTime } from "./chartTime";
+import { announce } from "./announce";
+import { pointTime, typeLabel } from "./chartTime";
 import RailOverlay, {
   RAIL_AXIS,
   RailTick,
@@ -310,6 +312,7 @@ export default function SeriesChart({
   const [hoverOff, setHoverOff] = useState(false);
   // The rail's readout shows only while the pointer is over the plot.
   const [inside, setInside] = useState(false);
+  const [kbIndex, setKbIndex] = useState<number | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
   );
@@ -353,6 +356,47 @@ export default function SeriesChart({
   // Day labels while the window spans days; clock times once it is zoomed in.
   const [winFrom, winTo] = domain ?? plotExtent;
   const byDay = winTo - winFrom >= 2 * 24 * 3600 * 1000;
+
+  const readable = chartData.filter(
+    (d): d is { time: number; value: number } => d.value !== null,
+  );
+  const scrubTo = (point: ScrubPoint | null) => {
+    onScrub?.(point);
+    if (point) {
+      announce(
+        `${pointTime(point.time)}, ${point.value.toFixed(1)} ${series.unit}`,
+      );
+    }
+  };
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (readable.length === 0) return;
+    if (event.key === "Escape") {
+      setKbIndex(null);
+      onScrub?.(null);
+      return;
+    }
+    const last = readable.length - 1;
+    const at = kbIndex ?? last;
+    const next: Record<string, number> = {
+      ArrowLeft: at - (kbIndex == null ? 0 : 1),
+      ArrowRight: at + (kbIndex == null ? 0 : 1),
+      PageDown: at - 10,
+      PageUp: at + 10,
+      Home: 0,
+      End: last,
+    };
+    if (!(event.key in next)) return;
+    event.preventDefault();
+    const index = Math.min(Math.max(next[event.key], 0), last);
+    setKbIndex(index);
+    scrubTo(readable[index]);
+  };
+  const kbPoint = kbIndex != null ? (readable[kbIndex] ?? null) : null;
+  const chartName = `${
+    series.measurement_type === "water_level"
+      ? "Water level"
+      : typeLabel(series.measurement_type)
+  } chart${timeRange ? `, ${PERIOD_LABELS[timeRange].toLowerCase()}` : ""}`;
 
   if (isError) return <ChartError error={error} onRetry={() => refetch()} />;
   if (isLoading) return <ChartSkeleton />;
@@ -405,6 +449,18 @@ export default function SeriesChart({
     <div
       ref={setContainer}
       data-plot-top={headroom}
+      // The plot is one focusable control: arrows pick a reading, the same
+      // readout as hovering, spoken through the live region.
+      role="group"
+      aria-roledescription="chart"
+      aria-label={`${chartName}. Use the arrow keys to read values.`}
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+      onBlur={() => {
+        if (kbIndex == null) return;
+        setKbIndex(null);
+        onScrub?.(null);
+      }}
       onPointerLeave={() => {
         setHoverOff(true);
         setInside(false);
@@ -425,7 +481,6 @@ export default function SeriesChart({
         // zoom hook instead of the browser.
         touchAction: "pan-y",
         WebkitTapHighlightColor: "transparent",
-        outline: "none",
       }}
     >
       {domain && (
@@ -450,6 +505,7 @@ export default function SeriesChart({
         <AreaChart
           width={size.width}
           height={size.height}
+          accessibilityLayer={false}
           data={chartData}
           margin={margin}
           onMouseMove={
@@ -457,7 +513,8 @@ export default function SeriesChart({
               ? (st) => {
                   const i = Number(st.activeIndex);
                   const d = Number.isInteger(i) ? chartData[i] : undefined;
-                  onScrub(
+                  setKbIndex(null);
+                  scrubTo(
                     d && d.value !== null
                       ? { time: d.time, value: d.value }
                       : null,
@@ -569,6 +626,17 @@ export default function SeriesChart({
           />
           {showThresholds && thresholdBands(displayRange)}
           {showThresholds && thresholdLines(displayRange, rail)}
+          {kbPoint && !rail && (
+            <ReferenceDot
+              x={kbPoint.time}
+              y={kbPoint.value}
+              ifOverflow="hidden"
+              r={DOT_RADIUS}
+              fill={tokens.chartSeries}
+              stroke={tokens.surface}
+              strokeWidth={2}
+            />
+          )}
           {lastPoint && !rail && (
             <ReferenceDot
               x={lastPoint.time}
