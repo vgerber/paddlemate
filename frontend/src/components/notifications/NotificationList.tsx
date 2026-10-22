@@ -1,3 +1,7 @@
+import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
+import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
+import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
+import LuggageOutlinedIcon from "@mui/icons-material/LuggageOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -5,7 +9,7 @@ import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { phoneRowPad } from "@/components/canvas/flatRow";
+import { phoneCardSx } from "@/components/canvas/flatRow";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -17,6 +21,18 @@ import {
   useRefreshNotifications,
 } from "@/lib/hooks/useNotifications";
 import { alphas, fonts, theme } from "@/lib/theme";
+
+const { phone } = theme.tokens;
+
+/** The icon the app uses for the thing that changed. */
+function KindIcon({ kind }: { kind: TripEvent["kind"] }) {
+  if (kind.startsWith("member_")) return <GroupOutlinedIcon />;
+  if (kind.startsWith("stay_") || kind.startsWith("candidate_")) {
+    return <HotelOutlinedIcon />;
+  }
+  if (kind === "log_linked") return <DirectionsBoatOutlinedIcon />;
+  return <LuggageOutlinedIcon />;
+}
 
 /** What changed on the caller's trips, newest first. Opening it marks
  * everything shown read; the entries that were new keep their dot until the
@@ -89,7 +105,9 @@ export default function NotificationList({
   };
 
   return (
-    <Box sx={cards ? { display: "grid", gap: 1, p: 1.5 } : undefined}>
+    <Box
+      sx={cards ? { ...phoneCardSx, my: 1.5, overflow: "hidden" } : undefined}
+    >
       {data.items.map((e) => (
         <NotificationRow
           key={e.id}
@@ -116,34 +134,58 @@ function NotificationRow({
       onClick={onClick}
       sx={{
         alignItems: "flex-start",
-        gap: 1.25,
+        gap: card ? `${phone.iconGap}px` : 1.25,
         py: 1.25,
-        ...(card
-          ? {
-              bgcolor: theme.tokens.surface,
-              borderRadius: `${theme.tokens.radii.md}px`,
-              boxShadow: theme.tokens.elevation.e1,
-              px: 1.75,
-              ...phoneRowPad,
-            }
-          : {
-              "&:not(:last-of-type)": {
-                borderBottom: "1px solid",
-                borderColor: `${theme.tokens.outlineVariant}${alphas.hairline}`,
-              },
-            }),
+        px: card ? `${phone.inner}px` : undefined,
+        "&:not(:last-of-type)": {
+          borderBottom: "1px solid",
+          borderColor: `${theme.tokens.outlineVariant}${alphas.hairline}`,
+        },
       }}
     >
-      <Box
-        sx={{
-          width: 8,
-          height: 8,
-          mt: 0.75,
-          flexShrink: 0,
-          borderRadius: "50%",
-          bgcolor: event.unread ? theme.tokens.primary : "transparent",
-        }}
-      />
+      {card ? (
+        <Box
+          sx={{
+            position: "relative",
+            width: phone.icon,
+            height: 20,
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: event.unread ? theme.tokens.primary : "text.secondary",
+            "& .MuiSvgIcon-root": { fontSize: 22 },
+          }}
+        >
+          <KindIcon kind={event.kind} />
+          {event.unread && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: -3,
+                right: -2,
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                bgcolor: theme.tokens.primary,
+                border: `2px solid ${theme.tokens.surface}`,
+                boxSizing: "content-box",
+              }}
+            />
+          )}
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            width: 8,
+            height: 8,
+            mt: 0.75,
+            flexShrink: 0,
+            borderRadius: "50%",
+            bgcolor: event.unread ? theme.tokens.primary : "transparent",
+          }}
+        />
+      )}
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography
           sx={{

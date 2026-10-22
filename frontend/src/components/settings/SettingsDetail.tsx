@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { phoneCardSx } from "@/components/canvas/flatRow";
 import PushSettings from "@/components/notifications/PushSettings";
 import PanelHeader from "@/components/PanelHeader";
 import { theme } from "@/lib/theme";
@@ -9,6 +10,7 @@ import LanguageSection from "./LanguageSection";
 import TokensSection from "./TokensSection";
 
 const { tokens } = theme;
+const { phone } = tokens;
 
 function SettingsSection({ group }: { group: GroupId }) {
   if (group === "language") return <LanguageSection />;
@@ -51,8 +53,8 @@ export default function SettingsDetail({
         }}
       >
         <PanelHeader title={title} onBack={onBack} />
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: 2, py: 2 }}>
-          {body}
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", py: 1.5 }}>
+          <Box sx={{ ...phoneCardSx, p: `${phone.inner}px` }}>{body}</Box>
         </Box>
       </Box>
     );

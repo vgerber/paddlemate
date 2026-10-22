@@ -153,7 +153,7 @@ function LogDetailPage() {
           actionButton={menu}
         />
       )}
-      <Box sx={embedded ? { px: 3.5, py: 2.5 } : { px: 2, py: 2 }}>
+      <Box sx={embedded ? { px: 3.5, py: 2.5 } : { py: 1.5 }}>
         <DescentDetail descent={descent} showMap={!embedded} />
       </Box>
       <ConfirmDialog

@@ -9,6 +9,7 @@ import { transition } from "@/lib/motion";
 import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
+const { phone } = tokens;
 
 // One entry per tool - adding a tool is a single row here. `as const` keeps
 // each `to` a literal route path so the typed Link accepts it.
@@ -61,8 +62,11 @@ export default function ToolsList() {
             to={tool.to}
             sx={{
               display: "grid",
-              gridTemplateColumns: "40px minmax(0, 1fr) auto",
-              gap: 1.5,
+              gridTemplateColumns: {
+                xs: `${phone.icon}px minmax(0, 1fr) auto`,
+                md: "40px minmax(0, 1fr) auto",
+              },
+              gap: { xs: `${phone.iconGap}px`, md: 1.5 },
               alignItems: "start",
               minHeight: tokens.touch.min,
               p: 2,
@@ -78,8 +82,9 @@ export default function ToolsList() {
             <Box
               data-testid="tool-icon"
               sx={{
-                width: 40,
-                height: 40,
+                width: { xs: phone.icon, md: 40 },
+                height: { xs: phone.icon, md: 40 },
+                "& .MuiSvgIcon-root": { fontSize: { xs: 20, md: 24 } },
                 display: "grid",
                 placeItems: "center",
                 borderRadius: `${tokens.radii.row}px`,
