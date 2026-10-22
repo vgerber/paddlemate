@@ -1,13 +1,27 @@
+import useMediaQuery from "@mui/material/useMediaQuery";
 import type { JSX } from "react";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { formatReading } from "@/lib/format";
 import { theme } from "@/lib/theme";
 import { levelInk, levelWord } from "@/lib/waterLevel";
 import { pointTime } from "./chartTime";
-import { clampLabelX, clampReadoutX, spreadWords } from "./railGeometry";
+import {
+  AXIS_EDGE,
+  clampLabelX,
+  clampReadoutX,
+  spreadWords,
+} from "./railGeometry";
 import { levelAt } from "./series";
 
 const { tokens } = theme;
+
+/** How far words and axis labels keep from the plot's edges: on a phone the
+ * plot is the card's full width, so the card's inner 16 puts them on the 28
+ * lines; the wide rail keeps `AXIS_EDGE`. */
+function useEdge() {
+  const phone = useMediaQuery(theme.breakpoints.down("md"), { noSsr: true });
+  return phone ? tokens.phone.inner : AXIS_EDGE;
+}
 
 /** Height of the axis row under the rail's plot, in px. */
 export const RAIL_AXIS = 20;
@@ -15,7 +29,6 @@ export const RAIL_AXIS = 20;
 const DOT_R = 5;
 const DOT_RING = 2.5;
 const WORD_SIZE = 10.5;
-const WORD_X = 12;
 const READOUT_FLIP = 44;
 /** Estimated glyph widths: the readout's 13px text and the 10.5px words. */
 const READOUT_CHAR = 7.2;
@@ -77,6 +90,7 @@ export default function RailOverlay({
   marker,
   hovering,
 }: RailOverlayProps) {
+  const wordX = useEdge();
   if (!yDomain) return null;
   const plotBottom = height - RAIL_AXIS;
   const span = domain[1] - domain[0] || 1;
@@ -144,10 +158,10 @@ export default function RailOverlay({
 
   const overlaps = (wy: number, word: string) => {
     if (!readoutBox) return false;
-    const x1 = WORD_X + word.length * WORD_CHAR;
+    const x1 = wordX + word.length * WORD_CHAR;
     return (
       x1 > readoutBox.x0 &&
-      WORD_X < readoutBox.x1 &&
+      wordX < readoutBox.x1 &&
       wy > readoutBox.y0 &&
       wy - WORD_SIZE < readoutBox.y1
     );
@@ -187,7 +201,7 @@ export default function RailOverlay({
             <title>{`${levelWord(l.key)} from ${l.v} ${unit}`}</title>
             <text
               data-testid="threshold-label"
-              x={WORD_X}
+              x={wordX}
               y={wordYs[i]}
               fontSize={WORD_SIZE}
               fontWeight={600}
@@ -232,19 +246,25 @@ export interface RailTickProps {
   payload?: { value?: unknown };
 }
 
-/** An axis label that keeps 12px clear of the plot's edges. */
+/** An axis label that keeps clear of the plot's edges (see `useEdge`). */
 export function RailTick({
   x,
   y,
   width,
   label,
 }: RailTickProps & { width: number; label: string }) {
-  const cx = clampLabelX(Number(x), label.length * TICK_CHAR, width);
+  const edge = useEdge();
+  const w = label.length * TICK_CHAR;
+  const cx = clampLabelX(Number(x), w, width, edge);
+  // A label pushed against an edge is anchored there, so its real glyph edge
+  // (not the width estimate) sits on the line.
+  const atLeft = cx - w / 2 <= edge;
+  const atRight = !atLeft && cx + w / 2 >= width - edge;
   return (
     <text
-      x={cx}
+      x={atLeft ? edge : atRight ? width - edge : cx}
       y={Number(y) + 4}
-      textAnchor="middle"
+      textAnchor={atLeft ? "start" : atRight ? "end" : "middle"}
       fontSize={11}
       fill={tokens.onSurfaceVariant}
       style={{ fontVariantNumeric: "tabular-nums" }}
