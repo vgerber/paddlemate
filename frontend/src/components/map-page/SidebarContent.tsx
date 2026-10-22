@@ -86,8 +86,11 @@ export default function SidebarContent({
     regionOutline,
     regionChoices,
     regionsLoading,
-    regionLevel,
-    setRegionLevel,
+    regionsListed,
+    regionsHiddenKinds,
+    regionKind,
+    toggleRegionKind,
+    regionPreview,
     selectRegion,
   } = state;
 
@@ -132,8 +135,11 @@ export default function SidebarContent({
           picked: regionOutline,
           choices: regionChoices,
           loading: regionsLoading && !regionOutline,
-          level: regionLevel,
-          onLevelChange: setRegionLevel,
+          listed: regionsListed,
+          kind: regionKind,
+          hiddenKinds: regionsHiddenKinds,
+          onKindToggle: toggleRegionKind,
+          preview: regionPreview,
           onPick: selectRegion,
         }}
       />

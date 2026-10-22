@@ -95,19 +95,6 @@ function holdsManyRanges(
   return nested >= MAX_NESTED_RANGES;
 }
 
-/** The ranges that `visibleRegions` leaves out because they hold other
- * ranges, so they can still be reached from a list. Bounding boxes stand in
- * for containment, as there: the API cannot answer "inside" yet. */
-export function rangesHiddenByNesting<T extends DrawableRegion>(
-  regions: readonly T[],
-  pickedId?: number | null,
-): T[] {
-  const ranges = regions.filter((r) => r.kind === "range");
-  return ranges.filter(
-    (range) => range.id !== pickedId && holdsManyRanges(range, ranges),
-  );
-}
-
 /** The regions the picked one lies in, nearest first. Bounding boxes stand in
  * for containment (an approximation: a neighbour's box can swallow a region
  * that is not inside it) until the API answers it. */

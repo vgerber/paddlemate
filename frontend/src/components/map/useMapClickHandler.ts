@@ -10,6 +10,9 @@ import {
 import type { PickMode } from "./PickModeButtons";
 import type { RegionChoice } from "./RegionChoicePopup";
 
+/** How far from a tap a region still counts as hit, in pixels. */
+const REGION_TAP_SLOP_PX = 10;
+
 /** The regions under one click, when there was more than one to choose from. */
 interface RegionMenu {
   at: { lng: number; lat: number };
@@ -22,7 +25,20 @@ interface RegionMenu {
  * browse layer draws the smallest region last. */
 function regionsUnder(event: MapLayerMouseEvent): RegionChoice[] {
   const options: RegionChoice[] = [];
-  for (const feature of event.features ?? []) {
+  let hits = event.features ?? [];
+  // A valley is a corridor a finger is wider than: when the tap landed beside
+  // one, take the regions within reach of it.
+  if (!hits.some((f) => f.layer.id === REGION_FILL_LAYER)) {
+    const { x, y } = event.point;
+    hits = event.target.queryRenderedFeatures(
+      [
+        [x - REGION_TAP_SLOP_PX, y - REGION_TAP_SLOP_PX],
+        [x + REGION_TAP_SLOP_PX, y + REGION_TAP_SLOP_PX],
+      ],
+      { layers: [REGION_FILL_LAYER] },
+    );
+  }
+  for (const feature of hits) {
     if (feature.layer.id !== REGION_FILL_LAYER) continue;
     const { id, label, sub } = feature.properties ?? {};
     if (typeof id !== "number" || options.some((o) => o.id === id)) continue;
@@ -62,6 +78,10 @@ interface MapClickHandlerOptions {
   onSectionToggle?: (id: number) => void;
   onSectionClick?: (id: number) => void;
   onRegionSelect?: (regionId: number) => void;
+  /** Phone: a tap on a region lights it first and only a second tap on the
+   * same one picks it. A tap on bare map clears the light. */
+  onRegionPreview?: (regionId: number | null) => void;
+  regionPreviewId?: number | null;
 }
 
 /** Owns the put-in/take-out pick mode and dispatches map clicks in priority
@@ -80,6 +100,8 @@ export function useMapClickHandler({
   onSectionToggle,
   onSectionClick,
   onRegionSelect,
+  onRegionPreview,
+  regionPreviewId,
 }: MapClickHandlerOptions) {
   const [pickMode, setPickMode] = useState<PickMode | null>(null);
   const [regionMenu, setRegionMenu] = useState<RegionMenu | null>(null);
@@ -127,7 +149,20 @@ export function useMapClickHandler({
     }
     if (!onRegionSelect) return;
     const options = regionsUnder(e);
-    if (options.length === 0) return;
+    if (options.length === 0) {
+      onRegionPreview?.(null);
+      return;
+    }
+    if (onRegionPreview) {
+      const target =
+        options.find((o) => o.id === regionPreviewId) ?? options[0];
+      if (target.id !== regionPreviewId) {
+        onRegionPreview(target.id);
+        return;
+      }
+      onRegionSelect(target.id);
+      return;
+    }
     // The innermost region is the answer at once; any others are offered.
     onRegionSelect(options[0].id);
     if (options.length > 1) {

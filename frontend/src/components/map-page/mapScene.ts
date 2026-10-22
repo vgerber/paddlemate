@@ -37,6 +37,8 @@ const SCENE_KEYS = [
   "countryBorders",
   "regionsHiddenKinds",
   "selectRegion",
+  "regionPreviewId",
+  "setRegionPreviewId",
   "sectionLevels",
   "searchSectionLevels",
   "focusedPoint",
@@ -174,6 +176,9 @@ export function buildMapScene(input: MapSceneInput): MapScene {
       hiddenKinds:
         riverOpen || !input.isRegionMode ? undefined : input.regionsHiddenKinds,
       onSelect: riverOpen ? undefined : input.selectRegion,
+      // A phone shows what a tap would pick before it picks.
+      previewId: isMobile ? input.regionPreviewId : null,
+      onPreview: riverOpen || !isMobile ? undefined : input.setRegionPreviewId,
     },
     sectionLevels: riverOpen ? input.sectionLevels : input.searchSectionLevels,
     camera: {

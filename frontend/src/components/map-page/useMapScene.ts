@@ -35,7 +35,6 @@ export function useMapScene(state: MapPageState) {
     sections,
     notePin,
     regionChoices,
-    regionLevel,
     isAreaMode,
     areaCircle,
     previewRadius,
@@ -188,14 +187,8 @@ export function useMapScene(state: MapPageState) {
     [selectedWaterwayId, isAreaMode, previewRadius, areaCircle],
   );
 
-  // The level chips narrow what the map draws.
-  const drawnRegions = useMemo(
-    () =>
-      regionLevel
-        ? regionChoices.filter((r) => r.kind === regionLevel)
-        : regionChoices,
-    [regionChoices, regionLevel],
-  );
+  // One kind at a time, already narrowed by the page state.
+  const drawnRegions = regionChoices;
 
   // Line features spanning (nearly) the whole section (e.g. the whitewater
   // zone) would just redraw the section line - keep them in the timeline
