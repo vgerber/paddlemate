@@ -1,8 +1,12 @@
 import Box from "@mui/material/Box";
-import { type ReactNode, useMemo, useState } from "react";
+import { lazy, type ReactNode, Suspense, useMemo, useState } from "react";
 import ChartDock from "@/components/canvas/ChartDock";
 import { useLayout } from "@/components/canvas/canvasStore";
-import { ChartBody, type ChartLoad } from "@/components/charts/ChartStatus";
+import {
+  ChartBody,
+  type ChartLoad,
+  ChartSkeleton,
+} from "@/components/charts/ChartStatus";
 import PeriodMenu from "@/components/charts/PeriodMenu";
 import ReadingBlock, {
   type ReadingView,
@@ -15,7 +19,6 @@ import {
   readingPerType,
 } from "@/components/charts/water/series";
 import type { TimeRange } from "@/components/charts/water/types";
-import WaterChart from "@/components/charts/water/WaterChart";
 import { useIsSwipeGhost } from "@/components/SwipeGhost";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { dockHeight } from "@/lib/canvasLayout";
@@ -28,6 +31,9 @@ import {
   levelWord,
   type WaterLevel,
 } from "@/lib/waterLevel";
+
+// Recharts is heavy and only charts need it, so it loads with the first chart.
+const WaterChart = lazy(() => import("@/components/charts/water/WaterChart"));
 
 const { tokens } = theme;
 
@@ -189,19 +195,21 @@ export default function ReadingChart(props: ReadingChartProps) {
 
   const plotBody = (
     <ChartBody load={status} pending={ghost}>
-      <WaterChart
-        ranges={own}
-        rail
-        onScrub={setScrub}
-        marker={scrub}
-        showThresholds={thresholdsAvailable}
-        timeRange={timeRange}
-        measurementType={measurementType}
-        selectedFeatureId={selectedFeatureId}
-        selectedFeature={selectedFeature}
-        preferredFeatureId={preferredFeatureId}
-        headroom={rail ? 6 : 10}
-      />
+      <Suspense fallback={<ChartSkeleton />}>
+        <WaterChart
+          ranges={own}
+          rail
+          onScrub={setScrub}
+          marker={scrub}
+          showThresholds={thresholdsAvailable}
+          timeRange={timeRange}
+          measurementType={measurementType}
+          selectedFeatureId={selectedFeatureId}
+          selectedFeature={selectedFeature}
+          preferredFeatureId={preferredFeatureId}
+          headroom={rail ? 6 : 10}
+        />
+      </Suspense>
     </ChartBody>
   );
   const source = (

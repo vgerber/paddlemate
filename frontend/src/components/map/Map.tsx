@@ -7,12 +7,6 @@ import MapGL, {
   Source,
   useMap,
 } from "react-map-gl/maplibre";
-import {
-  FEATURE_HIT_LAYERS,
-  REGION_FILL_LAYER,
-  SECTION_HIT_LAYERS,
-} from "./layerIds";
-import "maplibre-gl/dist/maplibre-gl.css";
 import type {
   CountryBorder,
   Feature,
@@ -34,6 +28,11 @@ import DraftLayers, { FeatureDraftLayer } from "./DraftLayers";
 import FeatureGeoJSONLayers from "./FeatureGeoJSONLayers";
 import GaugeMarkers, { type GaugePin } from "./GaugeMarkers";
 import LabelModeToggle from "./LabelModeToggle";
+import {
+  FEATURE_HIT_LAYERS,
+  REGION_FILL_LAYER,
+  SECTION_HIT_LAYERS,
+} from "./layerIds";
 import MapCompass from "./MapCompass";
 import MapNumberMarker from "./MapNumberMarker";
 import MarkerHit from "./MarkerHit";

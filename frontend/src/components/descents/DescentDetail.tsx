@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import Fact, { factValueSx } from "@/components/Fact";
-import WaterwayMap from "@/components/map/Map";
+import WaterwayMap from "@/components/map/LazyMap";
 import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { toPseudoSection, uniqueSnapshotsBySeries } from "@/lib/descents";

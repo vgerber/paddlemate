@@ -3,7 +3,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import { factLabelSx } from "@/components/Fact";
-import WaterwayMap from "@/components/map/Map";
+import WaterwayMap from "@/components/map/LazyMap";
 import { boundsOf, lineCoords } from "@/lib/geo";
 import { useTripStays } from "@/lib/hooks/useTrips";
 import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";

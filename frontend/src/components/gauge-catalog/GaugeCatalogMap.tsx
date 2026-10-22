@@ -14,7 +14,6 @@ import MapGL, {
   NavigationControl,
   Source,
 } from "react-map-gl/maplibre";
-import "maplibre-gl/dist/maplibre-gl.css";
 import AccessibleMarker from "@/components/map/AccessibleMarker";
 import { LIBERTY_STYLE } from "@/components/map/mapStyles";
 import { useCalmBaseMap } from "@/components/map/useMutedBaseMap";

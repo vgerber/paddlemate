@@ -229,12 +229,19 @@ export default function RiverState({
   const now = useMemo(() => new Date(), []);
   const { user } = useSession();
   const comments = useSectionComments(waterwayId, sectionId);
-  const last = useDescents({ section_id: sectionId, per_page: 1 });
   const year = useDescents({
     section_id: sectionId,
     per_page: 1,
     from: yearStartIso(now),
   });
+  // A log this year is also the latest one; only a section last paddled in an
+  // earlier year needs its own request.
+  const latestThisYear = year.data?.items[0];
+  const older = useDescents(
+    { section_id: sectionId, per_page: 1 },
+    year.isSuccess && !latestThisYear,
+  );
+  const lastLog = latestThisYear ?? older.data?.items[0];
   const proposals = useProposals({ section_id: sectionId, status: "pending" });
   const section = useSectionWithFeatures(waterwayId, sectionId);
   const history = useHistory({ waterwayId, sectionId });
@@ -245,7 +252,7 @@ export default function RiverState({
     const hazards = hazardNotes(list, now);
     return orderRows({
       hazard: hazardRow(hazards, now),
-      paddled: paddledRow(last.data?.items[0], {
+      paddled: paddledRow(lastLog, {
         sectionId,
         viewerId: user?.id ?? null,
         level: currentLevel(water.data?.ranges ?? [], now.getTime()),
@@ -257,7 +264,7 @@ export default function RiverState({
     });
   }, [
     comments.data,
-    last.data,
+    lastLog,
     year.data,
     proposals.data,
     water.data,
@@ -289,12 +296,9 @@ export default function RiverState({
     return () => observer.disconnect();
   }, []);
 
-  const waiting = useDelayed(
-    comments.isLoading || last.isLoading,
-    SKELETON_DELAY_MS,
-  );
-  const loading = comments.isLoading || last.isLoading;
-  const failed = [comments, last, proposals].some((q) => q.isError);
+  const loading = comments.isLoading || year.isLoading || older.isLoading;
+  const waiting = useDelayed(loading, SKELETON_DELAY_MS);
+  const failed = [comments, year, older, proposals].some((q) => q.isError);
   const none = !loading && !failed && rows.length === 0;
   const skeletons = waiting ? 2 : 0;
 

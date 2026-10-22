@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import WaterwayMap from "@/components/map/Map";
+import WaterwayMap from "@/components/map/LazyMap";
 import ProposalDiffTable from "@/components/proposals/ProposalDiffTable";
 import FeatureRow from "@/components/waterway/FeatureRow";
 import {

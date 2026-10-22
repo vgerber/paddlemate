@@ -1,6 +1,6 @@
-import { execSync } from "child_process";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
+import { execSync } from "child_process";
 import path from "path";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
@@ -19,6 +19,7 @@ export default defineConfig({
     TanStackRouterVite({
       routesDirectory: "src/routes",
       generatedRouteTree: "src/routeTree.gen.ts",
+      autoCodeSplitting: true,
     }),
     react(),
     VitePWA({
@@ -79,6 +80,12 @@ export default defineConfig({
         advancedChunks: {
           groups: [
             {
+              name: "react-vendor",
+              // Shared helpers stay with React: left alone, Rolldown parks them in the
+              // map or chart chunk, which then loads on every route.
+              test: /node_modules\/(react|react-dom|scheduler|use-sync-external-store)\/|vite\/preload-helper/,
+            },
+            {
               name: "maplibre",
               test: /maplibre-gl|react-map-gl/,
             },
@@ -89,10 +96,6 @@ export default defineConfig({
             {
               name: "recharts",
               test: /recharts/,
-            },
-            {
-              name: "react-vendor",
-              test: /react|react-dom/,
             },
           ],
         },
