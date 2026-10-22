@@ -5,7 +5,7 @@ import Fab from "@mui/material/Fab";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import ListPaneHeader from "@/components/ListPaneHeader";
-import { fabSx } from "@/components/PaneFab";
+import { fabRoom, fabSx } from "@/components/PaneFab";
 import LoadingBox from "@/components/states/LoadingBox";
 import QueryStates from "@/components/states/QueryStates";
 import SignInGate from "@/components/states/SignInGate";
@@ -83,6 +83,7 @@ function TripsPage() {
           flexDirection: "column",
           gap: { xs: 1, md: 0 },
           p: { xs: 1.5, md: 0 },
+          pb: { ...fabRoom, md: 0 },
         }}
       >
         {trips.map((t) => (

@@ -86,11 +86,7 @@ export function FeatureStrip({
   const right = x(totalM);
 
   return (
-    <Box
-      data-testid="features-strip"
-      // On a phone the round action button floats over the end of the strip.
-      sx={{ pr: { xs: 7, md: 0 } }}
-    >
+    <Box data-testid="features-strip">
       <Box ref={ref} sx={{ width: "100%" }}>
         <svg
           viewBox={`0 0 ${width} ${height}`}

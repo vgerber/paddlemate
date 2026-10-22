@@ -10,6 +10,13 @@ import UnderlineTabs from "./UnderlineTabs";
 
 const { tokens } = theme;
 const { panel } = tokens.canvas;
+const { phone } = tokens;
+
+/** The back arrow is a 44 box around a 22 icon; it hangs out so the icon
+ * starts on the phone's text line, and the title follows on the name line. */
+const BACK_ICON = 22;
+const backHang = (tokens.touch.min - BACK_ICON) / 2;
+const titleGap = phone.nameLine - (phone.line - backHang + tokens.touch.min);
 
 const backIconSx = { fontSize: 22, color: "text.primary" } as const;
 
@@ -48,7 +55,7 @@ export default function PanelHeader<T extends string>({
       sx={{
         // A titled header is the section panel's 56 + 48 from md; the tab
         // bar alone keeps its 16 inset.
-        px: { xs: 2, md: title ? 0 : 2 },
+        px: { xs: 0, md: title ? 0 : 2 },
         pt: { xs: title ? 1.5 : 0, md: 0 },
         pb: tabs ? 0 : 1,
         bgcolor: tokens.surface,
@@ -63,13 +70,13 @@ export default function PanelHeader<T extends string>({
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 1,
+            gap: { xs: `${titleGap}px`, md: 1 },
             mb: { xs: tabs ? 0.75 : 0, md: 0 },
             // From md the title row is one 56 row: back box at +12, title
             // text at +64, the last action box ends 12 from the edge.
             minHeight: { md: panel.headerRow },
-            pl: { md: `${panel.hitEdge}px` },
-            pr: { md: `${panel.hitEdge}px` },
+            pl: { xs: `${phone.line}px`, md: `${panel.hitEdge}px` },
+            pr: { xs: `${phone.line}px`, md: `${panel.hitEdge}px` },
           }}
         >
           {onBack && (
@@ -78,7 +85,7 @@ export default function PanelHeader<T extends string>({
               sx={{
                 width: tokens.touch.min,
                 height: tokens.touch.min,
-                ml: { xs: -0.75, md: 0 },
+                ml: { xs: `-${backHang}px`, md: 0 },
               }}
               aria-label={backIcon === "close" ? "Close" : "Back"}
             >
@@ -103,7 +110,18 @@ export default function PanelHeader<T extends string>({
               </Typography>
             )}
           </Box>
-          {actionButton}
+          {actionButton && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                // The last button hangs out so its icon ends on the right line.
+                mr: { xs: `-${phone.trailInset}px`, md: 0 },
+              }}
+            >
+              {actionButton}
+            </Box>
+          )}
         </Box>
       )}
 
@@ -113,7 +131,10 @@ export default function PanelHeader<T extends string>({
           sx={{
             touchAction: "pan-y",
             // The first label starts on the 24 line (tab padding is 4).
-            pl: { md: title ? `${panel.line - 4}px` : 0 },
+            pl: {
+              xs: `${phone.line - 4}px`,
+              md: title ? `${panel.line - 4}px` : 0,
+            },
             minHeight: { md: title ? panel.tabRow : undefined },
           }}
         >

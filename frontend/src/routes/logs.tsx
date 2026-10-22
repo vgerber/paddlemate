@@ -20,7 +20,7 @@ import ListPaneHeader from "@/components/ListPaneHeader";
 import MyLogsPanel from "@/components/logs-page/MyLogsPanel";
 import SocialPanel from "@/components/logs-page/SocialPanel";
 import { useLogsScene } from "@/components/logs-page/useLogsScene";
-import { fabSx } from "@/components/PaneFab";
+import { fabRoom, fabSx } from "@/components/PaneFab";
 import PanelHeader from "@/components/PanelHeader";
 import { SwipeGhost } from "@/components/SwipeGhost";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -188,7 +188,7 @@ function LogsPage() {
   );
 }
 
-const paneSx = { p: { xs: 1.5, md: 0 } };
+const paneSx = { p: { xs: 1.5, md: 0 }, pb: { ...fabRoom, md: 0 } };
 
 function LogsTabBody({
   tab,

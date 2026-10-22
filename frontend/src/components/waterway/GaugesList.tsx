@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
+import { phoneRowPad } from "@/components/canvas/flatRow";
 import GaugeAttribution from "@/components/GaugeAttribution";
 import EmptyState from "@/components/states/EmptyState";
 import type { WaterRangeWithStatus } from "@/lib/api";
@@ -48,6 +49,7 @@ export default function GaugesList({
               width: "100%",
               minHeight: tokens.touch.row,
               px: 1.75,
+              ...phoneRowPad,
               py: 1.25,
               textAlign: "left",
               bgcolor: selected

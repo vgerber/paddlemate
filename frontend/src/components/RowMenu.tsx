@@ -39,6 +39,8 @@ export default function RowMenu({
       <IconButton
         title={label}
         aria-label={label}
+        // The 44 box hangs out so the icon ends on the right line.
+        sx={{ mr: { xs: `-${tokens.phone.trailInset}px`, md: 0 } }}
         onClick={(e) => {
           e.stopPropagation();
           setAnchor(e.currentTarget);

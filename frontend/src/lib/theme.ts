@@ -254,6 +254,26 @@ const tokens = {
       side: { frac: 0.25, min: 400, max: 600, priority: 2, resize: null },
     },
   },
+
+  // The phone grid (below `md`), the counterpart of `canvas.panel`: a card
+  // sits `edge` from the screen edge and 8 from the next card, text sits
+  // `inner` inside it, so every text starts on `line` (edge + inner) and every
+  // value ends `line` from the right edge. A screen without cards uses the
+  // same line. A row's icon is `icon` wide with `iconGap` after it, so names
+  // start at `nameLine`. A trailing control is a 44 box whose 24px icon ends on
+  // the right line (`trailInset` hangs the box out past the text). A scrolling
+  // list ends with `fabRoom` (FAB 56 + 16 above it + 16 below).
+  phone: {
+    edge: 12,
+    gap: 8,
+    inner: 16,
+    line: 28,
+    icon: 28,
+    iconGap: 12,
+    nameLine: 68,
+    trailInset: 10,
+    fabRoom: 88,
+  },
 } as const;
 
 /** Font stacks used across the app: one family, weights carry the hierarchy. */

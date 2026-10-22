@@ -3,6 +3,7 @@ import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef } from "react";
+import { phoneRowPad } from "@/components/canvas/flatRow";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import type { Comment, Media } from "@/lib/api";
 import { categoryColor, categoryLabel } from "@/lib/comments";
@@ -77,6 +78,7 @@ export default function CommentRow({
         mx: 1.5,
         my: 1,
         px: "14px",
+        ...phoneRowPad,
         py: 1.5,
         bgcolor: selected ? `${tokens.primary}${alphas.wash}` : tokens.surface,
         borderRadius: `${tokens.radii.md}px`,

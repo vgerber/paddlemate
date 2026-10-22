@@ -107,7 +107,10 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
             textAlign: "left",
             minHeight: ROW_MIN,
             gap: 1,
-            pr: 1.5,
+            // On a phone the band sits 8 in from the card edge, so 4 and 8 put its
+            // rail and value on the same lines as a plain row's 12 and 16.
+            pl: { xs: 0.5, md: 0 },
+            pr: { xs: 1, md: 1.5 },
           }}
         >
           <Box
@@ -190,7 +193,7 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
       </Box>
 
       <Collapse in={open} timeout={durations.base} unmountOnExit>
-        <Box sx={{ pl: 3 }}>
+        <Box sx={{ pl: { xs: 3.5, md: 3 } }}>
           {node.nested.map((child, i) => (
             <FeatureNode
               key={child.item.feature.id}
