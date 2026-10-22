@@ -1,6 +1,7 @@
-import { Layer, Marker, Source } from "react-map-gl/maplibre";
+import { Layer, Source } from "react-map-gl/maplibre";
 import { circleGeoJSON } from "@/lib/geo";
 import { fonts, theme } from "@/lib/theme";
+import AccessibleMarker from "./AccessibleMarker";
 
 const { tokens } = theme;
 
@@ -98,7 +99,7 @@ export default function RangeRingLayers({ rings }: { rings: RangeRing[] }) {
       </Source>
 
       {rings.map((ring) => (
-        <Marker
+        <AccessibleMarker
           key={ring.id}
           latitude={ring.lat}
           longitude={ring.lon}
@@ -126,7 +127,7 @@ export default function RangeRingLayers({ rings }: { rings: RangeRing[] }) {
           >
             {ring.proposed ? "?" : ring.number}
           </div>
-        </Marker>
+        </AccessibleMarker>
       ))}
     </>
   );

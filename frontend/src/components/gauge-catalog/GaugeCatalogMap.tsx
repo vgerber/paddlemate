@@ -11,11 +11,11 @@ import MapGL, {
   Layer,
   type MapLayerMouseEvent,
   type MapRef,
-  Marker,
   NavigationControl,
   Source,
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
+import AccessibleMarker from "@/components/map/AccessibleMarker";
 import { LIBERTY_STYLE } from "@/components/map/mapStyles";
 import { useCalmBaseMap } from "@/components/map/useMutedBaseMap";
 import EmptyState from "@/components/states/EmptyState";
@@ -269,7 +269,8 @@ export default function GaugeCatalogMap() {
         </Source>
 
         {clusters.map((c) => (
-          <Marker
+          <AccessibleMarker
+            label={`${c.total} gauges, zoom in`}
             key={c.id}
             longitude={c.lng}
             latitude={c.lat}
@@ -280,7 +281,7 @@ export default function GaugeCatalogMap() {
             }}
           >
             <DonutCluster counts={c.counts} total={c.total} />
-          </Marker>
+          </AccessibleMarker>
         ))}
       </MapGL>
 

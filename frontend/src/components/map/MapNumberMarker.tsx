@@ -1,5 +1,5 @@
-import { Marker } from "react-map-gl/maplibre";
 import { theme } from "@/lib/theme";
+import AccessibleMarker from "./AccessibleMarker";
 import MarkerHit from "./MarkerHit";
 
 const { tokens } = theme;
@@ -19,7 +19,7 @@ export default function MapNumberMarker({
   color?: string;
 }) {
   return (
-    <Marker
+    <AccessibleMarker
       latitude={lat}
       longitude={lon}
       anchor="center"
@@ -46,6 +46,6 @@ export default function MapNumberMarker({
           {num}
         </div>
       </MarkerHit>
-    </Marker>
+    </AccessibleMarker>
   );
 }
