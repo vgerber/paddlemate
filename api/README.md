@@ -114,13 +114,14 @@ erDiagram
 ## History and sources
 
 Every river, section and feature has a history: one step per change, oldest
-first. All four routes are public, like the entries themselves.
+first. All five routes are public, like the entries themselves.
 
 | Route | Returns |
 |---|---|
 | `GET /waterways/{id}/history` | steps of the river, also after it was deleted |
 | `GET /waterways/{id}/sections/{section_id}/history` | steps of the section, also after it (or its river) was deleted |
 | `GET /waterways/{id}/sections/{section_id}/features/{feature_id}/history` | steps of the feature, also after it (or its section or river) was deleted |
+| `GET /waterways/{id}/sections/{section_id}/deleted-features` | features deleted from the section, newest deletion first, each with its last name and type, when, by whom (and the proposal and reviewer, if one did); also after the section (or its river) was deleted; paged like the history routes |
 | `GET /waterways/{id}/sources` | every source (with its step count) and contributor (with step count and last step) for the river, its sections and features; `?section_id=` narrows both to that section and its features (404 when the section is not in this river) |
 
 A deleted entity keeps its history under the path it had; the entity itself

@@ -573,3 +573,35 @@ test.describe("sources of a section", () => {
     await expect(page.getByTestId("history-step").first()).toBeVisible();
   });
 });
+
+test.describe("deleted features", () => {
+  // The fixture's strainer 9595 is gone: its delete was approved, and its
+  // history (created, edited, deleted) sits under the section it had.
+  test("a deleted step is listed and opens the feature's history", async ({
+    page,
+  }) => {
+    await openSources(page);
+    const removed = vis(page, "history")
+      .getByTestId("history-step")
+      .filter({ hasText: "Strainer · Deleted feature" })
+      .filter({ hasText: "Confirmed gone" });
+    await expect(removed).toBeVisible();
+    await expect(removed.getByTestId("history-dot")).toHaveAttribute(
+      "data-kind",
+      "gone",
+    );
+    await removed.getByTestId("edit-entry").click();
+    await expect(header(page)).toContainText("Strainer");
+    await expect(header(page)).toContainText("Deleted feature");
+    await expect(
+      header(page).getByRole("button", { name: "Edit feature" }),
+    ).toHaveCount(0);
+    const steps = vis(page, "history").getByTestId("history-step");
+    await expect(steps).toHaveCount(3);
+    await expect(steps.first()).toContainText("Added");
+    await expect(steps.last()).toContainText("Deleted");
+    await expect(steps.last()).toContainText("Confirmed gone");
+    await header(page).getByRole("button", { name: "All edits" }).click();
+    await expect(vis(page, "sources")).toBeVisible();
+  });
+});

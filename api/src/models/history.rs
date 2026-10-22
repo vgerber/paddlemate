@@ -91,6 +91,22 @@ pub struct HistoryStep {
     pub changes: Vec<HistoryChange>,
 }
 
+/// A feature that was deleted from a section, as it last stood.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct DeletedFeature {
+    pub feature_id: i64,
+    /// Name when it was last live; null if it had none recorded
+    pub name: Option<String>,
+    /// Type when it was last live, e.g. `weir`
+    pub feature_type: Option<String>,
+    pub deleted_at: DateTime<Utc>,
+    /// Who deleted it (the submitter, when a proposal did)
+    pub deleted_by: Option<HistoryUser>,
+    /// Set when the delete is the outcome of a proposal
+    pub proposal_id: Option<i64>,
+    pub reviewer: Option<HistoryUser>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct SourceEntries {
     pub source: HistorySource,

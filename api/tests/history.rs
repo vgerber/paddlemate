@@ -1239,3 +1239,202 @@ async fn an_accepted_edit_waits_for_the_row_lock(pool: PgPool) {
     assert_eq!(change(step, "description")["before"], "Concurrent");
     assert_eq!(change(step, "description")["after"], "From mara");
 }
+
+async fn delete_feature(app: &Router, w: i64, s: i64, f: i64, who: Who) -> Reply {
+    call(
+        app,
+        Method::DELETE,
+        &format!("/waterways/{w}/sections/{s}/features/{f}"),
+        who,
+        None,
+    )
+    .await
+}
+
+fn feature_ids(page: &Value) -> Vec<i64> {
+    page["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|i| i["feature_id"].as_i64().unwrap())
+        .collect()
+}
+
+#[sqlx::test]
+async fn deleted_features_list_both_kinds_of_delete(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let s = make_section(&app, w, "Upper", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let direct = make_feature(&app, w, s, "Old weir").await;
+    let proposed = make_feature(&app, w, s, "Ramp").await;
+    let live = make_feature(&app, w, s, "Bridge").await;
+    // A rename: the list shows the last name, not the first.
+    let r = call(
+        &app,
+        Method::PUT,
+        &format!("/waterways/{w}/sections/{s}/features/{direct}"),
+        Who::Admin,
+        Some(json!({ "name": "New weir" })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+
+    let r = delete_feature(&app, w, s, direct, Who::Admin).await;
+    assert_eq!(r.status, StatusCode::NO_CONTENT);
+    let r = delete_feature(&app, w, s, proposed, Who::User("mara-1")).await;
+    assert_eq!(r.status, StatusCode::ACCEPTED);
+    let pid = r.body["id"].as_i64().unwrap();
+    let url = format!("/waterways/{w}/sections/{s}/deleted-features");
+    // A pending proposal is not a deletion.
+    assert_eq!(get(&app, &url).await.body["total"], 1);
+    approve(&app, pid).await;
+
+    let page = get(&app, &url).await;
+    assert_eq!(page.status, StatusCode::OK);
+    assert_eq!(page.body["total"], 2);
+    assert_eq!(feature_ids(&page.body), [proposed, direct]);
+    let first = &page.body["items"][0];
+    assert_eq!(first["name"], "Ramp");
+    assert_eq!(first["feature_type"], "put_in");
+    assert_eq!(first["deleted_by"]["username"], "mara");
+    assert_eq!(first["reviewer"]["username"], "root");
+    assert_eq!(first["proposal_id"], pid);
+    let second = &page.body["items"][1];
+    assert_eq!(second["name"], "New weir");
+    assert_eq!(second["deleted_by"]["username"], "root");
+    assert!(second["proposal_id"].is_null());
+    assert!(!feature_ids(&page.body).contains(&live));
+    // Only usernames, no ids beyond the user id the history routes show.
+    assert!(first["deleted_by"].get("email").is_none());
+}
+
+#[sqlx::test]
+async fn deleted_features_are_looked_up_inside_their_parents(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let other = make_waterway(&app, "Lech").await;
+    let s1 = make_section(&app, w, "Upper", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let s2 = make_section(&app, w, "Lower", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let f1 = make_feature(&app, w, s1, "Weir").await;
+    let f2 = make_feature(&app, w, s2, "Ramp").await;
+    delete_feature(&app, w, s1, f1, Who::Admin).await;
+    delete_feature(&app, w, s2, f2, Who::Admin).await;
+
+    let page = get(
+        &app,
+        &format!("/waterways/{w}/sections/{s1}/deleted-features"),
+    )
+    .await;
+    assert_eq!(feature_ids(&page.body), [f1]);
+    let page = get(
+        &app,
+        &format!("/waterways/{w}/sections/{s2}/deleted-features"),
+    )
+    .await;
+    assert_eq!(feature_ids(&page.body), [f2]);
+    // A step filed under the section id but another river is not this
+    // section's (ids are not trusted to line up).
+    sqlx::query(
+        "INSERT INTO entity_history (entity_kind, entity_id, waterway_id, section_id, kind) \
+         VALUES ('feature', 777, $1, $2, 'deleted')",
+    )
+    .bind(other)
+    .bind(s1)
+    .execute(&pool)
+    .await
+    .unwrap();
+    let page = get(
+        &app,
+        &format!("/waterways/{w}/sections/{s1}/deleted-features"),
+    )
+    .await;
+    assert_eq!(feature_ids(&page.body), [f1]);
+    // Another river's path to the section finds nothing, and neither does a
+    // section that never existed.
+    for path in [
+        format!("/waterways/{other}/sections/{s1}/deleted-features"),
+        format!("/waterways/{w}/sections/999999/deleted-features"),
+    ] {
+        let r = get(&app, &path).await;
+        assert_eq!(r.status, StatusCode::NOT_FOUND, "{path}");
+        assert_eq!(r.body["error"]["code"], "not_found", "{path}");
+    }
+}
+
+#[sqlx::test]
+async fn deleted_features_survive_the_section_and_river(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let s = make_section(&app, w, "Upper", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let f = make_feature(&app, w, s, "Weir").await;
+    let url = format!("/waterways/{w}/sections/{s}/deleted-features");
+    assert_eq!(get(&app, &url).await.body["total"], 0);
+
+    let r = call(
+        &app,
+        Method::DELETE,
+        &format!("/waterways/{w}/sections/{s}"),
+        Who::Admin,
+        None,
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NO_CONTENT);
+    let page = get(&app, &url).await;
+    assert_eq!(page.status, StatusCode::OK);
+    assert_eq!(feature_ids(&page.body), [f]);
+    assert_eq!(page.body["items"][0]["name"], "Weir");
+
+    call(
+        &app,
+        Method::DELETE,
+        &format!("/waterways/{w}"),
+        Who::Admin,
+        None,
+    )
+    .await;
+    assert_eq!(get(&app, &url).await.status, StatusCode::OK);
+}
+
+#[sqlx::test]
+async fn deleted_features_are_paged_and_clamped(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let s = make_section(&app, w, "Upper", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let mut ids = Vec::new();
+    for i in 0..3 {
+        let f = make_feature(&app, w, s, &format!("F{i}")).await;
+        delete_feature(&app, w, s, f, Who::Admin).await;
+        ids.push(f);
+    }
+    let base = format!("/waterways/{w}/sections/{s}/deleted-features");
+
+    let p1 = get(&app, &format!("{base}?per_page=2")).await;
+    assert_eq!(p1.body["total"], 3);
+    assert_eq!(p1.body["total_pages"], 2);
+    // Newest deletion first.
+    assert_eq!(feature_ids(&p1.body), [ids[2], ids[1]]);
+    let p2 = get(&app, &format!("{base}?per_page=2&page=2")).await;
+    assert_eq!(feature_ids(&p2.body), [ids[0]]);
+    let beyond = get(&app, &format!("{base}?per_page=2&page=9")).await;
+    assert_eq!(beyond.status, StatusCode::OK);
+    assert!(beyond.body["items"].as_array().unwrap().is_empty());
+    let big = get(&app, &format!("{base}?per_page=100000")).await;
+    assert_eq!(big.body["per_page"], 100);
+    let zero = get(&app, &format!("{base}?per_page=0&page=0")).await;
+    assert_eq!(zero.body["per_page"], 1);
+    assert_eq!(zero.body["page"], 1);
+}

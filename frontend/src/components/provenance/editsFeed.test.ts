@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import type { HistoryStep, Proposal } from "@/lib/api";
+import type { DeletedFeature, HistoryStep, Proposal } from "@/lib/api";
 import {
   type EntryRef,
+  goneEntries,
   mergeEdits,
   resolveProposals,
   sameEntry,
@@ -152,5 +153,46 @@ describe("sameEntry", () => {
   test("compares kind and id", () => {
     expect(sameEntry(hole, { ...hole, name: "x" })).toBe(true);
     expect(sameEntry(hole, section)).toBe(false);
+  });
+});
+
+describe("goneEntries", () => {
+  const removal = (over: Partial<DeletedFeature> = {}): DeletedFeature => ({
+    feature_id: 8,
+    name: null,
+    feature_type: "weir",
+    deleted_at: "2026-03-01T00:00:00Z",
+    deleted_by: null,
+    proposal_id: null,
+    reviewer: null,
+    ...over,
+  });
+
+  test("a deleted feature is a gone entry named by its type", () => {
+    expect(goneEntries([removal()], [section, hole])).toEqual([
+      {
+        kind: "feature",
+        id: 8,
+        name: "Weir",
+        label: "Deleted feature",
+        gone: true,
+      },
+    ]);
+  });
+
+  test("its own name wins over the type", () => {
+    const [entry] = goneEntries([removal({ name: "Big weir" })], [section]);
+    expect(entry.name).toBe("Big weir");
+  });
+
+  test("no name and no type reads as a feature", () => {
+    const [entry] = goneEntries([removal({ feature_type: null })], [section]);
+    expect(entry.name).toBe("Feature");
+  });
+
+  test("a feature the live list holds is left out", () => {
+    expect(goneEntries([removal({ feature_id: 7 })], [section, hole])).toEqual(
+      [],
+    );
   });
 });
