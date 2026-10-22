@@ -23,6 +23,7 @@ export type HistoryStep = components["schemas"]["HistoryStep"];
 export type HistoryChange = components["schemas"]["HistoryChange"];
 export type HistoryPage =
   components["schemas"]["PaginatedResponse_for_HistoryStep"];
+export type DeletedFeature = components["schemas"]["DeletedFeature"];
 export type HistorySource = components["schemas"]["HistorySource"];
 export type HistoryUser = components["schemas"]["HistoryUser"];
 export type StepKind = components["schemas"]["StepKind"];

@@ -443,6 +443,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/waterways/{waterway_id}/sections/{section_id}/deleted-features": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Features deleted from a section, newest deletion first; readable after the section was deleted */
+        get: operations["list_deleted_features"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}/history": {
         parameters: {
             query?: never;
@@ -1830,6 +1847,25 @@ export interface components {
             /** Format: int64 */
             series_id: number;
         };
+        /** @description A feature that was deleted from a section, as it last stood. */
+        DeletedFeature: {
+            /** Format: date-time */
+            deleted_at: string;
+            /** @description Who deleted it (the submitter, when a proposal did) */
+            deleted_by?: components["schemas"]["HistoryUser"] | null;
+            /** Format: int64 */
+            feature_id: number;
+            /** @description Type when it was last live, e.g. `weir` */
+            feature_type?: string | null;
+            /** @description Name when it was last live; null if it had none recorded */
+            name?: string | null;
+            /**
+             * Format: int64
+             * @description Set when the delete is the outcome of a proposal
+             */
+            proposal_id?: number | null;
+            reviewer?: components["schemas"]["HistoryUser"] | null;
+        };
         /** @description A logged paddling descent. */
         Descent: {
             /** Format: date-time */
@@ -2560,6 +2596,17 @@ export interface components {
         };
         /** @description What an OSM element represents for a waterway. */
         OsmElementKind: "centerline" | "bank";
+        PaginatedResponse_for_DeletedFeature: {
+            items: components["schemas"]["DeletedFeature"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            per_page: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            total_pages: number;
+        };
         PaginatedResponse_for_Descent: {
             items: components["schemas"]["Descent"][];
             /** Format: int64 */
@@ -4188,11 +4235,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-20T20:13:02.738847103Z",
-                     *         "expires_at": "2027-01-18T20:13:02.738849273Z",
+                     *         "created_at": "2026-10-22T18:06:54.906379097Z",
+                     *         "expires_at": "2027-01-20T18:06:54.906381687Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-20T20:13:02.738858023Z",
+                     *         "last_used_at": "2026-10-22T18:06:54.906384067Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4223,8 +4270,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-20T20:13:02.738978833Z",
-                     *       "expires_at": "2027-01-18T20:13:02.738979253Z",
+                     *       "created_at": "2026-10-22T18:06:54.906503026Z",
+                     *       "expires_at": "2027-01-20T18:06:54.906503436Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -5317,6 +5364,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedResponse_for_HistoryStep"];
+                };
+            };
+            /** @description Section never existed in this waterway */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_deleted_features: {
+        parameters: {
+            query?: {
+                /** @description Page number, starting at 1. */
+                page?: number | null;
+                /** @description Steps per page (max 100, default 50). */
+                per_page?: number | null;
+            };
+            header?: never;
+            path: {
+                section_id: number;
+                waterway_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_for_DeletedFeature"];
                 };
             };
             /** @description Section never existed in this waterway */

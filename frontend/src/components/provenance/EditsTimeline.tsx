@@ -28,8 +28,9 @@ import StepRow, { Byline, smallSx } from "./StepRow";
 import { stepByline, stepHeadline } from "./steps";
 import type { HistoryTarget } from "./types";
 import {
+  useDeletedFeatures,
+  useDeletionProposals,
   useEntryHistories,
-  useRemovedFeatureProposals,
   useSectionProposals,
 } from "./useProvenance";
 
@@ -61,11 +62,11 @@ export function sectionEntries(section: SectionWithFeatures): EntryRef[] {
 /** The live entries plus the features deleted since, whose history is still
  * there to open. */
 export function useEntries(section: SectionWithFeatures): EntryRef[] {
-  const removed = useRemovedFeatureProposals();
+  const deleted = useDeletedFeatures(section.waterway_id, section.id);
   return useMemo(() => {
     const live = sectionEntries(section);
-    return [...live, ...goneEntries(section.id, removed.data ?? [], live)];
-  }, [section, removed.data]);
+    return [...live, ...goneEntries(deleted.data ?? [], live)];
+  }, [section, deleted.data]);
 }
 
 function targetOf(
@@ -262,15 +263,16 @@ export default function EditsTimeline({
   );
   const histories = useEntryHistories(shown.map((e) => targetOf(section, e)));
   const proposals = useSectionProposals(section.id);
-  const removed = useRemovedFeatureProposals();
+  const deleted = useDeletedFeatures(section.waterway_id, section.id);
+  const removed = useDeletionProposals(deleted.data ?? []);
 
   const resolved = useMemo(
     () =>
       resolveProposals(
-        [...(proposals.data ?? []), ...(removed.data ?? [])],
+        [...(proposals.data ?? []), ...removed],
         everything,
       ).filter((p) => !filter || shown.some((e) => sameEntry(e, p.entry))),
-    [proposals.data, removed.data, everything, filter, shown],
+    [proposals.data, removed, everything, filter, shown],
   );
   const { items, rejected } = useMemo(
     () =>

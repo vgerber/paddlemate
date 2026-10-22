@@ -4,7 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { ProposalFilters, ReviewRequest } from "@/lib/api";
+import type { DeletedFeature, ProposalFilters, ReviewRequest } from "@/lib/api";
 import { proposalsApi } from "@/lib/api";
 import { client } from "@/lib/api/client";
 import { proposalKeys } from "@/lib/hooks/useProposals";
@@ -15,6 +15,8 @@ export const provenanceKeys = {
   all: ["provenance"] as const,
   history: (target: HistoryTarget) =>
     [...provenanceKeys.all, "history", target] as const,
+  deleted: (waterwayId: number, sectionId: number) =>
+    [...provenanceKeys.all, "deleted", waterwayId, sectionId] as const,
   sources: (waterwayId: number, sectionId?: number) =>
     [...provenanceKeys.all, "sources", waterwayId, sectionId ?? null] as const,
 };
@@ -94,18 +96,42 @@ export function useSectionProposals(sectionId: number) {
   });
 }
 
-const removedFilters: ProposalFilters = {
-  entity_type: "feature",
-  operation: "delete",
-  status: "approved",
-};
-
-/** Approved feature deletions, whichever section they were in: the section
- * filter of the proposal list matches live features only. */
-export function useRemovedFeatureProposals() {
+/** The section's deleted features, newest first: one page of up to 100.
+ * The API finds them in the history, so admin deletes are in it too. */
+export function useDeletedFeatures(waterwayId: number, sectionId: number) {
   return useQuery({
-    queryKey: proposalKeys.list(removedFilters),
-    queryFn: () => proposalsApi.list(removedFilters),
+    queryKey: provenanceKeys.deleted(waterwayId, sectionId),
+    queryFn: async () => {
+      const { data } = await client.GET(
+        "/api/v1/waterways/{waterway_id}/sections/{section_id}/deleted-features",
+        {
+          params: {
+            path: { waterway_id: waterwayId, section_id: sectionId },
+            query: { per_page: 100 },
+          },
+        },
+      );
+      if (!data) throw new Error("No deleted features");
+      return data.items;
+    },
+  });
+}
+
+/** The proposals behind the deletions, for the reviewer's note. One request
+ * each, a few at a time; one the caller may not read is simply left out. */
+export function useDeletionProposals(deleted: DeletedFeature[]) {
+  const ids = deleted.flatMap((d) =>
+    d.proposal_id != null ? [d.proposal_id] : [],
+  );
+  return useQueries({
+    queries: ids.map((id) => ({
+      queryKey: proposalKeys.detail(id),
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        limit(() => proposalsApi.get(id), signal),
+      retry: false,
+      meta: { errorHandledLocally: true },
+    })),
+    combine: (results) => results.flatMap((r) => (r.data ? [r.data] : [])),
   });
 }
 

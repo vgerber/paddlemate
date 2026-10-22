@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { HistoryStep, Proposal } from "@/lib/api";
+import type { DeletedFeature, HistoryStep, Proposal } from "@/lib/api";
 import {
   type EntryRef,
   goneEntries,
@@ -157,17 +157,19 @@ describe("sameEntry", () => {
 });
 
 describe("goneEntries", () => {
-  const removal = (over: Record<string, unknown> = {}) =>
-    proposal(9, {
-      entity_id: 8,
-      operation: "delete",
-      status: "approved",
-      original_data: { section_id: 1, feature_type: "weir" },
-      ...over,
-    });
+  const removal = (over: Partial<DeletedFeature> = {}): DeletedFeature => ({
+    feature_id: 8,
+    name: null,
+    feature_type: "weir",
+    deleted_at: "2026-03-01T00:00:00Z",
+    deleted_by: null,
+    proposal_id: null,
+    reviewer: null,
+    ...over,
+  });
 
-  test("an approved delete of an unlisted feature is a gone entry", () => {
-    expect(goneEntries(1, [removal()], [section, hole])).toEqual([
+  test("a deleted feature is a gone entry named by its type", () => {
+    expect(goneEntries([removal()], [section, hole])).toEqual([
       {
         kind: "feature",
         id: 8,
@@ -179,27 +181,18 @@ describe("goneEntries", () => {
   });
 
   test("its own name wins over the type", () => {
-    const [entry] = goneEntries(
-      1,
-      [removal({ original_data: { section_id: 1, name: "Big weir" } })],
-      [section],
-    );
+    const [entry] = goneEntries([removal({ name: "Big weir" })], [section]);
     expect(entry.name).toBe("Big weir");
   });
 
-  test("open, rejected, listed and non-delete proposals are ignored", () => {
-    const others = [
-      removal({ status: "pending" }),
-      removal({ status: "rejected" }),
-      removal({ entity_id: 7 }),
-      removal({ operation: "update" }),
-      removal({ entity_type: "water_section" }),
-      removal({ original_data: { section_id: 2 } }),
-    ];
-    expect(goneEntries(1, others, [section, hole])).toEqual([]);
+  test("no name and no type reads as a feature", () => {
+    const [entry] = goneEntries([removal({ feature_type: null })], [section]);
+    expect(entry.name).toBe("Feature");
   });
 
-  test("one entry per feature", () => {
-    expect(goneEntries(1, [removal(), removal()], [section])).toHaveLength(1);
+  test("a feature the live list holds is left out", () => {
+    expect(goneEntries([removal({ feature_id: 7 })], [section, hole])).toEqual(
+      [],
+    );
   });
 });
