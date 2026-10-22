@@ -4,7 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { addDays, differenceInCalendarDays, startOfDay } from "date-fns";
 import type { JSX, KeyboardEvent } from "react";
-import { useLayoutEffect, useMemo, useState } from "react";
+import { startTransition, useLayoutEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -360,6 +360,13 @@ export default function SeriesChart({
   const readable = chartData.filter(
     (d): d is { time: number; value: number } => d.value !== null,
   );
+  // A transition: the redraw yields, so a finger that lands here to swipe the
+  // tabs is not held up by the chart repainting under it.
+  const hover = (on: boolean) =>
+    startTransition(() => {
+      setHoverOff(!on);
+      setInside(on);
+    });
   const scrubTo = (point: ScrubPoint | null) => {
     onScrub?.(point);
     if (point) {
@@ -461,18 +468,9 @@ export default function SeriesChart({
         setKbIndex(null);
         onScrub?.(null);
       }}
-      onPointerLeave={() => {
-        setHoverOff(true);
-        setInside(false);
-      }}
-      onPointerDown={() => {
-        setHoverOff(false);
-        setInside(true);
-      }}
-      onPointerMove={() => {
-        setHoverOff(false);
-        setInside(true);
-      }}
+      onPointerLeave={() => hover(false)}
+      onPointerDown={() => hover(true)}
+      onPointerMove={() => hover(true)}
       style={{
         width: "100%",
         height: "100%",
