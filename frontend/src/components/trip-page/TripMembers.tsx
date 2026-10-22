@@ -1,8 +1,3 @@
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
-import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
-import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
@@ -22,6 +17,13 @@ import {
   useRemoveTripMember,
   useTripMembers,
 } from "@/lib/hooks/useTrips";
+import {
+  AdminIcon,
+  DeleteIcon,
+  EditDatesIcon,
+  LeaveIcon,
+  MembersIcon,
+} from "@/lib/icons";
 import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -61,7 +63,7 @@ export default function TripMembers({
         errorFallback="Could not load the members."
         loadingSize={40}
         py={6}
-        empty={{ icon: <GroupOutlinedIcon />, title: "No members yet." }}
+        empty={{ icon: <MembersIcon />, title: "No members yet." }}
       >
         {(members ?? []).map((m) => (
           <MemberRow
@@ -139,14 +141,14 @@ function MemberRow({
   if (isSelf) {
     actions.push({
       label: "Set your dates",
-      icon: <EditCalendarOutlinedIcon fontSize="small" />,
+      icon: <EditDatesIcon fontSize="small" />,
       onClick: onEditAttendance,
     });
   }
   if (isAdmin) {
     actions.push({
       label: member.role === "admin" ? "Make member" : "Make admin",
-      icon: <ShieldOutlinedIcon fontSize="small" />,
+      icon: <AdminIcon fontSize="small" />,
       onClick: () => onRoleChange(member.role === "admin" ? "member" : "admin"),
     });
   }
@@ -154,9 +156,9 @@ function MemberRow({
     actions.push({
       label: isSelf ? "Leave trip" : "Remove from trip",
       icon: isSelf ? (
-        <LogoutOutlinedIcon fontSize="small" />
+        <LeaveIcon fontSize="small" />
       ) : (
-        <DeleteOutlinedIcon fontSize="small" />
+        <DeleteIcon fontSize="small" />
       ),
       onClick: onRemove,
       danger: true,

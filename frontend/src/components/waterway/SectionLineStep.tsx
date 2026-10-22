@@ -1,4 +1,3 @@
-import ReplayIcon from "@mui/icons-material/Replay";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -13,6 +12,7 @@ import SectionPointCard from "@/components/waterway/SectionPointCard";
 import { fmtKm } from "@/components/waterway/section-details/utils";
 import { distanceAlongLineM } from "@/lib/geo";
 import type { useRiverSnap } from "@/lib/hooks/useRiverSnap";
+import { ResetIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import { useMapVerb } from "./useMapVerb";
 
@@ -139,7 +139,7 @@ export default function SectionLineStep({
                   onClick={snap.retry}
                   disabled={snapInProgress}
                 >
-                  <ReplayIcon fontSize="small" />
+                  <ResetIcon fontSize="small" />
                 </IconButton>
               </span>
             </Tooltip>

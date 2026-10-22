@@ -1,11 +1,9 @@
-import CheckIcon from "@mui/icons-material/Check";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ButtonBase from "@mui/material/ButtonBase";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
 import type { TimeRange } from "@/components/charts/water/types";
+import { CollapseIcon, ConfirmIcon, ExpandIcon } from "@/lib/icons";
 import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -37,7 +35,7 @@ export default function PeriodMenu({
 }) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const open = anchor != null;
-  const Chevron = open ? ExpandLessIcon : ExpandMoreIcon;
+  const Chevron = open ? CollapseIcon : ExpandIcon;
   return (
     <>
       <ButtonBase
@@ -92,7 +90,7 @@ export default function PeriodMenu({
               }}
             >
               {PERIOD_LABELS[p]}
-              {on && <CheckIcon sx={{ fontSize: 18 }} />}
+              {on && <ConfirmIcon sx={{ fontSize: 18 }} />}
             </MenuItem>
           );
         })}

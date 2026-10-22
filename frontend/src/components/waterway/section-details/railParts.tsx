@@ -1,8 +1,8 @@
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Box from "@mui/material/Box";
 import { trailSlotSx } from "@/components/canvas/flatRow";
 import FeatureTypeIcon from "@/components/FeatureTypeIcon";
 import type { FeatureType } from "@/lib/api";
+import { ExpandIcon } from "@/lib/icons";
 import { css } from "@/lib/motion";
 import { theme } from "@/lib/theme";
 
@@ -154,7 +154,7 @@ export function RangeTile({
             color: tokens.primary,
           }}
         >
-          <ExpandMoreIcon
+          <ExpandIcon
             sx={{
               fontSize: 12,
               transform: open ? "none" : "rotate(-90deg)",
@@ -181,7 +181,7 @@ export function TrailSlot({ open }: { open?: boolean }) {
       }}
     >
       {open != null && (
-        <ExpandMoreIcon
+        <ExpandIcon
           sx={{
             transform: open ? "none" : "rotate(-90deg)",
             transition: `transform ${css.fast} ${css.easeOut}`,

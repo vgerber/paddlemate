@@ -1,6 +1,3 @@
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
-import StarIcon from "@mui/icons-material/Star";
-import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
@@ -10,6 +7,7 @@ import { cardRowSx, desktopFlatRow } from "@/components/canvas/flatRow";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import type { SectionWithFeatures } from "@/lib/api";
 import { plural, sectionPlace } from "@/lib/format";
+import { LogIcon, StarIcon, StarOutlineIcon } from "@/lib/icons";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
 import GradeTag from "./GradeTag";
@@ -160,9 +158,7 @@ export default function SectionListItem({
         >
           {descentCount != null && descentCount > 0 && (
             <>
-              <DirectionsBoatOutlinedIcon
-                sx={{ fontSize: 14, color: "text.disabled" }}
-              />
+              <LogIcon sx={{ fontSize: 14, color: "text.disabled" }} />
               {descentCount}
             </>
           )}
@@ -202,7 +198,7 @@ export default function SectionListItem({
             {isFavorite ? (
               <StarIcon fontSize="small" sx={{ color: tokens.primary }} />
             ) : (
-              <StarBorderIcon fontSize="small" />
+              <StarOutlineIcon fontSize="small" />
             )}
           </IconButton>
         )}

@@ -1,5 +1,3 @@
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -19,6 +17,7 @@ import {
   useLinkDescentToTrip,
   useTripMembers,
 } from "@/lib/hooks/useTrips";
+import { DeleteIcon, EditIcon } from "@/lib/icons";
 import AddMemberDialog from "./AddMemberDialog";
 import AttendanceDialog from "./AttendanceDialog";
 import type { DayActions } from "./DayDetail";
@@ -263,12 +262,12 @@ export default function TripDetail({
               actions={[
                 {
                   label: "Edit trip",
-                  icon: <EditOutlinedIcon />,
+                  icon: <EditIcon />,
                   onClick: () => onEditingChange(true),
                 },
                 {
                   label: "Delete trip",
-                  icon: <DeleteOutlinedIcon />,
+                  icon: <DeleteIcon />,
                   danger: true,
                   onClick: () => setConfirmDelete(true),
                 },

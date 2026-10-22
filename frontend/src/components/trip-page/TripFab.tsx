@@ -1,7 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
-import CloseIcon from "@mui/icons-material/Close";
-import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
-import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
 import Fab from "@mui/material/Fab";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
@@ -9,6 +5,7 @@ import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import type { ReactNode } from "react";
 import DockedAction from "@/components/DockedAction";
 import { fabSx } from "@/components/PaneFab";
+import { AddIcon, CloseIcon, EditDatesIcon, LinkIcon } from "@/lib/icons";
 import type { TripTab } from "./TripDetail";
 
 export interface TripActionContext {
@@ -55,7 +52,7 @@ function tripActions(p: TripActionContext): TripAction[] {
     return [
       {
         label: "Set your dates",
-        icon: <EditCalendarOutlinedIcon />,
+        icon: <EditDatesIcon />,
         onClick: p.onEditAttendance,
       },
     ];
@@ -64,7 +61,7 @@ function tripActions(p: TripActionContext): TripAction[] {
       { label: "Log a descent", icon: <AddIcon />, onClick: p.onNewLog },
       {
         label: "Link an existing log",
-        icon: <LinkOutlinedIcon />,
+        icon: <LinkIcon />,
         onClick: p.onLinkLog,
       },
     ];

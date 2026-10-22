@@ -1,4 +1,3 @@
-import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
@@ -20,6 +19,7 @@ import { PERIOD_LABELS } from "@/components/charts/PeriodMenu";
 import type { GaugeReading, WaterRangeWithStatus } from "@/lib/api";
 import { humanize, sentenceCase } from "@/lib/format";
 import { useGaugeReadings } from "@/lib/hooks/useGauges";
+import { FitIcon } from "@/lib/icons";
 import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
 import { levelInk } from "@/lib/waterLevel";
@@ -496,7 +496,7 @@ export default function SeriesChart({
             color: "text.secondary",
           }}
         >
-          <ZoomOutMapIcon sx={{ fontSize: 20 }} />
+          <FitIcon sx={{ fontSize: 20 }} />
         </IconButton>
       )}
       {size && (

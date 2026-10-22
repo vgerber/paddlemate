@@ -1,10 +1,10 @@
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import NumberBadge from "@/components/NumberBadge";
 import { useMapVerb } from "@/components/waterway/useMapVerb";
+import { DeleteIcon } from "@/lib/icons";
 import { labelSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -66,7 +66,7 @@ export default function LocationPin({
               mr: -1,
             }}
           >
-            <DeleteOutlinedIcon sx={{ fontSize: 18 }} />
+            <DeleteIcon sx={{ fontSize: 18 }} />
           </IconButton>
         )}
       </Box>

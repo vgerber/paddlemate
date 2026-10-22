@@ -1,5 +1,3 @@
-import LinkOffOutlinedIcon from "@mui/icons-material/LinkOffOutlined";
-import LuggageOutlinedIcon from "@mui/icons-material/LuggageOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -13,6 +11,7 @@ import { apiErrorMessage } from "@/lib/api/client";
 import { dateRange } from "@/lib/format";
 import { useSession } from "@/lib/hooks/useSession";
 import { useInvitePreview, useJoinByInvite } from "@/lib/hooks/useTrips";
+import { LinkOffIcon, TripIcon } from "@/lib/icons";
 import { labelSx, theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/invite/$token")({
@@ -45,9 +44,7 @@ function InvitePage() {
   if (!preview.data) {
     return (
       <EmptyState
-        icon={
-          <LinkOffOutlinedIcon sx={{ fontSize: 56, color: "text.disabled" }} />
-        }
+        icon={<LinkOffIcon sx={{ fontSize: 56, color: "text.disabled" }} />}
         title="This invite link has expired or was withdrawn."
         caption="Ask whoever sent it for a new one."
         py={10}
@@ -78,7 +75,7 @@ function InvitePage() {
         textAlign: "center",
       }}
     >
-      <LuggageOutlinedIcon sx={{ fontSize: 56, color: "text.disabled" }} />
+      <TripIcon sx={{ fontSize: 56, color: "text.disabled" }} />
       <Box>
         <Typography sx={{ ...labelSx, color: "text.disabled" }}>
           {trip.invited_by} invited you to

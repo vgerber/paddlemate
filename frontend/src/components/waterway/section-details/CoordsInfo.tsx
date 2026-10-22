@@ -1,15 +1,17 @@
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import DoneIcon from "@mui/icons-material/Done";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import HistoryIcon from "@mui/icons-material/History";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
+import {
+  ConfirmIcon,
+  CopyIcon,
+  DeleteIcon,
+  EditIcon,
+  HistoryIcon,
+  OpenExternalIcon,
+} from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -48,7 +50,7 @@ export function CoordsInfo({
   const menuActions: RowAction[] = [
     {
       label: "Copy coordinates",
-      icon: copied ? <DoneIcon /> : <ContentCopyOutlinedIcon />,
+      icon: copied ? <ConfirmIcon /> : <CopyIcon />,
       onClick: () => copy(`${lat.toFixed(5)}, ${lng.toFixed(5)}`),
     },
   ];
@@ -62,14 +64,14 @@ export function CoordsInfo({
   if (onEdit) {
     menuActions.push({
       label: "Edit feature",
-      icon: <EditOutlinedIcon />,
+      icon: <EditIcon />,
       onClick: onEdit,
     });
   }
   if (onDelete) {
     menuActions.push({
       label: "Delete feature",
-      icon: <DeleteOutlinedIcon />,
+      icon: <DeleteIcon />,
       onClick: onDelete,
       danger: true,
     });
@@ -100,7 +102,7 @@ export function CoordsInfo({
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
         sx={touchSx}
       >
-        <OpenInNewIcon fontSize="small" />
+        <OpenExternalIcon fontSize="small" />
       </IconButton>
       {actions}
       <RowMenu actions={menuActions} />

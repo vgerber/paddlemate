@@ -1,6 +1,3 @@
-import CheckIcon from "@mui/icons-material/Check";
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Collapse from "@mui/material/Collapse";
@@ -20,6 +17,7 @@ import {
   useVoteCandidate,
   useWithdrawCandidate,
 } from "@/lib/hooks/useTrips";
+import { ConfirmIcon, DeleteIcon, EditIcon } from "@/lib/icons";
 import { durations } from "@/lib/motion";
 import { alphas, fonts, theme } from "@/lib/theme";
 import { nearestWatched } from "@/lib/tripRange";
@@ -202,7 +200,7 @@ function CandidateRow({
   if (isAdmin) {
     actions.push({
       label: "Make this a base",
-      icon: <CheckIcon fontSize="small" />,
+      icon: <ConfirmIcon fontSize="small" />,
       onClick: onAccept,
     });
   }
@@ -211,13 +209,13 @@ function CandidateRow({
   // whoever typed it first.
   actions.push({
     label: "Edit",
-    icon: <EditOutlinedIcon fontSize="small" />,
+    icon: <EditIcon fontSize="small" />,
     onClick: onEdit,
   });
   if (mine || isAdmin) {
     actions.push({
       label: mine ? "Withdraw" : "Remove",
-      icon: <DeleteOutlinedIcon fontSize="small" />,
+      icon: <DeleteIcon fontSize="small" />,
       onClick: () => setConfirmingWithdraw(true),
       danger: true,
     });

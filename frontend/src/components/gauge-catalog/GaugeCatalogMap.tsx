@@ -1,4 +1,3 @@
-import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -21,6 +20,7 @@ import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import type { GaugeMapState } from "@/lib/api";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
+import { CloseIcon } from "@/lib/icons";
 import { labelSx, theme } from "@/lib/theme";
 import { DonutCluster } from "./DonutCluster";
 import { STATES, stateMeta } from "./gaugeStates";

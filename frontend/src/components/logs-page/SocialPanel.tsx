@@ -1,8 +1,3 @@
-import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
-import CloseIcon from "@mui/icons-material/Close";
-import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
-import PersonRemoveOutlinedIcon from "@mui/icons-material/PersonRemoveOutlined";
-import SearchIcon from "@mui/icons-material/Search";
 import Box from "@mui/material/Box";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
@@ -15,6 +10,13 @@ import LoadingBox from "@/components/states/LoadingBox";
 import MemberAvatar from "@/components/trips/MemberAvatar";
 import { useAllUsers, useFollows } from "@/lib/hooks/useFollows";
 import { useSession } from "@/lib/hooks/useSession";
+import {
+  AddPersonIcon,
+  CloseIcon,
+  ConfirmIcon,
+  RemovePersonIcon,
+  SearchIcon,
+} from "@/lib/icons";
 import { fonts, theme } from "@/lib/theme";
 import GroupHead from "./GroupHead";
 
@@ -157,12 +159,12 @@ export default function SocialPanel() {
                 u.outgoing_status === "accepted"
                   ? {
                       label: "Unfollow",
-                      icon: <PersonRemoveOutlinedIcon fontSize="small" />,
+                      icon: <RemovePersonIcon fontSize="small" />,
                       onClick: () => unfollow.mutate(u.id),
                     }
                   : {
                       label: "Follow",
-                      icon: <PersonAddOutlinedIcon fontSize="small" />,
+                      icon: <AddPersonIcon fontSize="small" />,
                       onClick: () => follow.mutate(u.id),
                     },
               );
@@ -198,7 +200,7 @@ export default function SocialPanel() {
                   actions={[
                     {
                       label: "Accept",
-                      icon: <CheckOutlinedIcon fontSize="small" />,
+                      icon: <ConfirmIcon fontSize="small" />,
                       onClick: () => accept.mutate(u.id),
                     },
                     {
@@ -222,7 +224,7 @@ export default function SocialPanel() {
                 actions={[
                   {
                     label: "Unfollow",
-                    icon: <PersonRemoveOutlinedIcon fontSize="small" />,
+                    icon: <RemovePersonIcon fontSize="small" />,
                     danger: true,
                     onClick: () => unfollow.mutate(u.id),
                   },

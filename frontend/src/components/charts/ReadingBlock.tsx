@@ -1,5 +1,3 @@
-import CloseIcon from "@mui/icons-material/Close";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import IconButton from "@mui/material/IconButton";
@@ -10,6 +8,7 @@ import { useState } from "react";
 import { Segment, SegmentTrack } from "@/components/canvas/SegmentedControl";
 import PeriodMenu from "@/components/charts/PeriodMenu";
 import type { TimeRange } from "@/components/charts/water/types";
+import { CloseIcon, ExpandIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -92,7 +91,7 @@ function GaugeName({
         }}
       >
         {text}
-        <ExpandMoreIcon fontSize="small" />
+        <ExpandIcon fontSize="small" />
       </ButtonBase>
       <Menu
         anchorEl={anchor}

@@ -1,11 +1,11 @@
-import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import type { ReactNode } from "react";
+import { InboxIcon } from "@/lib/icons";
 import StateLayout from "./StateLayout";
 
 /** Icon in a soft tile plus one line of text - the design language's empty
  * state. The FAB is the call to action, so no buttons here. */
 export default function EmptyState({
-  icon = <InboxOutlinedIcon />,
+  icon = <InboxIcon />,
   title,
   caption,
   py = 6,

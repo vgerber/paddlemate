@@ -1,6 +1,6 @@
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineOutlined";
 import Button from "@mui/material/Button";
 import { apiErrorMessage } from "@/lib/api/client";
+import { ErrorIcon } from "@/lib/icons";
 import StateCard from "./StateCard";
 
 /** Route-level error boundary screen: shown instead of a blank page when a
@@ -8,7 +8,7 @@ import StateCard from "./StateCard";
 export default function ErrorFallback({ error }: { error: unknown }) {
   return (
     <StateCard
-      icon={<ErrorOutlineIcon />}
+      icon={<ErrorIcon />}
       title="Something went wrong"
       caption={apiErrorMessage(error, "An unexpected error occurred.")}
     >

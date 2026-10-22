@@ -1,4 +1,3 @@
-import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
@@ -6,6 +5,7 @@ import Popover from "@mui/material/Popover";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { useNotificationState } from "@/lib/hooks/useNotifications";
+import { NotificationsIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import NotificationList from "./NotificationList";
 
@@ -30,7 +30,7 @@ export default function NotificationBell() {
         }}
       >
         <UnreadBadge count={unread}>
-          <NotificationsNoneOutlinedIcon fontSize="small" />
+          <NotificationsIcon fontSize="small" />
         </UnreadBadge>
       </IconButton>
       <Popover

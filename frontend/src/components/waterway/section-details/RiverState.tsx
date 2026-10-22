@@ -1,7 +1,3 @@
-import ChatBubbleOutlinedIcon from "@mui/icons-material/ChatBubbleOutlined";
-import KayakingOutlinedIcon from "@mui/icons-material/KayakingOutlined";
-import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
@@ -14,6 +10,7 @@ import { useProposals } from "@/lib/hooks/useProposals";
 import { useSectionWithFeatures } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
+import { LogIcon, NoteIcon, PendingIcon, WarningIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import { currentLevel } from "@/lib/waterLevel";
 import {
@@ -40,10 +37,10 @@ const { panel } = tokens.canvas;
 const TILE = 28;
 
 const ICONS: Record<StateRow["key"], ReactNode> = {
-  hazard: <WarningAmberIcon />,
-  paddled: <KayakingOutlinedIcon />,
-  note: <ChatBubbleOutlinedIcon />,
-  proposal: <PendingActionsOutlinedIcon />,
+  hazard: <WarningIcon />,
+  paddled: <LogIcon />,
+  note: <NoteIcon />,
+  proposal: <PendingIcon />,
 };
 
 const SKELETON_KEYS = ["first", "second"];

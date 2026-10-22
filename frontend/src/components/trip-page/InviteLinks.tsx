@@ -1,7 +1,3 @@
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
-import DoneIcon from "@mui/icons-material/Done";
-import IosShareOutlinedIcon from "@mui/icons-material/IosShareOutlined";
-import LinkOffOutlinedIcon from "@mui/icons-material/LinkOffOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -18,6 +14,7 @@ import {
   useDeleteTripInvite,
   useTripInvites,
 } from "@/lib/hooks/useTrips";
+import { ConfirmIcon, CopyIcon, LinkOffIcon, ShareIcon } from "@/lib/icons";
 import { alphas, theme } from "@/lib/theme";
 
 const inviteUrl = (token: string) =>
@@ -78,7 +75,7 @@ export default function InviteLinks({ tripId }: { tripId: number }) {
             actions={[
               {
                 label: "Withdraw link",
-                icon: <LinkOffOutlinedIcon fontSize="small" />,
+                icon: <LinkOffIcon fontSize="small" />,
                 danger: true,
                 onClick: () => setWithdrawing(invite),
               },
@@ -146,9 +143,9 @@ function FreshLink({ invite }: { invite: TripInviteCreated }) {
           sx={{ flex: 1, minHeight: theme.tokens.touch.min }}
           startIcon={
             copied ? (
-              <DoneIcon fontSize="small" />
+              <ConfirmIcon fontSize="small" />
             ) : (
-              <ContentCopyOutlinedIcon fontSize="small" />
+              <CopyIcon fontSize="small" />
             )
           }
           aria-label={copied ? "Copied" : "Copy link"}
@@ -172,7 +169,7 @@ function FreshLink({ invite }: { invite: TripInviteCreated }) {
                 .catch(() => undefined)
             }
           >
-            <IosShareOutlinedIcon fontSize="small" />
+            <ShareIcon fontSize="small" />
           </IconButton>
         )}
       </Box>

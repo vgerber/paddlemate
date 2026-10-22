@@ -309,7 +309,40 @@
         ]
       }
     },
-    { "includes": ["src/routes/**/*.{ts,tsx}"], "linter": { "rules": {} } }
+    { "includes": ["src/routes/**/*.{ts,tsx}"], "linter": { "rules": {} } },
+    {
+      "includes": ["src/**/*.{ts,tsx}", "!src/lib/icons.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@mui/icons-material", "@mui/icons-material/*"],
+                    "message": "Import icons from @/lib/icons: one export per idea."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // TEMPORARY: a region agent held these files while icons moved to
+    // @/lib/icons. Migrate them, then remove this override.
+    {
+      "includes": [
+        "src/components/search/**",
+        "src/components/map/RegionLayers.tsx",
+        "src/components/map-page/useRegionBrowse.ts",
+        "src/components/map/useMapClickHandler.ts"
+      ],
+      "linter": {
+        "rules": { "style": { "noRestrictedImports": "off" } }
+      }
+    }
   ],
   "assist": {
     "enabled": true,

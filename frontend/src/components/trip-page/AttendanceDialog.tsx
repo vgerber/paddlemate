@@ -1,4 +1,3 @@
-import CheckIcon from "@mui/icons-material/Check";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
@@ -12,6 +11,7 @@ import type { TripMember } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { clockTime } from "@/lib/format";
 import { usePatchTripMember } from "@/lib/hooks/useTrips";
+import { ConfirmIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 interface Props {
@@ -166,7 +166,7 @@ export default function AttendanceDialog({
             busy={patchMember.isPending}
             ariaLabel="Save your dates"
           >
-            <CheckIcon />
+            <ConfirmIcon />
           </RoundActionButton>
         }
       />

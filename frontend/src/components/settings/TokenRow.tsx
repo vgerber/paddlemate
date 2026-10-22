@@ -1,9 +1,9 @@
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import RowMenu from "@/components/RowMenu";
 import type { ApiToken } from "@/lib/api";
 import { formatDate } from "@/lib/format";
+import { DeleteIcon } from "@/lib/icons";
 import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -51,7 +51,7 @@ export default function TokenRow({
         actions={[
           {
             label: "Revoke",
-            icon: <DeleteOutlineIcon />,
+            icon: <DeleteIcon />,
             danger: true,
             onClick: onRevoke,
           },

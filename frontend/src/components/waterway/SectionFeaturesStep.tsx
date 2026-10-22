@@ -1,4 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -9,6 +8,7 @@ import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type { Feature } from "@/lib/api";
 import { plural } from "@/lib/format";
 import { distanceAlongLineM, type LngLat } from "@/lib/geo";
+import { AddIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import FeatureRow from "./FeatureRow";
 import FormSection from "./FormSection";

@@ -1,8 +1,8 @@
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
+import { DeleteIcon } from "@/lib/icons";
 import { durations } from "@/lib/motion";
 import { alphas, theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
@@ -48,7 +48,7 @@ export interface RowContext {
 /** Marker behind a feature name when a delete proposal is pending. */
 export function PendingDeleteMarker() {
   return (
-    <DeleteOutlinedIcon
+    <DeleteIcon
       titleAccess="Deletion proposed"
       sx={{ fontSize: 14, color: tokens.error, flexShrink: 0 }}
     />
