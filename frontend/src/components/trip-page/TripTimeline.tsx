@@ -25,6 +25,7 @@ import {
 } from "@/lib/tripTimeline";
 import DayDetail, { type DayActions } from "./DayDetail";
 import {
+  EVENT_GAP,
   EVENT_ICON_COLUMN,
   EventIcon,
   EventText,
@@ -278,7 +279,10 @@ function DayEntry({
         boxShadow: isToday
           ? `inset 0 0 0 2px ${tokens.primary}, ${tokens.elevation.e1}`
           : planned
-            ? `inset 0 0 0 1px ${tokens.outlineVariant}`
+            ? {
+                xs: `inset 0 0 0 1px ${tokens.outlineVariant}, ${tokens.elevation.e1}`,
+                md: `inset 0 0 0 1px ${tokens.outlineVariant}`,
+              }
             : "none",
         outlineOffset: 2,
         ...(isOpen ? { bgcolor: `${tokens.primary}${alphas.tint}` } : {}),
@@ -328,7 +332,7 @@ function DayEntry({
       <Collapse in={!isOpen} timeout={durations.base}>
         <Stack direction="column" sx={{ gap: 1, mt: 1 }}>
           {day.events.length === 0 && (
-            <Typography sx={{ ...factLabelSx, pl: `${EVENT_ICON_COLUMN}px` }}>
+            <Typography sx={{ ...factLabelSx, pl: EVENT_ICON_COLUMN }}>
               Rest
             </Typography>
           )}
@@ -369,7 +373,7 @@ function DayEntry({
 
 function RiverLine({ river }: { river: PaddledRiver }) {
   return (
-    <Box sx={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+    <Box sx={{ display: "flex", alignItems: "flex-start", gap: EVENT_GAP }}>
       <EventIcon>
         <DirectionsBoatOutlinedIcon />
       </EventIcon>
@@ -395,7 +399,7 @@ function EventLine({
   detail: string;
 }) {
   return (
-    <Box sx={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+    <Box sx={{ display: "flex", alignItems: "flex-start", gap: EVENT_GAP }}>
       <EventIcon>{icon}</EventIcon>
       <Box sx={{ minWidth: 0 }}>
         <EventText kind="title">{title}</EventText>

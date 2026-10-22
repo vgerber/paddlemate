@@ -7,10 +7,13 @@ const { tokens } = theme;
 export default function MemberAvatar({
   name,
   size = 36,
+  phoneSize = size,
   ring = false,
 }: {
   name: string;
   size?: number;
+  /** The size below `md`, where a row's icon column is 28 wide. */
+  phoneSize?: number;
   /** A ring in the card colour, so overlapping avatars stay separate. */
   ring?: boolean;
 }) {
@@ -19,8 +22,8 @@ export default function MemberAvatar({
       data-testid="member-avatar"
       aria-hidden
       sx={{
-        width: size,
-        height: size,
+        width: { xs: phoneSize, md: size },
+        height: { xs: phoneSize, md: size },
         flexShrink: 0,
         borderRadius: "50%",
         display: "grid",

@@ -6,18 +6,28 @@ import { stayKind } from "@/components/trips/stayKinds";
 import { ArrivalIcon, DepartureIcon } from "@/components/trips/TripIcons";
 import { descentRivers, descentTitle } from "@/lib/descents";
 import { clockTime, formatTime } from "@/lib/format";
+import { theme } from "@/lib/theme";
 import type { TripEvent } from "@/lib/tripTimeline";
 
-/** The icon column of an event line (22px) plus its 10px gap: where the text
- * starts, and where a line without an icon has to indent to. */
-export const EVENT_ICON_COLUMN = 32;
+const { phone } = theme.tokens;
+
+/** The icon column of an event line plus its gap: where the text starts, and
+ * where a line without an icon has to indent to. A phone uses the grid's
+ * icon column (names on the 68 line); the desktop card keeps 22 + 10. */
+export const EVENT_ICON_COLUMN = {
+  xs: `${phone.icon + phone.iconGap}px`,
+  md: "32px",
+} as const;
+
+/** The gap between an event's icon column and its text. */
+export const EVENT_GAP = { xs: `${phone.iconGap}px`, md: "10px" } as const;
 
 /** The event's glyph in its 22px column. */
 export function EventIcon({ children }: { children: ReactNode }) {
   return (
     <Box
       sx={{
-        width: 22,
+        width: { xs: phone.icon, md: 22 },
         flexShrink: 0,
         display: "grid",
         placeItems: "center",

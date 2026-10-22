@@ -69,6 +69,7 @@ export default function TripCandidates({
           fontSize: "0.875rem",
           fontWeight: 600,
           color: "text.secondary",
+          px: { xs: `${tokens.phone.inner}px`, md: 0 },
         }}
       >
         {`Up for a vote (${candidates.length})`}
@@ -232,7 +233,13 @@ function CandidateRow({
           overflow: "hidden",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", pr: 0.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            pr: { xs: 2, md: 0.5 },
+          }}
+        >
           <ButtonBase
             onClick={onToggle}
             aria-expanded={isOpen}
@@ -245,7 +252,7 @@ function CandidateRow({
               alignItems: "center",
               justifyContent: "flex-start",
               gap: 1,
-              px: 1.5,
+              px: { xs: 2, md: 1.5 },
               py: 1,
               textAlign: "left",
             }}
@@ -278,7 +285,7 @@ function CandidateRow({
           <RowMenu actions={actions} label={`Actions for ${candidate.name}`} />
         </Box>
 
-        <Box sx={{ px: 1.5, pb: 1 }}>
+        <Box sx={{ px: { xs: 2, md: 1.5 }, pb: 1 }}>
           <SupportBar up={candidate.upvotes} down={candidate.downvotes} />
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
             <Typography
@@ -325,7 +332,7 @@ function CandidateRow({
         </Box>
 
         <Collapse in={isOpen} timeout={durations.base} unmountOnExit>
-          <Box sx={{ px: 1.5, pb: 1.5 }}>
+          <Box sx={{ px: { xs: 2, md: 1.5 }, pb: 1.5 }}>
             <Typography sx={{ ...factLabelSx, display: "block" }}>
               Put up by {candidate.proposed_by_username}
             </Typography>

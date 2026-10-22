@@ -74,6 +74,18 @@ async function expectRight(page: Page, loc: Locator, name: string) {
   ).toBeLessThanOrEqual(TOLERANCE);
 }
 
+/** The row's last icon (a menu) ends on the right line. */
+async function expectIconRight(page: Page, row: Locator, name: string) {
+  const right = await row
+    .locator("svg")
+    .last()
+    .evaluate((el) => el.getBoundingClientRect().right);
+  const want = (await viewportWidth(page)) - LINE;
+  expect(Math.abs(right - want), `${name} ends on ${want}`).toBeLessThanOrEqual(
+    TOLERANCE,
+  );
+}
+
 /** Scrolls everything that can scroll to its end, then checks that the FAB
  * sits clear of the last row. */
 async function expectFabClear(page: Page, last: Locator, name: string) {
@@ -181,17 +193,74 @@ test.describe("phone grid @small", () => {
   });
 
   test("trip plan names sit on the name line", async ({ page }) => {
-    test.fail(
-      true,
-      "Trip plan: days are flat on the ground and rows put the icon at 20, so names start on 60; needs day cards and the 28/68 icon column.",
-    );
     await page.goto("/trips/9001?edit=false");
-    await expectLeft(byId(page, "plan-day").first(), LINE, "day");
+    const day = byId(page, "plan-day").first();
+    await expectLeft(day, LINE, "day");
+    await expectRight(page, day, "day date");
     await expectLeft(
-      byId(page, "plan-day").first().getByText("Arrives").first(),
+      day.getByText("Arrives").first(),
       NAME_LINE,
       "plan row name",
     );
+    const radius = await day.evaluate(
+      (el) => getComputedStyle(el).borderRadius,
+    );
+    expect(radius, "a day keeps the card shape").not.toBe("0px");
+  });
+
+  test("trip week strip sits on the lines", async ({ page, viewport }) => {
+    // Seven 44px cells fill a 320 screen, so the strip cannot hold the line.
+    test.skip((viewport?.width ?? 0) < 400, "strip is capped at 320");
+    await page.goto("/trips/9001?edit=false");
+    const disc = byId(page, "day-number");
+    await disc.first().waitFor();
+    const box = async (n: number) => disc.nth(n).boundingBox();
+    const first = await box(0);
+    const last = await box(6);
+    expect(
+      Math.abs((first?.x ?? 0) - LINE),
+      "first day starts on the line",
+    ).toBeLessThanOrEqual(TOLERANCE);
+    expect(
+      Math.abs(
+        (last?.x ?? 0) +
+          (last?.width ?? 0) -
+          ((await viewportWidth(page)) - LINE),
+      ),
+      "last day ends on the right line",
+    ).toBeLessThanOrEqual(TOLERANCE);
+  });
+
+  test("trip bases", async ({ page }) => {
+    await page.goto("/trips/9001?edit=false");
+    await tab(page, "Bases").click();
+    const row = byId(page, "stay-row").first();
+    await expectLeft(
+      row.getByText("Camping Oetztal Arena"),
+      NAME_LINE,
+      "base name",
+    );
+    const badge = await row.getByText("1", { exact: true }).boundingBox();
+    expect(Math.abs((badge?.x ?? 0) - LINE), "base number").toBeLessThanOrEqual(
+      TOLERANCE,
+    );
+    await expectLeft(byId(page, "form-section-label").first(), LINE, "label");
+    await expectIconRight(page, row, "base menu");
+    await expectFabClear(page, byId(page, "stay-row").last(), "bases");
+  });
+
+  test("trip members", async ({ page }) => {
+    await page.goto("/trips/9001?edit=false");
+    await tab(page, "Members").click();
+    const rows = byId(page, "member-row");
+    await expectLeft(rows.first().getByText("mara"), NAME_LINE, "member name");
+    const avatar = await byId(page, "member-avatar").first().boundingBox();
+    expect(Math.abs((avatar?.x ?? 0) - LINE), "avatar").toBeLessThanOrEqual(
+      TOLERANCE,
+    );
+    for (let n = 0; n < (await rows.count()); n++) {
+      await expectIconRight(page, rows.nth(n), `member ${n} menu`);
+    }
   });
 
   test("settings, inbox and tools", async ({ page }) => {

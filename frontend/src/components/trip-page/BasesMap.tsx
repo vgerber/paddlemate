@@ -68,7 +68,12 @@ export default function BasesMap({
         )}
       </Box>
       <Typography
-        sx={{ ...factLabelSx, fontSize: "0.8125rem", fontWeight: 400 }}
+        sx={{
+          ...factLabelSx,
+          fontSize: "0.8125rem",
+          fontWeight: 400,
+          px: { xs: `${theme.tokens.phone.inner}px`, md: 0 },
+        }}
       >
         {furthest && furthest.radiusKm > 0
           ? `Rings reach the farthest section on each base's list - ${furthest.radiusKm.toFixed(1)} km from ${furthest.name}`

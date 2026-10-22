@@ -8,6 +8,7 @@ import Collapse from "@mui/material/Collapse";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
+import { phoneRowPad, trailSlotSx } from "@/components/canvas/flatRow";
 import { factLabelSx } from "@/components/Fact";
 import LevelDots from "@/components/LevelDots";
 import MarkdownText from "@/components/MarkdownText";
@@ -28,6 +29,9 @@ import TripCandidates from "./TripCandidates";
 import WatchList from "./WatchList";
 
 const { tokens } = theme;
+const { phone } = tokens;
+// Where a row's name starts, relative to its text line.
+const nameIndent = `${phone.icon + phone.iconGap}px`;
 
 interface Props {
   tripId: number;
@@ -220,16 +224,23 @@ function StayRow({
           minHeight: tokens.touch.row,
           py: 1,
           pr: 0.5,
+          ...phoneRowPad,
           cursor: "pointer",
           bgcolor: isOpen ? `${tokens.primary}${alphas.tint}` : "transparent",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: { xs: `${phone.iconGap}px`, md: 1 },
+          }}
+        >
           {/* The same number the marker wears on the map above. */}
           <Box
             sx={{
-              width: 22,
-              height: 22,
+              width: { xs: phone.icon, md: 22 },
+              height: { xs: phone.icon, md: 22 },
               borderRadius: "50%",
               bgcolor: color,
               color: theme.tokens.white,
@@ -244,7 +255,14 @@ function StayRow({
           >
             {number}
           </Box>
-          <Icon sx={{ fontSize: 18, color: "text.disabled" }} />
+          {/* The kind is also the chip's label; a phone has one icon column. */}
+          <Icon
+            sx={{
+              fontSize: 18,
+              color: "text.disabled",
+              display: { xs: "none", md: "block" },
+            }}
+          />
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography
               sx={{
@@ -270,11 +288,15 @@ function StayRow({
           </Box>
           <LevelDots levels={dotLevels} names={dotNames} />
           <Chip label={label} size="small" variant="outlined" />
-          <RowMenu actions={actions} label="Base actions" />
+          {actions.length > 0 ? (
+            <RowMenu actions={actions} label="Base actions" />
+          ) : (
+            <Box sx={{ ...trailSlotSx, display: { xs: "flex", md: "none" } }} />
+          )}
         </Box>
 
         {stay.description && (
-          <Box sx={{ mt: 0.5 }}>
+          <Box sx={{ mt: 0.5, pl: { xs: nameIndent, md: 0 } }}>
             <MarkdownText>{stay.description}</MarkdownText>
           </Box>
         )}
@@ -282,10 +304,16 @@ function StayRow({
 
       <Collapse in={isOpen} timeout={durations.base} unmountOnExit>
         <Box sx={{ px: 2, pb: 1.5 }}>
-          <Typography sx={{ ...factLabelSx, ml: 3.5, display: "block" }}>
+          <Typography
+            sx={{
+              ...factLabelSx,
+              ml: { xs: nameIndent, md: 3.5 },
+              display: "block",
+            }}
+          >
             Watch list
           </Typography>
-          <Box sx={{ ml: 3.5 }}>
+          <Box sx={{ ml: { xs: nameIndent, md: 3.5 } }}>
             <WatchList sections={stay.sections} onSelect={onLogSection} />
           </Box>
         </Box>
