@@ -569,12 +569,14 @@ test.describe("region mode", () => {
     const field = regionField(page);
     await expect(field).toBeVisible();
     expect(await computed(field, "font-size")).toBe("16px");
-    // Before a pick the map is the way in: the hint says so, the levels are
-    // chips; typing swaps them for the list.
+    // Before a pick the map is the way in: the hint says so, the kinds are
+    // a segmented control; typing swaps them for the list.
     await expect(
-      seen(page.getByText(/a region on the map, or search one by name\./)),
+      seen(page.getByText(/on the map, or search one by name\./)),
     ).toBeVisible();
-    await expect(chip(page, "Valleys")).toBeVisible();
+    await expect(
+      seen(page.getByRole("button", { name: "Valleys", exact: true })),
+    ).toBeVisible();
     await field.fill("Wald");
     await expect(
       seen(page.getByText("Type a valley, district, state or range")),

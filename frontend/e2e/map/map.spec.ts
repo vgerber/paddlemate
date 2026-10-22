@@ -445,8 +445,8 @@ test.describe("regions", () => {
     const sizes = JSON.stringify(
       await layout(page, "region-label", "text-size"),
     );
-    expect(sizes, "12 for a choice, 13 for the picked one").toBe(
-      '["case",["get","picked"],13,12]',
+    expect(sizes, "12 for a choice, 14 for the picked one").toBe(
+      '["case",["get","picked"],14,12]',
     );
     const size = 12;
     const fonts = JSON.stringify(
@@ -496,9 +496,15 @@ test.describe("regions", () => {
   }) => {
     await openRegionMap(page, "valley");
     expect(
-      await paint(page, "region-valley-band", "line-blur"),
-      "no blurred band",
-    ).toBe(undefined);
+      await page.evaluate(() =>
+        (
+          window as unknown as {
+            __paddlemateMap: { getLayer(id: string): unknown };
+          }
+        ).__paddlemateMap.getLayer("region-valley-band"),
+      ),
+      "no blurred band layer",
+    ).toBeUndefined();
     expect(await paint(page, "region-browse-line", "line-width")).toBe(1);
     expect(await paint(page, "country-border-casing", "line-color")).toBe(
       WHITE,
@@ -553,12 +559,15 @@ test.describe("regions", () => {
         y: (box?.y ?? 0) + (pt?.y ?? 0),
       };
     }, SOLO_POINT);
-    await page.mouse.move(at.x, at.y);
-    await page.mouse.move(at.x + 2, at.y + 2);
+    // The move only counts once the region under it has been drawn.
     await expect
-      .poll(() =>
-        page.evaluate(() => window.__paddlemateMap?.getCanvas().style.cursor),
-      )
+      .poll(async () => {
+        await page.mouse.move(at.x, at.y);
+        await page.mouse.move(at.x + 2, at.y + 2);
+        return page.evaluate(
+          () => window.__paddlemateMap?.getCanvas().style.cursor,
+        );
+      })
       .toBe("pointer");
   });
 
@@ -586,7 +595,7 @@ test.describe("regions", () => {
     await clickAt(page, SHARED_POINT);
     const card = page.getByTestId("region-choices");
     await expect(card.getByText("2 regions here")).toBeVisible();
-    await expect(card.getByText("AT \u00b7 Mountain ranges")).toBeVisible();
+    await expect(card.getByText("AT \u00b7 Mountain ranges")).toHaveCount(2);
     await expect(page).toHaveURL(new RegExp(`region=${REGIONS.nested.id}`));
     const rows = card.getByRole("button");
     await expect(rows).toHaveCount(2);
@@ -661,7 +670,9 @@ test.describe("the region sheet", () => {
     await openRegionMap(page);
     const sheet = page.getByRole("region", { name: "Search" });
     await expect(
-      sheet.getByText("Tap a region on the map, or search one by name."),
+      sheet.getByText(
+        "Tap a mountain range on the map, or search one by name.",
+      ),
     ).toBeVisible();
     const field = page.getByRole("textbox", { name: "Search regions" });
     await expect(field).toBeVisible();

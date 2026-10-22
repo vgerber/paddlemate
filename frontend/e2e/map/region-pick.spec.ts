@@ -134,7 +134,7 @@ test.describe("region kinds", () => {
     await page.evaluate(() =>
       (
         window as unknown as { __paddlemateMap: MapLike }
-      ).__paddlemateMap.jumpTo({ center: [10.9, 46.8], zoom: 10 }),
+      ).__paddlemateMap.jumpTo({ center: [10.9, 46.8], zoom: 12 }),
     );
     await expect(segment(page, "Valleys")).toHaveAttribute(
       "aria-pressed",
@@ -181,10 +181,10 @@ test.describe("region kinds", () => {
     await tap(page, SOLO_POINT);
     if (onPhone(page)) await tap(page, SOLO_POINT);
     await expect(page).toHaveURL(new RegExp(`region=${REGIONS.beta.id}`));
-    await expect(segment(page, "Ranges")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    // The map fitted to the pick, which on the zoom alone would now draw
+    // valleys or districts; the ranges stay.
+    await expect.poll(() => drawnIds(page)).toContain(REGIONS.alpha.id);
+    expect(await drawnIds(page)).not.toContain(REGIONS.inner.id);
   });
 });
 
@@ -203,9 +203,17 @@ test.describe("tapping a region", () => {
     await open(page, [11.1, 46.2], 7);
     await segment(page, "Valleys").click();
     await expect
-      .poll(async () => (await drawnIds(page)).length)
+      .poll(() =>
+        page.evaluate((p) => {
+          const m = (window as unknown as { __paddlemateMap: MapLike })
+            .__paddlemateMap;
+          return m.queryRenderedFeatures(m.project(p), {
+            layers: ["region-browse-fill"],
+          }).length;
+        }, VALLEY_POINT),
+      )
       .toBeGreaterThan(0);
-    // Look up the corridor drawn, then tap beside it.
+    // The corridor is drawn; tap beside it.
     const at = await screenAt(page, VALLEY_POINT, 0, 7);
     await page.mouse.click(at.x, at.y);
     if (onPhone(page)) await page.mouse.click(at.x, at.y);
@@ -242,8 +250,8 @@ test.describe("tapping a region", () => {
     await segment(page, "Ranges").click();
     await tap(page, SOLO_POINT);
     expect(await litIds(page)).toHaveLength(1);
-    // Far from every mocked range.
-    const at = await screenAt(page, [9.2, 45.3]);
+    // East of every mocked range.
+    const at = await screenAt(page, [12.6, 47.2]);
     await page.mouse.click(at.x, at.y);
     await expect.poll(() => litIds(page)).toEqual([]);
     await expect(page.getByTestId("region-preview")).toHaveCount(0);
@@ -255,7 +263,17 @@ test.describe("tapping a region", () => {
     test.skip(onPhone(page), "hover and a direct pick are the desktop's");
     await open(page, [10.9, 46.8], 7);
     await segment(page, "Ranges").click();
-    await expect.poll(() => drawnIds(page)).toContain(REGIONS.beta.id);
+    await expect
+      .poll(() =>
+        page.evaluate((p) => {
+          const m = (window as unknown as { __paddlemateMap: MapLike })
+            .__paddlemateMap;
+          return m.queryRenderedFeatures(m.project(p), {
+            layers: ["region-browse-fill"],
+          }).length;
+        }, SOLO_POINT),
+      )
+      .toBeGreaterThan(0);
     const at = await screenAt(page, SOLO_POINT);
     await page.mouse.move(at.x, at.y);
     await page.mouse.move(at.x + 2, at.y + 2);
@@ -283,7 +301,7 @@ test.describe("the list matches the view", () => {
     page,
   }) => {
     // Narrow enough that Beta range is out of view.
-    await open(page, [10.4, 46.9], 9);
+    await open(page, [10.4, 46.9], 10);
     await segment(page, "Ranges").click();
     await expect
       .poll(() => drawnIds(page))
@@ -294,7 +312,7 @@ test.describe("the list matches the view", () => {
   });
 
   test("panning to other ground changes the list", async ({ page }) => {
-    await open(page, [10.4, 46.9], 9);
+    await open(page, [10.4, 46.9], 10);
     await segment(page, "Ranges").click();
     const toggle = page
       .getByTestId("region-list-toggle")
@@ -303,8 +321,8 @@ test.describe("the list matches the view", () => {
     await page.evaluate(() =>
       (
         window as unknown as { __paddlemateMap: MapLike }
-      ).__paddlemateMap.jumpTo({ center: [11.6, 46.9], zoom: 9 }),
+      ).__paddlemateMap.jumpTo({ center: [11.6, 46.9], zoom: 10 }),
     );
-    await expect(toggle).toHaveText("Mountain ranges in view (1)");
+    await expect(toggle).toHaveText("Mountain ranges in view (2)");
   });
 });
