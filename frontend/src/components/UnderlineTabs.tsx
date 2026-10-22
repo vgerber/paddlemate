@@ -47,6 +47,7 @@ export default function UnderlineTabs<T extends string>({
     const line = bar.current;
     if (!track || !wrap || !line) return;
     let span: Span | null = null;
+    let frame = 0;
     const label = (i: number, share: number | null) => {
       const el = tabs.current[i];
       if (!el) return;
@@ -56,6 +57,7 @@ export default function UnderlineTabs<T extends string>({
           : `color-mix(in srgb, ${primary} ${Math.round(share * 100)}%, ${onSurfaceVariant})`;
     };
     const clear = () => {
+      cancelAnimationFrame(frame);
       if (span) {
         label(span.from, null);
         label(span.to, null);
@@ -82,8 +84,33 @@ export default function UnderlineTabs<T extends string>({
         toWidth: rt.width,
       };
     };
-    return track.subscribe((e) => {
-      if (e.phase === "done") return clear();
+    // MUI moves its own indicator in an effect after the new tab renders, so
+    // after a committed swipe the drawn line stays until the hidden indicator
+    // has arrived; showing it earlier flashes it under the previous tab.
+    const handOver = (to: number, tries: number) => {
+      const indicator = wrap.querySelector<HTMLElement>(".MuiTabs-indicator");
+      const target = tabs.current[to];
+      const arrived =
+        !indicator ||
+        !target ||
+        Math.abs(
+          indicator.getBoundingClientRect().left -
+            target.getBoundingClientRect().left,
+        ) < 1;
+      if (arrived || tries <= 0) return clear();
+      frame = requestAnimationFrame(() => handOver(to, tries - 1));
+    };
+    const unsubscribe = track.subscribe((e) => {
+      if (e.phase === "done") {
+        if (span && latest.current.index === span.to) {
+          const to = span.to;
+          cancelAnimationFrame(frame);
+          frame = requestAnimationFrame(() => handOver(to, 10));
+          return;
+        }
+        return clear();
+      }
+      cancelAnimationFrame(frame);
       if (e.phase === "down" || e.progress === 0) {
         if (!span) return;
       }
@@ -107,6 +134,10 @@ export default function UnderlineTabs<T extends string>({
       label(span.from, 1 - mix);
       label(span.to, mix);
     });
+    return () => {
+      cancelAnimationFrame(frame);
+      unsubscribe();
+    };
   }, [track]);
 
   return (
