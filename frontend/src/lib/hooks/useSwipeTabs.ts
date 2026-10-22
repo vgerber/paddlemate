@@ -87,6 +87,7 @@ export function useSwipeTabs({
     samples: Sample[];
   } | null>(null);
   const busy = useRef(false);
+  const unmute = useRef<(() => void) | null>(null);
   const timer = useRef<number | undefined>(undefined);
   const entering = useRef(false);
   const ghostEls = useRef<Record<string, HTMLElement | null>>({});
@@ -175,10 +176,17 @@ export function useSwipeTabs({
     // `index` is the trigger; the rest is read from refs.
   }, [index]);
 
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(timer.current);
+      unmute.current?.();
+    },
+    [],
+  );
 
   const reset = useCallback(() => {
     drag.current = null;
+    unmute.current?.();
     busy.current = false;
     entering.current = false;
     ghostMode.current = false;
@@ -187,6 +195,19 @@ export function useSwipeTabs({
     if (paneRef.current) paneRef.current.style.opacity = "";
     emit({ phase: "done", progress: 0 });
   }, [place, emit]);
+
+  // A locked swipe keeps touch moves from the pane's children: a chart under
+  // the finger would otherwise scrub and re-render on every move.
+  const muteTouches = useCallback(() => {
+    const el = paneRef.current;
+    if (!el || unmute.current) return;
+    const stop = (e: Event) => e.stopPropagation();
+    el.addEventListener("touchmove", stop, { capture: true });
+    unmute.current = () => {
+      el.removeEventListener("touchmove", stop, { capture: true });
+      unmute.current = null;
+    };
+  }, []);
 
   const onPointerDown = (e: PointerEvent<HTMLElement>) => {
     if (!enabled || busy.current || e.pointerType === "mouse") return;
@@ -213,6 +234,7 @@ export function useSwipeTabs({
       if (d.lock === "horizontal") {
         e.currentTarget.setPointerCapture(e.pointerId);
         d.width = paneRef.current?.offsetWidth ?? 0;
+        muteTouches();
       }
     }
     if (d.lock !== "horizontal") return;
@@ -227,6 +249,7 @@ export function useSwipeTabs({
     const d = drag.current;
     if (!d || e.pointerId !== d.id) return;
     drag.current = null;
+    unmute.current?.();
     if (d.lock !== "horizontal") return;
     const width = d.width;
     d.samples.push({ x: e.clientX, t: e.timeStamp });
