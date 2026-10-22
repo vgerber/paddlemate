@@ -140,7 +140,9 @@ export default function TripForm({
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+              // A date field clips its value below about 160px; stack the two
+              // when the form is too narrow to hold both at that width.
+              gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
               gap: 1.5,
             }}
           >
