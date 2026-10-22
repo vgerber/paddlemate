@@ -1,5 +1,6 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Box from "@mui/material/Box";
+import { trailSlotSx } from "@/components/canvas/flatRow";
 import FeatureTypeIcon from "@/components/FeatureTypeIcon";
 import type { FeatureType } from "@/lib/api";
 import { css } from "@/lib/motion";
@@ -138,6 +139,9 @@ export function RangeTile({
         <Box
           aria-hidden="true"
           sx={{
+            // On a phone the fold cue is the row's trailing chevron (FoldCue):
+            // a badge on the tile would sit over the disc and off the rail.
+            display: { xs: "none", md: "grid" },
             position: "absolute",
             right: -6,
             bottom: -6,
@@ -146,7 +150,6 @@ export function RangeTile({
             borderRadius: "50%",
             bgcolor: tokens.surface,
             border: `1.5px solid ${tokens.primaryContainer}`,
-            display: "grid",
             placeItems: "center",
             color: tokens.primary,
           }}
@@ -159,6 +162,31 @@ export function RangeTile({
             }}
           />
         </Box>
+      )}
+    </Box>
+  );
+}
+
+/** The phone row's trailing slot (md up draws none): a spacer on rows with no
+ * control, so every value in the list ends on one line. */
+export function TrailSlot({ open }: { open?: boolean }) {
+  return (
+    <Box
+      aria-hidden="true"
+      data-trail-slot
+      sx={{
+        ...trailSlotSx,
+        display: { xs: "flex", md: "none" },
+        color: tokens.primary,
+      }}
+    >
+      {open != null && (
+        <ExpandMoreIcon
+          sx={{
+            transform: open ? "none" : "rotate(-90deg)",
+            transition: `transform ${css.fast} ${css.easeOut}`,
+          }}
+        />
       )}
     </Box>
   );
