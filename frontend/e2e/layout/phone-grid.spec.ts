@@ -218,3 +218,127 @@ test.describe("phone grid @small", () => {
     );
   });
 });
+
+test.describe("phone grid, river and section @small", () => {
+  const LOWER = "/?waterway=9001&section=9102";
+  const SLOT = 44;
+  const TRAIL_INSET = 10;
+
+  test("feature discs and rail share one column, values one line", async ({
+    page,
+  }) => {
+    await page.goto(LOWER);
+    await appReady(page);
+    const rows = page.locator("[data-row]").filter({ visible: true });
+    await rows.first().waitFor();
+    const count = await rows.count();
+    expect(count, "put-in, a group and its members").toBeGreaterThan(4);
+    const geo = await page.evaluate(() => {
+      const box = (el: Element) => el.getBoundingClientRect();
+      return [...document.querySelectorAll("[data-row]")].map((row) => {
+        const disc = box(row.querySelector("[data-row-disc]") as Element);
+        const rail = row.querySelector("[data-rail]");
+        const km = row.querySelector("[data-km]");
+        const name = row.querySelector("span:not([data-km])");
+        const badge = row.querySelectorAll(
+          "[data-row-disc] > div[aria-hidden]",
+        );
+        return {
+          disc: disc.left + disc.width / 2,
+          rail: rail ? box(rail).left + 1 : null,
+          km: km ? box(km).right : null,
+          name: name ? box(name).left : null,
+          badge: [...badge].filter(
+            (b) => getComputedStyle(b).display !== "none",
+          ).length,
+        };
+      });
+    });
+    const vw = await viewportWidth(page);
+    for (const g of geo) {
+      expect(Math.abs(g.disc - (LINE + 14)), "disc centre").toBeLessThanOrEqual(
+        TOLERANCE,
+      );
+      if (g.rail != null) {
+        expect(Math.abs(g.rail - (LINE + 14)), "rail line").toBeLessThanOrEqual(
+          TOLERANCE,
+        );
+      }
+      expect(g.badge, "no chevron badge on the tile").toBe(0);
+      if (g.name != null) {
+        expect(Math.abs(g.name - NAME_LINE), "name").toBeLessThanOrEqual(
+          TOLERANCE,
+        );
+      }
+      if (g.km != null) {
+        const want = vw - LINE - (SLOT - TRAIL_INSET);
+        expect(
+          Math.abs(g.km - want),
+          "value ends before the slot",
+        ).toBeLessThanOrEqual(TOLERANCE);
+      }
+    }
+    const chevron = page
+      .locator("[data-trail-slot] svg")
+      .filter({ visible: true });
+    const box = await chevron.first().boundingBox();
+    expect(
+      box && Math.abs(box.x + box.width - (vw - LINE)),
+      "chevron ends on the right line",
+    ).toBeLessThanOrEqual(TOLERANCE);
+  });
+
+  test("sources and edits sit on the 28 and 68 lines", async ({ page }) => {
+    await page.goto(LOWER);
+    await appReady(page);
+    await tab(page, "Sources").click();
+    const rows = byId(page, "source-row");
+    const tile = await rows.first().evaluate((el) => {
+      const r =
+        el.firstElementChild?.firstElementChild?.getBoundingClientRect();
+      return { left: r?.left ?? 0, width: r?.width ?? 0 };
+    });
+    expect(tile.left, "source icon tile starts on 28").toBe(LINE);
+    expect(tile.width, "tile is the 28 icon column").toBe(28);
+    const name = rows.first().getByText("Imported from Rivermap");
+    await expectLeft(name, NAME_LINE, "source name");
+    await expectLeft(byId(page, "history-step"), NAME_LINE, "edit title");
+    const dot = await page
+      .getByTestId("history-dot")
+      .filter({ visible: true })
+      .first()
+      .boundingBox();
+    expect(
+      dot && Math.abs(dot.x + dot.width / 2 - (LINE + 14)),
+    ).toBeLessThanOrEqual(TOLERANCE);
+  });
+
+  test("an empty notes tab keeps its caption on the 28 lines", async ({
+    page,
+  }) => {
+    await page.goto("/?waterway=9001&section=9101");
+    await appReady(page);
+    await tab(page, "Notes").click();
+    const caption = byId(page, "empty-state").getByText("Hazards, conditions");
+    // Centred text: the line may start inside the 28 line, never outside it.
+    const { left, right } = await textSpan(caption);
+    expect(left, "caption keeps inside the left line").toBeGreaterThanOrEqual(
+      LINE - TOLERANCE,
+    );
+    expect(right, "caption keeps inside the right line").toBeLessThanOrEqual(
+      (await viewportWidth(page)) - LINE + TOLERANCE,
+    );
+  });
+
+  test("chart words and dates sit on the 28 line", async ({ page }) => {
+    await page.goto(LOWER);
+    await appReady(page);
+    const word = byId(page, "threshold-label");
+    await expectLeft(word, LINE, "threshold word");
+    await expectLeft(
+      page.locator("svg text").filter({ hasText: /^[A-Z][a-z]{2} \d+$/ }),
+      LINE,
+      "first axis date",
+    );
+  });
+});
