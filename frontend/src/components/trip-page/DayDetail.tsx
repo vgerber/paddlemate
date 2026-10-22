@@ -9,7 +9,13 @@ import FormSection from "@/components/waterway/FormSection";
 import type { Descent, TripMember, TripStay } from "@/lib/api";
 import { alphas, theme } from "@/lib/theme";
 import type { TripDay, TripEvent } from "@/lib/tripTimeline";
-import { EventIcon, EventText, eventKey, eventLabels } from "./eventLabels";
+import {
+  EVENT_GAP,
+  EventIcon,
+  EventText,
+  eventKey,
+  eventLabels,
+} from "./eventLabels";
 
 /** What a day lets you reach. Only what this viewer may do is shown. */
 export interface DayActions {
@@ -167,8 +173,9 @@ function Row({
       sx={{
         display: "flex",
         alignItems: "flex-start",
-        gap: "10px",
-        px: 1,
+        gap: EVENT_GAP,
+        // On a phone the row's icon sits on the card's own 28 line.
+        px: { xs: 0, md: 1 },
         py: 1,
         borderBottom: "1px solid",
         borderColor: `${theme.tokens.outlineVariant}${alphas.hairline}`,
