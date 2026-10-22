@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useMemo } from "react";
 import type { MapScene } from "@/components/canvas/scene";
-import WaterwayMap from "@/components/map/Map";
+import WaterwayMap from "@/components/map/LazyMap";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import { featureName } from "@/components/waterway/section-details/utils";
 import { localizedName } from "@/lib/localization";

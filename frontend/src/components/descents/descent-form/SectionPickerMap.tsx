@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import WaterwayMap from "@/components/map/Map";
+import WaterwayMap from "@/components/map/LazyMap";
 import { theme } from "@/lib/theme";
 import type { SectionPicking } from "./useSectionPicking";
 

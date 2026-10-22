@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import WaterwayMap from "@/components/map/Map";
+import WaterwayMap from "@/components/map/LazyMap";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";

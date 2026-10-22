@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import { factLabelSx } from "@/components/Fact";
-import WaterwayMap from "@/components/map/Map";
+import WaterwayMap from "@/components/map/LazyMap";
 import { useIsSwipeGhost } from "@/components/SwipeGhost";
 import { theme } from "@/lib/theme";
 import { rangeBounds } from "@/lib/tripRange";
