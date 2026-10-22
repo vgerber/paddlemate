@@ -409,9 +409,11 @@ test.describe("design gaps", () => {
     expect(disc?.width).toBe(28);
     const head = await name("Slot Machine").boundingBox();
     const member = await name("Big Hole").boundingBox();
-    // The band indents its members by 24, and a member row has its own 12 of
-    // left padding before the rail.
-    expect((member?.x ?? 0) - (head?.x ?? 0)).toBe(36);
+    // From md the band indents its members by 24, and a member row has its own
+    // 12 of left padding before the rail. A phone keeps members on the head's
+    // rail column (no indent), so their names share its line.
+    const wide = (page.viewportSize()?.width ?? 0) >= 768;
+    expect((member?.x ?? 0) - (head?.x ?? 0)).toBe(wide ? 36 : 0);
     await expect(
       card(page).getByRole("button", { name: "More actions" }),
     ).toHaveCount(0);

@@ -16,6 +16,7 @@ import {
   type RailShape,
   RangeTile,
   ROW_MIN,
+  TrailSlot,
 } from "./railParts";
 import type { ComputedFeature } from "./types";
 import {
@@ -69,10 +70,14 @@ export function FeatureListRow({
   item,
   ctx,
   rail,
+  inBand = false,
 }: {
   item: ComputedFeature;
   ctx: RowContext;
   rail: RailShape;
+  /** Sits inside a range band: on a phone the band's own inset is the row's
+   * padding, so the disc stays on the head row's rail column. */
+  inBand?: boolean;
 }) {
   const typeLabel = featureTypeLabel(item.feature);
   const desc = featureDesc(item.feature);
@@ -97,8 +102,8 @@ export function FeatureListRow({
         textAlign: "left",
         minHeight: ROW_MIN,
         gap: 1,
-        pl: 1.5,
-        pr: `${panel.inner}px`,
+        pl: inBand ? { xs: 0.5, md: 1.5 } : 1.5,
+        pr: inBand ? { xs: 1, md: `${panel.inner}px` } : `${panel.inner}px`,
         bgcolor: isActive ? `${tokens.primary}${alphas.tint}` : "transparent",
         // The selected row's 2px teal ring, drawn inside so it never shifts.
         outline: isActive ? `2px solid ${tokens.primary}` : "none",
@@ -134,47 +139,51 @@ export function FeatureListRow({
           opacity: isProposal ? 0.6 : 1,
         }}
       >
-        <Box
-          sx={{
-            minHeight: ROW_MIN,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-            <Box
-              sx={{
-                flex: 1,
-                minWidth: 0,
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-              }}
-            >
-              <Typography
-                component="span"
-                sx={{ fontWeight: 500, fontSize: "0.9375rem", minWidth: 0 }}
+        <Box sx={{ minHeight: ROW_MIN, display: "flex", alignItems: "center" }}>
+          <Box
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+              <Box
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                }}
               >
-                {featureName(item.feature)}
+                <Typography
+                  component="span"
+                  sx={{ fontWeight: 500, fontSize: "0.9375rem", minWidth: 0 }}
+                >
+                  {featureName(item.feature)}
+                </Typography>
+                {ctx.pendingDeleteIds?.has(item.feature.id) && (
+                  <PendingDeleteMarker />
+                )}
+              </Box>
+              <Typography component="span" data-km sx={kmSx}>
+                {item.isZone
+                  ? fmtKmSpan(item.startM, item.endM)
+                  : fmtKm(item.distM)}
               </Typography>
-              {ctx.pendingDeleteIds?.has(item.feature.id) && (
-                <PendingDeleteMarker />
-              )}
             </Box>
-            <Typography component="span" data-km sx={kmSx}>
-              {item.isZone
-                ? fmtKmSpan(item.startM, item.endM)
-                : fmtKm(item.distM)}
-            </Typography>
+            {typeLabel && (
+              <Typography
+                sx={{ fontSize: "0.8125rem", color: tokens.onSurfaceVariant }}
+              >
+                {typeLabel}
+              </Typography>
+            )}
           </Box>
-          {typeLabel && (
-            <Typography
-              sx={{ fontSize: "0.8125rem", color: tokens.onSurfaceVariant }}
-            >
-              {typeLabel}
-            </Typography>
-          )}
+          <TrailSlot />
         </Box>
         {desc && (
           <Typography

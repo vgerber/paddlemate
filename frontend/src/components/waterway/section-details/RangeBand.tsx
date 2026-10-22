@@ -12,7 +12,14 @@ import {
   PendingDeleteMarker,
   type RowContext,
 } from "./FeatureListRow";
-import { DISC, RAIL_COL, RailLine, RangeTile, ROW_MIN } from "./railParts";
+import {
+  DISC,
+  RAIL_COL,
+  RailLine,
+  RangeTile,
+  ROW_MIN,
+  TrailSlot,
+} from "./railParts";
 import { isBand, memberNames } from "./rows";
 import type { TreeNode } from "./types";
 import { featureName, featureTypeLabel, fmtKmSpan } from "./utils";
@@ -27,6 +34,8 @@ interface NodeProps {
   /** First row of the whole list. */
   startsList: boolean;
   dashed: boolean;
+  /** Inside another band: its rows share that band's inset. */
+  inBand?: boolean;
 }
 
 /** A node of the tree: a band when it is a range with members, else a row. */
@@ -36,6 +45,7 @@ export function FeatureNode({
   endsList,
   startsList,
   dashed,
+  inBand,
 }: NodeProps) {
   if (isBand(node)) {
     return (
@@ -45,11 +55,13 @@ export function FeatureNode({
         endsList={endsList}
         startsList={startsList}
         dashed={dashed}
+        inBand={inBand}
       />
     );
   }
   return (
     <FeatureListRow
+      inBand={inBand}
       item={node.item}
       ctx={ctx}
       rail={{ top: !startsList, bottom: !endsList, dashed }}
@@ -59,7 +71,14 @@ export function FeatureNode({
 
 /** A range as a soft band. The whole head row folds and opens it; folded, it
  * names what it hides. A portage keeps a dashed rail. */
-function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
+function RangeBand({
+  node,
+  ctx,
+  endsList,
+  startsList,
+  dashed,
+  inBand,
+}: NodeProps) {
   const { item } = node;
   const [open, setOpen] = useState(true);
   const type = item.feature.feature_type;
@@ -84,7 +103,7 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
         outline: isActive ? `2px solid ${tokens.primary}` : "none",
         outlineOffset: -2,
         borderRadius: `${tokens.radii.row}px`,
-        mx: 1,
+        mx: { xs: inBand ? 0 : 1, md: 1 },
         my: 0.25,
       }}
     >
@@ -138,45 +157,54 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box
-              sx={{
-                minHeight: ROW_MIN,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-              }}
+              sx={{ minHeight: ROW_MIN, display: "flex", alignItems: "center" }}
             >
-              <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                <Box
-                  sx={{
-                    flex: 1,
-                    minWidth: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                  }}
-                >
-                  <Typography
-                    component="span"
-                    sx={{ fontWeight: 600, fontSize: "0.9375rem" }}
+              <Box
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                  <Box
+                    sx={{
+                      flex: 1,
+                      minWidth: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                    }}
                   >
-                    {featureName(item.feature)}
+                    <Typography
+                      component="span"
+                      sx={{ fontWeight: 600, fontSize: "0.9375rem" }}
+                    >
+                      {featureName(item.feature)}
+                    </Typography>
+                    {ctx.pendingDeleteIds?.has(item.feature.id) && (
+                      <PendingDeleteMarker />
+                    )}
+                  </Box>
+                  <Typography component="span" data-km sx={kmSx}>
+                    {fmtKmSpan(item.startM, item.endM)}
                   </Typography>
-                  {ctx.pendingDeleteIds?.has(item.feature.id) && (
-                    <PendingDeleteMarker />
-                  )}
                 </Box>
-                <Typography component="span" data-km sx={kmSx}>
-                  {fmtKmSpan(item.startM, item.endM)}
-                </Typography>
+                {subtitle && (
+                  <Typography
+                    noWrap
+                    sx={{
+                      fontSize: "0.8125rem",
+                      color: tokens.onSurfaceVariant,
+                    }}
+                  >
+                    {subtitle}
+                  </Typography>
+                )}
               </Box>
-              {subtitle && (
-                <Typography
-                  noWrap
-                  sx={{ fontSize: "0.8125rem", color: tokens.onSurfaceVariant }}
-                >
-                  {subtitle}
-                </Typography>
-              )}
+              <TrailSlot open={open} />
             </Box>
             <Collapse in={isActive} timeout={durations.base} unmountOnExit>
               <CoordsInfo
@@ -193,7 +221,7 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
       </Box>
 
       <Collapse in={open} timeout={durations.base} unmountOnExit>
-        <Box sx={{ pl: { xs: 3.5, md: 3 } }}>
+        <Box sx={{ pl: { xs: 0, md: 3 } }}>
           {node.nested.map((child, i) => (
             <FeatureNode
               key={child.item.feature.id}
@@ -202,6 +230,7 @@ function RangeBand({ node, ctx, endsList, startsList, dashed }: NodeProps) {
               startsList={false}
               endsList={endsList && i === node.nested.length - 1}
               dashed={railDashed}
+              inBand
             />
           ))}
         </Box>
