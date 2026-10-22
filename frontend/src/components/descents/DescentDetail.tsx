@@ -4,6 +4,7 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { phoneCardSx } from "@/components/canvas/flatRow";
 import Fact, { factValueSx } from "@/components/Fact";
 import WaterwayMap from "@/components/map/LazyMap";
 import { LevelPill } from "@/components/WaterLevelChip";
@@ -16,11 +17,16 @@ import {
   formatTime,
 } from "@/lib/format";
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
-import { labelSx, theme } from "@/lib/theme";
+import { alphas, labelSx, theme } from "@/lib/theme";
 import { levelConfig } from "@/lib/waterLevel";
 import DescentOverview from "./DescentOverview";
 
 const { tokens } = theme;
+const { phone } = tokens;
+
+/** On a phone each block is a card on the ground; its text sits on the 28
+ * line. */
+const blockSx = { ...phoneCardSx, p: `${phone.inner}px` } as const;
 
 const formatDateWithWeekday = (iso: string) =>
   formatDate(iso, { weekday: true });
@@ -70,66 +76,81 @@ export default function DescentDetail({
   const duration = durationLabel(descent.start_time, descent.end_time);
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      {showMap ? (
-        <Box
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            columnGap: 4,
-            rowGap: 1.5,
-          }}
-        >
-          {multiDay ? (
-            <>
-              <Fact
-                label="From"
-                value={formatDateWithWeekday(descent.start_time)}
-                caption={formatTime(descent.start_time)}
-              />
-              <Fact
-                label="To"
-                value={formatDateWithWeekday(descent.end_time)}
-                caption={formatTime(descent.end_time)}
-              />
-              {duration && <Fact label="Duration" value={duration} />}
-            </>
-          ) : (
-            <>
-              <Fact
-                label="Date"
-                value={formatDateWithWeekday(descent.start_time)}
-              />
-              <Fact
-                label="Time"
-                value={duration ?? "-"}
-                caption={`${formatTime(descent.start_time)} - ${formatTime(descent.end_time)}`}
-              />
-            </>
-          )}
-        </Box>
-      ) : (
-        <DescentOverview descent={descent} />
-      )}
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          ...(showMap ? blockSx : { mb: 1 }),
+        }}
+      >
+        {showMap ? (
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              columnGap: 4,
+              rowGap: 1.5,
+            }}
+          >
+            {multiDay ? (
+              <>
+                <Fact
+                  label="From"
+                  value={formatDateWithWeekday(descent.start_time)}
+                  caption={formatTime(descent.start_time)}
+                />
+                <Fact
+                  label="To"
+                  value={formatDateWithWeekday(descent.end_time)}
+                  caption={formatTime(descent.end_time)}
+                />
+                {duration && <Fact label="Duration" value={duration} />}
+              </>
+            ) : (
+              <>
+                <Fact
+                  label="Date"
+                  value={formatDateWithWeekday(descent.start_time)}
+                />
+                <Fact
+                  label="Time"
+                  value={duration ?? "-"}
+                  caption={`${formatTime(descent.start_time)} - ${formatTime(descent.end_time)}`}
+                />
+              </>
+            )}
+          </Box>
+        ) : (
+          <DescentOverview descent={descent} />
+        )}
 
-      {showMap && (descent.put_in_label || descent.take_out_label) && (
-        <Box
-          sx={{ display: "flex", flexWrap: "wrap", columnGap: 4, rowGap: 1.5 }}
-        >
-          {descent.put_in_label && (
-            <Fact label="Put in" value={descent.put_in_label} />
-          )}
-          {descent.take_out_label && (
-            <Fact label="Take out" value={descent.take_out_label} />
-          )}
-        </Box>
-      )}
+        {showMap && (descent.put_in_label || descent.take_out_label) && (
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              columnGap: 4,
+              rowGap: 1.5,
+            }}
+          >
+            {descent.put_in_label && (
+              <Fact label="Put in" value={descent.put_in_label} />
+            )}
+            {descent.take_out_label && (
+              <Fact label="Take out" value={descent.take_out_label} />
+            )}
+          </Box>
+        )}
+      </Box>
 
       {/* Route */}
       {showMap && (mapSections.length > 0 || descent.put_in_lat != null) && (
         <Box
           sx={{
             height: 260,
+            mx: `${phone.edge}px`,
             borderRadius: `${tokens.radii.md}px`,
             boxShadow: tokens.elevation.e1,
             overflow: "hidden",
@@ -155,11 +176,11 @@ export default function DescentDetail({
 
       {/* Sections in paddled order */}
       {listed.length > 0 && (
-        <Box>
+        <Box sx={showMap ? blockSx : { mt: 1 }}>
           <Typography sx={{ ...labelSx, fontSize: "0.875rem", mb: 1 }}>
             {showMap ? `Sections (${listed.length})` : "Section notes"}
           </Typography>
-          <Box sx={{ display: "grid", gap: 1 }}>
+          <Box sx={{ display: "grid", gap: showMap ? 0 : 1 }}>
             {listed.map((s) => {
               const index = sections.indexOf(s);
               const open = () =>
@@ -181,19 +202,31 @@ export default function DescentDetail({
                   onClick={s.waterway_id != null ? open : undefined}
                   sx={{
                     display: "grid",
-                    gridTemplateColumns: "auto minmax(0, 1fr)",
-                    columnGap: 1.5,
+                    gridTemplateColumns: showMap
+                      ? `${phone.icon}px minmax(0, 1fr)`
+                      : "auto minmax(0, 1fr)",
+                    columnGap: showMap ? `${phone.iconGap}px` : 1.5,
                     alignItems: "start",
                     alignContent: "center",
                     textAlign: "left",
                     width: "100%",
                     boxSizing: "border-box",
-                    minHeight: 56,
-                    p: 1.5,
+                    minHeight: showMap ? undefined : 56,
                     font: "inherit",
                     color: "text.primary",
-                    bgcolor: tokens.surfaceHigh,
-                    borderRadius: `${tokens.radii.md}px`,
+                    ...(showMap
+                      ? {
+                          py: 1.25,
+                          "&:last-of-type": { pb: 0 },
+                          "&:not(:last-of-type)": {
+                            borderBottom: `1px solid ${tokens.outlineVariant}${alphas.hairline}`,
+                          },
+                        }
+                      : {
+                          p: 1.5,
+                          bgcolor: tokens.surfaceHigh,
+                          borderRadius: `${tokens.radii.md}px`,
+                        }),
                     boxShadow: "none",
                     cursor: s.waterway_id != null ? "pointer" : "default",
                   }}
@@ -205,12 +238,15 @@ export default function DescentDetail({
                       display: "flex",
                       alignItems: "center",
                       gap: 0.5,
-                      minWidth: 36,
+                      minWidth: showMap ? undefined : 36,
+                      justifyContent: showMap ? "center" : undefined,
                       color: "text.secondary",
                       fontSize: "0.8125rem",
                     }}
                   >
-                    <DirectionsBoatOutlinedIcon sx={{ fontSize: 18 }} />
+                    {!showMap && (
+                      <DirectionsBoatOutlinedIcon sx={{ fontSize: 18 }} />
+                    )}
                     {index + 1}
                   </Box>
                   <Box component="span" sx={{ display: "block", minWidth: 0 }}>
@@ -280,7 +316,7 @@ export default function DescentDetail({
 
       {/* Trip note */}
       {descent.note && (
-        <Box>
+        <Box sx={showMap ? blockSx : undefined}>
           <Typography sx={{ ...labelSx, fontSize: "0.875rem", mb: 0.5 }}>
             Note
           </Typography>

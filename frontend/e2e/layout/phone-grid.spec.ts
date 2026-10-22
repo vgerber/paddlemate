@@ -264,26 +264,37 @@ test.describe("phone grid @small", () => {
   });
 
   test("settings, inbox and tools", async ({ page }) => {
-    test.fail(
-      true,
-      "Settings: Inbox rows start at 46 (icon column) and Tools rows at 80 (40 tile); both need the 28/12 icon column and the right line.",
-    );
     await page.goto("/settings");
     await tab(page, "Inbox").click();
-    await expectLeft(
-      page.locator(".MuiListItemButton-root").filter({ visible: true }),
-      NAME_LINE,
-      "inbox name",
-    );
+    const inbox = page
+      .locator(".MuiListItemButton-root")
+      .filter({ visible: true });
+    await expectLeft(inbox, NAME_LINE, "inbox name");
     await tab(page, "Tools").click();
+    const tool = page.locator('a[href="/proposals"]').filter({ visible: true });
     await expectLeft(
-      page
-        .locator('a[href^="/tools"]')
-        .filter({ visible: true })
-        .first()
-        .getByText("Proposals"),
+      tool.first().getByText("Proposals"),
       NAME_LINE,
       "tool name",
+    );
+    const count = tool.first().getByText(/^[\d,.]+$/);
+    await expectRight(page, count, "tool count");
+  });
+
+  test("settings section on the grid", async ({ page }) => {
+    await page.goto("/settings?group=account");
+    const detail = byId(page, "settings-detail");
+    await expectLeft(detail.getByText("Username"), LINE, "settings fact");
+  });
+
+  test("log detail", async ({ page }) => {
+    await page.goto("/logs");
+    await byId(page, "descent-card").first().click();
+    await expectLeft(byId(page, "fact-label"), LINE, "log fact");
+    await expectLeft(
+      byId(page, "log-section").first().locator("> span:nth-child(2)"),
+      NAME_LINE,
+      "log section name",
     );
   });
 });
