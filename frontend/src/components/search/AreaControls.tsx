@@ -60,6 +60,8 @@ export default function AreaControls({
           }}
           sx={{
             flex: 1,
+            // The dot's left edge, not the track's, sits on the grid line.
+            ml: { xs: "14px", md: 0 },
             // 28px to look at, a 44px band to hit.
             py: `${(tokens.touch.min - 4) / 2}px`,
             // The thumb element is the 44px hit area; the dot is its ::after.
@@ -97,14 +99,18 @@ export default function AreaControls({
               disabled={!areaCircle}
               aria-label={locked ? "Unlock area" : "Lock area"}
               color={locked ? "default" : "primary"}
-              sx={{ width: tokens.touch.min, height: tokens.touch.min }}
+              sx={{
+                width: tokens.touch.min,
+                height: tokens.touch.min,
+                mr: { xs: `-${tokens.phone.trailInset}px`, md: 0 },
+              }}
             >
               {locked ? <LockIcon /> : <LockOpenIcon />}
             </IconButton>
           </span>
         </Tooltip>
       </Box>
-      <Typography variant="body2" color="textSecondary" sx={{ px: 0.25 }}>
+      <Typography variant="body2" color="textSecondary">
         {verb} the map to move the search center.
       </Typography>
     </Box>

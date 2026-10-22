@@ -59,7 +59,15 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   screen is an exception only when a card would hide its structure, and says
   so here. A scrolling list ends with `fabRoom` (88: the FAB's 56 and 16 around
   it) as bottom padding instead of narrowing single rows or strips, so the
-  chart, the feature strip and the rows all use the full card width. Checked by
+  chart, the feature strip and the rows all use the full card width. **Forms and
+  sheets:** a form's fields, headings and hints start on the 28 line and end on
+  the right line (the screen's own padding is `phone.line`, not 16), and
+  `PanelBottomBar` puts its Cancel text on the 28 line and its round action's
+  edge on the right line; a text button or icon in a `FormSection` heading hangs
+  out so its label or icon ends on the right line. `BottomSheet` is full-bleed
+  with no padding of its own, because what it holds brings its own grid (a
+  `PanelHeader` for the tabs, cards at the 12 edge, controls on the 28 line);
+  a gutter in the sheet would double theirs. Checked by
   `e2e/layout/phone-grid.spec.ts`.
 - **One header menu, grouped.** The section's actions sit in one overflow menu
   in the header, in groups with a hairline between (`groupStart` on a

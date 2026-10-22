@@ -112,7 +112,8 @@ export default function SectionNamingForm({
         action={
           <Button
             startIcon={<AddIcon />}
-            sx={{ minHeight: tokens.touch.min }}
+            // Its 16 padding less the hang FormSection gives the action.
+            sx={{ minHeight: tokens.touch.min, mr: { xs: -0.75, md: 0 } }}
             onClick={() =>
               onChange({
                 ...value,

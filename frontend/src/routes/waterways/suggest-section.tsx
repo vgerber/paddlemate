@@ -99,7 +99,14 @@ function SuggestSectionPage() {
 
   if (waterwayId == null) {
     return (
-      <Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: 3 }}>
+      <Box
+        sx={{
+          maxWidth: 720,
+          mx: "auto",
+          px: { xs: `${tokens.phone.line}px`, md: 2 },
+          py: 3,
+        }}
+      >
         <Typography color="textSecondary">No waterway selected.</Typography>
       </Box>
     );
@@ -344,7 +351,15 @@ function SuggestSectionPage() {
   }
 
   return (
-    <Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: 1.5, pb: 12 }}>
+    <Box
+      sx={{
+        maxWidth: 720,
+        mx: "auto",
+        px: { xs: `${tokens.phone.line}px`, md: 2 },
+        py: 1.5,
+        pb: 12,
+      }}
+    >
       {/* No header - the bottom bar carries the title, step and cancel. */}
       {submitted ? (
         submittedCard

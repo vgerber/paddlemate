@@ -26,7 +26,7 @@ export function isListingRegions(query: string) {
 /** Under the region field, typed into or not. */
 export function RegionHint() {
   return (
-    <Typography variant="body2" color="textSecondary" sx={{ px: 0.25 }}>
+    <Typography variant="body2" color="textSecondary">
       Type a valley, district, state or range
     </Typography>
   );
@@ -56,7 +56,7 @@ export default function RegionSuggestions({
 
   if (groups.length === 0) {
     return (
-      <Typography variant="body2" color="textSecondary" sx={{ px: 0.25 }}>
+      <Typography variant="body2" color="textSecondary">
         {isFetching ? "…" : "No regions found."}
       </Typography>
     );

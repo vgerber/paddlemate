@@ -60,7 +60,7 @@ export default function SearchFiltersHeader({
           display: sheet ? "none" : { xs: "flex", md: "none" },
           alignItems: "center",
           gap: 1,
-          px: 2,
+          px: { xs: `${tokens.phone.line}px`, md: 2 },
           minHeight: 56,
         }}
       >

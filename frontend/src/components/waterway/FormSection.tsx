@@ -1,6 +1,9 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import { theme } from "@/lib/theme";
+
+const { phone } = theme.tokens;
 
 /** A labelled block of a form: a heading, one hint line saying what the block
  * is for, an optional action in the heading, and the fields below. Steps are
@@ -44,7 +47,12 @@ export default function FormSection({
             </Typography>
           )}
         </Box>
-        {action}
+        {action && (
+          // A 44 icon box hangs out so its icon ends on the phone's right line.
+          <Box sx={{ mr: { xs: `-${phone.trailInset}px`, md: 0 } }}>
+            {action}
+          </Box>
+        )}
       </Box>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
         {children}

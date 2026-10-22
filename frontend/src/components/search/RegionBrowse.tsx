@@ -99,7 +99,7 @@ export default function RegionBrowse({
           <Typography
             variant="body2"
             color="textSecondary"
-            sx={{ px: 0.25, display: "flex", alignItems: "center", gap: 1 }}
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
           >
             {/* A viewport the server has not seen takes ten seconds to fetch
                 from OSM; without this the map just sits empty. */}
