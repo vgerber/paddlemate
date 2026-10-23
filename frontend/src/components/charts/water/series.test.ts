@@ -6,6 +6,7 @@ import {
   measurementTypesOf,
   readingPerType,
   seriesGroups,
+  stepReading,
 } from "./series";
 
 function range(
@@ -87,5 +88,30 @@ describe("levelAt", () => {
     expect(
       levelAt(5, { range_low: null, range_medium: null, range_high: null }),
     ).toBe("empty");
+  });
+});
+
+describe("stepReading", () => {
+  const times = [10, 20, 30, 40, 50];
+  test("the arrows start at the newest reading, then step", () => {
+    expect(stepReading(times, null, "ArrowLeft")).toBe(4);
+    expect(stepReading(times, 50, "ArrowLeft")).toBe(3);
+    expect(stepReading(times, 30, "ArrowRight")).toBe(3);
+  });
+  test("Home, End and the page keys clamp to the readings", () => {
+    expect(stepReading(times, 30, "Home")).toBe(0);
+    expect(stepReading(times, 30, "End")).toBe(4);
+    expect(stepReading(times, 30, "PageUp")).toBe(4);
+    expect(stepReading(times, 30, "PageDown")).toBe(0);
+  });
+  test("a reading that left the data restarts at the newest", () => {
+    expect(stepReading(times, 35, "ArrowLeft")).toBe(4);
+  });
+  test("the same time keeps its reading when the data shifts", () => {
+    expect(stepReading([20, 30, 40, 50, 60], 30, "ArrowLeft")).toBe(0);
+  });
+  test("other keys and no readings do nothing", () => {
+    expect(stepReading(times, 30, "a")).toBeNull();
+    expect(stepReading([], null, "End")).toBeNull();
   });
 });

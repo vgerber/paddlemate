@@ -50,7 +50,6 @@ test.describe("section chart", () => {
     const chart = page
       .getByRole("group", { name: /chart/i })
       .filter({ has: page.getByTestId("latest-dot") })
-      .or(page.getByRole("group", { name: /chart/i }))
       .first();
     await expect(chart).toBeVisible({ timeout: 15_000 });
     return chart;
@@ -75,9 +74,9 @@ test.describe("section chart", () => {
     await chart.focus();
     await page.keyboard.press("End");
     const region = page.getByTestId("chart-live-region");
-    await expect(region).toHaveText(/\d+\.\d .+/);
+    await expect(region).toHaveText(/\d+(\.\d)? .+/);
     const first = await region.textContent();
-    await page.waitForTimeout(700);
+    // The announcer throttles; the last of three presses is the one spoken.
     await page.keyboard.press("ArrowLeft");
     await page.keyboard.press("ArrowLeft");
     await page.keyboard.press("ArrowLeft");

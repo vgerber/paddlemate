@@ -3,7 +3,13 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { addDays, differenceInCalendarDays, startOfDay } from "date-fns";
 import type { JSX, KeyboardEvent } from "react";
-import { startTransition, useLayoutEffect, useMemo, useState } from "react";
+import {
+  startTransition,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Area,
   AreaChart,
@@ -17,20 +23,21 @@ import {
 import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
 import { PERIOD_LABELS } from "@/components/charts/PeriodMenu";
 import type { GaugeReading, WaterRangeWithStatus } from "@/lib/api";
-import { humanize, sentenceCase } from "@/lib/format";
+import { formatReading, humanize, sentenceCase } from "@/lib/format";
 import { useGaugeReadings } from "@/lib/hooks/useGauges";
 import { FitIcon } from "@/lib/icons";
 import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
 import { levelInk } from "@/lib/waterLevel";
-import { announce } from "./announce";
+import { announce, cancelAnnounce } from "./announce";
 import { pointTime, typeLabel } from "./chartTime";
 import RailOverlay, {
   RAIL_AXIS,
   RailTick,
   type RailTickProps,
 } from "./RailOverlay";
-import { axisTicks, insetExtent, tickLabel } from "./railGeometry";
+import { AXIS_EDGE, axisTicks, insetExtent, tickLabel } from "./railGeometry";
+import { stepReading } from "./series";
 import type { DescentSpan, TimeRange } from "./types";
 import { useChartZoom } from "./useChartZoom";
 
@@ -69,6 +76,8 @@ export interface SeriesChartProps {
   /** The reading rail's look: edge to edge, threshold words on the lines,
    * its own hover readout, a 20px axis row. */
   rail?: boolean;
+  /** How far the rail's words and axis labels keep from the plot's edges. */
+  edge?: number;
   /** The period drawn; the rail picks its axis ticks from it. */
   timeRange?: TimeRange;
   /** The point the pointer picked, kept marked on the rail. */
@@ -198,6 +207,7 @@ export default function SeriesChart({
   descentSpans,
   headroom = CHART_MARGIN.top,
   rail = false,
+  edge = AXIS_EDGE,
   timeRange,
   marker = null,
   onScrub,
@@ -307,15 +317,17 @@ export default function SeriesChart({
   // Measure container explicitly and pass width/height directly to AreaChart,
   // bypassing ResponsiveContainer's -1/-1 initial state which causes console warnings.
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
-  // A touch leaves the tooltip standing; pointerleave hides it until the
-  // next touch or move.
-  const [hoverOff, setHoverOff] = useState(false);
-  // The rail's readout shows only while the pointer is over the plot.
-  const [inside, setInside] = useState(false);
-  const [kbIndex, setKbIndex] = useState<number | null>(null);
+  // The pointer is over the plot: the rail's readout shows, and the tooltip
+  // hides again on pointerleave, since a touch would leave it standing.
+  const [pointerInside, setPointerInside] = useState(false);
+  // The keyboard's reading by time, so a new period or gauge cannot leave it
+  // pointing at some other reading.
+  const [kbTime, setKbTime] = useState<number | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
   );
+
+  useEffect(() => cancelAnnounce, []);
 
   useLayoutEffect(() => {
     if (!container) return;
@@ -357,48 +369,42 @@ export default function SeriesChart({
   const [winFrom, winTo] = domain ?? plotExtent;
   const byDay = winTo - winFrom >= 2 * 24 * 3600 * 1000;
 
-  const readable = chartData.filter(
-    (d): d is { time: number; value: number } => d.value !== null,
+  const readable = useMemo(
+    () =>
+      chartData.filter(
+        (d): d is { time: number; value: number } => d.value !== null,
+      ),
+    [chartData],
   );
   // A transition: the redraw yields, so a finger that lands here to swipe the
   // tabs is not held up by the chart repainting under it.
-  const hover = (on: boolean) =>
-    startTransition(() => {
-      setHoverOff(!on);
-      setInside(on);
-    });
+  const hover = (on: boolean) => startTransition(() => setPointerInside(on));
   const scrubTo = (point: ScrubPoint | null) => {
     onScrub?.(point);
     if (point) {
       announce(
-        `${pointTime(point.time)}, ${point.value.toFixed(1)} ${series.unit}`,
+        `${pointTime(point.time)}, ${formatReading(point.value, series.unit)}`,
       );
     }
   };
   const onKeyDown = (event: KeyboardEvent) => {
     if (readable.length === 0) return;
     if (event.key === "Escape") {
-      setKbIndex(null);
+      setKbTime(null);
       onScrub?.(null);
       return;
     }
-    const last = readable.length - 1;
-    const at = kbIndex ?? last;
-    const next: Record<string, number> = {
-      ArrowLeft: at - (kbIndex == null ? 0 : 1),
-      ArrowRight: at + (kbIndex == null ? 0 : 1),
-      PageDown: at - 10,
-      PageUp: at + 10,
-      Home: 0,
-      End: last,
-    };
-    if (!(event.key in next)) return;
+    const index = stepReading(
+      readable.map((d) => d.time),
+      kbTime,
+      event.key,
+    );
+    if (index == null) return;
     event.preventDefault();
-    const index = Math.min(Math.max(next[event.key], 0), last);
-    setKbIndex(index);
+    setKbTime(readable[index].time);
     scrubTo(readable[index]);
   };
-  const kbPoint = kbIndex != null ? (readable[kbIndex] ?? null) : null;
+  const kbPoint = readable.find((d) => d.time === kbTime) ?? null;
   const chartName = `${
     series.measurement_type === "water_level"
       ? "Water level"
@@ -464,8 +470,8 @@ export default function SeriesChart({
       tabIndex={0}
       onKeyDown={onKeyDown}
       onBlur={() => {
-        if (kbIndex == null) return;
-        setKbIndex(null);
+        if (kbTime == null) return;
+        setKbTime(null);
         onScrub?.(null);
       }}
       onPointerLeave={() => hover(false)}
@@ -511,7 +517,7 @@ export default function SeriesChart({
               ? (st) => {
                   const i = Number(st.activeIndex);
                   const d = Number.isInteger(i) ? chartData[i] : undefined;
-                  setKbIndex(null);
+                  setKbTime(null);
                   scrubTo(
                     d && d.value !== null
                       ? { time: d.time, value: d.value }
@@ -559,6 +565,7 @@ export default function SeriesChart({
                     <RailTick
                       {...p}
                       width={size?.width ?? 0}
+                      edge={edge}
                       label={formatTickLabel(Number(p.payload?.value))}
                     />
                   )
@@ -577,7 +584,7 @@ export default function SeriesChart({
             tickFormatter={formatTick}
           />
           <Tooltip
-            active={hoverOff ? false : undefined}
+            active={pointerInside ? undefined : false}
             cursor={!rail}
             content={({ active, payload, label }) => {
               if (rail) return null;
@@ -600,7 +607,7 @@ export default function SeriesChart({
                     {pointTime(ts)}
                   </div>
                   <div style={{ color: tokens.onSurface }}>
-                    {`${Number(value).toFixed(1)} ${series.unit}`}
+                    {formatReading(Number(value), series.unit)}
                   </div>
                   {span && (
                     <div style={{ color: tokens.success, marginTop: 2 }}>
@@ -659,6 +666,7 @@ export default function SeriesChart({
         <RailOverlay
           width={size.width}
           height={size.height}
+          edge={edge}
           top={headroom}
           domain={(domain ?? plotExtent) as [number, number]}
           yDomain={yWindow}
@@ -667,7 +675,7 @@ export default function SeriesChart({
           latest={latestRail}
           stale={staleLatest}
           marker={marker}
-          hovering={inside}
+          hovering={pointerInside}
         />
       )}
       {hasSelectedRange && selectedFeature && (
