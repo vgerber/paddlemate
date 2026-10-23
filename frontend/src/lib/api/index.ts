@@ -117,6 +117,24 @@ function assertData<T>(data: T | undefined): T {
   return data;
 }
 
+/** The largest page the API serves. */
+const MAX_PER_PAGE = 100;
+
+/** Every item of a paged list, page by page, for callers that show the whole
+ * list rather than paging it. */
+async function allPages<T>(
+  fetchPage: (
+    page: number,
+  ) => Promise<{ items: T[]; total_pages: number } | undefined>,
+): Promise<T[]> {
+  const items: T[] = [];
+  for (let page = 1; ; page++) {
+    const data = assertData(await fetchPage(page));
+    items.push(...data.items);
+    if (page >= data.total_pages) return items;
+  }
+}
+
 export const waterwaysApi = {
   list: async (filters: WaterwayFilters = {}, signal?: AbortSignal) => {
     const { data } = await client.GET("/api/v1/waterways", {
@@ -846,12 +864,13 @@ export const tripsApi = {
 };
 
 export const proposalsApi = {
-  list: async (filters: ProposalFilters = {}) => {
-    const { data } = await client.GET("/api/v1/proposals", {
-      params: { query: filters },
-    });
-    return assertData(data);
-  },
+  list: (filters: ProposalFilters = {}) =>
+    allPages(async (page) => {
+      const { data } = await client.GET("/api/v1/proposals", {
+        params: { query: { ...filters, page, per_page: MAX_PER_PAGE } },
+      });
+      return data;
+    }),
   get: async (id: number) => {
     const { data } = await client.GET("/api/v1/proposals/{proposal_id}", {
       params: { path: { proposal_id: id } },
@@ -933,10 +952,13 @@ export const favoritesApi = {
 };
 
 export const followsApi = {
-  listAll: async (): Promise<UserWithFollowStatus[]> => {
-    const { data } = await client.GET("/api/v1/users");
-    return assertData(data);
-  },
+  listAll: (): Promise<UserWithFollowStatus[]> =>
+    allPages(async (page) => {
+      const { data } = await client.GET("/api/v1/users", {
+        params: { query: { page, per_page: MAX_PER_PAGE } },
+      });
+      return data;
+    }),
   listFollowing: async (): Promise<User[]> => {
     const { data } = await client.GET("/api/v1/users/{user_id}/following", {
       params: { path: { user_id: ME } },

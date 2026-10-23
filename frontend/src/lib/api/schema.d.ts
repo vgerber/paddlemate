@@ -11,7 +11,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description List all users with the caller's follow status for each. */
+        /** @description List users by name with the caller's follow status for each; paged (default and maximum 100 per page, in the usual items/total envelope), narrowed by `q`. */
         get: operations["list_users"];
         put?: never;
         post?: never;
@@ -310,7 +310,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** @description Change a member's role (owner only; cannot assign owner role) */
+        /** @description Change a member's role (owner only; cannot assign the owner role or change the owner's) */
         put: operations["set_member_role"];
         post?: never;
         /** @description Remove a member or leave a group (owner/admin for others; any member for self) */
@@ -1172,7 +1172,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description List proposals. Unauthenticated: pending only. Authenticated non-admin: own proposals (all statuses). Admin: all proposals. Supports filtering by status, entity_type, operation, waterway_id, section_id, feature_id, submitted_by. */
+        /** @description List proposals. Unauthenticated: pending only. Authenticated non-admin: own proposals (all statuses). Admin: all proposals. Supports filtering by status, entity_type, operation, waterway_id, section_id, feature_id, submitted_by. Newest first, paged with page and per_page (default and maximum 100). */
         get: operations["list_proposals"];
         put?: never;
         post?: never;
@@ -2454,6 +2454,10 @@ export interface components {
             feature_id?: number | null;
             operation?: string | null;
             /** Format: int64 */
+            page?: number | null;
+            /** Format: int64 */
+            per_page?: number | null;
+            /** Format: int64 */
             section_id?: number | null;
             status?: string | null;
             submitted_by?: string | null;
@@ -2475,6 +2479,14 @@ export interface components {
              * @description Only return trips that start on or before this date.
              */
             to?: string | null;
+        };
+        ListUsersQuery: {
+            /** Format: int64 */
+            page?: number | null;
+            /** Format: int64 */
+            per_page?: number | null;
+            /** @description Keep users whose name contains this text (case-insensitive). */
+            q?: string | null;
         };
         /**
          * @description What the live stream carries: enough to know what to refresh, nothing to
@@ -2629,6 +2641,17 @@ export interface components {
             /** Format: int64 */
             total_pages: number;
         };
+        PaginatedResponse_for_Proposal: {
+            items: components["schemas"]["Proposal"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            per_page: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            total_pages: number;
+        };
         PaginatedResponse_for_Trip: {
             items: components["schemas"]["Trip"][];
             /** Format: int64 */
@@ -2642,6 +2665,17 @@ export interface components {
         };
         PaginatedResponse_for_TripEvent: {
             items: components["schemas"]["TripEvent"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            per_page: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            total_pages: number;
+        };
+        PaginatedResponse_for_UserWithFollowStatusResponse: {
+            items: components["schemas"]["UserWithFollowStatusResponse"][];
             /** Format: int64 */
             page: number;
             /** Format: int64 */
@@ -3901,7 +3935,12 @@ export type $defs = Record<string, never>;
 export interface operations {
     list_users: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number | null;
+                per_page?: number | null;
+                /** @description Keep users whose name contains this text (case-insensitive). */
+                q?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3913,7 +3952,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserWithFollowStatusResponse"][];
+                    "application/json": components["schemas"]["PaginatedResponse_for_UserWithFollowStatusResponse"];
+                };
+            };
+            /** @description q too long */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -4235,11 +4283,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-22T18:06:54.906379097Z",
-                     *         "expires_at": "2027-01-20T18:06:54.906381687Z",
+                     *         "created_at": "2026-10-23T17:47:45.386153906Z",
+                     *         "expires_at": "2027-01-21T17:47:45.386156086Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-22T18:06:54.906384067Z",
+                     *         "last_used_at": "2026-10-23T17:47:45.386164206Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4270,8 +4318,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-22T18:06:54.906503026Z",
-                     *       "expires_at": "2027-01-20T18:06:54.906503436Z",
+                     *       "created_at": "2026-10-23T17:47:45.386338378Z",
+                     *       "expires_at": "2027-01-21T17:47:45.386339038Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -5330,7 +5378,7 @@ export interface operations {
                     "application/json": components["schemas"]["WaterwaySources"];
                 };
             };
-            /** @description Waterway not found, or the section is not in it */
+            /** @description Waterway never existed, or the section is not in it */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -5877,6 +5925,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            /** @description Not an admin */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Section not found */
             404: {
                 headers: {
@@ -6411,6 +6468,15 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not an admin */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -8042,6 +8108,8 @@ export interface operations {
                 entity_type?: string | null;
                 feature_id?: number | null;
                 operation?: string | null;
+                page?: number | null;
+                per_page?: number | null;
                 section_id?: number | null;
                 status?: string | null;
                 submitted_by?: string | null;
@@ -8058,7 +8126,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Proposal"][];
+                    "application/json": components["schemas"]["PaginatedResponse_for_Proposal"];
                 };
             };
         };
@@ -8254,6 +8322,24 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Proposal not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Proposal is no longer pending */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
