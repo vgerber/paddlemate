@@ -11,10 +11,14 @@ pub struct UserWithFollowStatus {
     pub incoming_pending: bool,
 }
 
-/// All users except the viewer, with outgoing status and incoming pending flag.
+/// One page of the users except the viewer, with outgoing status and
+/// incoming pending flag; `search` keeps those whose name contains it.
 pub async fn list_all_users_with_follow_status(
     pool: &PgPool,
     viewer_id: &str,
+    search: Option<&str>,
+    page: i64,
+    per_page: i64,
 ) -> Result<Vec<UserWithFollowStatus>, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -31,9 +35,14 @@ pub async fn list_all_users_with_follow_status(
             AND in_f.follower_id = u.id
             AND in_f.status = 'pending'
         WHERE u.id != $1
-        ORDER BY u.username
+          AND ($2::text IS NULL OR strpos(lower(u.username), lower($2)) > 0)
+        ORDER BY u.username, u.id
+        LIMIT $3 OFFSET $4
         "#,
-        viewer_id
+        viewer_id,
+        search,
+        per_page,
+        (page - 1) * per_page
     )
     .fetch_all(pool)
     .await

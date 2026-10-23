@@ -7,12 +7,21 @@ use aide::axum::{
     ApiRouter, IntoApiResponse,
     routing::{delete_with, get_with, patch_with, put_with},
 };
-use axum::{Extension, Json, extract::State, response::IntoResponse};
+use axum::{
+    Extension, Json,
+    extract::{Query, State},
+    response::IntoResponse,
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    doc_fn, error::ApiError, layers::auth::AuthToken, query::follows as follows_query,
+    doc_fn,
+    error::{ApiError, ErrorResponse},
+    layers::auth::AuthToken,
+    models::waterway::page_bounds,
+    query::follows as follows_query,
+    routes::geo::params::parse_search_name,
     state::AppState,
 };
 
@@ -138,13 +147,38 @@ pub struct UserWithFollowStatusResponse {
     pub incoming_pending: bool,
 }
 
+/// Users per page unless the caller asks for another size.
+const DEFAULT_USERS_PER_PAGE: i64 = 100;
+
+#[derive(Deserialize, JsonSchema)]
+pub struct ListUsersQuery {
+    /// Keep users whose name contains this text (case-insensitive).
+    pub q: Option<String>,
+    pub page: Option<i64>,
+    pub per_page: Option<i64>,
+}
+
 async fn list_users(
     State(app): State<AppState>,
     Extension(token): Extension<AuthToken>,
+    Query(query): Query<ListUsersQuery>,
 ) -> impl IntoApiResponse {
     let viewer_id = token.user_id();
+    let search = match parse_search_name(query.q.as_deref()) {
+        Ok(search) => search,
+        Err(err) => return err.into_response(),
+    };
+    let (page, per_page) = page_bounds(query.page, query.per_page, DEFAULT_USERS_PER_PAGE);
 
-    match follows_query::list_all_users_with_follow_status(&app.pg_pool, viewer_id).await {
+    match follows_query::list_all_users_with_follow_status(
+        &app.pg_pool,
+        viewer_id,
+        search,
+        page,
+        per_page,
+    )
+    .await
+    {
         Ok(users) => Json(
             users
                 .into_iter()
@@ -162,7 +196,9 @@ async fn list_users(
 }
 
 doc_fn!(list_users_docs, op =>
-    op.description("List all users with the caller's follow status for each.")
+    op.input::<Query<ListUsersQuery>>()
+        .description("List users by name with the caller's follow status for each; paged (default and maximum 100 per page), narrowed by `q`.")
+        .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("q too long"))
         .response::<200, Json<Vec<UserWithFollowStatusResponse>>>()
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Users")

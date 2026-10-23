@@ -255,3 +255,40 @@ async fn descent_text_and_coordinates_are_bounded(pool: PgPool) {
         assert_eq!(r.status, StatusCode::BAD_REQUEST, "PATCH {extra}");
     }
 }
+
+#[sqlx::test]
+async fn the_user_list_is_paged_and_searchable(pool: PgPool) {
+    people(&pool).await;
+    for i in 0..5 {
+        add_user(&pool, &format!("u-{i}"), &format!("paddler{i}")).await;
+    }
+    let app = app(pool.clone());
+    let who = Who::User("mara-1");
+    let all = call(&app, Method::GET, "/users", who, None).await;
+    assert_eq!(all.status, StatusCode::OK);
+    assert_eq!(all.body.as_array().unwrap().len(), 7);
+
+    let page = call(&app, Method::GET, "/users?per_page=2&page=2", who, None).await;
+    assert_eq!(page.body.as_array().unwrap().len(), 2);
+    let huge = call(&app, Method::GET, "/users?per_page=100000", who, None).await;
+    assert_eq!(huge.status, StatusCode::OK);
+
+    let found = call(&app, Method::GET, "/users?q=PADDLER3", who, None).await;
+    let names: Vec<&str> = found
+        .body
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|u| u["username"].as_str().unwrap())
+        .collect();
+    assert_eq!(names, ["paddler3"]);
+    let r = call(
+        &app,
+        Method::GET,
+        &format!("/users?q={}", "x".repeat(101)),
+        who,
+        None,
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::BAD_REQUEST);
+}
