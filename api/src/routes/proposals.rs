@@ -15,7 +15,7 @@ use crate::{
     models::{
         path_params::ProposalPath,
         proposal::{ListProposalsFilters, Proposal, ProposalStatus, ReviewRequest, VoteRequest},
-        waterway::page_bounds,
+        waterway::{PaginatedResponse, page_bounds, total_pages},
     },
     query::proposals,
     state::AppState,
@@ -83,7 +83,14 @@ pub async fn list_proposals(
     };
 
     match proposals::list_proposals(&app.pg_pool, filters, viewer_id.as_deref()).await {
-        Ok(list) => Json(list).into_response(),
+        Ok((items, total)) => Json(PaginatedResponse {
+            items,
+            total,
+            page,
+            per_page,
+            total_pages: total_pages(total, per_page),
+        })
+        .into_response(),
         Err(err) => ApiError::from_db("Error listing proposals", &err).into_response(),
     }
 }
@@ -96,7 +103,7 @@ doc_fn!(list_proposals_docs, op =>
          Admin: all proposals. \
          Supports filtering by status, entity_type, operation, waterway_id, section_id, feature_id, submitted_by. Newest first, paged with page and per_page (default and maximum 100)."
     )
-    .response::<200, Json<Vec<Proposal>>>()
+    .response::<200, Json<PaginatedResponse<Proposal>>>()
     .tag("Proposals")
 );
 

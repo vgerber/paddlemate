@@ -186,7 +186,7 @@ binaries.
 
 Other limits worth knowing: names (translations, descents) are at most 255
 characters and translated descriptions 10000; descent coordinates are range
-checked; `GET /users` and `GET /proposals` are paged (`page`, `per_page`, at
+checked; `GET /users` and `GET /proposals` return the paged envelope (`page`, `per_page`, at
 most 100, default 100; `GET /users` also takes `q`); comment edits, deletes and
 moderation are looked up inside the river, section and feature of their path;
 votes need a pending proposal (409 otherwise); a group's owner role cannot be

@@ -266,10 +266,28 @@ async fn the_user_list_is_paged_and_searchable(pool: PgPool) {
     let who = Who::User("mara-1");
     let all = call(&app, Method::GET, "/users", who, None).await;
     assert_eq!(all.status, StatusCode::OK);
-    assert_eq!(all.body.as_array().unwrap().len(), 7);
+    assert_eq!(all.body["items"].as_array().unwrap().len(), 7);
+    assert_eq!(all.body["total"], 7);
 
     let page = call(&app, Method::GET, "/users?per_page=2&page=2", who, None).await;
-    assert_eq!(page.body.as_array().unwrap().len(), 2);
+    assert_eq!(page.body["items"].as_array().unwrap().len(), 2);
+    assert_eq!(
+        (
+            page.body["total"].as_i64(),
+            page.body["total_pages"].as_i64()
+        ),
+        (Some(7), Some(4))
+    );
+    let last = call(&app, Method::GET, "/users?per_page=2&page=4", who, None).await;
+    assert_eq!(last.body["items"].as_array().unwrap().len(), 1);
+    let past = call(&app, Method::GET, "/users?per_page=2&page=9", who, None).await;
+    assert_eq!(
+        (
+            past.body["items"].as_array().unwrap().len(),
+            past.body["total"].as_i64()
+        ),
+        (0, Some(7))
+    );
     let huge = call(&app, Method::GET, "/users?per_page=100000", who, None).await;
     assert_eq!(huge.status, StatusCode::OK);
 
@@ -421,9 +439,14 @@ async fn votes_need_a_pending_proposal_and_the_list_is_paged(pool: PgPool) {
     assert_eq!(r.status, StatusCode::NOT_FOUND);
 
     let all = call(&app, Method::GET, "/proposals", Who::Admin, None).await;
-    assert_eq!(all.body.as_array().unwrap().len(), 3);
+    assert_eq!(all.body["items"].as_array().unwrap().len(), 3);
+    assert_eq!(all.body["total"], 3);
     let p1 = call(&app, Method::GET, "/proposals?per_page=2", Who::Admin, None).await;
-    assert_eq!(p1.body.as_array().unwrap().len(), 2);
+    assert_eq!(p1.body["items"].as_array().unwrap().len(), 2);
+    assert_eq!(
+        (p1.body["total"].as_i64(), p1.body["total_pages"].as_i64()),
+        (Some(3), Some(2))
+    );
     let p2 = call(
         &app,
         Method::GET,
@@ -432,7 +455,22 @@ async fn votes_need_a_pending_proposal_and_the_list_is_paged(pool: PgPool) {
         None,
     )
     .await;
-    assert_eq!(p2.body.as_array().unwrap().len(), 1);
+    assert_eq!(p2.body["items"].as_array().unwrap().len(), 1);
+    let past = call(
+        &app,
+        Method::GET,
+        "/proposals?per_page=2&page=7",
+        Who::Admin,
+        None,
+    )
+    .await;
+    assert_eq!(
+        (
+            past.body["items"].as_array().unwrap().len(),
+            past.body["total"].as_i64()
+        ),
+        (0, Some(3))
+    );
 }
 
 async fn upload(app: &Router, uri: &str, size: usize) -> common::Reply {

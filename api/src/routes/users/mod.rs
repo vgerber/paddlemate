@@ -19,7 +19,7 @@ use crate::{
     doc_fn,
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
-    models::waterway::page_bounds,
+    models::waterway::{PaginatedResponse, page_bounds, total_pages},
     query::follows as follows_query,
     routes::geo::params::parse_search_name,
     state::AppState,
@@ -179,8 +179,8 @@ async fn list_users(
     )
     .await
     {
-        Ok(users) => Json(
-            users
+        Ok((users, total)) => Json(PaginatedResponse {
+            items: users
                 .into_iter()
                 .map(|u| UserWithFollowStatusResponse {
                     id: u.id,
@@ -189,7 +189,11 @@ async fn list_users(
                     incoming_pending: u.incoming_pending,
                 })
                 .collect::<Vec<_>>(),
-        )
+            total,
+            page,
+            per_page,
+            total_pages: total_pages(total, per_page),
+        })
         .into_response(),
         Err(err) => ApiError::from_db("Error listing users", err).into_response(),
     }
@@ -197,9 +201,9 @@ async fn list_users(
 
 doc_fn!(list_users_docs, op =>
     op.input::<Query<ListUsersQuery>>()
-        .description("List users by name with the caller's follow status for each; paged (default and maximum 100 per page), narrowed by `q`.")
+        .description("List users by name with the caller's follow status for each; paged (default and maximum 100 per page, in the usual items/total envelope), narrowed by `q`.")
         .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("q too long"))
-        .response::<200, Json<Vec<UserWithFollowStatusResponse>>>()
+        .response::<200, Json<PaginatedResponse<UserWithFollowStatusResponse>>>()
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Users")
 );

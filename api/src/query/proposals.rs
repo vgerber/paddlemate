@@ -259,13 +259,34 @@ pub async fn insert_proposal(
 ///   - unauthenticated: set filters.status = Some("pending")
 ///   - non-admin auth: set filters.submitted_by = Some(viewer_user_id)
 ///   - admin: leave unrestricted
+/// One page of proposals and the total across all pages.
 pub async fn list_proposals(
     db: &PgPool,
     filters: ListProposalsFilters,
     viewer_user_id: Option<&str>,
-) -> Result<Vec<Proposal>, sqlx::Error> {
+) -> Result<(Vec<Proposal>, i64), sqlx::Error> {
+    let page = filters.page;
+    let (items, total) = list_proposals_page(db, &filters, viewer_user_id).await?;
+    if items.is_empty() && page > 1 {
+        // Past the last page the window count has no row to ride on.
+        let first = ListProposalsFilters {
+            page: 1,
+            per_page: 1,
+            ..filters
+        };
+        let (_, total) = list_proposals_page(db, &first, viewer_user_id).await?;
+        return Ok((items, total));
+    }
+    Ok((items, total))
+}
+
+async fn list_proposals_page(
+    db: &PgPool,
+    filters: &ListProposalsFilters,
+    viewer_user_id: Option<&str>,
+) -> Result<(Vec<Proposal>, i64), sqlx::Error> {
     let rows = sqlx::query(
-        r#"SELECT p.id, p.entity_type, p.entity_id, p.operation, p.proposed_data,
+        r#"SELECT COUNT(*) OVER() AS total_count, p.id, p.entity_type, p.entity_id, p.operation, p.proposed_data,
                   p.submitted_by, p.original_data, p.status, p.reviewed_by, p.review_note,
                   p.submitter_note,
                   p.created_at, p.updated_at,
@@ -332,7 +353,8 @@ pub async fn list_proposals(
     .fetch_all(db)
     .await?;
 
-    Ok(rows.iter().map(row_to_proposal_full).collect())
+    let total = rows.first().map_or(0, |r| r.get::<i64, _>("total_count"));
+    Ok((rows.iter().map(row_to_proposal_full).collect(), total))
 }
 
 /// Fetch a single proposal by ID including vote counts.
