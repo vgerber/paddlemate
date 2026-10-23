@@ -25,6 +25,15 @@ const rivermap = {
   license_url: "https://creativecommons.org/licenses/by-sa/4.0/",
 };
 
+/** The proposals list answers one page of this shape. */
+const paged = (items: unknown[]) => ({
+  items,
+  page: 1,
+  per_page: 100,
+  total: items.length,
+  total_pages: 1,
+});
+
 const days = (n: number) =>
   new Date(Date.now() - n * 86_400_000).toISOString().replace(/\.\d+Z$/, "Z");
 
@@ -150,7 +159,7 @@ async function serve(page: Page) {
     r.fulfill({ json: sources }),
   );
   await page.route("**/api/v1/proposals?*", (r) =>
-    r.fulfill({ json: proposals }),
+    r.fulfill({ json: paged(proposals) }),
   );
 }
 
@@ -385,8 +394,10 @@ test.describe("history", () => {
         json: { items: [], page: 1, per_page: 100, total: 0, total_pages: 0 },
       }),
     );
-    await page.route("**/api/v1/proposals?*", (r) => r.fulfill({ json: [] }));
-    await openHistory(page);
+    await page.route("**/api/v1/proposals?*", (r) =>
+      r.fulfill({ json: paged([]) }),
+    );
+    await openSources(page);
     await expect(page.getByText("No history yet.")).toBeVisible();
   });
 });
@@ -603,5 +614,75 @@ test.describe("deleted features", () => {
     await expect(steps.last()).toContainText("Confirmed gone");
     await header(page).getByRole("button", { name: "All edits" }).click();
     await expect(vis(page, "sources")).toBeVisible();
+  });
+});
+
+test.describe("after a feature is deleted", () => {
+  test("the Edits tab lists it without a reload", async ({ page }) => {
+    let deleted = false;
+    const gone = {
+      deleted_at: days(0),
+      deleted_by: vincent,
+      feature_id: 9999,
+      feature_type: "weir",
+      name: "Altes Wehr",
+      proposal_id: null,
+      reviewer: null,
+    };
+    await page.route("**/api/v1/**/deleted-features*", (r) =>
+      r.fulfill({
+        json: {
+          items: deleted ? [gone] : [],
+          page: 1,
+          per_page: 100,
+          total: deleted ? 1 : 0,
+          total_pages: 1,
+        },
+      }),
+    );
+    await page.route("**/features/9999/history*", (r) =>
+      r.fulfill({
+        json: {
+          ...paged([
+            {
+              id: 91,
+              at: days(0),
+              kind: "deleted",
+              actor: vincent,
+              source: null,
+              proposal_id: null,
+              reviewer: null,
+              changes: [],
+            },
+          ]),
+        },
+      }),
+    );
+    await page.route(/\/features\/\d+$/, (r) => {
+      if (r.request().method() !== "DELETE") return r.fallback();
+      deleted = true;
+      return r.fulfill({ status: 204 });
+    });
+    await openSources(page);
+    await expect(vis(page, "history")).toBeVisible();
+    await expect(page.getByText("Deleted feature")).toHaveCount(0);
+
+    await page.getByRole("tab", { name: "Features", exact: true }).click();
+    const card = page.getByTestId("features-card").filter({ visible: true });
+    await card.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
+    await card
+      .getByRole("button", { name: "More actions", exact: true })
+      .first()
+      .click();
+    await page.getByRole("menuitem", { name: "Delete feature" }).click();
+    await page.getByRole("button", { name: "Delete", exact: true }).click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+
+    await page.getByRole("tab", { name: "Sources", exact: true }).click();
+    await expect(
+      vis(page, "history")
+        .getByTestId("history-step")
+        .filter({ hasText: "Deleted feature" }),
+    ).toBeVisible();
   });
 });

@@ -12,7 +12,7 @@ const headSx = { ...labelSx, color: "text.secondary" } as const;
 
 /** An update as a Before / After table, one row per field: the old value
  * struck through, the new one in the accent. A value that was not there reads
- * "none" before, one that is gone "removed" after. Renders nothing when the
+ * "none" before ("not recorded" when the snapshot lacks the field), one that is gone "removed" after. Renders nothing when the
  * visible fields are unchanged. */
 export default function ProposalDiffTable({
   original,
@@ -41,7 +41,7 @@ export default function ProposalDiffTable({
         <Typography sx={headSx}>Before</Typography>
         <Typography sx={headSx}>After</Typography>
       </Box>
-      {diffs.map(({ key, from, to }) => {
+      {diffs.map(({ key, from, to, known }) => {
         const added = isEmptyValue(from);
         const removed = isEmptyValue(to);
         return (
@@ -61,7 +61,7 @@ export default function ProposalDiffTable({
                 data-testid="diff-note"
                 sx={{ ...rowSx, color: "text.secondary" }}
               >
-                none
+                {known ? "none" : "not recorded"}
               </Typography>
             ) : (
               <Typography

@@ -8,10 +8,16 @@ import {
 } from "@/components/canvas/flatRow";
 import type { Proposal } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
-import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
+import { ThumbDownIcon, ThumbUpIcon } from "@/lib/icons";
+import { proposalKind, proposalTitle } from "@/lib/proposals";
 import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
+
+const voteIconSx = {
+  fontSize: 14,
+  verticalAlign: "-2px",
+} as const;
 
 const metaSx = {
   fontSize: "0.8125rem",
@@ -34,10 +40,6 @@ export default function ProposalRow({
   onSelect: () => void;
 }) {
   const hasVotes = proposal.upvotes > 0 || proposal.downvotes > 0;
-  const meta = [
-    hasVotes && `▲ ${proposal.upvotes} · ▼ ${proposal.downvotes}`,
-    timeAgo(proposal.created_at),
-  ].filter(Boolean);
   return (
     <ButtonBase
       data-testid="proposal-card"
@@ -79,14 +81,19 @@ export default function ProposalRow({
       </Typography>
       <Box sx={{ flexShrink: 0, textAlign: "right" }}>
         <Typography sx={{ ...metaSx, fontWeight: 400 }}>
-          {OP_LABEL[proposal.operation] ?? proposal.operation} ·{" "}
-          {ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type}
+          {proposalKind(proposal)}
         </Typography>
         <Typography
           data-testid="proposal-meta"
           sx={{ ...metaSx, fontWeight: 500 }}
         >
-          {meta.join(" · ")}
+          {hasVotes && (
+            <>
+              <ThumbUpIcon sx={voteIconSx} /> {proposal.upvotes}{" "}
+              <ThumbDownIcon sx={voteIconSx} /> {proposal.downvotes} ·{" "}
+            </>
+          )}
+          {timeAgo(proposal.created_at)}
         </Typography>
       </Box>
     </ButtonBase>

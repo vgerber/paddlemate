@@ -16,6 +16,7 @@ import {
   proposedFeatures,
   proposedLocation,
   proposedTranslations,
+  shortValue,
 } from "@/lib/proposals";
 import { alphas, labelSx, theme } from "@/lib/theme";
 
@@ -41,8 +42,11 @@ export default function ProposalDetailPane({
   const pseudoFeatures = featureData.map(toPseudoFeature);
   const translations = proposedTranslations(data);
 
+  // An update's diff already says what changed; repeating the proposed
+  // description and region beneath it only restates it.
+  const showsDiff = proposal.operation === "update" && !!proposal.original_data;
   const detailRows: Array<[string, string]> = [];
-  if (typeof data.description === "string" && data.description) {
+  if (!showsDiff && typeof data.description === "string" && data.description) {
     detailRows.push(["Description", data.description]);
   }
   // `regions` array on current proposals; single `region` on ones stored
@@ -50,10 +54,13 @@ export default function ProposalDetailPane({
   const regionNames = Array.isArray(data.regions)
     ? data.regions.filter((v): v is string => typeof v === "string")
     : [data.region];
-  const regionCountry = [...regionNames, data.country]
+  const regionCountry = [
+    ...regionNames,
+    typeof data.country === "string" && shortValue("country", data.country),
+  ]
     .filter((v) => typeof v === "string" && v)
     .join(", ");
-  if (regionCountry) detailRows.push(["Region", regionCountry]);
+  if (!showsDiff && regionCountry) detailRows.push(["Region", regionCountry]);
 
   const focus = location ? representativePoint(location) : null;
 

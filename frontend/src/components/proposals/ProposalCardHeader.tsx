@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 import type { Proposal } from "@/lib/api";
 import { OpenFullIcon } from "@/lib/icons";
-import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
+import { proposalKind, proposalTitle } from "@/lib/proposals";
 import { fonts } from "@/lib/theme";
 import StatusChip from "./StatusChip";
 
@@ -57,8 +57,7 @@ export default function ProposalCardHeader({
           fontFamily: fonts.body,
         }}
       >
-        {ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type} ·{" "}
-        {OP_LABEL[proposal.operation] ?? proposal.operation}
+        {proposalKind(proposal)}
       </Typography>
     </>
   );

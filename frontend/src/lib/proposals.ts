@@ -22,6 +22,28 @@ export const ENTITY_LABEL: Record<string, string> = {
   feature: "Feature",
 };
 
+const KIND_ENTITY: Record<string, string> = {
+  waterway: "river",
+  water_section: "section",
+  feature: "feature",
+};
+
+/** What a proposal is in a paddler's words: "New feature", "Changed
+ * section", "Removed river". */
+export function proposalKind(
+  proposal: Pick<Proposal, "operation" | "entity_type">,
+): string {
+  const entity = KIND_ENTITY[proposal.entity_type] ?? proposal.entity_type;
+  switch (proposal.operation) {
+    case "create":
+      return `New ${entity}`;
+    case "delete":
+      return `Removed ${entity}`;
+    default:
+      return `Changed ${entity}`;
+  }
+}
+
 export const HIDDEN_KEYS = new Set(["geometry", "water_ranges", "location"]);
 
 /** Additionally hidden on create cards: internal ids, the name (it is the
@@ -43,16 +65,30 @@ export function isDisplayable(v: unknown): boolean {
   return true;
 }
 
+export interface FieldDiff {
+  key: string;
+  from: unknown;
+  to: unknown;
+  /** False when the stored snapshot does not carry the field at all (a
+   * feature's name lives in its translations), so "before" is unknown. */
+  known: boolean;
+}
+
+/** What an update changes. A proposal carries only the fields it sets, so a
+ * field it leaves out is unchanged, not removed; one it sets to null is. */
 export function diffObjects(
   original: Record<string, unknown>,
   proposed: Record<string, unknown>,
-): Array<{ key: string; from: unknown; to: unknown }> {
-  const keys = new Set([...Object.keys(original), ...Object.keys(proposed)]);
-  const diffs: Array<{ key: string; from: unknown; to: unknown }> = [];
-  for (const key of keys) {
-    if (JSON.stringify(original[key]) !== JSON.stringify(proposed[key])) {
-      diffs.push({ key, from: original[key], to: proposed[key] });
-    }
+): FieldDiff[] {
+  const diffs: FieldDiff[] = [];
+  for (const key of Object.keys(proposed)) {
+    const known = key in original;
+    const from = original[key];
+    const to = proposed[key];
+    if (known && JSON.stringify(from) === JSON.stringify(to)) continue;
+    // Nothing recorded and nothing proposed is no change.
+    if (!known && isEmptyValue(to)) continue;
+    diffs.push({ key, from, to, known });
   }
   return diffs;
 }
@@ -77,6 +113,15 @@ function plainValue(v: unknown): string {
 /** Nothing there: null, an empty string, list or object. */
 export function isEmptyValue(v: unknown): boolean {
   return !isDisplayable(v);
+}
+
+/** A country code as its name; an unknown code stays as written. */
+function countryName(code: string): string {
+  try {
+    return new Intl.DisplayNames(["en"], { type: "region" }).of(code) ?? code;
+  } catch {
+    return code;
+  }
 }
 
 export function shortValue(key: string, v: unknown): string {
@@ -104,6 +149,7 @@ export function shortValue(key: string, v: unknown): string {
       )
       .join(", ");
   }
+  if (key === "country" && typeof v === "string") return countryName(v);
   const text = plainValue(v);
   return text.length > 60 ? `${text.slice(0, 57)}…` : text;
 }
