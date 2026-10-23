@@ -5,6 +5,7 @@ import {
   proposalsApi,
   type ReviewRequest,
 } from "@/lib/api";
+import { provenanceKeys } from "./useProvenance";
 
 export const proposalKeys = {
   all: ["proposals"] as const,
@@ -104,6 +105,8 @@ export function useReviewProposal() {
     meta: { errorHandledLocally: true },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: proposalKeys.all });
+      // An approval adds a step to the history and may delete a feature.
+      queryClient.invalidateQueries({ queryKey: provenanceKeys.all });
     },
   });
 }

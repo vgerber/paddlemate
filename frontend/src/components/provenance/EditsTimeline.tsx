@@ -10,6 +10,12 @@ import type { DotKind } from "@/components/TimelineRail";
 import { featureName } from "@/components/waterway/section-details/utils";
 import type { HistoryStep, SectionWithFeatures } from "@/lib/api";
 import { formatDate, humanize, sentenceCase } from "@/lib/format";
+import {
+  useDeletedFeatures,
+  useDeletionProposals,
+  useEntryHistories,
+  useSectionProposals,
+} from "@/lib/hooks/useProvenance";
 import { useSession } from "@/lib/hooks/useSession";
 import { HistoryIcon } from "@/lib/icons";
 import { localizedName } from "@/lib/localization";
@@ -27,12 +33,6 @@ import ProposalStep, { ReviewNote } from "./ProposalStep";
 import StepRow, { Byline, smallSx } from "./StepRow";
 import { stepByline, stepHeadline } from "./steps";
 import type { HistoryTarget } from "./types";
-import {
-  useDeletedFeatures,
-  useDeletionProposals,
-  useEntryHistories,
-  useSectionProposals,
-} from "./useProvenance";
 
 const { tokens } = theme;
 

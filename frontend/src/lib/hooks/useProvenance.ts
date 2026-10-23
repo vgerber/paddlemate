@@ -1,15 +1,19 @@
 import {
-  useMutation,
+  type UseQueryResult,
   useQueries,
   useQuery,
-  useQueryClient,
 } from "@tanstack/react-query";
-import type { DeletedFeature, ProposalFilters, ReviewRequest } from "@/lib/api";
+import type { HistoryTarget } from "@/components/provenance/types";
+import type {
+  DeletedFeature,
+  HistoryStep,
+  Proposal,
+  ProposalFilters,
+} from "@/lib/api";
 import { proposalsApi } from "@/lib/api";
 import { client } from "@/lib/api/client";
 import { proposalKeys } from "@/lib/hooks/useProposals";
 import { createLimiter } from "@/lib/limiter";
-import type { HistoryTarget } from "./types";
 
 export const provenanceKeys = {
   all: ["provenance"] as const,
@@ -66,6 +70,21 @@ export function useHistory(target: HistoryTarget) {
  * section with many features from opening dozens of connections at once. */
 const limit = createLimiter(4);
 
+function combineHistories(results: UseQueryResult<{ items: HistoryStep[] }>[]) {
+  return {
+    data: results.map((r) => r.data?.items),
+    isLoading: results.some((r) => r.isLoading),
+    error: results.find((r) => r.error)?.error ?? null,
+    refetch: () => {
+      for (const r of results) if (r.error) r.refetch();
+    },
+  };
+}
+
+function combineProposals(results: UseQueryResult<Proposal>[]) {
+  return results.flatMap((r) => (r.data ? [r.data] : []));
+}
+
 /** The histories of several entries, each on its own cache key so a single
  * entry's view reuses them. Entries not loaded yet come back as undefined. */
 export function useEntryHistories(targets: HistoryTarget[]) {
@@ -75,14 +94,7 @@ export function useEntryHistories(targets: HistoryTarget[]) {
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         limit(() => fetchHistory(target), signal),
     })),
-    combine: (results) => ({
-      data: results.map((r) => r.data?.items),
-      isLoading: results.some((r) => r.isLoading),
-      error: results.find((r) => r.error)?.error ?? null,
-      refetch: () => {
-        for (const r of results) if (r.error) r.refetch();
-      },
-    }),
+    combine: combineHistories,
   });
 }
 
@@ -131,7 +143,7 @@ export function useDeletionProposals(deleted: DeletedFeature[]) {
       retry: false,
       meta: { errorHandledLocally: true },
     })),
-    combine: (results) => results.flatMap((r) => (r.data ? [r.data] : [])),
+    combine: combineProposals,
   });
 }
 
@@ -180,20 +192,5 @@ export function useEntryProposals(target: HistoryTarget) {
     queryFn: () => proposalsApi.list(filters),
     select: (all) =>
       all.filter((p) => p.operation !== "create" && p.entity_id === id),
-  });
-}
-
-/** Approve or reject from the timeline; the history gains the step. */
-export function useReviewEntryProposal() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, body }: { id: number; body: ReviewRequest }) =>
-      proposalsApi.review(id, body),
-    // The review dialog renders the failure inline.
-    meta: { errorHandledLocally: true },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: proposalKeys.all });
-      queryClient.invalidateQueries({ queryKey: provenanceKeys.all });
-    },
   });
 }
