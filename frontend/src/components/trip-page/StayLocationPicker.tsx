@@ -4,8 +4,8 @@ import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import { factLabelSx } from "@/components/Fact";
 import WaterwayMap from "@/components/map/LazyMap";
-import { boundsOf, lineCoords } from "@/lib/geo";
-import { useTripStays } from "@/lib/hooks/useTrips";
+import { boundsOf, lineCoords, pointCoords } from "@/lib/geo";
+import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
 import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";
 import { fonts, theme } from "@/lib/theme";
 
@@ -27,6 +27,7 @@ interface Props {
  */
 export default function StayLocationPicker({ tripId, point, onChange }: Props) {
   const { data: stays } = useTripStays(tripId);
+  const { data: candidates } = useTripCandidates(tripId);
 
   const waterwayIds = useMemo(
     () => [
@@ -41,15 +42,21 @@ export default function StayLocationPicker({ tripId, point, onChange }: Props) {
   );
   const { sections } = useWaterwaySections(waterwayIds, waterwayIds.length > 0);
 
-  // Open on the point if there is one, else on the water the trip watches.
+  // Open on the point if there is one, else on the trip's other bases, else
+  // on the water it watches.
   const focusedPoint = useMemo<[number, number] | null>(
     () => (point ? [point.lon, point.lat] : null),
     [point],
   );
   const focusBounds = useMemo(() => {
-    if (point || sections.length === 0) return null;
+    if (point) return null;
+    const bases = [...(stays ?? []), ...(candidates ?? [])].flatMap((b) => {
+      const at = b.location ? pointCoords(b.location) : null;
+      return at ? [at] : [];
+    });
+    if (bases.length > 0) return boundsOf(bases);
     return boundsOf(sections.flatMap((s) => lineCoords(s.location) ?? []));
-  }, [point, sections]);
+  }, [point, stays, candidates, sections]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
