@@ -144,6 +144,7 @@ function LogsPage() {
         screen="logs"
         title="Logs"
         selfHeaded
+        fullHeight
       >
         <Box
           sx={{

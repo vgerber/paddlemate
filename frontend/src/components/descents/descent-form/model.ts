@@ -1,3 +1,4 @@
+import { addHours, format, subHours } from "date-fns";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { localizedName } from "@/lib/localization";
 import { toVisibility, type VisibilityType } from "@/lib/visibility";
@@ -41,11 +42,52 @@ export interface StepProps {
   onChange: (p: Partial<LogForm>) => void;
 }
 
+const INPUT_FORMAT = "yyyy-MM-dd'T'HH:mm";
+
 export function toDatetimeLocal(iso: string): string {
-  return new Date(iso)
-    .toLocaleString("sv-SE", { timeZoneName: undefined })
-    .slice(0, 16)
-    .replace(" ", "T");
+  return format(new Date(iso), INPUT_FORMAT);
+}
+
+/** A new log runs for an hour by default: it ends at `end`, so an untouched
+ * form never saves with zero length. */
+function hourBefore(end: Date): Pick<LogForm, "start_time" | "end_time"> {
+  return {
+    start_time: format(subHours(end, 1), INPUT_FORMAT),
+    end_time: format(end, INPUT_FORMAT),
+  };
+}
+
+/** The form's times when the run starts at `startIso` and lasts an hour. */
+export function startingAt(
+  startIso: string,
+): Pick<LogForm, "start_time" | "end_time"> {
+  const start = new Date(startIso);
+  return {
+    start_time: format(start, INPUT_FORMAT),
+    end_time: format(addHours(start, 1), INPUT_FORMAT),
+  };
+}
+
+function timingModeOf(times: Pick<LogForm, "start_time" | "end_time">) {
+  return times.start_time.slice(0, 10) === times.end_time.slice(0, 10)
+    ? "single"
+    : "multi";
+}
+
+/** Why the user cannot leave `step` yet, in a calm sentence, or null. */
+export function stepProblem(form: LogForm, step: number): string | null {
+  if (step === 0) {
+    const start = new Date(form.start_time).getTime();
+    const end = new Date(form.end_time).getTime();
+    if (Number.isNaN(start) || Number.isNaN(end)) {
+      return "Pick when the run started and ended.";
+    }
+    if (end <= start) return "The run needs to end after it started.";
+  }
+  if (step === 1 && form.sections.length === 0) {
+    return "Add the section you paddled to go on.";
+  }
+  return null;
 }
 
 export function isValidCoord(val: string): boolean {
@@ -63,11 +105,10 @@ export function coordsFromStrings(
 }
 
 export function defaultForm(): LogForm {
-  const now = toDatetimeLocal(new Date().toISOString());
+  const times = hourBefore(new Date());
   return {
-    timing_mode: "single",
-    start_time: now,
-    end_time: now,
+    timing_mode: timingModeOf(times),
+    ...times,
     sections: [],
     put_in_lat: "",
     put_in_lon: "",
@@ -171,9 +212,11 @@ export function buildPayload(form: LogForm) {
     take_out_label: form.take_out_label || null,
     take_out_feature_id: null,
     visibility,
-    visible_from: form.visible_from
-      ? new Date(form.visible_from).toISOString()
-      : null,
+    // A private log has no audience to hold it back from.
+    visible_from:
+      form.visible_from && form.visibility_type !== "private"
+        ? new Date(form.visible_from).toISOString()
+        : null,
     trip_id: form.trip_id,
     sections: form.sections.map((s, i) => ({
       section_id: s.section_id,

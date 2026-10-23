@@ -82,13 +82,16 @@ describe("logSections", () => {
 
 describe("logsSubject", () => {
   test("the open log includes its put-in and take-out", () => {
-    expect(logsSubject(first, [first, second])).toEqual({
-      key: "log:1",
-      bounds: [
-        [9.5, 46.5],
-        [12, 49],
-      ],
-    });
+    const subject = logsSubject(first, [first, second]);
+    expect(subject?.key).toBe("log:1");
+    // The box 9.5..12 by 46.5..49 plus 12% room on each side.
+    const [[west, south], [east, north]] = subject?.bounds ?? [
+      [0, 0],
+      [0, 0],
+    ];
+    expect([west, south, east, north].map((n) => Number(n.toFixed(2)))).toEqual(
+      [9.2, 46.2, 12.3, 49.3],
+    );
   });
 
   test("without an open log it frames every log", () => {

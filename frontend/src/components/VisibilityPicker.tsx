@@ -8,12 +8,15 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { factLabelSx } from "@/components/Fact";
-import type { Group } from "@/lib/api";
+import type { Group, UserWithFollowStatus } from "@/lib/api";
+import { useAllUsers } from "@/lib/hooks/useFollows";
 import { useGroups } from "@/lib/hooks/useGroups";
 import { theme } from "@/lib/theme";
 import { VISIBILITY_LABEL, type VisibilityType } from "@/lib/visibility";
 
 const { tokens } = theme;
+
+const MIN_NAME_LETTERS = 2;
 
 export interface Audience {
   type: VisibilityType;
@@ -43,9 +46,20 @@ export default function VisibilityPicker({
 }: Props) {
   const [userInput, setUserInput] = useState("");
   const { data: groups } = useGroups();
+  const { data: users } = useAllUsers(value.type === "shared");
 
   const selectedGroups: Group[] = (groups ?? []).filter((g) =>
     value.groups.includes(g.id),
+  );
+
+  // Ids stay the stored value; a name not loaded yet shows as its id.
+  const selectedUsers: UserWithFollowStatus[] = value.users.map(
+    (id) =>
+      users?.find((u) => u.id === id) ?? {
+        id,
+        username: id,
+        incoming_pending: false,
+      },
   );
 
   return (
@@ -117,36 +131,46 @@ export default function VisibilityPicker({
             }
           />
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <TextField
-              label="Add user by ID"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key !== "Enter") return;
-                e.preventDefault();
-                const t = userInput.trim();
-                if (t && !value.users.includes(t)) {
-                  onChange({ users: [...value.users, t] });
-                }
-                setUserInput("");
-              }}
-              helperText="Press Enter to add"
-            />
-            {value.users.length > 0 && (
-              <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                {value.users.map((u) => (
-                  <Chip
-                    key={u}
-                    label={u}
-                    onDelete={() =>
-                      onChange({ users: value.users.filter((x) => x !== u) })
-                    }
-                  />
-                ))}
-              </Box>
+          <Autocomplete
+            multiple
+            // Names show from the second letter, so the whole user list is
+            // never laid out. A server-side `q` filter on /users would stop
+            // the client loading every account (see useAllUsers).
+            open={userInput.trim().length >= MIN_NAME_LETTERS}
+            popupIcon={null}
+            options={users ?? []}
+            getOptionLabel={(u) => u.username}
+            isOptionEqualToValue={(a, b) => a.id === b.id}
+            value={selectedUsers}
+            inputValue={userInput}
+            onInputChange={(_, v, reason) => {
+              if (reason !== "reset") setUserInput(v);
+            }}
+            onChange={(_, val) => {
+              setUserInput("");
+              onChange({ users: val.map((u) => u.id) });
+            }}
+            noOptionsText="Nobody by that name."
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="People"
+                helperText="Type a name to find someone."
+              />
             )}
-          </Box>
+            renderValue={(
+              val: UserWithFollowStatus[],
+              getItemProps: AutocompleteRenderValueGetItemProps<true>,
+            ) =>
+              val.map((u, idx) => (
+                <Chip
+                  {...getItemProps({ index: idx })}
+                  key={u.id}
+                  label={u.username}
+                />
+              ))
+            }
+          />
         </>
       )}
     </>
