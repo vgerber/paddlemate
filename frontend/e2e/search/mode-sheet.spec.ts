@@ -74,6 +74,24 @@ test.describe("area and region on a phone", () => {
     await expect(overlay(page)).toBeVisible();
   });
 
+  test("the search panel takes focus, Escape closes it and returns focus", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await appReady(page);
+    const fab = page.getByRole("button", { name: "Open search panel" });
+    await fab.focus();
+    await page.keyboard.press("Enter");
+    const panel = page.getByRole("dialog", { name: "Panel" });
+    await expect(panel).toBeVisible();
+    await expect
+      .poll(() => panel.evaluate((el) => el.contains(document.activeElement)))
+      .toBe(true);
+    await page.keyboard.press("Escape");
+    await expect(panel).toBeHidden();
+    await expect(fab).toBeFocused();
+  });
+
   test("the handle is a button that cycles the stops, by tap and by key", async ({
     page,
   }) => {

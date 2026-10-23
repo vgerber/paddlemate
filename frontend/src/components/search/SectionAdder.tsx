@@ -70,9 +70,7 @@ export default function SectionAdder({
         noOptionsText={
           input.length < 2 ? "Type to search rivers" : "No results"
         }
-        renderInput={(params) => (
-          <TextField {...params} label="Search river" />
-        )}
+        renderInput={(params) => <TextField {...params} label="Search river" />}
         slotProps={POPUP_INDICATOR}
       />
 
@@ -94,9 +92,7 @@ export default function SectionAdder({
         }}
         disabled={sections.length === 0}
         noOptionsText={
-          sections.length === 0
-            ? "Search a river first"
-            : "All sections added"
+          sections.length === 0 ? "Search a river first" : "All sections added"
         }
         renderInput={(params) => (
           <TextField

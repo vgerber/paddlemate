@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Slide from "@mui/material/Slide";
+import { useEffect, useRef } from "react";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import { durations } from "@/lib/motion";
 import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
@@ -28,6 +29,20 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
     suggestMode,
   } = state;
 
+  const overlay = useRef<HTMLDivElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    // Focus moves into the panel on open and back to what opened it.
+    if (isMobilePanelOpen) {
+      const active = document.activeElement as HTMLElement | null;
+      opener.current = active === document.body ? null : active;
+      if (!overlay.current?.contains(active)) overlay.current?.focus();
+      return;
+    }
+    if (opener.current?.isConnected) opener.current.focus();
+    opener.current = null;
+  }, [isMobilePanelOpen]);
+
   const sheetMode = modeSheetMode(state);
   if (sheetMode) return <SearchSheet state={state} mode={sheetMode} />;
 
@@ -44,8 +59,16 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
       timeout={{ enter: durations.base, exit: durations.fast }}
     >
       <Box
+        ref={overlay}
         data-testid="mobile-overlay"
+        role="dialog"
+        aria-label="Panel"
+        tabIndex={-1}
+        onKeyDown={(e) => {
+          if (e.key === "Escape" && !e.defaultPrevented) closeOverlay();
+        }}
         sx={{
+          outline: "none",
           display: { xs: "flex", md: "none" },
           position: "fixed",
           top: sheet ? "45%" : 0,
