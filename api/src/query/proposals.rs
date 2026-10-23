@@ -130,6 +130,8 @@ const RETURNING_COLS: &str = "id, entity_type, entity_id, operation, proposed_da
     original_data, status, reviewed_by, review_note, submitter_note, created_at, updated_at";
 
 /// Snapshot the current state of an entity row as JSON, for use as original_data.
+/// A feature's name and description live in translation tables; the snapshot
+/// carries the English one, else the oldest.
 /// Returns None if the entity doesn't exist or the entity_type is unrecognised.
 async fn snapshot_entity(
     db: &PgPool,
@@ -188,7 +190,11 @@ async fn snapshot_entity(
         "feature" => {
             let row = sqlx::query(
                 r#"SELECT id, section_id, feature_type::text, metadata,
-                          ST_AsGeoJSON(location) AS location_geojson
+                          ST_AsGeoJSON(location) AS location_geojson,
+                          (SELECT name FROM feature_names WHERE feature_id = features.id
+                           ORDER BY (lang_code = 'en') DESC, id LIMIT 1) AS name,
+                          (SELECT description FROM feature_descriptions WHERE feature_id = features.id
+                           ORDER BY (lang_code = 'en') DESC, id LIMIT 1) AS description
                    FROM features WHERE id = $1"#,
             )
             .bind(entity_id)
@@ -205,6 +211,8 @@ async fn snapshot_entity(
                     "section_id": r.get::<i64, _>("section_id"),
                     "feature_type": r.get::<String, _>("feature_type"),
                     "metadata": r.get::<Value, _>("metadata"),
+                    "name": r.get::<Option<String>, _>("name"),
+                    "description": r.get::<Option<String>, _>("description"),
                     "location": location,
                 })
             }))
@@ -400,10 +408,13 @@ pub async fn vote_proposal(
     proposal_id: i64,
     user_id: &str,
     vote: i16,
-) -> Result<(), sqlx::Error> {
-    sqlx::query(
+) -> Result<bool, sqlx::Error> {
+    // The author and status guards sit in the statement, so a proposal
+    // withdrawn or reviewed since the handler looked cannot take a vote.
+    let done = sqlx::query(
         r#"INSERT INTO proposal_votes (proposal_id, user_id, vote)
-           VALUES ($1, $2, $3)
+           SELECT id, $2, $3 FROM proposals
+           WHERE id = $1 AND status = 'pending' AND submitted_by <> $2
            ON CONFLICT (proposal_id, user_id)
            DO UPDATE SET vote = EXCLUDED.vote, created_at = NOW()"#,
     )
@@ -413,7 +424,7 @@ pub async fn vote_proposal(
     .execute(db)
     .await?;
 
-    Ok(())
+    Ok(done.rows_affected() > 0)
 }
 
 /// Remove a user's vote from a proposal.

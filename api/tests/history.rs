@@ -1664,3 +1664,36 @@ async fn sources_stay_readable_after_the_river_is_deleted(pool: PgPool) {
     let r = get(&app, "/waterways/999999/sources").await;
     assert_eq!(r.status, StatusCode::NOT_FOUND);
 }
+
+#[sqlx::test]
+async fn feature_proposal_snapshot_carries_name_and_description(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let s = make_section(&app, w, "Upper", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let f = make_feature(&app, w, s, "Old weir").await;
+    let base = format!("/waterways/{w}/sections/{s}/features/{f}");
+    sqlx::query("INSERT INTO feature_descriptions (feature_id, lang_code, description) VALUES ($1, 'en', 'A weir')")
+        .bind(f)
+        .execute(&pool)
+        .await
+        .unwrap();
+
+    let r = call(
+        &app,
+        Method::PUT,
+        &base,
+        Who::User("mara-1"),
+        Some(json!({ "feature_type": "put_in", "location": point(10.0) })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::ACCEPTED, "{}", r.body);
+    assert_eq!(r.body["original_data"]["name"], "Old weir");
+    assert_eq!(r.body["original_data"]["description"], "A weir");
+
+    let r = call(&app, Method::DELETE, &base, Who::User("mara-1"), None).await;
+    assert_eq!(r.status, StatusCode::ACCEPTED, "{}", r.body);
+    assert_eq!(r.body["original_data"]["name"], "Old weir");
+}

@@ -232,8 +232,9 @@ export const featuresApi = {
     );
     return assertData(data);
   },
+  /** The proposal when the delete was held for review; undefined when final. */
   remove: async (waterwayId: number, sectionId: number, featureId: number) => {
-    await client.DELETE(
+    const { data } = await client.DELETE(
       "/api/v1/waterways/{waterway_id}/sections/{section_id}/features/{feature_id}",
       {
         params: {
@@ -245,6 +246,7 @@ export const featuresApi = {
         },
       },
     );
+    return data;
   },
 };
 

@@ -4283,11 +4283,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-23T17:47:45.386153906Z",
-                     *         "expires_at": "2027-01-21T17:47:45.386156086Z",
+                     *         "created_at": "2026-10-23T19:37:19.237545745Z",
+                     *         "expires_at": "2027-01-21T19:37:19.237549025Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-23T17:47:45.386164206Z",
+                     *         "last_used_at": "2026-10-23T19:37:19.237555275Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4318,8 +4318,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-23T17:47:45.386338378Z",
-                     *       "expires_at": "2027-01-21T17:47:45.386339038Z",
+                     *       "created_at": "2026-10-23T19:37:19.237686394Z",
+                     *       "expires_at": "2027-01-21T19:37:19.237686724Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -8322,6 +8322,15 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The proposal's author may not vote on it */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
