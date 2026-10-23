@@ -46,7 +46,7 @@ test.describe("logs on the canvas", () => {
 
   for (const [w, list, side] of [
     [1440, 300, 400],
-    [1920, 384, 480],
+    [1920, 380, 480],
   ]) {
     test(`list card ${list}px and log card ${side}px at ${w}`, async ({
       page,
@@ -71,47 +71,50 @@ test.describe("logs on the canvas", () => {
     await expect(page.getByTestId("canvas-host")).toBeVisible();
   });
 
-  test("a deep link opens the log and draws its route with put-in and take-out inside the free area", async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto("/logs/9201");
-    await expect(card(page, "log")).toContainText("Public multi-section run");
-    await settle(page);
-    await expect.poll(() => drawnRoute(page)).toBeGreaterThan(1);
-    await expect
-      .poll(async () => {
-        const raw = await page
-          .getByTestId("canvas-host")
-          .getAttribute("data-free");
-        const [x, y, w, h] = (raw ?? "").split(",").map(Number);
-        const pts = await page.evaluate(
-          ([a, b]) => {
-            const map = (window as unknown as { __paddlemateMap?: MapLike })
-              .__paddlemateMap;
-            if (!map || map.isMoving()) return null;
-            return { a: map.project(a), b: map.project(b) };
-          },
-          [PUT_IN, TAKE_OUT] as const,
-        );
-        if (!pts) return "moving";
-        const slack = 2;
-        const inside = [pts.a, pts.b].every(
-          (p) =>
-            p.x >= x - slack &&
-            p.x <= x + w + slack &&
-            p.y >= y - slack &&
-            p.y <= y + h + slack,
-        );
-        return inside ? "inside" : JSON.stringify({ x, y, w, h, ...pts });
-      })
-      .toBe("inside");
-  });
+  for (const w of [1280, 1440]) {
+    test(`a deep link opens the log and frames put-in and take-out in the free area at ${w}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: w, height: 800 });
+      await page.goto("/logs/9201");
+      await expect(card(page, "log")).toContainText("Public multi-section run");
+      await settle(page);
+      await expect.poll(() => drawnRoute(page)).toBeGreaterThan(1);
+      await expect
+        .poll(async () => {
+          const raw = await page
+            .getByTestId("canvas-host")
+            .getAttribute("data-free");
+          const [x, y, w, h] = (raw ?? "").split(",").map(Number);
+          const pts = await page.evaluate(
+            ([a, b]) => {
+              const map = (window as unknown as { __paddlemateMap?: MapLike })
+                .__paddlemateMap;
+              if (!map || map.isMoving()) return null;
+              return { a: map.project(a), b: map.project(b) };
+            },
+            [PUT_IN, TAKE_OUT] as const,
+          );
+          if (!pts) return "moving";
+          // Clear of the edge, where the zoom keys sit.
+          const slack = -40;
+          const inside = [pts.a, pts.b].every(
+            (p) =>
+              p.x >= x - slack &&
+              p.x <= x + w + slack &&
+              p.y >= y - slack &&
+              p.y <= y + h + slack,
+          );
+          return inside ? "inside" : JSON.stringify({ x, y, w, h, ...pts });
+        })
+        .toBe("inside");
+    });
+  }
 
   test("the log card has no map of its own", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/logs/9201");
-    await expect(card(page, "log")).toContainText("Sections (2)");
+    await expect(card(page, "log")).toContainText("Put in");
     await expect(card(page, "log").locator("canvas")).toHaveCount(0);
     await expect(page.locator("canvas.maplibregl-canvas")).toHaveCount(1);
   });

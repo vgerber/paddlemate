@@ -1,9 +1,10 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import { useState } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
-import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
 import { ConfirmIcon, ForwardIcon } from "@/lib/icons";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
@@ -14,7 +15,8 @@ import {
   initFromDescent,
   type LogForm,
   makeDraft,
-  toDatetimeLocal,
+  startingAt,
+  stepProblem,
 } from "./descent-form/model";
 import SectionPickerMap from "./descent-form/SectionPickerMap";
 import StepDetails from "./descent-form/StepDetails";
@@ -58,7 +60,7 @@ export default function DescentForm({
     if (descent) return initFromDescent(descent);
     if (copyFrom) return copyFromDescent(copyFrom);
     const base = initialStartTime
-      ? { ...defaultForm(), start_time: toDatetimeLocal(initialStartTime) }
+      ? { ...defaultForm(), ...startingAt(initialStartTime) }
       : defaultForm();
     const seeded = initialTripId ? { ...base, trip_id: initialTripId } : base;
     if (initialSection) {
@@ -67,6 +69,8 @@ export default function DescentForm({
     return seeded;
   });
 
+  const [initialForm] = useState(form);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const createDescent = useCreateDescent();
   const patchDescent = usePatchDescent();
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -79,12 +83,15 @@ export default function DescentForm({
         ? await patchDescent.mutateAsync({ id: descent.id, body: payload })
         : await createDescent.mutateAsync(payload);
       onSave(result.id);
-    } catch (err) {
-      setSaveError(apiErrorMessage(err, "Saving failed. Please try again."));
+    } catch {
+      // The server's wording is for developers; the steps already say what
+      // is missing, so this is only for outages and races.
+      setSaveError("The log could not be saved. Please try again.");
     }
   }
 
   function patch(update: Partial<LogForm>) {
+    setSaveError(null);
     setForm((prev) => ({ ...prev, ...update }));
   }
 
@@ -95,11 +102,17 @@ export default function DescentForm({
   );
 
   const isLast = step === STEPS.length - 1;
+  const problem = stepProblem(form, step);
   const isBusy = createDescent.isPending || patchDescent.isPending;
+
+  function handleCancel() {
+    if (JSON.stringify(form) === JSON.stringify(initialForm)) onCancel();
+    else setConfirmDiscard(true);
+  }
 
   const bar = (
     <PanelBottomBar
-      onLeftClick={step === 0 ? onCancel : () => setStep((s) => s - 1)}
+      onLeftClick={step === 0 ? handleCancel : () => setStep((s) => s - 1)}
       leftLabel={step === 0 ? "Cancel" : "Back"}
       leftDisabled={isBusy}
       title={descent ? "Edit descent" : "Log descent"}
@@ -109,6 +122,7 @@ export default function DescentForm({
         <RoundActionButton
           onClick={isLast ? handleSave : () => setStep((s) => s + 1)}
           busy={isBusy}
+          disabled={problem !== null}
           ariaLabel={isLast ? "Save" : "Next"}
         >
           {isLast ? (
@@ -123,6 +137,15 @@ export default function DescentForm({
 
   const steps = (
     <>
+      <ConfirmDialog
+        open={confirmDiscard}
+        title="Discard this log?"
+        body="What you filled in will be lost."
+        confirmLabel="Discard"
+        color="error"
+        onCancel={() => setConfirmDiscard(false)}
+        onConfirm={onCancel}
+      />
       {step === 0 && <StepWhen form={form} onChange={patch} />}
       {step === 1 && (
         <StepSections
@@ -134,6 +157,16 @@ export default function DescentForm({
       )}
       {step === 2 && <StepDetails form={form} onChange={patch} />}
 
+      {problem && (
+        <Typography
+          role="status"
+          variant="body2"
+          color="textSecondary"
+          sx={{ mt: 2 }}
+        >
+          {problem}
+        </Typography>
+      )}
       {saveError && (
         <Alert severity="error" sx={{ mt: 2 }}>
           {saveError}

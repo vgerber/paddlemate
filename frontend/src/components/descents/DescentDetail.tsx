@@ -1,48 +1,20 @@
-import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
-import Typography from "@mui/material/Typography";
-import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { phoneCardSx } from "@/components/canvas/flatRow";
-import Fact, { factValueSx } from "@/components/Fact";
-import WaterwayMap from "@/components/map/LazyMap";
-import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
-import { toPseudoSection, uniqueSnapshotsBySeries } from "@/lib/descents";
-import {
-  durationLabel,
-  formatDate,
-  formatReading,
-  formatTime,
-} from "@/lib/format";
-import { LogIcon } from "@/lib/icons";
-import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
-import { alphas, labelSx, theme } from "@/lib/theme";
-import { levelConfig } from "@/lib/waterLevel";
-import DescentOverview from "./DescentOverview";
+import { toPseudoSection } from "@/lib/descents";
+import DescentCanvasDetail from "./DescentCanvasDetail";
+import DescentPhoneDetail from "./DescentPhoneDetail";
 
-const { tokens } = theme;
-const { phone } = tokens;
-
-/** On a phone each block is a card on the ground; its text sits on the 28
- * line. */
-const blockSx = { ...phoneCardSx, p: `${phone.inner}px` } as const;
-
-const formatDateWithWeekday = (iso: string) =>
-  formatDate(iso, { weekday: true });
-
-/** Full trip view for one descent: facts, route map, the sections in paddled
- * order with their notes and the water levels captured when it was logged. */
+/** Full view of one descent: facts, the sections in paddled order with their
+ * notes and the water levels captured when it was logged. A phone shows its
+ * own route map; on the canvas the host map already draws it. */
 export default function DescentDetail({
   descent,
-  showMap = true,
+  onCanvas = false,
 }: {
   descent: Descent;
-  /** Off where the canvas map already draws this log. */
-  showMap?: boolean;
+  /** The canvas map draws this log, so the card leaves the route out. */
+  onCanvas?: boolean;
 }) {
-  const navigate = useNavigate();
-
   const sections = useMemo(
     () => [...descent.sections].sort((a, b) => a.sort_order - b.sort_order),
     [descent.sections],
@@ -67,262 +39,14 @@ export default function DescentDetail({
     [sections],
   );
 
-  // The desktop card already names the sections and the level above, so it
-  // keeps a section row only where the paddler wrote something on it.
-  const listed = showMap ? sections : sections.filter((s) => s.note);
-
-  const multiDay =
-    descent.start_time.slice(0, 10) !== descent.end_time.slice(0, 10);
-  const duration = durationLabel(descent.start_time, descent.end_time);
-
+  if (onCanvas) {
+    return <DescentCanvasDetail descent={descent} sections={sections} />;
+  }
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-          ...(showMap ? blockSx : { mb: 1 }),
-        }}
-      >
-        {showMap ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              columnGap: 4,
-              rowGap: 1.5,
-            }}
-          >
-            {multiDay ? (
-              <>
-                <Fact
-                  label="From"
-                  value={formatDateWithWeekday(descent.start_time)}
-                  caption={formatTime(descent.start_time)}
-                />
-                <Fact
-                  label="To"
-                  value={formatDateWithWeekday(descent.end_time)}
-                  caption={formatTime(descent.end_time)}
-                />
-                {duration && <Fact label="Duration" value={duration} />}
-              </>
-            ) : (
-              <>
-                <Fact
-                  label="Date"
-                  value={formatDateWithWeekday(descent.start_time)}
-                />
-                <Fact
-                  label="Time"
-                  value={duration ?? "-"}
-                  caption={`${formatTime(descent.start_time)} - ${formatTime(descent.end_time)}`}
-                />
-              </>
-            )}
-          </Box>
-        ) : (
-          <DescentOverview descent={descent} />
-        )}
-
-        {showMap && (descent.put_in_label || descent.take_out_label) && (
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              columnGap: 4,
-              rowGap: 1.5,
-            }}
-          >
-            {descent.put_in_label && (
-              <Fact label="Put in" value={descent.put_in_label} />
-            )}
-            {descent.take_out_label && (
-              <Fact label="Take out" value={descent.take_out_label} />
-            )}
-          </Box>
-        )}
-      </Box>
-
-      {/* Route */}
-      {showMap && (mapSections.length > 0 || descent.put_in_lat != null) && (
-        <Box
-          sx={{
-            height: 260,
-            mx: `${phone.edge}px`,
-            borderRadius: `${tokens.radii.md}px`,
-            boxShadow: tokens.elevation.e1,
-            overflow: "hidden",
-            position: "relative",
-          }}
-        >
-          <WaterwayMap
-            sections={mapSections}
-            chrome={{ minimal: true }}
-            picking={{
-              putIn:
-                descent.put_in_lat != null && descent.put_in_lon != null
-                  ? { lat: descent.put_in_lat, lon: descent.put_in_lon }
-                  : null,
-              takeOut:
-                descent.take_out_lat != null && descent.take_out_lon != null
-                  ? { lat: descent.take_out_lat, lon: descent.take_out_lon }
-                  : null,
-            }}
-          />
-        </Box>
-      )}
-
-      {/* Sections in paddled order */}
-      {listed.length > 0 && (
-        <Box sx={showMap ? blockSx : { mt: 1 }}>
-          <Typography sx={{ ...labelSx, fontSize: "0.875rem", mb: 1 }}>
-            {showMap ? `Sections (${listed.length})` : "Section notes"}
-          </Typography>
-          <Box sx={{ display: "grid", gap: showMap ? 0 : 1 }}>
-            {listed.map((s) => {
-              const index = sections.indexOf(s);
-              const open = () =>
-                navigate({
-                  to: "/",
-                  // Fresh map search state - only the target section.
-                  search: {
-                    ...EMPTY_MAP_SEARCH,
-                    waterway: s.waterway_id ?? undefined,
-                    section: s.section_id,
-                  },
-                });
-              const snaps = uniqueSnapshotsBySeries(s.water_snapshots ?? []);
-              return (
-                <ButtonBase
-                  key={s.section_id}
-                  data-testid="log-section"
-                  component={s.waterway_id != null ? "button" : "div"}
-                  onClick={s.waterway_id != null ? open : undefined}
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: showMap
-                      ? `${phone.icon}px minmax(0, 1fr)`
-                      : "auto minmax(0, 1fr)",
-                    columnGap: showMap ? `${phone.iconGap}px` : 1.5,
-                    alignItems: "start",
-                    alignContent: "center",
-                    textAlign: "left",
-                    width: "100%",
-                    boxSizing: "border-box",
-                    minHeight: showMap ? undefined : 56,
-                    font: "inherit",
-                    color: "text.primary",
-                    ...(showMap
-                      ? {
-                          py: 1.25,
-                          "&:last-of-type": { pb: 0 },
-                          "&:not(:last-of-type)": {
-                            borderBottom: `1px solid ${tokens.outlineVariant}${alphas.hairline}`,
-                          },
-                        }
-                      : {
-                          p: 1.5,
-                          bgcolor: tokens.surfaceHigh,
-                          borderRadius: `${tokens.radii.md}px`,
-                        }),
-                    boxShadow: "none",
-                    cursor: s.waterway_id != null ? "pointer" : "default",
-                  }}
-                >
-                  <Box
-                    component="span"
-                    sx={{
-                      ...factValueSx,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      minWidth: showMap ? undefined : 36,
-                      justifyContent: showMap ? "center" : undefined,
-                      color: "text.secondary",
-                      fontSize: "0.8125rem",
-                    }}
-                  >
-                    {!showMap && <LogIcon sx={{ fontSize: 18 }} />}
-                    {index + 1}
-                  </Box>
-                  <Box component="span" sx={{ display: "block", minWidth: 0 }}>
-                    <Box
-                      component="span"
-                      sx={{ ...factValueSx, fontWeight: 600 }}
-                    >
-                      {s.section_name ?? `Section #${s.section_id}`}
-                    </Box>{" "}
-                    {s.waterway_name && (
-                      <Box
-                        component="span"
-                        sx={{ fontSize: "0.8125rem", color: "text.secondary" }}
-                      >
-                        {s.waterway_name}
-                      </Box>
-                    )}
-                    {s.note && (
-                      <Box
-                        component="span"
-                        sx={{
-                          display: "block",
-                          mt: 0.5,
-                          fontSize: "0.8125rem",
-                          color: "text.secondary",
-                          whiteSpace: "pre-wrap",
-                        }}
-                      >
-                        {s.note}
-                      </Box>
-                    )}
-                    {snaps.map((snap) => (
-                      <Box
-                        key={snap.series_id}
-                        component="span"
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          flexWrap: "wrap",
-                          gap: 1,
-                          mt: 0.75,
-                        }}
-                      >
-                        <LevelPill level={snap.level}>
-                          {snap.value != null
-                            ? formatReading(snap.value, snap.unit)
-                            : levelConfig[snap.level].label}
-                        </LevelPill>
-                        <Box
-                          component="span"
-                          sx={{
-                            fontSize: "0.8125rem",
-                            color: "text.secondary",
-                          }}
-                        >
-                          {snap.gauge_name}
-                        </Box>
-                      </Box>
-                    ))}
-                  </Box>
-                </ButtonBase>
-              );
-            })}
-          </Box>
-        </Box>
-      )}
-
-      {/* Trip note */}
-      {descent.note && (
-        <Box sx={showMap ? blockSx : undefined}>
-          <Typography sx={{ ...labelSx, fontSize: "0.875rem", mb: 0.5 }}>
-            Note
-          </Typography>
-          <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-            {descent.note}
-          </Typography>
-        </Box>
-      )}
-    </Box>
+    <DescentPhoneDetail
+      descent={descent}
+      sections={sections}
+      mapSections={mapSections}
+    />
   );
 }

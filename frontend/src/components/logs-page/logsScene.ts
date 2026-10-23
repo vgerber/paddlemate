@@ -2,7 +2,7 @@ import type { MapScene } from "@/components/canvas/scene";
 import type { MapSubject } from "@/components/map/Map";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { toPseudoSection } from "@/lib/descents";
-import { boundsOf, type LngLat, lineCoords } from "@/lib/geo";
+import { type Bounds, boundsOf, type LngLat, lineCoords } from "@/lib/geo";
 
 type Coord = LngLat;
 
@@ -34,6 +34,19 @@ export function logSections(descents: Descent[]): SectionWithFeatures[] {
   return out;
 }
 
+/** Share of the box added on every side, so the put-in and take-out pins
+ * sit clear of the free area's edge, where the map controls are. */
+const PIN_ROOM = 0.12;
+
+function withPinRoom([[west, south], [east, north]]: Bounds): Bounds {
+  const dx = (east - west) * PIN_ROOM;
+  const dy = (north - south) * PIN_ROOM;
+  return [
+    [west - dx, south - dy],
+    [east + dx, north + dy],
+  ];
+}
+
 /** What the canvas keeps in view: the open log with its put-in and take-out,
  * else every log. Nothing while an opened log is still loading. */
 export function logsSubject(
@@ -50,7 +63,9 @@ export function logsSubject(
       points.push([open.take_out_lon, open.take_out_lat]);
     }
     const bounds = boundsOf(points);
-    return bounds ? { key: `log:${open.id}`, bounds } : null;
+    return bounds
+      ? { key: `log:${open.id}`, bounds: withPinRoom(bounds) }
+      : null;
   }
   if (openId != null) return null;
   const all = logSections(descents).flatMap(

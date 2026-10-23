@@ -66,7 +66,7 @@ function LogsPage() {
     navigate({
       to: "/logs/$descentId",
       params: { descentId: String(id) },
-      search: { edit: false },
+      search: { edit: undefined },
     });
 
   const onNew = () =>
@@ -144,6 +144,7 @@ function LogsPage() {
         screen="logs"
         title="Logs"
         selfHeaded
+        fullHeight
       >
         <Box
           sx={{

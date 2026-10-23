@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import { useEffect } from "react";
 import LocationPin, {
   PUT_IN_COLOR,
@@ -64,6 +65,9 @@ export default function StepSections({
         gap: 2,
       }}
     >
+      <Typography variant="body2" color="textSecondary">
+        Pick the river, then the sections you ran.
+      </Typography>
       <SectionAdder
         waterwayId={selectedWaterwayId}
         onWaterwayChange={setSelectedWaterwayId}

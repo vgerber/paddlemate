@@ -16,6 +16,7 @@ interface Props {
 /** Map for toggling sections and picking put-in/take-out points. */
 export default function SectionPickerMap({ picking, fill, readOnly }: Props) {
   const { sectionsForMap: sections, selectedIds, putIn, takeOut } = picking;
+  const pinnable = !readOnly && selectedIds.size > 0;
   return (
     <Box
       sx={{
@@ -38,8 +39,9 @@ export default function SectionPickerMap({ picking, fill, readOnly }: Props) {
               },
           putIn,
           takeOut,
-          onPickPutIn: readOnly ? undefined : picking.pickPutIn,
-          onPickTakeOut: readOnly ? undefined : picking.pickTakeOut,
+          // Put-in and take-out only mean something once there is a route.
+          onPickPutIn: pinnable ? picking.pickPutIn : undefined,
+          onPickTakeOut: pinnable ? picking.pickTakeOut : undefined,
         }}
         chrome={{ minimal: true }}
       />

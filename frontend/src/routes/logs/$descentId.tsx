@@ -21,7 +21,11 @@ import { theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/logs/$descentId")({
   validateSearch: (search: Record<string, unknown>) => ({
-    edit: search.edit === true || search.edit === "true",
+    // Absent unless editing, so an open log carries no `?edit=false`.
+    edit:
+      search.edit === true || search.edit === "true"
+        ? (true as boolean)
+        : undefined,
   }),
   component: LogDetailPage,
 });
@@ -48,7 +52,7 @@ function LogDetailPage() {
     navigate({
       to: "/logs/$descentId",
       params: { descentId },
-      search: { edit: value },
+      search: { edit: value || undefined },
       replace: true,
     });
 
@@ -153,7 +157,7 @@ function LogDetailPage() {
         />
       )}
       <Box sx={embedded ? { px: 3.5, py: 2.5 } : { py: 1.5 }}>
-        <DescentDetail descent={descent} showMap={!embedded} />
+        <DescentDetail descent={descent} onCanvas={embedded} />
       </Box>
       <ConfirmDialog
         open={confirmDelete}

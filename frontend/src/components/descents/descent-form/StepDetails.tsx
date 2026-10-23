@@ -18,7 +18,7 @@ export default function StepDetails({ form, onChange }: StepProps) {
       >
         <TextField
           label="Title"
-          placeholder="Leave blank to use section / waterway name"
+          placeholder="Leave blank to use the section name"
           value={form.name}
           onChange={(e) => onChange({ name: e.target.value })}
           fullWidth
@@ -57,37 +57,38 @@ export default function StepDetails({ form, onChange }: StepProps) {
         />
       </FormSection>
 
-      <FormSection
-        label="Publish after"
-        hint="Optional. Hold the log back until a later time."
-      >
-        <ChipRow>
-          {[
-            { label: "1 day", days: 1 },
-            { label: "1 week", days: 7 },
-            { label: "1 month", days: 30 },
-          ].map(({ label, days }) => (
-            <Chip
-              key={days}
-              label={label}
-              sx={{ height: theme.tokens.touch.min }}
-              onClick={() => {
-                const d = new Date();
-                d.setDate(d.getDate() + days);
-                onChange({ visible_from: toDatetimeLocal(d.toISOString()) });
-              }}
-            />
-          ))}
-        </ChipRow>
-        <PickerField
-          kind="datetime-local"
+      {form.visibility_type !== "private" && (
+        <FormSection
           label="Publish after"
-          value={form.visible_from}
-          onChange={(v) => onChange({ visible_from: v })}
-          onClear={() => onChange({ visible_from: "" })}
-          helperText="The log stays hidden from others until then."
-        />
-      </FormSection>
+          hint="Optional. The log stays hidden from others until then."
+        >
+          <ChipRow>
+            {[
+              { label: "1 day", days: 1 },
+              { label: "1 week", days: 7 },
+              { label: "1 month", days: 30 },
+            ].map(({ label, days }) => (
+              <Chip
+                key={days}
+                label={label}
+                sx={{ height: theme.tokens.touch.min }}
+                onClick={() => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + days);
+                  onChange({ visible_from: toDatetimeLocal(d.toISOString()) });
+                }}
+              />
+            ))}
+          </ChipRow>
+          <PickerField
+            kind="datetime-local"
+            label="Date and time"
+            value={form.visible_from}
+            onChange={(v) => onChange({ visible_from: v })}
+            onClear={() => onChange({ visible_from: "" })}
+          />
+        </FormSection>
+      )}
     </Box>
   );
 }
