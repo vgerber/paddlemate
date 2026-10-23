@@ -198,7 +198,7 @@ test.describe("history mount", () => {
     const card = page.getByTestId("features-card").filter({ visible: true });
     await card.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
     await card
-      .getByRole("button", { name: "More actions", exact: true })
+      .getByRole("button", { name: "Feature actions", exact: true })
       .first()
       .click();
     await page.getByRole("menuitem", { name: "History" }).click();
@@ -485,7 +485,7 @@ test.describe("history of a feature", () => {
     const list = page.getByTestId("features-card").filter({ visible: true });
     await list.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
     await list
-      .getByRole("button", { name: "More actions", exact: true })
+      .getByRole("button", { name: "Feature actions", exact: true })
       .first()
       .click();
     await page.getByRole("menuitem", { name: "History" }).click();
@@ -671,7 +671,7 @@ test.describe("after a feature is deleted", () => {
     const card = page.getByTestId("features-card").filter({ visible: true });
     await card.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
     await card
-      .getByRole("button", { name: "More actions", exact: true })
+      .getByRole("button", { name: "Feature actions", exact: true })
       .first()
       .click();
     await page.getByRole("menuitem", { name: "Delete feature" }).click();

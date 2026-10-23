@@ -415,7 +415,7 @@ test.describe("design gaps", () => {
     const wide = (page.viewportSize()?.width ?? 0) >= 768;
     expect((member?.x ?? 0) - (head?.x ?? 0)).toBe(wide ? 36 : 0);
     await expect(
-      card(page).getByRole("button", { name: "More actions" }),
+      card(page).getByRole("button", { name: "Feature actions" }),
     ).toHaveCount(0);
   });
 

@@ -124,7 +124,7 @@ test.describe("logs list", () => {
     page,
   }) => {
     await openLogs(page);
-    await expect(page.getByText(/^\d+ results?$/).first()).toBeVisible();
+    await expect(page.getByText(/^\d+ logs?$/).first()).toBeVisible();
     const month = page.getByTestId("log-month").first();
     expect(await computed(month, "text-transform")).toBe("none");
   });
@@ -218,16 +218,16 @@ test.describe("a log", () => {
   }) => {
     await openLogs(page);
     await card(page, "Private upper run").click();
-    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("button", { name: "Log actions" }).click();
     await expect(page.getByRole("menuitem", { name: "Edit" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Delete" })).toBeVisible();
     await page.keyboard.press("Escape");
     // Somebody else's public log has no menu.
     await page.goto("/logs/9203");
     await expect(page.getByTestId("fact-label").first()).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "More actions" }),
-    ).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Log actions" })).toHaveCount(
+      0,
+    );
   });
 });
 
@@ -291,7 +291,7 @@ test.describe("log descent", () => {
     await expect(page.getByText(TITLE).first()).toBeVisible();
     if (isDesktop(info)) await expect(card(page, TITLE)).toBeVisible();
 
-    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("button", { name: "Log actions" }).click();
     await page.getByRole("menuitem", { name: "Delete" }).click();
     await page.getByRole("button", { name: "Delete", exact: true }).click();
     await expect(page).toHaveURL(/\/logs$/);
@@ -410,7 +410,7 @@ test.describe("design gaps", () => {
       .last()
       .boundingBox();
     const row = await page
-      .getByRole("button", { name: "More actions" })
+      .getByRole("button", { name: "Log actions" })
       .boundingBox();
     const search = await page.getByLabel("Search river").boundingBox();
     expect(map && row && search).toBeTruthy();
