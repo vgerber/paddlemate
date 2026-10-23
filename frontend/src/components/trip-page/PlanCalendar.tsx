@@ -18,6 +18,8 @@ const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 const DISC = 36;
 const BAND_INSET = 4;
 const GRABBER = 16;
+/** What the 44px button reaches beyond a 16px strip, per side. */
+const OVERHANG = (tokens.touch.min - GRABBER) / 2;
 const MARK = 5;
 const MARK_GAP = 3;
 
@@ -130,21 +132,14 @@ export default function PlanCalendar({
         sx={{
           position: "relative",
           width: "100%",
-          height: GRABBER,
-          mt: 1,
-          mb: 0.75,
+          // The bar is 4px; the button is a full touch target. Negative
+          // margins give the extra back to the neighbours, so the strip keeps
+          // its height and the button's reach overlaps them as before.
+          height: tokens.touch.min,
+          mt: `${8 - OVERHANG}px`,
+          mb: `${6 - OVERHANG}px`,
           // The drag is ours: the browser must not take it as a scroll.
           touchAction: "none",
-          // 16px to look at, 44px to hit; the extra reaches down into the
-          // list so it never steals taps from the day row above.
-          "&::after": {
-            content: '""',
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: -6,
-            bottom: -(tokens.touch.min - GRABBER - 6),
-          },
         }}
       >
         <Box

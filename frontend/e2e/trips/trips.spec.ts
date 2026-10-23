@@ -628,7 +628,7 @@ test.describe("trip gaps", () => {
 
   test("the add-a-day picker draws the plan's calendar", async ({ page }) => {
     await openPlan(page);
-    await page.getByRole("button", { name: "Add a day" }).click();
+    await page.getByRole("button", { name: "Plan a day" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByTestId("day-number").first()).toHaveCSS(
       "width",
@@ -700,7 +700,7 @@ test.describe("trip gaps", () => {
     await page.goto(`/trips/${TRIP}`);
     await expect(page).toHaveURL(new RegExp(`/trips\\?selected=${TRIP}`));
     await expect(dayCards(page).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add a day" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Plan a day" })).toBeVisible();
     // Nothing floats over the card: the add button is docked and the trip's
     // actions are in its header.
     await expect(page.locator(".MuiFab-root:visible")).toHaveCount(0);

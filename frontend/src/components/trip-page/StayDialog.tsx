@@ -244,7 +244,7 @@ export default function StayDialog({
       </DialogContent>
       <PanelBottomBar
         onLeftClick={onClose}
-        leftLabel="Close"
+        leftLabel="Cancel"
         leftDisabled={isBusy}
         title={
           candidate

@@ -17,7 +17,7 @@ import {
   useLinkDescentToTrip,
   useTripMembers,
 } from "@/lib/hooks/useTrips";
-import { DeleteIcon, EditIcon } from "@/lib/icons";
+import { DeleteIcon, EditIcon, LinkIcon } from "@/lib/icons";
 import AddMemberDialog from "./AddMemberDialog";
 import AttendanceDialog from "./AttendanceDialog";
 import type { DayActions } from "./DayDetail";
@@ -249,6 +249,33 @@ export default function TripDetail({
     );
   };
 
+  const tripMenu = [
+    ...(isMember && tab === "logs"
+      ? [
+          {
+            label: "Link an existing log",
+            icon: <LinkIcon />,
+            onClick: () => setLinking(true),
+          },
+        ]
+      : []),
+    ...(isAdmin
+      ? [
+          {
+            label: "Edit trip",
+            icon: <EditIcon />,
+            onClick: () => onEditingChange(true),
+          },
+          {
+            label: "Delete trip",
+            icon: <DeleteIcon />,
+            danger: true,
+            onClick: () => setConfirmDelete(true),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <>
       <PanelHeader
@@ -256,23 +283,8 @@ export default function TripDetail({
         subtitle={dateRange(trip.start_date, trip.end_date)}
         onBack={onClose}
         actionButton={
-          isAdmin ? (
-            <RowMenu
-              label="Trip actions"
-              actions={[
-                {
-                  label: "Edit trip",
-                  icon: <EditIcon />,
-                  onClick: () => onEditingChange(true),
-                },
-                {
-                  label: "Delete trip",
-                  icon: <DeleteIcon />,
-                  danger: true,
-                  onClick: () => setConfirmDelete(true),
-                },
-              ]}
-            />
+          tripMenu.length > 0 ? (
+            <RowMenu label="Trip actions" actions={tripMenu} />
           ) : undefined
         }
         tabs={{

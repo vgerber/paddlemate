@@ -48,7 +48,7 @@ export default function DayPickerDialog({
       <PanelBottomBar
         onLeftClick={onClose}
         leftLabel="Close"
-        title="Add a day"
+        title="Plan a day"
         subtitle="Pick the day to add to"
         action={null}
       />
