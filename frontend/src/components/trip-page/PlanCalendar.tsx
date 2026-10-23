@@ -32,6 +32,8 @@ const STRIP_PAD = `min(calc((${tokens.phone.line + DISC / 2}px - 100% / 14) * 7 
 interface Props {
   /** The day the reader is on; its week is the one shown. */
   current: string;
+  /** The day whose week the strip shows until the reader moves. */
+  weekOf?: string;
   today: string;
   /** The trip's own span, tinted. */
   from: string;
@@ -50,6 +52,7 @@ interface Props {
  * or tapped open to the month. Choosing a day jumps the list to it. */
 export default function PlanCalendar({
   current,
+  weekOf,
   today,
   from,
   to,
@@ -112,7 +115,7 @@ export default function PlanCalendar({
       {!open && (
         <>
           <WeekdayHeader />
-          <WeekRow dates={weekDays(current)} {...days} />
+          <WeekRow dates={weekDays(weekOf ?? current)} {...days} />
         </>
       )}
 
