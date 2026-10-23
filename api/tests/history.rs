@@ -1395,7 +1395,7 @@ async fn deleted_features_survive_the_section_and_river(pool: PgPool) {
     assert_eq!(feature_ids(&page.body), [f]);
     assert_eq!(page.body["items"][0]["name"], "Weir");
 
-    call(
+    let r = call(
         &app,
         Method::DELETE,
         &format!("/waterways/{w}"),
@@ -1403,7 +1403,211 @@ async fn deleted_features_survive_the_section_and_river(pool: PgPool) {
         None,
     )
     .await;
-    assert_eq!(get(&app, &url).await.status, StatusCode::OK);
+    assert_eq!(r.status, StatusCode::NO_CONTENT);
+    let page = get(&app, &url).await;
+    assert_eq!(page.status, StatusCode::OK);
+    assert_eq!(feature_ids(&page.body), [f]);
+    assert_eq!(page.body["total"], 1);
+}
+
+#[sqlx::test]
+async fn a_river_delete_records_features_created_during_it(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let s = make_section(&app, w, "Upper", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+
+    // A feature insert that has not committed yet holds a share lock on its
+    // section. The river delete must wait for it and then see the feature.
+    let mut tx = pool.begin().await.unwrap();
+    let f: i64 = sqlx::query_scalar(
+        "INSERT INTO features (section_id, feature_type, location, created_by) \
+         VALUES ($1, 'put_in', ST_GeomFromText('POINT(10 47)', 4326), 'mara-1') RETURNING id",
+    )
+    .bind(s)
+    .fetch_one(&mut *tx)
+    .await
+    .unwrap();
+    let deleting = tokio::spawn({
+        let app = app.clone();
+        async move {
+            call(
+                &app,
+                Method::DELETE,
+                &format!("/waterways/{w}"),
+                Who::Admin,
+                None,
+            )
+            .await
+        }
+    });
+    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    assert!(
+        !deleting.is_finished(),
+        "delete did not wait for the insert"
+    );
+    tx.commit().await.unwrap();
+    assert_eq!(deleting.await.unwrap().status, StatusCode::NO_CONTENT);
+
+    let url = format!("/waterways/{w}/sections/{s}/deleted-features");
+    assert_eq!(feature_ids(&get(&app, &url).await.body), [f]);
+}
+
+#[sqlx::test]
+async fn localization_writes_are_admin_only_and_leave_steps(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let s = make_section(&app, w, "Upper", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let f = make_feature(&app, w, s, "Weir").await;
+    let sec = format!("/waterways/{w}/sections/{s}");
+    let feat = format!("{sec}/features/{f}");
+
+    for base in [&sec, &feat] {
+        for part in ["names", "descriptions"] {
+            let key = if part == "names" {
+                "name"
+            } else {
+                "description"
+            };
+            let uri = format!("{base}/{part}/de");
+            let body = json!({ key: "Wehr" });
+            for (who, status) in [
+                (Who::Anyone, StatusCode::UNAUTHORIZED),
+                (Who::User("mara-1"), StatusCode::FORBIDDEN),
+            ] {
+                let r = call(&app, Method::POST, &uri, who, Some(body.clone())).await;
+                assert_eq!(r.status, status, "POST {uri}");
+                let r = call(&app, Method::DELETE, &uri, who, None).await;
+                assert_eq!(r.status, status, "DELETE {uri}");
+            }
+        }
+    }
+    // Nothing was written by the refused calls.
+    assert_eq!(
+        kinds(&get(&app, &format!("{feat}/history")).await.body),
+        ["created"]
+    );
+
+    let r = call(
+        &app,
+        Method::POST,
+        &format!("{feat}/names/de"),
+        Who::Admin,
+        Some(json!({ "name": "Wehr" })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+    let h = get(&app, &format!("{feat}/history")).await;
+    assert_eq!(kinds(&h.body), ["created", "edited"]);
+    assert_eq!(change(&h.body["items"][1], "name (de)")["after"], "Wehr");
+
+    let r = call(
+        &app,
+        Method::DELETE,
+        &format!("{feat}/names/de"),
+        Who::Admin,
+        None,
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NO_CONTENT);
+    let h = get(&app, &format!("{feat}/history")).await;
+    assert_eq!(kinds(&h.body), ["created", "edited", "edited"]);
+    // Deleting what is not there is a 404 and no step.
+    let r = call(
+        &app,
+        Method::DELETE,
+        &format!("{feat}/names/de"),
+        Who::Admin,
+        None,
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
+    assert_eq!(get(&app, &format!("{feat}/history")).await.body["total"], 3);
+
+    let r = call(
+        &app,
+        Method::POST,
+        &format!("{sec}/descriptions/de"),
+        Who::Admin,
+        Some(json!({ "description": "Oberlauf" })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+    let h = get(&app, &format!("{sec}/history")).await;
+    assert_eq!(kinds(&h.body), ["created", "edited"]);
+    assert_eq!(
+        change(&h.body["items"][1], "description (de)")["after"],
+        "Oberlauf"
+    );
+
+    // A feature or section under another river is not reachable.
+    let other = make_waterway(&app, "Salzach").await;
+    let r = call(
+        &app,
+        Method::POST,
+        &format!("/waterways/{other}/sections/{s}/features/{f}/names/de"),
+        Who::Admin,
+        Some(json!({ "name": "X" })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
+    let r = call(
+        &app,
+        Method::POST,
+        &format!("/waterways/{other}/sections/{s}/names/de"),
+        Who::Admin,
+        Some(json!({ "name": "X" })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
+}
+
+#[sqlx::test]
+async fn localized_texts_are_bounded(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let s = make_section(&app, w, "Upper", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let f = make_feature(&app, w, s, "Weir").await;
+    let sec = format!("/waterways/{w}/sections/{s}");
+    let feat = format!("{sec}/features/{f}");
+
+    for base in [&sec, &feat] {
+        for (part, key, too_long) in [
+            ("names", "name", 256),
+            ("descriptions", "description", 10_001),
+        ] {
+            let uri = format!("{base}/{part}/de");
+            for text in ["x".repeat(too_long), "  ".to_string()] {
+                let r = call(
+                    &app,
+                    Method::POST,
+                    &uri,
+                    Who::Admin,
+                    Some(json!({ key: text })),
+                )
+                .await;
+                assert_eq!(r.status, StatusCode::BAD_REQUEST, "{uri} {}", r.body);
+                assert_eq!(r.body["error"]["target"], key);
+            }
+        }
+    }
+    let ok = call(
+        &app,
+        Method::POST,
+        &format!("{feat}/names/de"),
+        Who::Admin,
+        Some(json!({ "name": "y".repeat(255) })),
+    )
+    .await;
+    assert_eq!(ok.status, StatusCode::OK);
 }
 
 #[sqlx::test]

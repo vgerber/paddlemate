@@ -1,6 +1,6 @@
 use aide::axum::IntoApiResponse;
 
-use super::authorize_localization;
+use super::{authorize_localization, check_description, check_name};
 use axum::{
     Extension, Json,
     extract::{Path, State},
@@ -26,7 +26,7 @@ use crate::{
         water_section::SectionId,
         waterway::WaterwayId,
     },
-    query::{features, proposals, sections},
+    query::{features, history::Scope, proposals, sections},
     state::AppState,
 };
 
@@ -323,24 +323,26 @@ pub async fn upsert_feature_name(
     )>,
     Json(body): Json<UpsertNameBody>,
 ) -> impl IntoApiResponse {
-    let lang_code = match authorize_localization(auth, &lang_code) {
-        Ok(code) => code,
+    let (token, lang_code) = match authorize_localization(auth, &lang_code) {
+        Ok(ok) => ok,
         Err(error) => return error.into_response(),
     };
 
-    match features::feature_belongs_to_section(&app.pg_pool, waterway_id, section_id, feature_id)
-        .await
-    {
-        Ok(true) => {}
-        Ok(false) => return ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            return ApiError::from_db(&format!("Error checking feature {feature_id}"), err)
-                .into_response();
-        }
+    if let Err(error) = check_name(&body.name) {
+        return error.into_response();
     }
-
-    match features::upsert_name(&app.pg_pool, feature_id, &lang_code, &body.name).await {
-        Ok(name) => Json(name).into_response(),
+    let scope = Scope::feature(waterway_id, section_id, feature_id);
+    match features::set_name(
+        &app.pg_pool,
+        scope,
+        &lang_code,
+        body.name.trim(),
+        token.user_id(),
+    )
+    .await
+    {
+        Ok(Some(name)) => Json(name).into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => ApiError::from_db(
             &format!("Error upserting name for feature {feature_id}"),
             err,
@@ -355,6 +357,7 @@ doc_fn!(upsert_feature_name_docs, op =>
         .description("Add or update a localized name for a feature")
         .response::<200, Json<FeatureName>>()
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Not an admin"))
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Feature not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Features")
@@ -370,20 +373,13 @@ pub async fn delete_feature_name(
         String,
     )>,
 ) -> impl IntoApiResponse {
-    let lang_code = match authorize_localization(auth, &lang_code) {
-        Ok(code) => code,
+    let (token, lang_code) = match authorize_localization(auth, &lang_code) {
+        Ok(ok) => ok,
         Err(error) => return error.into_response(),
     };
 
-    match features::delete_name(
-        &app.pg_pool,
-        waterway_id,
-        section_id,
-        feature_id,
-        &lang_code,
-    )
-    .await
-    {
+    let scope = Scope::feature(waterway_id, section_id, feature_id);
+    match features::remove_name(&app.pg_pool, scope, &lang_code, token.user_id()).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => ApiError::from_db(
@@ -421,26 +417,26 @@ pub async fn upsert_feature_description(
     )>,
     Json(body): Json<UpsertDescriptionBody>,
 ) -> impl IntoApiResponse {
-    let lang_code = match authorize_localization(auth, &lang_code) {
-        Ok(code) => code,
+    let (token, lang_code) = match authorize_localization(auth, &lang_code) {
+        Ok(ok) => ok,
         Err(error) => return error.into_response(),
     };
 
-    match features::feature_belongs_to_section(&app.pg_pool, waterway_id, section_id, feature_id)
-        .await
-    {
-        Ok(true) => {}
-        Ok(false) => return ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            return ApiError::from_db(&format!("Error checking feature {feature_id}"), err)
-                .into_response();
-        }
+    if let Err(error) = check_description(&body.description) {
+        return error.into_response();
     }
-
-    match features::upsert_description(&app.pg_pool, feature_id, &lang_code, &body.description)
-        .await
+    let scope = Scope::feature(waterway_id, section_id, feature_id);
+    match features::set_description(
+        &app.pg_pool,
+        scope,
+        &lang_code,
+        body.description.trim(),
+        token.user_id(),
+    )
+    .await
     {
-        Ok(desc) => Json(desc).into_response(),
+        Ok(Some(desc)) => Json(desc).into_response(),
+        Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => ApiError::from_db(
             &format!("Error upserting description for feature {feature_id}"),
             err,
@@ -470,20 +466,13 @@ pub async fn delete_feature_description(
         String,
     )>,
 ) -> impl IntoApiResponse {
-    let lang_code = match authorize_localization(auth, &lang_code) {
-        Ok(code) => code,
+    let (token, lang_code) = match authorize_localization(auth, &lang_code) {
+        Ok(ok) => ok,
         Err(error) => return error.into_response(),
     };
 
-    match features::delete_description(
-        &app.pg_pool,
-        waterway_id,
-        section_id,
-        feature_id,
-        &lang_code,
-    )
-    .await
-    {
+    let scope = Scope::feature(waterway_id, section_id, feature_id);
+    match features::remove_description(&app.pg_pool, scope, &lang_code, token.user_id()).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => ApiError::from_db(

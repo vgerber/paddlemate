@@ -334,31 +334,86 @@ pub async fn upsert_name(
     })
 }
 
-pub async fn delete_name(
+/// Set a feature's name in one language and record the history step. None
+/// when the feature is not in this section and river.
+pub async fn set_name(
     pool: &PgPool,
-    waterway_id: WaterwayId,
-    section_id: SectionId,
-    feature_id: FeatureId,
+    scope: Scope,
     lang_code: &str,
+    name: &str,
+    actor: &str,
+) -> Result<Option<FeatureName>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let out = history::tracked_edit(&mut tx, &scope, &Via::direct(actor), async |conn| {
+        upsert_name(conn, scope.id, lang_code, name).await
+    })
+    .await?;
+    tx.commit().await?;
+    Ok(out)
+}
+
+/// Set a feature's description in one language and record the history step.
+/// None when the feature is not in this section and river.
+pub async fn set_description(
+    pool: &PgPool,
+    scope: Scope,
+    lang_code: &str,
+    description: &str,
+    actor: &str,
+) -> Result<Option<FeatureDescription>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let out = history::tracked_edit(&mut tx, &scope, &Via::direct(actor), async |conn| {
+        upsert_description(conn, scope.id, lang_code, description).await
+    })
+    .await?;
+    tx.commit().await?;
+    Ok(out)
+}
+
+/// Remove a feature's name in one language and record the history step.
+/// False when the feature or the name does not exist.
+pub async fn remove_name(
+    pool: &PgPool,
+    scope: Scope,
+    lang_code: &str,
+    actor: &str,
 ) -> Result<bool, sqlx::Error> {
-    sqlx::query!(
-        r#"
-        DELETE FROM feature_names
-        WHERE feature_id = $1 AND lang_code = $2
-          AND $1 IN (
-              SELECT id FROM features WHERE section_id = $3
-              AND $3 IN (SELECT id FROM water_sections WHERE waterway_id = $4)
-          )
-        RETURNING id
-        "#,
-        feature_id,
-        lang_code,
-        section_id,
-        waterway_id
-    )
-    .fetch_optional(pool)
-    .await
-    .map(|r| r.is_some())
+    let mut tx = pool.begin().await?;
+    let out = history::tracked_edit(&mut tx, &scope, &Via::direct(actor), async |conn| {
+        let r = sqlx::query("DELETE FROM feature_names WHERE feature_id = $1 AND lang_code = $2")
+            .bind(scope.id)
+            .bind(lang_code)
+            .execute(conn)
+            .await?;
+        Ok(r.rows_affected() > 0)
+    })
+    .await?;
+    tx.commit().await?;
+    Ok(out.unwrap_or(false))
+}
+
+/// Remove a feature's description in one language and record the history
+/// step. False when the feature or the description does not exist.
+pub async fn remove_description(
+    pool: &PgPool,
+    scope: Scope,
+    lang_code: &str,
+    actor: &str,
+) -> Result<bool, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let out = history::tracked_edit(&mut tx, &scope, &Via::direct(actor), async |conn| {
+        let r = sqlx::query(
+            "DELETE FROM feature_descriptions WHERE feature_id = $1 AND lang_code = $2",
+        )
+        .bind(scope.id)
+        .bind(lang_code)
+        .execute(conn)
+        .await?;
+        Ok(r.rows_affected() > 0)
+    })
+    .await?;
+    tx.commit().await?;
+    Ok(out.unwrap_or(false))
 }
 
 pub async fn upsert_description(
@@ -388,33 +443,6 @@ pub async fn upsert_description(
         lang_code: r.lang_code,
         description: r.description,
     })
-}
-
-pub async fn delete_description(
-    pool: &PgPool,
-    waterway_id: WaterwayId,
-    section_id: SectionId,
-    feature_id: FeatureId,
-    lang_code: &str,
-) -> Result<bool, sqlx::Error> {
-    sqlx::query!(
-        r#"
-        DELETE FROM feature_descriptions
-        WHERE feature_id = $1 AND lang_code = $2
-          AND $1 IN (
-              SELECT id FROM features WHERE section_id = $3
-              AND $3 IN (SELECT id FROM water_sections WHERE waterway_id = $4)
-          )
-        RETURNING id
-        "#,
-        feature_id,
-        lang_code,
-        section_id,
-        waterway_id
-    )
-    .fetch_optional(pool)
-    .await
-    .map(|r| r.is_some())
 }
 
 pub async fn fetch_features_for_section(
