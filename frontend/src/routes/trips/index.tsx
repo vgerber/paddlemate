@@ -47,7 +47,7 @@ function TripsPage() {
       navigate({
         to: "/trips/$tripId",
         params: { tripId: String(id) },
-        search: { edit: false },
+        search: { edit: undefined },
       });
   };
 

@@ -2,9 +2,9 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
-import TextField from "@mui/material/TextField";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useState } from "react";
+import PickerField from "@/components/descents/descent-form/PickerField";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import FormSection from "@/components/waterway/FormSection";
 import type { TripMember } from "@/lib/api";
@@ -102,24 +102,20 @@ export default function AttendanceDialog({
           hint="Say when you get there. The day usually lands before the hour, so fill in whichever you know."
         >
           <Box sx={{ display: "flex", gap: 1.5 }}>
-            <TextField
+            <PickerField
+              kind="date"
               label="You arrive"
-              type="date"
               value={arrival}
-              onChange={(e) => setArrival(e.target.value)}
-              size="small"
-              fullWidth
-              slotProps={{ inputLabel: { shrink: true } }}
+              onChange={setArrival}
             />
-            <TextField
-              label="Around"
-              type="time"
-              value={arrivalTime}
-              onChange={(e) => setArrivalTime(e.target.value)}
-              size="small"
-              sx={{ width: 150, flexShrink: 0 }}
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
+            <Box sx={{ width: 150, flexShrink: 0 }}>
+              <PickerField
+                kind="time"
+                label="Around"
+                value={arrivalTime}
+                onChange={setArrivalTime}
+              />
+            </Box>
           </Box>
         </FormSection>
 
@@ -128,26 +124,21 @@ export default function AttendanceDialog({
           hint="Optional, and independent of the above - plenty of people know when they arrive long before they know when they can get away."
         >
           <Box sx={{ display: "flex", gap: 1.5 }}>
-            <TextField
+            <PickerField
+              kind="date"
               label="You leave"
-              type="date"
               value={departure}
-              onChange={(e) => setDeparture(e.target.value)}
-              size="small"
-              fullWidth
-              error={invalid}
+              onChange={setDeparture}
               helperText={problem ?? undefined}
-              slotProps={{ inputLabel: { shrink: true } }}
             />
-            <TextField
-              label="Around"
-              type="time"
-              value={departureTime}
-              onChange={(e) => setDepartureTime(e.target.value)}
-              size="small"
-              sx={{ width: 150, flexShrink: 0 }}
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
+            <Box sx={{ width: 150, flexShrink: 0 }}>
+              <PickerField
+                kind="time"
+                label="Around"
+                value={departureTime}
+                onChange={setDepartureTime}
+              />
+            </Box>
           </Box>
         </FormSection>
 
@@ -155,7 +146,7 @@ export default function AttendanceDialog({
       </DialogContent>
       <PanelBottomBar
         onLeftClick={onClose}
-        leftLabel="Close"
+        leftLabel="Cancel"
         leftDisabled={patchMember.isPending}
         title="Your dates"
         subtitle={problem ?? "Save your dates"}

@@ -154,7 +154,7 @@ export default function TripDetail({
     navigate({
       to: "/logs/$descentId",
       params: { descentId: String(descent.id) },
-      search: { edit: false },
+      search: { edit: undefined },
     });
 
   const copyLog = (descent: Descent) =>

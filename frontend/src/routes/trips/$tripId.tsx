@@ -11,7 +11,11 @@ import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/trips/$tripId")({
   validateSearch: (search: Record<string, unknown>) => ({
-    edit: search.edit === true || search.edit === "true",
+    // Absent unless editing, so an open trip carries no `?edit=false`.
+    edit:
+      search.edit === true || search.edit === "true"
+        ? (true as boolean)
+        : undefined,
   }),
   component: TripDetailPage,
 });
@@ -68,12 +72,12 @@ function TripDetailPage() {
     >
       <TripDetail
         trip={trip}
-        editing={edit}
+        editing={edit === true}
         onEditingChange={(value) =>
           navigate({
             to: "/trips/$tripId",
             params: { tripId },
-            search: { edit: value },
+            search: { edit: value || undefined },
             replace: true,
           })
         }

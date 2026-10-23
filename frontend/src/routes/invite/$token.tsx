@@ -60,7 +60,7 @@ function InvitePage() {
       : navigate({
           to: "/trips/$tripId",
           params: { tripId: String(trip.trip_id) },
-          search: { edit: false },
+          search: { edit: undefined },
         });
 
   return (

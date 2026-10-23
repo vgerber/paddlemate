@@ -60,7 +60,7 @@ export default function SectionLogsList({ sectionId }: SectionLogsListProps) {
                 navigate({
                   to: "/logs/$descentId",
                   params: { descentId: String(descent.id) },
-                  search: { edit: false },
+                  search: { edit: undefined },
                 })
               }
             />
