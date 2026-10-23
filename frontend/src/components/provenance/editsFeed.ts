@@ -1,5 +1,4 @@
-import type { DeletedFeature, HistoryStep, Proposal } from "@/lib/api";
-import { humanize, sentenceCase } from "@/lib/format";
+import type { HistoryStep, Proposal } from "@/lib/api";
 import { inOrder } from "./steps";
 
 /** The entry an edit belongs to: the section itself or one of its features.
@@ -11,8 +10,6 @@ export interface EntryRef {
   name: string;
   /** "Hole", or "Section" */
   label: string;
-  /** Deleted since; it is no longer in the section, only its history is. */
-  gone?: boolean;
 }
 
 export function sameEntry(a: EntryRef, b: EntryRef): boolean {
@@ -47,32 +44,8 @@ export interface EntryProposal {
   proposal: Proposal;
 }
 
-/** Features deleted from a section, as entries whose history can still be
- * opened. A feature the live list still holds is not one. */
-export function goneEntries(
-  deleted: DeletedFeature[],
-  live: EntryRef[],
-): EntryRef[] {
-  return deleted
-    .filter(
-      (d) => !live.some((e) => e.kind === "feature" && e.id === d.feature_id),
-    )
-    .map((d) => {
-      const type = d.feature_type
-        ? sentenceCase(humanize(d.feature_type))
-        : "Feature";
-      return {
-        kind: "feature",
-        id: d.feature_id,
-        name: d.name || type,
-        label: "Deleted feature",
-        gone: true,
-      };
-    });
-}
-
 /** Ties a proposal to the entry it is about. Anything about an entry that is
- * not listed (another section, a feature deleted since) has none. */
+ * not listed (for example in another section) has none. */
 export function resolveProposals(
   proposals: Proposal[],
   entries: EntryRef[],
