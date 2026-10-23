@@ -16,7 +16,7 @@ import MemberAvatar from "@/components/trips/MemberAvatar";
 import FormSection from "@/components/waterway/FormSection";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
-import { useAllUsers } from "@/lib/hooks/useFollows";
+import { useUserSearch } from "@/lib/hooks/useFollows";
 import { useAddTripMember } from "@/lib/hooks/useTrips";
 import { AddPersonIcon } from "@/lib/icons";
 import { alphas, BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
@@ -24,6 +24,9 @@ import { alphas, BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
 import InviteLinks from "./InviteLinks";
 
 const { tokens } = theme;
+
+/** Letters typed before the server is asked. */
+const MIN_QUERY = 2;
 
 /**
  * Who to add: a link for people not on Paddlemate yet, or somebody already
@@ -121,8 +124,16 @@ function AddMemberBody({
   open: boolean;
 }) {
   const [search, setSearch] = useState("");
-  const query = useDebouncedValue(search, 200);
-  const { data: users, isLoading } = useAllUsers(open);
+  const query = useDebouncedValue(search.trim(), 250);
+  // Nobody is listed before a name is typed: the server holds every account.
+  const searching = open && query.length >= MIN_QUERY;
+  const {
+    data: pages,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useUserSearch(searching ? query : "");
   const addMember = useAddTripMember(tripId);
   const [error, setError] = useState<string | null>(null);
 
@@ -136,13 +147,13 @@ function AddMemberBody({
     }
   }
 
-  const candidates = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return (users ?? [])
-      .filter((u) => !memberIds.includes(u.id))
-      .filter((u) => !q || u.username.toLowerCase().includes(q))
-      .sort((a, b) => a.username.localeCompare(b.username));
-  }, [users, memberIds, query]);
+  const candidates = useMemo(
+    () =>
+      (pages?.pages ?? [])
+        .flatMap((p) => p.items)
+        .filter((u) => !memberIds.includes(u.id)),
+    [pages, memberIds],
+  );
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -157,18 +168,21 @@ function AddMemberBody({
           onChange={(e) => setSearch(e.target.value)}
           fullWidth
         />
-        {isLoading ? (
+        {!searching ? (
+          <Typography
+            color="textSecondary"
+            sx={{ fontSize: "0.875rem", lineHeight: "20px" }}
+          >
+            Type a name to find someone.
+          </Typography>
+        ) : isLoading ? (
           <LoadingBox size={40} pt={4} />
         ) : candidates.length === 0 ? (
           <EmptyState
             icon={
               <AddPersonIcon sx={{ fontSize: 48, color: "text.disabled" }} />
             }
-            title={
-              query
-                ? "Nobody by that name."
-                : "Everybody is already on the trip."
-            }
+            title="Nobody by that name."
           />
         ) : (
           <Box>
@@ -191,6 +205,15 @@ function AddMemberBody({
                 </Typography>
               </ListItemButton>
             ))}
+            {hasNextPage && (
+              <Button
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                sx={{ minHeight: tokens.touch.min }}
+              >
+                Show more
+              </Button>
+            )}
           </Box>
         )}
       </FormSection>

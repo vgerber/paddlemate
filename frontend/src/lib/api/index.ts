@@ -959,6 +959,14 @@ export const followsApi = {
       });
       return data;
     }),
+  /** One page of users whose name contains `q`. */
+  search: async (q: string, page: number, signal?: AbortSignal) => {
+    const { data } = await client.GET("/api/v1/users", {
+      params: { query: { q, page, per_page: 20 } },
+      signal,
+    });
+    return assertData(data);
+  },
   listFollowing: async (): Promise<User[]> => {
     const { data } = await client.GET("/api/v1/users/{user_id}/following", {
       params: { path: { user_id: ME } },

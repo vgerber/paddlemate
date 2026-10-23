@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { followsApi } from "@/lib/api";
 import { useSession } from "./useSession";
 
@@ -8,6 +13,7 @@ export const followKeys = {
   followers: () => [...followKeys.all, "followers"] as const,
   pending: () => [...followKeys.all, "pending"] as const,
   allUsers: () => [...followKeys.all, "users"] as const,
+  search: (q: string) => [...followKeys.all, "search", q] as const,
 };
 
 /** Every user with their follow relation, for the social search list. */
@@ -16,6 +22,18 @@ export function useAllUsers(enabled: boolean) {
     queryKey: followKeys.allUsers(),
     queryFn: () => followsApi.listAll(),
     enabled,
+  });
+}
+
+/** Users matching a name, a page at a time; idle until there is a query. */
+export function useUserSearch(q: string) {
+  return useInfiniteQuery({
+    queryKey: followKeys.search(q),
+    queryFn: ({ pageParam, signal }) => followsApi.search(q, pageParam, signal),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.page < last.total_pages ? last.page + 1 : undefined,
+    enabled: q.length > 0,
   });
 }
 
