@@ -1,8 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  announceIfProposal,
-  announceProposalSent,
-} from "@/components/proposals/ProposalSentSnackbar";
+import { announceIfProposal } from "@/components/proposals/ProposalSentSnackbar";
 import {
   type CreateFeatureInput,
   featuresApi,
@@ -12,7 +9,6 @@ import {
 import type { components } from "@/lib/api/schema";
 import { proposalKeys } from "./useProposals";
 import { provenanceKeys } from "./useProvenance";
-import { useSession } from "./useSession";
 import { waterwayKeys } from "./useWaterways";
 
 type CreateSectionBody =
@@ -89,16 +85,14 @@ export function useUpdateFeature(waterwayId: number, sectionId: number) {
 
 export function useDeleteFeature(waterwayId: number, sectionId: number) {
   const qc = useQueryClient();
-  const { isAdmin } = useSession();
   return useMutation({
     mutationFn: (featureId: number) =>
       featuresApi.remove(waterwayId, sectionId, featureId),
     // Refresh the feature list and the pending proposals, so the timeline's
     // "deletion proposed" marker shows up right away.
-    onSuccess: () => {
+    onSuccess: (result) => {
       invalidateWaterwayAndProposals(qc, waterwayId);
-      // An admin's delete is final; anyone else's goes to review.
-      if (!isAdmin) announceProposalSent(null);
+      announceIfProposal(result);
     },
   });
 }
