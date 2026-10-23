@@ -25,7 +25,18 @@ async fn lock(conn: &mut PgConnection, scope: &Scope) -> Result<bool, sqlx::Erro
         .bind(scope.section_id)
         .bind(scope.waterway_id),
     };
-    Ok(query.fetch_optional(&mut *conn).await?.is_some())
+    let found = query.fetch_optional(&mut *conn).await?.is_some();
+    if found && scope.kind == EntityKind::Waterway {
+        // A feature being created holds a KEY SHARE lock on its section, not on
+        // the river, so locking the river alone would let the cascade delete a
+        // feature that record_children never saw. Locking the sections waits
+        // for such inserts and makes later ones fail instead.
+        sqlx::query("SELECT id FROM water_sections WHERE waterway_id = $1 ORDER BY id FOR UPDATE")
+            .bind(scope.id)
+            .fetch_all(&mut *conn)
+            .await?;
+    }
+    Ok(found)
 }
 
 /// Lock the entity, snapshot it, run `apply`, snapshot again and record the

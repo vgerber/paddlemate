@@ -15,6 +15,10 @@ pub struct ListProposalsFilters {
     pub section_id: Option<i64>,
     pub feature_id: Option<i64>,
     pub submitted_by: Option<String>,
+    /// 1-based page, already clamped.
+    pub page: i64,
+    /// Rows per page, already clamped.
+    pub per_page: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]

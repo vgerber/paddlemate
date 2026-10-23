@@ -13,10 +13,7 @@ use crate::{
         path_params::{FeaturePath, SectionPath, WaterwayPath},
         waterway::{PaginatedResponse, page_bounds, total_pages},
     },
-    query::{
-        history::{self, Scope},
-        sections, waterways,
-    },
+    query::history::{self, Scope},
     state::AppState,
 };
 
@@ -33,22 +30,17 @@ async fn require_known(app: &AppState, scope: &Scope) -> Result<(), ApiError> {
     }
 }
 
-fn require_live(found: Result<bool, sqlx::Error>) -> Result<(), ApiError> {
-    match found {
-        Ok(true) => Ok(()),
-        Ok(false) => Err(ApiError::not_found("Not found")),
-        Err(err) => Err(ApiError::from_db("Error checking existence", &err)),
-    }
-}
-
-async fn page_of(
+/// One page of a history listing: the 404 gate, the paging bounds and the
+/// envelope, around whatever `list` fetches for them.
+async fn page_of<T: schemars::JsonSchema>(
     app: &AppState,
     scope: Scope,
     query: &HistoryQuery,
-) -> Result<Json<PaginatedResponse<HistoryStep>>, ApiError> {
+    list: impl AsyncFnOnce(i64, i64) -> Result<(Vec<T>, i64), sqlx::Error>,
+) -> Result<Json<PaginatedResponse<T>>, ApiError> {
     require_known(app, &scope).await?;
     let (page, per_page) = page_bounds(query.page, query.per_page, DEFAULT_PER_PAGE);
-    let (items, total) = history::list_steps(&app.pg_pool, &scope, page, per_page)
+    let (items, total) = list(page, per_page)
         .await
         .map_err(|err| ApiError::from_db("Error listing history", &err))?;
     Ok(Json(PaginatedResponse {
@@ -60,12 +52,23 @@ async fn page_of(
     }))
 }
 
+async fn steps_of(
+    app: &AppState,
+    scope: Scope,
+    query: &HistoryQuery,
+) -> Result<Json<PaginatedResponse<HistoryStep>>, ApiError> {
+    page_of(app, scope, query, async |page, per_page| {
+        history::list_steps(&app.pg_pool, &scope, page, per_page).await
+    })
+    .await
+}
+
 pub async fn get_waterway_history(
     State(app): State<AppState>,
     Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
     Query(query): Query<HistoryQuery>,
 ) -> impl IntoApiResponse {
-    page_of(&app, Scope::waterway(waterway_id), &query)
+    steps_of(&app, Scope::waterway(waterway_id), &query)
         .await
         .into_response()
 }
@@ -87,7 +90,7 @@ pub async fn get_section_history(
     }): Path<SectionPath>,
     Query(query): Query<HistoryQuery>,
 ) -> impl IntoApiResponse {
-    page_of(&app, Scope::section(waterway_id, section_id), &query)
+    steps_of(&app, Scope::section(waterway_id, section_id), &query)
         .await
         .into_response()
 }
@@ -110,7 +113,7 @@ pub async fn get_feature_history(
     }): Path<FeaturePath>,
     Query(query): Query<HistoryQuery>,
 ) -> impl IntoApiResponse {
-    page_of(
+    steps_of(
         &app,
         Scope::feature(waterway_id, section_id, feature_id),
         &query,
@@ -137,23 +140,11 @@ pub async fn list_deleted_features(
     Query(query): Query<HistoryQuery>,
 ) -> impl IntoApiResponse {
     let scope = Scope::section(waterway_id, section_id);
-    if let Err(err) = require_known(&app, &scope).await {
-        return err.into_response();
-    }
-    let (page, per_page) = page_bounds(query.page, query.per_page, DEFAULT_PER_PAGE);
-    match history::list_deleted_features(&app.pg_pool, waterway_id, section_id, page, per_page)
-        .await
-    {
-        Ok((items, total)) => Json(PaginatedResponse {
-            items,
-            total,
-            page,
-            per_page,
-            total_pages: total_pages(total, per_page),
-        })
-        .into_response(),
-        Err(err) => ApiError::from_db("Error listing deleted features", &err).into_response(),
-    }
+    page_of(&app, scope, &query, async |page, per_page| {
+        history::list_deleted_features(&app.pg_pool, waterway_id, section_id, page, per_page).await
+    })
+    .await
+    .into_response()
 }
 
 doc_fn!(list_deleted_features_docs, op =>
@@ -170,14 +161,13 @@ pub async fn get_waterway_sources(
     Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
     Query(query): Query<SourcesQuery>,
 ) -> impl IntoApiResponse {
-    if let Err(err) = require_live(waterways::exists(&app.pg_pool, waterway_id).await) {
+    if let Err(err) = require_known(&app, &Scope::waterway(waterway_id)).await {
         return err.into_response();
     }
-    if let Some(section_id) = query.section_id {
-        let found = sections::section_exists(&app.pg_pool, waterway_id, section_id).await;
-        if let Err(err) = require_live(found) {
-            return err.into_response();
-        }
+    if let Some(section_id) = query.section_id
+        && let Err(err) = require_known(&app, &Scope::section(waterway_id, section_id)).await
+    {
+        return err.into_response();
     }
     match history::list_waterway_sources(&app.pg_pool, waterway_id, query.section_id).await {
         Ok(sources) => Json::<WaterwaySources>(sources).into_response(),
@@ -190,6 +180,6 @@ doc_fn!(get_waterway_sources_docs, op =>
         .input::<Query<SourcesQuery>>()
         .description("Every source and contributor behind a river, its sections and its features; with `section_id`, only those behind that section and its features")
         .response::<200, Json<WaterwaySources>>()
-        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Waterway not found, or the section is not in it"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Waterway never existed, or the section is not in it"))
         .tag("History")
 );

@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) AS \"count!\" FROM users u\n           WHERE u.id != $1\n             AND ($2::text IS NULL OR strpos(lower(u.username), lower($2)) > 0)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "96da89b698b9446e794904dd2d628e2b6b358eafd177fbe3d79c0fb7615fd6e9"
+}

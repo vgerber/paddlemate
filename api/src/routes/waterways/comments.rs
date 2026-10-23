@@ -23,7 +23,10 @@ use crate::{
             WaterwayPath,
         },
     },
-    query::{comments, media},
+    query::{
+        comments::{self, CommentParent},
+        media,
+    },
     state::AppState,
 };
 
@@ -145,7 +148,10 @@ doc_fn!(create_waterway_comment_docs, op =>
 pub async fn update_waterway_comment(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Path(WaterwayCommentPath { comment_id, .. }): Path<WaterwayCommentPath>,
+    Path(WaterwayCommentPath {
+        waterway_id,
+        comment_id,
+    }): Path<WaterwayCommentPath>,
     Json(body): Json<UpdateCommentRequest>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
@@ -155,6 +161,7 @@ pub async fn update_waterway_comment(
 
     match comments::update_comment(
         &app.pg_pool,
+        CommentParent::waterway(waterway_id),
         comment_id,
         &body.body,
         body.category,
@@ -182,7 +189,10 @@ doc_fn!(update_waterway_comment_docs, op =>
 pub async fn delete_waterway_comment(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Path(WaterwayCommentPath { comment_id, .. }): Path<WaterwayCommentPath>,
+    Path(WaterwayCommentPath {
+        waterway_id,
+        comment_id,
+    }): Path<WaterwayCommentPath>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
@@ -196,6 +206,7 @@ pub async fn delete_waterway_comment(
 
     match comments::delete_comment(
         &app.pg_pool,
+        CommentParent::waterway(waterway_id),
         comment_id,
         token.user_id(),
         token.is_server_admin(),
@@ -227,7 +238,10 @@ doc_fn!(delete_waterway_comment_docs, op =>
 pub async fn moderate_waterway_comment(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Path(WaterwayCommentPath { comment_id, .. }): Path<WaterwayCommentPath>,
+    Path(WaterwayCommentPath {
+        waterway_id,
+        comment_id,
+    }): Path<WaterwayCommentPath>,
     Json(body): Json<ModerateCommentRequest>,
 ) -> impl IntoApiResponse {
     let Some(Extension(token)) = auth else {
@@ -237,7 +251,14 @@ pub async fn moderate_waterway_comment(
         return ApiError::forbidden("Admin access required").into_response();
     }
 
-    match comments::moderate_comment(&app.pg_pool, comment_id, body.status).await {
+    match comments::moderate_comment(
+        &app.pg_pool,
+        CommentParent::waterway(waterway_id),
+        comment_id,
+        body.status,
+    )
+    .await
+    {
         Ok(Some(comment)) => Json(comment).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => ApiError::from_db(&format!("Error moderating comment {comment_id}"), err)
@@ -346,7 +367,7 @@ doc_fn!(create_section_comment_docs, op =>
 pub async fn update_section_comment(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Path((_waterway_id, _section_id, comment_id)): Path<(i64, i64, CommentId)>,
+    Path((waterway_id, section_id, comment_id)): Path<(i64, i64, CommentId)>,
     Json(body): Json<UpdateCommentRequest>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
@@ -356,6 +377,7 @@ pub async fn update_section_comment(
 
     match comments::update_comment(
         &app.pg_pool,
+        CommentParent::section(waterway_id, section_id),
         comment_id,
         &body.body,
         body.category,
@@ -384,7 +406,7 @@ doc_fn!(update_section_comment_docs, op =>
 pub async fn delete_section_comment(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Path((_waterway_id, _section_id, comment_id)): Path<(i64, i64, CommentId)>,
+    Path((waterway_id, section_id, comment_id)): Path<(i64, i64, CommentId)>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
@@ -393,6 +415,7 @@ pub async fn delete_section_comment(
 
     match comments::delete_comment(
         &app.pg_pool,
+        CommentParent::section(waterway_id, section_id),
         comment_id,
         token.user_id(),
         token.is_server_admin(),
@@ -488,7 +511,7 @@ doc_fn!(create_feature_comment_docs, op =>
 pub async fn update_feature_comment(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Path((_waterway_id, _section_id, _feature_id, comment_id)): Path<(i64, i64, i64, CommentId)>,
+    Path((waterway_id, section_id, feature_id, comment_id)): Path<(i64, i64, i64, CommentId)>,
     Json(body): Json<UpdateCommentRequest>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
@@ -498,6 +521,7 @@ pub async fn update_feature_comment(
 
     match comments::update_comment(
         &app.pg_pool,
+        CommentParent::feature(waterway_id, section_id, feature_id),
         comment_id,
         &body.body,
         body.category,
@@ -526,7 +550,7 @@ doc_fn!(update_feature_comment_docs, op =>
 pub async fn delete_feature_comment(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Path((_waterway_id, _section_id, _feature_id, comment_id)): Path<(i64, i64, i64, CommentId)>,
+    Path((waterway_id, section_id, feature_id, comment_id)): Path<(i64, i64, i64, CommentId)>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
@@ -535,6 +559,7 @@ pub async fn delete_feature_comment(
 
     match comments::delete_comment(
         &app.pg_pool,
+        CommentParent::feature(waterway_id, section_id, feature_id),
         comment_id,
         token.user_id(),
         token.is_server_admin(),

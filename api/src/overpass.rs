@@ -154,12 +154,28 @@ fn decode_response(body: &str, url: &str) -> anyhow::Result<OverpassResponse> {
     })
 }
 
+/// Slack on top of a query's own `[timeout:N]`, so the server gives up
+/// (and frees its slot) before the client abandons the request.
+const TIMEOUT_MARGIN: Duration = Duration::from_secs(10);
+
+/// How long to wait for a query: the `[timeout:N]` it asks Overpass for plus
+/// a margin, or the client default when it names none.
+pub fn request_timeout(query: &str) -> Option<Duration> {
+    let rest = query.split("[timeout:").nth(1)?;
+    let secs: u64 = rest.split(']').next()?.trim().parse().ok()?;
+    Some(Duration::from_secs(secs) + TIMEOUT_MARGIN)
+}
+
 /// Run one query against the mirrors in order, returning the first success.
 pub async fn run_query(client: &reqwest::Client, query: &str) -> anyhow::Result<OverpassResponse> {
     let mut last_error = None;
     for url in endpoints() {
         let result = async {
-            let resp = client.post(url).body(query.to_string()).send().await?;
+            let mut request = client.post(url).body(query.to_string());
+            if let Some(timeout) = request_timeout(query) {
+                request = request.timeout(timeout);
+            }
+            let resp = request.send().await?;
             let resp = resp.error_for_status()?;
             let body = resp.text().await?;
             decode_response(&body, url)
@@ -179,6 +195,23 @@ pub async fn run_query(client: &reqwest::Client, query: &str) -> anyhow::Result<
 /// One Overpass fetch at a time across all requests - Overpass allows very
 /// few requests per IP, and concurrent misses must not stampede it.
 pub static FETCH_LOCK: Mutex<()> = Mutex::const_new(());
+
+/// Take `lock` for background work without joining its queue: wait until it
+/// is free and no one is queued for it. Requests a user is waiting on lock
+/// normally, so they are served before any background fetch that is still
+/// waiting its turn.
+pub async fn lock_background(lock: &Mutex<()>) -> tokio::sync::MutexGuard<'_, ()> {
+    loop {
+        // try_lock fails while the permit is handed to a queued waiter.
+        if let Ok(guard) = lock.try_lock() {
+            return guard;
+        }
+        tokio::time::sleep(BACKGROUND_POLL).await;
+    }
+}
+
+/// How often a background fetch looks for a free `FETCH_LOCK`.
+const BACKGROUND_POLL: Duration = Duration::from_millis(250);
 
 /// Margin (degrees) when testing whether a cached envelope covers a request.
 const COVER_MARGIN_DEG: f64 = 0.02;
@@ -314,6 +347,43 @@ mod tests {
         let wide = "\u{f6}".repeat(300);
         assert_eq!(reply_start(&wide).chars().count(), LOGGED_REPLY_CHARS);
         assert_eq!(reply_start("short"), "short");
+    }
+
+    #[test]
+    fn request_timeout_follows_the_query_timeout() {
+        assert_eq!(
+            request_timeout("[out:json][timeout:120];x"),
+            Some(Duration::from_secs(130))
+        );
+        assert_eq!(request_timeout("[out:json];x"), None);
+    }
+
+    #[tokio::test]
+    async fn waiting_users_go_before_background_fetches() {
+        let lock = std::sync::Arc::new(Mutex::new(()));
+        let held = lock.lock().await;
+        let background = tokio::spawn({
+            let lock = lock.clone();
+            async move {
+                let _guard = lock_background(&lock).await;
+                "background"
+            }
+        });
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        let user = tokio::spawn({
+            let lock = lock.clone();
+            async move {
+                let _guard = lock.lock().await;
+                tokio::time::sleep(Duration::from_millis(600)).await;
+                "user"
+            }
+        });
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        drop(held);
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        assert!(!background.is_finished(), "background jumped the queue");
+        assert_eq!(user.await.unwrap(), "user");
+        assert_eq!(background.await.unwrap(), "background");
     }
 
     #[test]

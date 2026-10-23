@@ -277,44 +277,86 @@ pub async fn list_sections(
     rows.iter().map(row_to_section).collect()
 }
 
-/// Returns false when the section has no name in that language, so the caller
-/// can answer 404 rather than pretend it deleted something.
-pub async fn delete_name(
+/// Set a section's name in one language and record the history step. None
+/// when the section is not in this river.
+pub async fn set_name(
     pool: &PgPool,
-    waterway_id: WaterwayId,
-    section_id: SectionId,
+    scope: Scope,
     lang_code: &str,
-) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query!(
-        r#"DELETE FROM section_names
-           WHERE section_id = $1 AND lang_code = $2
-             AND $1 IN (SELECT id FROM water_sections WHERE waterway_id = $3)"#,
-        section_id,
-        lang_code,
-        waterway_id
-    )
-    .execute(pool)
+    name: &str,
+    actor: &str,
+) -> Result<Option<SectionName>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let out = history::tracked_edit(&mut tx, &scope, &Via::direct(actor), async |conn| {
+        upsert_name(conn, scope.id, lang_code, name).await
+    })
     .await?;
-    Ok(result.rows_affected() > 0)
+    tx.commit().await?;
+    Ok(out)
 }
 
-pub async fn delete_description(
+/// Set a section's description in one language and record the history step.
+/// None when the section is not in this river.
+pub async fn set_description(
     pool: &PgPool,
-    waterway_id: WaterwayId,
-    section_id: SectionId,
+    scope: Scope,
     lang_code: &str,
-) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query!(
-        r#"DELETE FROM section_descriptions
-           WHERE section_id = $1 AND lang_code = $2
-             AND $1 IN (SELECT id FROM water_sections WHERE waterway_id = $3)"#,
-        section_id,
-        lang_code,
-        waterway_id
-    )
-    .execute(pool)
+    description: &str,
+    actor: &str,
+) -> Result<Option<SectionDescription>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let out = history::tracked_edit(&mut tx, &scope, &Via::direct(actor), async |conn| {
+        upsert_description(conn, scope.id, lang_code, description).await
+    })
     .await?;
-    Ok(result.rows_affected() > 0)
+    tx.commit().await?;
+    Ok(out)
+}
+
+/// Remove a section's name in one language and record the history step.
+/// False when the section or the name does not exist.
+pub async fn remove_name(
+    pool: &PgPool,
+    scope: Scope,
+    lang_code: &str,
+    actor: &str,
+) -> Result<bool, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let out = history::tracked_edit(&mut tx, &scope, &Via::direct(actor), async |conn| {
+        let r = sqlx::query("DELETE FROM section_names WHERE section_id = $1 AND lang_code = $2")
+            .bind(scope.id)
+            .bind(lang_code)
+            .execute(conn)
+            .await?;
+        Ok(r.rows_affected() > 0)
+    })
+    .await?;
+    tx.commit().await?;
+    Ok(out.unwrap_or(false))
+}
+
+/// Remove a section's description in one language and record the history
+/// step. False when the section or the description does not exist.
+pub async fn remove_description(
+    pool: &PgPool,
+    scope: Scope,
+    lang_code: &str,
+    actor: &str,
+) -> Result<bool, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let out = history::tracked_edit(&mut tx, &scope, &Via::direct(actor), async |conn| {
+        let r = sqlx::query(
+            "DELETE FROM section_descriptions WHERE section_id = $1 AND lang_code = $2",
+        )
+        .bind(scope.id)
+        .bind(lang_code)
+        .execute(conn)
+        .await?;
+        Ok(r.rows_affected() > 0)
+    })
+    .await?;
+    tx.commit().await?;
+    Ok(out.unwrap_or(false))
 }
 
 /// Whether the section exists under that waterway, used to tell "no such

@@ -15,14 +15,6 @@ use crate::models::{
 
 use super::gauges::water_status_for_section_at;
 
-fn optional_username(row: &PgRow) -> Result<Option<String>, sqlx::Error> {
-    match row.try_get::<Option<String>, _>("username") {
-        Ok(username) => Ok(username),
-        Err(sqlx::Error::ColumnNotFound(_)) => Ok(None),
-        Err(err) => Err(err),
-    }
-}
-
 fn row_to_descent(row: &PgRow) -> Result<Descent, sqlx::Error> {
     // Visibility audience is populated later by enrich_descent.
     let visibility = match row.try_get::<String, _>("visibility_scope")?.as_str() {
@@ -36,8 +28,8 @@ fn row_to_descent(row: &PgRow) -> Result<Descent, sqlx::Error> {
     Ok(Descent {
         id: row.try_get("id")?,
         user_id: row.try_get("user_id")?,
-        // Present only in list queries that join the users table; None otherwise.
-        username: optional_username(row)?,
+        // Only list queries join the users table; the others select NULL.
+        username: row.try_get("username")?,
         name: row.try_get("name")?,
         start_time: row.try_get("start_time")?,
         end_time: row.try_get("end_time")?,
@@ -62,7 +54,8 @@ fn row_to_descent(row: &PgRow) -> Result<Descent, sqlx::Error> {
 const DESCENT_COLS: &str = "id, user_id, name, start_time, end_time, note, \
     put_in_feature_id, put_in_lat, put_in_lon, put_in_label, \
     take_out_feature_id, take_out_lat, take_out_lon, take_out_label, \
-    visibility_scope::text AS visibility_scope, visible_from, trip_id, created_at, updated_at";
+    visibility_scope::text AS visibility_scope, visible_from, trip_id, created_at, updated_at, \
+    NULL::text AS username";
 
 /// Column list for list queries that JOIN the users table for username attribution.
 const DESCENT_LIST_COLS: &str = concat!(

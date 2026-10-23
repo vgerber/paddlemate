@@ -18,17 +18,61 @@ use crate::{
     error::ApiError, layers::auth::AuthToken, models::lang::normalize_lang_code, state::AppState,
 };
 
-/// The two checks every localized name and description endpoint starts with:
-/// the caller must be signed in, and the language tag must be storable.
-/// Returns the normalized tag, or the error to send instead.
+/// Longest name; matches the `VARCHAR(255)` columns.
+const MAX_NAME_CHARS: usize = 255;
+/// Longest localized description.
+const MAX_DESCRIPTION_CHARS: usize = 10_000;
+
+/// The checks every localized name and description write starts with: the
+/// caller must be signed in and a server admin (the same rule as editing the
+/// entity itself, which sends everyone else through a proposal), and the
+/// language tag must be storable. Returns the caller and the normalized tag,
+/// or the error to send instead.
 pub(crate) fn authorize_localization(
     auth: Option<Extension<AuthToken>>,
     lang_code: &str,
-) -> Result<String, ApiError> {
-    if auth.is_none() {
+) -> Result<(AuthToken, String), ApiError> {
+    let Some(Extension(token)) = auth else {
         return Err(ApiError::unauthorized("Authentication required"));
+    };
+    if !token.is_server_admin() {
+        return Err(ApiError::forbidden(
+            "Only admins edit translations directly; propose the edit instead",
+        ));
     }
-    normalize_lang_code(lang_code).map_err(|msg| ApiError::validation(msg).with_target("lang_code"))
+    let lang = normalize_lang_code(lang_code)
+        .map_err(|msg| ApiError::validation(msg).with_target("lang_code"))?;
+    Ok((token, lang))
+}
+
+/// A localized name must be non-empty and fit its column.
+pub(crate) fn check_name(name: &str) -> Result<(), ApiError> {
+    if name.trim().is_empty() {
+        return Err(ApiError::validation("Name must not be empty").with_target("name"));
+    }
+    if name.chars().count() > MAX_NAME_CHARS {
+        return Err(ApiError::validation(format!(
+            "Name must be at most {MAX_NAME_CHARS} characters"
+        ))
+        .with_target("name"));
+    }
+    Ok(())
+}
+
+/// A localized description must be non-empty and bounded.
+pub(crate) fn check_description(description: &str) -> Result<(), ApiError> {
+    if description.trim().is_empty() {
+        return Err(
+            ApiError::validation("Description must not be empty").with_target("description")
+        );
+    }
+    if description.chars().count() > MAX_DESCRIPTION_CHARS {
+        return Err(ApiError::validation(format!(
+            "Description must be at most {MAX_DESCRIPTION_CHARS} characters"
+        ))
+        .with_target("description"));
+    }
+    Ok(())
 }
 
 /// All waterway routes combined into a single router.
@@ -101,7 +145,8 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
         .api_route(
             "/{waterway_id}/media",
             get_with(media::list_waterway_media, media::list_waterway_media_docs)
-                .post_with(media::add_waterway_media, media::add_waterway_media_docs),
+                .post_with(media::add_waterway_media, media::add_waterway_media_docs)
+                .layer(media::upload_body_limit()),
         )
         .api_route(
             "/{waterway_id}/media/{media_id}",
@@ -217,7 +262,8 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
         .api_route(
             "/{waterway_id}/sections/{section_id}/media",
             get_with(media::list_section_media, media::list_section_media_docs)
-                .post_with(media::add_section_media, media::add_section_media_docs),
+                .post_with(media::add_section_media, media::add_section_media_docs)
+                .layer(media::upload_body_limit()),
         )
         .api_route(
             "/{waterway_id}/sections/{section_id}/comments",

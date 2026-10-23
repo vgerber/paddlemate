@@ -21,16 +21,17 @@
 //! seconds without a manual backfill. The derive_section_regions bin reuses
 //! the same pieces for bulk runs.
 
-use std::collections::HashSet;
-use std::sync::{Arc, LazyLock, Mutex};
-use std::time::Duration;
+use std::collections::{HashMap, HashSet};
+use std::sync::{Arc, LazyLock, Mutex, MutexGuard, PoisonError};
+use std::time::{Duration, Instant};
 
 use sqlx::PgPool;
 use tokio::sync::Notify;
 
 use crate::models::region::{Region, RegionKind, RegionOutline};
 use crate::overpass::{
-    Element, FETCH_LOCK, OverpassResponse, client, escape_overpass_literal, run_query,
+    Element, FETCH_LOCK, OverpassResponse, client, escape_overpass_literal, lock_background,
+    run_query,
 };
 use crate::query::regions::{
     RegionImport, assign_countries, in_bbox, mark_tiles, missing_tiles, upsert,
@@ -501,9 +502,42 @@ static FILLING: LazyLock<Mutex<HashSet<(BrowseTier, i32, i32)>>> =
 /// `filling`, so the client asks again once there is room.
 const MAX_FILLING_TILES: usize = 32;
 
+type TileKey = (BrowseTier, i32, i32);
+
+fn fill_set() -> MutexGuard<'static, HashSet<TileKey>> {
+    FILLING.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+/// Tiles claimed from `FILLING`. Dropping the claim releases them, so a
+/// failed request, a panicking task or a shutdown mid-fill cannot leave tiles
+/// held for good.
+struct Claim {
+    tier: BrowseTier,
+    tiles: Vec<(i32, i32)>,
+}
+
+impl Claim {
+    /// Claim up to `room` of the missing tiles that no fill holds yet.
+    fn take(tier: BrowseTier, missing: &[(i32, i32)], room: usize) -> Claim {
+        let mut filling = fill_set();
+        let room = MAX_FILLING_TILES.saturating_sub(filling.len()).min(room);
+        let tiles = claim_tiles(&mut filling, tier, missing, room);
+        Claim { tier, tiles }
+    }
+}
+
+impl Drop for Claim {
+    fn drop(&mut self) {
+        let mut filling = fill_set();
+        for (x, y) in &self.tiles {
+            filling.remove(&(self.tier, *x, *y));
+        }
+    }
+}
+
 /// Claim up to `room` of the missing tiles that no fill holds yet.
 fn claim_tiles(
-    filling: &mut HashSet<(BrowseTier, i32, i32)>,
+    filling: &mut HashSet<TileKey>,
     tier: BrowseTier,
     missing: &[(i32, i32)],
     room: usize,
@@ -520,6 +554,61 @@ fn claim_tiles(
     claimed
 }
 
+/// Wait before retrying a tile after its first failure; doubles per failure.
+const RETRY_BASE: Duration = Duration::from_secs(60);
+/// Longest wait before a failing tile is tried again.
+const RETRY_MAX: Duration = Duration::from_secs(60 * 60);
+/// Most failing tiles remembered; the soonest to expire go first.
+const MAX_FAILED_TILES: usize = 1024;
+
+/// Tiles whose fetch failed, with when they may be tried again. A tile that
+/// needs longer than Overpass allows would otherwise be requested again on
+/// every pan while Overpass keeps computing the abandoned query.
+#[derive(Default)]
+struct FailedTiles {
+    tiles: HashMap<TileKey, (u32, Instant)>,
+}
+
+impl FailedTiles {
+    fn delay(failures: u32) -> Duration {
+        RETRY_BASE
+            .saturating_mul(2u32.saturating_pow(failures.saturating_sub(1)))
+            .min(RETRY_MAX)
+    }
+
+    fn record(&mut self, key: TileKey, now: Instant) {
+        let failures = self.tiles.get(&key).map_or(0, |(n, _)| *n) + 1;
+        self.tiles
+            .insert(key, (failures, now + Self::delay(failures)));
+        if self.tiles.len() > MAX_FAILED_TILES {
+            if let Some(soonest) = self
+                .tiles
+                .iter()
+                .min_by_key(|(_, (_, at))| *at)
+                .map(|(k, _)| *k)
+            {
+                self.tiles.remove(&soonest);
+            }
+        }
+    }
+
+    fn is_backed_off(&self, key: &TileKey, now: Instant) -> bool {
+        self.tiles
+            .get(key)
+            .is_some_and(|(_, retry_at)| now < *retry_at)
+    }
+
+    fn clear(&mut self, key: &TileKey) {
+        self.tiles.remove(key);
+    }
+}
+
+static FAILED: LazyLock<Mutex<FailedTiles>> = LazyLock::new(Mutex::default);
+
+fn failed_tiles() -> MutexGuard<'static, FailedTiles> {
+    FAILED.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
 /// Make sure a viewport's regions are on their way, and say whether any are
 /// still missing. Assembling boundaries takes long enough that the fetch
 /// runs detached: the caller answers from what is stored and asks again.
@@ -533,12 +622,19 @@ pub async fn ensure_browse_fill(
     // say so.
     let wanted = [BrowseTier::Countries, tier];
     let mut pending = false;
-    let mut work: Vec<(BrowseTier, Vec<(i32, i32)>)> = vec![];
+    let mut work: Vec<Claim> = vec![];
     for tier in wanted {
-        if work.iter().any(|(done, _)| *done == tier) {
+        if work.iter().any(|claim| claim.tier == tier) {
             continue;
         }
         let mut missing = missing_tiles(pool, tier.as_str(), &tiles_for_bbox(tier, bbox)).await?;
+        // A tile that failed lately is not on its way; asking again now
+        // would only repeat the failure.
+        let now = Instant::now();
+        {
+            let failed = failed_tiles();
+            missing.retain(|&(x, y)| !failed.is_backed_off(&(tier, x, y), now));
+        }
         if missing.is_empty() {
             continue;
         }
@@ -553,24 +649,18 @@ pub async fn ensure_browse_fill(
                 |(x, y): &(i32, i32)| (f64::from(*x) - cx).powi(2) + (f64::from(*y) - cy).powi(2);
             d(a).total_cmp(&d(b))
         });
-        let claimed = {
-            let mut filling = FILLING.lock().expect("fill set is not poisoned");
-            let room = MAX_FILLING_TILES
-                .saturating_sub(filling.len())
-                .min(MAX_TILES_PER_FILL);
-            claim_tiles(&mut filling, tier, &missing, room)
-        };
-        if !claimed.is_empty() {
-            work.push((tier, claimed));
+        let claim = Claim::take(tier, &missing, MAX_TILES_PER_FILL);
+        if !claim.tiles.is_empty() {
+            work.push(claim);
         }
     }
 
     if !work.is_empty() {
         let pool = pool.clone();
         tokio::spawn(async move {
-            for (tier, tiles) in &work {
-                if let Err(err) = fill_tiles(&pool, *tier, tiles).await {
-                    tracing::warn!("Filling {} region tiles failed: {err}", tier.as_str());
+            for claim in &work {
+                if let Err(err) = fill_tiles(&pool, claim.tier, &claim.tiles).await {
+                    tracing::warn!("Filling {} region tiles failed: {err}", claim.tier.as_str());
                 }
             }
             // Over the whole country tile, not just the viewport that
@@ -584,12 +674,8 @@ pub async fn ensure_browse_fill(
                     Err(err) => tracing::warn!("Placing regions in their country failed: {err}"),
                 }
             }
-            let mut filling = FILLING.lock().expect("fill set is not poisoned");
-            for (tier, tiles) in &work {
-                for (x, y) in tiles {
-                    filling.remove(&(*tier, *x, *y));
-                }
-            }
+            // The claims drop with `work`, here or on a panic above.
+            drop(work);
         });
     }
     Ok(pending)
@@ -706,9 +792,17 @@ async fn fill_tiles(pool: &PgPool, tier: BrowseTier, tiles: &[(i32, i32)]) -> an
         let Some(bbox) = tiles_bbox(tier, std::slice::from_ref(tile)) else {
             continue;
         };
-        let found = {
-            let _guard = FETCH_LOCK.lock().await;
-            collect_browse(run_query(client(), &browse_query(tier, bbox)).await?)
+        let key = (tier, tile.0, tile.1);
+        let fetched = {
+            let _guard = lock_background(&FETCH_LOCK).await;
+            run_query(client(), &browse_query(tier, bbox)).await
+        };
+        let found = match fetched {
+            Ok(response) => collect_browse(response),
+            Err(err) => {
+                failed_tiles().record(key, Instant::now());
+                return Err(err);
+            }
         };
         for region in &found {
             store_outline(
@@ -720,6 +814,7 @@ async fn fill_tiles(pool: &PgPool, tier: BrowseTier, tiles: &[(i32, i32)]) -> an
             .await?;
         }
         mark_tiles(pool, tier.as_str(), std::slice::from_ref(tile)).await?;
+        failed_tiles().clear(&key);
         tracing::info!(
             "Stored {} {} region(s) for tile {},{}",
             found.len(),
@@ -901,7 +996,10 @@ async fn run_cycle(pool: &PgPool) -> anyhow::Result<()> {
                 continue;
             }
         };
-        let derived = derive_for_location(&location).await;
+        let derived = {
+            let _guard = lock_background(&FETCH_LOCK).await;
+            derive_for_location(&location).await
+        };
         let names = derived.names();
         if names.is_empty() && derived.country.is_none() {
             continue;
@@ -1246,5 +1344,56 @@ mod tests {
             claim_tiles(&mut filling, BrowseTier::Valleys, &tiles, 5),
             [(3, 3)]
         );
+    }
+
+    #[test]
+    fn dropping_a_claim_releases_its_tiles() {
+        // Coordinates no other test uses, as FILLING is process-wide.
+        let tiles = [(900_001, 1), (900_002, 1)];
+        let claim = Claim::take(BrowseTier::Valleys, &tiles, 4);
+        assert_eq!(claim.tiles.len(), 2);
+        assert!(Claim::take(BrowseTier::Valleys, &tiles, 4).tiles.is_empty());
+        drop(claim);
+        assert_eq!(Claim::take(BrowseTier::Valleys, &tiles, 4).tiles.len(), 2);
+    }
+
+    #[test]
+    fn a_panicking_fill_releases_its_claim() {
+        let tiles = [(900_003, 1)];
+        let result = std::panic::catch_unwind(|| {
+            let _claim = Claim::take(BrowseTier::Valleys, &tiles, 4);
+            panic!("fill failed");
+        });
+        assert!(result.is_err());
+        assert_eq!(Claim::take(BrowseTier::Valleys, &tiles, 4).tiles.len(), 1);
+    }
+
+    #[test]
+    fn failed_tiles_back_off_exponentially() {
+        let key = (BrowseTier::Valleys, 1, 1);
+        let start = Instant::now();
+        let mut failed = FailedTiles::default();
+        assert!(!failed.is_backed_off(&key, start));
+        failed.record(key, start);
+        assert!(failed.is_backed_off(&key, start + RETRY_BASE - Duration::from_secs(1)));
+        assert!(!failed.is_backed_off(&key, start + RETRY_BASE));
+        failed.record(key, start);
+        assert!(failed.is_backed_off(&key, start + RETRY_BASE * 2 - Duration::from_secs(1)));
+        for _ in 0..40 {
+            failed.record(key, start);
+        }
+        assert!(!failed.is_backed_off(&key, start + RETRY_MAX));
+        failed.clear(&key);
+        assert!(!failed.is_backed_off(&key, start));
+    }
+
+    #[test]
+    fn remembered_failures_are_bounded() {
+        let now = Instant::now();
+        let mut failed = FailedTiles::default();
+        for x in 0..(MAX_FAILED_TILES as i32 + 10) {
+            failed.record((BrowseTier::Valleys, x, 0), now);
+        }
+        assert_eq!(failed.tiles.len(), MAX_FAILED_TILES);
     }
 }
