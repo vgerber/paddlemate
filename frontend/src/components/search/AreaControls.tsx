@@ -3,7 +3,7 @@ import IconButton from "@mui/material/IconButton";
 import Slider from "@mui/material/Slider";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMapVerb } from "@/components/waterway/useMapVerb";
 import type { AreaCircle } from "@/lib/geo";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
@@ -36,10 +36,18 @@ export default function AreaControls({
     if (areaCircle?.radiusKm != null) setLocalRadius(areaCircle.radiusKm);
   }, [areaCircle?.radiusKm]);
 
-  // Fire the query-triggering callback only after debounce
-  // biome-ignore lint/correctness/useExhaustiveDependencies: onRadiusChange is intentionally omitted; only the debounced value should trigger the callback
+  // The latest callback, without making it a trigger of the effect below.
+  const radiusChange = useRef(onRadiusChange);
+  radiusChange.current = onRadiusChange;
+  const circleRadius = useRef(areaCircle?.radiusKm);
+  circleRadius.current = areaCircle?.radiusKm;
+
+  // Fire the query-triggering callback only after debounce, and not to echo
+  // back a radius the parent already holds.
   useEffect(() => {
-    onRadiusChange(debouncedRadius);
+    if (debouncedRadius !== circleRadius.current) {
+      radiusChange.current(debouncedRadius);
+    }
   }, [debouncedRadius]);
 
   return (
@@ -110,7 +118,9 @@ export default function AreaControls({
         </Tooltip>
       </Box>
       <Typography variant="body2" color="textSecondary">
-        {verb} the map to move the search center.
+        {locked
+          ? "The search center is locked."
+          : `${verb} the map to move the search center.`}
       </Typography>
     </Box>
   );

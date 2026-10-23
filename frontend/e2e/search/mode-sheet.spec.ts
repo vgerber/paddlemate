@@ -74,6 +74,40 @@ test.describe("area and region on a phone", () => {
     await expect(overlay(page)).toBeVisible();
   });
 
+  test("the search panel takes focus, Escape closes it and returns focus", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await appReady(page);
+    const fab = page.getByRole("button", { name: "Open search panel" });
+    await fab.focus();
+    await page.keyboard.press("Enter");
+    const panel = page.getByRole("dialog", { name: "Panel" });
+    await expect(panel).toBeVisible();
+    await expect
+      .poll(() => panel.evaluate((el) => el.contains(document.activeElement)))
+      .toBe(true);
+    await page.keyboard.press("Escape");
+    await expect(panel).toBeHidden();
+    await expect(fab).toBeFocused();
+  });
+
+  test("the handle is a button that cycles the stops, by tap and by key", async ({
+    page,
+  }) => {
+    await open(page, "mode=area");
+    const handle = page.getByRole("button", { name: "Expand panel" });
+    const box = await handle.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await handle.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
+    const shrink = page.getByRole("button", { name: "Shrink panel" });
+    await expect(shrink).toHaveAttribute("aria-expanded", "true");
+    await shrink.click();
+    await expect(page.getByRole("region", { name: "Search" })).toBeVisible();
+  });
+
   test("Region shows the level chips and the way in through the map", async ({
     page,
   }) => {
@@ -104,4 +138,18 @@ test.describe("area and region on a desktop", () => {
     await expect(page.getByRole("slider")).toBeVisible();
     await expect(page.getByRole("button", { name: "Lock area" })).toBeVisible();
   });
+});
+
+test("a locked area says so instead of asking for a click", async ({
+  page,
+}) => {
+  await open(page, "mode=area");
+  await page
+    .getByRole("button", { name: "Lock area" })
+    .filter({ visible: true })
+    .click();
+  await expect(page.getByText("The search center is locked.")).toBeVisible();
+  await expect(page.getByText(/the map to move the search center/)).toHaveCount(
+    0,
+  );
 });

@@ -10,4 +10,9 @@ describe("countLabel", () => {
     expect(countLabel(0)).toBe("0 results");
     expect(countLabel(12)).toBe("12 results");
   });
+
+  test("names what the list holds", () => {
+    expect(countLabel(1, "log")).toBe("1 log");
+    expect(countLabel(6, "log")).toBe("6 logs");
+  });
 });

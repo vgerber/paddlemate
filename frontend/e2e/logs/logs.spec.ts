@@ -412,7 +412,7 @@ test.describe("design gaps", () => {
     const row = await page
       .getByRole("button", { name: "More actions" })
       .boundingBox();
-    const search = await page.getByLabel("Search waterway").boundingBox();
+    const search = await page.getByLabel("Search river").boundingBox();
     expect(map && row && search).toBeTruthy();
     expect(map && row && map.y < row.y).toBe(true);
     expect(row && search && row.y < search.y).toBe(true);
@@ -496,7 +496,7 @@ test.describe("design gaps", () => {
   }) => {
     await startNewLog(page);
     await next(page).click();
-    await expect(page.getByLabel("Search waterway")).toBeVisible();
+    await expect(page.getByLabel("Search river")).toBeVisible();
     await expect(page.getByLabel("Label (optional)")).toHaveCount(0);
   });
 

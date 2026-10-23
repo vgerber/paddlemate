@@ -25,9 +25,13 @@ export interface RowAction {
  */
 export default function RowMenu({
   actions,
-  label = "More actions",
+  name,
+  label = name ? `${name} actions` : "More actions",
 }: {
   actions: RowAction[];
+  /** What the row is ("Log"): the control reads "Log actions". */
+  name?: string;
+  /** The whole accessible name, when "<name> actions" does not fit. */
   label?: string;
 }) {
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
