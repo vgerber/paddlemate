@@ -15,6 +15,9 @@ export default function ProposalVoteBar({ proposal }: { proposal: Proposal }) {
   const vote = useVoteProposal();
   const unvote = useUnvoteProposal();
   const reviewed = reviewerLine(proposal);
+  // Backing your own proposal says nothing; the counts stay, the buttons rest.
+  const own = proposal.submitted_by === user?.id;
+  const locked = !isAuthenticated || own;
 
   function handleVote(next: 1 | -1 | null) {
     if (next === null) unvote.mutate(proposal.id);
@@ -51,7 +54,7 @@ export default function ProposalVoteBar({ proposal }: { proposal: Proposal }) {
         label="Upvote proposal"
         count={proposal.upvotes}
         pressed={proposal.user_vote === 1}
-        disabled={!isAuthenticated}
+        disabled={locked}
         onClick={() => handleVote(proposal.user_vote === 1 ? null : 1)}
       />
       <VoteButton
@@ -59,7 +62,7 @@ export default function ProposalVoteBar({ proposal }: { proposal: Proposal }) {
         label="Downvote proposal"
         count={proposal.downvotes}
         pressed={proposal.user_vote === -1}
-        disabled={!isAuthenticated}
+        disabled={locked}
         onClick={() => handleVote(proposal.user_vote === -1 ? null : -1)}
       />
     </Box>
