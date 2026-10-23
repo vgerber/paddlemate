@@ -292,3 +292,63 @@ async fn the_user_list_is_paged_and_searchable(pool: PgPool) {
     .await;
     assert_eq!(r.status, StatusCode::BAD_REQUEST);
 }
+
+#[sqlx::test]
+async fn the_owner_keeps_the_owner_role(pool: PgPool) {
+    use paddlemate_api::models::group::GroupMemberRole;
+    use paddlemate_api::query::groups;
+    people(&pool).await;
+    let app = app(pool.clone());
+    let g = id_of(
+        call(
+            &app,
+            Method::POST,
+            "/groups",
+            Who::User("mara-1"),
+            Some(json!({ "name": "Club" })),
+        )
+        .await,
+    )
+    .await;
+    // An admin, who may add members.
+    sqlx::query("INSERT INTO group_members (group_id, user_id, role, added_by) VALUES ($1, 'jon-1', 'admin', 'mara-1')")
+        .bind(g)
+        .execute(&pool)
+        .await
+        .unwrap();
+
+    // The owner cannot demote themselves.
+    let r = call(
+        &app,
+        Method::PUT,
+        &format!("/groups/{g}/members/mara-1"),
+        Who::User("mara-1"),
+        Some(json!({ "role": "member" })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::BAD_REQUEST, "{}", r.body);
+    // Nor can an admin do it by adding the owner again.
+    let added = groups::add_member(&pool, g, "mara-1", GroupMemberRole::Member, "jon-1")
+        .await
+        .unwrap();
+    assert!(added.is_none());
+    let role: String = sqlx::query_scalar(
+        "SELECT role::text FROM group_members WHERE group_id = $1 AND user_id = 'mara-1'",
+    )
+    .bind(g)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(role, "owner");
+
+    // Other members still change.
+    let r = call(
+        &app,
+        Method::PUT,
+        &format!("/groups/{g}/members/jon-1"),
+        Who::User("mara-1"),
+        Some(json!({ "role": "member" })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+}

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        UPDATE group_members SET role = $1\n        WHERE group_id = $2 AND user_id = $3\n        RETURNING group_id, user_id, role AS \"role: GroupMemberRole\", added_by, created_at\n        ",
+  "query": "\n        INSERT INTO group_members (group_id, user_id, role, added_by)\n        VALUES ($1, $2, $3, $4)\n        ON CONFLICT (group_id, user_id) DO UPDATE SET role = EXCLUDED.role\n            WHERE group_members.role <> 'owner'\n        RETURNING group_id, user_id, role AS \"role: GroupMemberRole\", added_by, created_at\n        ",
   "describe": {
     "columns": [
       {
@@ -42,6 +42,8 @@
     ],
     "parameters": {
       "Left": [
+        "Int8",
+        "Varchar",
         {
           "Custom": {
             "name": "group_member_role",
@@ -54,8 +56,7 @@
             }
           }
         },
-        "Int8",
-        "Text"
+        "Varchar"
       ]
     },
     "nullable": [
@@ -66,5 +67,5 @@
       false
     ]
   },
-  "hash": "a59c791f43b7b39ae2c9f601a0c44b32056546eece7ad33d9b4d2150137da300"
+  "hash": "b235ccf52b5ee80c60c102a12aea1e4c30f8d30b085fae17535e0e52021942d6"
 }
