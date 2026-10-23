@@ -3,8 +3,9 @@ import FloatingCard from "@/components/canvas/FloatingCard";
 import LoadingBox from "@/components/states/LoadingBox";
 import MissingState from "@/components/states/MissingState";
 import type { Proposal, ProposalStatus } from "@/lib/api";
-import { ENTITY_LABEL, OP_LABEL, proposalTitle } from "@/lib/proposals";
+import { proposalKind, proposalTitle } from "@/lib/proposals";
 import ProposalDetailView from "./ProposalDetailView";
+import ProposalMenu from "./ProposalMenu";
 import StatusChip from "./StatusChip";
 
 interface ProposalSideCardProps {
@@ -49,9 +50,7 @@ export default function ProposalSideCard({
   listStatus,
   onClose,
 }: ProposalSideCardProps) {
-  const kind = proposal
-    ? `${OP_LABEL[proposal.operation] ?? proposal.operation} · ${ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type}`
-    : undefined;
+  const kind = proposal ? proposalKind(proposal) : undefined;
 
   return (
     <FloatingCard
@@ -63,9 +62,14 @@ export default function ProposalSideCard({
       subtitle={kind}
       onClose={onClose}
       actions={
-        proposal && proposal.status !== listStatus ? (
-          <StatusChip status={proposal.status} />
-        ) : undefined
+        proposal && (
+          <>
+            {proposal.status !== listStatus && (
+              <StatusChip status={proposal.status} />
+            )}
+            <ProposalMenu proposal={proposal} onWithdrawn={onClose} />
+          </>
+        )
       }
     >
       <Box sx={{ height: "100%" }}>

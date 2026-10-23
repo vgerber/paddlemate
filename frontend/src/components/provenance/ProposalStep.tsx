@@ -9,11 +9,11 @@ import { proposerName } from "@/components/proposals/status";
 import type { Proposal } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { formatDate, timeAgo } from "@/lib/format";
+import { useReviewProposal } from "@/lib/hooks/useProposals";
 import { theme } from "@/lib/theme";
 import HistoryChanges from "./HistoryChanges";
 import { proposalChanges } from "./proposalChanges";
 import StepRow, { Byline, smallSx } from "./StepRow";
-import { useReviewEntryProposal } from "./useProvenance";
 
 const { tokens } = theme;
 
@@ -42,7 +42,7 @@ export function ReviewNote({
 }
 
 function ReviewButtons({ proposal }: { proposal: Proposal }) {
-  const review = useReviewEntryProposal();
+  const review = useReviewProposal();
   const [action, setAction] = useState<"approved" | "rejected" | null>(null);
   const [note, setNote] = useState("");
 

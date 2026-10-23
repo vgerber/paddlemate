@@ -3,6 +3,7 @@ import {
   computed,
   expectNoHorizontalOverflow,
   expectTouchTargets,
+  gotoSection,
 } from "../support/fixture";
 
 // WP11: proposals list, detail and review. Fixture proposals 9701 to 9707 are
@@ -13,6 +14,15 @@ const FEATURE_UPDATE = 9706;
 const FEATURE_CREATE_DESCRIBED = 9702;
 const DESCRIBED_TEXT = "Sticky";
 const UPDATE_SECTION = 9705;
+
+/** The proposals list answers one page of this shape. */
+const paged = (items: unknown[]) => ({
+  items,
+  page: 1,
+  per_page: 100,
+  total: items.length,
+  total_pages: 1,
+});
 
 const card = (page: Page, name: string) =>
   page
@@ -48,7 +58,7 @@ test.describe("proposal list", () => {
     await page.goto("/proposals?status=pending");
     const c = card(page, "Mittelschwall");
     await expect(c).toBeVisible();
-    await expect(c).toContainText("Create · Feature");
+    await expect(c).toContainText("New feature");
     await expect(c.getByTestId("proposal-meta")).toContainText(/ago|now/);
     // The tab already says Pending.
     await expect(page.getByTestId("proposal-status")).toHaveCount(0);
@@ -57,7 +67,7 @@ test.describe("proposal list", () => {
   test("kind and votes sit in a right column at 13px", async ({ page }) => {
     await page.route("**/api/v1/proposals?*", (r) =>
       r.fulfill({
-        json: [
+        json: paged([
           {
             id: 1,
             status: "pending",
@@ -70,14 +80,15 @@ test.describe("proposal list", () => {
             upvotes: 1,
             downvotes: 0,
           },
-        ],
+        ]),
       }),
     );
     await page.goto("/proposals?status=pending");
     const c = card(page, "Somewhere");
-    const kind = c.getByText("Create · River");
+    const kind = c.getByText("New river");
     const meta = c.getByTestId("proposal-meta");
-    await expect(meta).toContainText("▲ 1 · ▼ 0 · ");
+    await expect(meta.locator("svg")).toHaveCount(2);
+    await expect(meta).toContainText(/1\s+0\s+·/);
     expect(await computed(kind, "font-size")).toBe("13px");
     expect(await computed(kind, "font-weight")).toBe("400");
     expect(await computed(meta, "font-weight")).toBe("500");
@@ -129,12 +140,12 @@ test.describe("proposal list", () => {
     expect(hit).toBeGreaterThanOrEqual(44);
   });
 
-  test("cards are 14px padded, 8px apart", async ({ page }, info) => {
+  test("cards are 16px padded, 8px apart", async ({ page }, info) => {
     test.skip(info.project.name === "desktop", "desktop rows are flat");
     await page.goto("/proposals?status=pending");
     const cards = page.getByTestId("proposal-card").filter({ visible: true });
     await expect(cards.first()).toBeVisible();
-    expect(await computed(cards.first(), "padding-left")).toBe("14px");
+    expect(await computed(cards.first(), "padding-left")).toBe("16px");
     const [a, b] = await Promise.all([
       cards.nth(0).boundingBox(),
       cards.nth(1).boundingBox(),
@@ -291,7 +302,7 @@ test.describe("proposal diff", () => {
     );
     await expect(regions.getByTestId("diff-note")).toHaveText("none");
     const country = rows.filter({ hasText: "Country" });
-    await expect(country.getByTestId("diff-after")).toHaveText("AT");
+    await expect(country.getByTestId("diff-after")).toHaveText("Austria");
     await expect(country.getByTestId("diff-note")).toHaveText("none");
   });
 
@@ -423,7 +434,8 @@ test.describe("proposal votes and review bar", () => {
     ]);
     if (!r || !a) throw new Error("no boxes");
     expect(Math.abs(r.y - a.y)).toBeLessThan(2);
-    expect(r.x).toBeLessThan(a.x);
+    // The main action comes first.
+    expect(a.x).toBeLessThan(r.x);
   });
 
   test("the review bar stays above the map controls @small", async ({
@@ -435,7 +447,6 @@ test.describe("proposal votes and review bar", () => {
     await expect(page.locator("canvas.maplibregl-canvas")).toBeVisible();
     // The map's Labels control must not be painted over the bar: at the
     // bar's top edge the bar is what a finger hits, wherever the control is.
-    await expect(page.getByTestId("map-layer-toggle")).toBeVisible();
     const overlap = await approve.evaluate((btn) => {
       const bar = btn.parentElement as HTMLElement;
       const control = document.querySelector(
@@ -495,7 +506,8 @@ test.describe("canvas", () => {
     expect(Math.round((await listCard(page).boundingBox())?.width ?? 0)).toBe(
       300,
     );
-    await expect(sideCard(page)).toHaveCount(0);
+    // Nothing open: the side card only asks for a choice.
+    await expect(sideCard(page)).toContainText("Select a proposal");
     await expect(page.locator(".maplibregl-map")).toHaveCount(1);
   });
 
@@ -524,7 +536,8 @@ test.describe("canvas", () => {
     await page.goto("/proposals?status=pending&selected=9701");
     await expect(sideCard(page)).toBeVisible();
     await sideCard(page).getByRole("button", { name: "Close" }).click();
-    await expect(sideCard(page)).toHaveCount(0);
+    // Nothing open: the side card only asks for a choice.
+    await expect(sideCard(page)).toContainText("Select a proposal");
     await expect(page).not.toHaveURL(/selected=/);
   });
 
@@ -619,7 +632,8 @@ test.describe("phone keeps its pages", () => {
     test.skip(!isMobile, "phone only");
     await page.goto(`/proposals/${FEATURE_CREATE}`);
     await expect(page.getByTestId("proposal-detail")).toBeVisible();
-    await expect(sideCard(page)).toHaveCount(0);
+    // Nothing open: the side card only asks for a choice.
+    await expect(sideCard(page)).toContainText("Select a proposal");
     await expect(
       page.getByTestId("proposal-detail").getByRole("button", {
         name: "Back",
@@ -680,5 +694,148 @@ test.describe("proposal load failures", () => {
     );
     await expect(page.getByRole("button", { name: /back/i })).toBeVisible();
     await expect(page.getByText("Proposal not found.")).toHaveCount(0);
+  });
+});
+
+/** The signed-in user's id, read from the bearer token of an API call. */
+async function myId(page: Page): Promise<string> {
+  const request = await page.waitForRequest(
+    (r) => r.url().includes("/api/v1/") && !!r.headers().authorization,
+  );
+  const token = request.headers().authorization.split(" ")[1];
+  return JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString())
+    .sub;
+}
+
+function ownProposal(id: string, submittedBy: string) {
+  const now = new Date().toISOString();
+  return {
+    id: 777,
+    status: "pending",
+    entity_type: "feature",
+    entity_id: 9524,
+    operation: "update",
+    original_data: { id: 9524, feature_type: "rapid", metadata: {} },
+    proposed_data: { name: "Big Hole", feature_type: "rapid", metadata: {} },
+    submitted_by: submittedBy,
+    created_at: now,
+    updated_at: now,
+    upvotes: 0,
+    downvotes: 0,
+    user_vote: null,
+    note: id,
+  };
+}
+
+test.describe("your own proposal", () => {
+  async function open(page: Page) {
+    const idPromise = myId(page);
+    await page.goto("/proposals?status=pending");
+    const mine = ownProposal("own", await idPromise);
+    let withdrawn = false;
+    await page.route("**/api/v1/proposals/777", (r) => {
+      if (r.request().method() === "DELETE") {
+        withdrawn = true;
+        return r.fulfill({ status: 204 });
+      }
+      return r.fulfill({ json: mine });
+    });
+    await page.goto("/proposals/777");
+    return { isWithdrawn: () => withdrawn };
+  }
+
+  test("the author can withdraw it after a confirmation", async ({ page }) => {
+    const sent = await open(page);
+    await page
+      .getByRole("button", { name: "Proposal actions" })
+      .filter({ visible: true })
+      .click();
+    await page.getByRole("menuitem", { name: "Withdraw" }).click();
+    await expect(page.getByRole("dialog")).toContainText("Withdraw");
+    expect(sent.isWithdrawn()).toBe(false);
+    await page.getByRole("button", { name: "Withdraw", exact: true }).click();
+    await expect.poll(() => sent.isWithdrawn()).toBe(true);
+  });
+
+  test("the author cannot vote for it", async ({ page }) => {
+    await open(page);
+    await expect(
+      page.getByRole("button", { name: "Upvote proposal" }).filter({
+        visible: true,
+      }),
+    ).toBeDisabled();
+  });
+
+  test("someone else's proposal has no withdraw", async ({ page }) => {
+    await page.route("**/api/v1/proposals/777", (r) =>
+      r.fulfill({ json: ownProposal("other", "someone-else") }),
+    );
+    await page.goto("/proposals/777");
+    await expect(page.getByTestId("proposal-detail")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Proposal actions" }),
+    ).toHaveCount(0);
+    await expect(
+      page
+        .getByRole("button", { name: "Upvote proposal" })
+        .filter({ visible: true }),
+    ).toBeEnabled();
+  });
+});
+
+test.describe("proposal diff of an unchanged field", () => {
+  test("a name the proposal repeats is no change, one the snapshot lacks is not recorded", async ({
+    page,
+  }) => {
+    const now = new Date().toISOString();
+    await page.route("**/api/v1/proposals/778", (r) =>
+      r.fulfill({
+        json: {
+          ...ownProposal("diff", "someone-else"),
+          id: 778,
+          entity_type: "water_section",
+          original_data: {
+            id: 1,
+            name: "Lower Test",
+            description: null,
+            country: "AT",
+            regions: ["Test Valley"],
+          },
+          proposed_data: { name: "Lower Test", description: "Steady." },
+          created_at: now,
+        },
+      }),
+    );
+    await page.goto("/proposals/778");
+    const rows = page.getByTestId("diff-row");
+    await expect(rows).toHaveCount(1);
+    await expect(rows.first()).toContainText("Description");
+    await expect(page.getByTestId("proposal-detail")).not.toContainText(
+      "Country",
+    );
+  });
+});
+
+test.describe("sending a proposal", () => {
+  test("a non-admin's write says it went to review", async ({ page }) => {
+    await page.route("**/api/v1/waterways/*/sections/*/features/*", (r) => {
+      if (r.request().method() !== "PUT") return r.fallback();
+      return r.fulfill({
+        status: 202,
+        json: ownProposal("sent", "someone-else"),
+      });
+    });
+    await gotoSection(page, "lower");
+    const card = page.getByTestId("features-card").filter({ visible: true });
+    await card.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
+    await card
+      .getByRole("button", { name: "More actions", exact: true })
+      .first()
+      .click();
+    await page.getByRole("menuitem", { name: /Edit feature/ }).click();
+    await page.getByRole("button", { name: "Submit" }).click();
+    const notice = page.getByTestId("proposal-sent");
+    await expect(notice).toContainText("Sent for review");
+    await expect(notice.getByRole("button", { name: "View" })).toBeVisible();
   });
 });

@@ -24,6 +24,7 @@ import CanvasHost from "@/components/canvas/CanvasHost";
 import NotificationBell, {
   UnreadBadge,
 } from "@/components/notifications/NotificationBell";
+import ProposalSentSnackbar from "@/components/proposals/ProposalSentSnackbar";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import { apiErrorMessage } from "@/lib/api/client";
 import {
@@ -230,6 +231,7 @@ function Layout() {
       </Box>
       <BottomNav signedIn={isAuthenticated} />
       <AppSnackbar />
+      <ProposalSentSnackbar />
     </Box>
   );
 }

@@ -5,6 +5,7 @@ import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
@@ -27,8 +28,9 @@ import type {
 } from "@/lib/api";
 import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useProposals } from "@/lib/hooks/useProposals";
+import { useSession } from "@/lib/hooks/useSession";
 import { ExpandIcon, FilterIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme";
 import { STATUS_LABEL } from "./status";
 
 const { tokens } = theme;
@@ -132,6 +134,7 @@ export default function ProposalsView({
   onOperationChange,
   adminMode,
 }: ProposalsViewProps) {
+  const { isAuthenticated } = useSession();
   const navigate = useNavigate();
   const router = useRouter();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
@@ -180,6 +183,19 @@ export default function ProposalsView({
           </IconButton>
         }
       />
+
+      {isAuthenticated && !adminMode && (
+        <Typography
+          sx={{
+            ...labelSx,
+            color: "text.secondary",
+            px: { xs: `${tokens.phone.line}px`, md: 2 },
+            pb: 0.5,
+          }}
+        >
+          Your proposals
+        </Typography>
+      )}
 
       <Box sx={{ px: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
         <UnderlineTabs
@@ -274,9 +290,6 @@ export default function ProposalsView({
         kind="list"
         screen="proposals"
         title="Proposals"
-        // An empty or failed list keeps the pane's height instead of
-        // shrinking to its note.
-        fullHeight={!proposals?.length}
         selfHeaded
       >
         <Box data-testid="proposal-list">{list}</Box>

@@ -17,6 +17,7 @@ import type {
 import { formatDate, plural } from "@/lib/format";
 import { useWaterwayMedia } from "@/lib/hooks/useComments";
 import { useWaterwayGauges } from "@/lib/hooks/useGauges";
+import { useHistory, useSources } from "@/lib/hooks/useProvenance";
 import { useSession } from "@/lib/hooks/useSession";
 import {
   AlignBottomIcon,
@@ -33,7 +34,6 @@ import { alphas, fonts, labelSx, theme } from "@/lib/theme";
 import EditsTimeline, { type EditsFilter, useEntries } from "./EditsTimeline";
 import { smallSx } from "./StepRow";
 import { inOrder, ORIGIN_UNKNOWN, stepHeadline } from "./steps";
-import { useHistory, useSources } from "./useProvenance";
 
 const { tokens } = theme;
 const { phone } = tokens;

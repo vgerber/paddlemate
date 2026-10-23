@@ -5,6 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { announceIfProposal } from "@/components/proposals/ProposalSentSnackbar";
 import { type WaterwayFilters, waterwaysApi } from "@/lib/api";
 import type { components } from "@/lib/api/schema";
 import { proposalKeys } from "./useProposals";
@@ -72,9 +73,10 @@ export function useCreateWaterway() {
     mutationFn: (body: CreateWaterwayBody) => waterwaysApi.create(body),
     // The suggest panel renders submit failures inline (409 handling).
     meta: { errorHandledLocally: true },
-    onSuccess: () => {
+    onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: proposalKeys.all });
       qc.invalidateQueries({ queryKey: waterwayKeys.all });
+      announceIfProposal(result);
     },
   });
 }

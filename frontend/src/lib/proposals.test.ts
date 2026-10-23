@@ -4,6 +4,7 @@ import {
   diffObjects,
   isDisplayable,
   isEmptyValue,
+  proposalKind,
   proposalRecord,
   proposalTitle,
   proposedFeatures,
@@ -30,16 +31,33 @@ describe("isDisplayable", () => {
 });
 
 describe("diffObjects", () => {
-  test("reports changed, added and removed keys only", () => {
+  test("reports changed and added keys", () => {
     const diffs = diffObjects(
-      { same: 1, changed: "a", removed: true },
-      { same: 1, changed: "b", added: 2 },
+      { same: 1, changed: "a", nulled: true, empty: null },
+      { same: 1, changed: "b", nulled: null, empty: "x", added: 2 },
     );
     const byKey = Object.fromEntries(diffs.map((d) => [d.key, d]));
-    expect(Object.keys(byKey).sort()).toEqual(["added", "changed", "removed"]);
-    expect(byKey.changed).toMatchObject({ from: "a", to: "b" });
-    expect(byKey.added).toMatchObject({ from: undefined, to: 2 });
-    expect(byKey.removed).toMatchObject({ from: true, to: undefined });
+    expect(Object.keys(byKey).sort()).toEqual([
+      "added",
+      "changed",
+      "empty",
+      "nulled",
+    ]);
+    expect(byKey.changed).toMatchObject({ from: "a", to: "b", known: true });
+    expect(byKey.nulled).toMatchObject({ from: true, to: null, known: true });
+    expect(byKey.added).toMatchObject({ to: 2, known: false });
+  });
+
+  test("a field the proposal leaves out is unchanged, not removed", () => {
+    expect(diffObjects({ country: "AT", regions: ["A"] }, {})).toEqual([]);
+  });
+
+  test("an unchanged name is no diff, a field the snapshot lacks is unknown", () => {
+    expect(diffObjects({ name: "Big Hole" }, { name: "Big Hole" })).toEqual([]);
+    expect(diffObjects({}, { name: "Big Hole" })[0]).toMatchObject({
+      known: false,
+    });
+    expect(diffObjects({}, { name: null })).toEqual([]);
   });
 
   test("deep-equal values are not diffs", () => {
@@ -47,7 +65,25 @@ describe("diffObjects", () => {
   });
 });
 
+describe("proposalKind", () => {
+  test("says what the proposal does to what", () => {
+    expect(proposalKind({ operation: "create", entity_type: "feature" })).toBe(
+      "New feature",
+    );
+    expect(
+      proposalKind({ operation: "update", entity_type: "water_section" }),
+    ).toBe("Changed section");
+    expect(proposalKind({ operation: "delete", entity_type: "waterway" })).toBe(
+      "Removed river",
+    );
+  });
+});
+
 describe("shortValue", () => {
+  test("a country reads by name", () => {
+    expect(shortValue("country", "AT")).toBe("Austria");
+  });
+
   test("an empty value is none", () => {
     expect(shortValue("any", null)).toBe("none");
     expect(shortValue("regions", [])).toBe("none");

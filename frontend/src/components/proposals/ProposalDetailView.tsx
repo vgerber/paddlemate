@@ -6,13 +6,9 @@ import ProposalDetailPane from "@/components/proposals/ProposalDetailPane";
 import ProposalReviewControls from "@/components/proposals/ProposalReviewControls";
 import ProposalVoteBar from "@/components/proposals/ProposalVoteBar";
 import type { Proposal, ProposalStatus } from "@/lib/api";
-import {
-  ENTITY_LABEL,
-  OP_LABEL,
-  proposalRecord,
-  proposalTitle,
-} from "@/lib/proposals";
+import { proposalKind, proposalRecord, proposalTitle } from "@/lib/proposals";
 import { BOTTOM_NAV_SPACE, labelSx, theme } from "@/lib/theme";
+import ProposalMenu from "./ProposalMenu";
 import StatusChip from "./StatusChip";
 
 const { tokens } = theme;
@@ -42,7 +38,7 @@ export default function ProposalDetailView({
   const original = proposal.original_data
     ? proposalRecord(proposal.original_data)
     : null;
-  const kind = `${OP_LABEL[proposal.operation] ?? proposal.operation} · ${ENTITY_LABEL[proposal.entity_type] ?? proposal.entity_type}`;
+  const kind = proposalKind(proposal);
 
   return (
     <Box
@@ -61,9 +57,15 @@ export default function ProposalDetailView({
           subtitle={kind}
           onBack={onBack}
           actionButton={
-            listStatus === proposal.status ? undefined : (
-              <StatusChip status={proposal.status} />
-            )
+            <>
+              {listStatus !== proposal.status && (
+                <StatusChip status={proposal.status} />
+              )}
+              <ProposalMenu
+                proposal={proposal}
+                onWithdrawn={() => onBack?.()}
+              />
+            </>
           }
         />
       )}
