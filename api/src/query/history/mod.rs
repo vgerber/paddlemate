@@ -1,21 +1,24 @@
 //! History of rivers, sections and features: one `entity_history` row per
 //! step, written in the same transaction as the change it describes.
 //!
-//! Retention: the history is the audit trail, so it is kept for as long as the
-//! data it explains. There is no cleanup job and no cascade from the entity; a
-//! deleted entity's history stays readable, also when the river or section it
-//! hung off was deleted (that delete records a step for each child). Each step is bounded instead (see
-//! `record::MAX_CHANGES` and `record::MAX_VALUE_CHARS`).
+//! Retention: the history is the audit trail and is kept for as long as the
+//! data it explains. A deleted entity's history stays readable (also when the
+//! river or section it hung off was deleted; that delete records a step for
+//! each child) for `KEEP_DELETED_DAYS`, then `run_pruner` removes it. There is
+//! no cascade from the entity. Each step is bounded (see `record::MAX_CHANGES`
+//! and `record::MAX_VALUE_CHARS`).
 
 mod deleted;
 mod read;
 mod record;
+mod retention;
 mod snapshot;
 mod track;
 
 pub use deleted::list_deleted_features;
 pub use read::{is_known, list_steps, list_waterway_sources};
 pub use record::{Op, Via, diff, record};
+pub use retention::{KEEP_DELETED_DAYS, purge_deleted, run_pruner};
 pub use snapshot::{State, scope_of, snapshot};
 pub use track::{tracked_delete, tracked_edit};
 

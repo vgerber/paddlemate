@@ -121,7 +121,7 @@ first. All five routes are public, like the entries themselves.
 | `GET /waterways/{id}/history` | steps of the river, also after it was deleted |
 | `GET /waterways/{id}/sections/{section_id}/history` | steps of the section, also after it (or its river) was deleted |
 | `GET /waterways/{id}/sections/{section_id}/features/{feature_id}/history` | steps of the feature, also after it (or its section or river) was deleted |
-| `GET /waterways/{id}/sections/{section_id}/deleted-features` | features deleted from the section, newest deletion first, each with its last name and type, when, by whom (and the proposal and reviewer, if one did); also after the section (or its river) was deleted; paged like the history routes |
+| `GET /waterways/{id}/sections/{section_id}/deleted-features` | features deleted from the section, newest deletion first, each with its last name and type, when, by whom (and the proposal and reviewer, if one did); also after the section (or its river) was deleted, until the year is up; paged like the history routes. No screen uses it now (deleted features are hidden in the app); it stays as part of the public API |
 | `GET /waterways/{id}/sources` | every source (with its step count) and contributor (with step count and last step) for the river, its sections and features; `?section_id=` narrows both to that section and its features (404 when the section is not in this river); readable after the river was deleted |
 
 A deleted entity keeps its history under the path it had; the entity itself
@@ -193,8 +193,12 @@ votes need a pending proposal (409 otherwise) and never come from its author (40
 changed or overwritten; photo uploads accept up to 8 MB (the body limit of
 those routes is raised to match).
 
-Retention: history is the audit trail and is kept for as long as the data. There
-is no cleanup and no cascade from the entity; each step is bounded instead (32
+Retention: history is the audit trail and is kept for as long as the data. When
+an entity is deleted its history stays readable for one year
+(`KEEP_DELETED_DAYS`, 365), then a daily task (`history::run_pruner`, 5 minute
+timeout, batches of 200 entities) removes all its steps; a section or river
+delete counts for each child it took along. History of live entities is never
+pruned. There is no cascade from the entity; each step is bounded as well (32
 fields, 200 characters per field name or value).
 
 Proposal responses carry `submitted_by_name` and `reviewed_by_name`.

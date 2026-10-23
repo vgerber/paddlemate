@@ -1697,3 +1697,107 @@ async fn feature_proposal_snapshot_carries_name_and_description(pool: PgPool) {
     assert_eq!(r.status, StatusCode::ACCEPTED, "{}", r.body);
     assert_eq!(r.body["original_data"]["name"], "Old weir");
 }
+
+async fn steps_of(pool: &PgPool, kind: &str, id: i64) -> i64 {
+    sqlx::query_scalar(
+        "SELECT count(*) FROM entity_history WHERE entity_kind = $1 AND entity_id = $2",
+    )
+    .bind(kind)
+    .bind(id)
+    .fetch_one(pool)
+    .await
+    .unwrap()
+}
+
+/// Moves every step of an entity back in time.
+async fn age(pool: &PgPool, kind: &str, id: i64, days: i32) {
+    sqlx::query(
+        "UPDATE entity_history SET at = at - make_interval(days => $3) \
+         WHERE entity_kind = $1 AND entity_id = $2",
+    )
+    .bind(kind)
+    .bind(id)
+    .bind(days)
+    .execute(pool)
+    .await
+    .unwrap();
+}
+
+#[sqlx::test]
+async fn history_of_things_deleted_over_a_year_ago_is_purged(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let s = make_section(&app, w, "Upper", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let old = make_feature(&app, w, s, "Old weir").await;
+    let young = make_feature(&app, w, s, "Young weir").await;
+    let live = make_feature(&app, w, s, "Bridge").await;
+    delete_feature(&app, w, s, old, Who::Admin).await;
+    delete_feature(&app, w, s, young, Who::Admin).await;
+
+    // A river deleted long ago takes its section and feature histories along.
+    let w2 = make_waterway(&app, "Enns").await;
+    let s2 = make_section(&app, w2, "Lower", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let f2 = make_feature(&app, w2, s2, "Ramp").await;
+    let r = call(
+        &app,
+        Method::DELETE,
+        &format!("/waterways/{w2}"),
+        Who::Admin,
+        None,
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NO_CONTENT, "{}", r.body);
+
+    age(&pool, "feature", old, 400).await;
+    age(&pool, "feature", young, 300).await;
+    for (kind, id) in [("waterway", w2), ("section", s2), ("feature", f2)] {
+        age(&pool, kind, id, 400).await;
+    }
+    // Live things have old history too, which stays.
+    age(&pool, "feature", live, 800).await;
+    let live_steps = steps_of(&pool, "feature", live).await;
+    let young_steps = steps_of(&pool, "feature", young).await;
+    assert!(live_steps > 0 && young_steps > 1);
+
+    let n = paddlemate_api::query::history::purge_deleted(&pool, 365)
+        .await
+        .unwrap();
+    assert!(n >= 5, "purged {n}");
+
+    assert_eq!(steps_of(&pool, "feature", old).await, 0);
+    assert_eq!(steps_of(&pool, "feature", f2).await, 0);
+    assert_eq!(steps_of(&pool, "section", s2).await, 0);
+    assert_eq!(steps_of(&pool, "waterway", w2).await, 0);
+    assert_eq!(steps_of(&pool, "feature", young).await, young_steps);
+    assert_eq!(steps_of(&pool, "feature", live).await, live_steps);
+    assert!(steps_of(&pool, "waterway", w).await > 0);
+    assert!(steps_of(&pool, "section", s).await > 0);
+
+    let again = paddlemate_api::query::history::purge_deleted(&pool, 365)
+        .await
+        .unwrap();
+    assert_eq!(again, 0);
+}
+
+#[sqlx::test]
+async fn the_purge_finds_expired_deletes_through_an_index(pool: PgPool) {
+    let mut tx = pool.begin().await.unwrap();
+    sqlx::query("SET LOCAL enable_seqscan = off")
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    let plan: Vec<String> = sqlx::query_scalar(
+        "EXPLAIN SELECT DISTINCT entity_kind, entity_id FROM entity_history \
+         WHERE kind = 'deleted' AND at < NOW() - make_interval(days => 365) LIMIT 200",
+    )
+    .fetch_all(&mut *tx)
+    .await
+    .unwrap();
+    let plan = plan.join("\n");
+    assert!(plan.contains("idx_entity_history_deleted_at"), "{plan}");
+}
