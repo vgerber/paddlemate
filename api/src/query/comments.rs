@@ -118,25 +118,101 @@ pub async fn insert_comment(
     Ok(row_to_comment(&row))
 }
 
+/// Where a comment hangs, with the parents its URL named. A river's path
+/// reaches the notes on the river and on its sections, as its thread lists
+/// them. Update, delete and
+/// moderate look the comment up inside these, so a comment cannot be reached
+/// through another river's, section's or feature's path.
+#[derive(Clone, Copy)]
+pub struct CommentParent {
+    kind: &'static str,
+    entity_id: i64,
+    waterway_id: i64,
+    section_id: Option<i64>,
+}
+
+impl CommentParent {
+    pub fn waterway(waterway_id: i64) -> Self {
+        Self {
+            kind: "river",
+            entity_id: waterway_id,
+            waterway_id,
+            section_id: None,
+        }
+    }
+
+    pub fn section(waterway_id: i64, section_id: i64) -> Self {
+        Self {
+            kind: "water_section",
+            entity_id: section_id,
+            waterway_id,
+            section_id: Some(section_id),
+        }
+    }
+
+    pub fn feature(waterway_id: i64, section_id: i64, feature_id: i64) -> Self {
+        Self {
+            kind: "feature",
+            entity_id: feature_id,
+            waterway_id,
+            section_id: Some(section_id),
+        }
+    }
+
+    /// The WHERE condition for this parent, with its four parameters at
+    /// `$first` to `$first + 3`: kind, entity id, river id, section id.
+    fn condition(first: usize) -> String {
+        let (k, e, w, s) = (first, first + 1, first + 2, first + 3);
+        format!(
+            "CASE ${k}::text \
+               WHEN 'river' THEN (entity_type = 'waterway' AND entity_id = ${w}) \
+                    OR (entity_type = 'water_section' AND entity_id IN \
+                        (SELECT id FROM water_sections WHERE waterway_id = ${w})) \
+               WHEN 'water_section' THEN entity_type = 'water_section' AND entity_id = ${e} \
+                    AND EXISTS (SELECT 1 FROM water_sections \
+                        WHERE id = ${e} AND waterway_id = ${w}) \
+               ELSE entity_type = 'feature' AND entity_id = ${e} AND EXISTS \
+                    (SELECT 1 FROM features f JOIN water_sections ws ON ws.id = f.section_id \
+                     WHERE f.id = ${e} AND ws.id = ${s} AND ws.waterway_id = ${w}) END"
+        )
+    }
+}
+
+macro_rules! bind_parent {
+    ($query:expr, $parent:expr) => {
+        $query
+            .bind($parent.kind)
+            .bind($parent.entity_id)
+            .bind($parent.waterway_id)
+            .bind($parent.section_id)
+    };
+}
+
 /// Update a comment body. Only the original author can update.
-/// Returns None if the comment does not exist or the caller is not the author.
+/// Returns None if the comment does not exist under that parent or the caller
+/// is not the author.
 pub async fn update_comment(
     db: &PgPool,
+    parent: CommentParent,
     comment_id: CommentId,
     body: &str,
     category: Option<CommentCategory>,
     author_id: &str,
 ) -> Result<Option<Comment>, sqlx::Error> {
-    let row = sqlx::query(&format!(
-        "UPDATE comments
+    let row = bind_parent!(
+        sqlx::query(&format!(
+            "UPDATE comments
          SET body = $1, category = COALESCE($4, category), updated_at = NOW()
-         WHERE id = $2 AND author_id = $3
-         RETURNING {COMMENT_COLS}"
-    ))
-    .bind(body)
-    .bind(comment_id)
-    .bind(author_id)
-    .bind(category.map(|c| c.as_str()))
+         WHERE id = $2 AND author_id = $3 AND {}
+         RETURNING {COMMENT_COLS}",
+            CommentParent::condition(5)
+        ))
+        .bind(body)
+        .bind(comment_id)
+        .bind(author_id)
+        .bind(category.map(|c| c.as_str())),
+        parent
+    )
     .fetch_optional(db)
     .await?;
 
@@ -147,17 +223,23 @@ pub async fn update_comment(
 /// Returns true if a row was deleted.
 pub async fn delete_comment(
     db: &PgPool,
+    parent: CommentParent,
     comment_id: CommentId,
     caller_id: &str,
     is_admin: bool,
 ) -> Result<bool, sqlx::Error> {
-    let result =
-        sqlx::query("DELETE FROM comments WHERE id = $1 AND (author_id = $2 OR $3::boolean)")
-            .bind(comment_id)
-            .bind(caller_id)
-            .bind(is_admin)
-            .execute(db)
-            .await?;
+    let result = bind_parent!(
+        sqlx::query(&format!(
+            "DELETE FROM comments WHERE id = $1 AND (author_id = $2 OR $3::boolean) AND {}",
+            CommentParent::condition(4)
+        ))
+        .bind(comment_id)
+        .bind(caller_id)
+        .bind(is_admin),
+        parent
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.rows_affected() > 0)
 }
@@ -165,16 +247,21 @@ pub async fn delete_comment(
 /// Set a note's status. Admin moderation, so no author check.
 pub async fn moderate_comment(
     db: &PgPool,
+    parent: CommentParent,
     comment_id: CommentId,
     status: CommentStatus,
 ) -> Result<Option<Comment>, sqlx::Error> {
-    let row = sqlx::query(&format!(
-        "UPDATE comments SET status = $1, updated_at = NOW()
-         WHERE id = $2
-         RETURNING {COMMENT_COLS}"
-    ))
-    .bind(status.as_str())
-    .bind(comment_id)
+    let row = bind_parent!(
+        sqlx::query(&format!(
+            "UPDATE comments SET status = $1, updated_at = NOW()
+         WHERE id = $2 AND {}
+         RETURNING {COMMENT_COLS}",
+            CommentParent::condition(3)
+        ))
+        .bind(status.as_str())
+        .bind(comment_id),
+        parent
+    )
     .fetch_optional(db)
     .await?;
     Ok(row.as_ref().map(row_to_comment))

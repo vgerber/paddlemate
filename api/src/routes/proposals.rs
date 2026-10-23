@@ -15,6 +15,7 @@ use crate::{
     models::{
         path_params::ProposalPath,
         proposal::{ListProposalsFilters, Proposal, ProposalStatus, ReviewRequest, VoteRequest},
+        waterway::{PaginatedResponse, page_bounds, total_pages},
     },
     query::proposals,
     state::AppState,
@@ -29,13 +30,19 @@ pub struct ListProposalsQuery {
     pub section_id: Option<i64>,
     pub feature_id: Option<i64>,
     pub submitted_by: Option<String>,
+    pub page: Option<i64>,
+    pub per_page: Option<i64>,
 }
+
+/// Rows per page unless the caller asks for fewer; also the ceiling.
+const MAX_PER_PAGE: i64 = 100;
 
 pub async fn list_proposals(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Query(params): Query<ListProposalsQuery>,
 ) -> impl IntoApiResponse {
+    let (page, per_page) = page_bounds(params.page, params.per_page, MAX_PER_PAGE);
     let (viewer_id, filters) = match &auth {
         Some(Extension(token)) => {
             let uid = token.user_id().to_string();
@@ -47,6 +54,8 @@ pub async fn list_proposals(
                 section_id: params.section_id,
                 feature_id: params.feature_id,
                 submitted_by: params.submitted_by,
+                page,
+                per_page,
             };
             // Non-admin: scope to own proposals only unless admin overrides
             if !token.is_server_admin() {
@@ -64,6 +73,8 @@ pub async fn list_proposals(
                 section_id: params.section_id,
                 feature_id: params.feature_id,
                 submitted_by: params.submitted_by,
+                page,
+                per_page,
             };
             // Submitted_by filter from query params is ignored for unauthenticated requests
             f.submitted_by = None;
@@ -72,7 +83,14 @@ pub async fn list_proposals(
     };
 
     match proposals::list_proposals(&app.pg_pool, filters, viewer_id.as_deref()).await {
-        Ok(list) => Json(list).into_response(),
+        Ok((items, total)) => Json(PaginatedResponse {
+            items,
+            total,
+            page,
+            per_page,
+            total_pages: total_pages(total, per_page),
+        })
+        .into_response(),
         Err(err) => ApiError::from_db("Error listing proposals", &err).into_response(),
     }
 }
@@ -83,9 +101,9 @@ doc_fn!(list_proposals_docs, op =>
          Unauthenticated: pending only. \
          Authenticated non-admin: own proposals (all statuses). \
          Admin: all proposals. \
-         Supports filtering by status, entity_type, operation, waterway_id, section_id, feature_id, submitted_by."
+         Supports filtering by status, entity_type, operation, waterway_id, section_id, feature_id, submitted_by. Newest first, paged with page and per_page (default and maximum 100)."
     )
-    .response::<200, Json<Vec<Proposal>>>()
+    .response::<200, Json<PaginatedResponse<Proposal>>>()
     .tag("Proposals")
 );
 
@@ -215,6 +233,21 @@ pub async fn vote_proposal(
         return ApiError::validation("vote must be 1 or -1").into_response();
     }
 
+    match proposals::get_proposal(&app.pg_pool, path.proposal_id, None).await {
+        Ok(Some(p)) if p.status == ProposalStatus::Pending => {}
+        Ok(Some(_)) => {
+            return ApiError::conflict("Only pending proposals can be voted on").into_response();
+        }
+        Ok(None) => return ApiError::not_found("Not found").into_response(),
+        Err(err) => {
+            return ApiError::from_db(
+                &format!("Error fetching proposal {} for vote", path.proposal_id),
+                &err,
+            )
+            .into_response();
+        }
+    }
+
     match proposals::vote_proposal(&app.pg_pool, path.proposal_id, token.user_id(), body.vote).await
     {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
@@ -232,6 +265,8 @@ doc_fn!(vote_proposal_docs, op =>
         .response_with::<204, (), _>(|res| res.description("Vote recorded"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
         .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Invalid vote value"))
+        .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Proposal not found"))
+        .response_with::<409, Json<ErrorResponse>, _>(|res| res.description("Proposal is no longer pending"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Proposals")
 );

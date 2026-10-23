@@ -17,7 +17,7 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::group::{GroupMember, GroupMemberRole},
-    query::groups,
+    query::groups::{self, RoleChange},
     query::users,
     state::AppState,
 };
@@ -132,7 +132,8 @@ pub async fn add_member(
     )
     .await
     {
-        Ok(member) => (StatusCode::CREATED, Json(member)).into_response(),
+        Ok(Some(member)) => (StatusCode::CREATED, Json(member)).into_response(),
+        Ok(None) => ApiError::validation("The owner's role cannot be changed").into_response(),
         Err(err) => ApiError::from_db(&format!("Error adding member to group {group_id}"), err)
             .into_response(),
     }
@@ -180,15 +181,19 @@ pub async fn set_member_role(
     }
 
     match groups::set_member_role(&app.pg_pool, group_id, &target_user_id, body.role).await {
-        Ok(Some(member)) => Json(member).into_response(),
-        Ok(None) => ApiError::not_found("Not found").into_response(),
+        Ok(RoleChange::Changed(member)) => Json(member).into_response(),
+        Ok(RoleChange::NotMember) => ApiError::not_found("Not found").into_response(),
+        Ok(RoleChange::IsOwner) => {
+            ApiError::validation("The owner's role cannot be changed; delete the group instead")
+                .into_response()
+        }
         Err(err) => ApiError::from_db(&format!("Error setting role in group {group_id}"), err)
             .into_response(),
     }
 }
 
 doc_fn!(set_member_role_docs, op =>
-    op.description("Change a member's role (owner only; cannot assign owner role)")
+    op.description("Change a member's role (owner only; cannot assign the owner role or change the owner's)")
         .response::<200, Json<GroupMember>>()
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
         .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Forbidden"))

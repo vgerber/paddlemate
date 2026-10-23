@@ -192,7 +192,7 @@ pub async fn add_member(
     user_id: &str,
     role: GroupMemberRole,
     added_by: &str,
-) -> Result<GroupMember, sqlx::Error> {
+) -> Result<Option<GroupMember>, sqlx::Error> {
     let username = sqlx::query!("SELECT username FROM users WHERE id = $1", user_id)
         .fetch_one(pool)
         .await?
@@ -203,6 +203,7 @@ pub async fn add_member(
         INSERT INTO group_members (group_id, user_id, role, added_by)
         VALUES ($1, $2, $3, $4)
         ON CONFLICT (group_id, user_id) DO UPDATE SET role = EXCLUDED.role
+            WHERE group_members.role <> 'owner'
         RETURNING group_id, user_id, role AS "role: GroupMemberRole", added_by, created_at
         "#,
         group_id,
@@ -210,17 +211,18 @@ pub async fn add_member(
         role as GroupMemberRole,
         added_by
     )
-    .fetch_one(pool)
+    .fetch_optional(pool)
     .await?;
 
-    Ok(GroupMember {
+    // None: the user is the owner, whose role never changes.
+    Ok(r.map(|r| GroupMember {
         group_id: r.group_id,
         user_id: r.user_id,
         username,
         role: r.role,
         added_by: r.added_by,
         created_at: r.created_at,
-    })
+    }))
 }
 
 pub async fn remove_member(
@@ -238,25 +240,36 @@ pub async fn remove_member(
     .map(|r| r.is_some())
 }
 
+/// What changing a member's role did.
+pub enum RoleChange {
+    Changed(GroupMember),
+    NotMember,
+    /// The target is the owner, whose role never changes: a group without an
+    /// owner could not be managed or deleted any more.
+    IsOwner,
+}
+
 pub async fn set_member_role(
     pool: &PgPool,
     group_id: GroupId,
     user_id: &str,
     role: GroupMemberRole,
-) -> Result<Option<GroupMember>, sqlx::Error> {
+) -> Result<RoleChange, sqlx::Error> {
     let username = sqlx::query!("SELECT username FROM users WHERE id = $1", user_id)
         .fetch_optional(pool)
         .await?
         .map(|r| r.username);
 
     let Some(username) = username else {
-        return Ok(None);
+        return Ok(RoleChange::NotMember);
     };
 
+    // The owner guard is in the statement, so no concurrent request can slip
+    // between a check and the write.
     let r = sqlx::query!(
         r#"
         UPDATE group_members SET role = $1
-        WHERE group_id = $2 AND user_id = $3
+        WHERE group_id = $2 AND user_id = $3 AND role <> 'owner'
         RETURNING group_id, user_id, role AS "role: GroupMemberRole", added_by, created_at
         "#,
         role as GroupMemberRole,
@@ -266,14 +279,20 @@ pub async fn set_member_role(
     .fetch_optional(pool)
     .await?;
 
-    Ok(r.map(|r| GroupMember {
-        group_id: r.group_id,
-        user_id: r.user_id,
-        username,
-        role: r.role,
-        added_by: r.added_by,
-        created_at: r.created_at,
-    }))
+    if let Some(r) = r {
+        return Ok(RoleChange::Changed(GroupMember {
+            group_id: r.group_id,
+            user_id: r.user_id,
+            username,
+            role: r.role,
+            added_by: r.added_by,
+            created_at: r.created_at,
+        }));
+    }
+    match get_member_role(pool, group_id, user_id).await? {
+        Some(GroupMemberRole::Owner) => Ok(RoleChange::IsOwner),
+        _ => Ok(RoleChange::NotMember),
+    }
 }
 
 pub async fn fetch_members(

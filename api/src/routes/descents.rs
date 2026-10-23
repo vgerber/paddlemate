@@ -38,6 +38,54 @@ pub fn descents_routes(state: AppState) -> ApiRouter {
         .with_state(state)
 }
 
+/// Longest name or place label; matches the `name` column.
+const MAX_NAME_CHARS: usize = 255;
+/// Longest note.
+const MAX_NOTE_CHARS: usize = 10_000;
+
+fn check_text(field: &str, text: Option<&str>, max: usize) -> Result<(), ApiError> {
+    match text {
+        Some(t) if t.chars().count() > max => Err(ApiError::validation(format!(
+            "{field} must be at most {max} characters"
+        ))
+        .with_target(field)),
+        _ => Ok(()),
+    }
+}
+
+fn check_point(
+    field: &str,
+    label: Option<&str>,
+    lat: Option<f64>,
+    lon: Option<f64>,
+) -> Result<(), ApiError> {
+    check_text(&format!("{field}_label"), label, MAX_NAME_CHARS)?;
+    if lat.is_some_and(|v| !(-90.0..=90.0).contains(&v)) {
+        return Err(ApiError::validation("Latitude must be between -90 and 90")
+            .with_target(format!("{field}_lat")));
+    }
+    if lon.is_some_and(|v| !(-180.0..=180.0).contains(&v)) {
+        return Err(
+            ApiError::validation("Longitude must be between -180 and 180")
+                .with_target(format!("{field}_lon")),
+        );
+    }
+    Ok(())
+}
+
+/// Bounds on the free text and coordinates of a create or patch body.
+fn check_fields(
+    name: Option<&str>,
+    note: Option<&str>,
+    put_in: (Option<&str>, Option<f64>, Option<f64>),
+    take_out: (Option<&str>, Option<f64>, Option<f64>),
+) -> Result<(), ApiError> {
+    check_text("name", name, MAX_NAME_CHARS)?;
+    check_text("note", note, MAX_NOTE_CHARS)?;
+    check_point("put_in", put_in.0, put_in.1, put_in.2)?;
+    check_point("take_out", take_out.0, take_out.1, take_out.2)
+}
+
 fn validate_put_in(feature_id: Option<i64>, lat: Option<f64>, lon: Option<f64>) -> bool {
     matches!(
         (feature_id.is_some(), lat.is_some(), lon.is_some()),
@@ -168,6 +216,23 @@ pub async fn create_descent(
         None => return ApiError::unauthorized("Authentication required").into_response(),
     };
 
+    if let Err(err) = check_fields(
+        body.name.as_deref(),
+        body.note.as_deref(),
+        (
+            body.put_in_label.as_deref(),
+            body.put_in_lat,
+            body.put_in_lon,
+        ),
+        (
+            body.take_out_label.as_deref(),
+            body.take_out_lat,
+            body.take_out_lon,
+        ),
+    ) {
+        return err.into_response();
+    }
+
     if !validate_put_in(body.put_in_feature_id, body.put_in_lat, body.put_in_lon) {
         return ApiError::validation(
             "put_in must specify either feature_id or lat+lon, not both or neither",
@@ -270,6 +335,23 @@ pub async fn patch_descent(
             return ApiError::validation("shared visibility requires at least one user or group")
                 .into_response();
         }
+    }
+
+    if let Err(err) = check_fields(
+        body.name.as_ref().and_then(|n| n.as_deref()),
+        body.note.as_ref().and_then(|n| n.as_deref()),
+        (
+            body.put_in_label.as_deref(),
+            body.put_in_lat,
+            body.put_in_lon,
+        ),
+        (
+            body.take_out_label.as_deref(),
+            body.take_out_lat,
+            body.take_out_lon,
+        ),
+    ) {
+        return err.into_response();
     }
 
     let update_put_in = body.put_in_feature_id.is_some()
@@ -383,7 +465,7 @@ doc_fn!(delete_descent_docs, op =>
 
 #[cfg(test)]
 mod tests {
-    use super::{constraint_message, validate_put_in};
+    use super::{check_fields, constraint_message, validate_put_in};
 
     #[test]
     fn a_point_is_either_a_feature_or_coordinates() {
@@ -400,6 +482,19 @@ mod tests {
         );
         assert!(!validate_put_in(None, Some(47.0), None), "latitude only");
         assert!(!validate_put_in(None, None, Some(11.0)), "longitude only");
+    }
+
+    #[test]
+    fn text_and_coordinates_are_bounded() {
+        let none = (None, None, None);
+        assert!(check_fields(Some(&"n".repeat(255)), None, none, none).is_ok());
+        assert!(check_fields(Some(&"n".repeat(256)), None, none, none).is_err());
+        assert!(check_fields(None, Some(&"n".repeat(10_001)), none, none).is_err());
+        assert!(check_fields(None, None, (Some(&"l".repeat(256)), None, None), none).is_err());
+        assert!(check_fields(None, None, (None, Some(90.0), Some(-180.0)), none).is_ok());
+        assert!(check_fields(None, None, (None, Some(999.0), Some(10.0)), none).is_err());
+        assert!(check_fields(None, None, none, (None, Some(10.0), Some(181.0))).is_err());
+        assert!(check_fields(None, None, (None, Some(f64::NAN), Some(0.0)), none).is_err());
     }
 
     #[test]

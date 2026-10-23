@@ -11,11 +11,24 @@ pub struct UserWithFollowStatus {
     pub incoming_pending: bool,
 }
 
-/// All users except the viewer, with outgoing status and incoming pending flag.
+/// One page of the users except the viewer, with outgoing status and
+/// incoming pending flag; `search` keeps those whose name contains it.
 pub async fn list_all_users_with_follow_status(
     pool: &PgPool,
     viewer_id: &str,
-) -> Result<Vec<UserWithFollowStatus>, sqlx::Error> {
+    search: Option<&str>,
+    page: i64,
+    per_page: i64,
+) -> Result<(Vec<UserWithFollowStatus>, i64), sqlx::Error> {
+    let total = sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "count!" FROM users u
+           WHERE u.id != $1
+             AND ($2::text IS NULL OR strpos(lower(u.username), lower($2)) > 0)"#,
+        viewer_id,
+        search
+    )
+    .fetch_one(pool)
+    .await?;
     sqlx::query!(
         r#"
         SELECT
@@ -31,21 +44,28 @@ pub async fn list_all_users_with_follow_status(
             AND in_f.follower_id = u.id
             AND in_f.status = 'pending'
         WHERE u.id != $1
-        ORDER BY u.username
+          AND ($2::text IS NULL OR strpos(lower(u.username), lower($2)) > 0)
+        ORDER BY u.username, u.id
+        LIMIT $3 OFFSET $4
         "#,
-        viewer_id
+        viewer_id,
+        search,
+        per_page,
+        (page - 1) * per_page
     )
     .fetch_all(pool)
     .await
     .map(|rows| {
-        rows.into_iter()
+        let users = rows
+            .into_iter()
             .map(|r| UserWithFollowStatus {
                 id: r.id,
                 username: r.username,
                 outgoing_status: r.outgoing_status,
                 incoming_pending: r.incoming_pending,
             })
-            .collect()
+            .collect();
+        (users, total)
     })
 }
 

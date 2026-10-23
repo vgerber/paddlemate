@@ -14,12 +14,12 @@ use crate::{
         },
         waterway::WaterwayId,
     },
-    query::{descents, features, proposals, sections},
+    query::{descents, features, history::Scope, proposals, sections},
     state::AppState,
 };
 use aide::axum::IntoApiResponse;
 
-use super::authorize_localization;
+use super::{authorize_localization, check_description, check_name};
 use axum::{
     Extension, Json,
     extract::{Path, State},
@@ -361,19 +361,26 @@ pub async fn upsert_section_name(
     Path(path): Path<SectionLocalePath>,
     Json(body): Json<UpsertSectionNameBody>,
 ) -> impl IntoApiResponse {
-    let lang_code = match authorize_localization(auth, &path.lang_code) {
-        Ok(code) => code,
+    let (token, lang_code) = match authorize_localization(auth, &path.lang_code) {
+        Ok(ok) => ok,
         Err(error) => return error.into_response(),
     };
 
-    match sections::section_exists(&app.pg_pool, path.waterway_id, path.section_id).await {
-        Ok(true) => {}
-        Ok(false) => return ApiError::not_found("Section not found").into_response(),
-        Err(err) => return ApiError::from_db("checking section", err).into_response(),
+    if let Err(error) = check_name(&body.name) {
+        return error.into_response();
     }
-
-    match sections::upsert_name(&app.pg_pool, path.section_id, &lang_code, &body.name).await {
-        Ok(name) => Json(name).into_response(),
+    let scope = Scope::section(path.waterway_id, path.section_id);
+    match sections::set_name(
+        &app.pg_pool,
+        scope,
+        &lang_code,
+        body.name.trim(),
+        token.user_id(),
+    )
+    .await
+    {
+        Ok(Some(name)) => Json(name).into_response(),
+        Ok(None) => ApiError::not_found("Section not found").into_response(),
         Err(err) => ApiError::from_db("upserting section name", err).into_response(),
     }
 }
@@ -384,6 +391,7 @@ doc_fn!(upsert_section_name_docs, op =>
         .response::<200, Json<SectionName>>()
         .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Invalid lang_code"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Not an admin"))
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Section not found"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Sections")
@@ -394,12 +402,13 @@ pub async fn delete_section_name(
     auth: Option<Extension<AuthToken>>,
     Path(path): Path<SectionLocalePath>,
 ) -> impl IntoApiResponse {
-    let lang_code = match authorize_localization(auth, &path.lang_code) {
-        Ok(code) => code,
+    let (token, lang_code) = match authorize_localization(auth, &path.lang_code) {
+        Ok(ok) => ok,
         Err(error) => return error.into_response(),
     };
 
-    match sections::delete_name(&app.pg_pool, path.waterway_id, path.section_id, &lang_code).await {
+    let scope = Scope::section(path.waterway_id, path.section_id);
+    match sections::remove_name(&app.pg_pool, scope, &lang_code, token.user_id()).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("No name in that language").into_response(),
         Err(err) => ApiError::from_db("deleting section name", err).into_response(),
@@ -423,21 +432,26 @@ pub async fn upsert_section_description(
     Path(path): Path<SectionLocalePath>,
     Json(body): Json<UpsertSectionDescriptionBody>,
 ) -> impl IntoApiResponse {
-    let lang_code = match authorize_localization(auth, &path.lang_code) {
-        Ok(code) => code,
+    let (token, lang_code) = match authorize_localization(auth, &path.lang_code) {
+        Ok(ok) => ok,
         Err(error) => return error.into_response(),
     };
 
-    match sections::section_exists(&app.pg_pool, path.waterway_id, path.section_id).await {
-        Ok(true) => {}
-        Ok(false) => return ApiError::not_found("Section not found").into_response(),
-        Err(err) => return ApiError::from_db("checking section", err).into_response(),
+    if let Err(error) = check_description(&body.description) {
+        return error.into_response();
     }
-
-    match sections::upsert_description(&app.pg_pool, path.section_id, &lang_code, &body.description)
-        .await
+    let scope = Scope::section(path.waterway_id, path.section_id);
+    match sections::set_description(
+        &app.pg_pool,
+        scope,
+        &lang_code,
+        body.description.trim(),
+        token.user_id(),
+    )
+    .await
     {
-        Ok(description) => Json(description).into_response(),
+        Ok(Some(description)) => Json(description).into_response(),
+        Ok(None) => ApiError::not_found("Section not found").into_response(),
         Err(err) => ApiError::from_db("upserting section description", err).into_response(),
     }
 }
@@ -458,14 +472,13 @@ pub async fn delete_section_description(
     auth: Option<Extension<AuthToken>>,
     Path(path): Path<SectionLocalePath>,
 ) -> impl IntoApiResponse {
-    let lang_code = match authorize_localization(auth, &path.lang_code) {
-        Ok(code) => code,
+    let (token, lang_code) = match authorize_localization(auth, &path.lang_code) {
+        Ok(ok) => ok,
         Err(error) => return error.into_response(),
     };
 
-    match sections::delete_description(&app.pg_pool, path.waterway_id, path.section_id, &lang_code)
-        .await
-    {
+    let scope = Scope::section(path.waterway_id, path.section_id);
+    match sections::remove_description(&app.pg_pool, scope, &lang_code, token.user_id()).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("No description in that language").into_response(),
         Err(err) => ApiError::from_db("deleting section description", err).into_response(),

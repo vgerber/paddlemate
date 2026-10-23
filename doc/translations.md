@@ -48,6 +48,13 @@ POST/DELETE .../features/{id}/names/{lang_code}
 POST/DELETE .../features/{id}/descriptions/{lang_code}
 ```
 
+Only server admins write translations directly (403 for everyone else, 401
+when signed out). Other contributors can propose a rapid's name or description
+in a language (`PUT` on the feature with `name`, `description` and `lang_code`);
+section translations are admin-only. Each admin write leaves a history step, like any other edit. A
+name is at most 255 characters and a description 10000; both must be
+non-empty (400 otherwise).
+
 The `lang_code` in the path is normalized first, so `DELETE .../names/DE`
 removes the `de` row. The API returns *all* translations on reads and the
 client picks — there is no `Accept-Language` handling.
@@ -74,8 +81,9 @@ and must be kept in step. Without normalization, `de`, `DE` and `de_DE` would
 be three rows and defeat the UNIQUE constraint.
 
 All eight write handlers start with the shared
-`authorize_localization` (`api/src/routes/waterways/mod.rs`): signed in, then
-normalize.
+`authorize_localization` (`api/src/routes/waterways/mod.rs`): signed in, server admin, then
+normalize; the same file holds the length checks. The writes themselves run
+through `history::tracked_edit`.
 
 ### Frontend
 
