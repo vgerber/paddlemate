@@ -181,6 +181,15 @@ test.describe("region kinds", () => {
     await tap(page, SOLO_POINT);
     if (onPhone(page)) await tap(page, SOLO_POINT);
     await expect(page).toHaveURL(new RegExp(`region=${REGIONS.beta.id}`));
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          (
+            window as unknown as { __paddlemateMap: { getZoom(): number } }
+          ).__paddlemateMap.getZoom(),
+        ),
+      )
+      .toBeGreaterThan(8);
     // The map fitted to the pick, which on the zoom alone would now draw
     // valleys or districts; the ranges stay.
     await expect.poll(() => drawnIds(page)).toContain(REGIONS.alpha.id);
