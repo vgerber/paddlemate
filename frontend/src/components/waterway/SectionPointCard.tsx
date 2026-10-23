@@ -1,8 +1,8 @@
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import NumberBadge from "@/components/NumberBadge";
+import { DeleteIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -61,7 +61,7 @@ export default function SectionPointCard({
             height: tokens.touch.min,
           }}
         >
-          <DeleteOutlinedIcon fontSize="small" />
+          <DeleteIcon fontSize="small" />
         </IconButton>
       )}
     </Box>

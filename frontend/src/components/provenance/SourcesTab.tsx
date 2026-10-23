@@ -1,11 +1,3 @@
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import PhotoOutlinedIcon from "@mui/icons-material/PhotoOutlined";
-import ShowChartIcon from "@mui/icons-material/ShowChart";
-import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
-import ViewAgendaOutlinedIcon from "@mui/icons-material/ViewAgendaOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import ButtonBase from "@mui/material/ButtonBase";
@@ -26,6 +18,16 @@ import { formatDate, plural } from "@/lib/format";
 import { useWaterwayMedia } from "@/lib/hooks/useComments";
 import { useWaterwayGauges } from "@/lib/hooks/useGauges";
 import { useSession } from "@/lib/hooks/useSession";
+import {
+  AlignBottomIcon,
+  BackIcon,
+  BarChartIcon,
+  ChevronRightIcon,
+  EditIcon,
+  LineChartIcon,
+  PhotoIcon,
+  StackIcon,
+} from "@/lib/icons";
 import { licenseLink } from "@/lib/license";
 import { alphas, fonts, labelSx, theme } from "@/lib/theme";
 import EditsTimeline, { type EditsFilter, useEntries } from "./EditsTimeline";
@@ -194,7 +196,7 @@ function OriginRow({
     : undefined;
   return (
     <SourceRow
-      icon={<VerticalAlignBottomIcon fontSize="small" />}
+      icon={<AlignBottomIcon fontSize="small" />}
       kind="Section"
       who={originLine(first)}
       meta={meta}
@@ -213,7 +215,7 @@ function FeaturesRow({ data }: { data: WaterwaySources }) {
   if (from.length === 0 && !last) return null;
   return (
     <SourceRow
-      icon={<ViewAgendaOutlinedIcon fontSize="small" />}
+      icon={<StackIcon fontSize="small" />}
       kind="Features"
       who={from.join(", ") || "Added by paddlers"}
       meta={
@@ -233,7 +235,7 @@ function GaugeRows({ sources }: { sources: GaugeSource[] }) {
         return (
           <SourceRow
             key={source.id}
-            icon={<BarChartOutlinedIcon fontSize="small" />}
+            icon={<BarChartIcon fontSize="small" />}
             kind="Gauge"
             who={`Data: ${source.short_name ?? source.name}`}
             meta={
@@ -291,7 +293,7 @@ function FilterHeader({
         onClick={onBack}
         sx={{ width: tokens.touch.min, height: tokens.touch.min }}
       >
-        <ArrowBackIcon fontSize="small" />
+        <BackIcon fontSize="small" />
       </IconButton>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
@@ -312,7 +314,7 @@ function FilterHeader({
         <Button
           variant="outlined"
           color="inherit"
-          startIcon={<EditOutlinedIcon fontSize="small" />}
+          startIcon={<EditIcon fontSize="small" />}
           onClick={() => onEdit(feature)}
           sx={{ minHeight: tokens.touch.min, flexShrink: 0 }}
         >
@@ -423,7 +425,7 @@ export default function SourcesTab({
           onOpen={() => onFilterChange({ kind: "section", id: section.id })}
         />
         <SourceRow
-          icon={<ShowChartIcon fontSize="small" />}
+          icon={<LineChartIcon fontSize="small" />}
           kind="River line"
           who="OpenStreetMap"
           meta={<ExternalLink href={ODBL_URL}>ODbL</ExternalLink>}
@@ -432,7 +434,7 @@ export default function SourcesTab({
         <GaugeRows sources={[...gaugeSources.values()]} />
         {mediaLine && (
           <SourceRow
-            icon={<PhotoOutlinedIcon fontSize="small" />}
+            icon={<PhotoIcon fontSize="small" />}
             kind="Photos"
             who={mediaLine}
             meta="Each credited in the gallery"

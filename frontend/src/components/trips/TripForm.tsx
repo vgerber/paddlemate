@@ -1,4 +1,3 @@
-import CheckIcon from "@mui/icons-material/Check";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
@@ -9,6 +8,7 @@ import FormSection from "@/components/waterway/FormSection";
 import type { Trip, TripStayKind } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateTrip, usePatchTrip } from "@/lib/hooks/useTrips";
+import { ConfirmIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import { STAY_KINDS } from "./stayKinds";
 import {
@@ -214,7 +214,7 @@ export default function TripForm({
             busy={isBusy}
             ariaLabel="Save trip"
           >
-            <CheckIcon />
+            <ConfirmIcon />
           </RoundActionButton>
         }
       />

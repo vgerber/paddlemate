@@ -1,8 +1,3 @@
-import AddLocationAltOutlinedIcon from "@mui/icons-material/AddLocationAltOutlined";
-import AddPhotoAlternateOutlinedIcon from "@mui/icons-material/AddPhotoAlternateOutlined";
-import CloseIcon from "@mui/icons-material/Close";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import SendIcon from "@mui/icons-material/Send";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -27,6 +22,13 @@ import {
   useWaterwayComments,
 } from "@/lib/hooks/useComments";
 import { useSession } from "@/lib/hooks/useSession";
+import {
+  AddPhotoIcon,
+  AddPlaceIcon,
+  CloseIcon,
+  PlaceIcon,
+  SendIcon,
+} from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import CommentRow from "./CommentRow";
 
@@ -362,11 +364,7 @@ export default function CommentThread({
                               : "text.disabled",
                         }}
                       >
-                        {mapPin.pin ? (
-                          <LocationOnIcon />
-                        ) : (
-                          <AddLocationAltOutlinedIcon />
-                        )}
+                        {mapPin.pin ? <PlaceIcon /> : <AddPlaceIcon />}
                       </IconButton>
                     )}
                     <IconButton
@@ -383,7 +381,7 @@ export default function CommentThread({
                       {uploadMedia.isPending ? (
                         <CircularProgress size={15} />
                       ) : (
-                        <AddPhotoAlternateOutlinedIcon />
+                        <AddPhotoIcon />
                       )}
                     </IconButton>
                     <IconButton

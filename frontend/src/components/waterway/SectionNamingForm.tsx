@@ -1,11 +1,10 @@
-import AddIcon from "@mui/icons-material/Add";
-import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import LanguagePicker from "@/components/LanguagePicker";
 import FormSection from "@/components/waterway/FormSection";
+import { AddIcon, CloseIcon } from "@/lib/icons";
 import { preferredLanguage } from "@/lib/languagePreference";
 import { languageOptions } from "@/lib/languages";
 import { theme } from "@/lib/theme";

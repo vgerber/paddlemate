@@ -1,4 +1,3 @@
-import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -19,6 +18,7 @@ import { apiErrorMessage } from "@/lib/api/client";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useAllUsers } from "@/lib/hooks/useFollows";
 import { useAddTripMember } from "@/lib/hooks/useTrips";
+import { AddPersonIcon } from "@/lib/icons";
 import { alphas, BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
 
 import InviteLinks from "./InviteLinks";
@@ -162,9 +162,7 @@ function AddMemberBody({
         ) : candidates.length === 0 ? (
           <EmptyState
             icon={
-              <PersonAddOutlinedIcon
-                sx={{ fontSize: 48, color: "text.disabled" }}
-              />
+              <AddPersonIcon sx={{ fontSize: 48, color: "text.disabled" }} />
             }
             title={
               query

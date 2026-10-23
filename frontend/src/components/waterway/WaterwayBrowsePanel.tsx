@@ -1,10 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
-import MapIcon from "@mui/icons-material/Map";
-import PendingActionsOutlinedIcon from "@mui/icons-material/PendingActionsOutlined";
-import PlayArrowOutlinedIcon from "@mui/icons-material/PlayArrowOutlined";
-import StarIcon from "@mui/icons-material/Star";
-import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
 import IconButton from "@mui/material/IconButton";
@@ -42,6 +35,15 @@ import { useSession } from "@/lib/hooks/useSession";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
 import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import { useWaterway } from "@/lib/hooks/useWaterways";
+import {
+  AddIcon,
+  LogIcon,
+  MapIcon,
+  PendingIcon,
+  StarIcon,
+  StarOutlineIcon,
+  StartIcon,
+} from "@/lib/icons";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
 import CommentThread from "./CommentThread";
@@ -177,7 +179,7 @@ export default function WaterwayBrowsePanel({
       icon: starred ? (
         <StarIcon fontSize="small" sx={{ color: tokens.primary }} />
       ) : (
-        <StarBorderIcon fontSize="small" />
+        <StarOutlineIcon fontSize="small" />
       ),
       onClick: () => onToggleFavorite(selectedSection.id),
     });
@@ -186,7 +188,7 @@ export default function WaterwayBrowsePanel({
     if (!standingDescent) {
       own.push({
         label: "Start descent",
-        icon: <PlayArrowOutlinedIcon fontSize="small" />,
+        icon: <StartIcon fontSize="small" />,
         onClick: () =>
           startDescent({
             startTime: new Date().toISOString(),
@@ -200,7 +202,7 @@ export default function WaterwayBrowsePanel({
     if (sectionDetailTab !== "logs") {
       own.push({
         label: "Log descent",
-        icon: <DirectionsBoatOutlinedIcon fontSize="small" />,
+        icon: <LogIcon fontSize="small" />,
         onClick: () => navigate({ to: "/logs/new", search: logSearch }),
       });
     }
@@ -216,7 +218,7 @@ export default function WaterwayBrowsePanel({
         ? "Hide proposed features"
         : "Show proposed features",
       icon: (
-        <PendingActionsOutlinedIcon
+        <PendingIcon
           fontSize="small"
           sx={
             featureTimeline.showProposed ? { color: tokens.primary } : undefined

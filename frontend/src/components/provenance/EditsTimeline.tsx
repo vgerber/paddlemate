@@ -1,4 +1,3 @@
-import HistoryIcon from "@mui/icons-material/History";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Link from "@mui/material/Link";
@@ -12,6 +11,7 @@ import { featureName } from "@/components/waterway/section-details/utils";
 import type { HistoryStep, SectionWithFeatures } from "@/lib/api";
 import { formatDate, humanize, sentenceCase } from "@/lib/format";
 import { useSession } from "@/lib/hooks/useSession";
+import { HistoryIcon } from "@/lib/icons";
 import { localizedName } from "@/lib/localization";
 import { labelSx, theme } from "@/lib/theme";
 import {

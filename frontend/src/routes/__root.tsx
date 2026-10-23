@@ -1,7 +1,3 @@
-import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
-import LuggageOutlinedIcon from "@mui/icons-material/LuggageOutlined";
-import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -35,6 +31,7 @@ import {
   useNotificationState,
 } from "@/lib/hooks/useNotifications";
 import { useSession } from "@/lib/hooks/useSession";
+import { AccountIcon, LogIcon, MapIcon, TripIcon } from "@/lib/icons";
 import { useLanguage } from "@/lib/languagePreference";
 import { transition } from "@/lib/motion";
 import { activeNav, DESKTOP_NAV, PHONE_NAV } from "@/lib/nav";
@@ -237,11 +234,11 @@ function Layout() {
   );
 }
 
-const PHONE_ICONS: Record<string, typeof MapOutlinedIcon> = {
-  "/": MapOutlinedIcon,
-  "/logs": DirectionsBoatOutlinedIcon,
-  "/trips": LuggageOutlinedIcon,
-  "/settings": AccountCircleOutlinedIcon,
+const PHONE_ICONS: Record<string, typeof MapIcon> = {
+  "/": MapIcon,
+  "/logs": LogIcon,
+  "/trips": TripIcon,
+  "/settings": AccountIcon,
 };
 
 function BottomNav({ signedIn }: { signedIn: boolean }) {

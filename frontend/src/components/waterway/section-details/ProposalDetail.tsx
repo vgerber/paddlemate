@@ -1,6 +1,3 @@
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import ThumbDownOutlinedIcon from "@mui/icons-material/ThumbDownOutlined";
-import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
@@ -16,6 +13,7 @@ import {
   useVoteProposal,
 } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
+import { DeleteIcon, ThumbDownIcon, ThumbUpIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
 
@@ -55,7 +53,7 @@ function ProposalActions({ proposal }: { proposal: Proposal }) {
               color: proposal.user_vote === 1 ? tokens.success : tokens.outline,
             }}
           >
-            <ThumbUpOutlinedIcon fontSize="small" />
+            <ThumbUpIcon fontSize="small" />
           </IconButton>
         </span>
       </Tooltip>
@@ -82,7 +80,7 @@ function ProposalActions({ proposal }: { proposal: Proposal }) {
               color: proposal.user_vote === -1 ? "error.main" : tokens.outline,
             }}
           >
-            <ThumbDownOutlinedIcon fontSize="small" />
+            <ThumbDownIcon fontSize="small" />
           </IconButton>
         </span>
       </Tooltip>
@@ -110,7 +108,7 @@ function ProposalActions({ proposal }: { proposal: Proposal }) {
             }}
             sx={{ color: "error.main" }}
           >
-            <DeleteOutlineIcon fontSize="small" />
+            <DeleteIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}

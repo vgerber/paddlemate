@@ -1,5 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
-import LuggageOutlinedIcon from "@mui/icons-material/LuggageOutlined";
 import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -13,6 +11,7 @@ import TripRow from "@/components/trips/TripRow";
 import TripsCanvas from "@/components/trips/TripsCanvas";
 import { useSession } from "@/lib/hooks/useSession";
 import { useTrip, useTrips } from "@/lib/hooks/useTrips";
+import { AddIcon, TripIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/trips/")({
@@ -57,9 +56,7 @@ function TripsPage() {
   if (!isAuthenticated) {
     return (
       <SignInGate
-        icon={
-          <LuggageOutlinedIcon sx={{ fontSize: 56, color: "text.disabled" }} />
-        }
+        icon={<TripIcon sx={{ fontSize: 56, color: "text.disabled" }} />}
         title="Sign in to plan trips"
       />
     );
@@ -73,7 +70,7 @@ function TripsPage() {
       loadingSize={40}
       py={8}
       empty={{
-        icon: <LuggageOutlinedIcon />,
+        icon: <TripIcon />,
         title: "No trips yet.",
       }}
     >

@@ -1,6 +1,3 @@
-import CenterFocusStrongIcon from "@mui/icons-material/CenterFocusStrong";
-import CheckIcon from "@mui/icons-material/Check";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -30,6 +27,7 @@ import {
 } from "@/lib/hooks/useGauges";
 import { useSession } from "@/lib/hooks/useSession";
 import { useCreateWaterway } from "@/lib/hooks/useWaterways";
+import { ConfirmIcon, LocateIcon, SuccessIcon } from "@/lib/icons";
 import { labelSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -268,9 +266,7 @@ export default function SuggestWaterwayPanel({
           >
             <EmptyState
               icon={
-                <CheckCircleOutlineIcon
-                  sx={{ fontSize: 40, color: tokens.success }}
-                />
+                <SuccessIcon sx={{ fontSize: 40, color: tokens.success }} />
               }
               title="River submitted"
               caption="It appears in search once an admin approves it."
@@ -333,7 +329,7 @@ export default function SuggestWaterwayPanel({
                       sx={{ width: tokens.touch.min, height: tokens.touch.min }}
                       onClick={() => onFocusBounds?.(matchedBounds)}
                     >
-                      <CenterFocusStrongIcon sx={{ fontSize: 16 }} />
+                      <LocateIcon sx={{ fontSize: 16 }} />
                     </IconButton>
                   )}
                 </Box>
@@ -369,7 +365,7 @@ export default function SuggestWaterwayPanel({
                       >
                         {g.params?.join(", ")}
                       </Typography>
-                      <CenterFocusStrongIcon
+                      <LocateIcon
                         sx={{ fontSize: 16, color: "text.disabled", ml: 1 }}
                       />
                     </ListItemButton>
@@ -448,7 +444,7 @@ export default function SuggestWaterwayPanel({
             disabled={!submitted && (!canSubmit || !isAuthenticated)}
             ariaLabel={submitted ? "Done" : "Submit"}
           >
-            <CheckIcon fontSize="small" />
+            <ConfirmIcon fontSize="small" />
           </RoundActionButton>
         }
       />

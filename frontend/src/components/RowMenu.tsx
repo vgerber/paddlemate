@@ -1,9 +1,9 @@
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import IconButton from "@mui/material/IconButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { type ReactNode, useState } from "react";
+import { MoreIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -46,7 +46,7 @@ export default function RowMenu({
           setAnchor(e.currentTarget);
         }}
       >
-        <MoreVertIcon />
+        <MoreIcon />
       </IconButton>
       <Menu
         anchorEl={anchor}

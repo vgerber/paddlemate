@@ -208,6 +208,41 @@ rapid (a breaking wave), freestyle spot, hole, siphon, strainer (a tree), weir,
 dam, obstacle, bridge, portage, put in, take out, waterfall. Icons always sit
 beside the name.
 
+Every other icon comes from [`lib/icons.ts`](../frontend/src/lib/icons.ts), one
+export per idea, so the same idea shows the same glyph on every screen. No file
+imports `@mui/icons-material` directly (a Biome rule enforces it). The
+outlined Material glyph is the default; a filled one is allowed only where the
+fill carries meaning.
+
+| Idea | Export | Glyph | Where | Filled because |
+|---|---|---|---|---|
+| A map | `MapIcon` | MapOutlined | bottom nav, tools, map toggle, wizard done | |
+| A paddling log | `LogIcon` | DirectionsBoatOutlined | nav, log lists, trip logs, river state, inbox | |
+| A place | `PlaceIcon` | PlaceOutlined | comment pins, feature geometry, a stay of kind other | |
+| Add a place | `AddPlaceIcon` | AddLocationAltOutlined | comment map pin | |
+| A note | `NoteIcon` | ChatBubbleOutlined | river state | |
+| A note on the map | `NoteMarkerIcon` | ChatBubble | map note markers | solid shape stays legible over the map |
+| Expand / collapse | `ExpandIcon` / `CollapseIcon` | ExpandMore / ExpandLess | menus, rail, proposals, map pane | |
+| Confirm, done, copied | `ConfirmIcon` | Check | dialogs, forms, copy feedback | |
+| Success | `SuccessIcon` | CheckCircleOutlineOutlined | submitted steps | |
+| Search | `SearchIcon` | SearchOutlined | search fields, panels | |
+| A link / link revoked | `LinkIcon` / `LinkOffIcon` | LinkOutlined / LinkOffOutlined | markdown, invites | |
+| Locked / unlocked | `LockIcon` / `UnlockIcon` | LockOutlined / LockOpenOutlined | area lock | |
+| A starred section | `StarIcon` / `StarOutlineIcon` | Star / StarBorder | section rows, browse panel | the filled star means "starred" |
+| A trip | `TripIcon` | LuggageOutlined | nav, inbox, invite | |
+| A base (any) | `BaseIcon` | BedOutlined | trip bases empty state, inbox | |
+| A base by kind | `stayKinds.ts` | camp (tent), hotel, bivouac, holiday home, other (place) | trip bases, timeline | |
+| Back, close, more | `BackIcon`, `CloseIcon`, `MoreIcon` | ArrowBack, Close, MoreVert | panel headers, row menus | |
+| Add, edit, delete | `AddIcon`, `EditIcon`, `DeleteIcon` | Add, EditOutlined, DeleteOutlined | forms, rows | |
+| Copy, share | `CopyIcon`, `ShareIcon` | ContentCopyOutlined, IosShareOutlined | invites, tokens, coordinates | |
+| History | `HistoryIcon` | History | edits timeline, coordinates | |
+| Members, admin, leave | `MembersIcon`, `AdminIcon`, `LeaveIcon` | GroupOutlined, ShieldOutlined, LogoutOutlined | trip members, inbox | |
+| Pending proposal | `PendingIcon` | PendingActionsOutlined | browse panel, river state | |
+| Features of a river | `FeaturesIcon` | Waves | empty feature list | |
+
+The rest (arrows, chevrons, formatting, charts, thumbs, photos and so on) are
+one export each in the file; look there before adding one.
+
 ## Map
 
 The base map is light. Labels are ink on a white halo; region names are their

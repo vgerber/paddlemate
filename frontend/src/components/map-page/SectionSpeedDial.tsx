@@ -1,8 +1,8 @@
-import AddIcon from "@mui/icons-material/Add";
 import Fab from "@mui/material/Fab";
 import type { SxProps } from "@mui/material/styles";
 import { useNavigate } from "@tanstack/react-router";
 import { useSession } from "@/lib/hooks/useSession";
+import { AddIcon } from "@/lib/icons";
 import type { MapPageState } from "./useMapPageState";
 
 interface SectionSpeedDialProps {

@@ -1,4 +1,3 @@
-import WavesIcon from "@mui/icons-material/Waves";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
@@ -7,6 +6,7 @@ import EmptyState from "@/components/states/EmptyState";
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
 import { lineCoords } from "@/lib/geo";
 import { useSession } from "@/lib/hooks/useSession";
+import { FeaturesIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import { DeleteFeatureDialog } from "./DeleteFeatureDialog";
 import { FeatureStrip } from "./FeatureStrip";
@@ -169,7 +169,7 @@ export default function FeatureTimeline({
 
       {empty && (
         <EmptyState
-          icon={<WavesIcon />}
+          icon={<FeaturesIcon />}
           title="No rapids, hazards or access points yet."
           pt={2.5}
           pb={3}

@@ -1,6 +1,6 @@
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineOutlined";
 import Button from "@mui/material/Button";
 import { apiErrorMessage } from "@/lib/api/client";
+import { ErrorIcon } from "@/lib/icons";
 import StateLayout from "./StateLayout";
 
 /** A failed load as a quiet note: the server's message and a Retry. Shown
@@ -20,7 +20,7 @@ export default function ErrorState({
     <StateLayout
       data-testid="error-state"
       role="alert"
-      icon={<ErrorOutlineIcon />}
+      icon={<ErrorIcon />}
       title={apiErrorMessage(error, fallback)}
       py={py}
     >

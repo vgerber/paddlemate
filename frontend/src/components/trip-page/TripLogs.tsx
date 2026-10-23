@@ -1,6 +1,3 @@
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
-import LinkOffOutlinedIcon from "@mui/icons-material/LinkOffOutlined";
 import Box from "@mui/material/Box";
 import DescentCard from "@/components/descents/DescentCard";
 import ListPaneHeader from "@/components/ListPaneHeader";
@@ -8,6 +5,7 @@ import RowMenu from "@/components/RowMenu";
 import QueryStates from "@/components/states/QueryStates";
 import type { Descent } from "@/lib/api";
 import { useTripDescents } from "@/lib/hooks/useDescents";
+import { CopyIcon, LinkOffIcon, LogIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 interface Props {
@@ -43,7 +41,7 @@ export default function TripLogs({
       loadingSize={40}
       py={6}
       empty={{
-        icon: <DirectionsBoatOutlinedIcon />,
+        icon: <LogIcon />,
         title: "No logs in this trip yet.",
       }}
     >
@@ -78,14 +76,14 @@ export default function TripLogs({
                       ? [
                           {
                             label: "Unlink from trip",
-                            icon: <LinkOffOutlinedIcon fontSize="small" />,
+                            icon: <LinkOffIcon fontSize="small" />,
                             onClick: () => onUnlink(d),
                           },
                         ]
                       : [
                           {
                             label: "Copy to my log",
-                            icon: <ContentCopyOutlinedIcon fontSize="small" />,
+                            icon: <CopyIcon fontSize="small" />,
                             onClick: () => onCopy(d),
                           },
                         ]

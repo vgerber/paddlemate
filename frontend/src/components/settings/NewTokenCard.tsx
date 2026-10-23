@@ -1,10 +1,9 @@
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
-import DoneIcon from "@mui/icons-material/Done";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
+import { ConfirmIcon, CopyIcon } from "@/lib/icons";
 import { alphas, fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -53,7 +52,7 @@ export default function NewTokenCard({
           title={copied ? "Copied" : "Copy token"}
           onClick={() => copy(token)}
         >
-          {copied ? <DoneIcon /> : <ContentCopyOutlinedIcon />}
+          {copied ? <ConfirmIcon /> : <CopyIcon />}
         </IconButton>
       </Box>
       <Box sx={{ display: "flex", justifyContent: "flex-end" }}>

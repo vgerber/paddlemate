@@ -1,5 +1,3 @@
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
@@ -18,6 +16,7 @@ import { formatDate } from "@/lib/format";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
 import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useSession } from "@/lib/hooks/useSession";
+import { DeleteIcon, EditIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/logs/$descentId")({
@@ -104,12 +103,12 @@ function LogDetailPage() {
       actions={[
         {
           label: "Edit",
-          icon: <EditOutlinedIcon />,
+          icon: <EditIcon />,
           onClick: () => setEdit(true),
         },
         {
           label: "Delete",
-          icon: <DeleteOutlinedIcon />,
+          icon: <DeleteIcon />,
           danger: true,
           onClick: () => setConfirmDelete(true),
         },

@@ -1,4 +1,3 @@
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineOutlined";
 import Button from "@mui/material/Button";
 import {
   createFileRoute,
@@ -9,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import LoadingBox from "@/components/states/LoadingBox";
 import StateCard from "@/components/states/StateCard";
 import { getUserManager } from "@/lib/auth";
+import { ErrorIcon } from "@/lib/icons";
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
 import { safeReturnTo } from "@/lib/returnTo";
 import { theme } from "@/lib/theme";
@@ -45,11 +45,7 @@ function AuthCallback() {
 
   if (error) {
     return (
-      <StateCard
-        icon={<ErrorOutlineIcon />}
-        title="Sign-in failed"
-        caption={error}
-      >
+      <StateCard icon={<ErrorIcon />} title="Sign-in failed" caption={error}>
         <Button
           variant="contained"
           sx={{ minHeight: theme.tokens.touch.min }}

@@ -1,5 +1,3 @@
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef } from "react";
@@ -9,6 +7,7 @@ import type { Comment, Media } from "@/lib/api";
 import { categoryColor, categoryLabel } from "@/lib/comments";
 import { humanize, timeAgo } from "@/lib/format";
 import { pointCoords } from "@/lib/geo";
+import { DeleteIcon, PlaceIcon } from "@/lib/icons";
 import { alphas, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -55,14 +54,14 @@ export default function CommentRow({
   if (noteCoords && onFocusLocation) {
     actions.push({
       label: "Show on map",
-      icon: <PlaceOutlinedIcon fontSize="small" />,
+      icon: <PlaceIcon fontSize="small" />,
       onClick: () => onFocusLocation(noteCoords),
     });
   }
   if (canDelete) {
     actions.push({
       label: "Delete note",
-      icon: <DeleteOutlineIcon fontSize="small" />,
+      icon: <DeleteIcon fontSize="small" />,
       danger: true,
       onClick: onDelete,
     });

@@ -1,7 +1,3 @@
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import PlaylistAddOutlinedIcon from "@mui/icons-material/PlaylistAddOutlined";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
@@ -21,6 +17,7 @@ import type { TripStay } from "@/lib/api";
 import { dateRange } from "@/lib/format";
 import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
 import { useSectionDotLevels } from "@/lib/hooks/useWaterStatus";
+import { AddToListIcon, BaseIcon, DeleteIcon, EditIcon } from "@/lib/icons";
 import { durations } from "@/lib/motion";
 import { alphas, fonts, theme } from "@/lib/theme";
 import { baseColors, baseNumbers } from "@/lib/tripRange";
@@ -86,9 +83,7 @@ export default function TripStays({
   const numbers = baseNumbers(list);
 
   if (list.length === 0) {
-    return (
-      <EmptyState icon={<PlaceOutlinedIcon />} title="No bases yet." py={6} />
-    );
+    return <EmptyState icon={<BaseIcon />} title="No bases yet." py={6} />;
   }
 
   return (
@@ -186,19 +181,19 @@ function StayRow({
   if (isMember) {
     actions.push({
       label: "Edit base",
-      icon: <EditOutlinedIcon fontSize="small" />,
+      icon: <EditIcon fontSize="small" />,
       onClick: onEdit,
     });
     actions.push({
       label: "Edit watch list",
-      icon: <PlaylistAddOutlinedIcon fontSize="small" />,
+      icon: <AddToListIcon fontSize="small" />,
       onClick: onEditSections,
     });
   }
   if (canDelete) {
     actions.push({
       label: "Delete base",
-      icon: <DeleteOutlinedIcon fontSize="small" />,
+      icon: <DeleteIcon fontSize="small" />,
       onClick: onDelete,
       danger: true,
     });

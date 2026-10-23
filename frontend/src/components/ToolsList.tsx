@@ -1,10 +1,9 @@
-import ListAltOutlinedIcon from "@mui/icons-material/ListAltOutlined";
-import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
 import { useProposals } from "@/lib/hooks/useProposals";
+import { ListIcon, MapIcon } from "@/lib/icons";
 import { transition } from "@/lib/motion";
 import { alphas, theme } from "@/lib/theme";
 
@@ -18,14 +17,14 @@ const TOOLS = [
     to: "/proposals",
     title: "Proposals",
     description: "Review and submit river and section proposals",
-    icon: <ListAltOutlinedIcon />,
+    icon: <ListIcon />,
   },
   {
     to: "/tools/gauge-catalog",
     title: "Gauge coverage",
     description:
       "Map of used, fetched and available gauges across every provider",
-    icon: <MapOutlinedIcon />,
+    icon: <MapIcon />,
   },
 ] as const;
 

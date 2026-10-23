@@ -1,5 +1,3 @@
-import FilterListIcon from "@mui/icons-material/FilterList";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
@@ -29,6 +27,7 @@ import type {
 } from "@/lib/api";
 import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useProposals } from "@/lib/hooks/useProposals";
+import { ExpandIcon, FilterIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import { STATUS_LABEL } from "./status";
 
@@ -79,7 +78,7 @@ function FilterChip({
         label={
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
             {value ? `${label}: ${current?.label}` : label}
-            <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
+            <ExpandIcon sx={{ fontSize: 18 }} />
           </Box>
         }
       />
@@ -176,7 +175,7 @@ export default function ProposalsView({
               variant="dot"
               invisible={!hasActiveFilters || filtersOpen}
             >
-              <FilterListIcon fontSize="small" />
+              <FilterIcon fontSize="small" />
             </Badge>
           </IconButton>
         }

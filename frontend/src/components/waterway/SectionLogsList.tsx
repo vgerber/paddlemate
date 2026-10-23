@@ -1,10 +1,10 @@
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import { useNavigate } from "@tanstack/react-router";
 import DescentCard from "@/components/descents/DescentCard";
 import QueryStates from "@/components/states/QueryStates";
 import { useInfiniteDescents } from "@/lib/hooks/useDescents";
+import { LogIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -27,7 +27,7 @@ export default function SectionLogsList({ sectionId }: SectionLogsListProps) {
       query={query}
       count={descents.length}
       empty={{
-        icon: <DirectionsBoatOutlinedIcon />,
+        icon: <LogIcon />,
         title: "No descents logged for this section yet.",
       }}
       errorFallback="Could not load the logs."

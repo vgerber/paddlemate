@@ -1,7 +1,3 @@
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import CheckIcon from "@mui/icons-material/Check";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
-import MapIcon from "@mui/icons-material/Map";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -26,6 +22,7 @@ import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateSection } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway } from "@/lib/hooks/useWaterways";
+import { ConfirmIcon, ForwardIcon, MapIcon, SuccessIcon } from "@/lib/icons";
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
@@ -122,9 +119,7 @@ function SuggestSectionPage() {
 
   const submittedCard = (
     <EmptyState
-      icon={
-        <CheckCircleOutlineIcon sx={{ fontSize: 40, color: "text.disabled" }} />
-      }
+      icon={<SuccessIcon sx={{ fontSize: 40, color: "text.disabled" }} />}
       title="Section submitted"
       caption="It appears on the river once an admin approves it."
       py={8}
@@ -309,9 +304,9 @@ function SuggestSectionPage() {
           {submitted ? (
             <MapIcon fontSize="small" />
           ) : step < WIZARD_STEPS.length - 1 ? (
-            <ArrowForwardIcon fontSize="small" />
+            <ForwardIcon fontSize="small" />
           ) : (
-            <CheckIcon fontSize="small" />
+            <ConfirmIcon fontSize="small" />
           )}
         </RoundActionButton>
       }

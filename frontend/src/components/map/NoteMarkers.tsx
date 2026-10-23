@@ -1,8 +1,8 @@
-import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { Popup } from "react-map-gl/maplibre";
+import { NoteMarkerIcon } from "@/lib/icons";
 import { transition } from "@/lib/motion";
 import { labelSx, theme } from "@/lib/theme";
 import AccessibleMarker from "./AccessibleMarker";
@@ -98,7 +98,7 @@ export default function NoteMarkers({
                   }),
                 }}
               >
-                <ChatBubbleIcon
+                <NoteMarkerIcon
                   sx={{
                     fontSize: selected ? 14 : 12,
                     color: selected ? tokens.surfaceLowest : pin.color,

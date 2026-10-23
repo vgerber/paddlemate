@@ -1,5 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
-import DirectionsBoatOutlinedIcon from "@mui/icons-material/DirectionsBoatOutlined";
 import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -28,6 +26,7 @@ import SignInGate from "@/components/states/SignInGate";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
 import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
+import { AddIcon, LogIcon } from "@/lib/icons";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -87,12 +86,7 @@ function LogsPage() {
   // A public log is readable signed out, so the child route still renders.
   if (!isAuthenticated) {
     if (hasChild) return <Outlet />;
-    return (
-      <SignInGate
-        icon={<DirectionsBoatOutlinedIcon />}
-        title="Sign in to view your logs"
-      />
-    );
+    return <SignInGate icon={<LogIcon />} title="Sign in to view your logs" />;
   }
 
   const list = (
