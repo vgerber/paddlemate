@@ -206,6 +206,7 @@ async fn main() {
         state.live_events.clone(),
     ));
     tokio::spawn(paddlemate_api::notify::run_pruner(db.clone()));
+    tokio::spawn(paddlemate_api::query::history::run_pruner(db.clone()));
 
     let keycloak_auth_instance = Arc::new(KeycloakAuthInstance::new(
         KeycloakConfig::builder()

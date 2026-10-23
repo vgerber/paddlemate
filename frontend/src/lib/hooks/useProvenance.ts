@@ -4,12 +4,7 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 import type { HistoryTarget } from "@/components/provenance/types";
-import type {
-  DeletedFeature,
-  HistoryStep,
-  Proposal,
-  ProposalFilters,
-} from "@/lib/api";
+import type { HistoryStep, ProposalFilters } from "@/lib/api";
 import { proposalsApi } from "@/lib/api";
 import { client } from "@/lib/api/client";
 import { proposalKeys } from "@/lib/hooks/useProposals";
@@ -19,8 +14,6 @@ export const provenanceKeys = {
   all: ["provenance"] as const,
   history: (target: HistoryTarget) =>
     [...provenanceKeys.all, "history", target] as const,
-  deleted: (waterwayId: number, sectionId: number) =>
-    [...provenanceKeys.all, "deleted", waterwayId, sectionId] as const,
   sources: (waterwayId: number, sectionId?: number) =>
     [...provenanceKeys.all, "sources", waterwayId, sectionId ?? null] as const,
 };
@@ -81,10 +74,6 @@ function combineHistories(results: UseQueryResult<{ items: HistoryStep[] }>[]) {
   };
 }
 
-function combineProposals(results: UseQueryResult<Proposal>[]) {
-  return results.flatMap((r) => (r.data ? [r.data] : []));
-}
-
 /** The histories of several entries, each on its own cache key so a single
  * entry's view reuses them. Entries not loaded yet come back as undefined. */
 export function useEntryHistories(targets: HistoryTarget[]) {
@@ -105,45 +94,6 @@ export function useSectionProposals(sectionId: number) {
   return useQuery({
     queryKey: proposalKeys.list(filters),
     queryFn: () => proposalsApi.list(filters),
-  });
-}
-
-/** The section's deleted features, newest first: one page of up to 100.
- * The API finds them in the history, so admin deletes are in it too. */
-export function useDeletedFeatures(waterwayId: number, sectionId: number) {
-  return useQuery({
-    queryKey: provenanceKeys.deleted(waterwayId, sectionId),
-    queryFn: async () => {
-      const { data } = await client.GET(
-        "/api/v1/waterways/{waterway_id}/sections/{section_id}/deleted-features",
-        {
-          params: {
-            path: { waterway_id: waterwayId, section_id: sectionId },
-            query: { per_page: 100 },
-          },
-        },
-      );
-      if (!data) throw new Error("No deleted features");
-      return data.items;
-    },
-  });
-}
-
-/** The proposals behind the deletions, for the reviewer's note. One request
- * each, a few at a time; one the caller may not read is simply left out. */
-export function useDeletionProposals(deleted: DeletedFeature[]) {
-  const ids = deleted.flatMap((d) =>
-    d.proposal_id != null ? [d.proposal_id] : [],
-  );
-  return useQueries({
-    queries: ids.map((id) => ({
-      queryKey: proposalKeys.detail(id),
-      queryFn: ({ signal }: { signal: AbortSignal }) =>
-        limit(() => proposalsApi.get(id), signal),
-      retry: false,
-      meta: { errorHandledLocally: true },
-    })),
-    combine: combineProposals,
   });
 }
 

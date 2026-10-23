@@ -11,8 +11,6 @@ import { featureName } from "@/components/waterway/section-details/utils";
 import type { HistoryStep, SectionWithFeatures } from "@/lib/api";
 import { formatDate, humanize, sentenceCase } from "@/lib/format";
 import {
-  useDeletedFeatures,
-  useDeletionProposals,
   useEntryHistories,
   useSectionProposals,
 } from "@/lib/hooks/useProvenance";
@@ -23,7 +21,6 @@ import { labelSx, theme } from "@/lib/theme";
 import {
   type EditItem,
   type EntryRef,
-  goneEntries,
   mergeEdits,
   resolveProposals,
   sameEntry,
@@ -59,14 +56,9 @@ export function sectionEntries(section: SectionWithFeatures): EntryRef[] {
   ];
 }
 
-/** The live entries plus the features deleted since, whose history is still
- * there to open. */
+/** The section and its live features. */
 export function useEntries(section: SectionWithFeatures): EntryRef[] {
-  const deleted = useDeletedFeatures(section.waterway_id, section.id);
-  return useMemo(() => {
-    const live = sectionEntries(section);
-    return [...live, ...goneEntries(deleted.data ?? [], live)];
-  }, [section, deleted.data]);
+  return useMemo(() => sectionEntries(section), [section]);
 }
 
 function targetOf(
@@ -263,16 +255,13 @@ export default function EditsTimeline({
   );
   const histories = useEntryHistories(shown.map((e) => targetOf(section, e)));
   const proposals = useSectionProposals(section.id);
-  const deleted = useDeletedFeatures(section.waterway_id, section.id);
-  const removed = useDeletionProposals(deleted.data ?? []);
 
   const resolved = useMemo(
     () =>
-      resolveProposals(
-        [...(proposals.data ?? []), ...removed],
-        everything,
-      ).filter((p) => !filter || shown.some((e) => sameEntry(e, p.entry))),
-    [proposals.data, removed, everything, filter, shown],
+      resolveProposals(proposals.data ?? [], everything).filter(
+        (p) => !filter || shown.some((e) => sameEntry(e, p.entry)),
+      ),
+    [proposals.data, everything, filter, shown],
   );
   const { items, rejected } = useMemo(
     () =>

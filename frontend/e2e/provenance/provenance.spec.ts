@@ -586,103 +586,14 @@ test.describe("sources of a section", () => {
 });
 
 test.describe("deleted features", () => {
-  // The fixture's strainer 9595 is gone: its delete was approved, and its
-  // history (created, edited, deleted) sits under the section it had.
-  test("a deleted step is listed and opens the feature's history", async ({
-    page,
-  }) => {
+  // The fixture's strainer 9595 was deleted; it is kept only as retained
+  // history and is not shown.
+  test("the Sources tab lists no deleted feature", async ({ page }) => {
     await openSources(page);
-    const removed = vis(page, "history")
-      .getByTestId("history-step")
-      .filter({ hasText: "Strainer · Deleted feature" })
-      .filter({ hasText: "Confirmed gone" });
-    await expect(removed).toBeVisible();
-    await expect(removed.getByTestId("history-dot")).toHaveAttribute(
-      "data-kind",
-      "gone",
-    );
-    await removed.getByTestId("edit-entry").click();
-    await expect(header(page)).toContainText("Strainer");
-    await expect(header(page)).toContainText("Deleted feature");
-    await expect(
-      header(page).getByRole("button", { name: "Edit feature" }),
-    ).toHaveCount(0);
-    const steps = vis(page, "history").getByTestId("history-step");
-    await expect(steps).toHaveCount(3);
-    await expect(steps.first()).toContainText("Added");
-    await expect(steps.last()).toContainText("Deleted");
-    await expect(steps.last()).toContainText("Confirmed gone");
-    await header(page).getByRole("button", { name: "All edits" }).click();
-    await expect(vis(page, "sources")).toBeVisible();
-  });
-});
-
-test.describe("after a feature is deleted", () => {
-  test("the Edits tab lists it without a reload", async ({ page }) => {
-    let deleted = false;
-    const gone = {
-      deleted_at: days(0),
-      deleted_by: vincent,
-      feature_id: 9999,
-      feature_type: "weir",
-      name: "Altes Wehr",
-      proposal_id: null,
-      reviewer: null,
-    };
-    await page.route("**/api/v1/**/deleted-features*", (r) =>
-      r.fulfill({
-        json: {
-          items: deleted ? [gone] : [],
-          page: 1,
-          per_page: 100,
-          total: deleted ? 1 : 0,
-          total_pages: 1,
-        },
-      }),
-    );
-    await page.route("**/features/9999/history*", (r) =>
-      r.fulfill({
-        json: {
-          ...paged([
-            {
-              id: 91,
-              at: days(0),
-              kind: "deleted",
-              actor: vincent,
-              source: null,
-              proposal_id: null,
-              reviewer: null,
-              changes: [],
-            },
-          ]),
-        },
-      }),
-    );
-    await page.route(/\/features\/\d+$/, (r) => {
-      if (r.request().method() !== "DELETE") return r.fallback();
-      deleted = true;
-      return r.fulfill({ status: 204 });
-    });
-    await openSources(page);
-    await expect(vis(page, "history")).toBeVisible();
-    await expect(page.getByText("Deleted feature")).toHaveCount(0);
-
-    await page.getByRole("tab", { name: "Features", exact: true }).click();
-    const card = page.getByTestId("features-card").filter({ visible: true });
-    await card.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
-    await card
-      .getByRole("button", { name: "Feature actions", exact: true })
-      .first()
-      .click();
-    await page.getByRole("menuitem", { name: "Delete feature" }).click();
-    await page.getByRole("button", { name: "Delete", exact: true }).click();
-    await expect(page.getByRole("dialog")).toBeHidden();
-
-    await page.getByRole("tab", { name: "Sources", exact: true }).click();
-    await expect(
-      vis(page, "history")
-        .getByTestId("history-step")
-        .filter({ hasText: "Deleted feature" }),
-    ).toBeVisible();
+    const history = vis(page, "history");
+    await expect(history.getByTestId("history-step").first()).toBeVisible();
+    await expect(history.getByText("Deleted feature")).toHaveCount(0);
+    // The review note of the approved delete of the gone strainer 9595.
+    await expect(history.getByText("Confirmed gone")).toHaveCount(0);
   });
 });
