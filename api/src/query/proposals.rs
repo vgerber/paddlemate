@@ -316,7 +316,8 @@ pub async fn list_proposals(
                          AND (p.proposed_data->>'section_id')::bigint IN (
                              SELECT id FROM water_sections WHERE waterway_id = $8))
                  ))
-           ORDER BY p.created_at DESC"#,
+           ORDER BY p.created_at DESC, p.id DESC
+           LIMIT $9 OFFSET $10"#,
     )
     .bind(viewer_user_id)
     .bind(filters.status.as_deref())
@@ -326,6 +327,8 @@ pub async fn list_proposals(
     .bind(filters.feature_id)
     .bind(filters.section_id)
     .bind(filters.waterway_id)
+    .bind(filters.per_page)
+    .bind((filters.page - 1) * filters.per_page)
     .fetch_all(db)
     .await?;
 

@@ -1,7 +1,7 @@
 use aide::axum::IntoApiResponse;
 use axum::{
     Extension, Json,
-    extract::{FromRequest, Multipart, Path, Request, State},
+    extract::{DefaultBodyLimit, FromRequest, Multipart, Path, Request, State},
     http::StatusCode,
     response::IntoResponse,
 };
@@ -18,6 +18,15 @@ use crate::{
     query::media::{self as media_query, NewMedia},
     state::AppState,
 };
+
+/// Room for the form fields around a photo at its size limit.
+const FORM_OVERHEAD_BYTES: usize = 1024 * 1024;
+
+/// Body limit of the upload routes. Axum's default of 2 MB would cut a photo
+/// off before the 8 MB check in `read_form` could answer clearly.
+pub fn upload_body_limit() -> DefaultBodyLimit {
+    DefaultBodyLimit::max(MAX_UPLOAD_BYTES + FORM_OVERHEAD_BYTES)
+}
 
 /// aide cannot describe `Multipart`, so uploads take it through a wrapper
 /// that contributes nothing to the schema. The operation's description

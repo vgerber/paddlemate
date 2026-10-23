@@ -145,7 +145,8 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
         .api_route(
             "/{waterway_id}/media",
             get_with(media::list_waterway_media, media::list_waterway_media_docs)
-                .post_with(media::add_waterway_media, media::add_waterway_media_docs),
+                .post_with(media::add_waterway_media, media::add_waterway_media_docs)
+                .layer(media::upload_body_limit()),
         )
         .api_route(
             "/{waterway_id}/media/{media_id}",
@@ -261,7 +262,8 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
         .api_route(
             "/{waterway_id}/sections/{section_id}/media",
             get_with(media::list_section_media, media::list_section_media_docs)
-                .post_with(media::add_section_media, media::add_section_media_docs),
+                .post_with(media::add_section_media, media::add_section_media_docs)
+                .layer(media::upload_body_limit()),
         )
         .api_route(
             "/{waterway_id}/sections/{section_id}/comments",

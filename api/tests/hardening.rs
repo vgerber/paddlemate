@@ -352,3 +352,156 @@ async fn the_owner_keeps_the_owner_role(pool: PgPool) {
     .await;
     assert_eq!(r.status, StatusCode::OK, "{}", r.body);
 }
+
+#[sqlx::test]
+async fn votes_need_a_pending_proposal_and_the_list_is_paged(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = id_of(
+        call(
+            &app,
+            Method::POST,
+            "/waterways",
+            Who::Admin,
+            Some(json!({ "name": "Inn" })),
+        )
+        .await,
+    )
+    .await;
+    let mut ids = vec![];
+    for text in ["one", "two", "three"] {
+        let r = call(
+            &app,
+            Method::PUT,
+            &format!("/waterways/{w}"),
+            Who::User("mara-1"),
+            Some(json!({ "description": text })),
+        )
+        .await;
+        assert_eq!(r.status, StatusCode::ACCEPTED, "{}", r.body);
+        ids.push(r.body["id"].as_i64().unwrap());
+    }
+    let vote = |id: i64| format!("/proposals/{id}/vote");
+    let r = call(
+        &app,
+        Method::POST,
+        &vote(ids[0]),
+        Who::User("jon-1"),
+        Some(json!({ "vote": 1 })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NO_CONTENT);
+
+    let r = call(
+        &app,
+        Method::PATCH,
+        &format!("/proposals/{}", ids[0]),
+        Who::Admin,
+        Some(json!({ "status": "approved" })),
+    )
+    .await;
+    assert!(r.status.is_success(), "{} {}", r.status, r.body);
+    let r = call(
+        &app,
+        Method::POST,
+        &vote(ids[0]),
+        Who::User("jon-1"),
+        Some(json!({ "vote": -1 })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::CONFLICT);
+    let r = call(
+        &app,
+        Method::POST,
+        &vote(999_999),
+        Who::User("jon-1"),
+        Some(json!({ "vote": 1 })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
+
+    let all = call(&app, Method::GET, "/proposals", Who::Admin, None).await;
+    assert_eq!(all.body.as_array().unwrap().len(), 3);
+    let p1 = call(&app, Method::GET, "/proposals?per_page=2", Who::Admin, None).await;
+    assert_eq!(p1.body.as_array().unwrap().len(), 2);
+    let p2 = call(
+        &app,
+        Method::GET,
+        "/proposals?per_page=2&page=2",
+        Who::Admin,
+        None,
+    )
+    .await;
+    assert_eq!(p2.body.as_array().unwrap().len(), 1);
+}
+
+async fn upload(app: &Router, uri: &str, size: usize) -> common::Reply {
+    use axum::{body::Body, extract::Request, http::header};
+    use tower::ServiceExt;
+    let boundary = "XBOUNDARY";
+    let mut body = format!(
+        "--{boundary}\r\nContent-Disposition: form-data; name=\"kind\"\r\n\r\nphoto\r\n\
+         --{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.jpg\"\r\n\
+         Content-Type: image/jpeg\r\n\r\n"
+    )
+    .into_bytes();
+    body.extend(std::iter::repeat_n(0u8, size));
+    body.extend(format!("\r\n--{boundary}--\r\n").into_bytes());
+    let req = Request::builder()
+        .method(Method::POST)
+        .uri(uri)
+        .header("x-test-user", "mara-1")
+        .header(
+            header::CONTENT_TYPE,
+            format!("multipart/form-data; boundary={boundary}"),
+        )
+        .body(Body::from(body))
+        .unwrap();
+    let res = app.clone().oneshot(req).await.unwrap();
+    let status = res.status();
+    let bytes = axum::body::to_bytes(res.into_body(), usize::MAX)
+        .await
+        .unwrap();
+    common::Reply {
+        status,
+        body: serde_json::from_slice(&bytes).unwrap_or(Value::Null),
+    }
+}
+
+#[sqlx::test]
+async fn photo_uploads_get_the_advertised_size_limit(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = id_of(
+        call(
+            &app,
+            Method::POST,
+            "/waterways",
+            Who::Admin,
+            Some(json!({ "name": "Inn" })),
+        )
+        .await,
+    )
+    .await;
+    let uri = format!("/waterways/{w}/media");
+    // Past axum's 2 MB default: reaches the handler, which says what is wrong.
+    let r = upload(&app, &uri, 3 * 1024 * 1024).await;
+    assert_eq!(r.status, StatusCode::BAD_REQUEST);
+    assert!(
+        !r.body["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("Could not read"),
+        "{}",
+        r.body
+    );
+    let r = upload(&app, &uri, 8 * 1024 * 1024 + 1).await;
+    assert_eq!(r.body["error"]["message"], "Image must be 8 MB or smaller");
+    // Far past the limit is refused outright.
+    let r = upload(&app, &uri, 12 * 1024 * 1024).await;
+    assert!(
+        r.status == StatusCode::PAYLOAD_TOO_LARGE || r.status == StatusCode::BAD_REQUEST,
+        "{}",
+        r.status
+    );
+}

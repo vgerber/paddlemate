@@ -122,7 +122,7 @@ first. All five routes are public, like the entries themselves.
 | `GET /waterways/{id}/sections/{section_id}/history` | steps of the section, also after it (or its river) was deleted |
 | `GET /waterways/{id}/sections/{section_id}/features/{feature_id}/history` | steps of the feature, also after it (or its section or river) was deleted |
 | `GET /waterways/{id}/sections/{section_id}/deleted-features` | features deleted from the section, newest deletion first, each with its last name and type, when, by whom (and the proposal and reviewer, if one did); also after the section (or its river) was deleted; paged like the history routes |
-| `GET /waterways/{id}/sources` | every source (with its step count) and contributor (with step count and last step) for the river, its sections and features; `?section_id=` narrows both to that section and its features (404 when the section is not in this river) |
+| `GET /waterways/{id}/sources` | every source (with its step count) and contributor (with step count and last step) for the river, its sections and features; `?section_id=` narrows both to that section and its features (404 when the section is not in this river); readable after the river was deleted |
 
 A deleted entity keeps its history under the path it had; the entity itself
 answers 404. An id that never existed under that path, or exists under another
@@ -178,12 +178,20 @@ another section's path answers 404. Source ids are strings, as in the `sources`
 table.
 
 Steps are written in the same transaction as the change: admin creates, edits
-and deletes, and accepted proposals (the actor is the submitter, the reviewer
+and deletes (including the translation endpoints, which are admin-only), and accepted proposals (the actor is the submitter, the reviewer
 is the admin who approved). An edit that changes nothing writes no step. Old
 rows got a first step by migration `0048`: `imported` (source Rivermap) for
 rows the Rivermap importer made, else `created`. Not recorded: the bulk import
-binaries and the separate translation endpoints (`.../names/{lang}`,
-`.../descriptions/{lang}`) for sections and features.
+binaries.
+
+Other limits worth knowing: names (translations, descents) are at most 255
+characters and translated descriptions 10000; descent coordinates are range
+checked; `GET /users` and `GET /proposals` are paged (`page`, `per_page`, at
+most 100, default 100; `GET /users` also takes `q`); comment edits, deletes and
+moderation are looked up inside the river, section and feature of their path;
+votes need a pending proposal (409 otherwise); a group's owner role cannot be
+changed or overwritten; photo uploads accept up to 8 MB (the body limit of
+those routes is raised to match).
 
 Retention: history is the audit trail and is kept for as long as the data. There
 is no cleanup and no cascade from the entity; each step is bounded instead (32
