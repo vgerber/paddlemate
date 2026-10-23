@@ -21,8 +21,13 @@ async function openSearch(page: Page, query = "") {
   ).toBeVisible();
 }
 
-/** The sidebar and the phone overlay both mount the panel; one is hidden. */
-const seen = (l: Locator) => l.filter({ visible: true });
+/** The sidebar and the phone overlay both mount the panel; one is hidden. The
+ * swipe ghost of the neighbour pane renders a second, inert copy of the
+ * controls, which is not the active pane. */
+const seen = (l: Locator) =>
+  l
+    .filter({ visible: true })
+    .locator("xpath=self::*[not(ancestor::*[@data-testid='swipe-ghost'])]");
 
 const modeTab = (page: Page, name: string) =>
   seen(page.getByRole("tab", { name, exact: true }));
@@ -221,7 +226,9 @@ test.describe("name mode", () => {
     await openSearch(page);
     const field = nameField(page);
     await expect(field).toHaveAttribute("placeholder", "Name");
-    await expect(seen(page.getByTestId("SearchIcon")).first()).toBeVisible();
+    await expect(
+      seen(page.getByTestId("SearchOutlinedIcon")).first(),
+    ).toBeVisible();
   });
 
   test("@small chips are 44px white pills and teal when set", async ({
