@@ -74,6 +74,22 @@ test.describe("area and region on a phone", () => {
     await expect(overlay(page)).toBeVisible();
   });
 
+  test("the handle is a button that cycles the stops, by tap and by key", async ({
+    page,
+  }) => {
+    await open(page, "mode=area");
+    const handle = page.getByRole("button", { name: "Expand panel" });
+    const box = await handle.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await handle.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
+    const shrink = page.getByRole("button", { name: "Shrink panel" });
+    await expect(shrink).toHaveAttribute("aria-expanded", "true");
+    await shrink.click();
+    await expect(page.getByRole("region", { name: "Search" })).toBeVisible();
+  });
+
   test("Region shows the level chips and the way in through the map", async ({
     page,
   }) => {

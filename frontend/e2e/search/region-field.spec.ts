@@ -37,4 +37,24 @@ test.describe("region search field", () => {
     // The field stays: the region is a chip under it and typing lists again.
     await expect(field).toBeVisible();
   });
+
+  test("a whole word typed in the peek sheet keeps the field focused", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, "the peek sheet is the phone's");
+    await mockRegions(page);
+    await page.route(/\/api\/v1\/geo\/regions\?q=/, (route) =>
+      route.fulfill({ json: Object.values(REGIONS) }),
+    );
+    await page.goto("/?mode=region");
+    await appReady(page);
+    const field = page
+      .getByRole("textbox", { name: "Search regions" })
+      .filter({ visible: true });
+    await field.click();
+    await field.pressSequentially("Otztal", { delay: 80 });
+    await expect(field).toHaveValue("Otztal");
+    await expect(field).toBeFocused();
+  });
 });

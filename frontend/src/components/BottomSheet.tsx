@@ -47,6 +47,8 @@ export default function BottomSheet({
   const drag = useRef<{ y0: number; h0: number; samples: Sample[] } | null>(
     null,
   );
+  // A drag ends in a click on the handle; it must not also toggle.
+  const dragged = useRef(false);
   const [viewport, setViewport] = useState(() => window.innerHeight);
   const snaps = snapHeights(viewport, peekHeight);
   const resting = state === "open" ? snaps.open : snaps.peek;
@@ -66,7 +68,12 @@ export default function BottomSheet({
   }, [state, gap]);
 
   useEffect(() => {
-    if (state === "open") sheet.current?.focus();
+    // Not when focus is already inside: typing in a field that opens the
+    // sheet must keep the field focused (and the phone keyboard up).
+    const el = sheet.current;
+    if (state === "open" && el && !el.contains(document.activeElement)) {
+      el.focus();
+    }
   }, [state]);
 
   // Whatever had focus when the sheet appeared gets it back when it closes.
@@ -87,6 +94,7 @@ export default function BottomSheet({
 
   const onPointerDown = (e: PointerEvent<HTMLElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
+    dragged.current = false;
     drag.current = {
       y0: e.clientY,
       h0: resting,
@@ -99,6 +107,7 @@ export default function BottomSheet({
     const d = drag.current;
     if (!d || !sheet.current) return;
     d.samples.push({ x: e.clientY, t: e.timeStamp });
+    if (Math.abs(e.clientY - d.y0) > 4) dragged.current = true;
     const h = dragHeight(d.h0, e.clientY - d.y0, snaps);
     sheet.current.style.transform = `translate3d(0,${offsetFor(h, snaps)}px,0)`;
   };
@@ -171,6 +180,14 @@ export default function BottomSheet({
           }}
         >
           <Box
+            component="button"
+            type="button"
+            aria-expanded={state === "open"}
+            aria-label={state === "open" ? "Shrink panel" : "Expand panel"}
+            onClick={() => {
+              if (dragged.current) return;
+              onStateChange(state === "open" ? "peek" : "open");
+            }}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -181,6 +198,14 @@ export default function BottomSheet({
               zIndex: 1,
               touchAction: "none",
               cursor: "grab",
+              border: 0,
+              p: 0,
+              bgcolor: "transparent",
+              width: "100%",
+              "&:focus-visible": {
+                outline: `2px solid ${tokens.primary}`,
+                outlineOffset: -2,
+              },
               flexShrink: 0,
               height: tokens.touch.min,
               display: "flex",
