@@ -121,3 +121,17 @@ test.describe("area and region on a desktop", () => {
     await expect(page.getByRole("button", { name: "Lock area" })).toBeVisible();
   });
 });
+
+test("a locked area says so instead of asking for a click", async ({
+  page,
+}) => {
+  await open(page, "mode=area");
+  await page
+    .getByRole("button", { name: "Lock area" })
+    .filter({ visible: true })
+    .click();
+  await expect(page.getByText("The search center is locked.")).toBeVisible();
+  await expect(page.getByText(/the map to move the search center/)).toHaveCount(
+    0,
+  );
+});
