@@ -1,11 +1,10 @@
-import CloseIcon from "@mui/icons-material/Close";
-import SearchIcon from "@mui/icons-material/Search";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
 import ChipRow from "@/components/ChipRow";
 import type { AreaCircle } from "@/lib/geo";
+import { CloseIcon, SearchIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import AreaControls from "./AreaControls";
 import FilterChip from "./FilterChip";

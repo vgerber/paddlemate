@@ -1,5 +1,3 @@
-import StarIcon from "@mui/icons-material/Star";
-import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -9,6 +7,7 @@ import WaterLevelChip from "@/components/WaterLevelChip";
 import GradeTag from "@/components/waterway/GradeTag";
 import { sectionGradeText } from "@/components/waterway/section-details/grade";
 import type { SectionWithFeatures } from "@/lib/api";
+import { StarIcon, StarOutlineIcon } from "@/lib/icons";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
 
@@ -110,7 +109,7 @@ export default function SearchSectionRow({
           {isFavorite ? (
             <StarIcon fontSize="small" sx={{ color: tokens.primary }} />
           ) : (
-            <StarBorderIcon fontSize="small" />
+            <StarOutlineIcon fontSize="small" />
           )}
         </IconButton>
       )}

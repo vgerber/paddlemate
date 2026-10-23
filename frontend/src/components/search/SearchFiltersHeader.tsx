@@ -1,9 +1,9 @@
-import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import PanelHeader from "@/components/PanelHeader";
 import type { SwipeTrack } from "@/lib/hooks/useSwipeTabs";
+import { MapIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import type {
   SearchMode,
@@ -79,7 +79,7 @@ export default function SearchFiltersHeader({
               color: tokens.onSurfaceVariant,
             }}
           >
-            <MapOutlinedIcon />
+            <MapIcon />
           </IconButton>
         )}
       </Box>

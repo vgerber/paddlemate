@@ -1,4 +1,3 @@
-import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -9,6 +8,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useEffect, useRef } from "react";
 import BottomSheet from "@/components/BottomSheet";
 import { plural } from "@/lib/format";
+import { CloseIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import type { WaterLevel } from "@/lib/waterLevel";
 import DifficultySelect from "./DifficultySelect";

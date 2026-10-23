@@ -80,9 +80,9 @@ test.describe("area and region on a phone", () => {
     await open(page, "mode=region");
     await expect(sheet(page)).toBeVisible();
     await expect(
-      page.getByText("Tap a region on the map, or search one by name."),
+      page.getByText("Tap a state on the map, or search one by name."),
     ).toBeVisible();
-    const valleys = page.getByRole("button", { name: "Valleys" });
+    const valleys = page.getByRole("button", { name: "Valleys" }).first();
     await expect(valleys).toHaveAttribute("aria-pressed", "false");
     await valleys.click();
     await expect(valleys).toHaveAttribute("aria-pressed", "true");

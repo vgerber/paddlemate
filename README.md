@@ -20,7 +20,7 @@ water levels, and a shared logbook.
   accent-, digraph- and typo-tolerant, with an explanation of why each result
   matched. Area search by map point and radius; region search that turns the
   map into the picker - valleys, districts, mountain ranges and states in
-  view are outlined and clickable, and level chips limit the map to one kind;
+  view are outlined and clickable, one kind at a time, chosen by a segmented control or the zoom, a phone previews a tap before it picks;
   typo-tolerant by name, and an English country name lists its regions. Regions are
   filled from OpenStreetMap as you go. A Filters sheet for country, grade and
   the water level right now (kept in the URL). The empty search lists your

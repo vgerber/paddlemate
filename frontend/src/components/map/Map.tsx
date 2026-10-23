@@ -44,6 +44,7 @@ import PickModeButtons from "./PickModeButtons";
 import RangeRingLayers, { type RangeRing } from "./RangeRingLayers";
 import RegionChoicePopup from "./RegionChoicePopup";
 import RegionHiddenNote from "./RegionHiddenNote";
+import RegionHoverTag, { hoverUnder, type RegionHover } from "./RegionHoverTag";
 import RegionLayers from "./RegionLayers";
 import SectionLayers from "./SectionLayers";
 import { useControlInset } from "./useControlInset";
@@ -205,6 +206,9 @@ export interface MapRegions {
   /** Kinds in view too wide to draw; the map says so and how to see them. */
   hiddenKinds?: string[];
   onSelect?: (regionId: number) => void;
+  /** Phone: the region a first tap lit, and how to set it. */
+  previewId?: number | null;
+  onPreview?: (regionId: number | null) => void;
 }
 
 export interface WaterwayMapProps {
@@ -290,6 +294,8 @@ export default function WaterwayMap({
     borders: countryBorders,
     hiddenKinds: hiddenRegionKinds,
     onSelect: onRegionSelect,
+    previewId: regionPreviewId,
+    onPreview: onRegionPreview,
   } = regions;
   const {
     focusedPoint,
@@ -323,7 +329,8 @@ export default function WaterwayMap({
   const [showFeatureNames, setShowFeatureNames] = useState(true);
   const [viewBounds, setViewBounds] = useState<Bbox | null>(null);
   const [litRegionId, setLitRegionId] = useState<number | null>(null);
-  const [overRegion, setOverRegion] = useState(false);
+  const [hover, setHover] = useState<RegionHover | null>(null);
+  const overRegion = hover != null;
   useControlInset(mapRef, mapLoaded, inset);
   // The calm restyle goes first: it sets road opacity, which muting lowers.
   useCalmBaseMap(
@@ -384,7 +391,7 @@ export default function WaterwayMap({
     pickedRegion: regionOutline,
     countryBorders,
     viewBounds,
-    litRegionId,
+    litRegionId: litRegionId ?? regionPreviewId ?? hover?.id ?? null,
   });
 
   const { pickMode, togglePickMode, handleClick, regionMenu, closeRegionMenu } =
@@ -399,6 +406,8 @@ export default function WaterwayMap({
       onSectionToggle: picking.onSectionToggle,
       onSectionClick,
       onRegionSelect,
+      onRegionPreview,
+      regionPreviewId,
     });
 
   // Selected-sections overlay for picker mode, memoized like the rest.
@@ -478,12 +487,8 @@ export default function WaterwayMap({
             ? "pointer"
             : undefined
         }
-        onMouseMove={(e) =>
-          setOverRegion(
-            e.features?.some((f) => f.layer.id === REGION_FILL_LAYER) ?? false,
-          )
-        }
-        onMouseLeave={() => setOverRegion(false)}
+        onMouseMove={(e) => setHover(hoverUnder(e))}
+        onMouseLeave={() => setHover(null)}
         onLoad={() => {
           exposeMapForTests(mapRef.current);
           handleMapLoad();
@@ -506,7 +511,12 @@ export default function WaterwayMap({
           labels={regionLabelsGeoJSON}
           lit={regionLitGeoJSON}
           picked={pickedRegionGeoJSON}
+          dimmed={regionOutline != null}
         />
+
+        {hover && onRegionSelect && !pickMode && !regionMenu && (
+          <RegionHoverTag hover={hover} />
+        )}
 
         {regionMenu && onRegionSelect && (
           <RegionChoicePopup

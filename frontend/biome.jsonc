@@ -329,19 +329,6 @@
           }
         }
       }
-    },
-    // TEMPORARY: a region agent held these files while icons moved to
-    // @/lib/icons. Migrate them, then remove this override.
-    {
-      "includes": [
-        "src/components/search/**",
-        "src/components/map/RegionLayers.tsx",
-        "src/components/map-page/useRegionBrowse.ts",
-        "src/components/map/useMapClickHandler.ts"
-      ],
-      "linter": {
-        "rules": { "style": { "noRestrictedImports": "off" } }
-      }
     }
   ],
   "assist": {

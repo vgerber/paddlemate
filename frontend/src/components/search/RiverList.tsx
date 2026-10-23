@@ -1,5 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import List from "@mui/material/List";
@@ -9,6 +7,7 @@ import { listRowSx } from "@/components/canvas/flatRow";
 import EmptyState from "@/components/states/EmptyState";
 import type { WaterwayListItem } from "@/lib/api";
 import { humanize } from "@/lib/format";
+import { AddIcon, HourglassIcon } from "@/lib/icons";
 import ListGroupHeader from "./ListGroupHeader";
 import RiverRow from "./RiverRow";
 
@@ -103,7 +102,7 @@ function PendingRiverItems({
             }}
           />
           <Chip
-            icon={<HourglassEmptyIcon sx={{ fontSize: "0.8rem !important" }} />}
+            icon={<HourglassIcon sx={{ fontSize: "0.8rem !important" }} />}
             label="Pending approval"
             color="warning"
             size="small"

@@ -1,5 +1,3 @@
-import LockIcon from "@mui/icons-material/Lock";
-import LockOpenIcon from "@mui/icons-material/LockOpen";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Slider from "@mui/material/Slider";
@@ -9,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useMapVerb } from "@/components/waterway/useMapVerb";
 import type { AreaCircle } from "@/lib/geo";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
+import { LockIcon, UnlockIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -105,7 +104,7 @@ export default function AreaControls({
                 mr: { xs: `-${tokens.phone.trailInset}px`, md: 0 },
               }}
             >
-              {locked ? <LockIcon /> : <LockOpenIcon />}
+              {locked ? <LockIcon /> : <UnlockIcon />}
             </IconButton>
           </span>
         </Tooltip>

@@ -6,7 +6,6 @@ import {
   labelPoint,
   partOf,
   partOfChips,
-  rangesHiddenByNesting,
   regionContext,
   regionSubtitle,
   visibleRegions,
@@ -223,32 +222,6 @@ describe("labelPoint", () => {
 
   test("an empty line has no label", () => {
     expect(labelPoint({ type: "LineString", coordinates: [] })).toBeNull();
-  });
-});
-
-describe("rangesHiddenByNesting", () => {
-  const big = region(1, "range", 0, 0, 10, 10);
-  const a = region(2, "range", 1, 1, 3, 3);
-  const b = region(3, "range", 5, 5, 8, 8);
-
-  test("lists a range that holds two others", () => {
-    expect(rangesHiddenByNesting([big, a, b]).map((r) => r.id)).toEqual([1]);
-  });
-
-  test("agrees with visibleRegions about what is left out", () => {
-    const shown = visibleRegions([big, a, b], VIEW).map((r) => r.id);
-    const hidden = rangesHiddenByNesting([big, a, b]).map((r) => r.id);
-    expect(shown.some((id) => hidden.includes(id))).toBe(false);
-  });
-
-  test("never lists the picked range", () => {
-    expect(rangesHiddenByNesting([big, a, b], 1)).toHaveLength(0);
-  });
-
-  test("ignores districts", () => {
-    expect(
-      rangesHiddenByNesting([region(4, "district", 0, 0, 10, 10), a, b]),
-    ).toHaveLength(0);
   });
 });
 

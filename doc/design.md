@@ -127,7 +127,7 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 |---|---|
 | Section detail | The chart: from 1280 the reading block at the card's foot and the plot in the rail beside it, below that a card at the top of the pane (reading, plot, the credit and the period; on a phone the chart with an options button that opens reading and period); tabs Features, Logs, Notes, Sources; the feature strip (each feature as its icon, ranges as bands that fold and name what they hide; hidden for no rows, a single row, or put-in and take-out only); a graded range over 80% or more of the run is the section's grade, so it leaves the rows, strip and count (`sectionGrade` in `section-details/grade.ts`, shown in the card subtitle), with the hardest harder stretch in brackets; the count line reads "n features · m proposed"; a section with nothing but a grade reads "No rapids, hazards or access points yet."; the river state block (hazard, last paddled, latest note, open proposals) fills the card's spare room as a card that hugs its rows; the section's history opens from the Sources tab, a feature's from its open row |
 | Search | Tabs Name, Area, Region; the empty Name view lists starred sections and recent rivers, each river ending in `LevelDots` for its sections; a Filters sheet (country, grade, Water now); the chosen levels live in the `water` URL param |
-| Map region mode | The search panel (a peek sheet on a phone, the card on desktop) with the region field, level chips, and "Part of" naming the parents of a picked region; the regions stay visible on the map |
+| Map region mode | The search panel (a peek sheet on a phone, the card on desktop) with the region field, a segmented control for the kind drawn, and "Part of" naming the parents of a picked region; the regions stay visible on the map |
 | Logs | Two panes on desktop; the date is a picker field |
 | Trips | Plan, Bases, Members and Logs tabs; the Plan pins a week strip with a dot on days that have runs and opens to a month; its days read in three states - past quiet (sunk ground, no shadow, grey heading), today ringed in teal, upcoming white with a hairline outline; bases and candidate bases (a closed base ends in a `LevelDots` row, one dot per run on its watch list); admins get Add member and the trip actions |
 | Proposals | The diff shows the before struck through next to the after; reviewing opens a dialog |
@@ -250,7 +250,7 @@ own quiet type; the selected line and the picked region are teal; sections are
 a clear blue. Region boundaries are one thin grey line in one ink, each edge
 drawn once, with no per-region colors; names sit at the visual centre of each
 region; ranges that hold two or more others in
-view are not drawn; valleys are soft bands. The country is named once, at the
+view are not drawn; valleys are outlined like every other region. The country is named once, at the
 border, and in the picker.
 
 ## Wording

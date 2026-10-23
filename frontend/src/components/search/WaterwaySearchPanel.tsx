@@ -1,5 +1,3 @@
-import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
-import StarIcon from "@mui/icons-material/Star";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
@@ -14,6 +12,7 @@ import type { AreaCircle } from "@/lib/geo";
 import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
 import { useWaterways } from "@/lib/hooks/useWaterways";
+import { SearchIcon, StarIcon } from "@/lib/icons";
 import { readRecentWaterways } from "@/lib/recentWaterways";
 import { theme } from "@/lib/theme";
 import ListGroupHeader from "./ListGroupHeader";
@@ -287,7 +286,7 @@ export default function WaterwaySearchPanel({
       </>
     ) : (
       <EmptyState
-        icon={<SearchOutlinedIcon />}
+        icon={<SearchIcon />}
         title="Type a name, country or difficulty to search"
         py={4}
       />

@@ -21,8 +21,13 @@ async function openSearch(page: Page, query = "") {
   ).toBeVisible();
 }
 
-/** The sidebar and the phone overlay both mount the panel; one is hidden. */
-const seen = (l: Locator) => l.filter({ visible: true });
+/** The sidebar and the phone overlay both mount the panel; one is hidden. The
+ * swipe ghost of the neighbour pane renders a second, inert copy of the
+ * controls, which is not the active pane. */
+const seen = (l: Locator) =>
+  l
+    .filter({ visible: true })
+    .locator("xpath=self::*[not(ancestor::*[@data-testid='swipe-ghost'])]");
 
 const modeTab = (page: Page, name: string) =>
   seen(page.getByRole("tab", { name, exact: true }));
@@ -221,7 +226,9 @@ test.describe("name mode", () => {
     await openSearch(page);
     const field = nameField(page);
     await expect(field).toHaveAttribute("placeholder", "Name");
-    await expect(seen(page.getByTestId("SearchIcon")).first()).toBeVisible();
+    await expect(
+      seen(page.getByTestId("SearchOutlinedIcon")).first(),
+    ).toBeVisible();
   });
 
   test("@small chips are 44px white pills and teal when set", async ({
@@ -569,12 +576,14 @@ test.describe("region mode", () => {
     const field = regionField(page);
     await expect(field).toBeVisible();
     expect(await computed(field, "font-size")).toBe("16px");
-    // Before a pick the map is the way in: the hint says so, the levels are
-    // chips; typing swaps them for the list.
+    // Before a pick the map is the way in: the hint says so, the kinds are
+    // a segmented control; typing swaps them for the list.
     await expect(
-      seen(page.getByText(/a region on the map, or search one by name\./)),
+      seen(page.getByText(/on the map, or search one by name\./)),
     ).toBeVisible();
-    await expect(chip(page, "Valleys")).toBeVisible();
+    await expect(
+      seen(page.getByRole("button", { name: "Valleys", exact: true })),
+    ).toBeVisible();
     await field.fill("Wald");
     await expect(
       seen(page.getByText("Type a valley, district, state or range")),

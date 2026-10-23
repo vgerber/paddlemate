@@ -55,6 +55,8 @@ function input(over: Partial<MapSceneInput> = {}): MapSceneInput {
     regionOutline: undefined,
     countryBorders: [],
     selectRegion: () => Promise.resolve(),
+    regionPreviewId: null,
+    setRegionPreviewId: () => undefined,
     sectionLevels: { 1: "low" },
     searchSectionLevels: { 3: "high" },
     focusedPoint: null,
