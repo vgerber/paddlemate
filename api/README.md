@@ -189,7 +189,7 @@ characters and translated descriptions 10000; descent coordinates are range
 checked; `GET /users` and `GET /proposals` return the paged envelope (`page`, `per_page`, at
 most 100, default 100; `GET /users` also takes `q`); comment edits, deletes and
 moderation are looked up inside the river, section and feature of their path;
-votes need a pending proposal (409 otherwise); a group's owner role cannot be
+votes need a pending proposal (409 otherwise) and never come from its author (403); a group's owner role cannot be
 changed or overwritten; photo uploads accept up to 8 MB (the body limit of
 those routes is raised to match).
 

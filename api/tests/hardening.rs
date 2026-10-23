@@ -403,6 +403,15 @@ async fn votes_need_a_pending_proposal_and_the_list_is_paged(pool: PgPool) {
         &app,
         Method::POST,
         &vote(ids[0]),
+        Who::User("mara-1"),
+        Some(json!({ "vote": 1 })),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::FORBIDDEN, "{}", r.body);
+    let r = call(
+        &app,
+        Method::POST,
+        &vote(ids[0]),
         Who::User("jon-1"),
         Some(json!({ "vote": 1 })),
     )

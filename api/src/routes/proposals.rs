@@ -234,10 +234,13 @@ pub async fn vote_proposal(
     }
 
     match proposals::get_proposal(&app.pg_pool, path.proposal_id, None).await {
-        Ok(Some(p)) if p.status == ProposalStatus::Pending => {}
-        Ok(Some(_)) => {
+        Ok(Some(p)) if p.status != ProposalStatus::Pending => {
             return ApiError::conflict("Only pending proposals can be voted on").into_response();
         }
+        Ok(Some(p)) if p.submitted_by == token.user_id() => {
+            return ApiError::forbidden("You cannot vote on your own proposal").into_response();
+        }
+        Ok(Some(_)) => {}
         Ok(None) => return ApiError::not_found("Not found").into_response(),
         Err(err) => {
             return ApiError::from_db(
@@ -250,7 +253,8 @@ pub async fn vote_proposal(
 
     match proposals::vote_proposal(&app.pg_pool, path.proposal_id, token.user_id(), body.vote).await
     {
-        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => ApiError::conflict("Proposal can no longer be voted on").into_response(),
         Err(err) => ApiError::from_db(
             &format!("Error voting on proposal {}", path.proposal_id),
             err,
@@ -265,6 +269,7 @@ doc_fn!(vote_proposal_docs, op =>
         .response_with::<204, (), _>(|res| res.description("Vote recorded"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
         .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Invalid vote value"))
+        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("The proposal's author may not vote on it"))
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Proposal not found"))
         .response_with::<409, Json<ErrorResponse>, _>(|res| res.description("Proposal is no longer pending"))
         .security_requirement_multi(["Bearer", "ApiKey"])
