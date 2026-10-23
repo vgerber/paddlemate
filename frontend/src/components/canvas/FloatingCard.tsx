@@ -37,7 +37,9 @@ interface FloatingCardProps {
   screen?: string;
   /** Whether the grip shows; only a detail card has a resize range. */
   resizable?: boolean;
-  /** Full height between the margins; otherwise as tall as its content. */
+  /** Full height between the margins, so only the content scrolls and a
+   * docked action stays at the foot; otherwise as tall as its content. A
+   * list card is full height unless told otherwise. */
   fullHeight?: boolean;
   /** Folded first when the cards cover too much; higher stays open longer. */
   priority?: number;
@@ -58,7 +60,7 @@ export default function FloatingCard({
   children,
   screen = "default",
   resizable = kind === "detail",
-  fullHeight = false,
+  fullHeight = kind === "list",
   priority = canvas.cards[kind].priority,
 }: FloatingCardProps) {
   useLayoutEffect(() => {

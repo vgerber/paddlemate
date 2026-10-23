@@ -16,13 +16,13 @@ const { tokens } = theme;
 export default function CanvasHostView({ scene }: { scene: MapScene }) {
   const size = useWindowSize();
   useEffect(() => layout.setViewport(size), [size]);
-  const { padding, rect } = useFreeArea();
+  const { padding, clear, rect } = useFreeArea();
   const rail = useLayout((s) => s.dock?.height ?? null);
 
   const { camera, subject, chrome, ...mapProps } = scene;
   const mapChrome = useMemo(
-    () => ({ ...chrome, inset: controlInset(padding, rail) }),
-    [chrome, padding, rail],
+    () => ({ ...chrome, inset: controlInset(clear, rail) }),
+    [chrome, clear, rail],
   );
   const mapCamera = useMemo(
     () => ({ ...camera, padding, subject }),

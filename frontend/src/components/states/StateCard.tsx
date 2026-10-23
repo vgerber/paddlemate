@@ -13,6 +13,7 @@ export default function StateCard({
   title,
   caption,
   pt = 8,
+  flat = false,
   children,
 }: {
   icon?: ReactNode;
@@ -20,6 +21,8 @@ export default function StateCard({
   caption?: string;
   /** Top padding: less inside a panel than on a page of its own. */
   pt?: number;
+  /** Drops the card's own surface, for use inside a card that has one. */
+  flat?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -36,9 +39,11 @@ export default function StateCard({
           gap: 1,
           p: 3,
           textAlign: "center",
-          bgcolor: tokens.surfaceLowest,
-          borderRadius: `${tokens.radii.md}px`,
-          boxShadow: tokens.elevation.e1,
+          ...(!flat && {
+            bgcolor: tokens.surfaceLowest,
+            borderRadius: `${tokens.radii.md}px`,
+            boxShadow: tokens.elevation.e1,
+          }),
         }}
       >
         {icon && <StateTile>{icon}</StateTile>}

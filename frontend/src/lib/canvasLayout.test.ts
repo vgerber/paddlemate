@@ -57,6 +57,20 @@ describe("cover budget", () => {
   });
 });
 
+describe("room for the map", () => {
+  test("list and side at 1024 fold the list: 228px would be left", () => {
+    expect([...collapsedIds([list(), side()], 1024)]).toEqual(["list"]);
+  });
+
+  test("list and side at 1100 leave room and stay open", () => {
+    expect(collapsedIds([list(), side()], 1100).size).toBe(0);
+  });
+
+  test("the last card never folds for room", () => {
+    expect(collapsedIds([side(400)], 600).size).toBe(0);
+  });
+});
+
 describe("collapsedIds", () => {
   test("keeps everything while the cards cover at most 55%", () => {
     expect(collapsedIds([detail(486)], 1280).size).toBe(0);
@@ -123,6 +137,13 @@ describe("freeArea", () => {
     expect(freeArea(placed, 1000, 700, null).padding.left).toBe(450);
   });
 
+  test("clear is the card edge plus the margin, uncapped", () => {
+    const placed = layoutCards([side(400)], 768);
+    const free = freeArea(placed, 768, 700, null);
+    expect(free.padding.right).toBe(768 * 0.45);
+    expect(free.clear.right).toBe(16 + 400 + 32);
+  });
+
   test("falls back to the whole host when the free area is tiny", () => {
     const placed = [
       { ...detail(450), x: 16, collapsed: false },
@@ -131,6 +152,7 @@ describe("freeArea", () => {
     const free = freeArea(placed, 1000, 700, null);
     expect(free.fallback).toBe(true);
     expect(free.padding).toEqual({ top: 32, left: 32, right: 32, bottom: 32 });
+    expect(free.clear.left).toBe(16 + 450 + 32);
   });
 });
 

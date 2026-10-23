@@ -37,6 +37,10 @@ export interface Rect {
 export interface FreeArea {
   rect: Rect;
   padding: Padding;
+  /** How far the cards reach in from each window edge plus the margin, with
+   * no cap and no fallback: where map controls sit, so they are never under
+   * a card even when the fit padding is held back. */
+  clear: Padding;
   /** The free area was too small to frame anything, so the whole host is
    * used instead. */
   fallback: boolean;
@@ -62,7 +66,7 @@ export const expandedLimit = (
 ) => coverFrac(cards) * windowWidth;
 
 /** Ids to fold to their header so the expanded cards cover at most the
- * budget. Lowest priority folds first, a detail card after the others; the
+ * budget and leave the map `freeMin.w` to frame in. Lowest priority folds first, a detail card after the others; the
  * pinned card (the one the user just opened) only after everything else. The
  * last expanded card never folds. */
 export function collapsedIds(
@@ -88,9 +92,16 @@ export function collapsedIds(
     }
     return 0;
   });
+  // Width left between the cards: each card has a margin, the free area two
+  // margins of its own.
+  const room = () =>
+    windowWidth -
+    used() -
+    canvas.margin * (cards.length - folded.size) -
+    2 * canvas.freeMargin;
   for (const card of order) {
     // Half a pixel of slack: 70% of 1600 must not fail on rounding.
-    if (used() <= limit + 0.5) break;
+    if (used() <= limit + 0.5 && room() >= canvas.freeMin.w) break;
     if (cards.length - folded.size <= 1) break;
     folded.add(card.id);
   }
@@ -200,6 +211,18 @@ export function freeArea(
     right: Math.min(windowWidth - e.right + m, cap),
     bottom: dock == null ? m : canvas.margin + dock + m,
   };
+  const clear: Padding = {
+    ...padding,
+    left: e.left + m,
+    right: windowWidth - e.right + m,
+  };
+  // A folded header on the left stays over the map; when it reaches the
+  // controls' column they start below it.
+  const controlsLeft = windowWidth - (clear.right - (m - canvas.margin)) - 44;
+  const folded = placements.some(
+    (p) => p.collapsed && p.side === "left" && p.x + p.width > controlsLeft - 8,
+  );
+  if (folded) clear.top = m + canvas.headerHeight + 8;
   const rectOf = (p: Padding): Rect => ({
     x: p.left,
     y: p.top,
@@ -209,7 +232,7 @@ export function freeArea(
   const rect = rectOf(padding);
   if (rect.w < canvas.freeMin.w || rect.h < canvas.freeMin.h) {
     const whole = { top: m, left: m, right: m, bottom: m };
-    return { rect: rectOf(whole), padding: whole, fallback: true };
+    return { rect: rectOf(whole), padding: whole, clear, fallback: true };
   }
-  return { rect, padding, fallback: false };
+  return { rect, padding, clear, fallback: false };
 }

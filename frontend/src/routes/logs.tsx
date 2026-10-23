@@ -86,7 +86,13 @@ function LogsPage() {
   // A public log is readable signed out, so the child route still renders.
   if (!isAuthenticated) {
     if (hasChild) return <Outlet />;
-    return <SignInGate icon={<LogIcon />} title="Sign in to view your logs" />;
+    return (
+      <SignInGate
+        floating
+        icon={<LogIcon />}
+        title="Sign in to view your logs"
+      />
+    );
   }
 
   const list = (

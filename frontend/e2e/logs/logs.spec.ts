@@ -151,11 +151,11 @@ test.describe("logs list", () => {
     expect(await computed(c, "background-color")).not.toBe(
       "rgb(255, 255, 255)",
     );
-    // The card is as tall as its four rows, not the window.
+    // A list card runs the full height, so its action stays docked.
     const pane = await card(page, "Public multi-section run")
       .locator("xpath=ancestor::section")
       .boundingBox();
-    expect(pane?.height).toBeLessThan(700);
+    expect(pane?.height).toBeGreaterThan(700);
   });
 
   test("a log opens over the list on a phone and back returns", async ({
