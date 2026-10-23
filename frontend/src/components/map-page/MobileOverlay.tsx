@@ -65,7 +65,12 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
         aria-label="Panel"
         tabIndex={-1}
         onKeyDown={(e) => {
-          if (e.key === "Escape" && !e.defaultPrevented) closeOverlay();
+          // React bubbles keys from portals (the filters sheet, menus) up
+          // here; their Escape closes only themselves.
+          const inside = e.currentTarget.contains(e.target as Node);
+          if (e.key === "Escape" && inside && !e.defaultPrevented) {
+            closeOverlay();
+          }
         }}
         sx={{
           outline: "none",
