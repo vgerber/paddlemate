@@ -77,7 +77,7 @@ function NewLogPage() {
           navigate({
             to: "/logs/$descentId",
             params: { descentId: String(id) },
-            search: { edit: false },
+            search: { edit: undefined },
             replace: true,
           })
         }

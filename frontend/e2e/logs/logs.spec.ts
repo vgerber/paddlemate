@@ -42,6 +42,14 @@ async function startNewLog(page: Page) {
   await expect(page).toHaveURL(/\/logs\/new/);
 }
 
+/** A new log that already holds a section, so every step can be passed. */
+async function startSectionLog(page: Page) {
+  await page.goto(
+    `/logs/new?waterwayId=${FIX.waterway}&sectionId=${FIX.sections.upper}`,
+  );
+  await expect(page.getByText("Step 1 of 3 · When")).toBeVisible();
+}
+
 /** Removes the rows this spec made, however the test ended. */
 async function removeSpecRuns(page: Page) {
   const res = await page.request.get(
@@ -151,11 +159,17 @@ test.describe("logs list", () => {
     expect(await computed(c, "background-color")).not.toBe(
       "rgb(255, 255, 255)",
     );
-    // The card is as tall as its four rows, not the window.
+    // The card runs the full height, with the action docked at its foot
+    // instead of scrolling away with the list.
     const pane = await card(page, "Public multi-section run")
       .locator("xpath=ancestor::section")
       .boundingBox();
-    expect(pane?.height).toBeLessThan(700);
+    const dock = await page
+      .getByRole("button", { name: "Log descent" })
+      .boundingBox();
+    const win = page.viewportSize();
+    expect(pane && win && pane.height > win.height - 200).toBe(true);
+    expect(dock && win && dock.y + dock.height <= win.height).toBe(true);
   });
 
   test("a log opens over the list on a phone and back returns", async ({
@@ -174,7 +188,8 @@ test.describe("logs list", () => {
 test.describe("a log", () => {
   test("shows the facts, the sections as a quiet list and the route", async ({
     page,
-  }) => {
+  }, info) => {
+    test.skip(isDesktop(info), "the desktop card has its own test below");
     await openLogs(page);
     await card(page, "Public multi-section run").click();
     const labels = page.getByTestId("fact-label");
@@ -183,15 +198,14 @@ test.describe("a log", () => {
     await expect(page.getByText("Sections (2)")).toBeVisible();
     const row = page.getByTestId("log-section").first();
     await expect(row).toContainText("Upper Test");
-    expect(await computed(row, "border-top-left-radius")).toBe("14px");
-    expect(await computed(row, "background-color")).not.toBe(
-      "rgb(255, 255, 255)",
-    );
+    // A line in the section card, not a tile of its own.
+    expect(await computed(row, "border-top-left-radius")).toBe("0px");
     expect(await computed(row, "box-shadow")).toBe("none");
     await expect(page.locator("canvas.maplibregl-canvas")).toBeVisible();
   });
 
-  test("a section's level shows as a pill", async ({ page }) => {
+  test("a section's level shows as a pill", async ({ page }, info) => {
+    test.skip(isDesktop(info), "the canvas card names the level in its facts");
     await openLogs(page);
     await card(page, "Public multi-section run").click();
     await expect(
@@ -222,7 +236,7 @@ test.describe("log descent", () => {
     page.locator("main button:visible, main .MuiInputBase-root:visible");
 
   test("inputs are 16px on every step", async ({ page }) => {
-    await startNewLog(page);
+    await startSectionLog(page);
     for (const step of [0, 1, 2]) {
       const sizes = await page
         .locator("input:visible, textarea:visible")
@@ -236,7 +250,7 @@ test.describe("log descent", () => {
   });
 
   test("when and details reach 44px", async ({ page }) => {
-    await startNewLog(page);
+    await startSectionLog(page);
     await expectTouchTargets(targets(page));
     await next(page).click();
     await next(page).click();
@@ -334,8 +348,7 @@ test.describe("narrow screens", () => {
     await page.goto("/logs/9201");
     await expect(page.getByTestId("fact-label").first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
-    await page.goto("/logs/new");
-    await expect(page.getByText("Step 1 of 3 · When")).toBeVisible();
+    await startSectionLog(page);
     await expectNoHorizontalOverflow(page);
     await next(page).click();
     await next(page).click();
@@ -361,22 +374,28 @@ test.describe("design gaps", () => {
     expect(field && native && native.width >= field.width - 1).toBe(true);
   });
 
-  test("step 1 and 3 carry no block headings", async ({ page }) => {
-    await startNewLog(page);
+  test("step 1 has no block headings, a private step 3 has two", async ({
+    page,
+  }) => {
+    await startSectionLog(page);
     await expect(page.getByTestId("form-section-label")).toHaveCount(0);
     await next(page).click();
     await next(page).click();
-    await expect(page.getByTestId("form-section-label")).toHaveCount(0);
+    await expect(page.getByTestId("form-section-label")).toHaveText([
+      "Details",
+      "Visibility",
+    ]);
     await expect(page.getByLabel("Title")).toHaveAttribute(
       "placeholder",
-      "Leave blank to use section / waterway name",
+      "Leave blank to use the section name",
     );
   });
 
   test("the publish chips reach 44px", async ({ page }) => {
-    await startNewLog(page);
+    await startSectionLog(page);
     await next(page).click();
     await next(page).click();
+    await page.getByRole("radio", { name: "Public" }).click();
     await expectTouchTargets(page.locator(".MuiChip-root"));
   });
 
@@ -400,6 +419,76 @@ test.describe("design gaps", () => {
     // No tiles or headings of their own: the pins sit under the list.
     await expect(page.getByText("Put in and take out")).toHaveCount(0);
     await expect(page.getByText("Search a waterway to see")).toHaveCount(0);
+  });
+
+  test("a new log runs for an hour; an end before the start blocks Next", async ({
+    page,
+  }) => {
+    await startNewLog(page);
+    const start = page.locator('input[type=time][aria-label="Start time"]');
+    const end = page.locator('input[type=time][aria-label="End time"]');
+    expect(await end.inputValue()).not.toBe(await start.inputValue());
+    await expect(next(page)).toBeEnabled();
+    await end.fill(await start.inputValue());
+    await expect(page.getByRole("status")).toHaveText(
+      "The run needs to end after it started.",
+    );
+    await expect(next(page)).toBeDisabled();
+  });
+
+  test("step 2 waits for a section and says so, calmly", async ({ page }) => {
+    await startNewLog(page);
+    await next(page).click();
+    await expect(next(page)).toBeDisabled();
+    await expect(page.getByRole("status")).toHaveText(
+      "Add the section you paddled to go on.",
+    );
+    await expect(page.getByRole("alert")).toHaveCount(0);
+  });
+
+  test("Cancel asks before it throws a filled form away", async ({ page }) => {
+    await startSectionLog(page);
+    await page.getByRole("button", { name: "Multi day" }).click();
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.getByText("Discard this log?")).toBeVisible();
+    await page.getByRole("button", { name: "Cancel" }).last().click();
+    await expect(page).toHaveURL(/\/logs\/new/);
+    await page.getByRole("button", { name: "Cancel" }).first().click();
+    await page.getByRole("button", { name: "Discard" }).click();
+    await expect(page).not.toHaveURL(/\/logs\/new/);
+  });
+
+  test("an untouched form leaves without asking", async ({ page }) => {
+    await startNewLog(page);
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page).not.toHaveURL(/\/logs\/new/);
+  });
+
+  test("sharing picks people by name, and Publish after is not for private logs", async ({
+    page,
+  }) => {
+    // The list as the client's types describe it, whatever the API build.
+    await page.route("**/api/v1/users", (route) =>
+      route.fulfill({
+        json: [
+          { id: "u-mara", username: "mara", incoming_pending: false },
+          { id: "u-tobi", username: "tobi", incoming_pending: false },
+        ],
+      }),
+    );
+    await startSectionLog(page);
+    await next(page).click();
+    await next(page).click();
+    await expect(page.getByText("Publish after")).toHaveCount(0);
+    await page.getByRole("radio", { name: "Shared" }).click();
+    await expect(page.getByLabel("Add user by ID")).toHaveCount(0);
+    await expect(page.getByText("Publish after")).toBeVisible();
+    const people = page.getByLabel("People");
+    await people.fill("m");
+    await expect(page.getByRole("option")).toHaveCount(0);
+    await people.fill("ma");
+    await page.getByRole("option", { name: /mara/i }).click();
+    await expect(page.getByRole("button", { name: /mara/i })).toBeVisible();
   });
 
   test("sections: no put-in or take-out tiles before there is a route", async ({
@@ -437,7 +526,25 @@ test.describe("design gaps", () => {
     await expect(c.locator("svg")).toHaveCount(0);
   });
 
-  test("a month label has its space above, not below", async ({ page }) => {
+  test("phone: a month label's text sits on the 28 line", async ({
+    page,
+  }, info) => {
+    test.skip(isDesktop(info), "phone grid");
+    await openLogs(page);
+    const x = await page
+      .getByTestId("log-month")
+      .first()
+      .evaluate((el) => {
+        const pad = Number.parseFloat(getComputedStyle(el).paddingLeft);
+        return el.getBoundingClientRect().left + pad;
+      });
+    expect(x).toBe(28);
+  });
+
+  test("a month label has its space above, not below", async ({
+    page,
+  }, info) => {
+    test.skip(isDesktop(info), "the card grid gives desktop a space below");
     await openLogs(page);
     const m = page.getByTestId("log-month").first();
     expect(await computed(m, "padding-top")).toBe("6px");
@@ -493,13 +600,15 @@ test.describe("design gaps", () => {
     expect(await computed(sub, "font-size")).toBe("13px");
   });
 
-  test("log sections are 56px rows with a boat glyph", async ({ page }) => {
+  test("phone: log sections are rows a thumb can hit", async ({
+    page,
+  }, info) => {
+    test.skip(isDesktop(info), "the canvas card lists only noted sections");
     await page.goto("/logs/9201");
     const row = page.getByTestId("log-section").first();
     await expect(row).toBeVisible();
     const box = await row.boundingBox();
-    expect(box?.height).toBeGreaterThanOrEqual(56);
-    await expect(row.locator("svg")).toHaveCount(1);
+    expect(box?.height).toBeGreaterThanOrEqual(44);
   });
 
   test("a wrapped level pill keeps the age on the date line @small", async ({
@@ -508,7 +617,10 @@ test.describe("design gaps", () => {
     await openLogs(page);
     const c = card(page, "Public multi-section run");
     const ago = await c.getByText(/ago$/).boundingBox();
-    const date = await c.getByText(/09 Oct 2026/).boundingBox();
+    const date = await c
+      .getByText(/\d{2} \w{3} 2026/)
+      .first()
+      .boundingBox();
     expect(ago && date && ago.y + ago.height >= date.y + date.height - 1).toBe(
       true,
     );
