@@ -2,19 +2,23 @@ import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import { plural } from "@/lib/format";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
-/** "1 result", "3 results": every list names its count the same way. */
-export function countLabel(count: number): string {
-  return `${count} ${count === 1 ? "result" : "results"}`;
+/** "1 result", "3 logs": every list names its count the same way. The noun
+ * is what the list holds; a search says "result". */
+export function countLabel(count: number, noun = "result"): string {
+  return plural(count, noun);
 }
 
 interface ListPaneHeaderProps {
   /** How much is in the list. Omitted while there is no honest number, and
    * at zero, where the empty state speaks. */
   count?: number;
+  /** Singular noun for the count: "log" gives "6 logs". Defaults to "result". */
+  noun?: string;
   /** Suppresses the count rather than showing a stale one mid-fetch. */
   loading?: boolean;
   /** For a panel whose tabs already carry the counts on a phone. */
@@ -30,6 +34,7 @@ interface ListPaneHeaderProps {
  * list-plus-detail screen opens with this, so they all behave alike. */
 export default function ListPaneHeader({
   count,
+  noun,
   loading,
   hideCountOnMobile,
   actions,
@@ -63,7 +68,7 @@ export default function ListPaneHeader({
               : undefined,
           }}
         >
-          {countLabel(count)}
+          {countLabel(count, noun)}
         </Typography>
       )}
       {/* The spacer, not the count, holds the actions at the right edge: a

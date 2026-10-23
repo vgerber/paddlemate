@@ -25,12 +25,12 @@ interface Props {
   sections: SectionWithFeatures[];
   addedIds: Set<number>;
   onAdd: (section: SectionWithFeatures) => void;
-  /** Rendered between the waterway search and the add-section picker. */
+  /** Rendered between the river search and the add-section picker. */
   children?: ReactNode;
 }
 
 /**
- * Waterway search plus an add-section picker. Shared by the descent wizard and
+ * River search plus an add-section picker. Shared by the descent wizard and
  * a trip stay's watch list, which build the same kind of ordered list.
  */
 export default function SectionAdder({
@@ -42,6 +42,8 @@ export default function SectionAdder({
   children,
 }: Props) {
   const [input, setInput] = useState("");
+  // The picker stays empty after a pick: the section moves to the list above.
+  const [sectionInput, setSectionInput] = useState("");
 
   // Shares the map page's cache keys, so a waterway browsed there loads
   // instantly here (and vice versa). Debounced to one request per pause.
@@ -66,10 +68,10 @@ export default function SectionAdder({
         onChange={(_, val) => onWaterwayChange(val?.id ?? null)}
         loading={searching}
         noOptionsText={
-          input.length < 2 ? "Type to search waterways" : "No results"
+          input.length < 2 ? "Type to search rivers" : "No results"
         }
         renderInput={(params) => (
-          <TextField {...params} label="Search waterway" />
+          <TextField {...params} label="Search river" />
         )}
         slotProps={POPUP_INDICATOR}
       />
@@ -81,11 +83,19 @@ export default function SectionAdder({
         options={unadded}
         getOptionLabel={(opt) => localizedName(opt.name, opt.names)}
         value={null}
-        onChange={(_, val) => val && onAdd(val)}
+        inputValue={sectionInput}
+        onInputChange={(_, v, reason) => {
+          if (reason !== "reset") setSectionInput(v);
+        }}
+        onChange={(_, val) => {
+          if (!val) return;
+          setSectionInput("");
+          onAdd(val);
+        }}
         disabled={sections.length === 0}
         noOptionsText={
           sections.length === 0
-            ? "Search a waterway first"
+            ? "Search a river first"
             : "All sections added"
         }
         renderInput={(params) => (
@@ -93,7 +103,7 @@ export default function SectionAdder({
             {...params}
             label="Add section"
             placeholder={
-              sections.length === 0 ? "Search a waterway first" : undefined
+              sections.length === 0 ? "Search a river first" : undefined
             }
           />
         )}

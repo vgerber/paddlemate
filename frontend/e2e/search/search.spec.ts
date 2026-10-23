@@ -115,7 +115,8 @@ test.describe("header and tabs", () => {
     if (info.project.name === "desktop") {
       // One white surface from the tabs down to the rows: no grey band.
       const pane = seen(page.getByTestId("search-pane"));
-      const root = pane.locator("xpath=..");
+      // Pane, its wrapper, then the panel that owns the ground.
+      const root = pane.locator("xpath=../..");
       expect(await computed(root, "background-color")).toBe(white);
       const row = seen(page.getByTestId("search-section-row")).first();
       expect(await computed(row, "background-color")).toBe("rgba(0, 0, 0, 0)");
@@ -208,6 +209,12 @@ test.describe("name mode", () => {
   test("without history the panel says how to start, in the empty-state tile", async ({
     page,
   }) => {
+    // Stars are the account's data: none, whatever the fixture holds.
+    await page.route(/\/favorites\/sections$/, (route) =>
+      route.request().method() === "GET"
+        ? route.fulfill({ json: [] })
+        : route.fallback(),
+    );
     await page.goto("/");
     await appReady(page);
     await page.evaluate(() => localStorage.removeItem("pm.recent-waterways"));

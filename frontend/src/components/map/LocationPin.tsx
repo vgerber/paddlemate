@@ -18,6 +18,9 @@ interface LocationPinProps {
   color: string;
   title: string;
   coords: { lat: number; lon: number } | null;
+  /** A name for the spot (a put-in feature, say); shown in place of the
+   * raw coordinates, which move to the tooltip. */
+  place?: string;
   onClear: () => void;
   /** Optional free-text label; the field is hidden when onLabelChange is absent. */
   label?: string;
@@ -30,6 +33,7 @@ export default function LocationPin({
   color,
   title,
   coords,
+  place,
   onClear,
   label,
   onLabelChange,
@@ -73,9 +77,10 @@ export default function LocationPin({
       {hasCoords ? (
         <Typography
           variant="caption"
+          title={`${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}`}
           sx={{ color: "text.secondary", fontVariantNumeric: "tabular-nums" }}
         >
-          {coords.lat.toFixed(5)}, {coords.lon.toFixed(5)}
+          {place ?? `${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}`}
         </Typography>
       ) : (
         <Typography variant="caption" sx={{ color: "text.secondary" }}>
