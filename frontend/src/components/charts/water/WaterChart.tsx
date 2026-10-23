@@ -27,6 +27,8 @@ export interface WaterChartProps {
   headroom?: number;
   /** The reading rail's look and its pointer reading. */
   rail?: boolean;
+  /** How far the rail's words and axis labels keep from the plot's edges. */
+  edge?: number;
   /** The point the pointer picked, kept marked on the rail. */
   marker?: ScrubPoint | null;
   onScrub?: (point: ScrubPoint | null) => void;
@@ -45,6 +47,7 @@ export default function WaterChart({
   selectedFeature,
   headroom,
   rail,
+  edge,
   marker,
   onScrub,
 }: WaterChartProps) {
@@ -94,6 +97,7 @@ export default function WaterChart({
               descentSpans={descentSpans}
               headroom={headroom}
               rail={rail}
+              edge={edge}
               timeRange={timeRange}
               marker={marker}
               onScrub={onScrub}

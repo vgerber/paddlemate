@@ -17,6 +17,23 @@ function card(page: Page) {
   return page.locator('[data-testid="chart-card"]:visible').first();
 }
 
+/** The pseudo element is only a hit area if nothing clips it: a point 18px
+ * above and below each link's centre must still land on the link. */
+async function expectLinksHitAbove(links: Locator) {
+  const hit = await links.evaluateAll((els) =>
+    els.map((el) => {
+      const r = el.getBoundingClientRect();
+      const x = r.x + r.width / 2;
+      return [-18, 18].map(
+        (dy) => document.elementFromPoint(x, r.y + r.height / 2 + dy) === el,
+      );
+    }),
+  );
+  expect(hit.flat().every(Boolean), "links catch the pointer 18px off").toBe(
+    true,
+  );
+}
+
 async function openSection(page: Page) {
   await gotoSection(page, "lower");
   await expect(card(page)).toBeVisible();
@@ -164,6 +181,7 @@ test.describe("phone card", () => {
       expect(h.w).toBeGreaterThanOrEqual(44);
       expect(h.h).toBeGreaterThanOrEqual(44);
     }
+    await expectLinksHitAbove(links);
   });
 
   test("threshold labels sit short of the latest reading's dot", async ({
@@ -620,6 +638,7 @@ test.describe("reading block and rail", () => {
     expect(line.x - p.x, "the credit keeps its 16px").toBeGreaterThanOrEqual(
       15,
     );
+    await expectLinksHitAbove(credit.getByRole("link"));
   });
 
   test("pointing shows the readout in the plot; the values pane stays on the latest", async ({
@@ -635,6 +654,12 @@ test.describe("reading block and rail", () => {
     const readout = rail(page).getByTestId("chart-readout");
     await expect(readout).toContainText(/\d+(\.\d)? cm/);
     await expect(readout).toContainText(/, \d{2}:\d{2}/);
+    const line = await boxOf(rail(page).getByTestId("chart-marker-line"));
+    const beside = await boxOf(readout);
+    expect(
+      line.x < beside.x || line.x > beside.x + beside.width,
+      "the readout sits beside the hairline, not across it",
+    ).toBe(true);
     await expect(value).toHaveText(latestText);
     const before = await boxOf(block(page));
     // Off the plot: the point and its readout stay, the line turns dashed.

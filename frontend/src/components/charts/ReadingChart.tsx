@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import { lazy, type ReactNode, Suspense, useMemo, useState } from "react";
 import ChartDock from "@/components/canvas/ChartDock";
 import { useLayout } from "@/components/canvas/canvasStore";
+import { phoneCardSx } from "@/components/canvas/flatRow";
 import {
   ChartBody,
   type ChartLoad,
@@ -12,6 +13,7 @@ import ReadingBlock, {
   type ReadingView,
 } from "@/components/charts/ReadingBlock";
 import { typeLabel } from "@/components/charts/water/chartTime";
+import { AXIS_EDGE } from "@/components/charts/water/railGeometry";
 import type { ScrubPoint } from "@/components/charts/water/SeriesChart";
 import {
   activeMeasurementType,
@@ -41,14 +43,23 @@ const { tokens } = theme;
  * phone's grows by the free room the pane measured (--chart-extra). */
 const INLINE_PLOT = 128;
 const PHONE_PLOT = "calc(clamp(96px, 19vh, 112px) + var(--chart-extra, 0px))";
+/** The credit line is 18px of type; its box is 44 tall, reaching into the
+ * space around it, so the links keep their 44px hit area unclipped. */
 const SOURCE_LINE = 18;
+const SOURCE_HIT = tokens.touch.min;
 /** Side padding of the reading block: the rail's text line and the inline
  * card's. */
 const RAIL_INSET = 24;
 const INLINE_INSET = 16;
-/** Padding above and below the rail's plot: with the axis row and the source
- * line they leave the plot rail height minus 54. */
+/** Padding above and below the rail's plot: with the source line they leave
+ * the plot the rail's height minus 2 * RAIL_PAD + SOURCE_LINE. */
 const RAIL_PAD = 18;
+/** The reading number on the rail: a share of the dock's height, in bounds. */
+const RAIL_NUMBER = { min: 56, max: 80, share: 0.32 };
+const INLINE_NUMBER = 36;
+/** Room above the plot for text laid over it, in px. */
+const RAIL_HEADROOM = 6;
+const INLINE_HEADROOM = 10;
 
 /** Where a chart sits: the phone's own card, the rail from 1280, or the
  * first block of the detail card in between. */
@@ -80,7 +91,7 @@ export interface ReadingChartProps {
 /** The reading view for the charted range: the newest reading, when it was
  * taken and how long ago, and its level, or "No recent reading" when it is
  * too old to say. A hovered point shows in the plot, not here. */
-function useReadingView(
+function readingView(
   charted: WaterRangeWithStatus | undefined,
 ): ReadingView | null {
   if (!charted) return null;
@@ -155,7 +166,7 @@ export default function ReadingChart(props: ReadingChartProps) {
   const charted = readingPerType(own, preferredFeatureId).find(
     (r) => r.type === type,
   )?.range;
-  const view = useReadingView(charted);
+  const view = readingView(charted);
   const railHeight = dockHeight(windowHeight);
   const types = measurementTypesOf(own).map((t) => ({
     type: t,
@@ -188,7 +199,14 @@ export default function ReadingChart(props: ReadingChartProps) {
       phone={phone}
       inset={rail ? RAIL_INSET : INLINE_INSET}
       numberSize={
-        rail ? Math.round(Math.min(80, Math.max(56, railHeight * 0.32))) : 36
+        rail
+          ? Math.round(
+              Math.min(
+                RAIL_NUMBER.max,
+                Math.max(RAIL_NUMBER.min, railHeight * RAIL_NUMBER.share),
+              ),
+            )
+          : INLINE_NUMBER
       }
     />
   );
@@ -207,13 +225,29 @@ export default function ReadingChart(props: ReadingChartProps) {
           selectedFeatureId={selectedFeatureId}
           selectedFeature={selectedFeature}
           preferredFeatureId={preferredFeatureId}
-          headroom={rail ? 6 : 10}
+          headroom={rail ? RAIL_HEADROOM : INLINE_HEADROOM}
+          edge={phone ? tokens.phone.inner : AXIS_EDGE}
         />
       </Suspense>
     </ChartBody>
   );
   const source = (
-    <Box sx={{ height: SOURCE_LINE, minWidth: 0, overflow: "hidden" }}>
+    <Box
+      sx={{
+        height: SOURCE_HIT,
+        my: `${(SOURCE_LINE - SOURCE_HIT) / 2}px`,
+        mx: -1.5,
+        px: 1.5,
+        minWidth: 0,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        overflow: "hidden",
+        // Only the links catch the pointer, not the box around them.
+        pointerEvents: "none",
+        "& a": { pointerEvents: "auto" },
+      }}
+    >
       {footer}
     </Box>
   );
@@ -260,14 +294,12 @@ export default function ReadingChart(props: ReadingChartProps) {
     <Box
       data-testid="chart-card"
       sx={{
-        mx: 1.5,
+        ...phoneCardSx,
+        mx: `${tokens.phone.edge}px`,
         mt: 1.5,
         // The panel's gutter to the card below.
         mb: phone ? `${tokens.canvas.panel.gutter}px` : 0,
         flexShrink: 0,
-        bgcolor: tokens.surface,
-        borderRadius: `${tokens.radii.md}px`,
-        boxShadow: tokens.elevation.e1,
         overflow: "hidden",
       }}
     >

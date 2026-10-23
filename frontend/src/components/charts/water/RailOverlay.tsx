@@ -1,27 +1,13 @@
-import useMediaQuery from "@mui/material/useMediaQuery";
 import type { JSX } from "react";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { formatReading } from "@/lib/format";
 import { theme } from "@/lib/theme";
 import { levelInk, levelWord } from "@/lib/waterLevel";
 import { pointTime } from "./chartTime";
-import {
-  AXIS_EDGE,
-  clampLabelX,
-  clampReadoutX,
-  spreadWords,
-} from "./railGeometry";
+import { clampLabelX, clampReadoutX, spreadWords } from "./railGeometry";
 import { levelAt } from "./series";
 
 const { tokens } = theme;
-
-/** How far words and axis labels keep from the plot's edges: on a phone the
- * plot is the card's full width, so the card's inner 16 puts them on the 28
- * lines; the wide rail keeps `AXIS_EDGE`. */
-function useEdge() {
-  const phone = useMediaQuery(theme.breakpoints.down("md"), { noSsr: true });
-  return phone ? tokens.phone.inner : AXIS_EDGE;
-}
 
 /** Height of the axis row under the rail's plot, in px. */
 export const RAIL_AXIS = 20;
@@ -30,6 +16,7 @@ const DOT_R = 5;
 const DOT_RING = 2.5;
 const WORD_SIZE = 10.5;
 const READOUT_FLIP = 44;
+const READOUT_GAP = 8;
 /** Estimated glyph widths: the readout's 13px text and the 10.5px words. */
 const READOUT_CHAR = 7.2;
 const READOUT_TIME_CHAR = 5.6;
@@ -55,6 +42,9 @@ export interface RailPoint {
 
 export interface RailOverlayProps {
   width: number;
+  /** How far words keep from the plot's edges. On a phone the plot is the
+   * card's full width, so the card's inner 16 puts them on the 28 lines. */
+  edge: number;
   height: number;
   /** Room above the plot, in px. */
   top: number;
@@ -79,6 +69,7 @@ export interface RailOverlayProps {
  * readout. The scales mirror the chart's own (full width, no y axis). */
 export default function RailOverlay({
   width,
+  edge,
   height,
   top,
   domain,
@@ -90,7 +81,7 @@ export default function RailOverlay({
   marker,
   hovering,
 }: RailOverlayProps) {
-  const wordX = useEdge();
+  const wordX = edge;
   if (!yDomain) return null;
   const plotBottom = height - RAIL_AXIS;
   const span = domain[1] - domain[0] || 1;
@@ -123,7 +114,9 @@ export default function RailOverlay({
     const text = lv ? `${levelWord(lv.key)}, ${value}` : value;
     const half =
       Math.max(text.length * READOUT_CHAR, time.length * READOUT_TIME_CHAR) / 2;
-    const cx = clampReadoutX(mx, half, width);
+    // Beside the hairline, on the side with more room, not across it.
+    const side = mx < width / 2 ? 1 : -1;
+    const cx = clampReadoutX(mx + side * (half + READOUT_GAP), half, width);
     const below = my - top < READOUT_FLIP;
     const vy = below ? my + 22 : my - 25;
     const ty = below ? my + 36 : my - 11;
@@ -246,25 +239,32 @@ export interface RailTickProps {
   payload?: { value?: unknown };
 }
 
-/** An axis label that keeps clear of the plot's edges (see `useEdge`). */
+/** Where an axis label sits: kept clear of the plot's edges, and anchored on
+ * the edge it is pushed against so its real glyph edge (not the width
+ * estimate) lies on the line. */
+function anchorFor(cx: number, w: number, width: number, edge: number) {
+  if (cx - w / 2 <= edge) return { x: edge, anchor: "start" } as const;
+  if (cx + w / 2 >= width - edge) {
+    return { x: width - edge, anchor: "end" } as const;
+  }
+  return { x: cx, anchor: "middle" } as const;
+}
+
+/** An axis label that keeps clear of the plot's edges. */
 export function RailTick({
   x,
   y,
   width,
+  edge,
   label,
-}: RailTickProps & { width: number; label: string }) {
-  const edge = useEdge();
+}: RailTickProps & { width: number; edge: number; label: string }) {
   const w = label.length * TICK_CHAR;
-  const cx = clampLabelX(Number(x), w, width, edge);
-  // A label pushed against an edge is anchored there, so its real glyph edge
-  // (not the width estimate) sits on the line.
-  const atLeft = cx - w / 2 <= edge;
-  const atRight = !atLeft && cx + w / 2 >= width - edge;
+  const at = anchorFor(clampLabelX(Number(x), w, width, edge), w, width, edge);
   return (
     <text
-      x={atLeft ? edge : atRight ? width - edge : cx}
+      x={at.x}
       y={Number(y) + 4}
-      textAnchor={atLeft ? "start" : atRight ? "end" : "middle"}
+      textAnchor={at.anchor}
       fontSize={11}
       fill={tokens.onSurfaceVariant}
       style={{ fontVariantNumeric: "tabular-nums" }}

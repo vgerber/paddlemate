@@ -12,6 +12,8 @@ function liveRegion(): HTMLElement {
   region.setAttribute("aria-atomic", "true");
   region.setAttribute("data-testid", "chart-live-region");
   // Visually hidden, still read by screen readers.
+  // (MUI's `visuallyHidden` lives in @mui/utils, which is not a direct
+  // dependency, so the five properties are spelled out.)
   Object.assign(region.style, {
     position: "absolute",
     width: "1px",
@@ -41,4 +43,11 @@ export function announce(message: string) {
     }, THROTTLE_MS);
   };
   flush();
+}
+
+/** Drops a pending readout and the throttle timer, for a chart that unmounts. */
+export function cancelAnnounce() {
+  if (timer) clearTimeout(timer);
+  timer = null;
+  pending = null;
 }

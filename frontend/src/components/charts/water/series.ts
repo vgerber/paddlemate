@@ -72,3 +72,30 @@ export function levelAt(value: number, r: Thresholds): WaterLevel {
   if (r.range_low != null && value >= r.range_low) return "low";
   return "empty";
 }
+
+/** The reading a chart key moves the keyboard to, as an index into `times`
+ * (oldest first), or null for a key that does nothing. `at` is the reading
+ * now shown, by time: an index would point at another reading once the data
+ * is refetched or the window slides. Without one, the arrows start at the
+ * newest reading. */
+export function stepReading(
+  times: number[],
+  at: number | null,
+  key: string,
+): number | null {
+  if (times.length === 0) return null;
+  const last = times.length - 1;
+  const now = at == null ? -1 : times.indexOf(at);
+  const from = now >= 0 ? now : last;
+  const step = now >= 0 ? 1 : 0;
+  const target: Record<string, number> = {
+    ArrowLeft: from - step,
+    ArrowRight: from + step,
+    PageDown: from - 10,
+    PageUp: from + 10,
+    Home: 0,
+    End: last,
+  };
+  if (!(key in target)) return null;
+  return Math.min(Math.max(target[key], 0), last);
+}
