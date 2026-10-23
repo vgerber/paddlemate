@@ -44,7 +44,7 @@ async function openList(page: Page) {
 test.describe("trip list", () => {
   test("cards carry name, dates, avatars and sit as cards", async ({
     page,
-  }) => {
+  }, info) => {
     await openList(page);
     const card = page
       .getByTestId("trip-card")
@@ -55,8 +55,15 @@ test.describe("trip list", () => {
       const s = getComputedStyle(el);
       return { radius: s.borderRadius, shadow: s.boxShadow };
     });
-    expect(style.radius).toBe("14px");
-    expect(style.shadow).not.toBe("none");
+    // The phone draws each trip as a card; on the desktop the rows sit flat in
+    // the list card (desktopFlatRow).
+    if (info.project.name === "desktop") {
+      expect(style.radius).toBe("0px");
+      expect(style.shadow).toBe("none");
+    } else {
+      expect(style.radius).toBe("14px");
+      expect(style.shadow).not.toBe("none");
+    }
     await expect(page.getByRole("button", { name: "New trip" })).toBeVisible();
   });
 
@@ -287,7 +294,15 @@ test.describe("trip plan", () => {
 
   test("dates and day labels carry no capitals styling", async ({ page }) => {
     await openPlan(page);
-    await expect(dayCards(page).first()).toContainText(/Day -?\d/);
+    // The fixture's attendance starts before the trip, so the first card may
+    // be a "Before" day; the trip's own days are numbered from 1, and a day
+    // with nothing on it has no card.
+    await expect(
+      dayCards(page)
+        .filter({ hasText: /Day [1-9]/ })
+        .first(),
+    ).toBeVisible();
+    await expect(dayCards(page).filter({ hasText: /Day -\d/ })).toHaveCount(0);
     const bad = await page.locator("body *").evaluateAll((els) =>
       els
         .filter((el) => {
@@ -649,10 +664,32 @@ test.describe("trip gaps", () => {
     await expect(disc).toHaveCSS("box-shadow", /0px 0px 0px 4px/);
   });
 
-  test("days outside the trip sit back", async ({ page }) => {
+  test("days without a card sit back", async ({ page }) => {
     await openPhonePlan(page);
-    const first = strip(page).getByTestId("week-day").first();
-    await expect(first.getByTestId("day-number")).toHaveCSS("opacity", "0.55");
+    const withCard = new Set(
+      await dayCards(page).evaluateAll((els) =>
+        els.map((el) => el.getAttribute("data-date")),
+      ),
+    );
+    // Every cell obeys the rule, in the week and in the month (the month is
+    // wide enough to hold days the plan has no card for, whatever the weekday).
+    const faded = async (grid: Locator) => {
+      let sat = 0;
+      for (const cell of await grid.getByTestId("week-day").all()) {
+        const date = await cell.getAttribute("data-date");
+        const current = (await cell.getAttribute("data-current")) === "true";
+        if (current || withCard.has(date)) continue;
+        sat++;
+        await expect(cell.getByTestId("day-number")).toHaveCSS(
+          "opacity",
+          "0.55",
+        );
+      }
+      return sat;
+    };
+    await faded(strip(page));
+    await page.getByRole("button", { name: "Show the month" }).click();
+    expect(await faded(monthGrid(page))).toBeGreaterThan(0);
   });
 
   test("the open month dims the list and a tap on it closes the month", async ({
@@ -765,7 +802,7 @@ test.describe("trip gaps", () => {
     ).toBeVisible();
     const card = page.getByTestId("canvas-card-trip");
     await expect(card).toHaveCSS("background-color", "rgb(255, 255, 255)");
-    await expect(card).toHaveCSS("border-radius", "14px");
+    await expect(card).toHaveCSS("border-radius", "16px");
     await page.goto("/trips/new");
     await expect(page).toHaveURL(/\/trips\?new=true/);
     await expect(page.getByTestId("trip-card").first()).toBeVisible();
