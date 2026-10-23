@@ -61,6 +61,8 @@ export function useMapCameraEffects({
   paddingRef.current = padding;
   const subjectRef = useRef(subject);
   subjectRef.current = subject;
+  const focusedRef = useRef(focusedPoint);
+  focusedRef.current = focusedPoint;
   const padKey = padding
     ? `${padding.top},${padding.right},${padding.bottom},${padding.left}`
     : "";
@@ -201,7 +203,18 @@ export function useMapCameraEffects({
       const map = mapRef.current;
       const s = subjectRef.current;
       const pad = paddingRef.current;
-      if (!map || !s || !pad || subjectInside(map, s, pad)) return;
+      if (!map || !pad) return;
+      // A focused feature keeps its place in the free area, at its zoom.
+      const focus = focusedRef.current;
+      if (focus) {
+        map.easeTo({
+          center: focus,
+          padding: pad,
+          duration: dragging ? 0 : SETTLE_MS,
+        });
+        return;
+      }
+      if (!s || subjectInside(map, s, pad)) return;
       map.fitBounds(s.bounds, {
         padding: pad,
         duration: dragging ? 0 : SETTLE_MS,

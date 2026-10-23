@@ -172,7 +172,7 @@ export default function WaterwayBrowsePanel({
   // primary add. Three groups, a divider between: the section's own, the
   // grade, the view toggle.
   const own: RowAction[] = [];
-  if (inFeatures && onToggleFavorite) {
+  if (inFeatures && isAuthenticated && onToggleFavorite) {
     const starred = favoritedIds?.has(selectedSection.id) ?? false;
     own.push({
       label: starred ? "Remove favorite" : "Add favorite",

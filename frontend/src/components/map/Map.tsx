@@ -331,6 +331,8 @@ export default function WaterwayMap({
   const [litRegionId, setLitRegionId] = useState<number | null>(null);
   const [hover, setHover] = useState<RegionHover | null>(null);
   const overRegion = hover != null;
+  // A section line or feature under the pointer, which a click opens.
+  const [overHit, setOverHit] = useState(false);
   useControlInset(mapRef, mapLoaded, inset);
   // The calm restyle goes first: it sets road opacity, which muting lowers.
   useCalmBaseMap(
@@ -481,14 +483,25 @@ export default function WaterwayMap({
         style={{ width: "100%", height: "100%" }}
         mapStyle={satellite ? SATELLITE_STYLE : LIBERTY_STYLE}
         onClick={handleClick}
-        // A region is clickable wherever it is drawn; say so with the cursor.
+        // A region, section line or feature is clickable wherever it is
+        // drawn; say so with the cursor.
         cursor={
-          overRegion && onRegionSelect && !pickMode && !onAreaCircleChange
+          !pickMode &&
+          !onAreaCircleChange &&
+          (overHit || (overRegion && onRegionSelect))
             ? "pointer"
             : undefined
         }
-        onMouseMove={(e) => setHover(hoverUnder(e))}
-        onMouseLeave={() => setHover(null)}
+        onMouseMove={(e) => {
+          setHover(hoverUnder(e));
+          setOverHit(
+            (e.features ?? []).some((f) => f.layer.id !== REGION_FILL_LAYER),
+          );
+        }}
+        onMouseLeave={() => {
+          setHover(null);
+          setOverHit(false);
+        }}
         onLoad={() => {
           exposeMapForTests(mapRef.current);
           handleMapLoad();
