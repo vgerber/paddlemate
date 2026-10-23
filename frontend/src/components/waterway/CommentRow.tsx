@@ -129,7 +129,7 @@ export default function CommentRow({
         <Box sx={{ flex: 1 }} />
         {/* Pulled into the card's padding so the menu does not add height. */}
         <Box sx={{ mr: -1.5, my: -0.5 }}>
-          <RowMenu actions={actions} />
+          <RowMenu actions={actions} name="Comment" />
         </Box>
       </Box>
 

@@ -46,7 +46,7 @@ export default function TripLogs({
       }}
     >
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        <ListPaneHeader count={descents.length} sx={{ px: 0.5 }} />
+        <ListPaneHeader count={descents.length} noun="log" sx={{ px: 0.5 }} />
         {descents.map((d) => (
           // The same card as My logs: the card is the log, its menu sits inside.
           <Box

@@ -3,6 +3,7 @@ import type {
   SectionWaterSnapshot,
   SectionWithFeatures,
 } from "@/lib/api";
+import { localizedName } from "@/lib/localization";
 
 /** One snapshot per gauge series - older descents stored one per feature
  * range, which would repeat the same reading. */
@@ -68,3 +69,18 @@ export const VISIBILITY_LABELS = {
   shared: "Shared",
   public: "Public",
 } as const;
+
+/** Name of the put-in or take-out feature a log starts or ends at: the first
+ * such feature of the first picked section, the last of the last. Undefined
+ * when the river has none, so the form falls back to coordinates. */
+export function endpointName(
+  picked: number[],
+  sections: SectionWithFeatures[],
+  end: "put_in" | "take_out",
+): string | undefined {
+  const id = end === "put_in" ? picked[0] : picked[picked.length - 1];
+  const section = sections.find((s) => s.id === id);
+  const feature = section?.features?.find((f) => f.feature_type === end);
+  const first = feature?.names?.[0]?.name;
+  return first ? localizedName(first, feature?.names) : undefined;
+}

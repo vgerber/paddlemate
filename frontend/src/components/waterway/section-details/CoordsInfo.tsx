@@ -105,7 +105,7 @@ export function CoordsInfo({
         <OpenExternalIcon fontSize="small" />
       </IconButton>
       {actions}
-      <RowMenu actions={menuActions} />
+      <RowMenu actions={menuActions} name="Feature" />
     </Stack>
   );
 }

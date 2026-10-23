@@ -161,6 +161,7 @@ export default function ProposalsView({
     <>
       <ListPaneHeader
         count={proposals?.length ?? 0}
+        noun="proposal"
         loading={isLoading}
         actions={
           <IconButton
