@@ -190,3 +190,68 @@ async fn comments_are_reached_only_through_their_own_parents(pool: PgPool) {
     .await;
     assert_eq!(r.status, StatusCode::NO_CONTENT);
 }
+
+fn descent(extra: Value) -> Value {
+    let mut body = json!({
+        "start_time": "2026-07-01T09:00:00Z",
+        "end_time": "2026-07-01T12:00:00Z",
+        "visibility": { "type": "private" },
+        "put_in_lat": 47.0,
+        "put_in_lon": 10.0,
+        "take_out_feature_id": null,
+        "take_out_lat": 47.1,
+        "take_out_lon": 10.1,
+        "sections": [],
+    });
+    for (k, v) in extra.as_object().unwrap() {
+        body[k] = v.clone();
+    }
+    body
+}
+
+#[sqlx::test]
+async fn descent_text_and_coordinates_are_bounded(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let who = Who::User("mara-1");
+    let ok = call(
+        &app,
+        Method::POST,
+        "/descents",
+        who,
+        Some(descent(json!({ "name": "n".repeat(255) }))),
+    )
+    .await;
+    assert_eq!(ok.status, StatusCode::CREATED, "{}", ok.body);
+    let id = ok.body["id"].as_i64().unwrap();
+
+    for (extra, target) in [
+        (json!({ "name": "n".repeat(256) }), "name"),
+        (json!({ "note": "n".repeat(10_001) }), "note"),
+        (json!({ "put_in_label": "l".repeat(256) }), "put_in_label"),
+        (json!({ "put_in_lat": 999.0 }), "put_in_lat"),
+        (json!({ "take_out_lon": -181.0 }), "take_out_lon"),
+    ] {
+        let r = call(
+            &app,
+            Method::POST,
+            "/descents",
+            who,
+            Some(descent(extra.clone())),
+        )
+        .await;
+        assert_eq!(r.status, StatusCode::BAD_REQUEST, "POST {extra}");
+        assert_eq!(r.body["error"]["target"], target);
+        let patch = extra.clone();
+        let r = call(
+            &app,
+            Method::PATCH,
+            &format!("/descents/{id}"),
+            who,
+            Some(patch),
+        )
+        .await;
+        // A lone coordinate also fails the pairing rule, still a 400.
+        assert_eq!(r.status, StatusCode::BAD_REQUEST, "PATCH {extra}");
+    }
+}
