@@ -494,7 +494,7 @@ async fn accepted_proposals_leave_proposal_steps(pool: PgPool) {
         None,
     )
     .await;
-    let first = &list.body.as_array().unwrap()[0];
+    let first = &list.body["items"].as_array().unwrap()[0];
     assert_eq!(first["submitted_by_name"], "mara");
     assert_eq!(first["reviewed_by_name"], "root");
 }
@@ -937,7 +937,7 @@ async fn a_proposal_carries_the_submitters_note_into_its_history_step(pool: PgPo
     let r = get(&app, &format!("/proposals/{pid}")).await;
     assert_eq!(r.body["submitter_note"], "Paddled it last week");
     let r = get(&app, "/proposals").await;
-    assert_eq!(r.body[0]["submitter_note"], "Paddled it last week");
+    assert_eq!(r.body["items"][0]["submitter_note"], "Paddled it last week");
 
     call(
         &app,
