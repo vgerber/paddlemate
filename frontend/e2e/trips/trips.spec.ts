@@ -11,6 +11,10 @@ import {
 
 const TRIP = FIX.trips[0];
 
+/** The native input behind a PickerField (the visible text field shares its label). */
+const pickerInput = (page: Page, label: string) =>
+  page.locator(`input[aria-label="${label}"]`);
+
 const strip = (page: Page) =>
   page.getByTestId("week-strip").filter({ visible: true });
 const dayCards = (page: Page) =>
@@ -434,7 +438,7 @@ test.describe("trip forms", () => {
   async function expectFormFields(page: Page) {
     const sizes = await page
       .locator(
-        "input:visible:not([aria-hidden]), textarea:visible, [role=combobox]:visible",
+        "input:visible:not([aria-hidden]):not([type=date]):not([type=time]), textarea:visible, [role=combobox]:visible",
       )
       .evaluateAll((els) =>
         els.map((el) => ({
@@ -445,7 +449,7 @@ test.describe("trip forms", () => {
           ),
         })),
       );
-    expect(sizes.length).toBeGreaterThan(2);
+    expect(sizes.length).toBeGreaterThanOrEqual(2);
     for (const s of sizes) {
       expect(s.font).toBe("16px");
       expect(s.h).toBeGreaterThanOrEqual(44);
@@ -516,7 +520,7 @@ test.describe("trip forms", () => {
 
   test("an end before the start blocks saving", async ({ page }) => {
     await page.goto(`/trips/${TRIP}?edit=true`);
-    await page.getByLabel("Ends (optional)").fill("2000-01-01");
+    await pickerInput(page, "Ends (optional)").fill("2000-01-01");
     await expect(
       page.getByRole("button", { name: "Save trip" }),
     ).toBeDisabled();
@@ -554,14 +558,70 @@ test.describe("add member dialog", () => {
       await expect(page.getByTestId("sheet-scrim")).toBeVisible();
       await expect(dialog).toHaveCSS("border-top-left-radius", "20px");
     }
+    // Nobody is listed until a name is typed.
+    await expect(dialog.getByTestId("user-pick")).toHaveCount(0);
+    await dialog.getByLabel("Search people").fill("jo");
     await dialog.getByTestId("user-pick").first().click();
     await expect(dialog.getByRole("alert")).toContainText("Nope.");
     await expect(dialog).toBeVisible();
   });
+
+  test("the search asks the server for the typed name", async ({ page }) => {
+    const asked: string[] = [];
+    page.on("request", (r) => {
+      const url = new URL(r.url());
+      if (url.pathname.endsWith("/users")) asked.push(url.search);
+    });
+    await openTab(page, "Members");
+    await page.getByRole("button", { name: "Add member" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Search people").fill("jo");
+    await expect(dialog.getByTestId("user-pick").first()).toContainText("jo");
+    expect(asked.length).toBeGreaterThan(0);
+    expect(asked.every((q) => q.includes("q=jo"))).toBe(true);
+  });
+});
+
+test.describe("trip fixes", () => {
+  test("dates read in the app's format, not the browser's", async ({
+    page,
+  }) => {
+    await page.goto("/trips/new");
+    const picker = pickerInput(page, "Starts");
+    await expect(picker).toHaveAttribute("type", "date");
+    await picker.fill("2026-10-23");
+    await expect(page.locator('input[value="Fri, 23 Oct 2026"]')).toHaveCount(
+      1,
+    );
+  });
+
+  test("the logs tab has one primary action and the link lives in the menu", async ({
+    page,
+  }) => {
+    await openTab(page, "Logs");
+    const primary = page.getByRole("button", { name: "Log a descent" });
+    await expect(primary.filter({ visible: true })).toHaveCount(1);
+    await expect(
+      page.getByRole("button", { name: "Link an existing log" }),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: "Trip actions" }).click();
+    await expect(
+      page.getByRole("menuitem", { name: "Link an existing log" }),
+    ).toBeVisible();
+  });
+
+  test("opening a trip leaves no ?edit=false in the address", async ({
+    page,
+  }) => {
+    await openList(page);
+    await page.getByTestId("trip-card").first().click();
+    await expect(page).toHaveURL(/\/trips/);
+    expect(page.url()).not.toContain("edit=");
+  });
 });
 
 test.describe("trip gaps", () => {
-  test("the week is a pill band with a disc, the handle 16px with a 44px hit", async ({
+  test("the week is a pill band with a disc, the handle is a 44px target", async ({
     page,
   }, info) => {
     test.skip(info.project.name === "desktop");
@@ -574,14 +634,8 @@ test.describe("trip gaps", () => {
       .getByRole("button", { name: "Show the month" })
       .boundingBox();
     if (!handle) throw new Error("no handle");
-    expect(handle.height).toBe(16);
-    // 14px below the handle is still the handle.
-    const hit = await page.evaluate(
-      ([x, y]) =>
-        document.elementFromPoint(x, y)?.getAttribute("aria-label") ?? "",
-      [handle.x + handle.width / 2, handle.y + handle.height + 14],
-    );
-    expect(hit).toBe("Show the month");
+    expect(handle.height).toBeGreaterThanOrEqual(44);
+    expect(handle.width).toBeGreaterThanOrEqual(44);
   });
 
   test("today keeps its ring when it is also the current day", async ({
@@ -686,8 +740,8 @@ test.describe("trip gaps", () => {
       return !hit?.closest("nav[aria-label=Main]");
     });
     expect(covered).toBe(true);
-    const a = await page.getByLabel("Starts").boundingBox();
-    const b = await page.getByLabel("Ends (optional)").boundingBox();
+    const a = await page.getByLabel("Starts").first().boundingBox();
+    const b = await page.getByLabel("Ends (optional)").first().boundingBox();
     expect(a?.y).toBe(b?.y);
     await expectNoHorizontalOverflow(page);
   });
@@ -700,7 +754,9 @@ test.describe("trip gaps", () => {
     await page.goto(`/trips/${TRIP}`);
     await expect(page).toHaveURL(new RegExp(`/trips\\?selected=${TRIP}`));
     await expect(dayCards(page).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Plan a day" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Plan a day" }),
+    ).toBeVisible();
     // Nothing floats over the card: the add button is docked and the trip's
     // actions are in its header.
     await expect(page.locator(".MuiFab-root:visible")).toHaveCount(0);
