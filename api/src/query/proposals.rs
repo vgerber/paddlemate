@@ -259,7 +259,8 @@ pub async fn insert_proposal(
 ///   - unauthenticated: set filters.status = Some("pending")
 ///   - non-admin auth: set filters.submitted_by = Some(viewer_user_id)
 ///   - admin: leave unrestricted
-/// One page of proposals and the total across all pages.
+///
+/// Returns one page and the total across all pages.
 pub async fn list_proposals(
     db: &PgPool,
     filters: ListProposalsFilters,

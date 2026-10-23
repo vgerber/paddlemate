@@ -292,8 +292,7 @@ async fn the_user_list_is_paged_and_searchable(pool: PgPool) {
     assert_eq!(huge.status, StatusCode::OK);
 
     let found = call(&app, Method::GET, "/users?q=PADDLER3", who, None).await;
-    let names: Vec<&str> = found
-        .body
+    let names: Vec<&str> = found.body["items"]
         .as_array()
         .unwrap()
         .iter()
