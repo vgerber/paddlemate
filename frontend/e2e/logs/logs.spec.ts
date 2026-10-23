@@ -410,7 +410,7 @@ test.describe("design gaps", () => {
       .last()
       .boundingBox();
     const row = await page
-      .getByRole("button", { name: "Log actions" })
+      .getByRole("button", { name: "Section actions" })
       .boundingBox();
     const search = await page.getByLabel("Search river").boundingBox();
     expect(map && row && search).toBeTruthy();
