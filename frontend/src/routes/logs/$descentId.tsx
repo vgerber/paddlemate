@@ -104,6 +104,7 @@ function LogDetailPage() {
 
   const menu = isOwner ? (
     <RowMenu
+      name="Log"
       actions={[
         {
           label: "Edit",

@@ -71,7 +71,7 @@ function PersonRow({
           {note}
         </Typography>
       )}
-      <RowMenu actions={actions} />
+      <RowMenu actions={actions} name={name} />
     </Box>
   );
 }

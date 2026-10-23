@@ -99,11 +99,11 @@ test.describe("proposal list", () => {
     );
   });
 
-  test("the list names its count in results", async ({ page }) => {
+  test("the list names its count in proposals", async ({ page }) => {
     await page.goto("/proposals?status=pending");
     await expect(card(page, "Mittelschwall")).toBeVisible();
     await expect(
-      page.getByText(/^\d+ results?$/).filter({ visible: true }),
+      page.getByText(/^\d+ proposals?$/).filter({ visible: true }),
     ).toBeVisible();
   });
 
@@ -678,7 +678,7 @@ test.describe("proposal load failures", () => {
       "Boom from server",
     );
     await expect(page.getByText(/No pending proposals/)).toHaveCount(0);
-    await expect(page.getByText(/\d+ results?/)).toHaveCount(0);
+    await expect(page.getByText(/\d+ proposals?/)).toHaveCount(0);
   });
 
   test("a failed detail keeps its header and does not say not found", async ({
@@ -829,7 +829,7 @@ test.describe("sending a proposal", () => {
     const card = page.getByTestId("features-card").filter({ visible: true });
     await card.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
     await card
-      .getByRole("button", { name: "More actions", exact: true })
+      .getByRole("button", { name: "Feature actions", exact: true })
       .first()
       .click();
     await page.getByRole("menuitem", { name: /Edit feature/ }).click();

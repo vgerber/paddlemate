@@ -105,7 +105,11 @@ function TripsPage() {
     return (
       <>
         <Box sx={{ maxWidth: 720, mx: "auto" }}>
-          <ListPaneHeader count={trips.length} loading={isLoading} />
+          <ListPaneHeader
+            count={trips.length}
+            noun="trip"
+            loading={isLoading}
+          />
           {list}
         </Box>
         <Fab

@@ -227,7 +227,7 @@ function LogsList({
   });
   return (
     <>
-      {tab === "mine" && <ListPaneHeader count={count} />}
+      {tab === "mine" && <ListPaneHeader count={count} noun="log" />}
       <PanelHeader
         tabs={{
           value: tab,

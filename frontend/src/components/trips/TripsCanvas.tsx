@@ -82,7 +82,7 @@ export default function TripsCanvas({
             }}
           >
             <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-              <ListPaneHeader count={count} loading={loading} />
+              <ListPaneHeader count={count} noun="trip" loading={loading} />
               {list}
             </Box>
             <DockedAction label="New trip" onClick={onNew} />

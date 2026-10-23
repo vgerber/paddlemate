@@ -65,11 +65,17 @@ export function useWaterwaySearchFilters(
       ? urlSearch.mode
       : "name";
   const regionId = urlSearch.region;
+  const [name, setName] = useState(urlSearch.q ?? "");
+  const [country, setCountry] = useState(urlSearch.country ?? "");
   const setMode = useCallback(
     (next: SearchMode) =>
       navigate({
         search: (prev) => ({
           ...prev,
+          // The panel can remount on the switch and then reads the typed
+          // text from the URL; the debounced sync may not have written it yet.
+          q: name || undefined,
+          country: country.toUpperCase() || undefined,
           mode: next === "name" ? undefined : next,
           // Name is the full-screen list on a phone; without panel the
           // search would fall back to the bare map.
@@ -81,7 +87,7 @@ export function useWaterwaySearchFilters(
         }),
         replace: true,
       }),
-    [navigate],
+    [navigate, name, country],
   );
   const setRegion = useCallback(
     (picked: Region | null) =>
@@ -125,8 +131,6 @@ export function useWaterwaySearchFilters(
       }),
     [navigate],
   );
-  const [name, setName] = useState(urlSearch.q ?? "");
-  const [country, setCountry] = useState(urlSearch.country ?? "");
   const [minDiff, setMinDiffRaw] = useState<number | "">(
     urlSearch.min_diff ?? "",
   );

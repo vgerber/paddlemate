@@ -6,6 +6,7 @@ import LocationPin, {
   TAKE_OUT_COLOR,
 } from "@/components/map/LocationPin";
 import SectionAdder from "@/components/search/SectionAdder";
+import { endpointName } from "@/lib/descents";
 import type { SectionLocation, StepProps } from "./model";
 import SectionDraftList from "./SectionDraftList";
 import SectionPickerMap from "./SectionPickerMap";
@@ -34,6 +35,8 @@ export default function StepSections({
     putIn,
     takeOut,
   } = picking;
+
+  const pickedIds = form.sections.map((s) => s.section_id);
 
   // Auto-derive put-in/take-out from section geometry whenever sections change
   const sectionIds = form.sections.map((s) => s.section_id).join(",");
@@ -98,18 +101,17 @@ export default function StepSections({
                 color={PUT_IN_COLOR}
                 title="Put in"
                 coords={putIn}
-                label={form.put_in_label}
+                place={endpointName(pickedIds, mapSections, "put_in")}
                 onClear={() =>
                   onChange({ put_in_lat: "", put_in_lon: "", put_in_label: "" })
                 }
-                onLabelChange={(v) => onChange({ put_in_label: v })}
               />
               <LocationPin
                 num={2}
                 color={TAKE_OUT_COLOR}
                 title="Take out"
                 coords={takeOut}
-                label={form.take_out_label}
+                place={endpointName(pickedIds, mapSections, "take_out")}
                 onClear={() =>
                   onChange({
                     take_out_lat: "",
@@ -117,7 +119,6 @@ export default function StepSections({
                     take_out_label: "",
                   })
                 }
-                onLabelChange={(v) => onChange({ take_out_label: v })}
               />
             </Box>
           )}

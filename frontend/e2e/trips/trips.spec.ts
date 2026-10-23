@@ -65,7 +65,7 @@ test.describe("trip list", () => {
     // Wide enough that the list and the trip card both stay open.
     await page.setViewportSize({ width: 1440, height: 900 });
     await openList(page);
-    await expect(page.getByText(/\d+ results?/)).toBeVisible();
+    await expect(page.getByText(/\d+ trips?/)).toBeVisible();
     const first = page.getByTestId("trip-card").first();
     const name = (await first.innerText()).split("\n")[0];
     await first.click();
@@ -429,7 +429,7 @@ test.describe("bases and candidates", () => {
 
   test("logs tab opens with a count @small", async ({ page }) => {
     await openTab(page, "Logs");
-    await expect(page.getByText(/^\d+ results?$/).first()).toBeVisible();
+    await expect(page.getByText(/^\d+ logs?$/).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 });
@@ -694,7 +694,7 @@ test.describe("trip gaps", () => {
   test("the list opens with its count on a phone", async ({ page }, info) => {
     test.skip(info.project.name === "desktop");
     await openList(page);
-    await expect(page.getByText(/^\d+ results?$/)).toBeVisible();
+    await expect(page.getByText(/^\d+ trips?$/)).toBeVisible();
   });
 
   test("a trip card's role is a pill on the quiet fill", async ({ page }) => {

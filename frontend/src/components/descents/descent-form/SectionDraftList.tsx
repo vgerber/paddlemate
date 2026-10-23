@@ -84,7 +84,7 @@ export default function SectionDraftList({ sections, onChange }: Props) {
           <Typography sx={{ flex: 1, minWidth: 0, fontWeight: 600 }}>
             {s.display_name}
           </Typography>
-          <RowMenu actions={actions(i)} />
+          <RowMenu actions={actions(i)} name="Section" />
         </Box>
       ))}
     </Box>
