@@ -17,6 +17,7 @@ import {
 import { useMapVerb } from "@/components/waterway/useMapVerb";
 import type { RegionOutline } from "@/lib/api";
 import { useRegionSearch } from "@/lib/hooks/useRegions";
+import { CollapseIcon, ExpandIcon } from "@/lib/icons";
 import {
   type BrowseKind,
   hiddenKindsLabel,
@@ -219,6 +220,7 @@ export default function RegionBrowse({
               primary={`${kindLabel} in view (${others.length})`}
               slotProps={{ primary: { variant: "subtitle2" } }}
             />
+            {listOpen ? <CollapseIcon /> : <ExpandIcon />}
           </ListItemButton>
           {listOpen &&
             others.map((region) => (
