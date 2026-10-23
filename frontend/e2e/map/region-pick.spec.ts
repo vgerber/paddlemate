@@ -176,11 +176,21 @@ test.describe("region kinds", () => {
   test("a pick keeps its kind on after the map fits to it", async ({
     page,
   }) => {
-    await open(page, [11.6, 46.5], 7);
-    await segment(page, "Ranges").click();
-    await tap(page, SOLO_POINT);
-    if (onPhone(page)) await tap(page, SOLO_POINT);
-    await expect(page).toHaveURL(new RegExp(`region=${REGIONS.beta.id}`));
+    // The fit on a wide window stays in the district band; only a phone's
+    // narrow view drops to valleys, so only there the pin shows.
+    test.skip(!onPhone(page), "the fit leaves the band only on a phone");
+    // No chip chosen: the kind follows the zoom (districts here).
+    await open(page, [10.45, 46.9], 8);
+    await expect.poll(() => drawnIds(page)).toContain(REGIONS.inner.id);
+    const asked: string[] = [];
+    page.on("request", (req) => {
+      const url = new URL(req.url());
+      if (url.pathname.endsWith("/geo/region-outlines"))
+        asked.push(url.searchParams.get("kinds") ?? "");
+    });
+    await tap(page, SHARED_POINT);
+    if (onPhone(page)) await tap(page, SHARED_POINT);
+    await expect(page).toHaveURL(new RegExp(`region=${REGIONS.inner.id}`));
     await expect
       .poll(() =>
         page.evaluate(() =>
@@ -189,11 +199,11 @@ test.describe("region kinds", () => {
           ).__paddlemateMap.getZoom(),
         ),
       )
-      .toBeGreaterThan(8);
+      .toBeGreaterThan(8.5);
     // The map fitted to the pick, which on the zoom alone would now draw
-    // valleys or districts; the ranges stay.
-    await expect.poll(() => drawnIds(page)).toContain(REGIONS.alpha.id);
-    expect(await drawnIds(page)).not.toContain(REGIONS.inner.id);
+    // valleys; the districts stay.
+    await expect.poll(() => asked.length).toBeGreaterThan(0);
+    expect(new Set(asked)).toEqual(new Set(["district"]));
   });
 });
 
