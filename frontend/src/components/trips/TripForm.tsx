@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import { useEffect, useRef, useState } from "react";
+import PickerField from "@/components/descents/descent-form/PickerField";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import FormSection from "@/components/waterway/FormSection";
 import type { Trip, TripStayKind } from "@/lib/api";
@@ -146,21 +147,17 @@ export default function TripForm({
               gap: 1.5,
             }}
           >
-            <TextField
+            <PickerField
+              kind="date"
               label="Starts"
-              type="date"
               value={form.start_date}
-              onChange={(e) => patch({ start_date: e.target.value })}
-              fullWidth
-              slotProps={{ inputLabel: { shrink: true } }}
+              onChange={(v) => patch({ start_date: v })}
             />
-            <TextField
+            <PickerField
+              kind="date"
               label="Ends (optional)"
-              type="date"
               value={form.end_date}
-              onChange={(e) => patch({ end_date: e.target.value })}
-              fullWidth
-              slotProps={{ inputLabel: { shrink: true } }}
+              onChange={(v) => patch({ end_date: v })}
             />
           </Box>
         </FormSection>

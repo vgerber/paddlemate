@@ -100,7 +100,7 @@ export default function NotificationList({
       navigate({
         to: "/trips/$tripId",
         params: { tripId: String(e.trip_id) },
-        search: { edit: false },
+        search: { edit: undefined },
       });
     }
     onOpenTrip?.();

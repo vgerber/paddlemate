@@ -5,6 +5,7 @@ import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useEffect, useRef, useState } from "react";
+import PickerField from "@/components/descents/descent-form/PickerField";
 import MarkdownField from "@/components/MarkdownField";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import { STAY_KINDS } from "@/components/trips/stayKinds";
@@ -210,21 +211,17 @@ export default function StayDialog({
           label="Dates"
           hint="When the group is based here. Optional while the plan moves."
         >
-          <TextField
+          <PickerField
+            kind="date"
             label="Arrives"
-            type="date"
             value={form.arrival}
-            onChange={(e) => patch({ arrival: e.target.value })}
-            fullWidth
-            slotProps={{ inputLabel: { shrink: true } }}
+            onChange={(v) => patch({ arrival: v })}
           />
-          <TextField
+          <PickerField
+            kind="date"
             label="Leaves"
-            type="date"
             value={form.departure}
-            onChange={(e) => patch({ departure: e.target.value })}
-            fullWidth
-            slotProps={{ inputLabel: { shrink: true } }}
+            onChange={(v) => patch({ departure: v })}
           />
         </FormSection>
 
@@ -247,7 +244,7 @@ export default function StayDialog({
       </DialogContent>
       <PanelBottomBar
         onLeftClick={onClose}
-        leftLabel="Close"
+        leftLabel="Cancel"
         leftDisabled={isBusy}
         title={
           candidate

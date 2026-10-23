@@ -142,7 +142,7 @@ export default function TripTimeline({
       <EmptyState
         icon={<EventNoteIcon />}
         title="Nothing on the plan yet."
-        caption="Add a day to say when you arrive, where you are based, or what you paddled."
+        caption="Plan a day to say when you arrive, where you are based, or what you paddled."
         py={6}
       />
     );
