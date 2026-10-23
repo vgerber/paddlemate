@@ -32,7 +32,7 @@ import {
   eventLabels,
 } from "./eventLabels";
 import PlanCalendar from "./PlanCalendar";
-import { dayAtScroll } from "./planWeek";
+import { dayAtScroll, openingDay } from "./planWeek";
 import { TripMembersSummary, TripStaysSummary } from "./TripSummary";
 import TripWeek from "./TripWeek";
 
@@ -85,6 +85,12 @@ export default function TripTimeline({
   const planned = useMemo(() => new Set(days.map((d) => d.date)), [days]);
   const runs = useMemo(() => runCounts(days), [days]);
   const shown = current ?? days[0]?.date ?? today;
+  const weekOf =
+    current ??
+    openingDay(
+      days.map((d) => d.date),
+      today,
+    );
 
   const jumpTo = useCallback((date: string) => {
     const el = scroller.current;
@@ -181,6 +187,7 @@ export default function TripTimeline({
       ) : (
         <PlanCalendar
           current={shown}
+          weekOf={weekOf}
           today={today}
           from={trip.start_date}
           to={trip.end_date ?? null}

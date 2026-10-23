@@ -8,6 +8,12 @@ export function weekDays(date: string): string[] {
   return Array.from({ length: 7 }, (_, i) => format(addDays(monday, i), ISO));
 }
 
+/** The day whose week the strip opens on: today when the trip is under way
+ * (today is one of the shown days), else the first day. */
+export function openingDay(dates: readonly string[], today: string): string {
+  return dates.includes(today) ? today : (dates[0] ?? today);
+}
+
 /** The day whose card is the last one to start at or above the scroll edge:
  * the day the reader is on. `tops` are the cards' offsets, in order. */
 export function dayAtScroll(

@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { seen } from "../support/active";
 import { FIX } from "../support/fixture";
 
 // Failed and empty loads on trips, the inbox, tools and search: each says what
@@ -22,8 +23,7 @@ async function failGet(page: Page, re: RegExp) {
   );
 }
 
-const errorNote = (page: Page) =>
-  page.getByTestId("error-state").filter({ visible: true });
+const errorNote = (page: Page) => seen(page.getByTestId("error-state"));
 
 test.describe("trips, failed loads", () => {
   test("the trip list says it failed instead of 'No trips yet'", async ({

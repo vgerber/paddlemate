@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
+import { addDays, format, parseISO } from "date-fns";
 import {
   dayAtScroll,
+  openingDay,
   pulledOpen,
   sortByStanding,
   tripStanding,
@@ -76,5 +78,38 @@ describe("sortByStanding", () => {
       "2026-10-23",
     );
     expect(sorted.map((t) => t.id)).toEqual([3, 4, 1, 2]);
+  });
+});
+
+describe("openingDay", () => {
+  const dates = (from: string, n: number) =>
+    Array.from({ length: n }, (_, i) =>
+      format(addDays(parseISO(from), i), "yyyy-MM-dd"),
+    );
+
+  test("opens on today for every weekday of a trip that started 4 days ago", () => {
+    for (let offset = 0; offset < 7; offset++) {
+      const today = format(
+        addDays(parseISO("2026-10-19"), offset),
+        "yyyy-MM-dd",
+      );
+      const shown = dates(
+        format(addDays(parseISO(today), -4), "yyyy-MM-dd"),
+        8,
+      );
+      const open = openingDay(shown, today);
+      expect(open).toBe(today);
+      expect(weekDays(open)).toContain(today);
+    }
+  });
+
+  test("opens on the first day before and after the trip", () => {
+    const shown = ["2026-10-20", "2026-10-21"];
+    expect(openingDay(shown, "2026-10-01")).toBe("2026-10-20");
+    expect(openingDay(shown, "2026-11-01")).toBe("2026-10-20");
+  });
+
+  test("falls back to today without days", () => {
+    expect(openingDay([], "2026-10-23")).toBe("2026-10-23");
   });
 });
