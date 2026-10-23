@@ -42,3 +42,19 @@ export function tripStanding(
   if (end && today > end) return "past";
   return "under way";
 }
+
+const STANDING_ORDER: Record<TripStanding, number> = {
+  "under way": 0,
+  upcoming: 1,
+  past: 2,
+};
+
+/** Trips as they list: under way first, then upcoming, then past. Within a
+ * group the given order holds. */
+export function sortByStanding<
+  T extends { start_date: string; end_date?: string | null },
+>(trips: readonly T[], today: string): T[] {
+  const rank = (t: T) =>
+    STANDING_ORDER[tripStanding(t.start_date, t.end_date, today)];
+  return [...trips].sort((a, b) => rank(a) - rank(b));
+}

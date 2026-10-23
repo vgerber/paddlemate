@@ -2,13 +2,16 @@ import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMemo } from "react";
 import ListPaneHeader from "@/components/ListPaneHeader";
 import { fabRoom, fabSx } from "@/components/PaneFab";
 import LoadingBox from "@/components/states/LoadingBox";
 import QueryStates from "@/components/states/QueryStates";
 import SignInGate from "@/components/states/SignInGate";
+import { sortByStanding } from "@/components/trip-page/planWeek";
 import TripRow from "@/components/trips/TripRow";
 import TripsCanvas from "@/components/trips/TripsCanvas";
+import { todayIso } from "@/lib/format";
 import { useSession } from "@/lib/hooks/useSession";
 import { useTrip, useTrips } from "@/lib/hooks/useTrips";
 import { AddIcon, TripIcon } from "@/lib/icons";
@@ -38,7 +41,10 @@ function TripsPage() {
   const { data, isLoading } = tripsQuery;
   const selectedQuery = useTrip(isDesktop ? (selected ?? null) : null);
   const selectedTrip = selectedQuery.data;
-  const trips = data?.items ?? [];
+  const trips = useMemo(
+    () => sortByStanding(data?.items ?? [], todayIso()),
+    [data],
+  );
 
   const openTrip = (id: number) => {
     // Desktop opens beside the list; mobile replaces the screen with it.

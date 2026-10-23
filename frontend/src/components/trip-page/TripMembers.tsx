@@ -11,7 +11,7 @@ import QueryStates from "@/components/states/QueryStates";
 import MemberAvatar from "@/components/trips/MemberAvatar";
 import RolePill from "@/components/trips/RolePill";
 import type { TripMember, TripMemberRole } from "@/lib/api";
-import { clockTime, dateRange } from "@/lib/format";
+import { clockTime, dateRange, formatDate } from "@/lib/format";
 import {
   usePatchTripMember,
   useRemoveTripMember,
@@ -116,8 +116,8 @@ export default function TripMembers({
 function attendanceHours(member: TripMember): string {
   const from = member.arrival_time ? clockTime(member.arrival_time) : null;
   const to = member.departure_time ? clockTime(member.departure_time) : null;
-  if (!from && !to) return "";
-  return ` · ${from ?? "?"} - ${to ?? "?"}`;
+  if (from && to) return ` · ${from} - ${to}`;
+  return from ? ` · from ${from}` : ` · until ${to}`;
 }
 
 function MemberRow({
@@ -168,7 +168,7 @@ function MemberRow({
   const attendance = member.arrival
     ? `${dateRange(member.arrival, member.departure)}${attendanceHours(member)}`
     : member.departure
-      ? `until ${member.departure}`
+      ? `until ${formatDate(member.departure)}`
       : null;
 
   return (
@@ -232,9 +232,8 @@ function MemberRow({
               fontVariantNumeric: "tabular-nums",
               color: attendance ? "text.secondary" : "text.disabled",
             }}
-            noWrap
           >
-            {attendance ?? (isSelf ? "No dates set" : "Not said yet")}
+            {attendance ?? "Not said yet"}
           </Typography>
         </Box>
       </ButtonBase>

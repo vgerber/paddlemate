@@ -1,5 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { dayAtScroll, pulledOpen, tripStanding, weekDays } from "./planWeek";
+import {
+  dayAtScroll,
+  pulledOpen,
+  sortByStanding,
+  tripStanding,
+  weekDays,
+} from "./planWeek";
 
 describe("weekDays", () => {
   test("runs Monday to Sunday around the date", () => {
@@ -49,5 +55,26 @@ describe("tripStanding", () => {
     );
     expect(tripStanding("2026-10-08", "2026-10-14", "2026-10-15")).toBe("past");
     expect(tripStanding("2026-10-08", null, "2027-01-01")).toBe("under way");
+  });
+});
+
+describe("sortByStanding", () => {
+  const trip = (id: number, start_date: string, end_date: string | null) => ({
+    id,
+    start_date,
+    end_date,
+  });
+
+  test("lists under way, then upcoming, then past, keeping the given order", () => {
+    const sorted = sortByStanding(
+      [
+        trip(1, "2026-12-01", "2026-12-05"),
+        trip(2, "2026-09-01", "2026-09-05"),
+        trip(3, "2026-10-20", "2026-10-26"),
+        trip(4, "2026-10-22", null),
+      ],
+      "2026-10-23",
+    );
+    expect(sorted.map((t) => t.id)).toEqual([3, 4, 1, 2]);
   });
 });
