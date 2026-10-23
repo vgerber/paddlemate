@@ -289,11 +289,6 @@ async fn waterway_writes_leave_steps(pool: PgPool) {
     let h = get(&app, &format!("/waterways/{id}/history")).await;
     assert_eq!(h.status, StatusCode::OK);
     assert_eq!(kinds(&h.body), ["created", "edited", "deleted"]);
-    // The sources view needs a live river.
-    assert_eq!(
-        get(&app, &format!("/waterways/{id}/sources")).await.status,
-        StatusCode::NOT_FOUND
-    );
 }
 
 #[sqlx::test]
@@ -1641,4 +1636,31 @@ async fn deleted_features_are_paged_and_clamped(pool: PgPool) {
     let zero = get(&app, &format!("{base}?per_page=0&page=0")).await;
     assert_eq!(zero.body["per_page"], 1);
     assert_eq!(zero.body["page"], 1);
+}
+
+#[sqlx::test]
+async fn sources_stay_readable_after_the_river_is_deleted(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let w = make_waterway(&app, "Inn").await;
+    let s = make_section(&app, w, "Upper", json!([])).await["id"]
+        .as_i64()
+        .unwrap();
+    let r = call(
+        &app,
+        Method::DELETE,
+        &format!("/waterways/{w}"),
+        Who::Admin,
+        None,
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NO_CONTENT);
+    for url in [
+        format!("/waterways/{w}/sources"),
+        format!("/waterways/{w}/sources?section_id={s}"),
+    ] {
+        assert_eq!(get(&app, &url).await.status, StatusCode::OK, "{url}");
+    }
+    let r = get(&app, "/waterways/999999/sources").await;
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
 }
