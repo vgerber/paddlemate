@@ -37,6 +37,15 @@ async function gotoControls(page: Page, isMobile: boolean) {
 async function openLayers(page: Page) {
   const key = page.getByTestId("map-layer-button");
   if (await key.count()) await key.click();
+  await settle(page.getByTestId("map-layer-toggle"));
+}
+
+/** Waits out the open transition so a box is measured at rest. */
+async function settle(locator: Locator) {
+  await expect(locator).toBeVisible();
+  await locator.evaluate((el) =>
+    Promise.all(el.getAnimations().map((a) => a.finished)),
+  );
 }
 
 type FeatureCollection = {
@@ -302,8 +311,14 @@ test.describe("the base map", () => {
       (zoom?.y ?? 0) + (zoom?.height ?? 0),
     );
     await key.click();
+    await settle(page.getByTestId("map-layer-toggle"));
     const pop = await page.getByTestId("map-layer-toggle").boundingBox();
-    expect((pop?.x ?? 0) + (pop?.width ?? 0)).toBeLessThanOrEqual(k?.x ?? 0);
+    // Opens to the key's left; a 320px screen has no room for the 272px
+    // popover beside the key, so it then only has to stay on the screen.
+    expect(pop?.x ?? -1).toBeGreaterThanOrEqual(0);
+    expect((pop?.x ?? 0) + (pop?.width ?? 0)).toBeLessThanOrEqual(
+      Math.max(k?.x ?? 0, pop?.width ?? 0),
+    );
     await expectNoHorizontalOverflow(page);
   });
 
