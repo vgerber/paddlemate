@@ -541,13 +541,14 @@ test.describe("design gaps", () => {
     expect(x).toBe(28);
   });
 
-  test("a month label has its space above, not below", async ({
+  test("a month label has 8px below it", async ({
     page,
   }, info) => {
     test.skip(isDesktop(info), "the card grid gives desktop a space below");
     await openLogs(page);
     const m = page.getByTestId("log-month").first();
-    expect(await computed(m, "padding-top")).toBe("6px");
+    const row = m.locator("xpath=..");
+    expect(await computed(row, "margin-bottom")).toBe("8px");
     expect(await computed(m, "padding-bottom")).toBe("0px");
   });
 

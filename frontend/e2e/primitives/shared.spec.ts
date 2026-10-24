@@ -176,11 +176,11 @@ test.describe("labels", () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test("a form heading is 15px and semibold", async ({ page }) => {
+  test("a form heading is 13px and semibold", async ({ page }) => {
     await page.goto("/settings?group=language");
     const heading = page.getByTestId("form-section-label").first();
     await expect(heading).toBeVisible();
-    expect(await computed(heading, "font-size")).toBe("15px");
+    expect(await computed(heading, "font-size")).toBe("13px");
     expect(await computed(heading, "font-weight")).toBe("600");
   });
 });

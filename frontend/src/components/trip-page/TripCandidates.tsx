@@ -7,6 +7,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { factLabelSx } from "@/components/Fact";
 import MarkdownText from "@/components/MarkdownText";
 import RowMenu from "@/components/RowMenu";
+import SectionHeading from "@/components/SectionHeading";
 import RolePill from "@/components/trips/RolePill";
 import { stayKind } from "@/components/trips/stayKinds";
 import VoteButton from "@/components/VoteButton";
@@ -61,18 +62,9 @@ export default function TripCandidates({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      <Typography
-        data-testid="form-section-label"
-        sx={{
-          fontFamily: fonts.body,
-          fontSize: "0.875rem",
-          fontWeight: 600,
-          color: "text.secondary",
-          px: { xs: `${tokens.phone.inner}px`, md: 0 },
-        }}
-      >
+      <SectionHeading first testId="form-section-label" component="h3" inset>
         {`Up for a vote (${candidates.length})`}
-      </Typography>
+      </SectionHeading>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         {candidates.map((candidate) => (
           <CandidateRow

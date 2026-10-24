@@ -5,6 +5,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { addMonths, format, parseISO, startOfMonth } from "date-fns";
 import { type PointerEvent, useRef, useState } from "react";
+import { sectionHeadingSx } from "@/components/SectionHeading";
 import { withAlpha } from "@/lib/alpha";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
 import { css, durations } from "@/lib/motion";
@@ -197,9 +198,7 @@ export function MonthView({
         >
           <ChevronLeftIcon />
         </IconButton>
-        <Typography
-          sx={{ fontFamily: fonts.body, fontWeight: 600, fontSize: 15 }}
-        >
+        <Typography component="h3" sx={sectionHeadingSx}>
           {format(cursor, "MMMM yyyy")}
         </Typography>
         <IconButton

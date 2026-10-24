@@ -4,11 +4,11 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import { listRowSx } from "@/components/canvas/flatRow";
+import SectionHeading from "@/components/SectionHeading";
 import EmptyState from "@/components/states/EmptyState";
 import type { WaterwayListItem } from "@/lib/api";
 import { humanize } from "@/lib/format";
 import { AddIcon, HourglassIcon } from "@/lib/icons";
-import ListGroupHeader from "./ListGroupHeader";
 import RiverRow from "./RiverRow";
 
 interface PendingRiver {
@@ -170,7 +170,7 @@ export default function RiverList({
         {/* Approximate matches are grouped rather than assumed to come last,
             so the divider stays correct whatever order the API returns. */}
         {waterways.some((w) => w.fuzzy) && (
-          <ListGroupHeader label="Similar names" />
+          <SectionHeading inset>Similar names</SectionHeading>
         )}
         {waterways
           .filter((w) => w.fuzzy)

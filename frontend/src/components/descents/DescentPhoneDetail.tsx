@@ -3,9 +3,10 @@ import Typography from "@mui/material/Typography";
 import { phoneCardSx } from "@/components/canvas/flatRow";
 import Fact from "@/components/Fact";
 import WaterwayMap from "@/components/map/LazyMap";
+import SectionHeading from "@/components/SectionHeading";
 import type { Descent, DescentSection, SectionWithFeatures } from "@/lib/api";
 import { durationLabel, formatDate, formatTime } from "@/lib/format";
-import { labelSx, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import LogSectionRow from "./LogSectionRow";
 
 const { tokens } = theme;
@@ -112,9 +113,10 @@ export default function DescentPhoneDetail({
 
       {sections.length > 0 && (
         <Box sx={blockSx}>
-          <Typography sx={{ ...labelSx, fontSize: "0.875rem", mb: 1 }}>
-            {`Sections (${sections.length})`}
-          </Typography>
+          <SectionHeading
+            first
+            component="h3"
+          >{`Sections (${sections.length})`}</SectionHeading>
           <Box sx={{ display: "grid" }}>
             {sections.map((s, i) => (
               <LogSectionRow
@@ -130,9 +132,9 @@ export default function DescentPhoneDetail({
 
       {descent.note && (
         <Box sx={blockSx}>
-          <Typography sx={{ ...labelSx, fontSize: "0.875rem", mb: 0.5 }}>
+          <SectionHeading first component="h3">
             Note
-          </Typography>
+          </SectionHeading>
           <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
             {descent.note}
           </Typography>

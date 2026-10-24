@@ -1,10 +1,10 @@
 import Box from "@mui/material/Box";
 import { useMemo } from "react";
 import DescentCard from "@/components/descents/DescentCard";
+import SectionHeading from "@/components/SectionHeading";
 import QueryStates from "@/components/states/QueryStates";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 import { LogIcon } from "@/lib/icons";
-import GroupHead from "./GroupHead";
 
 /** The signed-in user's own descents, grouped by month. */
 export default function MyLogsPanel({
@@ -49,19 +49,21 @@ export default function MyLogsPanel({
         sx={{
           display: "flex",
           flexDirection: "column",
-          gap: { xs: 2, md: 0 },
+          gap: 0,
         }}
       >
-        {groups.map(([label, items]) => (
+        {groups.map(([label, items], i) => (
           <Box
             key={label}
             sx={{
               display: "flex",
               flexDirection: "column",
-              gap: { xs: 0.75, md: 0 },
+              gap: 0,
             }}
           >
-            <GroupHead testId="log-month">{label}</GroupHead>
+            <SectionHeading first={i === 0} inset testId="log-month">
+              {label}
+            </SectionHeading>
             <Box
               sx={{
                 display: "flex",
