@@ -68,7 +68,15 @@ export function typeLabel(t: string): string {
   return t === "water_level" ? "Level" : t === "discharge" ? "Flow" : t;
 }
 
-/** A point's time as the charts say it: "Oct 9, 16:48". */
-export function pointTime(ts: number): string {
-  return dayTime(new Date(ts).toISOString());
+/** A point's time as the charts say it: "Oct 9, 16:48". A bucket a day or
+ * longer is a day, not a minute, and reads as one. */
+export function pointTime(ts: number, bucketSeconds = 0): string {
+  const iso = new Date(ts).toISOString();
+  if (bucketSeconds >= 86400) {
+    return new Date(ts).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    });
+  }
+  return dayTime(iso);
 }

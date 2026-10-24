@@ -21,6 +21,7 @@ import {
 import { useState } from "react";
 import AppSnackbar, { showErrorSnackbar } from "@/components/AppSnackbar";
 import CanvasHost from "@/components/canvas/CanvasHost";
+import { chartRangeSearch } from "@/components/charts/chartState";
 import NotificationBell, {
   UnreadBadge,
 } from "@/components/notifications/NotificationBell";
@@ -90,6 +91,8 @@ const queryClient = new QueryClient({
 });
 
 export const Route = createRootRoute({
+  // A custom chart range rides in the URL on every route that charts.
+  validateSearch: chartRangeSearch,
   component: Root,
 });
 

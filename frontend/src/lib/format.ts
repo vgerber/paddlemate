@@ -117,6 +117,33 @@ export function dateRange(start: string, end?: string | null): string {
   return `${rangeHead(a, sameYear, sameMonth, start)} - ${formatDate(end)}`;
 }
 
+/** A day without padding: "4 Apr 2026". Takes an instant, read in the
+ * viewer's timezone. */
+export function formatDay(iso: string): string {
+  return new Date(iso).toLocaleDateString(LOCALE, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/** A chart's custom range: "12 Mar - 4 Apr 2026", the year shown once when
+ * both ends share it. */
+export function chartRange(from: string, to: string): string {
+  const a = new Date(from);
+  const b = new Date(to);
+  if (isSameDay(a, b)) return formatDay(to);
+  const head = isSameYear(a, b)
+    ? a.toLocaleDateString(LOCALE, { day: "numeric", month: "short" })
+    : formatDay(from);
+  return `${head} - ${formatDay(to)}`;
+}
+
+/** The low and high of a bucket: "62.1 - 71.3 cm". */
+export function formatSpread(low: number, high: number, unit: string): string {
+  return `${Number(low.toFixed(1))} - ${formatReading(high, unit)}`;
+}
+
 /** snake_case enum key to a human label: "put_in" -> "put in". */
 export function humanize(key: string): string {
   return key.replace(/_/g, " ");

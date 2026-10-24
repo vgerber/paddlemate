@@ -6,8 +6,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { Segment, SegmentTrack } from "@/components/canvas/SegmentedControl";
-import PeriodMenu from "@/components/charts/PeriodMenu";
-import type { TimeRange } from "@/components/charts/water/types";
+import PeriodMenu, { type PeriodControl } from "@/components/charts/PeriodMenu";
 import { CloseIcon, ExpandIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
@@ -43,7 +42,7 @@ interface ReadingBlockProps {
   onDismiss?: () => void;
   /** The period control, when it lives in the block (else the caller
    * places it). */
-  period?: { value: TimeRange; onChange: (range: TimeRange) => void };
+  period?: PeriodControl;
   /** Side padding in px: the text line the block keeps. */
   inset?: number;
   /** The reading's size: larger on the rail, where the block is tall. */

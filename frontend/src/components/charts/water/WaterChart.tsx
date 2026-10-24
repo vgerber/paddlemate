@@ -5,12 +5,16 @@ import type { WaterRangeWithStatus } from "@/lib/api";
 import { fromForRange } from "./chartTime";
 import SeriesChart, { type ScrubPoint } from "./SeriesChart";
 import { activeMeasurementType, seriesGroups } from "./series";
-import type { DescentSpan, TimeRange } from "./types";
+import type { CustomRange, DescentSpan, TimeRange } from "./types";
 
 export interface WaterChartProps {
   ranges: WaterRangeWithStatus[];
   showThresholds?: boolean;
   timeRange: TimeRange;
+  /** A custom range, which overrides the preset. */
+  customRange?: CustomRange | null;
+  /** A span picked by dragging over the plot becomes the custom range. */
+  onCustomRange?: (range: CustomRange) => void;
   measurementType?: string | null;
   /** Own descents drawn as shaded time bands in each series chart. */
   descentSpans?: DescentSpan[];
@@ -40,6 +44,8 @@ export default function WaterChart({
   ranges,
   showThresholds = true,
   timeRange,
+  customRange = null,
+  onCustomRange,
   measurementType,
   descentSpans,
   selectedFeatureId,
@@ -51,7 +57,11 @@ export default function WaterChart({
   marker,
   onScrub,
 }: WaterChartProps) {
-  const from = useMemo(() => fromForRange(timeRange), [timeRange]);
+  const customFrom = customRange?.from;
+  const from = useMemo(
+    () => customFrom ?? fromForRange(timeRange),
+    [customFrom, timeRange],
+  );
   const activeType = activeMeasurementType(ranges, measurementType);
 
   // One chart per gauge series, not per feature range - sections with many
@@ -77,9 +87,9 @@ export default function WaterChart({
     >
       {groups.map(({ primary, group }) => (
         <Box
-          // timeRange in the key remounts the chart, dropping its zoom
+          // The period in the key remounts the chart, dropping its zoom
           // window - a new time axis is a new chart.
-          key={`${primary.series.id}-${timeRange}`}
+          key={`${primary.series.id}-${timeRange}-${customRange?.from}-${customRange?.to}`}
           sx={{ flex: 1, minHeight: 0, position: "relative" }}
         >
           <Box sx={{ position: "absolute", inset: 0 }}>
@@ -99,6 +109,8 @@ export default function WaterChart({
               rail={rail}
               edge={edge}
               timeRange={timeRange}
+              customRange={customRange}
+              onSelectRange={onCustomRange}
               marker={marker}
               onScrub={onScrub}
             />

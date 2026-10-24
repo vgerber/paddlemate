@@ -35,8 +35,14 @@ export default function SectionChartPanel({
     error,
     refetch,
   } = useWaterStatus(waterwayId, sectionId);
-  const { timeRange, setTimeRange, measurementType, setMeasurementType } =
-    useChartPanelState();
+  const {
+    timeRange,
+    setTimeRange,
+    customRange,
+    setCustomRange,
+    measurementType,
+    setMeasurementType,
+  } = useChartPanelState();
 
   const ranges = useMemo(
     () => waterStatus?.ranges ?? [],
@@ -50,6 +56,8 @@ export default function SectionChartPanel({
       status={{ isLoading, isError, error, refetch }}
       timeRange={timeRange}
       onTimeRangeChange={setTimeRange}
+      customRange={customRange}
+      onCustomRangeChange={setCustomRange}
       measurementType={measurementType}
       onMeasurementTypeChange={setMeasurementType}
       preferredFeatureId={preferredFeatureId}

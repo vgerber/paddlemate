@@ -31,6 +31,8 @@ interface Props {
   helperText?: string;
   /** Shows a clear button while the field has a value. */
   onClear?: () => void;
+  /** Latest value the picker offers, in the input's own format. */
+  max?: string;
 }
 
 /** A date or time field that reads in the app's format and opens the
@@ -44,6 +46,7 @@ export default function PickerField({
   onChange,
   helperText,
   onClear,
+  max,
 }: Props) {
   return (
     <Box
@@ -85,6 +88,7 @@ export default function PickerField({
         type={kind}
         aria-label={label}
         value={value}
+        max={max}
         onChange={(e: ChangeEvent<HTMLInputElement>) =>
           onChange(e.target.value)
         }

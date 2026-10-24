@@ -1,10 +1,26 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { summaryStaleTime } from "@/components/charts/water/summary";
 import { gaugeReadingsApi, gaugesApi, waterwaysApi } from "@/lib/api";
 
 export const gaugeKeys = {
   all: ["gauges"] as const,
-  readings: (gaugeId: number, seriesId: number, from?: string) =>
-    [...gaugeKeys.all, gaugeId, "series", seriesId, "readings", from] as const,
+  summary: (
+    gaugeId: number,
+    seriesId: number,
+    from: string,
+    to: string | undefined,
+    points: number,
+  ) =>
+    [
+      ...gaugeKeys.all,
+      gaugeId,
+      "series",
+      seriesId,
+      "summary",
+      from,
+      to,
+      points,
+    ] as const,
   search: (q: string | undefined, lat?: number, lon?: number) =>
     [...gaugeKeys.all, "search", q, lat, lon] as const,
   catalogSearch: (
@@ -68,18 +84,32 @@ export function useWaterwayGauges(waterwayId: number | null) {
   });
 }
 
-export function useGaugeReadings(
-  gaugeId: number | null,
-  seriesId: number | null,
-  from?: string,
-  limit?: number,
+/** A series' readings over a period as about `points` buckets (average, low
+ * and high), or raw readings when the period holds few. Waits for `points`,
+ * which comes from the plot's width. A period that ended before today never
+ * changes, so it stays fresh for a day. */
+export function useReadingSummary(
+  gaugeId: number,
+  seriesId: number,
+  period: { from: string; to?: string },
+  points: number | null,
 ) {
   return useQuery({
-    queryKey: gaugeKeys.readings(gaugeId ?? 0, seriesId ?? 0, from),
+    queryKey: gaugeKeys.summary(
+      gaugeId,
+      seriesId,
+      period.from,
+      period.to,
+      points ?? 0,
+    ),
     queryFn: () =>
-      gaugeReadingsApi.list(gaugeId as number, seriesId as number, from, limit),
-    enabled: gaugeId !== null && seriesId !== null,
-    staleTime: 5 * 60 * 1000,
+      gaugeReadingsApi.summary(gaugeId, seriesId, {
+        ...period,
+        points: points ?? undefined,
+      }),
+    enabled: points != null,
+    staleTime: summaryStaleTime(period.to),
+    placeholderData: keepPreviousData,
   });
 }
 
