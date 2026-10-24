@@ -62,6 +62,7 @@ export default function TripStays({
   onEditWatchList,
   onDeleteStay,
 }: Props) {
+  const tokens = useTokens();
   const [openId, setOpenId] = useState<number | null>(null);
   const staysQuery = useTripStays(tripId);
   const { data: stays, isLoading } = staysQuery;
@@ -83,7 +84,7 @@ export default function TripStays({
   const list = stays ?? [];
   // The same colour the base wears on the map above, so a ring and a row are
   // recognisably one base.
-  const colors = baseColors(list);
+  const colors = baseColors(list, tokens);
   const numbers = baseNumbers(list);
 
   if (list.length === 0) {

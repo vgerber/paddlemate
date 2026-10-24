@@ -18,6 +18,7 @@ import {
   baseRanges,
   rangeBounds,
 } from "@/lib/tripRange";
+import { useTokens } from "@/lib/useTokens";
 
 export interface BasesScene {
   ranges: BaseRange[];
@@ -39,12 +40,13 @@ export function useBasesScene(
   tripId: number | null,
   isMember: boolean,
 ): BasesScene {
+  const tokens = useTokens();
   const { data: staysData } = useTripStays(tripId);
   const { data: candidates } = useTripCandidates(tripId, isMember);
   const stays = useMemo(() => staysData ?? [], [staysData]);
 
   const ranges = useMemo(() => baseRanges(stays), [stays]);
-  const colors = useMemo(() => baseColors(stays), [stays]);
+  const colors = useMemo(() => baseColors(stays, tokens), [stays, tokens]);
   const numbers = useMemo(() => baseNumbers(stays), [stays]);
 
   const waterwayIds = useMemo(
