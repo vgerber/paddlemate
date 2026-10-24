@@ -189,47 +189,50 @@ fn parse_station_overview(html: &str) -> Vec<StationInfo> {
     stations
 }
 
-/// Parse the HWIMS RSS feed XML for a single station.
-///
-/// Returns a list of `(utc_timestamp, level_cm, flow_m3s)` tuples.
-fn parse_feed(xml: &str) -> Vec<(DateTime<Utc>, Option<f64>, Option<f64>)> {
-    let mut readings = Vec::new();
-
-    // Split on <item> boundaries.
-    for item in xml.split("<item>").skip(1) {
-        // Extract <dc:date> value: UTC ISO-8601 string.
-        let ts = extract_tag(item, "dc:date")
-            .and_then(|s| DateTime::parse_from_rfc3339(s.trim()).ok())
-            .map(|dt| dt.with_timezone(&Utc));
-
-        let Some(ts) = ts else { continue };
-
-        // Extract <description> and decode HTML entities.
-        let desc = match extract_tag(item, "description") {
-            Some(d) => d
-                .replace("&lt;", "<")
-                .replace("&gt;", ">")
-                .replace("&amp;", "&"),
-            None => continue,
-        };
-
-        // Parse "Wasserstand: 33 cm<br/>Durchfluss: 0,187 m³/s<br/>…"
-        let level = parse_desc_value(&desc, "Wasserstand:");
-        let flow = parse_desc_value(&desc, "Durchfluss:");
-
-        readings.push((ts, level, flow));
-    }
-
-    readings
+#[derive(serde::Deserialize)]
+struct Rss {
+    channel: Channel,
 }
 
-/// Return the text content of the first occurrence of `<tag>…</tag>`.
-fn extract_tag<'a>(xml: &'a str, tag: &str) -> Option<&'a str> {
-    let open = format!("<{tag}>");
-    let close = format!("</{tag}>");
-    let start = xml.find(&open)? + open.len();
-    let end = xml[start..].find(&close)? + start;
-    Some(&xml[start..end])
+#[derive(serde::Deserialize)]
+struct Channel {
+    #[serde(default, rename = "item")]
+    items: Vec<Item>,
+}
+
+#[derive(serde::Deserialize)]
+struct Item {
+    // Matches dc:date; quick-xml compares the local name only.
+    #[serde(rename = "date")]
+    date: Option<String>,
+    description: Option<String>,
+}
+
+/// Parse the HWIMS RSS feed XML for a single station.
+///
+/// Returns a list of `(utc_timestamp, level_cm, flow_m3s)` tuples. Items
+/// without a valid date or description are skipped.
+fn parse_feed(xml: &str) -> Vec<(DateTime<Utc>, Option<f64>, Option<f64>)> {
+    let Ok(rss) = quick_xml::de::from_str::<Rss>(xml) else {
+        return Vec::new();
+    };
+    rss.channel
+        .items
+        .into_iter()
+        .filter_map(|item| {
+            let ts = DateTime::parse_from_rfc3339(item.date?.trim())
+                .ok()?
+                .with_timezone(&Utc);
+            // The XML parser has already decoded the entities, leaving
+            // "Wasserstand: 33 cm<br/>Durchfluss: 0,187 m³/s<br/>…".
+            let desc = item.description?;
+            Some((
+                ts,
+                parse_desc_value(&desc, "Wasserstand:"),
+                parse_desc_value(&desc, "Durchfluss:"),
+            ))
+        })
+        .collect()
 }
 
 /// Extract the numeric value for a labelled field in the description text.
@@ -410,6 +413,21 @@ mod tests {
             "2026-05-14T08:00:00Z"
         );
         assert_eq!(level1, Some(34.0));
+    }
+
+    #[test]
+    fn parse_feed_skips_bad_items() {
+        let xml = r#"<rss xmlns:dc="http://purl.org/dc/elements/1.1/"><channel>
+<item><description>Wasserstand: 5 cm</description></item>
+<item><description>Wasserstand: 6 cm</description><dc:date>bad</dc:date></item>
+<item><dc:date>2026-05-14T08:15:00Z</dc:date></item>
+<item><description>Wasserstand: 7 cm&lt;br/&gt;Durchfluss: k.A.</description><dc:date>2026-05-14T08:30:00Z</dc:date></item>
+</channel></rss>"#;
+        let readings = parse_feed(xml);
+        assert_eq!(readings.len(), 1);
+        assert_eq!(readings[0].1, Some(7.0));
+        assert_eq!(readings[0].2, None);
+        assert!(parse_feed("not xml").is_empty());
     }
 
     const SAMPLE_OVERVIEW: &str = r#"
