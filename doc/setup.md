@@ -96,8 +96,8 @@ host names and secrets), and `deploy/backend/.env` carries the settings.
   and best off-peak since they call Overpass at one request a second:
   `derive_section_regions` (fills `regions` of sections that have none), then
   `import_region_outlines` (the boundary of every region a section names).
-- **Settings to check in `deploy/backend/.env`**: `CORS_ALLOWED_ORIGINS` (unset
-  allows any origin; set it to the frontend origin, comma separated),
+- **Settings to check in `deploy/backend/.env`**: `CORS_ALLOWED_ORIGINS` (leave
+  it unset: the API is public, so any origin may call it),
   `OVERPASS_URLS` (the self-hosted instance first), `RATE_LIMIT_PER_SECOND`.
 - **Frontend**: build on the dev machine with the production `VITE_*` values
   (`frontend/.env`), check `grep -c localhost frontend/dist/assets/*.js` is 0,

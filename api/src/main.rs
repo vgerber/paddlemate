@@ -157,8 +157,8 @@ async fn main() {
     }
 
     // Comma separated list of origins allowed to call the API from a browser.
-    // Unset means any origin, which suits local development and a public
-    // read-only deployment; set it in production to name the web app.
+    // Unset means any origin: the API is public. A list narrows it for a
+    // deployment that wants that.
     let cors_origins = match std::env::var("CORS_ALLOWED_ORIGINS") {
         Ok(raw) if !raw.trim().is_empty() => {
             let origins: Vec<_> = raw

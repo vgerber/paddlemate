@@ -525,7 +525,7 @@ back.
 | Variable | Default | Purpose |
 |---|---|---|
 | `RUN_MIGRATIONS` | `true` | Set to `false` to apply migrations as a separate step instead of on boot |
-| `CORS_ALLOWED_ORIGINS` | any origin | Comma separated allowlist; set it in production |
+| `CORS_ALLOWED_ORIGINS` | any origin | Comma separated allowlist. Production leaves it unset: the API is public, usable by any site or script (decided 2026-10-24) |
 | `RATE_LIMIT_PER_SECOND` | `20` | Per-caller budget, burst is five times this; `0` disables |
 | `MEDIA_DIR` | `media` | Where uploaded photos are written; production mounts a volume there. The directory is **not** covered by `pg_dump` - back it up separately |
 | `OVERPASS_URLS` | public instances | Comma-separated Overpass endpoints tried in order; production puts the self-hosted instance (`deploy/overpass/`) first |
