@@ -81,6 +81,7 @@ export default function PanelHeader<T extends string>({
           {onBack && (
             <IconButton
               onClick={onBack}
+              data-panel-back
               sx={{
                 width: tokens.touch.min,
                 height: tokens.touch.min,

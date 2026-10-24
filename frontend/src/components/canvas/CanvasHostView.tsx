@@ -5,6 +5,7 @@ import { controlInset } from "@/lib/canvasLayout";
 import { theme } from "@/lib/theme";
 import { useFreeArea } from "./CanvasContext";
 import { layout, overlay, useLayout } from "./canvasStore";
+import { installFocusReturn } from "./focusReturn";
 import type { MapScene } from "./scene";
 import { useWindowSize } from "./useWindowSize";
 
@@ -16,6 +17,7 @@ const { tokens } = theme;
 export default function CanvasHostView({ scene }: { scene: MapScene }) {
   const size = useWindowSize();
   useEffect(() => layout.setViewport(size), [size]);
+  useEffect(() => installFocusReturn(), []);
   const { padding, clear, rect } = useFreeArea();
   const rail = useLayout((s) => s.dock?.height ?? null);
 
@@ -43,11 +45,18 @@ export default function CanvasHostView({ scene }: { scene: MapScene }) {
         zIndex: 0,
       }}
     >
-      <WaterwayMap {...mapProps} camera={mapCamera} chrome={mapChrome} />
+      {/* The overlay comes first in the DOM so Tab reaches the cards before
+          the map's controls; zIndex keeps it painted over the map. */}
       <Box
         ref={overlay.set}
-        sx={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+        sx={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 1,
+          pointerEvents: "none",
+        }}
       />
+      <WaterwayMap {...mapProps} camera={mapCamera} chrome={mapChrome} />
     </Box>
   );
 }
