@@ -106,7 +106,7 @@ CROSS JOIN (SELECT :'vincent'::varchar AS id) u;
 
 -- Gauge with a week of sinusoidal water-level readings, calibrated on the
 -- put_in of Lower Test (9102) so that section shows a chart and water status.
--- 9401 has a week of readings (latest ~85 cm); 9402 ("Silent Gauge") is
+-- 9401 has two years of readings (latest ~85 cm); 9402 ("Silent Gauge") is
 -- calibrated but never polled, so its section shows the level fallback
 -- without a reading. A gauge allows one series per measurement type.
 -- fetch_interval_secs matches the seeded 2-hourly readings; staleness is
@@ -138,9 +138,34 @@ INSERT INTO gauge_catalog (provider, station_id, name, river, country, lat, lon,
   ('fixture', '9802', 'Test Creek Lower', 'Test Creek', 'AT', 47.0800, 10.9500,
    ST_SetSRID(ST_MakePoint(10.9500, 47.0800), 4326), '{W}');
 
+-- Two years of 2-hourly readings. The last week keeps the familiar wave
+-- (latest ~85 cm); a seasonal swing fades in behind it so the month, year
+-- and two-year views have something to show.
 INSERT INTO gauge_readings (series_id, measured_at, value)
-SELECT 9401, NOW() - (n || ' hours')::interval, 85 + 30 * sin(n / 12.0)
-FROM generate_series(0, 168, 2) AS n;
+SELECT 9401, NOW() - (n || ' hours')::interval,
+       85 + 30 * sin(n / 12.0)
+          + 25 * least(1, n / 336.0) * sin(2 * pi() * n / 8760.0)
+FROM generate_series(0, 17520, 2) AS n;
+
+-- "Long Gauge" (9311 / 9411): two years at 15 minutes, about 70,000
+-- readings, for testing long chart periods. Seven filler gauges report at
+-- the same times and are written in time order, so one series is spread
+-- over the table the way production's is.
+INSERT INTO gauges (id, name, provider, source_id, data_source_id, fetch_interval_secs)
+SELECT g, CASE WHEN g = 9311 THEN 'Long Gauge' ELSE 'Filler Gauge ' || g END,
+       'test', 'test-long-' || g, '9901', 900
+FROM generate_series(9311, 9318) AS g;
+INSERT INTO gauge_series (id, gauge_id, measurement_type, unit)
+SELECT g + 100, g, 'water_level', 'cm' FROM generate_series(9311, 9318) AS g;
+INSERT INTO gauge_readings (series_id, measured_at, value)
+SELECT s, t,
+       90 + 40 * sin(extract(epoch FROM t) / 86400.0 / 58.0 * 2 * pi())
+          + 15 * sin(extract(epoch FROM t) / 86400.0 * 2 * pi())
+          + (s - 9411)
+FROM generate_series(date_trunc('hour', NOW()) - interval '730 days',
+                     date_trunc('hour', NOW()), interval '15 minutes') AS t
+CROSS JOIN generate_series(9411, 9418) AS s
+ORDER BY t, s;
 
 -- Water ranges chosen around the ~85 cm latest reading so the section list
 -- shows every chip variant:
@@ -496,7 +521,10 @@ INSERT INTO feature_water_ranges (id, feature_id, series_id, range_low, range_me
   (9616, 9605, 9401,  70,  95, 130),  -- low
   (9617, 9606, 9401,  30,  50,  70),  -- high
   (9618, 9607, 9401, 100, 130, 160),  -- too low
-  (9619, 9608, 9401,  60,  80, 120);  -- medium
+  (9619, 9608, 9401,  60,  80, 120),  -- medium
+  -- Wellerbruecke reads the Long Gauge, so a real-looking river has two
+  -- years of 15-minute data behind its chart.
+  (9620, 9581, 9411,  70,  95, 130);
 
 
 -- Jonas is in the club but on neither trip, so signing in as him is how you

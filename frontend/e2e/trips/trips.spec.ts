@@ -763,7 +763,7 @@ test.describe("trip gaps", () => {
     }
   });
 
-  test("new trip on a phone covers the bottom nav, dates side by side @small", async ({
+  test("new trip on a phone covers the bottom nav, dates fit @small", async ({
     page,
   }, info) => {
     test.skip(info.project.name === "desktop");
@@ -779,7 +779,10 @@ test.describe("trip gaps", () => {
     expect(covered).toBe(true);
     const a = await page.getByLabel("Starts").first().boundingBox();
     const b = await page.getByLabel("Ends (optional)").first().boundingBox();
-    expect(a?.y).toBe(b?.y);
+    // Side by side where both fit a whole date; stacked on the narrowest
+    // phones, where half the width cuts the date off.
+    if (info.project.name === "small") expect(b && a && b.y > a.y).toBe(true);
+    else expect(a?.y).toBe(b?.y);
     await expectNoHorizontalOverflow(page);
   });
 

@@ -72,7 +72,8 @@ docker compose --profile auth up -d --force-recreate keycloak
 | Whitewater features | 9523/9543/9553 | difficulty III / II / IV-V on sections 9102/9104/9105, spanning put-in to take-out - difficulty chip in the section list |
 | Extra features on Lower Test | 9524-9529 | rapid "Slot Machine" (III+), hole "Big Hole", weir "Altes Wehr", strainer, portage, bridge - 9102 is the feature-rich section for timeline/map/delete testing |
 | Catalog gauges "Test Creek Upper/Lower" | provider `fixture`, 9801, 9802 | river "Test Creek" (no waterway): typing it in the New river form shows the "2 gauges on Test Creek" card |
-| Gauge "Test Gauge" + series | 9301 / 9401, 9402 | water_level in cm; 9401 has a week of 2-hourly sinusoidal readings (55-115, latest ~85), 9402 has none |
+| Gauge "Test Gauge" + series | 9301 / 9401, 9402 | water_level in cm; 9401 has two years of 2-hourly readings (the last week a wave of 55-115, latest ~85; a seasonal swing behind it), 9402 has none |
+| "Long Gauge" + fillers | 9311-9318 / 9411-9418 | two years at 15 minutes (~70,000 readings each, written interleaved like production); 9411 feeds Wellerbruecke (9111, whitewater 9581, ranges 70/95/130) |
 | Water ranges | 9601-9608 | thresholds around the ~85 cm reading so the section list shows every chip variant (see below); section defaults sit on the whitewater features; 9607/9608 sit on the Lower Test rapid/hole (same series as the 9601 default) so selecting them in the timeline swaps the chart thresholds |
 | Descents | 9201-9204 | see below; all owned by the first user |
 | Notes (comments) | 9901-9906 | one per interesting category on Test River, plus a section note and a `merged` one a client should fold away |
