@@ -1250,3 +1250,11 @@ export const labelSx = {
   fontSize: "0.75rem",
   color: "text.secondary",
 } as const;
+
+/** An in-screen section heading, the name of the block below: 13px, semibold,
+ * 18 line, sentence case. Spread into sx; SectionHeading is the component. */
+export const sectionHeadingSx = {
+  ...labelSx,
+  fontSize: "0.8125rem",
+  lineHeight: "18px",
+} as const;
