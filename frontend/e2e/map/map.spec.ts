@@ -719,7 +719,7 @@ test.describe("the region sheet", () => {
 });
 
 test.describe("the put-in and take-out pins in the log form", () => {
-  test("labels are sentence case, fields 16px and 44px, no monospace, verb by device @small", async ({
+  test("labels are sentence case, the clear key is 44px, no monospace, verb by device @small", async ({
     page,
   }, info) => {
     await page.goto(
@@ -727,13 +727,7 @@ test.describe("the put-in and take-out pins in the log form", () => {
     );
     await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Step 2 of 3 · Sections")).toBeVisible();
-    const field = page.getByLabel("Label (optional)").first();
-    await expect(field).toBeVisible();
-    expect(await computed(field, "font-size")).toBe("16px");
-    const box = await field
-      .locator("xpath=ancestor::div[contains(@class,'MuiInputBase-root')]")
-      .boundingBox();
-    expect(box?.height).toBeGreaterThanOrEqual(44);
+    await expect(page.getByLabel("Label (optional)")).toHaveCount(0);
     const clear = page.getByRole("button", { name: "Clear Put in" });
     await expectTouchTargets(clear);
     await clear.click();
