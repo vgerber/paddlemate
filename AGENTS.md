@@ -77,6 +77,8 @@ via `tsconfig.test.json`; `bunfig.toml` limits it to `src`):
 
 ```
 cd frontend && bun test
+cd frontend && bun test ./scripts   # the colour guard's own test
+cd frontend && npm run check:colours
 ```
 
 Feature tests use Playwright (`*.spec.ts` in `frontend/e2e/<feature>/`, typed
@@ -216,8 +218,8 @@ asks for them or when an agreed plan calls for them.
   runs migrations against it.
 - **Gates.** While iterating, run the single test. Run the full gate once at
   the end: `cargo check` and `cargo test --workspace` (plus `cargo sqlx prepare`
-  after any SQL change) in `api/`; `npx tsc -b --force`, `npx biome check src` and
-  `bun test` in `frontend/`. The lead tests the gate's exit code and merges
+  after any SQL change) in `api/`; `npx tsc -b --force`, `npx biome check src`,
+  `bun test`, `bun test ./scripts` and `npm run check:colours` in `frontend/`. The lead tests the gate's exit code and merges
   only on 0, running the gate once per merge, not the agent's list again. Never
   pipe a gate through `grep` in a script that uses `set -e`: that hides a
   failing gate.
@@ -413,11 +415,16 @@ A new layer group joins one of these or becomes a new sibling.
 ### Theme and styling
 
 - Static `import { theme, fonts, labelSx } from "@/lib/theme"` - not
-  `useTheme()`. The theme is light; a dark mode is its own piece of work
-  (tokens as CSS variables) and until then there is no mode switching.
-- Colors come from tokens; transparency via hex-alpha suffix on a token
-  (e.g. `` `${tokens.primary}59` ``), never a literal hex/rgba duplicating
-  a token. Map-marker legibility shadows are the documented exception.
+  `useTheme()`. The app has a light and a dark scheme (System / Light / Dark,
+  [doc/design.md](doc/design.md#dark-mode)); `tokens` are CSS variables, so
+  one value serves both.
+- Colors come from tokens, never a literal hex/rgba. A new colour is a token
+  with a light and a dark value in `lib/theme.ts`, checked in both schemes.
+  Transparency is `withAlpha(token, step)` from `lib/alpha.ts`, not a hex
+  suffix. Where a resolved colour is needed (MapLibre paint, SVG strings,
+  canvas, colour maths) use `useTokens()`; a `var()` does not reach those.
+  `npm run check:colours` enforces this; a documented exception carries a
+  `/* mask */` marker. Map-marker legibility shadows are the other exception.
 - Radii, shadows, motion and touch sizes come from `tokens.radii`,
   `tokens.elevation`, `tokens.motion` and `tokens.touch`; no literal pixel
   radius, no hand-written `box-shadow` or transition duration. A circle is

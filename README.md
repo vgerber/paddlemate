@@ -56,6 +56,11 @@ water levels, and a shared logbook.
 - **Inbox, settings and tools** - the inbox lists what changed on your trips;
   settings hold account, display language, notifications and access tokens
   (shown once); the Tools page opens the gauge catalog.
+- **Dark mode** - Settings > Appearance offers System, Light and Dark, kept
+  per device. System, the default, follows the phone or computer live; the map,
+  charts and markers recolour with the app, and print is always light. The
+  installed app keeps a dark frame (status bar and system buttons) on a dark
+  device even when the app is set to Light.
 - **Community** - voting on proposals, comments on
   sections and features, favorites (listed as starred sections), follows, and per-user or
   per-group visibility of logs.

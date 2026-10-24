@@ -88,16 +88,8 @@ test.describe("map in both schemes @small", () => {
       }),
     );
     for (const f of filters) expect(f).toContain("invert");
-    // The water level chip (dot and cm text) is D2's; everything else on the map screen
-    // must sit on a dark surface.
-    const light = (await lightSurfaces(page)).filter(
-      (f) => !f.what.includes("MuiBox-root.css-5p64yp"),
-    );
-    expect(light).toEqual([]);
-    const weak = (await contrastReport(page)).filter(
-      (f) => !/ cm"$/.test(f.what),
-    );
-    expect(weak, "contrast violations").toEqual([]);
+    expect(await lightSurfaces(page)).toEqual([]);
+    expect(await contrastReport(page), "contrast violations").toEqual([]);
   });
 
   test("light: control glyphs stay as drawn", async ({ page }) => {

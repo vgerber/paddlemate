@@ -14,10 +14,6 @@ const KNOWN = [
   // element, so the scan measures it against the card; the real pair is
   // onPrimary on primary.
   /^text div.* "\d+" 1\.0/,
-  // MapLibre's own zoom control.
-  /^border button\.maplibregl-ctrl/,
-  // LogSectionRow renders levelConfig for light only (descents folder).
-  /^text span.* "\d+ cm" /,
 ];
 
 const tab = (name: string) => async (page: Page) => {
@@ -101,11 +97,7 @@ for (const screen of screens) {
     await expect(page.getByText(screen.ready).first()).toBeVisible();
     await screen.open?.(page);
     await page.waitForTimeout(600);
-    // The BottomSheet scrim is onSurface at 60%, light in dark
-    // (components/BottomSheet.tsx, the shell's).
-    const light = (await lightSurfaces(page)).filter(
-      (l) => !l.detail.includes("rgba(232, 238, 240, 0.6)"),
-    );
+    const light = await lightSurfaces(page);
     // The current day's number sits on a sliding disc that is a sibling
     // element, so the scan measures it against the card (1.0x); the real pair
     // is onPrimary on primary.
