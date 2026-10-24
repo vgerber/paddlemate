@@ -5,11 +5,7 @@ import type { ReactNode } from "react";
 import { humanize, sentenceCase } from "@/lib/format";
 import { CloseIcon } from "@/lib/icons";
 import { labelSx } from "@/lib/theme";
-import {
-  FULL_SECTION_TOLERANCE_M,
-  fmtKm,
-  fmtKmSpan,
-} from "./section-details/utils";
+import { coversWholeSection, fmtKm, fmtKmSpan } from "./section-details/utils";
 
 /** Position along the section line - the subset of ComputedFeature the row
  * needs, so callers can also pass hand-built extents (e.g. endpoints). */
@@ -67,8 +63,7 @@ export default function FeatureRow({
     extent != null &&
     totalM != null &&
     extent.isZone &&
-    extent.startM < FULL_SECTION_TOLERANCE_M &&
-    totalM - extent.endM < FULL_SECTION_TOLERANCE_M;
+    coversWholeSection(extent, totalM);
 
   const placement = isFullSection
     ? "Full section"

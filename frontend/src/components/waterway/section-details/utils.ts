@@ -48,7 +48,15 @@ export function spansWholeSection(
 ): boolean {
   if (f.location.type !== "LineString" || line.length < 2) return false;
   const totalM = distanceAlongLineM(line[line.length - 1], line);
-  const extent = computeExtent(f, line);
+  return coversWholeSection(computeExtent(f, line), totalM);
+}
+
+/** True when an extent runs (nearly) from one end of a section of length
+ * `totalM` to the other. */
+export function coversWholeSection(
+  extent: { startM: number; endM: number },
+  totalM: number,
+): boolean {
   return (
     extent.startM < FULL_SECTION_TOLERANCE_M &&
     totalM - extent.endM < FULL_SECTION_TOLERANCE_M
