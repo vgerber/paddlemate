@@ -5,6 +5,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import NotificationList from "@/components/notifications/NotificationList";
 import PanelHeader from "@/components/PanelHeader";
+import { SwipeGhost } from "@/components/SwipeGhost";
 import { type GroupId, parseGroup } from "@/components/settings/groups";
 import SettingsDetail from "@/components/settings/SettingsDetail";
 import SettingsList from "@/components/settings/SettingsList";
@@ -12,6 +13,7 @@ import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
 import ToolsList from "@/components/ToolsList";
 import { useSession } from "@/lib/hooks/useSession";
+import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import { AccountIcon } from "@/lib/icons";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
@@ -40,8 +42,73 @@ const Version = () => (
   </Typography>
 );
 
-function SettingsPage() {
+function PhoneTabBody({
+  tab,
+  onOpen,
+}: {
+  tab: PhoneTab;
+  onOpen: (id: GroupId) => void;
+}) {
+  if (tab === "profile") {
+    return (
+      <>
+        <SettingsList onOpen={onOpen} />
+        <Box sx={{ px: 2, pt: 1.75, pb: 1 }}>
+          <Version />
+        </Box>
+      </>
+    );
+  }
+  // The inbox is a list, edge to edge like every other list.
+  if (tab === "inbox") return <NotificationList cards />;
+  return (
+    <Box sx={{ px: 1.5, py: 3 }}>
+      <ToolsList />
+    </Box>
+  );
+}
+
+function PhoneSettings({
+  onOpen,
+  group,
+  onBack,
+}: {
+  onOpen: (id: GroupId) => void;
+  group?: GroupId;
+  onBack: () => void;
+}) {
   const [tab, setTab] = useState<PhoneTab>("profile");
+  const index = PHONE_TABS.findIndex((t) => t.value === tab);
+  const swipe = useSwipeTabs({
+    index,
+    count: PHONE_TABS.length,
+    onIndexChange: (i) => setTab(PHONE_TABS[i].value),
+  });
+  return (
+    <Box>
+      <PanelHeader
+        tabs={{
+          value: tab,
+          onChange: setTab,
+          track: swipe.track,
+          gesture: swipe.gestureProps,
+          options: PHONE_TABS,
+        }}
+      />
+      <Box sx={{ position: "relative", overflowX: "clip" }}>
+        <Box {...swipe.paneProps} data-testid="settings-pane">
+          <PhoneTabBody tab={tab} onOpen={onOpen} />
+        </Box>
+        <SwipeGhost swipe={swipe} index={index} count={PHONE_TABS.length}>
+          {(i) => <PhoneTabBody tab={PHONE_TABS[i].value} onOpen={onOpen} />}
+        </SwipeGhost>
+      </Box>
+      {group && <SettingsDetail group={group} overlay onBack={onBack} />}
+    </Box>
+  );
+}
+
+function SettingsPage() {
   const { isAuthenticated, isLoading } = useSession();
   const navigate = useNavigate({ from: "/settings" });
   const { group } = Route.useSearch();
@@ -65,33 +132,11 @@ function SettingsPage() {
   // settings and the groups become the list beside them.
   if (!isDesktop) {
     return (
-      <Box>
-        <PanelHeader
-          tabs={{ value: tab, onChange: setTab, options: PHONE_TABS }}
-        />
-        {tab === "profile" && (
-          <>
-            <SettingsList onOpen={open} />
-            <Box sx={{ px: 2, pt: 1.75, pb: 1 }}>
-              <Version />
-            </Box>
-          </>
-        )}
-        {/* The inbox is a list, edge to edge like every other list. */}
-        {tab === "inbox" && <NotificationList cards />}
-        {tab === "tools" && (
-          <Box sx={{ px: 1.5, py: 3 }}>
-            <ToolsList />
-          </Box>
-        )}
-        {group && (
-          <SettingsDetail
-            group={group}
-            overlay
-            onBack={() => navigate({ search: {} })}
-          />
-        )}
-      </Box>
+      <PhoneSettings
+        onOpen={open}
+        group={group}
+        onBack={() => navigate({ search: {} })}
+      />
     );
   }
 
