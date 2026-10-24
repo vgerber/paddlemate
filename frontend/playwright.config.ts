@@ -9,6 +9,8 @@ export default defineConfig({
   testDir: "./e2e",
   globalSetup: "./e2e/support/global-setup.ts",
   outputDir: "./test-results",
+  // The dark-mode light baseline sits next to its spec (e2e/dark/baseline.spec.ts).
+  snapshotPathTemplate: "{testDir}/dark/__baseline__/{arg}{ext}",
   // One worker: the specs share one seeded database, and a spec may change it.
   workers: 1,
   fullyParallel: false,
