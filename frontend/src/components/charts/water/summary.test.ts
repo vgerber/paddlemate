@@ -99,6 +99,12 @@ describe("rangeError", () => {
     expect(rangeError("", "2026-04-04", today)).toMatch(/both/);
     expect(rangeError("2020-01-01", "2026-04-04", today)).toMatch(/5 years/);
   });
+
+  test("accepts exactly 5 calendar years across leap days", () => {
+    expect(rangeError("2020-02-28", "2025-02-28", today)).toBeNull();
+    expect(rangeError("2021-10-24", today, today)).toBeNull();
+    expect(rangeError("2021-10-23", today, today)).toMatch(/5 years/);
+  });
 });
 
 describe("custom ranges", () => {
