@@ -193,7 +193,8 @@ pub async fn run_query(client: &reqwest::Client, query: &str) -> anyhow::Result<
 }
 
 /// One Overpass fetch at a time across all requests - Overpass allows very
-/// few requests per IP, and concurrent misses must not stampede it.
+/// few requests per IP, and concurrent misses must not stampede it. Ours
+/// because background priority is domain logic no library offers.
 pub static FETCH_LOCK: Mutex<()> = Mutex::const_new(());
 
 /// Take `lock` for background work without joining its queue: wait until it

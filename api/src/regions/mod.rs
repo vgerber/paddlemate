@@ -43,5 +43,6 @@ pub use worker::run_worker;
 
 /// How far from a section a named valley still counts as its valley.
 const VALLEY_RADIUS_M: u32 = 2_000;
-/// Pause between Overpass requests of one batch.
+/// Pause between Overpass requests of one batch. A fixed gap, not a retry
+/// crate: there is nothing to back off from.
 pub const REQUEST_GAP: Duration = Duration::from_secs(1);

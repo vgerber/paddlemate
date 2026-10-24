@@ -69,7 +69,10 @@ function leaveDuration(distance: number, width: number): number {
  * cross-fades instead. Spread `gestureProps` on the tab bar so a swipe can
  * start there too, and pass `progress` and `dragging` to `UnderlineTabs` so
  * its underline follows. Touch and pen only: a mouse keeps text selection,
- * and the tab bar stays the other way in. */
+ * and the tab bar stays the other way in.
+ *
+ * Hand-rolled because a drag writes the DOM without rendering and needs edge
+ * zones; @use-gesture has had no release since March 2024. */
 export function useSwipeTabs({
   index,
   count,
