@@ -31,18 +31,20 @@ test.describe("floating action button", () => {
     await gotoSection(page, "lower");
     const fab = seen(page.getByRole("button", { name: "New feature" }));
     await expect(fab).toBeVisible();
-    const discs = seen(page.getByTestId("features-strip")).locator(
-      "[data-disc]",
-    );
-    const n = await discs.count();
-    expect(n, "the strip draws its features").toBeGreaterThan(3);
-    for (let i = 0; i < n; i++)
-      await expectClear(discs.nth(i), fab, `strip disc ${i}`);
     const chart = seen(page.getByTestId("chart-card"));
     await expectClear(
       chart.getByRole("button", { name: "Chart period" }),
       fab,
       "the period button",
     );
+    const strip = seen(page.getByTestId("features-strip"));
+    // The open chart pushes the strip down the pane on a short screen; the
+    // pane ends with fab room, so what matters is that it can scroll clear.
+    await strip.evaluate((el) => el.scrollIntoView({ block: "start" }));
+    const discs = strip.locator("[data-disc]");
+    const n = await discs.count();
+    expect(n, "the strip draws its features").toBeGreaterThan(3);
+    for (let i = 0; i < n; i++)
+      await expectClear(discs.nth(i), fab, `strip disc ${i}`);
   });
 });

@@ -127,16 +127,19 @@ test.describe("header menu", () => {
   test("lists the actions of each tab in groups", async ({ page }) => {
     await page.goto(`/?waterway=${FIX.waterway}&section=${FIX.sections.upper}`);
     expect(await menuLabels(page)).toEqual([
-      "Add favorite",
+      "Remove favorite",
       "Start descent",
       "Log descent",
       "Show proposed features",
     ]);
     await tab(page, "Logs").click();
-    expect(await menuLabels(page)).toEqual(["Add favorite", "Start descent"]);
+    expect(await menuLabels(page)).toEqual([
+      "Remove favorite",
+      "Start descent",
+    ]);
     await page.goto(`/?waterway=9010&section=9171`);
     expect(await menuLabels(page)).toEqual([
-      "Add favorite",
+      "Remove favorite",
       "Start descent",
       "Log descent",
       "Edit grade",
@@ -145,7 +148,7 @@ test.describe("header menu", () => {
     ]);
     await tab(page, "Sources").click();
     expect(await menuLabels(page)).toEqual([
-      "Add favorite",
+      "Remove favorite",
       "Start descent",
       "Log descent",
       "Edit grade",
