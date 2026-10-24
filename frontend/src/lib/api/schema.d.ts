@@ -1026,6 +1026,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/waterways/gauges/{gauge_id}/series/{series_id}/readings/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Readings of a series in a range, about `points` of them. Raw when the range holds no more than `points` readings (bucket_seconds 0), otherwise bucketed with average, min, max and count; empty buckets are left out. */
+        get: operations["summarize_readings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/waterways/gauges/{gauge_id}/series/{series_id}/readings/latest": {
         parameters: {
             query?: never;
@@ -3047,6 +3064,28 @@ export interface components {
             /** Format: int64 */
             subscription_id: number;
         };
+        /**
+         * @description One point of a readings summary. In raw mode `min` and `max` equal `value`
+         *      and `count` is 1.
+         */
+        ReadingBucket: {
+            /** Format: int64 */
+            count: number;
+            /** Format: double */
+            max: number;
+            /**
+             * Format: date-time
+             * @description Bucket start (or the reading time in raw mode).
+             */
+            measured_at: string;
+            /** Format: double */
+            min: number;
+            /**
+             * Format: double
+             * @description Average of the readings in the bucket.
+             */
+            value: number;
+        };
         ReadingsQuery: {
             /** Format: date-time */
             from?: string | null;
@@ -3057,6 +3096,19 @@ export interface components {
             limit?: number | null;
             /** Format: date-time */
             to?: string | null;
+        };
+        ReadingsSummary: {
+            /**
+             * Format: int64
+             * @description Bucket width in seconds; 0 when the items are raw readings.
+             */
+            bucket_seconds: number;
+            /** Format: date-time */
+            from: string;
+            /** @description Oldest first; empty buckets are left out. */
+            items: components["schemas"]["ReadingBucket"][];
+            /** Format: date-time */
+            to: string;
         };
         /**
          * @description One named region a section lies in. `id`, `country` and `bbox` are filled
@@ -3350,6 +3402,23 @@ export interface components {
          * @enum {string}
          */
         StepKind: "imported" | "created" | "proposal_accepted" | "edited" | "deleted";
+        SummaryQuery: {
+            /**
+             * Format: date-time
+             * @description Range start, ISO 8601 UTC (default: `to` minus 7 days).
+             */
+            from?: string | null;
+            /**
+             * Format: int64
+             * @description Target number of points (default 300, clamped to 10..1000).
+             */
+            points?: number | null;
+            /**
+             * Format: date-time
+             * @description Range end, ISO 8601 UTC (default: now).
+             */
+            to?: string | null;
+        };
         /**
          * @description A collaborative trip. Ownership is a member row with role `admin`, so it
          *      can be transferred or shared without touching the trip itself.
@@ -4283,11 +4352,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-23T19:37:19.237545745Z",
-                     *         "expires_at": "2027-01-21T19:37:19.237549025Z",
+                     *         "created_at": "2026-10-24T08:35:00.912267665Z",
+                     *         "expires_at": "2027-01-22T08:35:00.912270355Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-23T19:37:19.237555275Z",
+                     *         "last_used_at": "2026-10-24T08:35:00.912273175Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4318,8 +4387,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-23T19:37:19.237686394Z",
-                     *       "expires_at": "2027-01-21T19:37:19.237686724Z",
+                     *       "created_at": "2026-10-24T08:35:00.912396165Z",
+                     *       "expires_at": "2027-01-22T08:35:00.912396855Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -7644,6 +7713,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GaugeReading"][];
+                };
+            };
+        };
+    };
+    summarize_readings: {
+        parameters: {
+            query?: {
+                /** @description Range start, ISO 8601 UTC (default: `to` minus 7 days). */
+                from?: string | null;
+                /** @description Target number of points (default 300, clamped to 10..1000). */
+                points?: number | null;
+                /** @description Range end, ISO 8601 UTC (default: now). */
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                gauge_id: number;
+                series_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadingsSummary"];
+                };
+            };
+            /** @description `from` not before `to`, or a range over 5 years */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Series not found on that gauge */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
