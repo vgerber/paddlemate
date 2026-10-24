@@ -73,7 +73,7 @@ function addFlow(status: FlowStatus, asOwnGauge = false) {
     {
       ...level,
       id: 99001,
-      ...(asOwnGauge ? { gauge: { ...level.gauge, id: 99301 } } : {}),
+      gauge: asOwnGauge ? { ...level.gauge, id: 99301 } : level.gauge,
       series: {
         ...level.series,
         id: 99401,
