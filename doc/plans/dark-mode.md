@@ -426,10 +426,12 @@ Built on the `dark-mode` integration branch before any agent started:
 4. **Light baseline**: `e2e/dark/baseline.spec.ts` compares the 14 named
    screens at phone (Pixel 7), small (320) and desktop (1280) against
    screenshots committed in `e2e/dark/__baseline__/` (deleted with the plan).
-   `--update-snapshots` rewrites them. Tolerance measured by the spike: up to
-   7/255 on a few hairline pixels, so the comparison uses a per-pixel
-   `threshold` just above that and a small `maxDiffPixels`; moving map
-   canvases and time-shifted chart data are masked.
+   `--update-snapshots` rewrites them. Tolerance: the spike measured up to
+   7/255 on a few hairline pixels, so the per-pixel `threshold` is 0.05; text
+   edges move by a pixel between runs, so a screen may hold 1.5% different
+   pixels. The map canvas and controls (hidden by `baseline.css`), the chart
+   and clock-bound text (masked) are left out; the baseline cannot see map
+   control glyphs, which D1a's spec covers.
 5. The 14 screens (all in the fixture): start map `/`, river detail on the
    Test River, section detail (features tab), section detail (sources tab),
    gauge panel, descent log list, descent form, trips list, trip detail,
@@ -553,10 +555,13 @@ Statements the reviewer checks by running the app (or the stated test).
 "Dark" means `paddlemate-color-mode=dark`; "N screens" are the 14 in Phase 0.
 
 1. **Light unchanged after phase 1**: on the 14 named screens at Pixel 7, 320
-   and 1280 wide (42 screenshots), the flipped branch differs from the phase-0
-   baseline in 0 pixels beyond a per-channel difference of 1/255 (Playwright
-   `maxDiffPixels: 0`, `threshold: 0.01`; the 1/255 allowance is the byte
-   rounding of the alpha percentages), and `getComputedStyle` of
+   and 1280 wide (42 screenshots), the flipped branch matches the phase-0
+   baseline (`e2e/dark/baseline.spec.ts`: `threshold: 0.05`, which tolerates
+   the spike's 7/255 colour-mix rounding on a few hairline pixels, and
+   `maxDiffPixelRatio: 0.015`, because text edges re-rasterise by up to 0.75%
+   of a screen between two runs of the same build; the map canvas, the map
+   controls, the chart and clock-bound text are hidden or masked, three retries
+   absorb a transient loading frame), and the computed style of
    `body`, the app bar, the first list row and the primary button match.
 2. **No light surface left**: in dark, `noLightSurface` reports 0 elements on
    each of the 14 screens at the three sizes, and on the dialogs and menus
