@@ -541,9 +541,7 @@ test.describe("design gaps", () => {
     expect(x).toBe(28);
   });
 
-  test("a month label has 8px below it", async ({
-    page,
-  }, info) => {
+  test("a month label has 8px below it", async ({ page }, info) => {
     test.skip(isDesktop(info), "the card grid gives desktop a space below");
     await openLogs(page);
     const m = page.getByTestId("log-month").first();

@@ -1,18 +1,9 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { labelSx, theme } from "@/lib/theme";
+import { sectionHeadingSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
-
-/** Typography of an in-screen section heading. Belongs in lib/theme.ts next to
- * labelSx once the bars change lands; kept here until then. */
-export const sectionHeadingSx = {
-  ...labelSx,
-  fontSize: "0.8125rem",
-  lineHeight: "18px",
-  color: tokens.onSurfaceVariant,
-} as const;
 
 /** The name of the block below it: 13/600, sentence case, 24 above and 8
  * below, with an optional control on the right line. `first` drops the top
@@ -54,6 +45,7 @@ export default function SectionHeading({
         data-testid={testId}
         sx={{
           ...sectionHeadingSx,
+          color: tokens.onSurfaceVariant,
           flex: 1,
           minWidth: 0,
           display: "flex",

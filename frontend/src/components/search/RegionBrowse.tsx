@@ -26,7 +26,7 @@ import {
   regionKindLabel,
   regionKindSingular,
 } from "@/lib/regionKinds";
-import { theme } from "@/lib/theme";
+import { cardTitleSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -128,7 +128,7 @@ export default function RegionBrowse({
           sx={{ display: "flex", alignItems: "center", gap: 2, py: 0.5 }}
         >
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6" noWrap>
+            <Typography variant="h6" noWrap sx={cardTitleSx}>
               {preview.name}
             </Typography>
             <Typography variant="body2" color="textSecondary" noWrap>

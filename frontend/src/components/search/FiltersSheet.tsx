@@ -54,7 +54,14 @@ function FiltersBody({
     maxDiff !== "" ||
     filters.water.length > 0;
   return (
-    <Box sx={{ display: "grid", gap: 2, px: 2, pb: 2 }}>
+    <Box
+      sx={{
+        display: "grid",
+        gap: 2,
+        px: { xs: `${tokens.phone.line}px`, md: 2 },
+        pb: 2,
+      }}
+    >
       <Box
         sx={{
           display: "flex",
@@ -62,11 +69,7 @@ function FiltersBody({
           justifyContent: "space-between",
         }}
       >
-        <Typography
-          variant="h6"
-          component="h2"
-          sx={{ fontWeight: 700, fontSize: "1.125rem" }}
-        >
+        <Typography variant="h4" component="h2" sx={{ lineHeight: "24px" }}>
           Filters
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center" }}>
