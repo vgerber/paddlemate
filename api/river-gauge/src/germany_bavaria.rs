@@ -163,17 +163,7 @@ const STATION_COORDS: &str = include_str!("../data/germany_bavaria_coords.csv");
 
 /// Parse the embedded coordinate table into a Pegelnummer -> (lat, lon) map.
 fn coord_lookup() -> HashMap<&'static str, (f64, f64)> {
-    STATION_COORDS
-        .lines()
-        .filter(|l| !l.is_empty() && !l.starts_with('#'))
-        .filter_map(|l| {
-            let mut it = l.split(',');
-            let id = it.next()?;
-            let lat = it.next()?.trim().parse().ok()?;
-            let lon = it.next()?.trim().parse().ok()?;
-            Some((id, (lat, lon)))
-        })
-        .collect()
+    crate::parse_coord_table(STATION_COORDS)
 }
 
 impl GaugeReader for GermanyBavariaReader {
@@ -288,6 +278,17 @@ impl GaugeReader for GermanyBavariaReader {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn coord_lookup_matches_table() {
+        let m = coord_lookup();
+        assert_eq!(m.len(), 819);
+        let lat: f64 = m.values().map(|v| v.0).sum();
+        let lon: f64 = m.values().map(|v| v.1).sum();
+        assert!((lat - 39949.50437).abs() < 1e-6);
+        assert!((lon - 9370.23217).abs() < 1e-6);
+        assert_eq!(m["10026302"], (48.38934, 9.98673));
+    }
 
     // --- parse_german_float ---
 
