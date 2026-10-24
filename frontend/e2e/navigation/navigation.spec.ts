@@ -326,7 +326,9 @@ test.describe("tools", () => {
   });
 });
 
-test("the browser chrome is white and the installed frame dark", async ({ page }) => {
+test("the browser chrome is white and the installed frame dark", async ({
+  page,
+}) => {
   await page.goto("/");
   // A phone in dark mode gets a dark frame (system-bars.spec.ts); the light
   // one is white.
