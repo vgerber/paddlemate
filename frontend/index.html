@@ -23,6 +23,9 @@
     <style>
       html { background: #eef2f3; }
       html[data-theme="dark"] { background: #141b1f; color-scheme: dark; }
+      @media print {
+        html[data-theme="dark"] { background: #ffffff; color-scheme: light; }
+      }
     </style>
     <script>
       (function () {
