@@ -46,6 +46,7 @@ function dayLabel(day: number): string {
 
 // Ink at 22%: the month's veil over the list. No alpha step is this light.
 const MONTH_SCRIM = 21.96;
+const MONTH_SCRIM_DARK = 50;
 
 /**
  * The trip as it runs: the week pinned above, one card per day below, with
@@ -173,7 +174,11 @@ export default function TripTimeline({
             position: "absolute",
             inset: 0,
             zIndex: 1,
-            bgcolor: withAlpha(tokens.onSurface, MONTH_SCRIM),
+            // Ink in light, black in dark: onSurface would lighten the page.
+            bgcolor: withAlpha(tokens.scrimBase, MONTH_SCRIM),
+            '[data-theme="dark"] &': {
+              bgcolor: withAlpha(tokens.scrimBase, MONTH_SCRIM_DARK),
+            },
           }}
         />
       )}

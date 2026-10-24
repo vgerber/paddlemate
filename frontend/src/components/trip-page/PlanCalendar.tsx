@@ -317,11 +317,11 @@ function WeekRow({
               width: DISC,
               height: DISC,
               borderRadius: "50%",
-              bgcolor: tokens.primary,
+              bgcolor: tokens.primaryFill,
               // Today and current: a white gap, then the accent ring.
               boxShadow:
                 current === today
-                  ? `0 0 0 2px ${tokens.surface}, 0 0 0 4px ${tokens.primary}`
+                  ? `0 0 0 2px ${tokens.surface}, 0 0 0 4px ${tokens.primaryFill}`
                   : "none",
             }}
           />

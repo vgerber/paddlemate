@@ -212,6 +212,16 @@ describe("the dark palette table (doc/plans/dark-mode.md)", () => {
     ["gaugeUntracked on map ground", d.gaugeUntracked, d.mapGround, 3.5],
     ["chartSeries on surface", d.chartSeries, d.surface, 8.1],
     ["white ring on map ground", d.white, d.mapGround, 15.75],
+    ["onPrimary on primaryFill", d.onPrimary, d.primaryFill, 5.2],
+    ["primaryFill on surface", d.primaryFill, d.surface, 5.1],
+    ["onPrimary on primaryFillHover", d.onPrimary, d.primaryFillHover, 5.8],
+    ["onErrorFill on errorFill", d.onErrorFill, d.errorFill, 4.8],
+    ["high chip on surface", d.levels.high.bg, d.surface, 3.2],
+    ["high ink on surface", d.levels.high.ink, d.surface, 6.6],
+    ["outlineControl on surface", d.outlineControl, d.surface, 3.0],
+    ["segmentThumb on its track", d.segmentThumb, d.surfaceHigh, 1.3],
+    ["switchThumb on surface", d.switchThumb, d.surface, 10.4],
+    ["surface on the map ground", d.surface, d.mapGround, 1.1],
   ];
   for (const [name, fg, bg, min] of rows) {
     test(`${name} >= ${min}`, () => {

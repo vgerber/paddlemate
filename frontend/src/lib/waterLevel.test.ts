@@ -59,7 +59,7 @@ describe("isCalibrated", () => {
 
 describe("levelInk", () => {
   test("uses the pill colour for high, whose text is white", () => {
-    expect(levelInk("high")).toBe(tokensFor("light").levels.high.bg);
+    expect(levelInk("high")).toBe(tokensFor("light").levels.high.ink);
     expect(levelInk("high")).not.toBe("#ffffff");
   });
   test("uses the text colour for low and medium", () => {
@@ -134,7 +134,7 @@ describe.each(SCHEMES)("level colours in the %s scheme", (scheme) => {
   test("levelInk reads the scheme's tokens", () => {
     expect(levelInk("low", scheme)).toBe(t.levels.low.text);
     expect(levelInk("medium", scheme)).toBe(t.levels.medium.text);
-    expect(levelInk("high", scheme)).toBe(t.levels.high.bg);
+    expect(levelInk("high", scheme)).toBe(t.levels.high.ink);
     expect(levelInk("low", t)).toBe(levelInk("low", scheme));
   });
 

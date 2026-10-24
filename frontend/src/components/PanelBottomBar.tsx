@@ -32,10 +32,10 @@ export function RoundActionButton({
         width: 52,
         height: 52,
         borderRadius: `${tokens.radii.lg}px`,
-        bgcolor: tokens.primary,
+        bgcolor: tokens.primaryFill,
         color: tokens.onPrimary,
         boxShadow: tokens.elevation.e3,
-        "&:hover": { bgcolor: tokens.primaryDark },
+        "&:hover": { bgcolor: tokens.primaryFillHover },
         "&.Mui-disabled": {
           bgcolor: tokens.surfaceHighest,
           color: tokens.outline,

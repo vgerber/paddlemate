@@ -71,14 +71,13 @@ export function levelWord(level: Exclude<WaterLevel, "empty">): string {
 }
 
 /** The level's colour as ink on a light ground (a chart line, a word on the
- * plot). High's text colour is white for its solid pill, so its ink is the
- * pill colour itself. */
+ * plot). High's text colour is white for its solid pill, so it has its own ink. */
 export function levelInk(
   level: Exclude<WaterLevel, "empty">,
   from: TokenSource = "light",
 ): string {
-  const t = resolveTokens(from).levels[level];
-  return level === "high" ? t.bg : t.text;
+  const levels = resolveTokens(from).levels;
+  return level === "high" ? levels.high.ink : levels[level].text;
 }
 
 /** True when the range has at least one threshold configured. */

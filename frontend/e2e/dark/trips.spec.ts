@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { parseColour } from "../support/colour";
 import { contrastReport, lightSurfaces, useScheme } from "../support/dark";
 import { FIX } from "../support/fixture";
 
@@ -124,3 +125,20 @@ for (const screen of screens) {
     expect(contrast, "contrast").toEqual([]);
   });
 }
+
+test("the month scrim darkens the page under it in dark", async ({ page }) => {
+  test.skip(
+    test.info().project.name === "desktop",
+    "the month is a phone view",
+  );
+  await useScheme(page, "dark");
+  await page.goto(`/trips/${TRIP}?edit=false`);
+  await page.getByRole("button", { name: "Show the month" }).click();
+  const scrim = page.getByTestId("month-scrim").filter({ visible: true });
+  await expect(scrim).toBeVisible();
+  const [r, g, b, a] = parseColour(
+    await scrim.evaluate((el) => getComputedStyle(el).backgroundColor),
+  );
+  expect(Math.max(r, g, b)).toBeLessThan(10);
+  expect(a).toBeGreaterThanOrEqual(0.4);
+});

@@ -67,10 +67,12 @@ export function Segment({
         fontSize: "0.8125rem",
         fontWeight: active ? 600 : 500,
         color: active ? tokens.onSurface : tokens.onSurfaceVariant,
-        bgcolor: active ? tokens.surface : "transparent",
+        bgcolor: active ? tokens.segmentThumb : "transparent",
         boxShadow: active ? tokens.elevation.e1 : "none",
         borderRadius: `${tokens.radii.segment}px`,
-        "&:hover": { bgcolor: active ? tokens.surface : tokens.surfaceHighest },
+        "&:hover": {
+          bgcolor: active ? tokens.segmentThumb : tokens.surfaceHighest,
+        },
         ...(compact && {
           "&::after": { content: '""', position: "absolute", inset: "-6px 0" },
         }),
