@@ -58,7 +58,7 @@ test.beforeEach(async ({ page }) => {
 
 interface FlowStatus {
   ranges: ({
-    gauge: { name: string };
+    gauge: { id?: number; name: string };
     series: object;
     latest_reading: object;
   } & Record<string, unknown>)[];
@@ -513,7 +513,7 @@ test.describe("reading block and rail", () => {
         .includes("section_ids")
         ? Object.values(body)
         : [body];
-      for (const status of statuses) addFlow(status, asOwnGauge);
+      for (const status of statuses) addFlow(status);
       await route.fulfill({ response: res, json: body });
     });
     await page.route(/\/series\/99401\/readings/, (route) =>
