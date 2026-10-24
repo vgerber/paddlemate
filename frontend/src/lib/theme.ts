@@ -43,6 +43,12 @@ export const lightTokens = {
   primaryDark: "#0b5d74",
   primaryContainer: "#e0f2f6",
   onPrimaryContainer: "#0b5d74",
+  // Solid accent fills (contained button, FAB, round action, numbered discs)
+  // with their hover step and `onPrimary` text. Dark softens the fill so the
+  // call to action does not outshine the content; `primary` stays the
+  // bright accent for text, rings and lines.
+  primaryFill: teal,
+  primaryFillHover: "#0b5d74",
 
   // Success - the calm "low" green, also palette.success
   success: "#1d6b4f",
@@ -54,6 +60,11 @@ export const lightTokens = {
   error,
   errorDark: "#8e2b32",
   errorContainer: "#f7dcde",
+  // A solid error fill (contained button, high-water chip) and its hover,
+  // always under white text. Dark is a deeper red than the `error` text hue.
+  errorFill: error,
+  errorFillHover: "#8e2b32",
+  onErrorFill: "#ffffff",
   // Text and icons on a solid error or warning fill.
   onError: "#ffffff",
 
@@ -63,6 +74,10 @@ export const lightTokens = {
   // The edge of an outlined button or tile: a hairline in light, and in dark
   // the 3:1 outline, since a hairline vanishes on a dark surface.
   outlineControl: "#dde4e7",
+  // The selected segment of a segmented control: raised above its track.
+  segmentThumb: "#ffffff",
+  // The thumb of a switch that is off.
+  switchThumb: "#ffffff",
   // The wash behind a sheet or dialog: ink in light, black in dark.
   scrimBase: "#1f2b31",
 
@@ -99,6 +114,8 @@ export const lightTokens = {
       marker: "#e5483f",
       text: "#ffffff",
       bg: error,
+      // The same hue as ink on the plain ground (a chart line, a word).
+      ink: error,
     },
   },
 
@@ -315,6 +332,8 @@ export const darkTokens: Tokens = {
   primaryDark: "#4db4cf",
   primaryContainer: "#12343f",
   onPrimaryContainer: "#9fdcee",
+  primaryFill: "#3a9fba",
+  primaryFillHover: "#46a9c3",
   success: "#86d2b2",
   successContainer: "#173a2d",
   onSuccessContainer: "#b9e8d2",
@@ -322,10 +341,14 @@ export const darkTokens: Tokens = {
   error: "#f08c8a",
   errorDark: "#f4a4a2",
   errorContainer: "#4a2326",
+  errorFill: "#c4474e",
+  errorFillHover: "#d05960",
   onError: "#1b2429",
   outline: "#7f8d93",
-  outlineVariant: "#2a353c",
-  outlineControl: "#7f8d93",
+  outlineVariant: "#323f47",
+  outlineControl: "#627077",
+  segmentThumb: "#34424a",
+  switchThumb: "#c9d4d8",
   scrimBase: "#000000",
   background: "#141b1f",
   levels: {
@@ -344,7 +367,7 @@ export const darkTokens: Tokens = {
       text: "#f0c06c",
       bg: "rgba(240,192,108,0.16)",
     },
-    high: { ...lightTokens.levels.high, text: "#1b2429", bg: "#f08c8a" },
+    high: { ...lightTokens.levels.high, bg: "#c4474e", ink: "#f08c8a" },
   },
   featureColors: {
     ...lightTokens.featureColors,
@@ -362,7 +385,7 @@ export const darkTokens: Tokens = {
   mapLabelHalo: "#141b1f",
   mapCountryBorder: "#aab6bb",
   mapCountryBorderCasing: "#141b1f",
-  mapGround: "#1c2429",
+  mapGround: "#12181b",
   mapGreen: "#1f2e29",
   mapWater: "#12303f",
   mapRiver: "#2f6384",
@@ -383,8 +406,10 @@ export const darkTokens: Tokens = {
   elevation: {
     ...lightTokens.elevation,
     e1: "0 1px 2px rgba(0,0,0,0.4), 0 1px 1px rgba(0,0,0,0.2)",
-    e2: "0 10px 28px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.35)",
-    e3: "0 4px 14px rgba(103,199,224,0.25)",
+    // The hairline ring lifts a floating surface off the dark map, where a
+    // shadow alone does not show.
+    e2: "0 0 0 1px rgba(232,238,240,0.08), 0 10px 28px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.35)",
+    e3: "0 4px 14px rgba(0,0,0,0.45)",
   },
 };
 
@@ -686,6 +711,8 @@ export const theme = createTheme({
           // A divider, not a control edge: an inset line keeps it out of the
           // button's border box.
           "& + button": { boxShadow: `inset 0 1px 0 ${tokens.outlineVariant}` },
+          // MapLibre's own #ddd rule between buttons is a bright line in dark.
+          '[data-theme="dark"] & + button': { borderTop: "none" },
         },
       },
     },
@@ -767,8 +794,20 @@ export const theme = createTheme({
         {
           props: { variant: "contained", color: "primary" },
           style: {
+            backgroundColor: tokens.primaryFill,
             boxShadow: elevation.e3,
-            "&:hover": { boxShadow: elevation.e3 },
+            "&:hover": {
+              backgroundColor: tokens.primaryFillHover,
+              boxShadow: elevation.e3,
+            },
+          },
+        },
+        {
+          props: { variant: "contained", color: "error" },
+          style: {
+            backgroundColor: tokens.errorFill,
+            color: tokens.onErrorFill,
+            "&:hover": { backgroundColor: tokens.errorFillHover },
           },
         },
       ],
@@ -788,6 +827,15 @@ export const theme = createTheme({
           "&:hover": { boxShadow: elevation.e3 },
         },
       },
+      variants: [
+        {
+          props: { color: "primary" },
+          style: {
+            backgroundColor: tokens.primaryFill,
+            "&:hover": { backgroundColor: tokens.primaryFillHover },
+          },
+        },
+      ],
     },
 
     MuiSpeedDialAction: {
@@ -809,15 +857,17 @@ export const theme = createTheme({
           fontWeight: 600,
           fontSize: "0.8125rem",
           height: 32,
-          // A set filter: teal ring and a wash, not just teal text.
-          "&.MuiChip-outlinedPrimary": {
+          // A set filter: teal ring and a wash, not just teal text. MUI 9 has
+          // no `outlinedPrimary` class. Scoped to dark: light keeps MUI's ring.
+          '[data-theme="dark"] &.MuiChip-outlined.MuiChip-colorPrimary': {
             backgroundColor: withAlpha(tokens.primary, "wash"),
             borderColor: tokens.primary,
             borderWidth: 1.5,
           },
           // Light keeps MUI's own rest edge; dark needs a visible one.
-          '[data-theme="dark"] &.MuiChip-outlined:not(.MuiChip-outlinedPrimary)':
-            { borderColor: tokens.outlineControl },
+          '[data-theme="dark"] &.MuiChip-outlined:not(.MuiChip-colorPrimary)': {
+            borderColor: tokens.outlineControl,
+          },
           // 32px to look at, 44px to hit.
           "&.MuiChip-clickable::after": {
             content: '""',
@@ -1003,10 +1053,10 @@ export const theme = createTheme({
           textTransform: "none",
           color: tokens.onSurfaceVariant,
           "&.Mui-selected": {
-            backgroundColor: tokens.surface,
+            backgroundColor: tokens.segmentThumb,
             color: tokens.onSurface,
             boxShadow: elevation.e1,
-            "&:hover": { backgroundColor: tokens.surface },
+            "&:hover": { backgroundColor: tokens.segmentThumb },
           },
         },
       },
@@ -1019,6 +1069,12 @@ export const theme = createTheme({
           backgroundColor: tokens.onSurface,
           color: tokens.surface,
           fontSize: "0.75rem",
+          // A near-white tooltip is a flash on dark: lift a dark one instead.
+          '[data-theme="dark"] &': {
+            backgroundColor: tokens.surfaceHighest,
+            color: tokens.onSurface,
+            boxShadow: elevation.e2,
+          },
         },
       },
     },
@@ -1109,8 +1165,14 @@ export const theme = createTheme({
         filled: {
           "& .MuiAlert-action .MuiIconButton-root": { color: "inherit" },
           "&.MuiAlert-colorError": {
-            backgroundColor: tokens.error,
-            color: tokens.onError,
+            backgroundColor: tokens.errorFill,
+            color: tokens.onErrorFill,
+            // Dark: the tonal pair of the inline alert, not a glaring bar.
+            '[data-theme="dark"] &': {
+              backgroundColor: tokens.errorContainer,
+              color: tokens.errorDark,
+              "& .MuiAlert-icon": { color: tokens.error },
+            },
           },
           "&.MuiAlert-colorWarning": {
             backgroundColor: tokens.levels.medium.text,

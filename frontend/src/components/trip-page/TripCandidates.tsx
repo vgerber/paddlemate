@@ -141,7 +141,7 @@ function SupportBar({ up, down }: { up: number; down: number }) {
       >
         {/* Cyan is the app's "key data value"; the signal colours stay with
             water levels, so a vote does not borrow red and green. */}
-        <Box sx={{ width: `${share}%`, bgcolor: tokens.primary }} />
+        <Box sx={{ width: `${share}%`, bgcolor: tokens.primaryFill }} />
       </Box>
       <Typography
         sx={{
