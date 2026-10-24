@@ -1,7 +1,6 @@
 import type { ExpressionSpecification } from "maplibre-gl";
 import { Layer, Source } from "react-map-gl/maplibre";
-import { theme } from "@/lib/theme";
-import { LEVEL_MARKER_MATCH } from "@/lib/waterLevel";
+import { useTokens } from "@/lib/useTokens";
 
 import {
   SECTION_CASING_LAYER,
@@ -9,8 +8,6 @@ import {
   SECTION_HITBOX_LAYER,
   SECTION_LINE_LAYER,
 } from "./layerIds";
-
-const { tokens } = theme;
 
 interface SectionLayersProps {
   sections: GeoJSON.FeatureCollection;
@@ -46,6 +43,7 @@ export default function SectionLayers({
   highlighted,
   ghost,
 }: SectionLayersProps) {
+  const tokens = useTokens();
   const hasGhost = ghost != null && ghost.length > 0;
   const hasHighlight = highlighted != null && highlighted.length > 0;
   // Plain layers skip the ghosts, so a ghost can neither be clicked nor
@@ -95,7 +93,17 @@ export default function SectionLayers({
           }}
           paint={{
             "circle-radius": ["interpolate", ["linear"], ["zoom"], 7, 3, 10, 5],
-            "circle-color": LEVEL_MARKER_MATCH,
+            "circle-color": [
+              "match",
+              ["get", "level"],
+              "low",
+              tokens.levels.low.marker,
+              "medium",
+              tokens.levels.medium.marker,
+              "high",
+              tokens.levels.high.marker,
+              tokens.levels.empty.marker,
+            ],
             "circle-opacity": 1,
             "circle-stroke-width": 1,
             "circle-stroke-color": tokens.background,

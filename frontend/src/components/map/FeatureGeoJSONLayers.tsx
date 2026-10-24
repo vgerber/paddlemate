@@ -1,10 +1,8 @@
 import type { ExpressionSpecification } from "maplibre-gl";
 import { useMemo } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
-import { theme } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 import { useFeatureNumbers } from "./featureNumbers";
-
-const { tokens } = theme;
 
 const EMPTY: ReadonlyMap<number, number> = new Map();
 
@@ -54,6 +52,7 @@ export default function FeatureGeoJSONLayers({
   selectedId = null,
   proposed = false,
 }: FeatureGeoJSONLayersProps) {
+  const tokens = useTokens();
   const open = useFeatureNumbers();
   const numbers = proposed ? EMPTY : open;
   const numberedPoints = useMemo(

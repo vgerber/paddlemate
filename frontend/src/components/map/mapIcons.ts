@@ -1,12 +1,6 @@
 import type { MapRef } from "react-map-gl/maplibre";
-import { theme } from "@/lib/theme";
-import {
-  LEVEL_ORDER,
-  levelMarkerColor,
-  type WaterLevel,
-} from "@/lib/waterLevel";
-
-const { tokens } = theme;
+import type { ResolvedTokens } from "@/lib/useTokens";
+import { LEVEL_ORDER, type WaterLevel } from "@/lib/waterLevel";
 
 const PUT_IN_ARROW =
   "M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z";
@@ -15,22 +9,31 @@ const TAKE_OUT_ARROW =
 
 /** Put-in and take-out: a disc in the water level's colour with a white ring
  * and an arrow. Empty is a hollow ring: a white disc, grey ring and arrow. */
-const makeMarkerSvg = (level: WaterLevel, path: string) => {
-  const color = levelMarkerColor(level);
+const makeMarkerSvg = (
+  level: WaterLevel,
+  path: string,
+  tokens: ResolvedTokens,
+) => {
+  const color = tokens.levels[level].marker;
   const hollow = level === "empty";
   const disc = hollow
     ? `<circle cx="13" cy="13" r="10.5" fill="${tokens.white}" stroke="${color}" stroke-width="3"/>`
     : `<circle cx="13" cy="13" r="11" fill="${color}" stroke="${tokens.white}" stroke-width="2.5"/>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26">${disc}<g transform="translate(6.5, 6.5) scale(0.542)"><path d="${path}" fill="${hollow ? color : "white"}"/></g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26">${disc}<g transform="translate(6.5, 6.5) scale(0.542)"><path d="${path}" fill="${hollow ? color : tokens.white}"/></g></svg>`;
 };
 
-/** Register the per-level put-in/take-out marker icons with the map. */
-export function addMapImages(map: ReturnType<MapRef["getMap"]> | undefined) {
+/** Register the per-level put-in/take-out marker icons with the map. The
+ * SVGs carry resolved colours (an image cannot read a `var()`), so this runs
+ * again when the scheme changes. */
+export function addMapImages(
+  map: ReturnType<MapRef["getMap"]> | undefined,
+  tokens: ResolvedTokens,
+) {
   if (!map) return;
   for (const level of LEVEL_ORDER) {
     for (const [id, svg] of [
-      [`put-in-icon-${level}`, makeMarkerSvg(level, PUT_IN_ARROW)],
-      [`take-out-icon-${level}`, makeMarkerSvg(level, TAKE_OUT_ARROW)],
+      [`put-in-icon-${level}`, makeMarkerSvg(level, PUT_IN_ARROW, tokens)],
+      [`take-out-icon-${level}`, makeMarkerSvg(level, TAKE_OUT_ARROW, tokens)],
     ] as [string, string][]) {
       // A blank stand-in now, so a layer that draws before the SVG has
       // decoded does not warn about a missing image.

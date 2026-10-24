@@ -1,8 +1,6 @@
 import type { GaugeMapState } from "@/lib/api";
-import { theme } from "@/lib/theme";
-import { STATES } from "./gaugeStates";
-
-const { tokens } = theme;
+import { useTokens } from "@/lib/useTokens";
+import { gaugeStates } from "./gaugeStates";
 
 const compact = new Intl.NumberFormat(undefined, {
   notation: "compact",
@@ -63,13 +61,14 @@ export function DonutCluster({
   counts: Record<GaugeMapState, number>;
   total: number;
 }) {
+  const tokens = useTokens();
   const r = total >= 1000 ? 26 : total >= 100 ? 22 : total >= 30 ? 18 : 15;
   const r0 = Math.round(r * 0.62);
   const w = r * 2;
   // Only the gauges we collect from are drawn as arcs; the untracked share is
   // left as the bare disc, so grey never dominates the map.
   let cum = 0;
-  const slices = STATES.flatMap((s) => {
+  const slices = gaugeStates(tokens).flatMap((s) => {
     const start = cum / total;
     cum += counts[s.key];
     if (s.key === "available" || counts[s.key] === 0) return [];

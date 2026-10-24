@@ -1,10 +1,8 @@
 import type { ExpressionSpecification } from "maplibre-gl";
 import { Layer, Source } from "react-map-gl/maplibre";
-import { theme } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 
 import { REGION_FILL_LAYER } from "./layerIds";
-
-const { tokens } = theme;
 
 const IS_VALLEY: ExpressionSpecification = ["==", ["get", "kind"], "valley"];
 
@@ -36,6 +34,7 @@ export default function RegionLayers({
   /** A region is picked: the others fall back. */
   dimmed?: boolean;
 }) {
+  const tokens = useTokens();
   return (
     <>
       <Source id="region-browse" type="geojson" data={choices}>

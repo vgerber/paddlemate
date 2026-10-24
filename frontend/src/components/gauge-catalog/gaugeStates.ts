@@ -1,14 +1,15 @@
 import type { GaugeMapState } from "@/lib/api";
-import { theme } from "@/lib/theme";
+import type { ResolvedTokens } from "@/lib/useTokens";
 
-const { tokens } = theme;
-
-export const STATES: {
+export interface GaugeStateMeta {
   key: GaugeMapState;
   label: string;
   color: string;
   help: string;
-}[] = [
+}
+
+/** The three gauge states with their colours for the active scheme. */
+export const gaugeStates = (tokens: ResolvedTokens): GaugeStateMeta[] => [
   {
     key: "used",
     label: "On a section",
@@ -29,5 +30,5 @@ export const STATES: {
   },
 ];
 
-export const stateMeta = (state: GaugeMapState) =>
-  STATES.find((s) => s.key === state) ?? STATES[2];
+export const stateMeta = (states: GaugeStateMeta[], state: GaugeMapState) =>
+  states.find((s) => s.key === state) ?? states[2];

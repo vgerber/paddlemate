@@ -7,6 +7,7 @@ import type {
 } from "@/lib/api";
 import type { Bbox } from "@/lib/geo";
 import { useLanguage } from "@/lib/languagePreference";
+import { useTokens } from "@/lib/useTokens";
 import {
   buildCountryBordersGeoJSON,
   buildLineFeatureEndpointsGeoJSON,
@@ -62,6 +63,7 @@ export function useMapSources({
   litRegionId = null,
 }: UseMapSourcesInput) {
   const language = useLanguage();
+  const t = useTokens();
 
   const sectionsGeoJSON = useMemo(
     () => buildSectionsGeoJSON(sections ?? []),
@@ -82,36 +84,37 @@ export function useMapSources({
     [sections, sectionLevels],
   );
   const connectorsGeoJSON = useMemo(
-    () => buildPutInTakeOutConnectorsGeoJSON(sections ?? []),
-    [sections],
+    () => buildPutInTakeOutConnectorsGeoJSON(sections ?? [], t),
+    [sections, t],
   );
   const pointsGeoJSON = useMemo(
-    () => buildPointFeaturesGeoJSON(features ?? [], language),
-    [features, language],
+    () => buildPointFeaturesGeoJSON(features ?? [], language, t),
+    [features, language, t],
   );
   const linesGeoJSON = useMemo(
-    () => buildLineFeaturesGeoJSON(features ?? [], language),
-    [features, language],
+    () => buildLineFeaturesGeoJSON(features ?? [], language, t),
+    [features, language, t],
   );
   const lineEndpointsGeoJSON = useMemo(
-    () => buildLineFeatureEndpointsGeoJSON(features ?? []),
-    [features],
+    () => buildLineFeatureEndpointsGeoJSON(features ?? [], t),
+    [features, t],
   );
   const lineLabelsGeoJSON = useMemo(
     () => buildLineFeatureLabelsGeoJSON(features ?? [], language),
     [features, language],
   );
   const proposedPointsGeoJSON = useMemo(
-    () => buildProposedPointFeaturesGeoJSON(proposedFeatures ?? [], language),
-    [proposedFeatures, language],
+    () =>
+      buildProposedPointFeaturesGeoJSON(proposedFeatures ?? [], language, t),
+    [proposedFeatures, language, t],
   );
   const proposedLinesGeoJSON = useMemo(
-    () => buildProposedLineFeaturesGeoJSON(proposedFeatures ?? [], language),
-    [proposedFeatures, language],
+    () => buildProposedLineFeaturesGeoJSON(proposedFeatures ?? [], language, t),
+    [proposedFeatures, language, t],
   );
   const proposedLineEndpointsGeoJSON = useMemo(
-    () => buildLineFeatureEndpointsGeoJSON(proposedFeatures ?? []),
-    [proposedFeatures],
+    () => buildLineFeatureEndpointsGeoJSON(proposedFeatures ?? [], t),
+    [proposedFeatures, t],
   );
   const proposedLineLabelsGeoJSON = useMemo(
     () => buildLineFeatureLabelsGeoJSON(proposedFeatures ?? [], language),

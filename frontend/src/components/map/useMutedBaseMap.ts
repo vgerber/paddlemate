@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 import { useEffect } from "react";
 import type { MapRef } from "react-map-gl/maplibre";
+import { useTokens } from "@/lib/useTokens";
 import { applyCalmStyle } from "./calmStyle";
 
 const ROAD_LINE = /^(road|bridge|tunnel)_(?!.*rail)/;
@@ -16,6 +17,9 @@ export function useMutedBaseMap(
   active: boolean,
   styleKey: string,
 ) {
+  // A scheme switch re-runs the calm restyle, which resets road opacity to 1;
+  // the new tokens object re-runs this effect after it to mute again.
+  const tokens = useTokens();
   // styleKey only re-runs the effect when the base style is swapped.
   // biome-ignore lint/correctness/useExhaustiveDependencies: see above
   useEffect(() => {
@@ -55,7 +59,7 @@ export function useMutedBaseMap(
         }
       }
     };
-  }, [mapRef, ready, active, styleKey]);
+  }, [mapRef, ready, active, styleKey, tokens]);
 }
 
 /** Restyles the vector base map to the calm look at every zoom (see
@@ -67,12 +71,13 @@ export function useCalmBaseMap(
   enabled: boolean,
   styleKey: string,
 ) {
+  const tokens = useTokens();
   // styleKey only re-runs the effect when the base style is swapped.
   // biome-ignore lint/correctness/useExhaustiveDependencies: see above
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!map || !ready || !enabled) return;
-    const apply = () => applyCalmStyle(map);
+    const apply = () => applyCalmStyle(map, tokens);
     // isStyleLoaded() is false while tiles load, so it cannot gate this: the
     // style JSON being there is enough to restyle its layers.
     apply();
@@ -80,5 +85,5 @@ export function useCalmBaseMap(
     return () => {
       map.off("style.load", apply);
     };
-  }, [mapRef, ready, enabled, styleKey]);
+  }, [mapRef, ready, enabled, styleKey, tokens]);
 }
