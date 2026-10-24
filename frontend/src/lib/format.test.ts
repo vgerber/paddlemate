@@ -1,12 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import {
+  chartRange,
   clockTime,
   dateAndTime,
   dateRange,
   dayTime,
   durationLabel,
   formatDate,
+  formatDay,
   formatReading,
+  formatSpread,
   formatTime,
   humanize,
   readingTime,
@@ -197,5 +200,33 @@ describe("sentenceCase", () => {
     expect(sentenceCase("put in")).toBe("Put in");
     expect(sentenceCase("Weir")).toBe("Weir");
     expect(sentenceCase("")).toBe("");
+  });
+});
+
+describe("chart range labels", () => {
+  test("a range inside one year names the year once", () => {
+    expect(chartRange("2026-03-12T00:00:00", "2026-04-04T12:00:00")).toBe(
+      "12 Mar - 4 Apr 2026",
+    );
+  });
+
+  test("a range across years names both", () => {
+    expect(chartRange("2025-12-30T00:00:00", "2026-01-04T12:00:00")).toBe(
+      "30 Dec 2025 - 4 Jan 2026",
+    );
+  });
+
+  test("a range inside one day is that day", () => {
+    expect(chartRange("2026-03-12T08:00:00", "2026-03-12T17:00:00")).toBe(
+      "12 Mar 2026",
+    );
+  });
+
+  test("formatDay does not pad the day", () => {
+    expect(formatDay("2024-10-04T12:00:00")).toBe("4 Oct 2024");
+  });
+
+  test("a bucket's spread reads low - high with the unit once", () => {
+    expect(formatSpread(62.14, 71.3, "cm")).toBe("62.1 - 71.3 cm");
   });
 });

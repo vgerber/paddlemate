@@ -1,5 +1,5 @@
 import type { ViewBounds } from "@/lib/geo";
-import { ApiError, client, postForm } from "./client";
+import { ApiError, authorizedTarget, client, postForm } from "./client";
 import type { components, operations } from "./schema.d.ts";
 
 export type Waterway = components["schemas"]["Waterway"];
@@ -588,7 +588,48 @@ export const gaugeReadingsApi = {
     );
     return assertData(data);
   },
+  /** Hand-typed until the API route merges: replace with the generated
+   * client call and type. */
+  summary: async (
+    gaugeId: number,
+    seriesId: number,
+    query: { from?: string; to?: string; points?: number },
+  ): Promise<ReadingSummary> => {
+    const params = new URLSearchParams();
+    for (const [k, v] of Object.entries(query)) {
+      if (v != null) params.set(k, String(v));
+    }
+    const { url, headers } = await authorizedTarget(
+      `/api/v1/waterways/gauges/${gaugeId}/series/${seriesId}/readings/summary?${params}`,
+    );
+    const response = await fetch(url, { headers });
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      throw new ApiError(
+        response.status,
+        body?.error?.message ?? response.statusText,
+      );
+    }
+    return response.json();
+  },
 };
+
+/** One bucket of the readings summary (a raw reading when `bucket_seconds`
+ * is 0). Hand-typed until the generated client has it. */
+export interface ReadingSummaryItem {
+  measured_at: string;
+  value: number;
+  min: number;
+  max: number;
+  count: number;
+}
+
+export interface ReadingSummary {
+  bucket_seconds: number;
+  from: string;
+  to: string;
+  items: ReadingSummaryItem[];
+}
 
 export type Descent = components["schemas"]["Descent"];
 export type DescentSection = components["schemas"]["DescentSection"];

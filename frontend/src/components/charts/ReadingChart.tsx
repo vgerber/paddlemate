@@ -8,7 +8,7 @@ import {
   type ChartLoad,
   ChartSkeleton,
 } from "@/components/charts/ChartStatus";
-import PeriodMenu from "@/components/charts/PeriodMenu";
+import PeriodMenu, { type PeriodControl } from "@/components/charts/PeriodMenu";
 import ReadingBlock, {
   type ReadingView,
 } from "@/components/charts/ReadingBlock";
@@ -20,7 +20,7 @@ import {
   measurementTypesOf,
   readingPerType,
 } from "@/components/charts/water/series";
-import type { TimeRange } from "@/components/charts/water/types";
+import type { CustomRange, TimeRange } from "@/components/charts/water/types";
 import { useIsSwipeGhost } from "@/components/SwipeGhost";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { dockHeight } from "@/lib/canvasLayout";
@@ -75,6 +75,9 @@ export interface ReadingChartProps {
   status?: ChartLoad;
   timeRange: TimeRange;
   onTimeRangeChange: (range: TimeRange) => void;
+  /** A custom range, which overrides the preset until cleared. */
+  customRange: CustomRange | null;
+  onCustomRangeChange: (range: CustomRange | null) => void;
   measurementType: string | null;
   onMeasurementTypeChange: (type: string) => void;
   preferredFeatureId?: number | null;
@@ -133,6 +136,8 @@ export default function ReadingChart(props: ReadingChartProps) {
     status,
     timeRange,
     onTimeRangeChange,
+    customRange,
+    onCustomRangeChange,
     measurementType,
     onMeasurementTypeChange,
     preferredFeatureId,
@@ -172,9 +177,17 @@ export default function ReadingChart(props: ReadingChartProps) {
     type: t,
     label: typeLabel(t),
   }));
-  const changeRange = (range: TimeRange) => {
-    setScrub(null);
-    onTimeRangeChange(range);
+  const period: PeriodControl = {
+    value: timeRange,
+    custom: customRange,
+    onChange: (range) => {
+      setScrub(null);
+      onTimeRangeChange(range);
+    },
+    onCustom: (range) => {
+      setScrub(null);
+      onCustomRangeChange(range);
+    },
   };
 
   const block = (
@@ -195,7 +208,7 @@ export default function ReadingChart(props: ReadingChartProps) {
         },
       }}
       onDismiss={onDismiss}
-      period={rail ? { value: timeRange, onChange: changeRange } : undefined}
+      period={rail ? period : undefined}
       phone={phone}
       inset={rail ? RAIL_INSET : INLINE_INSET}
       numberSize={
@@ -221,6 +234,8 @@ export default function ReadingChart(props: ReadingChartProps) {
           marker={scrub}
           showThresholds={thresholdsAvailable}
           timeRange={timeRange}
+          customRange={customRange}
+          onCustomRange={period.onCustom}
           measurementType={measurementType}
           selectedFeatureId={selectedFeatureId}
           selectedFeature={selectedFeature}
@@ -316,12 +331,16 @@ export default function ReadingChart(props: ReadingChartProps) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          // A custom range's label and Reset wrap under the credit.
+          flexWrap: "wrap",
           gap: 1,
           minHeight: tokens.touch.min,
         }}
       >
-        <Box sx={{ flex: 1, minWidth: 0 }}>{source}</Box>
-        <PeriodMenu value={timeRange} onChange={changeRange} />
+        <Box sx={{ flex: "1 1 120px", minWidth: 0 }}>{source}</Box>
+        <Box sx={{ display: "flex", flexShrink: 0, ml: "auto" }}>
+          <PeriodMenu {...period} />
+        </Box>
       </Box>
     </Box>
   );

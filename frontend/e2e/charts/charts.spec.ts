@@ -7,6 +7,7 @@ import {
   FIX,
   gotoSection,
 } from "../support/fixture";
+import { mockSummary } from "./summary.mock";
 
 // WP5: the phone's chart card, the gauge cards and the credit line
 // (doc/plans/ui-overhaul/calm-design.html, "A chart that opens for its
@@ -44,6 +45,8 @@ async function openSection(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
+  // The summary route is not on the shared API yet.
+  await mockSummary(page);
   await page.addInitScript(() => {
     try {
       localStorage.setItem("chart-time-range", "7d");
@@ -86,7 +89,9 @@ test.describe("phone card", () => {
       await route.fulfill({ response: res, json: body });
     });
     await page.route(/\/series\/99401\/readings/, (route) =>
-      route.fulfill({ json: [] }),
+      route.fulfill({
+        json: { bucket_seconds: 0, from: "", to: "", items: [] },
+      }),
     );
   };
 
@@ -129,7 +134,7 @@ test.describe("phone card", () => {
     ]);
   });
 
-  test("the period is one quiet text button that opens the four-item menu", async ({
+  test("the period is one quiet text button that opens the five-item menu", async ({
     page,
   }) => {
     await openSection(page);
@@ -138,7 +143,7 @@ test.describe("phone card", () => {
     await expectTouchTargets(period);
     await period.click();
     const menu = page.getByRole("menu");
-    await expect(menu.getByRole("menuitem")).toHaveCount(4);
+    await expect(menu.getByRole("menuitem")).toHaveCount(5);
     await menu.getByRole("menuitem", { name: "Last 30 days" }).click();
     await expect(period).toContainText("Last 30 days");
   });
@@ -488,7 +493,9 @@ test.describe("reading block and rail", () => {
       await route.fulfill({ response: res, json: body });
     });
     await page.route(/\/series\/99401\/readings/, (route) =>
-      route.fulfill({ json: [] }),
+      route.fulfill({
+        json: { bucket_seconds: 0, from: "", to: "", items: [] },
+      }),
     );
   }
 
@@ -512,7 +519,7 @@ test.describe("reading block and rail", () => {
     );
   });
 
-  test("the period is one text button that opens four items upward", async ({
+  test("the period is one text button that opens five items upward", async ({
     page,
   }) => {
     await openRail(page);
@@ -528,6 +535,7 @@ test.describe("reading block and rail", () => {
       "Last 7 days",
       "Last 30 days",
       "Last year",
+      "Custom range…",
     ]);
     await settled(items.first());
     await expectTouchTargets(items);

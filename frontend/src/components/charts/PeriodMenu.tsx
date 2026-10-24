@@ -2,7 +2,9 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
-import type { TimeRange } from "@/components/charts/water/types";
+import RangeDialog from "@/components/charts/RangeDialog";
+import type { CustomRange, TimeRange } from "@/components/charts/water/types";
+import { chartRange } from "@/lib/format";
 import { CollapseIcon, ConfirmIcon, ExpandIcon } from "@/lib/icons";
 import { alphas, theme } from "@/lib/theme";
 
@@ -21,19 +23,44 @@ export const PERIOD_LABELS: Record<TimeRange, string> = {
  * on the button. */
 const OFFERED: TimeRange[] = ["24h", "7d", "1m", "1y"];
 
+const CUSTOM_LABEL = "Custom range…";
 const MENU_WIDTH = 200;
 const MENU_GAP = 4;
 
-/** The chart's period: one quiet text button that opens a four-item menu
- * upward. */
+/** What a chart's period control reads and changes: a preset, or a custom
+ * range that overrides it until reset. */
+export interface PeriodControl {
+  value: TimeRange;
+  custom: CustomRange | null;
+  onChange: (range: TimeRange) => void;
+  onCustom: (range: CustomRange | null) => void;
+}
+
+/** The period as the control and the chart's name say it. */
+export function periodLabel(value: TimeRange, custom: CustomRange | null) {
+  return custom ? chartRange(custom.from, custom.to) : PERIOD_LABELS[value];
+}
+
+const quietButtonSx = {
+  alignSelf: "flex-start",
+  minHeight: tokens.touch.min,
+  px: "12px",
+  borderRadius: `${tokens.radii.sm}px`,
+  fontSize: "0.875rem",
+  fontWeight: 600,
+  whiteSpace: "nowrap",
+} as const;
+
+/** The chart's period: one quiet text button that opens a menu upward, the
+ * presets and a custom range. A custom range gets a Reset beside it. */
 export default function PeriodMenu({
   value,
+  custom,
   onChange,
-}: {
-  value: TimeRange;
-  onChange: (range: TimeRange) => void;
-}) {
+  onCustom,
+}: PeriodControl) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const [dialog, setDialog] = useState(false);
   const open = anchor != null;
   const Chevron = open ? CollapseIcon : ExpandIcon;
   return (
@@ -44,20 +71,15 @@ export default function PeriodMenu({
         aria-expanded={open}
         onClick={(e) => setAnchor(e.currentTarget)}
         sx={{
-          alignSelf: "flex-start",
-          minHeight: tokens.touch.min,
+          ...quietButtonSx,
           // The box sits 12px out so the label starts on the text line.
           mx: "-12px",
-          px: "12px",
           gap: 0.5,
-          borderRadius: `${tokens.radii.sm}px`,
-          fontSize: "0.875rem",
-          fontWeight: 600,
           color: open ? tokens.primary : tokens.onSurfaceVariant,
           bgcolor: open ? `${tokens.primary}${alphas.wash}` : "transparent",
         }}
       >
-        {PERIOD_LABELS[value]}
+        {periodLabel(value, custom)}
         <Chevron sx={{ fontSize: 16 }} />
       </ButtonBase>
       <Menu
@@ -71,7 +93,7 @@ export default function PeriodMenu({
         }}
       >
         {OFFERED.map((p) => {
-          const on = p === value;
+          const on = p === value && !custom;
           return (
             <MenuItem
               key={p}
@@ -94,7 +116,41 @@ export default function PeriodMenu({
             </MenuItem>
           );
         })}
+        <MenuItem
+          selected={custom != null}
+          onClick={() => {
+            setAnchor(null);
+            setDialog(true);
+          }}
+          sx={{
+            "&&": { minHeight: tokens.touch.min },
+            fontSize: "0.875rem",
+            fontWeight: custom ? 600 : 400,
+            color: custom ? tokens.primary : "inherit",
+          }}
+        >
+          {CUSTOM_LABEL}
+        </MenuItem>
       </Menu>
+      {custom && (
+        <ButtonBase
+          onClick={() => onCustom(null)}
+          sx={{ ...quietButtonSx, color: tokens.primary }}
+        >
+          Reset
+        </ButtonBase>
+      )}
+      {dialog && (
+        <RangeDialog
+          open
+          current={custom}
+          onCancel={() => setDialog(false)}
+          onApply={(range) => {
+            setDialog(false);
+            onCustom(range);
+          }}
+        />
+      )}
     </>
   );
 }

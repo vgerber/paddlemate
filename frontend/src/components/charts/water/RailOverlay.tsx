@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import type { WaterRangeWithStatus } from "@/lib/api";
-import { formatReading } from "@/lib/format";
+import { formatReading, formatSpread } from "@/lib/format";
 import { theme } from "@/lib/theme";
 import { levelInk, levelWord } from "@/lib/waterLevel";
 import { pointTime } from "./chartTime";
@@ -38,6 +38,10 @@ const LEVELS = [
 export interface RailPoint {
   time: number;
   value: number;
+  /** A bucket's extremes and length in seconds; absent for a raw reading. */
+  low?: number;
+  high?: number;
+  bucket?: number;
 }
 
 export interface RailOverlayProps {
@@ -110,7 +114,11 @@ export default function RailOverlay({
     const my = y(marker.value);
     const lv = level(marker.value);
     const value = formatReading(marker.value, unit);
-    const time = pointTime(marker.time);
+    const when = pointTime(marker.time, marker.bucket);
+    const time =
+      marker.low != null && marker.high != null
+        ? `${when} · ${formatSpread(marker.low, marker.high, unit)}`
+        : when;
     const text = lv ? `${levelWord(lv.key)}, ${value}` : value;
     const half =
       Math.max(text.length * READOUT_CHAR, time.length * READOUT_TIME_CHAR) / 2;

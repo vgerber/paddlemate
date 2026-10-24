@@ -97,6 +97,8 @@ export function useChartZoom(
       p.px = e.clientX - rectLeft;
 
       if (pointers.size === 1) {
+        // A mouse drag selects a span (useDragSelect) instead of panning.
+        if (e.pointerType === "mouse") return;
         // A drag pans when zoomed; in the full view it stays with the
         // recharts tooltip scrub (and there is nothing to pan anyway).
         const d = raf ? pendingDomain : domainRef.current;

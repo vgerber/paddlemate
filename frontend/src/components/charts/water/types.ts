@@ -8,3 +8,10 @@ export interface DescentSpan {
   /** Shown as a native hover tooltip on the band. */
   name?: string;
 }
+
+/** A chart period picked by dates instead of a preset: ISO instants, `from`
+ * before `to`. */
+export interface CustomRange {
+  from: string;
+  to: string;
+}

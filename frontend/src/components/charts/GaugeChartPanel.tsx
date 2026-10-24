@@ -18,8 +18,14 @@ export default function GaugeChartPanel({
   onClose,
   placement,
 }: GaugeChartPanelProps) {
-  const { timeRange, setTimeRange, measurementType, setMeasurementType } =
-    useChartPanelState();
+  const {
+    timeRange,
+    setTimeRange,
+    customRange,
+    setCustomRange,
+    measurementType,
+    setMeasurementType,
+  } = useChartPanelState();
 
   const footer = <GaugeAttributions sources={ranges.map((r) => r.source)} />;
   return (
@@ -28,6 +34,8 @@ export default function GaugeChartPanel({
       ranges={ranges}
       timeRange={timeRange}
       onTimeRangeChange={setTimeRange}
+      customRange={customRange}
+      onCustomRangeChange={setCustomRange}
       measurementType={measurementType}
       onMeasurementTypeChange={setMeasurementType}
       onDismiss={onClose}
