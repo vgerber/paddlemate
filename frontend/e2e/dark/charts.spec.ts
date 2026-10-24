@@ -9,22 +9,9 @@ import { appReady } from "../support/fixture";
 const SECTION = "/?waterway=9001&section=9102";
 const LONG = "/?waterway=9002&section=9111";
 
-// Level dots are saturated marker hues by design, and the map controls belong
-// to the map spec: neither is a surface or a text of this screen.
 async function clean(page: Page) {
-  const surfaces = (await lightSurfaces(page)).filter(
-    (f) =>
-      !f.what.includes("level-dot") &&
-      !/rgba\((240, 192, 108|134, 210, 178)/.test(f.detail),
-  );
-  expect(surfaces, "light surfaces").toEqual([]);
-  const text = (await contrastReport(page)).filter(
-    (f) =>
-      !f.what.includes("maplibregl") &&
-      // Note rows (CommentRow, waterway/) still read the light category colours.
-      !/Hazard|Urgent|Permanent hazard/.test(f.what),
-  );
-  expect(text, "contrast violations").toEqual([]);
+  expect(await lightSurfaces(page), "light surfaces").toEqual([]);
+  expect(await contrastReport(page), "contrast violations").toEqual([]);
   expect(await svgTextContrast(page), "svg text contrast").toEqual([]);
 }
 

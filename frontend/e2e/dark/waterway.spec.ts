@@ -4,17 +4,11 @@ import { contrastReport, lightSurfaces, useScheme } from "../support/dark";
 // The waterway screens in dark: river panel and tabs, section list, notes,
 // the suggest forms (doc/plans/dark-mode.md, D3).
 
-// Level dots and bars are data colours (D2) and have no text. Not this folder's to fix.
 async function expectDark(page: Page) {
-  const surfaces = (await lightSurfaces(page)).filter((f) =>
-    f.what.includes('"'),
-  );
-  expect(surfaces, "light surfaces on the screen").toEqual([]);
-  // The feature type tiles use the same outlineVariant hairline; they follow
-  // whatever the lead decides for outlined controls.
+  expect(await lightSurfaces(page), "light surfaces on the screen").toEqual([]);
+  // The rejected fold draws a dimmed separator rule on purpose.
   const contrast = (await contrastReport(page)).filter(
-    (f) =>
-      !(f.what.startsWith("border") && /MuiChip|MuiButton|MuiBox/.test(f.what)),
+    (f) => !/^border button.* "(Hide|Show) rejected/.test(f.what),
   );
   expect(contrast, "contrast violations").toEqual([]);
 }

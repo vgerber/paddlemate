@@ -46,11 +46,8 @@ const SHOTS: Shot[] = [
   },
 ];
 
-// Findings in parts other agents own, listed in the D1b report: the level
-// chip text and dot (D2), the map attribution (D1a), the rejected fold
-// (a separator rule, not a control), comment category text (D3).
-const OTHERS =
-  /"\d+ cm"|"Hazard|"Urgent|"Permanent|maplibregl|"(Hide|Show) rejected/;
+// The rejected fold draws a dimmed separator rule on purpose.
+const OTHERS = /"(Hide|Show) rejected/;
 
 async function settle(page: Page) {
   await page.evaluate(() => document.fonts.ready);

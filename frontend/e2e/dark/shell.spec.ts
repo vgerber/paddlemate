@@ -1,24 +1,28 @@
 import { expect, test } from "@playwright/test";
-import { expectContrast, noLightSurface, useScheme } from "../support/dark";
+import {
+  expectContrast,
+  lightSurfaces,
+  noLightSurface,
+  useScheme,
+} from "../support/dark";
 
 // The shell in dark: app bar, bottom nav, canvas cards, states, tools, dev
 // routes and the sign-in gate (doc/plans/dark-mode.md, D6b).
 
-// `skip` names a check that fails on something outside D6b's files: the legend
-// swatch on the gauge map is a data colour (D1), the zoom control border is
-// maplibre chrome (D1a).
+// The legend swatch on the gauge map is a data colour: the surface check
+// skips that one element, not the page.
+const LEGEND_SWATCH = /^div\.MuiBox-root\.css-\w+$/;
+const LEGEND_GREEN = "background rgba(134, 210, 178, 1)";
 const SIGNED_IN: {
   name: string;
   path: string;
   ready: RegExp;
-  skip?: ("surface" | "contrast")[];
 }[] = [
   { name: "tools", path: "/tools", ready: /Tools|Gauge/i },
   {
     name: "gauge-catalog",
     path: "/tools/gauge-catalog",
     ready: /Gauge/i,
-    skip: ["surface", "contrast"],
   },
   { name: "dev-canvas", path: "/dev/canvas", ready: /\w/ },
   {
@@ -56,8 +60,11 @@ test.describe("shell in dark @small", () => {
       await expect(page.locator("body")).toContainText(s.ready);
       await page.waitForTimeout(1000);
       await settle(page);
-      if (!s.skip?.includes("surface")) await noLightSurface(page);
-      if (!s.skip?.includes("contrast")) await expectContrast(page);
+      const light = (await lightSurfaces(page)).filter(
+        (f) => !(LEGEND_SWATCH.test(f.what) && f.detail === LEGEND_GREEN),
+      );
+      expect(light, "light surfaces on the screen").toEqual([]);
+      await expectContrast(page);
       await noSideways(page);
     });
   }
