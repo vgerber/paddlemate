@@ -56,36 +56,56 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+interface FlowStatus {
+  ranges: ({ series: object; latest_reading: object } & Record<
+    string,
+    unknown
+  >)[];
+}
+
+/** Adds a discharge series next to the level one. */
+function addFlow(status: FlowStatus) {
+  const level = status.ranges[0];
+  if (!level) return;
+  status.ranges = [
+    ...status.ranges,
+    {
+      ...level,
+      id: 99001,
+      series: {
+        ...level.series,
+        id: 99401,
+        measurement_type: "discharge",
+        unit: "m3/s",
+      },
+      range_low: null,
+      range_medium: null,
+      range_high: null,
+      latest_reading: {
+        ...level.latest_reading,
+        series_id: 99401,
+        value: 12.4,
+      },
+    },
+  ];
+}
+
 test.describe("phone card", () => {
   test.skip(({ isMobile }) => !isMobile, "the phone's chart card");
 
   const withFlow = async (page: Page) => {
-    await page.route(/\/water-status$/, async (route) => {
+    // A section is read from its own endpoint or, as a list row asks first,
+    // from the batch keyed by section id.
+    await page.route(/\/water-status(\?|$)/, async (route) => {
       const res = await route.fetch();
       const body = await res.json();
-      const level = body.ranges[0];
-      if (!level) return route.fulfill({ response: res, json: body });
-      body.ranges = [
-        ...body.ranges,
-        {
-          ...level,
-          id: 99001,
-          series: {
-            ...level.series,
-            id: 99401,
-            measurement_type: "discharge",
-            unit: "m3/s",
-          },
-          range_low: null,
-          range_medium: null,
-          range_high: null,
-          latest_reading: {
-            ...level.latest_reading,
-            series_id: 99401,
-            value: 12.4,
-          },
-        },
-      ];
+      const statuses: FlowStatus[] = route
+        .request()
+        .url()
+        .includes("section_ids")
+        ? Object.values(body)
+        : [body];
+      for (const status of statuses) addFlow(status);
       await route.fulfill({ response: res, json: body });
     });
     await page.route(/\/series\/99401\/readings/, (route) =>
@@ -464,32 +484,18 @@ test.describe("reading block and rail", () => {
   }
 
   async function withFlow(page: Page) {
-    await page.route(/\/water-status$/, async (route) => {
+    // A section is read from its own endpoint or, as a list row asks first,
+    // from the batch keyed by section id.
+    await page.route(/\/water-status(\?|$)/, async (route) => {
       const res = await route.fetch();
       const body = await res.json();
-      const level = body.ranges[0];
-      if (!level) return route.fulfill({ response: res, json: body });
-      body.ranges = [
-        ...body.ranges,
-        {
-          ...level,
-          id: 99001,
-          series: {
-            ...level.series,
-            id: 99401,
-            measurement_type: "discharge",
-            unit: "m3/s",
-          },
-          range_low: null,
-          range_medium: null,
-          range_high: null,
-          latest_reading: {
-            ...level.latest_reading,
-            series_id: 99401,
-            value: 12.4,
-          },
-        },
-      ];
+      const statuses: FlowStatus[] = route
+        .request()
+        .url()
+        .includes("section_ids")
+        ? Object.values(body)
+        : [body];
+      for (const status of statuses) addFlow(status);
       await route.fulfill({ response: res, json: body });
     });
     await page.route(/\/series\/99401\/readings/, (route) =>
