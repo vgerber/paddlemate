@@ -4,6 +4,7 @@ import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import { useColorScheme } from "@mui/material/styles";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import {
@@ -109,6 +110,7 @@ function Layout() {
   useLanguage();
   const { isAuthenticated, isLoading, user, login, signup, logout } =
     useSession();
+  const { colorScheme } = useColorScheme();
   useLiveTripEvents(isAuthenticated);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const activeTo = activeNav(DESKTOP_NAV, pathname);
@@ -155,7 +157,7 @@ function Layout() {
           >
             <Box
               component="img"
-              src="/logo.svg"
+              src={colorScheme === "dark" ? "/logo-dark.svg" : "/logo.svg"}
               alt=""
               sx={{ width: 28, height: 28, flexShrink: 0 }}
             />
