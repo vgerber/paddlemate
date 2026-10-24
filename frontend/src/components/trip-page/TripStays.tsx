@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
 import ListItemButton from "@mui/material/ListItemButton";
+import { useColorScheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
 import { phoneRowPad, trailSlotSx } from "@/components/canvas/flatRow";
@@ -22,7 +23,9 @@ import { AddToListIcon, BaseIcon, DeleteIcon, EditIcon } from "@/lib/icons";
 import { durations } from "@/lib/motion";
 import { fonts, theme } from "@/lib/theme";
 import { baseColors, baseNumbers } from "@/lib/tripRange";
+import { useTokens } from "@/lib/useTokens";
 import BasesMap from "./BasesMap";
+import { badgeInk } from "./badgeInk";
 import TripCandidates from "./TripCandidates";
 import WatchList from "./WatchList";
 
@@ -156,6 +159,8 @@ function StayRow({
   onLogSection: (sectionId: number, waterwayId: number) => void;
 }) {
   const { label, Icon } = stayKind(stay.kind);
+  const dark = useColorScheme().colorScheme === "dark";
+  const ink = useTokens().onPrimary;
   // Cache-shared with the chips in the watch list below and the section
   // lines on the map, so opening a base costs no extra request.
   const pairs = useMemo(
@@ -239,7 +244,7 @@ function StayRow({
               height: { xs: phone.icon, md: 22 },
               borderRadius: "50%",
               bgcolor: color,
-              color: theme.tokens.white,
+              color: badgeInk(color, ink, dark),
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
