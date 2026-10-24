@@ -33,9 +33,9 @@ test.describe("panel header", () => {
     test.skip(isDesktop(info), "the phone header chrome");
     await page.goto(`/trips/${FIX.trips[0]}`);
     // The fixture trip straddles today, so its dates move with the clock.
-    const subtitle = page.getByText(
-      /^\d{2}( [A-Z][a-z]{2})? - \d{2} [A-Z][a-z]{2} \d{4}$/,
-    ).first();
+    const subtitle = page
+      .getByText(/^\d{2}( [A-Z][a-z]{2})? - \d{2} [A-Z][a-z]{2} \d{4}$/)
+      .first();
     await expect(subtitle).toBeVisible();
     expect(await computed(subtitle, "font-size")).toBe("13px");
     expect(await computed(subtitle, "color")).toBe(INK2);

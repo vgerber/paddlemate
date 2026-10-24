@@ -632,8 +632,8 @@ test.describe("phone keeps its pages", () => {
     test.skip(!isMobile, "phone only");
     await page.goto(`/proposals/${FEATURE_CREATE}`);
     await expect(page.getByTestId("proposal-detail")).toBeVisible();
-    // Nothing open: the side card only asks for a choice.
-    await expect(sideCard(page)).toContainText("Select a proposal");
+    // A phone keeps its own page: no floating canvas card.
+    await expect(sideCard(page)).toHaveCount(0);
     await expect(
       page.getByTestId("proposal-detail").getByRole("button", {
         name: "Back",

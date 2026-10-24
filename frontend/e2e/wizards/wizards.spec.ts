@@ -340,13 +340,13 @@ test.describe("suggest river", () => {
       await docked.first().click();
     } else {
       // A phone has no button over the results; it proposes a river from
-      // the empty Rivers list.
+      // the empty Rivers list (a zero count is dropped from the tab label).
       await page
         .getByPlaceholder("Name", { exact: true })
         .filter({ visible: true })
         .fill("zzzqqq");
       await page
-        .locator("button.MuiTab-root", { hasText: /^Rivers \(/ })
+        .locator("button.MuiTab-root", { hasText: /^Rivers( \(\d+\))?$/ })
         .filter({ visible: true })
         .click();
       await page
