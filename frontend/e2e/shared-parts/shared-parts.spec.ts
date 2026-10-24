@@ -32,7 +32,10 @@ test.describe("panel header", () => {
   }, info) => {
     test.skip(isDesktop(info), "the phone header chrome");
     await page.goto(`/trips/${FIX.trips[0]}`);
-    const subtitle = page.getByText("08 - 14 Oct 2026");
+    // The fixture trip straddles today, so its dates move with the clock.
+    const subtitle = page.getByText(
+      /^\d{2}( [A-Z][a-z]{2})? - \d{2} [A-Z][a-z]{2} \d{4}$/,
+    ).first();
     await expect(subtitle).toBeVisible();
     expect(await computed(subtitle, "font-size")).toBe("13px");
     expect(await computed(subtitle, "color")).toBe(INK2);
@@ -55,12 +58,12 @@ test.describe("panel header", () => {
 });
 
 test.describe("list pane", () => {
-  test("the count says results and the tabs follow it directly", async ({
+  test("the count names the logs and the tabs follow it directly", async ({
     page,
   }, info) => {
     test.skip(!isDesktop(info), "the list pane header is a desktop pane");
     await page.goto("/logs");
-    const count = page.getByText(/^\d+ results?$/);
+    const count = page.getByText(/^\d+ logs?$/);
     await expect(count).toBeVisible();
     const tab = page.getByRole("tab", { name: "My logs" });
     const c = await count.boundingBox();
@@ -68,7 +71,8 @@ test.describe("list pane", () => {
     if (!c || !t) throw new Error("no boxes");
     expect(t.y - (c.y + c.height), "gap from count to tab").toBeLessThan(24);
     const tabs = await page.getByRole("tablist").boundingBox();
-    expect(tabs?.x).toBe(16);
+    // canvas.margin (16) from the window to the card, 16 of padding inside.
+    expect(tabs?.x).toBe(16 + 16);
   });
 
   test("the docked action is a 12px-radius label-only button", async ({
@@ -167,7 +171,10 @@ test.describe("forms", () => {
   test("visibility is three separate tiles, the chosen one ringed", async ({
     page,
   }) => {
-    await page.goto("/logs/new");
+    // A log that already holds a section, so the guided steps can be passed.
+    await page.goto(
+      `/logs/new?waterwayId=${FIX.waterway}&sectionId=${FIX.sections.upper}`,
+    );
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "Next" }).click();
     const tiles = page.getByRole("radio");
