@@ -10,7 +10,8 @@ import { formatReading } from "@/lib/format";
 import { LogIcon } from "@/lib/icons";
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
 import { theme } from "@/lib/theme";
-import { levelConfig } from "@/lib/waterLevel";
+import { useTokens } from "@/lib/useTokens";
+import { levelConfigFor } from "@/lib/waterLevel";
 
 const { tokens } = theme;
 const { phone } = tokens;
@@ -20,6 +21,7 @@ const mutedSx = { fontSize: "0.8125rem", color: "text.secondary" } as const;
 /** What a logged section says about itself: name, river, the paddler's note
  * and the water level at the time. Both row shapes show it. */
 function SectionText({ section: s }: { section: DescentSection }) {
+  const ink = useTokens();
   const snaps = uniqueSnapshotsBySeries(s.water_snapshots ?? []);
   return (
     <Box component="span" sx={{ display: "block", minWidth: 0 }}>
@@ -54,7 +56,7 @@ function SectionText({ section: s }: { section: DescentSection }) {
           <LevelPill level={snap.level}>
             {snap.value != null
               ? formatReading(snap.value, snap.unit)
-              : levelConfig[snap.level].label}
+              : levelConfigFor(ink)[snap.level].label}
           </LevelPill>
           <Box component="span" sx={mutedSx}>
             {snap.gauge_name}
