@@ -226,7 +226,15 @@ function LogsList({
     onIndexChange: (i) => onTabChange(TABS[i]),
   });
   return (
-    <>
+    // On a phone the pane runs down to the bottom nav, so a swipe anywhere
+    // below the tabs turns the page, not only over the rows.
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: { xs: PANEL_HEIGHT.xs, md: 0 },
+      }}
+    >
       {tab === "mine" && <ListPaneHeader count={count} noun="log" />}
       <PanelHeader
         tabs={{
@@ -240,8 +248,16 @@ function LogsList({
           ],
         }}
       />
-      <Box sx={{ position: "relative", overflowX: "clip" }}>
-        <Box {...swipe.paneProps} sx={paneSx}>
+      <Box
+        sx={{
+          position: "relative",
+          overflowX: "clip",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Box {...swipe.paneProps} sx={{ ...paneSx, flex: 1 }}>
           <LogsTabBody tab={tab} onOpen={onOpen} selectedId={selectedId} />
         </Box>
         <SwipeGhost
@@ -253,6 +269,6 @@ function LogsList({
           {(i) => <LogsTabBody tab={TABS[i]} onOpen={onOpen} />}
         </SwipeGhost>
       </Box>
-    </>
+    </Box>
   );
 }
