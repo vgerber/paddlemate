@@ -3,12 +3,12 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import { flatRowSx } from "@/components/canvas/flatRow";
 import { regionContext } from "@/components/map/regionGeometry";
+import SectionHeading from "@/components/SectionHeading";
 import type { Region, RegionKind } from "@/lib/api";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useRegionSearch } from "@/lib/hooks/useRegions";
 import { REGION_KINDS } from "@/lib/regionKinds";
 import { theme } from "@/lib/theme";
-import ListGroupHeader from "./ListGroupHeader";
 
 const { tokens } = theme;
 
@@ -66,7 +66,7 @@ export default function RegionSuggestions({
     <Box>
       {groups.map((g) => (
         <Box key={g.kind} data-testid="region-group" data-label={g.label}>
-          <ListGroupHeader label={g.label} />
+          <SectionHeading inset>{g.label}</SectionHeading>
           <Box sx={{ display: "grid", gap: { xs: 1, md: 0 }, pt: 0.5, pb: 1 }}>
             {g.items.map((region) => (
               <ButtonBase

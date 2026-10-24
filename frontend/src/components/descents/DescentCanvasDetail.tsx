@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import SectionHeading from "@/components/SectionHeading";
 import type { Descent, DescentSection } from "@/lib/api";
-import { labelSx } from "@/lib/theme";
 import DescentOverview from "./DescentOverview";
 import LogSectionRow from "./LogSectionRow";
 
@@ -26,9 +26,9 @@ export default function DescentCanvasDetail({
 
       {noted.length > 0 && (
         <Box sx={{ mt: 1 }}>
-          <Typography sx={{ ...labelSx, fontSize: "0.875rem", mb: 1 }}>
+          <SectionHeading first component="h3">
             Section notes
-          </Typography>
+          </SectionHeading>
           <Box sx={{ display: "grid", gap: 1 }}>
             {noted.map((s) => (
               <LogSectionRow
@@ -44,9 +44,9 @@ export default function DescentCanvasDetail({
 
       {descent.note && (
         <Box>
-          <Typography sx={{ ...labelSx, fontSize: "0.875rem", mb: 0.5 }}>
+          <SectionHeading first component="h3">
             Note
-          </Typography>
+          </SectionHeading>
           <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
             {descent.note}
           </Typography>

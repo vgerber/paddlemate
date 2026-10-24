@@ -2,9 +2,9 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import SectionHeading from "@/components/SectionHeading";
 import QueryStates from "@/components/states/QueryStates";
 import FormSection from "@/components/waterway/FormSection";
 import type { ApiToken, ApiTokenCreated } from "@/lib/api";
@@ -88,9 +88,7 @@ export default function TokensSection() {
       </FormSection>
 
       <Box>
-        <Typography sx={{ fontWeight: 600, fontSize: "0.9375rem", mb: 0.5 }}>
-          Your tokens
-        </Typography>
+        <SectionHeading first>Your tokens</SectionHeading>
         <QueryStates
           query={tokenList}
           count={list?.length ?? 0}

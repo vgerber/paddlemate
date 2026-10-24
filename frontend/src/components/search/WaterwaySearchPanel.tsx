@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
 import DockedAction from "@/components/DockedAction";
+import SectionHeading from "@/components/SectionHeading";
 import { SwipeGhost } from "@/components/SwipeGhost";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
@@ -15,7 +16,6 @@ import { useWaterways } from "@/lib/hooks/useWaterways";
 import { SearchIcon, StarIcon } from "@/lib/icons";
 import { readRecentWaterways } from "@/lib/recentWaterways";
 import { theme } from "@/lib/theme";
-import ListGroupHeader from "./ListGroupHeader";
 import RecentRiverList from "./RecentRiverList";
 import type { RegionBrowseProps } from "./RegionBrowse";
 import RegionSuggestions, { isListingRegions } from "./RegionSelect";
@@ -254,10 +254,10 @@ export default function WaterwaySearchPanel({
       <>
         {favorites.length > 0 && (
           <>
-            <ListGroupHeader
-              icon={<StarIcon sx={{ fontSize: 14 }} />}
-              label="Starred sections"
-            />
+            <SectionHeading inset first>
+              <StarIcon sx={{ fontSize: 14 }} />
+              Starred sections
+            </SectionHeading>
             <SectionList
               sections={favoriteSections}
               selectedSectionId={selectedSectionId}

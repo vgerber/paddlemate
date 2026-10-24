@@ -77,7 +77,12 @@ export default function SettingsDetail({
       >
         <Typography
           component="h2"
-          sx={{ fontSize: "1.125rem", fontWeight: 700, mb: 2 }}
+          sx={{
+            fontSize: "0.9375rem",
+            fontWeight: 600,
+            lineHeight: "20px",
+            mb: 2,
+          }}
         >
           {title}
         </Typography>

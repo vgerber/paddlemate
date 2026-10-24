@@ -1,10 +1,10 @@
 import List from "@mui/material/List";
 import { useMemo } from "react";
 import LevelDots from "@/components/LevelDots";
+import SectionHeading from "@/components/SectionHeading";
 import { useSectionDotLevels } from "@/lib/hooks/useWaterStatus";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import type { RecentWaterway } from "@/lib/recentWaterways";
-import ListGroupHeader from "./ListGroupHeader";
 import RiverRow from "./RiverRow";
 
 interface RecentRiverListProps {
@@ -40,7 +40,7 @@ export default function RecentRiverList({
 
   return (
     <>
-      <ListGroupHeader label="Recent rivers" />
+      <SectionHeading inset>Recent rivers</SectionHeading>
       <List dense disablePadding>
         {rivers.map((river) => (
           <RiverRow

@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import { type ReactNode, useState } from "react";
 import { flatRowSx } from "@/components/canvas/flatRow";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
+import SectionHeading from "@/components/SectionHeading";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import MemberAvatar from "@/components/trips/MemberAvatar";
@@ -18,7 +19,6 @@ import {
   SearchIcon,
 } from "@/lib/icons";
 import { fonts, theme } from "@/lib/theme";
-import GroupHead from "./GroupHead";
 
 const { tokens } = theme;
 
@@ -82,10 +82,10 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
       sx={{
         display: "flex",
         flexDirection: "column",
-        gap: { xs: 0.75, md: 0 },
+        gap: 0,
       }}
     >
-      <GroupHead>{title}</GroupHead>
+      <SectionHeading inset>{title}</SectionHeading>
       <Box
         sx={{ display: "flex", flexDirection: "column", gap: { xs: 1, md: 0 } }}
       >
@@ -126,9 +126,7 @@ export default function SocialPanel() {
     : [];
 
   return (
-    <Box
-      sx={{ display: "flex", flexDirection: "column", gap: { xs: 2, md: 1 } }}
-    >
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
       <TextField
         sx={{ mx: { md: 1.5 }, mt: { md: 1.5 }, width: { md: "auto" } }}
         placeholder="Find users…"
