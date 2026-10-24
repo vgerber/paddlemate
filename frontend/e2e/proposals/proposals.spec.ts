@@ -84,7 +84,8 @@ test.describe("proposal list", () => {
       }),
     );
     await page.goto("/proposals?status=pending");
-    const c = card(page, "Somewhere");
+    // The swipe neighbour on a phone holds the same mocked row.
+    const c = card(page, "Somewhere").first();
     const kind = c.getByText("New river");
     const meta = c.getByTestId("proposal-meta");
     await expect(meta.locator("svg")).toHaveCount(2);
@@ -674,7 +675,7 @@ test.describe("proposal load failures", () => {
       r.fulfill({ status: 500, json: body }),
     );
     await page.goto("/proposals?status=pending");
-    await expect(page.getByTestId("error-state")).toContainText(
+    await expect(page.getByTestId("error-state").first()).toContainText(
       "Boom from server",
     );
     await expect(page.getByText(/No pending proposals/)).toHaveCount(0);
