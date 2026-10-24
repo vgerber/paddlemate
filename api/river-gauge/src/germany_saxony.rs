@@ -64,17 +64,7 @@ const STATION_COORDS: &str = include_str!("../data/germany_saxony_coords.csv");
 
 /// Parse the embedded coordinate table into a Pegelnummer -> (lat, lon) map.
 fn coord_lookup() -> HashMap<&'static str, (f64, f64)> {
-    STATION_COORDS
-        .lines()
-        .filter(|l| !l.is_empty() && !l.starts_with('#'))
-        .filter_map(|l| {
-            let mut it = l.split(',');
-            let id = it.next()?;
-            let lat = it.next()?.trim().parse().ok()?;
-            let lon = it.next()?.trim().parse().ok()?;
-            Some((id, (lat, lon)))
-        })
-        .collect()
+    crate::parse_coord_table(STATION_COORDS)
 }
 
 /// Marker `left%`/`top%` on the HWIMS map image to WGS84. Quadratic fit against
@@ -376,6 +366,17 @@ impl GaugeReader for GermanySaxonyReader {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn coord_lookup_matches_table() {
+        let m = coord_lookup();
+        assert_eq!(m.len(), 104);
+        let lat: f64 = m.values().map(|v| v.0).sum();
+        let lon: f64 = m.values().map(|v| v.1).sum();
+        assert!((lat - 5300.9072).abs() < 1e-6);
+        assert!((lon - 1403.7272).abs() < 1e-6);
+        assert_eq!(m["501010"], (50.8758, 14.2352));
+    }
 
     const SAMPLE_FEED: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <rss xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">

@@ -245,3 +245,20 @@ pub fn build_registry() -> Vec<Arc<dyn GaugeReader>> {
         Arc::new(rivermap::RivermapReader::default()),
     ]
 }
+
+/// Parse an embedded `id,lat,lon` table (one station per line, `#` comments,
+/// no quoting) into an id -> (lat, lon) map. Malformed lines are skipped.
+pub(crate) fn parse_coord_table(
+    csv: &'static str,
+) -> std::collections::HashMap<&'static str, (f64, f64)> {
+    csv.lines()
+        .filter(|l| !l.is_empty() && !l.starts_with('#'))
+        .filter_map(|l| {
+            let mut it = l.split(',');
+            let id = it.next()?;
+            let lat = it.next()?.trim().parse().ok()?;
+            let lon = it.next()?.trim().parse().ok()?;
+            Some((id, (lat, lon)))
+        })
+        .collect()
+}
