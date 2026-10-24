@@ -126,6 +126,12 @@ const CASES: {
   },
   { name: "logs", url: "/logs", tab: "Social", pane: "[role=tablist]" },
   {
+    name: "profile tabs",
+    url: "/settings",
+    tab: "Inbox",
+    pane: "[data-testid=settings-pane]",
+  },
+  {
     name: "trip tabs",
     url: "/trips/9001",
     tab: "Bases",
