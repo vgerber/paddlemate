@@ -193,6 +193,19 @@ votes need a pending proposal (409 otherwise) and never come from its author (40
 changed or overwritten; photo uploads accept up to 8 MB (the body limit of
 those routes is raised to match).
 
+Rate limits (`layers/limit.rs`), per caller, each answering 429 with the error
+envelope (`too_many_requests`) and a `Retry-After` header in seconds:
+
+| Budget | Applies to | Default | Key |
+|---|---|---|---|
+| reads | every request | 20/s, burst 100 | address |
+| expensive reads | `GET /geo/regions*`, `/geo/region-outlines`, `/geo/river-segments`, `/waterways/{id}/geometry`, `.../readings/summary` | 2/s, burst 10, extra to the above | address |
+| writes | POST, PUT, PATCH, DELETE | 1/s, burst 10 | signed-in user, else address |
+
+The address is the peer address. `X-Forwarded-For` (right-most entry that is
+not a trusted proxy) and `X-Real-IP` count only when the peer is in
+`TRUSTED_PROXIES`; a client cannot choose its key with a header it sends.
+
 Retention: history is the audit trail and is kept for as long as the data. When
 an entity is deleted its history stays readable for one year
 (`KEEP_DELETED_DAYS`, 365), then a daily task (`history::run_pruner`, 5 minute

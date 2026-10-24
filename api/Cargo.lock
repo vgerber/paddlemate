@@ -203,7 +203,7 @@ dependencies = [
  "futures",
  "http 1.4.0",
  "jsonwebtoken",
- "nonempty 0.11.0",
+ "nonempty",
  "reqwest",
  "serde",
  "serde-querystring",
@@ -967,16 +967,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf"
 dependencies = [
  "percent-encoding",
-]
-
-[[package]]
-name = "forwarded-header-value"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8835f84f38484cc86f110a805655697908257fb9a7af005234060891557198e9"
-dependencies = [
- "nonempty 0.7.0",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -2056,12 +2046,6 @@ dependencies = [
 
 [[package]]
 name = "nonempty"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9e591e719385e6ebaeb5ce5d3887f7d5676fceca6411d1925ccc95745f3d6f7"
-
-[[package]]
-name = "nonempty"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "549e471b99ccaf2f89101bec68f4d244457d5a95a9c3d0672e9564124397741d"
@@ -2236,8 +2220,10 @@ dependencies = [
  "dotenvy",
  "futures-util",
  "getrandom 0.3.4",
+ "governor",
  "image",
  "indexmap 2.13.0",
+ "ipnet",
  "moka",
  "reqwest",
  "river-gauge",
@@ -2250,7 +2236,6 @@ dependencies = [
  "tokio",
  "tower",
  "tower-http",
- "tower_governor",
  "tracing",
  "tracing-subscriber",
  "uuid",
@@ -3866,22 +3851,6 @@ name = "tower-service"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3"
-
-[[package]]
-name = "tower_governor"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44de9b94d849d3c46e06a883d72d408c2de6403367b39df2b1c9d9e7b6736fe6"
-dependencies = [
- "axum",
- "forwarded-header-value",
- "governor",
- "http 1.4.0",
- "pin-project",
- "thiserror 2.0.18",
- "tower",
- "tracing",
-]
 
 [[package]]
 name = "tracing"

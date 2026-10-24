@@ -54,7 +54,9 @@ docker exec -i paddlemate-db-1 psql -U postgres -d paddlemate -v ON_ERROR_STOP=1
   `cd api && cargo sqlx migrate add <name>`.
 - **Keep `RATE_LIMIT_PER_SECOND=0` on dev machines** - the limiter's clock
   does not survive a laptop suspend and every caller gets 429s until the
-  process restarts. Production keeps the default (20/s per caller).
+  process restarts. Production keeps the defaults (reads 20/s, writes 1/s,
+  expensive reads 2/s per caller). Set the write and expensive rates to 0 there
+  as well.
 - After changing SQL queries: `cd api && cargo sqlx prepare` (offline cache).
   After changing the API surface: `cd frontend && npm run generate:api` (API
   must be running).
@@ -96,9 +98,18 @@ host names and secrets), and `deploy/backend/.env` carries the settings.
   and best off-peak since they call Overpass at one request a second:
   `derive_section_regions` (fills `regions` of sections that have none), then
   `import_region_outlines` (the boundary of every region a section names).
-- **Settings to check in `deploy/backend/.env`**: `CORS_ALLOWED_ORIGINS` (unset
-  allows any origin; set it to the frontend origin, comma separated),
-  `OVERPASS_URLS` (the self-hosted instance first), `RATE_LIMIT_PER_SECOND`.
+- **Settings to check in `deploy/backend/.env`**: `CORS_ALLOWED_ORIGINS` (leave
+  it unset: the API is public, so any origin may call it),
+  `OVERPASS_URLS` (the self-hosted instance first), and the rate limits
+  (`RATE_LIMIT_PER_SECOND`, `WRITE_RATE_LIMIT_PER_SECOND`,
+  `EXPENSIVE_RATE_LIMIT_PER_SECOND`). The limiter keys on the peer address and
+  believes `X-Forwarded-For` / `X-Real-IP` only from `TRUSTED_PROXIES`
+  (default: loopback and the private ranges, which covers a proxy on the Docker
+  network or LAN). If the proxy reaches the API from a public address, set
+  `TRUSTED_PROXIES` to it, or every visitor shares the proxy's budget. The
+  proxy must append the client to `X-Forwarded-For` (or set `X-Real-IP`); a
+  LAN client that talks to the API port directly is also trusted, so keep
+  that port off the internet. Startup logs which mode is active.
 - **Frontend**: build on the dev machine with the production `VITE_*` values
   (`frontend/.env`), check `grep -c localhost frontend/dist/assets/*.js` is 0,
   then `deploy/frontend/deploy.sh`, right after the API (it deletes old hashed
