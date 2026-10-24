@@ -57,14 +57,15 @@ test.beforeEach(async ({ page }) => {
 });
 
 interface FlowStatus {
-  ranges: ({ series: object; latest_reading: object } & Record<
-    string,
-    unknown
-  >)[];
+  ranges: ({
+    gauge: { id?: number; name: string };
+    series: object;
+    latest_reading: object;
+  } & Record<string, unknown>)[];
 }
 
 /** Adds a discharge series next to the level one. */
-function addFlow(status: FlowStatus) {
+function addFlow(status: FlowStatus, asOwnGauge = false) {
   const level = status.ranges[0];
   if (!level) return;
   status.ranges = [
@@ -72,11 +73,13 @@ function addFlow(status: FlowStatus) {
     {
       ...level,
       id: 99001,
+      gauge: asOwnGauge ? { ...level.gauge, id: 99301 } : level.gauge,
       series: {
         ...level.series,
         id: 99401,
         measurement_type: "discharge",
         unit: "m3/s",
+        ...(asOwnGauge ? { label: level.gauge.name } : {}),
       },
       range_low: null,
       range_medium: null,
@@ -93,7 +96,7 @@ function addFlow(status: FlowStatus) {
 test.describe("phone card", () => {
   test.skip(({ isMobile }) => !isMobile, "the phone's chart card");
 
-  const withFlow = async (page: Page) => {
+  const withFlow = async (page: Page, asOwnGauge = false) => {
     // A section is read from its own endpoint or, as a list row asks first,
     // from the batch keyed by section id.
     await page.route(/\/water-status(\?|$)/, async (route) => {
@@ -105,7 +108,7 @@ test.describe("phone card", () => {
         .includes("section_ids")
         ? Object.values(body)
         : [body];
-      for (const status of statuses) addFlow(status);
+      for (const status of statuses) addFlow(status, asOwnGauge);
       await route.fulfill({ response: res, json: body });
     });
     await page.route(/\/series\/99401\/readings/, (route) =>
@@ -273,6 +276,21 @@ test.describe("phone card", () => {
     await openSection(page);
     const choice = card(page).getByRole("group", { name: "Reading" });
     await expect(choice.getByRole("button")).toHaveText(["Level", "Flow"]);
+    await choice.getByRole("button", { name: "Flow" }).click();
+    await expect(card(page).getByTestId("reading-value")).toContainText("12.4");
+  });
+
+  test("level and flow of one station, imported as two gauges named alike, still read Level | Flow", async ({
+    page,
+  }) => {
+    await withFlow(page, true);
+    await openSection(page);
+    const choice = card(page).getByRole("group", { name: "Reading" });
+    await expect(choice.getByRole("button")).toHaveText(["Level", "Flow"]);
+    await expect(
+      card(page).getByRole("button", { name: /^Gauge:/ }),
+      "no gauge menu listing the same name twice",
+    ).toHaveCount(0);
     await choice.getByRole("button", { name: "Flow" }).click();
     await expect(card(page).getByTestId("reading-value")).toContainText("12.4");
   });

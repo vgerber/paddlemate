@@ -81,7 +81,7 @@ export default function SectionListItem({
           minHeight: 56,
           columnGap: 1,
           rowGap: 0.5,
-          gridTemplateColumns: `minmax(0, 1fr) 30px 46px 74px${star}`,
+          gridTemplateColumns: `minmax(0, 1fr) minmax(30px, max-content) minmax(46px, max-content) minmax(74px, max-content)${star}`,
           gridTemplateAreas: `"n k g c${star2}"`,
           [`@container (max-width: ${STACK_BELOW}px)`]: {
             gridTemplateColumns: `auto auto minmax(0, 1fr) auto${star}`,

@@ -102,6 +102,21 @@ test.describe("the next tab is there while swiping", () => {
     );
   });
 
+  test("profile: Inbox sits beside Profile mid-swipe", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop", "touch layouts only");
+    await page.goto("/settings");
+    await expect(page.getByRole("tab", { name: "Inbox" })).toBeVisible();
+    const { f } = await dragHalf(page, "[data-testid=settings-pane]");
+    await expectGhostFilled(page, page.viewportSize()?.width ?? 400);
+    await f.up();
+    await expect(page.getByRole("tab", { name: "Inbox" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
   test("search: Area sits beside Name mid-swipe", async ({ page }, info) => {
     test.skip(info.project.name === "desktop", "touch layouts only");
     await page.goto("/?panel=1");

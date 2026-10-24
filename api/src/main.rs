@@ -6,7 +6,6 @@ use aide::{
     transform::TransformOpenApi,
 };
 use axum::http::HeaderValue;
-use axum::response::IntoResponse;
 use axum::{Extension, middleware};
 use axum_keycloak_auth::{
     Url,
@@ -17,8 +16,8 @@ use axum_keycloak_auth::{
 use indexmap::IndexMap;
 use moka::future::Cache;
 use paddlemate_api::{
-    error::ApiError,
     layers::auth::{api_token_auth, api_token_auth_optional},
+    layers::limit::{RateLimits, limit_requests, limit_writes},
     routes::{
         descents::descents_routes, docs::docs_routes, gauges::gauges_routes, geo::geo_routes,
         groups::group_routes, proposals::proposals_routes, trips::trips_routes,
@@ -29,10 +28,6 @@ use paddlemate_api::{
 use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ETAG, HeaderName, IF_MATCH};
 use sqlx::postgres::PgPoolOptions;
 use std::time::Duration;
-use tower_governor::{
-    GovernorLayer, errors::GovernorError, governor::GovernorConfigBuilder,
-    key_extractor::SmartIpKeyExtractor,
-};
 use tower_http::{
     cors::{AllowOrigin, Any, CorsLayer},
     trace::TraceLayer,
@@ -157,8 +152,8 @@ async fn main() {
     }
 
     // Comma separated list of origins allowed to call the API from a browser.
-    // Unset means any origin, which suits local development and a public
-    // read-only deployment; set it in production to name the web app.
+    // Unset means any origin: the API is public. A list narrows it for a
+    // deployment that wants that.
     let cors_origins = match std::env::var("CORS_ALLOWED_ORIGINS") {
         Ok(raw) if !raw.trim().is_empty() => {
             let origins: Vec<_> = raw
@@ -216,9 +211,24 @@ async fn main() {
             .build(),
     ));
 
+    let base_url = dotenvy::var("BASE_URL").unwrap_or_else(|_| "/api/v1".to_string());
+    let limits = RateLimits::from_env(&base_url);
+    {
+        let limits = limits.clone();
+        tokio::spawn(async move {
+            let mut tick = tokio::time::interval(Duration::from_secs(60));
+            loop {
+                tick.tick().await;
+                limits.prune();
+            }
+        });
+    }
+
     let protected = ApiRouter::new()
         .nest_api_service("/users", users_routes(state.clone()))
         .nest_api_service("/groups", group_routes(state.clone()))
+        // Inside sign-in, so a write is charged to the user.
+        .layer(middleware::from_fn_with_state(limits.clone(), limit_writes))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth,
@@ -234,6 +244,7 @@ async fn main() {
         .nest_api_service("/geo", geo_routes(state.clone()))
         .nest_api_service("/proposals", proposals_routes(state.clone()))
         .nest_api_service("/trips", trips_routes(state.clone()))
+        .layer(middleware::from_fn_with_state(limits.clone(), limit_writes))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth_optional,
@@ -266,43 +277,6 @@ async fn main() {
         .nest_api_service("/docs", docs_routes(state.clone()))
         .with_state(state.clone());
 
-    let base_url = dotenvy::var("BASE_URL").unwrap_or_else(|_| "/api/v1".to_string());
-
-    // Per-caller request budget. Anyone can submit proposals and comments, so
-    // without this a single client can flood the review queue. The allowance
-    // is generous enough that the map, which fires several requests per pan,
-    // never notices; RATE_LIMIT_PER_SECOND=0 turns it off.
-    let rate_limit_per_second = std::env::var("RATE_LIMIT_PER_SECOND")
-        .ok()
-        .and_then(|raw| raw.parse::<u64>().ok())
-        .unwrap_or(20);
-    let rate_limiter = (rate_limit_per_second > 0).then(|| {
-        tracing::info!("Rate limit: {rate_limit_per_second}/s per caller");
-        GovernorLayer::new(
-            GovernorConfigBuilder::default()
-                // Read the caller from the proxy headers, falling back to the
-                // peer address, so that everyone behind the reverse proxy is
-                // not treated as one client.
-                .key_extractor(SmartIpKeyExtractor)
-                // per_second() sets the gap between replenished requests, not
-                // the rate: passing 20 there means one request every 20
-                // seconds. The interval is the reciprocal, and must not be
-                // zero, so a rate above 1000/s replenishes every millisecond.
-                .per_millisecond((1000 / rate_limit_per_second).max(1))
-                .burst_size(rate_limit_per_second.saturating_mul(5) as u32)
-                .finish()
-                .expect("valid rate limit configuration"),
-        )
-        // Report exhaustion in the same shape as every other failure.
-        .error_handler(|err| match err {
-            GovernorError::TooManyRequests { wait_time, .. } => {
-                ApiError::too_many_requests(format!("Too many requests, retry in {wait_time}s"))
-                    .into_response()
-            }
-            _ => ApiError::internal().into_response(),
-        })
-    });
-
     // Uploaded photos, served straight off disk. Keys are random and a
     // stored file never changes, so they can be cached hard.
     let media_dir = paddlemate_api::media::media_dir();
@@ -330,10 +304,7 @@ async fn main() {
     // Applied inside CORS on purpose: a rejected request still needs the CORS
     // headers, or the browser reports a cross-origin failure rather than the
     // 429 the caller should act on.
-    let limited = match rate_limiter {
-        Some(layer) => routed.layer(layer),
-        None => routed,
-    };
+    let limited = routed.layer(middleware::from_fn_with_state(limits, limit_requests));
 
     let app = limited
         .layer(
@@ -387,8 +358,7 @@ async fn main() {
         .await
         .unwrap();
     tracing::info!("Listening on port {}", port);
-    // Connect info is what lets the rate limiter identify a direct caller when
-    // there are no proxy headers to read.
+    // Connect info gives the rate limiter the peer address.
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<std::net::SocketAddr>(),

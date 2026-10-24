@@ -326,13 +326,19 @@ test.describe("tools", () => {
   });
 });
 
-test("the browser chrome and the PWA manifest are white", async ({ page }) => {
+test("the browser chrome is white and the installed frame dark", async ({
+  page,
+}) => {
   await page.goto("/");
-  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
-    "content",
-    "#ffffff",
-  );
+  // A phone in dark mode gets a dark frame (system-bars.spec.ts); the light
+  // one is white.
+  await expect(
+    page.locator(
+      'meta[name="theme-color"][media="(prefers-color-scheme: light)"]',
+    ),
+  ).toHaveAttribute("content", "#ffffff");
   const config = readFileSync("vite.config.ts", "utf8");
-  expect(config).toContain('theme_color: "#ffffff"');
-  expect(config).toContain('background_color: "#ffffff"');
+  // The installed app's frame is dark (system-bars.spec.ts).
+  expect(config).toContain('theme_color: "#141b1f"');
+  expect(config).toContain('background_color: "#141b1f"');
 });
