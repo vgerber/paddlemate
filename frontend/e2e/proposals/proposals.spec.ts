@@ -822,7 +822,6 @@ test.describe("a proposal in a feature row", () => {
     await page
       .getByRole("menuitem", { name: "Show proposed features" })
       .click();
-    await page.keyboard.press("Escape");
     await page
       .locator("[data-row]")
       .filter({ hasText: "Row Vote Rapid" })
