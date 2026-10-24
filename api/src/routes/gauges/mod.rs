@@ -5,6 +5,8 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
+mod summary;
+
 use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -551,6 +553,13 @@ pub fn gauges_routes(state: AppState) -> aide::axum::ApiRouter {
         .api_route(
             "/{gauge_id}/series/{series_id}/readings",
             get_with(list_readings, list_readings_docs),
+        )
+        .api_route(
+            "/{gauge_id}/series/{series_id}/readings/summary",
+            get_with(
+                summary::summarize_readings,
+                summary::summarize_readings_docs,
+            ),
         )
         .api_route(
             "/{gauge_id}/series/{series_id}/readings/latest",

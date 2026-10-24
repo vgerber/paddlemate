@@ -1,3 +1,7 @@
+mod summary;
+
+pub use summary::{bucket_step, series_on_gauge, summarize_readings};
+
 use chrono::{DateTime, Utc};
 use sqlx::{PgPool, Row, postgres::PgRow};
 
