@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import WaterwayMap from "@/components/map/LazyMap";
 import ProposalDiffTable from "@/components/proposals/ProposalDiffTable";
+import SectionHeading from "@/components/SectionHeading";
 import FeatureRow from "@/components/waterway/FeatureRow";
 import {
   computeExtent,
@@ -111,7 +112,7 @@ export default function ProposalDetailPane({
     : null;
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       {/* What an update changes, before the full proposed state below */}
       {original && proposal.operation === "update" && (
         <ProposalDiffTable original={original} proposed={data} />
@@ -175,9 +176,7 @@ export default function ProposalDetailPane({
       {/* Translations */}
       {translations.length > 0 && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <Typography variant="overline" sx={{ lineHeight: 1 }}>
-            Translations
-          </Typography>
+          <SectionHeading first>Translations</SectionHeading>
           {translations.map((translation) => (
             <Box
               key={translation.lang_code}
@@ -205,10 +204,8 @@ export default function ProposalDetailPane({
 
       {/* Features */}
       {featureData.length > 0 && (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <Typography variant="overline" sx={{ lineHeight: 1 }}>
-            Features
-          </Typography>
+        <Box sx={{ display: "flex", flexDirection: "column" }}>
+          <SectionHeading first>Features</SectionHeading>
           <Box
             sx={{
               bgcolor: tokens.surface,

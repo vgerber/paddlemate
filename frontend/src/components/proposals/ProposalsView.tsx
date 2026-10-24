@@ -5,7 +5,6 @@ import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
@@ -18,6 +17,7 @@ import PanelHeader from "@/components/PanelHeader";
 import ProposalRow from "@/components/proposals/ProposalRow";
 import ProposalSideCard from "@/components/proposals/ProposalSideCard";
 import { useProposalScene } from "@/components/proposals/useProposalScene";
+import SectionHeading from "@/components/SectionHeading";
 import { SwipeGhost } from "@/components/SwipeGhost";
 import EmptyState from "@/components/states/EmptyState";
 import QueryStates from "@/components/states/QueryStates";
@@ -32,7 +32,7 @@ import { useProposals } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
 import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import { ExpandIcon, FilterIcon } from "@/lib/icons";
-import { labelSx, PANEL_HEIGHT, theme } from "@/lib/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme";
 import { STATUS_LABEL } from "./status";
 
 const { tokens } = theme;
@@ -254,16 +254,9 @@ export default function ProposalsView({
       />
 
       {isAuthenticated && !adminMode && (
-        <Typography
-          sx={{
-            ...labelSx,
-            color: "text.secondary",
-            px: { xs: `${tokens.phone.line}px`, md: 2 },
-            pb: 0.5,
-          }}
-        >
-          Your proposals
-        </Typography>
+        <Box sx={{ px: { xs: `${tokens.phone.line}px`, md: 2 } }}>
+          <SectionHeading first>Your proposals</SectionHeading>
+        </Box>
       )}
 
       <Box

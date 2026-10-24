@@ -3,6 +3,7 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
+import { cardTitleSx } from "@/components/SectionHeading";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -14,7 +15,7 @@ import { useHistory, useSectionProposals } from "@/lib/hooks/useProvenance";
 import { useSession } from "@/lib/hooks/useSession";
 import { HistoryIcon } from "@/lib/icons";
 import { localizedName } from "@/lib/localization";
-import { labelSx, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import {
   type EditItem,
   type EntryRef,
@@ -303,7 +304,7 @@ export default function EditsTimeline({
         overflow: "hidden",
       }}
     >
-      <Typography sx={{ ...labelSx, px: 2, pt: 1.75, pb: 0.5 }}>
+      <Typography sx={{ ...cardTitleSx, px: 2, pt: 1.75, pb: 0.5 }}>
         {filter ? "History" : "All edits"}
       </Typography>
       <Box sx={{ pt: 0.5, pb: 1 }}>

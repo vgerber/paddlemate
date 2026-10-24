@@ -5,9 +5,10 @@ import ProposalCreateSummary from "@/components/proposals/ProposalCreateSummary"
 import ProposalDetailPane from "@/components/proposals/ProposalDetailPane";
 import ProposalReviewControls from "@/components/proposals/ProposalReviewControls";
 import ProposalVoteBar from "@/components/proposals/ProposalVoteBar";
+import SectionHeading from "@/components/SectionHeading";
 import type { Proposal, ProposalStatus } from "@/lib/api";
 import { proposalKind, proposalRecord, proposalTitle } from "@/lib/proposals";
-import { BOTTOM_NAV_SPACE, labelSx, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
 import ProposalMenu from "./ProposalMenu";
 import StatusChip from "./StatusChip";
 
@@ -92,9 +93,7 @@ export default function ProposalDetailView({
 
         {proposal.submitter_note && (
           <Box data-testid="proposal-submitter-note">
-            <Typography sx={{ ...labelSx, color: "text.secondary" }}>
-              Note from the submitter
-            </Typography>
+            <SectionHeading first>Note from the submitter</SectionHeading>
             <Typography
               variant="body2"
               sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
