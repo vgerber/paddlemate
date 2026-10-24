@@ -29,6 +29,7 @@ fn app(rates: Rates, proxies: &str) -> Router {
             get(|| async { "ok" }).post(|| async { "ok" }),
         )
         .route("/api/v1/geo/regions", get(|| async { "ok" }))
+        .route("/api/v1/geo/region-outlines", get(|| async { "ok" }))
         .route("/api/v1/waterways/{id}/geometry", get(|| async { "ok" }))
         .route(
             "/api/v1/waterways/gauges/{g}/series/{s}/readings/summary",
@@ -216,7 +217,7 @@ async fn expensive_reads_have_their_own_budget() {
     let app = app(rates(), "10.0.0.0/8");
     for (peer, uri) in [
         ("203.0.113.7", "/api/v1/geo/regions?x=1"),
-        ("203.0.113.8", "/api/v1/geo/regions/3"),
+        ("203.0.113.8", "/api/v1/geo/region-outlines"),
         ("203.0.113.9", "/api/v1/waterways/7/geometry"),
         (
             "203.0.113.10",
