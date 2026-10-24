@@ -210,7 +210,7 @@ returns about `points` values for any range, for charts.
 
 | Query | Meaning |
 |---|---|
-| `from`, `to` | ISO 8601 UTC. `to` defaults to now, `from` to `to` minus 7 days. `from` must be before `to` and the span at most 5 years, else 400 |
+| `from`, `to` | ISO 8601 UTC. `to` defaults to now, `from` to `to` minus 7 days. `from` must be before `to` and the span at most 1831 days (five calendar years always fit), else 400 |
 | `points` | Target count, default 300, clamped to 10..1000 |
 
 Response: `{ bucket_seconds, from, to, items: [{ measured_at, value, min, max, count }] }`,

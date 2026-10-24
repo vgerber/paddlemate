@@ -20,7 +20,9 @@ const DEFAULT_POINTS: i64 = 300;
 const MIN_POINTS: i64 = 10;
 const MAX_POINTS: i64 = 1000;
 const DEFAULT_SPAN_DAYS: i64 = 7;
-const MAX_SPAN_DAYS: i64 = 5 * 365;
+/// Five calendar years with two leap days, plus the end of the last day: the
+/// longest span the chart's date dialog can ask for.
+const MAX_SPAN_DAYS: i64 = 5 * 366 + 1;
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]
 pub struct SummaryQuery {
@@ -95,3 +97,34 @@ doc_fn!(summarize_readings_docs, op =>
         })
         .tag("Gauges")
 );
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+
+    fn query(from: DateTime<Utc>, to: DateTime<Utc>) -> SummaryQuery {
+        SummaryQuery {
+            from: Some(from),
+            to: Some(to),
+            points: None,
+        }
+    }
+
+    #[test]
+    fn accepts_five_calendar_years_across_leap_days() {
+        let now = Utc.with_ymd_and_hms(2026, 10, 24, 12, 0, 0).unwrap();
+        let from = Utc.with_ymd_and_hms(2020, 2, 28, 0, 0, 0).unwrap();
+        let to = Utc.with_ymd_and_hms(2025, 2, 28, 23, 59, 59).unwrap();
+        assert!(resolve_range(&query(from, to), now).is_ok());
+    }
+
+    #[test]
+    fn rejects_more_than_the_cap() {
+        let now = Utc.with_ymd_and_hms(2026, 10, 24, 12, 0, 0).unwrap();
+        let from = Utc.with_ymd_and_hms(2020, 1, 1, 0, 0, 0).unwrap();
+        let to = from + Duration::days(MAX_SPAN_DAYS) + Duration::seconds(1);
+        assert!(resolve_range(&query(from, to), now).is_err());
+        assert!(resolve_range(&query(to, from), now).is_err());
+    }
+}

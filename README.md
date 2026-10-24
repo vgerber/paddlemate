@@ -35,7 +35,10 @@ water levels, and a shared logbook.
   proposals.
 - **Water levels** - live gauge readings from public hydrological services;
   per-feature low/medium/high ranges classify the current level, shown on
-  markers, chips, level dots and a per-section chart.
+  markers, chips, level dots and a per-section chart. The chart covers 24
+  hours up to a year or a custom From/To range of up to five years, draws the
+  low-high band where readings are averaged, and zooms by dragging a span
+  across the plot.
 - **Logs** - record a descent across one or more sections; counts per section,
   a log list in the section view, and your descents shaded into the gauge
   chart at the level you paddled.

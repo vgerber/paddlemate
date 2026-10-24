@@ -295,7 +295,12 @@ The reasons and the work plan are in [plans/wide-canvas.md](plans/wide-canvas.md
   the map; at the foot the latest value, large (56 to 80px with the rail
   height, weight 600), its unit, and the level dot and word on its baseline,
   with the Level | Flow choice at the right only for a gauge that measures
-  both. The space between holds a future outlook line, so the number never
+  both.
+  The period menu lists 24h to 1Y and "Custom range", which opens a dialog
+  with From and To day pickers (To not after today, at most five years); the
+  low-high band is the line's own hue at low opacity and appears only where
+  readings are averaged; a mouse drag over the plot selects a span to zoom to,
+  and touch keeps its own pinch gesture. The space between holds a future outlook line, so the number never
   moves; there is no trend until there are predictions. A reading older than
   3 h or three gauge intervals shows "No recent reading" with no level word,
   and its dot is grey. The plot runs edge to edge with no grid and a 2px line:

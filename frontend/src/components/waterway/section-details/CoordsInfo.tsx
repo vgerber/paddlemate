@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
+import { useSession } from "@/lib/hooks/useSession";
 import {
   ConfirmIcon,
   CopyIcon,
@@ -28,7 +29,7 @@ interface Props {
   actions?: ReactNode;
   /** Adds a "History" entry to the more-actions menu. */
   onHistory?: () => void;
-  /** Adds an "Edit feature" entry to the more-actions menu. */
+  /** Adds an "Edit feature" entry ("Suggest a change" for non-admins) to the more-actions menu. */
   onEdit?: () => void;
   /** Adds a "Delete feature" entry to the more-actions menu. */
   onDelete?: () => void;
@@ -45,6 +46,7 @@ export function CoordsInfo({
 }: Props) {
   const [lng, lat] = coords;
   const { copied, copy } = useCopyToClipboard();
+  const { isAdmin } = useSession();
   const url = `https://www.google.com/maps?q=${lat},${lng}`;
 
   const menuActions: RowAction[] = [
@@ -63,7 +65,7 @@ export function CoordsInfo({
   }
   if (onEdit) {
     menuActions.push({
-      label: "Edit feature",
+      label: isAdmin ? "Edit feature" : "Suggest a change",
       icon: <EditIcon />,
       onClick: onEdit,
     });
