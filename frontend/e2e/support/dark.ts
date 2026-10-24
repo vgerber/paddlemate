@@ -33,7 +33,7 @@ type Rgba = [number, number, number, number];
 
 /** Runs in the page. Returns the offending elements; the helpers below turn
  * them into assertions. Kept as one function so it serialises to the browser. */
-function scan(kind: "surface" | "contrast") {
+function scan(kind: string) {
   const parse = (c: string): Rgba => {
     const m = c.match(/^rgba?\(([^)]+)\)$/);
     if (m) {
