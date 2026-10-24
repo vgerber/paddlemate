@@ -1,4 +1,10 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import {
+  expect,
+  type Locator,
+  type Page,
+  type TestInfo,
+  test,
+} from "@playwright/test";
 import {
   appReady,
   computed,
@@ -28,6 +34,9 @@ async function openRiver(page: Page) {
   await appReady(page);
   await expect(rows(page).first()).toBeVisible();
 }
+
+/** Rows of a desktop card are flat: no gap, no gutter (canvas/flatRow.ts). */
+const flat = (info: TestInfo) => info.project.name === "desktop";
 
 async function box(locator: Locator) {
   const b = await locator.first().boundingBox();
@@ -81,14 +90,16 @@ test.describe("section rows", () => {
     expect(await r.innerText(), "no place under the name").not.toContain("·");
   });
 
-  test("cards are 8px apart", async ({ page }) => {
+  test("cards are 8px apart; on the desktop canvas flat rows touch", async ({
+    page,
+  }, info) => {
     await openRiver(page);
     const boxes = await rows(page).evaluateAll((els) =>
       els.map((el) => el.getBoundingClientRect()).map((b) => [b.top, b.bottom]),
     );
     expect(boxes.length).toBeGreaterThan(2);
     for (const [i, b] of boxes.entries()) {
-      if (i > 0) expect(b[0] - boxes[i - 1][1]).toBe(8);
+      if (i > 0) expect(b[0] - boxes[i - 1][1]).toBe(flat(info) ? 0 : 8);
     }
   });
 
@@ -125,11 +136,13 @@ test.describe("section rows", () => {
 });
 
 test.describe("list gutters", () => {
-  test("sections, gauges and notes start 12px from the pane edge", async ({
+  test("sections, gauges and notes start 12px from the pane edge (sections flush on the desktop canvas)", async ({
     page,
-  }) => {
+  }, info) => {
     await openRiver(page);
-    expect(await gutter(page, row(page, "Lower Test")), "sections").toBe(12);
+    expect(await gutter(page, row(page, "Lower Test")), "sections").toBe(
+      flat(info) ? 0 : 12,
+    );
     await tab(page, "Gauges").click();
     await expect(
       page.locator("[data-testid=gauge-card]:visible").first(),
@@ -148,21 +161,27 @@ test.describe("list gutters", () => {
     ).toBe(12);
   });
 
-  test("search results start 12px from the list edge", async ({ page }) => {
+  test("search results start 12px from the list edge (flush in the desktop list card)", async ({
+    page,
+  }, info) => {
     await page.goto("/");
     await appReady(page);
     const open = page.getByRole("button", { name: "Open search panel" });
     if (await open.isVisible()) await open.click();
     await page.getByRole("textbox").first().fill("Test");
-    const first = page.locator(".MuiListItemButton-root:visible").first();
+    const first = page
+      .locator(".MuiListItemButton-root:visible")
+      .filter({ hasText: "Test" })
+      .first();
     await expect(first).toBeVisible();
-    const edge = await first.evaluate((el) => {
+    const gap = await first.evaluate((el) => {
       let p: HTMLElement | null = el.parentElement;
       while (p && getComputedStyle(p).overflowY !== "auto") p = p.parentElement;
-      return p ? p.getBoundingClientRect().left : 0;
+      return (
+        el.getBoundingClientRect().left - (p?.getBoundingClientRect().left ?? 0)
+      );
     });
-    const left = (await box(first)).x;
-    expect(Math.round(left - edge)).toBe(12);
+    expect(Math.round(gap)).toBe(flat(info) ? 0 : 12);
   });
 });
 
@@ -183,14 +202,16 @@ test.describe("gauge credit", () => {
 });
 
 test.describe("notes", () => {
-  test("a note reads at 15px with 14px padding; a folded one is labelled Merged", async ({
+  test("a note reads at 15px with 14px padding (16 on the phone grid); a folded one is labelled Merged", async ({
     page,
-  }) => {
+  }, info) => {
     await openRiver(page);
     await tab(page, "Notes").click();
     const card = page.locator("[data-testid=note-card]:visible").first();
     await expect(card).toBeVisible();
-    expect(await computed(card, "padding-left")).toBe("14px");
+    expect(await computed(card, "padding-left")).toBe(
+      info.project.name === "desktop" ? "14px" : "16px",
+    );
     expect(await computed(card, "padding-top")).toBe("12px");
     const body = card.locator("[data-testid=note-body]");
     expect(await computed(body, "font-size")).toBe("15px");
@@ -289,7 +310,9 @@ test.describe("map page chrome", () => {
     await appReady(page);
     const fab = page.getByRole("button", { name: "Open search panel" });
     await expect(fab).toBeVisible();
-    await expect(fab.locator("svg[data-testid=SearchIcon]")).toHaveCount(1);
+    await expect(
+      fab.locator("svg[data-testid=SearchOutlinedIcon]"),
+    ).toHaveCount(1);
   });
 
   test("the desktop map fills the window under the bar, the panel floats over it", async ({

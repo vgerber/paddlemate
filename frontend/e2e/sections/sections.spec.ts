@@ -33,6 +33,18 @@ const row = (page: Page, name: string) =>
 const tab = (page: Page, name: string) =>
   page.getByRole("tab", { name, exact: true });
 
+/** A phone row is a shadowed card; on the desktop canvas it is a flat row
+ * inside the card (canvas/flatRow.ts). */
+async function expectRowSurface(row: Locator, project: string) {
+  const flat = project === "desktop";
+  expect(await computed(row, "border-top-left-radius")).toBe(
+    flat ? "0px" : "14px",
+  );
+  const shadow = await computed(row, "box-shadow");
+  if (flat) expect(shadow).toBe("none");
+  else expect(shadow).toContain(E1_COLOR);
+}
+
 async function box(locator: Locator) {
   const b = await locator.boundingBox();
   if (!b) throw new Error("element has no box");
@@ -249,27 +261,27 @@ test.describe("river rows and group headings", () => {
     expect(await computed(h, "font-weight")).toBe("600");
   });
 
-  test("a recent river is a card of 52px or more", async ({ page }) => {
+  test("a recent river is a card of 52px or more (flat on a desktop card)", async ({
+    page,
+  }, info) => {
     await openSearch(page);
     const r = rows(page).filter({ hasText: "Test River" }).first();
     await expect(r).toBeVisible();
     expect(
       Number.parseFloat(await computed(r, "height")),
     ).toBeGreaterThanOrEqual(52);
-    expect(await computed(r, "border-top-left-radius")).toBe("14px");
-    expect(await computed(r, "box-shadow")).toContain(E1_COLOR);
+    await expectRowSurface(r, info.project.name);
   });
 
   test("@small search results are cards that do not overflow", async ({
     page,
-  }) => {
+  }, info) => {
     await page.goto("/?panel=true&q=Test");
     await appReady(page);
     await page.getByRole("tab", { name: /^Rivers/ }).click();
     const r = rows(page).filter({ hasText: "Test River" }).first();
     await expect(r).toBeVisible();
-    expect(await computed(r, "border-top-left-radius")).toBe("14px");
-    expect(await computed(r, "box-shadow")).toContain(E1_COLOR);
+    await expectRowSurface(r, info.project.name);
     await expectNoHorizontalOverflow(page);
     await expectTouchTargets(rows(page), 44);
     const type = r.locator(".MuiChip-root").first();
