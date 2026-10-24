@@ -31,9 +31,15 @@ export default function AreaControls({
   const [localRadius, setLocalRadius] = useState(areaCircle?.radiusKm ?? 10);
   const debouncedRadius = useDebouncedValue(localRadius, 400);
 
-  // Sync if parent updates radius externally (e.g. map drag)
+  // Sync if parent updates radius externally (e.g. map drag). The circle's
+  // first arrival is not a change: it would undo a radius picked before it.
+  const parentRadius = useRef(areaCircle?.radiusKm);
   useEffect(() => {
-    if (areaCircle?.radiusKm != null) setLocalRadius(areaCircle.radiusKm);
+    const previous = parentRadius.current;
+    parentRadius.current = areaCircle?.radiusKm;
+    if (previous != null && areaCircle?.radiusKm != null) {
+      setLocalRadius(areaCircle.radiusKm);
+    }
   }, [areaCircle?.radiusKm]);
 
   // The latest callback, without making it a trigger of the effect below.
