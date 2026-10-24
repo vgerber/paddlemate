@@ -5,6 +5,7 @@ import PushSettings from "@/components/notifications/PushSettings";
 import PanelHeader from "@/components/PanelHeader";
 import { theme } from "@/lib/theme";
 import AccountSection from "./AccountSection";
+import AppearanceSection from "./AppearanceSection";
 import { type GroupId, groupLabel } from "./groups";
 import LanguageSection from "./LanguageSection";
 import TokensSection from "./TokensSection";
@@ -14,6 +15,7 @@ const { phone } = tokens;
 
 function SettingsSection({ group }: { group: GroupId }) {
   if (group === "language") return <LanguageSection />;
+  if (group === "appearance") return <AppearanceSection />;
   if (group === "tokens") return <TokensSection />;
   if (group === "notifications") return <PushSettings />;
   return <AccountSection />;

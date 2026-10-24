@@ -18,9 +18,12 @@ export function resolveScheme(
   return prefersDark ? "dark" : "light";
 }
 
-/** The browser bar colour of a scheme: the colour of the screen under it. */
+/** The frame colour of a scheme, behind the phone's system buttons. Dark is
+ * the ground, not the card surface: it is what the dark-media meta in
+ * index.html holds too. */
 export function themeColorFor(scheme: Scheme): string {
-  return tokensFor(scheme).surface;
+  const t = tokensFor(scheme);
+  return scheme === "dark" ? t.background : t.surface;
 }
 
 /** The device-local appearance choice and its setter. MUI persists it. */
@@ -29,14 +32,16 @@ export function useColorMode(): [ColorMode, (mode: ColorMode) => void] {
   return [mode ?? "system", setMode];
 }
 
-/** Keeps `<meta name="theme-color">` equal to the screen under it after a
- * switch; MUI does not touch the meta. Mount once. */
+/** Keeps the light-media `<meta name="theme-color">` on the frame of the
+ * active scheme after a switch; MUI does not touch it. The dark-media meta is
+ * never written: a dark device keeps a dark frame even with the app on Light.
+ * Mount once. */
 export function useThemeColorMeta() {
   const { colorScheme } = useColorScheme();
   useEffect(() => {
     if (!colorScheme) return;
     document
-      .querySelector('meta[name="theme-color"]')
+      .querySelector('meta[name="theme-color"][media*="light"]')
       ?.setAttribute("content", themeColorFor(colorScheme));
   }, [colorScheme]);
 }

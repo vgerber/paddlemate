@@ -4,6 +4,11 @@ export const GROUPS = [
   { id: "account", label: "Account", hint: "Who you are signed in as" },
   { id: "language", label: "Display language", hint: "Which names are shown" },
   {
+    id: "appearance",
+    label: "Appearance",
+    hint: "Light, dark or follow the device",
+  },
+  {
     id: "notifications",
     label: "Notifications",
     hint: "Push when trip plans change",

@@ -11,7 +11,12 @@
          cover every inset is 0 and the browser manages the unsafe areas.
          (Trade-off: Chrome 15+ edge-to-edge paints its own chin there.) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#ffffff" />
+    <!-- The phone's system buttons sit on this frame colour. The light-media
+         meta follows the app's scheme (colorMode.ts); the dark-media meta
+         stays dark, so a dark device with the app forced Light keeps a dark
+         frame its buttons show on. -->
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141b1f" media="(prefers-color-scheme: dark)" />
     <!-- Dark mode, before first paint (the bundle is a module and arrives
          later). The script mirrors resolveScheme in src/lib/colorMode.ts, the
          style the grounds in src/lib/theme.ts; colorMode.test.ts holds both. -->
@@ -30,8 +35,8 @@
           (mode !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
         document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
         document
-          .querySelector('meta[name="theme-color"]')
-          .setAttribute("content", dark ? "#1b2429" : "#ffffff");
+          .querySelector('meta[name="theme-color"][media*="light"]')
+          .setAttribute("content", dark ? "#141b1f" : "#ffffff");
       })();
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
