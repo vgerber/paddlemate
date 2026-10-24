@@ -94,17 +94,19 @@ test.describe("desktop app bar", () => {
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeGreaterThan(1280 - 40);
   });
 
-  test("the app bar is 56px and a pane fills exactly the rest of the window", async ({
+  test("the app bar is 56px and a list card runs the rest of the window, 16px clear", async ({
     page,
   }) => {
     for (const path of ["/", "/trips"]) {
       await page.goto(path);
       const bar = await appBar(page).boundingBox();
       expect(bar?.height).toBe(56);
-      const pane = await page.locator("main > *").first().boundingBox();
+      const pane = page.locator('[data-testid^="canvas-card-"]').first();
+      await expect(pane).toBeVisible();
+      const box = await pane.boundingBox();
       const vh = page.viewportSize()?.height ?? 0;
-      expect(pane?.y, `${path} pane top`).toBe(56);
-      expect(pane?.height, `${path} pane height`).toBe(vh - 56);
+      expect(box?.y, `${path} card top`).toBe(56 + 16);
+      expect(box?.height, `${path} card height`).toBe(vh - 56 - 2 * 16);
     }
   });
 
@@ -147,8 +149,9 @@ test.describe("desktop app bar", () => {
       "rgb(238, 242, 243)",
     );
     const box = await panel.boundingBox();
+    // tokens.canvas.cards.detail.min: 26% of 1280 is under it.
     expect(box?.x).toBe(16);
-    expect(box?.width).toBeGreaterThanOrEqual(400);
+    expect(box?.width).toBe(340);
     await expect(
       panel.getByRole("button", { name: "Back" }).first(),
     ).toBeVisible();
