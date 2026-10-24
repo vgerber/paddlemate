@@ -8,6 +8,7 @@ use crate::models::waterway::{
 };
 use crate::query::history::{self, Op, Scope, Via};
 
+use super::section_order::{Span, sort_along_river};
 use super::{FUZZY_MIN_CHARS, features, sections};
 
 /// Case-insensitive check whether a waterway with this name already exists.
@@ -410,9 +411,9 @@ async fn sections_for_waterways(
     let (sections, features, names, descriptions) = tokio::join!(
         sqlx::query!(
             r#"
-            SELECT id, waterway_id, name, description, regions, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at
+            SELECT id, waterway_id, name, description, regions, country, river_km_start, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at
             FROM water_sections WHERE waterway_id = ANY($1)
-            ORDER BY waterway_id, river_km_start NULLS LAST, name
+            ORDER BY waterway_id, id
             "#,
             waterway_ids
         )
@@ -424,7 +425,9 @@ async fn sections_for_waterways(
     let (sections, mut features, mut names, mut descriptions) =
         (sections?, features?, names?, descriptions?);
     let mut grouped: HashMap<WaterwayId, Vec<SectionWithFeatures>> = HashMap::new();
+    let mut kms: HashMap<i64, Option<f64>> = HashMap::new();
     for s in sections {
+        kms.insert(s.id, s.river_km_start);
         grouped
             .entry(s.waterway_id)
             .or_default()
@@ -444,6 +447,15 @@ async fn sections_for_waterways(
                 updated_at: s.updated_at,
             });
     }
+    let grouped: HashMap<_, _> = grouped
+        .into_iter()
+        .map(|(id, list)| {
+            let list = sort_along_river(list, |s| {
+                Span::new(&s.location, kms.get(&s.id).copied().flatten(), &s.name)
+            });
+            (id, list)
+        })
+        .collect();
     Ok(grouped)
 }
 
