@@ -60,6 +60,9 @@ export const lightTokens = {
   // Borders
   outline: "#7c8a90",
   outlineVariant: "#dde4e7",
+  // The edge of an outlined button or tile: a hairline in light, and in dark
+  // the 3:1 outline, since a hairline vanishes on a dark surface.
+  outlineControl: "#dde4e7",
 
   // Base
   background: "#eef2f3",
@@ -320,6 +323,7 @@ export const darkTokens: Tokens = {
   onError: "#1b2429",
   outline: "#7f8d93",
   outlineVariant: "#2a353c",
+  outlineControl: "#7f8d93",
   background: "#141b1f",
   levels: {
     empty: {
@@ -750,7 +754,7 @@ export const theme = createTheme({
         sizeSmall: { minHeight: tokens.touch.min, paddingInline: 12 },
         outlined: {
           borderWidth: 1,
-          borderColor: tokens.outlineVariant,
+          borderColor: tokens.outlineControl,
           color: tokens.onSurface,
           backgroundColor: tokens.surface,
           "&:hover": { borderWidth: 1, backgroundColor: tokens.surfaceHigh },
@@ -808,6 +812,9 @@ export const theme = createTheme({
             borderColor: tokens.primary,
             borderWidth: 1.5,
           },
+          // Light keeps MUI's own rest edge; dark needs a visible one.
+          '[data-theme="dark"] &.MuiChip-outlined:not(.MuiChip-outlinedPrimary)':
+            { borderColor: tokens.outlineControl },
           // 32px to look at, 44px to hit.
           "&.MuiChip-clickable::after": {
             content: '""',
