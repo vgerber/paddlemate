@@ -280,7 +280,7 @@ export default function WaterwayBrowsePanel({
     ...(live &&
       moreBelow && {
         maskImage:
-          "linear-gradient(to bottom, #000 calc(100% - 20px), transparent)",
+          "linear-gradient(to bottom, #000 calc(100% - 20px), transparent)" /* mask */,
       }),
     // Overscroll at the list edge must not chain into a document
     // bounce - that drags the fixed overlay and shows the map

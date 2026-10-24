@@ -80,15 +80,36 @@ describe("check-colours", () => {
   });
 
   test("rule 3: a colour token in a paint file fails, layout tokens pass", () => {
-    const bad = run({ "m.ts": "const c = tokens.primary;\n" }, ["m.ts"]);
+    const bad = run(
+      {
+        "m.ts":
+          'import { tokens } from "@/lib/theme";\nconst c = tokens.primary;\n',
+      },
+      ["m.ts"],
+    );
     expect(bad.code).toBe(1);
-    expect(bad.out).toContain("m.ts:1: rule 3:");
+    expect(bad.out).toContain("m.ts:2: rule 3:");
     const ok = run({ "m.ts": "const r = tokens.canvas.cards;\n" }, ["m.ts"]);
     expect(ok.code).toBe(0);
   });
 
+  test("rule 3: a local resolved tokens passes in a paint file", () => {
+    const res = run(
+      { "m.ts": "const tokens = useTokens();\nconst c = tokens.primary;\n" },
+      ["m.ts"],
+    );
+    expect(res.code).toBe(0);
+  });
+
   test("rule 3: the same token outside a paint file passes", () => {
     const res = run({ "m.ts": "const c = tokens.primary;\n" });
+    expect(res.code).toBe(0);
+  });
+
+  test("rule 4: a mask marker on the same line exempts it", () => {
+    const res = run({
+      "a.tsx": 'const m = "linear-gradient(#000, transparent)"; /* mask */\n',
+    });
     expect(res.code).toBe(0);
   });
 

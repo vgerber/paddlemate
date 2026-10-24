@@ -49,7 +49,11 @@ fi
 paint=()
 while IFS= read -r line; do
   [ -z "$line" ] && continue
-  [ -f "$src/$line" ] && paint+=("$src/$line")
+  # Only the imported (CSS-variable) `tokens` is wrong in paint code; a local
+  # `tokens` from useTokens() or a parameter is resolved.
+  if [ -f "$src/$line" ] && perl -0ne 'exit(!/import\s*\{[^}]*\btokens\b[^}]*\}\s*from\s*"[^"]*\/theme"/)' "$src/$line"; then
+    paint+=("$src/$line")
+  fi
 done < "$paint_list"
 if [ "${#paint[@]}" -gt 0 ]; then
   report 3 '\btokens\.(?!(touch|radii|elevation|motion|phone|chrome|canvas)\b)\w' "${paint[@]}"
