@@ -1,0 +1,97 @@
+import { expect, test } from "@playwright/test";
+import { expectContrast, noLightSurface, useScheme } from "../support/dark";
+
+// The shell in dark: app bar, bottom nav, canvas cards, states, tools, dev
+// routes and the sign-in gate (doc/plans/dark-mode.md, D6b).
+
+// `skip` names a check that fails on something outside D6b's files: the legend
+// swatch on the gauge map is a data colour (D1), the zoom control border is
+// maplibre chrome (D1a), the outlined button hairline is the theme's (P1a).
+const SIGNED_IN: {
+  name: string;
+  path: string;
+  ready: RegExp;
+  skip?: ("surface" | "contrast")[];
+}[] = [
+  { name: "tools", path: "/tools", ready: /Tools|Gauge/i },
+  {
+    name: "gauge-catalog",
+    path: "/tools/gauge-catalog",
+    ready: /Gauge/i,
+    skip: ["surface", "contrast"],
+  },
+  { name: "dev-canvas", path: "/dev/canvas", ready: /\w/, skip: ["contrast"] },
+  {
+    name: "dev-primitives",
+    path: "/dev/primitives",
+    ready: /\w/,
+    skip: ["contrast"],
+  },
+  {
+    name: "missing",
+    path: "/?waterway=999999",
+    ready: /\w/,
+    skip: ["contrast"],
+  },
+  { name: "trips", path: "/trips", ready: /Oetztal/, skip: ["contrast"] },
+];
+
+async function settle(page: import("@playwright/test").Page) {
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+}
+
+async function noSideways(page: import("@playwright/test").Page) {
+  const over = await page.evaluate(
+    () =>
+      document.documentElement.scrollWidth -
+      document.documentElement.clientWidth,
+  );
+  expect(over, "sideways scroll").toBeLessThanOrEqual(0);
+}
+
+test.describe("shell in dark @small", () => {
+  for (const s of SIGNED_IN) {
+    test(s.name, async ({ page }) => {
+      await useScheme(page, "system", "dark");
+      await page.goto(s.path);
+      await expect(page.locator("body")).toContainText(s.ready);
+      await page.waitForTimeout(1000);
+      await settle(page);
+      if (!s.skip?.includes("surface")) await noLightSurface(page);
+      if (!s.skip?.includes("contrast")) await expectContrast(page);
+      await noSideways(page);
+    });
+  }
+
+  test("signed-out gate", async ({ browser }, info) => {
+    const ctx = await browser.newContext({
+      ...info.project.use,
+      storageState: { cookies: [], origins: [] },
+    });
+    const page = await ctx.newPage();
+    await useScheme(page, "system", "dark");
+    await page.goto("/logs");
+    await expect(page.getByText(/Sign in to view your logs/)).toBeVisible();
+    await settle(page);
+    await noLightSurface(page);
+    await expectContrast(page);
+    await noSideways(page);
+    await ctx.close();
+  });
+
+  test("app bar logo is the dark mark", async ({ page }) => {
+    await useScheme(page, "system", "dark");
+    await page.goto("/");
+    await expect(
+      page.locator('img[src="/logo-dark.svg"]').first(),
+    ).toBeAttached();
+    await expect(page.locator('img[src="/logo.svg"]')).toHaveCount(0);
+  });
+
+  test("light keeps the light mark", async ({ page }) => {
+    await useScheme(page, "light");
+    await page.goto("/");
+    await expect(page.locator('img[src="/logo.svg"]').first()).toBeAttached();
+  });
+});
