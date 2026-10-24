@@ -3,6 +3,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { flatRowSx } from "@/components/canvas/flatRow";
+import { categoryColor } from "@/lib/comments";
 import { useSectionComments } from "@/lib/hooks/useComments";
 import { useDescents } from "@/lib/hooks/useDescents";
 import { useProposals } from "@/lib/hooks/useProposals";
@@ -12,6 +13,7 @@ import { useSession } from "@/lib/hooks/useSession";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
 import { LogIcon, NoteIcon, PendingIcon, WarningIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 import { currentLevel } from "@/lib/waterLevel";
 import {
   CAPTION_PX,
@@ -98,6 +100,7 @@ function Row({
   row: StateRow;
   onOpen?: (tab: StateTab) => void;
 }) {
+  const ink = useTokens();
   const body = (
     <>
       <Box
@@ -124,7 +127,12 @@ function Row({
             {row.lead && (
               <Box
                 component="span"
-                sx={{ color: row.lead.color, fontWeight: 600 }}
+                sx={{
+                  color: row.lead.category
+                    ? categoryColor(row.lead.category, ink)
+                    : undefined,
+                  fontWeight: 600,
+                }}
               >
                 {row.lead.text}
               </Box>
