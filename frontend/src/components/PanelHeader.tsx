@@ -104,6 +104,7 @@ export default function PanelHeader<T extends string>({
             {subtitle && (
               <Typography
                 variant="body2"
+                noWrap
                 color="textSecondary"
                 sx={{ fontSize: "0.8125rem", lineHeight: "18px" }}
               >
