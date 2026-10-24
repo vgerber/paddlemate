@@ -14,7 +14,12 @@ test.describe("settings list rows", () => {
     await page.goto("/settings");
     const row = list(page).getByRole("button", { name: "Display language" });
     await expect(row).toBeVisible();
-    expect(await computed(row, "padding")).toBe("10px 14px");
+    // The phone grid puts text 16 inside the card; the desktop pane's gutter
+    // does the list's side margin.
+    const desktop = isDesktop(page);
+    expect(await computed(row, "padding")).toBe(
+      desktop ? "10px 14px" : "10px 16px",
+    );
     expect(await computed(row, "border-radius")).toBe("12px");
     const title = row.getByText("Display language", { exact: true });
     expect(await computed(title, "font-weight")).toBe("500");
@@ -23,7 +28,9 @@ test.describe("settings list rows", () => {
     expect(await computed(hint, "font-size")).toBe("13px");
     expect(await computed(hint, "color")).toBe(SECONDARY);
     expect(await computed(list(page), "row-gap")).toBe("6px");
-    expect(await computed(list(page), "padding")).toBe("12px");
+    expect(await computed(list(page), "padding")).toBe(
+      desktop ? "12px 0px" : "12px",
+    );
   });
 
   test("the open group has the teal wash and 3px bar; focus looks different", async ({
@@ -161,7 +168,7 @@ test.describe("inbox", () => {
     expect(await computed(caption, "color")).toBe(SECONDARY);
   });
 
-  test("rows: 14px text, quiet meta, each row a white card", async ({
+  test("rows: 14px text, quiet meta, one white card with hairlines", async ({
     page,
   }) => {
     test.skip(isDesktop(page), "the inbox is a tab on a phone");
@@ -179,11 +186,13 @@ test.describe("inbox", () => {
     const meta = rows.first().locator("p").nth(1);
     expect(await computed(meta, "font-size")).toBe("13px");
     expect(await computed(meta, "color")).toBe(SECONDARY);
-    expect(await computed(rows.first(), "background-color")).toBe(
-      "rgb(255, 255, 255)",
-    );
-    expect(await computed(rows.first(), "border-top-left-radius")).toBe("14px");
-    expect(await computed(rows.first(), "border-bottom-width")).toBe("0px");
+    // The phone's rows share one white card (design.md, the phone grid),
+    // parted by hairlines.
+    const card = rows.first().locator("xpath=..");
+    expect(await computed(card, "background-color")).toBe("rgb(255, 255, 255)");
+    expect(await computed(card, "border-top-left-radius")).toBe("14px");
+    expect(await computed(rows.first(), "border-bottom-width")).toBe("1px");
+    expect(await computed(rows.last(), "border-bottom-width")).toBe("0px");
     const weights = await rows.evaluateAll((els) =>
       els.map(
         (el) => getComputedStyle(el.querySelector("p") as Element).fontWeight,

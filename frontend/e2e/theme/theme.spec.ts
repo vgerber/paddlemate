@@ -24,14 +24,20 @@ test.describe("theme tokens", () => {
 
   test("one typeface, loaded: Figtree", async ({ page }) => {
     await page.goto("/");
-    await page.evaluate(() => document.fonts.ready);
     expect(await computed(page.locator("body"), "font-family")).toContain(
       "Figtree",
     );
-    const loaded = await page.evaluate(() =>
-      document.fonts.check('600 16px "Figtree Variable"'),
-    );
-    expect(loaded, "Figtree Variable is loaded").toBe(true);
+    // The face downloads once text is laid out, which can be after the
+    // first `fonts.ready`, so poll instead of reading once.
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            document.fonts.check('600 16px "Figtree Variable"'),
+          ),
+        { message: "Figtree Variable is loaded" },
+      )
+      .toBe(true);
   });
 
   test("buttons, tabs and toggles are sentence case, not capitals", async ({
@@ -65,6 +71,14 @@ test.describe("theme tokens", () => {
     // token from the action above, so each guards its own value.
     await page.goto("/settings");
     const tab = page.locator(".MuiTabs-indicator:visible");
+    // count() does not wait: let the page draw one of the two first.
+    await expect(
+      page
+        .locator(
+          ".MuiTabs-indicator:visible, .MuiListItemButton-root.Mui-selected:visible",
+        )
+        .first(),
+    ).toBeVisible();
     if (await tab.count()) {
       expect(await computed(tab, "background-color")).toBe("rgb(14, 116, 144)");
     } else {

@@ -295,6 +295,7 @@ export default function SuggestWaterwayPanel({
                   borderRadius: `${tokens.radii.md}px`,
                   boxShadow: `inset 0 0 0 1px ${tokens.outlineVariant}`,
                   overflow: "hidden",
+                  flexShrink: 0,
                 }}
               >
                 <Box
@@ -349,7 +350,7 @@ export default function SuggestWaterwayPanel({
                       title="Show on map"
                       sx={{
                         minHeight: tokens.touch.min,
-                        px: { xs: 0, md: 1.5 },
+                        px: `${tokens.phone.inner}px`,
                         borderTop: "1px solid",
                         borderColor: tokens.outlineVariant,
                       }}
