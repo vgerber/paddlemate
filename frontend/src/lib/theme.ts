@@ -1,4 +1,5 @@
 import { createTheme, type Shadows } from "@mui/material/styles";
+import { alphas } from "./alpha";
 
 // Extend MUI Theme so components can access tokens via theme.tokens
 declare module "@mui/material/styles" {
@@ -291,19 +292,7 @@ const shadows = [
   ...Array.from({ length: 23 }, () => elevation.e2),
 ] as Shadows;
 
-/** The only alpha suffixes to append to a token (\`\${token}\${alphas.x}\`):
- * tint for row washes, wash for selected grounds, hover on top of them,
- * strong for an avatar tile,
- * hairline for rules, border for control outlines, scrim over imagery. */
-export const alphas = {
-  tint: "0d",
-  wash: "14",
-  hover: "1f",
-  strong: "2e",
-  hairline: "55",
-  border: "99",
-  scrim: "cc",
-} as const;
+export { alphas };
 
 export const theme = createTheme({
   tokens,
