@@ -31,7 +31,7 @@ import {
   StackIcon,
 } from "@/lib/icons";
 import { licenseLink } from "@/lib/license";
-import { fonts, labelSx, theme } from "@/lib/theme";
+import { cardTitleSx, fonts, theme } from "@/lib/theme";
 import EditsTimeline, { type EditsFilter, useEntries } from "./EditsTimeline";
 import { smallSx } from "./StepRow";
 import { inOrder, ORIGIN_UNKNOWN, stepHeadline } from "./steps";
@@ -407,7 +407,7 @@ export default function SourcesTab({
           overflow: "hidden",
         }}
       >
-        <Typography sx={{ ...labelSx, px: 2, pt: 1.75, pb: 0.5 }}>
+        <Typography sx={{ ...cardTitleSx, px: 2, pt: 1.75, pb: 0.5 }}>
           Sources
         </Typography>
         <Typography

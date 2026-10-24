@@ -14,7 +14,7 @@ import { useHistory, useSectionProposals } from "@/lib/hooks/useProvenance";
 import { useSession } from "@/lib/hooks/useSession";
 import { HistoryIcon } from "@/lib/icons";
 import { localizedName } from "@/lib/localization";
-import { labelSx, theme } from "@/lib/theme";
+import { cardTitleSx, theme } from "@/lib/theme";
 import {
   type EditItem,
   type EntryRef,
@@ -303,7 +303,7 @@ export default function EditsTimeline({
         overflow: "hidden",
       }}
     >
-      <Typography sx={{ ...labelSx, px: 2, pt: 1.75, pb: 0.5 }}>
+      <Typography sx={{ ...cardTitleSx, px: 2, pt: 1.75, pb: 0.5 }}>
         {filter ? "History" : "All edits"}
       </Typography>
       <Box sx={{ pt: 0.5, pb: 1 }}>
