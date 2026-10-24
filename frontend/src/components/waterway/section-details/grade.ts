@@ -108,6 +108,14 @@ export function gradeLabel(grade: SectionGrade): string {
 /** The grade a section shows wherever it is named: lists, map labels and the
  * panel subtitle, or null when it has none. */
 export function sectionGradeText(section: SectionWithFeatures): string | null {
+  const cached = gradeTexts.get(section);
+  if (cached !== undefined) return cached;
   const grade = sectionGradeOf(section);
-  return grade ? gradeLabel(grade) : null;
+  const text = grade ? gradeLabel(grade) : null;
+  gradeTexts.set(section, text);
+  return text;
 }
+
+/** Rows ask on every render and the answer projects every feature vertex onto
+ * the section line, so it is kept per section object. */
+const gradeTexts = new WeakMap<SectionWithFeatures, string | null>();
