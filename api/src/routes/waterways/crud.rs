@@ -14,19 +14,15 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
-        geometry::Geometry,
+        id_list::{MAX_BATCH_IDS, parse_id_list},
         path_params::WaterwayPath,
         proposal::Proposal,
-        water_section::SectionWithFeatures,
         waterway::{
             PaginatedResponse, Waterway, WaterwayFilters, WaterwayId, WaterwayListItem,
             WaterwayType, WaterwayWithSections, page_bounds, total_pages,
         },
     },
-    query::{
-        features, gauges as query_gauges, proposals, sections as query_sections,
-        waterways as query_waterways,
-    },
+    query::{gauges as query_gauges, proposals, waterways as query_waterways},
     state::AppState,
 };
 
@@ -34,23 +30,53 @@ pub async fn list_waterways(
     State(app): State<AppState>,
     Query(filters): Query<WaterwayFilters>,
 ) -> impl IntoApiResponse {
-    let (page, per_page) = page_bounds(filters.page, filters.per_page, 20);
-
-    match query_waterways::search(&app.pg_pool, &filters, page, per_page).await {
-        Ok((items, total)) => Json(PaginatedResponse {
-            items,
-            total,
-            page,
-            per_page,
-            total_pages: total_pages(total, per_page),
-        })
-        .into_response(),
-        Err(err) => ApiError::from_db("Error listing waterways", &err).into_response(),
+    let ids = match filters.ids.as_deref().map(|raw| parse_id_list(raw, "ids")) {
+        Some(Ok(ids)) => Some(ids),
+        Some(Err(err)) => return err.into_response(),
+        None => None,
+    };
+    if filters.include_sections.unwrap_or(false) && ids.is_none() {
+        return ApiError::validation("include_sections needs ids")
+            .with_target("include_sections")
+            .into_response();
     }
+    // A lookup by ids answers all of them on one page.
+    let default_per_page = if ids.is_some() {
+        MAX_BATCH_IDS as i64
+    } else {
+        20
+    };
+    let (page, per_page) = page_bounds(filters.page, filters.per_page, default_per_page);
+
+    let found =
+        query_waterways::search(&app.pg_pool, &filters, ids.as_deref(), page, per_page).await;
+    let (mut items, total) = match found {
+        Ok(found) => found,
+        Err(err) => return ApiError::from_db("Error listing waterways", &err).into_response(),
+    };
+    if filters.include_sections.unwrap_or(false) {
+        if let Err(err) = query_waterways::attach_sections(&app.pg_pool, &mut items).await {
+            return ApiError::from_db("Error listing waterway sections", &err).into_response();
+        }
+    }
+    Json(PaginatedResponse {
+        items,
+        total,
+        page,
+        per_page,
+        total_pages: total_pages(total, per_page),
+    })
+    .into_response()
 }
 
 doc_fn!(list_waterways_docs, op =>
-    op.description("List waterways with optional filters and pagination")
+    op.description(
+        "List waterways with optional filters and pagination. `ids` (comma separated, \
+         at most 100) looks up those waterways, which are all on page one unless \
+         `per_page` says otherwise; with `include_sections=true` each item also \
+         carries its sections as the single-waterway route returns them.",
+    )
+    .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Malformed ids or more than 100"))
         .response::<200, Json<PaginatedResponse<WaterwayListItem>>>()
         .tag("Waterways")
 );
@@ -97,76 +123,26 @@ pub async fn get_waterway(
         }
     };
 
-    let (sections_result, features_result, names_result, descriptions_result) = tokio::join!(
-        sqlx::query!(
-            r#"
-            SELECT id, waterway_id, name, description, regions, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at
-            FROM water_sections WHERE waterway_id = $1 ORDER BY river_km_start NULLS LAST, name
-            "#,
-            waterway_id
-        )
-        .fetch_all(&app.pg_pool),
-        features::fetch_features_for_waterway(&app.pg_pool, waterway_id),
-        query_sections::fetch_names_for_waterway(&app.pg_pool, waterway_id),
-        query_sections::fetch_descriptions_for_waterway(&app.pg_pool, waterway_id)
-    );
-
-    match (
-        sections_result,
-        features_result,
-        names_result,
-        descriptions_result,
-    ) {
-        (Ok(records), Ok(mut features_map), Ok(mut names_map), Ok(mut descriptions_map)) => {
-            let sections: Result<Vec<SectionWithFeatures>, sqlx::Error> = records
-                .into_iter()
-                .map(|s| {
-                    Ok(SectionWithFeatures {
-                        id: s.id,
-                        waterway_id: s.waterway_id,
-                        name: s.name,
-                        description: s.description,
-                        regions: s.regions,
-                        country: s.country,
-                        features: features_map.remove(&s.id).unwrap_or_default(),
-                        names: names_map.remove(&s.id).unwrap_or_default(),
-                        descriptions: descriptions_map.remove(&s.id).unwrap_or_default(),
-                        location: Geometry::from_db(s.location)?,
-                        created_by: s.created_by,
-                        created_at: s.created_at,
-                        updated_at: s.updated_at,
-                    })
-                })
-                .collect();
-            let sections = match sections {
-                Ok(sections) => sections,
-                Err(err) => {
-                    return ApiError::from_db(
-                        &format!("Invalid section geometry for waterway {waterway_id}"),
-                        err,
-                    )
-                    .into_response();
-                }
-            };
-            Json(WaterwayWithSections {
-                id: waterway.id,
-                waterway_type: waterway.waterway_type,
-                name: waterway.name,
-                description: waterway.description,
-                sections,
-                created_at: waterway.created_at,
-                updated_at: waterway.updated_at,
-            })
-            .into_response()
-        }
-        (Err(err), _, _, _) | (_, Err(err), _, _) | (_, _, Err(err), _) | (_, _, _, Err(err)) => {
-            ApiError::from_db(
+    let sections = match query_waterways::sections_with_features(&app.pg_pool, waterway_id).await {
+        Ok(sections) => sections,
+        Err(err) => {
+            return ApiError::from_db(
                 &format!("Error fetching sections for waterway {waterway_id}"),
                 err,
             )
-            .into_response()
+            .into_response();
         }
-    }
+    };
+    Json(WaterwayWithSections {
+        id: waterway.id,
+        waterway_type: waterway.waterway_type,
+        name: waterway.name,
+        description: waterway.description,
+        sections,
+        created_at: waterway.created_at,
+        updated_at: waterway.updated_at,
+    })
+    .into_response()
 }
 
 doc_fn!(get_waterway_docs, op =>

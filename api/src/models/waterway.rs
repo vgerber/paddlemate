@@ -90,6 +90,9 @@ pub struct WaterwayListItem {
     /// regions its sections lie in, so a name on its own says which of the
     /// world's rivers it is. Empty for a river with no located sections.
     pub place: Vec<String>,
+    /// Only with `include_sections=true` on an `ids` lookup.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sections: Option<Vec<SectionWithFeatures>>,
 }
 
 /// Query parameters of the waterway search.
@@ -117,6 +120,12 @@ pub struct WaterwayFilters {
     /// Region to filter by - returns waterways with at least one section
     /// inside the region's imported outline.
     pub region_id: Option<i64>,
+    /// Comma separated waterway ids (at most 100): only these, narrowed by
+    /// the other filters.
+    pub ids: Option<String>,
+    /// With `ids`, add each waterway's sections, as the single-waterway
+    /// route returns them.
+    pub include_sections: Option<bool>,
 }
 
 /// The last page any listing serves. Far past what a person pages to, and

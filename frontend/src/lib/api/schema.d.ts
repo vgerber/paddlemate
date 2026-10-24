@@ -327,7 +327,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description List waterways with optional filters and pagination */
+        /** @description List waterways with optional filters and pagination. `ids` (comma separated, at most 100) looks up those waterways, which are all on page one unless `per_page` says otherwise; with `include_sections=true` each item also carries its sections as the single-waterway route returns them. */
         get: operations["list_waterways"];
         put?: never;
         /** @description Create a waterway (admin: immediate 201, others: proposal 202) */
@@ -433,7 +433,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description History of a section, oldest step first; readable after the section was deleted */
+        /** @description History of a section, oldest step first; readable after the section was deleted. With `include_features=true`, `features` also holds the same page of each feature's history (up to 500 features), keyed by feature id. */
         get: operations["get_section_history"];
         put?: never;
         post?: never;
@@ -847,6 +847,23 @@ export interface paths {
         post?: never;
         /** @description Delete a water-level threshold range */
         delete: operations["delete_water_range"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/waterways/water-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Water status of up to 100 sections in one call, keyed by section id. Each value is what the single-section route returns; a section without ranges, or one that does not exist, has an empty `ranges`. */
+        get: operations["get_water_statuses"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3279,6 +3296,44 @@ export interface components {
             /** @description Whose starred sections are edited; only "me" (or the caller's own id). */
             user_id: string;
         };
+        /** @description A section's history page, with its features' pages when asked for. */
+        SectionHistory: {
+            /**
+             * @description Feature id to that feature's page, as its own history route returns it.
+             *      Only with `include_features=true`.
+             */
+            features?: {
+                [key: string]: components["schemas"]["PaginatedResponse_for_HistoryStep"];
+            } | null;
+            items: components["schemas"]["HistoryStep"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            per_page: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            total_pages: number;
+        };
+        /** @description Query parameters of a section's history. */
+        SectionHistoryQuery: {
+            /**
+             * @description Also return the history of each of the section's features, including
+             *      ones deleted since, under `features`.
+             */
+            include_features?: boolean | null;
+            /**
+             * Format: int64
+             * @description Page number, starting at 1.
+             */
+            page?: number | null;
+            /**
+             * Format: int64
+             * @description Steps per page (max 100, default 50), for the section and for each
+             *      feature alike.
+             */
+            per_page?: number | null;
+        };
         /** @description A section together with the language of one of its translations. */
         SectionLocalePath: {
             lang_code: string;
@@ -3840,6 +3895,10 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        WaterStatusBatchQuery: {
+            /** @description Comma separated section ids, at most 100. */
+            section_ids: string;
+        };
         Waterway: {
             description?: string | null;
             /** Format: date-time */
@@ -3861,6 +3920,16 @@ export interface components {
         WaterwayFilters: {
             /** @description Filter by ISO 3166-1 alpha-2 country code (e.g. "AT", "FR"). */
             country?: string | null;
+            /**
+             * @description Comma separated waterway ids (at most 100): only these, narrowed by
+             *      the other filters.
+             */
+            ids?: string | null;
+            /**
+             * @description With `ids`, add each waterway's sections, as the single-waterway
+             *      route returns them.
+             */
+            include_sections?: boolean | null;
             /**
              * Format: double
              * @description Latitude for proximity filter (requires lon and radius_km).
@@ -3949,6 +4018,8 @@ export interface components {
              *      world's rivers it is. Empty for a river with no located sections.
              */
             place: string[];
+            /** @description Only with `include_sections=true` on an `ids` lookup. */
+            sections?: components["schemas"]["SectionWithFeatures"][] | null;
             /** Format: date-time */
             updated_at: string;
             waterway_type: components["schemas"]["WaterwayType"];
@@ -4352,11 +4423,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-24T08:35:00.912267665Z",
-                     *         "expires_at": "2027-01-22T08:35:00.912270355Z",
+                     *         "created_at": "2026-10-24T11:08:05.989628902Z",
+                     *         "expires_at": "2027-01-22T11:08:05.989632342Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-24T08:35:00.912273175Z",
+                     *         "last_used_at": "2026-10-24T11:08:05.989649642Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4387,8 +4458,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-24T08:35:00.912396165Z",
-                     *       "expires_at": "2027-01-22T08:35:00.912396855Z",
+                     *       "created_at": "2026-10-24T11:08:05.989792782Z",
+                     *       "expires_at": "2027-01-22T11:08:05.989793332Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -5056,6 +5127,16 @@ export interface operations {
             query?: {
                 /** @description Filter by ISO 3166-1 alpha-2 country code (e.g. "AT", "FR"). */
                 country?: string | null;
+                /**
+                 * @description Comma separated waterway ids (at most 100): only these, narrowed by
+                 *      the other filters.
+                 */
+                ids?: string | null;
+                /**
+                 * @description With `ids`, add each waterway's sections, as the single-waterway
+                 *      route returns them.
+                 */
+                include_sections?: boolean | null;
                 /** @description Latitude for proximity filter (requires lon and radius_km). */
                 lat?: number | null;
                 /** @description Longitude for proximity filter (requires lat and radius_km). */
@@ -5093,6 +5174,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedResponse_for_WaterwayListItem"];
+                };
+            };
+            /** @description Malformed ids or more than 100 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -5461,9 +5551,17 @@ export interface operations {
     get_section_history: {
         parameters: {
             query?: {
+                /**
+                 * @description Also return the history of each of the section's features, including
+                 *      ones deleted since, under `features`.
+                 */
+                include_features?: boolean | null;
                 /** @description Page number, starting at 1. */
                 page?: number | null;
-                /** @description Steps per page (max 100, default 50). */
+                /**
+                 * @description Steps per page (max 100, default 50), for the section and for each
+                 *      feature alike.
+                 */
                 per_page?: number | null;
             };
             header?: never;
@@ -5475,12 +5573,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description A section's history page, with its features' pages when asked for. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_for_HistoryStep"];
+                    "application/json": components["schemas"]["SectionHistory"];
                 };
             };
             /** @description Section never existed in this waterway */
@@ -7229,6 +7328,39 @@ export interface operations {
             };
             /** @description Range not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_water_statuses: {
+        parameters: {
+            query: {
+                /** @description Comma separated section ids, at most 100. */
+                section_ids: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["SectionWaterStatus"];
+                    };
+                };
+            };
+            /** @description Missing, malformed or more than 100 ids */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

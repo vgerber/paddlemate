@@ -11,8 +11,8 @@ export function useWaterwaySections(waterwayIds: number[], enabled: boolean) {
     queries: enabled
       ? waterwayIds.map((id) => ({
           queryKey: waterwayKeys.detail(id),
-          queryFn: ({ signal }: { signal: AbortSignal }) =>
-            waterwaysApi.get(id, signal),
+          // Rivers asked for together are one request.
+          queryFn: () => waterwaysApi.getBatched(id),
           // Result ids change on every keystroke; don't refetch details
           // that were already loaded for a previous search.
           staleTime: 5 * 60 * 1000,

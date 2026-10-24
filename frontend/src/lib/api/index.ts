@@ -1,3 +1,4 @@
+import { createBatcher } from "@/lib/batcher";
 import type { ViewBounds } from "@/lib/geo";
 import { ApiError, client, postForm } from "./client";
 import type { components, operations } from "./schema.d.ts";
@@ -135,6 +136,35 @@ async function allPages<T>(
   }
 }
 
+/** The API takes at most this many ids in a batch read. */
+const MAX_BATCH_IDS = 100;
+
+/** Waterways with their sections for many ids in one call; an id the API does
+ * not know is left out of the result. */
+async function getWaterways(ids: number[]) {
+  const { data } = await client.GET("/api/v1/waterways", {
+    params: { query: { ids: ids.join(","), include_sections: true } },
+  });
+  const found = new Map<number, WaterwayWithSections>();
+  for (const w of assertData(data).items) {
+    found.set(w.id, {
+      id: w.id,
+      waterway_type: w.waterway_type,
+      name: w.name,
+      description: w.description,
+      sections: w.sections ?? [],
+      created_at: w.created_at,
+      updated_at: w.updated_at,
+    });
+  }
+  return found;
+}
+
+const batchedWaterway = createBatcher(getWaterways, {
+  maxSize: MAX_BATCH_IDS,
+  missing: () => new ApiError(404, "Not found"),
+});
+
 export const waterwaysApi = {
   list: async (filters: WaterwayFilters = {}, signal?: AbortSignal) => {
     const { data } = await client.GET("/api/v1/waterways", {
@@ -143,6 +173,9 @@ export const waterwaysApi = {
     });
     return assertData(data);
   },
+  /** Same result as `get`; waterways asked for within a few milliseconds
+   * share one request. */
+  getBatched: (id: number) => batchedWaterway(id),
   get: async (id: number, signal?: AbortSignal) => {
     const { data } = await client.GET("/api/v1/waterways/{waterway_id}", {
       params: { path: { waterway_id: id } },
@@ -508,7 +541,28 @@ export const regionsApi = {
   },
 };
 
+async function getWaterStatuses(sectionIds: number[]) {
+  const { data } = await client.GET("/api/v1/waterways/water-status", {
+    params: { query: { section_ids: sectionIds.join(",") } },
+  });
+  const byId = assertData(data);
+  return new Map(
+    sectionIds.flatMap((id) => {
+      const status = byId[String(id)];
+      return status ? [[id, status] as const] : [];
+    }),
+  );
+}
+
+const batchedStatus = createBatcher(getWaterStatuses, {
+  maxSize: MAX_BATCH_IDS,
+  missing: () => new ApiError(404, "No water status"),
+});
+
 export const waterStatusApi = {
+  /** Same result as `getForSection`; sections asked for within a few
+   * milliseconds share one request. */
+  getBatched: (sectionId: number) => batchedStatus(sectionId),
   getForSection: async (
     waterwayId: number,
     sectionId: number,

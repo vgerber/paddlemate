@@ -1,6 +1,10 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use super::waterway::PaginatedResponse;
 
 /// Query parameters of a history listing.
 #[derive(Debug, Default, Deserialize, JsonSchema)]
@@ -9,6 +13,28 @@ pub struct HistoryQuery {
     pub page: Option<i64>,
     /// Steps per page (max 100, default 50).
     pub per_page: Option<i64>,
+}
+
+/// Query parameters of a section's history.
+#[derive(Debug, Default, Deserialize, JsonSchema)]
+pub struct SectionHistoryQuery {
+    /// Page number, starting at 1.
+    pub page: Option<i64>,
+    /// Steps per page (max 100, default 50), for the section and for each
+    /// feature alike.
+    pub per_page: Option<i64>,
+    /// Also return the history of each of the section's features, including
+    /// ones deleted since, under `features`.
+    pub include_features: Option<bool>,
+}
+
+impl SectionHistoryQuery {
+    pub fn paging(&self) -> HistoryQuery {
+        HistoryQuery {
+            page: self.page,
+            per_page: self.per_page,
+        }
+    }
 }
 
 /// Query parameters of the sources view.
@@ -147,4 +173,15 @@ mod tests {
         }
         assert_eq!(StepKind::parse("bogus"), None);
     }
+}
+
+/// A section's history page, with its features' pages when asked for.
+#[derive(Debug, Clone, Serialize, JsonSchema)]
+pub struct SectionHistory {
+    #[serde(flatten)]
+    pub page: PaginatedResponse<HistoryStep>,
+    /// Feature id to that feature's page, as its own history route returns it.
+    /// Only with `include_features=true`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub features: Option<HashMap<i64, PaginatedResponse<HistoryStep>>>,
 }

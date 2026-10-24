@@ -9,7 +9,10 @@ use crate::{
     doc_fn,
     error::{ApiError, ErrorResponse},
     models::{
-        history::{DeletedFeature, HistoryQuery, HistoryStep, SourcesQuery, WaterwaySources},
+        history::{
+            DeletedFeature, HistoryQuery, HistoryStep, SectionHistory, SectionHistoryQuery,
+            SourcesQuery, WaterwaySources,
+        },
         path_params::{FeaturePath, SectionPath, WaterwayPath},
         waterway::{PaginatedResponse, page_bounds, total_pages},
     },
@@ -88,18 +91,53 @@ pub async fn get_section_history(
         waterway_id,
         section_id,
     }): Path<SectionPath>,
-    Query(query): Query<HistoryQuery>,
+    Query(query): Query<SectionHistoryQuery>,
 ) -> impl IntoApiResponse {
-    steps_of(&app, Scope::section(waterway_id, section_id), &query)
-        .await
-        .into_response()
+    let paging = query.paging();
+    let page = match steps_of(&app, Scope::section(waterway_id, section_id), &paging).await {
+        Ok(Json(page)) => page,
+        Err(err) => return err.into_response(),
+    };
+    if !query.include_features.unwrap_or(false) {
+        return Json(SectionHistory {
+            page,
+            features: None,
+        })
+        .into_response();
+    }
+    let (page_no, per_page) = (page.page, page.per_page);
+    let found =
+        history::list_feature_steps(&app.pg_pool, waterway_id, section_id, page_no, per_page).await;
+    let features = match found {
+        Ok(found) => found
+            .into_iter()
+            .map(|(id, (items, total))| {
+                let page = PaginatedResponse {
+                    items,
+                    total,
+                    page: page_no,
+                    per_page,
+                    total_pages: total_pages(total, per_page),
+                };
+                (id, page)
+            })
+            .collect(),
+        Err(err) => {
+            return ApiError::from_db("Error listing feature history", &err).into_response();
+        }
+    };
+    Json(SectionHistory {
+        page,
+        features: Some(features),
+    })
+    .into_response()
 }
 
 doc_fn!(get_section_history_docs, op =>
     op.input::<Path<SectionPath>>()
-        .input::<Query<HistoryQuery>>()
-        .description("History of a section, oldest step first; readable after the section was deleted")
-        .response::<200, Json<PaginatedResponse<HistoryStep>>>()
+        .input::<Query<SectionHistoryQuery>>()
+        .description("History of a section, oldest step first; readable after the section was deleted. With `include_features=true`, `features` also holds the same page of each feature's history (up to 500 features), keyed by feature id.")
+        .response::<200, Json<SectionHistory>>()
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Section never existed in this waterway"))
         .tag("History")
 );

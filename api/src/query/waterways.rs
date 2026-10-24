@@ -1,11 +1,14 @@
+use futures_util::StreamExt;
 use sqlx::{PgPool, QueryBuilder};
 
+use crate::models::geometry::Geometry;
+use crate::models::water_section::SectionWithFeatures;
 use crate::models::waterway::{
     MatchSource, Waterway, WaterwayFilters, WaterwayId, WaterwayListItem, WaterwayType,
 };
 use crate::query::history::{self, Op, Scope, Via};
 
-use super::FUZZY_MIN_CHARS;
+use super::{FUZZY_MIN_CHARS, features, sections};
 
 /// Case-insensitive check whether a waterway with this name already exists.
 pub async fn name_exists(pool: &PgPool, name: &str) -> Result<bool, sqlx::Error> {
@@ -181,6 +184,7 @@ impl From<SearchRow> for WaterwayListItem {
             matched_section_name: r.matched_section_name,
             fuzzy: r.fuzzy.unwrap_or(false),
             place: r.place.unwrap_or_default(),
+            sections: None,
         }
     }
 }
@@ -205,6 +209,7 @@ fn escape_like(input: &str) -> String {
 pub async fn search(
     pool: &PgPool,
     filters: &WaterwayFilters,
+    ids: Option<&[i64]>,
     page: i64,
     per_page: i64,
 ) -> Result<(Vec<WaterwayListItem>, i64), sqlx::Error> {
@@ -298,7 +303,7 @@ pub async fn search(
         );
     }
 
-    push_filters(&mut qb, filters);
+    push_filters(&mut qb, filters, ids);
 
     if name.is_some() {
         qb.push(" ORDER BY b.tier, b.source_rank, b.score DESC, w.name");
@@ -320,7 +325,17 @@ pub async fn search(
 
 /// The non-name filters, which narrow the rivers found by name rather than
 /// contributing to the match themselves.
-fn push_filters(qb: &mut QueryBuilder<'_, sqlx::Postgres>, filters: &WaterwayFilters) {
+fn push_filters(
+    qb: &mut QueryBuilder<'_, sqlx::Postgres>,
+    filters: &WaterwayFilters,
+    ids: Option<&[i64]>,
+) {
+    if let Some(ids) = ids {
+        qb.push(" AND w.id = ANY(");
+        qb.push_bind(ids.to_vec());
+        qb.push(")");
+    }
+
     if let Some(country) = filters.country.as_deref().filter(|c| !c.is_empty()) {
         qb.push(
             " AND EXISTS (SELECT 1 FROM water_sections ws WHERE ws.waterway_id = w.id AND ws.country = ",
@@ -375,6 +390,69 @@ fn push_filters(qb: &mut QueryBuilder<'_, sqlx::Postgres>, filters: &WaterwayFil
             AND ST_DWithin(ws3.location::geography, r.geom::geography, r.match_radius_m))",
         );
     }
+}
+
+/// A waterway's sections with their features and translations, ordered along
+/// the river.
+pub async fn sections_with_features(
+    pool: &PgPool,
+    waterway_id: WaterwayId,
+) -> Result<Vec<SectionWithFeatures>, sqlx::Error> {
+    let (sections, features, names, descriptions) = tokio::join!(
+        sqlx::query!(
+            r#"
+            SELECT id, waterway_id, name, description, regions, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at
+            FROM water_sections WHERE waterway_id = $1 ORDER BY river_km_start NULLS LAST, name
+            "#,
+            waterway_id
+        )
+        .fetch_all(pool),
+        features::fetch_features_for_waterway(pool, waterway_id),
+        sections::fetch_names_for_waterway(pool, waterway_id),
+        sections::fetch_descriptions_for_waterway(pool, waterway_id)
+    );
+    let (sections, mut features, mut names, mut descriptions) =
+        (sections?, features?, names?, descriptions?);
+    sections
+        .into_iter()
+        .map(|s| {
+            Ok(SectionWithFeatures {
+                id: s.id,
+                waterway_id: s.waterway_id,
+                name: s.name,
+                description: s.description,
+                regions: s.regions,
+                country: s.country,
+                features: features.remove(&s.id).unwrap_or_default(),
+                names: names.remove(&s.id).unwrap_or_default(),
+                descriptions: descriptions.remove(&s.id).unwrap_or_default(),
+                location: Geometry::from_db(s.location)?,
+                created_by: s.created_by,
+                created_at: s.created_at,
+                updated_at: s.updated_at,
+            })
+        })
+        .collect()
+}
+
+/// How many waterways load their sections at once.
+const SECTION_LOADS: usize = 8;
+
+/// Fill in the sections of a page of waterways, a few at a time.
+pub async fn attach_sections(
+    pool: &PgPool,
+    items: &mut [WaterwayListItem],
+) -> Result<(), sqlx::Error> {
+    let ids: Vec<WaterwayId> = items.iter().map(|w| w.id).collect();
+    let loaded: Vec<_> = futures_util::stream::iter(ids)
+        .map(|id| sections_with_features(pool, id))
+        .buffered(SECTION_LOADS)
+        .collect()
+        .await;
+    for (item, sections) in items.iter_mut().zip(loaded) {
+        item.sections = Some(sections?);
+    }
+    Ok(())
 }
 
 #[cfg(test)]

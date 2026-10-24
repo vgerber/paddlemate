@@ -333,6 +333,13 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
                 water_ranges::delete_water_range_docs,
             ),
         )
+        .api_route(
+            "/water-status",
+            get_with(
+                water_status::get_water_statuses,
+                water_status::get_water_statuses_docs,
+            ),
+        )
         // Section water status
         .api_route(
             "/{waterway_id}/sections/{section_id}/water-status",

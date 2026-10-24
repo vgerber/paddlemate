@@ -171,7 +171,7 @@ pub struct WaterRangeWithStatus {
 }
 
 /// All water-level ranges for every feature in a section, with their latest readings.
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
 pub struct SectionWaterStatus {
     pub ranges: Vec<WaterRangeWithStatus>,
 }

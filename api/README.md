@@ -119,7 +119,7 @@ first. All five routes are public, like the entries themselves.
 | Route | Returns |
 |---|---|
 | `GET /waterways/{id}/history` | steps of the river, also after it was deleted |
-| `GET /waterways/{id}/sections/{section_id}/history` | steps of the section, also after it (or its river) was deleted |
+| `GET /waterways/{id}/sections/{section_id}/history` | steps of the section, also after it (or its river) was deleted; `?include_features=true` adds `features`, feature id to that feature's page (same `page`/`per_page`, as its own route returns it) for the live and the deleted features of this section, at most 500 |
 | `GET /waterways/{id}/sections/{section_id}/features/{feature_id}/history` | steps of the feature, also after it (or its section or river) was deleted |
 | `GET /waterways/{id}/sections/{section_id}/deleted-features` | features deleted from the section, newest deletion first, each with its last name and type, when, by whom (and the proposal and reviewer, if one did); also after the section (or its river) was deleted, until the year is up; paged like the history routes. No screen uses it now (deleted features are hidden in the app); it stays as part of the public API |
 | `GET /waterways/{id}/sources` | every source (with its step count) and contributor (with step count and last step) for the river, its sections and features; `?section_id=` narrows both to that section and its features (404 when the section is not in this river); readable after the river was deleted |
@@ -202,6 +202,19 @@ pruned. There is no cascade from the entity; each step is bounded as well (32
 fields, 200 characters per field name or value).
 
 Proposal responses carry `submitted_by_name` and `reviewed_by_name`.
+
+## Batch reads
+
+Screens that show many rivers or sections ask once instead of once per row.
+Each takes at most 100 comma separated ids and answers 400 for an empty or
+malformed list or more than 100; repeated ids count once, unknown ids are
+absent (or have an empty `ranges`).
+
+| Route | Returns |
+|---|---|
+| `GET /waterways?ids=1,2,3` | the list route, only these rivers, all on page one; other filters still narrow. `&include_sections=true` adds each river's `sections` as `GET /waterways/{id}` returns them (400 without `ids`) |
+| `GET /waterways/water-status?section_ids=1,2,3` | object keyed by section id, each value what `.../sections/{id}/water-status` returns |
+| `GET /waterways/{id}/sections/{section_id}/history?include_features=true` | see History and sources |
 
 ## Gauge readings
 
