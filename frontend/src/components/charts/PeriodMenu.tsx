@@ -48,6 +48,7 @@ const quietButtonSx = {
   borderRadius: `${tokens.radii.sm}px`,
   fontSize: "0.875rem",
   fontWeight: 600,
+  whiteSpace: "nowrap",
 } as const;
 
 /** The chart's period: one quiet text button that opens a menu upward, the

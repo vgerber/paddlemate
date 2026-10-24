@@ -331,12 +331,16 @@ export default function ReadingChart(props: ReadingChartProps) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          // A custom range's label and Reset wrap under the credit.
+          flexWrap: "wrap",
           gap: 1,
           minHeight: tokens.touch.min,
         }}
       >
-        <Box sx={{ flex: 1, minWidth: 0 }}>{source}</Box>
-        <PeriodMenu {...period} />
+        <Box sx={{ flex: "1 1 120px", minWidth: 0 }}>{source}</Box>
+        <Box sx={{ display: "flex", flexShrink: 0, ml: "auto" }}>
+          <PeriodMenu {...period} />
+        </Box>
       </Box>
     </Box>
   );

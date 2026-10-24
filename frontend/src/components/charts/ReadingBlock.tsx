@@ -350,7 +350,14 @@ export default function ReadingBlock({
             </Typography>
           )}
         </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            flexShrink: 0,
+          }}
+        >
           {period && <PeriodMenu {...period} />}
           {onDismiss && (
             <IconButton

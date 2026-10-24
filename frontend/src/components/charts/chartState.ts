@@ -15,7 +15,7 @@ function isInstant(v: unknown): v is string {
 }
 
 /** The chart range keys of a URL search, kept only as a valid pair with
- * From before To. Any route can carry them (see the root route). */
+ * From before To. Any route can carry them; the router keeps keys it does not know. */
 export function chartRangeSearch(
   search: Record<string, unknown>,
 ): ChartRangeSearch {
@@ -31,7 +31,8 @@ function useChartRange(): [
   CustomRange | null,
   (range: CustomRange | null) => void,
 ] {
-  const { chartFrom, chartTo } = useSearch({ strict: false });
+  // The URL is the user's to edit: only a sound pair counts.
+  const { chartFrom, chartTo } = chartRangeSearch(useSearch({ strict: false }));
   const navigate = useNavigate();
   const range = chartFrom && chartTo ? { from: chartFrom, to: chartTo } : null;
   const setRange = (next: CustomRange | null) => {

@@ -268,3 +268,12 @@ test("data that reaches back to From says nothing", async ({ page }) => {
   await expect(plot(page).locator("svg.recharts-surface")).toBeVisible();
   await expect(page.getByTestId("readings-start")).toHaveCount(0);
 });
+
+test("a link whose range is backwards is ignored", async ({ page }) => {
+  const from = new Date(Date.now() - 5 * DAY).toISOString();
+  const to = new Date(Date.now() - 20 * DAY).toISOString();
+  await openLong(page, {
+    search: `&chartFrom=${encodeURIComponent(JSON.stringify(from))}&chartTo=${encodeURIComponent(JSON.stringify(to))}`,
+  });
+  await expect(periodButton(page)).toHaveText("Last 7 days");
+});
