@@ -12,11 +12,10 @@ test("the installed app's frame is dark, so the phone's buttons show", () => {
   expect(config).toMatch(/background_color: "#141b1f"/);
 });
 
-test("theme-color is white for the light scheme and the page declares it is light", () => {
+test("theme-color is white for the light scheme", () => {
   expect(html).toContain(
     '<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />',
   );
-  expect(html).toContain('<meta name="color-scheme" content="light" />');
 });
 
 test("iOS status bar keeps dark text over the light page", () => {

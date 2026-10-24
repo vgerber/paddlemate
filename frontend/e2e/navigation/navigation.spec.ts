@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
+import { expectColour } from "../support/colour";
 import {
   appReady,
   computed,
@@ -309,7 +310,8 @@ test.describe("tools", () => {
     expect(await computed(tile, "box-shadow")).toBe(E1);
     expect(await computed(tile, "border-top-width")).toBe("0px");
     const icon = tile.getByTestId("tool-icon");
-    expect(await computed(icon, "background-color")).toBe(
+    expectColour(
+      await computed(icon, "background-color"),
       "rgba(14, 116, 144, 0.12)",
     );
     expect(await computed(icon, "border-radius")).toBe("12px");

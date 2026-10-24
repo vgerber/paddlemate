@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { expectColour } from "../support/colour";
 import { appReady, expectNoHorizontalOverflow, FIX } from "../support/fixture";
 
 // Level dots: a dot per section on a closed trip base and on a recent river
@@ -11,21 +12,6 @@ const MARKER = {
   high: "rgb(229, 72, 63)",
   unknown: "rgba(124, 138, 144, 0.5)",
 };
-
-/** r, g, b (0-255) and alpha of a computed colour, whichever syntax the
- * browser serialises: `rgb(...)` or, for a mixed colour, `color(srgb ... / a)`. */
-function parseColour(css: string): number[] {
-  const nums = css.match(/-?\d*\.?\d+/g)?.map(Number) ?? [];
-  const [r, g, b, a = 1] = nums;
-  const scale = css.startsWith("color(") ? 255 : 1;
-  return [r * scale, g * scale, b * scale]
-    .map(Math.round)
-    .concat(Math.round(a * 100) / 100);
-}
-
-function expectColour(actual: string, expected: string) {
-  expect(parseColour(actual)).toEqual(parseColour(expected));
-}
 
 /** Every section answers with a level picked from its id: low, high or no
  * gauge, so one base shows a mix. */
