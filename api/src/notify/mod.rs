@@ -154,7 +154,8 @@ async fn fan_out(
 
 /// LISTENs for recorded events and hands each to this instance's live
 /// streams. Runs for the life of the server; a lost connection is retried,
-/// and streams that missed events meanwhile are told to refetch.
+/// and streams that missed events meanwhile are told to refetch. The backoff
+/// is hand-rolled: a retry crate would dwarf this loop.
 pub async fn run_listener(pool: PgPool, live: broadcast::Sender<LiveEvent>) {
     let mut backoff = Duration::from_secs(1);
     loop {

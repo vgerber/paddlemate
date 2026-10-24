@@ -40,7 +40,8 @@ export function durationLabel(start: string, end: string): string | null {
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
-/** Compact relative age: "5m ago", "3d ago", "2y ago". */
+/** Compact relative age: "5m ago", "3d ago", "2y ago". Hand-rolled: neither
+ * Intl.RelativeTimeFormat nor date-fns gives this compact form. */
 export function timeAgo(iso: string): string {
   const ms = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(ms / 60000);
@@ -172,7 +173,8 @@ export function sectionPlace(
 }
 
 /** "1 gauge", "3 gauges": the count and its noun. Pass `many` for an
- * irregular plural. */
+ * irregular plural. Hand-rolled: the UI is English only, so Intl.PluralRules
+ * would add nothing. */
 export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;
 }
