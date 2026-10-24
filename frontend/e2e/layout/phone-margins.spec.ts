@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { seen } from "../support/active";
 import { appReady } from "../support/fixture";
 
 // Every card on a phone sits 12 from each screen edge and 8 from the next
@@ -40,8 +41,8 @@ const tab = (page: Page, name: string) =>
     .filter({ visible: true })
     .first();
 
-const byId = (page: Page, id: string) =>
-  page.getByTestId(id).filter({ visible: true });
+// The swipe ghost holds the neighbour tab's copy of a list, parked offscreen.
+const byId = (page: Page, id: string) => seen(page.getByTestId(id));
 
 test.describe("phone card margins @small", () => {
   test("section tabs", async ({ page }) => {
@@ -98,15 +99,11 @@ test.describe("phone card margins @small", () => {
     await tab(page, "Inbox").click();
     await expectMargins(
       page,
-      page.locator(".MuiListItemButton-root").filter({ visible: true }),
+      seen(page.locator(".MuiListItemButton-root")),
       "inbox",
     );
     await tab(page, "Tools").click();
-    await expectMargins(
-      page,
-      page.locator('a[href^="/tools"]').filter({ visible: true }),
-      "tools",
-    );
+    await expectMargins(page, seen(page.locator('a[href^="/tools"]')), "tools");
   });
 
   test("trip tabs", async ({ page }) => {

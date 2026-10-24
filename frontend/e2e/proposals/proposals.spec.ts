@@ -367,7 +367,7 @@ test.describe("proposal create facts", () => {
     await page.goto(`/proposals/${FEATURE_CREATE_DESCRIBED}`);
     const detail = page.getByTestId("proposal-detail");
     await expect(
-      detail.locator(".MuiTypography-overline", { hasText: "Features" }),
+      detail.getByRole("heading", { name: "Features", exact: true }),
     ).toBeVisible();
     await expect(detail).not.toContainText("0.0-0.0");
     await expect(detail).not.toContainText("Full section");
