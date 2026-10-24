@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT sn.id, sn.section_id, sn.lang_code, sn.name\n           FROM section_names sn\n           JOIN water_sections s ON s.id = sn.section_id\n           WHERE s.waterway_id = $1",
+  "query": "SELECT sn.id, sn.section_id, sn.lang_code, sn.name\n           FROM section_names sn\n           JOIN water_sections s ON s.id = sn.section_id\n           WHERE s.waterway_id = ANY($1)",
   "describe": {
     "columns": [
       {
@@ -26,7 +26,7 @@
     ],
     "parameters": {
       "Left": [
-        "Int8"
+        "Int8Array"
       ]
     },
     "nullable": [
@@ -36,5 +36,5 @@
       false
     ]
   },
-  "hash": "c849f4466804af837c8631bd4abb27127938502c40315355b87f9483a0fde588"
+  "hash": "f6593e12f9ebd2f9ef95f3699ff93a84a02602a76b0f7a5f2b1840767f702fc2"
 }

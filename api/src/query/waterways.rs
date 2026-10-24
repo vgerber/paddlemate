@@ -1,5 +1,5 @@
-use futures_util::StreamExt;
 use sqlx::{PgPool, QueryBuilder};
+use std::collections::HashMap;
 
 use crate::models::geometry::Geometry;
 use crate::models::water_section::SectionWithFeatures;
@@ -398,25 +398,37 @@ pub async fn sections_with_features(
     pool: &PgPool,
     waterway_id: WaterwayId,
 ) -> Result<Vec<SectionWithFeatures>, sqlx::Error> {
+    let mut by_waterway = sections_for_waterways(pool, &[waterway_id]).await?;
+    Ok(by_waterway.remove(&waterway_id).unwrap_or_default())
+}
+
+/// The sections of several waterways in four queries, grouped by waterway.
+async fn sections_for_waterways(
+    pool: &PgPool,
+    waterway_ids: &[WaterwayId],
+) -> Result<HashMap<WaterwayId, Vec<SectionWithFeatures>>, sqlx::Error> {
     let (sections, features, names, descriptions) = tokio::join!(
         sqlx::query!(
             r#"
             SELECT id, waterway_id, name, description, regions, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at
-            FROM water_sections WHERE waterway_id = $1 ORDER BY river_km_start NULLS LAST, name
+            FROM water_sections WHERE waterway_id = ANY($1)
+            ORDER BY waterway_id, river_km_start NULLS LAST, name
             "#,
-            waterway_id
+            waterway_ids
         )
         .fetch_all(pool),
-        features::fetch_features_for_waterway(pool, waterway_id),
-        sections::fetch_names_for_waterway(pool, waterway_id),
-        sections::fetch_descriptions_for_waterway(pool, waterway_id)
+        features::fetch_features_for_waterways(pool, waterway_ids),
+        sections::fetch_names_for_waterways(pool, waterway_ids),
+        sections::fetch_descriptions_for_waterways(pool, waterway_ids)
     );
     let (sections, mut features, mut names, mut descriptions) =
         (sections?, features?, names?, descriptions?);
-    sections
-        .into_iter()
-        .map(|s| {
-            Ok(SectionWithFeatures {
+    let mut grouped: HashMap<WaterwayId, Vec<SectionWithFeatures>> = HashMap::new();
+    for s in sections {
+        grouped
+            .entry(s.waterway_id)
+            .or_default()
+            .push(SectionWithFeatures {
                 id: s.id,
                 waterway_id: s.waterway_id,
                 name: s.name,
@@ -430,27 +442,20 @@ pub async fn sections_with_features(
                 created_by: s.created_by,
                 created_at: s.created_at,
                 updated_at: s.updated_at,
-            })
-        })
-        .collect()
+            });
+    }
+    Ok(grouped)
 }
 
-/// How many waterways load their sections at once.
-const SECTION_LOADS: usize = 8;
-
-/// Fill in the sections of a page of waterways, a few at a time.
+/// Fill in the sections of a page of waterways.
 pub async fn attach_sections(
     pool: &PgPool,
     items: &mut [WaterwayListItem],
 ) -> Result<(), sqlx::Error> {
     let ids: Vec<WaterwayId> = items.iter().map(|w| w.id).collect();
-    let loaded: Vec<_> = futures_util::stream::iter(ids)
-        .map(|id| sections_with_features(pool, id))
-        .buffered(SECTION_LOADS)
-        .collect()
-        .await;
-    for (item, sections) in items.iter_mut().zip(loaded) {
-        item.sections = Some(sections?);
+    let mut grouped = sections_for_waterways(pool, &ids).await?;
+    for item in items.iter_mut() {
+        item.sections = Some(grouped.remove(&item.id).unwrap_or_default());
     }
     Ok(())
 }

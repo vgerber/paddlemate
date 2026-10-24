@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, waterway_id, name, description, regions, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at\n            FROM water_sections WHERE waterway_id = $1 ORDER BY river_km_start NULLS LAST, name\n            ",
+  "query": "\n            SELECT id, waterway_id, name, description, regions, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at\n            FROM water_sections WHERE waterway_id = ANY($1)\n            ORDER BY waterway_id, river_km_start NULLS LAST, name\n            ",
   "describe": {
     "columns": [
       {
@@ -56,7 +56,7 @@
     ],
     "parameters": {
       "Left": [
-        "Int8"
+        "Int8Array"
       ]
     },
     "nullable": [
@@ -72,5 +72,5 @@
       false
     ]
   },
-  "hash": "c2fa8c5c445f60a42295d24e378cfd2788aeef8a8760d1ed10dc5455613bdefa"
+  "hash": "7e6ff47306b8c2c0ab663215b66c14eaa494be93955d715f04d9e7ad62c1fc5a"
 }

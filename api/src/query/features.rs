@@ -502,9 +502,9 @@ pub async fn fetch_features_for_section(
         .collect()
 }
 
-pub async fn fetch_features_for_waterway(
+pub async fn fetch_features_for_waterways(
     pool: &PgPool,
-    waterway_id: WaterwayId,
+    waterway_ids: &[WaterwayId],
 ) -> Result<std::collections::HashMap<SectionId, Vec<Feature>>, sqlx::Error> {
     let records = sqlx::query!(
         r#"
@@ -529,13 +529,13 @@ pub async fn fetch_features_for_waterway(
                 '[]'
             ) AS "descriptions!: serde_json::Value"
         FROM features f
-        JOIN water_sections s ON s.id = f.section_id AND s.waterway_id = $1
+        JOIN water_sections s ON s.id = f.section_id AND s.waterway_id = ANY($1)
         LEFT JOIN feature_names fn ON fn.feature_id = f.id
         LEFT JOIN feature_descriptions fd ON fd.feature_id = f.id
         GROUP BY f.id
         ORDER BY f.section_id, f.created_at
         "#,
-        waterway_id
+        waterway_ids
     )
     .fetch_all(pool)
     .await?;

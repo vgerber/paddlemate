@@ -162,26 +162,35 @@ const MAX_FEATURES: i64 = 500;
 /// One page of each feature's steps in a section, with its total, oldest
 /// first. Covers the section's live features and those deleted since; a
 /// feature without steps has an empty page. Looked up through the waterway
-/// and the section, so another section's features never appear.
+/// and the section, so another section's features never appear. At most
+/// `MAX_FEATURES` features answer, lowest ids first, over both sets together;
+/// the flag says some were left out.
 pub async fn list_feature_steps(
     pool: &PgPool,
     waterway_id: i64,
     section_id: i64,
     page: i64,
     per_page: i64,
-) -> Result<HashMap<i64, (Vec<HistoryStep>, i64)>, sqlx::Error> {
-    let live = sqlx::query(
+) -> Result<(HashMap<i64, (Vec<HistoryStep>, i64)>, bool), sqlx::Error> {
+    // One more than the cap, to tell "exactly the cap" from "cut".
+    let mut feature_ids: Vec<i64> = sqlx::query_scalar(
         "SELECT f.id FROM features f JOIN water_sections s ON s.id = f.section_id \
-         WHERE f.section_id = $1 AND s.waterway_id = $2 ORDER BY f.id LIMIT $3",
+         WHERE f.section_id = $1 AND s.waterway_id = $2 \
+         UNION \
+         SELECT entity_id FROM entity_history \
+         WHERE entity_kind = 'feature' AND waterway_id = $2 AND section_id = $1 \
+         ORDER BY 1 LIMIT $3",
     )
     .bind(section_id)
     .bind(waterway_id)
-    .bind(MAX_FEATURES)
+    .bind(MAX_FEATURES + 1)
     .fetch_all(pool)
     .await?;
-    let mut out: HashMap<i64, (Vec<HistoryStep>, i64)> = live
+    let truncated = feature_ids.len() as i64 > MAX_FEATURES;
+    feature_ids.truncate(MAX_FEATURES as usize);
+    let mut out: HashMap<i64, (Vec<HistoryStep>, i64)> = feature_ids
         .iter()
-        .map(|r| (r.get::<i64, _>("id"), (Vec::new(), 0)))
+        .map(|id| (*id, (Vec::new(), 0)))
         .collect();
 
     let lo = (page - 1) * per_page;
@@ -198,10 +207,7 @@ pub async fn list_feature_steps(
                     row_number() OVER (PARTITION BY entity_id ORDER BY at, id) AS rn \
              FROM entity_history \
              WHERE entity_kind = 'feature' AND waterway_id = $1 AND section_id = $2 \
-               AND entity_id IN ( \
-                   SELECT DISTINCT entity_id FROM entity_history \
-                   WHERE entity_kind = 'feature' AND waterway_id = $1 AND section_id = $2 \
-                   ORDER BY entity_id LIMIT $5) \
+               AND entity_id = ANY($5) \
          ) p \
          JOIN entity_history h ON h.id = p.id \
          LEFT JOIN users au ON au.id = h.actor_id \
@@ -215,7 +221,7 @@ pub async fn list_feature_steps(
     .bind(section_id)
     .bind(lo)
     .bind(per_page)
-    .bind(MAX_FEATURES)
+    .bind(&feature_ids)
     .fetch_all(pool)
     .await?;
     for row in &rows {
@@ -223,7 +229,7 @@ pub async fn list_feature_steps(
         entry.0.push(step(row)?);
         entry.1 = row.get("total");
     }
-    Ok(out)
+    Ok((out, truncated))
 }
 
 /// Every source and contributor named by a river's history, including its
