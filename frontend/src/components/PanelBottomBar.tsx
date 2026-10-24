@@ -103,7 +103,10 @@ export default function PanelBottomBar({
         {leftLabel}
       </ButtonBase>
       <Box sx={{ minWidth: 0, textAlign: "center" }}>
-        <Typography noWrap sx={{ fontSize: "1rem", fontWeight: 700 }}>
+        <Typography
+          noWrap
+          sx={{ fontSize: "1rem", fontWeight: 700, lineHeight: "22px" }}
+        >
           {title}
         </Typography>
         <Typography

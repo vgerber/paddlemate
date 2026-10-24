@@ -1251,6 +1251,13 @@ export const labelSx = {
   color: "text.secondary",
 } as const;
 
+/** A card or row title: 15px, semibold, 20 line. */
+export const cardTitleSx = {
+  fontWeight: 600,
+  fontSize: "0.9375rem",
+  lineHeight: "20px",
+} as const;
+
 /** An in-screen section heading, the name of the block below: 13px, semibold,
  * 18 line, sentence case. Spread into sx; SectionHeading is the component. */
 export const sectionHeadingSx = {

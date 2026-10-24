@@ -12,7 +12,7 @@ import { dateRange } from "@/lib/format";
 import { useSession } from "@/lib/hooks/useSession";
 import { useInvitePreview, useJoinByInvite } from "@/lib/hooks/useTrips";
 import { LinkOffIcon, TripIcon } from "@/lib/icons";
-import { labelSx, theme } from "@/lib/theme";
+import { cardTitleSx, labelSx, theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/invite/$token")({
   component: InvitePage,
@@ -80,7 +80,9 @@ function InvitePage() {
         <Typography sx={{ ...labelSx, color: "text.disabled" }}>
           {trip.invited_by} invited you to
         </Typography>
-        <Typography variant="h6">{trip.name}</Typography>
+        <Typography variant="h6" sx={cardTitleSx}>
+          {trip.name}
+        </Typography>
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           {dateRange(trip.start_date, trip.end_date)}
         </Typography>

@@ -61,7 +61,7 @@ export default function SearchFiltersHeader({
           alignItems: "center",
           gap: 1,
           px: { xs: `${tokens.phone.line}px`, md: 2 },
-          minHeight: 56,
+          minHeight: tokens.canvas.panel.headerRow,
         }}
       >
         <Typography variant="h3" component="h1" noWrap sx={{ flex: 1 }}>
@@ -79,7 +79,7 @@ export default function SearchFiltersHeader({
               color: tokens.onSurfaceVariant,
             }}
           >
-            <MapIcon />
+            <MapIcon sx={{ fontSize: 24 }} />
           </IconButton>
         )}
       </Box>

@@ -17,6 +17,8 @@ const BACK_ICON = 22;
 const backHang = (tokens.touch.min - BACK_ICON) / 2;
 const titleGap = phone.nameLine - (phone.line - backHang + tokens.touch.min);
 
+const ACTION_ICON = 24;
+
 const backIconSx = { fontSize: 22, color: "text.primary" } as const;
 
 interface PanelHeaderProps<T extends string> {
@@ -55,8 +57,7 @@ export default function PanelHeader<T extends string>({
         // A titled header is the section panel's 56 + 48 from md; the tab
         // bar alone keeps its 16 inset.
         px: { xs: 0, md: title ? 0 : 2 },
-        pt: { xs: title ? 1.5 : 0, md: 0 },
-        pb: tabs ? 0 : 1,
+        pb: { xs: 0, md: tabs ? 0 : 1 },
         bgcolor: tokens.surface,
         boxShadow: tokens.elevation.e1,
         position: "relative",
@@ -70,10 +71,10 @@ export default function PanelHeader<T extends string>({
             display: "flex",
             alignItems: "center",
             gap: { xs: `${titleGap}px`, md: 1 },
-            mb: { xs: tabs ? 0.75 : 0, md: 0 },
-            // From md the title row is one 56 row: back box at +12, title
-            // text at +64, the last action box ends 12 from the edge.
-            minHeight: { md: panel.headerRow },
+            // The title row is one 56 row on every screen (104 with the
+            // tabs): back box at +12 (md), title text at +64, the last action
+            // box ends 12 from the edge.
+            minHeight: panel.headerRow,
             pl: { xs: `${phone.line}px`, md: `${panel.hitEdge}px` },
             pr: { xs: `${phone.line}px`, md: `${panel.hitEdge}px` },
           }}
@@ -117,6 +118,8 @@ export default function PanelHeader<T extends string>({
                 alignItems: "center",
                 // The last button hangs out so its icon ends on the right line.
                 mr: { xs: `-${phone.trailInset}px`, md: 0 },
+                // Every action icon is 24, whatever the caller passes.
+                "& .MuiSvgIcon-root": { fontSize: ACTION_ICON },
               }}
             >
               {actionButton}
