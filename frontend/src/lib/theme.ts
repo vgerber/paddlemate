@@ -671,8 +671,6 @@ export const theme = createTheme({
       styleOverrides: {
         ":root": {
           "--system-inset": "0px",
-          "@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui)":
-            { "--system-inset": "env(safe-area-inset-bottom, 0px)" },
         },
         body: {
           fontVariantNumeric: "tabular-nums",
@@ -1224,10 +1222,12 @@ export const theme = createTheme({
   },
 });
 
-/** The bottom gap for the phone's system buttons. Zero in a browser tab, whose
- * own toolbar handles them; the safe-area inset only when the app runs
- * installed (see the `:root` rule in the CssBaseline overrides). Every bottom
- * inset in the app uses this, never `env(safe-area-inset-bottom)` directly. */
+/** The bottom gap for the phone's system buttons: zero, in the browser and
+ * installed. The page is never drawn under the system bar (no
+ * viewport-fit=cover, see index.html), yet Chrome on Android still reports a
+ * bottom safe-area inset, which left a dead band under the bottom nav. Every
+ * bottom inset in the app uses this, never `env(safe-area-inset-bottom)`, so
+ * drawing edge to edge later is a change in one place. */
 export const SYSTEM_INSET = "var(--system-inset)";
 
 /** Height of a full-screen panel: the window less the desktop app bar, or

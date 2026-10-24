@@ -1,19 +1,15 @@
 import { expect, test } from "@playwright/test";
 import { appReady, computed } from "../support/fixture";
 
-// The gap for the phone's system buttons applies only when the app runs
-// installed. A browser tab has its own toolbar, so the gap is zero there.
-// Chrome cannot emulate display-mode and an emulated phone reports a zero
-// safe-area inset anyway, so the rule is checked in the stylesheet: the inset
-// is defined only under the installed display modes.
+// The page is never drawn under the phone's system bar, so no gap is left for
+// its buttons, in a browser tab or installed. Chrome on Android reports a
+// bottom safe-area inset anyway; an env() use would turn it into a dead band
+// under the bottom nav. Chrome cannot emulate that inset, so the stylesheet is
+// checked: no rule reads it.
 
 test.skip(({ isMobile }) => !isMobile, "the system inset is the phone's");
 
-const MODES = ["standalone", "fullscreen", "minimal-ui"];
-
-test("the inset is zero in a tab and the safe area only when installed @small", async ({
-  page,
-}) => {
+test("no style reads the safe-area inset @small", async ({ page }) => {
   await page.goto("/");
   await appReady(page);
   const rules = await page.evaluate(() => {
@@ -34,15 +30,20 @@ test("the inset is zero in a tab and the safe area only when installed @small", 
     }
     return out;
   });
-  const base = rules.filter((r) => r.media === "");
-  const installed = rules.filter((r) => r.media !== "");
-  expect(base.map((r) => r.text).join()).toContain("--system-inset: 0px");
-  expect(base.map((r) => r.text).join()).not.toContain("env(");
-  expect(installed).toHaveLength(1);
-  for (const mode of MODES) {
-    expect(installed[0].media).toContain(`display-mode: ${mode}`);
-  }
-  expect(installed[0].text).toContain("env(safe-area-inset-bottom");
+  expect(rules.map((r) => r.text).join()).toContain("--system-inset: 0px");
+  expect(rules.filter((r) => r.media !== "")).toHaveLength(0);
+  const sheets = await page.evaluate(() =>
+    [...document.styleSheets]
+      .flatMap((s) => {
+        try {
+          return [...s.cssRules].map((r) => r.cssText);
+        } catch {
+          return [];
+        }
+      })
+      .join("\n"),
+  );
+  expect(sheets).not.toContain("safe-area-inset-bottom");
   expect(
     await page.evaluate(() =>
       getComputedStyle(document.documentElement).getPropertyValue(
@@ -52,9 +53,7 @@ test("the inset is zero in a tab and the safe area only when installed @small", 
   ).toBe("0px");
 });
 
-test("the bottom nav and the pane above it take no gap in a tab", async ({
-  page,
-}) => {
+test("the bottom nav takes no gap under it", async ({ page }) => {
   await page.goto("/");
   await appReady(page);
   const nav = page.getByRole("navigation", { name: "Main" });
