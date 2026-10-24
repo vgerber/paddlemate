@@ -71,22 +71,6 @@ fn council_base(key: &str) -> Option<&'static str> {
     COUNCILS.iter().find(|(k, _)| *k == key).map(|(_, b)| *b)
 }
 
-/// Minimal percent-encoding for a query value (site/measurement names carry
-/// spaces, `@`, parentheses, ...). Everything outside RFC 3986 "unreserved"
-/// is encoded.
-fn percent_encode(s: &str) -> String {
-    let mut out = String::with_capacity(s.len());
-    for b in s.bytes() {
-        match b {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'.' | b'_' | b'~' => {
-                out.push(b as char)
-            }
-            _ => out.push_str(&format!("%{b:02X}")),
-        }
-    }
-    out
-}
-
 /// Multiplier converting a Hilltop unit into our unit (cm / m³/s); `None`
 /// for units we do not understand.
 fn unit_factor(param: &str, unit: &str) -> Option<f64> {
@@ -313,10 +297,10 @@ fn flatten_measurement_list(doc: &MeasurementListDoc) -> Vec<HilltopMeasurement>
 impl NewZealandHilltopReader {
     /// GET with one retry - council servers sit behind flaky reverse proxies
     /// (Cloudflare 522s were seen on HBRC).
-    async fn get_text(&self, url: &str) -> anyhow::Result<String> {
+    async fn get_text(&self, base: &str, params: &[(&str, &str)]) -> anyhow::Result<String> {
         let mut last_err = anyhow::anyhow!("unreachable");
         for _ in 0..2 {
-            match self.client.get(url).send().await {
+            match self.client.get(base).query(params).send().await {
                 Ok(r) if r.status().is_success() => match r.text().await {
                     Ok(t) => return Ok(t),
                     Err(e) => last_err = anyhow::anyhow!("read error: {e}"),
@@ -340,11 +324,12 @@ impl NewZealandHilltopReader {
         if let Some(m) = cache.get(station_id) {
             return Some(m.clone());
         }
-        let url = format!(
-            "{base}?Service=Hilltop&Request=MeasurementList&Site={}",
-            percent_encode(site)
-        );
-        let body = match self.get_text(&url).await {
+        let params = [
+            ("Service", "Hilltop"),
+            ("Request", "MeasurementList"),
+            ("Site", site),
+        ];
+        let body = match self.get_text(base, &params).await {
             Ok(b) => b,
             Err(e) => {
                 tracing::warn!("NewZealandHilltopReader: MeasurementList for '{station_id}': {e}");
@@ -395,11 +380,13 @@ impl GaugeReader for NewZealandHilltopReader {
                 // measurement names vary per site but the plain filters match
                 // the vast majority ("Stage (NIWA 1)"-only sites are skipped).
                 for (param, filter) in [("W", "Stage"), ("Q", "Flow")] {
-                    let url = format!(
-                        "{base}?Service=Hilltop&Request=SiteList&Location=LatLong&Measurement={}",
-                        percent_encode(filter)
-                    );
-                    let body = match self.get_text(&url).await {
+                    let params = [
+                        ("Service", "Hilltop"),
+                        ("Request", "SiteList"),
+                        ("Location", "LatLong"),
+                        ("Measurement", filter),
+                    ];
+                    let body = match self.get_text(base, &params).await {
                         Ok(b) => b,
                         Err(e) => {
                             // One council failing must not break the others.
@@ -506,14 +493,16 @@ impl GaugeReader for NewZealandHilltopReader {
                     continue;
                 };
 
-                let url = format!(
-                    "{base}?Service=Hilltop&Request=GetData&Site={}&Measurement={}&From={}&To={}",
-                    percent_encode(site),
-                    percent_encode(&chosen.request_as),
-                    format_nz_time(req.from),
-                    format_nz_time(req.to),
-                );
-                let body = match self.get_text(&url).await {
+                let (from, to) = (format_nz_time(req.from), format_nz_time(req.to));
+                let params = [
+                    ("Service", "Hilltop"),
+                    ("Request", "GetData"),
+                    ("Site", site),
+                    ("Measurement", chosen.request_as.as_str()),
+                    ("From", from.as_str()),
+                    ("To", to.as_str()),
+                ];
+                let body = match self.get_text(base, &params).await {
                     Ok(b) => b,
                     Err(e) => {
                         tracing::warn!(
@@ -588,12 +577,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn percent_encodes_site_names() {
-        assert_eq!(
-            percent_encode("Buller Rv @ Te Kuha"),
-            "Buller%20Rv%20%40%20Te%20Kuha"
-        );
-        assert_eq!(percent_encode("Stage (NIWA 1)"), "Stage%20%28NIWA%201%29");
+    fn query_encodes_site_names() {
+        let req = reqwest::Client::new()
+            .get("https://example.test/hilltop.hts")
+            .query(&[
+                ("Site", "Buller Rv @ Te Kuha"),
+                ("Measurement", "Stage (NIWA 1)"),
+            ])
+            .build()
+            .unwrap();
+        let url = req.url().as_str();
+        assert!(url.contains("Site=Buller+Rv+%40+Te+Kuha"), "{url}");
+        assert!(url.contains("Measurement=Stage+%28NIWA+1%29"), "{url}");
     }
 
     #[test]
