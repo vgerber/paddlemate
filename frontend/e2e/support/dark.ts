@@ -75,7 +75,9 @@ function scan(kind: string) {
     const text = (el.textContent ?? "").trim().slice(0, 24);
     return `${el.tagName.toLowerCase()}${id}${cls}${text ? ` "${text}"` : ""}`;
   };
-  const skip = "img, canvas, video, picture, svg, [data-imagery]";
+  // Level dots are data marks, not surfaces.
+  const skip =
+    'img, canvas, video, picture, svg, [data-imagery], [data-dot], [data-level], [data-testid="note-dot"]';
   const visible = (el: Element) => {
     const r = el.getBoundingClientRect();
     if (r.width < 1 || r.height < 1) return false;

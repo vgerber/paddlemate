@@ -49,12 +49,13 @@ const SCREENS: {
 ];
 
 // Not D5's: level dots and the sheet grabber are data/shell colours (D2, D6b),
-// the outlined Reject button hairline is the theme's, and the note category
+// and the note category
 // text in the section tabs is D3's (waterway/CommentRow).
 const OTHERS = [
+  // The rejected fold (ButtonBase) draws a dimmed separator rule on purpose.
+  /^border button.* "(Hide|Show) rejected/,
   /^span\.MuiBox-root\.css-\w+$/,
   /^div\.MuiBox-root\.css-\w+$/,
-  /^border button.* "(Reject|Show rejected)/,
   /^text p\.MuiTypography-root\.MuiTypography-body1 "(Hazard|Urgent|Permanent hazard|Hazard cleared)"/,
 ];
 const ours = (r: { what: string }) => !OTHERS.some((re) => re.test(r.what));

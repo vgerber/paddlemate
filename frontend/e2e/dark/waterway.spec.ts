@@ -4,8 +4,7 @@ import { contrastReport, lightSurfaces, useScheme } from "../support/dark";
 // The waterway screens in dark: river panel and tabs, section list, notes,
 // the suggest forms (doc/plans/dark-mode.md, D3).
 
-// Level dots and bars are data colours (D2) and have no text; the outlined
-// chip and button hairline is the theme's (P1a). Neither is this folder's to fix.
+// Level dots and bars are data colours (D2) and have no text. Not this folder's to fix.
 async function expectDark(page: Page) {
   const surfaces = (await lightSurfaces(page)).filter((f) =>
     f.what.includes('"'),
