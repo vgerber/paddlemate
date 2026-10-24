@@ -10,6 +10,7 @@ import RowMenu from "@/components/RowMenu";
 import RolePill from "@/components/trips/RolePill";
 import { stayKind } from "@/components/trips/stayKinds";
 import VoteButton from "@/components/VoteButton";
+import { withAlpha } from "@/lib/alpha";
 import type { TripStay, TripStayCandidate } from "@/lib/api";
 import { dateRange } from "@/lib/format";
 import {
@@ -19,7 +20,7 @@ import {
 } from "@/lib/hooks/useTrips";
 import { ConfirmIcon, DeleteIcon, EditIcon } from "@/lib/icons";
 import { durations } from "@/lib/motion";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 import { nearestWatched } from "@/lib/tripRange";
 import StayDialog from "./StayDialog";
 
@@ -134,7 +135,7 @@ function SupportBar({ up, down }: { up: number; down: number }) {
           height: 6,
           borderRadius: `${tokens.radii.xs}px`,
           overflow: "hidden",
-          bgcolor: `${tokens.outlineVariant}${alphas.hairline}`,
+          bgcolor: withAlpha(tokens.outlineVariant, "hairline"),
           display: "flex",
         }}
       >

@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
-import { alphas, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/alpha";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -14,7 +15,7 @@ export default function StateTile({ children }: { children: ReactNode }) {
         width: 48,
         height: 48,
         borderRadius: `${tokens.radii.md}px`,
-        bgcolor: `${tokens.primary}${alphas.wash}`,
+        bgcolor: withAlpha(tokens.primary, "wash"),
         color: tokens.primary,
         display: "grid",
         placeItems: "center",

@@ -6,11 +6,12 @@ import {
   phoneRowPad,
 } from "@/components/canvas/flatRow";
 import { LevelPill } from "@/components/WaterLevelChip";
+import { withAlpha } from "@/lib/alpha";
 import type { Descent } from "@/lib/api";
 import { descentRivers, descentTitle, VISIBILITY_LABELS } from "@/lib/descents";
 import { durationLabel, formatDate, formatTime, timeAgo } from "@/lib/format";
 import { transition } from "@/lib/motion";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import { levelAtTime } from "./levelAtTime";
 
 const { tokens } = theme;
@@ -118,7 +119,7 @@ export default function DescentCard({
         ...(flatFromMd && !flush && desktopFlatRow),
         transition: transition("background-color", { duration: "instant" }),
         "&:active": onClick
-          ? { bgcolor: `${tokens.primary}${alphas.wash}` }
+          ? { bgcolor: withAlpha(tokens.primary, "wash") }
           : undefined,
       }}
     >

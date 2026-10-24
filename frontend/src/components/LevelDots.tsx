@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import { withAlpha } from "@/lib/alpha";
 import { type DotLevel, dotsLabel } from "@/lib/levelDots";
 import { theme } from "@/lib/theme";
 import { levelMarkerColor } from "@/lib/waterLevel";
@@ -9,7 +10,7 @@ const { tokens } = theme;
 const MAX_DOTS = 12;
 
 function dotSx(level: DotLevel) {
-  if (level === "unknown") return { bgcolor: `${tokens.outline}80` };
+  if (level === "unknown") return { bgcolor: withAlpha(tokens.outline, 50.2) };
   if (level === "empty") {
     return { border: `2px solid ${levelMarkerColor("empty")}` };
   }

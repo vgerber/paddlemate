@@ -3,9 +3,10 @@ import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
+import { withAlpha } from "@/lib/alpha";
 import type { Media } from "@/lib/api";
 import { CloseIcon } from "@/lib/icons";
-import { alphas, labelSx, theme } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -60,7 +61,7 @@ export default function ImageLightbox({
               right: 8,
               width: tokens.touch.min,
               height: tokens.touch.min,
-              bgcolor: `${tokens.surfaceLowest}${alphas.scrim}`,
+              bgcolor: withAlpha(tokens.surfaceLowest, "scrim"),
               boxShadow: tokens.elevation.e1,
               "&:hover": { bgcolor: tokens.surfaceHigh },
             }}
@@ -88,7 +89,7 @@ export default function ImageLightbox({
                 px: 2,
                 py: 1.5,
                 borderTop: "1px solid",
-                borderColor: `${tokens.outlineVariant}${alphas.hairline}`,
+                borderColor: withAlpha(tokens.outlineVariant, "hairline"),
               }}
             >
               {media.caption && (

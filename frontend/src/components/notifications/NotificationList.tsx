@@ -8,6 +8,7 @@ import { phoneCardSx } from "@/components/canvas/flatRow";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
+import { withAlpha } from "@/lib/alpha";
 import type { TripEvent } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
 import {
@@ -22,7 +23,7 @@ import {
   NotificationsIcon,
   TripIcon,
 } from "@/lib/icons";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 
 const { phone } = theme.tokens;
 
@@ -141,7 +142,7 @@ function NotificationRow({
         px: card ? `${phone.inner}px` : undefined,
         "&:not(:last-of-type)": {
           borderBottom: "1px solid",
-          borderColor: `${theme.tokens.outlineVariant}${alphas.hairline}`,
+          borderColor: withAlpha(theme.tokens.outlineVariant, "hairline"),
         },
       }}
     >

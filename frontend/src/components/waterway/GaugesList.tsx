@@ -4,9 +4,10 @@ import Typography from "@mui/material/Typography";
 import { phoneRowPad } from "@/components/canvas/flatRow";
 import GaugeAttribution from "@/components/GaugeAttribution";
 import EmptyState from "@/components/states/EmptyState";
+import { withAlpha } from "@/lib/alpha";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { formatReading } from "@/lib/format";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -53,7 +54,7 @@ export default function GaugesList({
               py: 1.25,
               textAlign: "left",
               bgcolor: selected
-                ? `${tokens.primary}${alphas.wash}`
+                ? withAlpha(tokens.primary, "wash")
                 : tokens.surface,
               borderRadius: `${tokens.radii.md}px`,
               boxShadow: selected

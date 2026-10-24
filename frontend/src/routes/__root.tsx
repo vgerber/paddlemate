@@ -27,6 +27,7 @@ import NotificationBell, {
 import ProposalSentSnackbar from "@/components/proposals/ProposalSentSnackbar";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import UpdateReadySnackbar from "@/components/UpdateReadySnackbar";
+import { withAlpha } from "@/lib/alpha";
 import { apiErrorMessage } from "@/lib/api/client";
 import {
   useLiveTripEvents,
@@ -38,7 +39,7 @@ import { useLanguage } from "@/lib/languagePreference";
 import { transition } from "@/lib/motion";
 import { activeNav, DESKTOP_NAV, PHONE_NAV } from "@/lib/nav";
 import { shouldRetryQuery } from "@/lib/retry";
-import { alphas, BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -58,7 +59,7 @@ const navLinkSx = {
   "&:hover": { color: "text.primary" },
   "&[aria-current=page]": {
     color: "primary.main",
-    bgcolor: `${tokens.primary}${alphas.hover}`,
+    bgcolor: withAlpha(tokens.primary, "hover"),
   },
 } as const;
 
@@ -364,7 +365,7 @@ function UserMenu({
             display: "grid",
             placeItems: "center",
             borderRadius: "50%",
-            bgcolor: `${tokens.primary}${alphas.strong}`,
+            bgcolor: withAlpha(tokens.primary, "strong"),
             color: tokens.primary,
             fontSize: "0.8125rem",
             fontWeight: 700,

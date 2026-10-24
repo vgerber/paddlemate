@@ -1,10 +1,11 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import RowMenu from "@/components/RowMenu";
+import { withAlpha } from "@/lib/alpha";
 import type { ApiToken } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { DeleteIcon } from "@/lib/icons";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -31,7 +32,7 @@ export default function TokenRow({
         minHeight: tokens.touch.row,
         py: 0.5,
         borderBottom: "1px solid",
-        borderColor: `${tokens.outlineVariant}${alphas.hairline}`,
+        borderColor: withAlpha(tokens.outlineVariant, "hairline"),
       }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }}>

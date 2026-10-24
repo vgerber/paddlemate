@@ -14,12 +14,13 @@ import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import MemberAvatar from "@/components/trips/MemberAvatar";
 import FormSection from "@/components/waterway/FormSection";
+import { withAlpha } from "@/lib/alpha";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useUserSearch } from "@/lib/hooks/useFollows";
 import { useAddTripMember } from "@/lib/hooks/useTrips";
 import { AddPersonIcon } from "@/lib/icons";
-import { alphas, BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
 
 import InviteLinks from "./InviteLinks";
 
@@ -196,7 +197,7 @@ function AddMemberBody({
                   minHeight: tokens.touch.min,
                   gap: 1.5,
                   borderBottom: "1px solid",
-                  borderColor: `${tokens.outlineVariant}${alphas.hairline}`,
+                  borderColor: withAlpha(tokens.outlineVariant, "hairline"),
                 }}
               >
                 <MemberAvatar name={user.username} size={32} />

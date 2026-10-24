@@ -3,12 +3,13 @@ import ButtonBase from "@mui/material/ButtonBase";
 import { useNavigate } from "@tanstack/react-router";
 import { factValueSx } from "@/components/Fact";
 import { LevelPill } from "@/components/WaterLevelChip";
+import { withAlpha } from "@/lib/alpha";
 import type { DescentSection } from "@/lib/api";
 import { uniqueSnapshotsBySeries } from "@/lib/descents";
 import { formatReading } from "@/lib/format";
 import { LogIcon } from "@/lib/icons";
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import { levelConfig } from "@/lib/waterLevel";
 
 const { tokens } = theme;
@@ -131,7 +132,7 @@ export default function LogSectionRow({
               py: 1.25,
               "&:last-of-type": { pb: 0 },
               "&:not(:last-of-type)": {
-                borderBottom: `1px solid ${tokens.outlineVariant}${alphas.hairline}`,
+                borderBottom: `1px solid ${withAlpha(tokens.outlineVariant, "hairline")}`,
               },
             }),
       }}
