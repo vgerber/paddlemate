@@ -453,9 +453,9 @@ export function tokensFor(scheme: Scheme): Tokens {
   return scheme === "dark" ? darkTokens : lightTokens;
 }
 
-/** The tokens every consumer imports. Until the flip this is the light
- * palette as resolved values; the flip makes it `toVars(lightTokens)`. */
-export const tokens = lightTokens;
+/** The tokens every consumer imports: colours are `var(--pm-*)`, so one value
+ * serves both schemes in CSS. Code that needs a real colour uses `useTokens()`. */
+export const tokens = toVars(lightTokens);
 
 /** Font stacks used across the app: one family, weights carry the hierarchy. */
 export const fonts = {

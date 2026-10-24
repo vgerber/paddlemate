@@ -150,17 +150,14 @@ for (const scheme of schemes) {
         });
       }
 
-      test.skipIf(scheme === "dark")(
-        "the input edge at rest is outline, not the hairline",
-        () => {
-          const root = theme.components?.MuiFilledInput?.styleOverrides?.root;
-          const shadow = (root as { boxShadow: string }).boxShadow;
-          expect(shadow).toContain(t.outline);
-          expect(
-            ratio(rgbOf(t.outline), rgbOf(t.surface)),
-          ).toBeGreaterThanOrEqual(3);
-        },
-      );
+      test("the input edge at rest is outline, not the hairline", () => {
+        const root = theme.components?.MuiFilledInput?.styleOverrides?.root;
+        const shadow = (root as { boxShadow: string }).boxShadow;
+        expect(shadow).toContain("var(--pm-outline)");
+        expect(
+          ratio(rgbOf(t.outline), rgbOf(t.surface)),
+        ).toBeGreaterThanOrEqual(3);
+      });
     });
 
     describe("level markers", () => {
