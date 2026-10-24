@@ -1,7 +1,8 @@
 import Box from "@mui/material/Box";
 import { useEffect, useRef, useState } from "react";
 import FeatureTypeIcon from "@/components/FeatureTypeIcon";
-import { fonts, theme } from "@/lib/theme";
+import { fonts } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 import {
   DEFAULT_STRIP,
   layoutStrip,
@@ -9,8 +10,6 @@ import {
   stripX,
 } from "./stripLayout";
 import type { ComputedFeature } from "./types";
-
-const { tokens } = theme;
 
 const R = DEFAULT_STRIP.disc / 2;
 const ICON = 16;
@@ -65,6 +64,7 @@ export function FeatureStrip({
   features: ComputedFeature[];
   totalM: number;
 }) {
+  const tokens = useTokens();
   const { ref, width } = useWidth();
   const ranges = features.filter((f) => f.isZone);
   const points: StripPoint[] = features

@@ -7,7 +7,7 @@ import {
   mergeBounds,
   pointCoords,
 } from "@/lib/geo";
-import { theme } from "@/lib/theme";
+import { resolveTokens, type TokenSource } from "@/lib/waterLevel";
 
 /** A placed base and how far it reaches. */
 export interface BaseRange {
@@ -101,8 +101,11 @@ export function rangeBounds(ranges: BaseRange[]): Bounds | null {
  * bases, including the ones with no location yet, so a colour does not shift
  * the moment somebody places a pin.
  */
-export function baseColors(stays: TripStay[]): Record<number, string> {
-  const palette = theme.tokens.mapRegionPalette;
+export function baseColors(
+  stays: TripStay[],
+  from: TokenSource = "light",
+): Record<number, string> {
+  const palette = resolveTokens(from).mapRegionPalette;
   const colors: Record<number, string> = {};
   stays.forEach((stay, i) => {
     colors[stay.id] = palette[i % palette.length];
