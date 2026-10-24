@@ -1,3 +1,4 @@
+use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
 use std::collections::HashMap;
 
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
@@ -298,9 +299,10 @@ impl NewZealandHilltopReader {
     /// GET with one retry - council servers sit behind flaky reverse proxies
     /// (Cloudflare 522s were seen on HBRC).
     async fn get_text(&self, base: &str, params: &[(&str, &str)]) -> anyhow::Result<String> {
+        let url = hilltop_url(base, params);
         let mut last_err = anyhow::anyhow!("unreachable");
         for _ in 0..2 {
-            match self.client.get(base).query(params).send().await {
+            match self.client.get(&url).send().await {
                 Ok(r) if r.status().is_success() => match r.text().await {
                     Ok(t) => return Ok(t),
                     Err(e) => last_err = anyhow::anyhow!("read error: {e}"),
@@ -572,23 +574,41 @@ impl GaugeReader for NewZealandHilltopReader {
     }
 }
 
+/// Everything but unreserved characters is percent-encoded.
+const QUERY_VALUE: &AsciiSet = &NON_ALPHANUMERIC
+    .remove(b'-')
+    .remove(b'_')
+    .remove(b'.')
+    .remove(b'~');
+
+/// A Hilltop request URL. Hilltop servers read `+` in a query as a literal
+/// plus, so spaces must be `%20`, which form encoding (reqwest's `.query()`)
+/// does not produce.
+fn hilltop_url(base: &str, params: &[(&str, &str)]) -> String {
+    let query = params
+        .iter()
+        .map(|(k, v)| format!("{k}={}", utf8_percent_encode(v, QUERY_VALUE)))
+        .collect::<Vec<_>>()
+        .join("&");
+    format!("{base}?{query}")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn query_encodes_site_names() {
-        let req = reqwest::Client::new()
-            .get("https://example.test/hilltop.hts")
-            .query(&[
+        let url = hilltop_url(
+            "https://example.test/hilltop.hts",
+            &[
                 ("Site", "Buller Rv @ Te Kuha"),
                 ("Measurement", "Stage (NIWA 1)"),
-            ])
-            .build()
-            .unwrap();
-        let url = req.url().as_str();
-        assert!(url.contains("Site=Buller+Rv+%40+Te+Kuha"), "{url}");
-        assert!(url.contains("Measurement=Stage+%28NIWA+1%29"), "{url}");
+            ],
+        );
+        assert!(url.contains("Site=Buller%20Rv%20%40%20Te%20Kuha"), "{url}");
+        assert!(url.contains("Measurement=Stage%20%28NIWA%201%29"), "{url}");
+        assert!(!url.contains('+'), "{url}");
     }
 
     #[test]

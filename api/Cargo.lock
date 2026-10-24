@@ -2786,6 +2786,7 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "dotenvy",
+ "percent-encoding",
  "quick-xml",
  "reqwest",
  "serde",
