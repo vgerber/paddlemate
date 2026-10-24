@@ -17,11 +17,14 @@ function runInline(stored: string | null | "throws", prefersDark: boolean) {
         attrs[k] = v;
       },
     },
-    querySelector: () => ({
-      setAttribute: (k: string, v: string) => {
-        meta[k] = v;
-      },
-    }),
+    querySelector: (sel: string) => {
+      if (!sel.includes('media*="light"')) throw new Error(`wrong meta ${sel}`);
+      return {
+        setAttribute: (k: string, v: string) => {
+          meta[k] = v;
+        },
+      };
+    },
   };
   const fakeStorage = {
     getItem: () => {
@@ -52,9 +55,17 @@ describe("resolveScheme", () => {
 });
 
 describe("themeColorFor", () => {
-  test("is the surface of the scheme", () => {
+  test("is the light surface and the dark ground", () => {
     expect(themeColorFor("light")).toBe(lightTokens.surface);
-    expect(themeColorFor("dark")).toBe(darkTokens.surface);
+    expect(themeColorFor("dark")).toBe(darkTokens.background);
+  });
+  test("agrees with the metas in index.html", () => {
+    expect(html).toContain(
+      `content="${themeColorFor("light")}" media="(prefers-color-scheme: light)"`,
+    );
+    expect(html).toContain(
+      `content="${themeColorFor("dark")}" media="(prefers-color-scheme: dark)"`,
+    );
   });
 });
 
