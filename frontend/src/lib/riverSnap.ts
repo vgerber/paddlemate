@@ -28,10 +28,7 @@
  * shortest path through the river network from put-in to take-out.
  */
 
-import type { LngLat } from "@/lib/geo";
-
-/** Rough conversion at mid latitudes; fine for the distances involved here. */
-const METERS_PER_DEGREE = 111_320;
+import { distanceM, type LngLat, nearestOnLine } from "@/lib/geo";
 
 /** Two way endpoints closer than this (degrees) count as the same point. */
 const ENDPOINT_MATCH_EPSILON = 1e-7;
@@ -46,95 +43,14 @@ const MAX_BRIDGEABLE_GAP_DEGREES = 5e-4;
 /** Maximum distance (m) a point may be from the network to attach to it. */
 const MAX_ATTACH_DISTANCE_METERS = 300;
 
-/** Approximate distance in meters between two coordinates. */
-export function distanceInMeters(a: LngLat, b: LngLat): number {
-  const cosineLatitude = Math.cos((a[1] * Math.PI) / 180);
-  const deltaX = (b[0] - a[0]) * cosineLatitude;
-  const deltaY = b[1] - a[1];
-  return Math.sqrt(deltaX * deltaX + deltaY * deltaY) * METERS_PER_DEGREE;
-}
-
-/** Minimum distance in meters from `point` to the polyline `line`. */
-export function distanceToLineInMeters(line: LngLat[], point: LngLat): number {
-  const cosineLatitude = Math.cos((point[1] * Math.PI) / 180);
-  let best = Number.POSITIVE_INFINITY;
-  for (let i = 0; i < line.length - 1; i++) {
-    const projection = projectPointOnSegment(
-      line[i],
-      line[i + 1],
-      point,
-      cosineLatitude,
-    );
-    if (projection.distance < best) best = projection.distance;
-  }
-  return best * METERS_PER_DEGREE;
-}
-
-/** The point on polyline `line` closest to `point`. */
-export function nearestPointOnLine(line: LngLat[], point: LngLat): LngLat {
-  const cosineLatitude = Math.cos((point[1] * Math.PI) / 180);
-  let best: { distance: number; projected: LngLat } = {
-    distance: Number.POSITIVE_INFINITY,
-    projected: line[0],
-  };
-  for (let i = 0; i < line.length - 1; i++) {
-    const projection = projectPointOnSegment(
-      line[i],
-      line[i + 1],
-      point,
-      cosineLatitude,
-    );
-    if (projection.distance < best.distance) best = projection;
-  }
-  return best.projected;
-}
-
-/**
- * Project `point` onto the segment a–b. Longitudes are scaled by
- * cos(latitude) so distances are metric; the returned distance is in those
- * scaled degrees.
- */
-function projectPointOnSegment(
-  a: LngLat,
-  b: LngLat,
-  point: LngLat,
-  cosineLatitude: number,
-): { distance: number; projected: LngLat } {
-  const startX = a[0] * cosineLatitude;
-  const startY = a[1];
-  const deltaX = b[0] * cosineLatitude - startX;
-  const deltaY = b[1] - startY;
-  const pointX = point[0] * cosineLatitude;
-  const pointY = point[1];
-  const lengthSquared = deltaX * deltaX + deltaY * deltaY;
-  const t =
-    lengthSquared > 0
-      ? Math.max(
-          0,
-          Math.min(
-            1,
-            ((pointX - startX) * deltaX + (pointY - startY) * deltaY) /
-              lengthSquared,
-          ),
-        )
-      : 0;
-  const projectedX = startX + t * deltaX;
-  const projectedY = startY + t * deltaY;
-  return {
-    distance: Math.sqrt(
-      (projectedX - pointX) ** 2 + (projectedY - pointY) ** 2,
-    ),
-    projected: [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])],
-  };
-}
-
-/** Segment length in degrees (only used for comparisons and ratios). */
+/** Segment length in degrees; ours because stitching only compares chains. */
 function segmentLength(a: LngLat, b: LngLat): number {
   const deltaX = b[0] - a[0];
   const deltaY = b[1] - a[1];
   return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 }
 
+/** Ours: stitching compares endpoints in degrees against exact-match epsilons. */
 function coordinatesMatch(a: LngLat, b: LngLat): boolean {
   return (
     Math.abs(a[0] - b[0]) < ENDPOINT_MATCH_EPSILON &&
@@ -216,7 +132,8 @@ function growChain(
 }
 
 /**
- * Stitch way fragments into the longest continuous polyline:
+ * Stitch way fragments into the longest continuous polyline (ours: Turf has
+ * no equivalent for merging unordered, partly gapped OSM fragments):
  *
  *   1. Grow chains from exactly touching fragments until all are consumed.
  *   2. Bridge small gaps (< ~50 m) between the chains - OSM rivers are often
@@ -290,43 +207,16 @@ export function snapSection(
  * closest to `point`.
  */
 function normalizedPositionOnLine(line: LngLat[], point: LngLat): number {
-  let bestDistanceSquared = Number.POSITIVE_INFINITY;
-  let bestPosition = 0;
-  let traveled = 0;
+  const total = lineLengthM(line);
+  return total > 0 ? nearestOnLine(line, point).arcM / total : 0;
+}
 
+function lineLengthM(line: LngLat[]): number {
+  let length = 0;
   for (let i = 0; i < line.length - 1; i++) {
-    const a = line[i];
-    const b = line[i + 1];
-    const deltaX = b[0] - a[0];
-    const deltaY = b[1] - a[1];
-    const lengthSquared = deltaX * deltaX + deltaY * deltaY;
-    const length = Math.sqrt(lengthSquared);
-
-    const t =
-      lengthSquared > 0
-        ? Math.max(
-            0,
-            Math.min(
-              1,
-              ((point[0] - a[0]) * deltaX + (point[1] - a[1]) * deltaY) /
-                lengthSquared,
-            ),
-          )
-        : 0;
-
-    const projectedX = a[0] + t * deltaX;
-    const projectedY = a[1] + t * deltaY;
-    const distanceSquared =
-      (projectedX - point[0]) ** 2 + (projectedY - point[1]) ** 2;
-
-    if (distanceSquared < bestDistanceSquared) {
-      bestDistanceSquared = distanceSquared;
-      bestPosition = traveled + t * length;
-    }
-    traveled += length;
+    length += distanceM(line[i], line[i + 1]);
   }
-
-  return traveled > 0 ? bestPosition / traveled : 0;
+  return length;
 }
 
 /**
@@ -341,7 +231,7 @@ function extractLineBetween(
   const cumulativeLengths: number[] = [0];
   for (let i = 0; i < line.length - 1; i++) {
     cumulativeLengths.push(
-      cumulativeLengths[i] + segmentLength(line[i], line[i + 1]),
+      cumulativeLengths[i] + distanceM(line[i], line[i + 1]),
     );
   }
   const totalLength = cumulativeLengths[cumulativeLengths.length - 1];
@@ -413,12 +303,7 @@ export function routeSection(
   takeOut: { lat: number; lon: number },
 ): LngLat[] | null {
   if (ways.length === 0) return null;
-  const cosineLatitude = Math.cos((putIn.lat * Math.PI) / 180);
-  const metersBetween = (a: LngLat, b: LngLat) => {
-    const deltaX = (b[0] - a[0]) * cosineLatitude;
-    const deltaY = b[1] - a[1];
-    return Math.sqrt(deltaX * deltaX + deltaY * deltaY) * METERS_PER_DEGREE;
-  };
+  const metersBetween = distanceM;
 
   // Graph nodes: one per unique vertex coordinate
   const nodeIdByKey = new Map<string, number>();
@@ -475,25 +360,19 @@ export function routeSection(
     };
     for (let wayIndex = 0; wayIndex < ways.length; wayIndex++) {
       const way = ways[wayIndex];
-      for (let i = 0; i < way.length - 1; i++) {
-        const projection = projectPointOnSegment(
-          way[i],
-          way[i + 1],
-          point,
-          cosineLatitude,
-        );
-        if (projection.distance < best.distance) {
-          best = {
-            distance: projection.distance,
-            segmentKey: `${wayIndex}:${i}`,
-            projected: projection.projected,
-            segmentStart: way[i],
-            segmentEnd: way[i + 1],
-          };
-        }
+      if (way.length < 2) continue;
+      const hit = nearestOnLine(way, point);
+      if (hit.distanceM < best.distance) {
+        best = {
+          distance: hit.distanceM,
+          segmentKey: `${wayIndex}:${hit.segment}`,
+          projected: hit.point,
+          segmentStart: way[hit.segment],
+          segmentEnd: way[hit.segment + 1],
+        };
       }
     }
-    if (best.distance * METERS_PER_DEGREE > MAX_ATTACH_DISTANCE_METERS) {
+    if (best.distance > MAX_ATTACH_DISTANCE_METERS) {
       return null;
     }
     const id = nodeCoordinates.length;

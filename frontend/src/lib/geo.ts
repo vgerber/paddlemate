@@ -1,19 +1,18 @@
-/** Haversine distance between two lat/lon points in kilometers. */
-export function haversineKm(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number,
-): number {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+import turfCircle from "@turf/circle";
+import turfDistance from "@turf/distance";
+import turfNearestPointOnLine from "@turf/nearest-point-on-line";
+
+/** [longitude, latitude], the GeoJSON axis order. */
+export type LngLat = [number, number];
+
+/** Ground distance between two points in kilometers. */
+export function distanceKm(a: LngLat, b: LngLat): number {
+  return turfDistance(a, b, { units: "kilometers" });
+}
+
+/** Ground distance between two points in meters. */
+export function distanceM(a: LngLat, b: LngLat): number {
+  return turfDistance(a, b, { units: "meters" });
 }
 
 /** Parse a whitewater difficulty string (I-VI, X) into a numeric grade. */
@@ -29,33 +28,18 @@ export function parseDifficulty(diff: string | undefined): number | null {
   return null;
 }
 
-/** Generate a GeoJSON polygon approximating a circle (n-sided). */
+/** A GeoJSON polygon approximating a circle of `radiusKm` (n-sided). */
 export function circleGeoJSON(
   lat: number,
   lon: number,
   radiusKm: number,
   steps = 64,
 ): GeoJSON.FeatureCollection {
-  const R = 6371;
-  const coords: [number, number][] = [];
-  for (let i = 0; i <= steps; i++) {
-    const angle = (i / steps) * 2 * Math.PI;
-    const dlat = (radiusKm / R) * (180 / Math.PI) * Math.cos(angle);
-    const dlon =
-      ((radiusKm / R) * (180 / Math.PI) * Math.sin(angle)) /
-      Math.cos((lat * Math.PI) / 180);
-    coords.push([lon + dlon, lat + dlat]);
-  }
-  return {
-    type: "FeatureCollection",
-    features: [
-      {
-        type: "Feature",
-        properties: {},
-        geometry: { type: "Polygon", coordinates: [coords] },
-      },
-    ],
-  };
+  const ring = turfCircle([lon, lat], radiusKm, {
+    steps,
+    units: "kilometers",
+  });
+  return { type: "FeatureCollection", features: [ring] };
 }
 
 export interface AreaCircle {
@@ -66,9 +50,6 @@ export interface AreaCircle {
 
 /** The radius a search circle starts at. */
 export const DEFAULT_RADIUS_KM = 10;
-
-/** [longitude, latitude], the GeoJSON axis order. */
-export type LngLat = [number, number];
 
 /** The one box type: [[west, south], [east, north]], what the map fits. */
 export type Bounds = [LngLat, LngLat];
@@ -209,41 +190,54 @@ export function downstreamDot(
   return (takeOut.lon - putIn.lon) * fx + (takeOut.lat - putIn.lat) * fy;
 }
 
+/** Where on a polyline the point nearest to a given point lies. */
+export interface LineHit {
+  /** The nearest point on the line. */
+  point: LngLat;
+  /** Ground distance from the query point to `point`, in meters. */
+  distanceM: number;
+  /** Ground distance along the line from its start to `point`, in meters. */
+  arcM: number;
+  /** Index of the segment `point` lies on. */
+  segment: number;
+}
+
+/**
+ * The point on `line` nearest to `point` (both [lng, lat]). Turf rejects
+ * lines under two points, so those are answered here.
+ */
+export function nearestOnLine(line: LngLat[], point: LngLat): LineHit {
+  if (line.length === 0) {
+    return { point, distanceM: Number.POSITIVE_INFINITY, arcM: 0, segment: 0 };
+  }
+  if (line.length === 1) {
+    return {
+      point: line[0],
+      distanceM: distanceM(line[0], point),
+      arcM: 0,
+      segment: 0,
+    };
+  }
+  const hit = turfNearestPointOnLine(
+    { type: "LineString", coordinates: line },
+    point,
+    { units: "meters" },
+  );
+  const { dist, location, index } = hit.properties;
+  const [lng, lat] = hit.geometry.coordinates;
+  return {
+    point: [lng, lat],
+    distanceM: dist ?? Number.POSITIVE_INFINITY,
+    arcM: location ?? 0,
+    // Turf reports the last vertex as its own index; keep it on a segment.
+    segment: Math.min(index ?? 0, line.length - 2),
+  };
+}
+
 /**
  * Arc-length distance in meters from the start of `line` to the
  * nearest point on it from `pt` (both in [lng, lat] order).
  */
-export function distanceAlongLineM(
-  pt: [number, number],
-  line: [number, number][],
-): number {
-  if (line.length < 2) return 0;
-  let bestDistToLine = Number.POSITIVE_INFINITY;
-  let bestArc = 0;
-  let arcSoFar = 0;
-  for (let i = 0; i < line.length - 1; i++) {
-    const a = line[i];
-    const b = line[i + 1];
-    const segLenM = haversineKm(a[1], a[0], b[1], b[0]) * 1000;
-    const dx = b[0] - a[0];
-    const dy = b[1] - a[1];
-    const lenSq = dx * dx + dy * dy;
-    const t =
-      lenSq > 0
-        ? Math.max(
-            0,
-            Math.min(1, ((pt[0] - a[0]) * dx + (pt[1] - a[1]) * dy) / lenSq),
-          )
-        : 0;
-    const distToSegment = Math.hypot(
-      a[0] + t * dx - pt[0],
-      a[1] + t * dy - pt[1],
-    );
-    if (distToSegment < bestDistToLine) {
-      bestDistToLine = distToSegment;
-      bestArc = arcSoFar + t * segLenM;
-    }
-    arcSoFar += segLenM;
-  }
-  return bestArc;
+export function distanceAlongLineM(pt: LngLat, line: LngLat[]): number {
+  return nearestOnLine(line, pt).arcM;
 }

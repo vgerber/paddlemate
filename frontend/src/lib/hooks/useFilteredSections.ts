@@ -2,7 +2,12 @@ import { useMemo } from "react";
 import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type { SectionWithFeatures } from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
-import { haversineKm, lineCoords, parseDifficulty } from "@/lib/geo";
+import {
+  distanceKm,
+  type LngLat,
+  lineCoords,
+  parseDifficulty,
+} from "@/lib/geo";
 
 interface FilterOptions {
   areaCircle: AreaCircle | null;
@@ -25,13 +30,9 @@ export function useFilteredSections(
         const first = coords[0];
         const last = coords[coords.length - 1];
         const mid = coords[Math.floor(coords.length / 2)];
-        return (
-          haversineKm(areaCircle.lat, areaCircle.lon, first[1], first[0]) <=
-            areaCircle.radiusKm ||
-          haversineKm(areaCircle.lat, areaCircle.lon, last[1], last[0]) <=
-            areaCircle.radiusKm ||
-          haversineKm(areaCircle.lat, areaCircle.lon, mid[1], mid[0]) <=
-            areaCircle.radiusKm
+        const centre: LngLat = [areaCircle.lon, areaCircle.lat];
+        return [first, last, mid].some(
+          (p) => distanceKm(centre, p) <= areaCircle.radiusKm,
         );
       });
     }

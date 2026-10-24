@@ -1,5 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import { bboxToBounds, boundsOf, circleBounds, mergeBounds } from "./geo";
+import {
+  bboxToBounds,
+  boundsOf,
+  circleBounds,
+  circleGeoJSON,
+  distanceAlongLineM,
+  distanceKm,
+  distanceM,
+  mergeBounds,
+  nearestOnLine,
+} from "./geo";
 
 describe("boundsOf", () => {
   test("is the box holding every coordinate", () => {
@@ -78,5 +88,120 @@ describe("circleBounds", () => {
   test("longitude widens with latitude", () => {
     const [[west], [east]] = circleBounds({ lat: 60, lon: 10, radiusKm: 111 });
     expect(east - west).toBeCloseTo(4, 1);
+  });
+});
+
+describe("distanceKm and distanceM", () => {
+  test("measure along the ground in the stated unit", () => {
+    // One degree of longitude on the equator is about 111.19 km.
+    expect(distanceKm([0, 0], [1, 0])).toBeCloseTo(111.19, 1);
+    expect(distanceM([0, 0], [1, 0])).toBeCloseTo(111_195, -2);
+  });
+
+  test("shrink with latitude", () => {
+    expect(distanceKm([10, 60], [11, 60])).toBeCloseTo(55.6, 0);
+  });
+
+  test("are zero for the same point", () => {
+    expect(distanceM([10, 47], [10, 47])).toBe(0);
+  });
+
+  test("go the short way across the antimeridian", () => {
+    expect(distanceKm([179.5, 0], [-179.5, 0])).toBeCloseTo(111.19, 1);
+  });
+});
+
+describe("nearestOnLine", () => {
+  const line: [number, number][] = [
+    [10, 47],
+    [10.01, 47],
+    [10.02, 47],
+  ];
+
+  test("projects onto the segment and reports distance and arc position", () => {
+    const hit = nearestOnLine(line, [10.005, 47.0009]);
+    expect(hit.point[0]).toBeCloseTo(10.005, 5);
+    expect(hit.point[1]).toBeCloseTo(47, 5);
+    expect(hit.distanceM).toBeCloseTo(100, -1);
+    expect(hit.arcM).toBeCloseTo(distanceM(line[0], line[1]) / 2, -1);
+  });
+
+  test("clamps a point beyond either end to that end", () => {
+    const before = nearestOnLine(line, [9.9, 47]);
+    expect(before.point).toEqual([10, 47]);
+    expect(before.arcM).toBe(0);
+    const after = nearestOnLine(line, [10.5, 47]);
+    expect(after.point).toEqual([10.02, 47]);
+    expect(after.arcM).toBeCloseTo(distanceM(line[0], line[2]), 0);
+  });
+
+  test("copes with a zero-length segment", () => {
+    const hit = nearestOnLine(
+      [
+        [10, 47],
+        [10, 47],
+        [10.01, 47],
+      ],
+      [10.005, 47],
+    );
+    expect(hit.point[0]).toBeCloseTo(10.005, 5);
+    expect(Number.isFinite(hit.arcM)).toBe(true);
+  });
+
+  test("handles a line that is not a line", () => {
+    expect(nearestOnLine([], [10, 47]).distanceM).toBe(
+      Number.POSITIVE_INFINITY,
+    );
+    const single = nearestOnLine([[10, 47]], [10.001, 47]);
+    expect(single.point).toEqual([10, 47]);
+    expect(single.arcM).toBe(0);
+  });
+
+  test("finds the closer of two branches of a bent line", () => {
+    const bent: [number, number][] = [
+      [10, 47],
+      [10.01, 47],
+      [10.01, 47.01],
+    ];
+    const hit = nearestOnLine(bent, [10.011, 47.005]);
+    expect(hit.point[0]).toBeCloseTo(10.01, 5);
+    expect(hit.point[1]).toBeCloseTo(47.005, 3);
+  });
+});
+
+describe("distanceAlongLineM", () => {
+  const line: [number, number][] = [
+    [10, 47],
+    [10.01, 47],
+    [10.02, 47],
+  ];
+
+  test("is the arc length to the nearest point", () => {
+    expect(distanceAlongLineM([10.02, 47], line)).toBeCloseTo(
+      distanceM(line[0], line[2]),
+      0,
+    );
+    expect(distanceAlongLineM([10, 47], line)).toBe(0);
+  });
+
+  test("is zero for a line with fewer than two points", () => {
+    expect(distanceAlongLineM([10, 47], [[10, 47]])).toBe(0);
+  });
+});
+
+describe("circleGeoJSON", () => {
+  test("is a closed ring whose vertices sit one radius from the centre", () => {
+    const ring = circleGeoJSON(47, 10, 10).features[0].geometry;
+    if (ring.type !== "Polygon") throw new Error("not a polygon");
+    const coords = ring.coordinates[0] as [number, number][];
+    expect(coords).toHaveLength(65);
+    expect(coords[0]).toEqual(coords[64]);
+    for (const c of coords) expect(distanceKm([10, 47], c)).toBeCloseTo(10, 1);
+  });
+
+  test("honours the step count", () => {
+    const ring = circleGeoJSON(0, 0, 1, 8).features[0].geometry;
+    if (ring.type !== "Polygon") throw new Error("not a polygon");
+    expect(ring.coordinates[0]).toHaveLength(9);
   });
 });

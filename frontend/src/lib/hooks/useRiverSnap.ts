@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { riverSegmentsApi, waterwayGeometryApi } from "@/lib/api";
-import type { LngLat, ViewBounds } from "@/lib/geo";
 import {
-  distanceInMeters,
-  distanceToLineInMeters,
-  nearestPointOnLine,
-  routeSection,
-  snapSection,
-  stitchWays,
-} from "@/lib/riverSnap";
+  distanceM,
+  type LngLat,
+  nearestOnLine,
+  type ViewBounds,
+} from "@/lib/geo";
+import { routeSection, snapSection, stitchWays } from "@/lib/riverSnap";
 
 /** Snap pipeline state - `searching` is the river lookup, `routing` the
  * confluence-crossing stage. */
@@ -357,9 +355,9 @@ export function useRiverSnap(
       ];
       const bothPointsOnNamedRiver =
         namedRiver != null &&
-        distanceToLineInMeters(namedRiver, putInCoordinate) <=
+        nearestOnLine(namedRiver, putInCoordinate).distanceM <=
           ON_RIVER_THRESHOLD_METERS &&
-        distanceToLineInMeters(namedRiver, takeOutCoordinate) <=
+        nearestOnLine(namedRiver, takeOutCoordinate).distanceM <=
           ON_RIVER_THRESHOLD_METERS;
 
       // Stage 2: a point sits on another river past a confluence -
@@ -373,8 +371,8 @@ export function useRiverSnap(
         const corridor: LngLat[] = namedRiver
           ? [
               putInCoordinate,
-              nearestPointOnLine(namedRiver, putInCoordinate),
-              nearestPointOnLine(namedRiver, takeOutCoordinate),
+              nearestOnLine(namedRiver, putInCoordinate).point,
+              nearestOnLine(namedRiver, takeOutCoordinate).point,
               takeOutCoordinate,
             ]
           : [putInCoordinate, takeOutCoordinate];
@@ -382,10 +380,10 @@ export function useRiverSnap(
         // connector, narrow enough to keep the Overpass query fast
         const connectorMeters = namedRiver
           ? Math.max(
-              distanceToLineInMeters(namedRiver, putInCoordinate),
-              distanceToLineInMeters(namedRiver, takeOutCoordinate),
+              nearestOnLine(namedRiver, putInCoordinate).distanceM,
+              nearestOnLine(namedRiver, takeOutCoordinate).distanceM,
             )
-          : distanceInMeters(putInCoordinate, takeOutCoordinate);
+          : distanceM(putInCoordinate, takeOutCoordinate);
         const radiusMeters = Math.min(
           20_000,
           Math.max(5_000, 0.35 * connectorMeters),
@@ -395,9 +393,9 @@ export function useRiverSnap(
         let network =
           cachedNetwork &&
           cachedNetwork.waterwayId === waterwayId &&
-          distanceToLineInMeters(cachedNetwork.line, putInCoordinate) <=
+          nearestOnLine(cachedNetwork.line, putInCoordinate).distanceM <=
             cachedNetwork.radiusMeters - 1000 &&
-          distanceToLineInMeters(cachedNetwork.line, takeOutCoordinate) <=
+          nearestOnLine(cachedNetwork.line, takeOutCoordinate).distanceM <=
             cachedNetwork.radiusMeters - 1000
             ? cachedNetwork
             : null;

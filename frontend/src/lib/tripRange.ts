@@ -2,7 +2,7 @@ import type { TripSection, TripStay } from "@/lib/api";
 import {
   type Bounds,
   circleBounds,
-  haversineKm,
+  distanceKm,
   lineCoords,
   mergeBounds,
   pointCoords,
@@ -40,7 +40,7 @@ export function sectionDistanceKm(
   if (!coords || coords.length === 0) return null;
   let nearest = Number.POSITIVE_INFINITY;
   for (const [clon, clat] of coords) {
-    const d = haversineKm(lat, lon, clat, clon);
+    const d = distanceKm([lon, lat], [clon, clat]);
     if (d < nearest) nearest = d;
   }
   return nearest;
