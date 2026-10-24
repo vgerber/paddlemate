@@ -8,7 +8,7 @@ import {
 } from "date-fns";
 import type { CommentCategory, Descent, Proposal } from "@/lib/api";
 import type { components } from "@/lib/api/schema";
-import { categoryColor, categoryLabel } from "@/lib/comments";
+import { categoryLabel } from "@/lib/comments";
 import { formatReading, plural } from "@/lib/format";
 import { proposalTitle } from "@/lib/proposals";
 import { LEVEL_ORDER, type WaterLevel } from "@/lib/waterLevel";
@@ -32,7 +32,7 @@ export interface StateRow {
   key: "hazard" | "paddled" | "note" | "proposal";
   title: string;
   /** Leading word of the second line, drawn in a category color. */
-  lead?: { text: string; color?: string };
+  lead?: { text: string; category?: CommentCategory };
   detail: string;
   /** Right-hand date. */
   when?: string;
@@ -83,7 +83,7 @@ export function hazardRow(hazards: Comment[], now: Date): StateRow | null {
     title: top.body,
     lead: {
       text: categoryLabel(top.category),
-      color: categoryColor(top.category),
+      category: top.category,
     },
     detail: `, ${author(top)}${more > 0 ? `, +${more} more` : ""}`,
     when: dayLabel(top.created_at, now),
