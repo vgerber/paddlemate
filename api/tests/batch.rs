@@ -403,3 +403,44 @@ async fn section_history_features_are_capped_over_both_sets(pool: PgPool) {
     let r = get(&app, &format!("/waterways/{w}/sections/{s}/history")).await;
     assert!(r.body.get("features_truncated").is_none());
 }
+
+#[sqlx::test]
+async fn sections_are_listed_upstream_to_downstream(pool: PgPool) {
+    let w = waterway(&pool, "Chain").await;
+    // Inserted downstream first, with names that sort the other way and no
+    // river_km_start; each take-out is the next put-in.
+    let legs = [
+        ("A last", "9.2 46.2, 9.3 46.1"),
+        ("B first", "9.0 46.4, 9.1 46.3"),
+        ("C middle", "9.1 46.3, 9.2 46.2"),
+    ];
+    for (name, line) in legs {
+        sqlx::query(
+            "INSERT INTO water_sections (waterway_id, name, location) \
+             VALUES ($1, $2, ST_GeomFromText('LINESTRING(' || $3 || ')', 4326))",
+        )
+        .bind(w)
+        .bind(name)
+        .bind(line)
+        .execute(&pool)
+        .await
+        .unwrap();
+    }
+    let app = app(pool);
+    let names = |sections: &Value| -> Vec<String> {
+        sections
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|s| s["name"].as_str().unwrap().to_owned())
+            .collect()
+    };
+    let want = ["B first", "C middle", "A last"];
+
+    let single = get(&app, &format!("/waterways/{w}")).await;
+    assert_eq!(names(&single.body["sections"]), want);
+    let batch = get(&app, &format!("/waterways?ids={w}&include_sections=true")).await;
+    assert_eq!(names(&batch.body["items"][0]["sections"]), want);
+    let list = get(&app, &format!("/waterways/{w}/sections")).await;
+    assert_eq!(names(&list.body), want);
+}
