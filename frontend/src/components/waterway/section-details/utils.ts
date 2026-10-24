@@ -1,6 +1,11 @@
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
 import { humanize, sentenceCase } from "@/lib/format";
-import { distanceAlongLineM, lineCoords, representativePoint } from "@/lib/geo";
+import {
+  distanceAlongLineM,
+  distanceM,
+  lineCoords,
+  representativePoint,
+} from "@/lib/geo";
 import { localizedDescription, localizedName } from "@/lib/localization";
 import type { ComputedFeature, TreeNode } from "./types";
 
@@ -33,9 +38,19 @@ export function featureName(f: Feature): string {
   return diff ? `${name} ${diff}` : name;
 }
 
+/** Rows ask for the same line's length on every render; a walk of the line is
+ * cheap, a hundred of them per slider step are not. */
+const lengths = new WeakMap<object, number>();
+
 /** Length of the section line in metres; 0 for a degenerate line. */
 export function sectionLengthM(line: [number, number][]): number {
-  return line.length < 2 ? 0 : distanceAlongLineM(line[line.length - 1], line);
+  const cached = lengths.get(line);
+  if (cached != null) return cached;
+  let total = 0;
+  for (let i = 1; i < line.length; i++)
+    total += distanceM(line[i - 1], line[i]);
+  lengths.set(line, total);
+  return total;
 }
 
 /** Tolerance (m) when detecting that a zone spans the whole section. */
@@ -47,8 +62,7 @@ export function spansWholeSection(
   line: [number, number][],
 ): boolean {
   if (f.location.type !== "LineString" || line.length < 2) return false;
-  const totalM = distanceAlongLineM(line[line.length - 1], line);
-  return coversWholeSection(computeExtent(f, line), totalM);
+  return coversWholeSection(computeExtent(f, line), sectionLengthM(line));
 }
 
 /** True when an extent runs (nearly) from one end of a section of length

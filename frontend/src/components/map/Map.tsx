@@ -433,12 +433,13 @@ export default function WaterwayMap({
     });
   };
 
-  const circleData = areaCircle
-    ? circleGeoJSON(areaCircle.lat, areaCircle.lon, areaCircle.radiusKm)
-    : ({
-        type: "FeatureCollection",
-        features: [],
-      } as GeoJSON.FeatureCollection);
+  const circleData = useMemo<GeoJSON.FeatureCollection>(
+    () =>
+      areaCircle
+        ? circleGeoJSON(areaCircle.lat, areaCircle.lon, areaCircle.radiusKm)
+        : { type: "FeatureCollection", features: [] },
+    [areaCircle],
+  );
 
   return (
     <div
