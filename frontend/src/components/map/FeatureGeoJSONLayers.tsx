@@ -110,7 +110,8 @@ export default function FeatureGeoJSONLayers({
           id={`${p}-lines-casing`}
           type="line"
           paint={{
-            "line-color": ringColor,
+            // Light keeps the white casing (mapSectionLineCasing is white).
+            "line-color": tokens.mapSectionLineCasing,
             "line-width": proposed ? 6.5 : 3.5,
             "line-opacity": proposed ? 0.9 : 0.8,
             "line-offset": lineOffset,

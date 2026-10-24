@@ -61,7 +61,10 @@ export default function RangeRingLayers({ rings }: { rings: RangeRing[] }) {
         <Layer
           id="range-rings-fill"
           type="fill"
-          paint={{ "fill-color": ["get", "color"], "fill-opacity": 0.07 }}
+          paint={{
+            "fill-color": ["get", "color"],
+            "fill-opacity": dark ? 0 : 0.07,
+          }}
         />
         <Layer
           id="range-rings-line"
