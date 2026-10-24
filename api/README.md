@@ -203,6 +203,28 @@ fields, 200 characters per field name or value).
 
 Proposal responses carry `submitted_by_name` and `reviewed_by_name`.
 
+## Gauge readings
+
+`GET /api/v1/waterways/gauges/{gauge_id}/series/{series_id}/readings/summary`
+returns about `points` values for any range, for charts.
+
+| Query | Meaning |
+|---|---|
+| `from`, `to` | ISO 8601 UTC. `to` defaults to now, `from` to `to` minus 7 days. `from` must be before `to` and the span at most 5 years, else 400 |
+| `points` | Target count, default 300, clamped to 10..1000 |
+
+Response: `{ bucket_seconds, from, to, items: [{ measured_at, value, min, max, count }] }`,
+oldest first. When the range holds at most `points` readings, `bucket_seconds`
+is 0 and each item is one raw reading (`min = max = value`, `count = 1`).
+Otherwise the span divided by `points` is rounded up to one of 60, 300, 900,
+1800, 3600, 7200, 10800, 21600, 43200, 86400, 172800, 259200 or 604800 seconds
+(the last when none fits). Buckets are aligned with `date_bin` to 1970-01-01;
+`measured_at` is the bucket start, `value` the average. Empty buckets are left
+out. 404 when the series is not on that gauge. The query is an index-only scan
+on `idx_gauge_readings_series_time_value`; code in
+`src/query/gauges/summary.rs` and `src/routes/gauges/summary.rs`.
+`.../readings` (newest first, at most 1000) is unchanged.
+
 ## Authentication
 
 Two authentication methods are supported:

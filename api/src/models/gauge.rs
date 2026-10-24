@@ -449,3 +449,26 @@ mod water_range_body_tests {
         assert!(ok.validate().is_ok());
     }
 }
+
+/// One point of a readings summary. In raw mode `min` and `max` equal `value`
+/// and `count` is 1.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct ReadingBucket {
+    /// Bucket start (or the reading time in raw mode).
+    pub measured_at: DateTime<Utc>,
+    /// Average of the readings in the bucket.
+    pub value: f64,
+    pub min: f64,
+    pub max: f64,
+    pub count: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct ReadingsSummary {
+    /// Bucket width in seconds; 0 when the items are raw readings.
+    pub bucket_seconds: i64,
+    pub from: DateTime<Utc>,
+    pub to: DateTime<Utc>,
+    /// Oldest first; empty buckets are left out.
+    pub items: Vec<ReadingBucket>,
+}
