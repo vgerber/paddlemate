@@ -95,6 +95,7 @@ function PhoneSettings({
       }}
     >
       <PanelHeader
+        title="Settings"
         tabs={{
           value: tab,
           onChange: setTab,

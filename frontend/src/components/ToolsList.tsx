@@ -6,7 +6,7 @@ import { useGaugeMap } from "@/lib/hooks/useGauges";
 import { useProposals } from "@/lib/hooks/useProposals";
 import { ListIcon, MapIcon } from "@/lib/icons";
 import { transition } from "@/lib/motion";
-import { theme } from "@/lib/theme";
+import { cardTitleSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 const { phone } = tokens;
@@ -95,9 +95,7 @@ export default function ToolsList() {
               {tool.icon}
             </Box>
             <Box sx={{ minWidth: 0 }}>
-              <Typography sx={{ fontWeight: 700, fontSize: "1rem" }}>
-                {tool.title}
-              </Typography>
+              <Typography sx={cardTitleSx}>{tool.title}</Typography>
               <Typography
                 color="textSecondary"
                 sx={{ fontSize: "0.875rem", lineHeight: "19px" }}

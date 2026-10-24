@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { theme } from "@/lib/theme";
+import { cardTitleSx, theme } from "@/lib/theme";
 import StateTile from "./StateTile";
 
 const { tokens } = theme;
@@ -47,7 +47,9 @@ export default function StateCard({
         }}
       >
         {icon && <StateTile>{icon}</StateTile>}
-        <Typography variant="h6">{title}</Typography>
+        <Typography variant="h6" sx={cardTitleSx}>
+          {title}
+        </Typography>
         {caption && (
           <Typography
             variant="body2"

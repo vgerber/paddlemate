@@ -27,6 +27,18 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   tabs** when the panel has views. A detail pane rendered beside the list it was
   picked from keeps the title row and drops only the back arrow, because the
   list beside it carries the way back.
+- **One bar, one set of numbers** (phone and desktop alike). The title row is
+  56 high, 104 with the 48 tab row; there is no extra padding above or gap
+  under it. Title 20/700/26, subtitle 13/400/18, every action icon 24 in a 44
+  box (back and close are 22). A screen with no back arrow (Settings, Tools,
+  the map search) puts its title on the 28 line; with a back arrow the arrow is
+  on the 28 line and the title on the 68 line. The search header is the same
+  bar, so going from a search to a river does not move the tabs. Other titles:
+  card and state titles 15/600/20 (`cardTitleSx`), sheet and dialog titles
+  18/700/24 (`h4`; a sheet's on the 28 line), the form bottom bar 16/700 with a
+  13/400 subtitle, the count line (`ListPaneHeader`) 13/500 in a 44 row, and an
+  in-screen section heading 13/600/18 (`sectionHeadingSx`). A heading never
+  sets its own size.
 - **Tabs swipe.** The content under the tab bar follows the finger one to one
   and settles on the next tab; the underline stretches in step. The first and
   last tab resist and spring back. The screen edge (24px) stays free for the
