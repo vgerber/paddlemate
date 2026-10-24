@@ -85,7 +85,15 @@ function PhoneSettings({
     onIndexChange: (i) => setTab(PHONE_TABS[i].value),
   });
   return (
-    <Box>
+    // The pane runs down to the bottom nav, so a swipe anywhere below the
+    // tabs turns the page, not only over the rows.
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: PANEL_HEIGHT.xs,
+      }}
+    >
       <PanelHeader
         tabs={{
           value: tab,
@@ -95,8 +103,16 @@ function PhoneSettings({
           options: PHONE_TABS,
         }}
       />
-      <Box sx={{ position: "relative", overflowX: "clip" }}>
-        <Box {...swipe.paneProps} data-testid="settings-pane">
+      <Box
+        sx={{
+          position: "relative",
+          overflowX: "clip",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Box {...swipe.paneProps} data-testid="settings-pane" sx={{ flex: 1 }}>
           <PhoneTabBody tab={tab} onOpen={onOpen} />
         </Box>
         <SwipeGhost swipe={swipe} index={index} count={PHONE_TABS.length}>

@@ -117,6 +117,25 @@ test.describe("the next tab is there while swiping", () => {
     );
   });
 
+  test("profile: a swipe in the empty space under the rows turns the page", async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name === "desktop", "touch layouts only");
+    await page.goto("/settings");
+    await expect(page.getByRole("tab", { name: "Inbox" })).toBeVisible();
+    // Just above the bottom nav, below the last settings row.
+    const nav = await page.locator("nav[aria-label=Main]").boundingBox();
+    const view = page.viewportSize();
+    if (!nav || !view) throw new Error("no nav");
+    const f = await Finger.down(page, view.width * 0.8, nav.y - 40);
+    await f.moveBy(-view.width * 0.5);
+    await f.up();
+    await expect(page.getByRole("tab", { name: "Inbox" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
   test("search: Area sits beside Name mid-swipe", async ({ page }, info) => {
     test.skip(info.project.name === "desktop", "touch layouts only");
     await page.goto("/?panel=1");
