@@ -14,6 +14,7 @@ const title = (page: Page, text: string) =>
 const GROUPS = [
   ["account", "Account"],
   ["language", "Display language"],
+  ["appearance", "Appearance"],
   ["notifications", "Notifications"],
   ["tokens", "Access tokens"],
 ] as const;

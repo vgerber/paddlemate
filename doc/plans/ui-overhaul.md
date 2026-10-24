@@ -99,7 +99,7 @@ uses bounding boxes, which is only an approximation. WP3 and WP6 share the
 
 | WP | What |
 |---|---|
-| WP13 | Dark mode: tokens as CSS variables so the hex-alpha suffix becomes a helper; one switch for the system preference; the dark screens from the design page |
+| WP13 | Done: dark mode - tokens as CSS variables so the hex-alpha suffix becomes a helper; one switch for the system preference; the dark screens from the design page. See [dark-mode.md](dark-mode.md) |
 | WP14 | Motion applied: the panel, fold, chart, sheet, calendar and tab transitions from the choreography page; feedback states; the flow along the selected section on the map under the battery policy; one per-app reduced-motion switch |
 | WP15 | The sweep: every screen at 320px and at 130% text, touch targets everywhere, keyboard and screen reader pass, then the Opus review |
 

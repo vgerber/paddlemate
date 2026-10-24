@@ -25,7 +25,7 @@ const switchSx = {
   "& .MuiSwitch-thumb": {
     width: 20,
     height: 20,
-    color: tokens.surfaceLowest,
+    color: tokens.switchThumb,
     boxShadow: tokens.elevation.e1,
   },
   "& .MuiSwitch-switchBase + .MuiSwitch-track": {

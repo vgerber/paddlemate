@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useMap } from "react-map-gl/maplibre";
 import { transition } from "@/lib/motion";
 import { theme } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 import type { MapPadding } from "./Map";
 
 const { tokens } = theme;
@@ -31,6 +32,7 @@ const NORTH_EPSILON = 0.5;
  * and layers never move; pressing it puts north back on top. */
 export default function MapCompass({ inset }: { inset?: MapPadding }) {
   const { current: map } = useMap();
+  const { onSurface } = useTokens();
   const [bearing, setBearing] = useState(0);
   const [pitch, setPitch] = useState(0);
 
@@ -89,7 +91,7 @@ export default function MapCompass({ inset }: { inset?: MapPadding }) {
         <path
           d="M12 3v18M12 3l-5 5M12 3l5 5"
           fill="none"
-          stroke={tokens.onSurface}
+          stroke={onSurface}
           strokeWidth="2.2"
           strokeLinecap="round"
           strokeLinejoin="round"

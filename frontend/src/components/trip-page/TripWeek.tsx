@@ -2,7 +2,8 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import { format, parseISO } from "date-fns";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/alpha";
+import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -58,7 +59,7 @@ export default function TripWeek({
               gap: 0.25,
               py: 1,
               borderRadius: `${tokens.radii.md}px`,
-              bgcolor: on ? `${tokens.primary}${alphas.tint}` : "transparent",
+              bgcolor: on ? withAlpha(tokens.primary, "tint") : "transparent",
               boxShadow: `inset 0 0 0 ${on ? 2 : 1}px ${
                 on ? tokens.primary : tokens.outlineVariant
               }`,
@@ -89,7 +90,7 @@ export default function TripWeek({
                 bgcolor:
                   count > 0
                     ? tokens.primary
-                    : `${tokens.primary}${alphas.wash}`,
+                    : withAlpha(tokens.primary, "wash"),
               }}
             />
             <Typography

@@ -1,6 +1,8 @@
 import Box from "@mui/material/Box";
+import { withAlpha } from "@/lib/alpha";
 import { type DotLevel, dotsLabel } from "@/lib/levelDots";
 import { theme } from "@/lib/theme";
+import { type ResolvedTokens, useTokens } from "@/lib/useTokens";
 import { levelMarkerColor } from "@/lib/waterLevel";
 
 const { tokens } = theme;
@@ -8,12 +10,12 @@ const { tokens } = theme;
 /** More dots than this read as noise: the rest collapse into a count. */
 const MAX_DOTS = 12;
 
-function dotSx(level: DotLevel) {
-  if (level === "unknown") return { bgcolor: `${tokens.outline}80` };
+function dotSx(level: DotLevel, ink: ResolvedTokens) {
+  if (level === "unknown") return { bgcolor: withAlpha(tokens.outline, 50.2) };
   if (level === "empty") {
-    return { border: `2px solid ${levelMarkerColor("empty")}` };
+    return { border: `2px solid ${levelMarkerColor("empty", ink)}` };
   }
-  return { bgcolor: levelMarkerColor(level) };
+  return { bgcolor: levelMarkerColor(level, ink) };
 }
 
 /** One small dot per section, coloured by its level, so a closed row answers
@@ -28,6 +30,7 @@ export default function LevelDots({
   /** Section names, same order, for the hover title of each dot. */
   names?: string[];
 }) {
+  const ink = useTokens();
   if (levels.length === 0) return null;
   const shown = levels.slice(0, MAX_DOTS);
   const more = levels.length - shown.length;
@@ -48,7 +51,7 @@ export default function LevelDots({
             height: 8,
             boxSizing: "border-box",
             borderRadius: "50%",
-            ...dotSx(level),
+            ...dotSx(level, ink),
           }}
         />
       ))}

@@ -57,7 +57,7 @@ export function NumberDisc({ n, size = DISC }: { n: number; size?: number }) {
         width: size,
         height: size,
         borderRadius: "50%",
-        bgcolor: tokens.primary,
+        bgcolor: tokens.primaryFill,
         color: tokens.onPrimary,
         display: "grid",
         placeItems: "center",

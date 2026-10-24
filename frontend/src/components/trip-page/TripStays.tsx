@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
 import ListItemButton from "@mui/material/ListItemButton";
+import { useColorScheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
 import { phoneRowPad, trailSlotSx } from "@/components/canvas/flatRow";
@@ -13,14 +14,17 @@ import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import { stayKind } from "@/components/trips/stayKinds";
+import { withAlpha } from "@/lib/alpha";
 import type { TripStay } from "@/lib/api";
+import { badgeInk } from "@/lib/badgeInk";
 import { dateRange } from "@/lib/format";
 import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
 import { useSectionDotLevels } from "@/lib/hooks/useWaterStatus";
 import { AddToListIcon, BaseIcon, DeleteIcon, EditIcon } from "@/lib/icons";
 import { durations } from "@/lib/motion";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 import { baseColors, baseNumbers } from "@/lib/tripRange";
+import { useTokens } from "@/lib/useTokens";
 import BasesMap from "./BasesMap";
 import TripCandidates from "./TripCandidates";
 import WatchList from "./WatchList";
@@ -58,6 +62,7 @@ export default function TripStays({
   onEditWatchList,
   onDeleteStay,
 }: Props) {
+  const tokens = useTokens();
   const [openId, setOpenId] = useState<number | null>(null);
   const staysQuery = useTripStays(tripId);
   const { data: stays, isLoading } = staysQuery;
@@ -79,7 +84,7 @@ export default function TripStays({
   const list = stays ?? [];
   // The same colour the base wears on the map above, so a ring and a row are
   // recognisably one base.
-  const colors = baseColors(list);
+  const colors = baseColors(list, tokens);
   const numbers = baseNumbers(list);
 
   if (list.length === 0) {
@@ -155,6 +160,8 @@ function StayRow({
   onLogSection: (sectionId: number, waterwayId: number) => void;
 }) {
   const { label, Icon } = stayKind(stay.kind);
+  const dark = useColorScheme().colorScheme === "dark";
+  const ink = useTokens().onPrimary;
   // Cache-shared with the chips in the watch list below and the section
   // lines on the map, so opening a base costs no extra request.
   const pairs = useMemo(
@@ -221,7 +228,7 @@ function StayRow({
           pr: 0.5,
           ...phoneRowPad,
           cursor: "pointer",
-          bgcolor: isOpen ? `${tokens.primary}${alphas.tint}` : "transparent",
+          bgcolor: isOpen ? withAlpha(tokens.primary, "tint") : "transparent",
         }}
       >
         <Box
@@ -238,7 +245,7 @@ function StayRow({
               height: { xs: phone.icon, md: 22 },
               borderRadius: "50%",
               bgcolor: color,
-              color: theme.tokens.white,
+              color: badgeInk(color, ink, dark),
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

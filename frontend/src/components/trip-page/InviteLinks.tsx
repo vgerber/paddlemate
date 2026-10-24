@@ -6,6 +6,7 @@ import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import RowMenu from "@/components/RowMenu";
 import FormSection from "@/components/waterway/FormSection";
+import { withAlpha } from "@/lib/alpha";
 import type { TripInvite, TripInviteCreated } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
@@ -15,7 +16,7 @@ import {
   useTripInvites,
 } from "@/lib/hooks/useTrips";
 import { ConfirmIcon, CopyIcon, LinkOffIcon, ShareIcon } from "@/lib/icons";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 const inviteUrl = (token: string) =>
   `${window.location.origin}/invite/${token}`;
@@ -58,7 +59,7 @@ export default function InviteLinks({ tripId }: { tripId: number }) {
             gap: 1,
             py: 0.75,
             borderBottom: "1px solid",
-            borderColor: `${theme.tokens.outlineVariant}${alphas.hairline}`,
+            borderColor: withAlpha(theme.tokens.outlineVariant, "hairline"),
           }}
         >
           <Box sx={{ flex: 1, minWidth: 0 }}>

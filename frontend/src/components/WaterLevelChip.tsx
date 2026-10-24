@@ -4,11 +4,12 @@ import type { components } from "@/lib/api/schema";
 import { formatReading } from "@/lib/format";
 import { useRowWaterStatus } from "@/lib/hooks/useWaterStatus";
 import { theme } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 import {
   currentLevel,
   freshRanges,
   isCalibrated,
-  levelConfig,
+  levelConfigFor,
   type WaterLevel,
 } from "@/lib/waterLevel";
 
@@ -34,7 +35,9 @@ export function LevelPill({
   title?: string;
   dot?: boolean;
 }) {
-  const cfg = level === "none" ? levelConfig.empty : levelConfig[level];
+  const ink = useTokens();
+  const config = levelConfigFor(ink);
+  const cfg = level === "none" ? config.empty : config[level];
   const hollow = level === "empty" || level === "none";
   const outline =
     level === "empty" ? tokens.levels.empty.border : tokens.outlineVariant;
@@ -93,6 +96,7 @@ export default function WaterLevelChip({
   waterwayId,
   sectionId,
 }: WaterLevelChipProps) {
+  const ink = useTokens();
   const { data: waterStatus, isLoading } = useRowWaterStatus(
     waterwayId,
     sectionId,
@@ -139,6 +143,8 @@ export default function WaterLevelChip({
   const reading = source ? readingLabel(source) : null;
 
   return (
-    <LevelPill level={level}>{reading ?? levelConfig[level].label}</LevelPill>
+    <LevelPill level={level}>
+      {reading ?? levelConfigFor(ink)[level].label}
+    </LevelPill>
   );
 }

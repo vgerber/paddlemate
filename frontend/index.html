@@ -11,13 +11,37 @@
          cover every inset is 0 and the browser manages the unsafe areas.
          (Trade-off: Chrome 15+ edge-to-edge paints its own chin there.) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- The frame follows the phone: a phone in dark mode draws its system
-         buttons light, so the bar behind them must be dark even while the app
-         itself is light. The dark value is dark mode's ground. The manifest
-         cannot carry a pair; these tags override it at runtime. -->
-    <meta name="color-scheme" content="light" />
+    <!-- The phone's system buttons sit on this frame colour. The light-media
+         meta follows the app's scheme (colorMode.ts); the dark-media meta
+         stays dark, so a dark device with the app forced Light keeps a dark
+         frame its buttons show on. -->
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#141b1f" media="(prefers-color-scheme: dark)" />
+    <!-- Dark mode, before first paint (the bundle is a module and arrives
+         later). The script mirrors resolveScheme in src/lib/colorMode.ts, the
+         style the grounds in src/lib/theme.ts; colorMode.test.ts holds both. -->
+    <style>
+      html { background: #eef2f3; }
+      html[data-theme="dark"] { background: #141b1f; color-scheme: dark; }
+      @media print {
+        html[data-theme="dark"] { background: #ffffff; color-scheme: light; }
+      }
+    </style>
+    <script>
+      (function () {
+        var mode = null;
+        try {
+          mode = localStorage.getItem("paddlemate-color-mode");
+        } catch (e) {}
+        var dark =
+          mode === "dark" ||
+          (mode !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+        document
+          .querySelector('meta[name="theme-color"][media*="light"]')
+          .setAttribute("content", dark ? "#141b1f" : "#ffffff");
+      })();
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />

@@ -10,6 +10,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import ImageLightbox from "@/components/ImageLightbox";
 import QueryStates from "@/components/states/QueryStates";
 import SignInGate from "@/components/states/SignInGate";
+import { withAlpha } from "@/lib/alpha";
 import type { CommentCategory, Media, SectionWithFeatures } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { CATEGORY_ORDER, categoryLabel } from "@/lib/comments";
@@ -241,7 +242,7 @@ export default function CommentThread({
             pb: { xs: 1.5, md: 0 },
             mt: { xs: 0.5, md: 0 },
             borderTop: "1px solid",
-            borderColor: `${tokens.outlineVariant}55`,
+            borderColor: withAlpha(tokens.outlineVariant, "hairline"),
             display: "flex",
             flexDirection: "column",
             gap: 1,
@@ -274,7 +275,7 @@ export default function CommentThread({
                       width: 56,
                       height: 56,
                       border: "1px solid",
-                      borderColor: `${tokens.outlineVariant}55`,
+                      borderColor: withAlpha(tokens.outlineVariant, "hairline"),
                       backgroundImage: `url(${item.thumbnail_url ?? item.url})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
@@ -291,7 +292,7 @@ export default function CommentThread({
                       p: 0.25,
                       bgcolor: tokens.surface,
                       border: "1px solid",
-                      borderColor: `${tokens.outlineVariant}99`,
+                      borderColor: withAlpha(tokens.outlineVariant, "border"),
                       "&:hover": { bgcolor: tokens.surfaceHigh },
                     }}
                   >

@@ -1,9 +1,10 @@
+import { useColorScheme } from "@mui/material/styles";
 import { Layer, Source } from "react-map-gl/maplibre";
+import { badgeInk } from "@/lib/badgeInk";
 import { circleGeoJSON } from "@/lib/geo";
-import { fonts, theme } from "@/lib/theme";
+import { fonts } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 import AccessibleMarker from "./AccessibleMarker";
-
-const { tokens } = theme;
 
 /** A place and how far it reaches, drawn as a named dot inside its ring. */
 export interface RangeRing {
@@ -29,6 +30,8 @@ export interface RangeRing {
  * farthest thing on the list is.
  */
 export default function RangeRingLayers({ rings }: { rings: RangeRing[] }) {
+  const tokens = useTokens();
+  const dark = useColorScheme().colorScheme === "dark";
   const data: GeoJSON.FeatureCollection = {
     type: "FeatureCollection",
     features: rings
@@ -58,7 +61,10 @@ export default function RangeRingLayers({ rings }: { rings: RangeRing[] }) {
         <Layer
           id="range-rings-fill"
           type="fill"
-          paint={{ "fill-color": ["get", "color"], "fill-opacity": 0.07 }}
+          paint={{
+            "fill-color": ["get", "color"],
+            "fill-opacity": dark ? 0 : 0.07,
+          }}
         />
         <Layer
           id="range-rings-line"
@@ -111,7 +117,9 @@ export default function RangeRingLayers({ rings }: { rings: RangeRing[] }) {
               height: 22,
               borderRadius: "50%",
               background: ring.proposed ? "transparent" : ring.color,
-              color: ring.proposed ? ring.color : tokens.white,
+              color: ring.proposed
+                ? ring.color
+                : badgeInk(ring.color, tokens.onPrimary, dark),
               border: ring.proposed
                 ? `2px dashed ${ring.color}`
                 : `2px solid ${tokens.surfaceLowest}`,

@@ -63,7 +63,7 @@ export default function SuggestFeatureTypeGrid({
               cursor: "pointer",
               border: "1px solid",
               borderRadius: `${tokens.radii.sm}px`,
-              borderColor: chosen ? tokens.primary : tokens.outlineVariant,
+              borderColor: chosen ? tokens.primary : tokens.outlineControl,
               bgcolor: chosen ? tokens.primaryContainer : tokens.surface,
               color: chosen ? tokens.primary : tokens.onSurfaceVariant,
               transition: `background-color ${tokens.motion.fast}ms ${tokens.motion.easeOut}`,

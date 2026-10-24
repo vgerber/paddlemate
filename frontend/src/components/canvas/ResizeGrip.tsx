@@ -1,7 +1,8 @@
 import Box from "@mui/material/Box";
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from "react";
+import { withAlpha } from "@/lib/alpha";
 import { transition } from "@/lib/motion";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 const { canvas } = tokens;
@@ -138,7 +139,7 @@ export default function ResizeGrip({
           height: canvas.gripBar.h,
           borderRadius: `${tokens.radii.pill}px`,
           // A soft edge; the shadow and the dots carry the tab.
-          boxShadow: `${tokens.elevation.e2}, inset 0 0 0 1px ${tokens.outline}${alphas.hairline}`,
+          boxShadow: `${tokens.elevation.e2}, inset 0 0 0 1px ${withAlpha(tokens.outline, "hairline")}`,
           // Two columns of three dots over the tab's fill; the dots layer is
           // held to the content box, the fill covers the whole tab.
           background: dots(tokens.onSurfaceVariant),

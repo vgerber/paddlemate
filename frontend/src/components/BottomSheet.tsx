@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { withAlpha } from "@/lib/alpha";
 import { transition } from "@/lib/motion";
 import {
   dragHeight,
@@ -18,7 +19,7 @@ import {
   snapHeights,
 } from "@/lib/sheetSnap";
 import { releaseVelocity, type Sample } from "@/lib/swipe";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -148,7 +149,7 @@ export default function BottomSheet({
             position: "fixed",
             inset: 0,
             zIndex: theme.zIndex.modal,
-            bgcolor: `${tokens.onSurface}${alphas.border}`,
+            bgcolor: withAlpha(tokens.scrimBase, "border"),
           }}
         />
       )}
@@ -218,7 +219,7 @@ export default function BottomSheet({
                 width: 36,
                 height: 4,
                 borderRadius: `${tokens.radii.pill}px`,
-                bgcolor: tokens.outlineVariant,
+                bgcolor: tokens.outlineControl,
               }}
             />
           </Box>

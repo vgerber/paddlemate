@@ -5,6 +5,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { useMapVerb } from "@/components/waterway/useMapVerb";
+import { withAlpha } from "@/lib/alpha";
 import type { AreaCircle } from "@/lib/geo";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { LockIcon, UnlockIcon } from "@/lib/icons";
@@ -89,7 +90,7 @@ export default function AreaControls({
                 bgcolor: tokens.primary,
               },
               "&:hover::after, &.Mui-focusVisible::after, &.Mui-active::after":
-                { boxShadow: `0 0 0 8px ${tokens.primary}29` },
+                { boxShadow: `0 0 0 8px ${withAlpha(tokens.primary, 16.08)}` },
             },
           }}
         />

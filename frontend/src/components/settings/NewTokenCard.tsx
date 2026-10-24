@@ -2,9 +2,10 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import { withAlpha } from "@/lib/alpha";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { ConfirmIcon, CopyIcon } from "@/lib/icons";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -26,9 +27,9 @@ export default function NewTokenCard({
         display: "flex",
         flexDirection: "column",
         gap: 1,
-        bgcolor: `${tokens.primary}${alphas.tint}`,
+        bgcolor: withAlpha(tokens.primary, "tint"),
         border: "1px solid",
-        borderColor: `${tokens.primary}${alphas.border}`,
+        borderColor: withAlpha(tokens.primary, "border"),
         borderRadius: `${tokens.radii.md}px`,
       }}
     >

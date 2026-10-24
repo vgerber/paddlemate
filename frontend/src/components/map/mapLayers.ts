@@ -9,11 +9,8 @@ import type {
 import { humanize, sentenceCase } from "@/lib/format";
 import { lineCoords, pointCoords, representativePoint } from "@/lib/geo";
 import { localizedName } from "@/lib/localization";
-import { theme } from "@/lib/theme";
+import type { ResolvedTokens } from "@/lib/useTokens";
 import { labelPoint, regionSubtitle } from "./regionGeometry";
-
-export const FEATURE_COLORS: Record<string, string> =
-  theme.tokens.featureColors;
 
 function nearestPointOnSegment(
   p: [number, number],
@@ -203,6 +200,7 @@ export function buildSectionEndpointsGeoJSON(
 
 export function buildPutInTakeOutConnectorsGeoJSON(
   sections: SectionWithFeatures[],
+  t: ResolvedTokens,
 ): GeoJSON.FeatureCollection {
   const connectors: GeoJSON.Feature[] = [];
   for (const s of sections) {
@@ -224,7 +222,7 @@ export function buildPutInTakeOutConnectorsGeoJSON(
         id: ap.id,
         properties: {
           feature_type: ap.feature_type,
-          color: FEATURE_COLORS[ap.feature_type] ?? theme.tokens.outline,
+          color: t.featureColors[ap.feature_type] ?? t.outline,
         },
         geometry: {
           type: "LineString" as const,
@@ -239,6 +237,7 @@ export function buildPutInTakeOutConnectorsGeoJSON(
 export function buildPointFeaturesGeoJSON(
   features: Feature[],
   language: string,
+  t: ResolvedTokens,
 ): GeoJSON.FeatureCollection {
   return {
     type: "FeatureCollection",
@@ -258,7 +257,7 @@ export function buildPointFeaturesGeoJSON(
             id: f.id,
             feature_type: f.feature_type,
             label: featureLabel(f, language) || typeLabel(f),
-            color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
+            color: t.featureColors[f.feature_type] ?? t.primary,
           },
           geometry: f.location,
         },
@@ -270,6 +269,7 @@ export function buildPointFeaturesGeoJSON(
 export function buildLineFeaturesGeoJSON(
   features: Feature[],
   language: string,
+  t: ResolvedTokens,
 ): GeoJSON.FeatureCollection {
   const lines = features.flatMap((f) =>
     f.location.type === "LineString" ? [{ f, geometry: f.location }] : [],
@@ -285,7 +285,7 @@ export function buildLineFeaturesGeoJSON(
         label: featureLabel(f, language),
         // Sideways offset step so overlapping lines stay distinguishable
         stack: index,
-        color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
+        color: t.featureColors[f.feature_type] ?? t.primary,
       },
       geometry,
     })),
@@ -322,13 +322,14 @@ export function buildLineFeatureLabelsGeoJSON(
 /** Small start/end dots for line features, delimiting each stretch. */
 export function buildLineFeatureEndpointsGeoJSON(
   features: Feature[],
+  t: ResolvedTokens,
 ): GeoJSON.FeatureCollection {
   return {
     type: "FeatureCollection",
     features: features.flatMap((f) => {
       const coords = lineCoords(f.location);
       if (!coords || coords.length < 2) return [];
-      const color = FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary;
+      const color = t.featureColors[f.feature_type] ?? t.primary;
       return [coords[0], coords[coords.length - 1]].map((c) => ({
         type: "Feature" as const,
         properties: { color },
@@ -342,6 +343,7 @@ export function buildLineFeatureEndpointsGeoJSON(
 export function buildProposedPointFeaturesGeoJSON(
   features: Feature[],
   language: string,
+  t: ResolvedTokens,
 ): GeoJSON.FeatureCollection {
   return {
     type: "FeatureCollection",
@@ -360,7 +362,7 @@ export function buildProposedPointFeaturesGeoJSON(
           properties: {
             id: f.id,
             label: featureLabel(f, language) || typeLabel(f),
-            color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
+            color: t.featureColors[f.feature_type] ?? t.primary,
           },
           geometry: f.location,
         },
@@ -374,6 +376,7 @@ export function buildProposedPointFeaturesGeoJSON(
 export function buildProposedLineFeaturesGeoJSON(
   features: Feature[],
   language: string,
+  t: ResolvedTokens,
 ): GeoJSON.FeatureCollection {
   const lines = features.flatMap((f) =>
     f.location.type === "LineString" || f.location.type === "Polygon"
@@ -390,7 +393,7 @@ export function buildProposedLineFeaturesGeoJSON(
         label: featureLabel(f, language),
         // Sideways offset step so overlapping lines stay distinguishable
         stack: index,
-        color: FEATURE_COLORS[f.feature_type] ?? theme.tokens.primary,
+        color: t.featureColors[f.feature_type] ?? t.primary,
       },
       geometry,
     })),

@@ -1,3 +1,4 @@
+import { useColorScheme } from "@mui/material/styles";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { MapScene } from "@/components/canvas/scene";
 import { setFeatureNumbers } from "@/components/map/featureNumbers";
@@ -25,6 +26,7 @@ function shallowEqual(a: MapSceneInput, b: MapSceneInput): boolean {
  * until something it draws changes, so the map is not redrawn by unrelated
  * renders. */
 export function useMapScene(state: MapPageState) {
+  const scheme = useColorScheme().colorScheme === "dark" ? "dark" : "light";
   const {
     selectedWaterwayId,
     selectedSectionId,
@@ -136,7 +138,7 @@ export function useMapScene(state: MapPageState) {
                   lon: coords[0],
                   lat: coords[1],
                   color:
-                    categoryColor(comment.category) ??
+                    categoryColor(comment.category, scheme) ??
                     theme.tokens.onSurfaceVariant,
                   categoryLabel: categoryLabel(comment.category),
                   body: comment.body,
@@ -146,7 +148,7 @@ export function useMapScene(state: MapPageState) {
               ];
             })
         : [],
-    [showNoteMarkers, noteData, selectedSectionId],
+    [showNoteMarkers, noteData, selectedSectionId, scheme],
   );
 
   const draftPin = useMemo<PointPin[]>(

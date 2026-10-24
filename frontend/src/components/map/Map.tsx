@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MapGL, {
   AttributionControl,
   Layer,
@@ -7,6 +7,7 @@ import MapGL, {
   Source,
   useMap,
 } from "react-map-gl/maplibre";
+import { withAlpha } from "@/lib/alpha";
 import type {
   CountryBorder,
   Feature,
@@ -21,7 +22,7 @@ import {
   type LngLat,
   type ViewBounds,
 } from "@/lib/geo";
-import { theme } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 import AccessibleMarker from "./AccessibleMarker";
 import CountryBorderLayer from "./CountryBorderLayer";
 import DraftLayers, { FeatureDraftLayer } from "./DraftLayers";
@@ -67,8 +68,6 @@ export interface PointPin {
   /** Larger with a halo - the pin currently being placed. */
   emphasis?: boolean;
 }
-
-const { tokens } = theme;
 
 /** Mounts as the map's first child, before its style adds any layer. */
 function MissingIconGuard() {
@@ -324,7 +323,16 @@ export default function WaterwayMap({
   } = chrome;
   const minimal = chrome.minimal ?? !!cooperativeGestures;
   const mapRef = useRef<MapRef>(null);
+  const tokens = useTokens();
   const [mapLoaded, setMapLoaded] = useState(false);
+  // The base style's layers exist long before `load` (which waits for tiles);
+  // the calm restyle runs from then, so the light default never paints.
+  const [styleReady, setStyleReady] = useState(false);
+  // New identity per scheme, which draws the marker icons again.
+  const addImages = useCallback(
+    (m: Parameters<typeof addMapImages>[0]) => addMapImages(m, tokens),
+    [tokens],
+  );
   const [satellite, setSatellite] = useState(false);
   const [showFeatureNames, setShowFeatureNames] = useState(true);
   const [viewBounds, setViewBounds] = useState<Bbox | null>(null);
@@ -337,13 +345,13 @@ export default function WaterwayMap({
   // The calm restyle goes first: it sets road opacity, which muting lowers.
   useCalmBaseMap(
     mapRef,
-    mapLoaded,
+    mapLoaded || styleReady,
     !satellite,
     satellite ? "satellite" : "liberty",
   );
   useMutedBaseMap(
     mapRef,
-    mapLoaded,
+    mapLoaded || styleReady,
     regionChoices != null,
     satellite ? "satellite" : "liberty",
   );
@@ -351,7 +359,7 @@ export default function WaterwayMap({
     mapRef,
     mapLoaded,
     setMapLoaded,
-    addMapImages,
+    addMapImages: addImages,
     sections,
     areaCircle,
     areaLocked,
@@ -503,6 +511,9 @@ export default function WaterwayMap({
           setHover(null);
           setOverHit(false);
         }}
+        onStyleData={(e) => {
+          if (e.target.getStyle()?.layers?.length) setStyleReady(true);
+        }}
         onLoad={() => {
           exposeMapForTests(mapRef.current);
           handleMapLoad();
@@ -606,9 +617,9 @@ export default function WaterwayMap({
                   height: pin.emphasis ? 14 : 10,
                   borderRadius: "50%",
                   background: pin.color,
-                  border: `2px solid ${theme.tokens.surfaceLowest}`,
+                  border: `2px solid ${tokens.surfaceLowest}`,
                   boxShadow: pin.emphasis
-                    ? `0 0 0 3px ${pin.color}55`
+                    ? `0 0 0 3px ${withAlpha(pin.color, "hairline")}`
                     : tokens.elevation.marker,
                 }}
               />
@@ -740,7 +751,7 @@ export default function WaterwayMap({
                   borderRadius: "50%",
                   background: tokens.primary,
                   border: `2px solid ${tokens.surface}`,
-                  boxShadow: `0 0 0 3px ${tokens.primary}55, 0 0 10px ${tokens.primary}99`,
+                  boxShadow: `0 0 0 3px ${withAlpha(tokens.primary, "hairline")}, 0 0 10px ${withAlpha(tokens.primary, "border")}`,
                 }}
               />
             </MarkerHit>

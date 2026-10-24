@@ -1,7 +1,15 @@
 import type { ExpressionSpecification } from "maplibre-gl";
 import type { components } from "@/lib/api/schema";
 import { isStale } from "@/lib/staleness";
-import { theme } from "@/lib/theme";
+import { type ResolvedTokens, type Scheme, tokensFor } from "@/lib/useTokens";
+
+/** A scheme name, or tokens a component already got from `useTokens()`.
+ * Absent means light. */
+export type TokenSource = Scheme | ResolvedTokens;
+
+export function resolveTokens(from: TokenSource): ResolvedTokens {
+  return typeof from === "string" ? tokensFor(from) : from;
+}
 
 export type WaterLevel = components["schemas"]["WaterLevel"];
 type WaterRangeWithStatus = components["schemas"]["WaterRangeWithStatus"];
@@ -32,15 +40,28 @@ function chip(level: {
   };
 }
 
-export const levelConfig = {
-  empty: chip(theme.tokens.levels.empty),
-  low: chip(theme.tokens.levels.low),
-  medium: chip(theme.tokens.levels.medium),
-  high: chip(theme.tokens.levels.high),
-} satisfies Record<
-  WaterLevel,
-  { label: string; color: string; bgcolor: string; border?: string }
->;
+type LevelChip = {
+  label: string;
+  color: string;
+  bgcolor: string;
+  border?: string;
+};
+
+/** Chip styling per level for the given scheme. */
+export function levelConfigFor(
+  from: TokenSource = "light",
+): Record<WaterLevel, LevelChip> {
+  const { levels } = resolveTokens(from);
+  return {
+    empty: chip(levels.empty),
+    low: chip(levels.low),
+    medium: chip(levels.medium),
+    high: chip(levels.high),
+  };
+}
+
+/** The light chip styling, for callers that do not follow the scheme yet. */
+export const levelConfig = levelConfigFor("light");
 
 const LEVEL_WORDS = { low: "Low", medium: "Medium", high: "High" } as const;
 
@@ -50,11 +71,13 @@ export function levelWord(level: Exclude<WaterLevel, "empty">): string {
 }
 
 /** The level's colour as ink on a light ground (a chart line, a word on the
- * plot). High's text colour is white for its solid pill, so its ink is the
- * pill colour itself. */
-export function levelInk(level: Exclude<WaterLevel, "empty">): string {
-  const t = theme.tokens.levels[level];
-  return level === "high" ? t.bg : t.text;
+ * plot). High's text colour is white for its solid pill, so it has its own ink. */
+export function levelInk(
+  level: Exclude<WaterLevel, "empty">,
+  from: TokenSource = "light",
+): string {
+  const levels = resolveTokens(from).levels;
+  return level === "high" ? levels.high.ink : levels[level].text;
 }
 
 /** True when the range has at least one threshold configured. */
@@ -89,20 +112,30 @@ export function currentLevel(
 
 /** The level's saturated hue for map geometry, dots and legends (text uses
  * `levelConfig`). */
-export function levelMarkerColor(level: WaterLevel): string {
-  return theme.tokens.levels[level].marker;
+export function levelMarkerColor(
+  level: WaterLevel,
+  from: TokenSource = "light",
+): string {
+  return resolveTokens(from).levels[level].marker;
 }
 
 /** A MapLibre expression colouring a feature by its `level` property
  * (unset or unknown reads as empty). */
-export const LEVEL_MARKER_MATCH: ExpressionSpecification = [
-  "match",
-  ["get", "level"],
-  "low",
-  levelMarkerColor("low"),
-  "medium",
-  levelMarkerColor("medium"),
-  "high",
-  levelMarkerColor("high"),
-  levelMarkerColor("empty"),
-];
+export function levelMarkerMatch(
+  from: TokenSource = "light",
+): ExpressionSpecification {
+  return [
+    "match",
+    ["get", "level"],
+    "low",
+    levelMarkerColor("low", from),
+    "medium",
+    levelMarkerColor("medium", from),
+    "high",
+    levelMarkerColor("high", from),
+    levelMarkerColor("empty", from),
+  ];
+}
+
+/** The light expression, for callers that do not follow the scheme yet. */
+export const LEVEL_MARKER_MATCH = levelMarkerMatch("light");

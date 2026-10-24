@@ -4,6 +4,7 @@ import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import { useColorScheme } from "@mui/material/styles";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import {
@@ -27,6 +28,7 @@ import NotificationBell, {
 import ProposalSentSnackbar from "@/components/proposals/ProposalSentSnackbar";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import UpdateReadySnackbar from "@/components/UpdateReadySnackbar";
+import { withAlpha } from "@/lib/alpha";
 import { apiErrorMessage } from "@/lib/api/client";
 import {
   useLiveTripEvents,
@@ -38,7 +40,7 @@ import { useLanguage } from "@/lib/languagePreference";
 import { transition } from "@/lib/motion";
 import { activeNav, DESKTOP_NAV, PHONE_NAV } from "@/lib/nav";
 import { shouldRetryQuery } from "@/lib/retry";
-import { alphas, BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -58,7 +60,7 @@ const navLinkSx = {
   "&:hover": { color: "text.primary" },
   "&[aria-current=page]": {
     color: "primary.main",
-    bgcolor: `${tokens.primary}${alphas.hover}`,
+    bgcolor: withAlpha(tokens.primary, "hover"),
   },
 } as const;
 
@@ -108,6 +110,7 @@ function Layout() {
   useLanguage();
   const { isAuthenticated, isLoading, user, login, signup, logout } =
     useSession();
+  const { colorScheme } = useColorScheme();
   useLiveTripEvents(isAuthenticated);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const activeTo = activeNav(DESKTOP_NAV, pathname);
@@ -154,7 +157,7 @@ function Layout() {
           >
             <Box
               component="img"
-              src="/logo.svg"
+              src={colorScheme === "dark" ? "/logo-dark.svg" : "/logo.svg"}
               alt=""
               sx={{ width: 28, height: 28, flexShrink: 0 }}
             />
@@ -364,7 +367,7 @@ function UserMenu({
             display: "grid",
             placeItems: "center",
             borderRadius: "50%",
-            bgcolor: `${tokens.primary}${alphas.strong}`,
+            bgcolor: withAlpha(tokens.primary, "strong"),
             color: tokens.primary,
             fontSize: "0.8125rem",
             fontWeight: 700,

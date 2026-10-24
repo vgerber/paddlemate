@@ -70,9 +70,13 @@ export function useMapCameraEffects({
   // A subject (even an empty one) hands the camera to the canvas.
   const hasSubject = subject !== undefined;
 
+  // The images are drawn for one scheme; a different `addMapImages` means the
+  // scheme changed and they are drawn again.
+  const drawnWith = useRef(addMapImages);
   const handleMapLoad = useCallback(() => {
     setMapLoaded(true);
     const map = mapRef.current?.getMap();
+    drawnWith.current = addMapImages;
     addMapImages(map);
     // MapLibre opens the compact attribution on load and only closes it when
     // the info button is tapped, which on a phone leaves a bar across the
@@ -89,6 +93,10 @@ export function useMapCameraEffects({
     const map = mapRef.current?.getMap();
     if (!map || !mapLoaded) return;
     const handler = () => addMapImages(map);
+    if (drawnWith.current !== addMapImages) {
+      drawnWith.current = addMapImages;
+      handler();
+    }
     map.on("style.load", handler);
     return () => {
       map.off("style.load", handler);

@@ -35,7 +35,7 @@ export default function ChipRow({ children }: { children: ReactNode }) {
     return () => observer.disconnect();
   }, [measure]);
 
-  const fade = `linear-gradient(to right, ${more.start ? "transparent" : "#000"}, #000 ${FADE}px, #000 calc(100% - ${FADE}px), ${more.end ? "transparent" : "#000"})`;
+  const fade = `linear-gradient(to right, ${more.start ? "transparent" : "#000"}, #000 ${FADE}px, #000 calc(100% - ${FADE}px), ${more.end ? "transparent" : "#000"})`; /* mask */
 
   return (
     <Box

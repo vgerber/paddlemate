@@ -46,6 +46,9 @@ export default function FilterChip({
           !plain && {
             bgcolor: tokens.surface,
             borderColor: "transparent",
+            // Beats the dark edge rule in the theme (same specificity, later).
+            '[data-theme="dark"] &.MuiChip-outlined:not(.MuiChip-colorPrimary)':
+              { borderColor: "transparent" },
             boxShadow: tokens.elevation.e1,
           }),
       }}

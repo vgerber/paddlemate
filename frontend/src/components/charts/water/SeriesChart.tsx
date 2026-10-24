@@ -22,6 +22,7 @@ import {
 } from "recharts";
 import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
 import { periodLabel } from "@/components/charts/PeriodMenu";
+import { withAlpha } from "@/lib/alpha";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import {
   formatDay,
@@ -33,7 +34,8 @@ import {
 import { useReadingSummary } from "@/lib/hooks/useGauges";
 import { FitIcon } from "@/lib/icons";
 import { isStale } from "@/lib/staleness";
-import { alphas, labelSx, theme } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme";
+import { type ResolvedTokens, useTokens } from "@/lib/useTokens";
 import { levelInk } from "@/lib/waterLevel";
 import { announce, cancelAnnounce } from "./announce";
 import { pointTime, typeLabel } from "./chartTime";
@@ -168,7 +170,11 @@ function yDomainOf(
  * line and short of the latest reading's dot; the rail names them in its
  * overlay. Returned as an element array because recharts only recognizes
  * direct children. */
-function thresholdLines(r: WaterRangeWithStatus, rail: boolean) {
+function thresholdLines(
+  r: WaterRangeWithStatus,
+  rail: boolean,
+  ink: ResolvedTokens,
+) {
   const line = (key: string, y: number, color: string, labelText: string) => (
     <ReferenceLine
       key={`thresholds-${key}`}
@@ -203,17 +209,22 @@ function thresholdLines(r: WaterRangeWithStatus, rail: boolean) {
   );
   return [
     r.range_low != null &&
-      line("low", r.range_low, levelInk("low"), `L ${r.range_low}`),
+      line("low", r.range_low, levelInk("low", ink), `L ${r.range_low}`),
     r.range_medium != null &&
-      line("medium", r.range_medium, levelInk("medium"), `M ${r.range_medium}`),
+      line(
+        "medium",
+        r.range_medium,
+        levelInk("medium", ink),
+        `M ${r.range_medium}`,
+      ),
     r.range_high != null &&
-      line("high", r.range_high, levelInk("high"), `H ${r.range_high}`),
+      line("high", r.range_high, levelInk("high", ink), `H ${r.range_high}`),
   ].filter((l): l is JSX.Element => l !== false);
 }
 
 /** The quiet wash between thresholds: green from low to medium, amber from
  * medium to high. */
-function thresholdBands(r: WaterRangeWithStatus) {
+function thresholdBands(r: WaterRangeWithStatus, ink: ResolvedTokens) {
   const band = (key: string, y1: number, y2: number, fill: string) => (
     <ReferenceArea
       key={key}
@@ -228,10 +239,10 @@ function thresholdBands(r: WaterRangeWithStatus) {
   return [
     r.range_low != null &&
       r.range_medium != null &&
-      band("low", r.range_low, r.range_medium, tokens.levels.low.text),
+      band("low", r.range_low, r.range_medium, ink.levels.low.text),
     r.range_medium != null &&
       r.range_high != null &&
-      band("medium", r.range_medium, r.range_high, tokens.levels.medium.text),
+      band("medium", r.range_medium, r.range_high, ink.levels.medium.text),
   ].filter((l): l is JSX.Element => l !== false);
 }
 
@@ -251,6 +262,7 @@ export default function SeriesChart({
   marker = null,
   onScrub,
 }: SeriesChartProps) {
+  const ink = useTokens();
   const { series, gauge } = range;
   const to = customRange?.to;
 
@@ -455,7 +467,7 @@ export default function SeriesChart({
     onSelect: onSelectRange,
   });
 
-  const tickStyle = { fontSize: 11, fill: tokens.outline };
+  const tickStyle = { fontSize: 11, fill: ink.outline };
   const zoomed = domain != null;
   // A custom range borrows the preset axis nearest its span, but only once
   // it covers days: a few hours read better with plain clock ticks.
@@ -567,7 +579,7 @@ export default function SeriesChart({
                   bottom: rail ? RAIL_AXIS : 0,
                   left: dragging.x0,
                   width: dragging.x1 - dragging.x0,
-                  background: `${tokens.primary}${alphas.hover}`,
+                  background: withAlpha(tokens.primary, "hover"),
                   pointerEvents: "none",
                   zIndex: 1,
                 }}
@@ -625,12 +637,12 @@ export default function SeriesChart({
                   >
                     <stop
                       offset="0%"
-                      stopColor={tokens.primary}
+                      stopColor={ink.primary}
                       stopOpacity={0.24}
                     />
                     <stop
                       offset="100%"
-                      stopColor={tokens.primary}
+                      stopColor={ink.primary}
                       stopOpacity={0}
                     />
                   </linearGradient>
@@ -641,9 +653,9 @@ export default function SeriesChart({
                     x1={s.x1}
                     x2={s.x2}
                     ifOverflow="hidden"
-                    fill={tokens.success}
+                    fill={ink.success}
                     fillOpacity={0.15}
-                    stroke={tokens.success}
+                    stroke={ink.success}
                     strokeOpacity={0.35}
                   />
                 ))}
@@ -722,7 +734,7 @@ export default function SeriesChart({
                     className="chart-band"
                     dataKey="band"
                     stroke="none"
-                    fill={`${tokens.chartSeries}${alphas.strong}`}
+                    fill={withAlpha(ink.chartSeries, "strong")}
                     dot={false}
                     activeDot={false}
                     connectNulls={false}
@@ -732,7 +744,7 @@ export default function SeriesChart({
                 <Area
                   type="monotone"
                   dataKey="value"
-                  stroke={tokens.chartSeries}
+                  stroke={ink.chartSeries}
                   strokeWidth={2}
                   strokeLinecap="round"
                   fill={`url(#fill-${series.id})`}
@@ -740,16 +752,16 @@ export default function SeriesChart({
                   connectNulls={false}
                   isAnimationActive={false}
                 />
-                {showThresholds && thresholdBands(displayRange)}
-                {showThresholds && thresholdLines(displayRange, rail)}
+                {showThresholds && thresholdBands(displayRange, ink)}
+                {showThresholds && thresholdLines(displayRange, rail, ink)}
                 {kbPoint && !rail && (
                   <ReferenceDot
                     x={kbPoint.time}
                     y={kbPoint.value}
                     ifOverflow="hidden"
                     r={DOT_RADIUS}
-                    fill={tokens.chartSeries}
-                    stroke={tokens.surface}
+                    fill={ink.chartSeries}
+                    stroke={ink.surface}
                     strokeWidth={2}
                   />
                 )}
@@ -764,8 +776,8 @@ export default function SeriesChart({
                         cx={cx}
                         cy={cy}
                         r={DOT_RADIUS}
-                        fill={tokens.surface}
-                        stroke={tokens.chartSeries}
+                        fill={ink.surface}
+                        stroke={ink.chartSeries}
                         strokeWidth={2}
                       />
                     )}

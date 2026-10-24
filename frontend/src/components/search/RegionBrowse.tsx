@@ -15,6 +15,7 @@ import {
   regionSubtitle,
 } from "@/components/map/regionGeometry";
 import { useMapVerb } from "@/components/waterway/useMapVerb";
+import { withAlpha } from "@/lib/alpha";
 import type { RegionOutline } from "@/lib/api";
 import { useRegionSearch } from "@/lib/hooks/useRegions";
 import { CollapseIcon, ExpandIcon } from "@/lib/icons";
@@ -25,7 +26,7 @@ import {
   regionKindLabel,
   regionKindSingular,
 } from "@/lib/regionKinds";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -77,7 +78,7 @@ function RegionChip({
         border: "none",
         height: tokens.touch.min,
         borderRadius: `${tokens.radii.pill}px`,
-        bgcolor: set ? `${tokens.primary}${alphas.wash}` : "transparent",
+        bgcolor: set ? withAlpha(tokens.primary, "wash") : "transparent",
         boxShadow: set
           ? `inset 0 0 0 2px ${tokens.primary}`
           : `inset 0 0 0 1px ${tokens.outlineVariant}`,

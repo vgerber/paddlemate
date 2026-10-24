@@ -3,12 +3,14 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useRef } from "react";
 import { phoneRowPad } from "@/components/canvas/flatRow";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
+import { withAlpha } from "@/lib/alpha";
 import type { Comment, Media } from "@/lib/api";
 import { categoryColor, categoryLabel } from "@/lib/comments";
 import { humanize, timeAgo } from "@/lib/format";
 import { pointCoords } from "@/lib/geo";
 import { DeleteIcon, PlaceIcon } from "@/lib/icons";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 
 const { tokens } = theme;
 
@@ -38,7 +40,8 @@ export default function CommentRow({
   selected?: boolean;
   onSelect?: () => void;
 }) {
-  const color = categoryColor(comment.category);
+  const ink = useTokens();
+  const color = categoryColor(comment.category, ink);
   const retired = comment.status !== "ok";
   const noteCoords = comment.location ? pointCoords(comment.location) : null;
 
@@ -79,7 +82,7 @@ export default function CommentRow({
         px: "14px",
         ...phoneRowPad,
         py: 1.5,
-        bgcolor: selected ? `${tokens.primary}${alphas.wash}` : tokens.surface,
+        bgcolor: selected ? withAlpha(tokens.primary, "wash") : tokens.surface,
         borderRadius: `${tokens.radii.md}px`,
         boxShadow: tokens.elevation.e1,
         opacity: retired ? 0.55 : 1,

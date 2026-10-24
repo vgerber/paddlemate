@@ -149,8 +149,8 @@ Components for each live in the matching folder under `frontend/src/components/`
   a chart card the level reading is neutral: the thresholds already show it.
 - **Map feature markers** use the Okabe-Ito colorblind-safe palette.
 - No hex values in components: all color comes from the tokens in `theme.ts`,
-  component-wide rules from the theme's `styleOverrides`.
-- Transparency uses the six named alpha steps from `alphas` (`tint 5%`,
+  component-wide rules from the theme's `styleOverrides` (see Dark mode).
+- Transparency uses `withAlpha(token, step)` with the named steps from `alphas` (`tint 5%`,
   `wash 8%`, `hover 12%`, `hairline 33%`, `border 60%`, `scrim 80%`).
 - Contrast floors, checked by [`contrast.test.ts`](../frontend/src/lib/contrast.test.ts)
   against the tokens in `theme.ts`: text and its ground reach 4.5:1 (body and
@@ -162,6 +162,67 @@ Components for each live in the matching folder under `frontend/src/components/`
   tokens rather than a tint of the marker color.
 - The ground is `surfaceLow`, cards are `surface`, a quiet inset inside a card
   is `surfaceHigh`.
+
+## Dark mode
+
+Settings > Appearance offers System, Light and Dark. The choice is kept per
+device; System, the default, follows the device live. Dark is calm, not
+inverted: a deep blue-grey ground, cards one step lighter, the teal accent
+brightened. Print is always light. The installed app keeps a dark frame on a
+dark device even when the app is set to Light, so the system buttons stay
+legible.
+
+Palette (values live in [`lib/theme.ts`](../frontend/src/lib/theme.ts), the
+contrast floors in `contrast.test.ts` hold for both schemes):
+
+| Role | Light | Dark |
+|---|---|---|
+| Ground (`surfaceLow`, `background`) | `#eef2f3` | `#141b1f` |
+| Card (`surface`) | `#ffffff` | `#1b2429` |
+| Inset (`surfaceHigh`) | `#f6f8f9` | `#212c32` |
+| Line (`outlineVariant`), highest surface | `#dde4e7` / `#e7edef` | `#2a353c` |
+| Text / secondary | `#1f2b31` / `#58666d` | `#e8eef0` / `#9aa8ae` |
+| Primary | `#0e7490` | `#67c7e0` |
+| Success / error | `#1d6b4f` / `#b4373f` | `#86d2b2` / `#f08c8a` |
+| Level chips | text on a wash; high is a solid fill | low `#86d2b2`, medium `#f0c06c` on a 16% wash, high `#f08c8a` with dark text |
+| Map ground / water / river | see `mapGround`, `mapWater`, `mapRiver` | `#1c2429` / `#12303f` / `#2f6384` |
+
+Elevation in dark is a lighter surface, not a shadow: a card sits one step
+above the ground, a floating card one above that (`surfaceBright`). Paper
+overlays are off.
+
+Rules for new work:
+
+- **A colour is a token** with a light and a dark value in `lib/theme.ts`;
+  never a hex or `rgb()` literal elsewhere. Add it to both `lightTokens` and
+  `darkTokens` and check it in both schemes.
+- **Transparency** is `withAlpha(token, step)` (`lib/alpha.ts`), which works on
+  a `var()`. The hex-alpha suffix no longer works on a token.
+- **Resolved colours** for MapLibre paint, SVG strings turned into images,
+  canvas and colour maths come from `useTokens()`, which returns hex values
+  for the active scheme and changes identity only on a switch.
+- **The colour guard**, `npm run check:colours`, fails on literals outside
+  `theme.ts` and on tokens in the map paint files. A line that must stay a
+  literal (a mask-image alpha) carries `/* mask */`.
+- **Print is light**: `theme.ts` resets the variables under `@media print`,
+  and the inline style in `index.html` does the same for the page ground.
+- **Frame colours**: the `theme-color` meta is `#ffffff` in light and `#141b1f`
+  in dark; the dark-media meta is always `#141b1f`; the manifest theme and
+  background are `#141b1f` (a manifest holds one colour).
+
+### Internals
+
+- `tokens` is `toVars(lightTokens)`: every colour is `var(--pm-*)`; MUI runs in
+  CSS-variables mode with both schemes and `data-theme` on `html`.
+- A small script in `index.html` reads the stored mode
+  (`paddlemate-color-mode`) and the device preference before first paint, sets
+  `data-theme` and the light-media meta; it mirrors `resolveScheme` in
+  [`lib/colorMode.ts`](../frontend/src/lib/colorMode.ts), and
+  `colorMode.test.ts` holds both together.
+- The map restyles on a switch (`useMutedBaseMap` re-mutes after the style
+  loads); marker images are re-registered per scheme.
+- Specs: `frontend/e2e/dark/` (no light surface, contrast, map paint, switch,
+  print, no flash); the baseline spec keeps light pixel-identical.
 
 ## Type scale
 

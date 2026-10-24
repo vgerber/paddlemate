@@ -5,9 +5,10 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { addMonths, format, parseISO, startOfMonth } from "date-fns";
 import { type PointerEvent, useRef, useState } from "react";
+import { withAlpha } from "@/lib/alpha";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
 import { css, durations } from "@/lib/motion";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 import { monthGrid } from "@/lib/tripTimeline";
 import { pulledOpen, weekDays } from "./planWeek";
 
@@ -292,7 +293,7 @@ function WeekRow({
             left: `calc(${a} * 100% / 7 + ${BAND_INSET}px)`,
             width: `calc(${b - a + 1} * 100% / 7 - ${2 * BAND_INSET}px)`,
             borderRadius: `${DISC / 2}px`,
-            bgcolor: `${tokens.primary}${alphas.hover}`,
+            bgcolor: withAlpha(tokens.primary, "hover"),
           }}
         />
       ))}
@@ -316,11 +317,11 @@ function WeekRow({
               width: DISC,
               height: DISC,
               borderRadius: "50%",
-              bgcolor: tokens.primary,
+              bgcolor: tokens.primaryFill,
               // Today and current: a white gap, then the accent ring.
               boxShadow:
                 current === today
-                  ? `0 0 0 2px ${tokens.surface}, 0 0 0 4px ${tokens.primary}`
+                  ? `0 0 0 2px ${tokens.surface}, 0 0 0 4px ${tokens.primaryFill}`
                   : "none",
             }}
           />
