@@ -4,8 +4,8 @@ use sqlx::{PgPool, Row};
 use crate::models::gauge::{GaugeId, ReadingBucket, ReadingsSummary, SeriesId};
 
 /// Allowed bucket widths in seconds, smallest first.
-pub const STEPS: [i64; 12] = [
-    60, 300, 900, 1800, 3600, 7200, 10800, 21600, 43200, 86400, 172800, 604800,
+pub const STEPS: [i64; 13] = [
+    60, 300, 900, 1800, 3600, 7200, 10800, 21600, 43200, 86400, 172800, 259200, 604800,
 ];
 
 /// The smallest step that fits `span_secs` into at most `points` buckets
@@ -132,7 +132,7 @@ mod tests {
         assert_eq!(bucket_step(7 * 86400, 300), 3600);
         assert_eq!(bucket_step(30 * 86400, 300), 10800);
         assert_eq!(bucket_step(365 * 86400, 300), 172800);
-        assert_eq!(bucket_step(730 * 86400, 300), 604800);
+        assert_eq!(bucket_step(730 * 86400, 300), 259200);
         assert_eq!(bucket_step(60, 300), 60);
     }
 

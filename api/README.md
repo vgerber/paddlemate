@@ -217,7 +217,7 @@ Response: `{ bucket_seconds, from, to, items: [{ measured_at, value, min, max, c
 oldest first. When the range holds at most `points` readings, `bucket_seconds`
 is 0 and each item is one raw reading (`min = max = value`, `count = 1`).
 Otherwise the span divided by `points` is rounded up to one of 60, 300, 900,
-1800, 3600, 7200, 10800, 21600, 43200, 86400, 172800 or 604800 seconds
+1800, 3600, 7200, 10800, 21600, 43200, 86400, 172800, 259200 or 604800 seconds
 (the last when none fits). Buckets are aligned with `date_bin` to 1970-01-01;
 `measured_at` is the bucket start, `value` the average. Empty buckets are left
 out. 404 when the series is not on that gauge. The query is an index-only scan
