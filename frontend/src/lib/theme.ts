@@ -63,6 +63,8 @@ export const lightTokens = {
   // The edge of an outlined button or tile: a hairline in light, and in dark
   // the 3:1 outline, since a hairline vanishes on a dark surface.
   outlineControl: "#dde4e7",
+  // The wash behind a sheet or dialog: ink in light, black in dark.
+  scrimBase: "#1f2b31",
 
   // Base
   background: "#eef2f3",
@@ -324,6 +326,7 @@ export const darkTokens: Tokens = {
   outline: "#7f8d93",
   outlineVariant: "#2a353c",
   outlineControl: "#7f8d93",
+  scrimBase: "#000000",
   background: "#141b1f",
   levels: {
     empty: {
