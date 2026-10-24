@@ -1,4 +1,6 @@
-const WHITE = "#ffffff";
+import { lightTokens } from "@/lib/theme";
+
+const WHITE = lightTokens.white;
 
 function luminance(hex: string): number {
   const channel = (i: number) => {
