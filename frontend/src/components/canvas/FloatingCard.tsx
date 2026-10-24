@@ -11,6 +11,7 @@ import {
 } from "@/lib/cardWidth";
 import { theme } from "@/lib/theme";
 import { layout, useLayout } from "./canvasStore";
+import { escapeContext, escapeGoesBack } from "./keys";
 import ResizeGrip from "./ResizeGrip";
 
 const { tokens } = theme;
@@ -86,6 +87,13 @@ export default function FloatingCard({
       aria-label={title}
       data-testid={`canvas-card-${id}`}
       data-collapsed={collapsed || undefined}
+      onKeyDown={(e) => {
+        // Escape is Back (or Close) unless something inside took it first.
+        if (!escapeGoesBack(escapeContext(e))) return;
+        e.currentTarget
+          .querySelector<HTMLElement>("[data-panel-back]")
+          ?.click();
+      }}
       sx={{
         position: "absolute",
         left: x,
