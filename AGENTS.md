@@ -215,8 +215,8 @@ asks for them or when an agreed plan calls for them.
   Agents share one local database; only the agent that owns the schema change
   runs migrations against it.
 - **Gates.** While iterating, run the single test. Run the full gate once at
-  the end: `cargo check` and `cargo test` (plus `cargo sqlx prepare` after any
-  SQL change) in `api/`; `npx tsc -b --force`, `npx biome check src` and
+  the end: `cargo check` and `cargo test --workspace` (plus `cargo sqlx prepare`
+  after any SQL change) in `api/`; `npx tsc -b --force`, `npx biome check src` and
   `bun test` in `frontend/`. The lead tests the gate's exit code and merges
   only on 0, running the gate once per merge, not the agent's list again. Never
   pipe a gate through `grep` in a script that uses `set -e`: that hides a
