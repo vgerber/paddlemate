@@ -57,10 +57,11 @@ test.beforeEach(async ({ page }) => {
 });
 
 interface FlowStatus {
-  ranges: ({ series: object; latest_reading: object } & Record<
-    string,
-    unknown
-  >)[];
+  ranges: ({
+    gauge: { name: string };
+    series: object;
+    latest_reading: object;
+  } & Record<string, unknown>)[];
 }
 
 /** Adds a discharge series next to the level one. */
@@ -72,17 +73,13 @@ function addFlow(status: FlowStatus, asOwnGauge = false) {
     {
       ...level,
       id: 99001,
-      ...(asOwnGauge
-        ? { gauge: { ...(level as { gauge: object }).gauge, id: 99301 } }
-        : {}),
+      ...(asOwnGauge ? { gauge: { ...level.gauge, id: 99301 } } : {}),
       series: {
         ...level.series,
         id: 99401,
         measurement_type: "discharge",
         unit: "m3/s",
-        ...(asOwnGauge
-          ? { label: (level as { gauge: { name: string } }).gauge.name }
-          : {}),
+        ...(asOwnGauge ? { label: level.gauge.name } : {}),
       },
       range_low: null,
       range_medium: null,
