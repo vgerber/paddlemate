@@ -22,12 +22,11 @@ import type { GaugeMapState } from "@/lib/api";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
 import { CloseIcon } from "@/lib/icons";
 import { labelSx, theme } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 import { DonutCluster } from "./DonutCluster";
-import { STATES, stateMeta } from "./gaugeStates";
+import { gaugeStates, stateMeta } from "./gaugeStates";
 import { groupByProximity, type MapGroup } from "./groupByProximity";
 import { toFeatureCollection } from "./toFeatureCollection";
-
-const { tokens } = theme;
 
 const SOURCE_ID = "gauge-points-src";
 const POINT_LAYER = "gauge-points";
@@ -43,6 +42,8 @@ interface ClusterInfo {
 /** Read-only coverage map: points colored by state (used/fetched/available),
  * clustered into donut charts; legend rows toggle each state. */
 export default function GaugeCatalogMap() {
+  const tokens = useTokens();
+  const states = useMemo(() => gaugeStates(tokens), [tokens]);
   const mapRef = useRef<MapRef>(null);
   const { data: points, isLoading, isError, error, refetch } = useGaugeMap();
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -318,7 +319,7 @@ export default function GaugeCatalogMap() {
             >
               Gauges
               <Box sx={{ display: "flex", gap: 0.5 }}>
-                {STATES.map((s) => (
+                {states.map((s) => (
                   <Box
                     key={s.key}
                     sx={{
@@ -354,7 +355,7 @@ export default function GaugeCatalogMap() {
                   </IconButton>
                 )}
               </Box>
-              {STATES.map((s) => {
+              {states.map((s) => {
                 const off = hidden.has(s.key);
                 return (
                   <ButtonBase
@@ -475,7 +476,7 @@ export default function GaugeCatalogMap() {
 
           <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 1 }}>
             {selected.members.map((m) => {
-              const meta = stateMeta(m.state);
+              const meta = stateMeta(states, m.state);
               return (
                 <Box
                   key={`${m.provider}:${m.station_id}`}
@@ -571,9 +572,9 @@ function GaugeMapNote({ children }: { children: ReactNode }) {
         transform: "translate(-50%, -50%)",
         zIndex: 10,
         width: "min(320px, calc(100% - 32px))",
-        bgcolor: tokens.surface,
-        borderRadius: `${tokens.radii.md}px`,
-        boxShadow: tokens.elevation.e2,
+        bgcolor: theme.tokens.surface,
+        borderRadius: `${theme.tokens.radii.md}px`,
+        boxShadow: theme.tokens.elevation.e2,
       }}
     >
       {children}

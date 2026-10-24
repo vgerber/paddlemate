@@ -1,9 +1,8 @@
 import { Layer, Source } from "react-map-gl/maplibre";
 import { circleGeoJSON } from "@/lib/geo";
-import { fonts, theme } from "@/lib/theme";
+import { fonts } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 import AccessibleMarker from "./AccessibleMarker";
-
-const { tokens } = theme;
 
 /** A place and how far it reaches, drawn as a named dot inside its ring. */
 export interface RangeRing {
@@ -29,6 +28,7 @@ export interface RangeRing {
  * farthest thing on the list is.
  */
 export default function RangeRingLayers({ rings }: { rings: RangeRing[] }) {
+  const tokens = useTokens();
   const data: GeoJSON.FeatureCollection = {
     type: "FeatureCollection",
     features: rings

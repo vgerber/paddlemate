@@ -1,13 +1,5 @@
 import { Layer, Source } from "react-map-gl/maplibre";
-import { theme } from "@/lib/theme";
-
-const { tokens } = theme;
-
-const labelPaint = {
-  "text-color": tokens.onSurfaceVariant,
-  "text-halo-color": tokens.mapLabelHalo,
-  "text-halo-width": 2,
-};
+import { useTokens } from "@/lib/useTokens";
 
 /** Country borders, drawn over every other region so you always know which
  * country you are looking at: one solid line on a white casing. */
@@ -16,6 +8,12 @@ export default function CountryBorderLayer({
 }: {
   borders: GeoJSON.FeatureCollection;
 }) {
+  const tokens = useTokens();
+  const labelPaint = {
+    "text-color": tokens.onSurfaceVariant,
+    "text-halo-color": tokens.mapLabelHalo,
+    "text-halo-width": 2,
+  };
   return (
     <Source id="country-borders" type="geojson" data={borders}>
       <Layer

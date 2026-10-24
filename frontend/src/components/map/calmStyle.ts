@@ -1,7 +1,5 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
-import { theme } from "@/lib/theme";
-
-const { tokens } = theme;
+import type { ResolvedTokens } from "@/lib/useTokens";
 
 const GREEN_FILL = /^(park$|landcover_(wood|grass))/;
 const HIDDEN =
@@ -41,8 +39,9 @@ const PLACE_NAME = ["coalesce", ["get", "name_en"], ["get", "name"]];
  * greens, pale water, thin pale roads that appear late, a single dashed
  * country border and few place names in ink on a white halo. Section
  * lines, markers and region layers are added by the app and are not
- * touched. Safe to run again after a style swap. */
-export function applyCalmStyle(map: MapLibreMap) {
+ * touched. Safe to run again after a style swap or a scheme switch: the
+ * colours are resolved values (MapLibre cannot parse a `var()`). */
+export function applyCalmStyle(map: MapLibreMap, tokens: ResolvedTokens) {
   for (const layer of map.getStyle()?.layers ?? []) {
     const { id } = layer;
     // The app's own layers (regions, sections, markers) carry their own paint.

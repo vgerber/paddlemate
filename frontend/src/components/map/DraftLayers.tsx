@@ -1,8 +1,6 @@
 import { Layer, Source } from "react-map-gl/maplibre";
 import type { LngLat } from "@/lib/geo";
-import { theme } from "@/lib/theme";
-
-const { tokens } = theme;
+import { useTokens } from "@/lib/useTokens";
 
 const emptyLine = (coordinates: [number, number][]) => ({
   type: "Feature" as const,
@@ -24,6 +22,7 @@ export default function DraftLayers({
   putIn?: { lat: number; lon: number } | null;
   takeOut?: { lat: number; lon: number } | null;
 }) {
+  const tokens = useTokens();
   return (
     <>
       <Source
@@ -96,6 +95,7 @@ export function FeatureDraftLayer({
   vertices: LngLat[];
   geomType?: "Point" | "LineString" | "Polygon";
 }) {
+  const tokens = useTokens();
   if (vertices.length < 2) return null;
   const isPolygon = geomType === "Polygon" && vertices.length >= 3;
   const data = isPolygon
