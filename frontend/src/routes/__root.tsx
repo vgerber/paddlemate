@@ -147,9 +147,16 @@ function Layout() {
               fontSize: "1.125rem",
               fontWeight: 700,
               color: "primary.main",
+              gap: 1,
               textDecoration: "none",
             }}
           >
+            <Box
+              component="img"
+              src="/logo.svg"
+              alt=""
+              sx={{ width: 28, height: 28, flexShrink: 0 }}
+            />
             Paddlemate
           </Typography>
           <Box

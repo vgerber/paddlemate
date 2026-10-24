@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 import {
   appReady,
@@ -55,6 +56,23 @@ test.describe("desktop app bar", () => {
     expect(await computed(logo, "color")).toBe(TEAL);
     expect(await computed(logo, "font-size")).toBe("18px");
     expect(await computed(logo, "text-transform")).toBe("none");
+  });
+
+  test("the brand link shows the 28px logo and is one 44px target", async ({
+    page,
+  }) => {
+    await page.goto("/tools");
+    const brand = appBar(page).getByRole("link", {
+      name: "Paddlemate",
+      exact: true,
+    });
+    await expect(brand).toBeVisible();
+    const logo = brand.locator("img");
+    await expect(logo).toHaveAttribute("src", "/logo.svg");
+    const box = await logo.boundingBox();
+    expect(box?.width).toBe(28);
+    expect(box?.height).toBe(28);
+    await expectTouchTargets(brand);
   });
 
   test("text navigation in sentence case; the current one is a soft teal pill", async ({
@@ -306,4 +324,15 @@ test.describe("tools", () => {
     await page.getByRole("link", { name: /Proposals/ }).click();
     await expect(page).toHaveURL(/\/proposals/);
   });
+});
+
+test("the browser chrome and the PWA manifest are white", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
+    "content",
+    "#ffffff",
+  );
+  const config = readFileSync("vite.config.ts", "utf8");
+  expect(config).toContain('theme_color: "#ffffff"');
+  expect(config).toContain('background_color: "#ffffff"');
 });
