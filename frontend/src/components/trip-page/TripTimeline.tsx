@@ -9,13 +9,14 @@ import { fabRoom } from "@/components/PaneFab";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
+import { withAlpha } from "@/lib/alpha";
 import type { Trip } from "@/lib/api";
 import { descentTitle } from "@/lib/descents";
 import { formatDate, todayIso } from "@/lib/format";
 import { useTripTimeline } from "@/lib/hooks/useTrips";
 import { EventNoteIcon, LogIcon } from "@/lib/icons";
 import { durations } from "@/lib/motion";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 import {
   type PaddledRiver,
   paddledByRiver,
@@ -43,8 +44,8 @@ function dayLabel(day: number): string {
   return day < 1 ? "Before" : `Day ${day}`;
 }
 
-// Ink at 22%: the month's veil over the list. alphas has no step this light.
-const MONTH_SCRIM = "38";
+// Ink at 22%: the month's veil over the list. No alpha step is this light.
+const MONTH_SCRIM = 21.96;
 
 /**
  * The trip as it runs: the week pinned above, one card per day below, with
@@ -172,7 +173,7 @@ export default function TripTimeline({
             position: "absolute",
             inset: 0,
             zIndex: 1,
-            bgcolor: `${tokens.onSurface}${MONTH_SCRIM}`,
+            bgcolor: withAlpha(tokens.onSurface, MONTH_SCRIM),
           }}
         />
       )}
@@ -291,7 +292,7 @@ function DayEntry({
               }
             : "none",
         outlineOffset: 2,
-        ...(isOpen ? { bgcolor: `${tokens.primary}${alphas.tint}` } : {}),
+        ...(isOpen ? { bgcolor: withAlpha(tokens.primary, "tint") } : {}),
       }}
     >
       <Stack direction="row" sx={{ alignItems: "baseline", gap: 1 }}>

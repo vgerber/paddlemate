@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
+import { withAlpha } from "@/lib/alpha";
 import type {
   Feature,
   GaugeSource,
@@ -30,7 +31,7 @@ import {
   StackIcon,
 } from "@/lib/icons";
 import { licenseLink } from "@/lib/license";
-import { alphas, fonts, labelSx, theme } from "@/lib/theme";
+import { fonts, labelSx, theme } from "@/lib/theme";
 import EditsTimeline, { type EditsFilter, useEntries } from "./EditsTimeline";
 import { smallSx } from "./StepRow";
 import { inOrder, ORIGIN_UNKNOWN, stepHeadline } from "./steps";
@@ -71,7 +72,7 @@ function SourceRow({
           width: { xs: phone.icon, md: 36 },
           height: { xs: phone.icon, md: 36 },
           borderRadius: `${tokens.radii.sm}px`,
-          bgcolor: `${tokens.primary}${alphas.wash}`,
+          bgcolor: withAlpha(tokens.primary, "wash"),
           color: tokens.primary,
           display: "grid",
           placeItems: "center",
@@ -137,7 +138,7 @@ function SourceRow({
       data-testid="source-row"
       sx={{
         "& + &": {
-          borderTop: `1px solid ${tokens.outlineVariant}${alphas.hairline}`,
+          borderTop: `1px solid ${withAlpha(tokens.outlineVariant, "hairline")}`,
         },
       }}
     >

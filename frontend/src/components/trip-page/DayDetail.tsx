@@ -4,9 +4,10 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { ArrivalIcon, DepartureIcon } from "@/components/trips/TripIcons";
 import FormSection from "@/components/waterway/FormSection";
+import { withAlpha } from "@/lib/alpha";
 import type { Descent, TripMember, TripStay } from "@/lib/api";
 import { LogIcon, PlaceIcon } from "@/lib/icons";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import type { TripDay, TripEvent } from "@/lib/tripTimeline";
 import {
   EVENT_GAP,
@@ -177,7 +178,7 @@ function Row({
         px: { xs: 0, md: 1 },
         py: 1,
         borderBottom: "1px solid",
-        borderColor: `${theme.tokens.outlineVariant}${alphas.hairline}`,
+        borderColor: withAlpha(theme.tokens.outlineVariant, "hairline"),
         // A row nobody may act on still has to read normally.
         "&.Mui-disabled": { opacity: 1 },
       }}

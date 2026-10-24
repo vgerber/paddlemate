@@ -7,6 +7,7 @@ import MapGL, {
   Source,
   useMap,
 } from "react-map-gl/maplibre";
+import { withAlpha } from "@/lib/alpha";
 import type {
   CountryBorder,
   Feature,
@@ -607,7 +608,7 @@ export default function WaterwayMap({
                   background: pin.color,
                   border: `2px solid ${theme.tokens.surfaceLowest}`,
                   boxShadow: pin.emphasis
-                    ? `0 0 0 3px ${pin.color}55`
+                    ? `0 0 0 3px ${withAlpha(pin.color, "hairline")}`
                     : tokens.elevation.marker,
                 }}
               />
@@ -739,7 +740,7 @@ export default function WaterwayMap({
                   borderRadius: "50%",
                   background: tokens.primary,
                   border: `2px solid ${tokens.surface}`,
-                  boxShadow: `0 0 0 3px ${tokens.primary}55, 0 0 10px ${tokens.primary}99`,
+                  boxShadow: `0 0 0 3px ${withAlpha(tokens.primary, "hairline")}, 0 0 10px ${withAlpha(tokens.primary, "border")}`,
                 }}
               />
             </MarkerHit>

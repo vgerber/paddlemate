@@ -7,10 +7,11 @@ import IconButton from "@mui/material/IconButton";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import { withAlpha } from "@/lib/alpha";
 import { plural } from "@/lib/format";
 import type { LngLat } from "@/lib/geo";
 import { CloseIcon, PlaceIcon } from "@/lib/icons";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import {
   type GeometryPicking,
   type GeomType,
@@ -195,11 +196,11 @@ export default function SuggestFeatureGeometry({
                 minHeight: 48,
                 gap: 1,
                 borderRadius: `${tokens.radii.row}px`,
-                bgcolor: `${tokens.primary}${alphas.hover}`,
+                bgcolor: withAlpha(tokens.primary, "hover"),
                 color: tokens.primary,
                 fontSize: "0.875rem",
                 fontWeight: 600,
-                "&:hover": { bgcolor: `${tokens.primary}${alphas.strong}` },
+                "&:hover": { bgcolor: withAlpha(tokens.primary, "strong") },
                 "&.Mui-disabled": { opacity: 0.5 },
               }}
             >
@@ -212,7 +213,7 @@ export default function SuggestFeatureGeometry({
                   borderRadius: "50%",
                   bgcolor: tokens.primary,
                   boxShadow: pickingActive
-                    ? `0 0 0 4px ${tokens.primary}${alphas.strong}`
+                    ? `0 0 0 4px ${withAlpha(tokens.primary, "strong")}`
                     : "none",
                 }}
               />

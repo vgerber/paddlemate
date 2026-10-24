@@ -8,6 +8,7 @@ import {
   featureDifficulty,
   toPseudoFeature,
 } from "@/components/waterway/section-details/utils";
+import { withAlpha } from "@/lib/alpha";
 import type { Proposal } from "@/lib/api";
 import { distanceAlongLineM, lineCoords, representativePoint } from "@/lib/geo";
 import { useWaterway } from "@/lib/hooks/useWaterways";
@@ -18,7 +19,7 @@ import {
   proposedTranslations,
   shortValue,
 } from "@/lib/proposals";
-import { alphas, labelSx, theme } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -217,7 +218,7 @@ export default function ProposalDetailPane({
               // The card draws the edge; rows only keep a rule between them.
               "& > *": { border: "none" },
               "& > * + *": {
-                borderTop: `1px solid ${tokens.outlineVariant}${alphas.hairline}`,
+                borderTop: `1px solid ${withAlpha(tokens.outlineVariant, "hairline")}`,
               },
             }}
           >

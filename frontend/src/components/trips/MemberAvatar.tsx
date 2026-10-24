@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/alpha";
+import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -28,7 +29,7 @@ export default function MemberAvatar({
         borderRadius: "50%",
         display: "grid",
         placeItems: "center",
-        bgcolor: `${tokens.primary}${alphas.wash}`,
+        bgcolor: withAlpha(tokens.primary, "wash"),
         color: tokens.primary,
         fontFamily: fonts.body,
         fontWeight: 600,

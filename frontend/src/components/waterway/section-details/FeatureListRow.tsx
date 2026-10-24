@@ -2,9 +2,10 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
+import { withAlpha } from "@/lib/alpha";
 import { DeleteIcon } from "@/lib/icons";
 import { durations } from "@/lib/motion";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
 import { ProposalDetail } from "./ProposalDetail";
 import {
@@ -104,7 +105,7 @@ export function FeatureListRow({
         gap: 1,
         pl: inBand ? { xs: 0.5, md: 1.5 } : 1.5,
         pr: inBand ? { xs: 1, md: `${panel.inner}px` } : `${panel.inner}px`,
-        bgcolor: isActive ? `${tokens.primary}${alphas.tint}` : "transparent",
+        bgcolor: isActive ? withAlpha(tokens.primary, "tint") : "transparent",
         // The selected row's 2px teal ring, drawn inside so it never shifts.
         outline: isActive ? `2px solid ${tokens.primary}` : "none",
         outlineOffset: -2,

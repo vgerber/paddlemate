@@ -3,8 +3,9 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
+import { withAlpha } from "@/lib/alpha";
 import { durations } from "@/lib/motion";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
 import {
   FeatureListRow,
@@ -98,7 +99,7 @@ function RangeBand({
       data-band={isPortage ? "portage" : "range"}
       sx={{
         bgcolor: isActive
-          ? `${tokens.primary}${alphas.wash}`
+          ? withAlpha(tokens.primary, "wash")
           : tokens.surfaceHigh,
         outline: isActive ? `2px solid ${tokens.primary}` : "none",
         outlineOffset: -2,

@@ -1,6 +1,7 @@
 import ButtonBase from "@mui/material/ButtonBase";
+import { withAlpha } from "@/lib/alpha";
 import { ThumbDownIcon, ThumbUpIcon } from "@/lib/icons";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -36,7 +37,7 @@ export default function VoteButton({
         borderRadius: `${tokens.radii.sm}px`,
         border: "1px solid",
         borderColor: pressed ? tokens.primary : tokens.outlineVariant,
-        bgcolor: pressed ? `${tokens.primary}${alphas.tint}` : "transparent",
+        bgcolor: pressed ? withAlpha(tokens.primary, "tint") : "transparent",
         color: pressed ? tokens.primary : tokens.onSurfaceVariant,
         fontFamily: fonts.body,
         fontWeight: 600,

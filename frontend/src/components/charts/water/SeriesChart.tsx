@@ -22,6 +22,7 @@ import {
 } from "recharts";
 import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
 import { periodLabel } from "@/components/charts/PeriodMenu";
+import { withAlpha } from "@/lib/alpha";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import {
   formatDay,
@@ -33,7 +34,7 @@ import {
 import { useReadingSummary } from "@/lib/hooks/useGauges";
 import { FitIcon } from "@/lib/icons";
 import { isStale } from "@/lib/staleness";
-import { alphas, labelSx, theme } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme";
 import { levelInk } from "@/lib/waterLevel";
 import { announce, cancelAnnounce } from "./announce";
 import { pointTime, typeLabel } from "./chartTime";
@@ -567,7 +568,7 @@ export default function SeriesChart({
                   bottom: rail ? RAIL_AXIS : 0,
                   left: dragging.x0,
                   width: dragging.x1 - dragging.x0,
-                  background: `${tokens.primary}${alphas.hover}`,
+                  background: withAlpha(tokens.primary, "hover"),
                   pointerEvents: "none",
                   zIndex: 1,
                 }}
@@ -722,7 +723,7 @@ export default function SeriesChart({
                     className="chart-band"
                     dataKey="band"
                     stroke="none"
-                    fill={`${tokens.chartSeries}${alphas.strong}`}
+                    fill={withAlpha(tokens.chartSeries, "strong")}
                     dot={false}
                     activeDot={false}
                     connectNulls={false}

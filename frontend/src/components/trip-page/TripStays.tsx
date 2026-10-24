@@ -13,13 +13,14 @@ import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import { stayKind } from "@/components/trips/stayKinds";
+import { withAlpha } from "@/lib/alpha";
 import type { TripStay } from "@/lib/api";
 import { dateRange } from "@/lib/format";
 import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
 import { useSectionDotLevels } from "@/lib/hooks/useWaterStatus";
 import { AddToListIcon, BaseIcon, DeleteIcon, EditIcon } from "@/lib/icons";
 import { durations } from "@/lib/motion";
-import { alphas, fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme";
 import { baseColors, baseNumbers } from "@/lib/tripRange";
 import BasesMap from "./BasesMap";
 import TripCandidates from "./TripCandidates";
@@ -221,7 +222,7 @@ function StayRow({
           pr: 0.5,
           ...phoneRowPad,
           cursor: "pointer",
-          bgcolor: isOpen ? `${tokens.primary}${alphas.tint}` : "transparent",
+          bgcolor: isOpen ? withAlpha(tokens.primary, "tint") : "transparent",
         }}
       >
         <Box

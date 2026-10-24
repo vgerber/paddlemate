@@ -2,8 +2,9 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Popover from "@mui/material/Popover";
 import { useState } from "react";
 import { Segment, SegmentTrack } from "@/components/canvas/SegmentedControl";
+import { withAlpha } from "@/lib/alpha";
 import { LayersIcon } from "@/lib/icons";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 import type { MapPadding } from "./Map";
 import { BELOW_ZOOM, stackOffset } from "./MapCompass";
 
@@ -120,7 +121,7 @@ function LayerKey(
           width: tokens.touch.min,
           height: tokens.touch.min,
           borderRadius: `${tokens.radii.sm}px`,
-          bgcolor: open ? `${tokens.primary}${alphas.wash}` : tokens.surface,
+          bgcolor: open ? withAlpha(tokens.primary, "wash") : tokens.surface,
           color: open ? tokens.primary : tokens.onSurface,
           boxShadow: open
             ? `${tokens.elevation.e2}, inset 0 0 0 2px ${tokens.primary}`

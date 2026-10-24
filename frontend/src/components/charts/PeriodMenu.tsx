@@ -4,9 +4,10 @@ import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
 import RangeDialog from "@/components/charts/RangeDialog";
 import type { CustomRange, TimeRange } from "@/components/charts/water/types";
+import { withAlpha } from "@/lib/alpha";
 import { chartRange } from "@/lib/format";
 import { CollapseIcon, ConfirmIcon, ExpandIcon } from "@/lib/icons";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -76,7 +77,7 @@ export default function PeriodMenu({
           mx: "-12px",
           gap: 0.5,
           color: open ? tokens.primary : tokens.onSurfaceVariant,
-          bgcolor: open ? `${tokens.primary}${alphas.wash}` : "transparent",
+          bgcolor: open ? withAlpha(tokens.primary, "wash") : "transparent",
         }}
       >
         {periodLabel(value, custom)}

@@ -1,11 +1,12 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
+import { withAlpha } from "@/lib/alpha";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
 import { useProposals } from "@/lib/hooks/useProposals";
 import { ListIcon, MapIcon } from "@/lib/icons";
 import { transition } from "@/lib/motion";
-import { alphas, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 const { phone } = tokens;
@@ -87,7 +88,7 @@ export default function ToolsList() {
                 display: "grid",
                 placeItems: "center",
                 borderRadius: `${tokens.radii.row}px`,
-                bgcolor: `${tokens.primary}${alphas.hover}`,
+                bgcolor: withAlpha(tokens.primary, "hover"),
                 color: tokens.primary,
               }}
             >

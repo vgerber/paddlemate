@@ -1,4 +1,5 @@
-import { alphas, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/alpha";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 const { phone } = tokens;
@@ -9,7 +10,7 @@ const { phone } = tokens;
 export function openRowSx(selected = false, flat = false) {
   if (!selected) return {};
   return {
-    bgcolor: `${tokens.primary}${alphas.wash}`,
+    bgcolor: withAlpha(tokens.primary, "wash"),
     boxShadow: flat
       ? `inset 3px 0 0 ${tokens.primary}`
       : `inset 3px 0 0 ${tokens.primary}, ${tokens.elevation.e1}`,
@@ -25,11 +26,11 @@ export const flatRowSx = {
   borderRadius: 0,
   boxShadow: "none",
   mb: 0,
-  borderBottom: `1px solid ${tokens.outlineVariant}${alphas.hairline}`,
+  borderBottom: `1px solid ${withAlpha(tokens.outlineVariant, "hairline")}`,
   "&:hover": { bgcolor: tokens.surfaceLow },
   "&.Mui-selected, &[aria-current='true']": {
     ...openRowSx(true, true),
-    "&:hover": { bgcolor: `${tokens.primary}${alphas.wash}` },
+    "&:hover": { bgcolor: withAlpha(tokens.primary, "wash") },
   },
 } as const;
 
