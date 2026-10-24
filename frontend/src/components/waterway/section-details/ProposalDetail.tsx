@@ -28,6 +28,9 @@ function ProposalActions({ proposal }: { proposal: Proposal }) {
 
   const isOwner = !!user && user.id === proposal.submitted_by;
   const canDelete = isOwner || isAdmin;
+  // Backing your own proposal says nothing (the API answers 403).
+  const voteLocked = !isAuthenticated || isOwner;
+  const voteHint = !isAuthenticated ? "Sign in to vote" : "";
 
   function handleVote(v: 1 | -1) {
     if (proposal.user_vote === v) unvote.mutate(proposal.id);
@@ -40,11 +43,12 @@ function ProposalActions({ proposal }: { proposal: Proposal }) {
 
   return (
     <>
-      <Tooltip title={!isAuthenticated ? "Login to vote" : ""} placement="top">
+      <Tooltip title={voteHint} placement="top">
         <span>
           <IconButton
             size="small"
-            disabled={!isAuthenticated}
+            aria-label="Upvote proposal"
+            disabled={voteLocked}
             onClick={(e) => {
               e.stopPropagation();
               handleVote(1);
@@ -67,11 +71,12 @@ function ProposalActions({ proposal }: { proposal: Proposal }) {
       >
         {proposal.upvotes}
       </Typography>
-      <Tooltip title={!isAuthenticated ? "Login to vote" : ""} placement="top">
+      <Tooltip title={voteHint} placement="top">
         <span>
           <IconButton
             size="small"
-            disabled={!isAuthenticated}
+            aria-label="Downvote proposal"
+            disabled={voteLocked}
             onClick={(e) => {
               e.stopPropagation();
               handleVote(-1);

@@ -783,6 +783,66 @@ test.describe("your own proposal", () => {
   });
 });
 
+test.describe("a proposal in a feature row", () => {
+  async function openRow(page: Page, submittedBy: (me: string) => string) {
+    const idPromise = myId(page);
+    await page.goto("/?waterway=9001&section=9102");
+    const me = await idPromise;
+    const mine = {
+      ...ownProposal("row", submittedBy(me)),
+      entity_id: null,
+      operation: "create",
+      original_data: null,
+      proposed_data: {
+        name: "Row Vote Rapid",
+        location: { type: "Point", coordinates: [11.0132, 47.0132] },
+        metadata: {},
+        lang_code: "en",
+        section_id: 9102,
+        waterway_id: 9001,
+        feature_type: "rapid",
+      },
+    };
+    await page.route("**/api/v1/proposals?*", (r) =>
+      r.fulfill({
+        json: {
+          items: [mine],
+          total: 1,
+          page: 1,
+          per_page: 100,
+          total_pages: 1,
+        },
+      }),
+    );
+    await page.goto("/?waterway=9001&section=9102");
+    await page
+      .getByRole("button", { name: "Section actions" })
+      .filter({ visible: true })
+      .click();
+    await page
+      .getByRole("menuitem", { name: "Show proposed features" })
+      .click();
+    await page.keyboard.press("Escape");
+    await page
+      .locator("[data-row]")
+      .filter({ hasText: "Row Vote Rapid" })
+      .filter({ visible: true })
+      .first()
+      .click();
+    return page
+      .getByRole("button", { name: "Upvote proposal", exact: true })
+      .filter({ visible: true });
+  }
+
+  test("the author cannot vote on it", async ({ page }) => {
+    await expect(await openRow(page, (me) => me)).toBeDisabled();
+  });
+
+  test("someone else can", async ({ page }) => {
+    await expect(await openRow(page, () => "someone-else")).toBeEnabled();
+  });
+});
+
 test.describe("proposal diff of an unchanged field", () => {
   test("a name the proposal repeats is no change, one the snapshot lacks is not recorded", async ({
     page,
