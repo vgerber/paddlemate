@@ -7,7 +7,7 @@ import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
 import { ConfirmIcon, ForwardIcon } from "@/lib/icons";
-import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { PANEL_HEIGHT, SYSTEM_INSET, theme } from "@/lib/theme";
 import {
   buildPayload,
   copyFromDescent,
@@ -220,7 +220,7 @@ export default function DescentForm({
           px: { xs: `${tokens.phone.line}px`, md: 2 },
           py: 3,
           // Clear the fixed bottom bar so the last field stays reachable.
-          pb: "calc(88px + env(safe-area-inset-bottom))",
+          pb: `calc(88px + ${SYSTEM_INSET})`,
         }}
       >
         {steps}

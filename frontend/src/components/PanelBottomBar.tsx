@@ -4,7 +4,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { theme } from "@/lib/theme";
+import { SYSTEM_INSET, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -78,7 +78,7 @@ export default function PanelBottomBar({
         alignItems: "center",
         minHeight: 76,
         px: { xs: `${tokens.phone.line}px`, md: 2 },
-        pb: "env(safe-area-inset-bottom)",
+        pb: SYSTEM_INSET,
         bgcolor: tokens.surface,
         borderTop: "1px solid",
         borderColor: "divider",

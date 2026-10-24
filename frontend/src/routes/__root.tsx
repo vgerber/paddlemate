@@ -40,7 +40,7 @@ import { useLanguage } from "@/lib/languagePreference";
 import { transition } from "@/lib/motion";
 import { activeNav, DESKTOP_NAV, PHONE_NAV } from "@/lib/nav";
 import { shouldRetryQuery } from "@/lib/retry";
-import { BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, fonts, SYSTEM_INSET, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
@@ -272,7 +272,7 @@ function BottomNav({ signedIn }: { signedIn: boolean }) {
         right: 0,
         height: tokens.chrome.bottomNav,
         boxSizing: "content-box",
-        pb: "env(safe-area-inset-bottom)",
+        pb: SYSTEM_INSET,
         zIndex: theme.zIndex.modal,
         bgcolor: tokens.surfaceLowest,
         boxShadow: tokens.elevation.e1,
