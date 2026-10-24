@@ -15,10 +15,11 @@ import {
   dragHeight,
   offsetFor,
   type SheetState,
+  type Snaps,
   settleState,
   snapHeights,
 } from "@/lib/sheetSnap";
-import { releaseVelocity, type Sample } from "@/lib/swipe";
+import { lockDirection, releaseVelocity, type Sample } from "@/lib/swipe";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -34,6 +35,35 @@ interface BottomSheetProps {
   children: ReactNode;
 }
 
+/** The nearest ancestor of `from`, inside `root`, that scrolls vertically. */
+function scrollerAt(from: HTMLElement, root: HTMLElement | null) {
+  for (let el: HTMLElement | null = from; el && el !== root; ) {
+    const overflow = getComputedStyle(el).overflowY;
+    if (
+      (overflow === "auto" || overflow === "scroll") &&
+      el.scrollHeight > el.clientHeight + 1
+    ) {
+      return el;
+    }
+    el = el.parentElement;
+  }
+  return null;
+}
+
+/** Whether a vertical drag moves the sheet or scrolls the content: the sheet
+ * takes it from anywhere that does not scroll, from content at its top when
+ * the drag goes down, and from content when the sheet can still rise. */
+function takesDrag(
+  scroller: HTMLElement | null,
+  dy: number,
+  height: number,
+  snaps: Snaps,
+) {
+  if (!scroller) return true;
+  if (dy > 0) return scroller.scrollTop <= 0;
+  return height < snaps.open;
+}
+
 /** A sheet from the bottom edge with a peek and an open height. Drag the
  * handle between them; open shows a scrim, traps focus, and Escape closes it.
  * Moves by transform only. */
@@ -45,10 +75,19 @@ export default function BottomSheet({
   children,
 }: BottomSheetProps) {
   const sheet = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ y0: number; h0: number; samples: Sample[] } | null>(
-    null,
-  );
-  // A drag ends in a click on the handle; it must not also toggle.
+  const handle = useRef<HTMLButtonElement>(null);
+  const drag = useRef<{
+    id: number;
+    x0: number;
+    y0: number;
+    h0: number;
+    locked: boolean;
+    /** The scrolling content under the finger, if any. */
+    scroller: HTMLElement | null;
+    samples: Sample[];
+  } | null>(null);
+  // A drag ends in a click on whatever was under the finger; it must not
+  // also toggle the handle or open a row.
   const dragged = useRef(false);
   const [viewport, setViewport] = useState(() => window.innerHeight);
   const snaps = snapHeights(viewport, peekHeight);
@@ -67,6 +106,19 @@ export default function BottomSheet({
     el.style.transition = transition("transform", { easing: "easeInOut" });
     el.style.transform = `translate3d(0,${gap}px,0)`;
   }, [state, gap]);
+
+  // While the sheet follows a drag the browser must not also scroll or pan.
+  // React's touch props are passive, so this is a native listener.
+  const closed = state === "closed";
+  useEffect(() => {
+    const el = sheet.current;
+    if (!el || closed) return;
+    const hold = (e: TouchEvent) => {
+      if (drag.current?.locked && e.cancelable) e.preventDefault();
+    };
+    el.addEventListener("touchmove", hold, { passive: false });
+    return () => el.removeEventListener("touchmove", hold);
+  }, [closed]);
 
   useEffect(() => {
     // Not when focus is already inside: typing in a field that opens the
@@ -94,29 +146,57 @@ export default function BottomSheet({
   if (state === "closed") return null;
 
   const onPointerDown = (e: PointerEvent<HTMLElement>) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
     dragged.current = false;
+    const onHandle = !!handle.current?.contains(e.target as Node);
+    // A mouse drags by the handle only; touch and pen drag from anywhere.
+    if (e.pointerType === "mouse") {
+      if (!onHandle) return;
+      // A touch is captured by the browser; a mouse leaves the sheet. The
+      // handle keeps the capture so its click still lands on it.
+      handle.current?.setPointerCapture(e.pointerId);
+    }
     drag.current = {
+      id: e.pointerId,
+      x0: e.clientX,
       y0: e.clientY,
       h0: resting,
+      locked: false,
+      scroller: onHandle
+        ? null
+        : scrollerAt(e.target as HTMLElement, sheet.current),
       samples: [{ x: e.clientY, t: e.timeStamp }],
     };
-    if (sheet.current) sheet.current.style.transition = "none";
   };
 
   const onPointerMove = (e: PointerEvent<HTMLElement>) => {
     const d = drag.current;
-    if (!d || !sheet.current) return;
+    if (!d || e.pointerId !== d.id || !sheet.current) return;
     d.samples.push({ x: e.clientY, t: e.timeStamp });
-    if (Math.abs(e.clientY - d.y0) > 4) dragged.current = true;
-    const h = dragHeight(d.h0, e.clientY - d.y0, snaps);
+    const dy = e.clientY - d.y0;
+    if (!d.locked) {
+      const lock = lockDirection(e.clientX - d.x0, dy);
+      if (lock === "pending") return;
+      // Horizontal belongs to the tab swipe; a scroll belongs to the content.
+      if (lock === "horizontal" || !takesDrag(d.scroller, dy, resting, snaps)) {
+        drag.current = null;
+        return;
+      }
+      d.locked = true;
+      dragged.current = true;
+      if (e.pointerType !== "mouse") {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }
+      sheet.current.style.transition = "none";
+    }
+    const h = dragHeight(d.h0, dy, snaps);
     sheet.current.style.transform = `translate3d(0,${offsetFor(h, snaps)}px,0)`;
   };
 
   const onPointerUp = (e: PointerEvent<HTMLElement>) => {
     const d = drag.current;
+    if (!d || e.pointerId !== d.id) return;
     drag.current = null;
-    if (!d) return;
+    if (!d.locked) return;
     d.samples.push({ x: e.clientY, t: e.timeStamp });
     const next = settleState(
       dragHeight(d.h0, e.clientY - d.y0, snaps),
@@ -159,6 +239,16 @@ export default function BottomSheet({
           onKeyDown={(e) => {
             if (state === "open" && e.key === "Escape") onStateChange("closed");
           }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          onClickCapture={(e) => {
+            if (!dragged.current) return;
+            dragged.current = false;
+            e.stopPropagation();
+            e.preventDefault();
+          }}
           role={state === "open" ? "dialog" : "region"}
           aria-modal={state === "open" ? true : undefined}
           aria-label={label}
@@ -186,13 +276,9 @@ export default function BottomSheet({
             aria-expanded={state === "open"}
             aria-label={state === "open" ? "Shrink panel" : "Expand panel"}
             onClick={() => {
-              if (dragged.current) return;
               onStateChange(state === "open" ? "peek" : "open");
             }}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
+            ref={handle}
             sx={{
               // Above content that is pulled up under the handle's foot.
               position: "relative",
@@ -223,7 +309,17 @@ export default function BottomSheet({
               }}
             />
           </Box>
-          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              // Vertical is the sheet's or the list's; sideways is the
+              // tab swipe's own.
+              touchAction: "pan-y",
+              overscrollBehavior: "contain",
+            }}
+          >
             {children}
           </Box>
         </Box>
