@@ -236,12 +236,12 @@ impl RateLimits {
             return false;
         };
         let segs: Vec<&str> = rest.split('/').filter(|s| !s.is_empty()).collect();
-        match segs.as_slice() {
-            ["geo", "regions" | "region-outlines" | "river-segments", ..] => true,
-            ["waterways", _, "geometry"] => true,
-            [.., "readings", "summary"] => true,
-            _ => false,
-        }
+        matches!(
+            segs.as_slice(),
+            ["geo", "regions" | "region-outlines" | "river-segments", ..]
+                | ["waterways", _, "geometry"]
+                | [.., "readings", "summary"]
+        )
     }
 }
 

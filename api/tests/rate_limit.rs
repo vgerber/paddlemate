@@ -227,7 +227,6 @@ async fn expensive_reads_have_their_own_budget() {
         let ok = passed(&app, 30, |_| req(Method::GET, uri, peer)).await;
         assert!((10..=11).contains(&ok), "{uri}: {ok}");
     }
-    let peer = "203.0.113.7";
     // Cheap reads from that caller still work: the expensive budget is extra.
     assert_eq!(
         send(&app, read("203.0.113.7")).await.status(),
