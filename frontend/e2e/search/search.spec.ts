@@ -425,7 +425,7 @@ test.describe("filters sheet", () => {
   test("sections whose water status fails are left out and counted", async ({
     page,
   }) => {
-    await page.route("**/water-status", (route) =>
+    await page.route("**/waterways/water-status?*", (route) =>
       route.fulfill({ status: 500, json: { error: { code: "x" } } }),
     );
     await openSearch(page, "&q=Test");
@@ -445,14 +445,16 @@ test.describe("filters sheet", () => {
     await expect.poll(() => tabCount(page, "Sections")).toBe(0);
   });
 
-  test("water status requests run at most six at a time", async ({ page }) => {
-    let active = 0;
-    let peak = 0;
-    await page.route("**/water-status", async (route) => {
-      active++;
-      peak = Math.max(peak, active);
-      await new Promise((r) => setTimeout(r, 150));
-      active--;
+  test("water statuses are asked for in batches of at most 100", async ({
+    page,
+  }) => {
+    const sizes: number[] = [];
+    let single = 0;
+    await page.route("**/water-status*", async (route) => {
+      const url = new URL(route.request().url());
+      const ids = url.searchParams.get("section_ids");
+      if (ids) sizes.push(ids.split(",").length);
+      else single++;
       await route.continue();
     });
     await openSearch(page, "&q=Test");
@@ -462,8 +464,9 @@ test.describe("filters sheet", () => {
       .getByRole("button", { name: "High", exact: true })
       .click();
     await expect.poll(() => rowLevels(page)).toEqual(["high"]);
-    expect(peak).toBeGreaterThan(0);
-    expect(peak).toBeLessThanOrEqual(6);
+    expect(sizes.length).toBeGreaterThan(0);
+    expect(Math.max(...sizes)).toBeLessThanOrEqual(100);
+    expect(single).toBe(0);
   });
 
   test("an unknown water value in the URL is ignored", async ({ page }) => {

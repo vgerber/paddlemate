@@ -15,20 +15,15 @@ const MARKER = {
 /** Every section answers with a level picked from its id: low, high or no
  * gauge, so one base shows a mix. */
 async function mockStatuses(page: Page) {
-  await page.route("**/water-status", async (route) => {
-    const id = Number(
-      route
-        .request()
-        .url()
-        .match(/sections\/(\d+)\//)?.[1],
-    );
-    const pick = id % 3;
-    if (pick === 2) {
-      await route.fulfill({ json: { ranges: [] } });
-      return;
-    }
-    await route.fulfill({
-      json: {
+  await page.route("**/waterways/water-status?*", async (route) => {
+    const ids = new URL(route.request().url()).searchParams
+      .get("section_ids")
+      ?.split(",")
+      .map(Number);
+    const level = (id: number) => {
+      const pick = id % 3;
+      if (pick === 2) return { ranges: [] };
+      return {
         ranges: [
           {
             id: 1,
@@ -48,7 +43,10 @@ async function mockStatuses(page: Page) {
             updated_at: "2026-01-01T00:00:00Z",
           },
         ],
-      },
+      };
+    };
+    await route.fulfill({
+      json: Object.fromEntries((ids ?? []).map((id) => [id, level(id)])),
     });
   });
 }

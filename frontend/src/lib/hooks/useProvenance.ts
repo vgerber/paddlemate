@@ -1,14 +1,9 @@
-import {
-  type UseQueryResult,
-  useQueries,
-  useQuery,
-} from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { HistoryTarget } from "@/components/provenance/types";
-import type { HistoryStep, ProposalFilters } from "@/lib/api";
+import type { HistoryPage, ProposalFilters } from "@/lib/api";
 import { proposalsApi } from "@/lib/api";
 import { client } from "@/lib/api/client";
 import { proposalKeys } from "@/lib/hooks/useProposals";
-import { createLimiter } from "@/lib/limiter";
 
 export const provenanceKeys = {
   all: ["provenance"] as const,
@@ -18,7 +13,12 @@ export const provenanceKeys = {
     [...provenanceKeys.all, "sources", waterwayId, sectionId ?? null] as const,
 };
 
-async function fetchHistory(target: HistoryTarget) {
+/** One page of steps; a section's also holds its features' pages by id. */
+type HistoryResult = HistoryPage & {
+  features?: Record<string, HistoryPage> | null;
+};
+
+async function fetchHistory(target: HistoryTarget): Promise<HistoryResult> {
   const query = { per_page: 100 };
   const waterway_id = target.waterwayId;
   if (!("sectionId" in target)) {
@@ -31,9 +31,15 @@ async function fetchHistory(target: HistoryTarget) {
   }
   const section_id = target.sectionId;
   if (!("featureId" in target)) {
+    // The features' steps come along; see `seedFeatureHistories`.
     const { data } = await client.GET(
       "/api/v1/waterways/{waterway_id}/sections/{section_id}/history",
-      { params: { path: { waterway_id, section_id }, query } },
+      {
+        params: {
+          path: { waterway_id, section_id },
+          query: { ...query, include_features: true },
+        },
+      },
     );
     if (!data) throw new Error("No history");
     return data;
@@ -51,39 +57,31 @@ async function fetchHistory(target: HistoryTarget) {
   return data;
 }
 
-/** Steps oldest first; one page of up to 100. */
+/** The phone and desktop panels, and the views that read the entries a
+ * section's history seeded, mount one after the other; the later ones read
+ * what the first fetched. Edits invalidate `provenanceKeys.all`. */
+const HISTORY_STALE_MS = 30_000;
+
+/** Steps oldest first; one page of up to 100. A section's answer carries its
+ * features' pages too (`features`), and each lands on its own key, so a
+ * feature's view reads them without another request. */
 export function useHistory(target: HistoryTarget) {
+  const qc = useQueryClient();
   return useQuery({
     queryKey: provenanceKeys.history(target),
-    queryFn: () => fetchHistory(target),
-  });
-}
-
-/** A section's edits are one request per entry; a few at a time keeps a
- * section with many features from opening dozens of connections at once. */
-const limit = createLimiter(4);
-
-function combineHistories(results: UseQueryResult<{ items: HistoryStep[] }>[]) {
-  return {
-    data: results.map((r) => r.data?.items),
-    isLoading: results.some((r) => r.isLoading),
-    error: results.find((r) => r.error)?.error ?? null,
-    refetch: () => {
-      for (const r of results) if (r.error) r.refetch();
+    queryFn: async () => {
+      const page = await fetchHistory(target);
+      if ("sectionId" in target) {
+        for (const [id, feature] of Object.entries(page.features ?? {})) {
+          qc.setQueryData(
+            provenanceKeys.history({ ...target, featureId: Number(id) }),
+            feature,
+          );
+        }
+      }
+      return page;
     },
-  };
-}
-
-/** The histories of several entries, each on its own cache key so a single
- * entry's view reuses them. Entries not loaded yet come back as undefined. */
-export function useEntryHistories(targets: HistoryTarget[]) {
-  return useQueries({
-    queries: targets.map((target) => ({
-      queryKey: provenanceKeys.history(target),
-      queryFn: ({ signal }: { signal: AbortSignal }) =>
-        limit(() => fetchHistory(target), signal),
-    })),
-    combine: combineHistories,
+    staleTime: HISTORY_STALE_MS,
   });
 }
 

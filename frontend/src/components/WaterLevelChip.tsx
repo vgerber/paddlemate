@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
 import type { components } from "@/lib/api/schema";
 import { formatReading } from "@/lib/format";
-import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
+import { useRowWaterStatus } from "@/lib/hooks/useWaterStatus";
 import { theme } from "@/lib/theme";
 import {
   currentLevel,
@@ -93,7 +93,7 @@ export default function WaterLevelChip({
   waterwayId,
   sectionId,
 }: WaterLevelChipProps) {
-  const { data: waterStatus, isLoading } = useWaterStatus(
+  const { data: waterStatus, isLoading } = useRowWaterStatus(
     waterwayId,
     sectionId,
   );

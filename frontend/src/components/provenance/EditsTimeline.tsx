@@ -10,10 +10,7 @@ import type { DotKind } from "@/components/TimelineRail";
 import { featureName } from "@/components/waterway/section-details/utils";
 import type { HistoryStep, SectionWithFeatures } from "@/lib/api";
 import { formatDate, humanize, sentenceCase } from "@/lib/format";
-import {
-  useEntryHistories,
-  useSectionProposals,
-} from "@/lib/hooks/useProvenance";
+import { useHistory, useSectionProposals } from "@/lib/hooks/useProvenance";
 import { useSession } from "@/lib/hooks/useSession";
 import { HistoryIcon } from "@/lib/icons";
 import { localizedName } from "@/lib/localization";
@@ -29,7 +26,6 @@ import HistoryChanges from "./HistoryChanges";
 import ProposalStep, { ReviewNote } from "./ProposalStep";
 import StepRow, { Byline, smallSx } from "./StepRow";
 import { stepByline, stepHeadline } from "./steps";
-import type { HistoryTarget } from "./types";
 
 const { tokens } = theme;
 
@@ -59,16 +55,6 @@ export function sectionEntries(section: SectionWithFeatures): EntryRef[] {
 /** The section and its live features. */
 export function useEntries(section: SectionWithFeatures): EntryRef[] {
   return useMemo(() => sectionEntries(section), [section]);
-}
-
-function targetOf(
-  section: SectionWithFeatures,
-  entry: EntryRef,
-): HistoryTarget {
-  const base = { waterwayId: section.waterway_id, sectionId: section.id };
-  return entry.kind === "feature" && entry.id != null
-    ? { ...base, featureId: entry.id }
-    : base;
 }
 
 function SourceLicence({ step }: { step: HistoryStep }) {
@@ -253,7 +239,23 @@ export default function EditsTimeline({
         : everything,
     [everything, filter],
   );
-  const histories = useEntryHistories(shown.map((e) => targetOf(section, e)));
+  const history = useHistory({
+    waterwayId: section.waterway_id,
+    sectionId: section.id,
+  });
+  const histories = useMemo(
+    () => ({
+      data: shown.map((e) =>
+        e.kind === "feature" && e.id != null
+          ? history.data?.features?.[e.id]?.items
+          : history.data?.items,
+      ),
+      isLoading: history.isLoading,
+      error: history.error,
+      refetch: history.refetch,
+    }),
+    [shown, history],
+  );
   const proposals = useSectionProposals(section.id);
 
   const resolved = useMemo(
