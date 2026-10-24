@@ -237,7 +237,7 @@ test.describe("phone bottom navigation", () => {
     const nav = bottomNav(page);
     await expect(nav).toBeVisible();
     expect(await computed(nav, "border-top-width")).toBe("0px");
-    expect(await pageCss(page)).toContain("safe-area-inset-bottom");
+    expect(await pageCss(page)).toContain("--system-inset");
   });
 
   test("the nav is 64px and the map pane ends exactly at its top", async ({

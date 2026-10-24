@@ -669,6 +669,11 @@ export const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        ":root": {
+          "--system-inset": "0px",
+          "@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui)":
+            { "--system-inset": "env(safe-area-inset-bottom, 0px)" },
+        },
         body: {
           fontVariantNumeric: "tabular-nums",
           scrollbarColor: `${tokens.outline} transparent`,
@@ -1219,16 +1224,22 @@ export const theme = createTheme({
   },
 });
 
+/** The bottom gap for the phone's system buttons. Zero in a browser tab, whose
+ * own toolbar handles them; the safe-area inset only when the app runs
+ * installed (see the `:root` rule in the CssBaseline overrides). Every bottom
+ * inset in the app uses this, never `env(safe-area-inset-bottom)` directly. */
+export const SYSTEM_INSET = "var(--system-inset)";
+
 /** Height of a full-screen panel: the window less the desktop app bar, or
  * less the mobile bottom nav and its safe area. A panel that pins a bottom
  * bar needs a bounded height to size its scroller against. */
 export const PANEL_HEIGHT = {
-  xs: `calc(100dvh - ${tokens.chrome.bottomNav}px - env(safe-area-inset-bottom))`,
+  xs: `calc(100dvh - ${tokens.chrome.bottomNav}px - ${SYSTEM_INSET})`,
   md: `calc(100vh - ${tokens.chrome.appBar}px)`,
 } as const;
 
 /** Space the fixed bottom nav takes at the foot of the page. */
-export const BOTTOM_NAV_SPACE = `calc(${tokens.chrome.bottomNav}px + env(safe-area-inset-bottom))`;
+export const BOTTOM_NAV_SPACE = `calc(${tokens.chrome.bottomNav}px + ${SYSTEM_INSET})`;
 
 /** The app's standard small label: 12px, semibold, sentence case. Spread into
  * sx and override size or color where a variant is needed. */

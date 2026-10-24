@@ -3,7 +3,7 @@ import Typography from "@mui/material/Typography";
 import { phoneCardSx } from "@/components/canvas/flatRow";
 import PushSettings from "@/components/notifications/PushSettings";
 import PanelHeader from "@/components/PanelHeader";
-import { theme } from "@/lib/theme";
+import { SYSTEM_INSET, theme } from "@/lib/theme";
 import AccountSection from "./AccountSection";
 import AppearanceSection from "./AppearanceSection";
 import { type GroupId, groupLabel } from "./groups";
@@ -47,7 +47,7 @@ export default function SettingsDetail({
         sx={{
           position: "fixed",
           inset: 0,
-          bottom: `calc(${tokens.chrome.bottomNav}px + env(safe-area-inset-bottom))`,
+          bottom: `calc(${tokens.chrome.bottomNav}px + ${SYSTEM_INSET})`,
           zIndex: theme.zIndex.appBar - 1,
           display: "flex",
           flexDirection: "column",
