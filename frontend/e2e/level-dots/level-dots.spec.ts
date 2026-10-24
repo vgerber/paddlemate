@@ -12,6 +12,21 @@ const MARKER = {
   unknown: "rgba(124, 138, 144, 0.5)",
 };
 
+/** r, g, b (0-255) and alpha of a computed colour, whichever syntax the
+ * browser serialises: `rgb(...)` or, for a mixed colour, `color(srgb ... / a)`. */
+function parseColour(css: string): number[] {
+  const nums = css.match(/-?\d*\.?\d+/g)?.map(Number) ?? [];
+  const [r, g, b, a = 1] = nums;
+  const scale = css.startsWith("color(") ? 255 : 1;
+  return [r * scale, g * scale, b * scale]
+    .map(Math.round)
+    .concat(Math.round(a * 100) / 100);
+}
+
+function expectColour(actual: string, expected: string) {
+  expect(parseColour(actual)).toEqual(parseColour(expected));
+}
+
 /** Every section answers with a level picked from its id: low, high or no
  * gauge, so one base shows a mix. */
 async function mockStatuses(page: Page) {
@@ -80,9 +95,9 @@ test.describe("trip bases", () => {
       expect(dots.length).toBeGreaterThan(0);
       for (const d of dots) {
         seen.add(d.level ?? "");
-        if (d.level === "low") expect(d.bg).toBe(MARKER.low);
-        if (d.level === "high") expect(d.bg).toBe(MARKER.high);
-        if (d.level === "unknown") expect(d.bg).toBe(MARKER.unknown);
+        if (d.level === "low") expectColour(d.bg, MARKER.low);
+        if (d.level === "high") expectColour(d.bg, MARKER.high);
+        if (d.level === "unknown") expectColour(d.bg, MARKER.unknown);
       }
       expect(
         await row.getByTestId("level-dots").getAttribute("aria-label"),
@@ -117,9 +132,9 @@ test.describe("recent rivers", () => {
     expect(levels).toContain("high");
     expect(levels).toContain("unknown");
     for (const d of dots) {
-      if (d.level === "low") expect(d.bg).toBe(MARKER.low);
-      if (d.level === "high") expect(d.bg).toBe(MARKER.high);
-      if (d.level === "unknown") expect(d.bg).toBe(MARKER.unknown);
+      if (d.level === "low") expectColour(d.bg, MARKER.low);
+      if (d.level === "high") expectColour(d.bg, MARKER.high);
+      if (d.level === "unknown") expectColour(d.bg, MARKER.unknown);
     }
     expect(
       await row.getByTestId("level-dots").getAttribute("aria-label"),
