@@ -102,7 +102,10 @@ host names and secrets), and `deploy/backend/.env` carries the settings.
 - **Frontend**: build on the dev machine with the production `VITE_*` values
   (`frontend/.env`), check `grep -c localhost frontend/dist/assets/*.js` is 0,
   then `deploy/frontend/deploy.sh`, right after the API (it deletes old hashed
-  assets). Installed PWAs reload once when the new service worker takes over.
+  assets). Open apps are not reloaded for the person: when the new service worker takes
+  over, a snackbar says "A new version is ready." with a Reload button, so an
+  open form is not lost. Bundles already in the field (released before that
+  listener existed) do not show it and need one manual reload after this deploy.
 - **Rollback**: the schema is additive, so roll back code only. Tag the running
   image `paddlemate-api:previous` before deploying, keep `dist.prev`, and take a
   `pg_dump -Fc` plus a copy of `data/media`. To go back, retag, set

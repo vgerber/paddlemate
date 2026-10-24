@@ -184,4 +184,8 @@ pub struct SectionHistory {
     /// Only with `include_features=true`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub features: Option<HashMap<i64, PaginatedResponse<HistoryStep>>>,
+    /// True when the section has more features than the cap, so `features`
+    /// leaves some out. Only with `include_features=true`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub features_truncated: Option<bool>,
 }

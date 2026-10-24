@@ -433,7 +433,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description History of a section, oldest step first; readable after the section was deleted. With `include_features=true`, `features` also holds the same page of each feature's history (up to 500 features), keyed by feature id. */
+        /** @description History of a section, oldest step first; readable after the section was deleted. With `include_features=true`, `features` also holds the same page of each feature's history (up to 500 features, lowest ids first), keyed by feature id; `features_truncated` is true when more were left out. */
         get: operations["get_section_history"];
         put?: never;
         post?: never;
@@ -3305,6 +3305,11 @@ export interface components {
             features?: {
                 [key: string]: components["schemas"]["PaginatedResponse_for_HistoryStep"];
             } | null;
+            /**
+             * @description True when the section has more features than the cap, so `features`
+             *      leaves some out. Only with `include_features=true`.
+             */
+            features_truncated?: boolean | null;
             items: components["schemas"]["HistoryStep"][];
             /** Format: int64 */
             page: number;
@@ -4423,11 +4428,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-24T11:08:05.989628902Z",
-                     *         "expires_at": "2027-01-22T11:08:05.989632342Z",
+                     *         "created_at": "2026-10-24T13:19:09.460817905Z",
+                     *         "expires_at": "2027-01-22T13:19:09.460820665Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-24T11:08:05.989649642Z",
+                     *         "last_used_at": "2026-10-24T13:19:09.460829765Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4458,8 +4463,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-24T11:08:05.989792782Z",
-                     *       "expires_at": "2027-01-22T11:08:05.989793332Z",
+                     *       "created_at": "2026-10-24T13:19:09.461198894Z",
+                     *       "expires_at": "2027-01-22T13:19:09.461199804Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."

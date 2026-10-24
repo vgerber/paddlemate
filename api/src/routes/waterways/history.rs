@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use aide::axum::IntoApiResponse;
 use axum::{
     Json,
@@ -102,26 +104,30 @@ pub async fn get_section_history(
         return Json(SectionHistory {
             page,
             features: None,
+            features_truncated: None,
         })
         .into_response();
     }
     let (page_no, per_page) = (page.page, page.per_page);
     let found =
         history::list_feature_steps(&app.pg_pool, waterway_id, section_id, page_no, per_page).await;
-    let features = match found {
-        Ok(found) => found
-            .into_iter()
-            .map(|(id, (items, total))| {
-                let page = PaginatedResponse {
-                    items,
-                    total,
-                    page: page_no,
-                    per_page,
-                    total_pages: total_pages(total, per_page),
-                };
-                (id, page)
-            })
-            .collect(),
+    let (features, truncated): (HashMap<_, _>, bool) = match found {
+        Ok((found, truncated)) => (
+            found
+                .into_iter()
+                .map(|(id, (items, total))| {
+                    let page = PaginatedResponse {
+                        items,
+                        total,
+                        page: page_no,
+                        per_page,
+                        total_pages: total_pages(total, per_page),
+                    };
+                    (id, page)
+                })
+                .collect(),
+            truncated,
+        ),
         Err(err) => {
             return ApiError::from_db("Error listing feature history", &err).into_response();
         }
@@ -129,6 +135,7 @@ pub async fn get_section_history(
     Json(SectionHistory {
         page,
         features: Some(features),
+        features_truncated: Some(truncated),
     })
     .into_response()
 }
@@ -136,7 +143,7 @@ pub async fn get_section_history(
 doc_fn!(get_section_history_docs, op =>
     op.input::<Path<SectionPath>>()
         .input::<Query<SectionHistoryQuery>>()
-        .description("History of a section, oldest step first; readable after the section was deleted. With `include_features=true`, `features` also holds the same page of each feature's history (up to 500 features), keyed by feature id.")
+        .description("History of a section, oldest step first; readable after the section was deleted. With `include_features=true`, `features` also holds the same page of each feature's history (up to 500 features, lowest ids first), keyed by feature id; `features_truncated` is true when more were left out.")
         .response::<200, Json<SectionHistory>>()
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Section never existed in this waterway"))
         .tag("History")

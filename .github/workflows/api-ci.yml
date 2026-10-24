@@ -72,7 +72,7 @@ jobs:
       # catch that, because it builds its indexes from the current function.
       - name: Test
         working-directory: api
-        run: cargo test
+        run: cargo test --workspace
 
       - name: Install sqlx-cli
         run: |

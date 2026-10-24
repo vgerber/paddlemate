@@ -26,6 +26,7 @@ import NotificationBell, {
 } from "@/components/notifications/NotificationBell";
 import ProposalSentSnackbar from "@/components/proposals/ProposalSentSnackbar";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
+import UpdateReadySnackbar from "@/components/UpdateReadySnackbar";
 import { apiErrorMessage } from "@/lib/api/client";
 import {
   useLiveTripEvents,
@@ -239,6 +240,7 @@ function Layout() {
       <BottomNav signedIn={isAuthenticated} />
       <AppSnackbar />
       <ProposalSentSnackbar />
+      <UpdateReadySnackbar />
     </Box>
   );
 }

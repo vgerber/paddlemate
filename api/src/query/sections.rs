@@ -176,17 +176,17 @@ pub async fn fetch_descriptions_for_section(
     .await
 }
 
-pub async fn fetch_names_for_waterway(
+pub async fn fetch_names_for_waterways(
     pool: &PgPool,
-    waterway_id: WaterwayId,
+    waterway_ids: &[WaterwayId],
 ) -> Result<HashMap<SectionId, Vec<SectionName>>, sqlx::Error> {
     let records = sqlx::query_as!(
         SectionName,
         r#"SELECT sn.id, sn.section_id, sn.lang_code, sn.name
            FROM section_names sn
            JOIN water_sections s ON s.id = sn.section_id
-           WHERE s.waterway_id = $1"#,
-        waterway_id
+           WHERE s.waterway_id = ANY($1)"#,
+        waterway_ids
     )
     .fetch_all(pool)
     .await?;
@@ -198,17 +198,17 @@ pub async fn fetch_names_for_waterway(
     Ok(map)
 }
 
-pub async fn fetch_descriptions_for_waterway(
+pub async fn fetch_descriptions_for_waterways(
     pool: &PgPool,
-    waterway_id: WaterwayId,
+    waterway_ids: &[WaterwayId],
 ) -> Result<HashMap<SectionId, Vec<SectionDescription>>, sqlx::Error> {
     let records = sqlx::query_as!(
         SectionDescription,
         r#"SELECT sd.id, sd.section_id, sd.lang_code, sd.description
            FROM section_descriptions sd
            JOIN water_sections s ON s.id = sd.section_id
-           WHERE s.waterway_id = $1"#,
-        waterway_id
+           WHERE s.waterway_id = ANY($1)"#,
+        waterway_ids
     )
     .fetch_all(pool)
     .await?;

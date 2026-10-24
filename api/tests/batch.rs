@@ -311,3 +311,95 @@ async fn section_history_with_features_is_scoped_to_its_waterway(pool: PgPool) {
     .await;
     assert_eq!(r.status, StatusCode::NOT_FOUND);
 }
+
+#[sqlx::test]
+async fn batched_sections_equal_the_single_waterway_shape(pool: PgPool) {
+    let mut made = Vec::new();
+    for n in 0..4 {
+        let w = waterway(&pool, &format!("River {n}")).await;
+        for m in 0..n {
+            let s = section(&pool, w, &format!("Run {n}.{m}")).await;
+            feature(&pool, s).await;
+            feature(&pool, s).await;
+            sqlx::query(
+                "INSERT INTO section_names (section_id, lang_code, name) VALUES ($1, 'de', 'Lauf')",
+            )
+            .bind(s)
+            .execute(&pool)
+            .await
+            .unwrap();
+            sqlx::query("INSERT INTO section_descriptions (section_id, lang_code, description) VALUES ($1, 'en', 'Fun')")
+                .bind(s)
+                .execute(&pool)
+                .await
+                .unwrap();
+        }
+        made.push(w);
+    }
+    let app = app(pool);
+    let list = made
+        .iter()
+        .map(i64::to_string)
+        .collect::<Vec<_>>()
+        .join(",");
+    let r = get(
+        &app,
+        &format!("/waterways?ids={list}&include_sections=true"),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::OK);
+    assert_eq!(ids(&r.body), made);
+    for (item, w) in r.body["items"].as_array().unwrap().iter().zip(&made) {
+        let single = get(&app, &format!("/waterways/{w}")).await;
+        assert_eq!(item["sections"], single.body["sections"], "waterway {w}");
+    }
+    assert_eq!(r.body["items"][3]["sections"].as_array().unwrap().len(), 3);
+    assert_eq!(r.body["items"][0]["sections"].as_array().unwrap().len(), 0);
+}
+
+#[sqlx::test]
+async fn section_history_features_are_capped_over_both_sets(pool: PgPool) {
+    let w = waterway(&pool, "River").await;
+    let s = section(&pool, w, "Run").await;
+    let app_pool = pool.clone();
+    // 300 live features, plus 300 deleted ones that only the history knows.
+    sqlx::query(
+        "INSERT INTO features (section_id, feature_type, location, created_by) \
+         SELECT $1, 'whitewater', ST_GeomFromText('POINT(9.8 46.4)', 4326), 'test' \
+         FROM generate_series(1, 300)",
+    )
+    .bind(s)
+    .execute(&pool)
+    .await
+    .unwrap();
+    sqlx::query(
+        "INSERT INTO entity_history (entity_kind, entity_id, waterway_id, section_id, kind) \
+         SELECT 'feature', 1000000 + g, $1, $2, 'edited' FROM generate_series(1, 300) g",
+    )
+    .bind(w)
+    .bind(s)
+    .execute(&pool)
+    .await
+    .unwrap();
+    let app = app(app_pool);
+    let base = format!("/waterways/{w}/sections/{s}/history?include_features=true");
+
+    let r = get(&app, &base).await;
+    assert_eq!(r.status, StatusCode::OK);
+    assert_eq!(r.body["features"].as_object().unwrap().len(), 500);
+    assert_eq!(r.body["features_truncated"], true);
+
+    // Exactly the cap is not a cut.
+    sqlx::query(
+        "DELETE FROM entity_history WHERE entity_kind = 'feature' AND entity_id > 1000000 + 200",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+    let r = get(&app, &base).await;
+    assert_eq!(r.body["features"].as_object().unwrap().len(), 500);
+    assert_eq!(r.body["features_truncated"], false);
+
+    let r = get(&app, &format!("/waterways/{w}/sections/{s}/history")).await;
+    assert!(r.body.get("features_truncated").is_none());
+}
