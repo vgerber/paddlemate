@@ -28,9 +28,12 @@ export default defineConfig({
       manifest: {
         name: "Paddlemate",
         short_name: "Paddlemate",
-        description: "Paddlemate — whitewater section tracker",
-        theme_color: "#ffffff",
-        background_color: "#ffffff",
+        description: "Paddlemate - whitewater section tracker",
+        // The installed app takes its system bars from here, not from the
+        // page's theme-color pair, and a manifest holds one colour. A dark
+        // frame keeps the phone's buttons visible in either phone mode.
+        theme_color: "#141b1f",
+        background_color: "#141b1f",
         display: "standalone",
         orientation: "any",
         start_url: "/",

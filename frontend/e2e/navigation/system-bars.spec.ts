@@ -7,9 +7,9 @@ import { expect, test } from "@playwright/test";
 const html = readFileSync("index.html", "utf8");
 const config = readFileSync("vite.config.ts", "utf8");
 
-test("manifest colours are the light app's white", () => {
-  expect(config).toMatch(/theme_color: "#ffffff"/);
-  expect(config).toMatch(/background_color: "#ffffff"/);
+test("the installed app's frame is dark, so the phone's buttons show", () => {
+  expect(config).toMatch(/theme_color: "#141b1f"/);
+  expect(config).toMatch(/background_color: "#141b1f"/);
 });
 
 test("theme-color is white for the light scheme and the page declares it is light", () => {
