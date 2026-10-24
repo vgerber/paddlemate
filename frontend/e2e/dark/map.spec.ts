@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { parseColour } from "../support/colour";
 import {
   contrastReport,
   lightSurfaces,
@@ -112,5 +113,53 @@ test.describe("map in both schemes @small", () => {
         ).filter,
     );
     expect(filter).toBe("none");
+  });
+});
+
+test.describe("dark contrast: fills and controls", () => {
+  test("the zoom group has no MapLibre divider", async ({ page }) => {
+    await useScheme(page, "dark");
+    await page.goto("/");
+    const second = page
+      .locator(".maplibregl-ctrl-group button + button")
+      .first();
+    await expect(second).toBeVisible();
+    expect(
+      await second.evaluate((el) => getComputedStyle(el).borderTopWidth),
+    ).toBe("0px");
+  });
+
+  test("a primary action is the softer fill, without a glow", async ({
+    page,
+  }) => {
+    await useScheme(page, "dark");
+    await page.goto("/?panel=1&q=Test");
+    const action = page
+      .locator("button.MuiButton-contained, button.MuiFab-primary")
+      .filter({ visible: true })
+      .first();
+    await expect(action).toBeVisible();
+    const { bg, shadow } = await action.evaluate((el) => ({
+      bg: getComputedStyle(el).backgroundColor,
+      shadow: getComputedStyle(el).boxShadow,
+    }));
+    expect(parseColour(bg).slice(0, 3)).toEqual([58, 159, 186]);
+    expect(shadow).not.toContain("103, 199, 224");
+  });
+
+  test("a floating card has a ring against the map", async ({ page }) => {
+    test.skip(test.info().project.name !== "desktop", "cards float on desktop");
+    await useScheme(page, "dark");
+    await page.goto("/?waterway=9001");
+    const card = page.getByText("Lower Test").first();
+    await expect(card).toBeVisible();
+    const ring = await card.evaluate((el) => {
+      for (let n: Element | null = el; n; n = n.parentElement) {
+        const s = getComputedStyle(n).boxShadow;
+        if (s.includes("0.08")) return s;
+      }
+      return "";
+    });
+    expect(ring).toContain("0px 0px 0px 1px");
   });
 });

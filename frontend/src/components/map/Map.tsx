@@ -325,6 +325,9 @@ export default function WaterwayMap({
   const mapRef = useRef<MapRef>(null);
   const tokens = useTokens();
   const [mapLoaded, setMapLoaded] = useState(false);
+  // The base style's layers exist long before `load` (which waits for tiles);
+  // the calm restyle runs from then, so the light default never paints.
+  const [styleReady, setStyleReady] = useState(false);
   // New identity per scheme, which draws the marker icons again.
   const addImages = useCallback(
     (m: Parameters<typeof addMapImages>[0]) => addMapImages(m, tokens),
@@ -342,13 +345,13 @@ export default function WaterwayMap({
   // The calm restyle goes first: it sets road opacity, which muting lowers.
   useCalmBaseMap(
     mapRef,
-    mapLoaded,
+    mapLoaded || styleReady,
     !satellite,
     satellite ? "satellite" : "liberty",
   );
   useMutedBaseMap(
     mapRef,
-    mapLoaded,
+    mapLoaded || styleReady,
     regionChoices != null,
     satellite ? "satellite" : "liberty",
   );
@@ -507,6 +510,9 @@ export default function WaterwayMap({
         onMouseLeave={() => {
           setHover(null);
           setOverHit(false);
+        }}
+        onStyleData={(e) => {
+          if (e.target.getStyle()?.layers?.length) setStyleReady(true);
         }}
         onLoad={() => {
           exposeMapForTests(mapRef.current);

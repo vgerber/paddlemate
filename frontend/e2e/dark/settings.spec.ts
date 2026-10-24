@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
-import { MODE_KEY } from "../support/dark";
+import { parseColour } from "../support/colour";
+import { MODE_KEY, useScheme } from "../support/dark";
 import {
   expectNoHorizontalOverflow,
   expectTouchTargets,
@@ -156,5 +157,40 @@ test.describe("appearance setting @small", () => {
       page.getByTestId("settings-detail").locator("button[aria-pressed]"),
     );
     await expectNoHorizontalOverflow(page);
+  });
+});
+
+const lum = (css: string) => {
+  const [r, g, b] = parseColour(css);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+test.describe("dark contrast: selection and switch", () => {
+  test("the selected theme segment is lighter than its track", async ({
+    page,
+  }) => {
+    await useScheme(page, "dark");
+    await page.goto(OPEN);
+    const selected = choice(page, "Dark");
+    await expect(selected).toBeVisible();
+    const { thumb, track } = await selected.evaluate((el) => {
+      const group = el.closest('[role="group"]') as HTMLElement;
+      return {
+        thumb: getComputedStyle(el).backgroundColor,
+        track: getComputedStyle(group).backgroundColor,
+      };
+    });
+    expect(lum(thumb)).toBeGreaterThan(lum(track) + 8);
+  });
+
+  test("an off switch keeps a light thumb on the card", async ({ page }) => {
+    await useScheme(page, "dark");
+    await page.goto("/settings?group=notifications");
+    const thumb = page.locator(".MuiSwitch-thumb").first();
+    await expect(thumb).toBeVisible();
+    const bg = await thumb.evaluate(
+      (el) => getComputedStyle(el).backgroundColor,
+    );
+    expect(parseColour(bg).slice(0, 3)).toEqual([201, 212, 216]);
   });
 });
