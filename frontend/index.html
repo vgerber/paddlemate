@@ -11,11 +11,13 @@
          cover every inset is 0 and the browser manages the unsafe areas.
          (Trade-off: Chrome 15+ edge-to-edge paints its own chin there.) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Light only until dark mode lands; then add a second theme-color with
-         media="(prefers-color-scheme: dark)" and widen color-scheme to
-         "light dark". The manifest cannot carry a dark pair. -->
+    <!-- The frame follows the phone: a phone in dark mode draws its system
+         buttons light, so the bar behind them must be dark even while the app
+         itself is light. The dark value is dark mode's ground. The manifest
+         cannot carry a pair; these tags override it at runtime. -->
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141b1f" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />

@@ -25,3 +25,25 @@ test("iOS status bar keeps dark text over the light page", () => {
   );
   expect(html).not.toContain("black-translucent");
 });
+
+// A phone in dark mode draws its buttons light, so the frame behind them must
+// be dark even though the app is light.
+for (const [scheme, colour] of [
+  ["light", "#ffffff"],
+  ["dark", "#141b1f"],
+] as const) {
+  test(`a phone in ${scheme} mode gets a ${colour} frame`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto("/");
+    const active = await page.evaluate(() =>
+      [
+        ...document.querySelectorAll<HTMLMetaElement>(
+          'meta[name="theme-color"]',
+        ),
+      ]
+        .filter((m) => !m.media || matchMedia(m.media).matches)
+        .map((m) => m.content),
+    );
+    expect(active).toEqual([colour]);
+  });
+}
