@@ -675,7 +675,9 @@ export const theme = createTheme({
           height: tokens.touch.min,
           borderRadius: 0,
           "&:hover": { backgroundColor: tokens.surfaceHigh },
-          "& + button": { borderTop: `1px solid ${tokens.outlineVariant}` },
+          // A divider, not a control edge: an inset line keeps it out of the
+          // button's border box.
+          "& + button": { boxShadow: `inset 0 1px 0 ${tokens.outlineVariant}` },
         },
       },
     },

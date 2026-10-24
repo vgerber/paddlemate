@@ -66,3 +66,14 @@ body {
   outline-offset: -2px;
   box-shadow: none;
 }
+
+/* MapLibre draws its control glyphs (zoom, compass, geolocate, attribution
+   info) as black background images; on the dark surfaces they are inverted. */
+:root[data-theme="dark"] .maplibregl-ctrl button .maplibregl-ctrl-icon,
+:root[data-theme="dark"] .maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+:root[data-theme="dark"] .maplibregl-ctrl-attrib-button {
+  background-color: transparent;
+  opacity: 0.75;
+}
