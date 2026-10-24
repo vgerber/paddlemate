@@ -6,7 +6,8 @@ import type { SwipeTrack } from "@/lib/hooks/useSwipeTabs";
 import { transition } from "@/lib/motion";
 import { theme } from "@/lib/theme";
 
-const { primary, onSurfaceVariant } = theme.tokens;
+const { tokens } = theme;
+const { primary, onSurfaceVariant } = tokens;
 
 interface UnderlineTabsProps<T extends string> {
   value: T;
@@ -162,8 +163,12 @@ export default function UnderlineTabs<T extends string>({
           // swipe that starts on the bar is taken as a sideways scroll.
           "& .MuiTabs-scroller": { touchAction: "pan-y" },
           "& .MuiTabs-list": { gap: 2.5 },
-          // A short label sits at the tab's left edge, on the grid line.
-          "& .MuiTab-root": { minWidth: 0 },
+          // A short label sits at the tab's left edge, on the grid line; the
+          // tab is still a full touch target wide.
+          "& .MuiTab-root": {
+            minWidth: tokens.touch.min,
+            alignItems: "flex-start",
+          },
         }}
       >
         {items.map((item, i) => (

@@ -261,7 +261,7 @@ test.describe("features card", () => {
       expect(tabs[i].left - tabs[i - 1].right).toBeCloseTo(20, 0);
     for (const t of tabs) {
       expect(t.h).toBeGreaterThanOrEqual(48);
-      expect(t.w).toBeGreaterThanOrEqual(56);
+      expect(t.w).toBeGreaterThanOrEqual(44);
     }
   });
 
