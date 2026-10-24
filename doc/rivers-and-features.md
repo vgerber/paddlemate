@@ -65,6 +65,14 @@ while the values pane keeps the latest. A reading older than 3 hours or three
 gauge intervals reads "No recent reading" and the section's level dot turns
 grey. The layout rules are in [design](design.md).
 
+The period is 24h, 7d, 1M, 3M, 6M or 1Y, or a custom range: "Custom range"
+opens a dialog with From and To days (To up to today, at most five years
+apart). Long periods are summarised by the server
+(`/readings/summary`, about 300 points per plot), so a year loads as fast as a
+week; where several readings share a point the plot draws the line at their
+average and a lighter band between their lowest and highest. Dragging across
+the plot with a mouse zooms to that span, and a reset puts the period back.
+
 ## Features
 
 | Type | Meaning |
