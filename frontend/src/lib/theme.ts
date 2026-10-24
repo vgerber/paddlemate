@@ -60,6 +60,11 @@ export const lightTokens = {
   // Borders
   outline: "#7c8a90",
   outlineVariant: "#dde4e7",
+  // The edge of an outlined button or tile: a hairline in light, and in dark
+  // the 3:1 outline, since a hairline vanishes on a dark surface.
+  outlineControl: "#dde4e7",
+  // The wash behind a sheet or dialog: ink in light, black in dark.
+  scrimBase: "#1f2b31",
 
   // Base
   background: "#eef2f3",
@@ -320,6 +325,8 @@ export const darkTokens: Tokens = {
   onError: "#1b2429",
   outline: "#7f8d93",
   outlineVariant: "#2a353c",
+  outlineControl: "#7f8d93",
+  scrimBase: "#000000",
   background: "#141b1f",
   levels: {
     empty: {
@@ -362,13 +369,14 @@ export const darkTokens: Tokens = {
   mapRoad: "#34424a",
   gaugeTracked: "#5aaee0",
   gaugeUntracked: "#6b7a81",
+  // Each is at least 3:1 on the dark map and 4.5:1 under onPrimary text.
   mapRegionPalette: [
     "#3b9be0",
-    lightTokens.mapRegionPalette[1],
-    lightTokens.mapRegionPalette[2],
-    lightTokens.mapRegionPalette[3],
-    lightTokens.mapRegionPalette[4],
-    lightTokens.mapRegionPalette[5],
+    "#e8743a",
+    "#2fb98c",
+    "#d98bb6",
+    "#e6a817",
+    "#56b4e9",
   ],
   chartSeries: "#67c7e0",
   chartGrid: "rgba(232,238,240,0.10)",
@@ -749,7 +757,7 @@ export const theme = createTheme({
         sizeSmall: { minHeight: tokens.touch.min, paddingInline: 12 },
         outlined: {
           borderWidth: 1,
-          borderColor: tokens.outlineVariant,
+          borderColor: tokens.outlineControl,
           color: tokens.onSurface,
           backgroundColor: tokens.surface,
           "&:hover": { borderWidth: 1, backgroundColor: tokens.surfaceHigh },
@@ -807,6 +815,9 @@ export const theme = createTheme({
             borderColor: tokens.primary,
             borderWidth: 1.5,
           },
+          // Light keeps MUI's own rest edge; dark needs a visible one.
+          '[data-theme="dark"] &.MuiChip-outlined:not(.MuiChip-outlinedPrimary)':
+            { borderColor: tokens.outlineControl },
           // 32px to look at, 44px to hit.
           "&.MuiChip-clickable::after": {
             content: '""',

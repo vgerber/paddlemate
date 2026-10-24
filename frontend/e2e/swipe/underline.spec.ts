@@ -19,6 +19,12 @@ const screens = [
     from: "Plan",
     pane: "[data-testid=trip-pane]",
   },
+  {
+    name: "profile",
+    path: "/settings",
+    from: "Profile",
+    pane: "[data-testid=settings-pane]",
+  },
 ];
 
 for (const s of screens) {

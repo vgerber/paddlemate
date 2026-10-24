@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
+import { expectColour } from "../support/colour";
 import {
   appReady,
   computed,
@@ -309,7 +310,8 @@ test.describe("tools", () => {
     expect(await computed(tile, "box-shadow")).toBe(E1);
     expect(await computed(tile, "border-top-width")).toBe("0px");
     const icon = tile.getByTestId("tool-icon");
-    expect(await computed(icon, "background-color")).toBe(
+    expectColour(
+      await computed(icon, "background-color"),
       "rgba(14, 116, 144, 0.12)",
     );
     expect(await computed(icon, "border-radius")).toBe("12px");
@@ -326,13 +328,19 @@ test.describe("tools", () => {
   });
 });
 
-test("the browser chrome and the PWA manifest are white", async ({ page }) => {
+test("the browser chrome is white and the installed frame dark", async ({
+  page,
+}) => {
   await page.goto("/");
-  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
-    "content",
-    "#ffffff",
-  );
+  // A phone in dark mode gets a dark frame (system-bars.spec.ts); the light
+  // one is white.
+  await expect(
+    page.locator(
+      'meta[name="theme-color"][media="(prefers-color-scheme: light)"]',
+    ),
+  ).toHaveAttribute("content", "#ffffff");
   const config = readFileSync("vite.config.ts", "utf8");
-  expect(config).toContain('theme_color: "#ffffff"');
-  expect(config).toContain('background_color: "#ffffff"');
+  // The installed app's frame is dark (system-bars.spec.ts).
+  expect(config).toContain('theme_color: "#141b1f"');
+  expect(config).toContain('background_color: "#141b1f"');
 });

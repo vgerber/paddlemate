@@ -16,6 +16,7 @@ import LoadingBox from "@/components/states/LoadingBox";
 import { stayKind } from "@/components/trips/stayKinds";
 import { withAlpha } from "@/lib/alpha";
 import type { TripStay } from "@/lib/api";
+import { badgeInk } from "@/lib/badgeInk";
 import { dateRange } from "@/lib/format";
 import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
 import { useSectionDotLevels } from "@/lib/hooks/useWaterStatus";
@@ -25,7 +26,6 @@ import { fonts, theme } from "@/lib/theme";
 import { baseColors, baseNumbers } from "@/lib/tripRange";
 import { useTokens } from "@/lib/useTokens";
 import BasesMap from "./BasesMap";
-import { badgeInk } from "./badgeInk";
 import TripCandidates from "./TripCandidates";
 import WatchList from "./WatchList";
 
@@ -62,6 +62,7 @@ export default function TripStays({
   onEditWatchList,
   onDeleteStay,
 }: Props) {
+  const tokens = useTokens();
   const [openId, setOpenId] = useState<number | null>(null);
   const staysQuery = useTripStays(tripId);
   const { data: stays, isLoading } = staysQuery;
@@ -83,7 +84,7 @@ export default function TripStays({
   const list = stays ?? [];
   // The same colour the base wears on the map above, so a ring and a row are
   // recognisably one base.
-  const colors = baseColors(list);
+  const colors = baseColors(list, tokens);
   const numbers = baseNumbers(list);
 
   if (list.length === 0) {

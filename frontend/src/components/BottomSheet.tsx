@@ -149,7 +149,7 @@ export default function BottomSheet({
             position: "fixed",
             inset: 0,
             zIndex: theme.zIndex.modal,
-            bgcolor: withAlpha(tokens.onSurface, "border"),
+            bgcolor: withAlpha(tokens.scrimBase, "border"),
           }}
         />
       )}
@@ -219,7 +219,7 @@ export default function BottomSheet({
                 width: 36,
                 height: 4,
                 borderRadius: `${tokens.radii.pill}px`,
-                bgcolor: tokens.outlineVariant,
+                bgcolor: tokens.outlineControl,
               }}
             />
           </Box>

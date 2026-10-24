@@ -1,8 +1,6 @@
-import { theme } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 import AccessibleMarker from "./AccessibleMarker";
 import MarkerHit from "./MarkerHit";
-
-const { tokens } = theme;
 
 /** Numbered circular marker with the white ring and drop shadow that keep
  * it legible over map tiles (put-in "1", take-out "2", draft vertices). */
@@ -10,7 +8,7 @@ export default function MapNumberMarker({
   lat,
   lon,
   num,
-  color = tokens.primary,
+  color,
 }: {
   lat: number;
   lon: number;
@@ -18,6 +16,7 @@ export default function MapNumberMarker({
   /** Defaults to the accent; put-in and take-out bring their own hue. */
   color?: string;
 }) {
+  const tokens = useTokens();
   return (
     <AccessibleMarker
       latitude={lat}
@@ -31,7 +30,7 @@ export default function MapNumberMarker({
             width: 20,
             height: 20,
             borderRadius: "50%",
-            background: color,
+            background: color ?? tokens.primary,
             color: tokens.onPrimary,
             display: "flex",
             alignItems: "center",

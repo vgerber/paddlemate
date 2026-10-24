@@ -6,7 +6,7 @@ import { expectContrast, noLightSurface, useScheme } from "../support/dark";
 
 // `skip` names a check that fails on something outside D6b's files: the legend
 // swatch on the gauge map is a data colour (D1), the zoom control border is
-// maplibre chrome (D1a), the outlined button hairline is the theme's (P1a).
+// maplibre chrome (D1a).
 const SIGNED_IN: {
   name: string;
   path: string;
@@ -20,20 +20,18 @@ const SIGNED_IN: {
     ready: /Gauge/i,
     skip: ["surface", "contrast"],
   },
-  { name: "dev-canvas", path: "/dev/canvas", ready: /\w/, skip: ["contrast"] },
+  { name: "dev-canvas", path: "/dev/canvas", ready: /\w/ },
   {
     name: "dev-primitives",
     path: "/dev/primitives",
     ready: /\w/,
-    skip: ["contrast"],
   },
   {
     name: "missing",
     path: "/?waterway=999999",
     ready: /\w/,
-    skip: ["contrast"],
   },
-  { name: "trips", path: "/trips", ready: /Oetztal/, skip: ["contrast"] },
+  { name: "trips", path: "/trips", ready: /Oetztal/ },
 ];
 
 async function settle(page: import("@playwright/test").Page) {

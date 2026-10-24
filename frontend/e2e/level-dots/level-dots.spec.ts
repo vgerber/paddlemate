@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { expectColour } from "../support/colour";
 import { appReady, expectNoHorizontalOverflow, FIX } from "../support/fixture";
 
 // Level dots: a dot per section on a closed trip base and on a recent river
@@ -80,9 +81,9 @@ test.describe("trip bases", () => {
       expect(dots.length).toBeGreaterThan(0);
       for (const d of dots) {
         seen.add(d.level ?? "");
-        if (d.level === "low") expect(d.bg).toBe(MARKER.low);
-        if (d.level === "high") expect(d.bg).toBe(MARKER.high);
-        if (d.level === "unknown") expect(d.bg).toBe(MARKER.unknown);
+        if (d.level === "low") expectColour(d.bg, MARKER.low);
+        if (d.level === "high") expectColour(d.bg, MARKER.high);
+        if (d.level === "unknown") expectColour(d.bg, MARKER.unknown);
       }
       expect(
         await row.getByTestId("level-dots").getAttribute("aria-label"),
@@ -117,9 +118,9 @@ test.describe("recent rivers", () => {
     expect(levels).toContain("high");
     expect(levels).toContain("unknown");
     for (const d of dots) {
-      if (d.level === "low") expect(d.bg).toBe(MARKER.low);
-      if (d.level === "high") expect(d.bg).toBe(MARKER.high);
-      if (d.level === "unknown") expect(d.bg).toBe(MARKER.unknown);
+      if (d.level === "low") expectColour(d.bg, MARKER.low);
+      if (d.level === "high") expectColour(d.bg, MARKER.high);
+      if (d.level === "unknown") expectColour(d.bg, MARKER.unknown);
     }
     expect(
       await row.getByTestId("level-dots").getAttribute("aria-label"),

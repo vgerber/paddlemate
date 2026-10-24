@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Regenerate the PWA and favicon assets from public/logo.svg and
-# public/favicon.svg (the simplified mark for 16-48px).
+# Regenerate the PWA and favicon assets from public/logo.svg,
+# public/favicon.svg (16-48px) and scripts/icon-src (maskable, Apple).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

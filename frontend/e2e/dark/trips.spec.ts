@@ -13,15 +13,6 @@ const KNOWN = [
   // element, so the scan measures it against the card; the real pair is
   // onPrimary on primary.
   /^text div.* "\d+" 1\.0/,
-  // The shared VoteButton (components/VoteButton.tsx) and the outlined
-  // controls draw their border in outlineVariant: the lead's theme item.
-  /^border button\.MuiButtonBase-root.* "\d+" /,
-  // Outlined MUI buttons: the theme's outlined variant (the lead's).
-  /^border button\.MuiButtonBase-root\.MuiButton-root/,
-  // Base number badges: the region palette's hues reach only 3.4 to 4.1 with
-  // white or ink (theme.ts mapRegionPalette, the lead's); the map markers use
-  // the same hues.
-  /^text div.* "\d+" [34]\.\d\d < 4\.5/,
   // MapLibre's own zoom control.
   /^border button\.maplibregl-ctrl/,
   // LogSectionRow renders levelConfig for light only (descents folder).

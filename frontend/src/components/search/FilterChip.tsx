@@ -42,11 +42,6 @@ export default function FilterChip({
           p: 1.25,
           boxSizing: "content-box",
         },
-        // Dark: a resting chip needs a visible outline (light draws none on
-        // summary chips and MUI's own hairline on toggles).
-        ...(!set && {
-          '[data-theme="dark"] &': { borderColor: tokens.outline },
-        }),
         ...(!set &&
           !plain && {
             bgcolor: tokens.surface,

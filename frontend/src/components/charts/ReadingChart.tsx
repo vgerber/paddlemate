@@ -131,6 +131,21 @@ function readingView(
 }
 
 /** The chart of a section or gauge, as a reading block and a plot. */
+/** Level and flow of one station can arrive as separate gauge rows with the
+ * same name and place (the rivermap import makes one per parameter); they are
+ * one gauge to the reader, so Level | Flow switches within it. */
+function stationKey(
+  gauge: {
+    provider: string;
+    name: string;
+    lat?: number | null;
+    lon?: number | null;
+  } | null,
+): string {
+  if (!gauge) return "";
+  return `${gauge.provider}|${gauge.name}|${gauge.lat ?? ""}|${gauge.lon ?? ""}`;
+}
+
 export default function ReadingChart(props: ReadingChartProps) {
   const ink = useTokens();
   const {
@@ -158,17 +173,22 @@ export default function ReadingChart(props: ReadingChartProps) {
   const windowHeight = useLayout((s) => s.viewport.h);
 
   const gauges = useMemo(() => {
-    const seen = new Map<number, string>();
-    for (const r of ranges) seen.set(r.gauge.id, r.gauge.name);
-    return [...seen].map(([id, name]) => ({ id, name }));
+    const seen = new Map<string, { id: number; name: string }>();
+    for (const r of ranges) {
+      const key = stationKey(r.gauge);
+      if (!seen.has(key)) seen.set(key, { id: r.gauge.id, name: r.gauge.name });
+    }
+    return [...seen.values()];
   }, [ranges]);
   const gaugeId = gauges.some((g) => g.id === gaugeChoice)
     ? gaugeChoice
     : (gauges[0]?.id ?? null);
-  const own = useMemo(
-    () => ranges.filter((r) => r.gauge.id === gaugeId),
-    [ranges, gaugeId],
-  );
+  const own = useMemo(() => {
+    const key = stationKey(
+      ranges.find((r) => r.gauge.id === gaugeId)?.gauge ?? null,
+    );
+    return ranges.filter((r) => stationKey(r.gauge) === key);
+  }, [ranges, gaugeId]);
 
   const type = activeMeasurementType(own, measurementType);
   const charted = readingPerType(own, preferredFeatureId).find(

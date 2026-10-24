@@ -47,10 +47,10 @@ const SHOTS: Shot[] = [
 ];
 
 // Findings in parts other agents own, listed in the D1b report: the level
-// chip text and dot (D2), search filter chip borders (D5), the outlined
-// button hairline (theme), the map attribution (D1a), member avatars (MemberAvatar), comment category text (D3).
+// chip text and dot (D2), the map attribution (D1a), the rejected fold
+// (a separator rule, not a control), comment category text (D3).
 const OTHERS =
-  /"\d+ cm"|MuiChip-root|Reject|rejected|"Hazard|"Urgent|"Permanent|css-5p64yp|maplibregl|css-t1weds/;
+  /"\d+ cm"|"Hazard|"Urgent|"Permanent|maplibregl|"(Hide|Show) rejected/;
 
 async function settle(page: Page) {
   await page.evaluate(() => document.fonts.ready);

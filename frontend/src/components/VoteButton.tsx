@@ -36,7 +36,7 @@ export default function VoteButton({
         px: 1.5,
         borderRadius: `${tokens.radii.sm}px`,
         border: "1px solid",
-        borderColor: pressed ? tokens.primary : tokens.outlineVariant,
+        borderColor: pressed ? tokens.primary : tokens.outlineControl,
         bgcolor: pressed ? withAlpha(tokens.primary, "tint") : "transparent",
         color: pressed ? tokens.primary : tokens.onSurfaceVariant,
         fontFamily: fonts.body,
