@@ -194,7 +194,7 @@ async fn bad_ranges_are_400(pool: PgPool) {
     for q in [
         "from=2026-01-03T00:00:00Z&to=2026-01-01T00:00:00Z",
         "from=2026-01-01T00:00:00Z&to=2026-01-01T00:00:00Z",
-        "from=2026-01-01T00:00:00Z&to=2031-01-03T00:00:00Z",
+        "from=2026-01-01T00:00:00Z&to=2031-01-10T00:00:00Z",
         "from=2999-01-01T00:00:00Z",
     ] {
         let r = get(&app, &url(g, s, q)).await;

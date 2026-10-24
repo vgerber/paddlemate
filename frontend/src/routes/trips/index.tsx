@@ -62,6 +62,7 @@ function TripsPage() {
   if (!isAuthenticated) {
     return (
       <SignInGate
+        floating
         icon={<TripIcon sx={{ fontSize: 56, color: "text.disabled" }} />}
         title="Sign in to plan trips"
       />
