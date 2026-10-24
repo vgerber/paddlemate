@@ -12,6 +12,7 @@ pub mod osm_geometry;
 pub mod proposals;
 pub mod push_subscriptions;
 pub mod regions;
+pub mod section_order;
 pub mod sections;
 pub mod tokens;
 pub mod trips;

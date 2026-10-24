@@ -12,6 +12,7 @@ use crate::models::{
 };
 use crate::query::features;
 use crate::query::history::{self, Op, Scope, Via};
+use crate::query::section_order::{Span, sort_along_river};
 
 const SECTION_COLS: &str = "id, waterway_id, name, description, regions, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at";
 
@@ -269,12 +270,22 @@ pub async fn list_sections(
     waterway_id: WaterwayId,
 ) -> Result<Vec<Section>, sqlx::Error> {
     let rows = sqlx::query(&format!(
-        "SELECT {SECTION_COLS} FROM water_sections WHERE waterway_id = $1 ORDER BY name"
+        "SELECT {SECTION_COLS}, river_km_start FROM water_sections WHERE waterway_id = $1 ORDER BY id"
     ))
     .bind(waterway_id)
     .fetch_all(pool)
     .await?;
-    rows.iter().map(row_to_section).collect()
+    let mut kms = HashMap::new();
+    let mut sections = Vec::with_capacity(rows.len());
+    for row in &rows {
+        use sqlx::Row;
+        let section = row_to_section(row)?;
+        kms.insert(section.id, row.try_get::<Option<f64>, _>("river_km_start")?);
+        sections.push(section);
+    }
+    Ok(sort_along_river(sections, |s| {
+        Span::new(&s.location, kms.get(&s.id).copied().flatten(), &s.name)
+    }))
 }
 
 /// Set a section's name in one language and record the history step. None

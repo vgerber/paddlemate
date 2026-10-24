@@ -20,6 +20,12 @@ const screens = [
     pane: "[data-testid=trip-pane]",
   },
   {
+    name: "proposals",
+    path: "/proposals",
+    from: "Pending",
+    pane: "[data-testid=proposals-pane]",
+  },
+  {
     name: "profile",
     path: "/settings",
     from: "Profile",

@@ -126,6 +126,12 @@ const CASES: {
   },
   { name: "logs", url: "/logs", tab: "Social", pane: "[role=tablist]" },
   {
+    name: "proposals tabs",
+    url: "/proposals",
+    tab: "Approved",
+    pane: "[data-testid=proposals-pane]",
+  },
+  {
     name: "profile tabs",
     url: "/settings",
     tab: "Inbox",

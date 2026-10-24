@@ -18,6 +18,7 @@ import PanelHeader from "@/components/PanelHeader";
 import ProposalRow from "@/components/proposals/ProposalRow";
 import ProposalSideCard from "@/components/proposals/ProposalSideCard";
 import { useProposalScene } from "@/components/proposals/useProposalScene";
+import { SwipeGhost } from "@/components/SwipeGhost";
 import EmptyState from "@/components/states/EmptyState";
 import QueryStates from "@/components/states/QueryStates";
 import UnderlineTabs from "@/components/UnderlineTabs";
@@ -29,8 +30,9 @@ import type {
 import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useProposals } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
+import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import { ExpandIcon, FilterIcon } from "@/lib/icons";
-import { labelSx, theme } from "@/lib/theme";
+import { labelSx, PANEL_HEIGHT, theme } from "@/lib/theme";
 import { STATUS_LABEL } from "./status";
 
 const { tokens } = theme;
@@ -121,6 +123,67 @@ interface ProposalsViewProps {
   adminMode?: boolean;
 }
 
+interface ProposalRowsProps {
+  status: ProposalStatus;
+  entityType?: ProposalEntityType;
+  operation?: ProposalOperation;
+  isDesktop: boolean;
+  selectedId?: number;
+}
+
+/** The proposals of one status; the swipe neighbour renders its own. */
+function ProposalRows({
+  status,
+  entityType,
+  operation,
+  isDesktop,
+  selectedId,
+  onSelect,
+}: ProposalRowsProps & { onSelect?: (id: number | undefined) => void }) {
+  const navigate = useNavigate();
+  const query = useProposals({
+    status,
+    entity_type: entityType,
+    operation,
+  });
+  const { data: proposals } = query;
+  return (
+    <QueryStates
+      query={query}
+      count={proposals?.length ?? 0}
+      empty={{ title: `No ${status} proposals.` }}
+      errorFallback="Could not load proposals."
+      loadingSize={40}
+      py={6}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: { xs: 1, md: 0 },
+          p: { xs: 1.5, md: 0 },
+        }}
+      >
+        {proposals?.map((p) => (
+          <ProposalRow
+            key={p.id}
+            proposal={p}
+            selected={isDesktop && p.id === selectedId}
+            onSelect={() =>
+              isDesktop
+                ? onSelect?.(p.id)
+                : navigate({
+                    to: "/proposals/$proposalId",
+                    params: { proposalId: String(p.id) },
+                  })
+            }
+          />
+        ))}
+      </Box>
+    </QueryStates>
+  );
+}
+
 /** Proposals browser: status tabs + filters + card list.
  * Admins additionally get review controls on each card (adminMode). */
 export default function ProposalsView({
@@ -135,7 +198,6 @@ export default function ProposalsView({
   adminMode,
 }: ProposalsViewProps) {
   const { isAuthenticated } = useSession();
-  const navigate = useNavigate();
   const router = useRouter();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const hasActiveFilters = entityType != null || operation != null;
@@ -146,6 +208,12 @@ export default function ProposalsView({
     operation,
   });
   const { data: proposals, isLoading } = query;
+  const statusIndex = STATUS_TABS.findIndex((t) => t.value === status);
+  const swipe = useSwipeTabs({
+    index: statusIndex,
+    count: STATUS_TABS.length,
+    onIndexChange: (i) => onStatusChange(STATUS_TABS[i].value),
+  });
 
   // The phone reaches the list through the Tools tab, so back goes there.
   const goBack = useGoBack(() =>
@@ -157,7 +225,7 @@ export default function ProposalsView({
   const open = useProposalScene(isDesktop ? selectedId : undefined);
   useCanvasScene(open.scene);
 
-  const list = (
+  const head = (
     <>
       <ListPaneHeader
         count={proposals?.length ?? 0}
@@ -198,11 +266,15 @@ export default function ProposalsView({
         </Typography>
       )}
 
-      <Box sx={{ px: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
+      <Box
+        {...swipe.gestureProps}
+        sx={{ px: 1.5, borderBottom: "1px solid", borderColor: "divider" }}
+      >
         <UnderlineTabs
           value={status}
           onChange={onStatusChange}
           items={STATUS_TABS}
+          track={swipe.track}
         />
       </Box>
 
@@ -234,49 +306,66 @@ export default function ProposalsView({
           </ChipRow>
         </Box>
       </Collapse>
-
-      {/* List */}
-      <QueryStates
-        query={query}
-        count={proposals?.length ?? 0}
-        empty={{ title: `No ${status} proposals.` }}
-        errorFallback="Could not load proposals."
-        loadingSize={40}
-        py={6}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: { xs: 1, md: 0 },
-            p: { xs: 1.5, md: 0 },
-          }}
-        >
-          {proposals?.map((p) => (
-            <ProposalRow
-              key={p.id}
-              proposal={p}
-              selected={isDesktop && p.id === selectedId}
-              onSelect={() =>
-                isDesktop
-                  ? onSelect?.(p.id)
-                  : navigate({
-                      to: "/proposals/$proposalId",
-                      params: { proposalId: String(p.id) },
-                    })
-              }
-            />
-          ))}
-        </Box>
-      </QueryStates>
     </>
+  );
+
+  const rows = (
+    <ProposalRows
+      status={status}
+      entityType={entityType}
+      operation={operation}
+      isDesktop={isDesktop}
+      selectedId={selectedId}
+      onSelect={onSelect}
+    />
   );
 
   if (!isDesktop) {
     return (
-      <Box sx={{ maxWidth: 720, mx: "auto" }}>
+      // The pane runs down to the bottom nav, so a swipe anywhere below the
+      // tabs turns the page, not only over the rows.
+      <Box
+        sx={{
+          maxWidth: 720,
+          mx: "auto",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: PANEL_HEIGHT.xs,
+        }}
+      >
         <PanelHeader title="Proposals" onBack={goBack} />
-        {list}
+        {head}
+        <Box
+          sx={{
+            position: "relative",
+            overflowX: "clip",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Box
+            {...swipe.paneProps}
+            data-testid="proposals-pane"
+            sx={{ flex: 1 }}
+          >
+            {rows}
+          </Box>
+          <SwipeGhost
+            swipe={swipe}
+            index={statusIndex}
+            count={STATUS_TABS.length}
+          >
+            {(i) => (
+              <ProposalRows
+                status={STATUS_TABS[i].value}
+                entityType={entityType}
+                operation={operation}
+                isDesktop={false}
+              />
+            )}
+          </SwipeGhost>
+        </Box>
       </Box>
     );
   }
@@ -293,7 +382,10 @@ export default function ProposalsView({
         title="Proposals"
         selfHeaded
       >
-        <Box data-testid="proposal-list">{list}</Box>
+        <Box data-testid="proposal-list">
+          {head}
+          {rows}
+        </Box>
       </FloatingCard>
       {selectedId == null && (
         <FloatingCard
