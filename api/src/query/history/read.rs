@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 use sqlx::{
     PgPool, Postgres, Row,
@@ -152,6 +154,76 @@ pub async fn list_steps(
 
     let steps = rows.iter().map(step).collect::<Result<_, _>>()?;
     Ok((steps, total))
+}
+
+/// Most features whose history one call returns.
+const MAX_FEATURES: i64 = 500;
+
+/// One page of each feature's steps in a section, with its total, oldest
+/// first. Covers the section's live features and those deleted since; a
+/// feature without steps has an empty page. Looked up through the waterway
+/// and the section, so another section's features never appear.
+pub async fn list_feature_steps(
+    pool: &PgPool,
+    waterway_id: i64,
+    section_id: i64,
+    page: i64,
+    per_page: i64,
+) -> Result<HashMap<i64, (Vec<HistoryStep>, i64)>, sqlx::Error> {
+    let live = sqlx::query(
+        "SELECT f.id FROM features f JOIN water_sections s ON s.id = f.section_id \
+         WHERE f.section_id = $1 AND s.waterway_id = $2 ORDER BY f.id LIMIT $3",
+    )
+    .bind(section_id)
+    .bind(waterway_id)
+    .bind(MAX_FEATURES)
+    .fetch_all(pool)
+    .await?;
+    let mut out: HashMap<i64, (Vec<HistoryStep>, i64)> = live
+        .iter()
+        .map(|r| (r.get::<i64, _>("id"), (Vec::new(), 0)))
+        .collect();
+
+    let lo = (page - 1) * per_page;
+    let rows = sqlx::query(
+        "SELECT h.id, h.at, h.kind, h.proposal_id, h.changes, h.entity_id, p.total, \
+                au.id AS actor_user_id, au.username AS actor_name, \
+                ru.id AS reviewer_user_id, ru.username AS reviewer_name, \
+                s.id AS source_id, s.name AS source_name, \
+                COALESCE(s.short_name, s.name) AS source_short_name, \
+                s.website AS source_website, s.license_name AS source_license_name, \
+                s.license_url AS source_license_url, pr.submitter_note AS proposal_note \
+         FROM ( \
+             SELECT id, count(*) OVER (PARTITION BY entity_id) AS total, \
+                    row_number() OVER (PARTITION BY entity_id ORDER BY at, id) AS rn \
+             FROM entity_history \
+             WHERE entity_kind = 'feature' AND waterway_id = $1 AND section_id = $2 \
+               AND entity_id IN ( \
+                   SELECT DISTINCT entity_id FROM entity_history \
+                   WHERE entity_kind = 'feature' AND waterway_id = $1 AND section_id = $2 \
+                   ORDER BY entity_id LIMIT $5) \
+         ) p \
+         JOIN entity_history h ON h.id = p.id \
+         LEFT JOIN users au ON au.id = h.actor_id \
+         LEFT JOIN users ru ON ru.id = h.reviewer_id \
+         LEFT JOIN sources s ON s.id = h.source_id \
+         LEFT JOIN proposals pr ON pr.id = h.proposal_id \
+         WHERE p.rn > $3 AND p.rn <= $3 + $4 \
+         ORDER BY h.entity_id, h.at, h.id",
+    )
+    .bind(waterway_id)
+    .bind(section_id)
+    .bind(lo)
+    .bind(per_page)
+    .bind(MAX_FEATURES)
+    .fetch_all(pool)
+    .await?;
+    for row in &rows {
+        let entry = out.entry(row.get("entity_id")).or_default();
+        entry.0.push(step(row)?);
+        entry.1 = row.get("total");
+    }
+    Ok(out)
 }
 
 /// Every source and contributor named by a river's history, including its

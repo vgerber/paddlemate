@@ -2,6 +2,8 @@ mod summary;
 
 pub use summary::{bucket_step, series_on_gauge, summarize_readings};
 
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 use sqlx::{PgPool, Row, postgres::PgRow};
 
@@ -641,10 +643,29 @@ pub async fn water_status_for_section_at(
     section_id: i64,
     at: impl Into<Option<DateTime<Utc>>>,
 ) -> Result<SectionWaterStatus, sqlx::Error> {
-    let at = at.into();
+    let mut all = water_status_for_sections_at(pool, &[section_id], at.into()).await?;
+    Ok(all.remove(&section_id).unwrap_or_default())
+}
+
+/// Water status of many sections in one query. Every requested id has an
+/// entry, with no ranges when the section has none or does not exist, as the
+/// single-section call answers.
+pub async fn water_status_for_sections(
+    pool: &PgPool,
+    section_ids: &[i64],
+) -> Result<HashMap<i64, SectionWaterStatus>, sqlx::Error> {
+    water_status_for_sections_at(pool, section_ids, None).await
+}
+
+async fn water_status_for_sections_at(
+    pool: &PgPool,
+    section_ids: &[i64],
+    at: Option<DateTime<Utc>>,
+) -> Result<HashMap<i64, SectionWaterStatus>, sqlx::Error> {
     let rows = sqlx::query(
         r#"
         SELECT
+            f.section_id        AS section_id,
             fwr.id,
             fwr.feature_id,
             fwr.range_low,
@@ -700,22 +721,28 @@ pub async fn water_status_for_section_at(
             ORDER BY measured_at DESC
             LIMIT 1
         ) lr ON TRUE
-        WHERE f.section_id = $1
+        WHERE f.section_id = ANY($1)
         ORDER BY fwr.id
         "#,
     )
-    .bind(section_id)
+    .bind(section_ids)
     .bind(at)
     .bind(MIN_FRESHNESS_SECS)
     .fetch_all(pool)
     .await?;
 
-    let ranges = rows
+    let mut out: HashMap<i64, SectionWaterStatus> = section_ids
         .iter()
-        .map(row_to_water_range_with_status)
-        .collect::<Result<Vec<_>, sqlx::Error>>()?;
-
-    Ok(SectionWaterStatus { ranges })
+        .map(|id| (*id, SectionWaterStatus::default()))
+        .collect();
+    for row in &rows {
+        let section_id: i64 = row.try_get("section_id")?;
+        out.entry(section_id)
+            .or_default()
+            .ranges
+            .push(row_to_water_range_with_status(row)?);
+    }
+    Ok(out)
 }
 
 fn row_to_water_range_with_status(row: &PgRow) -> Result<WaterRangeWithStatus, sqlx::Error> {

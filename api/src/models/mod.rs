@@ -6,6 +6,7 @@ pub mod gauge;
 pub mod geometry;
 pub mod group;
 pub mod history;
+pub mod id_list;
 pub mod lang;
 pub mod media_item;
 pub mod notification;

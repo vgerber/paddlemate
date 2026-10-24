@@ -16,7 +16,7 @@ mod snapshot;
 mod track;
 
 pub use deleted::list_deleted_features;
-pub use read::{is_known, list_steps, list_waterway_sources};
+pub use read::{is_known, list_feature_steps, list_steps, list_waterway_sources};
 pub use record::{Op, Via, diff, record};
 pub use retention::{KEEP_DELETED_DAYS, purge_deleted, run_pruner};
 pub use snapshot::{State, scope_of, snapshot};
