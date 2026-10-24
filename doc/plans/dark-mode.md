@@ -1,7 +1,6 @@
 # Plan: dark mode (WP13)
 
-Status: plan; palette approved 2026-10-24, phase 0 built, spike done
-(corrections folded in below). Delete this file when the work has landed; the
+Status: landed on the `dark-mode` branch; palette approved 2026-10-24. Delete this file when the work has landed; the
 user-facing part moves to [design.md](../design.md) and the README feature
 list, the palette to `lib/theme.ts`.
 
@@ -591,7 +590,7 @@ Statements the reviewer checks by running the app (or the stated test).
 7. **No flash**: with the bundle request delayed 2 seconds, the document
    background is already `#141b1f` in dark before the first React render.
 8. **Browser chrome**: `meta[name=theme-color]` is `#ffffff` in light and
-   `#1b2429` in dark, updated on a switch; `getComputedStyle(documentElement)
+   `#141b1f` in dark, updated on a switch; `getComputedStyle(documentElement)
    .colorScheme` is `dark` in dark.
 9. **No literal colours outside the theme**: `npm run check:colours` exits 0;
    the script's own test shows each of its 4 rules failing when the offending
