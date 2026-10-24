@@ -1,13 +1,13 @@
 import { createTheme, type Shadows } from "@mui/material/styles";
-import { alphas } from "./alpha";
+import { alphas, withAlpha } from "./alpha";
 
 // Extend MUI Theme so components can access tokens via theme.tokens
 declare module "@mui/material/styles" {
   interface Theme {
-    tokens: typeof tokens;
+    tokens: Tokens;
   }
   interface ThemeOptions {
-    tokens?: Partial<typeof tokens>;
+    tokens?: Partial<Tokens>;
   }
 }
 
@@ -22,7 +22,7 @@ const blue = "#0072B2";
 const amber = "#C48800";
 const appBarHeight = 56;
 
-const tokens = {
+export const lightTokens = {
   // Surfaces: the ground is the grey every screen sits on, a surface is a
   // white card on it, surfaceHigh a quiet inset inside a card.
   surfaceLowest: "#ffffff",
@@ -54,6 +54,8 @@ const tokens = {
   error,
   errorDark: "#8e2b32",
   errorContainer: "#f7dcde",
+  // Text and icons on a solid error or warning fill.
+  onError: "#ffffff",
 
   // Borders
   outline: "#7c8a90",
@@ -175,7 +177,7 @@ const tokens = {
   elevation: {
     e1: "0 1px 2px rgba(31,43,49,0.08), 0 1px 1px rgba(31,43,49,0.04)",
     e2: "0 8px 24px rgba(31,43,49,0.12), 0 2px 6px rgba(31,43,49,0.08)",
-    e3: `0 4px 14px ${teal}40`,
+    e3: "0 4px 14px rgba(14,116,144,0.251)",
     // The legibility halo under a map marker or label sitting on imagery.
     marker: "0 1px 4px rgba(0,0,0,0.5)",
     // The same halo with a ring, for the selected marker.
@@ -277,6 +279,184 @@ const tokens = {
   },
 } as const;
 
+export type Scheme = "light" | "dark";
+
+/** `as const` pins every literal; widen strings and numbers (recursively,
+ * keeping readonly) so a second palette has the same shape. */
+type Widen<T> = T extends string
+  ? string
+  : T extends number
+    ? number
+    : T extends object
+      ? { [K in keyof T]: Widen<T[K]> }
+      : T;
+
+export type Tokens = Widen<typeof lightTokens>;
+
+/** The night palette (doc/plans/dark-mode.md). Same keys as `lightTokens`;
+ * the non-colour groups are shared. */
+export const darkTokens: Tokens = {
+  ...lightTokens,
+  surfaceLowest: "#1b2429",
+  surfaceLow: "#141b1f",
+  surface: "#1b2429",
+  surfaceHigh: "#212c32",
+  surfaceHighest: "#2a353c",
+  surfaceBright: "#243038",
+  onSurface: "#e8eef0",
+  onSurfaceVariant: "#9aa8ae",
+  primary: "#67c7e0",
+  onPrimary: "#062530",
+  primaryDark: "#4db4cf",
+  primaryContainer: "#12343f",
+  onPrimaryContainer: "#9fdcee",
+  success: "#86d2b2",
+  successContainer: "#173a2d",
+  onSuccessContainer: "#b9e8d2",
+  onSuccess: "#062018",
+  error: "#f08c8a",
+  errorDark: "#f4a4a2",
+  errorContainer: "#4a2326",
+  onError: "#1b2429",
+  outline: "#7f8d93",
+  outlineVariant: "#2a353c",
+  background: "#141b1f",
+  levels: {
+    empty: {
+      ...lightTokens.levels.empty,
+      text: "#a2aeb3",
+      border: "rgba(162,174,179,0.45)",
+    },
+    low: {
+      ...lightTokens.levels.low,
+      text: "#86d2b2",
+      bg: "rgba(134,210,178,0.16)",
+    },
+    medium: {
+      ...lightTokens.levels.medium,
+      text: "#f0c06c",
+      bg: "rgba(240,192,108,0.16)",
+    },
+    high: { ...lightTokens.levels.high, text: "#1b2429", bg: "#f08c8a" },
+  },
+  featureColors: {
+    ...lightTokens.featureColors,
+    put_in: "#3b9be0",
+    bridge: "#8a979d",
+  },
+  putIn: "#3b9be0",
+  mapSectionLine: "#5fb0e6",
+  mapSectionLineCasing: "#10171b",
+  mapSelectedLine: "#67c7e0",
+  mapSectionHighlight: "#67c7e0",
+  mapSectionGhost: "#46565f",
+  mapAreaCircle: "#67c7e0",
+  mapLabelText: "#c9d4d8",
+  mapLabelHalo: "#141b1f",
+  mapCountryBorder: "#aab6bb",
+  mapCountryBorderCasing: "#141b1f",
+  mapGround: "#1c2429",
+  mapGreen: "#1f2e29",
+  mapWater: "#12303f",
+  mapRiver: "#2f6384",
+  mapRoad: "#34424a",
+  gaugeTracked: "#5aaee0",
+  gaugeUntracked: "#6b7a81",
+  mapRegionPalette: [
+    "#3b9be0",
+    lightTokens.mapRegionPalette[1],
+    lightTokens.mapRegionPalette[2],
+    lightTokens.mapRegionPalette[3],
+    lightTokens.mapRegionPalette[4],
+    lightTokens.mapRegionPalette[5],
+  ],
+  chartSeries: "#67c7e0",
+  chartGrid: "rgba(232,238,240,0.10)",
+  elevation: {
+    ...lightTokens.elevation,
+    e1: "0 1px 2px rgba(0,0,0,0.4), 0 1px 1px rgba(0,0,0,0.2)",
+    e2: "0 10px 28px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.35)",
+    e3: "0 4px 14px rgba(103,199,224,0.25)",
+  },
+};
+
+/** Groups that hold numbers and motion strings, not colours: never variables. */
+const PLAIN_GROUPS = new Set([
+  "touch",
+  "radii",
+  "motion",
+  "phone",
+  "canvas",
+  "chrome",
+]);
+
+const kebab = (name: string) =>
+  name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`).replaceAll("_", "-");
+
+function mapEntries<V, R>(
+  group: Readonly<Record<string, V>>,
+  fn: (key: string, value: V) => R,
+): Record<string, R> {
+  return Object.fromEntries(
+    Object.entries(group).map(([k, v]) => [k, fn(k, v)]),
+  );
+}
+
+/** Rebuilds `t` with every colour leaf passed through `fn(name, value)`, where
+ * `name` is the kebab-joined path: `levels.low.text` is `level-low-text`,
+ * `mapRegionPalette[2]` is `map-region-3`, `featureColors.put_in` is
+ * `feature-put-in`, `elevation.e2` is `e2`. */
+function mapColours(
+  t: Tokens,
+  fn: (name: string, value: string) => string,
+): Tokens {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(t)) {
+    if (PLAIN_GROUPS.has(key)) out[key] = value;
+    else if (typeof value === "string") out[key] = fn(kebab(key), value);
+    else if (key === "mapRegionPalette")
+      out[key] = t.mapRegionPalette.map((c, i) => fn(`map-region-${i + 1}`, c));
+    else if (key === "levels")
+      out[key] = mapEntries(t.levels, (level, group) =>
+        mapEntries(group, (field, c) =>
+          field === "label" ? c : fn(`level-${level}-${field}`, c),
+        ),
+      );
+    else if (key === "featureColors")
+      out[key] = mapEntries(t.featureColors, (name, c) =>
+        fn(`feature-${kebab(name)}`, c),
+      );
+    else if (key === "elevation")
+      out[key] = mapEntries(t.elevation, (name, c) => fn(kebab(name), c));
+  }
+  return out as Tokens;
+}
+
+/** Tokens whose colour leaves are `var(--pm-*)` strings: usable wherever the
+ * browser parses CSS, nowhere else (MapLibre, canvas, colour maths). */
+export function toVars(t: Tokens): Tokens {
+  return mapColours(t, (name) => `var(--pm-${name})`);
+}
+
+/** The `--pm-*` declarations of one palette. */
+function declarations(t: Tokens): string {
+  const out: string[] = [];
+  mapColours(t, (name, value) => {
+    out.push(`--pm-${name}:${value};`);
+    return value;
+  });
+  return out.join("");
+}
+
+/** Resolved tokens for a scheme (hex), for non-CSS contexts. */
+export function tokensFor(scheme: Scheme): Tokens {
+  return scheme === "dark" ? darkTokens : lightTokens;
+}
+
+/** The tokens every consumer imports. Until the flip this is the light
+ * palette as resolved values; the flip makes it `toVars(lightTokens)`. */
+export const tokens = lightTokens;
+
 /** Font stacks used across the app: one family, weights carry the hierarchy. */
 export const fonts = {
   body: '"Figtree Variable", "Figtree", system-ui, sans-serif',
@@ -294,6 +474,83 @@ const shadows = [
 
 export { alphas };
 
+/** A hex colour at a 0-1 opacity as `#rrggbbaa`. MUI runs colour maths on the
+ * palette, so it takes resolved values: the one place a hex-alpha suffix is
+ * still right. */
+function alphaHex(hex: string, opacity: number): string {
+  const byte = Math.round(opacity * 255)
+    .toString(16)
+    .padStart(2, "0");
+  return `${hex}${byte}`;
+}
+
+/** The MUI palette of one scheme, from resolved values (never var strings). */
+function paletteFor(t: Tokens) {
+  return {
+    primary: {
+      main: t.primary,
+      dark: t.primaryDark,
+      contrastText: t.onPrimary,
+    },
+    error: {
+      main: t.error,
+      dark: t.errorDark,
+      contrastText: t.onError,
+    },
+    // Amber for pending/incomplete states, aligned with the medium water
+    // level so the app has one orange, not MUI's stock one.
+    warning: {
+      main: t.levels.medium.text,
+      contrastText: t.onError,
+    },
+    success: {
+      main: t.success,
+      dark: t.onSuccessContainer,
+      contrastText: t.onSuccess,
+    },
+    background: {
+      default: t.background,
+      paper: t.surface,
+    },
+    text: {
+      primary: t.onSurface,
+      secondary: t.onSurfaceVariant,
+      disabled: t.outline,
+    },
+    divider: t.outlineVariant,
+    action: {
+      active: t.onSurfaceVariant,
+      hover: alphaHex(t.primary, 0.08),
+      selected: alphaHex(t.primary, 0.12),
+      selectedOpacity: 0.12,
+      focus: alphaHex(t.primary, 0.12),
+    },
+  };
+}
+
+/** Light values of the MUI palette variables, for the print override. */
+function printPalette(): string {
+  const out: string[] = [];
+  const walk = (node: object, path: string[]) => {
+    for (const [key, value] of Object.entries(node)) {
+      if (typeof value === "string")
+        out.push(`--mui-palette-${[...path, key].join("-")}:${value};`);
+      else if (typeof value === "object") walk(value, [...path, key]);
+    }
+  };
+  walk(paletteFor(lightTokens), []);
+  return out.join("");
+}
+
+/** The variables of both schemes, generated from the two palettes (no
+ * hand-written variable), then the print override: paper is always light. The
+ * `--mui-*` lines re-light the palette variables MUI declares per scheme. */
+export const tokenCss = [
+  `:root{${declarations(lightTokens)}}`,
+  `:root[data-theme="dark"]{${declarations(darkTokens)}}`,
+  `@media print{:root,:root[data-theme="dark"]{color-scheme:light;${declarations(lightTokens)}${printPalette()}}}`,
+].join("");
+
 export const theme = createTheme({
   tokens,
   // `md` is the one switch between the phone layout and the two-pane desktop
@@ -303,46 +560,13 @@ export const theme = createTheme({
   breakpoints: {
     values: { xs: 0, sm: 600, md: 768, lg: 1200, xl: 1536 },
   },
-  palette: {
-    mode: "light",
-    primary: {
-      main: tokens.primary,
-      dark: tokens.primaryDark,
-      contrastText: tokens.onPrimary,
-    },
-    error: {
-      main: tokens.error,
-      dark: tokens.errorDark,
-      contrastText: tokens.white,
-    },
-    // Amber for pending/incomplete states, aligned with the medium water
-    // level so the app has one orange, not MUI's stock one.
-    warning: {
-      main: tokens.levels.medium.text,
-      contrastText: tokens.white,
-    },
-    success: {
-      main: tokens.success,
-      dark: tokens.onSuccessContainer,
-      contrastText: tokens.onSuccess,
-    },
-    background: {
-      default: tokens.background,
-      paper: tokens.surface,
-    },
-    text: {
-      primary: tokens.onSurface,
-      secondary: tokens.onSurfaceVariant,
-      disabled: tokens.outline,
-    },
-    divider: tokens.outlineVariant,
-    action: {
-      active: tokens.onSurfaceVariant,
-      hover: `${tokens.primary}${alphas.wash}`,
-      selected: `${tokens.primary}${alphas.hover}`,
-      selectedOpacity: 0.12,
-      focus: `${tokens.primary}${alphas.hover}`,
-    },
+  cssVariables: {
+    colorSchemeSelector: '[data-theme="%s"]',
+    cssVarPrefix: "mui",
+  },
+  colorSchemes: {
+    light: { palette: paletteFor(lightTokens) },
+    dark: { palette: paletteFor(darkTokens) },
   },
 
   shape: { borderRadius: radii.md },
@@ -413,7 +637,6 @@ export const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: tokens.background,
           fontVariantNumeric: "tabular-nums",
           scrollbarColor: `${tokens.outline} transparent`,
           "&::-webkit-scrollbar": { width: 8 },
@@ -578,7 +801,7 @@ export const theme = createTheme({
           height: 32,
           // A set filter: teal ring and a wash, not just teal text.
           "&.MuiChip-outlinedPrimary": {
-            backgroundColor: `${tokens.primary}${alphas.wash}`,
+            backgroundColor: withAlpha(tokens.primary, "wash"),
             borderColor: tokens.primary,
             borderWidth: 1.5,
           },
@@ -709,10 +932,10 @@ export const theme = createTheme({
         root: {
           minHeight: tokens.touch.row,
           transition: `background-color ${motion.instant}ms ${motion.easeOut}`,
-          "&:active": { backgroundColor: `${tokens.primary}${alphas.wash}` },
+          "&:active": { backgroundColor: withAlpha(tokens.primary, "wash") },
           "&.Mui-selected": {
-            backgroundColor: `${tokens.primary}${alphas.hover}`,
-            "&:hover": { backgroundColor: `${tokens.primary}${alphas.strong}` },
+            backgroundColor: withAlpha(tokens.primary, "hover"),
+            "&:hover": { backgroundColor: withAlpha(tokens.primary, "strong") },
           },
         },
       },
@@ -781,15 +1004,30 @@ export const theme = createTheme({
         tooltip: {
           borderRadius: radii.xs,
           backgroundColor: tokens.onSurface,
-          color: tokens.white,
+          color: tokens.surface,
           fontSize: "0.75rem",
         },
       },
     },
 
+    // Floating surfaces take the bright step: in dark a shadow alone does
+    // not lift them off the ground.
     MuiDialog: {
       styleOverrides: {
-        paper: { borderRadius: radii.xl, boxShadow: elevation.e2 },
+        paper: {
+          borderRadius: radii.xl,
+          boxShadow: elevation.e2,
+          backgroundColor: tokens.surfaceBright,
+        },
+      },
+    },
+
+    MuiPopover: {
+      styleOverrides: {
+        paper: {
+          boxShadow: elevation.e2,
+          backgroundColor: tokens.surfaceBright,
+        },
       },
     },
 
@@ -801,7 +1039,11 @@ export const theme = createTheme({
 
     MuiMenu: {
       styleOverrides: {
-        paper: { borderRadius: radii.md, boxShadow: elevation.e2 },
+        paper: {
+          borderRadius: radii.md,
+          boxShadow: elevation.e2,
+          backgroundColor: tokens.surfaceBright,
+        },
       },
     },
 
@@ -855,19 +1097,19 @@ export const theme = createTheme({
           "& .MuiAlert-action .MuiIconButton-root": { color: "inherit" },
           "&.MuiAlert-colorError": {
             backgroundColor: tokens.error,
-            color: tokens.white,
+            color: tokens.onError,
           },
           "&.MuiAlert-colorWarning": {
             backgroundColor: tokens.levels.medium.text,
-            color: tokens.white,
+            color: tokens.onError,
           },
           "&.MuiAlert-colorSuccess": {
             backgroundColor: tokens.success,
-            color: tokens.white,
+            color: tokens.onSuccess,
           },
           "&.MuiAlert-colorInfo": {
             backgroundColor: tokens.primary,
-            color: tokens.white,
+            color: tokens.onPrimary,
           },
         },
       },
