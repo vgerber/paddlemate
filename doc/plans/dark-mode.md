@@ -1,6 +1,7 @@
 # Plan: dark mode (WP13)
 
-Status: plan, not started. Delete this file when the work has landed; the
+Status: plan; palette approved 2026-10-24, phase 0 built, spike done
+(corrections folded in below). Delete this file when the work has landed; the
 user-facing part moves to [design.md](../design.md) and the README feature
 list, the palette to `lib/theme.ts`.
 
@@ -25,7 +26,8 @@ chips keep their four looks (outline, green, amber, red) on the night
 ground; charts keep their shape and reading rail. Satellite imagery stays
 imagery. Printing always prints the light version.
 
-Light mode does not change by a single pixel.
+Light mode does not change visibly: the same pixels, within 7/255 on a few
+hairline pixels (colour mixing rounds differently from the old hex suffix).
 
 ## Measured starting point (branch `ui-overhaul`, `d80b60c`)
 
@@ -36,7 +38,7 @@ Light mode does not change by a single pixel.
 | Colour tokens in the object | 67 entries, plus 4 level groups, 14 feature colours, 6 region colours; 70 colour literals in `theme.ts` |
 | MUI palette strings in `sx` (`"text.secondary"`, `"background.paper"` ...) | 115, and they follow the palette for free |
 | Hex-alpha through `alphas.<step>` | 51 uses, 34 files (steps: wash 16, hairline 12, hover 8, tint 6, strong 5, border 2, scrim 1) |
-| Hex-alpha written by hand (`${tokens.x}55`, `${teal}40`, `${pin.color}55`) | 7 sites (`LevelDots`, `Map.tsx` x2, `AreaControls`, `CommentThread` x3, `theme.ts` e3); `ui-overhaul.md` says 38, the real number is 58 sites in 37 files |
+| Hex-alpha written by hand (`${tokens.x}55`, `${teal}40`, `${pin.color}55`) | 9 sites, not 7: `LevelDots` (`tokens.outline` + `80`), `Map.tsx` (2 lines, 3 sites), `AreaControls`, `CommentThread` x3, `theme.ts` e3, and `TripTimeline.tsx:176` (`${tokens.onSurface}${MONTH_SCRIM}`: a named constant, so no grep for `alphas.` finds it); `ui-overhaul.md` says 38, the real number is 58 sites in 37 files |
 | `alpha()` from MUI | 0 |
 | `color-mix` | 1 (`UnderlineTabs`, works with `var()` as it is) |
 | Colour literals outside `theme.ts` | `index.css` 9 literals (map popup, attribution), `ChipRow` and `WaterwayBrowsePanel` `#000` (a mask, not a colour), 2 test files |
@@ -61,7 +63,8 @@ ground `#141b1f`, card `#1b2429`, tint `#212c32`, line `#2a353c`, ink
 `#e8eef0`, ink 2 `#9aa8ae`, accent `#67c7e0` on `#062530`, levels empty
 `#a2aeb3`, low `#86d2b2`, medium `#f0c06c`, high fill `#f08c8a` with `#1b2429`
 text, shadows `0 1px 2px #0006`, `0 10px 28px #0009`, `0 4px 14px #0008`.
-Two things there disagree and are settled here: the page declares the accent
+Two things there disagree and are settled here (the palette below was
+approved on 2026-10-24 and is final; changes need the user): the page declares the accent
 twice (`#67c7e0` in the media query and on the dark phones, `#79b9e0` under
 `[data-theme=dark]`; this plan uses `#67c7e0`, 8.1:1 on the card), and its
 medium level text is `#8f5b00` while the app ships `#855400` (the app wins,
@@ -79,8 +82,9 @@ what ships).
 
 ```ts
 export const lightTokens = { ...as today, colours literal };
-export const darkTokens: typeof lightTokens;      // same keys, same shape
-export const tokens: typeof lightTokens;          // colour leaves are CSS var strings
+export type Tokens = Widen<typeof lightTokens>;   // strings widened, recursive, readonly kept
+export const darkTokens: Tokens;                  // same keys, same shape
+export const tokens: Tokens;                      // colour leaves are CSS var strings
 export type Scheme = "light" | "dark";
 ```
 
@@ -106,18 +110,27 @@ export type Scheme = "light" | "dark";
 
 ```ts
 // lib/useTokens.ts
-export function useTokens(): typeof lightTokens;   // resolved hex for the active scheme
-export function tokensFor(scheme: Scheme): typeof lightTokens;  // non-hook form (calmStyle, tests)
+export function useTokens(): Tokens;   // resolved hex for the active scheme
+export function tokensFor(scheme: Scheme): Tokens;  // non-hook form (calmStyle, tests)
 ```
+
+`darkTokens: typeof lightTokens` does not compile: `as const` pins every hex
+literal (`"#141b1f"` is not assignable to `"#eef2f3"`). `Tokens` widens the
+strings recursively and keeps `readonly` (stripping it breaks
+`mapRegionPalette`). `darkTokens`, `tokens`, `tokensFor` and `useTokens` use
+`Tokens`.
 
 `useTokens()` returns the module-level `lightTokens` or `darkTokens` object
 (stable identity, so it is a safe dependency) following the active scheme. It
 re-renders its component when the scheme changes. Every place that paints
 outside CSS uses it: the 112 MapLibre lines, `mapIcons.ts`, `calmStyle.ts`
 (through `tokensFor`), the 41 SVG attributes, `levelInk`/`levelMarkerColor`,
-`pin.color` data. (Whether React SVG presentation attributes accept `var()` is
-probed in P1a; the plan assumes **no** and uses `useTokens()` for them, which is
-correct either way.)
+`pin.color` data. (The spike measured that React SVG presentation attributes - `fill`,
+`stroke`, also `color-mix()` - do accept `var()` in Chrome. Firefox and Safari
+are untested, so SVG keeps `useTokens()`, which is correct everywhere; `var()`
+in SVG is the cheapest place to simplify later if cross-browser testing
+passes. MapLibre keeps resolved values for certain: it parses colours itself
+and prints one console error per layer per render for a `var()`.)
 
 AGENTS.md "Theme and styling" ("static `import { tokens }`, not `useTheme()`")
 stays true for CSS contexts and gains one line: JS-painted contexts use
@@ -134,12 +147,16 @@ export function withAlpha(color: string, amount: AlphaStep | number): string;
 Returns `color-mix(in srgb, <color> <p>%, transparent)` with `p` the step's
 byte over 255 as a percentage to two decimals (`wash` 7.84, `hover` 12.16,
 `tint` 5.10, `strong` 18.04, `hairline` 33.33, `border` 60, `scrim` 80); a
-`number` is a percentage `0-100` for the seven one-off sites (`80` -> 50.2
+`number` is a percentage `0-100` for the nine one-off sites (`80` -> 50.2
 as `50.2`, `55` -> 33.33, `99` -> 60, `29` -> 16.08, `40` -> 25.1). It works
 on a hex, an `rgb()` and a `var(--pm-x)`; it is **not** for MapLibre or
 SVG-attribute contexts (they set `fill-opacity` or `opacity` instead, which
 none of the 58 sites currently needs: every one is `sx`/`style`/`boxShadow`).
-`alphas` stays exported as the step table. The suffix form `${token}${step}`
+The `alphas` table lives in `lib/alpha.ts` (`theme.ts` re-exports it):
+`theme.ts` needs `withAlpha` for `e3` and the component overrides, and
+`alpha.ts` needs the table, so the table moves to the file that has no
+imports and the cycle disappears (the spike worked only because function
+declarations hoist). The suffix form `${token}${step}`
 is deleted everywhere; `check:colours` forbids it.
 
 ### The switch
@@ -160,8 +177,13 @@ createTheme({
 ```
 
 - The MUI palette (`text.*`, `background.*`, `divider`, `action.*`,
-  `primary/error/success/warning`) is built twice from `lightTokens` and
-  `darkTokens`; MUI emits its own `--mui-palette-*` variables per scheme and
+  `primary/error/success/warning`) is built twice, by one `paletteFor(t)` from
+  the **resolved** `lightTokens` and `darkTokens`, never from var strings:
+  MUI runs `lighten/darken/getContrastText` on `primary.main` and friends,
+  and a `color-mix` in `action.hover/selected/focus` makes it log "Can't
+  create `palette.selectedChannel`" on every load. Inside `paletteFor` the
+  hex-alpha suffix is the one allowed place (an `alphaHex()` helper there, and
+  `check:colours` rule 2 names that file as its exception); MUI emits its own `--mui-palette-*` variables per scheme and
   sets `color-scheme` (native scrollbars, form controls, date inputs) itself.
   `palette.mode: "light"` in the current theme goes away.
 - `lib/colorMode.ts` is the setting: `useColorMode(): ["system" | "light" |
@@ -170,12 +192,19 @@ createTheme({
   `storageManager` failure (private window) leaves System, no crash.
 - `index.html` gets a small inline script before the bundle (not React): read
   `paddlemate-color-mode`, resolve `system` with `matchMedia`, set
-  `<html data-theme>`, set `<meta name="theme-color">`. It is the only thing
-  that runs before first paint; it keeps the cold start free of a white flash.
+  `<html data-theme>`, set `<meta name="theme-color">`. It is the only script
+  that runs before first paint. Beside it sits a tiny inline `<style>`
+  (`html{background:#eef2f3}`, `html[data-theme=dark]{background:#141b1f;
+  color-scheme:dark}`): the CSS bundle is a module and arrives later, so
+  without the style the page is default white until React mounts (the spike
+  saw zero light frames with both, a light frame with the script alone
+  stripped). The hex in the style equals `lightTokens.background` and
+  `darkTokens.background`; a unit test checks it.
   A comment in the file says it mirrors `colorMode.ts`; a unit test
   (`colorMode.test.ts`) evaluates the same function from a shared string.
-- `useColorMode` effect keeps `meta[name=theme-color]` equal to
-  `tokensFor(scheme).surface` (white / `#1b2429`) and listens to
+- MUI does not touch `meta[name=theme-color]`; after a switch it stays at the
+  load value. `useColorMode` therefore runs a **runtime effect** that keeps the
+  meta equal to `tokensFor(scheme).surface` (white / `#1b2429`) and listens to
   `prefers-color-scheme` changes only while the mode is System (MUI does the
   listening; the meta update hangs off its `colorScheme`).
 - Manifest `theme_color` and `background_color` stay `#0c0e10` (a manifest
@@ -226,6 +255,9 @@ are settled, not left to the agents:
 | `theme.ts` `warning.contrastText`, `error.contrastText` | `onError` / `#1b2429` per scheme |
 
 ## The dark palette
+
+Approved 2026-10-24. The values are final; the source is `palette.mjs` of the
+approved design page, and `contrast.test.ts` holds every ratio.
 
 Every key in `darkTokens`, with its ratio against the ground it is read on.
 AA means 4.5:1 for text and 3:1 for icons, control borders and map geometry.
@@ -303,8 +335,16 @@ Concretely:
 
 - `useCalmBaseMap` gets the scheme in its dependency list and in the
   `styleKey`, so a switch re-applies on the loaded style without a reload.
-  `useMutedBaseMap` stores and restores `line-opacity`, no colours, and is
-  unchanged.
+  The map recolours **within 250 ms** of the switch (spike: the background
+  paint property flips on the second animation frame, 98-235 ms headless; the
+  tiles finish repainting after 650-820 ms and a switch costs five long tasks
+  of 50-81 ms on the desktop), with no remount and the camera unchanged to six
+  decimals. The plan does not promise one frame.
+- `useMutedBaseMap` is **not** unchanged: `applyCalmStyle` resets road
+  `line-opacity` to 1, and muting lowers it afterwards and re-runs only on its
+  own dependencies, so a scheme switch while region browse is active would
+  un-mute the roads. The scheme (or `tokens`) joins the muted hook's
+  dependencies, or it runs from the same effect (D1a).
 - App layers (`SectionLayers`, `FeatureGeoJSONLayers`, `RegionLayers`,
   `DraftLayers`, `RangeRingLayers`, `CountryBorderLayer`, `Map`) read
   `useTokens()` and pass hex to `paint`; react-map-gl updates the paint
@@ -317,6 +357,10 @@ Concretely:
   `index.css` and the `.maplibregl-ctrl-group` block in `theme.ts` become
   `var(--pm-*)` (the attribution background is `withAlpha`-equivalent
   `color-mix` in CSS), so they follow the scheme with no JS.
+- **Control glyphs**: MapLibre draws the zoom, compass and geolocate glyphs as
+  dark background images, which vanish on a dark control. `index.css` and the
+  control block in `theme.ts` give them token colours or `filter: invert(1)`
+  under `[data-theme="dark"]` (D1a owns both).
 - Satellite stays Esri imagery in both schemes. Its toggle button, labels and
   halo use the scheme (labels over imagery already use a halo).
 - `GaugeCatalogMap` loads `LIBERTY_STYLE` without `applyCalmStyle` today; it
@@ -344,6 +388,7 @@ scheme's text colour for SVG text; `levelConfig` (CSS) returns vars.
 |---|---|
 | `favicon.svg` | P1a opens it in a dark tab at 16/32 px; if the #1e2022 glyph lacks an opaque ground it gets a `@media (prefers-color-scheme: dark)` block inside the SVG (the favicon follows the device, not the app setting, and cannot do better) |
 | PWA PNGs, apple-touch icon, maskable icon | unchanged (full-bleed art) |
+| `logo-dark.svg` (new) | the app bar shows it instead of the light logo in dark (D6b owns the swap; the glyph ink `#1e2022` is invisible on `#1b2429`); the light logo is unchanged |
 | `logo.svg`, `icons.svg`, `icons/put-in.svg`, `icons/take-out.svg`, `hero.png`, `vite.svg` | not referenced in `src`; left alone, listed in the cuts so nobody expects them to change |
 | Feature type icons (`FeatureTypeIcon`, `TripIcons`) | `currentColor` / tokens; follow automatically (`FeatureStrip` 12 attributes are in P1c's scope) |
 | User photos | shown as uploaded; no filter |
@@ -354,7 +399,7 @@ scheme's text colour for SVG text; `levelConfig` (CSS) returns vars.
 Phase 0  lead (about 1 hour, no agent)
 Phase 1  P1a  P1b  P1c  P1d      four agents in parallel, disjoint files
 Merge 1  lead: gate, then the flip (one line), then "light identical"
-Phase 2  D1 D2 D3 D4 D5 D6       six agents in parallel, disjoint folders
+Phase 2  D1a D1b D2 D3 D4 D5 D6a D6b   eight agents (D1a before D1b, D6a can start in phase 1), disjoint folders
 Merge 2  lead: gate, design system, docs, README
 Phase 3  review (Opus), then fixes by one agent per finding group
 ```
@@ -366,47 +411,46 @@ to `useTokens()`, and light mode is proven unchanged before any dark work
 starts. Phase 2 is then visual: with the flip in, dark works everywhere that is
 CSS, and each agent fixes what looks wrong in its own folder.
 
-### Phase 0 (lead)
+### Phase 0 (lead, built)
 
-Before any agent starts, on `ui-overhaul`:
+Built on the `dark-mode` integration branch before any agent started:
 
-1. `lib/alpha.ts` (full implementation, `withAlpha`, with `alpha.test.ts`):
-   works on hex today, so P1b can use it before the flip.
-2. `lib/useTokens.ts` stub: returns `tokens` as they are (light hex), the
-   final signature. P1c and P1d code against it and compile.
-3. `e2e/support/dark.ts`: `useScheme(page, "light" | "dark" | "system")`
-   (sets `localStorage` `paddlemate-color-mode` before load and
-   `page.emulateMedia({ colorScheme })`), `noLightSurface(page)` (walks
-   visible elements; fails on a `background-color` with alpha above 0.5 and
-   luminance above 0.5, except `img`, `canvas`, `[data-imagery]`),
-   `contrastReport(page)` (every visible text node and every control border
-   against its effective background, per WCAG), and `SCREENS` (the named screen
-   list below).
-4. **Light baseline**: on the unchanged branch, a spec `e2e/dark/baseline.spec.ts`
-   writes a screenshot of each of the 14 named screens at phone, small and
-   desktop into `e2e/dark/__baseline__/` (git-ignored; the folder is deleted
-   with the plan). Playwright is run for this only when the user has asked for
-   Playwright runs (memory: Playwright on request); the lead asks once at the
-   start of phase 0.
-5. The 14 screens (all of them exist in the fixture): start map `/`, river
-   detail on the Test River with the chart, section detail (features tab),
-   section detail (sources tab), gauge panel, descent log list, descent form,
-   trips list, trip detail, proposals list, proposal detail, search results,
-   settings (language group), notifications.
+1. `lib/alpha.ts` (`withAlpha`, the `alphas` table, `alpha.test.ts`); it works
+   on hex today, so P1b can use it before the flip.
+2. `lib/useTokens.ts`: `useTokens()` and `tokensFor(scheme)` with the final
+   signatures, returning the light values until the flip, so P1c and P1d
+   compile against them.
+3. `e2e/support/dark.ts`: `useScheme(page, "light" | "dark" | "system")` (sets
+   `paddlemate-color-mode` before load and `emulateMedia`), `noLightSurface`,
+   `contrastReport`, `SCREENS`; `e2e/dark/helpers.spec.ts` is their self-test.
+4. **Light baseline**: `e2e/dark/baseline.spec.ts` compares the 14 named
+   screens at phone (Pixel 7), small (320) and desktop (1280) against
+   screenshots committed in `e2e/dark/__baseline__/` (deleted with the plan).
+   `--update-snapshots` rewrites them. Tolerance: the spike measured up to
+   7/255 on a few hairline pixels, so the per-pixel `threshold` is 0.05; text
+   edges move by a pixel between runs, so a screen may hold 1.5% different
+   pixels. The map canvas and controls (hidden by `baseline.css`), the chart
+   and clock-bound text (masked) are left out; the baseline cannot see map
+   control glyphs, which D1a's spec covers.
+5. The 14 screens (all in the fixture): start map `/`, river detail on the
+   Test River, section detail (features tab), section detail (sources tab),
+   gauge panel, descent log list, descent form, trips list, trip detail,
+   proposals list, proposal detail, search results, settings (language
+   group), notifications.
 
 ### Phase 1: infrastructure (4 agents, parallel, about 30 min and 200k each)
 
 | Agent | Owns (files) | Does | Spec |
 |---|---|---|---|
-| **P1a Foundation** | `lib/theme.ts`, `lib/colorMode.ts`, `lib/colorMode.test.ts`, `lib/contrast.test.ts`, `main.tsx`, `index.html`, `index.css`, `public/favicon.svg`, `e2e/theme/theme.spec.ts` (additions only) | Splits tokens into `lightTokens`/`darkTokens` with the palette above; `toVars`, the `GlobalStyles` block, `onError`; `createTheme` with `colorSchemes` and the data selector; `ThemeProvider` props; inline script and meta; `index.css` to variables plus the print block; MUI overrides in `theme.ts` (popover/menu/dialog paper, scrollbar, maplibre control group) onto tokens; the probe of SVG attributes with `var()`. **Leaves `export const tokens = lightTokens`** (the lead flips it) and `useTokens` untouched. `contrast.test.ts` checks both schemes. | `theme.spec.ts`: in dark the ground computes `#141b1f`, the accent `#67c7e0`, the meta theme-color follows, `color-scheme` is `dark`, no reload on switch |
-| **P1b Alpha sweep** | the 37 files with hex-alpha (51 `alphas.` uses, 7 hand-written), `scripts/check-colours.sh`, `scripts/check-colours.test.ts`, `scripts/paint-files.txt`, `package.json` script | Codemod to `withAlpha(...)`; the 7 hand-written sites by hand; the guard script rules 1-4 | the bun test for each rule, each checked by removing the rule |
+| **P1a Foundation** | `lib/theme.ts`, `lib/colorMode.ts`, `lib/colorMode.test.ts`, `lib/contrast.test.ts`, `main.tsx`, `index.html`, `index.css`, `public/favicon.svg`, `e2e/theme/theme.spec.ts` (additions only) | Splits tokens into `lightTokens`/`darkTokens` with the palette above; `toVars`, the `GlobalStyles` block, `onError`; `createTheme` with `colorSchemes` and the data selector; `ThemeProvider` props; inline script and meta; `index.css` to variables plus the print block; MUI overrides in `theme.ts` (popover/menu/dialog paper, scrollbar, maplibre control group) onto tokens; `paletteFor(t)` on resolved values, the inline `<style>` beside the script. The SVG probe is done (see above). **Leaves `export const tokens = lightTokens`** (the lead flips it) and `useTokens` untouched. `contrast.test.ts` checks both schemes. | `theme.spec.ts`: in dark the ground computes `#141b1f`, the accent `#67c7e0`, the meta theme-color follows, `color-scheme` is `dark`, no reload on switch |
+| **P1b Alpha sweep** | the 37 files with hex-alpha (51 `alphas.` uses, 9 hand-written), `scripts/check-colours.sh`, `scripts/check-colours.test.ts`, `scripts/paint-files.txt`, `package.json` script | Codemod to `withAlpha(...)`; the 9 hand-written sites by hand (incl. `TripTimeline` `MONTH_SCRIM`); the guard script rules 1-4 | the bun test for each rule, each checked by removing the rule |
 | **P1c Map paint** | `components/map/**` paint code (`calmStyle.ts`, `mapIcons.ts`, `SectionLayers`, `FeatureGeoJSONLayers`, `RegionLayers`, `DraftLayers`, `RangeRingLayers`, `CountryBorderLayer`, `Map.tsx`, `MapCompass`, `LocationPin`, `useMapSources`), `components/gauge-catalog/**` | MapLibre paint and marker SVG strings onto `useTokens()` / `tokensFor`; `applyCalmStyle(map, tokens)`; scheme in `styleKey`; `GaugeCatalogMap` gets the calm hook; `white` rows from the table | `bun test` for `applyCalmStyle` with a fake map recording `setPaintProperty` per scheme (every `map*` token reaches a paint property); light screens unchanged |
 | **P1d SVG and runtime colours** | `components/charts/**`, `components/waterway/section-details/FeatureStrip.tsx`, `components/trips/TripIcons.tsx`, `lib/waterLevel.ts`, `lib/comments.ts`, `lib/tripRange.ts` and their tests | The 41 SVG attributes and the module-level colour reads onto `useTokens()`; `levelInk`, `levelMarkerColor` take the scheme (or return from `useTokens`) | `bun test` updated for `waterLevel`, `comments`, `tripRange` in both schemes |
 
-P1a, P1b, P1c, P1d never edit the same file: `theme.ts`, `main.tsx`, `index.*` are
-P1a's alone; `alphas`-using files in the map and chart folders belong to P1b
+P1a, P1b, P1c, P1d never edit the same file: `theme.ts`, `main.tsx`, `index.css` are
+P1a's alone (`index.html` is P1a's for the script and style; D6a only extends it); `alphas`-using files in the map and chart folders belong to P1b
 for the alpha lines only. That is the one overlap: P1b's edits there are the
-7-and-51 alpha lines, P1c and P1d edit paint lines. To keep it a non-overlap,
+9-and-51 alpha lines, P1c and P1d edit paint lines. To keep it a non-overlap,
 **P1b runs first on those folders** (15 minutes, merged before P1c and P1d are
 merged), and P1c and P1d rebase on it; the alpha uses in `components/map`
 (1) and `components/charts` (3) are the whole intersection.
@@ -424,7 +468,7 @@ merged), and P1c and P1d rebase on it; the alpha uses in `components/map`
    before phase 2.
 4. Tag the commit `dark-infra`; phase 2 branches from it.
 
-### Phase 2: dark sweep (6 agents, parallel, by folder)
+### Phase 2: dark sweep (8 agents, by folder)
 
 With the flip in, dark already works for every CSS use. Each agent opens its
 screens in dark at Pixel 7, 320 wide and 1280 wide, runs `noLightSurface` and
@@ -437,18 +481,26 @@ exception inside the token layer (AGENTS.md: a third exception means redesign).
 
 | Agent | Owns | Colour refs | Size |
 |---|---|---|---|
-| **D1 Map** | `components/map/**` (non-paint: markers, controls, popups, `LabelModeToggle`, `NoteMarkers`, `GaugeMarkers`, `PickModeButtons`, `Region*`), `components/map-page/**`, `components/logs-page/**`, `routes/index.tsx`, `routes/logs*` | about 120 | 45 min / 200k; the map screens are the hardest to judge, so no other folder is added |
+| **D1a Map internals** | `components/map/**` non-paint (markers, `NoteMarkers`, `GaugeMarkers`, `MapCompass`, `LabelModeToggle`, `PickModeButtons`, `RegionChoicePopup`/`RegionHoverTag`/`RegionHiddenNote`, `LocationPin`, `AccessibleMarker`, `MapNumberMarker`), popups, `index.css` popup/attribution CSS and control glyphs, the control block in `theme.ts`, `mapIcons` per-scheme registration, the `useMutedBaseMap` dependency fix, the `GaugeCatalogMap` hook | about 100 | 25 min / 150k; spec `e2e/dark/map.spec.ts`: console-error-free map in both schemes (no `color expected`, `Could not parse color` or `Missing image` message when a `var()` reaches MapLibre) plus a pixel assertion on the canvas background |
+| **D1b Map pages** | `components/map-page/**`, `components/logs-page/**`, `routes/index.tsx`, `routes/logs*` | about 16 | 25 min / 150k; judging the screens at Pixel 7, 320 and 1280, fixes in screen `sx`; starts after D1a merges only if it needs a changed marker, otherwise parallel; spec `e2e/dark/map-pages.spec.ts` |
 | **D2 Charts and levels** | `components/charts/**`, `components/LevelDots.tsx`, `components/WaterLevelChip.tsx`, `components/waterway/section-details/**` (except `FeatureStrip` if P1d moved it), gauge panel | about 100 | 30 min / 160k |
 | **D3 Waterway** | `components/waterway/**` (except `section-details`), `routes/waterways/**` | about 50 | 30 min / 150k |
 | **D4 Trips** | `components/trip-page/**`, `components/trips/**`, `routes/trips/**`, `routes/invite/**` | about 55 | 30 min / 150k |
 | **D5 Content screens** | `components/search/**`, `components/proposals/**`, `components/descents/**`, `components/provenance/**`, `components/notifications/**`, `routes/proposals/**`, `routes/admin/**`, `routes/logs/**` | about 55 | 35 min / 180k |
-| **D6 Shell and settings** | `components/canvas/**`, `components/states/**`, `components/dev/**`, `routes/__root.tsx`, `routes/dev/**`, `routes/tools/**`, `routes/auth/**`, `routes/settings.tsx`, `components/settings/**` (new `AppearanceSection.tsx`, `groups.ts`, `SettingsDetail.tsx`), the 21 top-level `components/*.tsx` | about 90 | 40 min / 200k |
+| **D6a Appearance** | new `lib/colorMode.ts` + test, `AppearanceSection.tsx`, `settings/groups.ts`, `SettingsDetail.tsx`, `routes/settings.tsx`, the runtime `theme-color` meta effect, the `@media print` re-light rule, the inline script and its mirror unit test | about 10 | 30 min / 150k; the only agent that edits `index.html` in phase 2; can start in phase 1 right after P1a (it needs only the provider); spec `e2e/dark/settings.spec.ts`: switch, persistence across reload, System via emulation, no flash, print |
+| **D6b Shell sweep** | `components/canvas/**`, `components/states/**`, `components/dev/**`, `routes/__root.tsx`, `routes/dev/**`, `routes/tools/**`, `routes/auth/**`, the 21 top-level `components/*.tsx`, the app bar logo swap to `logo-dark.svg` in dark | about 80 | 30 min / 150k; a pure dark sweep like D2-D5; `__root.tsx` takes no mount counter (the spike's was throwaway); spec `e2e/dark/shell.spec.ts` |
+
+D1 and D6 were each one agent of 200k in the first draft; the spike showed
+D1 mixes mechanism-sensitive work (MapLibre, icons, CSS the browser parses
+once) with page judging, and D6 bundles a new feature with a sweep. Hence
+the split by what is judged, on disjoint folders. 12 agents in all: P1a-P1d,
+D1a, D1b, D2-D5, D6a, D6b.
 
 Each agent's spec lives in its own file, `e2e/dark/<area>.spec.ts`
 (`map`, `charts`, `waterway`, `trips`, `content`, `shell`), on `phone` and
 `desktop`, `@small` where a layout can break at 320: the screens above in dark,
-`noLightSurface`, `contrastReport` with no violation, no sideways scroll. D6's
-`e2e/dark/switch.spec.ts` covers the setting (System follows
+`noLightSurface`, `contrastReport` with no violation, no sideways scroll. D6a's
+`e2e/dark/settings.spec.ts` covers the setting (System follows
 `emulateMedia`; Light and Dark override it; a reload keeps the choice;
 switching does not reload the page: a `window.__marker` set before the switch
 is still there after). Each guard in a spec is checked by removing it.
@@ -477,12 +529,16 @@ agent per finding group.
 | Risk | Where | Handling |
 |---|---|---|
 | A `var()` reaches a place that cannot parse it: MapLibre prints "could not parse color" and draws nothing | 112 paint lines, `mapIcons.ts`, `pin.color` | rule 3 of `check:colours` plus the paint-file list; the flip is gated on it; P1c's fake-map test |
-| SVG presentation attributes and `var()` | 41 sites in 5 files | assumed unsupported; `useTokens()`; P1a probes and records the result so the plan's assumption is a fact |
+| SVG presentation attributes and `var()` | 41 sites in 5 files | spike: Chrome accepts `var()` and `color-mix()` there; Firefox and Safari untested, so `useTokens()` stays |
 | Hex-alpha on a runtime value | `${pin.color}55` in `Map.tsx` (colour is data), `LevelDots` | `withAlpha` takes any CSS colour; a marker pin colour is already a feature colour, so it is a `var()` or hex either way |
-| MapLibre has no CSS: popup, controls, attribution | `index.css`, `theme.ts` control group | CSS with variables, so they switch without JS; verified by D1's spec in both schemes |
+| MapLibre has no CSS: popup, controls, attribution | `index.css`, `theme.ts` control group | CSS with variables, so they switch without JS; verified by D1a's spec in both schemes; the control glyphs need tokens or `invert` in dark |
+| A `var()` reaches MapLibre paint | any paint file | silent: a console error per layer per render (38 per load on the map page) and a default colour; rule 3 of `check:colours` plus D1a's console-error spec on the map pages, in both schemes |
+| `useMutedBaseMap` un-mutes roads on a switch | region browse active | the scheme joins its dependencies (D1a); spec: open region browse, switch, read `line-opacity` |
+| `color-mix` support floor | `withAlpha` is used at 58 sites | check browserslist (Safari 16.2, Chrome 111) once in P1b |
+| Chrome headless first compositor frame is `18,18,18` | no-flash proof | not page paint; check once in headed Chrome |
 | Style swap loses the recolour | satellite -> vector, scheme switch while a style loads | the existing `style.load` listener plus the scheme in `styleKey`; spec: toggle satellite twice, then switch scheme |
 | First paint flashes white | cold start with dark preference | inline script in `index.html`; spec: block the bundle, assert `data-theme` and background are already dark |
-| MUI components with inline colours | `Autocomplete`, `Select` menus, `Tooltip`, `Snackbar`, `Switch`, `Checkbox`, `Skeleton` | the palette is dark, so they follow; D6's spec opens each once in dark; `Skeleton` and `Tooltip` get their grounds from `MuiSkeleton`/`MuiTooltip` overrides in `theme.ts` (P1a) |
+| MUI components with inline colours | `Autocomplete`, `Select` menus, `Tooltip`, `Snackbar`, `Switch`, `Checkbox`, `Skeleton` | the palette is dark, so they follow; D6b's shell spec opens each once in dark; `Skeleton` and `Tooltip` get their grounds from `MuiSkeleton`/`MuiTooltip` overrides in `theme.ts` (P1a) |
 | `react-markdown` content | `MarkdownRender` (2 `theme.palette` uses) | variables via the palette; D3 checks a comment with a link, code and a quote |
 | Recharts internals (tooltip cursor, active dot, default stroke) | `SeriesChart` | every prop already explicit; D2 reads the DOM for any remaining default `#ccc`/`#666` and sets it |
 | Third-party CSS ordering | `maplibre-gl.css` imported after the theme | the existing comment in `index.css` stays; `.maplibregl-*` rules remain in `index.css`, on variables |
@@ -491,7 +547,7 @@ agent per finding group.
 | 38-site claim in `ui-overhaul.md` | doc | corrected to 58 in the same change as the README row |
 | Contrast regressions by later code | all | `contrastReport` runs in each dark spec; `contrast.test.ts` runs in the gate |
 | A test or tool that parses `theme.tokens` as hex | `contrast.test.ts` (and any e2e that reads `theme.tokens`) | those use `lightTokens`/`darkTokens`; found by `tsc` after the flip because `tokens` leaves keep type `string` - so the lead also greps `e2e` and `*.test.ts` for `tokens.` once |
-| Agents overlap on `components/map/**` | P1c then D1 | sequential by phase; D1 is the only phase-2 agent in that folder |
+| Agents overlap on `components/map/**` | P1c then D1a | sequential by phase; D1a is the only phase-2 agent in that folder |
 
 ## Acceptance
 
@@ -499,10 +555,13 @@ Statements the reviewer checks by running the app (or the stated test).
 "Dark" means `paddlemate-color-mode=dark`; "N screens" are the 14 in Phase 0.
 
 1. **Light unchanged after phase 1**: on the 14 named screens at Pixel 7, 320
-   and 1280 wide (42 screenshots), the flipped branch differs from the phase-0
-   baseline in 0 pixels beyond a per-channel difference of 1/255 (Playwright
-   `maxDiffPixels: 0`, `threshold: 0.01`; the 1/255 allowance is the byte
-   rounding of the alpha percentages), and `getComputedStyle` of
+   and 1280 wide (42 screenshots), the flipped branch matches the phase-0
+   baseline (`e2e/dark/baseline.spec.ts`: `threshold: 0.05`, which tolerates
+   the spike's 7/255 colour-mix rounding on a few hairline pixels, and
+   `maxDiffPixelRatio: 0.015`, because text edges re-rasterise by up to 0.75%
+   of a screen between two runs of the same build; the map canvas, the map
+   controls, the chart and clock-bound text are hidden or masked, three retries
+   absorb a transient loading frame), and the computed style of
    `body`, the app bar, the first list row and the primary button match.
 2. **No light surface left**: in dark, `noLightSurface` reports 0 elements on
    each of the 14 screens at the three sizes, and on the dialogs and menus
@@ -525,8 +584,9 @@ Statements the reviewer checks by running the app (or the stated test).
    the three level bands are distinguishable by their text colours.
 6. **Switch**: System follows `emulateMedia({ colorScheme })` live; Light and
    Dark override it; the choice survives a reload; the page object is not
-   reloaded when switching (a window marker survives); the map recolours in
-   under 1 second after a switch with satellite on and off; the second device
+   reloaded when switching (a window marker survives); the map recolours
+   within 250 ms of a switch (no remount, camera unchanged) with satellite on
+   and off, and the console stays free of MapLibre colour errors across it; the second device
    (a fresh browser context) starts at System.
 7. **No flash**: with the bundle request delayed 2 seconds, the document
    background is already `#141b1f` in dark before the first React render.
@@ -587,7 +647,7 @@ Each has a spec line showing the symptom (AGENTS.md "Cuts are visible").
 
 ## Confidence
 
-About 70% that the plan runs as written. The infrastructure half is well
+About 88% that the plan runs as written (70% before the spike). The infrastructure half is well
 bounded and measured: 516 colour references mostly follow for free once
 `tokens` becomes variables, and the 160 places that cannot (112 paint lines, 41
 SVG attributes, the marker SVG string, 6 runtime reads) are enumerated and
@@ -604,9 +664,9 @@ fenced by a grep that fails the gate. What would lower it:
   call.
 - The dark map and the dark chart colours are derived, not designed: the design
   page has neither. Contrast is computed, taste is not; expect one round of
-  adjustments after the first look (inside D1 and D2's budgets, not a new
+  adjustments after the first look (inside D1a and D2's budgets, not a new
   agent).
-- D1 and D6 are sized at the 200k edge. If either hands back, the continuation
+- D1 and D6 were split to stay under 200k. If either hands back, the continuation
   is a fresh agent from the handoff note.
 - Playwright is on request: statements 1 to 8 need the user to allow runs for
   the phase-0 baseline, merge 1 and the review.
