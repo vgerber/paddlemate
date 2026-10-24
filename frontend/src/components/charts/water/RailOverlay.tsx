@@ -1,13 +1,11 @@
 import type { JSX } from "react";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { formatReading, formatSpread } from "@/lib/format";
-import { theme } from "@/lib/theme";
+import { useTokens } from "@/lib/useTokens";
 import { levelInk, levelWord } from "@/lib/waterLevel";
 import { pointTime } from "./chartTime";
 import { clampLabelX, clampReadoutX, spreadWords } from "./railGeometry";
 import { levelAt } from "./series";
-
-const { tokens } = theme;
 
 /** Height of the axis row under the rail's plot, in px. */
 export const RAIL_AXIS = 20;
@@ -22,12 +20,15 @@ const READOUT_CHAR = 7.2;
 const READOUT_TIME_CHAR = 5.6;
 const WORD_CHAR = 6.4;
 
-const halo = {
-  stroke: tokens.surface,
-  strokeWidth: 3,
-  paintOrder: "stroke",
-  strokeLinejoin: "round",
-} as const;
+/** Text halo in the ground colour, so words stay legible over the line. */
+function haloFor(ground: string) {
+  return {
+    stroke: ground,
+    strokeWidth: 3,
+    paintOrder: "stroke",
+    strokeLinejoin: "round",
+  } as const;
+}
 
 const LEVELS = [
   { key: "high", from: "range_high" },
@@ -85,6 +86,8 @@ export default function RailOverlay({
   marker,
   hovering,
 }: RailOverlayProps) {
+  const tokens = useTokens();
+  const halo = haloFor(tokens.surface);
   const wordX = edge;
   if (!yDomain) return null;
   const plotBottom = height - RAIL_AXIS;
@@ -140,7 +143,9 @@ export default function RailOverlay({
           {...halo}
         >
           {lv && (
-            <tspan fill={levelInk(lv.key)}>{`${levelWord(lv.key)}, `}</tspan>
+            <tspan
+              fill={levelInk(lv.key, tokens)}
+            >{`${levelWord(lv.key)}, `}</tspan>
           )}
           {value}
         </text>
@@ -206,7 +211,7 @@ export default function RailOverlay({
               y={wordYs[i]}
               fontSize={WORD_SIZE}
               fontWeight={600}
-              fill={levelInk(l.key)}
+              fill={levelInk(l.key, tokens)}
               {...halo}
             >
               {levelWord(l.key)}
@@ -266,6 +271,7 @@ export function RailTick({
   edge,
   label,
 }: RailTickProps & { width: number; edge: number; label: string }) {
+  const tokens = useTokens();
   const w = label.length * TICK_CHAR;
   const at = anchorFor(clampLabelX(Number(x), w, width, edge), w, width, edge);
   return (

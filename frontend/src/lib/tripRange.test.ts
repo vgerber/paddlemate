@@ -1,11 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import type { TripSection, TripStay } from "@/lib/api";
 import {
+  baseColors,
   baseRanges,
   nearestWatched,
   rangeBounds,
   sectionDistanceKm,
 } from "./tripRange";
+import { type ResolvedTokens, type Scheme, tokensFor } from "./useTokens";
 
 // Each call is a different run: sharing one section_id made every section
 // look like the same one to anything that dedupes by it.
@@ -166,5 +168,31 @@ describe("nearestWatched", () => {
       twice,
     );
     expect(hit?.name).toBe("Shared");
+  });
+});
+
+describe("baseColors", () => {
+  const stays = [1, 2, 3].map((id) => ({ id }) as unknown as TripStay);
+
+  test.each([
+    "light",
+    "dark",
+  ] as Scheme[])("cycles the %s scheme's region palette by position", (scheme) => {
+    const palette = tokensFor(scheme).mapRegionPalette;
+    const colors = baseColors(stays, scheme);
+    expect(colors[1]).toBe(palette[0]);
+    expect(colors[3]).toBe(palette[2 % palette.length]);
+  });
+
+  test("given tokens reach the palette, wrapping past its end", () => {
+    const fake = {
+      ...tokensFor("light"),
+      mapRegionPalette: ["#000001"],
+    } as unknown as ResolvedTokens;
+    expect(baseColors(stays, fake)).toEqual({
+      1: "#000001",
+      2: "#000001",
+      3: "#000001",
+    });
   });
 });

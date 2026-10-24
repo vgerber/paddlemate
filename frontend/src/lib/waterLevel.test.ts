@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { theme } from "@/lib/theme";
+import { type ResolvedTokens, type Scheme, tokensFor } from "@/lib/useTokens";
 import {
   currentLevel,
   freshRanges,
@@ -7,8 +7,10 @@ import {
   LEVEL_MARKER_MATCH,
   LEVEL_ORDER,
   levelConfig,
+  levelConfigFor,
   levelInk,
   levelMarkerColor,
+  levelMarkerMatch,
   levelWord,
   maxLevel,
 } from "./waterLevel";
@@ -57,12 +59,12 @@ describe("isCalibrated", () => {
 
 describe("levelInk", () => {
   test("uses the pill colour for high, whose text is white", () => {
-    expect(levelInk("high")).toBe(theme.tokens.levels.high.bg);
+    expect(levelInk("high")).toBe(tokensFor("light").levels.high.bg);
     expect(levelInk("high")).not.toBe("#ffffff");
   });
   test("uses the text colour for low and medium", () => {
-    expect(levelInk("low")).toBe(theme.tokens.levels.low.text);
-    expect(levelInk("medium")).toBe(theme.tokens.levels.medium.text);
+    expect(levelInk("low")).toBe(tokensFor("light").levels.low.text);
+    expect(levelInk("medium")).toBe(tokensFor("light").levels.medium.text);
   });
 });
 
@@ -104,7 +106,9 @@ describe("currentLevel", () => {
 describe("levelMarkerColor", () => {
   test("is the theme marker hue of each level", () => {
     for (const level of LEVEL_ORDER) {
-      expect(levelMarkerColor(level)).toBe(theme.tokens.levels[level].marker);
+      expect(levelMarkerColor(level)).toBe(
+        tokensFor("light").levels[level].marker,
+      );
     }
   });
 
@@ -119,5 +123,70 @@ describe("levelWord", () => {
     expect(levelWord("low")).toBe("Low");
     expect(levelWord("medium")).toBe("Medium");
     expect(levelWord("high")).toBe("High");
+  });
+});
+
+const SCHEMES: Scheme[] = ["light", "dark"];
+
+describe.each(SCHEMES)("level colours in the %s scheme", (scheme) => {
+  const t = tokensFor(scheme);
+
+  test("levelInk reads the scheme's tokens", () => {
+    expect(levelInk("low", scheme)).toBe(t.levels.low.text);
+    expect(levelInk("medium", scheme)).toBe(t.levels.medium.text);
+    expect(levelInk("high", scheme)).toBe(t.levels.high.bg);
+    expect(levelInk("low", t)).toBe(levelInk("low", scheme));
+  });
+
+  test("levelMarkerColor reads the scheme's tokens", () => {
+    for (const level of LEVEL_ORDER) {
+      expect(levelMarkerColor(level, scheme)).toBe(t.levels[level].marker);
+      expect(levelMarkerColor(level, t)).toBe(t.levels[level].marker);
+    }
+  });
+
+  test("levelConfigFor reads the scheme's chip pair", () => {
+    for (const level of LEVEL_ORDER) {
+      expect(levelConfigFor(scheme)[level].color).toBe(t.levels[level].text);
+      expect(levelConfigFor(scheme)[level].bgcolor).toBe(t.levels[level].bg);
+    }
+  });
+
+  test("levelMarkerMatch uses the scheme's markers", () => {
+    const match = levelMarkerMatch(scheme);
+    expect(match).toContain(t.levels.high.marker);
+    expect(match.at(-1)).toBe(t.levels.empty.marker);
+  });
+});
+
+describe("scheme plumbing", () => {
+  const probe = (c: string) => ({
+    text: c,
+    bg: c,
+    marker: c,
+    label: c,
+    border: c,
+  });
+  // Literal-typed tokens: the probe values are not the light literals.
+  const fake = {
+    ...tokensFor("light"),
+    levels: {
+      empty: probe("#000001"),
+      low: probe("#000002"),
+      medium: probe("#000003"),
+      high: probe("#000004"),
+    },
+  } as unknown as ResolvedTokens;
+
+  test("given tokens reach every colour function", () => {
+    expect(levelInk("low", fake)).toBe("#000002");
+    expect(levelMarkerColor("high", fake)).toBe("#000004");
+    expect(levelConfigFor(fake).medium.color).toBe("#000003");
+    expect(levelMarkerMatch(fake).at(-1)).toBe("#000001");
+  });
+
+  test("the light defaults match the light scheme", () => {
+    expect(levelConfig).toEqual(levelConfigFor("light"));
+    expect(LEVEL_MARKER_MATCH).toEqual(levelMarkerMatch("light"));
   });
 });

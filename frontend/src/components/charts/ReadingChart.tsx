@@ -27,6 +27,7 @@ import { dockHeight } from "@/lib/canvasLayout";
 import { readingTime, timeAgo } from "@/lib/format";
 import { isStale } from "@/lib/staleness";
 import { theme } from "@/lib/theme";
+import { type ResolvedTokens, useTokens } from "@/lib/useTokens";
 import {
   currentLevel,
   levelMarkerColor,
@@ -96,12 +97,13 @@ export interface ReadingChartProps {
  * too old to say. A hovered point shows in the plot, not here. */
 function readingView(
   charted: WaterRangeWithStatus | undefined,
+  ink: ResolvedTokens,
 ): ReadingView | null {
   if (!charted) return null;
   const unit = charted.series.unit;
   const levelView = (level: WaterLevel | null) => {
     if (!level || level === "empty") return undefined;
-    return { word: levelWord(level), color: levelMarkerColor(level) };
+    return { word: levelWord(level), color: levelMarkerColor(level, ink) };
   };
   const latest = charted.latest_reading;
   const stale = isStale(
@@ -130,6 +132,7 @@ function readingView(
 
 /** The chart of a section or gauge, as a reading block and a plot. */
 export default function ReadingChart(props: ReadingChartProps) {
+  const ink = useTokens();
   const {
     placement,
     ranges,
@@ -171,7 +174,7 @@ export default function ReadingChart(props: ReadingChartProps) {
   const charted = readingPerType(own, preferredFeatureId).find(
     (r) => r.type === type,
   )?.range;
-  const view = readingView(charted);
+  const view = readingView(charted, ink);
   const railHeight = dockHeight(windowHeight);
   const types = measurementTypesOf(own).map((t) => ({
     type: t,
