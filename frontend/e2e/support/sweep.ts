@@ -459,7 +459,8 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
   let bodyStops = 0;
   for (let i = 0; i < max; i++) {
     await page.keyboard.press("Tab");
-    await page.waitForTimeout(60);
+    // Focus rings fade in (tokens.motion.fast): read them once they have.
+    await page.waitForTimeout(220);
     const s: Seen | null = await page.evaluate(() => {
       const el = document.activeElement as HTMLElement | null;
       if (!el) return null;
@@ -534,9 +535,12 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
       break;
     }
     if (s.isBody) {
-      // Chrome's own stop between the page and its UI: step past it once.
+      // Chrome's own stop between the page and its UI. Before anything was
+      // reached it is the start, stepped past once; after, it is the page's
+      // end, and the next stop would be the page's top again (a wrap, not a
+      // jump in the order).
       bodyStops++;
-      if (bodyStops < 2) continue;
+      if (bodyStops < 2 && order.length === 0) continue;
       ended = "focus left the page";
       cycled = true;
       break;
