@@ -38,6 +38,7 @@ import { useSession } from "@/lib/hooks/useSession";
 import { AccountIcon, LogIcon, MapIcon, TripIcon } from "@/lib/icons";
 import { useLanguage } from "@/lib/languagePreference";
 import { transition } from "@/lib/motion";
+import { useMotionSync } from "@/lib/motionMode";
 import { activeNav, DESKTOP_NAV, PHONE_NAV } from "@/lib/nav";
 import { shouldRetryQuery } from "@/lib/retry";
 import { BOTTOM_NAV_SPACE, fonts, SYSTEM_INSET, theme } from "@/lib/theme";
@@ -111,6 +112,7 @@ function Layout() {
   const { isAuthenticated, isLoading, user, login, signup, logout } =
     useSession();
   const { colorScheme } = useColorScheme();
+  useMotionSync();
   useLiveTripEvents(isAuthenticated);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const activeTo = activeNav(DESKTOP_NAV, pathname);

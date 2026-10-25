@@ -17,6 +17,7 @@ const stored = (page: Page) =>
 const choice = (page: Page, name: string) =>
   page
     .getByTestId("settings-detail")
+    .getByRole("group", { name: "Theme" })
     .getByRole("button", { name, exact: true });
 const frames = (page: Page) =>
   page.evaluate(() => ({
