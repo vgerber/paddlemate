@@ -49,8 +49,9 @@ test.describe("suggest section on the canvas", () => {
       const map = await page.locator(".maplibregl-map").boundingBox();
       if (!map) throw new Error("no map");
       for (const [pin, fx] of [
-        ["Put-in", 0.1],
-        ["Take-out", 0.3],
+        // In the free area, right of the cards.
+        ["Put-in", 0.7],
+        ["Take-out", 0.9],
       ] as const) {
         await page
           .locator("button[aria-pressed]")

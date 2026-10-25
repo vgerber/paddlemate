@@ -162,7 +162,7 @@ function LogsPage() {
       {hasChild && (
         <FloatingCard
           id="log"
-          side={formAlone ? "left" : "right"}
+          side="left"
           kind="side"
           screen="logs"
           title={form ? "Log form" : "Log"}

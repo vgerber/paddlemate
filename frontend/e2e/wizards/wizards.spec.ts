@@ -164,9 +164,9 @@ test.describe("suggest section", () => {
     const hint = page.getByTestId("pick-hint");
     await expect(hint).toHaveText(`${verb(page)} the map to set the put-in`);
     await expectNoHorizontalOverflow(page);
-    await pickOnMap(page, "Put-in", 0.25);
+    await pickOnMap(page, "Put-in", 0.65);
     await expect(hint).toHaveText(`${verb(page)} the map to set the take-out`);
-    await pickOnMap(page, "Take-out", 0.45);
+    await pickOnMap(page, "Take-out", 0.85);
     await expect(page.getByTestId("picked-put-in")).toBeVisible();
     await expect(page.getByTestId("picked-take-out")).toBeVisible();
     await expectTouchTargets(page.getByRole("button", { name: /^Clear / }));
@@ -174,7 +174,7 @@ test.describe("suggest section", () => {
     // A cleared point puts its hint back.
     await page.getByRole("button", { name: "Clear put-in" }).click();
     await expect(hint).toHaveText(`${verb(page)} the map to set the put-in`);
-    await pickOnMap(page, "Put-in", 0.25);
+    await pickOnMap(page, "Put-in", 0.65);
 
     await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Step 3 of 3 · Features")).toBeVisible();
@@ -241,8 +241,8 @@ test.describe("suggest section steps", () => {
     await toLineStep(page);
     const unset = page.getByTestId("unpicked-put-in");
     await expect(unset).toContainText("Not set");
-    await pickOnMap(page, "Put-in", 0.25);
-    await pickOnMap(page, "Take-out", 0.45);
+    await pickOnMap(page, "Put-in", 0.65);
+    await pickOnMap(page, "Take-out", 0.85);
     const card = page.getByTestId("picked-put-in");
     await expect(card).toContainText("Put-in");
     await expect(card).toContainText("0.0 km");
@@ -272,8 +272,8 @@ test.describe("suggest section steps", () => {
     ).toContainText(`${verb(page).toLowerCase()} the map to place your points`);
     await expect(page.getByText("Searching for")).toHaveCount(0);
     await page.clock.resume();
-    await pickOnMap(page, "Put-in", 0.25);
-    await pickOnMap(page, "Take-out", 0.45);
+    await pickOnMap(page, "Put-in", 0.65);
+    await pickOnMap(page, "Take-out", 0.85);
     await expect(page.getByRole("button", { name: "Next" })).toBeEnabled();
   });
 
@@ -281,8 +281,8 @@ test.describe("suggest section steps", () => {
     page,
   }) => {
     await toLineStep(page);
-    await pickOnMap(page, "Put-in", 0.25);
-    await pickOnMap(page, "Take-out", 0.45);
+    await pickOnMap(page, "Put-in", 0.65);
+    await pickOnMap(page, "Take-out", 0.85);
     await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Step 3 of 3 · Features")).toBeVisible();
     const rows = page.getByTestId("section-point-card");
@@ -320,8 +320,8 @@ test.describe("suggest section steps", () => {
     await expect(page.getByTestId("map-hint")).toContainText(
       "Click the map to set where you get on and off the water.",
     );
-    await pickOnMap(page, "Put-in", 0.25);
-    await pickOnMap(page, "Take-out", 0.45);
+    await pickOnMap(page, "Put-in", 0.65);
+    await pickOnMap(page, "Take-out", 0.85);
     await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Step 3 of 3 · Features")).toBeVisible();
     expect((await map.boundingBox())?.y).toBe(top2);

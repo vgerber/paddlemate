@@ -71,7 +71,7 @@ https://claude.ai/artifact/1qgiaEkCBRxcVquBH5x152, page map-canvas.html). The us
 | Screen | Cards | Scene and subject |
 |---|---|---|
 | Map and section `/` | Detail card left (`SidebarContent`: search, river, section, features, notes, sources); dock: `MapCharts` | sections, features as numbered markers matching the rows, gauges, notes, area, regions, picking/drawing; subject: selected section, else river, else results |
-| Logs | List card left; side card right with the open log (`DescentDetail showMap={false}`) | the run's sections in teal, put-in and take-out, other logs as dim ghost lines; subject: the open log, else all logs |
+| Logs | List card left; side card beside it with the open log (`DescentDetail showMap={false}`) | the run's sections in teal, put-in and take-out, other logs as dim ghost lines; subject: the open log, else all logs |
 | Trips | List card left; detail card (`TripDetail`); at 1600+ a members side card right | watch-list sections, base rings; subject: all rings and sections |
 | Proposals | List card left; detail card (diff as the main block, review docked) | before dim, after teal; subject: the union |
 | Settings | no map; centred 240 + 720 | none |

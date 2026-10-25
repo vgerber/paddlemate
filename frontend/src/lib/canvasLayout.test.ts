@@ -216,3 +216,17 @@ describe("fitsBeside", () => {
     expect(fitsBeside(["side"], 800)).toBe(true);
   });
 });
+
+describe("card order", () => {
+  test("a list card sits nearest its edge even when it registered last", () => {
+    const [side, list] = layoutCards(
+      [
+        { id: "log", side: "left", kind: "side", priority: 1, width: 400 },
+        { id: "list", side: "left", kind: "list", priority: 2, width: 300 },
+      ],
+      1600,
+    );
+    expect(list.x).toBeLessThan(side.x);
+    expect(side.x).toBe(list.x + list.width + 16);
+  });
+});

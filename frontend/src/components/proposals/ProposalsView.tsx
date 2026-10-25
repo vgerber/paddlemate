@@ -383,7 +383,7 @@ export default function ProposalsView({
       {selectedId == null && (
         <FloatingCard
           id="proposal"
-          side="right"
+          side="left"
           kind="side"
           screen="proposals"
           title="Proposal"

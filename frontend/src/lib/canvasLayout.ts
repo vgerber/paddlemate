@@ -123,7 +123,8 @@ export function fitsBeside(kinds: CardKind[], windowWidth: number): boolean {
 }
 
 /** Positions every card: expanded ones from their window edge inwards in
- * input order, folded ones after them. */
+ * input order (a list card first: it sits nearest its edge, whatever mounted
+ * first), folded ones after them. */
 export function layoutCards(
   cards: CardInput[],
   windowWidth: number,
@@ -135,8 +136,12 @@ export function layoutCards(
     right: canvas.margin,
   };
   const placed = new Map<string, Placement>();
+  const ordered = [
+    ...cards.filter((c) => c.kind === "list"),
+    ...cards.filter((c) => c.kind !== "list"),
+  ];
   for (const isFolded of [false, true]) {
-    for (const c of cards) {
+    for (const c of ordered) {
       if (folded.has(c.id) !== isFolded) continue;
       const offset = cursor[c.side];
       cursor[c.side] += c.width + canvas.margin;

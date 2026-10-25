@@ -9,6 +9,11 @@ type MapLike = {
   loaded(): boolean;
   project(lngLat: [number, number]): { x: number; y: number };
   getFilter(id: string): unknown;
+  easeTo(o: {
+    center: [number, number];
+    offset: [number, number];
+    duration: number;
+  }): void;
 };
 
 const PUT_IN: [number, number] = [11.0, 47.0];
@@ -139,8 +144,33 @@ test.describe("logs on the canvas", () => {
   });
 });
 
-/** A click on the upper fixture section, as the map projects it. */
+/** A click on the upper fixture section, as the map projects it. The camera
+ * frames the picks, so a section just taken out may rest under a card: it is
+ * brought to the middle of the free area first. */
 async function clickUpper(page: Page) {
+  await page.evaluate(
+    (p) => {
+      const map = (window as unknown as { __paddlemateMap?: MapLike })
+        .__paddlemateMap;
+      const host = document.querySelector<HTMLElement>(
+        "[data-testid=canvas-host]",
+      );
+      const box = document
+        .querySelector(".maplibregl-map")
+        ?.getBoundingClientRect();
+      const [fx, fy, fw, fh] = (host?.dataset.free ?? "")
+        .split(",")
+        .map(Number);
+      if (!map || !box || !fw) return;
+      map.easeTo({
+        center: p,
+        offset: [fx + fw / 2 - box.width / 2, fy + fh / 2 - box.height / 2],
+        duration: 0,
+      });
+    },
+    [11.005, 47.005] as [number, number],
+  );
+  await settle(page);
   const spot = await page.evaluate(
     (p) => {
       const map = (window as unknown as { __paddlemateMap?: MapLike })
@@ -205,6 +235,9 @@ test.describe("the log form on the canvas", () => {
       // another puts it back.
       await clickUpper(page);
       await expect(card(page, "log")).not.toContainText("Upper Test");
+      // The subject changed with the pick, so the camera moves; click where
+      // the section is once it rests.
+      await settle(page);
       await clickUpper(page);
       await expect(card(page, "log")).toContainText("Upper Test");
       await next(page).click();
@@ -227,6 +260,11 @@ test.describe("the log form on the canvas", () => {
     await page.setViewportSize({ width: 1600, height: 900 });
     await expect(card(page, "list")).toBeVisible();
     await expect(card(page, "log")).toBeVisible();
+    // The form opens right beside the list, not at the far edge.
+    const list = await card(page, "list").boundingBox();
+    const log = await card(page, "log").boundingBox();
+    if (!list || !log) throw new Error("no cards");
+    expect(Math.abs(log.x - (list.x + list.width + 16))).toBeLessThanOrEqual(1);
   });
 
   test("the map changes no pick on the other steps", async ({ page }) => {

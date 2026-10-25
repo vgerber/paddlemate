@@ -55,7 +55,7 @@ export default function ProposalSideCard({
   return (
     <FloatingCard
       id="proposal"
-      side="right"
+      side="left"
       kind="side"
       screen="proposals"
       title={proposal ? proposalTitle(proposal) : "Proposal"}

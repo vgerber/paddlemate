@@ -356,6 +356,8 @@ The rules, built in `components/canvas/` (plan and reasons:
   `list` 20% (300-380), `side` 25% (400-600). The cards may cover 55% of the
   window, or 70% when a list card is among them; beyond that the lowest
   priority card folds to its header. The map page alone uses a `detail` card.
+  Cards stack from the left: the list, then the item opened from it
+  (`side="left"`); only an extra third card goes `side="right"`.
 - **Header.** A card's header is supplied by the screen: `title`, `subtitle`,
   `actions`, `onClose`, or `selfHeaded` when the content brings its own panel
   header. A screen never shows a kind label above its own header.

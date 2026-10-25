@@ -113,7 +113,7 @@ function SuggestSectionPage() {
       <CanvasLayout>
         <FloatingCard
           id="suggest"
-          side="right"
+          side="left"
           kind="side"
           screen="suggest-section"
           title="Suggest section"

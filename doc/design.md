@@ -359,6 +359,11 @@ The reasons and the work plan are in [plans/wide-canvas.md](plans/wide-canvas.md
   card is among them (so a list and an open item both fit at 1280, and a
   trip's members card fits at 1600 and up). Past that the lowest priority card
   folds to its header; tapping the header opens it and folds another.
+- **Order.** Cards line up from the left: the list, then what you opened from
+  it right beside it (a log, a trip, a proposal, a form), so the map stays one
+  free area on the right. Only a third card that adds to the open item (a
+  trip's members) sits at the right edge. Where a form and the list would not
+  both fit, the form takes the list's place.
 - **Header.** Each card has one header, supplied by its screen: a title, a
   grey subtitle, actions at the right and a close button. Where the panel in
   the card has its own header (the search panel, a log), that is the card's
