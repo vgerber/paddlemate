@@ -222,7 +222,12 @@ describe("the dark palette table (doc/plans/dark-mode.md)", () => {
     // Raised grounds that hold controls: candidate cards, floating cards.
     ["outlineControl on surfaceHigh", d.outlineControl, d.surfaceHigh, 3.0],
     ["outlineControl on surfaceBright", d.outlineControl, d.surfaceBright, 3.0],
-    ["outlineControl on surfaceHighest", d.outlineControl, d.surfaceHighest, 3.0],
+    [
+      "outlineControl on surfaceHighest",
+      d.outlineControl,
+      d.surfaceHighest,
+      3.0,
+    ],
     ["segmentThumb on its track", d.segmentThumb, d.surfaceHigh, 1.3],
     ["switchThumb on surface", d.switchThumb, d.surface, 10.4],
     ["surface on the map ground", d.surface, d.mapGround, 1.1],
