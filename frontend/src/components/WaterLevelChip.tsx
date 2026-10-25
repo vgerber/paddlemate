@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { components } from "@/lib/api/schema";
 import { formatReading } from "@/lib/format";
 import { useRowWaterStatus } from "@/lib/hooks/useWaterStatus";
+import { transition } from "@/lib/motion";
 import { theme } from "@/lib/theme";
 import { useTokens } from "@/lib/useTokens";
 import {
@@ -64,6 +65,10 @@ export function LevelPill({
         fontWeight: 600,
         lineHeight: 1,
         whiteSpace: "nowrap",
+        // A level change cross-fades its colours; the box does not resize.
+        transition: transition(["background-color", "border-color", "color"], {
+          duration: "fast",
+        }),
       }}
     >
       {dot && (

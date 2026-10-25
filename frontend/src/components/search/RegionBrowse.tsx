@@ -1,7 +1,6 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
-import CircularProgress from "@mui/material/CircularProgress";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import ToggleButton from "@mui/material/ToggleButton";
@@ -14,6 +13,7 @@ import {
   partOfChips,
   regionSubtitle,
 } from "@/components/map/regionGeometry";
+import DelayedSpinner from "@/components/states/DelayedSpinner";
 import { useMapVerb } from "@/components/waterway/useMapVerb";
 import { withAlpha } from "@/lib/alpha";
 import type { RegionOutline } from "@/lib/api";
@@ -154,7 +154,7 @@ export default function RegionBrowse({
           >
             {/* A viewport the server has not seen takes ten seconds to fetch
                 from OSM; without this the map just sits empty. */}
-            {loading && <CircularProgress size={12} color="inherit" />}
+            {loading && <DelayedSpinner size={12} color="inherit" />}
             {loading
               ? "Finding the regions here…"
               : `${verb} a ${regionKindSingular(kind)} on the map, or search one by name.`}

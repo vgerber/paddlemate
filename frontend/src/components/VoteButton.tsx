@@ -1,6 +1,7 @@
 import ButtonBase from "@mui/material/ButtonBase";
 import { withAlpha } from "@/lib/alpha";
 import { ThumbDownIcon, ThumbUpIcon } from "@/lib/icons";
+import { transition } from "@/lib/motion";
 import { fonts, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -42,7 +43,15 @@ export default function VoteButton({
         fontFamily: fonts.body,
         fontWeight: 600,
         fontSize: "0.8125rem",
-        "&.Mui-disabled": { opacity: 0.5 },
+        transition: transition(["transform", "background-color", "color"], {
+          duration: "fast",
+        }),
+        "&:active": {
+          transform: "scale(0.985)",
+          transition: transition("transform", { duration: "instant" }),
+        },
+        'html[data-motion="reduced"] &:active': { transform: "none" },
+        "&.Mui-disabled": { opacity: 0.5, transition: "none" },
       }}
     >
       <Icon sx={{ fontSize: 18 }} />

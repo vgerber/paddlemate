@@ -1,9 +1,9 @@
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import { useMemo } from "react";
 import type { MapScene } from "@/components/canvas/scene";
 import WaterwayMap from "@/components/map/LazyMap";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
+import DelayedSpinner from "@/components/states/DelayedSpinner";
 import { featureName } from "@/components/waterway/section-details/utils";
 import { localizedName } from "@/lib/localization";
 import MapPaneChrome from "./MapPaneChrome";
@@ -74,7 +74,7 @@ export default function MapPane({
   const { subject: _subject, camera: _camera, ...mapProps } = scene;
 
   const resultsBadge = isAreaSearchLoading ? (
-    <CircularProgress size={10} color="inherit" />
+    <DelayedSpinner size={10} color="inherit" />
   ) : (
     filteredSearchSections.length || null
   );

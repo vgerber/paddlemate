@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import MenuItem from "@mui/material/MenuItem";
@@ -8,6 +7,7 @@ import TextField from "@mui/material/TextField";
 import { useRef, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import ImageLightbox from "@/components/ImageLightbox";
+import DelayedSpinner from "@/components/states/DelayedSpinner";
 import QueryStates from "@/components/states/QueryStates";
 import SignInGate from "@/components/states/SignInGate";
 import { withAlpha } from "@/lib/alpha";
@@ -380,7 +380,7 @@ export default function CommentThread({
                       sx={{ ...composerIconSx, color: "text.disabled" }}
                     >
                       {uploadMedia.isPending ? (
-                        <CircularProgress size={15} />
+                        <DelayedSpinner size={15} />
                       ) : (
                         <AddPhotoIcon />
                       )}
@@ -398,7 +398,7 @@ export default function CommentThread({
                       }}
                     >
                       {createComment.isPending ? (
-                        <CircularProgress size={15} color="inherit" />
+                        <DelayedSpinner size={15} color="inherit" />
                       ) : (
                         <SendIcon />
                       )}

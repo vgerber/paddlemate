@@ -1,9 +1,9 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import DelayedSpinner from "@/components/states/DelayedSpinner";
 import { SYSTEM_INSET, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -43,7 +43,7 @@ export function RoundActionButton({
         },
       }}
     >
-      {busy ? <CircularProgress size={22} color="inherit" /> : children}
+      {busy ? <DelayedSpinner size={22} color="inherit" /> : children}
     </IconButton>
   );
 }
