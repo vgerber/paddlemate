@@ -50,7 +50,8 @@ export function Fold({
             minHeight: 0,
             overflow: "hidden",
             opacity: open ? 1 : 0,
-            visibility: open ? "visible" : "hidden",
+            // Open content inherits, so a hidden panel around it hides it.
+            visibility: open ? "inherit" : "hidden",
             transition: `opacity ${fade} ${css.easeOut} ${wait}, visibility 0s linear ${open ? "0ms" : hideAfter}`,
           },
           ...(Array.isArray(sx) ? sx : [sx]),
