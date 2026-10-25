@@ -291,6 +291,9 @@ function WeekPane({
       ref={ref}
       data-testid="week-pane"
       data-mode={mode}
+      // The leaving week is a picture: out of the tab order and a11y tree.
+      inert={mode === "out" || undefined}
+      aria-hidden={mode === "out" || undefined}
       sx={mode === "out" ? { position: "absolute", inset: "0 0 auto 0" } : {}}
     >
       <WeekRow dates={dates} discFade={mode} {...days} />
