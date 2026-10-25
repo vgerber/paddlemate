@@ -1074,24 +1074,9 @@ export const theme = createTheme({
           minHeight: tokens.touch.row,
           transition: `background-color ${motion.instant}ms ${easeOut}, outline-color ${motion.fast}ms ${easeOut}`,
           "&.Mui-disabled": { transition: "none" },
-          // Selected: a wash and a 3px bar, both at the instant step.
-          "&::after": {
-            content: '""',
-            position: "absolute",
-            insetBlock: 0,
-            left: 0,
-            width: 3,
-            backgroundColor: tokens.primary,
-            opacity: 0,
-            transform: "scaleY(0.4)",
-            pointerEvents: "none",
-            transition: `opacity ${motion.instant}ms ${easeOut}, transform ${motion.instant}ms ${easeOut}`,
-          },
-          "&.Mui-selected": {
-            backgroundColor: withAlpha(tokens.primary, "hover"),
-            "&::after": { opacity: 1, transform: "none" },
-            "&:hover": { backgroundColor: withAlpha(tokens.primary, "hover") },
-          },
+          // The open row's wash and bar are one look, `openRowSx` in
+          // canvas/flatRow.ts; the background change above lands it at the
+          // instant step.
         },
       },
     },

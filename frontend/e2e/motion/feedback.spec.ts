@@ -66,18 +66,25 @@ test.describe("press feedback", () => {
     await page.mouse.up();
   });
 
-  test("a selected row has a wash and a 3 px bar", async ({ page }, info) => {
+  test("a selected row has a wash and one 3 px bar", async ({ page }, info) => {
     test.skip(info.project.name === "phone", "no selected row on a phone");
     await page.goto("/settings?group=appearance");
     const sel = page.locator(`${ROW}.Mui-selected`).first();
     await expect(sel).toBeVisible();
-    const bar = await sel.evaluate((el) => {
-      const s = getComputedStyle(el, "::after");
-      return { w: s.width, o: s.opacity, d: s.transitionDuration };
+    const look = await sel.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        shadow: s.boxShadow,
+        after: getComputedStyle(el, "::after").content,
+        d: s.transitionDuration,
+      };
     });
-    expect(bar.w).toBe("3px");
-    expect(bar.o).toBe("1");
-    expect(bar.d).toContain("0.09s");
+    // The bar is the row's own inset edge (openRowSx), which follows its
+    // corners; no second, straight bar is drawn over it.
+    expect(look.shadow).toContain("inset");
+    expect(look.shadow).toMatch(/3px 0px 0px 0px/);
+    expect(look.after === "none" || look.after === "normal").toBe(true);
+    expect(look.d).toContain("0.09s");
   });
 
   test("a button scales to .985 while pressed, and not under reduced", async ({
