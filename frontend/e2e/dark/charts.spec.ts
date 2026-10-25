@@ -87,7 +87,7 @@ test.describe("dark charts and levels @small", () => {
     await chartDrawn(page);
     await clean(page);
     await page
-      .locator('button[aria-label="Chart period"]:visible')
+      .locator('button[aria-label$="chart period"]:visible')
       .first()
       .click();
     await page.getByRole("menuitem", { name: "Custom range…" }).click();

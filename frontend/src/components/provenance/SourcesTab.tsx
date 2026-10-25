@@ -49,6 +49,7 @@ const textLinkSx = {
   alignItems: "center",
   // The line is 13px type; the hit area is drawn around it.
   minHeight: tokens.touch.min,
+  minWidth: tokens.touch.min,
   my: "-13px",
 } as const;
 
