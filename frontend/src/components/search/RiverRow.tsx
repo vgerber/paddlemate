@@ -1,3 +1,4 @@
+import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
@@ -29,41 +30,43 @@ export default function RiverRow({
 }) {
   const where = place?.length ? place.join(" · ") : undefined;
   return (
-    <ListItemButton
-      data-testid={testId}
-      onClick={onClick}
-      sx={{ ...listRowSx, gap: 1 }}
-    >
-      <ListItemText
-        primary={name}
-        secondary={
-          where || secondary ? (
-            <>
-              {where && (
-                <Typography variant="caption" color="textSecondary" noWrap>
-                  {where}
-                </Typography>
-              )}
-              {secondary && (
-                <Typography
-                  variant="caption"
-                  color="textDisabled"
-                  noWrap
-                  sx={{ display: "block" }}
-                >
-                  {secondary}
-                </Typography>
-              )}
-            </>
-          ) : undefined
-        }
-        sx={{ my: 0, minWidth: 0 }}
-        slotProps={{
-          primary: { variant: "body2", sx: { fontWeight: 600 } },
-          secondary: { component: "span", sx: { display: "block" } },
-        }}
-      />
-      {trailing}
-    </ListItemButton>
+    <ListItem disablePadding>
+      <ListItemButton
+        data-testid={testId}
+        onClick={onClick}
+        sx={{ ...listRowSx, gap: 1 }}
+      >
+        <ListItemText
+          primary={name}
+          secondary={
+            where || secondary ? (
+              <>
+                {where && (
+                  <Typography variant="caption" color="textSecondary" noWrap>
+                    {where}
+                  </Typography>
+                )}
+                {secondary && (
+                  <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    noWrap
+                    sx={{ display: "block" }}
+                  >
+                    {secondary}
+                  </Typography>
+                )}
+              </>
+            ) : undefined
+          }
+          sx={{ my: 0, minWidth: 0 }}
+          slotProps={{
+            primary: { variant: "body2", sx: { fontWeight: 600 } },
+            secondary: { component: "span", sx: { display: "block" } },
+          }}
+        />
+        {trailing}
+      </ListItemButton>
+    </ListItem>
   );
 }
