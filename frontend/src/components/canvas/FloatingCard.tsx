@@ -10,6 +10,7 @@ import {
   resizeBounds,
   writeCardFrac,
 } from "@/lib/cardWidth";
+import { durations, LEAD_MS } from "@/lib/motion";
 import { theme } from "@/lib/theme";
 import { layout, useLayout } from "./canvasStore";
 import { escapeContext, escapeGoesBack } from "./keys";
@@ -79,7 +80,11 @@ export default function FloatingCard({
   // A new screen in the card (the title names it) fades in with a short rise
   // after the old one is gone; the content stays mounted.
   const body = useRef<HTMLDivElement>(null);
-  usePanelEnter(body, title, { from: { y: 8 }, delay: 60, duration: 160 });
+  usePanelEnter(body, title, {
+    from: { y: 8 },
+    delay: LEAD_MS,
+    duration: durations.fast,
+  });
 
   const placement = useLayout((s) => s.placements.get(id));
   const windowWidth = useLayout((s) => s.viewport.w);

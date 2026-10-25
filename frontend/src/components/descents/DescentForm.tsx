@@ -28,6 +28,9 @@ import { useSectionPicking } from "./descent-form/useSectionPicking";
 
 const { tokens } = theme;
 
+/** The form sits inside the logs route: its map scene covers the route's. */
+const FORM_SCENE_RANK = 1;
+
 const STEPS = ["When", "Sections", "Details"];
 
 interface Props {
@@ -106,7 +109,7 @@ export default function DescentForm({
 
   // Drawn by the canvas host from md; harmless on a phone, which keeps its
   // own map in the sections step.
-  useCanvasScene(useFormScene(picking, step === 1));
+  useCanvasScene(useFormScene(picking, step === 1), FORM_SCENE_RANK);
 
   const isLast = step === STEPS.length - 1;
   const problem = stepProblem(form, step);

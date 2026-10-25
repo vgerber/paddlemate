@@ -124,19 +124,13 @@ test.describe("spinner delay", () => {
       await route.continue();
     });
     await page.goto("/logs");
-    // Seek the spinner's own animation, so slow frames cannot move the
-    // reading: at 100 ms it is still hidden, at 500 ms fully in.
+    // Seek the delay animation on the spinner's wrapper, so slow frames
+    // cannot move the reading: at 100 ms it is still hidden, at 500 ms in.
     const [early, late] = await page.evaluate(
       () =>
         new Promise<[number, number]>((resolve) => {
           const look = () => {
-            const el = [
-              ...document.querySelectorAll("[role=progressbar]"),
-            ].find((e) =>
-              e
-                .getAnimations()
-                .some((a) => a.effect?.getTiming().delay === 150),
-            );
+            const el = document.querySelector("[data-delayed-spinner]");
             const anim = el
               ?.getAnimations()
               .find((a) => a.effect?.getTiming().delay === 150);
@@ -153,6 +147,27 @@ test.describe("spinner delay", () => {
     );
     expect(early).toBeLessThan(0.05);
     expect(late).toBeGreaterThan(0.9);
+  });
+
+  test("a delayed spinner still turns", async ({ page }) => {
+    await page.route("**/api/**", async (route) => {
+      await new Promise((r) => setTimeout(r, 1500));
+      await route.continue();
+    });
+    await page.goto("/logs");
+    const bar = page.locator("[data-delayed-spinner] [role=progressbar]");
+    await expect(bar.first()).toBeAttached();
+    await expect
+      .poll(() =>
+        bar.first().evaluate((el) =>
+          el
+            .getAnimations()
+            .filter((a) => a.playState === "running")
+            .map((a) => a.effect?.getTiming().duration),
+        ),
+      )
+      // MUI's rotate runs 1.4 s, linear, forever.
+      .toContain(1400);
   });
 });
 

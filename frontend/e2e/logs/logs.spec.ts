@@ -25,6 +25,12 @@ const TOKEN = { "X-Api-Key": "pm_testtoken123" };
 const TITLE = "WP9 spec run";
 const STANDING_KEY = "paddlemate_standing_descent";
 
+interface MapHandle {
+  isMoving(): boolean;
+  loaded(): boolean;
+  project(lngLat: number[]): { x: number; y: number };
+}
+
 const cards = (page: Page) => page.getByTestId("descent-card");
 const card = (page: Page, name: string) =>
   cards(page).filter({ hasText: name }).first();
@@ -276,6 +282,74 @@ test.describe("log descent", () => {
     expect(await computed(next(page), "background-color")).toBe(TEAL);
     await next(page).click();
     await expect(page.getByText("Step 2 of 3 · Sections")).toBeVisible();
+  });
+
+  test("a put-in picked on the map survives Next and is what is saved", async ({
+    page,
+  }, info) => {
+    await startSectionLog(page);
+    await next(page).click();
+    await expect(page.getByText("Step 2 of 3 · Sections")).toBeVisible();
+    await expect(page.locator("[data-step-ghost]")).toHaveCount(0);
+    await page.waitForFunction(() => {
+      const map = (window as unknown as { __paddlemateMap?: MapHandle })
+        .__paddlemateMap;
+      return !!map && map.loaded() && !map.isMoving();
+    });
+    await page.getByRole("button", { name: "Put-in", exact: false }).click();
+    // A point off the section's ends: the ends are 47.0 and 47.01.
+    const at = [11.0042, 47.0042];
+    await page
+      .locator("canvas.maplibregl-canvas")
+      .last()
+      .scrollIntoViewIfNeeded();
+    const canvas = await page
+      .locator("canvas.maplibregl-canvas")
+      .last()
+      .boundingBox();
+    const p = await page.evaluate(
+      (lngLat) =>
+        (
+          window as unknown as { __paddlemateMap: MapHandle }
+        ).__paddlemateMap.project(lngLat),
+      at,
+    );
+    if (!canvas) throw new Error("no canvas");
+    if (info.project.name === "phone") {
+      await page.touchscreen.tap(canvas.x + p.x, canvas.y + p.y);
+    } else await page.mouse.click(canvas.x + p.x, canvas.y + p.y);
+    await expect(page.getByText(/^47\.004\d+, 11\.004\d+$/)).toBeVisible();
+    // The sections step is mounted once, however long its fade runs.
+    const mounts = page.evaluate(
+      () =>
+        new Promise<number>((resolve) => {
+          let max = 0;
+          const obs = new MutationObserver(() => {
+            max = Math.max(
+              max,
+              document.querySelectorAll("[data-testid=sections-map-block]")
+                .length,
+            );
+          });
+          obs.observe(document.body, { childList: true, subtree: true });
+          setTimeout(() => resolve(max), 1000);
+        }),
+    );
+    await next(page).click();
+    expect(await mounts).toBeLessThanOrEqual(1);
+    await page.getByLabel("Title").fill(TITLE);
+    const post = page.waitForRequest(
+      (r) => r.method() === "POST" && /\/descents$/.test(r.url()),
+    );
+    await page.getByRole("button", { name: "Save" }).click();
+    const body = (await post).postDataJSON() as {
+      put_in_lat?: number;
+      put_in_lon?: number;
+    };
+    // Not the section's end (47.0), which the reset would have written.
+    expect(body.put_in_lat).toBeGreaterThan(47.002);
+    expect(body.put_in_lat).toBeLessThan(47.007);
+    expect(body.put_in_lon).toBeGreaterThan(11.002);
   });
 
   test("create a log through the UI and delete it again", async ({

@@ -168,6 +168,51 @@ test.describe("calendar motion", () => {
     expect(back[1].anims[0].keys[0].transform).toBe("translateX(-100%)");
   });
 
+  test("the leaving week is out of the tab order and the a11y tree", async ({
+    page,
+  }) => {
+    await openPlan(page);
+    await page.evaluate(tapHandle);
+    await expect(page.getByTestId("month-scrim")).toHaveCSS("opacity", "1");
+    const seen = await page.evaluate(
+      (pick) =>
+        new Promise<{
+          inert: boolean;
+          hidden: string | null;
+          live: number;
+          incoming: number;
+        }>((resolve) => {
+          const look = () => {
+            const out = document.querySelector<HTMLElement>(
+              "[data-testid=week-pane][data-mode=out]",
+            );
+            if (!out) return requestAnimationFrame(look);
+            const stage = out.closest("[data-testid=week-stage]");
+            const live = [...(stage?.querySelectorAll("button") ?? [])].filter(
+              (b) => !b.closest("[inert]") && !b.closest("[aria-hidden]"),
+            ).length;
+            resolve({
+              inert: out.inert,
+              hidden: out.getAttribute("aria-hidden"),
+              live,
+              incoming:
+                stage?.querySelectorAll(
+                  "[data-testid=week-pane]:not([data-mode=out]) button",
+                ).length ?? 0,
+            });
+          };
+          look();
+          new Function(pick)();
+        }),
+      pickFromMonth("last"),
+    );
+    expect(seen.inert).toBe(true);
+    expect(seen.hidden).toBe("true");
+    // One set of day buttons, not two.
+    expect(seen.incoming).toBeGreaterThan(0);
+    expect(seen.live).toBe(seen.incoming);
+  });
+
   test("the month opens from the active week, fanning 22 ms per week", async ({
     page,
   }) => {

@@ -41,24 +41,36 @@ function createStore<T>(initial: T) {
 interface SceneEntry {
   owner: symbol;
   scene: MapScene;
+  rank: number;
 }
 
-/** The scenes routes have set, oldest first; the map draws the newest. A
- * screen inside a route (the log form in the logs route) stacks its scene on
- * top of the route's and uncovers it again when it unmounts. */
+/** The scenes routes have set, lowest rank first and oldest first within a
+ * rank; the map draws the last. A screen inside a route (the log form in the
+ * logs route) sets a higher rank, so its scene covers the route's whatever
+ * order the two mount in, and uncovers it again when it unmounts. */
 const sceneStore = createStore<readonly SceneEntry[]>([]);
 
 /** Only an owner may replace or clear its entry, so a route that unmounts
  * after its successor mounted cannot clear the new one. */
 export const scenes = {
-  set(owner: symbol, scene: MapScene) {
+  set(owner: symbol, scene: MapScene, rank = 0) {
     const stack = sceneStore.get();
     const at = stack.findIndex((e) => e.owner === owner);
-    if (at < 0) {
-      sceneStore.set([...stack, { owner, scene }]);
+    if (at >= 0 && stack[at].rank === rank) {
+      sceneStore.set(
+        stack.map((e, i) => (i === at ? { owner, scene, rank } : e)),
+      );
       return;
     }
-    sceneStore.set(stack.map((e, i) => (i === at ? { owner, scene } : e)));
+    // Insert after the last entry of the same or a lower rank.
+    const rest = stack.filter((e) => e.owner !== owner);
+    let to = rest.length;
+    while (to > 0 && rest[to - 1].rank > rank) to--;
+    sceneStore.set([
+      ...rest.slice(0, to),
+      { owner, scene, rank },
+      ...rest.slice(to),
+    ]);
   },
   current: (): MapScene | null => sceneStore.get().at(-1)?.scene ?? null,
   clear(owner: symbol) {

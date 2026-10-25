@@ -29,6 +29,20 @@ describe("scenes", () => {
     expect(scenes.current()).toBeNull();
   });
 
+  test("a higher rank stays on top whatever the mount order", () => {
+    const route = Symbol("route");
+    const form = Symbol("form");
+    // Child effects run first: the form sets its scene before the route.
+    scenes.set(form, scene("form"), 1);
+    scenes.set(route, scene("route"));
+    expect(scenes.current()?.subject?.key).toBe("form");
+    scenes.set(route, scene("route2"));
+    expect(scenes.current()?.subject?.key).toBe("form");
+    scenes.clear(form);
+    expect(scenes.current()?.subject?.key).toBe("route2");
+    scenes.clear(route);
+  });
+
   test("a screen inside a route stacks over its scene and uncovers it", () => {
     const route = Symbol("route");
     const form = Symbol("form");

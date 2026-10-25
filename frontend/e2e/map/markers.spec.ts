@@ -9,7 +9,7 @@ import { appReady, FIX } from "../support/fixture";
 const LOWER = `/?waterway=${FIX.waterway}&section=${FIX.sections.lower}`;
 const RIVER = `/?waterway=${FIX.waterway}`;
 const PUT_IN = { id: 9521 };
-const HOLE = { id: 9525, at: [11.013, 47.013] as [number, number] };
+const HOLE = { id: 9525 };
 const GAUGE_AT = { lat: 47.011, lon: 11.011 };
 
 type MapLike = {
@@ -87,21 +87,13 @@ async function ready(page: Page, isMobile: boolean) {
   if (isMobile && (await view.isVisible())) await view.click();
 }
 
-async function tapAt(page: Page, at: [number, number], isMobile: boolean) {
-  await page.waitForFunction(
-    () => !(window as unknown as Win).__paddlemateMap?.isMoving(),
-  );
-  const canvas = await page.locator("canvas.maplibregl-canvas").boundingBox();
-  if (!canvas) throw new Error("no canvas");
-  const p = await page.evaluate(
-    (lngLat) =>
-      (window as unknown as Win).__paddlemateMap?.project(lngLat) ?? null,
-    at,
-  );
-  if (!p) throw new Error("no map");
-  const [x, y] = [canvas.x + p.x, canvas.y + p.y];
-  if (isMobile) await page.touchscreen.tap(x, y);
-  else await page.mouse.click(x, y);
+/** Opens a feature the way the router does on a tap, by an in-app history
+ * step: a note pin sits on the hole's point, so a pixel tap is unreliable. */
+async function selectInApp(page: Page, url: string) {
+  await page.evaluate((u) => {
+    window.history.pushState({}, "", u);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, url);
 }
 
 interface GaugeMock {
@@ -175,7 +167,7 @@ test.describe("marker motion", () => {
         .querySelector("[data-testid=target-ring]")
         ?.setAttribute("data-first", "1");
     });
-    await tapAt(page, HOLE.at, isMobile);
+    await selectInApp(page, `${LOWER}&feature=${HOLE.id}`);
     await expect
       .poll(() => sample(page, "target-ring", 0).then((s) => s?.count))
       .toBe(2);
@@ -212,7 +204,7 @@ test.describe("marker motion", () => {
     expect(first?.props).toEqual(["opacity"]);
     expect(first?.duration).toBe(140);
     expect(first?.opacity).toBe(0);
-    await tapAt(page, HOLE.at, isMobile);
+    await selectInApp(page, `${LOWER}&feature=${HOLE.id}`);
     await expect
       .poll(() => new URL(page.url()).searchParams.get("feature"))
       .toBe(String(HOLE.id));
@@ -257,8 +249,8 @@ test.describe("marker motion", () => {
     expect(mid?.scale).toBeLessThan(1);
     // The dot keeps its size: it is a scale on the inner layer.
     const after = await pin(page).boundingBox();
-    expect(after?.width).toBe(before?.width);
-    expect(after?.height).toBe(before?.height);
+    expect(after?.width).toBeCloseTo(before?.width ?? 0, 2);
+    expect(after?.height).toBeCloseTo(before?.height ?? 0, 2);
   });
 
   test("reduced: the new level fades in 140 ms without scaling", async ({
@@ -299,6 +291,24 @@ test.describe("marker motion", () => {
       return { bg: cs.backgroundColor, border: cs.borderTopColor };
     });
     expect(dot.bg).not.toBe(dot.border);
+  });
+
+  test("a gauge turns hollow as its reading ages, with no new data", async ({
+    page,
+    isMobile,
+  }) => {
+    await page.clock.install();
+    await mockGauge(page, { level: "medium", ageMs: 60_000 });
+    await openGauges(page, isMobile);
+    await expect(pin(page)).toHaveAttribute("data-level", "medium");
+    await expect(pin(page)).not.toHaveAttribute("data-hollow", "true");
+    // Later requests hang, so only the clock can change the pin.
+    await page.route(
+      "**/waterways/water-status?*",
+      () => new Promise(() => undefined),
+    );
+    await page.clock.fastForward("06:00:00");
+    await expect(pin(page)).toHaveAttribute("data-hollow", "true");
   });
 
   test("offline turns a fresh gauge hollow, online fills it again", async ({

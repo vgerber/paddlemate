@@ -30,6 +30,24 @@ async function open(page: Page) {
 }
 
 test.describe("motion setting", () => {
+  test("another tab's change is followed without a reload", async ({
+    page,
+  }) => {
+    await open(page);
+    expect(await attr(page)).toBe("full");
+    // What the browser fires here when a second tab writes the key.
+    await page.evaluate((k) => {
+      localStorage.setItem(k, "reduced");
+      window.dispatchEvent(new StorageEvent("storage", { key: k }));
+    }, KEY);
+    await expect.poll(() => attr(page)).toBe("reduced");
+    await expect(choice(page, "Reduced")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await page.evaluate((k) => localStorage.removeItem(k), KEY);
+  });
+
   test("Full is the default, even on a device that reduces", async ({
     page,
   }) => {

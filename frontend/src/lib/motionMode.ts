@@ -41,6 +41,15 @@ function subscribe(fn: () => void) {
   };
 }
 
+// Another tab changed the choice: follow it (the event fires only there).
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key !== null && e.key !== MOTION_KEY) return;
+    current = readMode();
+    for (const fn of listeners) fn();
+  });
+}
+
 function setMode(mode: MotionMode) {
   current = mode;
   try {

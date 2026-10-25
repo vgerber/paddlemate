@@ -8,7 +8,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { durations, REDUCED_FADE_MS, useReducedMotion } from "@/lib/motion";
+import {
+  cubicBezier,
+  durations,
+  REDUCED_FADE_MS,
+  useReducedMotion,
+} from "@/lib/motion";
 import { theme } from "@/lib/theme";
 
 /** Layers and sources the motion drives; SectionLayers draws them. */
@@ -74,38 +79,7 @@ export function flowFrames(count = FLOW_FRAMES): number[][] {
   );
 }
 
-/** Control points of a CSS `cubic-bezier(a, b, c, d)` string. */
-export function parseBezier(css: string): [number, number, number, number] {
-  const nums = (css.match(/-?\d*\.?\d+/g) ?? []).map(Number);
-  if (nums.length !== 4) return [0, 0, 1, 1];
-  return [nums[0] ?? 0, nums[1] ?? 0, nums[2] ?? 1, nums[3] ?? 1];
-}
-
-/** Easing function for CSS control points (x in 0..1 to y). */
-export function cubicBezier([x1, y1, x2, y2]: readonly number[]) {
-  const cx = 3 * (x1 ?? 0);
-  const bx = 3 * ((x2 ?? 1) - (x1 ?? 0)) - cx;
-  const ax = 1 - cx - bx;
-  const cy = 3 * (y1 ?? 0);
-  const by = 3 * ((y2 ?? 1) - (y1 ?? 0)) - cy;
-  const ay = 1 - cy - by;
-  const sx = (t: number) => ((ax * t + bx) * t + cx) * t;
-  const sy = (t: number) => ((ay * t + by) * t + cy) * t;
-  return (x: number) => {
-    if (x <= 0) return 0;
-    if (x >= 1) return 1;
-    let t = x;
-    for (let i = 0; i < 8; i++) {
-      const err = sx(t) - x;
-      const d = (3 * ax * t + 2 * bx) * t + cx;
-      if (Math.abs(err) < 1e-5 || d === 0) break;
-      t -= err / d;
-    }
-    return sy(t);
-  };
-}
-
-const easeInOut = cubicBezier(parseBezier(theme.tokens.motion.easeInOut));
+const easeInOut = cubicBezier(theme.tokens.motion.easeInOut);
 
 /** How far the draw-in has got (0..1) `elapsed` ms after it started. */
 export function drawProgress(elapsed: number, durationMs = DRAWIN_MS): number {
@@ -205,12 +179,13 @@ export function useMapMotion({
   const [forcedSoftware, setForcedSoftware] = useState<boolean | null>(null);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    Object.assign(window, {
-      __paddlemateMotion: {
-        cover: setForcedCover,
-        software: setForcedSoftware,
-      },
-    });
+    const hook = { cover: setForcedCover, software: setForcedSoftware };
+    const w = window as unknown as { __paddlemateMotion?: typeof hook };
+    w.__paddlemateMotion = hook;
+    return () => {
+      // Only the map that set it takes it down.
+      if (w.__paddlemateMotion === hook) delete w.__paddlemateMotion;
+    };
   }, []);
   // A CPU rasteriser pays for every repaint, so the flow is not worth it.
   const [software, setSoftware] = useState(false);

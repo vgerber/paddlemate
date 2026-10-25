@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import CircularProgress, {
   type CircularProgressProps,
 } from "@mui/material/CircularProgress";
@@ -12,19 +13,22 @@ export default function DelayedSpinner({
   sx,
   ...props
 }: CircularProgressProps) {
+  // The delay sits on a wrapper: on the spinner itself it would replace
+  // MUI's rotate animation.
   return (
-    <CircularProgress
-      {...props}
-      sx={[
-        {
-          animation: `pm-spinner-in ${motion.fast}ms ${motion.easeOut} ${SPINNER_DELAY_MS}ms backwards`,
-          "@keyframes pm-spinner-in": {
-            from: { opacity: 0 },
-            to: { opacity: 1 },
-          },
+    <Box
+      component="span"
+      data-delayed-spinner
+      sx={{
+        display: "inline-flex",
+        animation: `pm-spinner-in ${motion.fast}ms ${motion.easeOut} ${SPINNER_DELAY_MS}ms backwards`,
+        "@keyframes pm-spinner-in": {
+          from: { opacity: 0 },
+          to: { opacity: 1 },
         },
-        ...(Array.isArray(sx) ? sx : [sx]),
-      ]}
-    />
+      }}
+    >
+      <CircularProgress {...props} sx={sx} />
+    </Box>
   );
 }

@@ -218,6 +218,8 @@ export const lightTokens = {
     // replaces movement under reduced motion.
     spinnerDelay: 150,
     reducedFade: 140,
+    // The beat an arriving element waits for the leaving one to clear.
+    lead: 60,
     easeOut: "cubic-bezier(0.2, 0.8, 0.2, 1)",
     easeInOut: "cubic-bezier(0.4, 0, 0.2, 1)",
     easeIn: "cubic-bezier(0.4, 0, 1, 1)",

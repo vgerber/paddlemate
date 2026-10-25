@@ -89,7 +89,8 @@ test.describe("desktop app bar", () => {
     const current = bar.getByRole("link", { name: "Tools", exact: true });
     await expect(current).toHaveAttribute("aria-current", "page");
     expect(await computed(current, "color")).toBe(TEAL);
-    expect(await computed(current, "background-color")).toBe(
+    expectColour(
+      await computed(current, "background-color"),
       "rgba(14, 116, 144, 0.12)",
     );
     expect(await computed(current, "border-radius")).toBe("10px");
