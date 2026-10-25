@@ -111,7 +111,6 @@ export default function PanelBottomBar({
           {title}
         </Typography>
         <Typography
-          noWrap
           color="textSecondary"
           sx={{ fontSize: "0.8125rem", lineHeight: "18px" }}
         >

@@ -262,7 +262,6 @@ function DayEntry({
         }
       }}
       aria-expanded={isOpen}
-      aria-label={`${dayLabel(day.day)}, ${formatDate(day.date)}`}
       sx={{
         flexShrink: 0,
         cursor: "pointer",
