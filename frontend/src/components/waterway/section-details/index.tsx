@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
 import type { EditsFilter } from "@/components/provenance/EditsTimeline";
@@ -6,10 +7,12 @@ import EmptyState from "@/components/states/EmptyState";
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
 import { lineCoords } from "@/lib/geo";
 import { useSession } from "@/lib/hooks/useSession";
-import { FeaturesIcon } from "@/lib/icons";
+import { ExpandIcon, FeaturesIcon } from "@/lib/icons";
+import { css, useReducedMotion } from "@/lib/motion";
 import { theme } from "@/lib/theme";
 import { DeleteFeatureDialog } from "./DeleteFeatureDialog";
 import { FeatureStrip } from "./FeatureStrip";
+import { Fold } from "./Fold";
 import { FeatureNode } from "./RangeBand";
 import { countLabel, featureNumbers, splitBaseGrade, stripShown } from "./rows";
 import type { ComputedFeature } from "./types";
@@ -96,6 +99,9 @@ export default function FeatureTimeline({
     }
   }
 
+  const [folded, setFolded] = useState(false);
+  const reduced = useReducedMotion();
+
   const { isAuthenticated } = useSession();
   // Feature awaiting delete confirmation (drives the dialog).
   const [deleteTarget, setDeleteTarget] = useState<ComputedFeature | null>(
@@ -129,10 +135,13 @@ export default function FeatureTimeline({
   const empty = approved.length === 0 && tree.length === 0;
   const longest = Math.max(totalM, ...approved.map((f) => f.endM));
   const showCount = approved.length > 0 || tree.length > 0;
+  // The list folds down to the strip, so a card without a strip cannot fold.
+  const foldable = stripShown(approved) && tree.length > 0;
 
   return (
     <Box
       data-testid="features-card"
+      data-folded={foldable && folded ? "" : undefined}
       sx={{
         // On a phone the card keeps the 12 side margin of every card; from md
         // the pane's gutter does it.
@@ -150,21 +159,53 @@ export default function FeatureTimeline({
       }}
     >
       {showCount && (
-        <Typography
-          data-testid="features-count"
+        <Box
           sx={{
             flexShrink: 0,
             display: "flex",
             alignItems: "center",
-            pl: 2,
             minHeight: tokens.touch.row,
-            fontSize: "0.8125rem",
-            fontWeight: 600,
-            color: tokens.onSurfaceVariant,
           }}
         >
-          {countLabel(approved.length, proposedCount)}
-        </Typography>
+          <Typography
+            data-testid="features-count"
+            sx={{
+              flex: 1,
+              alignSelf: "stretch",
+              display: "flex",
+              alignItems: "center",
+              pl: 2,
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              color: tokens.onSurfaceVariant,
+            }}
+          >
+            {countLabel(approved.length, proposedCount)}
+          </Typography>
+          {foldable && (
+            <ButtonBase
+              data-testid="features-fold"
+              aria-label={folded ? "Show the list" : "Fold the list"}
+              aria-expanded={!folded}
+              onClick={() => setFolded((f) => !f)}
+              sx={{
+                width: tokens.touch.min,
+                height: tokens.touch.min,
+                borderRadius: "50%",
+                color: tokens.onSurfaceVariant,
+              }}
+            >
+              <ExpandIcon
+                sx={{
+                  transform: folded ? "none" : "rotate(180deg)",
+                  transition: reduced
+                    ? "none"
+                    : `transform ${css.base} ${css.easeInOut}`,
+                }}
+              />
+            </ButtonBase>
+          )}
+        </Box>
       )}
 
       {empty && (
@@ -189,32 +230,34 @@ export default function FeatureTimeline({
         </Box>
       )}
 
-      <Box
-        data-testid="features-scroll"
-        sx={{
-          flex: "0 1 auto",
-          minHeight: 0,
-          overflowY: { md: "auto" },
-          // A scroller is its own touch-action boundary: without this a tab
-          // swipe that starts on the list is taken as a scroll and cancelled.
-          touchAction: "pan-y",
-        }}
-      >
-        {tree.length > 0 && (
-          <Box sx={{ pb: 1 }}>
-            {tree.map((node, idx) => (
-              <FeatureNode
-                key={node.item.feature.id}
-                node={node}
-                ctx={ctx}
-                startsList={idx === 0}
-                endsList={idx === tree.length - 1}
-                dashed={false}
-              />
-            ))}
-          </Box>
-        )}
-      </Box>
+      <Fold open={!(foldable && folded)} sx={{ flex: "0 1 auto" }}>
+        <Box
+          data-testid="features-scroll"
+          sx={{
+            flex: "0 1 auto",
+            minHeight: 0,
+            overflowY: { md: "auto" },
+            // A scroller is its own touch-action boundary: without this a tab
+            // swipe that starts on the list is taken as a scroll and cancelled.
+            touchAction: "pan-y",
+          }}
+        >
+          {tree.length > 0 && (
+            <Box sx={{ pb: 1 }}>
+              {tree.map((node, idx) => (
+                <FeatureNode
+                  key={node.item.feature.id}
+                  node={node}
+                  ctx={ctx}
+                  startsList={idx === 0}
+                  endsList={idx === tree.length - 1}
+                  dashed={false}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
+      </Fold>
 
       <DeleteFeatureDialog
         feature={deleteTarget?.feature ?? null}

@@ -5,6 +5,7 @@ import type { FeatureType } from "@/lib/api";
 import { ExpandIcon } from "@/lib/icons";
 import { css } from "@/lib/motion";
 import { theme } from "@/lib/theme";
+import { selectionFade } from "./Fold";
 
 const { tokens } = theme;
 
@@ -50,6 +51,7 @@ export function NumberDisc({ n, size = DISC }: { n: number; size?: number }) {
   return (
     <Box
       data-row-disc
+      data-reduced-fade
       data-pin-number={n}
       sx={{
         position: "relative",
@@ -59,6 +61,7 @@ export function NumberDisc({ n, size = DISC }: { n: number; size?: number }) {
         borderRadius: "50%",
         bgcolor: tokens.primaryFill,
         color: tokens.onPrimary,
+        transition: selectionFade(["background-color", "color"]),
         display: "grid",
         placeItems: "center",
         flexShrink: 0,
@@ -158,7 +161,7 @@ export function RangeTile({
             sx={{
               fontSize: 12,
               transform: open ? "none" : "rotate(-90deg)",
-              transition: `transform ${css.fast} ${css.easeOut}`,
+              transition: `transform ${css.base} ${css.easeInOut}`,
             }}
           />
         </Box>
@@ -184,7 +187,7 @@ export function TrailSlot({ open }: { open?: boolean }) {
         <ExpandIcon
           sx={{
             transform: open ? "none" : "rotate(-90deg)",
-            transition: `transform ${css.fast} ${css.easeOut}`,
+            transition: `transform ${css.base} ${css.easeInOut}`,
           }}
         />
       )}

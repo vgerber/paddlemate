@@ -134,7 +134,7 @@ test.describe("features card", () => {
 
     await head.click();
     await expect(head).toHaveAttribute("aria-expanded", "false");
-    await expect(hole).toHaveCount(0);
+    await expect(hole).toBeHidden();
     // A folded range names what it hides.
     await expect(head).toContainText("Big Hole");
 
@@ -276,14 +276,16 @@ test.describe("features card", () => {
     await expectTouchTargets(icons);
   });
 
-  test("the card has no fold chevron and no menu of its own", async ({
+  test("the card's only control besides its rows is the fold to the strip", async ({
     page,
   }) => {
     await openFeatures(page);
-    await expect(card(page).getByTestId("features-fold")).toHaveCount(0);
-    // The rows are the only buttons: a row is a ButtonBase div.
+    await expect(card(page).getByTestId("features-fold")).toHaveCount(1);
+    // A row is a ButtonBase div; no menu of the card's own.
     await expect(
-      card(page).locator('button, [role="button"]:not([data-row])'),
+      card(page).locator(
+        'button:not([data-testid="features-fold"]), [role="button"]:not([data-row]):not([data-testid="features-fold"])',
+      ),
     ).toHaveCount(0);
   });
 });
