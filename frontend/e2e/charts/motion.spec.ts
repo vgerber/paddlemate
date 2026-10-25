@@ -243,6 +243,37 @@ test("a pick reveals the new line left to right, the area after", async ({
     .toContain("pm-line-reveal");
 });
 
+test("hovering a settled chart does not draw it in again", async ({ page }) => {
+  await open(page);
+  // Past the redraw window (slow + base + fast).
+  await page.waitForTimeout(1200);
+  await page.evaluate(() => {
+    (window as unknown as { seen: string[] }).seen = [];
+    new MutationObserver(() => {
+      for (const el of document.querySelectorAll(".recharts-area-curve")) {
+        for (const a of el.getAnimations()) {
+          (window as unknown as { seen: string[] }).seen.push(
+            (a as CSSAnimation).animationName,
+          );
+        }
+      }
+    }).observe(document.body, { childList: true, subtree: true });
+  });
+  const box = await page
+    .locator(".recharts-area-curve:visible")
+    .first()
+    .boundingBox();
+  if (!box) throw new Error("no line");
+  for (let i = 1; i <= 6; i++) {
+    await page.mouse.move(box.x + (box.width * i) / 7, box.y + box.height / 2);
+    await page.waitForTimeout(80);
+  }
+  const seen = await page.evaluate(
+    () => (window as unknown as { seen: string[] }).seen,
+  );
+  expect(seen).not.toContain("pm-line-reveal");
+});
+
 test("reduced: a pick cross-fades and does not draw the line in", async ({
   page,
 }) => {

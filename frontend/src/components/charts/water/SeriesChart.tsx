@@ -264,12 +264,14 @@ function redrawSx() {
       to: { clipPath: "inset(0 0 0 0)" },
     },
     "@keyframes pm-area-in": fade,
-    "& .recharts-area-curve": {
+    // Only while a redraw is on: hovering rebuilds the path for its dot,
+    // and a new element would replay the reveal.
+    "&[data-redraw] .recharts-area-curve": {
       animation: reduced
         ? `pm-area-in ${REDUCED_FADE_MS}ms ${css.easeOut} backwards`
         : `pm-line-reveal ${css.slow} ${css.easeOut} backwards`,
     },
-    "& .recharts-area-area": {
+    "&[data-redraw] .recharts-area-area": {
       animation: `pm-area-in ${reduced ? `${REDUCED_FADE_MS}ms` : css.fast} ${css.easeOut} ${reduced ? 0 : durations.base}ms backwards`,
     },
   };
@@ -429,6 +431,20 @@ export default function SeriesChart({
     plotWidth: Math.max((size?.width ?? 0) - plotLeft - margin.right, 1),
   });
 
+  // A new series or period draws in once; the window covers the line and
+  // the area that follows it.
+  const drawKey = `${series.id}|${timeRange}|${to ?? ""}`;
+  const [redrawing, setRedrawing] = useState(true);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: drawKey is the trigger
+  useEffect(() => {
+    setRedrawing(true);
+    const id = window.setTimeout(
+      () => setRedrawing(false),
+      durations.slow + durations.base + durations.fast,
+    );
+    return () => window.clearTimeout(id);
+  }, [drawKey]);
+
   // Zooming only narrows the time axis; the y window stays fixed on the
   // full data range so values remain comparable while panning.
   const yWindow = useMemo(
@@ -561,6 +577,7 @@ export default function SeriesChart({
 
   return (
     <Box
+      data-redraw={redrawing || undefined}
       sx={[
         { height: "100%", display: "flex", flexDirection: "column" },
         redrawSx(),
@@ -639,7 +656,7 @@ export default function SeriesChart({
             )}
             {size && (
               <AreaChart
-                key={`${series.id}|${timeRange}|${to ?? ""}`}
+                key={drawKey}
                 width={size.width}
                 height={size.height}
                 accessibilityLayer={false}
