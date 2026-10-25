@@ -50,6 +50,31 @@ body {
   min-height: 22px;
 }
 
+/* The attribution toggle keeps its 24px look (the pill and the glyph) inside
+   a 44px hit box that reaches 10px past the pill's corner. */
+.maplibregl-map .maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button {
+  width: 44px;
+  height: 44px;
+  top: -10px;
+  right: -10px;
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.maplibregl-map
+  :is(.maplibregl-ctrl-top-left, .maplibregl-ctrl-bottom-left)
+  .maplibregl-ctrl-attrib-button {
+  left: -10px;
+  right: auto;
+}
+.maplibregl-map
+  .maplibregl-ctrl-attrib
+  summary.maplibregl-ctrl-attrib-button:focus-visible {
+  outline: 2px solid var(--pm-primary);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
 /* Suppress browser tap highlight and focus outline on recharts SVG elements */
 .recharts-wrapper,
 .recharts-wrapper svg,

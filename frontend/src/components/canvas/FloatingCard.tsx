@@ -120,6 +120,24 @@ export default function FloatingCard({
         boxShadow: tokens.elevation.e2,
       }}
     >
+      {/* First in the DOM so Tab meets the handle before the card's content;
+          it is positioned on the card's edge. */}
+      {!collapsed && bounds && (
+        <ResizeGrip
+          side={side}
+          width={width}
+          min={bounds.min}
+          max={bounds.max}
+          label="Resize panel"
+          onLive={(w) => layout.setLive({ id, width: w })}
+          onCommit={(w) => {
+            const frac = w / layout.get().viewport.w;
+            writeCardFrac(screen, id, frac);
+            layout.setFrac(id, frac);
+            layout.setLive(null);
+          }}
+        />
+      )}
       {/* Clips the content to the corners; the resize tab sits outside it,
           on the card's edge. */}
       <Box
@@ -167,22 +185,6 @@ export default function FloatingCard({
           </>
         )}
       </Box>
-      {!collapsed && bounds && (
-        <ResizeGrip
-          side={side}
-          width={width}
-          min={bounds.min}
-          max={bounds.max}
-          label="Resize panel"
-          onLive={(w) => layout.setLive({ id, width: w })}
-          onCommit={(w) => {
-            const frac = w / layout.get().viewport.w;
-            writeCardFrac(screen, id, frac);
-            layout.setFrac(id, frac);
-            layout.setLive(null);
-          }}
-        />
-      )}
     </Box>
   );
 }

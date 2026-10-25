@@ -359,7 +359,12 @@ type Seen = {
   shown: boolean;
   strong: boolean;
   top: number;
+  vy: number;
+  pane: number;
   isBody: boolean;
+  inMap: boolean;
+  handle: boolean;
+  card: string;
 };
 
 type SweepWindow = Window & { __swEl?: HTMLElement; __swOn?: string[] };
@@ -441,7 +446,13 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
   await page.evaluate(() => {
     (document.activeElement as HTMLElement | null)?.blur();
     window.scrollTo(0, 0);
-    getSelection()?.setPosition(document.body, 0);
+    // A focused-then-removed node at the top resets Chrome's starting point
+    // for sequential focus, which blur() alone leaves where it was.
+    const anchor = document.createElement("span");
+    anchor.tabIndex = -1;
+    document.body.prepend(anchor);
+    anchor.focus();
+    anchor.remove();
   });
   let ended = `stopped at the ${max}-stop cap`;
   let cycled = false;
@@ -484,8 +495,38 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
           cs.outlineStyle !== "none" &&
           Number.parseFloat(cs.outlineWidth) > 0 &&
           !cs.outlineColor.includes(", 0)"),
-        top: r.top + scrollY,
+        // Position inside the nearest scrolling pane: a pane scrolls on its
+        // own, so a row lower in a scrolled pane is not "up".
+        ...(() => {
+          let n = el.parentElement;
+          while (n && n !== document.documentElement) {
+            const o = getComputedStyle(n).overflowY;
+            if (
+              (o === "auto" || o === "scroll") &&
+              n.scrollHeight > n.clientHeight
+            )
+              break;
+            n = n.parentElement;
+          }
+          const pane = n && n !== document.documentElement ? n : null;
+          if (pane) pane.setAttribute("data-sweep-pane", "");
+          return {
+            pane: pane
+              ? [...document.querySelectorAll("[data-sweep-pane]")].indexOf(
+                  pane,
+                )
+              : -1,
+            vy: r.top,
+            top: r.top + (pane ? pane.scrollTop : scrollY),
+          };
+        })(),
         isBody,
+        card:
+          el
+            .closest("section[data-testid^='canvas-card-']")
+            ?.getAttribute("data-testid") ?? "",
+        handle: el.getAttribute("role") === "separator",
+        inMap: Boolean(el.closest(".maplibregl-map, [data-testid='map-root']")),
       };
     });
     if (!s) {
@@ -500,11 +541,16 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
       cycled = true;
       break;
     }
-    if (s.id && reached.has(s.id)) {
+    // Native date and time inputs take several Tab stops on one element;
+    // only coming back to an element after leaving it is a cycle.
+    if (s.id && reached.has(s.id) && s.id !== order[order.length - 1]?.id) {
       ended = "focus cycled";
       cycled = true;
       break;
     }
+    // A further stop on the same element (a date field's next segment) was
+    // judged at the first one.
+    if (s.id && s.id === order[order.length - 1]?.id) continue;
     if (s.id) reached.add(s.id);
     order.push(s);
     if (!s.shown)
@@ -533,10 +579,26 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
     }
   }
   for (let i = 1; i < order.length; i++)
-    if (order[i].top < order[i - 1].top - 300)
+    // Deliberate orders are not reading-order faults:
+    // - The map's controls follow the cards (Tab reaches the cards before the
+    //   map; e2e/a11y/desktop-keys.spec.ts holds that order), so a jump up
+    //   into the map is expected.
+    // - A card's resize handle is first in the card but sits on its edge at
+    //   mid height, so the step to or from it is a jump by construction.
+    // - Canvas cards are columns: from the foot of one card (its docked
+    //   action) Tab moves to the card on its right, which starts at the top.
+    if (
+      order[i].card === order[i - 1].card &&
+      !order[i].inMap &&
+      !order[i].handle &&
+      !order[i - 1].handle &&
+      (order[i].pane === order[i - 1].pane
+        ? order[i].top < order[i - 1].top - 300
+        : order[i].vy < order[i - 1].vy - 300)
+    )
       found.push({
         selector: order[i].sel,
-        detail: `order: jumps up ${Math.round(order[i - 1].top - order[i].top)}px after ${order[i - 1].sel}`,
+        detail: `order: jumps up ${Math.round(order[i - 1].pane === order[i].pane ? order[i - 1].top - order[i].top : order[i - 1].vy - order[i].vy)}px after ${order[i - 1].sel}`,
       });
   const missed = await page.evaluate(
     ([ids, seen]) =>
@@ -544,10 +606,14 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
         .filter((id) => !seen.includes(id))
         .map((id) => {
           const el = document.querySelector(`[data-sweep-id="${id}"]`);
+          // The map folds its attribution after it moves; what is hidden by
+          // the end of the pass was not a stop the user could have missed.
+          if (el && !(el as HTMLElement).getClientRects().length) return "";
           return el
             ? `${el.tagName.toLowerCase()} "${(el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 28)}"`
             : id;
-        }),
+        })
+        .filter(Boolean),
     [all, [...reached]] as const,
   );
   // A cap hit says nothing about what is left; only a finished loop does.

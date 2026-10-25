@@ -100,6 +100,8 @@ export default function MapPane({
     >
       <Box
         data-testid="map-card"
+        // Behind a full-screen panel the map's controls are not reachable.
+        inert={covered}
         sx={{
           flex: 1,
           minHeight: 0,

@@ -134,6 +134,19 @@ export default function BottomSheet({
     return () => el.removeEventListener("touchmove", hold);
   }, [closed]);
 
+  // An open sheet and its scrim cover the whole app: what is behind them is
+  // neither reachable by Tab nor read out. The sheet is portaled outside the
+  // app root, so it is not inerted with it.
+  const modal = state === "open";
+  useEffect(() => {
+    const root = document.getElementById("root");
+    if (!modal || !root || root.inert) return;
+    root.inert = true;
+    return () => {
+      root.inert = false;
+    };
+  }, [modal]);
+
   useEffect(() => {
     // Not when focus is already inside: typing in a field that opens the
     // sheet must keep the field focused (and the phone keyboard up).
