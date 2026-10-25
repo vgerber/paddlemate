@@ -15,9 +15,10 @@ describe("resolveMotion", () => {
 });
 
 describe("parseMotionMode", () => {
-  test("unknown or missing values are System", () => {
-    expect(parseMotionMode(null)).toBe("system");
-    expect(parseMotionMode("bogus")).toBe("system");
+  test("unknown or missing values are Full", () => {
+    expect(parseMotionMode(null)).toBe("full");
+    expect(parseMotionMode("bogus")).toBe("full");
+    expect(parseMotionMode("system")).toBe("system");
     expect(parseMotionMode("reduced")).toBe("reduced");
     expect(parseMotionMode("full")).toBe("full");
   });

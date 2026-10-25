@@ -253,6 +253,8 @@ test.describe("swipeable tabs", () => {
   test("under reduced motion the pane cross-fades in about 140ms", async ({
     page,
   }) => {
+    // The device setting counts only when the app follows the system.
+    await page.addInitScript(() => localStorage.setItem("pm-motion", "system"));
     await page.emulateMedia({ reducedMotion: "reduce" });
     const { pane, box } = await openSection(page);
     const settled = timeSettle(page);

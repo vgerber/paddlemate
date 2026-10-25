@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 /** The stored choice; MUI's `modeStorageKey`, read by the inline script in
- * index.html (doc/plans/dark-mode.md). */
+ * index.html (doc/design.md#dark-mode). */
 export const MODE_KEY = "paddlemate-color-mode";
 
 export type Mode = "light" | "dark" | "system";
@@ -147,7 +147,13 @@ function scan(kind: string) {
       "button, input, select, textarea, [role='button'], [role='tab'], [role='switch']",
     );
     const bw = Number.parseFloat(s.borderTopWidth);
-    if (control && bw > 0 && s.borderTopStyle !== "none") {
+    // An unset FilterChip is a borderless raised pill: transparent edge, a
+    // fill and the e1 shadow. Nothing else gets this pass.
+    const raisedChip =
+      el.matches(".MuiChip-root:not(.MuiChip-colorPrimary)") &&
+      parse(s.borderTopColor)[3] === 0 &&
+      s.boxShadow !== "none";
+    if (control && !raisedChip && bw > 0 && s.borderTopStyle !== "none") {
       const border = over(parse(s.borderTopColor), ground);
       const r = ratio(border, ground);
       if (r < 3)

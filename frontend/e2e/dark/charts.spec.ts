@@ -4,7 +4,7 @@ import { contrastReport, lightSurfaces, useScheme } from "../support/dark";
 import { appReady } from "../support/fixture";
 
 // Charts, level chips and dots, section details and the gauge panel in a dark
-// device scheme (doc/plans/dark-mode.md, D2).
+// device scheme (doc/design.md#dark-mode).
 
 const SECTION = "/?waterway=9001&section=9102";
 const LONG = "/?waterway=9002&section=9111";

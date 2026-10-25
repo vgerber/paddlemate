@@ -7,8 +7,8 @@ export type MotionMode = "system" | "reduced" | "full";
 
 const OS_QUERY = "(prefers-reduced-motion: reduce)";
 
-/** What a stored mode shows. System follows the device. index.html repeats
- * this before first paint. */
+/** What a stored mode shows. Full is the default; System follows the device.
+ * index.html repeats this before first paint. */
 export function resolveMotion(
   mode: MotionMode,
   osReduced: boolean,
@@ -18,16 +18,16 @@ export function resolveMotion(
   return osReduced ? "reduced" : "full";
 }
 
-/** Anything but reduced or full is System. */
+/** Anything but reduced or system is Full, the default. */
 export function parseMotionMode(raw: string | null | undefined): MotionMode {
-  return raw === "reduced" || raw === "full" ? raw : "system";
+  return raw === "reduced" || raw === "system" ? raw : "full";
 }
 
 function readMode(): MotionMode {
   try {
     return parseMotionMode(localStorage.getItem(MOTION_KEY));
   } catch {
-    return "system";
+    return "full";
   }
 }
 
@@ -44,7 +44,7 @@ function subscribe(fn: () => void) {
 function setMode(mode: MotionMode) {
   current = mode;
   try {
-    if (mode === "system") localStorage.removeItem(MOTION_KEY);
+    if (mode === "full") localStorage.removeItem(MOTION_KEY);
     else localStorage.setItem(MOTION_KEY, mode);
   } catch {
     // Storage blocked: the choice lasts until reload.
@@ -57,7 +57,7 @@ export function useMotionMode(): [MotionMode, (m: MotionMode) => void] {
   const mode = useSyncExternalStore(
     subscribe,
     () => current,
-    () => "system" as const,
+    () => "full" as const,
   );
   return [mode, setMode];
 }

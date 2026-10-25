@@ -12,9 +12,9 @@ const MODES: { value: ColorMode; label: string }[] = [
 ];
 
 const MOTIONS: { value: MotionMode; label: string }[] = [
-  { value: "system", label: "System" },
-  { value: "reduced", label: "Reduced" },
   { value: "full", label: "Full" },
+  { value: "reduced", label: "Reduced" },
+  { value: "system", label: "System" },
 ];
 
 /** The device-local theme choice. MUI stores it and applies it without a

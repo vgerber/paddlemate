@@ -348,7 +348,7 @@ export const darkTokens: Tokens = {
   onError: "#1b2429",
   outline: "#7f8d93",
   outlineVariant: "#323f47",
-  outlineControl: "#627077",
+  outlineControl: "#728087",
   segmentThumb: "#34424a",
   switchThumb: "#c9d4d8",
   scrimBase: "#000000",

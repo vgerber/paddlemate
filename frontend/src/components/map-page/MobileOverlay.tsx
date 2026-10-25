@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Slide from "@mui/material/Slide";
 import { useEffect, useRef } from "react";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
+import { usePanelEnter } from "@/components/usePanelEnter";
 import { durations } from "@/lib/motion";
 import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
 import { modeSheetMode } from "./modeSheet";
@@ -42,6 +43,14 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
     if (opener.current?.isConnected) opener.current.focus();
     opener.current = null;
   }, [isMobilePanelOpen]);
+
+  // Opening a river pushes the detail in from the right; going back brings
+  // the list in from where it stepped back to.
+  const content = useRef<HTMLDivElement>(null);
+  const stage = state.selectedWaterwayId == null ? "list" : "detail";
+  usePanelEnter(content, stage, {
+    from: stage === "detail" ? { x: 40 } : { x: -16, opacity: 0.55 },
+  });
 
   const sheetMode = modeSheetMode(state);
   if (sheetMode) return <SearchSheet state={state} mode={sheetMode} />;
@@ -113,6 +122,8 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
           </Box>
         )}
         <Box
+          ref={content}
+          data-testid="overlay-content"
           sx={{
             flex: 1,
             minHeight: 0,

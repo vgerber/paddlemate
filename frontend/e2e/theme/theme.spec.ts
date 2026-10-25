@@ -104,6 +104,8 @@ test.describe("theme tokens", () => {
   });
 
   test("reduced motion collapses transitions", async ({ page }) => {
+    // The device setting counts only when the app follows the system.
+    await page.addInitScript(() => localStorage.setItem("pm-motion", "system"));
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
     const target = page.locator("button:visible").first();

@@ -60,8 +60,9 @@ water levels, and a shared logbook.
   per device. System, the default, follows the phone or computer live; the map,
   charts and markers recolour with the app, and print is always light. The
   installed app keeps a dark frame (status bar and system buttons) on a dark
-  device even when the app is set to Light. A second choice, Motion (System,
-  Reduced, Full), keeps short fades and stops movement, also on the map.
+  device even when the app is set to Light. A second choice, Motion (Full by
+  default, Reduced, or System to follow the device): Reduced keeps short fades
+  and stops movement, also on the map.
 - **Community** - voting on proposals, comments on
   sections and features, favorites (listed as starred sections), follows, and per-user or
   per-group visibility of logs.

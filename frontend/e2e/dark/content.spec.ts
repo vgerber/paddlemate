@@ -3,7 +3,7 @@ import { mockRegions } from "../map/regions.mock";
 import { contrastReport, lightSurfaces, useScheme } from "../support/dark";
 
 // The content screens in dark: search and its modes, filters, proposals, the
-// log form and detail, provenance, inbox (doc/plans/dark-mode.md, D5).
+// log form and detail, provenance, inbox (doc/design.md#dark-mode).
 
 const SCREENS: {
   name: string;
@@ -51,6 +51,8 @@ const SCREENS: {
 const OTHERS = [
   // The rejected fold (ButtonBase) draws a dimmed separator rule on purpose.
   /^border button.* "(Hide|Show) rejected/,
+  // The switch thumb is a dimmed light token (switchThumb) on the track.
+  /^span\.MuiSwitch-thumb/,
 ];
 const ours = (r: { what: string }) => !OTHERS.some((re) => re.test(r.what));
 
@@ -75,14 +77,34 @@ test.describe("content screens in dark @small", () => {
     });
   }
 
-  test("the filter chip keeps a visible border", async ({ page }) => {
+  test("an unset filter chip is a raised pill, a set one has the teal ring", async ({
+    page,
+  }) => {
     await useScheme(page, "system", "dark");
     await page.goto("/?panel=1&q=Test");
     const chip = page.getByRole("button", { name: /Grade/ }).first();
     await expect(chip).toBeVisible();
-    const border = await chip.evaluate(
-      (el) => getComputedStyle(el).borderTopColor,
-    );
-    expect(border).not.toBe("rgba(0, 0, 0, 0)");
+    const unset = await chip.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        border: s.borderTopColor,
+        bg: s.backgroundColor,
+        shadow: s.boxShadow,
+      };
+    });
+    expect(unset.border, "no border").toBe("rgba(0, 0, 0, 0)");
+    expect(unset.bg, "surface fill").not.toBe("rgba(0, 0, 0, 0)");
+    expect(unset.shadow, "e1 shadow").not.toBe("none");
+
+    await page.goto("/?panel=1&q=Test&country=AT");
+    const set = page.getByRole("button", { name: /^AT/ }).first();
+    await expect(set).toBeVisible();
+    const ring = await set.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { width: s.borderTopWidth, colour: s.borderTopColor };
+    });
+    expect(ring.width, "ring width").toBe("1px");
+    expect(ring.colour, "teal ring").not.toBe(unset.border);
+    expect(ring.colour, "teal ring").not.toBe("rgba(0, 0, 0, 0)");
   });
 });
