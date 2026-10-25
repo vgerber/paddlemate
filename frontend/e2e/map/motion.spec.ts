@@ -23,7 +23,10 @@ type MapLike = {
 };
 type Win = {
   __paddlemateMap?: MapLike;
-  __paddlemateMotion?: { cover(on: boolean): void };
+  __paddlemateMotion?: {
+    cover(on: boolean): void;
+    software(on: boolean | null): void;
+  };
   __rec: Rec;
 };
 
@@ -83,12 +86,19 @@ async function record(page: Page) {
   });
 }
 
-async function open(page: Page, url = UPPER) {
+/** `software` false lifts the software-GL pause, which this headless Chrome
+ * (SwiftShader) always has; null leaves the real detection. */
+async function open(page: Page, url = UPPER, software: boolean | null = false) {
   await page.goto(url);
   await appReady(page);
   await page.waitForFunction(
     () =>
-      !!(window as unknown as Win).__paddlemateMap?.getLayer("sections-flow"),
+      !!(window as unknown as Win).__paddlemateMap?.getLayer("sections-flow") &&
+      !!(window as unknown as Win).__paddlemateMotion,
+  );
+  await page.evaluate(
+    (on) => (window as unknown as Win).__paddlemateMotion?.software(on),
+    software,
   );
 }
 
@@ -156,6 +166,17 @@ test.describe("map motion", () => {
       ),
     );
     expect(filter).toContain(String(FIX.sections.upper));
+  });
+
+  test("software-rendered GL requests no flow frames", async ({ page }) => {
+    await record(page);
+    await open(page, UPPER, null);
+    await drawDone(page);
+    expect(await framesIn(page, 1000)).toBe(0);
+    await page.evaluate(() =>
+      (window as unknown as Win).__paddlemateMotion?.software(false),
+    );
+    expect(await framesIn(page, 700)).toBeGreaterThan(3);
   });
 
   test("it stops when the tab is hidden and resumes", async ({ page }) => {
@@ -291,6 +312,11 @@ test.describe("map motion", () => {
     await page.clock.pauseAt(new Date(Date.now() + 50));
     await record(page);
     await page.goto(UPPER);
+    // The paused clock stalls the page, so the override is set as it steps.
+    const lift = () =>
+      page.evaluate(() =>
+        (window as unknown as Win).__paddlemateMotion?.software(false),
+      );
     const state = () =>
       page.evaluate(() => {
         const w = window as unknown as Win;
@@ -314,6 +340,7 @@ test.describe("map motion", () => {
     for (let i = 0; i < 2000 && now.vis !== "visible"; i++) {
       await page.clock.runFor(16);
       await page.waitForTimeout(20);
+      await lift();
       now = await state();
     }
     expect(now.vis).toBe("visible");

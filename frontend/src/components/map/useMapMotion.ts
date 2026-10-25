@@ -32,7 +32,31 @@ const LOW_BATTERY = 0.2;
 export const DRAWIN_MS = durations.slow;
 
 /** Why ambient (looping) motion is paused. Empty means it may run. */
-export type PauseReason = "hidden" | "idle" | "reduced" | "overlay" | "battery";
+export type PauseReason =
+  | "hidden"
+  | "idle"
+  | "reduced"
+  | "overlay"
+  | "battery"
+  | "software";
+
+const SOFTWARE_RENDERER =
+  /swiftshader|llvmpipe|softpipe|software|microsoft basic render/i;
+
+/** True when a WebGL renderer string names a CPU rasteriser. */
+export function isSoftwareRenderer(renderer: string | null | undefined) {
+  return !!renderer && SOFTWARE_RENDERER.test(renderer);
+}
+
+/** The map canvas's GL renderer string, when the browser reveals it. */
+function glRenderer(map: MlMap): string | null {
+  const canvas = map.getCanvas();
+  const gl = (canvas.getContext("webgl2") ??
+    canvas.getContext("webgl")) as WebGLRenderingContext | null;
+  const info = gl?.getExtension("WEBGL_debug_renderer_info");
+  if (!gl || !info) return null;
+  return String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL));
+}
 
 /** A dash pattern [dash, gap, ...] moved `shift` along its cycle. Always sums
  * to dash + gap, so the frames loop without a jump. */
@@ -178,10 +202,25 @@ export function useMapMotion({
   useEffect(() => setReason("reduced", reduced), [reduced, setReason]);
   // Browser tests cover the map without a real overlay (development only).
   const [forcedCover, setForcedCover] = useState(false);
+  const [forcedSoftware, setForcedSoftware] = useState<boolean | null>(null);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    Object.assign(window, { __paddlemateMotion: { cover: setForcedCover } });
+    Object.assign(window, {
+      __paddlemateMotion: {
+        cover: setForcedCover,
+        software: setForcedSoftware,
+      },
+    });
   }, []);
+  // A CPU rasteriser pays for every repaint, so the flow is not worth it.
+  const [software, setSoftware] = useState(false);
+  useEffect(() => {
+    if (map) setSoftware(isSoftwareRenderer(glRenderer(map)));
+  }, [map]);
+  useEffect(
+    () => setReason("software", forcedSoftware ?? software),
+    [forcedSoftware, software, setReason],
+  );
   useEffect(
     () => setReason("overlay", covered || forcedCover),
     [covered, forcedCover, setReason],

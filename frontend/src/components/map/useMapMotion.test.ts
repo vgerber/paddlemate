@@ -5,6 +5,7 @@ import {
   drawProgress,
   FLOW_FRAMES,
   flowFrames,
+  isSoftwareRenderer,
   parseBezier,
   shiftedDash,
 } from "./useMapMotion";
@@ -58,5 +59,32 @@ describe("draw-in", () => {
       0.25,
       "transparent",
     ]);
+  });
+});
+
+describe("software renderer", () => {
+  test("CPU rasterisers are recognised", () => {
+    for (const r of [
+      "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)), SwiftShader driver)",
+      "llvmpipe (LLVM 15.0.7, 256 bits)",
+      "softpipe",
+      "Mesa Software Rasterizer",
+      "Microsoft Basic Render Driver",
+    ]) {
+      expect(isSoftwareRenderer(r)).toBe(true);
+    }
+  });
+
+  test("GPUs and unknowns are not", () => {
+    for (const r of [
+      "Adreno (TM) 730",
+      "ANGLE (Apple, Apple M2, OpenGL 4.1)",
+      "Mali-G710",
+      "",
+      null,
+      undefined,
+    ]) {
+      expect(isSoftwareRenderer(r)).toBe(false);
+    }
   });
 });
