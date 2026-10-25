@@ -221,6 +221,8 @@ export const lightTokens = {
     easeOut: "cubic-bezier(0.2, 0.8, 0.2, 1)",
     easeInOut: "cubic-bezier(0.4, 0, 0.2, 1)",
     easeIn: "cubic-bezier(0.4, 0, 1, 1)",
+    // Sheets only: a small overshoot as they settle.
+    easeSettle: "cubic-bezier(0.22, 0.9, 0.28, 1.02)",
   },
 
   // Touch: every target is at least `min` px, list rows and tabs `row`.
@@ -686,10 +688,10 @@ export const theme = createTheme({
           outline: `2px solid ${tokens.primary}`,
           outlineOffset: 2,
         },
-        // Motion off for people who ask for it. A per-app switch that wins
-        // over this comes with the motion work. An element that sets
-        // `data-reduced-fade` keeps its own short fade.
-        "@media (prefers-reduced-motion: reduce)": {
+        // Motion off when html[data-motion] says reduced: the app's setting,
+        // which already folds in the device setting (motionMode.ts). An
+        // element that sets `data-reduced-fade` keeps its own short fade.
+        'html[data-motion="reduced"]': {
           "*:not([data-reduced-fade]), *::before, *::after": {
             animationDuration: "1ms !important",
             animationIterationCount: "1 !important",
