@@ -243,7 +243,7 @@ test.describe("map motion", () => {
     });
   }
 
-  for (const how of ["the switch", "the device setting"] as const) {
+  for (const how of ["the switch", "System with a reduced device"] as const) {
     test(`reduced motion (${how}): no flow, no draw-in, a short fade`, async ({
       page,
     }) => {
@@ -252,6 +252,10 @@ test.describe("map motion", () => {
           localStorage.setItem("pm-motion", "reduced"),
         );
       } else {
+        // The device setting counts only when the app is set to System.
+        await page.addInitScript(() =>
+          localStorage.setItem("pm-motion", "system"),
+        );
         await page.emulateMedia({ reducedMotion: "reduce" });
       }
       await record(page);
