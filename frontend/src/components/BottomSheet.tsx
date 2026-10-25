@@ -136,9 +136,11 @@ export default function BottomSheet({
 
   // An open sheet and its scrim cover the whole app: what is behind them is
   // neither reachable by Tab nor read out. The sheet is portaled outside the
-  // app root, so it is not inerted with it.
+  // app root, so it is not inerted with it. A layout effect, so closing
+  // releases the root before the focus below goes back to the opener (focus
+  // cannot land inside an inert root).
   const modal = state === "open";
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.getElementById("root");
     if (!modal || !root || root.inert) return;
     root.inert = true;
