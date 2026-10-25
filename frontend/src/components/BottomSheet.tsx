@@ -10,7 +10,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { withAlpha } from "@/lib/alpha";
-import { transition } from "@/lib/motion";
+import { css, prefersReducedMotion, releaseMs } from "@/lib/motion";
 import {
   dragHeight,
   offsetFor,
@@ -64,6 +64,18 @@ function takesDrag(
   return height < snaps.open;
 }
 
+/** Moves the sheet to `to` px of offset from `from`: a curve whose time grows
+ * with the distance left, settling going up and easing out going down. Under
+ * reduced motion it snaps. */
+function settleTo(el: HTMLElement, from: number, to: number) {
+  const px = Math.abs(to - from);
+  el.style.transition =
+    prefersReducedMotion() || px === 0
+      ? "none"
+      : `transform ${releaseMs(px)}ms ${to < from ? css.settle : css.easeOut}`;
+  el.style.transform = `translate3d(0,${to}px,0)`;
+}
+
 /** A sheet from the bottom edge with a peek and an open height. Drag the
  * handle between them; open shows a scrim, traps focus, and Escape closes it.
  * Moves by transform only. */
@@ -100,11 +112,13 @@ export default function BottomSheet({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Where the sheet is now, so a release knows how far it has left to go.
+  const offset = useRef(gap);
   useLayoutEffect(() => {
     const el = sheet.current;
     if (!el || state === "closed") return;
-    el.style.transition = transition("transform", { easing: "easeInOut" });
-    el.style.transform = `translate3d(0,${gap}px,0)`;
+    settleTo(el, offset.current, gap);
+    offset.current = gap;
   }, [state, gap]);
 
   // While the sheet follows a drag the browser must not also scroll or pan.
@@ -189,7 +203,8 @@ export default function BottomSheet({
       sheet.current.style.transition = "none";
     }
     const h = dragHeight(d.h0, dy, snaps);
-    sheet.current.style.transform = `translate3d(0,${offsetFor(h, snaps)}px,0)`;
+    offset.current = offsetFor(h, snaps);
+    sheet.current.style.transform = `translate3d(0,${offset.current}px,0)`;
   };
 
   const onPointerUp = (e: PointerEvent<HTMLElement>) => {
@@ -207,8 +222,8 @@ export default function BottomSheet({
       // Same state, so the layout effect will not run: settle by hand.
       const el = sheet.current;
       if (!el) return;
-      el.style.transition = transition("transform", { easing: "easeInOut" });
-      el.style.transform = `translate3d(0,${offsetFor(resting, snaps)}px,0)`;
+      settleTo(el, offset.current, offsetFor(resting, snaps));
+      offset.current = offsetFor(resting, snaps);
       return;
     }
     onStateChange(next);
