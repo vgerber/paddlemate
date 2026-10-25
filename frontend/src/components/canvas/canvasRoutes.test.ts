@@ -29,11 +29,13 @@ describe("isGeographyRoute", () => {
     }
   });
 
-  test("the log form keeps its own picker map, so the canvas steps aside", () => {
-    expect(isGeographyRoute("/logs/new")).toBe(false);
-    expect(isGeographyRoute("/logs/12", { edit: true })).toBe(false);
-    expect(isGeographyRoute("/logs/12", { edit: "true" })).toBe(false);
-    expect(isGeographyRoute("/logs/12", { edit: false })).toBe(true);
+  test("the log form is on the canvas, its picker map is the host map", () => {
+    expect(isGeographyRoute("/logs/new")).toBe(true);
+    expect(isGeographyRoute("/logs/12")).toBe(true);
+    expect(isLogFormRoute("/logs/new")).toBe(true);
+    expect(isLogFormRoute("/logs/12", { edit: true })).toBe(true);
+    expect(isLogFormRoute("/logs/12", { edit: "true" })).toBe(true);
+    expect(isLogFormRoute("/logs/12", { edit: false })).toBe(false);
     expect(isLogFormRoute("/logs")).toBe(false);
   });
 

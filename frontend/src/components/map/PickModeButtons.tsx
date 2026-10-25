@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
 import { theme } from "@/lib/theme";
+import type { MapPadding } from "./Map";
 
 const { tokens } = theme;
 
@@ -68,23 +69,26 @@ export default function PickModeButtons({
   onToggle,
   showPutIn,
   showTakeOut,
+  inset,
 }: {
   pickMode: PickMode | null;
   onToggle: (mode: PickMode) => void;
   showPutIn: boolean;
   showTakeOut: boolean;
+  /** Where the free map area starts, so the buttons clear the cards. */
+  inset?: MapPadding;
 }) {
   return (
     <Box
       sx={{
         position: "absolute",
-        top: 10,
-        left: 10,
+        top: inset?.top ?? 10,
+        left: inset?.left ?? 10,
         zIndex: 10,
         display: "flex",
         flexWrap: "wrap",
         gap: 1,
-        maxWidth: "calc(100% - 20px)",
+        maxWidth: `calc(100% - ${(inset?.left ?? 10) + 10}px)`,
       }}
     >
       {showPutIn && (

@@ -7,36 +7,29 @@ const { tokens } = theme;
 
 interface Props {
   picking: SectionPicking;
-  /** Fill the pane it sits in instead of a fixed height. */
-  fill?: boolean;
-  /** Show the picks without letting a click change them. */
-  readOnly?: boolean;
 }
 
-/** Map for toggling sections and picking put-in/take-out points. */
-export default function SectionPickerMap({ picking, fill, readOnly }: Props) {
+/** Phone map for toggling sections and picking put-in/take-out points. */
+export default function SectionPickerMap({ picking }: Props) {
   const { sectionsForMap: sections, selectedIds, putIn, takeOut } = picking;
-  const pinnable = !readOnly && selectedIds.size > 0;
+  const pinnable = selectedIds.size > 0;
   return (
     <Box
       sx={{
-        height: fill ? "100%" : 380,
+        height: 380,
         borderRadius: `${tokens.radii.md}px`,
         overflow: "hidden",
         position: "relative",
-        ...(fill && { boxShadow: tokens.elevation.e1 }),
       }}
     >
       <WaterwayMap
         sections={sections}
         picking={{
           selectedSectionIds: selectedIds,
-          onSectionToggle: readOnly
-            ? undefined
-            : (id) => {
-                const section = sections.find((s) => s.id === id);
-                if (section) picking.toggleSection(section);
-              },
+          onSectionToggle: (id) => {
+            const section = sections.find((s) => s.id === id);
+            if (section) picking.toggleSection(section);
+          },
           putIn,
           takeOut,
           // Put-in and take-out only mean something once there is a route.

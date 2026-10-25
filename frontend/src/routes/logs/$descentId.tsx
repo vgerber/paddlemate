@@ -77,7 +77,7 @@ function LogDetailPage() {
 
   // The edit form carries a bottom bar, which needs a floor to sit on.
   const formShellSx: SxProps<Theme> = embedded
-    ? { flex: 1, display: "flex", flexDirection: "column" }
+    ? { flex: 1, height: "100%", display: "flex", flexDirection: "column" }
     : { maxWidth: 720, mx: "auto" };
 
   if (edit && isOwner) {
