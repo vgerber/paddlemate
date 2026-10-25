@@ -299,7 +299,18 @@ export async function clippedText(page: Page): Promise<Finding[]> {
       if (!clipsX && !clipsY) continue;
       if (s.overflowX === "auto" || s.overflowX === "scroll") continue;
       if (h.clientWidth === 0) continue;
-      if (el.closest("[title], [aria-label]")) continue;
+      // Readable some other way only when the text itself, or the control it
+      // sits in, is labelled; a labelled dialog or list around it says nothing.
+      const own = el.closest(
+        "button, a, [role='button'], [role='tab'], [role='menuitem'], [role='link'], [role='option']",
+      );
+      if (
+        el.hasAttribute("title") ||
+        el.hasAttribute("aria-label") ||
+        own?.hasAttribute("title") ||
+        own?.hasAttribute("aria-label")
+      )
+        continue;
       const cls =
         typeof el.className === "string"
           ? el.className.split(/\s+/).slice(0, 2).join(".")
@@ -367,36 +378,33 @@ type Seen = {
   card: string;
 };
 
-type SweepWindow = Window & { __swEl?: HTMLElement; __swOn?: string[] };
+type SweepWindow = Window & { __swEl?: HTMLElement; __swOn?: string[][] };
 
 /** Presses Tab through the screen. Focus must land on shown elements with a
  * visible indicator, in reading order, and reach every interactive element. */
 export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
   const found: Finding[] = [];
   // Style signature of an element and its three parents: a focus ring may sit
-  // on a wrapper (a field) or be a fill change rather than an outline.
+  // on a wrapper (a field). Each entry is [outline style, width, colour,
+  // box-shadow, background, border colour, text colour].
   await page.evaluate(() => {
     (window as unknown as Record<string, unknown>).__swSig = (
       el: HTMLElement,
     ) => {
-      const parts: string[] = [];
+      const parts: string[][] = [];
       let n: HTMLElement | null = el;
       for (let d = 0; n && d < 4; d++, n = n.parentElement) {
         for (const pseudo of [null, "::before", "::after"]) {
           const c = getComputedStyle(n, pseudo);
-          parts.push(
-            [
-              c.outlineStyle,
-              c.outlineWidth,
-              c.outlineColor,
-              c.boxShadow,
-              c.backgroundColor,
-              c.borderTopColor,
-              c.color,
-              c.textDecorationLine,
-              c.opacity,
-            ].join("|"),
-          );
+          parts.push([
+            c.outlineStyle,
+            c.outlineWidth,
+            c.outlineColor,
+            c.boxShadow,
+            c.backgroundColor,
+            c.borderTopColor,
+            c.color,
+          ]);
         }
       }
       return parts;
@@ -465,7 +473,7 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
       const el = document.activeElement as HTMLElement | null;
       if (!el) return null;
       const w = window as unknown as SweepWindow & {
-        __swSig: (e: HTMLElement) => string[];
+        __swSig: (e: HTMLElement) => string[][];
       };
       const isBody = el === document.body || el === document.documentElement;
       const r = el.getBoundingClientRect();
@@ -569,14 +577,57 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
       await page.waitForTimeout(60);
       const differs = await page.evaluate(() => {
         const w = window as unknown as SweepWindow & {
-          __swSig: (e: HTMLElement) => string[];
+          __swSig: (e: HTMLElement) => string[][];
         };
         const el = w.__swEl;
         if (!el) return false;
         const off = w.__swSig(el);
         const on = w.__swOn ?? [];
+        // r, g, b, alpha of a computed colour.
+        const rgba = (css: string): number[] => {
+          const n = css.match(/-?\d*\.?\d+/g)?.map(Number) ?? [0, 0, 0, 0];
+          const k = css.startsWith("color(") ? 255 : 1;
+          return [n[0] * k, n[1] * k, n[2] * k, n[3] ?? 1];
+        };
+        let ground = [255, 255, 255];
+        for (let n: HTMLElement | null = el; n; n = n.parentElement) {
+          const b = rgba(getComputedStyle(n).backgroundColor);
+          if (b[3] >= 0.99) {
+            ground = b.slice(0, 3);
+            break;
+          }
+        }
+        const flat = (css: string): number[] => {
+          const c = rgba(css);
+          return [0, 1, 2].map((k) => c[k] * c[3] + ground[k] * (1 - c[3]));
+        };
+        const lum = (c: number[]) => {
+          const [r, g, b] = c.map((v) => {
+            const x = v / 255;
+            return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+        const ratio = (a: string, b: string) => {
+          const [hi, lo] = [lum(flat(a)), lum(flat(b))].sort((x, y) => y - x);
+          return (hi + 0.05) / (lo + 0.05);
+        };
         el.focus();
-        return on.some((p, k) => p !== off[k]);
+        // An outline or a shadow that was not there, or a colour that moved
+        // by at least 3:1; a faint wash alone is not an indicator.
+        return on.some((p, k) => {
+          const q = off[k] ?? [];
+          const outlined =
+            p[0] !== "none" &&
+            Number.parseFloat(p[1]) > 0 &&
+            rgba(p[2])[3] > 0 &&
+            (p[0] !== q[0] || p[1] !== q[1] || p[2] !== q[2]);
+          const shadowed = p[3] !== "none" && p[3] !== q[3];
+          const moved = [4, 5, 6].some(
+            (c) => p[c] !== q[c] && ratio(p[c], q[c]) >= 3,
+          );
+          return outlined || shadowed || moved;
+        });
       });
       if (!differs)
         found.push({ selector: s.sel, detail: "no visible focus indicator" });
@@ -592,7 +643,12 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
     // - Canvas cards are columns: from the foot of one card (its docked
     //   action) Tab moves to the card on its right, which starts at the top.
     if (
-      order[i].card === order[i - 1].card &&
+      // Only a step between two different cards is a column change.
+      !(
+        order[i].card &&
+        order[i - 1].card &&
+        order[i].card !== order[i - 1].card
+      ) &&
       !order[i].inMap &&
       !order[i].handle &&
       !order[i - 1].handle &&

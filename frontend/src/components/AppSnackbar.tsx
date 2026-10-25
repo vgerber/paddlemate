@@ -8,6 +8,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   css,
   durations,
@@ -96,7 +97,9 @@ export default function AppSnackbar() {
     };
   }, []);
 
-  return (
+  // Portaled out of the app root: an open sheet makes the root inert, and an
+  // error that appears over it must stay clickable and announced.
+  return createPortal(
     <Snackbar
       open={message !== null}
       autoHideDuration={6000}
@@ -116,6 +119,7 @@ export default function AppSnackbar() {
       >
         {message}
       </Alert>
-    </Snackbar>
+    </Snackbar>,
+    document.body,
   );
 }

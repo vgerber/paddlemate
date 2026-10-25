@@ -249,19 +249,7 @@ function DayEntry({
     <Box
       data-testid="plan-day"
       data-date={day.date}
-      role="button"
-      tabIndex={0}
       onClick={onToggle}
-      onKeyDown={(e) => {
-        if (
-          e.target === e.currentTarget &&
-          (e.key === "Enter" || e.key === " ")
-        ) {
-          e.preventDefault();
-          onToggle();
-        }
-      }}
-      aria-expanded={isOpen}
       sx={{
         flexShrink: 0,
         cursor: "pointer",
@@ -280,10 +268,34 @@ function DayEntry({
               }
             : "none",
         outlineOffset: 2,
+        // The ring wraps the whole day while its header holds the focus.
+        "&:has(> [role='button']:focus-visible)": {
+          outline: `2px solid ${tokens.primary}`,
+        },
         ...(isOpen ? { bgcolor: withAlpha(tokens.primary, "tint") } : {}),
       }}
     >
-      <Stack direction="row" sx={{ alignItems: "baseline", gap: 1 }}>
+      <Stack
+        direction="row"
+        role="button"
+        tabIndex={0}
+        aria-expanded={isOpen}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
+        sx={{
+          alignItems: "baseline",
+          gap: 1,
+          outline: "none",
+          // The card's padding above and below is part of the button, so it
+          // is a full touch target without moving anything.
+          my: "-12px",
+          py: "12px",
+        }}
+      >
         <Typography
           component="span"
           sx={{

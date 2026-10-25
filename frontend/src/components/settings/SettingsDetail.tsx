@@ -54,7 +54,7 @@ export default function SettingsDetail({
           bgcolor: "background.default",
         }}
       >
-        <PanelHeader title={title} onBack={onBack} />
+        <PanelHeader title={title} onBack={onBack} focusOnOpen="always" />
         <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", py: 1.5 }}>
           <Box sx={{ ...phoneCardSx, p: `${phone.inner}px` }}>{body}</Box>
         </Box>

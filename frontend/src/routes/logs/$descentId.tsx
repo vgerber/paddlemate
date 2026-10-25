@@ -16,6 +16,7 @@ import { formatDate } from "@/lib/format";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
 import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useSession } from "@/lib/hooks/useSession";
+import { useViewFocus } from "@/lib/hooks/useViewFocus";
 import { DeleteIcon, EditIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 
@@ -46,6 +47,7 @@ function LogDetailPage() {
     refetch,
   } = useDescent(Number(descentId));
   const deleteDescent = useDeleteDescent();
+  const titleRef = useViewFocus<HTMLElement>(embedded ? "lost" : undefined);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const setEdit = (value: boolean) =>
@@ -136,7 +138,13 @@ function LogDetailPage() {
           }}
         >
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h3" noWrap>
+            <Typography
+              variant="h3"
+              noWrap
+              ref={titleRef}
+              tabIndex={-1}
+              sx={{ outline: "none" }}
+            >
               {title}
             </Typography>
             <Typography
@@ -154,6 +162,7 @@ function LogDetailPage() {
           title={title}
           subtitle={subtitle}
           onBack={goBack}
+          focusOnOpen="lost"
           actionButton={menu}
         />
       )}

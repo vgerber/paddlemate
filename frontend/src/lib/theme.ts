@@ -966,28 +966,53 @@ export const theme = createTheme({
     },
 
     // Autocomplete re-pads the filled field (37px); restore the calm field's
-    // 52px and give the open arrow a full touch target.
+    // 52px and give the open and clear arrows a full touch target. The right
+    // padding leaves room for the icons showing: one, or Clear and Open.
     MuiAutocomplete: {
       styleOverrides: {
-        root: {
-          "&& .MuiFilledInput-root": {
-            paddingTop: 0,
-            paddingBottom: 0,
-            paddingLeft: 0,
-            paddingRight: 0,
-            "& .MuiFilledInput-input": {
-              padding: "25px 14px 8px",
-              minHeight: 19,
-              boxSizing: "content-box",
+        root: ({ ownerState }) => {
+          const field = "&& .MuiFilledInput-root";
+          const room = (n: number) => ({
+            "& .MuiFilledInput-root.MuiInputBase-adornedEnd": {
+              paddingRight: tokens.touch.min * n,
             },
-            "& .MuiFilledInput-input.MuiInputBase-inputSizeSmall, &.MuiInputBase-sizeSmall .MuiFilledInput-input":
-              { padding: "22px 14px 6px" },
-          },
-          "& .MuiFilledInput-root.MuiInputBase-adornedEnd": {
-            paddingRight: tokens.touch.min,
-          },
+            "&.MuiAutocomplete-hasClearIcon.MuiAutocomplete-hasPopupIcon .MuiFilledInput-root.MuiInputBase-adornedEnd":
+              { paddingRight: tokens.touch.min * 2 },
+          });
+          // Chips wrap inside the field under the label.
+          if (ownerState.multiple)
+            return {
+              [field]: {
+                paddingTop: 22,
+                paddingBottom: 8,
+                paddingLeft: 8,
+                "& .MuiAutocomplete-endAdornment": { right: 0 },
+                "& .MuiFilledInput-input": {
+                  padding: "6px 6px",
+                  minHeight: 19,
+                  boxSizing: "content-box",
+                },
+              },
+              ...room(1),
+            };
+          return {
+            [field]: {
+              paddingTop: 0,
+              paddingBottom: 0,
+              paddingLeft: 0,
+              paddingRight: 0,
+              "& .MuiFilledInput-input": {
+                padding: "25px 14px 8px",
+                minHeight: 19,
+                boxSizing: "content-box",
+              },
+              "& .MuiFilledInput-input.MuiInputBase-inputSizeSmall, &.MuiInputBase-sizeSmall .MuiFilledInput-input":
+                { padding: "22px 14px 6px" },
+            },
+            ...room(1),
+          };
         },
-        endAdornment: { right: 0, top: "calc(50% - 22px)" },
+        endAdornment: { right: 0 },
         popupIndicator: {
           width: tokens.touch.min,
           height: tokens.touch.min,
