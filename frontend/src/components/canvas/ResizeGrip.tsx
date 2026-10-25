@@ -131,6 +131,7 @@ export default function ResizeGrip({
         placeItems: "center",
         cursor: "col-resize",
         touchAction: "none",
+        borderRadius: `${tokens.radii.pill}px`,
         outline: "none",
         opacity: width <= min || width >= max ? 0.4 : 1,
         transition: transition(["opacity"], { duration: "fast" }),
@@ -151,9 +152,9 @@ export default function ResizeGrip({
           background: dots(tokens.primary),
           boxShadow: `${tokens.elevation.e2}, inset 0 0 0 2px ${tokens.primary}`,
         },
-        "&:focus-visible > span": {
+        "&:focus-visible": {
           outline: `2px solid ${tokens.primary}`,
-          outlineOffset: 2,
+          outlineOffset: 0,
         },
       }}
     >
