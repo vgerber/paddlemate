@@ -143,8 +143,13 @@ test.describe("map page on the canvas", () => {
       expect(
         Math.abs(dock.y + dock.height - (height - 16)),
       ).toBeLessThanOrEqual(1);
+      // The reading is an inset card like the features card: its top meets
+      // the rail's top, its foot sits one 8px inset above the card's foot.
       const block = await box(card(page).getByTestId("reading-block"));
-      expect(Math.abs(block.height - rail)).toBeLessThanOrEqual(1);
+      expect(Math.abs(block.y - dock.y)).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(block.y + block.height - (c.y + c.height - 8)),
+      ).toBeLessThanOrEqual(1);
       await expect(page.getByTestId("chart-plot")).toBeVisible();
       await expectSectionInFreeArea(page, [LOWER_SW, LOWER_NE]);
     });
