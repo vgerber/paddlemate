@@ -11,11 +11,12 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
 import type { GaugePin } from "@/components/map/GaugeMarkers";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
-import EmptyState from "@/components/states/EmptyState";
 import SignInGate from "@/components/states/SignInGate";
 import FormSection from "@/components/waterway/FormSection";
 import ProposalNoteField from "@/components/waterway/ProposalNoteField";
 import { proposalNoteValue } from "@/components/waterway/proposalNote";
+import SavedMark from "@/components/wizard/SavedMark";
+import StepSlide from "@/components/wizard/StepSlide";
 import type { CatalogRiver } from "@/lib/api";
 import { ApiError, apiErrorMessage } from "@/lib/api/client";
 import { plural } from "@/lib/format";
@@ -27,7 +28,7 @@ import {
 } from "@/lib/hooks/useGauges";
 import { useSession } from "@/lib/hooks/useSession";
 import { useCreateWaterway } from "@/lib/hooks/useWaterways";
-import { ConfirmIcon, LocateIcon, SuccessIcon } from "@/lib/icons";
+import { ConfirmIcon, LocateIcon } from "@/lib/icons";
 import { labelSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -255,183 +256,187 @@ export default function SuggestWaterwayPanel({
       >
         {!isAuthenticated ? (
           <SignInGate title="Sign in to suggest a river" pt={3} />
-        ) : submitted ? (
-          <Box
-            data-testid="river-submitted"
-            sx={{
-              bgcolor: tokens.surface,
-              borderRadius: `${tokens.radii.md}px`,
-              boxShadow: tokens.elevation.e1,
-            }}
-          >
-            <EmptyState
-              icon={
-                <SuccessIcon sx={{ fontSize: 40, color: tokens.success }} />
-              }
-              title="River submitted"
-              caption="It appears in search once an admin approves it."
-            />
-          </Box>
         ) : (
-          <>
-            <FormSection
-              label="River name"
-              hint="Missing from PaddleMate? Name it - after approval you can add sections."
-            >
-              <TextField
-                label="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                slotProps={{ htmlInput: { "aria-required": true } }}
-                fullWidth
-              />
-            </FormSection>
-
-            {exactGaugeMatch && riverGauges.length > 0 && (
+          <StepSlide step={submitted ? 1 : 0} fadeTo={1}>
+            {submitted ? (
               <Box
-                data-testid="river-gauges"
+                data-testid="river-submitted"
                 sx={{
                   bgcolor: tokens.surface,
                   borderRadius: `${tokens.radii.md}px`,
-                  boxShadow: `inset 0 0 0 1px ${tokens.outlineVariant}`,
-                  overflow: "hidden",
-                  flexShrink: 0,
+                  boxShadow: tokens.elevation.e1,
                 }}
               >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.75,
-                    pl: 1.5,
-                    pr: 0.5,
-                    pt: 0.5,
-                  }}
+                <SavedMark
+                  title="River submitted"
+                  caption="It appears in search once an admin approves it."
+                />
+              </Box>
+            ) : (
+              <>
+                <FormSection
+                  label="River name"
+                  hint="Missing from PaddleMate? Name it - after approval you can add sections."
                 >
-                  <Box
-                    sx={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: "50%",
-                      bgcolor: tokens.outline,
-                    }}
+                  <TextField
+                    label="Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    slotProps={{ htmlInput: { "aria-required": true } }}
+                    fullWidth
                   />
-                  <Typography
-                    sx={{ ...labelSx, flex: 1 }}
-                    title="Live water levels can be linked to this river's sections"
+                </FormSection>
+
+                {exactGaugeMatch && riverGauges.length > 0 && (
+                  <Box
+                    data-testid="river-gauges"
+                    sx={{
+                      bgcolor: tokens.surface,
+                      borderRadius: `${tokens.radii.md}px`,
+                      boxShadow: `inset 0 0 0 1px ${tokens.outlineVariant}`,
+                      overflow: "hidden",
+                      flexShrink: 0,
+                    }}
                   >
-                    {plural(riverGauges.length, "gauge")} on "{matchedRiverName}
-                    "
-                  </Typography>
-                  {matchedBounds && (
-                    <IconButton
-                      aria-label="Show all on map"
-                      title="Show all on map"
-                      sx={{ width: tokens.touch.min, height: tokens.touch.min }}
-                      onClick={() => onFocusBounds?.(matchedBounds)}
-                    >
-                      <LocateIcon sx={{ fontSize: 16 }} />
-                    </IconButton>
-                  )}
-                </Box>
-                <List dense disablePadding>
-                  {visibleGauges.map((g) => (
-                    <ListItemButton
-                      key={`${g.provider}:${g.station_id}`}
-                      disabled={g.lat == null || g.lon == null}
-                      onClick={() =>
-                        g.lat != null &&
-                        g.lon != null &&
-                        onFocusBounds?.([
-                          [g.lon, g.lat],
-                          [g.lon, g.lat],
-                        ])
-                      }
-                      title="Show on map"
+                    <Box
                       sx={{
-                        minHeight: tokens.touch.min,
-                        px: `${tokens.phone.inner}px`,
-                        borderTop: "1px solid",
-                        borderColor: tokens.outlineVariant,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.75,
+                        pl: 1.5,
+                        pr: 0.5,
+                        pt: 0.5,
                       }}
                     >
-                      <ListItemText
-                        primary={g.name || `Station ${g.station_id}`}
-                        slotProps={{ primary: { variant: "body2" } }}
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          bgcolor: tokens.outline,
+                        }}
                       />
                       <Typography
-                        variant="caption"
-                        color="textSecondary"
-                        data-testid="gauge-params"
+                        sx={{ ...labelSx, flex: 1 }}
+                        title="Live water levels can be linked to this river's sections"
                       >
-                        {g.params?.join(", ")}
+                        {plural(riverGauges.length, "gauge")} on "
+                        {matchedRiverName}"
                       </Typography>
-                      <LocateIcon
-                        sx={{ fontSize: 16, color: "text.disabled", ml: 1 }}
-                      />
-                    </ListItemButton>
-                  ))}
-                </List>
-                {riverGauges.length > GAUGE_LIST_CAP && (
-                  <Button
-                    fullWidth
-                    onClick={() => setShowAllGauges((v) => !v)}
-                    sx={{
-                      ...labelSx,
-                      minHeight: tokens.touch.min,
-                      color: tokens.primary,
-                      borderTop: "1px solid",
-                      borderColor: tokens.outlineVariant,
-                      borderRadius: 0,
-                    }}
-                  >
-                    {showAllGauges
-                      ? "Show fewer"
-                      : `Show all ${riverGauges.length}`}
-                  </Button>
+                      {matchedBounds && (
+                        <IconButton
+                          aria-label="Show all on map"
+                          title="Show all on map"
+                          sx={{
+                            width: tokens.touch.min,
+                            height: tokens.touch.min,
+                          }}
+                          onClick={() => onFocusBounds?.(matchedBounds)}
+                        >
+                          <LocateIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      )}
+                    </Box>
+                    <List dense disablePadding>
+                      {visibleGauges.map((g) => (
+                        <ListItemButton
+                          key={`${g.provider}:${g.station_id}`}
+                          disabled={g.lat == null || g.lon == null}
+                          onClick={() =>
+                            g.lat != null &&
+                            g.lon != null &&
+                            onFocusBounds?.([
+                              [g.lon, g.lat],
+                              [g.lon, g.lat],
+                            ])
+                          }
+                          title="Show on map"
+                          sx={{
+                            minHeight: tokens.touch.min,
+                            px: `${tokens.phone.inner}px`,
+                            borderTop: "1px solid",
+                            borderColor: tokens.outlineVariant,
+                          }}
+                        >
+                          <ListItemText
+                            primary={g.name || `Station ${g.station_id}`}
+                            slotProps={{ primary: { variant: "body2" } }}
+                          />
+                          <Typography
+                            variant="caption"
+                            color="textSecondary"
+                            data-testid="gauge-params"
+                          >
+                            {g.params?.join(", ")}
+                          </Typography>
+                          <LocateIcon
+                            sx={{ fontSize: 16, color: "text.disabled", ml: 1 }}
+                          />
+                        </ListItemButton>
+                      ))}
+                    </List>
+                    {riverGauges.length > GAUGE_LIST_CAP && (
+                      <Button
+                        fullWidth
+                        onClick={() => setShowAllGauges((v) => !v)}
+                        sx={{
+                          ...labelSx,
+                          minHeight: tokens.touch.min,
+                          color: tokens.primary,
+                          borderTop: "1px solid",
+                          borderColor: tokens.outlineVariant,
+                          borderRadius: 0,
+                        }}
+                      >
+                        {showAllGauges
+                          ? "Show fewer"
+                          : `Show all ${riverGauges.length}`}
+                      </Button>
+                    )}
+                  </Box>
                 )}
-              </Box>
+
+                {suggestionChips.length > 0 && (
+                  <FormSection
+                    label="Similar rivers with gauges"
+                    hint="Pick one to use its exact name."
+                  >
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
+                      {suggestionChips.map((r) => (
+                        <Chip
+                          data-testid="similar-river"
+                          key={`${r.river}|${r.country ?? ""}`}
+                          variant="outlined"
+                          label={`${r.river}${r.country ? ` (${r.country})` : ""}`}
+                          title={`${plural(r.gauge_count, "gauge")} in the catalog`}
+                          onClick={() => setName(r.river)}
+                          sx={{ maxWidth: "100%" }}
+                        />
+                      ))}
+                    </Box>
+                  </FormSection>
+                )}
+
+                <FormSection
+                  label="Description"
+                  hint="Optional - what makes this river worth paddling."
+                >
+                  <TextField
+                    label="Description"
+                    multiline
+                    rows={2}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    fullWidth
+                  />
+                </FormSection>
+
+                <ProposalNoteField value={note} onChange={setNote} />
+
+                {submitError && <Alert severity="error">{submitError}</Alert>}
+              </>
             )}
-
-            {suggestionChips.length > 0 && (
-              <FormSection
-                label="Similar rivers with gauges"
-                hint="Pick one to use its exact name."
-              >
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
-                  {suggestionChips.map((r) => (
-                    <Chip
-                      data-testid="similar-river"
-                      key={`${r.river}|${r.country ?? ""}`}
-                      variant="outlined"
-                      label={`${r.river}${r.country ? ` (${r.country})` : ""}`}
-                      title={`${plural(r.gauge_count, "gauge")} in the catalog`}
-                      onClick={() => setName(r.river)}
-                      sx={{ maxWidth: "100%" }}
-                    />
-                  ))}
-                </Box>
-              </FormSection>
-            )}
-
-            <FormSection
-              label="Description"
-              hint="Optional - what makes this river worth paddling."
-            >
-              <TextField
-                label="Description"
-                multiline
-                rows={2}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                fullWidth
-              />
-            </FormSection>
-
-            <ProposalNoteField value={note} onChange={setNote} />
-
-            {submitError && <Alert severity="error">{submitError}</Alert>}
-          </>
+          </StepSlide>
         )}
       </Box>
       <PanelBottomBar

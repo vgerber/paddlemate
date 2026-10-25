@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
+import StepSlide from "@/components/wizard/StepSlide";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
 import { ConfirmIcon, ForwardIcon } from "@/lib/icons";
@@ -146,16 +147,18 @@ export default function DescentForm({
         onCancel={() => setConfirmDiscard(false)}
         onConfirm={onCancel}
       />
-      {step === 0 && <StepWhen form={form} onChange={patch} />}
-      {step === 1 && (
-        <StepSections
-          form={form}
-          onChange={patch}
-          picking={picking}
-          mapBeside={embedded}
-        />
-      )}
-      {step === 2 && <StepDetails form={form} onChange={patch} />}
+      <StepSlide step={step}>
+        {step === 0 && <StepWhen form={form} onChange={patch} />}
+        {step === 1 && (
+          <StepSections
+            form={form}
+            onChange={patch}
+            picking={picking}
+            mapBeside={embedded}
+          />
+        )}
+        {step === 2 && <StepDetails form={form} onChange={patch} />}
+      </StepSlide>
 
       {problem && (
         <Typography

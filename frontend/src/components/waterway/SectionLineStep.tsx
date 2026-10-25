@@ -1,12 +1,12 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { PUT_IN_COLOR, TAKE_OUT_COLOR } from "@/components/map/LocationPin";
+import DelayedSpinner from "@/components/states/DelayedSpinner";
 import FormSection from "@/components/waterway/FormSection";
 import SectionPointCard from "@/components/waterway/SectionPointCard";
 import { fmtKm } from "@/components/waterway/section-details/utils";
@@ -121,7 +121,7 @@ export default function SectionLineStep({
             color="textSecondary"
             sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
           >
-            {lookupBusy && <CircularProgress size={12} />}
+            {lookupBusy && <DelayedSpinner size={12} />}
             {lookupHint}
           </Typography>
         )}
@@ -169,7 +169,7 @@ export default function SectionLineStep({
           >
             <ToggleButton value="snap" disabled={snap.status !== "done"}>
               {snapInProgress && !lookupStalled && (
-                <CircularProgress size={12} color="inherit" sx={{ mr: 0.75 }} />
+                <DelayedSpinner size={12} color="inherit" sx={{ mr: 0.75 }} />
               )}
               Snapped course
             </ToggleButton>
