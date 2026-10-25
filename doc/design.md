@@ -199,6 +199,10 @@ contrast floors in `contrast.test.ts` hold for both schemes):
 | Level chips | text on a wash; high is a solid fill | low `#86d2b2`, medium `#f0c06c` on a 16% wash, high `#f08c8a` with dark text |
 | Map ground / water / river | see `mapGround`, `mapWater`, `mapRiver` | `#1c2429` / `#12303f` / `#2f6384` |
 
+Known limits: satellite imagery is not darkened, the favicon follows the
+device scheme rather than the app setting, and there is no sunset schedule or
+synced preference (System is the only automatic mode).
+
 Elevation in dark is a lighter surface, not a shadow: a card sits one step
 above the ground, a floating card one above that (`surfaceBright`). Paper
 overlays are off.
@@ -234,7 +238,7 @@ Rules for new work:
 - The map restyles on a switch (`useMutedBaseMap` re-mutes after the style
   loads); marker images are re-registered per scheme.
 - Specs: `frontend/e2e/dark/` (no light surface, contrast, map paint, switch,
-  print, no flash); the baseline spec keeps light pixel-identical.
+  print, no flash).
 
 ## Type scale
 
