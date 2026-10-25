@@ -97,6 +97,81 @@ test.describe("the hand-over", () => {
     ).toBeGreaterThan(first.top);
   });
 
+  test("the real fold: the cards' shared edge travels together", async ({
+    page,
+  }) => {
+    // Short enough that the fold's pixels fit under the chart's cap.
+    await page.setViewportSize({ width: 390, height: 1100 });
+    await open(page);
+    const rows = await page.evaluate(async () => {
+      const q = (id: string) =>
+        document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
+      const features = q("features-card");
+      const chart = q("chart-card");
+      const fold = q("features-fold");
+      if (!features || !chart || !fold) throw new Error("no cards");
+      const settle = () =>
+        new Promise<void>((done) =>
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => setTimeout(done, 30)),
+          ),
+        );
+      const read = () => ({
+        featuresTop: features.getBoundingClientRect().top,
+        featuresBottom: features.getBoundingClientRect().bottom,
+        chartBottom: chart.getBoundingClientRect().bottom,
+        h: chart.getBoundingClientRect().height,
+      });
+      const start = read();
+      fold.click();
+      await new Promise((r) => setTimeout(r, 0));
+      // Hold every running transition and step it by hand: a loaded
+      // browser's frames are too uneven to sample a live one.
+      const running = document.getAnimations();
+      for (const a of running) a.pause();
+      const out = [start];
+      for (let i = 1; i <= 13; i++) {
+        for (const a of running) a.currentTime = (i / 13) * 260;
+        await settle();
+        out.push(read());
+      }
+      for (const a of running) a.finish();
+      await settle();
+      return { rows: out, animated: running.length };
+    });
+    expect(rows.animated, "the fold ran a transition").toBeGreaterThan(0);
+    const first = rows.rows[0];
+    const last = rows.rows[rows.rows.length - 1];
+    if (!first || !last) throw new Error("no frames");
+    let followed = 0;
+    for (const r of rows.rows) {
+      // The chart's lower edge meets the card's upper one, and the card's
+      // foot (the pane's) stays: the chart takes the pixels the card gave.
+      expect(
+        Math.abs(
+          r.featuresTop -
+            r.chartBottom -
+            (first.featuresTop - first.chartBottom),
+        ),
+        "the cards stay one gap apart",
+      ).toBeLessThanOrEqual(1);
+      // Until the chart reaches its cap (half the window), which the fold
+      // can outrun in a fixture this small.
+      if (r.h < last.h - 1) {
+        followed++;
+        expect(
+          Math.abs(r.featuresBottom - first.featuresBottom),
+          "the card's foot stays put",
+        ).toBeLessThanOrEqual(1);
+      }
+    }
+    expect(followed, "enough frames below the cap").toBeGreaterThan(3);
+    expect(
+      last.h,
+      "the chart is taller by the pixels the card gave",
+    ).toBeGreaterThan(first.h);
+  });
+
   test("a step in one frame is taken in that frame", async ({ page }) => {
     await open(page);
     const rows = await sampleChart(page, [80]);
@@ -126,10 +201,9 @@ test("the period options stagger in, three rows at most", async ({ page }) => {
   await expect(page.getByRole("menuitem").first()).toBeVisible();
   const delays = await page.getByRole("menuitem").evaluateAll((els) =>
     els.map((el) => {
-      const a = el
-        .getAnimations()
-        .find((x) => (x as CSSAnimation).animationName === "pm-option-in");
-      return a ? Number(a.effect?.getTiming().delay) : -1;
+      const style = getComputedStyle(el);
+      if (style.animationName !== "pm-option-in") return -1;
+      return Number.parseFloat(style.animationDelay) * 1000;
     }),
   );
   expect(delays.slice(0, 3)).toEqual([0, 40, 80]);
@@ -202,7 +276,7 @@ test("the reading number sits in a fixed tabular cell", async ({ page }) => {
   await open(page);
   const cell = card(page).getByTestId("reading-number");
   expect(await cell.evaluate((el) => getComputedStyle(el).display)).toBe(
-    "inline-grid",
+    "inline-block",
   );
   expect(
     await cell
@@ -318,3 +392,54 @@ test.describe("the wheel over the chart", () => {
     ).toBeVisible();
   });
 });
+
+for (const width of [600, 1000, 1280]) {
+  test.describe(`at ${width}px wide`, () => {
+    test.beforeEach(async ({ page }, info) => {
+      test.skip(info.project.name !== "desktop", "a wide-window check");
+      await page.setViewportSize({ width, height: 800 });
+    });
+
+    test("the gauge card and the features card share their edges", async ({
+      page,
+    }) => {
+      await open(page);
+      const edges = (id: string) =>
+        page
+          .locator(`[data-testid="${id}"]:visible`)
+          .first()
+          .evaluate((el) => {
+            const r = el.getBoundingClientRect();
+            return { left: r.left, right: r.right };
+          });
+      const features = await edges("features-card");
+      const chart = await edges("chart-card");
+      expect(Math.abs(chart.left - features.left)).toBeLessThanOrEqual(1);
+      expect(Math.abs(chart.right - features.right)).toBeLessThanOrEqual(1);
+    });
+
+    test("a plain wheel over the chart is left to the page", async ({
+      page,
+    }) => {
+      await open(page);
+      const prevented = await page.evaluate(() => {
+        const el = document.querySelector(
+          '[role="group"][aria-roledescription="chart"]',
+        );
+        if (!el) throw new Error("no chart");
+        const wheel = (ctrlKey: boolean) => {
+          const ev = new WheelEvent("wheel", {
+            deltaY: -200,
+            ctrlKey,
+            cancelable: true,
+            bubbles: true,
+          });
+          el.dispatchEvent(ev);
+          return ev.defaultPrevented;
+        };
+        return { plain: wheel(false), ctrl: wheel(true) };
+      });
+      expect(prevented).toEqual({ plain: false, ctrl: true });
+    });
+  });
+}

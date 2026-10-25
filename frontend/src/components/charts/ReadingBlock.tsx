@@ -170,7 +170,6 @@ function ReadingNumber({
   const shift = reduced ? 0 : NUMBER_SHIFT;
   const time = reduced ? `${REDUCED_FADE_MS}ms` : css.fast;
   const base = {
-    gridArea: "1 / 1",
     fontSize: size,
     lineHeight: 1,
     fontWeight: 600,
@@ -185,9 +184,13 @@ function ReadingNumber({
       // The old value is a pseudo element, so it is never read as text.
       data-prev={leaving ?? undefined}
       sx={{
-        display: "inline-grid",
+        display: "inline-block",
+        position: "relative",
         "&[data-prev]::before": {
           ...base,
+          position: "absolute",
+          left: 0,
+          top: 0,
           content: "attr(data-prev)",
           animation: `pm-number-out ${time} ${css.easeIn} forwards`,
         },
