@@ -123,6 +123,11 @@ Tabs and the swipe are already built to the page (`useSwipeTabs`,
 
 ## Known limitations
 
+- Frame budget: in software-rendered headless Chrome the map alone makes
+  long tasks of 70-180 ms (measured on the phone panel and the features
+  fold, identical under Reduced motion), so the 50 ms line cannot hold there.
+  `e2e/motion/frames.spec.ts` keeps a 300 ms bound; the 50 ms budget is
+  checked on a real phone before ship.
 - Stored section lines are often two points, so the flow and the draw-in
   follow a straight stroke beside the river until the OSM centreline is used.
 - Phone panel (M4): the list is unmounted while a detail shows, so it does
