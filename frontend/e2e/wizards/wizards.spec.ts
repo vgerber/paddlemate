@@ -1,4 +1,5 @@
 import { expect, type Page, type Route, test } from "@playwright/test";
+import { expectColour } from "../support/colour";
 import {
   appReady,
   computed,
@@ -504,7 +505,8 @@ test.describe("suggest feature", () => {
     const place = pane(page).getByTestId("place-button");
     expect(await computed(place, "border-top-left-radius")).toBe("12px");
     expect(await computed(place, "color")).toBe(TEAL);
-    expect(await computed(place, "background-color")).toBe(
+    expectColour(
+      await computed(place, "background-color"),
       "rgba(14, 116, 144, 0.12)",
     );
     expect(await computed(place, "font-weight")).toBe("600");

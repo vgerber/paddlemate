@@ -6,7 +6,6 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import WaterwayMap from "@/components/map/LazyMap";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
-import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
 import SectionFeaturesStep from "@/components/waterway/SectionFeaturesStep";
@@ -18,11 +17,13 @@ import {
   useSectionWizardState,
   WIZARD_STEPS,
 } from "@/components/waterway/useSectionWizardState";
+import SavedMark from "@/components/wizard/SavedMark";
+import StepSlide from "@/components/wizard/StepSlide";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateSection } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway } from "@/lib/hooks/useWaterways";
-import { ConfirmIcon, ForwardIcon, MapIcon, SuccessIcon } from "@/lib/icons";
+import { ConfirmIcon, ForwardIcon, MapIcon } from "@/lib/icons";
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
@@ -118,11 +119,9 @@ function SuggestSectionPage() {
   }
 
   const submittedCard = (
-    <EmptyState
-      icon={<SuccessIcon sx={{ fontSize: 40, color: "text.disabled" }} />}
+    <SavedMark
       title="Section submitted"
       caption="It appears on the river once an admin approves it."
-      py={8}
     />
   );
 
@@ -212,57 +211,62 @@ function SuggestSectionPage() {
         minWidth: 0,
       }}
     >
-      {step === 0 && (
-        <SectionNamingForm value={wizard.naming} onChange={wizard.setNaming} />
-      )}
+      <StepSlide step={step}>
+        {step === 0 && (
+          <SectionNamingForm
+            value={wizard.naming}
+            onChange={wizard.setNaming}
+          />
+        )}
 
-      {step === 1 && (
-        <SectionLineStep
-          waterwayName={waterway?.name}
-          snap={wizard.snap}
-          putIn={putIn}
-          takeOut={takeOut}
-          onClearPutIn={() => wizard.setPutIn(null)}
-          onClearTakeOut={() => wizard.setTakeOut(null)}
-          snapActive={wizard.snapActive}
-          onLineSourceChange={wizard.setLineSource}
-          orderWrong={wizard.orderWrong}
-          finalCoords={finalCoords}
-          lookupStalled={wizard.lookupStalled}
-        />
-      )}
+        {step === 1 && (
+          <SectionLineStep
+            waterwayName={waterway?.name}
+            snap={wizard.snap}
+            putIn={putIn}
+            takeOut={takeOut}
+            onClearPutIn={() => wizard.setPutIn(null)}
+            onClearTakeOut={() => wizard.setTakeOut(null)}
+            snapActive={wizard.snapActive}
+            onLineSourceChange={wizard.setLineSource}
+            orderWrong={wizard.orderWrong}
+            finalCoords={finalCoords}
+            lookupStalled={wizard.lookupStalled}
+          />
+        )}
 
-      {step === 2 && (
-        <SectionFeaturesStep
-          regionCountry={{
-            regions: wizard.regionInfo.regions,
-            country: wizard.regionInfo.country,
-            loading: wizard.regionLookup === "loading",
-            onChange: wizard.setRegionInfo,
-          }}
-          finalCoords={finalCoords}
-          nearPoint={
-            finalCoords
-              ? {
-                  lat: finalCoords[Math.floor(finalCoords.length / 2)][1],
-                  lon: finalCoords[Math.floor(finalCoords.length / 2)][0],
-                }
-              : (putIn ?? undefined)
-          }
-          draftFeatures={wizard.draftFeatures}
-          draftFeaturePseudos={wizard.draftFeaturePseudos}
-          onAddDraft={(feature) =>
-            wizard.setDraftFeatures((features) => [...features, feature])
-          }
-          onRemoveDraft={(index) =>
-            wizard.setDraftFeatures((features) =>
-              features.filter((_, i) => i !== index),
-            )
-          }
-          geometry={wizard.featureGeometry}
-          defaultLangCode={wizard.naming.langCode}
-        />
-      )}
+        {step === 2 && (
+          <SectionFeaturesStep
+            regionCountry={{
+              regions: wizard.regionInfo.regions,
+              country: wizard.regionInfo.country,
+              loading: wizard.regionLookup === "loading",
+              onChange: wizard.setRegionInfo,
+            }}
+            finalCoords={finalCoords}
+            nearPoint={
+              finalCoords
+                ? {
+                    lat: finalCoords[Math.floor(finalCoords.length / 2)][1],
+                    lon: finalCoords[Math.floor(finalCoords.length / 2)][0],
+                  }
+                : (putIn ?? undefined)
+            }
+            draftFeatures={wizard.draftFeatures}
+            draftFeaturePseudos={wizard.draftFeaturePseudos}
+            onAddDraft={(feature) =>
+              wizard.setDraftFeatures((features) => [...features, feature])
+            }
+            onRemoveDraft={(index) =>
+              wizard.setDraftFeatures((features) =>
+                features.filter((_, i) => i !== index),
+              )
+            }
+            geometry={wizard.featureGeometry}
+            defaultLangCode={wizard.naming.langCode}
+          />
+        )}
+      </StepSlide>
 
       {submitError && <Alert severity="error">{submitError}</Alert>}
     </Box>
@@ -336,7 +340,9 @@ function SuggestSectionPage() {
           }}
         >
           <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2 }}>
-            {submitted ? submittedCard : formNode}
+            <StepSlide step={submitted ? 1 : 0} fadeTo={1}>
+              {submitted ? submittedCard : formNode}
+            </StepSlide>
           </Box>
           {barNode}
         </Box>
@@ -356,14 +362,16 @@ function SuggestSectionPage() {
       }}
     >
       {/* No header - the bottom bar carries the title, step and cancel. */}
-      {submitted ? (
-        submittedCard
-      ) : (
-        <Box sx={{ display: "grid", gap: 2.5 }}>
-          {mapNode}
-          {formNode}
-        </Box>
-      )}
+      <StepSlide step={submitted ? 1 : 0} fadeTo={1}>
+        {submitted ? (
+          submittedCard
+        ) : (
+          <Box sx={{ display: "grid", gap: 2.5 }}>
+            {mapNode}
+            {formNode}
+          </Box>
+        )}
+      </StepSlide>
 
       {/* Pinned to the viewport bottom, above the mobile bottom navigation
           (zIndex 1300). Carries the flow's only action, including the way

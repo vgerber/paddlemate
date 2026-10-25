@@ -1,9 +1,9 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
 import { useMemo, useRef, useState } from "react";
 import { PUT_IN_COLOR, TAKE_OUT_COLOR } from "@/components/map/LocationPin";
+import DelayedSpinner from "@/components/states/DelayedSpinner";
 import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type { Feature } from "@/lib/api";
 import { plural } from "@/lib/format";
@@ -106,7 +106,7 @@ export default function SectionFeaturesStep({
             slotProps={{
               input: {
                 endAdornment: regionCountry.loading ? (
-                  <CircularProgress size={16} />
+                  <DelayedSpinner size={16} />
                 ) : undefined,
               },
             }}

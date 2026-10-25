@@ -51,6 +51,7 @@ import SectionLayers from "./SectionLayers";
 import { useControlInset } from "./useControlInset";
 import { useMapCameraEffects } from "./useMapCameraEffects";
 import { useMapClickHandler } from "./useMapClickHandler";
+import { useFirstLoadFade, useMapMotion } from "./useMapMotion";
 import { useMapSources } from "./useMapSources";
 import { useCalmBaseMap, useMutedBaseMap } from "./useMutedBaseMap";
 
@@ -138,6 +139,8 @@ export interface MapChrome {
    * edges (px in from each side of the map) instead of the map's own
    * corners: the free area of a canvas screen, so no card covers them. */
   inset?: MapPadding;
+  /** A full-screen overlay covers the map: ambient motion stops. */
+  covered?: boolean;
 }
 
 /** What the camera frames: refit when `key` changes, and again (unless it is
@@ -320,6 +323,7 @@ export default function WaterwayMap({
     attributionPosition = "bottom-right",
     cooperativeGestures,
     inset,
+    covered,
   } = chrome;
   const minimal = chrome.minimal ?? !!cooperativeGestures;
   const mapRef = useRef<MapRef>(null);
@@ -420,6 +424,31 @@ export default function WaterwayMap({
       regionPreviewId,
     });
 
+  const selectedFeature = useMemo<GeoJSON.FeatureCollection>(
+    () => ({
+      type: "FeatureCollection",
+      features: sectionsGeoJSON.features.filter(
+        (f) => selectedSectionId != null && f.id === selectedSectionId,
+      ),
+    }),
+    [sectionsGeoJSON, selectedSectionId],
+  );
+  const drawColors = useMemo(
+    () => ({
+      casing: tokens.mapSectionLineCasing,
+      line: tokens.mapSelectedLine,
+    }),
+    [tokens],
+  );
+  const motion = useMapMotion({
+    map: mapLoaded ? (mapRef.current?.getMap() ?? null) : null,
+    selectedSectionId,
+    hasSelectedFeature: selectedFeature.features.length > 0,
+    covered,
+    colors: drawColors,
+  });
+  const fade = useFirstLoadFade(mapLoaded || styleReady);
+
   // Selected-sections overlay for picker mode, memoized like the rest.
   const pickerSelectionGeoJSON = useMemo(
     () =>
@@ -451,10 +480,14 @@ export default function WaterwayMap({
 
   return (
     <div
+      data-testid="map-root"
+      // Keeps its own short fade under reduced motion (see the global rule).
+      data-reduced-fade=""
       style={{
         width: "100%",
         height: "100%",
         position: "relative",
+        ...fade,
         cursor: onAreaCircleChange
           ? "crosshair"
           : placingFeature
@@ -569,6 +602,8 @@ export default function WaterwayMap({
           selectedSectionId={selectedSectionId}
           highlighted={sectionStates?.highlighted}
           ghost={sectionStates?.ghost}
+          selectedFeature={selectedFeature}
+          motion={motion}
         />
 
         <FeatureGeoJSONLayers

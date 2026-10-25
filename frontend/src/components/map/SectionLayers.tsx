@@ -8,6 +8,16 @@ import {
   SECTION_HITBOX_LAYER,
   SECTION_LINE_LAYER,
 } from "./layerIds";
+import {
+  DRAWIN_CASING_LAYER,
+  DRAWIN_LINE_LAYER,
+  DRAWIN_SOURCE,
+  drawGradient,
+  FLOW_LAYER,
+  flowFrames,
+  SELECTED_CASING_LAYER,
+  SELECTED_LINE_LAYER,
+} from "./useMapMotion";
 
 interface SectionLayersProps {
   sections: GeoJSON.FeatureCollection;
@@ -19,7 +29,19 @@ interface SectionLayersProps {
   highlighted?: number[];
   /** Drawn dim and left out of clicks and access-point marks. */
   ghost?: number[];
+  /** The selected section alone, for the draw-in (needs line metrics). */
+  selectedFeature?: GeoJSON.FeatureCollection;
+  /** Motion state from useMapMotion: the plain selected line waits while the
+   * section draws in, and the flow shows only while it runs. */
+  motion?: { drawing: boolean; flowing: boolean };
 }
+
+const NO_FEATURES: GeoJSON.FeatureCollection = {
+  type: "FeatureCollection",
+  features: [],
+};
+const NO_MOTION = { drawing: false, flowing: false };
+const FLOW_START = flowFrames()[0];
 
 type Filter = ExpressionSpecification;
 
@@ -42,6 +64,8 @@ export default function SectionLayers({
   selectedSectionId,
   highlighted,
   ghost,
+  selectedFeature = NO_FEATURES,
+  motion = NO_MOTION,
 }: SectionLayersProps) {
   const tokens = useTokens();
   const hasGhost = ghost != null && ghost.length > 0;
@@ -231,11 +255,15 @@ export default function SectionLayers({
           />
         )}
         <Layer
-          id="sections-line-selected-casing"
+          id={SELECTED_CASING_LAYER}
           beforeId="section-endpoints-dot"
           type="line"
           filter={["==", ["id"], selectedSectionId ?? -1]}
-          layout={{ "line-cap": "round", "line-join": "round" }}
+          layout={{
+            "line-cap": "round",
+            "line-join": "round",
+            visibility: motion.drawing ? "none" : "visible",
+          }}
           paint={{
             "line-color": tokens.mapSectionLineCasing,
             "line-width": 10,
@@ -243,15 +271,73 @@ export default function SectionLayers({
           }}
         />
         <Layer
-          id="sections-line-selected"
+          id={SELECTED_LINE_LAYER}
           beforeId="section-endpoints-dot"
           type="line"
           filter={["==", ["id"], selectedSectionId ?? -1]}
-          layout={{ "line-cap": "round", "line-join": "round" }}
+          layout={{
+            "line-cap": "round",
+            "line-join": "round",
+            visibility: motion.drawing ? "none" : "visible",
+          }}
           paint={{
             "line-color": tokens.mapSelectedLine,
             "line-width": 5,
             "line-opacity": 1,
+          }}
+        />
+        {/* One dash pattern per frame, set by useMapMotion; butt caps so the
+            zero-length dashes draw nothing. */}
+        <Layer
+          id={FLOW_LAYER}
+          beforeId="section-endpoints-dot"
+          type="line"
+          filter={["==", ["id"], selectedSectionId ?? -1]}
+          layout={{ visibility: motion.flowing ? "visible" : "none" }}
+          paint={{
+            "line-color": tokens.white,
+            "line-width": 2,
+            "line-opacity": 0.55,
+            "line-dasharray": FLOW_START,
+            "line-dasharray-transition": { duration: 0, delay: 0 },
+          }}
+        />
+      </Source>
+
+      {/* Its own source: line metrics are what a line-gradient needs, and the
+          many-section source should not pay for them. */}
+      <Source
+        id={DRAWIN_SOURCE}
+        type="geojson"
+        data={selectedFeature}
+        lineMetrics
+      >
+        <Layer
+          id={DRAWIN_CASING_LAYER}
+          beforeId="section-endpoints-dot"
+          type="line"
+          layout={{
+            "line-cap": "round",
+            "line-join": "round",
+            visibility: motion.drawing ? "visible" : "none",
+          }}
+          paint={{
+            "line-width": 10,
+            "line-gradient": drawGradient(tokens.mapSectionLineCasing, 0),
+          }}
+        />
+        <Layer
+          id={DRAWIN_LINE_LAYER}
+          beforeId="section-endpoints-dot"
+          type="line"
+          layout={{
+            "line-cap": "round",
+            "line-join": "round",
+            visibility: motion.drawing ? "visible" : "none",
+          }}
+          paint={{
+            "line-width": 5,
+            "line-gradient": drawGradient(tokens.mapSelectedLine, 0),
           }}
         />
       </Source>

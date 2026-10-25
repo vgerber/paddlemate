@@ -1,16 +1,22 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { addMonths, format, parseISO, startOfMonth } from "date-fns";
-import { type PointerEvent, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { withAlpha } from "@/lib/alpha";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
-import { css, durations } from "@/lib/motion";
+import {
+  css,
+  durations,
+  prefersReducedMotion,
+  REDUCED_FADE_MS,
+  useReducedMotion,
+} from "@/lib/motion";
 import { fonts, sectionHeadingSx, theme } from "@/lib/theme";
 import { monthGrid } from "@/lib/tripTimeline";
-import { pulledOpen, weekDays } from "./planWeek";
+import { weekDays } from "./planWeek";
+import { useMonthPull } from "./useMonthPull";
 
 const { tokens } = theme;
 
@@ -23,6 +29,13 @@ const GRABBER = 16;
 const OVERHANG = (tokens.touch.min - GRABBER) / 2;
 const MARK = 5;
 const MARK_GAP = 3;
+// What the handle button adds below the week: its height less the overhang it
+// shares with its neighbours (see the button's margins).
+const HANDLE_BLOCK = tokens.touch.min + 8 - OVERHANG + (6 - OVERHANG);
+
+// Ink behind the month, over the list.
+const MONTH_SCRIM = 18;
+const MONTH_SCRIM_DARK = 50;
 
 // Seven columns, the first disc's left edge on the 28 line and the last
 // one's right edge on the right line: the disc centre of column one sits at
@@ -64,97 +77,223 @@ export default function PlanCalendar({
   onPick,
 }: Props) {
   const [cursor, setCursor] = useState(() => startOfMonth(parseISO(current)));
-  const drag = useRef<number | null>(null);
+  const pull = useMonthPull({
+    open,
+    onOpenChange,
+    onPullStart: () => setCursor(startOfMonth(parseISO(current))),
+  });
 
   const pick = (date: string) => {
     onOpenChange(false);
     onPick(date);
   };
 
-  const toggle = () => {
-    if (!open) setCursor(startOfMonth(parseISO(current)));
-    onOpenChange(!open);
-  };
-
-  const onDown = (e: PointerEvent<HTMLElement>) => {
-    drag.current = e.clientY;
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-  const onUp = (e: PointerEvent<HTMLElement>) => {
-    const y0 = drag.current;
-    drag.current = null;
-    if (y0 === null) return;
-    const dy = e.clientY - y0;
-    // A tap is a toggle; a pull goes the way it was pulled.
-    if (Math.abs(dy) < 6) toggle();
-    else {
-      const next = pulledOpen(dy, open);
-      if (next && !open) setCursor(startOfMonth(parseISO(current)));
-      onOpenChange(next);
-    }
-  };
-
   const days = { today, current, from, to, runs, planned, onPick: pick };
 
   return (
-    <Box
-      data-testid="week-strip"
-      sx={{
-        flexShrink: 0,
-        position: "relative",
-        zIndex: 1,
-        bgcolor: tokens.surface,
-        boxShadow: tokens.elevation.e1,
-        pt: 0.75,
-        px: STRIP_PAD,
-      }}
-    >
-      <Collapse in={open} timeout={durations.base} unmountOnExit>
-        <MonthView cursor={cursor} onCursorChange={setCursor} {...days} />
-      </Collapse>
-
-      {!open && (
-        <>
-          <WeekdayHeader />
-          <WeekRow dates={weekDays(weekOf ?? current)} {...days} />
-        </>
-      )}
-
-      <ButtonBase
-        aria-label={open ? "Show the week" : "Show the month"}
-        aria-expanded={open}
-        onPointerDown={onDown}
-        onPointerUp={onUp}
-        // Keyboard activation has no pointer; it arrives as a click with no
-        // detail.
-        onClick={(e) => {
-          if (e.detail === 0) toggle();
-        }}
-        onPointerCancel={() => {
-          drag.current = null;
-        }}
-        sx={{
-          position: "relative",
-          width: "100%",
-          // The bar is 4px; the button is a full touch target. Negative
-          // margins give the extra back to the neighbours, so the strip keeps
-          // its height and the button's reach overlaps them as before.
-          height: tokens.touch.min,
-          mt: `${8 - OVERHANG}px`,
-          mb: `${6 - OVERHANG}px`,
-          // The drag is ours: the browser must not take it as a scroll.
-          touchAction: "none",
-        }}
-      >
+    <>
+      {pull.mounted && (
         <Box
+          ref={pull.scrimRef}
+          data-testid="month-scrim"
+          // Keeps its own short fade under reduced motion.
+          data-reduced-fade
+          onClick={() => onOpenChange(false)}
           sx={{
-            width: 36,
-            height: 4,
-            borderRadius: `${tokens.radii.xs}px`,
-            bgcolor: `${tokens.outlineVariant}`,
+            position: "absolute",
+            inset: 0,
+            zIndex: 1,
+            opacity: 0,
+            // Ink in light, black in dark: onSurface would lighten the page.
+            bgcolor: withAlpha(tokens.scrimBase, MONTH_SCRIM),
+            '[data-theme="dark"] &': {
+              bgcolor: withAlpha(tokens.scrimBase, MONTH_SCRIM_DARK),
+            },
           }}
         />
-      </ButtonBase>
+      )}
+      <Box
+        ref={pull.rootRef}
+        data-testid="week-strip"
+        sx={{
+          flexShrink: 0,
+          position: "relative",
+          zIndex: 1,
+          bgcolor: tokens.surface,
+          boxShadow: tokens.elevation.e1,
+          pt: 0.75,
+          px: STRIP_PAD,
+        }}
+      >
+        {pull.mounted && (
+          <Box
+            ref={pull.panelRef}
+            data-testid="month-panel"
+            data-reduced-fade
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 1,
+              bgcolor: tokens.surface,
+              pt: 0.75,
+              px: STRIP_PAD,
+              pb: `${HANDLE_BLOCK}px`,
+            }}
+          >
+            <MonthView cursor={cursor} onCursorChange={setCursor} {...days} />
+          </Box>
+        )}
+
+        <Box sx={{ visibility: open ? "hidden" : "visible" }}>
+          <WeekdayHeader />
+          <WeekSlider week={weekOf ?? current} open={open} {...days} />
+        </Box>
+
+        <ButtonBase
+          ref={pull.handleRef}
+          aria-label={open ? "Show the week" : "Show the month"}
+          aria-expanded={open}
+          {...pull.handlers}
+          // Keyboard activation has no pointer; it arrives as a click with no
+          // detail.
+          onClick={(e) => {
+            if (e.detail === 0) {
+              if (!open) setCursor(startOfMonth(parseISO(current)));
+              onOpenChange(!open);
+            }
+          }}
+          sx={{
+            position: "relative",
+            zIndex: 2,
+            width: "100%",
+            // The bar is 4px; the button is a full touch target. Negative
+            // margins give the extra back to the neighbours, so the strip keeps
+            // its height and the button's reach overlaps them as before.
+            height: tokens.touch.min,
+            mt: `${8 - OVERHANG}px`,
+            mb: `${6 - OVERHANG}px`,
+            // The drag is ours: the browser must not take it as a scroll.
+            touchAction: "none",
+          }}
+        >
+          <Box
+            sx={{
+              width: 36,
+              height: 4,
+              borderRadius: `${tokens.radii.xs}px`,
+              bgcolor: `${tokens.outlineVariant}`,
+            }}
+          />
+        </ButtonBase>
+      </Box>
+    </>
+  );
+}
+
+/** The week row, swapping weeks by sliding one week sideways in the direction
+ * of travel; the old row slides out beside the new one. Reduced motion
+ * cross-fades the two rows instead. */
+function WeekSlider({
+  week,
+  open,
+  ...days
+}: DayProps & { week: string; open: boolean }) {
+  const monday = weekDays(week)[0] ?? week;
+  // The week and day as last drawn: the old row keeps its disc while it leaves.
+  const [shown, setShown] = useState({ monday, current: days.current });
+  const [leaving, setLeaving] = useState<{
+    monday: string;
+    current: string | null;
+    dir: 1 | -1;
+  } | null>(null);
+  if (monday !== shown.monday) {
+    setLeaving(open ? null : { ...shown, dir: monday > shown.monday ? 1 : -1 });
+    setShown({ monday, current: days.current });
+  } else if (days.current !== shown.current) {
+    setShown({ monday, current: days.current });
+  }
+  return (
+    <Box
+      data-testid="week-stage"
+      sx={{ position: "relative", overflow: "hidden" }}
+    >
+      {leaving && (
+        <WeekPane
+          key={`out-${leaving.monday}`}
+          mode="out"
+          dir={leaving.dir}
+          dates={weekDays(leaving.monday)}
+          onDone={() => setLeaving(null)}
+          {...days}
+          current={leaving.current}
+        />
+      )}
+      <WeekPane
+        key={monday}
+        mode={leaving ? "in" : "rest"}
+        dir={leaving?.dir ?? 1}
+        dates={weekDays(monday)}
+        {...days}
+      />
+    </Box>
+  );
+}
+
+function WeekPane({
+  mode,
+  dir,
+  onDone,
+  dates,
+  ...days
+}: DayProps & {
+  mode: "rest" | "in" | "out";
+  dir: 1 | -1;
+  dates: string[];
+  onDone?: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  // The mode and direction only matter at mount, when the pane arrives.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount only
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || mode === "rest") return;
+    const reduced = prefersReducedMotion();
+    const enter = mode === "in";
+    const slide = `${enter ? dir * 100 : 0}%`;
+    const away = `${enter ? 0 : -dir * 100}%`;
+    const anim = reduced
+      ? el.animate(
+          { opacity: enter ? [0, 1] : [1, 0] },
+          {
+            duration: REDUCED_FADE_MS,
+            fill: enter ? "backwards" : "forwards",
+          },
+        )
+      : el.animate(
+          {
+            transform: enter
+              ? [`translateX(${slide})`, "translateX(0)"]
+              : ["translateX(0)", `translateX(${away})`],
+          },
+          {
+            duration: durations.base,
+            easing: css.easeInOut,
+            fill: enter ? "backwards" : "forwards",
+          },
+        );
+    anim.onfinish = () => onDone?.();
+    return () => anim.cancel();
+  }, []);
+  return (
+    <Box
+      ref={ref}
+      data-testid="week-pane"
+      data-mode={mode}
+      sx={mode === "out" ? { position: "absolute", inset: "0 0 auto 0" } : {}}
+    >
+      <WeekRow dates={dates} discFade={mode} {...days} />
     </Box>
   );
 }
@@ -183,6 +322,7 @@ export function MonthView({
   return (
     <Box data-testid="month-grid">
       <Box
+        data-pr="title"
         sx={{
           display: "grid",
           gridTemplateColumns: `${tokens.touch.min}px minmax(0, 1fr) ${tokens.touch.min}px`,
@@ -208,15 +348,24 @@ export function MonthView({
           <ChevronRightIcon />
         </IconButton>
       </Box>
-      <WeekdayHeader />
-      {monthGrid(cursor.getFullYear(), cursor.getMonth() + 1).map((week) => (
-        <WeekRow
-          key={week[0]}
-          dates={week}
-          dimmed={(d) => !d.startsWith(monthPrefix)}
-          {...days}
-        />
-      ))}
+      <Box data-pr="body">
+        <WeekdayHeader />
+        {monthGrid(cursor.getFullYear(), cursor.getMonth() + 1).map((week) => (
+          <Box
+            key={week[0]}
+            data-pr="week"
+            data-has-current={
+              days.current !== null && week.includes(days.current)
+            }
+          >
+            <WeekRow
+              dates={week}
+              dimmed={(d) => !d.startsWith(monthPrefix)}
+              {...days}
+            />
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 }
@@ -267,8 +416,25 @@ function WeekRow({
   runs,
   planned,
   onPick,
-}: DayProps & { dates: string[]; dimmed?: (date: string) => boolean }) {
+  discFade,
+}: DayProps & {
+  dates: string[];
+  dimmed?: (date: string) => boolean;
+  /** The pane's role while weeks swap: its disc fades in or out. */
+  discFade?: "rest" | "in" | "out";
+}) {
+  const reduced = useReducedMotion();
   const col = current === null ? -1 : dates.indexOf(current);
+  // Under reduced motion the disc does not travel: the old one fades out where
+  // it was while the new one fades in.
+  const [seen, setSeen] = useState(col);
+  const [ghost, setGhost] = useState<number | null>(null);
+  const [fresh, setFresh] = useState(false);
+  if (col !== seen) {
+    setSeen(col);
+    setFresh(true);
+    setGhost(reduced && seen >= 0 && col >= 0 ? seen : null);
+  }
   const bands = stretches(
     dates.map((d) => d >= from && (to === null || d <= to)),
   );
@@ -296,34 +462,20 @@ function WeekRow({
         />
       ))}
       {col >= 0 && (
-        <Box
-          data-testid="current-disc"
-          sx={{
-            position: "absolute",
-            top: 6,
-            left: 0,
-            width: "calc(100% / 7)",
-            display: "grid",
-            placeItems: "center",
-            transform: `translateX(${col * 100}%)`,
-            // The disc slides to the new day as the list scrolls.
-            transition: `transform ${css.base} ${css.easeInOut}`,
-          }}
-        >
-          <Box
-            sx={{
-              width: DISC,
-              height: DISC,
-              borderRadius: "50%",
-              bgcolor: tokens.primaryFill,
-              // Today and current: a white gap, then the accent ring.
-              boxShadow:
-                current === today
-                  ? `0 0 0 2px ${tokens.surface}, 0 0 0 4px ${tokens.primaryFill}`
-                  : "none",
-            }}
-          />
-        </Box>
+        <Disc
+          key={reduced ? col : "disc"}
+          col={col}
+          ring={current === today}
+          fade={reduced ? (fresh ? "in" : "rest") : discFade}
+        />
+      )}
+      {ghost !== null && (
+        <Disc
+          col={ghost}
+          ring={false}
+          fade="out"
+          onDone={() => setGhost(null)}
+        />
       )}
       {dates.map((d) => (
         <DayCell
@@ -337,6 +489,68 @@ function WeekRow({
           onPick={() => onPick(d)}
         />
       ))}
+    </Box>
+  );
+}
+
+function Disc({
+  col,
+  ring,
+  fade = "rest",
+  onDone,
+}: {
+  col: number;
+  ring: boolean;
+  fade?: "rest" | "in" | "out";
+  onDone?: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  // The fade only matters when the disc arrives.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount only
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || fade === "rest") return;
+    const reduced = prefersReducedMotion();
+    const anim = el.animate(
+      { opacity: fade === "in" ? [0, 1] : [1, 0] },
+      {
+        duration: reduced ? REDUCED_FADE_MS : durations.fast,
+        easing: fade === "in" ? css.easeOut : css.easeIn,
+        fill: fade === "in" ? "backwards" : "forwards",
+      },
+    );
+    anim.onfinish = () => onDone?.();
+    return () => anim.cancel();
+  }, []);
+  return (
+    <Box
+      ref={ref}
+      data-testid={onDone ? "ghost-disc" : "current-disc"}
+      sx={{
+        position: "absolute",
+        top: 6,
+        left: 0,
+        width: "calc(100% / 7)",
+        display: "grid",
+        placeItems: "center",
+        transform: `translateX(${col * 100}%)`,
+        // The disc slides to the new day as the list scrolls; a new target
+        // retargets the slide from where it is.
+        transition: `transform ${css.base} ${css.easeInOut}`,
+      }}
+    >
+      <Box
+        sx={{
+          width: DISC,
+          height: DISC,
+          borderRadius: "50%",
+          bgcolor: tokens.primaryFill,
+          // Today and current: a white gap, then the accent ring.
+          boxShadow: ring
+            ? `0 0 0 2px ${tokens.surface}, 0 0 0 4px ${tokens.primaryFill}`
+            : "none",
+        }}
+      />
     </Box>
   );
 }
@@ -393,7 +607,9 @@ function DayCell({
           fontSize: 15,
           fontWeight: current ? 700 : 500,
           fontVariantNumeric: "tabular-nums",
-          transition: `color ${css.base} ${css.easeInOut}`,
+          // The digit turns white as the disc arrives under it.
+          transition: `color ${css.fast} ${css.easeInOut} 60ms`,
+          'html[data-motion="reduced"] &': { transitionDelay: "0ms" },
           // Days outside the month or without a card sit back.
           opacity: faded && !current ? 0.55 : 1,
           color: current
