@@ -29,6 +29,9 @@ export const css = {
 /** How long a spinner waits before it shows, so a fast answer never flashes one. */
 export const SPINNER_DELAY_MS = motion.spinnerDelay;
 
+/** The beat an arriving element waits for the leaving one to clear. */
+export const LEAD_MS = motion.lead;
+
 /** The cross-fade that replaces movement under reduced motion, out and in. */
 export const REDUCED_FADE_MS = motion.reducedFade;
 

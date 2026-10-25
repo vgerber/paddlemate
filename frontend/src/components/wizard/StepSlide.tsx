@@ -9,6 +9,7 @@ import {
 import {
   css,
   durations,
+  LEAD_MS,
   prefersReducedMotion,
   REDUCED_FADE_MS,
 } from "@/lib/motion";
@@ -17,16 +18,20 @@ const SHIFT_PX = 16;
 // Choreography moment 6: the leaving step fades out in 140 ms, the arriving
 // one fades in over 60-280 ms; the two overlap.
 const LEAVE_MS = REDUCED_FADE_MS;
-const ENTER_DELAY_MS = 60;
-const ENTER_MS = 220;
+const ENTER_DELAY_MS = LEAD_MS;
+const ENTER_MS = durations.fast + LEAD_MS;
 
 interface Ghost {
+  step: number;
   node: ReactNode;
   dir: 1 | -1;
   fade: boolean;
 }
 
-/** Swaps wizard steps with a direction-aware slide: forward leaves to the
+/** The leaving step is the same keyed element that was showing, kept mounted
+ * until its fade ends, so a step's mount effects and maps run once.
+ *
+ * Swaps wizard steps with a direction-aware slide: forward leaves to the
  * left and arrives from the right, back is mirrored. Only the step content
  * moves, never the footer. Under reduced motion the steps cross-fade in
  * place. `fadeTo` names a step (the saved state) entered by a plain
@@ -49,6 +54,7 @@ export default function StepSlide({
 
   if (shown !== step) {
     const next: Ghost = {
+      step: shown,
       node: last.current.node,
       dir: step > shown ? 1 : -1,
       fade: step === fadeTo,
@@ -71,6 +77,8 @@ export default function StepSlide({
     const shift = plain ? 0 : SHIFT_PX * m.dir;
     const move = (x: number) => (plain ? "none" : `translateX(${x}px)`);
     const leaveMs = reduced ? LEAVE_MS : m.fade ? durations.fast : LEAVE_MS;
+    // A step swapped back mid-fade reuses its element: drop the old fade.
+    for (const a of enterRef.current?.getAnimations() ?? []) a.cancel();
     const enter = enterRef.current?.animate(
       [
         { opacity: 0, transform: move(shift) },
@@ -106,6 +114,7 @@ export default function StepSlide({
     <Box sx={{ position: "relative", minWidth: 0 }}>
       {ghost && (
         <Box
+          key={ghost.step}
           ref={ghostRef}
           inert
           aria-hidden
@@ -121,7 +130,7 @@ export default function StepSlide({
           {ghost.node}
         </Box>
       )}
-      <Box ref={enterRef} data-step-enter>
+      <Box key={step} ref={enterRef} data-step-enter>
         {children}
       </Box>
     </Box>
