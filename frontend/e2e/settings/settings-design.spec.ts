@@ -55,8 +55,11 @@ test.describe("settings list rows", () => {
       "rgb(255, 255, 255)",
     );
     expect(await computed(other, "outline-style")).toBe("solid");
-    expect(await computed(other, "outline-color")).toBe(TEAL);
-    expect(await computed(open, "outline-style")).toBe("none");
+    // The ring fades in (instant step), so it is read once it has.
+    await expect.poll(() => computed(other, "outline-color")).toBe(TEAL);
+    // No visible ring: the outline stays in place, transparent, so focus can
+    // fade it in.
+    expect(await computed(open, "outline-color")).toBe("rgba(0, 0, 0, 0)");
   });
 });
 

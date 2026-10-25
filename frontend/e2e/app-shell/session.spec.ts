@@ -1,5 +1,4 @@
 import { expect, type Page, test } from "@playwright/test";
-import { appReady } from "../support/fixture";
 
 // The PWA keeps its session through a phone's sleep: a renewal that fails
 // for want of a network keeps the stored user and retries when the device is
@@ -34,7 +33,7 @@ test("a renewal without a network keeps the session and resumes online", async (
   await expireStoredToken(page);
   await page.route(TOKEN, (route) => route.abort("internetdisconnected"));
   await page.goto("/trips");
-  await appReady(page).catch(() => {});
+  await page.waitForLoadState("load");
   await page.waitForTimeout(1500);
   expect(await storedUser(page)).toBe(true);
 
