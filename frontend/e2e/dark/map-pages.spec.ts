@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { contrastReport, lightSurfaces, useScheme } from "../support/dark";
 
-// Map-page and logs screens in dark (doc/plans/dark-mode.md, D1b).
+// Map-page and logs screens in dark (doc/design.md#dark-mode).
 type Shot = {
   name: string;
   path: string;
