@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { appReady, computed } from "../support/fixture";
+import { appReady } from "../support/fixture";
 
 const KEY = "pm-motion";
 
