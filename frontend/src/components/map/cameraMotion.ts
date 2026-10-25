@@ -1,48 +1,17 @@
 import type { LngLatBoundsLike, LngLatLike } from "maplibre-gl";
 import type { MapRef } from "react-map-gl/maplibre";
-import { cameraMs, durations, prefersReducedMotion } from "@/lib/motion";
+import {
+  cameraMs,
+  cubicBezier,
+  durations,
+  prefersReducedMotion,
+} from "@/lib/motion";
 import { theme } from "@/lib/theme";
 
 const { motion } = theme.tokens;
 
 /** One zoom level counts as this many screens of travel. */
 export const SCREENS_PER_ZOOM = 0.5;
-
-/** Solve a CSS cubic-bezier(x1, y1, x2, y2) string into an easing function
- * for MapLibre, which takes a function rather than a CSS curve. */
-export function cubicBezier(css: string): (t: number) => number {
-  const m = css.match(/cubic-bezier\(([^)]+)\)/);
-  const p = m?.[1].split(",").map(Number);
-  if (!p || p.length !== 4 || p.some(Number.isNaN)) return (t) => t;
-  const [x1, y1, x2, y2] = p;
-  const at = (a: number, b: number, s: number) =>
-    3 * a * s * (1 - s) ** 2 + 3 * b * s ** 2 * (1 - s) + s ** 3;
-  const slope = (a: number, b: number, s: number) =>
-    3 * a * (1 - s) ** 2 + 6 * (b - a) * s * (1 - s) + 3 * (1 - b) * s ** 2;
-  return (x) => {
-    if (x <= 0) return 0;
-    if (x >= 1) return 1;
-    let s = x;
-    for (let i = 0; i < 8; i++) {
-      const err = at(x1, x2, s) - x;
-      if (Math.abs(err) < 1e-6) return at(y1, y2, s);
-      const d = slope(x1, x2, s);
-      if (Math.abs(d) < 1e-6) break;
-      s -= err / d;
-    }
-    let lo = 0;
-    let hi = 1;
-    s = x;
-    for (let i = 0; i < 24; i++) {
-      const v = at(x1, x2, s);
-      if (Math.abs(v - x) < 1e-6) break;
-      if (v < x) lo = s;
-      else hi = s;
-      s = (lo + hi) / 2;
-    }
-    return at(y1, y2, s);
-  };
-}
 
 export const cameraEasing = cubicBezier(motion.easeOut);
 

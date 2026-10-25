@@ -1,12 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import {
-  cubicBezier,
   drawGradient,
   drawProgress,
   FLOW_FRAMES,
   flowFrames,
   isSoftwareRenderer,
-  parseBezier,
   shiftedDash,
 } from "./useMapMotion";
 
@@ -29,21 +27,6 @@ describe("flow frames", () => {
 });
 
 describe("draw-in", () => {
-  test("the bezier parser reads css control points", () => {
-    expect(parseBezier("cubic-bezier(0.4, 0, 0.2, 1)")).toEqual([
-      0.4, 0, 0.2, 1,
-    ]);
-    expect(parseBezier("linear")).toEqual([0, 0, 1, 1]);
-  });
-
-  test("in-out easing is symmetric and slow at both ends", () => {
-    const e = cubicBezier([0.4, 0, 0.2, 1]);
-    expect(e(0)).toBe(0);
-    expect(e(1)).toBe(1);
-    expect(e(0.1)).toBeLessThan(0.1);
-    expect(e(0.9)).toBeGreaterThan(0.9);
-  });
-
   test("progress is clamped and finishes at the duration", () => {
     expect(drawProgress(-5)).toBe(0);
     expect(drawProgress(360)).toBe(1);
