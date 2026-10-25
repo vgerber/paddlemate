@@ -285,8 +285,10 @@ export default function WaterwayBrowsePanel({
     // Overscroll at the list edge must not chain into a document
     // bounce - that drags the fixed overlay and shows the map
     // behind it (the body-level rule alone does not stop chaining
-    // that starts inside a scroller).
-    overscrollBehavior: "contain",
+    // that starts inside a scroller). Phone only: on a desktop card the
+    // card scrolls, and Firefox stops the wheel at a contained box even
+    // when that box has nothing to scroll.
+    overscrollBehavior: { xs: "contain", md: "auto" },
     py: 1,
     ...(inFeatures && { p: { md: `${panel.gutter}px` } }),
     // Leave room so a floating button never covers the last row.

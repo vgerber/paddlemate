@@ -416,3 +416,49 @@ test.describe("canvas foundation on a phone", () => {
     await expect(page.locator('[data-testid^="canvas-card-"]')).toHaveCount(0);
   });
 });
+
+// Firefox stops the wheel at a box with `overscroll-behavior: contain` even
+// when the box has nothing to scroll, so inside a scrolling card the wheel
+// dies over that box. Chrome lets it through, so the rule is checked on the
+// page's structure, not with a wheel.
+test.describe("the wheel reaches the scrolling card", () => {
+  test.skip(({ isMobile }) => isMobile, "desktop cards");
+  for (const [name, url] of [
+    ["section", "/?waterway=9001&section=9105"],
+    ["search", "/"],
+    ["trip", "/trips/9001"],
+  ] as const) {
+    for (const height of [543, 900]) {
+      test(`${name} at 1326x${height}: no contained box that does not scroll sits in a scroller`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1326, height });
+        await page.goto(url);
+        await appReady(page);
+        await page.waitForTimeout(1000);
+        const traps = await page.evaluate(() =>
+          [...document.querySelectorAll<HTMLElement>("*")]
+            .filter(
+              (e) =>
+                getComputedStyle(e).overscrollBehaviorY !== "auto" &&
+                e.getBoundingClientRect().height > 0 &&
+                e.scrollHeight <= e.clientHeight + 1,
+            )
+            .filter((e) => {
+              for (let a = e.parentElement; a; a = a.parentElement) {
+                const s = getComputedStyle(a);
+                if (
+                  /(auto|scroll)/.test(s.overflowY) &&
+                  a.scrollHeight > a.clientHeight + 1
+                )
+                  return true;
+              }
+              return false;
+            })
+            .map((e) => e.dataset.testid ?? e.className.toString()),
+        );
+        expect(traps).toEqual([]);
+      });
+    }
+  }
+});
