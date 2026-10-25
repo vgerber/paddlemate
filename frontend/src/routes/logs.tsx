@@ -12,6 +12,7 @@ import { useState } from "react";
 import { useCanvasScene } from "@/components/canvas/CanvasContext";
 import CanvasLayout from "@/components/canvas/CanvasLayout";
 import { isLogFormRoute } from "@/components/canvas/canvasRoutes";
+import { useLayout } from "@/components/canvas/canvasStore";
 import FloatingCard from "@/components/canvas/FloatingCard";
 import DockedAction from "@/components/DockedAction";
 import ListPaneHeader from "@/components/ListPaneHeader";
@@ -23,6 +24,7 @@ import PanelHeader from "@/components/PanelHeader";
 import { SwipeGhost } from "@/components/SwipeGhost";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
+import { fitsBeside } from "@/lib/canvasLayout";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
 import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
@@ -58,6 +60,7 @@ function LogsPage() {
   // Drawn by the canvas host from md; called on a phone too, where it is
   // harmless. The log form stacks its own scene on top while it is open.
   useCanvasScene(useLogsScene(selectedId, isAuthenticated));
+  const windowWidth = useLayout((s) => s.viewport.w);
 
   // On a phone the log replaces the list; on a desktop it opens beside it.
   if (isMobile && hasChild) return <Outlet />;
@@ -124,37 +127,42 @@ function LogsPage() {
   }
 
   const form = isLogFormRoute(pathname, search);
+  // Where the list would fold to its header beside the form, the form takes
+  // the list's place: one card, not a header and a form.
+  const formAlone = form && !fitsBeside(["list", "side"], windowWidth);
 
   // Desktop: the list and the open log float over the map, which draws the
   // open log (or all of them).
   return (
     <CanvasLayout>
-      <FloatingCard
-        id="list"
-        side="left"
-        kind="list"
-        screen="logs"
-        title="Logs"
-        selfHeaded
-        fullHeight
-      >
-        <Box
-          sx={{
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-          }}
+      {!formAlone && (
+        <FloatingCard
+          id="list"
+          side="left"
+          kind="list"
+          screen="logs"
+          title="Logs"
+          selfHeaded
+          fullHeight
         >
-          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
-          {tab === "mine" && (
-            <DockedAction label="Log descent" onClick={onNew} />
-          )}
-        </Box>
-      </FloatingCard>
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>{list}</Box>
+            {tab === "mine" && (
+              <DockedAction label="Log descent" onClick={onNew} />
+            )}
+          </Box>
+        </FloatingCard>
+      )}
       {hasChild && (
         <FloatingCard
           id="log"
-          side="right"
+          side={formAlone ? "left" : "right"}
           kind="side"
           screen="logs"
           title={form ? "Log form" : "Log"}

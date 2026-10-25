@@ -8,6 +8,7 @@ import {
   dockMode,
   dockRect,
   expandedLimit,
+  fitsBeside,
   freeArea,
   layoutCards,
 } from "./canvasLayout";
@@ -203,5 +204,15 @@ describe("controlInset", () => {
     const placed = layoutCards([detail(486)], 1280);
     const free = freeArea(placed, 1280, 744, null);
     expect(controlInset(free.padding, null).bottom).toBe(24);
+  });
+});
+
+describe("fitsBeside", () => {
+  test("a list and a side card fold one of them at 1000, not at 1600", () => {
+    expect(fitsBeside(["list", "side"], 1000)).toBe(false);
+    expect(fitsBeside(["list", "side"], 1600)).toBe(true);
+  });
+  test("one card always fits", () => {
+    expect(fitsBeside(["side"], 800)).toBe(true);
   });
 });

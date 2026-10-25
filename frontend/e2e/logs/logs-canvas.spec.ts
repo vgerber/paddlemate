@@ -184,9 +184,10 @@ test.describe("the log form on the canvas", () => {
         true,
       );
       // The cards leave the map room.
-      expect(b.width + (await width(page, "list"))).toBeLessThanOrEqual(
-        w * 0.7 + 1,
-      );
+      const list = (await card(page, "list").count())
+        ? await width(page, "list")
+        : 0;
+      expect(b.width + list).toBeLessThanOrEqual(w * 0.7 + 1);
     });
 
     test(`the steps work and a click on the map picks a section at ${w}`, async ({
@@ -213,6 +214,20 @@ test.describe("the log form on the canvas", () => {
       await expect(page.getByText("Step 1 of 3 · When")).toBeVisible();
     });
   }
+
+  test("where the list would fold beside it, the form is the one card", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1000, height: 800 });
+    await page.goto("/logs/new");
+    await expect(card(page, "log")).toBeVisible();
+    await expect(card(page, "list")).toHaveCount(0);
+    const b = await card(page, "log").boundingBox();
+    expect(b && b.x < 100).toBe(true);
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await expect(card(page, "list")).toBeVisible();
+    await expect(card(page, "log")).toBeVisible();
+  });
 
   test("the map changes no pick on the other steps", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });

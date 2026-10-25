@@ -1,4 +1,4 @@
-import type { CardKind } from "@/lib/cardWidth";
+import { type CardKind, cardWidth } from "@/lib/cardWidth";
 import { theme } from "@/lib/theme";
 
 const { canvas } = theme.tokens;
@@ -106,6 +106,20 @@ export function collapsedIds(
     folded.add(card.id);
   }
   return folded;
+}
+
+/** Whether cards of these kinds, at their default widths, all stay expanded
+ * side by side in a window this wide. A screen that would fold one shows a
+ * single card instead. */
+export function fitsBeside(kinds: CardKind[], windowWidth: number): boolean {
+  const cards = kinds.map((kind, i) => ({
+    id: String(i),
+    side: "left" as const,
+    kind,
+    priority: canvas.cards[kind].priority,
+    width: cardWidth(kind, windowWidth),
+  }));
+  return collapsedIds(cards, windowWidth).size === 0;
 }
 
 /** Positions every card: expanded ones from their window edge inwards in
