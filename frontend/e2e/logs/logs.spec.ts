@@ -245,7 +245,11 @@ test.describe("log descent", () => {
         sizes.filter((s) => s !== "16px"),
         `step ${step}`,
       ).toEqual([]);
-      if (step < 2) await next(page).click();
+      if (step < 2) {
+        await next(page).click();
+        // The leaving step stays mounted while it fades out.
+        await expect(page.locator("[data-step-ghost]")).toHaveCount(0);
+      }
     }
   });
 
