@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import LevelFill from "@/components/LevelFill";
 import { withAlpha } from "@/lib/alpha";
 import { type DotLevel, dotsLabel } from "@/lib/levelDots";
 import { theme } from "@/lib/theme";
@@ -10,12 +11,14 @@ const { tokens } = theme;
 /** More dots than this read as noise: the rest collapse into a count. */
 const MAX_DOTS = 12;
 
-function dotSx(level: DotLevel, ink: ResolvedTokens) {
-  if (level === "unknown") return { bgcolor: withAlpha(tokens.outline, 50.2) };
-  if (level === "empty") {
-    return { border: `2px solid ${levelMarkerColor("empty", ink)}` };
-  }
-  return { bgcolor: levelMarkerColor(level, ink) };
+function dotColor(level: DotLevel, ink: ResolvedTokens) {
+  if (level === "unknown") return withAlpha(tokens.outline, 50.2);
+  if (level === "empty") return "transparent";
+  return levelMarkerColor(level, ink);
+}
+
+function dotBorder(level: DotLevel, ink: ResolvedTokens) {
+  return level === "empty" ? `2px solid ${levelMarkerColor("empty", ink)}` : "";
 }
 
 /** One small dot per section, coloured by its level, so a closed row answers
@@ -42,16 +45,18 @@ export default function LevelDots({
       sx={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}
     >
       {shown.map((level, i) => (
-        <Box
+        <LevelFill
           key={i}
           data-level={level}
+          level={level}
           title={names?.[i]}
-          sx={{
+          color={dotColor(level, ink)}
+          style={{
             width: 8,
             height: 8,
             boxSizing: "border-box",
             borderRadius: "50%",
-            ...dotSx(level, ink),
+            border: dotBorder(level, ink),
           }}
         />
       ))}

@@ -2,9 +2,12 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { Popup } from "react-map-gl/maplibre";
+import LevelFill from "@/components/LevelFill";
 import type { components } from "@/lib/api/schema";
 import { transition } from "@/lib/motion";
+import { isStale } from "@/lib/staleness";
 import { labelSx, theme } from "@/lib/theme";
+import { useOnline } from "@/lib/useOnline";
 import { levelMarkerColor } from "@/lib/waterLevel";
 import AccessibleMarker from "./AccessibleMarker";
 
@@ -19,6 +22,10 @@ export interface GaugePin {
   name: string;
   /** Null for catalog-only stations without readings (neutral color). */
   level: WaterLevel | null;
+  /** Newest reading time and its station's fetch interval: with them the pin
+   * can tell a silent gauge from a live one. */
+  measuredAt?: string | null;
+  fetchIntervalSecs?: number;
   /** Emphasized pin (e.g. the matched river's own gauges in suggest mode). */
   highlighted?: boolean;
   /** When set, clicking opens an info popup instead of calling onClick. */
@@ -41,6 +48,8 @@ export default function GaugeMarkers({
   onClick,
 }: GaugeMarkersProps) {
   const [popupPin, setPopupPin] = useState<GaugePin | null>(null);
+  const online = useOnline();
+  const now = Date.now();
 
   return (
     <>
@@ -52,6 +61,13 @@ export default function GaugeMarkers({
           : pin.highlighted
             ? theme.tokens.primary
             : theme.tokens.outline;
+        // A reading that is old, or no network to trust it over, is shown as
+        // a ring: the level is not current.
+        const hollow =
+          pin.level != null &&
+          (!online ||
+            (pin.fetchIntervalSecs != null &&
+              isStale(pin.measuredAt, now, pin.fetchIntervalSecs)));
         return (
           <AccessibleMarker
             key={pin.id}
@@ -79,15 +95,21 @@ export default function GaugeMarkers({
                 padding: 0,
               }}
             >
-              <span
+              <LevelFill
+                color={hollow ? theme.tokens.background : color}
+                level={`${pin.level ?? "none"}${hollow ? "-hollow" : ""}`}
+                data-level={pin.level ?? "none"}
+                data-hollow={hollow ? "true" : "false"}
                 style={{
                   width: emphasized ? 18 : 14,
                   height: emphasized ? 18 : 14,
                   borderRadius: "50%",
-                  background: color,
-                  border: isSelected
-                    ? `3px solid ${theme.tokens.white}`
-                    : `2px solid ${theme.tokens.background}`,
+                  boxSizing: "content-box",
+                  border: hollow
+                    ? `3px solid ${color}`
+                    : isSelected
+                      ? `3px solid ${theme.tokens.white}`
+                      : `2px solid ${theme.tokens.background}`,
                   boxShadow: isSelected
                     ? tokens.elevation.markerRaised
                     : tokens.elevation.marker,

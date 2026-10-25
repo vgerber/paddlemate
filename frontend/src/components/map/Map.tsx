@@ -20,6 +20,7 @@ import {
   type Bounds,
   circleGeoJSON,
   type LngLat,
+  pointCoords,
   type ViewBounds,
 } from "@/lib/geo";
 import { useTokens } from "@/lib/useTokens";
@@ -48,6 +49,7 @@ import RegionHiddenNote from "./RegionHiddenNote";
 import RegionHoverTag, { hoverUnder, type RegionHover } from "./RegionHoverTag";
 import RegionLayers from "./RegionLayers";
 import SectionLayers from "./SectionLayers";
+import TargetRing, { type RingTarget } from "./TargetRing";
 import { useControlInset } from "./useControlInset";
 import { useMapCameraEffects } from "./useMapCameraEffects";
 import { useMapClickHandler } from "./useMapClickHandler";
@@ -433,6 +435,14 @@ export default function WaterwayMap({
     }),
     [sectionsGeoJSON, selectedSectionId],
   );
+  const ringTarget = useMemo<RingTarget | null>(() => {
+    const pin = gaugePins?.find((p) => p.id === selectedGaugePinId);
+    if (pin) return { lon: pin.lon, lat: pin.lat };
+    const coords = pointCoords(
+      features?.find((f) => f.id === selectedFeatureId)?.location,
+    );
+    return coords ? { lon: coords[0], lat: coords[1] } : null;
+  }, [gaugePins, selectedGaugePinId, features, selectedFeatureId]);
   const drawColors = useMemo(
     () => ({
       casing: tokens.mapSectionLineCasing,
@@ -676,6 +686,8 @@ export default function WaterwayMap({
           selectedId={selectedGaugePinId}
           onClick={onGaugeClick}
         />
+
+        <TargetRing target={ringTarget} />
 
         <Source id="area-circle" type="geojson" data={circleData}>
           <Layer
