@@ -4,6 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import DelayedSpinner from "@/components/states/DelayedSpinner";
+import { transition } from "@/lib/motion";
 import { SYSTEM_INSET, theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -130,10 +131,24 @@ export default function PanelBottomBar({
                 key={i}
                 data-step-bar={i < steps.n ? "done" : "todo"}
                 sx={{
+                  position: "relative",
+                  overflow: "hidden",
                   width: 18,
                   height: 4,
                   borderRadius: `${tokens.radii.bar}px`,
-                  bgcolor: i < steps.n ? tokens.primary : tokens.outlineVariant,
+                  bgcolor: tokens.outlineVariant,
+                  // A step done fills left to right.
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    inset: 0,
+                    bgcolor: tokens.primary,
+                    transformOrigin: "left",
+                    transform: i < steps.n ? "scaleX(1)" : "scaleX(0)",
+                    transition: transition("transform", {
+                      easing: "easeInOut",
+                    }),
+                  },
                 }}
               />
             ))}

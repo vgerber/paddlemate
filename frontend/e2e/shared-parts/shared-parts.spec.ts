@@ -168,6 +168,45 @@ test.describe("forms", () => {
     await expectTouchTargets(cancel);
   });
 
+  test("a step bar fills left to right on the base step, and jumps under reduced", async ({
+    page,
+  }) => {
+    const fill = (page: Page) =>
+      page
+        .locator("[data-step-bar=done]")
+        .first()
+        .evaluate((el) => {
+          const s = getComputedStyle(el, "::after");
+          return {
+            origin: s.transformOrigin,
+            transition: s.transitionProperty,
+            duration: s.transitionDuration,
+            easing: s.transitionTimingFunction,
+            transform: s.transform,
+          };
+        });
+    await page.goto("/logs/new");
+    await expect(page.locator("[data-step-bar=done]")).toHaveCount(1);
+    const full = await fill(page);
+    expect(full.origin.startsWith("0px")).toBe(true);
+    expect(full.transition).toBe("transform");
+    expect(full.duration).toBe("0.26s");
+    expect(full.easing).toBe("cubic-bezier(0.4, 0, 0.2, 1)");
+    expect(full.transform).toBe("matrix(1, 0, 0, 1, 0, 0)");
+    const todo = await page
+      .locator("[data-step-bar=todo]")
+      .first()
+      .evaluate((el) => getComputedStyle(el, "::after").transform);
+    expect(todo).toBe("matrix(0, 0, 0, 1, 0, 0)");
+
+    await page.evaluate(() => localStorage.setItem("pm-motion", "reduced"));
+    await page.reload();
+    await expect(page.locator("[data-step-bar=done]")).toHaveCount(1);
+    expect(Number.parseFloat((await fill(page)).duration)).toBeLessThanOrEqual(
+      0.001,
+    );
+  });
+
   test("visibility is three separate tiles, the chosen one ringed", async ({
     page,
   }) => {

@@ -88,9 +88,17 @@ async function record(page: Page) {
 
 /** `software` false lifts the software-GL pause, which this headless Chrome
  * (SwiftShader) always has; null leaves the real detection. */
-async function open(page: Page, url = UPPER, software: boolean | null = false) {
+async function open(
+  page: Page,
+  url = UPPER,
+  software: boolean | null = false,
+  showMap = true,
+) {
   await page.goto(url);
   await appReady(page);
+  // On a phone the section opens as a full-screen panel that pauses the flow.
+  const toMap = page.getByRole("button", { name: "View on map" });
+  if (showMap && (await toMap.isVisible())) await toMap.click();
   await page.waitForFunction(
     () =>
       !!(window as unknown as Win).__paddlemateMap?.getLayer("sections-flow") &&
@@ -223,6 +231,18 @@ test.describe("map motion", () => {
     expect(await framesIn(page, 700)).toBeGreaterThan(3);
   });
 
+  test("the phone's full-screen panel stops it", async ({ page }, info) => {
+    test.skip(
+      info.project.name === "desktop",
+      "the panel covers the map on a phone",
+    );
+    await record(page);
+    await open(page, UPPER, false, false);
+    await expect(page.getByTestId("mobile-overlay")).toBeVisible();
+    await page.waitForTimeout(500);
+    expect(await framesIn(page, 700)).toBe(0);
+  });
+
   test("it stops after 20 s without input and input wakes it", async ({
     page,
   }) => {
@@ -304,7 +324,7 @@ test.describe("map motion", () => {
 
   test("a newly selected section draws in over 360 ms, then the flow starts", async ({
     page,
-  }) => {
+  }, info) => {
     test.setTimeout(90_000);
     await page.emulateMedia({ reducedMotion: "no-preference" });
     // Stepped by hand at 16 ms: real frames are too slow here to time 360 ms.
@@ -377,7 +397,10 @@ test.describe("map motion", () => {
     expect(steps.at(-1)?.main).toBe("visible");
     // One animated object at a time: no flow frame before the draw-in ends.
     expect(drawn.at(-1)?.flow).toBe(0);
-    expect(steps.at(-1)?.flow).toBeGreaterThan(0);
+    // A phone opens the section under its full-screen panel: no flow yet.
+    if (info.project.name === "desktop")
+      expect(steps.at(-1)?.flow).toBeGreaterThan(0);
+    else expect(steps.at(-1)?.flow).toBe(0);
   });
 
   test("the map fades in once on first load, over 260 ms", async ({ page }) => {
