@@ -3,7 +3,10 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
+import { useCanvasScene } from "@/components/canvas/CanvasContext";
+import CanvasLayout from "@/components/canvas/CanvasLayout";
+import FloatingCard from "@/components/canvas/FloatingCard";
 import WaterwayMap from "@/components/map/LazyMap";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -17,17 +20,21 @@ import {
   useSectionWizardState,
   WIZARD_STEPS,
 } from "@/components/waterway/useSectionWizardState";
+import { useSuggestScene } from "@/components/waterway/useSuggestScene";
 import SavedMark from "@/components/wizard/SavedMark";
 import StepSlide from "@/components/wizard/StepSlide";
+import type { SectionWithFeatures } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateSection } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { ConfirmIcon, ForwardIcon, MapIcon } from "@/lib/icons";
 import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
-import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
+
+const NO_SECTIONS: SectionWithFeatures[] = [];
 
 export const Route = createFileRoute("/waterways/suggest-section")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -42,7 +49,7 @@ function SuggestSectionPage() {
   const { waterway: waterwayId } = Route.useSearch();
   const { isAuthenticated, isLoading: sessionLoading } = useSession();
   const { data: waterway } = useWaterway(waterwayId ?? null);
-  const sections = waterway?.sections ?? [];
+  const sections = waterway?.sections ?? NO_SECTIONS;
 
   const verb = useMapVerb();
   const wizard = useSectionWizardState(
@@ -51,6 +58,10 @@ function SuggestSectionPage() {
     waterwayId,
   );
   const { step, putIn, takeOut, finalCoords, featurePickActive } = wizard;
+
+  // Drawn by the canvas host from md; harmless on a phone, which keeps its
+  // own map.
+  useCanvasScene(useSuggestScene(wizard, sections));
 
   const createSection = useCreateSection(waterwayId ?? 0);
   const submitting = createSection.isPending;
@@ -95,8 +106,29 @@ function SuggestSectionPage() {
       search: { ...EMPTY_MAP_SEARCH, waterway: waterwayId },
     });
 
+  // Desktop: the screen is the card over the canvas map, even for its
+  // empty and sign-in states.
+  const inCard = (content: ReactNode) =>
+    isDesktop ? (
+      <CanvasLayout>
+        <FloatingCard
+          id="suggest"
+          side="right"
+          kind="side"
+          screen="suggest-section"
+          title="Suggest section"
+          selfHeaded
+          fullHeight
+        >
+          {content}
+        </FloatingCard>
+      </CanvasLayout>
+    ) : (
+      content
+    );
+
   if (waterwayId == null) {
-    return (
+    return inCard(
       <Box
         sx={{
           maxWidth: 720,
@@ -106,16 +138,16 @@ function SuggestSectionPage() {
         }}
       >
         <Typography color="textSecondary">No waterway selected.</Typography>
-      </Box>
+      </Box>,
     );
   }
 
   if (sessionLoading) {
-    return <LoadingBox size={40} pt={8} />;
+    return inCard(<LoadingBox size={40} pt={8} />);
   }
 
   if (!isAuthenticated) {
-    return <SignInGate title="Sign in to suggest a section" />;
+    return inCard(<SignInGate title="Sign in to suggest a section" />);
   }
 
   const submittedCard = (
@@ -125,21 +157,17 @@ function SuggestSectionPage() {
     />
   );
 
-  const mapNode = (step > 0 || isDesktop) && (
+  const mapNode = step > 0 && (
     <Box
       ref={wizard.mapContainerRef}
       sx={{
         position: "relative",
-        height: { xs: 380, md: "100%" },
-        minHeight: { md: 360 },
+        height: 380,
         overflow: "hidden",
-        border: { xs: "1px solid", md: "none" },
+        border: "1px solid",
         borderColor: "divider",
-        borderRadius: { md: `${tokens.radii.md}px` },
-        boxShadow: { md: tokens.elevation.e1 },
-        // Keep clear of the fixed AppBar when scrolled into view
-        // (mobile has no top bar)
-        scrollMarginTop: { xs: 8, md: 80 },
+        // Mobile has no top bar
+        scrollMarginTop: 8,
       }}
     >
       <WaterwayMap
@@ -177,29 +205,16 @@ function SuggestSectionPage() {
           featureGeomType: wizard.featureGeomType,
         }}
       />
-      {isDesktop && onSectionStep && (
-        <Typography
-          data-testid="map-hint"
-          sx={{
-            position: "absolute",
-            top: 12,
-            left: "50%",
-            transform: "translateX(-50%)",
-            maxWidth: "calc(100% - 24px)",
-            px: 2,
-            py: 1,
-            borderRadius: `${tokens.radii.pill}px`,
-            bgcolor: tokens.surface,
-            boxShadow: tokens.elevation.e1,
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            pointerEvents: "none",
-          }}
-        >
-          {verb} the map to set where you get on and off the water.
-        </Typography>
-      )}
     </Box>
+  );
+
+  const mapHint = isDesktop && onSectionStep && !submitted && (
+    <Typography
+      data-testid="map-hint"
+      sx={{ fontSize: "0.875rem", color: "text.secondary" }}
+    >
+      {verb} the map to set where you get on and off the water.
+    </Typography>
   );
 
   const formNode = (
@@ -211,6 +226,7 @@ function SuggestSectionPage() {
         minWidth: 0,
       }}
     >
+      {mapHint}
       <StepSlide step={step}>
         {step === 0 && (
           <SectionNamingForm
@@ -317,37 +333,18 @@ function SuggestSectionPage() {
     />
   );
 
-  // Desktop: the form and its bar in a left pane, the map beside it, the
-  // same split on every step so the map never shifts.
+  // Desktop: the form and its bar in a card over the canvas map, which
+  // takes the picking and drawing.
   if (isDesktop) {
-    return (
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "400px minmax(0, 1fr)",
-          height: PANEL_HEIGHT.md,
-          bgcolor: tokens.surfaceLow,
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 0,
-            bgcolor: tokens.surface,
-            borderRight: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2 }}>
-            <StepSlide step={submitted ? 1 : 0} fadeTo={1}>
-              {submitted ? submittedCard : formNode}
-            </StepSlide>
-          </Box>
-          {barNode}
+    return inCard(
+      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2 }}>
+          <StepSlide step={submitted ? 1 : 0} fadeTo={1}>
+            {submitted ? submittedCard : formNode}
+          </StepSlide>
         </Box>
-        <Box sx={{ minWidth: 0, minHeight: 0, p: 1.5 }}>{mapNode}</Box>
-      </Box>
+        {barNode}
+      </Box>,
     );
   }
 

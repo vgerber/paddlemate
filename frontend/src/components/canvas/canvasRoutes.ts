@@ -11,12 +11,16 @@ export function isLogFormRoute(
 
 const isTrue = (v: unknown) => v === true || v === "true";
 
+/** The suggest-section wizard: a card over the canvas whose scene is the
+ * line and feature picking. */
+export const SUGGEST_SECTION_PATH = "/waterways/suggest-section";
+
 /** Routes whose screen is about places, so on a wide window the map fills it
  * and the content floats over. Everything else (settings, tools, admin, the
- * pickers and wizards with their own maps) keeps its own layout. */
+ * pickers and wizards without one) keeps its own layout. */
 export function isGeographyRoute(pathname: string): boolean {
   if (import.meta.env.DEV && pathname === "/dev/canvas") return true;
-  if (pathname === "/") return true;
+  if (pathname === "/" || pathname === SUGGEST_SECTION_PATH) return true;
   return GEOGRAPHY_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );

@@ -338,7 +338,7 @@ line of icons.
 
 **Desktop is not a wide phone.** From `md` (the theme moves it down to **768**
 from MUI's 900; it is the app's one phone-versus-desktop switch) the map is the
-canvas: on the geography routes (`/`, `/logs*`, `/trips*`, `/proposals*`) one
+canvas: on the geography routes (`/`, `/logs*`, `/trips*`, `/proposals*`, `/waterways/suggest-section`) one
 map fills the window under the app bar and the screen floats over it as cards.
 The rules, built in `components/canvas/` (plan and reasons:
 [doc/plans/wide-canvas.md](doc/plans/wide-canvas.md); user-facing description in

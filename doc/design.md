@@ -413,6 +413,6 @@ The reasons and the work plan are in [plans/wide-canvas.md](plans/wide-canvas.md
 - **Sections on the map.** The subject of a screen is teal (the open log's
   sections, a proposed line); context is a dim line you cannot click (other
   logged sections, the stored line a proposal replaces).
-- **Forms that pick on the map** (logging a descent) are a side card over the
-  canvas; sections and put-in/take-out are picked on the host map, and the
+- **Forms that pick on the map** (logging a descent, suggesting a section) are a
+  side card over the canvas; sections and put-in/take-out are picked on the host map, and the
   form's bar stays at the card's foot. On a phone the form keeps its own map.
