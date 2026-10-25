@@ -111,8 +111,10 @@ export function FeatureListRow({
         bgcolor: isActive ? withAlpha(tokens.primary, "tint") : "transparent",
         transition: selectionFade(["background-color"]),
         // The selected row's 2px teal ring, drawn inside so it never shifts.
-        outline: isActive ? `2px solid ${tokens.primary}` : "none",
+        outline: "2px solid",
+        outlineColor: isActive ? tokens.primary : "transparent",
         outlineOffset: -2,
+        "&.Mui-focusVisible": { outlineColor: tokens.primary },
         borderRadius: `${tokens.radii.row}px`,
       }}
     >
