@@ -62,7 +62,7 @@ test.describe("panel spacing", () => {
     }
   });
 
-  test("the features rows are 56 high and the card has no controls", async ({
+  test("the features rows are 56 high and the card has only the fold control", async ({
     page,
   }) => {
     await gotoSection(page, "upper");
@@ -74,7 +74,9 @@ test.describe("panel spacing", () => {
     ))
       expect(h).toBe(56);
     await expect(
-      card.locator('button, [role="button"]:not([data-row])'),
+      card.locator(
+        'button:not([data-testid="features-fold"]), [role="button"]:not([data-row]):not([data-testid="features-fold"])',
+      ),
     ).toHaveCount(0);
     const count = await card.getByTestId("features-count").boundingBox();
     expect(Math.round(count?.height ?? 0)).toBe(48);

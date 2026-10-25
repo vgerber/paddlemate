@@ -4,7 +4,7 @@ import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { withAlpha } from "@/lib/alpha";
-import { durations } from "@/lib/motion";
+import { css, durations, useReducedMotion } from "@/lib/motion";
 import { theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
 import {
@@ -13,6 +13,7 @@ import {
   PendingDeleteMarker,
   type RowContext,
 } from "./FeatureListRow";
+import { Fold, selectionFade } from "./Fold";
 import {
   DISC,
   RAIL_COL,
@@ -82,6 +83,7 @@ function RangeBand({
 }: NodeProps) {
   const { item } = node;
   const [open, setOpen] = useState(true);
+  const reduced = useReducedMotion();
   const type = item.feature.feature_type;
   const isPortage = type === "portage";
   const isActive = ctx.activeId === item.feature.id;
@@ -96,6 +98,7 @@ function RangeBand({
 
   return (
     <Box
+      data-reduced-fade
       data-band={isPortage ? "portage" : "range"}
       sx={{
         bgcolor: isActive
@@ -104,6 +107,7 @@ function RangeBand({
         outline: isActive ? `2px solid ${tokens.primary}` : "none",
         outlineOffset: -2,
         borderRadius: `${tokens.radii.row}px`,
+        transition: selectionFade(["background-color"]),
         mx: { xs: inBand ? 0 : 1, md: 1 },
         my: 0.25,
       }}
@@ -207,7 +211,12 @@ function RangeBand({
               </Box>
               <TrailSlot open={open} />
             </Box>
-            <Collapse in={isActive} timeout={durations.base} unmountOnExit>
+            <Collapse
+              in={isActive}
+              timeout={reduced ? 0 : durations.base}
+              easing={css.easeInOut}
+              unmountOnExit
+            >
               <CoordsInfo
                 coords={item.coords}
                 onHistory={
@@ -221,7 +230,7 @@ function RangeBand({
         </ButtonBase>
       </Box>
 
-      <Collapse in={open} timeout={durations.base} unmountOnExit>
+      <Fold open={open}>
         <Box sx={{ pl: { xs: 0, md: 3 } }}>
           {node.nested.map((child, i) => (
             <FeatureNode
@@ -235,7 +244,7 @@ function RangeBand({
             />
           ))}
         </Box>
-      </Collapse>
+      </Fold>
     </Box>
   );
 }

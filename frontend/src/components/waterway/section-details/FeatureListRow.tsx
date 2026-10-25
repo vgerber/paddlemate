@@ -4,9 +4,10 @@ import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
 import { withAlpha } from "@/lib/alpha";
 import { DeleteIcon } from "@/lib/icons";
-import { durations } from "@/lib/motion";
+import { css, durations, useReducedMotion } from "@/lib/motion";
 import { theme } from "@/lib/theme";
 import { CoordsInfo } from "./CoordsInfo";
+import { selectionFade } from "./Fold";
 import { ProposalDetail } from "./ProposalDetail";
 import {
   DISC,
@@ -87,12 +88,14 @@ export function FeatureListRow({
   const type = item.feature.feature_type;
   const asRange = item.isZone && !isProposal;
   const n = ctx.numbers?.get(item.feature.id);
+  const reduced = useReducedMotion();
 
   return (
     <ButtonBase
       component="div"
       disableRipple
       data-row
+      data-reduced-fade
       data-type={type}
       aria-expanded={isActive}
       onClick={() => ctx.onItemClick?.(item)}
@@ -106,6 +109,7 @@ export function FeatureListRow({
         pl: inBand ? { xs: 0.5, md: 1.5 } : 1.5,
         pr: inBand ? { xs: 1, md: `${panel.inner}px` } : `${panel.inner}px`,
         bgcolor: isActive ? withAlpha(tokens.primary, "tint") : "transparent",
+        transition: selectionFade(["background-color"]),
         // The selected row's 2px teal ring, drawn inside so it never shifts.
         outline: isActive ? `2px solid ${tokens.primary}` : "none",
         outlineOffset: -2,
@@ -198,7 +202,12 @@ export function FeatureListRow({
             {desc}
           </Typography>
         )}
-        <Collapse in={isActive} timeout={durations.base} unmountOnExit>
+        <Collapse
+          in={isActive}
+          timeout={reduced ? 0 : durations.base}
+          easing={css.easeInOut}
+          unmountOnExit
+        >
           {isProposal && item.proposal ? (
             <ProposalDetail
               proposal={item.proposal}
