@@ -286,7 +286,15 @@ function DayEntry({
             onToggle();
           }
         }}
-        sx={{ alignItems: "baseline", gap: 1, outline: "none" }}
+        sx={{
+          alignItems: "baseline",
+          gap: 1,
+          outline: "none",
+          // The card's padding above and below is part of the button, so it
+          // is a full touch target without moving anything.
+          my: "-12px",
+          py: "12px",
+        }}
       >
         <Typography
           component="span"
