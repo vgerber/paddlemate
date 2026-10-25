@@ -8,12 +8,13 @@ export { useScene };
 
 /** Sets the map the canvas draws while this component is mounted. Pass a
  * memoised scene: a new object each render redraws the map each render. The
- * scene is cleared on unmount unless a newer route has already replaced it. */
-export function useCanvasScene(scene: MapScene) {
+ * scene is cleared on unmount unless a newer route has already replaced it.
+ * A screen inside a route passes a higher `rank` so its scene stays on top. */
+export function useCanvasScene(scene: MapScene, rank = 0) {
   const owner = useRef<symbol>(Symbol("canvas-scene"));
   useLayoutEffect(() => {
-    scenes.set(owner.current, scene);
-  }, [scene]);
+    scenes.set(owner.current, scene, rank);
+  }, [scene, rank]);
   useLayoutEffect(() => {
     const token = owner.current;
     return () => scenes.clear(token);
