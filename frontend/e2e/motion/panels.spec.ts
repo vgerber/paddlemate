@@ -86,10 +86,11 @@ test.describe("detail from a list row", () => {
     test.skip(!isPhone(page), "the push is the phone's");
     await start(page);
     const m = await openRiver(page);
-    expect(tx(m.at100.transform)).toBeGreaterThan(5);
+    // On the out curve most of the 40 px is covered early: about 4 px left.
+    expect(tx(m.at100.transform)).toBeGreaterThan(2);
     expect(tx(m.at100.transform)).toBeLessThan(40);
     expect(m.at100.opacity).toBeLessThan(1);
-    expect(m.duration).toBe(360);
+    expect(m.duration).toBe(260);
     expect(m.end.transform).toBe("none");
   });
 

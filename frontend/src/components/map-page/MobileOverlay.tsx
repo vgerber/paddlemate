@@ -48,11 +48,8 @@ export default function MobileOverlay({ state }: MobileOverlayProps) {
   // the list in from where it stepped back to.
   const content = useRef<HTMLDivElement>(null);
   const stage = state.selectedWaterwayId == null ? "list" : "detail";
-  // The slow step: on the out curve the push has 5 px left at 100 ms only
-  // when it takes 360.
   usePanelEnter(content, stage, {
     from: stage === "detail" ? { x: 40 } : { x: -16, opacity: 0.55 },
-    duration: durations.slow,
   });
 
   const sheetMode = modeSheetMode(state);

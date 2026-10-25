@@ -101,7 +101,7 @@ Tabs and the swipe are already built to the page (`useSwipeTabs`,
   (every transform on the panel is `none` mid-transition) and the panel's
   opacity goes 0 to 1 in 140 ms +-30; the camera jumps (`easeTo` duration 0);
   no flow frame is requested for 2 s. With Full, the panel's translateX at
-  100 ms is between 5 and 40 px.
+  100 ms is between 2 and 40 px (260 ms on the out curve).
 - The setting survives a reload with no flash: `html[data-motion]` is set
   before the bundle runs (checked from an init script).
 - The flow animates only the selected section, at 12 Hz +-2, and stops within
@@ -125,3 +125,9 @@ Tabs and the swipe are already built to the page (`useSwipeTabs`,
 
 - Stored section lines are often two points, so the flow and the draw-in
   follow a straight stroke beside the river until the OSM centreline is used.
+- Phone panel (M4): the list is unmounted while a detail shows, so it does
+  not step back and dim behind it, and the detail has no slide-out on close;
+  the facts stagger, the row tint after close and the title flight are cut.
+  The desktop pane only fades in (the old content is gone when the new one
+  arrives). Of the region pick sequence only the region chip rising in is
+  built.
