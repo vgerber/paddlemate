@@ -156,14 +156,14 @@ test.describe("dark scheme", () => {
     expect(await computed(body, "background-color")).toBe("rgb(20, 27, 31)");
     expect(await computed(body, "color")).toBe("rgb(232, 238, 240)");
     expect(await computed(page.locator("html"), "color-scheme")).toBe("dark");
-    expect(await themeColor(page)).toBe("#1b2429");
+    expect(await themeColor(page)).toBe("#141b1f");
 
     const action = page.locator(
       "button.MuiFab-root:visible, button.MuiButton-contained:visible",
     );
     await expect(action.first()).toBeVisible();
     expect(await computed(action, "background-color")).toBe(
-      "rgb(103, 199, 224)",
+      "rgb(58, 159, 186)",
     );
   });
 
@@ -194,7 +194,7 @@ test.describe("dark scheme", () => {
     await expect
       .poll(() => computed(body, "background-color"))
       .toBe("rgb(20, 27, 31)");
-    await expect.poll(() => themeColor(page)).toBe("#1b2429");
+    await expect.poll(() => themeColor(page)).toBe("#141b1f");
     expect(await computed(page.locator("html"), "color-scheme")).toBe("dark");
 
     await page.emulateMedia({ colorScheme: "light" });

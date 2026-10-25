@@ -392,6 +392,11 @@ test.describe("filters sheet", () => {
       .toBe(true);
     await done.click();
     expect(await computed(chip(page, /^Water/), "color")).toBe(TEAL);
+    // A set filter carries the teal ring, not just teal text.
+    expect(await computed(chip(page, /^Water/), "border-top-color")).toBe(TEAL);
+    expect(
+      await computed(chip(page, /^Water/), "background-color"),
+    ).not.toMatch(/^rgba\(0, 0, 0, 0\)$/);
   });
 
   test("Water now is in the URL, survives a reload and both panels agree", async ({

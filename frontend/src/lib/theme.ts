@@ -861,8 +861,8 @@ export const theme = createTheme({
           fontSize: "0.8125rem",
           height: 32,
           // A set filter: teal ring and a wash, not just teal text. MUI 9 has
-          // no `outlinedPrimary` class. Scoped to dark: light keeps MUI's ring.
-          '[data-theme="dark"] &.MuiChip-outlined.MuiChip-colorPrimary': {
+          // no `outlinedPrimary` class.
+          "&.MuiChip-outlined.MuiChip-colorPrimary": {
             backgroundColor: withAlpha(tokens.primary, "wash"),
             borderColor: tokens.primary,
             borderWidth: 1.5,
