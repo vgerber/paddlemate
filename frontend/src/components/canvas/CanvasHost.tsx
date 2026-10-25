@@ -15,15 +15,12 @@ const CanvasHostView = lazy(() => import("./CanvasHostView"));
 export default function CanvasHost() {
   const wide = useMediaQuery(theme.breakpoints.up("md"));
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const search = useRouterState({
-    select: (s) => s.location.search as Record<string, unknown>,
-  });
   const scene = useScene();
-  const onCanvas = wide && isGeographyRoute(pathname, search);
+  const onCanvas = wide && isGeographyRoute(pathname);
   useEffect(() => {
     if (onCanvas) preloadMap();
   }, [onCanvas]);
-  if (!wide || !isGeographyRoute(pathname, search) || !scene) return null;
+  if (!onCanvas || !scene) return null;
   return (
     <Suspense fallback={null}>
       <CanvasHostView scene={scene} />

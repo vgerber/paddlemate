@@ -29,6 +29,19 @@ describe("scenes", () => {
     expect(scenes.current()).toBeNull();
   });
 
+  test("a screen inside a route stacks over its scene and uncovers it", () => {
+    const route = Symbol("route");
+    const form = Symbol("form");
+    scenes.set(route, scene("route"));
+    scenes.set(form, scene("form"));
+    scenes.set(route, scene("route2"));
+    expect(scenes.current()?.subject?.key).toBe("form");
+    scenes.clear(form);
+    expect(scenes.current()?.subject?.key).toBe("route2");
+    scenes.clear(route);
+    expect(scenes.current()).toBeNull();
+  });
+
   test("an old owner's cleanup never clears a newer scene", () => {
     const old = Symbol("old");
     const next = Symbol("next");

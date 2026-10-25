@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { FIX } from "../support/fixture";
 
 // WP16c: logs on the shared map canvas. Fixture: Vincent's logs 9201 (two
 // sections, put-in 47.0/11.0, take-out 47.02/11.02) and 9202.
@@ -12,6 +13,8 @@ type MapLike = {
 
 const PUT_IN: [number, number] = [11.0, 47.0];
 const TAKE_OUT: [number, number] = [11.02, 47.02];
+
+const next = (page: Page) => page.getByRole("button", { name: "Next" });
 
 const card = (page: Page, id: string) => page.getByTestId(`canvas-card-${id}`);
 
@@ -136,6 +139,106 @@ test.describe("logs on the canvas", () => {
   });
 });
 
+/** A click on the upper fixture section, as the map projects it. */
+async function clickUpper(page: Page) {
+  const spot = await page.evaluate(
+    (p) => {
+      const map = (window as unknown as { __paddlemateMap?: MapLike })
+        .__paddlemateMap;
+      const at = map?.project(p);
+      const box = document
+        .querySelector(".maplibregl-map")
+        ?.getBoundingClientRect();
+      return at && box ? { x: box.x + at.x, y: box.y + at.y } : null;
+    },
+    [11.005, 47.005] as [number, number],
+  );
+  if (!spot) throw new Error("map not ready");
+  await page.mouse.click(spot.x, spot.y);
+}
+
+test.describe("the log form on the canvas", () => {
+  test.skip(({ isMobile }) => isMobile, "wide screens only");
+
+  const NEW = `/logs/new?waterwayId=${FIX.waterway}&sectionId=${FIX.sections.upper}`;
+
+  for (const w of [1000, 1280]) {
+    test(`is a floating card over the one map at ${w}`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: 800 });
+      await page.goto("/logs/new");
+      await expect(page.getByText("Step 1 of 3 · When")).toBeVisible();
+      await expect(card(page, "log")).toBeVisible();
+      await expect(page.getByTestId("canvas-host")).toHaveCount(1);
+      await expect(page.locator(".maplibregl-map")).toHaveCount(1);
+      // The card floats: margins around it, not a full-height sidebar.
+      const b = await card(page, "log").boundingBox();
+      if (!b) throw new Error("no card");
+      expect(b.x + b.width).toBeLessThan(w - 8);
+      expect(b.y).toBeGreaterThanOrEqual(56 + 8);
+      expect(b.y + b.height).toBeLessThan(800 - 8);
+      // The bar stays at the card's foot.
+      const cancel = await card(page, "log")
+        .getByRole("button", { name: "Cancel" })
+        .boundingBox();
+      expect(cancel && cancel.y + cancel.height > b.y + b.height - 100).toBe(
+        true,
+      );
+      // The cards leave the map room.
+      expect(b.width + (await width(page, "list"))).toBeLessThanOrEqual(
+        w * 0.7 + 1,
+      );
+    });
+
+    test(`the steps work and a click on the map picks a section at ${w}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: w, height: 800 });
+      await page.goto(NEW);
+      await expect(card(page, "log")).toBeVisible();
+      await next(page).click();
+      await expect(page.getByText("Step 2 of 3 · Sections")).toBeVisible();
+      await expect(page.locator(".maplibregl-map")).toHaveCount(1);
+      await expect(card(page, "log")).toContainText("Upper Test");
+      await settle(page);
+      // A click on the section on the map takes it out of the log, and
+      // another puts it back.
+      await clickUpper(page);
+      await expect(card(page, "log")).not.toContainText("Upper Test");
+      await clickUpper(page);
+      await expect(card(page, "log")).toContainText("Upper Test");
+      await next(page).click();
+      await expect(page.getByText("Step 3 of 3 · Details")).toBeVisible();
+      await page.getByRole("button", { name: "Back" }).click();
+      await page.getByRole("button", { name: "Back" }).click();
+      await expect(page.getByText("Step 1 of 3 · When")).toBeVisible();
+    });
+  }
+
+  test("the map changes no pick on the other steps", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(NEW);
+    await expect(card(page, "log")).toBeVisible();
+    await settle(page);
+    await clickUpper(page);
+    await next(page).click();
+    await next(page).click();
+    await page.getByRole("button", { name: "Back" }).click();
+    await page.getByRole("button", { name: "Back" }).click();
+    await expect(page.getByText("Step 1 of 3 · When")).toBeVisible();
+    await next(page).click();
+    await expect(card(page, "log")).toContainText("Upper Test");
+  });
+
+  test("editing a log is the same card over the one map", async ({ page }) => {
+    await page.setViewportSize({ width: 1000, height: 800 });
+    await page.goto("/logs/9201?edit=true");
+    await expect(page.getByText("Step 1 of 3 · When")).toBeVisible();
+    await expect(card(page, "log")).toBeVisible();
+    await expect(page.locator(".maplibregl-map")).toHaveCount(1);
+    await expect(page.getByTestId("canvas-host")).toHaveCount(1);
+  });
+});
+
 test.describe("logs on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "phone only");
 
@@ -144,5 +247,19 @@ test.describe("logs on a phone", () => {
     await expect(page.getByText("Sections (2)")).toBeVisible();
     await expect(page.getByTestId("canvas-host")).toHaveCount(0);
     await expect(page.locator("canvas.maplibregl-canvas")).toHaveCount(1);
+  });
+});
+
+test.describe("the log form on a phone", () => {
+  test.skip(({ isMobile }) => !isMobile, "phone only");
+
+  test("keeps its own picker map and there is no canvas", async ({ page }) => {
+    await page.goto(
+      `/logs/new?waterwayId=${FIX.waterway}&sectionId=${FIX.sections.upper}`,
+    );
+    await next(page).click();
+    await expect(page.getByText("Step 2 of 3 · Sections")).toBeVisible();
+    await expect(page.getByTestId("canvas-host")).toHaveCount(0);
+    await expect(page.locator(".maplibregl-map")).toHaveCount(1);
   });
 });

@@ -3,12 +3,13 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { useCanvasScene } from "@/components/canvas/CanvasContext";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import StepSlide from "@/components/wizard/StepSlide";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
 import { ConfirmIcon, ForwardIcon } from "@/lib/icons";
-import { PANEL_HEIGHT, SYSTEM_INSET, theme } from "@/lib/theme";
+import { SYSTEM_INSET, theme } from "@/lib/theme";
 import {
   buildPayload,
   copyFromDescent,
@@ -19,10 +20,10 @@ import {
   startingAt,
   stepProblem,
 } from "./descent-form/model";
-import SectionPickerMap from "./descent-form/SectionPickerMap";
 import StepDetails from "./descent-form/StepDetails";
 import StepSections from "./descent-form/StepSections";
 import StepWhen from "./descent-form/StepWhen";
+import { useFormScene } from "./descent-form/useFormScene";
 import { useSectionPicking } from "./descent-form/useSectionPicking";
 
 const { tokens } = theme;
@@ -38,7 +39,8 @@ interface Props {
   initialTripId?: number;
   onSave: (id: number) => void;
   onCancel: () => void;
-  /** Wide screen: the steps in a left pane with the map beside them. */
+  /** Wide screen: the steps fill the card they sit in and the picker map is
+   * the canvas map behind it. */
   embedded?: boolean;
 }
 
@@ -101,6 +103,10 @@ export default function DescentForm({
     patch,
     initialSection?.waterwayId ?? null,
   );
+
+  // Drawn by the canvas host from md; harmless on a phone, which keeps its
+  // own map in the sections step.
+  useCanvasScene(useFormScene(picking, step === 1));
 
   const isLast = step === STEPS.length - 1;
   const problem = stepProblem(form, step);
@@ -178,36 +184,20 @@ export default function DescentForm({
     </>
   );
 
-  // Wide screen: the steps and their bar in a left pane, the map beside it
-  // on every step so it never shifts.
   if (embedded) {
     return (
       <Box
         sx={{
-          display: "grid",
-          gridTemplateColumns: "400px minmax(0, 1fr)",
-          height: PANEL_HEIGHT.md,
-          bgcolor: tokens.surfaceLow,
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          minHeight: 0,
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 0,
-            bgcolor: tokens.surface,
-            borderRight: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2 }}>
-            {steps}
-          </Box>
-          {bar}
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2 }}>
+          {steps}
         </Box>
-        <Box sx={{ minWidth: 0, minHeight: 0, p: 1.5 }}>
-          <SectionPickerMap picking={picking} readOnly={step !== 1} fill />
-        </Box>
+        {bar}
       </Box>
     );
   }

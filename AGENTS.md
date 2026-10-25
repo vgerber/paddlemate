@@ -348,8 +348,9 @@ The rules, built in `components/canvas/` (plan and reasons:
   not render a map; it describes one with `useCanvasScene(scene)`, a memoised
   `MapScene` (the `WaterwayMap` props, the camera without padding, and a
   `subject` to frame). Call it unconditionally; it is harmless on a phone,
-  which keeps its own screens. A route that has its own picker map (the log
-  form) leaves `canvasRoutes.ts` so only one map draws.
+  which keeps its own screens. A screen inside a route (the log
+  form) stacks its own scene over the route's, and the route's returns when it
+  unmounts; its picking happens on the host map.
 - **Cards.** A route renders `FloatingCard`s inside `CanvasLayout`. Kinds and
   widths live in `tokens.canvas.cards`: `detail` 26% (340-440, resizable; 360 below 1280),
   `list` 20% (300-380), `side` 25% (400-600). The cards may cover 55% of the

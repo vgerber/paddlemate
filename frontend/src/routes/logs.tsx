@@ -56,7 +56,7 @@ function LogsPage() {
   // extra request - it just has to be known one level up to be shown.
   const { data: myDescents } = useMyDescents({}, isAuthenticated);
   // Drawn by the canvas host from md; called on a phone too, where it is
-  // harmless.
+  // harmless. The log form stacks its own scene on top while it is open.
   useCanvasScene(useLogsScene(selectedId, isAuthenticated));
 
   // On a phone the log replaces the list; on a desktop it opens beside it.
@@ -123,21 +123,7 @@ function LogsPage() {
     );
   }
 
-  // The log form has its own picker map, so the canvas map steps aside and
-  // the form takes the page.
-  if (isLogFormRoute(pathname, search)) {
-    return (
-      <Box
-        sx={{
-          minHeight: PANEL_HEIGHT,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <Outlet />
-      </Box>
-    );
-  }
+  const form = isLogFormRoute(pathname, search);
 
   // Desktop: the list and the open log float over the map, which draws the
   // open log (or all of them).
@@ -171,12 +157,14 @@ function LogsPage() {
           side="right"
           kind="side"
           screen="logs"
-          title="Log"
+          title={form ? "Log form" : "Log"}
           selfHeaded
+          fullHeight={form}
         >
           <Box
             sx={{
               minHeight: "100%",
+              height: form ? "100%" : undefined,
               display: "flex",
               flexDirection: "column",
             }}

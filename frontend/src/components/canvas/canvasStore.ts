@@ -38,29 +38,40 @@ function createStore<T>(initial: T) {
   };
 }
 
-interface SceneState {
+interface SceneEntry {
   owner: symbol;
   scene: MapScene;
 }
 
-const sceneStore = createStore<SceneState | null>(null);
+/** The scenes routes have set, oldest first; the map draws the newest. A
+ * screen inside a route (the log form in the logs route) stacks its scene on
+ * top of the route's and uncovers it again when it unmounts. */
+const sceneStore = createStore<readonly SceneEntry[]>([]);
 
-/** The scene a route has set; only its owner may replace or clear it, so a
- * route that unmounts after its successor mounted cannot clear the new one. */
+/** Only an owner may replace or clear its entry, so a route that unmounts
+ * after its successor mounted cannot clear the new one. */
 export const scenes = {
   set(owner: symbol, scene: MapScene) {
-    sceneStore.set({ owner, scene });
+    const stack = sceneStore.get();
+    const at = stack.findIndex((e) => e.owner === owner);
+    if (at < 0) {
+      sceneStore.set([...stack, { owner, scene }]);
+      return;
+    }
+    sceneStore.set(stack.map((e, i) => (i === at ? { owner, scene } : e)));
   },
-  current: (): MapScene | null => sceneStore.get()?.scene ?? null,
+  current: (): MapScene | null => sceneStore.get().at(-1)?.scene ?? null,
   clear(owner: symbol) {
-    if (sceneStore.get()?.owner === owner) sceneStore.set(null);
+    const stack = sceneStore.get();
+    if (!stack.some((e) => e.owner === owner)) return;
+    sceneStore.set(stack.filter((e) => e.owner !== owner));
   },
 };
 
 export function useScene(): MapScene | null {
   return useSyncExternalStore(
     sceneStore.subscribe,
-    () => sceneStore.get()?.scene ?? null,
+    () => sceneStore.get().at(-1)?.scene ?? null,
   );
 }
 
