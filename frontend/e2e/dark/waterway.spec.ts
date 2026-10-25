@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { contrastReport, lightSurfaces, useScheme } from "../support/dark";
 
 // The waterway screens in dark: river panel and tabs, section list, notes,
-// the suggest forms (doc/plans/dark-mode.md, D3).
+// the suggest forms (doc/design.md#dark-mode).
 
 async function expectDark(page: Page) {
   expect(await lightSurfaces(page), "light surfaces on the screen").toEqual([]);

@@ -4,7 +4,7 @@ import { contrastReport, lightSurfaces, useScheme } from "../support/dark";
 import { FIX } from "../support/fixture";
 
 // Every trip screen in dark: no light surface, text and control borders clear
-// their ratios (doc/plans/dark-mode.md, Phase 2, D4).
+// their ratios (doc/design.md#dark-mode).
 
 const TRIP = FIX.trips[0];
 

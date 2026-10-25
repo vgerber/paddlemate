@@ -7,7 +7,7 @@ import {
 } from "../support/dark";
 
 // The shell in dark: app bar, bottom nav, canvas cards, states, tools, dev
-// routes and the sign-in gate (doc/plans/dark-mode.md, D6b).
+// routes and the sign-in gate (doc/design.md#dark-mode).
 
 // The legend swatch on the gauge map is a data colour: the surface check
 // skips that one element, not the page.
