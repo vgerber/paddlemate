@@ -101,6 +101,7 @@ export default function WaterwaySearchPanel({
     onIndexChange: (i) => searchFilters.setMode(MODES[i]),
   });
   const [listView, setListView] = useState<ListView>("sections");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Read once per mount - the panel remounts when returning from a river,
   // which is exactly when the list can have changed
@@ -342,6 +343,7 @@ export default function WaterwaySearchPanel({
             onRadiusPreview={onRadiusPreview}
             listingRegions={listingRegions}
             regionBrowse={regionBrowse}
+            onSheetOpenChange={setFiltersOpen}
           />
 
           {showResults && (
@@ -360,6 +362,8 @@ export default function WaterwaySearchPanel({
           )}
 
           <Box
+            // The sheet traps focus, so the list behind it is out of play.
+            inert={filtersOpen}
             sx={{
               flex: 1,
               overflowY: "auto",

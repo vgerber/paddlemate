@@ -33,6 +33,11 @@ export default function FilterChip({
       // A toggle in the sheet is the thing being tapped: full touch height.
       sx={{
         height: tokens.touch.min,
+        // The theme's chip style drops the button focus ring.
+        "&.Mui-focusVisible": {
+          outline: `2px solid ${tokens.primary}`,
+          outlineOffset: 2,
+        },
         // The X is a touch target of its own.
         "& .MuiChip-deleteIcon": {
           position: "relative",

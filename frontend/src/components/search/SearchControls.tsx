@@ -82,6 +82,9 @@ interface SearchControlsProps {
   listingRegions: boolean;
   /** The map's regions, for the level chips and "Part of". */
   regionBrowse?: RegionBrowseProps;
+  /** Told when the Filters sheet opens or closes, so the panel can make the
+   * list behind it inert. */
+  onSheetOpenChange?: (open: boolean) => void;
 }
 
 /** What the active mode searches with - the name field, the radius, or the
@@ -97,10 +100,15 @@ export default function SearchControls({
   onRadiusPreview,
   listingRegions,
   regionBrowse,
+  onSheetOpenChange,
 }: SearchControlsProps) {
   const { mode, country, minDiff, maxDiff, region } = filters;
   const [sheetField, setSheetField] = useState<FilterField | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetOpen, setSheetOpenState] = useState(false);
+  const setSheetOpen = (value: boolean) => {
+    setSheetOpenState(value);
+    onSheetOpenChange?.(value);
+  };
   const grade = gradeSummary(minDiff, maxDiff);
   const open = (field: FilterField) => () => {
     setSheetField(field);

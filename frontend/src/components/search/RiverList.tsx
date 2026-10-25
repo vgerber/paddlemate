@@ -167,21 +167,25 @@ export default function RiverList({
               onSelect={onSelect}
             />
           ))}
-        {/* Approximate matches are grouped rather than assumed to come last,
-            so the divider stays correct whatever order the API returns. */}
-        {waterways.some((w) => w.fuzzy) && (
-          <SectionHeading inset>Similar names</SectionHeading>
-        )}
-        {waterways
-          .filter((w) => w.fuzzy)
-          .map((waterway) => (
-            <RiverItem
-              key={waterway.id}
-              waterway={waterway}
-              onSelect={onSelect}
-            />
-          ))}
       </List>
+      {/* Approximate matches are grouped rather than assumed to come last,
+          so the divider stays correct whatever order the API returns. */}
+      {waterways.some((w) => w.fuzzy) && (
+        <>
+          <SectionHeading inset>Similar names</SectionHeading>
+          <List dense disablePadding>
+            {waterways
+              .filter((w) => w.fuzzy)
+              .map((waterway) => (
+                <RiverItem
+                  key={waterway.id}
+                  waterway={waterway}
+                  onSelect={onSelect}
+                />
+              ))}
+          </List>
+        </>
+      )}
       {hasNextPage && (
         <Button
           onClick={onLoadMore}

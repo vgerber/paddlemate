@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
+import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import { listRowSx } from "@/components/canvas/flatRow";
@@ -38,70 +39,79 @@ export default function SearchSectionRow({
 }: SearchSectionRowProps) {
   const grade = sectionGradeText(section);
   return (
-    <ListItemButton
-      data-testid="search-section-row"
-      selected={selected}
-      onClick={() => onClick(section.id)}
-      sx={{
-        ...listRowSx,
-        minHeight: 64,
-        display: "grid",
-        gridTemplateColumns: onToggleFavorite
-          ? `minmax(0, 1fr) auto ${tokens.touch.min}px`
-          : "minmax(0, 1fr) auto",
-        columnGap: 1.25,
-        rowGap: 0.25,
-        alignItems: "center",
-      }}
+    // The star is the button's sibling, not its child: a control inside a
+    // control is not reachable by assistive tech. The button keeps an empty
+    // third column for it.
+    <ListItem
+      disablePadding
+      sx={{ position: "relative", mb: { xs: 0.75, md: 0 } }}
     >
-      <Typography variant="body1" noWrap sx={{ fontWeight: 500 }}>
-        {localizedName(section.name, section.names)}
-      </Typography>
-      <Box sx={{ gridRow: "1 / 3", gridColumn: 2, justifySelf: "end" }}>
-        <WaterLevelChip
-          waterwayId={section.waterway_id}
-          sectionId={section.id}
-        />
-      </Box>
-      <Box
+      <ListItemButton
+        data-testid="search-section-row"
+        selected={selected}
+        onClick={() => onClick(section.id)}
         sx={{
-          display: "flex",
+          ...listRowSx,
+          mb: 0,
+          width: "100%",
+          minHeight: 64,
+          display: "grid",
+          gridTemplateColumns: onToggleFavorite
+            ? `minmax(0, 1fr) auto ${tokens.touch.min}px`
+            : "minmax(0, 1fr) auto",
+          columnGap: 1.25,
+          rowGap: 0.25,
           alignItems: "center",
-          gap: 1,
-          minWidth: 0,
-          gridColumn: 1,
         }}
       >
-        <Typography
-          variant="body2"
-          color="textSecondary"
-          noWrap
-          sx={{ minWidth: 0 }}
-        >
-          {riverName}
+        <Typography variant="body1" noWrap sx={{ fontWeight: 500 }}>
+          {localizedName(section.name, section.names)}
         </Typography>
-        {grade && <GradeTag grade={grade} />}
-      </Box>
-      {matchedFeature && (
-        <Typography
-          variant="caption"
-          color="textDisabled"
-          noWrap
-          sx={{ gridColumn: 1 }}
+        <Box sx={{ gridRow: "1 / 3", gridColumn: 2, justifySelf: "end" }}>
+          <WaterLevelChip
+            waterwayId={section.waterway_id}
+            sectionId={section.id}
+          />
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            minWidth: 0,
+            gridColumn: 1,
+          }}
         >
-          {`Rapid: ${matchedFeature}`}
-        </Typography>
-      )}
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            noWrap
+            sx={{ minWidth: 0 }}
+          >
+            {riverName}
+          </Typography>
+          {grade && <GradeTag grade={grade} />}
+        </Box>
+        {matchedFeature && (
+          <Typography
+            variant="caption"
+            color="textSecondary"
+            noWrap
+            sx={{ gridColumn: 1 }}
+          >
+            {`Rapid: ${matchedFeature}`}
+          </Typography>
+        )}
+      </ListItemButton>
       {onToggleFavorite && (
         <IconButton
           aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleFavorite(section.id);
-          }}
+          onClick={() => onToggleFavorite(section.id)}
           sx={{
-            gridRow: "1 / 3",
-            gridColumn: 3,
+            position: "absolute",
+            right: `${tokens.phone.inner}px`,
+            top: "50%",
+            transform: "translateY(-50%)",
             width: tokens.touch.min,
             height: tokens.touch.min,
           }}
@@ -113,6 +123,6 @@ export default function SearchSectionRow({
           )}
         </IconButton>
       )}
-    </ListItemButton>
+    </ListItem>
   );
 }

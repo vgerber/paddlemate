@@ -601,6 +601,7 @@ function SectionsList({
     <List dense disablePadding sx={{ px: { xs: 1.5, md: 0 } }}>
       {sections.map((section) => (
         <SectionListItem
+          asListItem
           key={section.id}
           section={section}
           waterwayId={waterwayId}

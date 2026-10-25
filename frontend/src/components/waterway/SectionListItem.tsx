@@ -35,6 +35,8 @@ interface SectionListItemProps {
    * trip's watch list - and redundant inside one waterway's own section
    * list, which is why it is the caller's call. */
   riverName?: string;
+  /** Rendered as a list item; set when the parent is a `List`. */
+  asListItem?: boolean;
 }
 
 export default function SectionListItem({
@@ -47,6 +49,7 @@ export default function SectionListItem({
   descentCount,
   matchedFeature,
   riverName,
+  asListItem,
 }: SectionListItemProps) {
   const grade = sectionGradeText(section);
 
@@ -69,13 +72,25 @@ export default function SectionListItem({
   return (
     // Each row is its own container, so the stacked layout follows the width
     // the row is given wherever it is listed.
-    <Box sx={{ containerType: "inline-size", mb: { xs: 1, md: 0 } }}>
+    // The star is the button's sibling, not its child: a control inside a
+    // control is not reachable by assistive tech. The button keeps an empty
+    // column for it.
+    <Box
+      component={asListItem ? "li" : "div"}
+      sx={{
+        containerType: "inline-size",
+        position: "relative",
+        listStyle: "none",
+        mb: { xs: 1, md: 0 },
+      }}
+    >
       <ListItemButton
         selected={selected}
         onClick={() => onClick(section.id)}
         sx={{
           ...cardRowSx,
           ...desktopFlatRow,
+          width: "100%",
           display: "grid",
           alignItems: "center",
           minHeight: 56,
@@ -120,7 +135,7 @@ export default function SectionListItem({
           {matchedFeature && (
             <Typography
               variant="caption"
-              color="textDisabled"
+              color="textSecondary"
               noWrap
               sx={{ display: "block" }}
             >
@@ -179,30 +194,27 @@ export default function SectionListItem({
         <Box sx={{ gridArea: "c", justifySelf: "end", alignSelf: "center" }}>
           <WaterLevelChip waterwayId={waterwayId} sectionId={section.id} />
         </Box>
-
-        {hasStar && (
-          <IconButton
-            aria-label={
-              isFavorite ? "Remove from favorites" : "Add to favorites"
-            }
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleFavorite(section.id);
-            }}
-            sx={{
-              gridArea: "s",
-              width: tokens.touch.min,
-              height: tokens.touch.min,
-            }}
-          >
-            {isFavorite ? (
-              <StarIcon fontSize="small" sx={{ color: tokens.primary }} />
-            ) : (
-              <StarOutlineIcon fontSize="small" />
-            )}
-          </IconButton>
-        )}
       </ListItemButton>
+      {hasStar && (
+        <IconButton
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          onClick={() => onToggleFavorite(section.id)}
+          sx={{
+            position: "absolute",
+            right: { xs: `${tokens.phone.inner}px`, md: 1.75 },
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: tokens.touch.min,
+            height: tokens.touch.min,
+          }}
+        >
+          {isFavorite ? (
+            <StarIcon fontSize="small" sx={{ color: tokens.primary }} />
+          ) : (
+            <StarOutlineIcon fontSize="small" />
+          )}
+        </IconButton>
+      )}
     </Box>
   );
 }
