@@ -40,6 +40,9 @@ export default function MapPane({
     isMobileMapView,
     toggleMobileMapView,
     selectedFeature,
+    isMobilePanelOpen,
+    suggestMode,
+    notePinPlacing,
   } = state;
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId);
@@ -72,6 +75,13 @@ export default function MapPane({
 
   // The phone keeps the old fits: the subject belongs to the canvas camera.
   const { subject: _subject, camera: _camera, ...mapProps } = scene;
+  // The panel covers the whole map unless it rests as a sheet over it.
+  const covered =
+    isMobilePanelOpen && !sheetMode && !suggestMode && !notePinPlacing;
+  const chrome = useMemo(
+    () => ({ ...mapProps.chrome, covered }),
+    [mapProps.chrome, covered],
+  );
 
   const resultsBadge = isAreaSearchLoading ? (
     <DelayedSpinner size={10} color="inherit" />
@@ -107,7 +117,7 @@ export default function MapPane({
             zIndex: 10,
           }}
         />
-        <WaterwayMap {...mapProps} camera={camera} />
+        <WaterwayMap {...mapProps} camera={camera} chrome={chrome} />
 
         <MapPaneChrome
           state={state}
