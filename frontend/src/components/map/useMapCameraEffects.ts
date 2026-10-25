@@ -9,6 +9,8 @@ import {
   circleBounds,
   lineCoords,
 } from "@/lib/geo";
+import { cameraMs } from "@/lib/motion";
+import { cameraEasing, fitMs, fitSelection, screensTo } from "./cameraMotion";
 import type { MapPadding, MapSubject } from "./Map";
 
 interface UseMapCameraEffectsParams {
@@ -37,7 +39,6 @@ interface UseMapCameraEffectsParams {
 /** A refit that follows a padding change after this many ms of quiet eases;
  * changes arriving faster (a card being dragged) jump so the map keeps up. */
 const DRAG_GAP_MS = 120;
-const SETTLE_MS = 400;
 /** The subject counts as inside the free area within this many px. */
 const INSIDE_SLACK = 1;
 
@@ -114,7 +115,11 @@ export function useMapCameraEffects({
       sections.flatMap((s) => lineCoords(s.location) ?? []),
     );
     if (!bounds) return;
-    map.fitBounds(bounds, { padding: paddingRef.current ?? 60, duration: 800 });
+    map.fitBounds(bounds, {
+      padding: paddingRef.current ?? 60,
+      duration: fitMs(true),
+      easing: cameraEasing,
+    });
   }, [
     sections,
     mapLoaded,
@@ -131,7 +136,8 @@ export function useMapCameraEffects({
     if (!map || !mapLoaded || !areaCircle) return;
     map.fitBounds(circleBounds(areaCircle), {
       padding: paddingRef.current ?? 60,
-      duration: 800,
+      duration: fitMs(true),
+      easing: cameraEasing,
     });
   }, [areaCircle, mapLoaded, mapRef]);
 
@@ -143,19 +149,21 @@ export function useMapCameraEffects({
     const section = sections.find((s) => s.id === selectedSectionId);
     const bounds = boundsOf(lineCoords(section?.location) ?? []);
     if (!bounds) return;
-    map.fitBounds(bounds, { padding: paddingRef.current ?? 80, duration: 600 });
+    fitSelection(map, bounds, { padding: paddingRef.current ?? 80 });
   }, [selectedSectionId, sections, mapLoaded, hasSubject, mapRef]);
 
   // Fly to a focused feature point
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !focusedPoint) return;
-    map.flyTo({
+    const zoom = Math.max(map.getZoom(), 14);
+    map.easeTo({
       center: focusedPoint,
-      zoom: Math.max(map.getZoom(), 14),
+      zoom,
       // Centre it in the free area beside the cards, not the whole window.
       ...(paddingRef.current && { padding: paddingRef.current }),
-      duration: 600,
+      duration: cameraMs(screensTo(map, focusedPoint, zoom)),
+      easing: cameraEasing,
     });
   }, [focusedPoint, mapLoaded, mapRef]);
 
@@ -173,7 +181,8 @@ export function useMapCameraEffects({
         right: 60,
         bottom: 60 + focusPaddingBottom,
       },
-      duration: 800,
+      duration: fitMs(true),
+      easing: cameraEasing,
       maxZoom: 11,
     });
   }, [focusBounds, mapLoaded, mapRef, focusPaddingBottom]);
@@ -191,11 +200,13 @@ export function useMapCameraEffects({
     const first = framedKey.current === null;
     framedKey.current = subjectKey;
     padKeyFramed.current = padKeyNow.current;
-    map.fitBounds(s.bounds, {
-      padding: paddingRef.current ?? 60,
-      duration: first ? 0 : 800,
-      ...(s.maxZoom !== undefined && { maxZoom: s.maxZoom }),
-    });
+    const padding = paddingRef.current ?? 60;
+    const zoomCap = s.maxZoom === undefined ? {} : { maxZoom: s.maxZoom };
+    if (first) {
+      map.fitBounds(s.bounds, { padding, duration: 0, ...zoomCap });
+      return;
+    }
+    fitSelection(map, s.bounds, { padding, ...zoomCap });
   }, [subjectKey, mapLoaded, mapRef]);
 
   // Keep the subject in the free area when the padding changes (a card
@@ -218,14 +229,16 @@ export function useMapCameraEffects({
         map.easeTo({
           center: focus,
           padding: pad,
-          duration: dragging ? 0 : SETTLE_MS,
+          duration: dragging ? 0 : fitMs(),
+          easing: cameraEasing,
         });
         return;
       }
       if (!s || subjectInside(map, s, pad)) return;
       map.fitBounds(s.bounds, {
         padding: pad,
-        duration: dragging ? 0 : SETTLE_MS,
+        duration: dragging ? 0 : fitMs(),
+        easing: cameraEasing,
         ...(s.maxZoom !== undefined && { maxZoom: s.maxZoom }),
       });
     });

@@ -14,6 +14,7 @@ import MapGL, {
   Source,
 } from "react-map-gl/maplibre";
 import AccessibleMarker from "@/components/map/AccessibleMarker";
+import { cameraEasing, screensTo } from "@/components/map/cameraMotion";
 import { LIBERTY_STYLE } from "@/components/map/mapStyles";
 import { useCalmBaseMap } from "@/components/map/useMutedBaseMap";
 import EmptyState from "@/components/states/EmptyState";
@@ -21,6 +22,7 @@ import ErrorState from "@/components/states/ErrorState";
 import type { GaugeMapState } from "@/lib/api";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
 import { CloseIcon } from "@/lib/icons";
+import { cameraMs, SPINNER_DELAY_MS } from "@/lib/motion";
 import { labelSx, theme } from "@/lib/theme";
 import { useTokens } from "@/lib/useTokens";
 import { DonutCluster } from "./DonutCluster";
@@ -139,7 +141,14 @@ export default function GaugeCatalogMap() {
       | undefined;
     if (!source) return;
     const zoom = await source.getClusterExpansionZoom(id);
-    mapRef.current?.easeTo({ center: [lng, lat], zoom, duration: 500 });
+    const map = mapRef.current;
+    if (!map) return;
+    map.easeTo({
+      center: [lng, lat],
+      zoom,
+      duration: cameraMs(screensTo(map, [lng, lat], zoom)),
+      easing: cameraEasing,
+    });
   };
 
   const handleClick = (e: MapLayerMouseEvent) => {
@@ -533,6 +542,11 @@ export default function GaugeCatalogMap() {
             boxShadow: tokens.elevation.e2,
             px: 1.5,
             py: 0.75,
+            animation: `pm-spinner-in ${theme.tokens.motion.fast}ms ${theme.tokens.motion.easeOut} ${SPINNER_DELAY_MS}ms backwards`,
+            "@keyframes pm-spinner-in": {
+              from: { opacity: 0 },
+              to: { opacity: 1 },
+            },
           }}
         >
           <CircularProgress size={16} />
