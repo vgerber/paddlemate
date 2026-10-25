@@ -20,9 +20,9 @@ import {
   useWithdrawCandidate,
 } from "@/lib/hooks/useTrips";
 import { ConfirmIcon, DeleteIcon, EditIcon } from "@/lib/icons";
-import { durations } from "@/lib/motion";
 import { fonts, theme } from "@/lib/theme";
 import { nearestWatched } from "@/lib/tripRange";
+import { foldProps } from "./folds";
 import StayDialog from "./StayDialog";
 
 const { tokens } = theme;
@@ -322,7 +322,7 @@ function CandidateRow({
           </Box>
         </Box>
 
-        <Collapse in={isOpen} timeout={durations.base} unmountOnExit>
+        <Collapse in={isOpen} {...foldProps} unmountOnExit>
           <Box sx={{ px: { xs: 2, md: 1.5 }, pb: 1.5 }}>
             <Typography sx={{ ...factLabelSx, display: "block" }}>
               Put up by {candidate.proposed_by_username}

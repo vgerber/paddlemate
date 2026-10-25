@@ -21,11 +21,11 @@ import { dateRange } from "@/lib/format";
 import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
 import { useSectionDotLevels } from "@/lib/hooks/useWaterStatus";
 import { AddToListIcon, BaseIcon, DeleteIcon, EditIcon } from "@/lib/icons";
-import { durations } from "@/lib/motion";
 import { fonts, theme } from "@/lib/theme";
 import { baseColors, baseNumbers } from "@/lib/tripRange";
 import { useTokens } from "@/lib/useTokens";
 import BasesMap from "./BasesMap";
+import { foldProps } from "./folds";
 import TripCandidates from "./TripCandidates";
 import WatchList from "./WatchList";
 
@@ -304,7 +304,7 @@ function StayRow({
         )}
       </ListItemButton>
 
-      <Collapse in={isOpen} timeout={durations.base} unmountOnExit>
+      <Collapse in={isOpen} {...foldProps} unmountOnExit>
         <Box sx={{ px: 2, pb: 1.5 }}>
           <Typography
             sx={{

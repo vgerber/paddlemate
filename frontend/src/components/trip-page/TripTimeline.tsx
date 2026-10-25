@@ -15,7 +15,7 @@ import { descentTitle } from "@/lib/descents";
 import { formatDate, todayIso } from "@/lib/format";
 import { useTripTimeline } from "@/lib/hooks/useTrips";
 import { EventNoteIcon, LogIcon } from "@/lib/icons";
-import { durations } from "@/lib/motion";
+import { prefersReducedMotion } from "@/lib/motion";
 import { fonts, theme } from "@/lib/theme";
 import {
   type PaddledRiver,
@@ -32,6 +32,7 @@ import {
   eventKey,
   eventLabels,
 } from "./eventLabels";
+import { foldProps } from "./folds";
 import PlanCalendar from "./PlanCalendar";
 import { dayAtScroll, openingDay } from "./planWeek";
 import { TripMembersSummary, TripStaysSummary } from "./TripSummary";
@@ -43,10 +44,6 @@ const { tokens } = theme;
 function dayLabel(day: number): string {
   return day < 1 ? "Before" : `Day ${day}`;
 }
-
-// Ink at 22%: the month's veil over the list. No alpha step is this light.
-const MONTH_SCRIM = 21.96;
-const MONTH_SCRIM_DARK = 50;
 
 /**
  * The trip as it runs: the week pinned above, one card per day below, with
@@ -100,7 +97,10 @@ export default function TripTimeline({
     if (!el || !card) return;
     jumped.current = true;
     setCurrent(date);
-    el.scrollTo({ top: card.offsetTop - el.offsetTop - 8 });
+    el.scrollTo({
+      top: card.offsetTop - el.offsetTop - 8,
+      behavior: prefersReducedMotion() ? "instant" : "smooth",
+    });
   }, []);
 
   const onScroll = () => {
@@ -166,22 +166,6 @@ export default function TripTimeline({
         minHeight: 0,
       }}
     >
-      {monthOpen && (
-        <Box
-          data-testid="month-scrim"
-          onClick={() => setMonthOpen(false)}
-          sx={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 1,
-            // Ink in light, black in dark: onSurface would lighten the page.
-            bgcolor: withAlpha(tokens.scrimBase, MONTH_SCRIM),
-            '[data-theme="dark"] &': {
-              bgcolor: withAlpha(tokens.scrimBase, MONTH_SCRIM_DARK),
-            },
-          }}
-        />
-      )}
       {wide ? (
         <TripWeek
           dates={days.map((d) => d.date)}
@@ -341,7 +325,7 @@ function DayEntry({
         </Typography>
       </Stack>
 
-      <Collapse in={!isOpen} timeout={durations.base}>
+      <Collapse in={!isOpen} {...foldProps}>
         <Stack direction="column" sx={{ gap: 1, mt: 1 }}>
           {day.events.length === 0 && (
             <Typography sx={{ ...factLabelSx, pl: EVENT_ICON_COLUMN }}>
@@ -376,7 +360,7 @@ function DayEntry({
         </Stack>
       </Collapse>
 
-      <Collapse in={isOpen} timeout={durations.base} unmountOnExit>
+      <Collapse in={isOpen} {...foldProps} unmountOnExit>
         <DayDetail day={day} actions={actions} />
       </Collapse>
     </Box>
