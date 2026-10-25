@@ -131,3 +131,15 @@ Tabs and the swipe are already built to the page (`useSwipeTabs`,
   The desktop pane only fades in (the old content is gone when the new one
   arrives). Of the region pick sequence only the region chip rising in is
   built.
+- Chart (M5b): the period choice is a menu, so options open as a staggered
+  menu, not a panel inside the card; a redraw remounts the chart, so the old
+  line does not fade out first.
+- Calendar (M6): a second week change mid-swap drops the first slide; a drag
+  started while the month settles starts from its target.
+- Markers (M8): feature markers are GL layers, so they do not fade in as the
+  draw-in head passes; the flow does not stop for a stale gauge on the
+  selected section (only offline and stale gauge dots turn hollow).
+- Wizards (M9): the log descent and suggest feature flows close straight away,
+  so only the suggest section and river flows show the success mark.
+- The flow pauses on software-rendered WebGL (no GPU), where each repaint
+  costs about 80 ms; its cost on a real phone is still to be judged.
