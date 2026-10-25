@@ -7,11 +7,15 @@ import type { components } from "@/lib/api/schema";
 import { transition } from "@/lib/motion";
 import { isStale } from "@/lib/staleness";
 import { labelSx, theme } from "@/lib/theme";
+import { useNow } from "@/lib/useNow";
 import { useOnline } from "@/lib/useOnline";
 import { levelMarkerColor } from "@/lib/waterLevel";
 import AccessibleMarker from "./AccessibleMarker";
 
 const { tokens } = theme;
+
+/** How often a pin re-checks whether its reading has gone stale. */
+const STALE_CHECK_MS = 60_000;
 
 type WaterLevel = components["schemas"]["WaterLevel"];
 
@@ -49,7 +53,7 @@ export default function GaugeMarkers({
 }: GaugeMarkersProps) {
   const [popupPin, setPopupPin] = useState<GaugePin | null>(null);
   const online = useOnline();
-  const now = Date.now();
+  const now = useNow(STALE_CHECK_MS);
 
   return (
     <>

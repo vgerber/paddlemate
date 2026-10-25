@@ -293,6 +293,24 @@ test.describe("marker motion", () => {
     expect(dot.bg).not.toBe(dot.border);
   });
 
+  test("a gauge turns hollow as its reading ages, with no new data", async ({
+    page,
+    isMobile,
+  }) => {
+    await page.clock.install();
+    await mockGauge(page, { level: "medium", ageMs: 60_000 });
+    await openGauges(page, isMobile);
+    await expect(pin(page)).toHaveAttribute("data-level", "medium");
+    await expect(pin(page)).not.toHaveAttribute("data-hollow", "true");
+    // Later requests hang, so only the clock can change the pin.
+    await page.route(
+      "**/waterways/water-status?*",
+      () => new Promise(() => undefined),
+    );
+    await page.clock.fastForward("06:00:00");
+    await expect(pin(page)).toHaveAttribute("data-hollow", "true");
+  });
+
   test("offline turns a fresh gauge hollow, online fills it again", async ({
     page,
     context,
