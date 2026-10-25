@@ -146,14 +146,14 @@ test.describe("phone card", () => {
     await expect(card(page)).not.toContainText(/\b[HML] \d/);
   });
 
-  test("thresholds are always drawn as the words Low, Medium, High", async ({
+  test("thresholds are always drawn as Low, Medium, High with their value", async ({
     page,
   }) => {
     await openSection(page);
     await expect(card(page).getByTestId("threshold-label")).toHaveText([
-      "High",
-      "Medium",
-      "Low",
+      /^High \d[\d.]* cm$/,
+      /^Medium \d[\d.]* cm$/,
+      /^Low \d[\d.]* cm$/,
     ]);
   });
 
@@ -621,7 +621,8 @@ test.describe("reading block and rail", () => {
     const labels = rail(page).getByTestId("threshold-label");
     const words = await labels.allTextContents();
     expect(words.length).toBeGreaterThan(0);
-    for (const w of words) expect(["Low", "Medium", "High"]).toContain(w);
+    for (const w of words)
+      expect(w).toMatch(/^(Low|Medium|High) \d[\d.]* \S+$/);
     const p = await boxOf(plot(page));
     for (const x of await labels.evaluateAll((els) =>
       els.map((e) => e.getBoundingClientRect().x),

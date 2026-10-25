@@ -392,8 +392,9 @@ The reasons and the work plan are in [plans/wide-canvas.md](plans/wide-canvas.md
   moves; there is no trend until there are predictions. A reading older than
   3 h or three gauge intervals shows "No recent reading" with no level word,
   and its dot is grey. The plot runs edge to edge with no grid and a 2px line:
-  threshold words (Low, Medium, High; the number is in the tooltip) stand on
-  the lines at the plot's left, no gutter, thresholds are always drawn; the
+  threshold marks (the word and the value the level starts at, "Medium
+  80 cm") stand on the lines at the plot's left, no gutter, thresholds are
+  always drawn; the
   latest point is a ringed dot 8px short of the right edge; the credit line is
   under it. Pointing at or tapping the plot shows a hairline, a ring dot and a
   readout ("High, 78.8 cm" with the time) in the plot only; the values pane

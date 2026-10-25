@@ -201,10 +201,12 @@ export default function RailOverlay({
         overflow: "hidden",
       }}
     >
-      {lines.map((l, i) =>
-        overlaps(wordYs[i], levelWord(l.key)) ? null : (
+      {lines.map((l, i) => {
+        // The word and the value the level starts at.
+        const mark = `${levelWord(l.key)} ${formatReading(l.v, unit)}`;
+        return overlaps(wordYs[i], mark) ? null : (
           <g key={l.key}>
-            <title>{`${levelWord(l.key)} from ${l.v} ${unit}`}</title>
+            <title>{`${levelWord(l.key)} from ${formatReading(l.v, unit)}`}</title>
             <text
               data-testid="threshold-label"
               x={wordX}
@@ -214,11 +216,11 @@ export default function RailOverlay({
               fill={levelInk(l.key, tokens)}
               {...halo}
             >
-              {levelWord(l.key)}
+              {mark}
             </text>
           </g>
-        ),
-      )}
+        );
+      })}
       {marker && (
         <line
           data-testid="chart-marker-line"
