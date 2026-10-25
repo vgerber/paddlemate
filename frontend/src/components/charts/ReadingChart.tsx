@@ -294,15 +294,25 @@ export default function ReadingChart(props: ReadingChartProps) {
     return (
       <>
         <Box
-          data-testid="chart-card"
           sx={{
             height: railHeight,
             flexShrink: 0,
-            bgcolor: tokens.surface,
-            borderTop: `1px solid ${tokens.outlineVariant}`,
+            boxSizing: "border-box",
+            // The same inset as the features card above it.
+            px: `${tokens.canvas.panel.gutter}px`,
+            pb: `${tokens.canvas.panel.gutter}px`,
           }}
         >
-          {block}
+          <Box
+            data-testid="chart-card"
+            sx={{
+              ...phoneCardSx,
+              height: "100%",
+              overflow: "hidden",
+            }}
+          >
+            {block}
+          </Box>
         </Box>
         <ChartDock>
           <Box
@@ -333,7 +343,6 @@ export default function ReadingChart(props: ReadingChartProps) {
       data-testid="chart-card"
       sx={{
         ...phoneCardSx,
-        mx: `${tokens.phone.edge}px`,
         mt: 1.5,
         // The panel's gutter to the card below.
         mb: phone ? `${tokens.canvas.panel.gutter}px` : 0,

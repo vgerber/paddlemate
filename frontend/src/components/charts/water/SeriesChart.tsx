@@ -33,6 +33,12 @@ import {
 } from "@/lib/format";
 import { useReadingSummary } from "@/lib/hooks/useGauges";
 import { FitIcon } from "@/lib/icons";
+import {
+  css,
+  durations,
+  prefersReducedMotion,
+  REDUCED_FADE_MS,
+} from "@/lib/motion";
 import { isStale } from "@/lib/staleness";
 import { labelSx, theme } from "@/lib/theme";
 import { type ResolvedTokens, useTokens } from "@/lib/useTokens";
@@ -244,6 +250,29 @@ function thresholdBands(r: WaterRangeWithStatus, ink: ResolvedTokens) {
       r.range_high != null &&
       band("medium", r.range_medium, r.range_high, ink.levels.medium.text),
   ].filter((l): l is JSX.Element => l !== false);
+}
+
+/** A redraw: the new line is revealed left to right (clip-path, paint only),
+ * the area fades in after it. Reduced, the line is not drawn in: everything
+ * cross-fades. */
+function redrawSx() {
+  const reduced = prefersReducedMotion();
+  const fade = { from: { opacity: 0 } };
+  return {
+    "@keyframes pm-line-reveal": {
+      from: { clipPath: "inset(0 100% 0 0)" },
+      to: { clipPath: "inset(0 0 0 0)" },
+    },
+    "@keyframes pm-area-in": fade,
+    "& .recharts-area-curve": {
+      animation: reduced
+        ? `pm-area-in ${REDUCED_FADE_MS}ms ${css.easeOut} backwards`
+        : `pm-line-reveal ${css.slow} ${css.easeOut} backwards`,
+    },
+    "& .recharts-area-area": {
+      animation: `pm-area-in ${reduced ? `${REDUCED_FADE_MS}ms` : css.fast} ${css.easeOut} ${reduced ? 0 : durations.base}ms backwards`,
+    },
+  };
 }
 
 export default function SeriesChart({
@@ -531,7 +560,12 @@ export default function SeriesChart({
   const ready = status == null;
 
   return (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={[
+        { height: "100%", display: "flex", flexDirection: "column" },
+        redrawSx(),
+      ]}
+    >
       <div
         ref={setContainer}
         data-plot-top={headroom}
@@ -605,6 +639,7 @@ export default function SeriesChart({
             )}
             {size && (
               <AreaChart
+                key={`${series.id}|${timeRange}|${to ?? ""}`}
                 width={size.width}
                 height={size.height}
                 accessibilityLayer={false}

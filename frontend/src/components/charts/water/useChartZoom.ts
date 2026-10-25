@@ -13,7 +13,7 @@ interface ChartZoomOpts {
 const MIN_SPAN_MS = 10 * 60 * 1000;
 
 /**
- * Zoom (pinch, wheel) and pan (drag while zoomed, horizontal scroll,
+ * Zoom (pinch, ctrl+wheel) and pan (drag while zoomed, horizontal scroll,
  * two-finger drag) for a chart's time axis.
  *
  * Native listeners go on the container (touch-action must allow it, see the
@@ -132,18 +132,24 @@ export function useChartZoom(
     const onWheel = (e: WheelEvent) => {
       const d = currentDomain();
       if (!d) return;
-      e.preventDefault();
+      const horizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+      const pinch = e.ctrlKey || e.metaKey;
+      // A plain vertical wheel belongs to the page: the chart sits in a
+      // scrolling pane. Zoom takes ctrl/meta (a trackpad pinch arrives as a
+      // ctrl wheel); a horizontal wheel pans, and only while zoomed.
+      if (!pinch && !horizontal) return;
       rectLeft = container.getBoundingClientRect().left;
 
-      // Horizontal scroll (trackpad) pans, vertical zooms.
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      if (!pinch) {
         const zoomed = raf ? pendingDomain : domainRef.current;
         if (!zoomed) return;
+        e.preventDefault();
         const shift =
           (e.deltaX / geomRef.current.plotWidth) * (zoomed[1] - zoomed[0]);
         scheduleDomain(clampDomain(zoomed[0] + shift, zoomed[1] + shift));
         return;
       }
+      e.preventDefault();
 
       const tCursor = pxToTime(e.clientX - rectLeft, d);
       const factor = Math.exp(e.deltaY * 0.0015);

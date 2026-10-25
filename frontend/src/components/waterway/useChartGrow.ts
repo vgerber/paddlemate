@@ -7,6 +7,11 @@ const MAX_SHARE = 0.5;
 export const CHART_EXTRA_VAR = "--chart-extra";
 
 /**
+ * The chart takes whatever height the neighbours give up, in the same frame
+ * the ResizeObserver reports it. A neighbour that animates its height (the
+ * features card folding) is followed frame by frame, on its own curve, so
+ * the edge between the two is one edge and needs no signal from them.
+ *
  * On a phone the free height of the features pane goes to the chart card.
  * The free height is measured with the chart's current growth taken out
  * again, so applying it does not change the next measurement (no
