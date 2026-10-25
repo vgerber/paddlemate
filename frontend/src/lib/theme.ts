@@ -499,6 +499,53 @@ export const fonts = {
 
 const { radii, elevation, motion } = tokens;
 
+// Press feedback: a currentColor overlay moves by opacity (hover only where
+// hover exists), release is slower than press, and buttons, chips and cards
+// scale a hair while held. Reduced motion keeps the overlay and drops the
+// scale. Filled controls use stronger steps.
+const PRESS_SCALE = 0.985;
+const easeOut = motion.easeOut;
+const slowTo = (props: string[]) =>
+  props.map((p) => `${p} ${motion.fast}ms ${easeOut}`).join(", ");
+const COLOUR_PROPS = [
+  "background-color",
+  "border-color",
+  "box-shadow",
+  "color",
+  "outline-color",
+];
+
+function overlay(hover: number, press: number) {
+  return {
+    "&::before": {
+      content: '""',
+      position: "absolute",
+      inset: 0,
+      borderRadius: "inherit",
+      backgroundColor: "currentColor",
+      opacity: 0,
+      pointerEvents: "none",
+      transition: `opacity ${motion.fast}ms ${easeOut}`,
+    },
+    "@media (hover: hover)": { "&:hover::before": { opacity: hover } },
+    "&:active::before": {
+      opacity: press,
+      transition: `opacity ${motion.instant}ms ${easeOut}`,
+    },
+    "&.Mui-disabled::before": { display: "none" },
+  } as const;
+}
+
+const scaleOnPress = {
+  transition: slowTo(["transform", ...COLOUR_PROPS]),
+  "&:active": {
+    transform: `scale(${PRESS_SCALE})`,
+    transition: `transform ${motion.instant}ms ${easeOut}`,
+  },
+  'html[data-motion="reduced"] &:active': { transform: "none" },
+  "&.Mui-disabled": { transition: "none", transform: "none" },
+} as const;
+
 /** MUI draws elevation 1 as the card step and everything above as the
  * floating step, so a Paper never invents a shadow of its own. */
 const shadows = [
@@ -759,6 +806,13 @@ export const theme = createTheme({
           backgroundColor: tokens.surface,
           backgroundImage: "none",
           borderRadius: radii.md,
+          transition: slowTo(["transform"]),
+          "&:has(> .MuiCardActionArea-root:active)": {
+            transform: `scale(${PRESS_SCALE})`,
+            transition: `transform ${motion.instant}ms ${easeOut}`,
+          },
+          'html[data-motion="reduced"] &:has(> .MuiCardActionArea-root:active)':
+            { transform: "none" },
         },
       },
     },
@@ -768,10 +822,13 @@ export const theme = createTheme({
       defaultProps: { disableRipple: true },
       styleOverrides: {
         root: {
+          position: "relative",
+          outline: "2px solid transparent",
+          outlineOffset: -2,
           "&.Mui-focusVisible, &:focus-visible": {
-            outline: `2px solid ${tokens.primary}`,
-            outlineOffset: -2,
+            outlineColor: tokens.primary,
           },
+          ...overlay(0.04, 0.08),
         },
       },
     },
@@ -785,6 +842,12 @@ export const theme = createTheme({
           paddingInline: 16,
           fontWeight: 600,
           textTransform: "none",
+          ...scaleOnPress,
+        },
+        text: { "&:hover": { backgroundColor: "transparent" } },
+        contained: {
+          "@media (hover: hover)": { "&:hover::before": { opacity: 0.1 } },
+          "&:active::before": { opacity: 0.2 },
         },
         sizeSmall: { minHeight: tokens.touch.min, paddingInline: 12 },
         outlined: {
@@ -802,7 +865,7 @@ export const theme = createTheme({
             backgroundColor: tokens.primaryFill,
             boxShadow: elevation.e3,
             "&:hover": {
-              backgroundColor: tokens.primaryFillHover,
+              backgroundColor: tokens.primaryFill,
               boxShadow: elevation.e3,
             },
           },
@@ -812,7 +875,7 @@ export const theme = createTheme({
           style: {
             backgroundColor: tokens.errorFill,
             color: tokens.onErrorFill,
-            "&:hover": { backgroundColor: tokens.errorFillHover },
+            "&:hover": { backgroundColor: tokens.errorFill },
           },
         },
       ],
@@ -820,6 +883,10 @@ export const theme = createTheme({
 
     MuiIconButton: {
       styleOverrides: {
+        root: {
+          ...scaleOnPress,
+          "&:hover": { backgroundColor: "transparent" },
+        },
         sizeMedium: { padding: 10 },
       },
     },
@@ -829,7 +896,10 @@ export const theme = createTheme({
         root: {
           borderRadius: radii.lg,
           boxShadow: elevation.e3,
+          ...scaleOnPress,
           "&:hover": { boxShadow: elevation.e3 },
+          "@media (hover: hover)": { "&:hover::before": { opacity: 0.1 } },
+          "&:active::before": { opacity: 0.2 },
         },
       },
       variants: [
@@ -837,7 +907,7 @@ export const theme = createTheme({
           props: { color: "primary" },
           style: {
             backgroundColor: tokens.primaryFill,
-            "&:hover": { backgroundColor: tokens.primaryFillHover },
+            "&:hover": { backgroundColor: tokens.primaryFill },
           },
         },
       ],
@@ -862,6 +932,7 @@ export const theme = createTheme({
           fontWeight: 600,
           fontSize: "0.8125rem",
           height: 32,
+          ...scaleOnPress,
           // A set filter: teal ring and a wash, not just teal text. MUI 9 has
           // no `outlinedPrimary` class.
           "&.MuiChip-outlined.MuiChip-colorPrimary": {
@@ -999,11 +1070,25 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           minHeight: tokens.touch.row,
-          transition: `background-color ${motion.instant}ms ${motion.easeOut}`,
-          "&:active": { backgroundColor: withAlpha(tokens.primary, "wash") },
+          transition: `background-color ${motion.instant}ms ${easeOut}, outline-color ${motion.fast}ms ${easeOut}`,
+          "&.Mui-disabled": { transition: "none" },
+          // Selected: a wash and a 3px bar, both at the instant step.
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            insetBlock: 0,
+            left: 0,
+            width: 3,
+            backgroundColor: tokens.primary,
+            opacity: 0,
+            transform: "scaleY(0.4)",
+            pointerEvents: "none",
+            transition: `opacity ${motion.instant}ms ${easeOut}, transform ${motion.instant}ms ${easeOut}`,
+          },
           "&.Mui-selected": {
             backgroundColor: withAlpha(tokens.primary, "hover"),
-            "&:hover": { backgroundColor: withAlpha(tokens.primary, "strong") },
+            "&::after": { opacity: 1, transform: "none" },
+            "&:hover": { backgroundColor: withAlpha(tokens.primary, "hover") },
           },
         },
       },
@@ -1057,6 +1142,9 @@ export const theme = createTheme({
           fontWeight: 600,
           textTransform: "none",
           color: tokens.onSurfaceVariant,
+          // Thumb: the segmented control swaps fills per button, so the time
+          // is the fast step, not a travel time.
+          transition: slowTo(COLOUR_PROPS),
           "&.Mui-selected": {
             backgroundColor: tokens.segmentThumb,
             color: tokens.onSurface,
