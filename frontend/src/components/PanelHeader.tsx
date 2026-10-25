@@ -3,6 +3,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { SwipeTrack } from "@/lib/hooks/useSwipeTabs";
+import { useViewFocus } from "@/lib/hooks/useViewFocus";
 import { BackIcon, CloseIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import UnderlineTabs from "./UnderlineTabs";
@@ -28,6 +29,8 @@ interface PanelHeaderProps<T extends string> {
   subtitle?: string;
   onBack?: () => void;
   backIcon?: "arrow" | "close";
+  /** Move focus to the title when the header mounts (see `useViewFocus`). */
+  focusOnOpen?: "lost" | "always";
   actionButton?: ReactNode;
   tabs?: {
     value: T;
@@ -48,9 +51,11 @@ export default function PanelHeader<T extends string>({
   subtitle,
   onBack,
   backIcon = "arrow",
+  focusOnOpen,
   actionButton,
   tabs,
 }: PanelHeaderProps<T>) {
+  const titleRef = useViewFocus<HTMLElement>(focusOnOpen);
   return (
     <Box
       sx={{
@@ -98,7 +103,13 @@ export default function PanelHeader<T extends string>({
             </IconButton>
           )}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h3" noWrap>
+            <Typography
+              variant="h3"
+              noWrap
+              ref={titleRef}
+              tabIndex={focusOnOpen ? -1 : undefined}
+              sx={{ outline: "none" }}
+            >
               {title}
             </Typography>
             {subtitle && (

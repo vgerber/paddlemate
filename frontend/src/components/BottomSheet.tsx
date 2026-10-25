@@ -172,6 +172,16 @@ export default function BottomSheet({
     wasClosed.current = closed;
   }, [state]);
 
+  // A sheet mounted only while it is open (`{adding && <Sheet open />}`) never
+  // sees the closed state: unmounting is its close.
+  useLayoutEffect(
+    () => () => {
+      if (!wasClosed.current && opener.current?.isConnected)
+        opener.current.focus();
+    },
+    [],
+  );
+
   if (state === "closed") return null;
 
   const onPointerDown = (e: PointerEvent<HTMLElement>) => {

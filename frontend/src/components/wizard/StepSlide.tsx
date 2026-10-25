@@ -68,6 +68,40 @@ export default function StepSlide({
     last.current = { step, node: children };
   });
 
+  // Whether the last input was the keyboard: a touch user is not handed a
+  // soft keyboard by a step change, a keyboard user is not left on <body>.
+  const byKeyboard = useRef(false);
+  useEffect(() => {
+    const set = (v: boolean) => () => {
+      byKeyboard.current = v;
+    };
+    const down = set(true);
+    const point = set(false);
+    window.addEventListener("keydown", down, true);
+    window.addEventListener("pointerdown", point, true);
+    return () => {
+      window.removeEventListener("keydown", down, true);
+      window.removeEventListener("pointerdown", point, true);
+    };
+  }, []);
+
+  // A new step takes focus to its first control, so the next Tab continues
+  // inside it. Not on the first render.
+  const first = useRef(true);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs per step change only
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    if (!byKeyboard.current) return;
+    enterRef.current
+      ?.querySelector<HTMLElement>(
+        "input:not([disabled]):not([type=hidden]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex='-1'])",
+      )
+      ?.focus({ preventScroll: true });
+  }, [step]);
+
   useLayoutEffect(() => {
     const m = motion.current;
     if (!m || !ghost) return;
