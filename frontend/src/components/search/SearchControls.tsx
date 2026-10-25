@@ -1,8 +1,9 @@
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
-import { useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import ChipRow from "@/components/ChipRow";
+import { usePanelEnter } from "@/components/usePanelEnter";
 import type { AreaCircle } from "@/lib/geo";
 import { CloseIcon, SearchIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
@@ -15,6 +16,17 @@ import { isListingRegions, RegionHint } from "./RegionSelect";
 import type { WaterwaySearchFilters } from "./useWaterwaySearchFilters";
 
 const { tokens } = theme;
+
+/** The picked region's name rises into the bar. */
+function RegionChipEnter({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  usePanelEnter(ref, "in", { from: { y: 8 }, onMount: true });
+  return (
+    <Box ref={ref} component="span" sx={{ display: "inline-flex" }}>
+      {children}
+    </Box>
+  );
+}
 
 /** One filled field with a magnifier and the label as placeholder: the name search or the region search. */
 function SearchField({
@@ -147,12 +159,14 @@ export default function SearchControls({
       {!listingRegions && (mode !== "region" || region) && (
         <ChipRow>
           {mode === "region" && region && (
-            <FilterChip
-              label={region.name}
-              testId="region-chip"
-              set
-              onDelete={() => filters.setRegion(null)}
-            />
+            <RegionChipEnter key={region.name}>
+              <FilterChip
+                label={region.name}
+                testId="region-chip"
+                set
+                onDelete={() => filters.setRegion(null)}
+              />
+            </RegionChipEnter>
           )}
           <FilterChip
             label={grade ? `Grade ${grade}` : "Grade"}

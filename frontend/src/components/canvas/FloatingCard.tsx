@@ -1,7 +1,8 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import { type ReactNode, useLayoutEffect } from "react";
+import { type ReactNode, useLayoutEffect, useRef } from "react";
 import PanelHeader from "@/components/PanelHeader";
+import { usePanelEnter } from "@/components/usePanelEnter";
 import type { CardSide } from "@/lib/canvasLayout";
 import {
   type CardKind,
@@ -74,6 +75,11 @@ export default function FloatingCard({
     });
     return () => layout.unregister(id);
   }, [id, side, kind, priority, screen, resizable]);
+
+  // A new screen in the card (the title names it) fades in with a short rise
+  // after the old one is gone; the content stays mounted.
+  const body = useRef<HTMLDivElement>(null);
+  usePanelEnter(body, title, { from: { y: 8 }, delay: 60, duration: 160 });
 
   const placement = useLayout((s) => s.placements.get(id));
   const windowWidth = useLayout((s) => s.viewport.w);
@@ -150,7 +156,7 @@ export default function FloatingCard({
                 />
               </Box>
             )}
-            <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+            <Box ref={body} sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
               {children}
             </Box>
           </>
