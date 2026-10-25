@@ -502,7 +502,7 @@ test.describe("suggest feature", () => {
     expect(labels.slice(0, 3)).toEqual(["Feature type", "Location", "Details"]);
     const place = pane(page).getByTestId("place-button");
     expect(await computed(place, "border-top-left-radius")).toBe("12px");
-    expect(await computed(place, "color")).toBe(TEAL);
+    expect(await computed(place, "color")).toBe("rgb(11, 93, 116)");
     expectColour(
       await computed(place, "background-color"),
       "rgba(14, 116, 144, 0.12)",

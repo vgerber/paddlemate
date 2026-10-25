@@ -197,7 +197,7 @@ export default function SuggestFeatureGeometry({
                 gap: 1,
                 borderRadius: `${tokens.radii.row}px`,
                 bgcolor: withAlpha(tokens.primary, "hover"),
-                color: tokens.primary,
+                color: tokens.onPrimaryContainer,
                 fontSize: "0.875rem",
                 fontWeight: 600,
                 "&:hover": { bgcolor: withAlpha(tokens.primary, "strong") },

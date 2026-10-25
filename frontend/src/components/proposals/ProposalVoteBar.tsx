@@ -33,17 +33,17 @@ export default function ProposalVoteBar({ proposal }: { proposal: Proposal }) {
       }}
     >
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography sx={labelSx} noWrap>
+        <Typography sx={labelSx}>
           Proposed by {proposerName(proposal, user?.id)} ·{" "}
           {formatDate(proposal.created_at)}
         </Typography>
         {!isAuthenticated && (
-          <Typography sx={{ ...labelSx, color: "text.disabled" }} noWrap>
+          <Typography sx={{ ...labelSx, color: "text.secondary" }}>
             Sign in to vote
           </Typography>
         )}
         {reviewed && (
-          <Typography sx={{ ...labelSx, color: "text.disabled" }} noWrap>
+          <Typography sx={{ ...labelSx, color: "text.secondary" }}>
             {reviewed}
           </Typography>
         )}

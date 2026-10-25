@@ -121,7 +121,7 @@ export default function SectionLineStep({
             color="textSecondary"
             sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
           >
-            {lookupBusy && <DelayedSpinner size={12} />}
+            {lookupBusy && <DelayedSpinner size={12} aria-hidden="true" />}
             {lookupHint}
           </Typography>
         )}
@@ -169,7 +169,12 @@ export default function SectionLineStep({
           >
             <ToggleButton value="snap" disabled={snap.status !== "done"}>
               {snapInProgress && !lookupStalled && (
-                <DelayedSpinner size={12} color="inherit" sx={{ mr: 0.75 }} />
+                <DelayedSpinner
+                  size={12}
+                  color="inherit"
+                  aria-hidden="true"
+                  sx={{ mr: 0.75 }}
+                />
               )}
               Snapped course
             </ToggleButton>

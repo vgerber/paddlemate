@@ -965,6 +965,41 @@ export const theme = createTheme({
       defaultProps: { variant: "filled" },
     },
 
+    // Autocomplete re-pads the filled field (37px); restore the calm field's
+    // 52px and give the open arrow a full touch target.
+    MuiAutocomplete: {
+      styleOverrides: {
+        root: {
+          "&& .MuiFilledInput-root": {
+            paddingTop: 0,
+            paddingBottom: 0,
+            paddingLeft: 0,
+            paddingRight: 0,
+            "& .MuiFilledInput-input": {
+              padding: "25px 14px 8px",
+              minHeight: 19,
+              boxSizing: "content-box",
+            },
+            "& .MuiFilledInput-input.MuiInputBase-inputSizeSmall, &.MuiInputBase-sizeSmall .MuiFilledInput-input":
+              { padding: "22px 14px 6px" },
+          },
+          "& .MuiFilledInput-root.MuiInputBase-adornedEnd": {
+            paddingRight: tokens.touch.min,
+          },
+        },
+        endAdornment: { right: 0, top: "calc(50% - 22px)" },
+        popupIndicator: {
+          width: tokens.touch.min,
+          height: tokens.touch.min,
+          marginRight: 0,
+        },
+        clearIndicator: {
+          width: tokens.touch.min,
+          height: tokens.touch.min,
+        },
+      },
+    },
+
     // The calm field: the label always sits inside at the top, the value
     // beneath it, a 1px inset outline that becomes a 2px accent ring on focus.
     MuiFilledInput: {

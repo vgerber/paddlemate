@@ -53,7 +53,7 @@ export default function ProposalCardHeader({
       <Typography
         sx={{
           fontSize: "0.6875rem",
-          color: "text.disabled",
+          color: "text.secondary",
           fontFamily: fonts.body,
         }}
       >
