@@ -94,33 +94,41 @@ function PhoneSettings({
         minHeight: PANEL_HEIGHT.xs,
       }}
     >
-      <PanelHeader
-        title="Settings"
-        tabs={{
-          value: tab,
-          onChange: setTab,
-          track: swipe.track,
-          gesture: swipe.gestureProps,
-          options: PHONE_TABS,
-        }}
-      />
-      <Box
-        sx={{
-          position: "relative",
-          overflowX: "clip",
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <Box {...swipe.paneProps} data-testid="settings-pane" sx={{ flex: 1 }}>
-          <PhoneTabBody tab={tab} onOpen={onOpen} />
-        </Box>
-        <SwipeGhost swipe={swipe} index={index} count={PHONE_TABS.length}>
-          {(i) => <PhoneTabBody tab={PHONE_TABS[i].value} onOpen={onOpen} />}
-        </SwipeGhost>
-      </Box>
+      {/* First in DOM order: the overlay is fixed, and Tab starts at its back arrow. */}
       {group && <SettingsDetail group={group} overlay onBack={onBack} />}
+      {/* The list under the overlay is out of reach for Tab and readers. */}
+      <Box inert={group ? true : undefined} sx={{ display: "contents" }}>
+        <PanelHeader
+          title="Settings"
+          tabs={{
+            value: tab,
+            onChange: setTab,
+            track: swipe.track,
+            gesture: swipe.gestureProps,
+            options: PHONE_TABS,
+          }}
+        />
+        <Box
+          sx={{
+            position: "relative",
+            overflowX: "clip",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Box
+            {...swipe.paneProps}
+            data-testid="settings-pane"
+            sx={{ flex: 1 }}
+          >
+            <PhoneTabBody tab={tab} onOpen={onOpen} />
+          </Box>
+          <SwipeGhost swipe={swipe} index={index} count={PHONE_TABS.length}>
+            {(i) => <PhoneTabBody tab={PHONE_TABS[i].value} onOpen={onOpen} />}
+          </SwipeGhost>
+        </Box>
+      </Box>
     </Box>
   );
 }

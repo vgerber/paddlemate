@@ -106,7 +106,7 @@ export default function SectionFeaturesStep({
             slotProps={{
               input: {
                 endAdornment: regionCountry.loading ? (
-                  <DelayedSpinner size={16} />
+                  <DelayedSpinner size={16} aria-label="Looking up region" />
                 ) : undefined,
               },
             }}

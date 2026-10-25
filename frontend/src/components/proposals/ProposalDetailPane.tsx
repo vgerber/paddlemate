@@ -24,7 +24,7 @@ import { labelSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
-const paneLabelSx = { ...labelSx, color: "text.disabled" } as const;
+const paneLabelSx = { ...labelSx, color: "text.secondary" } as const;
 
 /** Read-only full view of a proposal - the wizard's review layout without
  * the editing: map, naming, translations and feature rows with positions. */

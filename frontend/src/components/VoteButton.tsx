@@ -26,7 +26,7 @@ export default function VoteButton({
   const Icon = direction === "up" ? ThumbUpIcon : ThumbDownIcon;
   return (
     <ButtonBase
-      aria-label={label}
+      aria-label={`${label}, ${count}`}
       aria-pressed={pressed}
       disabled={disabled}
       onClick={onClick}

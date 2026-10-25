@@ -67,8 +67,8 @@ export default function ProposalRow({
       }}
     >
       <Typography
-        noWrap
         sx={{
+          overflowWrap: "anywhere",
           fontFamily: fonts.body,
           fontWeight: 600,
           fontSize: "0.9375rem",

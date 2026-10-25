@@ -7,16 +7,6 @@ import { type SectionWithFeatures, waterwaysApi } from "@/lib/api";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { waterwayKeys } from "@/lib/hooks/useWaterways";
 import { localizedName } from "@/lib/localization";
-import { theme } from "@/lib/theme";
-
-const { tokens } = theme;
-
-/** The open arrow is a button: full touch size, not the 28px default. */
-const POPUP_INDICATOR = {
-  popupIndicator: {
-    sx: { width: tokens.touch.min, height: tokens.touch.min },
-  },
-};
 
 interface Props {
   waterwayId: number | null;
@@ -71,7 +61,6 @@ export default function SectionAdder({
           input.length < 2 ? "Type to search rivers" : "No results"
         }
         renderInput={(params) => <TextField {...params} label="Search river" />}
-        slotProps={POPUP_INDICATOR}
       />
 
       {children}
@@ -103,7 +92,6 @@ export default function SectionAdder({
             }
           />
         )}
-        slotProps={POPUP_INDICATOR}
       />
     </>
   );

@@ -125,7 +125,7 @@ export default function FeatureRow({
             sx={{
               fontVariantNumeric: "tabular-nums",
               fontSize: "0.6875rem",
-              color: "text.disabled",
+              color: "text.secondary",
             }}
           >
             {extent.isZone
