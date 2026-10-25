@@ -29,6 +29,11 @@ describe("isGeographyRoute", () => {
     }
   });
 
+  test("the suggest-section wizard is on the canvas", () => {
+    expect(isGeographyRoute("/waterways/suggest-section")).toBe(true);
+    expect(isGeographyRoute("/waterways/suggest-river")).toBe(false);
+  });
+
   test("the log form is on the canvas, its picker map is the host map", () => {
     expect(isGeographyRoute("/logs/new")).toBe(true);
     expect(isGeographyRoute("/logs/12")).toBe(true);
