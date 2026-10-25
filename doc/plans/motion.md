@@ -16,7 +16,7 @@ in from the right, a folded list hands its height to the chart, the trip
 calendar's disc follows the day you scroll to, a wizard step slides the way
 you are going. Taps answer at once. The selected section on the map flows
 gently and draws itself in from put-in to take-out. **Settings > Appearance >
-Motion** has System (the default), Reduced and Full; Reduced keeps short
+Motion** has Full (the default), Reduced and System; Reduced keeps short
 fades and drops all movement, also on the map.
 
 ## Sources

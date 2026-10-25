@@ -44,7 +44,7 @@
         } catch (e) {}
         var reduced =
           motion === "reduced" ||
-          (motion !== "full" &&
+          (motion === "system" &&
             matchMedia("(prefers-reduced-motion: reduce)").matches);
         document.documentElement.setAttribute(
           "data-motion",

@@ -30,15 +30,19 @@ async function open(page: Page) {
 }
 
 test.describe("motion setting", () => {
-  test("System is the default and follows the device live", async ({
+  test("Full is the default, even on a device that reduces", async ({
     page,
   }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await open(page);
+    await expect(choice(page, "Full")).toHaveAttribute("aria-pressed", "true");
+    expect(await attr(page)).toBe("full");
+  });
+
+  test("System follows the device live", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await open(page);
-    await expect(choice(page, "System")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await choice(page, "System").click();
     expect(await attr(page)).toBe("full");
     await page.emulateMedia({ reducedMotion: "reduce" });
     await expect.poll(() => attr(page)).toBe("reduced");
@@ -59,7 +63,7 @@ test.describe("motion setting", () => {
       "aria-pressed",
       "true",
     );
-    await choice(page, "System").click();
+    await choice(page, "Full").click();
     await expect.poll(() => attr(page)).toBe("full");
     expect(await page.evaluate((k) => localStorage.getItem(k), KEY)).toBeNull();
   });

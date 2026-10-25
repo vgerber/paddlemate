@@ -277,7 +277,7 @@ movement to nothing and keeps a short fade. Ambient motion (the flow along the
 selected section on the map) is at most one thing, off when the tab is hidden,
 after a quiet spell, offline or under reduced motion.
 
-Settings > Appearance > Motion holds System (default), Reduced and Full, kept
+Settings > Appearance > Motion holds Full (default), Reduced and System, kept
 per device. The resolved value is `html[data-motion]` (set before first paint
 and kept live by `lib/motionMode.ts`); the global reduced rule and
 `prefersReducedMotion()` / `useReducedMotion()` in `lib/motion.ts` read it.
