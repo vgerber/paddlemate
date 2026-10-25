@@ -812,6 +812,7 @@ export default function WaterwayMap({
           onToggle={togglePickMode}
           showPutIn={!!onPickPutIn}
           showTakeOut={!!onPickTakeOut}
+          inset={inset}
         />
       )}
     </div>
