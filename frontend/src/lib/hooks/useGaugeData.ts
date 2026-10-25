@@ -40,6 +40,8 @@ export function useGaugeData({
             lon: r.gauge.lon,
             name: r.gauge.name,
             level: r.level,
+            measuredAt: r.latest_reading?.measured_at,
+            fetchIntervalSecs: r.gauge.fetch_interval_secs,
           },
         ];
       }),
