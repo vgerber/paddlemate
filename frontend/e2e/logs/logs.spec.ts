@@ -341,7 +341,12 @@ test.describe("log descent", () => {
     const post = page.waitForRequest(
       (r) => r.method() === "POST" && /\/descents$/.test(r.url()),
     );
+    const saved = page.waitForResponse(
+      (r) => r.request().method() === "POST" && /\/descents$/.test(r.url()),
+    );
     await page.getByRole("button", { name: "Save" }).click();
+    // The cleanup after the test must find the log, so it waits for the save.
+    await saved;
     const body = (await post).postDataJSON() as {
       put_in_lat?: number;
       put_in_lon?: number;
