@@ -33,8 +33,8 @@ export default function TripWeek({
       data-testid="trip-week"
       sx={{
         display: "flex",
-        gap: 0.75,
-        px: 2,
+        gap: 0.25,
+        px: 1.5,
         py: 1.5,
         overflowX: "auto",
         flexShrink: 0,
@@ -49,11 +49,10 @@ export default function TripWeek({
             data-testid="trip-week-day"
             data-date={date}
             aria-current={on ? "date" : undefined}
-            aria-label={format(parseISO(date), "EEEE d MMMM")}
             onClick={() => onPick(date)}
             sx={{
               flex: "1 1 0",
-              minWidth: 40,
+              minWidth: tokens.touch.min,
               minHeight: tokens.touch.min,
               flexDirection: "column",
               gap: 0.25,
