@@ -52,7 +52,7 @@ async function lineSpan(page: Page) {
 
 async function chooseCustom(page: Page, from: string, to: string) {
   await page
-    .locator('button[aria-label="Chart period"]:visible')
+    .locator('button[aria-label$="chart period"]:visible')
     .first()
     .click();
   await page.getByRole("menuitem", { name: "Custom range…" }).click();
@@ -76,7 +76,7 @@ async function pointMiddle(page: Page) {
 }
 
 const periodButton = (page: Page) =>
-  page.locator('button[aria-label="Chart period"]:visible').first();
+  page.locator('button[aria-label$="chart period"]:visible').first();
 
 for (const [preset, label] of [
   ["1m", "month"],

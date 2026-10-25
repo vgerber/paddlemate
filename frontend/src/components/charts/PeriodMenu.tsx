@@ -87,7 +87,7 @@ export default function PeriodMenu({
   return (
     <>
       <ButtonBase
-        aria-label="Chart period"
+        aria-label={`${periodLabel(value, custom)}, chart period`}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={(e) => setAnchor(e.currentTarget)}

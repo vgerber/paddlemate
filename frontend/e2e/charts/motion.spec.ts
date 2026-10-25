@@ -191,13 +191,13 @@ test.describe("the hand-over", () => {
 });
 
 async function pickPeriod(page: Page, label: string) {
-  await page.locator('[aria-label="Chart period"]:visible').first().click();
+  await page.locator('[aria-label$="chart period"]:visible').first().click();
   await page.getByRole("menuitem", { name: label }).click();
 }
 
 test("the period options stagger in, three rows at most", async ({ page }) => {
   await open(page);
-  await page.locator('[aria-label="Chart period"]:visible').first().click();
+  await page.locator('[aria-label$="chart period"]:visible').first().click();
   await expect(page.getByRole("menuitem").first()).toBeVisible();
   const delays = await page.getByRole("menuitem").evaluateAll((els) =>
     els.map((el) => {
@@ -212,7 +212,7 @@ test("the period options stagger in, three rows at most", async ({ page }) => {
 
 test("the period button fills with a transition", async ({ page }) => {
   await open(page);
-  const button = page.locator('[aria-label="Chart period"]:visible').first();
+  const button = page.locator('[aria-label$="chart period"]:visible').first();
   const t = await button.evaluate(
     (el) => getComputedStyle(el).transitionProperty,
   );

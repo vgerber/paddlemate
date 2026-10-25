@@ -13,7 +13,6 @@ import MapGL, {
   NavigationControl,
   Source,
 } from "react-map-gl/maplibre";
-import AccessibleMarker from "@/components/map/AccessibleMarker";
 import { cameraEasing, screensTo } from "@/components/map/cameraMotion";
 import { LIBERTY_STYLE } from "@/components/map/mapStyles";
 import { useCalmBaseMap } from "@/components/map/useMutedBaseMap";
@@ -25,6 +24,7 @@ import { CloseIcon } from "@/lib/icons";
 import { cameraMs, SPINNER_DELAY_MS } from "@/lib/motion";
 import { labelSx, theme } from "@/lib/theme";
 import { useTokens } from "@/lib/useTokens";
+import ClusterMarker from "./ClusterMarker";
 import { DonutCluster } from "./DonutCluster";
 import { gaugeStates, stateMeta } from "./gaugeStates";
 import { groupByProximity, type MapGroup } from "./groupByProximity";
@@ -278,7 +278,7 @@ export default function GaugeCatalogMap() {
         </Source>
 
         {clusters.map((c) => (
-          <AccessibleMarker
+          <ClusterMarker
             label={`${c.total} gauges, zoom in`}
             key={c.id}
             longitude={c.lng}
@@ -290,7 +290,7 @@ export default function GaugeCatalogMap() {
             }}
           >
             <DonutCluster counts={c.counts} total={c.total} />
-          </AccessibleMarker>
+          </ClusterMarker>
         ))}
       </MapGL>
 
