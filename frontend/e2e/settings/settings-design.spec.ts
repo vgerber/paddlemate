@@ -61,7 +61,7 @@ test.describe("settings list rows", () => {
 });
 
 test.describe("settings detail", () => {
-  test("desktop: the section is a white card with an 18px title", async ({
+  test("desktop: the section is a white card with a 15px title", async ({
     page,
   }) => {
     test.skip(!isDesktop(page), "the card is the desktop pane");
@@ -70,8 +70,8 @@ test.describe("settings detail", () => {
       .getByTestId("settings-detail")
       .getByRole("heading", { name: "Account" });
     await expect(title).toBeVisible();
-    expect(await computed(title, "font-size")).toBe("18px");
-    expect(await computed(title, "font-weight")).toBe("700");
+    expect(await computed(title, "font-size")).toBe("15px");
+    expect(await computed(title, "font-weight")).toBe("600");
     const card = title.locator("..");
     expect(await computed(card, "background-color")).toBe("rgb(255, 255, 255)");
     expect(await computed(card, "border-radius")).toBe("16px");

@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { parseColour } from "../support/colour";
 import {
   appReady,
   computed,
@@ -142,8 +143,9 @@ test.describe("empty state", () => {
     expect(await computed(tile, "height")).toBe("48px");
     expect(await computed(tile, "border-top-left-radius")).toBe("14px");
     const wash = await computed(tile, "background-color");
-    expect(wash.match(/\d+/g)?.slice(0, 3).join(",")).toBe("14,116,144");
-    expect(wash, "a wash, not a solid").toContain("0.");
+    const [r, g, b, a] = parseColour(wash);
+    expect([r, g, b]).toEqual([14, 116, 144]);
+    expect(a, "a wash, not a solid").toBeLessThan(1);
     expect(await computed(tile, "color")).toBe("rgb(14, 116, 144)");
     expect(await computed(empty, "text-align")).toBe("center");
   });
