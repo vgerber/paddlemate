@@ -284,7 +284,7 @@ test.describe("log descent", () => {
     await expect(page.getByText("Step 2 of 3 · Sections")).toBeVisible();
   });
 
-  test("a put-in picked on the map survives Next and is what is saved", async ({
+  test("a put-in picked on the map survives Next and is what is saved @write", async ({
     page,
   }, info) => {
     await startSectionLog(page);
@@ -357,7 +357,7 @@ test.describe("log descent", () => {
     expect(body.put_in_lon).toBeGreaterThan(11.002);
   });
 
-  test("create a log through the UI and delete it again", async ({
+  test("create a log through the UI and delete it again @write", async ({
     page,
   }, info) => {
     await page.goto(

@@ -35,7 +35,7 @@ test.describe("focus after a view change", () => {
     await expect(row).toBeFocused();
   });
 
-  test("log form: Next, Back and Save keep focus in the view", async ({
+  test("log form: Next, Back and Save keep focus in the view @write", async ({
     page,
   }) => {
     await page.goto(

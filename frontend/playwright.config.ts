@@ -2,15 +2,98 @@ import { defineConfig, devices } from "@playwright/test";
 
 // The tests drive the running stack (see the dev-services skill): Postgres,
 // Keycloak, the API on :3000 and Vite on :5173, with the test-data fixture
-// seeded. They use the system Chrome, so no browser download is needed.
+// seeded. They use the system Chrome, so no browser download is needed. Start
+// the API with the three rate-limit variables at 0 (the skill has the
+// command), or parallel workers hit the limiter.
 const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:5173";
+
+// The routine run and the sweep are two runs of the same projects:
+// `npm run e2e` runs everything but e2e/sweep, `npm run e2e:sweep` only that.
+const SWEEP = !!process.env.E2E_SWEEP;
+
+// The specs share one seeded database, so a test that creates, changes or
+// deletes data is tagged `@write` in its title and runs after every read-only
+// test, one worker at a time, one layout after the other. Everything else is
+// read-only (page.route mocks are not writes) and runs in parallel. Writers:
+//   a11y/view-focus   log form: Next, Back and Save keep focus
+//   logs/logs         put-in survives Next and is saved; create and delete a log
+//   settings/settings access token is created and revoked
+//   trips/trips       a vote is pressed and taken back; edit trip saves
+// A new test that writes gets `@write`.
+const WRITE = /@write/;
+
+// Whole files that test tokens, storage or logic the layout does not change:
+// the phone project runs them, desktop skips them, and small runs only the
+// tests inside them tagged @small. Single tests and describes of the same
+// kind call `phoneOnly()` from support/fixture.ts instead. The dark specs
+// for the map, the map pages and trips stay on desktop.
+const PHONE_ONLY = [
+  /dark\/(charts|content|flash|helpers|print|recolour|settings|shell|waterway)\.spec/,
+  /motion\/switch\.spec/,
+  /app-shell\/session\.spec/,
+  /batch\/requests\.spec/,
+  /settings\/(auth-callback|tokens-error)\.spec/,
+];
+const SMALL = /@small/;
+const READERS = { grepInvert: WRITE };
+
+// Workers for the read-only tests (measured in e2e/README.md).
+const WORKERS = Number(process.env.E2E_WORKERS ?? 6);
+
+const layouts = {
+  // A phone, the layout most people use.
+  phone: { ...devices["Pixel 7"], channel: "chrome" },
+  // The smallest phone still in use. Only tests tagged @small run here.
+  small: {
+    ...devices["iPhone SE"],
+    channel: "chrome",
+    viewport: { width: 320, height: 568 },
+    defaultBrowserType: "chromium",
+  },
+  // The two-pane layout from the `md` breakpoint up.
+  desktop: {
+    ...devices["Desktop Chrome"],
+    channel: "chrome",
+    viewport: { width: 1280, height: 800 },
+  },
+} as const;
+
+type Layout = keyof typeof layouts;
+const names = Object.keys(layouts) as Layout[];
+
+function layoutProject(name: Layout, writers: boolean, after: string[]) {
+  const small = name === "small";
+  const base = small ? SMALL : undefined;
+  return {
+    name: writers ? `${name}-write` : name,
+    use: { ...layouts[name], storageState: "e2e/.auth/vincent.json" },
+    dependencies: ["setup", ...after],
+    testIgnore: SWEEP
+      ? undefined
+      : [
+          /auth\.setup\.ts/,
+          /sweep\//,
+          ...(name === "desktop" ? PHONE_ONLY : []),
+        ],
+    testMatch: SWEEP ? /sweep\/.*\.spec\.ts/ : undefined,
+    // Playwright takes one grep; a lookahead ands the layout and the tag.
+    grep: writers ? (small ? /^(?=.*@small)(?=.*@write)/ : WRITE) : base,
+    ...(writers ? {} : READERS),
+    // Writers share the database with each other: one worker.
+    ...(writers ? { workers: 1 } : {}),
+  };
+}
+
+const readers = names.map((n) => layoutProject(n, false, []));
+const writers = names.map((n, i) =>
+  layoutProject(n, true, i === 0 ? names : [`${names[i - 1]}-write`]),
+);
 
 export default defineConfig({
   testDir: "./e2e",
   globalSetup: "./e2e/support/global-setup.ts",
   outputDir: "./test-results",
-  // One worker: the specs share one seeded database, and a spec may change it.
-  workers: 1,
+  workers: WORKERS,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -26,42 +109,7 @@ export default defineConfig({
   },
   projects: [
     { name: "setup", testMatch: /auth\.setup\.ts/ },
-    {
-      // A phone, the layout most people use.
-      name: "phone",
-      use: {
-        ...devices["Pixel 7"],
-        channel: "chrome",
-        storageState: "e2e/.auth/vincent.json",
-      },
-      dependencies: ["setup"],
-      testIgnore: /auth\.setup\.ts/,
-    },
-    {
-      // The smallest phone still in use. Only specs tagged @small run here.
-      name: "small",
-      use: {
-        ...devices["iPhone SE"],
-        channel: "chrome",
-        viewport: { width: 320, height: 568 },
-        defaultBrowserType: "chromium",
-        storageState: "e2e/.auth/vincent.json",
-      },
-      dependencies: ["setup"],
-      grep: /@small/,
-      testIgnore: /auth\.setup\.ts/,
-    },
-    {
-      // The two-pane layout from the `md` breakpoint up.
-      name: "desktop",
-      use: {
-        ...devices["Desktop Chrome"],
-        channel: "chrome",
-        viewport: { width: 1280, height: 800 },
-        storageState: "e2e/.auth/vincent.json",
-      },
-      dependencies: ["setup"],
-      testIgnore: /auth\.setup\.ts/,
-    },
+    ...readers,
+    ...(SWEEP ? [] : writers),
   ],
 });

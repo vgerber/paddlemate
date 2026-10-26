@@ -87,14 +87,29 @@ Chrome after a real Keycloak sign-in, so start the stack first (the
 `dev-services` skill) with the test-data fixture seeded:
 
 ```
-cd frontend && npx playwright test                       # everything
+cd frontend && npm run e2e                                # routine run
+cd frontend && npm run e2e:sweep                          # pre-release sweep
 cd frontend && npx playwright test e2e/theme              # one feature
-cd frontend && npx playwright test --project=phone        # one layout
+cd frontend && npx playwright test --project=phone        # one layout, read-only tests
 ```
 
-The projects are `phone` (Pixel 7), `small` (320px wide; only specs tagged
-`@small`) and `desktop` (1280px). Run `npx biome check src e2e` with the other
-gates.
+The API must run with `RATE_LIMIT_PER_SECOND=0`,
+`WRITE_RATE_LIMIT_PER_SECOND=0` and `EXPENSIVE_RATE_LIMIT_PER_SECOND=0` (the
+`dev-services` skill's start command has them), or parallel workers hit the
+limiter.
+
+The projects are `phone` (Pixel 7), `small` (320px wide; only tests tagged
+`@small`) and `desktop` (1280px). Each runs its read-only tests in parallel
+(6 workers, `E2E_WORKERS` overrides); tests that create, change or delete
+data are tagged `@write` in their title and run afterwards in `phone-write`,
+`small-write` and `desktop-write`, one worker each, one after the other (the
+writer files are listed in `playwright.config.ts`). A layout with its writers:
+`--project=phone --project=phone-write`. The routine run leaves out
+`e2e/sweep`, the accessibility and small-screen pass over every screen, which
+`npm run e2e:sweep` runs on its own (results in `sweep-results/`). Tests that
+do not depend on the layout call `phoneOnly()` (or sit in the config's
+`PHONE_ONLY` list) and run on `phone` only. Run `npx biome check src e2e` with
+the other gates.
 
 Note: the root tsconfig is solution-style (`files: []` + references), so a
 plain `tsc --noEmit` type-checks nothing and always passes - use `tsc -b`.

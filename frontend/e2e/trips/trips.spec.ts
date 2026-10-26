@@ -429,7 +429,7 @@ test.describe("bases and candidates", () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test("a vote is pressed and taken back", async ({ page }) => {
+  test("a vote is pressed and taken back @write", async ({ page }) => {
     await openTab(page, "Bases");
     const row = page
       .getByTestId("candidate-row")
@@ -485,7 +485,9 @@ test.describe("trip forms", () => {
     await expectFormFields(page);
   });
 
-  test("edit trip saves a change and puts it back @small", async ({ page }) => {
+  test("edit trip saves a change and puts it back @small @write", async ({
+    page,
+  }) => {
     await page.goto(`/trips/${TRIP}?edit=true`);
     const name = page.getByLabel("Trip name");
     await expect(name).toBeVisible();
