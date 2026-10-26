@@ -4,6 +4,7 @@ import {
   expectNoHorizontalOverflow,
   expectTouchTargets,
   FIX,
+  selectFirstPlanDay,
 } from "../support/fixture";
 
 // WP8: trips (doc/plans/ui-overhaul.md). Trip 9001 "Oetztal week" has four
@@ -34,6 +35,11 @@ async function openPlan(page: Page) {
 async function openPhonePlan(page: Page) {
   test.skip(test.info().project.name === "desktop", "phone calendar");
   await openPlan(page);
+}
+
+async function openFirstWeek(page: Page) {
+  await openPlan(page);
+  await selectFirstPlanDay(page);
 }
 
 async function openList(page: Page) {
@@ -157,7 +163,8 @@ test.describe("trip plan", () => {
   test("run marks: one dot per planned run, inside the cell, white when selected @small", async ({
     page,
   }) => {
-    await openPhonePlan(page);
+    test.skip(test.info().project.name === "desktop", "phone calendar");
+    await openFirstWeek(page);
     const marks = (cell: Locator) => cell.getByTestId("run-mark");
     const cells = strip(page).getByTestId("week-day");
     const runDays = strip(page).locator("[data-runs]:not([data-runs='0'])");
@@ -642,7 +649,7 @@ test.describe("trip gaps", () => {
     page,
   }, info) => {
     test.skip(info.project.name === "desktop");
-    await openPlan(page);
+    await openFirstWeek(page);
     const band = strip(page).getByTestId("trip-band").first();
     await expect(band).toHaveCSS("height", "36px");
     await expect(band).toHaveCSS("border-top-left-radius", "18px");

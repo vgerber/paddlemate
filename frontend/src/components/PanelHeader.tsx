@@ -117,6 +117,8 @@ export default function PanelHeader<T extends string>({
                 variant="body2"
                 noWrap
                 color="textSecondary"
+                // One line by design; the title gives the full text.
+                title={subtitle}
                 sx={{ fontSize: "0.8125rem", lineHeight: "18px" }}
               >
                 {subtitle}

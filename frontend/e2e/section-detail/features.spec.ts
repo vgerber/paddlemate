@@ -444,7 +444,8 @@ test.describe("features card seams", () => {
   test("the selected row carries a 2px teal ring", async ({ page }) => {
     await openFeatures(page);
     const r = row(page, "Altes Wehr");
-    expect(await computed(r, "outline-style")).toBe("none");
+    // Unselected rows keep a transparent outline so the ring can fade in.
+    expect(await computed(r, "outline-color")).toBe("rgba(0, 0, 0, 0)");
     await r.click();
     expect(await computed(r, "outline-width")).toBe("2px");
     expect(await computed(r, "outline-style")).toBe("solid");
