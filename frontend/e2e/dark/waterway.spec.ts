@@ -50,7 +50,7 @@ async function settle(page: Page) {
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 }
 
-test.describe("waterway in dark @small", () => {
+test.describe("waterway in dark", () => {
   test("suggest-river", async ({ page }) => {
     await useScheme(page, "system", "dark");
     await page.goto("/?panel=1&q=Nowhere");

@@ -56,7 +56,7 @@ const OTHERS = [
 ];
 const ours = (r: { what: string }) => !OTHERS.some((re) => re.test(r.what));
 
-test.describe("content screens in dark @small", () => {
+test.describe("content screens in dark", () => {
   for (const s of SCREENS) {
     test(s.name, async ({ page }) => {
       await useScheme(page, "system", "dark");

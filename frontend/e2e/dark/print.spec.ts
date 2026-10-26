@@ -4,7 +4,7 @@ import { appReady } from "../support/fixture";
 
 // Paper is always light: printing in dark gives a white page and dark text,
 // html included (index.html), or the margin below the body prints dark.
-test.describe("print in dark @small", () => {
+test.describe("print in dark", () => {
   test("the page and its ground are white, the text dark", async ({ page }) => {
     await useScheme(page, "dark");
     await page.goto("/");
@@ -15,10 +15,15 @@ test.describe("print in dark @small", () => {
       body: getComputedStyle(document.body).backgroundColor,
       text: getComputedStyle(document.body).color,
       scheme: getComputedStyle(document.documentElement).colorScheme,
+      surface: getComputedStyle(document.documentElement).getPropertyValue(
+        "--pm-surface",
+      ),
     }));
     expect(look.html).toBe("rgb(255, 255, 255)");
     expect(look.body).toBe("rgb(255, 255, 255)");
     expect(look.text).toBe("rgb(31, 43, 49)");
     expect(look.scheme).toBe("light");
+    // A card is the light surface too, not the dark one.
+    expect(look.surface).toBe("#ffffff");
   });
 });

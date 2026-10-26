@@ -5,6 +5,7 @@ import {
   expectNoHorizontalOverflow,
   expectTouchTargets,
   gotoSection,
+  phoneOnly,
 } from "../support/fixture";
 
 // The shared primitives of the UI overhaul, held to what the browser computes.
@@ -124,6 +125,8 @@ test.describe("underlined tabs", () => {
 });
 
 test.describe("swipeable tabs", () => {
+  phoneOnly("touch swipes; the phone project covers them");
+
   test("a swipe past 40% moves Features to Logs", async ({ page }) => {
     const { pane, box } = await openSection(page);
     const f = await Finger.down(
@@ -202,10 +205,7 @@ test.describe("swipeable tabs", () => {
     );
   });
 
-  test("the first 24px at the screen edge are left alone", async ({
-    page,
-  }, info) => {
-    test.skip(info.project.name === "desktop", "the pane is not at the edge");
+  test("the first 24px at the screen edge are left alone", async ({ page }) => {
     const { pane, box } = await openSection(page);
     const f = await Finger.down(page, 10, box.y + box.height / 2);
     await f.moveBy(box.width * 0.5);

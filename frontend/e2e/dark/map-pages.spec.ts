@@ -54,7 +54,7 @@ async function settle(page: Page) {
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 }
 
-test.describe("map pages in dark @small", () => {
+test.describe("map pages in dark", () => {
   for (const s of SHOTS) {
     test(s.name, async ({ page }) => {
       await useScheme(page, "system", "dark");

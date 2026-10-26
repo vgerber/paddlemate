@@ -48,7 +48,7 @@ async function cornerLuminance(page: Page) {
   }, shot.toString("base64"));
 }
 
-test.describe("map in both schemes @small", () => {
+test.describe("map in both schemes", () => {
   for (const scheme of ["light", "dark"] as Scheme[]) {
     for (const screen of SCREENS) {
       test(`${screen.name} in ${scheme}: no paint errors, canvas follows`, async ({

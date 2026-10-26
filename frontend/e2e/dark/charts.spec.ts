@@ -60,7 +60,7 @@ async function chartDrawn(page: Page) {
   ).toBeVisible();
 }
 
-test.describe("dark charts and levels @small", () => {
+test.describe("dark charts and levels", () => {
   test.beforeEach(async ({ page }) => {
     await useScheme(page, "system", "dark");
   });

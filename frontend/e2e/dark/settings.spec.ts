@@ -37,7 +37,7 @@ async function open(page: Page, os: "light" | "dark") {
   await expect(choice(page, "System")).toBeVisible();
 }
 
-test.describe("appearance setting @small", () => {
+test.describe("appearance setting", () => {
   test("is a row in the settings list that opens it", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto("/settings");
@@ -49,7 +49,9 @@ test.describe("appearance setting @small", () => {
     await expect(choice(page, "Dark")).toBeVisible();
   });
 
-  test("System is the default and follows the device", async ({ page }) => {
+  test("System follows the device; Dark and Light apply without a reload; the keyboard works", async ({
+    page,
+  }) => {
     await open(page, "light");
     await expect(choice(page, "System")).toHaveAttribute(
       "aria-pressed",
@@ -60,12 +62,7 @@ test.describe("appearance setting @small", () => {
     await expect.poll(() => scheme(page)).toBe("dark");
     await page.emulateMedia({ colorScheme: "light" });
     await expect.poll(() => scheme(page)).toBe("light");
-  });
 
-  test("Dark and Light apply without a reload and keep the marker", async ({
-    page,
-  }) => {
-    await open(page, "light");
     await page.evaluate(() => {
       (window as unknown as { __marker: number }).__marker = 7;
     });
@@ -82,6 +79,18 @@ test.describe("appearance setting @small", () => {
         () => (window as unknown as { __marker: number }).__marker,
       ),
     ).toBe(7);
+
+    await choice(page, "System").focus();
+    await page.keyboard.press("Tab");
+    await expect(choice(page, "Light")).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(choice(page, "Dark")).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect.poll(() => scheme(page)).toBe("dark");
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Space");
+    await expect.poll(() => scheme(page)).toBe("light");
+    await choice(page, "System").click();
   });
 
   test("the choice survives a reload, with no flash", async ({ page }) => {
@@ -134,21 +143,6 @@ test.describe("appearance setting @small", () => {
     await choice(page, "System").click();
     await expect.poll(() => scheme(page)).toBe("dark");
     expect(await frames(page)).toEqual({ light: DARK_FRAME, dark: DARK_FRAME });
-    await choice(page, "System").click();
-  });
-
-  test("works by keyboard", async ({ page }) => {
-    await open(page, "light");
-    await choice(page, "System").focus();
-    await page.keyboard.press("Tab");
-    await expect(choice(page, "Light")).toBeFocused();
-    await page.keyboard.press("Tab");
-    await expect(choice(page, "Dark")).toBeFocused();
-    await page.keyboard.press("Enter");
-    await expect.poll(() => scheme(page)).toBe("dark");
-    await page.keyboard.press("Shift+Tab");
-    await page.keyboard.press("Space");
-    await expect.poll(() => scheme(page)).toBe("light");
     await choice(page, "System").click();
   });
 

@@ -29,51 +29,43 @@ function pill(page: Page, section: string) {
     .first();
 }
 
-test.describe("level pills", () => {
-  test("high is a solid red pill with white text", async ({ page }) => {
-    await openSectionList(page);
-    const high = pill(page, "High Water Test");
-    await expect(high).toHaveAttribute("data-level", "high");
-    expect(await computed(high, "background-color")).toBe("rgb(180, 55, 63)");
-    expect(await computed(high, "color")).toBe("rgb(255, 255, 255)");
-    expect(await computed(high, "height")).toBe("24px");
-    expect(
-      Number.parseFloat(await computed(high, "border-top-left-radius")),
-    ).toBeGreaterThanOrEqual(12);
-  });
+test("level pills: high solid red, low green wash, medium amber wash, empty hollow", async ({
+  page,
+}) => {
+  await openSectionList(page);
 
-  test("low is green text on a green wash", async ({ page }) => {
-    await openSectionList(page);
-    const low = pill(page, "Low Water Test");
-    await expect(low).toHaveAttribute("data-level", "low");
-    expect(await computed(low, "color")).toBe("rgb(29, 107, 79)");
-    expect(await computed(low, "background-color")).toBe(
-      "rgba(29, 107, 79, 0.13)",
-    );
-    expect(await computed(low, "height")).toBe("24px");
-  });
+  const high = pill(page, "High Water Test");
+  await expect(high).toHaveAttribute("data-level", "high");
+  expect(await computed(high, "background-color")).toBe("rgb(180, 55, 63)");
+  expect(await computed(high, "color")).toBe("rgb(255, 255, 255)");
+  expect(await computed(high, "height")).toBe("24px");
+  expect(
+    Number.parseFloat(await computed(high, "border-top-left-radius")),
+  ).toBeGreaterThanOrEqual(12);
 
-  test("medium is amber text on an amber wash", async ({ page }) => {
-    await openSectionList(page);
-    const medium = pill(page, "Lower Test");
-    await expect(medium).toHaveAttribute("data-level", "medium");
-    expect(await computed(medium, "color")).toBe("rgb(133, 84, 0)");
-    expect(await computed(medium, "background-color")).toBe(
-      "rgba(133, 84, 0, 0.15)",
-    );
-  });
+  const low = pill(page, "Low Water Test");
+  await expect(low).toHaveAttribute("data-level", "low");
+  expect(await computed(low, "color")).toBe("rgb(29, 107, 79)");
+  expect(await computed(low, "background-color")).toBe(
+    "rgba(29, 107, 79, 0.13)",
+  );
+  expect(await computed(low, "height")).toBe("24px");
 
-  test("empty is a hollow dot and an outline, no fill", async ({ page }) => {
-    await openSectionList(page);
-    const dry = pill(page, "Dry Test");
-    await expect(dry).toHaveAttribute("data-level", "empty");
-    expect(await computed(dry, "background-color")).toBe("rgba(0, 0, 0, 0)");
-    expect(await computed(dry, "border-top-width")).toBe("1px");
-    expect(await computed(dry, "height")).toBe("24px");
-    const dot = dry.locator("[data-dot]");
-    expect(await computed(dot, "background-color")).toBe("rgba(0, 0, 0, 0)");
-    expect(await computed(dot, "border-top-width")).toBe("2px");
-  });
+  const medium = pill(page, "Lower Test");
+  await expect(medium).toHaveAttribute("data-level", "medium");
+  expect(await computed(medium, "color")).toBe("rgb(133, 84, 0)");
+  expect(await computed(medium, "background-color")).toBe(
+    "rgba(133, 84, 0, 0.15)",
+  );
+
+  const dry = pill(page, "Dry Test");
+  await expect(dry).toHaveAttribute("data-level", "empty");
+  expect(await computed(dry, "background-color")).toBe("rgba(0, 0, 0, 0)");
+  expect(await computed(dry, "border-top-width")).toBe("1px");
+  expect(await computed(dry, "height")).toBe("24px");
+  const dot = dry.locator("[data-dot]");
+  expect(await computed(dot, "background-color")).toBe("rgba(0, 0, 0, 0)");
+  expect(await computed(dot, "border-top-width")).toBe("2px");
 });
 
 test.describe("docked action", () => {
