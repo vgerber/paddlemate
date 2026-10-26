@@ -74,3 +74,24 @@ export function phoneOnly(reason = "layout independent: the phone covers it") {
     test.skip(info.project.name !== "phone", reason);
   });
 }
+
+/** The trip plan's week strip opens on today's week (3ee008c). Scrolling the
+ * plan makes the first day current, so the strip shows the selected disc and
+ * the logged runs however long ago the fixture was seeded. */
+export async function selectFirstPlanDay(page: Page) {
+  await page
+    .getByTestId("plan-scroll")
+    .filter({ visible: true })
+    .evaluate((el) => {
+      el.scrollTop = 2;
+      el.dispatchEvent(new Event("scroll"));
+    });
+  await expect(
+    page
+      .getByTestId("week-strip")
+      .filter({ visible: true })
+      .getByTestId("current-disc"),
+  ).toHaveCount(1);
+  // The week swaps from today's week; wait for the leaving pane to go.
+  await expect(page.getByTestId("week-pane")).toHaveCount(1);
+}

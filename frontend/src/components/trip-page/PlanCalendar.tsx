@@ -584,7 +584,7 @@ function DayCell({
       data-current={current}
       data-runs={runs}
       disabled={!enabled}
-      aria-label={format(parseISO(date), "EEE, dd MMM")}
+      aria-label={format(parseISO(date), "EEE, d MMM")}
       aria-current={today ? "date" : undefined}
       onClick={onPick}
       sx={{

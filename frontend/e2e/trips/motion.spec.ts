@@ -1,14 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
-import { FIX } from "../support/fixture";
+import { FIX, selectFirstPlanDay } from "../support/fixture";
 
 // WP14 M6: the plan calendar's motion (disc, week swap, month pull) and the
 // trip folds. Motion is read from what the browser computes mid-transition.
 
 const TRIP = FIX.trips[0];
 const INOUT = "cubic-bezier(0.4, 0, 0.2, 1)";
-
-const strip = (page: Page) =>
-  page.getByTestId("week-strip").filter({ visible: true });
 
 async function openPlan(page: Page, motion?: "reduced") {
   test.skip(test.info().project.name === "desktop", "the phone calendar");
@@ -19,7 +16,7 @@ async function openPlan(page: Page, motion?: "reduced") {
   }
   await page.goto(`/trips/${TRIP}`);
   await expect(page.getByTestId("plan-day").first()).toBeVisible();
-  await expect(strip(page).getByTestId("current-disc")).toHaveCount(1);
+  await selectFirstPlanDay(page);
 }
 
 interface Seen {

@@ -67,7 +67,7 @@ test.describe("press feedback", () => {
   });
 
   test("a selected row has a wash and one 3 px bar", async ({ page }, info) => {
-    test.skip(info.project.name === "phone", "no selected row on a phone");
+    test.skip(info.project.name.startsWith("phone"), "no selected row on a phone");
     await page.goto("/settings?group=appearance");
     const sel = page.locator(`${ROW}.Mui-selected`).first();
     await expect(sel).toBeVisible();
