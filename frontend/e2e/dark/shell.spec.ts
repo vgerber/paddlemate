@@ -52,7 +52,17 @@ async function noSideways(page: import("@playwright/test").Page) {
   expect(over, "sideways scroll").toBeLessThanOrEqual(0);
 }
 
-test.describe("shell in dark @small", () => {
+test.describe("shell in dark", () => {
+  for (const s of SIGNED_IN) {
+    test(`${s.name} never scrolls sideways @small`, async ({ page }) => {
+      await useScheme(page, "system", "dark");
+      await page.goto(s.path);
+      await expect(page.locator("body")).toContainText(s.ready);
+      await settle(page);
+      await noSideways(page);
+    });
+  }
+
   for (const s of SIGNED_IN) {
     test(s.name, async ({ page }) => {
       await useScheme(page, "system", "dark");
@@ -65,7 +75,6 @@ test.describe("shell in dark @small", () => {
       );
       expect(light, "light surfaces on the screen").toEqual([]);
       await expectContrast(page);
-      await noSideways(page);
     });
   }
 
@@ -85,18 +94,16 @@ test.describe("shell in dark @small", () => {
     await ctx.close();
   });
 
-  test("app bar logo is the dark mark", async ({ page }) => {
+  test("app bar logo is the dark mark, the light one in light", async ({
+    page,
+  }) => {
     await useScheme(page, "system", "dark");
     await page.goto("/");
     await expect(
       page.locator('img[src="/logo-dark.svg"]').first(),
     ).toBeAttached();
     await expect(page.locator('img[src="/logo.svg"]')).toHaveCount(0);
-  });
-
-  test("light keeps the light mark", async ({ page }) => {
-    await useScheme(page, "light");
-    await page.goto("/");
+    await page.emulateMedia({ colorScheme: "light" });
     await expect(page.locator('img[src="/logo.svg"]').first()).toBeAttached();
   });
 });

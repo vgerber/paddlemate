@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
 /** Ids from the test-data fixture (.claude/skills/test-data/seed.sql). */
 export const FIX = {
@@ -65,4 +65,12 @@ export async function computed(locator: Locator, property: string) {
   return locator
     .first()
     .evaluate((el, p) => getComputedStyle(el).getPropertyValue(p), property);
+}
+
+/** Call at file or describe level: the tests there are layout independent
+ * (tokens, storage, logic) and run on the phone project only. */
+export function phoneOnly(reason = "layout independent: the phone covers it") {
+  test.beforeEach(({ browserName: _browser }, info) => {
+    test.skip(info.project.name !== "phone", reason);
+  });
 }

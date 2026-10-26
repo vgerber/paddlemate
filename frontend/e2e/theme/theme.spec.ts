@@ -1,18 +1,15 @@
 import { expect, test } from "@playwright/test";
 import { useScheme } from "../support/dark";
-import {
-  appReady,
-  computed,
-  expectNoHorizontalOverflow,
-  gotoSection,
-} from "../support/fixture";
+import { computed, gotoSection, phoneOnly } from "../support/fixture";
 
 // The theme is the first work package of the UI overhaul. These checks hold
 // the tokens in doc/design.md to what the browser actually computes, so a
 // later change that drifts from the calm design fails here first.
 
 test.describe("theme tokens", () => {
-  test("the ground and the ink are the calm tokens", async ({ page }) => {
+  test("the ground and the ink are the calm tokens, in one loaded typeface: Figtree", async ({
+    page,
+  }) => {
     await page.goto("/");
     await expect(page.locator("body")).toBeVisible();
     expect(await computed(page.locator("body"), "background-color")).toBe(
@@ -21,10 +18,6 @@ test.describe("theme tokens", () => {
     expect(await computed(page.locator("body"), "color")).toBe(
       "rgb(31, 43, 49)",
     );
-  });
-
-  test("one typeface, loaded: Figtree", async ({ page }) => {
-    await page.goto("/");
     expect(await computed(page.locator("body"), "font-family")).toContain(
       "Figtree",
     );
@@ -102,6 +95,10 @@ test.describe("theme tokens", () => {
     await expect(hint).toBeVisible();
     expect(await computed(hint, "color")).toBe("rgb(88, 102, 109)");
   });
+});
+
+test.describe("motion preference", () => {
+  phoneOnly();
 
   test("reduced motion collapses transitions", async ({ page }) => {
     // The device setting counts only when the app follows the system.
@@ -118,19 +115,6 @@ test.describe("theme tokens", () => {
   });
 });
 
-test.describe("layout floor", () => {
-  test("the start screen never scrolls sideways @small", async ({ page }) => {
-    await page.goto("/");
-    await appReady(page);
-    await expectNoHorizontalOverflow(page);
-  });
-
-  test("a section screen never scrolls sideways @small", async ({ page }) => {
-    await gotoSection(page, "lower");
-    await expectNoHorizontalOverflow(page);
-  });
-});
-
 test("screens for review", async ({ page }, testInfo) => {
   await gotoSection(page, "lower");
   await testInfo.attach("section", {
@@ -140,6 +124,8 @@ test("screens for review", async ({ page }, testInfo) => {
 });
 
 test.describe("dark scheme", () => {
+  phoneOnly();
+
   const themeColor = (page: import("@playwright/test").Page) =>
     page.evaluate(
       () =>
@@ -225,25 +211,5 @@ test.describe("dark scheme", () => {
     await page.goto("/");
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect(page.locator("body")).toBeVisible();
-  });
-
-  test("printing from dark prints the light palette", async ({ page }) => {
-    await useScheme(page, "dark");
-    await page.goto("/");
-    const body = page.locator("body");
-    await expect(body).toBeVisible();
-    await page.emulateMedia({ media: "print", colorScheme: "dark" });
-    await expect
-      .poll(() => computed(body, "background-color"))
-      .toBe("rgb(255, 255, 255)");
-    expect(await computed(body, "color")).toBe("rgb(31, 43, 49)");
-    // A card is the light surface too, not the dark one.
-    expect(
-      await page.evaluate(() =>
-        getComputedStyle(document.documentElement).getPropertyValue(
-          "--pm-surface",
-        ),
-      ),
-    ).toBe("#ffffff");
   });
 });

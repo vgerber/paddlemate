@@ -46,7 +46,7 @@ const camera = (page: Page) =>
     return { ...map.getCenter(), zoom: map.getZoom() };
   });
 
-test.describe("map recolour @small", () => {
+test.describe("map recolour", () => {
   test("a device flip recolours within 250 ms, camera unchanged", async ({
     page,
   }) => {

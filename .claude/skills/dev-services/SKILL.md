@@ -25,7 +25,11 @@ for i in $(seq 1 60); do curl -sf http://localhost:8080/realms/paddle >/dev/null
 
 # 3. Migrations, then the API - always after Keycloak is answering.
 cd api && cargo sqlx migrate run
+# The three rate-limit variables at 0 are for Playwright: parallel workers
+# otherwise hit the limiter. Leave them out when you are not running e2e.
 nohup env KEYCLOAK_URL=http://localhost:8080 \
+  RATE_LIMIT_PER_SECOND=0 WRITE_RATE_LIMIT_PER_SECOND=0 \
+  EXPENSIVE_RATE_LIMIT_PER_SECOND=0 \
   KEYCLOAK_TOKEN_URL=http://localhost:8080/realms/paddle/protocol/openid-connect/token \
   KEYCLOAK_CLIENT_SECRET=local-dev-secret \
   cargo run > "$SCRATCH/logs/api.log" 2>&1 &

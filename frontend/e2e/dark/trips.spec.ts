@@ -86,7 +86,7 @@ const screens: {
 ];
 
 for (const screen of screens) {
-  test(`trips in dark: ${screen.name} @small`, async ({ page }) => {
+  test(`trips in dark: ${screen.name}`, async ({ page }) => {
     const project = test.info().project.name;
     test.skip(
       project === "desktop" && !!screen.open,

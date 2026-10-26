@@ -3,7 +3,7 @@ import { useScheme } from "../support/dark";
 
 // The bundle is a module and arrives late; the inline script and style in
 // index.html must already have made the page dark.
-test.describe("no flash @small", () => {
+test.describe("no flash", () => {
   test("a held bundle leaves a dark page before React mounts", async ({
     page,
   }) => {

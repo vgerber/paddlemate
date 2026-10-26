@@ -158,7 +158,7 @@ test.describe("settings layout", () => {
 });
 
 test.describe("access tokens", () => {
-  test("a token is shown once, then revoked after a confirmation", async ({
+  test("a token is shown once, then revoked after a confirmation @write", async ({
     page,
   }) => {
     const name = `wp12-${Date.now()}`;
