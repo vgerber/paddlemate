@@ -103,7 +103,10 @@ The projects are `phone` (Pixel 7), `small` (320px wide; only tests tagged
 (6 workers, `E2E_WORKERS` overrides); tests that create, change or delete
 data are tagged `@write` in their title and run afterwards in `phone-write`,
 `small-write` and `desktop-write`, one worker each, one after the other (the
-writer files are listed in `playwright.config.ts`). A layout with its writers:
+writer files are listed in `playwright.config.ts`). Specs that sample frames,
+long tasks or mid-transition values fail under contention and run last in
+`phone-timing`, `small-timing` and `desktop-timing` (the `TIMING` list in the
+config), one worker. A layout with its writers:
 `--project=phone --project=phone-write`. The routine run leaves out
 `e2e/sweep`, the accessibility and small-screen pass over every screen, which
 `npm run e2e:sweep` runs on its own (results in `sweep-results/`). Tests that
@@ -478,8 +481,10 @@ what the user can do and what the browser computes (tokens, sizes, no sideways
 scroll), on the `phone` and `desktop` projects, and `@small` where a layout can
 break at 320px. A spec is written with the feature, not after it, and each
 guard in it is checked by removing the guard and watching it fail. Specs share
-the seeded fixture and run in one worker, so a spec that changes data puts it
-back.
+the seeded fixture: read-only tests run in parallel, a test that creates,
+changes or deletes data is tagged `@write` in its title (one worker, puts the
+data back), and a spec that samples frames or transitions is added to `TIMING`
+in `playwright.config.ts`.
 
 ## Rust code style (api/)
 

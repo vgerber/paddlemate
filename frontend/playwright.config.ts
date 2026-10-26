@@ -34,10 +34,16 @@ const PHONE_ONLY = [
   /batch\/requests\.spec/,
   /settings\/(auth-callback|tokens-error)\.spec/,
 ];
+// Specs that sample frames, long tasks or mid-transition values (and the CPU
+// cost specs): they fail when 6 workers compete for the cores, so they run in
+// the `*-timing` projects, one worker, after the writers.
+const TIMING =
+  /(motion\/(frames|panels|feedback)|swipe\/frames|charts\/(motion|range)|map\/(area-region|area-slider-cost|markers|motion)|section-detail\/motion|trips\/motion|wizards\/motion)\.spec/;
 const SMALL = /@small/;
 const READERS = { grepInvert: WRITE };
 
-// Workers for the read-only tests (measured in e2e/README.md).
+// Workers for the read-only tests: 8 was 20% faster than 4 on the phone but
+// more timing specs failed; 6 with the timing group apart is the balance.
 const WORKERS = Number(process.env.E2E_WORKERS ?? 6);
 
 const layouts = {
@@ -61,11 +67,16 @@ const layouts = {
 type Layout = keyof typeof layouts;
 const names = Object.keys(layouts) as Layout[];
 
-function layoutProject(name: Layout, writers: boolean, after: string[]) {
+function layoutProject(
+  name: Layout,
+  kind: "read" | "write" | "timing",
+  after: string[],
+) {
+  const writers = kind === "write";
   const small = name === "small";
   const base = small ? SMALL : undefined;
   return {
-    name: writers ? `${name}-write` : name,
+    name: kind === "read" ? name : `${name}-${kind}`,
     use: { ...layouts[name], storageState: "e2e/.auth/vincent.json" },
     dependencies: ["setup", ...after],
     testIgnore: SWEEP
@@ -73,20 +84,33 @@ function layoutProject(name: Layout, writers: boolean, after: string[]) {
       : [
           /auth\.setup\.ts/,
           /sweep\//,
+          ...(kind === "read" || kind === "write" ? [TIMING] : []),
           ...(name === "desktop" ? PHONE_ONLY : []),
         ],
-    testMatch: SWEEP ? /sweep\/.*\.spec\.ts/ : undefined,
+    testMatch: SWEEP
+      ? /sweep\/.*\.spec\.ts/
+      : kind === "timing"
+        ? TIMING
+        : undefined,
     // Playwright takes one grep; a lookahead ands the layout and the tag.
     grep: writers ? (small ? /^(?=.*@small)(?=.*@write)/ : WRITE) : base,
     ...(writers ? {} : READERS),
-    // Writers share the database with each other: one worker.
-    ...(writers ? { workers: 1 } : {}),
+    // Writers share the database with each other, timing specs the CPU: one
+    // worker.
+    ...(kind === "read" ? {} : { workers: 1 }),
   };
 }
 
-const readers = names.map((n) => layoutProject(n, false, []));
+const readers = names.map((n) => layoutProject(n, "read", []));
 const writers = names.map((n, i) =>
-  layoutProject(n, true, i === 0 ? names : [`${names[i - 1]}-write`]),
+  layoutProject(n, "write", i === 0 ? names : [`${names[i - 1]}-write`]),
+);
+const timing = names.map((n, i) =>
+  layoutProject(
+    n,
+    "timing",
+    i === 0 ? [`${names[names.length - 1]}-write`] : [`${names[i - 1]}-timing`],
+  ),
 );
 
 export default defineConfig({
@@ -110,6 +134,6 @@ export default defineConfig({
   projects: [
     { name: "setup", testMatch: /auth\.setup\.ts/ },
     ...readers,
-    ...(SWEEP ? [] : writers),
+    ...(SWEEP ? [] : [...writers, ...timing]),
   ],
 });

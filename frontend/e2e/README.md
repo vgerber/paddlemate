@@ -28,6 +28,7 @@ cd frontend && npx playwright test --project=phone  # one layout, read-only test
 | `small` | 320px wide | read-only tests tagged `@small` |
 | `desktop` | 1280px | every read-only test except the phone-only ones |
 | `phone-write`, `small-write`, `desktop-write` | as above | tests tagged `@write`, one worker, after all read-only tests, one layout after the other |
+| `phone-timing`, `small-timing`, `desktop-timing` | as above | frame, long-task and mid-transition specs (`TIMING` in the config), one worker, after the writers |
 
 The specs share one seeded database. Read-only tests (a `page.route` mock is
 not a write) run in parallel; a test that creates, changes or deletes data is
