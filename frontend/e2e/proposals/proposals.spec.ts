@@ -142,7 +142,7 @@ test.describe("proposal list", () => {
   });
 
   test("cards are 16px padded, 8px apart", async ({ page }, info) => {
-    test.skip(info.project.name === "desktop", "desktop rows are flat");
+    test.skip(info.project.name.startsWith("desktop"), "desktop rows are flat");
     await page.goto("/proposals?status=pending");
     const cards = page.getByTestId("proposal-card").filter({ visible: true });
     await expect(cards.first()).toBeVisible();
@@ -403,7 +403,7 @@ test.describe("proposal votes and review bar", () => {
   test("the review bar is docked at the foot of a short proposal", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "the phone page");
+    test.skip(info.project.name.startsWith("desktop"), "the phone page");
     await page.goto(`/proposals/${FEATURE_UPDATE}`);
     const approve = page.getByRole("button", { name: "Approve" });
     await expect(approve).toBeVisible();
@@ -647,7 +647,7 @@ test.describe("proposals on desktop", () => {
   test("rows are flat with a rule, and the right side says what to do", async ({
     page,
   }, info) => {
-    test.skip(info.project.name !== "desktop", "desktop layout");
+    test.skip(!info.project.name.startsWith("desktop"), "desktop layout");
     await page.goto("/proposals?status=pending");
     const first = page.getByTestId("proposal-card").filter({ visible: true });
     await expect(first.first()).toBeVisible();
@@ -685,7 +685,7 @@ test.describe("proposal load failures", () => {
   test("a failed detail keeps its header and does not say not found", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "the phone overlay");
+    test.skip(info.project.name.startsWith("desktop"), "the phone overlay");
     await page.route(`**/api/v1/proposals/${FEATURE_UPDATE}`, (r) =>
       r.fulfill({ status: 500, json: body }),
     );

@@ -24,7 +24,10 @@ test("a section without a gauge draws no chart card and no rail", async ({
 test("on a wide screen that section ends in a foot row that says so", async ({
   page,
 }, info) => {
-  test.skip(info.project.name !== "desktop", "the rail is a desktop layout");
+  test.skip(
+    !info.project.name.startsWith("desktop"),
+    "the rail is a desktop layout",
+  );
   await gotoSection(page, "empty");
   const row = page.getByTestId("no-gauge");
   await expect(row).toContainText("No gauge for this section");
@@ -71,7 +74,10 @@ test("a failing river request keeps a section header with Retry", async ({
 test("the period menu opens over the map and leaves the plot alone", async ({
   page,
 }, info) => {
-  test.skip(info.project.name !== "desktop", "the rail is a desktop layout");
+  test.skip(
+    !info.project.name.startsWith("desktop"),
+    "the rail is a desktop layout",
+  );
   await gotoSection(page, "lower");
   const dock = page.getByTestId("chart-dock");
   await expect(dock.getByTestId("latest-dot")).toBeVisible();

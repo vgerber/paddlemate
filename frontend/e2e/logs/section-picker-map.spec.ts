@@ -4,7 +4,10 @@ import { FIX } from "../support/fixture";
 test("the section picker map of the log form has no layer chrome", async ({
   page,
 }, info) => {
-  test.skip(info.project.name === "desktop", "the host map draws on desktop");
+  test.skip(
+    info.project.name.startsWith("desktop"),
+    "the host map draws on desktop",
+  );
   await page.goto(
     `/logs/new?waterwayId=${FIX.waterway}&sectionId=${FIX.sections.upper}`,
   );
@@ -20,7 +23,7 @@ test("the section picker map of the log form has no layer chrome", async ({
 test("on desktop the log form is a card over the host map", async ({
   page,
 }, info) => {
-  test.skip(info.project.name !== "desktop", "wide layout");
+  test.skip(!info.project.name.startsWith("desktop"), "wide layout");
   await page.goto("/logs/new");
   await expect(page.getByText("Step 1 of 3 · When")).toBeVisible();
   await expect(page.locator(".maplibregl-map")).toHaveCount(1);

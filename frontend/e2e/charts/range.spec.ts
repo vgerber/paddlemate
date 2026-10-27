@@ -114,7 +114,10 @@ test("a bucketed view draws the low-high band, a raw one does not", async ({
 });
 
 test("a bucket reads average and low - high", async ({ page }, info) => {
-  test.skip(info.project.name !== "desktop", "the readout sits on the rail");
+  test.skip(
+    !info.project.name.startsWith("desktop"),
+    "the readout sits on the rail",
+  );
   await openLong(page, { preset: "1y" });
   await pointMiddle(page);
   await expect(page.getByTestId("chart-readout")).toContainText(
@@ -123,7 +126,10 @@ test("a bucket reads average and low - high", async ({ page }, info) => {
 });
 
 test("a raw reading reads just the value", async ({ page }, info) => {
-  test.skip(info.project.name !== "desktop", "the readout sits on the rail");
+  test.skip(
+    !info.project.name.startsWith("desktop"),
+    "the readout sits on the rail",
+  );
   await openLong(page, { preset: "24h" });
   await pointMiddle(page);
   const readout = page.getByTestId("chart-readout");
@@ -220,7 +226,7 @@ test("dragging over the plot with a mouse zooms to that span", async ({
   page,
 }, info) => {
   test.skip(
-    info.project.name !== "desktop",
+    !info.project.name.startsWith("desktop"),
     "a mouse drag; phones keep swiping",
   );
   await openLong(page);
@@ -241,7 +247,7 @@ test("dragging over the plot with a mouse zooms to that span", async ({
 });
 
 test("a click on the plot does not zoom", async ({ page }, info) => {
-  test.skip(info.project.name !== "desktop", "a mouse click");
+  test.skip(!info.project.name.startsWith("desktop"), "a mouse click");
   await openLong(page);
   const box = await plot(page).boundingBox();
   if (!box) throw new Error("no plot");

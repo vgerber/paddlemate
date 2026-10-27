@@ -72,7 +72,10 @@ test.describe("docked action", () => {
   test("a desktop pane ends in a teal button at least 44px tall", async ({
     page,
   }, info) => {
-    test.skip(info.project.name !== "desktop", "docked from md up only");
+    test.skip(
+      !info.project.name.startsWith("desktop"),
+      "docked from md up only",
+    );
     await openSectionList(page);
     const action = page.getByRole("button", { name: "New section" });
     await expect(action).toBeVisible();
@@ -125,7 +128,10 @@ test.describe("empty state", () => {
   }, info) => {
     // The reseeded fixture has an inbox, so the empty detail pane beside a
     // desktop list is the one empty state left to look at.
-    test.skip(info.project.name !== "desktop", "empty panes are desktop");
+    test.skip(
+      !info.project.name.startsWith("desktop"),
+      "empty panes are desktop",
+    );
     await page.goto("/proposals");
     const empty = page.getByTestId("empty-state");
     await expect(empty).toBeVisible();

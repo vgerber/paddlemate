@@ -647,7 +647,10 @@ async function dragSheetOpen(page: Page) {
 test.describe("the region sheet", () => {
   test.beforeEach(({ browserName }, info) => {
     void browserName;
-    test.skip(info.project.name === "desktop", "the sheet is the phone layout");
+    test.skip(
+      info.project.name.startsWith("desktop"),
+      "the sheet is the phone layout",
+    );
   });
 
   test("kinds are a segmented control that narrows the map, and the sheet is the panel", async ({
@@ -746,7 +749,7 @@ test.describe("the put-in and take-out pins in the log form", () => {
     const clear = page.getByRole("button", { name: "Clear Put in" });
     await expectTouchTargets(clear);
     await clear.click();
-    const verb = info.project.name === "desktop" ? "Click" : "Tap";
+    const verb = info.project.name.startsWith("desktop") ? "Click" : "Tap";
     const hint = page.getByText(`${verb} the map to set`).first();
     await expect(hint).toBeVisible();
     expect(await computed(hint, "font-family")).not.toMatch(/mono/i);

@@ -362,7 +362,10 @@ test.describe("gauge coverage design", () => {
   test("the legend is a 250px card with the design's type and colours", async ({
     page,
   }, info) => {
-    test.skip(info.project.name !== "desktop", "the phone folds the legend");
+    test.skip(
+      !info.project.name.startsWith("desktop"),
+      "the phone folds the legend",
+    );
     await page.goto("/tools/gauge-catalog");
     const legend = page.getByTestId("gauge-legend");
     await expect(legend).toBeVisible();
@@ -387,7 +390,10 @@ test.describe("gauge coverage design", () => {
   test("on a desktop the map sits in a rounded card inset 12px", async ({
     page,
   }, info) => {
-    test.skip(info.project.name !== "desktop", "the phone map is edge to edge");
+    test.skip(
+      !info.project.name.startsWith("desktop"),
+      "the phone map is edge to edge",
+    );
     await page.goto("/tools/gauge-catalog");
     const frame = page.getByTestId("gauge-legend").locator("xpath=../..");
     expect(await computed(frame, "border-top-left-radius")).toBe("16px");
@@ -400,7 +406,7 @@ test.describe("gauge coverage design", () => {
   test("a phone folds the legend to a one-line chip that opens @small", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "phone only");
+    test.skip(info.project.name.startsWith("desktop"), "phone only");
     await page.goto("/tools/gauge-catalog");
     const legend = page.getByTestId("gauge-legend");
     await expect(legend).toBeVisible();
@@ -441,7 +447,7 @@ test.describe("gauge coverage design", () => {
 test.describe("design gaps", () => {
   test.skip(({ isMobile }) => !isMobile, "the phone's chart card");
   test("the card sits 12px from the edge", async ({ page }, info) => {
-    test.skip(info.project.name === "desktop", "phone margins");
+    test.skip(info.project.name.startsWith("desktop"), "phone margins");
     await openSection(page);
     const box = await card(page).boundingBox();
     expect(box?.x).toBe(12);
@@ -464,7 +470,7 @@ test.describe("design gaps", () => {
   test("the plot keeps 96px of height on a small screen @small", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "phone height");
+    test.skip(info.project.name.startsWith("desktop"), "phone height");
     await openSection(page);
     const plot = await card(page).getByTestId("chart-plot").boundingBox();
     expect(plot?.height).toBeGreaterThanOrEqual(96);

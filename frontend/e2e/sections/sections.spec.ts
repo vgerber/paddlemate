@@ -55,7 +55,7 @@ test.describe("section rows", () => {
   test("a row is a card: 52px or more, radius md, soft shadow, no border", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "desktop rows are flat");
+    test.skip(info.project.name.startsWith("desktop"), "desktop rows are flat");
     await openRiver(page);
     const r = row(page, "Lower Test");
     expect(
@@ -70,7 +70,7 @@ test.describe("section rows", () => {
   test("every row is a card and the cards are separated", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "desktop rows are flat");
+    test.skip(info.project.name.startsWith("desktop"), "desktop rows are flat");
     await openRiver(page);
     const boxes = await rows(page).evaluateAll((els) =>
       els.map((el) => {
@@ -134,7 +134,10 @@ test.describe("section rows", () => {
   test("@small the row stacks: name above, pill at the right", async ({
     page,
   }, info) => {
-    test.skip(info.project.name !== "small", "only the 320px phone stacks");
+    test.skip(
+      !info.project.name.startsWith("small"),
+      "only the 320px phone stacks",
+    );
     await openRiver(page);
     await expectNoHorizontalOverflow(page);
     const r = row(page, "Lower Test");
@@ -158,7 +161,10 @@ test.describe("section rows", () => {
   });
 
   test("@small at 130% text the stacked row holds", async ({ page }, info) => {
-    test.skip(info.project.name !== "small", "only the 320px phone stacks");
+    test.skip(
+      !info.project.name.startsWith("small"),
+      "only the 320px phone stacks",
+    );
     await page.addInitScript(() => {
       document.addEventListener("DOMContentLoaded", () => {
         document.documentElement.style.fontSize = "130%";

@@ -141,7 +141,7 @@ test.describe("chip row", () => {
     page,
   }, info) => {
     test.skip(
-      info.project.name !== "small",
+      !info.project.name.startsWith("small"),
       "the chips only overflow at 320px",
     );
     await openGallery(page);
@@ -203,7 +203,10 @@ test.describe("bottom sheet over the nav", () => {
   test("an open sheet and its scrim cover the bottom nav", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "the nav is a phone bar");
+    test.skip(
+      info.project.name.startsWith("desktop"),
+      "the nav is a phone bar",
+    );
     await openToPeek(page);
     await dragOpen(page);
     await expect(page.getByTestId("sheet-scrim")).toBeVisible();

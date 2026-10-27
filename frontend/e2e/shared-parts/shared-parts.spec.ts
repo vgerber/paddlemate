@@ -9,7 +9,7 @@ test.use({ hasTouch: true });
 
 const INK2 = "rgb(88, 102, 109)";
 const TEAL = "rgb(14, 116, 144)";
-const isDesktop = (info: TestInfo) => info.project.name === "desktop";
+const isDesktop = (info: TestInfo) => info.project.name.startsWith("desktop");
 
 async function standing(page: Page) {
   await page.addInitScript(

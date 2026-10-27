@@ -58,7 +58,7 @@ test.describe("the next tab is there while swiping", () => {
   test("section tabs: Logs sits beside Features mid-swipe", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "touch layouts only");
+    test.skip(info.project.name.startsWith("desktop"), "touch layouts only");
     await page.goto("/?waterway=9001&section=9101");
     await expect(page.getByRole("tab", { name: "Logs" })).toBeVisible();
     const { f } = await dragHalf(page, "[data-testid=tab-pane]:visible");
@@ -75,7 +75,7 @@ test.describe("the next tab is there while swiping", () => {
   test("river tabs: Gauges sits beside Sections mid-swipe", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "touch layouts only");
+    test.skip(info.project.name.startsWith("desktop"), "touch layouts only");
     await page.goto("/?waterway=9001");
     await expect(page.getByRole("tab", { name: "Gauges" })).toBeVisible();
     const { f } = await dragHalf(page, "[data-testid=tab-pane]:visible");
@@ -89,7 +89,7 @@ test.describe("the next tab is there while swiping", () => {
   });
 
   test("logs: Social sits beside My logs mid-swipe", async ({ page }, info) => {
-    test.skip(info.project.name === "desktop", "touch layouts only");
+    test.skip(info.project.name.startsWith("desktop"), "touch layouts only");
     await page.goto("/logs");
     await expect(page.getByRole("tab", { name: "Social" })).toBeVisible();
     const { f } = await dragHalf(page, "[role=tablist]");
@@ -105,7 +105,7 @@ test.describe("the next tab is there while swiping", () => {
   test("profile: Inbox sits beside Profile mid-swipe", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "touch layouts only");
+    test.skip(info.project.name.startsWith("desktop"), "touch layouts only");
     await page.goto("/settings");
     await expect(page.getByRole("tab", { name: "Inbox" })).toBeVisible();
     const { f } = await dragHalf(page, "[data-testid=settings-pane]");
@@ -120,7 +120,7 @@ test.describe("the next tab is there while swiping", () => {
   test("profile: a swipe in the empty space under the rows turns the page", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "touch layouts only");
+    test.skip(info.project.name.startsWith("desktop"), "touch layouts only");
     await page.goto("/settings");
     await expect(page.getByRole("tab", { name: "Inbox" })).toBeVisible();
     // Just above the bottom nav, below the last settings row.
@@ -148,7 +148,7 @@ test.describe("the next tab is there while swiping", () => {
     test(`${c.name}: a swipe in the empty space above the nav turns the page`, async ({
       page,
     }, info) => {
-      test.skip(info.project.name === "desktop", "touch layouts only");
+      test.skip(info.project.name.startsWith("desktop"), "touch layouts only");
       await page.goto(c.path);
       await expect(page.getByRole("tab", { name: c.tab })).toBeVisible();
       await page.waitForTimeout(500);
@@ -166,7 +166,7 @@ test.describe("the next tab is there while swiping", () => {
   }
 
   test("search: Area sits beside Name mid-swipe", async ({ page }, info) => {
-    test.skip(info.project.name === "desktop", "touch layouts only");
+    test.skip(info.project.name.startsWith("desktop"), "touch layouts only");
     await page.goto("/?panel=1");
     await expect(page.getByTestId("search-pane")).toBeVisible();
     const { f } = await dragHalf(page, "[data-testid=search-pane]", 0.75);
@@ -182,7 +182,7 @@ test.describe("the next tab is there while swiping", () => {
   test("trip tabs: Bases sits beside Plan mid-swipe", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "touch layouts only");
+    test.skip(info.project.name.startsWith("desktop"), "touch layouts only");
     await page.goto("/trips/9001");
     await expect(page.getByRole("tab", { name: "Bases" })).toBeVisible();
     await expect(page.getByTestId("trip-pane")).toBeVisible();
@@ -200,7 +200,7 @@ test.describe("the next tab is there while swiping", () => {
   test("the first trip tab has no neighbour to the left", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "touch layouts only");
+    test.skip(info.project.name.startsWith("desktop"), "touch layouts only");
     await page.goto("/trips/9001");
     await expect(page.getByTestId("trip-pane")).toBeVisible();
     const box = await page.getByTestId("trip-pane").boundingBox();
@@ -212,7 +212,7 @@ test.describe("the next tab is there while swiping", () => {
   });
 
   test("the first tab has no neighbour to the left", async ({ page }, info) => {
-    test.skip(info.project.name === "desktop", "touch layouts only");
+    test.skip(info.project.name.startsWith("desktop"), "touch layouts only");
     await page.goto("/?waterway=9001&section=9101");
     await expect(page.getByRole("tab", { name: "Logs" })).toBeVisible();
     const box = await page
@@ -228,7 +228,7 @@ test.describe("the next tab is there while swiping", () => {
   test("the neighbours are mounted before the finger moves", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "touch layouts only");
+    test.skip(info.project.name.startsWith("desktop"), "touch layouts only");
     await page.goto("/trips/9001");
     await expect(page.getByTestId("trip-pane")).toBeVisible();
     // Parked offscreen once the page is idle, with nothing active yet.

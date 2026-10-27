@@ -148,7 +148,7 @@ const CASES: {
 test.describe("the swipe holds frame rate", () => {
   for (const c of CASES) {
     test(c.name, async ({ page }, info) => {
-      test.skip(info.project.name !== "phone", "one layout is enough");
+      test.skip(!info.project.name.startsWith("phone"), "one layout is enough");
       await page.goto(c.url);
       await expect(page.getByRole("tab", { name: c.tab })).toBeVisible();
       // Let the idle pre-mount of the neighbours finish.

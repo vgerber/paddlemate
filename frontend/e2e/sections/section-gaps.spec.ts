@@ -36,7 +36,7 @@ async function openRiver(page: Page) {
 }
 
 /** Rows of a desktop card are flat: no gap, no gutter (canvas/flatRow.ts). */
-const flat = (info: TestInfo) => info.project.name === "desktop";
+const flat = (info: TestInfo) => info.project.name.startsWith("desktop");
 
 async function box(locator: Locator) {
   const b = await locator.first().boundingBox();
@@ -116,7 +116,7 @@ test.describe("section rows", () => {
   });
 
   test("the columns are 30, 46 and 74px wide", async ({ page }, info) => {
-    test.skip(info.project.name === "small", "the 320px row stacks");
+    test.skip(info.project.name.startsWith("small"), "the 320px row stacks");
     await openRiver(page);
     const columns = await computed(
       row(page, "Lower Test"),
@@ -210,7 +210,7 @@ test.describe("notes", () => {
     const card = page.locator("[data-testid=note-card]:visible").first();
     await expect(card).toBeVisible();
     expect(await computed(card, "padding-left")).toBe(
-      info.project.name === "desktop" ? "14px" : "16px",
+      info.project.name.startsWith("desktop") ? "14px" : "16px",
     );
     expect(await computed(card, "padding-top")).toBe("12px");
     const body = card.locator("[data-testid=note-body]");
@@ -277,7 +277,7 @@ test.describe("section actions", () => {
     const add = page.getByRole("button", { name: "New feature", exact: true });
     await expect(add.first()).toBeVisible();
     await expect(add).toHaveCount(1);
-    if (info.project.name !== "desktop") {
+    if (!info.project.name.startsWith("desktop")) {
       expect(await add.first().getAttribute("aria-haspopup")).toBeNull();
     }
   });
@@ -285,7 +285,7 @@ test.describe("section actions", () => {
 
 test.describe("map page chrome", () => {
   test("a phone search shows no New river button", async ({ page }, info) => {
-    test.skip(info.project.name === "desktop", "the desktop docks it");
+    test.skip(info.project.name.startsWith("desktop"), "the desktop docks it");
     await page.goto("/");
     await appReady(page);
     await page.getByRole("button", { name: "Open search panel" }).click();
@@ -296,7 +296,7 @@ test.describe("map page chrome", () => {
   });
 
   test("the desktop docks New river", async ({ page }, info) => {
-    test.skip(info.project.name !== "desktop", "phones have no dock");
+    test.skip(!info.project.name.startsWith("desktop"), "phones have no dock");
     await page.goto("/");
     await appReady(page);
     await expect(
@@ -305,7 +305,7 @@ test.describe("map page chrome", () => {
   });
 
   test("the map button on a phone is a magnifier", async ({ page }, info) => {
-    test.skip(info.project.name === "desktop", "phones only");
+    test.skip(info.project.name.startsWith("desktop"), "phones only");
     await page.goto("/");
     await appReady(page);
     const fab = page.getByRole("button", { name: "Open search panel" });
@@ -318,7 +318,7 @@ test.describe("map page chrome", () => {
   test("the desktop map fills the window under the bar, the panel floats over it", async ({
     page,
   }, info) => {
-    test.skip(info.project.name !== "desktop", "desktop only");
+    test.skip(!info.project.name.startsWith("desktop"), "desktop only");
     await page.goto("/");
     await appReady(page);
     const host = await box(page.getByTestId("canvas-host"));
@@ -340,7 +340,7 @@ test.describe("map page chrome", () => {
   test("the attribution key is inset from the corner", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "phones only");
+    test.skip(info.project.name.startsWith("desktop"), "phones only");
     await page.goto("/");
     await appReady(page);
     const key = page.locator(".maplibregl-ctrl-attrib").first();

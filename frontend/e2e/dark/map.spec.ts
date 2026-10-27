@@ -140,7 +140,10 @@ test.describe("dark contrast: fills and controls", () => {
   });
 
   test("a floating card has a ring against the map", async ({ page }) => {
-    test.skip(test.info().project.name !== "desktop", "cards float on desktop");
+    test.skip(
+      !test.info().project.name.startsWith("desktop"),
+      "cards float on desktop",
+    );
     await useScheme(page, "dark");
     await page.goto("/?waterway=9001");
     const card = page.getByText("Lower Test").first();

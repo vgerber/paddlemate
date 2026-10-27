@@ -8,7 +8,10 @@ const TRIP = FIX.trips[0];
 const INOUT = "cubic-bezier(0.4, 0, 0.2, 1)";
 
 async function openPlan(page: Page, motion?: "reduced") {
-  test.skip(test.info().project.name === "desktop", "the phone calendar");
+  test.skip(
+    test.info().project.name.startsWith("desktop"),
+    "the phone calendar",
+  );
   if (motion) {
     await page.addInitScript(() =>
       localStorage.setItem("pm-motion", "reduced"),

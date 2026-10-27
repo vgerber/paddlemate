@@ -120,7 +120,7 @@ for (const screen of screens) {
 
 test("the month scrim darkens the page under it in dark", async ({ page }) => {
   test.skip(
-    test.info().project.name === "desktop",
+    test.info().project.name.startsWith("desktop"),
     "the month is a phone view",
   );
   await useScheme(page, "dark");

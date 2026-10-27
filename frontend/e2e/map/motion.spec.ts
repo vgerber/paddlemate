@@ -233,7 +233,7 @@ test.describe("map motion", () => {
 
   test("the phone's full-screen panel stops it", async ({ page }, info) => {
     test.skip(
-      info.project.name === "desktop",
+      info.project.name.startsWith("desktop"),
       "the panel covers the map on a phone",
     );
     await record(page);
@@ -398,7 +398,7 @@ test.describe("map motion", () => {
     // One animated object at a time: no flow frame before the draw-in ends.
     expect(drawn.at(-1)?.flow).toBe(0);
     // A phone opens the section under its full-screen panel: no flow yet.
-    if (info.project.name === "desktop")
+    if (info.project.name.startsWith("desktop"))
       expect(steps.at(-1)?.flow).toBeGreaterThan(0);
     else expect(steps.at(-1)?.flow).toBe(0);
   });

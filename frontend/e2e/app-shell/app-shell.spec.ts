@@ -46,7 +46,10 @@ test("no navigation text is set in capitals", async ({ page }) => {
 });
 
 test("the top bar's links and bell are 44px to hit", async ({ page }, info) => {
-  test.skip(info.project.name !== "desktop", "the top bar is md and up");
+  test.skip(
+    !info.project.name.startsWith("desktop"),
+    "the top bar is md and up",
+  );
   await page.goto("/");
   await appReady(page);
   const links = page.locator("header a:visible");

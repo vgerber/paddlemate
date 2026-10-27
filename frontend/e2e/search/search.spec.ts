@@ -66,7 +66,7 @@ test.describe("header and tabs", () => {
   }, info) => {
     await openSearch(page);
     const title = seen(page.getByRole("heading", { name: "Search" }));
-    if (info.project.name === "desktop") {
+    if (info.project.name.startsWith("desktop")) {
       // The desktop card draws the title in its own header.
       await expect(title).toHaveCount(0);
       await expect(
@@ -88,7 +88,7 @@ test.describe("header and tabs", () => {
   test("@small the header names the screen and the tabs are underlined", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "the phone's title row");
+    test.skip(info.project.name.startsWith("desktop"), "the phone's title row");
     await openSearch(page);
     await expect(seen(page.getByText("Search", { exact: true }))).toBeVisible();
     const tabs = seen(
@@ -112,7 +112,7 @@ test.describe("header and tabs", () => {
   }, info) => {
     await openSearch(page, "&q=Test");
     const white = "rgb(255, 255, 255)";
-    if (info.project.name === "desktop") {
+    if (info.project.name.startsWith("desktop")) {
       // One white surface from the tabs down to the rows: no grey band.
       const pane = seen(page.getByTestId("search-pane"));
       // Pane, its wrapper, then the panel that owns the ground.
@@ -145,7 +145,7 @@ test.describe("header and tabs", () => {
   });
 
   test("a swipe on the pane moves between modes", async ({ page }, info) => {
-    test.skip(info.project.name === "desktop", "touch only");
+    test.skip(info.project.name.startsWith("desktop"), "touch only");
     await openSearch(page);
     const field = await nameField(page).boundingBox();
     if (!field) throw new Error("no field");
@@ -518,7 +518,7 @@ test.describe("section rows", () => {
     await expect(row.getByText("Test River", { exact: true })).toBeVisible();
     await expect(row.getByText("III", { exact: true })).toBeVisible();
     await expect(row.locator("[data-level]")).toHaveCount(1);
-    if (info.project.name === "desktop") {
+    if (info.project.name.startsWith("desktop")) {
       expect(await computed(row, "border-top-left-radius")).toBe("0px");
       expect(await computed(row, "box-shadow")).toBe("none");
       expect(await computed(row, "border-bottom-width")).toBe("1px");
@@ -547,7 +547,7 @@ test.describe("area mode", () => {
   }, info) => {
     await openSearch(page, "&mode=area");
     // A finger taps, a pointer clicks.
-    const verb = info.project.name === "desktop" ? "Click" : "Tap";
+    const verb = info.project.name.startsWith("desktop") ? "Click" : "Tap";
     await expect(
       seen(page.getByText(`${verb} the map to move the search center.`)),
     ).toBeVisible();

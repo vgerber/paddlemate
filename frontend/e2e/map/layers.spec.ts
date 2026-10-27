@@ -10,7 +10,7 @@ for (const path of screens) {
     page,
   }, info) => {
     // The phone shows these as lists, without a map.
-    test.skip(info.project.name !== "desktop", "desktop canvas only");
+    test.skip(!info.project.name.startsWith("desktop"), "desktop canvas only");
     const errors: string[] = [];
     page.on("console", (m) => {
       if (m.type() === "error" && /layers\.|source/i.test(m.text())) {
@@ -25,7 +25,7 @@ for (const path of screens) {
 }
 
 test("the layers popover opens beside its key", async ({ page }, info) => {
-  test.skip(info.project.name !== "desktop", "desktop control stack");
+  test.skip(!info.project.name.startsWith("desktop"), "desktop control stack");
   await page.goto("/?waterway=9001&section=9101");
   const key = page.getByTestId("map-layer-button");
   await key.click();

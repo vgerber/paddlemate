@@ -30,7 +30,7 @@ for (const screen of SWEEP_SCREENS) {
     });
 
     test("layout at 390px with 130% text", async ({ page }, info) => {
-      test.skip(info.project.name !== "phone", "a phone check");
+      test.skip(!info.project.name.startsWith("phone"), "a phone check");
       await useScheme(page, "light");
       await page.setViewportSize({ width: 390, height: 844 });
       await page.addInitScript(() => {

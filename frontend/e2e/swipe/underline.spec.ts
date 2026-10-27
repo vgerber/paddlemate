@@ -37,7 +37,7 @@ for (const s of screens) {
   test(`${s.name} tabs: the underline does not jump back`, async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "touch layouts only");
+    test.skip(info.project.name.startsWith("desktop"), "touch layouts only");
     await page.goto(s.path);
     const from = page.getByRole("tab", { name: s.from });
     await expect(from).toHaveAttribute("aria-selected", "true");

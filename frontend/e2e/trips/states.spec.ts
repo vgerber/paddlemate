@@ -41,7 +41,7 @@ test.describe("trips, failed loads", () => {
     ["Logs", "/descents"],
   ] as const) {
     test(`${tab} says it failed, not that it is empty`, async ({ page }) => {
-      test.skip(test.info().project.name === "desktop", "phone route");
+      test.skip(test.info().project.name.startsWith("desktop"), "phone route");
       await failGet(page, api(path));
       await page.goto(`/trips/${TRIP}?edit=false`);
       await page.getByRole("tab", { name: tab }).click();
@@ -51,14 +51,14 @@ test.describe("trips, failed loads", () => {
   }
 
   test("the plan says it failed when the stays do", async ({ page }) => {
-    test.skip(test.info().project.name === "desktop", "phone route");
+    test.skip(test.info().project.name.startsWith("desktop"), "phone route");
     await failGet(page, api("/trips/\\d+/stays"));
     await page.goto(`/trips/${TRIP}?edit=false`);
     await expect(errorNote(page)).toContainText("Hiccup (test)");
   });
 
   test("days before the start read Before, not Day -1", async ({ page }) => {
-    test.skip(test.info().project.name === "desktop", "phone route");
+    test.skip(test.info().project.name.startsWith("desktop"), "phone route");
     await page.goto(`/trips/${TRIP}?edit=false`);
     await expect(page.getByTestId("plan-day").first()).toBeVisible();
     await expect(page.getByText(/Day -\d/)).toHaveCount(0);
@@ -67,7 +67,7 @@ test.describe("trips, failed loads", () => {
   test("the desktop pane shows a spinner, then the error, for the open trip", async ({
     page,
   }) => {
-    test.skip(test.info().project.name !== "desktop", "desktop pane");
+    test.skip(!test.info().project.name.startsWith("desktop"), "desktop pane");
     await failGet(page, api(`/trips/${TRIP}$`));
     await page.goto(`/trips?selected=${TRIP}`);
     await expect(page.getByTestId("trip-panel")).toBeVisible();
@@ -79,7 +79,7 @@ test.describe("inbox, tools and search states", () => {
   test("the inbox says it failed instead of 'Nothing new'", async ({
     page,
   }) => {
-    test.skip(test.info().project.name === "desktop", "phone tab");
+    test.skip(test.info().project.name.startsWith("desktop"), "phone tab");
     await failGet(page, api("/users/me/notifications"));
     await page.goto("/settings");
     await page.getByRole("tab", { name: "Inbox" }).click();
@@ -103,7 +103,10 @@ test.describe("inbox, tools and search states", () => {
   test("a failed name search shows only the error, no tabs", async ({
     page,
   }) => {
-    test.skip(test.info().project.name === "desktop", "phone search sheet");
+    test.skip(
+      test.info().project.name.startsWith("desktop"),
+      "phone search sheet",
+    );
     await failGet(page, api("/waterways(\\?.*)?$"));
     await page.goto("/");
     await page.getByLabel("Open search panel").click();

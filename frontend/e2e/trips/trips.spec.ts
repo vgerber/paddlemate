@@ -33,7 +33,7 @@ async function openPlan(page: Page) {
 /** The pinned week and its month are the phone's calendar; the desktop card
  * has the row of day cells instead. */
 async function openPhonePlan(page: Page) {
-  test.skip(test.info().project.name === "desktop", "phone calendar");
+  test.skip(test.info().project.name.startsWith("desktop"), "phone calendar");
   await openPlan(page);
 }
 
@@ -63,7 +63,7 @@ test.describe("trip list", () => {
     });
     // The phone draws each trip as a card; on the desktop the rows sit flat in
     // the list card (desktopFlatRow).
-    if (info.project.name === "desktop") {
+    if (info.project.name.startsWith("desktop")) {
       expect(style.radius).toBe("0px");
       expect(style.shadow).toBe("none");
     } else {
@@ -74,7 +74,7 @@ test.describe("trip list", () => {
   });
 
   test("desktop opens the trip beside the list", async ({ page }, info) => {
-    test.skip(info.project.name !== "desktop");
+    test.skip(!info.project.name.startsWith("desktop"));
     // Wide enough that the list and the trip card both stay open.
     await page.setViewportSize({ width: 1440, height: 900 });
     await openList(page);
@@ -163,7 +163,7 @@ test.describe("trip plan", () => {
   test("run marks: one dot per planned run, inside the cell, white when selected @small", async ({
     page,
   }) => {
-    test.skip(test.info().project.name === "desktop", "phone calendar");
+    test.skip(test.info().project.name.startsWith("desktop"), "phone calendar");
     await openFirstWeek(page);
     const marks = (cell: Locator) => cell.getByTestId("run-mark");
     const cells = strip(page).getByTestId("week-day");
@@ -333,7 +333,7 @@ test.describe("trip plan", () => {
   });
 
   test("tabs swipe", async ({ page }, info) => {
-    test.skip(info.project.name === "desktop");
+    test.skip(info.project.name.startsWith("desktop"));
     await openPlan(page);
     const pane = page.getByTestId("trip-pane").filter({ visible: true });
     const box = await pane.boundingBox();
@@ -577,7 +577,7 @@ test.describe("add member dialog", () => {
       dialog.getByRole("button", { name: "Add to trip" }),
     ).toHaveCount(0);
     await expectTouchTargets(dialog.getByRole("button", { name: "New link" }));
-    if (info.project.name !== "desktop") {
+    if (!info.project.name.startsWith("desktop")) {
       // A sheet from the bottom edge: rounded top, scrim above.
       await expect(page.getByTestId("sheet-scrim")).toBeVisible();
       await expect(dialog).toHaveCSS("border-top-left-radius", "20px");
@@ -648,7 +648,7 @@ test.describe("trip gaps", () => {
   test("the week is a pill band with a disc, the handle is a 44px target", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop");
+    test.skip(info.project.name.startsWith("desktop"));
     await openFirstWeek(page);
     const band = strip(page).getByTestId("trip-band").first();
     await expect(band).toHaveCSS("height", "36px");
@@ -738,7 +738,7 @@ test.describe("trip gaps", () => {
   });
 
   test("the list opens with its count on a phone", async ({ page }, info) => {
-    test.skip(info.project.name === "desktop");
+    test.skip(info.project.name.startsWith("desktop"));
     await openList(page);
     await expect(page.getByText(/^\d+ trips?$/)).toBeVisible();
   });
@@ -761,7 +761,7 @@ test.describe("trip gaps", () => {
       page.getByTestId("member-role").filter({ visible: true }).first(),
     ).toHaveCSS("background-color", "rgb(246, 248, 249)");
     await page.getByRole("tab", { name: "Bases", exact: true }).click();
-    if (info.project.name !== "desktop") {
+    if (!info.project.name.startsWith("desktop")) {
       const map = page
         .locator(".maplibregl-map")
         .filter({ visible: true })
@@ -775,7 +775,7 @@ test.describe("trip gaps", () => {
   test("new trip on a phone covers the bottom nav, dates fit @small", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop");
+    test.skip(info.project.name.startsWith("desktop"));
     await page.goto("/trips/new");
     await expect(page.getByLabel("Trip name")).toBeVisible();
     const covered = await page.evaluate(() => {
@@ -790,7 +790,8 @@ test.describe("trip gaps", () => {
     const b = await page.getByLabel("Ends (optional)").first().boundingBox();
     // Side by side where both fit a whole date; stacked on the narrowest
     // phones, where half the width cuts the date off.
-    if (info.project.name === "small") expect(b && a && b.y > a.y).toBe(true);
+    if (info.project.name.startsWith("small"))
+      expect(b && a && b.y > a.y).toBe(true);
     else expect(a?.y).toBe(b?.y);
     await expectNoHorizontalOverflow(page);
   });
@@ -798,7 +799,7 @@ test.describe("trip gaps", () => {
   test("desktop: trip panel, docked action, deep links land in the split", async ({
     page,
   }, info) => {
-    test.skip(info.project.name !== "desktop");
+    test.skip(!info.project.name.startsWith("desktop"));
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`/trips/${TRIP}`);
     await expect(page).toHaveURL(new RegExp(`/trips\\?selected=${TRIP}`));

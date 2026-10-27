@@ -27,7 +27,7 @@ test.describe("floating action button", () => {
   test("clears the strip and the open chart's controls @small", async ({
     page,
   }, info) => {
-    test.skip(info.project.name === "desktop", "no button from md up");
+    test.skip(info.project.name.startsWith("desktop"), "no button from md up");
     await gotoSection(page, "lower");
     const fab = seen(page.getByRole("button", { name: "New feature" }));
     await expect(fab).toBeVisible();

@@ -34,7 +34,7 @@ interface MapHandle {
 const cards = (page: Page) => page.getByTestId("descent-card");
 const card = (page: Page, name: string) =>
   cards(page).filter({ hasText: name }).first();
-const isDesktop = (info: TestInfo) => info.project.name === "desktop";
+const isDesktop = (info: TestInfo) => info.project.name.startsWith("desktop");
 const next = (page: Page) => page.getByRole("button", { name: "Next" });
 
 async function openLogs(page: Page) {
@@ -315,7 +315,7 @@ test.describe("log descent", () => {
       at,
     );
     if (!canvas) throw new Error("no canvas");
-    if (info.project.name === "phone") {
+    if (info.project.name.startsWith("phone")) {
       await page.touchscreen.tap(canvas.x + p.x, canvas.y + p.y);
     } else await page.mouse.click(canvas.x + p.x, canvas.y + p.y);
     await expect(page.getByText(/^47\.004\d+, 11\.004\d+$/)).toBeVisible();

@@ -182,7 +182,7 @@ test.describe("features card", () => {
       );
     expect(heights.length).toBe(8);
     expect(Math.min(...heights), "row heights").toBeGreaterThanOrEqual(
-      info.project.name === "desktop" ? 56 : 48,
+      info.project.name.startsWith("desktop") ? 56 : 48,
     );
   });
 
@@ -343,7 +343,7 @@ test.describe("chart height", () => {
     page,
   }, info) => {
     test.skip(
-      info.project.name === "desktop",
+      info.project.name.startsWith("desktop"),
       "the desktop's chart is the rail",
     );
     await openFeatures(page);

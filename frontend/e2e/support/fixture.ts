@@ -71,7 +71,7 @@ export async function computed(locator: Locator, property: string) {
  * (tokens, storage, logic) and run on the phone project only. */
 export function phoneOnly(reason = "layout independent: the phone covers it") {
   test.beforeEach(({ browserName: _browser }, info) => {
-    test.skip(info.project.name !== "phone", reason);
+    test.skip(!info.project.name.startsWith("phone"), reason);
   });
 }
 

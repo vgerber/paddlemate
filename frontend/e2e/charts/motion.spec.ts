@@ -71,7 +71,10 @@ const EASED = Array.from({ length: 14 }, (_, i) => {
 
 test.describe("the hand-over", () => {
   test.beforeEach(async ({ page }, info) => {
-    test.skip(info.project.name !== "phone", "the grow is a phone layout");
+    test.skip(
+      !info.project.name.startsWith("phone"),
+      "the grow is a phone layout",
+    );
     // A tall window leaves the features pane free height to hand over.
     await page.setViewportSize({ width: 390, height: 1230 });
   });
@@ -352,7 +355,7 @@ test("the reading skeleton holds the number's height", async ({
   page,
 }, info) => {
   test.skip(
-    info.project.name !== "phone",
+    !info.project.name.startsWith("phone"),
     "the rail has no card while loading",
   );
   await page.route(/\/water-status(\?|$)/, async (route) => {
@@ -386,7 +389,10 @@ test("the gauge card and the features card share their edges", async ({
 
 test.describe("the wheel over the chart", () => {
   test.beforeEach(async ({ page }, info) => {
-    test.skip(info.project.name !== "desktop", "a mouse wheel needs a mouse");
+    test.skip(
+      !info.project.name.startsWith("desktop"),
+      "a mouse wheel needs a mouse",
+    );
     await page.setViewportSize({ width: 600, height: 800 });
   });
 
@@ -427,7 +433,10 @@ test.describe("the wheel over the chart", () => {
 for (const width of [600, 1000, 1280]) {
   test.describe(`at ${width}px wide`, () => {
     test.beforeEach(async ({ page }, info) => {
-      test.skip(info.project.name !== "desktop", "a wide-window check");
+      test.skip(
+        !info.project.name.startsWith("desktop"),
+        "a wide-window check",
+      );
       await page.setViewportSize({ width, height: 800 });
     });
 
