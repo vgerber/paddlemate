@@ -331,8 +331,15 @@ Rules behind the choices:
   a straight stroke beside the river until the OSM centreline is used.
 - The chart's period choice is a menu, so options open as a menu, not a panel
   inside the card.
+- A chart redraw remounts the chart, so the old line does not fade out before
+  the new one is revealed.
+- Trip calendar: a second week change mid-swap drops the first slide, and a
+  drag started while the month settles starts from where it is heading.
 - Feature markers are GL layers, so they do not fade in as the draw-in head
-  passes.
+  passes. The flow does not stop for a stale gauge on the selected section;
+  only the gauge dots turn hollow.
+- Gauge catalog: clusters are not Tab stops (dozens sit offscreen); a keyboard
+  zooms with the map keys until single gauges, which are, appear.
 - The log descent and suggest feature flows close straight away; only the
   suggest section and river flows show the success mark.
 - Open: whether the camera wants a longer time for moves of three zoom levels
