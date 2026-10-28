@@ -117,6 +117,9 @@ export default defineConfig({
   testDir: "./e2e",
   globalSetup: "./e2e/support/global-setup.ts",
   outputDir: "./test-results",
+  // Six browsers load the map and readings at once: the default 5 s for an
+  // assertion is too tight for data to arrive under that load.
+  expect: { timeout: 10_000 },
   workers: WORKERS,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
