@@ -10,8 +10,8 @@ translations, rivers-and-features) and `api/README.md`. Topic docs go deep on
 one area each.
 
 UI work follows the layout and color rules in [doc/design.md](doc/design.md);
-new patterns agreed in review get added there. The UI overhaul is run from
-[doc/plans/ui-overhaul.md](doc/plans/ui-overhaul.md) until it has landed.
+new patterns agreed in review get added there, as do the motion rules and the
+sweep standard (320px, 130% text, 44px, keyboard, axe).
 
 Rules for the docs:
 
@@ -358,9 +358,8 @@ line of icons.
 from MUI's 900; it is the app's one phone-versus-desktop switch) the map is the
 canvas: on the geography routes (`/`, `/logs*`, `/trips*`, `/proposals*`, `/waterways/suggest-section`) one
 map fills the window under the app bar and the screen floats over it as cards.
-The rules, built in `components/canvas/` (plan and reasons:
-[doc/plans/wide-canvas.md](doc/plans/wide-canvas.md); user-facing description in
-[doc/design.md](doc/design.md)):
+The rules, built in `components/canvas/` (reasons and user-facing
+description in [doc/design.md](doc/design.md#map-as-the-canvas)):
 
 - **One host.** `CanvasHost` in `__root.tsx` draws the only map. A route does
   not render a map; it describes one with `useCanvasScene(scene)`, a memoised

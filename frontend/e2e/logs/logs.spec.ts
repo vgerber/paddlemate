@@ -13,7 +13,7 @@ import {
 } from "../support/fixture";
 
 // WP9: the logs list, a log, the log descent flow and the standing descent
-// banner in the calm design (doc/plans/ui-overhaul/calm-design.html, "Logs and
+// banner in the calm design ("Logs and
 // a log" and "Log descent"). Fixture: Vincent's descents 9201, 9202 and 9208.
 
 test.use({ hasTouch: true });

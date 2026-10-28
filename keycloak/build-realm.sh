@@ -1,6 +1,9 @@
 #!/usr/bin/env sh
 # Composes the local dev realm from the shared client definitions so the
 # clients never drift between this file and a production import.
+# Session lifetimes match production (SSO and offline idle 30 days). A realm
+# import only applies to a fresh Keycloak container, so an edit here needs the
+# container recreated (see the dev-services skill, Gotchas).
 # Run after editing either *-client.json:  sh keycloak/build-realm.sh
 set -eu
 cd "$(dirname "$0")"
@@ -31,7 +34,8 @@ jq -n \
     registrationAllowed: true,
     loginWithEmailAllowed: true,
     accessTokenLifespan: 1800,
-    ssoSessionIdleTimeout: 7200,
+    ssoSessionIdleTimeout: 2592000,
+    offlineSessionIdleTimeout: 2592000,
     roles: {
       realm: [
         { name: "server_admin", description: "Full administrative access" }

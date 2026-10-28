@@ -7,7 +7,7 @@ import {
   selectFirstPlanDay,
 } from "../support/fixture";
 
-// WP8: trips (doc/plans/ui-overhaul.md). Trip 9001 "Oetztal week" has four
+// WP8: trips. Trip 9001 "Oetztal week" has four
 // members and days before and after today, so the plan spans two weeks.
 
 const TRIP = FIX.trips[0];

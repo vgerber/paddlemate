@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Colour guard for dark mode (doc/plans/dark-mode.md). Run: npm run check:colours
+# Colour guard for dark mode (doc/design.md, Dark mode). Run: npm run check:colours
 # Usage: check-colours.sh [src_dir]   (PAINT_FILES overrides scripts/paint-files.txt)
 # Paths in the paint list are relative to the source dir.
 set -euo pipefail

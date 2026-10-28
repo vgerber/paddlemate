@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { mockRegions } from "../map/regions.mock";
 import { appReady, gotoSection } from "../support/fixture";
 
-// Frame budget of the plan's Acceptance: opening the phone panel and folding
+// Frame budget: opening the phone panel and folding
 // the features card cause no long task. A long task is main-thread work over
 // 50 ms, the line the browser itself calls janky.
 
@@ -10,7 +10,7 @@ const isPhone = (page: Page) => (page.viewportSize()?.width ?? 0) < 768;
 /** The budget is 50 ms, but software-rendered WebGL in headless Chrome draws
  * the map in tasks of 70-180 ms, the same with Reduced motion, so the
  * animations are not their cause. This bound is a regression net, not the
- * budget (see Known limitations in doc/plans/motion.md). */
+ * budget (see Known limits in doc/design.md). */
 const LONG_TASK_MS = 300;
 
 async function watchLongTasks(page: Page) {

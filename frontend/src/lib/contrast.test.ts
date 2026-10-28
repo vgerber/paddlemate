@@ -172,7 +172,7 @@ for (const scheme of schemes) {
   });
 }
 
-describe("the dark palette table (doc/plans/dark-mode.md)", () => {
+describe("the dark palette table (doc/design.md, Dark mode)", () => {
   const d = tokensFor("dark");
   const rows: [string, string, string, number][] = [
     ["onSurface on surface", d.onSurface, d.surface, 13.5],

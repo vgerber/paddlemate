@@ -12,7 +12,7 @@ import {
 } from "../support/sweep";
 
 // WP15 S0: one pass over every screen for what a small phone, big text, a
-// keyboard and a screen reader need (doc/plans/sweep.md). Every check is soft,
+// keyboard and a screen reader need (doc/design.md, "Touch"). Every check is soft,
 // so one run lists all failures; they also go to sweep-results/<project>.jsonl.
 // Run a single screen with `-g "sweep: <name>"`. Checks tagged @small run on
 // the 320px project too.

@@ -319,7 +319,7 @@ type Widen<T> = T extends string
 
 export type Tokens = Widen<typeof lightTokens>;
 
-/** The night palette (doc/plans/dark-mode.md). Same keys as `lightTokens`;
+/** The night palette (doc/design.md, Dark mode). Same keys as `lightTokens`;
  * the non-colour groups are shared. */
 export const darkTokens: Tokens = {
   ...lightTokens,

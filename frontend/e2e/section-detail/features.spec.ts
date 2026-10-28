@@ -6,8 +6,8 @@ import {
   gotoSection,
 } from "../support/fixture";
 
-// WP4: the features card of a section (doc/plans/ui-overhaul.md, "Features
-// list rules"). Lower Test has: WW III over the whole run, Put in, Slot
+// WP4: the features card of a section (doc/design.md, "Features
+// list"). Lower Test has: WW III over the whole run, Put in, Slot
 // Machine III+ (a range with Big Hole inside), Altes Wehr, Portage (a range
 // with Strainer inside), Bridge, Take out.
 
