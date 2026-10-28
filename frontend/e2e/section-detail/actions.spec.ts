@@ -9,10 +9,13 @@ test("the section actions stay inside the screen @small", async ({ page }) => {
   await page.getByRole("button", { name: "Section actions" }).click();
   const items = page.getByRole("menuitem");
   await expect(items.first()).toBeVisible();
-  // The menu grows in (scale); measure it at rest, not mid-transition.
+  // The menu grows in (scale); measure it at rest, not mid-transition. A
+  // cancelled animation rejects `finished`, which counts as at rest too.
   await page
     .locator(".MuiMenu-paper")
-    .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+    .evaluate((el) =>
+      Promise.all(el.getAnimations().map((a) => a.finished.catch(() => a))),
+    );
   await expect
     .poll(() =>
       page

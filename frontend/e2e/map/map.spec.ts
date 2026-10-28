@@ -44,7 +44,7 @@ async function openLayers(page: Page) {
 async function settle(locator: Locator) {
   await expect(locator).toBeVisible();
   await locator.evaluate((el) =>
-    Promise.all(el.getAnimations().map((a) => a.finished)),
+    Promise.all(el.getAnimations().map((a) => a.finished.catch(() => a))),
   );
 }
 
