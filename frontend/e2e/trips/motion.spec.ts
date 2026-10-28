@@ -122,6 +122,9 @@ test.describe("calendar motion", () => {
       page,
       `${pickInWeek.replace('find((c) => c.dataset.current !== "true")', 'findLast((c) => c.dataset.current !== "true")')}`,
       DISC,
+      // Read while the 260 ms slide still runs: on a loaded machine six
+      // frames can outlast it.
+      2,
     );
     expect(disc.anims.filter((a) => a.prop === "transform")).toHaveLength(1);
   });
