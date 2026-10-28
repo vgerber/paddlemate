@@ -9,8 +9,7 @@ import {
 } from "../support/fixture";
 
 // WP3: the river panel, section rows, river rows and group headings in the
-// calm design (doc/plans/ui-overhaul/calm-design.html, "River and section"
-// and "A section list that fits"). Fixture: Test River with seven sections.
+// calm design ("River and section" and "A section list that fits"). Fixture: Test River with seven sections.
 
 test.use({ hasTouch: true });
 

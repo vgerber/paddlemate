@@ -10,8 +10,7 @@ import {
 } from "../support/fixture";
 
 // WP10: the three suggest wizards in the calm design
-// (doc/plans/ui-overhaul/calm-design.html, "Suggest section", "New river",
-// "Suggest new feature"). Nothing is written: each submit is intercepted,
+// ("Suggest section", "New river", "Suggest new feature"). Nothing is written: each submit is intercepted,
 // its body asserted and fulfilled with a canned reply.
 
 const TEAL = "rgb(14, 116, 144)";

@@ -264,6 +264,17 @@ rows and tabs 48px. A smaller visual gets a larger hit area (chips are 32px to
 look at and 44px to hit). Text inputs are 16px. Layouts hold at 320px wide and
 with text at 130%: names wrap, cards grow, nothing scrolls sideways.
 
+The sweep is a Playwright spec, `frontend/e2e/sweep/sweep.spec.ts`, that
+loops over every screen in `e2e/support/dark.ts` `SCREENS` (add a new screen
+there). On each it checks, light and dark: no sideways scroll or clipped text
+at 320px, and at 390px with the root font at 130%; every visible control at
+least 44px or with a hit area that size; `@axe-core/playwright` (WCAG 2.1 AA)
+with no serious or critical violation; Tab reaches every control in reading
+order with focus always visible; Escape closes what opened. Every check is
+soft, so one run lists all failures, also written to `sweep-results/`. Run it
+with `npm run e2e:sweep`, or one screen with `-g "sweep: <name>"`. An allowlist
+entry needs a reason beside it.
+
 ## Motion
 
 The scale is `tokens.motion`: instant 90 ms (press feedback), fast 160 ms
@@ -282,6 +293,64 @@ per device. The resolved value is `html[data-motion]` (set before first paint
 and kept live by `lib/motionMode.ts`); the global reduced rule and
 `prefersReducedMotion()` / `useReducedMotion()` in `lib/motion.ts` read it.
 `tokens.motion.easeSettle` is for sheets only.
+
+Rules behind the choices:
+
+- Scale helpers in `lib/motion.ts`: `releaseMs` (a released sheet, 220 ms plus
+  0.25 per px, at most 360), `stepMs` (a stepped control, 160 ms plus 20 per
+  step, at most 300) and `cameraMs` (the camera: 260 ms up to half a screen
+  away, 360 up to 1.5 screens, beyond that a jump). All return 0 under reduced
+  motion; JS-timed transitions (Collapse, Slide, Fade, MapLibre durations) read
+  `useReducedMotion()`.
+- Disclosure animates `grid-template-rows` (or MUI `Collapse` on the token
+  timing); sheets move by `transform` only; the trip calendar's day disc
+  follows the scroll by IntersectionObserver plus a transform transition. No
+  view transitions over the map canvas.
+- Map: paint expressions and `easeTo`, never `setData` per frame and never CSS
+  left/top on markers. The flow along the selected section is one dasharray
+  layer, 12 frames at 12 Hz; the draw-in is a `line-gradient` step in its own
+  source with `lineMetrics` (360 ms; `setData` per frame costs two to three
+  times more); a level change fills the dot from its centre as a DOM marker
+  transition (a paint transition does not run on data-driven expressions); the
+  first load fades in once (260 ms). Ambient motion pauses on a hidden tab,
+  after 20 s without input, under reduced motion, under a full-screen overlay,
+  at 20% battery when not charging, and on software-rendered WebGL.
+  [`useMapMotion.ts`](../frontend/src/components/map/useMapMotion.ts) owns the policy.
+- Dropped on purpose: flow on every river, a ripple on a line, region outlines
+  drawing in, marking an unchanged reading. The feedback pages' berry error
+  colour was not adopted; errors stay red.
+
+## Known limits
+
+- Headless Chrome draws the map in software, in tasks of 70-180 ms (the same
+  under Reduced motion), so the 50 ms long-task budget cannot hold there;
+  `e2e/motion/frames.spec.ts` keeps a 300 ms bound and the real budget is
+  judged on a phone. The flow pauses on software-rendered WebGL for the same
+  reason; its cost on a real phone is still to be judged.
+- Stored section lines are often two points, so the flow and the draw-in follow
+  a straight stroke beside the river until the OSM centreline is used.
+- The chart's period choice is a menu, so options open as a menu, not a panel
+  inside the card.
+- Feature markers are GL layers, so they do not fade in as the draw-in head
+  passes.
+- The log descent and suggest feature flows close straight away; only the
+  suggest section and river flows show the success mark.
+- Open: whether the camera wants a longer time for moves of three zoom levels
+  or more.
+
+## Features list
+
+The strip above a section's feature list shows the run to scale with each
+feature's icon in a small white disc on the line; it never folds. Put in and
+take out always stand alone. Two features that would overlap step apart, the
+second below the line on a short stem (ranges are drawn above it). Three or
+more that would overlap merge into one group disc; a group holding a hazard
+shows that hazard's icon with the count as a badge, by danger: siphon,
+strainer, waterfall, dam, weir, hole; otherwise the count. Groups form from the
+space available, so a wider screen splits them. In the list a point carries its
+icon on the rail; a range is a soft band whose icon tile carries a chevron
+badge, and the whole range row folds or opens it; a folded range lists what it
+hides by name. A portage band keeps a dashed rail.
 
 ## Icons
 
@@ -347,7 +416,12 @@ From 768px wide, on the map page, Logs, Trips and Proposals, one map fills the
 window under the app bar and the content floats over it in cards. The map
 always shows what you are looking at: the open log, the trip's bases, the
 proposed change. Below 768px nothing changes; the phone keeps its own screens.
-The reasons and the work plan are in [plans/wide-canvas.md](plans/wide-canvas.md).
+
+Why: on a wide window a phone layout wastes the screen, and a map beside a
+list leaves the place you are reading about small and far from its words. One
+map under floating cards keeps place and text together and costs nothing to
+reach, and cards let a list and an open item sit side by side without a fixed
+grid.
 
 | Card | Width | Used for |
 |---|---|---|
@@ -422,3 +496,34 @@ The reasons and the work plan are in [plans/wide-canvas.md](plans/wide-canvas.md
 - **Forms that pick on the map** (logging a descent, suggesting a section) are a
   side card over the canvas; sections and put-in/take-out are picked on the host map, and the
   form's bar stays at the card's foot. On a phone the form keeps its own map.
+
+### Internals
+
+- **One host.** `CanvasHost` in `__root.tsx` draws the only map, at md and up
+  and only on the geography routes; elsewhere it renders nothing and the map is
+  released, so there is never more than one `.maplibregl-map` at md and up
+  (`window.__paddlemateMap` stays valid). Crossing 768 mounts or unmounts it.
+  It sits fixed under the app bar; the card layer is `pointer-events: none`
+  and each card turns it back on, so the map pans in the gaps.
+- **Scene contract.** A route describes its map with `useCanvasScene(scene)`
+  (`components/canvas/CanvasContext.tsx`, an external store read through
+  `useSyncExternalStore`, so a scene change re-renders only the host). The
+  scene is set in a layout effect and cleared on unmount with an owner token,
+  so an old cleanup never clears a newer scene. It carries the `WaterwayMap`
+  props, the camera without padding and a `subject` (`key`, `bounds`,
+  `maxZoom`) to frame. `buildMapScene` (`map-page/mapScene.ts`) is the pure
+  builder the map page and its phone `MapPane` share.
+- **Camera.** `useMapCameraEffects` pads every fit by the free area (60 when
+  none), fits the subject when its key changes, refits when padding changes
+  (instantly while a card is dragged, 400 ms after) and skips a refit when the
+  subject is already inside.
+- **Cards.** `useCoverBudget` folds the lowest priority card past the budget.
+  `ResizeGrip` is a focusable `role="separator"` (arrow keys 16px, Shift 64,
+  Home and End); width fractions persist through `lib/cardWidth.ts`
+  (localStorage in try/catch, clamped on read). `useFreeArea` is the card edges
+  plus 32px, each side at most 45%, falling back to the whole host when under
+  240x200 is free.
+- **Risks handled.** Refits are event driven (subject key, drag end), never a
+  loop, and an idle map makes no render events. Deep links build their scene
+  from route params and cached queries; the first fit waits for the map load
+  and the measured card rects. Cards follow the map in DOM order.

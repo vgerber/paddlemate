@@ -97,4 +97,7 @@ If it is gone, reseed with the `test-data` skill.
 - **Regenerating the API client needs the API running**: `npm run generate:api`
   reads `localhost:3000`, so restart the API first if the schema changed.
 - Realm import only runs on a *fresh* Keycloak container. Realm edits go in
-  `keycloak/build-realm.sh`, never in the generated `realm-local.json`.
+  `keycloak/build-realm.sh`, never in the generated `realm-local.json`. To apply an edit, rebuild the
+  realm (`sh keycloak/build-realm.sh`), then remove the Keycloak container and
+  its data and bring it up again, which also mints new signing keys (restart
+  the API).

@@ -38,7 +38,6 @@ and below.
 1. Make the test fixture's dates relative to today (`.claude/skills/test-data/seed.sql`), so the trips specs stop failing from date drift (the fixture trip now opens with a "Before" day on 18 Oct: week strip, today ring, day labels, trip cards, trip panel, states Bases/plan).
 2. One full Playwright run on `ui-overhaul` (phone, small, desktop, one worker); sort every failure.
 3. Opus review of the combined diff, then push `ui-overhaul` and merge into `main` with the user's OK, following `review/deploy.md` (RUN_MIGRATIONS=false, migrate as its own step, `derive_section_regions` and `import_region_outlines`; check the VITE_* values; set CORS_ALLOWED_ORIGINS).
-4. Delete `doc/plans/wide-canvas.md` and `doc/plans/ui-overhaul.md` when the work is on `main`.
 
 ## Known, not yet fixed
 

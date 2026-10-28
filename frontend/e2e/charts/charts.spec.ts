@@ -10,7 +10,7 @@ import {
 import { mockSummary } from "./summary.mock";
 
 // WP5: the phone's chart card, the gauge cards and the credit line
-// (doc/plans/ui-overhaul/calm-design.html, "A chart that opens for its
+// ("A chart that opens for its
 // options"), and the desktop's reading block and rail. The fixture gauge reads
 // about 85 cm with thresholds 60/80/120.
 

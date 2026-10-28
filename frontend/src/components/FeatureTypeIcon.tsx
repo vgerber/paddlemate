@@ -1,7 +1,7 @@
 import type { FeatureType } from "@/lib/api";
 
-/** Path data of the feature type icons, from
- * doc/plans/ui-overhaul/feature-icons.svg: one 24px grid, 2px stroke. The
+/** Path data of the feature type icons, on
+ * one 24px grid, 2px stroke. The
  * Record type makes a new FeatureType fail to compile until it has a drawing. */
 export const FEATURE_ICON_PATHS: Record<FeatureType, string[]> = {
   whitewater: [
