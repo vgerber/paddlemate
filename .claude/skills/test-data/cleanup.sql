@@ -19,6 +19,12 @@ DELETE FROM proposal_votes WHERE proposal_id BETWEEN 9700 AND 9799;
 DELETE FROM proposals WHERE id BETWEEN 9700 AND 9799;
 DELETE FROM user_section_favorites WHERE section_id BETWEEN 9000 AND 9999;
 DELETE FROM descents WHERE id BETWEEN 9200 AND 9299;
+-- Logs a test run made on the fixture's sections and left behind: real data
+-- never uses fixture sections, and their water snapshots hold the fixture
+-- gauge series below.
+DELETE FROM descents
+ WHERE id IN (SELECT descent_id FROM descent_sections WHERE section_id BETWEEN 9100 AND 9199)
+    OR id IN (SELECT descent_id FROM descent_section_water_snapshots WHERE series_id BETWEEN 9400 AND 9499);
 DELETE FROM feature_water_ranges WHERE id BETWEEN 9600 AND 9699;
 DELETE FROM gauge_readings WHERE series_id BETWEEN 9400 AND 9499;
 DELETE FROM gauge_series WHERE id BETWEEN 9400 AND 9499;
