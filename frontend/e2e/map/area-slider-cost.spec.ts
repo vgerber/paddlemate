@@ -3,16 +3,18 @@ import { appReady } from "../support/fixture";
 
 // Dragging the Area radius re-renders the section rows on every step. A row's
 // grade and length are worked out from the section line, so recomputing them
-// per render turns a drag into seconds of script. The drag runs with the CPU
-// slowed 4x; the script time it costs must stay under a bound.
+// per render turns a drag into seconds of script. The script time the drag
+// costs must stay under a bound. The CPU is not throttled: software WebGL
+// repaints then slow every input event until it times out, and the script
+// time is what the budget measures anyway.
 
 test.use({ hasTouch: true });
 
 const STEPS = 60;
 const STEP_MS = 16;
-/** Cached rows measure about 17 s on the desktop project, recomputing per
- * render about 40 s (ScriptDuration counts the throttled time). */
-const SCRIPT_BUDGET_S = 28;
+/** Cached rows measure about 6 s on the desktop project, recomputing per
+ * render about 13 s. */
+const SCRIPT_BUDGET_S = 9;
 
 test("dragging the radius stays cheap in script time", async ({
   page,
@@ -43,7 +45,6 @@ test("dragging the radius stays cheap in script time", async ({
     const { metrics } = await cdp.send("Performance.getMetrics");
     return metrics.find((m) => m.name === "ScriptDuration")?.value ?? 0;
   };
-  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
   const before = await script();
   if (isMobile) {
     await cdp.send("Input.dispatchTouchEvent", {
@@ -71,7 +72,6 @@ test("dragging the radius stays cheap in script time", async ({
     await page.mouse.up();
   }
   const spent = (await script()) - before;
-  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
 
   expect(spent, "script seconds spent on the drag").toBeLessThan(
     SCRIPT_BUDGET_S,

@@ -147,6 +147,13 @@ test.describe("the hand-over", () => {
     const last = rows.rows[rows.rows.length - 1];
     if (!first || !last) throw new Error("no frames");
     let followed = 0;
+    // The card starts a little taller than the pane (its content overflows),
+    // so its foot first rises to the pane's foot while the chart waits; the
+    // chart grows from there, and from then on the foot stays.
+    const grown = rows.rows.filter(
+      (r) => r.h > first.h + 1 && r.h < last.h - 1,
+    );
+    const foot = grown[0]?.featuresBottom ?? first.featuresBottom;
     for (const r of rows.rows) {
       // The chart's lower edge meets the card's upper one, and the card's
       // foot (the pane's) stays: the chart takes the pixels the card gave.
@@ -160,10 +167,10 @@ test.describe("the hand-over", () => {
       ).toBeLessThanOrEqual(1);
       // Until the chart reaches its cap (half the window), which the fold
       // can outrun in a fixture this small.
-      if (r.h < last.h - 1) {
+      if (r.h > first.h + 1 && r.h < last.h - 1) {
         followed++;
         expect(
-          Math.abs(r.featuresBottom - first.featuresBottom),
+          Math.abs(r.featuresBottom - foot),
           "the card's foot stays put",
         ).toBeLessThanOrEqual(1);
       }
