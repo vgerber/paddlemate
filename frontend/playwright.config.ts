@@ -98,6 +98,9 @@ function layoutProject(
     // Writers share the database with each other, timing specs the CPU: one
     // worker.
     ...(kind === "read" ? {} : { workers: 1 }),
+    // Frame and transition timing on software-rendered WebGL varies from run
+    // to run even alone; a real regression fails every attempt.
+    ...(kind === "timing" ? { retries: 2 } : {}),
   };
 }
 

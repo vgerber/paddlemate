@@ -113,7 +113,15 @@ export function sectionGradeText(section: SectionWithFeatures): string | null {
   const grade = sectionGradeOf(section);
   const text = grade ? gradeLabel(grade) : null;
   gradeTexts.set(section, text);
+  if (import.meta.env?.DEV) countGradeWork();
   return text;
+}
+
+/** Development builds count the grades worked out, so a spec can tell a cache
+ * that works from one that does not, whatever the machine's speed. */
+function countGradeWork() {
+  const w = window as unknown as { __paddlemateGradeWork?: number };
+  w.__paddlemateGradeWork = (w.__paddlemateGradeWork ?? 0) + 1;
 }
 
 /** Rows ask on every render and the answer projects every feature vertex onto

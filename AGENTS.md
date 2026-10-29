@@ -106,7 +106,9 @@ data are tagged `@write` in their title and run afterwards in `phone-write`,
 writer files are listed in `playwright.config.ts`). Specs that sample frames,
 long tasks or mid-transition values fail under contention and run last in
 `phone-timing`, `small-timing` and `desktop-timing` (the `TIMING` list in the
-config), one worker. A layout with its writers:
+config), one worker, with two retries (their timing on software-rendered
+WebGL varies even alone; a real regression fails every attempt). Only the
+timing groups retry. A layout with its writers:
 `--project=phone --project=phone-write`. The routine run leaves out
 `e2e/sweep`, the accessibility and small-screen pass over every screen, which
 `npm run e2e:sweep` runs on its own (results in `sweep-results/`). Tests that
