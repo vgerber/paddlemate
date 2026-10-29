@@ -1,49 +1,42 @@
-import { expect, test } from "@playwright/test";
+import { devices, expect, test } from "@playwright/test";
 import { appReady, computed } from "../support/fixture";
 
-// The page is never drawn under the phone's system bar, so no gap is left for
-// its buttons, in a browser tab or installed. Chrome on Android reports a
-// bottom safe-area inset anyway; an env() use would turn it into a dead band
-// under the bottom nav. Chrome cannot emulate that inset, so the stylesheet is
-// checked: no rule reads it.
+// Android and desktops never draw the page under the system bar, so no gap is
+// left for its buttons: Chrome on Android reports a bottom safe-area inset
+// anyway, and reading it left a dead band under the bottom nav. iOS does draw
+// an installed app under the home indicator, so there (and only there) the
+// page is drawn to the edge and the bottom chrome keeps the safe area clear.
+// Chrome cannot emulate the inset itself, so the rule is checked in the
+// stylesheet and the page's flags.
 
 test.skip(({ isMobile }) => !isMobile, "the system inset is the phone's");
 
-test("no style reads the safe-area inset @small", async ({ page }) => {
-  await page.goto("/");
-  await appReady(page);
-  const rules = await page.evaluate(() => {
-    const out: { media: string; text: string }[] = [];
-    const walk = (list: CSSRuleList, media: string) => {
-      for (const r of list) {
-        if (r instanceof CSSMediaRule) walk(r.cssRules, r.conditionText);
-        else if (r.cssText.includes("--system-inset:"))
-          out.push({ media, text: r.cssText });
-      }
-    };
+const insetRule = (selector: string) =>
+  `(() => {
     for (const s of document.styleSheets) {
-      try {
-        walk(s.cssRules, "");
-      } catch {
-        // a cross-origin sheet
+      let rules;
+      try { rules = s.cssRules; } catch { continue; }
+      for (const r of rules) {
+        if (r instanceof CSSStyleRule && r.selectorText === ${JSON.stringify(selector)})
+          return r.style.getPropertyValue("--system-inset").trim();
       }
     }
-    return out;
-  });
-  expect(rules.map((r) => r.text).join()).toContain("--system-inset: 0px");
-  expect(rules.filter((r) => r.media !== "")).toHaveLength(0);
-  const sheets = await page.evaluate(() =>
-    [...document.styleSheets]
-      .flatMap((s) => {
-        try {
-          return [...s.cssRules].map((r) => r.cssText);
-        } catch {
-          return [];
-        }
-      })
-      .join("\n"),
-  );
-  expect(sheets).not.toContain("safe-area-inset-bottom");
+    return null;
+  })()`;
+
+test("Android draws no gap under the bottom nav @small", async ({ page }) => {
+  const ua = await page.evaluate(() => navigator.userAgent);
+  test.skip(/iPhone|iPad|iPod/.test(ua), "an iPhone layout: the iOS test");
+  await page.goto("/");
+  await appReady(page);
+  expect(
+    await page.evaluate(() =>
+      document.documentElement.hasAttribute("data-ios"),
+    ),
+  ).toBe(false);
+  expect(
+    await page.locator('meta[name="viewport"]').getAttribute("content"),
+  ).not.toContain("viewport-fit=cover");
   expect(
     await page.evaluate(() =>
       getComputedStyle(document.documentElement).getPropertyValue(
@@ -51,12 +44,35 @@ test("no style reads the safe-area inset @small", async ({ page }) => {
       ),
     ),
   ).toBe("0px");
-});
-
-test("the bottom nav takes no gap under it", async ({ page }) => {
-  await page.goto("/");
-  await appReady(page);
   const nav = page.getByRole("navigation", { name: "Main" });
   expect(await computed(nav, "padding-bottom")).toBe("0px");
   expect((await nav.boundingBox())?.height).toBe(64);
+});
+
+test("iOS draws to the edge and keeps the home indicator clear", async ({
+  browser,
+}) => {
+  const iphone = devices["iPhone 13"];
+  const context = await browser.newContext({
+    userAgent: iphone.userAgent,
+    viewport: iphone.viewport,
+    isMobile: true,
+    hasTouch: true,
+    storageState: "e2e/.auth/vincent.json",
+  });
+  const page = await context.newPage();
+  await page.goto("/");
+  await appReady(page);
+  expect(
+    await page.evaluate(() =>
+      document.documentElement.hasAttribute("data-ios"),
+    ),
+  ).toBe(true);
+  expect(
+    await page.locator('meta[name="viewport"]').getAttribute("content"),
+  ).toContain("viewport-fit=cover");
+  expect(await page.evaluate(insetRule(":root[data-ios]"))).toBe(
+    "env(safe-area-inset-bottom, 0px)",
+  );
+  await context.close();
 });

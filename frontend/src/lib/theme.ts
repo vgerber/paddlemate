@@ -723,6 +723,11 @@ export const theme = createTheme({
         ":root": {
           "--system-inset": "0px",
         },
+        // iOS draws the page under the home indicator (index.html sets
+        // viewport-fit=cover there only), so its bottom chrome keeps clear.
+        ":root[data-ios]": {
+          "--system-inset": "env(safe-area-inset-bottom, 0px)",
+        },
         body: {
           fontVariantNumeric: "tabular-nums",
           scrollbarColor: `${tokens.outline} transparent`,
@@ -1359,12 +1364,13 @@ export const theme = createTheme({
   },
 });
 
-/** The bottom gap for the phone's system buttons: zero, in the browser and
- * installed. The page is never drawn under the system bar (no
- * viewport-fit=cover, see index.html), yet Chrome on Android still reports a
- * bottom safe-area inset, which left a dead band under the bottom nav. Every
- * bottom inset in the app uses this, never `env(safe-area-inset-bottom)`, so
- * drawing edge to edge later is a change in one place. */
+/** The bottom gap for the phone's system buttons. Zero on Android and
+ * desktops: the page is not drawn under the system bar there (no
+ * viewport-fit=cover, see index.html), yet Chrome still reports a bottom
+ * safe-area inset, which left a dead band under the bottom nav. On iOS the
+ * page is drawn under the home indicator, and this is its safe-area inset.
+ * Every bottom inset in the app uses this, never `env(safe-area-inset-bottom)`
+ * directly. */
 export const SYSTEM_INSET = "var(--system-inset)";
 
 /** Height of a full-screen panel: the window less the desktop app bar, or
