@@ -87,4 +87,5 @@ water levels, and a shared logbook.
 | [Material wiki](doc/material-wiki.md) | The gear catalog: searching boats, comparing their specs, and who may edit an entry |
 | [Search](doc/search.md) | What you can type, how results rank, normalization and the REINDEX rule |
 | [Translations](doc/translations.md) | Display language, translation endpoints, language codes end to end |
+| [Agent instructions](AGENTS.md) | Conventions, gates and the agent workflow for contributors |
 | [API](api/README.md) | Database schema, authentication, Keycloak setup |

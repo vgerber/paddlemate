@@ -5,9 +5,12 @@ Shared guidance for all coding agents working on this repository.
 ## Documentation
 
 The feature list lives directly on the main `README.md`; below it, a
-Documentation table links the reference docs in `doc/` (setup, design, search,
-translations, rivers-and-features) and `api/README.md`. Topic docs go deep on
-one area each.
+Documentation table is the one index of the reference docs: `doc/setup.md`,
+`doc/design.md`, `doc/rivers-and-features.md`, `doc/search.md`,
+`doc/translations.md`, `doc/trips.md`, `doc/material-wiki.md`,
+`doc/fetching-gauge-data.md`, `doc/gauge-data-and-whitewater-guide.md`,
+`frontend/e2e/README.md` and `api/README.md`. A new doc gets its row there.
+Topic docs go deep on one area each.
 
 UI work follows the layout and color rules in [doc/design.md](doc/design.md);
 new patterns agreed in review get added there, as do the motion rules and the

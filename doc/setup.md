@@ -15,7 +15,7 @@ Running the stack locally.
 - Rust (see `api/rust-toolchain.toml`)
 - [sqlx-cli](https://github.com/launchbadge/sqlx): `cargo install sqlx-cli`
 - Bun
-- Docker (for the database)
+- Docker (for the database and the optional local Keycloak)
 
 ## Start
 
@@ -32,6 +32,11 @@ cd frontend && bun install && bun run dev
 
 Copy `api/.env.example` to `api/.env` and fill in the Keycloak values. The
 frontend expects the API on `http://localhost:3000`.
+
+For a local sign-in, `docker compose --profile auth up -d keycloak` starts
+Keycloak on port 8080 with a ready-made realm; the API's `KEYCLOAK_URL` must
+match the frontend's. The `dev-services` skill (`.claude/skills/dev-services/`)
+brings up the whole stack in the right order.
 
 ## Test data
 
