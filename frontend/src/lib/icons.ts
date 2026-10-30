@@ -24,6 +24,7 @@ export { default as SuccessIcon } from "@mui/icons-material/CheckCircleOutlineOu
 export { default as ChevronLeftIcon } from "@mui/icons-material/ChevronLeft";
 export { default as ChevronRightIcon } from "@mui/icons-material/ChevronRight";
 export { default as CloseIcon } from "@mui/icons-material/Close";
+export { default as CompareIcon } from "@mui/icons-material/CompareArrows";
 export { default as CopyIcon } from "@mui/icons-material/ContentCopyOutlined";
 export { default as HolidayHomeIcon } from "@mui/icons-material/CottageOutlined";
 export { default as DeleteIcon } from "@mui/icons-material/DeleteOutlined";
@@ -44,6 +45,7 @@ export { default as HotelIcon } from "@mui/icons-material/HotelOutlined";
 export { default as HourglassIcon } from "@mui/icons-material/HourglassEmpty";
 export { default as InboxIcon } from "@mui/icons-material/InboxOutlined";
 export { default as ShareIcon } from "@mui/icons-material/IosShareOutlined";
+export { default as MaterialIcon } from "@mui/icons-material/KayakingOutlined";
 export { default as LayersIcon } from "@mui/icons-material/LayersOutlined";
 export { default as LinkOffIcon } from "@mui/icons-material/LinkOffOutlined";
 export { default as LinkIcon } from "@mui/icons-material/LinkOutlined";

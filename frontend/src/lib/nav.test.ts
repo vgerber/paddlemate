@@ -17,7 +17,12 @@ describe("activeNav", () => {
   });
 
   test("proposals and tools light Tools on desktop and Profile on a phone", () => {
-    for (const path of ["/tools/x", "/proposals/4", "/admin/proposals"]) {
+    for (const path of [
+      "/tools/x",
+      "/proposals/4",
+      "/admin/proposals",
+      "/materials/3",
+    ]) {
       expect(activeNav(DESKTOP_NAV, path)).toBe("/tools");
       expect(activeNav(PHONE_NAV, path)).toBe("/settings");
     }

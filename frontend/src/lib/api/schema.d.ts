@@ -1131,6 +1131,60 @@ export interface paths {
         patch: operations["patch_descent"];
         trace?: never;
     };
+    "/api/v1/materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Search the material wiki. `ids` returns exactly the entries listed, in that order, for a comparison. */
+        get: operations["list_materials"];
+        put?: never;
+        /** @description Add an entry to the wiki. Any signed-in paddler may add one. */
+        post: operations["create_material"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/materials/brands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Brands in the wiki with their entry counts, most entries first */
+        get: operations["list_brands"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/materials/{material_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get one wiki entry */
+        get: operations["get_material"];
+        /** @description Replace an entry. Any signed-in paddler may correct one - the wiki keeps who last did. */
+        put: operations["update_material"];
+        post?: never;
+        /** @description Delete a wiki entry (admin only) */
+        delete: operations["delete_material"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/geo/regions": {
         parameters: {
             query?: never;
@@ -1571,6 +1625,10 @@ export interface components {
             from: string;
             /** Format: date-time */
             to: string;
+        };
+        BrandsQuery: {
+            /** @description Count only the entries in this category. */
+            category?: components["schemas"]["MaterialCategory"] | null;
         };
         BrowseQuery: {
             /** @description Viewport to draw regions for, as "south,west,north,east". */
@@ -2547,6 +2605,174 @@ export interface components {
          * @enum {string}
          */
         MatchSource: "waterway" | "section" | "section_name" | "feature_name";
+        /**
+         * @description One entry in the material wiki. The measurements are flat and each names
+         *      its unit, so a comparison reads them straight off two entries without
+         *      converting anything.
+         */
+        Material: {
+            description?: string | null;
+            brand: string;
+            category: components["schemas"]["MaterialCategory"];
+            /** Format: double */
+            cockpit_length_cm?: number | null;
+            /** Format: double */
+            cockpit_width_cm?: number | null;
+            construction?: components["schemas"]["MaterialConstruction"] | null;
+            /** Format: date-time */
+            created_at: string;
+            created_by: string;
+            created_by_username?: string | null;
+            discipline?: components["schemas"]["MaterialDiscipline"] | null;
+            /** Format: double */
+            height_cm?: number | null;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            length_cm?: number | null;
+            model: string;
+            /** Format: double */
+            paddler_weight_max_kg?: number | null;
+            /** Format: double */
+            paddler_weight_min_kg?: number | null;
+            product_url?: string | null;
+            /** Format: date-time */
+            updated_at: string;
+            updated_by_username?: string | null;
+            /**
+             * @description Size or trim of the same model ("M", "Large"); absent when the model
+             *      comes in one size only.
+             */
+            variant?: string | null;
+            /** Format: double */
+            volume_l?: number | null;
+            /** Format: double */
+            weight_kg?: number | null;
+            /** Format: double */
+            width_cm?: number | null;
+            /**
+             * Format: int32
+             * @description First and last model year, both open ended - a boat still in
+             *      production has no `year_to`.
+             */
+            year_from?: number | null;
+            /** Format: int32 */
+            year_to?: number | null;
+        };
+        /**
+         * @description The writable fields of an entry. A PUT replaces all of them, so create and
+         *      update take the same body.
+         */
+        MaterialBody: {
+            description?: string | null;
+            brand: string;
+            category: components["schemas"]["MaterialCategory"];
+            /** Format: double */
+            cockpit_length_cm?: number | null;
+            /** Format: double */
+            cockpit_width_cm?: number | null;
+            construction?: components["schemas"]["MaterialConstruction"] | null;
+            discipline?: components["schemas"]["MaterialDiscipline"] | null;
+            /** Format: double */
+            height_cm?: number | null;
+            /** Format: double */
+            length_cm?: number | null;
+            model: string;
+            /** Format: double */
+            paddler_weight_max_kg?: number | null;
+            /** Format: double */
+            paddler_weight_min_kg?: number | null;
+            product_url?: string | null;
+            variant?: string | null;
+            /** Format: double */
+            volume_l?: number | null;
+            /** Format: double */
+            weight_kg?: number | null;
+            /** Format: double */
+            width_cm?: number | null;
+            /** Format: int32 */
+            year_from?: number | null;
+            /** Format: int32 */
+            year_to?: number | null;
+        };
+        /** @description A brand with the number of entries filed under it, for the brand filter. */
+        MaterialBrand: {
+            brand: string;
+            /** Format: int64 */
+            count: number;
+        };
+        /**
+         * @description What kind of gear an entry is. Every category is a boat for now, so they
+         *      all carry the same hull specs; a category with a different spec set gets
+         *      its own table rather than more optional fields here.
+         * @enum {string}
+         */
+        MaterialCategory: "kayak" | "canoe" | "packraft" | "sup";
+        /** @enum {string} */
+        MaterialConstruction: "plastic" | "composite" | "inflatable" | "folding" | "wood";
+        /**
+         * @description What the boat is built for. This is the peer group of a comparison - two
+         *      creekers compare, a creeker and a sea kayak do not.
+         * @enum {string}
+         */
+        MaterialDiscipline: "creek" | "river_runner" | "half_slice" | "playboat" | "slalom" | "downriver" | "touring" | "sea" | "expedition" | "recreational";
+        /**
+         * @description Query parameters of the material search. Every measurement filter is a
+         *      half-open bound, so a list can be narrowed from one side only.
+         */
+        MaterialFilters: {
+            /** @description Exact brand, case-insensitive. */
+            brand?: string | null;
+            category?: components["schemas"]["MaterialCategory"] | null;
+            construction?: components["schemas"]["MaterialConstruction"] | null;
+            discipline?: components["schemas"]["MaterialDiscipline"] | null;
+            /**
+             * Format: double
+             * @description Body weight in kg - keeps the boats whose paddler range covers it. An
+             *      entry that states no range is kept, since it contradicts nothing.
+             */
+            fits_paddler_kg?: number | null;
+            /**
+             * @description Comma separated ids - what the comparison view asks for. Overrides
+             *      every other filter and returns those entries in one page.
+             */
+            ids?: string | null;
+            /** Format: double */
+            max_length_cm?: number | null;
+            /** Format: double */
+            max_volume_l?: number | null;
+            /** Format: double */
+            max_weight_kg?: number | null;
+            /** Format: double */
+            min_length_cm?: number | null;
+            /** Format: double */
+            min_volume_l?: number | null;
+            /** Format: double */
+            min_weight_kg?: number | null;
+            /**
+             * Format: int64
+             * @description Page number, starting at 1.
+             */
+            page?: number | null;
+            /**
+             * Format: int64
+             * @description Items per page (max 100, default 24).
+             */
+            per_page?: number | null;
+            /** @description Filter by brand or model, diacritic- and typo-tolerant. */
+            q?: string | null;
+            sort?: components["schemas"]["MaterialSort"];
+        };
+        MaterialPath: {
+            /** Format: int64 */
+            material_id: number;
+        };
+        /**
+         * @description How a material list is ordered. Name is the default; the measurement sorts
+         *      put the entries missing that measurement last either way.
+         * @enum {string}
+         */
+        MaterialSort: "name" | "newest" | "length" | "volume" | "weight";
         /** @enum {string} */
         MeasurementType: "water_level" | "discharge" | "temperature";
         /**
@@ -2666,6 +2892,17 @@ export interface components {
         };
         PaginatedResponse_for_HistoryStep: {
             items: components["schemas"]["HistoryStep"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            per_page: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            total_pages: number;
+        };
+        PaginatedResponse_for_Material: {
+            items: components["schemas"]["Material"][];
             /** Format: int64 */
             page: number;
             /** Format: int64 */
@@ -4428,11 +4665,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-24T13:19:09.460817905Z",
-                     *         "expires_at": "2027-01-22T13:19:09.460820665Z",
+                     *         "created_at": "2026-10-30T21:22:54.782552920Z",
+                     *         "expires_at": "2027-01-28T21:22:54.782555480Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-24T13:19:09.460829765Z",
+                     *         "last_used_at": "2026-10-30T21:22:54.782565130Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4463,8 +4700,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-24T13:19:09.461198894Z",
-                     *       "expires_at": "2027-01-22T13:19:09.461199804Z",
+                     *       "created_at": "2026-10-30T21:22:54.782666642Z",
+                     *       "expires_at": "2027-01-28T21:22:54.782667002Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -8191,6 +8428,296 @@ export interface operations {
                 };
             };
             /** @description Not found or not the owner */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_materials: {
+        parameters: {
+            query?: {
+                /** @description Exact brand, case-insensitive. */
+                brand?: string | null;
+                category?: components["schemas"]["MaterialCategory"] | null;
+                construction?: components["schemas"]["MaterialConstruction"] | null;
+                discipline?: components["schemas"]["MaterialDiscipline"] | null;
+                /**
+                 * @description Body weight in kg - keeps the boats whose paddler range covers it. An
+                 *      entry that states no range is kept, since it contradicts nothing.
+                 */
+                fits_paddler_kg?: number | null;
+                /**
+                 * @description Comma separated ids - what the comparison view asks for. Overrides
+                 *      every other filter and returns those entries in one page.
+                 */
+                ids?: string | null;
+                max_length_cm?: number | null;
+                max_volume_l?: number | null;
+                max_weight_kg?: number | null;
+                min_length_cm?: number | null;
+                min_volume_l?: number | null;
+                min_weight_kg?: number | null;
+                /** @description Page number, starting at 1. */
+                page?: number | null;
+                /** @description Items per page (max 100, default 24). */
+                per_page?: number | null;
+                /** @description Filter by brand or model, diacritic- and typo-tolerant. */
+                q?: string | null;
+                sort?: components["schemas"]["MaterialSort"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_for_Material"];
+                };
+            };
+        };
+    };
+    create_material: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description The writable fields of an entry. A PUT replaces all of them, so create and
+         *      update take the same body.
+         */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaterialBody"];
+            };
+        };
+        responses: {
+            /**
+             * @description One entry in the material wiki. The measurements are flat and each names
+             *      its unit, so a comparison reads them straight off two entries without
+             *      converting anything.
+             */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Material"];
+                };
+            };
+            /** @description Invalid entry */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Entry already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Daily limit of new entries reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_brands: {
+        parameters: {
+            query?: {
+                /** @description Count only the entries in this category. */
+                category?: components["schemas"]["MaterialCategory"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialBrand"][];
+                };
+            };
+        };
+    };
+    get_material: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                material_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /**
+             * @description One entry in the material wiki. The measurements are flat and each names
+             *      its unit, so a comparison reads them straight off two entries without
+             *      converting anything.
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Material"];
+                };
+            };
+            /** @description Entry not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_material: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                material_id: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * @description The writable fields of an entry. A PUT replaces all of them, so create and
+         *      update take the same body.
+         */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaterialBody"];
+            };
+        };
+        responses: {
+            /**
+             * @description One entry in the material wiki. The measurements are flat and each names
+             *      its unit, so a comparison reads them straight off two entries without
+             *      converting anything.
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Material"];
+                };
+            };
+            /** @description Invalid entry */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Entry not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Entry already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_material: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                material_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Entry not found */
             404: {
                 headers: {
                     [name: string]: unknown;

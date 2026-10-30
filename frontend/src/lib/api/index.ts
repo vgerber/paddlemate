@@ -98,6 +98,16 @@ export type PaginatedTripEvents =
 export type PushSubscriptionEntry = components["schemas"]["PushSubscription"];
 export type CreatePushSubscriptionRequest =
   components["schemas"]["CreatePushSubscriptionRequest"];
+export type Material = components["schemas"]["Material"];
+export type MaterialBody = components["schemas"]["MaterialBody"];
+export type MaterialBrand = components["schemas"]["MaterialBrand"];
+export type MaterialCategory = components["schemas"]["MaterialCategory"];
+export type MaterialConstruction =
+  components["schemas"]["MaterialConstruction"];
+export type MaterialDiscipline = components["schemas"]["MaterialDiscipline"];
+export type MaterialSort = components["schemas"]["MaterialSort"];
+export type MaterialPage =
+  components["schemas"]["PaginatedResponse_for_Material"];
 export type Region = components["schemas"]["Region"];
 export type RegionRef = components["schemas"]["RegionRef"];
 export type RegionKind = components["schemas"]["RegionKind"];
@@ -111,6 +121,10 @@ export type WaterwayFilters = NonNullable<
 
 export type ProposalFilters = NonNullable<
   operations["list_proposals"]["parameters"]["query"]
+>;
+
+export type MaterialFilters = NonNullable<
+  operations["list_materials"]["parameters"]["query"]
 >;
 
 function assertData<T>(data: T | undefined): T {
@@ -558,6 +572,48 @@ const batchedStatus = createBatcher(getWaterStatuses, {
   maxSize: MAX_BATCH_IDS,
   missing: () => new ApiError(404, "No water status"),
 });
+
+export const materialsApi = {
+  /** Search the wiki. `ids` asks for exactly those entries, in that order. */
+  list: async (filters: MaterialFilters = {}, signal?: AbortSignal) => {
+    const { data } = await client.GET("/api/v1/materials", {
+      params: { query: filters },
+      signal,
+    });
+    return assertData(data);
+  },
+  get: async (id: number, signal?: AbortSignal) => {
+    const { data } = await client.GET("/api/v1/materials/{material_id}", {
+      params: { path: { material_id: id } },
+      signal,
+    });
+    return assertData(data);
+  },
+  /** Brands with their entry counts, for the brand filter. */
+  brands: async (category?: MaterialCategory, signal?: AbortSignal) => {
+    const { data } = await client.GET("/api/v1/materials/brands", {
+      params: { query: { category } },
+      signal,
+    });
+    return assertData(data);
+  },
+  create: async (body: MaterialBody) => {
+    const { data } = await client.POST("/api/v1/materials", { body });
+    return assertData(data);
+  },
+  update: async (id: number, body: MaterialBody) => {
+    const { data } = await client.PUT("/api/v1/materials/{material_id}", {
+      params: { path: { material_id: id } },
+      body,
+    });
+    return assertData(data);
+  },
+  remove: async (id: number) => {
+    await client.DELETE("/api/v1/materials/{material_id}", {
+      params: { path: { material_id: id } },
+    });
+  },
+};
 
 export const waterStatusApi = {
   /** Same result as `getForSection`; sections asked for within a few

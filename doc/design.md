@@ -377,6 +377,8 @@ fill carries meaning.
 |---|---|---|---|---|
 | A map | `MapIcon` | MapOutlined | bottom nav, tools, map toggle, wizard done | |
 | A paddling log | `LogIcon` | DirectionsBoatOutlined | nav, log lists, trip logs, river state, inbox | |
+| Material wiki, a boat in the catalog | `MaterialIcon` | KayakingOutlined | tools, wiki lists and empty states | |
+| Compare | `CompareIcon` | CompareArrows | wiki compare bar | |
 | A place | `PlaceIcon` | PlaceOutlined | comment pins, feature geometry, a stay of kind other | |
 | Add a place | `AddPlaceIcon` | AddLocationAltOutlined | comment map pin | |
 | A note | `NoteIcon` | ChatBubbleOutlined | river state | |

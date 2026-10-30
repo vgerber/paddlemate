@@ -15,11 +15,15 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TripsIndexRouteImport } from './routes/trips/index'
 import { Route as ToolsIndexRouteImport } from './routes/tools/index'
 import { Route as ProposalsIndexRouteImport } from './routes/proposals/index'
+import { Route as MaterialsIndexRouteImport } from './routes/materials/index'
 import { Route as WaterwaysSuggestSectionRouteImport } from './routes/waterways/suggest-section'
 import { Route as TripsNewRouteImport } from './routes/trips/new'
 import { Route as TripsTripIdRouteImport } from './routes/trips/$tripId'
 import { Route as ToolsGaugeCatalogRouteImport } from './routes/tools/gauge-catalog'
 import { Route as ProposalsProposalIdRouteImport } from './routes/proposals/$proposalId'
+import { Route as MaterialsNewRouteImport } from './routes/materials/new'
+import { Route as MaterialsCompareRouteImport } from './routes/materials/compare'
+import { Route as MaterialsMaterialIdRouteImport } from './routes/materials/$materialId'
 import { Route as LogsNewRouteImport } from './routes/logs/new'
 import { Route as LogsDescentIdRouteImport } from './routes/logs/$descentId'
 import { Route as InviteTokenRouteImport } from './routes/invite/$token'
@@ -58,6 +62,11 @@ const ProposalsIndexRoute = ProposalsIndexRouteImport.update({
   path: '/proposals/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MaterialsIndexRoute = MaterialsIndexRouteImport.update({
+  id: '/materials/',
+  path: '/materials/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WaterwaysSuggestSectionRoute = WaterwaysSuggestSectionRouteImport.update({
   id: '/waterways/suggest-section',
   path: '/waterways/suggest-section',
@@ -81,6 +90,21 @@ const ToolsGaugeCatalogRoute = ToolsGaugeCatalogRouteImport.update({
 const ProposalsProposalIdRoute = ProposalsProposalIdRouteImport.update({
   id: '/proposals/$proposalId',
   path: '/proposals/$proposalId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaterialsNewRoute = MaterialsNewRouteImport.update({
+  id: '/materials/new',
+  path: '/materials/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaterialsCompareRoute = MaterialsCompareRouteImport.update({
+  id: '/materials/compare',
+  path: '/materials/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaterialsMaterialIdRoute = MaterialsMaterialIdRouteImport.update({
+  id: '/materials/$materialId',
+  path: '/materials/$materialId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LogsNewRoute = LogsNewRouteImport.update({
@@ -129,11 +153,15 @@ export interface FileRoutesByFullPath {
   '/invite/$token': typeof InviteTokenRoute
   '/logs/$descentId': typeof LogsDescentIdRoute
   '/logs/new': typeof LogsNewRoute
+  '/materials/$materialId': typeof MaterialsMaterialIdRoute
+  '/materials/compare': typeof MaterialsCompareRoute
+  '/materials/new': typeof MaterialsNewRoute
   '/proposals/$proposalId': typeof ProposalsProposalIdRoute
   '/tools/gauge-catalog': typeof ToolsGaugeCatalogRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/new': typeof TripsNewRoute
   '/waterways/suggest-section': typeof WaterwaysSuggestSectionRoute
+  '/materials/': typeof MaterialsIndexRoute
   '/proposals/': typeof ProposalsIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/trips/': typeof TripsIndexRoute
@@ -149,11 +177,15 @@ export interface FileRoutesByTo {
   '/invite/$token': typeof InviteTokenRoute
   '/logs/$descentId': typeof LogsDescentIdRoute
   '/logs/new': typeof LogsNewRoute
+  '/materials/$materialId': typeof MaterialsMaterialIdRoute
+  '/materials/compare': typeof MaterialsCompareRoute
+  '/materials/new': typeof MaterialsNewRoute
   '/proposals/$proposalId': typeof ProposalsProposalIdRoute
   '/tools/gauge-catalog': typeof ToolsGaugeCatalogRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/new': typeof TripsNewRoute
   '/waterways/suggest-section': typeof WaterwaysSuggestSectionRoute
+  '/materials': typeof MaterialsIndexRoute
   '/proposals': typeof ProposalsIndexRoute
   '/tools': typeof ToolsIndexRoute
   '/trips': typeof TripsIndexRoute
@@ -170,11 +202,15 @@ export interface FileRoutesById {
   '/invite/$token': typeof InviteTokenRoute
   '/logs/$descentId': typeof LogsDescentIdRoute
   '/logs/new': typeof LogsNewRoute
+  '/materials/$materialId': typeof MaterialsMaterialIdRoute
+  '/materials/compare': typeof MaterialsCompareRoute
+  '/materials/new': typeof MaterialsNewRoute
   '/proposals/$proposalId': typeof ProposalsProposalIdRoute
   '/tools/gauge-catalog': typeof ToolsGaugeCatalogRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/new': typeof TripsNewRoute
   '/waterways/suggest-section': typeof WaterwaysSuggestSectionRoute
+  '/materials/': typeof MaterialsIndexRoute
   '/proposals/': typeof ProposalsIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/trips/': typeof TripsIndexRoute
@@ -192,11 +228,15 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/logs/$descentId'
     | '/logs/new'
+    | '/materials/$materialId'
+    | '/materials/compare'
+    | '/materials/new'
     | '/proposals/$proposalId'
     | '/tools/gauge-catalog'
     | '/trips/$tripId'
     | '/trips/new'
     | '/waterways/suggest-section'
+    | '/materials/'
     | '/proposals/'
     | '/tools/'
     | '/trips/'
@@ -212,11 +252,15 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/logs/$descentId'
     | '/logs/new'
+    | '/materials/$materialId'
+    | '/materials/compare'
+    | '/materials/new'
     | '/proposals/$proposalId'
     | '/tools/gauge-catalog'
     | '/trips/$tripId'
     | '/trips/new'
     | '/waterways/suggest-section'
+    | '/materials'
     | '/proposals'
     | '/tools'
     | '/trips'
@@ -232,11 +276,15 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/logs/$descentId'
     | '/logs/new'
+    | '/materials/$materialId'
+    | '/materials/compare'
+    | '/materials/new'
     | '/proposals/$proposalId'
     | '/tools/gauge-catalog'
     | '/trips/$tripId'
     | '/trips/new'
     | '/waterways/suggest-section'
+    | '/materials/'
     | '/proposals/'
     | '/tools/'
     | '/trips/'
@@ -251,11 +299,15 @@ export interface RootRouteChildren {
   DevCanvasRoute: typeof DevCanvasRoute
   DevPrimitivesRoute: typeof DevPrimitivesRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  MaterialsMaterialIdRoute: typeof MaterialsMaterialIdRoute
+  MaterialsCompareRoute: typeof MaterialsCompareRoute
+  MaterialsNewRoute: typeof MaterialsNewRoute
   ProposalsProposalIdRoute: typeof ProposalsProposalIdRoute
   ToolsGaugeCatalogRoute: typeof ToolsGaugeCatalogRoute
   TripsTripIdRoute: typeof TripsTripIdRoute
   TripsNewRoute: typeof TripsNewRoute
   WaterwaysSuggestSectionRoute: typeof WaterwaysSuggestSectionRoute
+  MaterialsIndexRoute: typeof MaterialsIndexRoute
   ProposalsIndexRoute: typeof ProposalsIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
   TripsIndexRoute: typeof TripsIndexRoute
@@ -306,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProposalsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/materials/': {
+      id: '/materials/'
+      path: '/materials'
+      fullPath: '/materials/'
+      preLoaderRoute: typeof MaterialsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/waterways/suggest-section': {
       id: '/waterways/suggest-section'
       path: '/waterways/suggest-section'
@@ -339,6 +398,27 @@ declare module '@tanstack/react-router' {
       path: '/proposals/$proposalId'
       fullPath: '/proposals/$proposalId'
       preLoaderRoute: typeof ProposalsProposalIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/materials/new': {
+      id: '/materials/new'
+      path: '/materials/new'
+      fullPath: '/materials/new'
+      preLoaderRoute: typeof MaterialsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/materials/compare': {
+      id: '/materials/compare'
+      path: '/materials/compare'
+      fullPath: '/materials/compare'
+      preLoaderRoute: typeof MaterialsCompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/materials/$materialId': {
+      id: '/materials/$materialId'
+      path: '/materials/$materialId'
+      fullPath: '/materials/$materialId'
+      preLoaderRoute: typeof MaterialsMaterialIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/logs/new': {
@@ -413,11 +493,15 @@ const rootRouteChildren: RootRouteChildren = {
   DevCanvasRoute: DevCanvasRoute,
   DevPrimitivesRoute: DevPrimitivesRoute,
   InviteTokenRoute: InviteTokenRoute,
+  MaterialsMaterialIdRoute: MaterialsMaterialIdRoute,
+  MaterialsCompareRoute: MaterialsCompareRoute,
+  MaterialsNewRoute: MaterialsNewRoute,
   ProposalsProposalIdRoute: ProposalsProposalIdRoute,
   ToolsGaugeCatalogRoute: ToolsGaugeCatalogRoute,
   TripsTripIdRoute: TripsTripIdRoute,
   TripsNewRoute: TripsNewRoute,
   WaterwaysSuggestSectionRoute: WaterwaysSuggestSectionRoute,
+  MaterialsIndexRoute: MaterialsIndexRoute,
   ProposalsIndexRoute: ProposalsIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
   TripsIndexRoute: TripsIndexRoute,
