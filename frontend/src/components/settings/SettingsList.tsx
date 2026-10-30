@@ -1,7 +1,8 @@
 import Box from "@mui/material/Box";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
-import { openRowSx, phoneRowPad } from "@/components/canvas/flatRow";
+import { openRowSx } from "@/components/canvas/flatRow";
+import { phoneRowPad } from "@/components/phone/phoneGrid";
 import { ChevronRightIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme/theme";
 import type { GroupId } from "./groups";

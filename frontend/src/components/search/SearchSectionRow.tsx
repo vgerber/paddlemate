@@ -4,6 +4,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import { listRowSx } from "@/components/canvas/flatRow";
+import { grid } from "@/components/phone/phoneGrid";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import GradeTag from "@/components/waterway/GradeTag";
 import { sectionGradeText } from "@/components/waterway/section-details/grade";
@@ -124,7 +125,7 @@ export default function SearchSectionRow({
           onClick={() => onToggleFavorite(section.id)}
           sx={{
             position: "absolute",
-            right: `${tokens.phone.inner}px`,
+            right: `${grid.inner}px`,
             top: "50%",
             transform: "translateY(-50%)",
             width: tokens.touch.min,

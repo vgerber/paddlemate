@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import RowCard, { TrailSlot } from "@/components/phone/RowCard";
 import { CloseIcon } from "@/lib/icons";
 import { useUnits } from "@/lib/prefs/units";
 import { humanize, sentenceCase } from "@/lib/text/format";
@@ -76,17 +77,7 @@ export default function FeatureRow({
         : "Point";
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 1.5,
-        px: 1.5,
-        py: 1,
-        border: "1px solid",
-        borderColor: "divider",
-      }}
-    >
+    <RowCard gap={1.5}>
       {leading}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         {detail && (
@@ -137,11 +128,13 @@ export default function FeatureRow({
         )}
       </Box>
       {onRemove && (
-        <IconButton aria-label="Remove feature" onClick={onRemove}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
+        <TrailSlot>
+          <IconButton aria-label="Remove feature" onClick={onRemove}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </TrailSlot>
       )}
       {trailing}
-    </Box>
+    </RowCard>
   );
 }

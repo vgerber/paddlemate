@@ -4,6 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import { cardRowSx, desktopFlatRow } from "@/components/canvas/flatRow";
+import { innerInset } from "@/components/phone/phoneGrid";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import type { SectionWithFeatures } from "@/lib/api";
 import { LogIcon, StarIcon, StarOutlineIcon } from "@/lib/icons";
@@ -201,7 +202,7 @@ export default function SectionListItem({
           onClick={() => onToggleFavorite(section.id)}
           sx={{
             position: "absolute",
-            right: { xs: `${tokens.phone.inner}px`, md: 1.75 },
+            right: innerInset(1.75),
             top: "50%",
             transform: "translateY(-50%)",
             width: tokens.touch.min,

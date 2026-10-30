@@ -79,7 +79,12 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
   out so its label or icon ends on the right line. `BottomSheet` is full-bleed
   with no padding of its own, because what it holds brings its own grid (a
   `PanelHeader` for the tabs, cards at the 12 edge, controls on the 28 line);
-  a gutter in the sheet would double theirs. Checked by
+  a gutter in the sheet would double theirs. **One module owns the grid:**
+  `components/phone/phoneGrid.ts` (`grid`, `lineInset`, `innerInset`,
+  `trailPull`, `phoneCardSx`, `phoneRowPad`, `trailSlotSx`) and
+  `components/phone/RowCard.tsx` (the list row and `TrailSlot`). A component
+  asks them for the line, the card or the trailing slot; it does not read
+  `tokens.phone` or write `28px` itself. Checked by
   `e2e/layout/phone-grid.spec.ts`.
 - **One header menu, grouped.** The section's actions sit in one overflow menu
   in the header, in groups with a hairline between (`groupStart` on a

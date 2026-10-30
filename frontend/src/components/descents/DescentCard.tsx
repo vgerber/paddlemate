@@ -1,10 +1,7 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
-import {
-  desktopFlatRow,
-  openRowSx,
-  phoneRowPad,
-} from "@/components/canvas/flatRow";
+import { desktopFlatRow, openRowSx } from "@/components/canvas/flatRow";
+import { phoneRowPad } from "@/components/phone/phoneGrid";
 import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
 import { descentRivers, descentTitle, VISIBILITY_LABELS } from "@/lib/descents";

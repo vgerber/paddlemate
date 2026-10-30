@@ -1,10 +1,8 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { theme } from "@/lib/theme/theme";
+import { lineInset } from "@/components/phone/phoneGrid";
 import StateTile from "./StateTile";
-
-const { phone } = theme.tokens;
 
 /** The centred column behind the empty and failed states: the tile, one
  * line, an optional caption and the actions beneath. `pt` and `pb` default
@@ -40,7 +38,7 @@ export default function StateLayout({
         pt,
         pb,
         // A phone keeps the caption inside the 28 / width - 28 lines.
-        px: { xs: `${phone.line}px`, md: 2 },
+        px: lineInset(),
         textAlign: "center",
       }}
     >

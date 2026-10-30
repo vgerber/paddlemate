@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { phoneCardSx } from "@/components/canvas/flatRow";
 import Fact from "@/components/Fact";
 import WaterwayMap from "@/components/map/LazyMap";
+import { phoneCardSx } from "@/components/phone/phoneGrid";
 import SectionHeading from "@/components/SectionHeading";
 import type { Descent, DescentSection, SectionWithFeatures } from "@/lib/api";
 import { durationLabel, formatDate, formatTime } from "@/lib/text/format";

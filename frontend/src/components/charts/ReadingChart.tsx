@@ -2,7 +2,6 @@ import Box from "@mui/material/Box";
 import { lazy, type ReactNode, Suspense, useMemo, useState } from "react";
 import ChartDock from "@/components/canvas/ChartDock";
 import { useLayout } from "@/components/canvas/canvasStore";
-import { phoneCardSx } from "@/components/canvas/flatRow";
 import {
   ChartBody,
   type ChartLoad,
@@ -21,6 +20,7 @@ import {
   readingPerType,
 } from "@/components/charts/water/series";
 import type { CustomRange, TimeRange } from "@/components/charts/water/types";
+import { phoneCardSx } from "@/components/phone/phoneGrid";
 import { useIsSwipeGhost } from "@/components/SwipeGhost";
 import type { WaterRangeWithStatus } from "@/lib/api";
 import { type ResolvedTokens, useTokens } from "@/lib/hooks/ui/useTokens";

@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { phoneCardSx } from "@/components/canvas/flatRow";
 import PushSettings from "@/components/notifications/PushSettings";
 import PanelHeader from "@/components/PanelHeader";
+import { phoneCardSx } from "@/components/phone/phoneGrid";
 import { SYSTEM_INSET, theme } from "@/lib/theme/theme";
 import AccountSection from "./AccountSection";
 import AppearanceSection from "./AppearanceSection";
