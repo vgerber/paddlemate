@@ -5,8 +5,6 @@ mod geometry;
 mod history;
 mod media;
 mod sections;
-mod water_ranges;
-mod water_status;
 
 use aide::axum::{
     ApiRouter,
@@ -314,38 +312,38 @@ pub fn waterways_routes(state: AppState) -> ApiRouter {
         .api_route(
             "/{waterway_id}/sections/{section_id}/features/{feature_id}/water-ranges",
             get_with(
-                water_ranges::list_water_ranges,
-                water_ranges::list_water_ranges_docs,
+                super::gauges::water_ranges::list_water_ranges,
+                super::gauges::water_ranges::list_water_ranges_docs,
             )
             .post_with(
-                water_ranges::create_water_range,
-                water_ranges::create_water_range_docs,
+                super::gauges::water_ranges::create_water_range,
+                super::gauges::water_ranges::create_water_range_docs,
             ),
         )
         .api_route(
             "/{waterway_id}/sections/{section_id}/features/{feature_id}/water-ranges/{range_id}",
             put_with(
-                water_ranges::update_water_range,
-                water_ranges::update_water_range_docs,
+                super::gauges::water_ranges::update_water_range,
+                super::gauges::water_ranges::update_water_range_docs,
             )
             .delete_with(
-                water_ranges::delete_water_range,
-                water_ranges::delete_water_range_docs,
+                super::gauges::water_ranges::delete_water_range,
+                super::gauges::water_ranges::delete_water_range_docs,
             ),
         )
         .api_route(
             "/water-status",
             get_with(
-                water_status::get_water_statuses,
-                water_status::get_water_statuses_docs,
+                super::gauges::water_status::get_water_statuses,
+                super::gauges::water_status::get_water_statuses_docs,
             ),
         )
         // Section water status
         .api_route(
             "/{waterway_id}/sections/{section_id}/water-status",
             get_with(
-                water_status::get_section_water_status,
-                water_status::get_section_water_status_docs,
+                super::gauges::water_status::get_section_water_status,
+                super::gauges::water_status::get_section_water_status_docs,
             ),
         )
         .with_state(state)
