@@ -15,7 +15,7 @@ use crate::{
         media_item::{Media, MediaDetails, MediaEntityType, MediaKind},
         path_params::{SectionPath, WaterwayMediaPath, WaterwayPath},
     },
-    query::media::{self as media_query, NewMedia},
+    query::waterways::media::{self as media_query, NewMedia},
     state::AppState,
 };
 

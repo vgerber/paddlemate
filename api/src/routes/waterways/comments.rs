@@ -23,7 +23,7 @@ use crate::{
             WaterwayPath,
         },
     },
-    query::{
+    query::waterways::{
         comments::{self, CommentParent},
         media,
     },

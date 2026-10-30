@@ -17,7 +17,7 @@ use crate::{
     models::{
         feature::Feature, geometry::Geometry, water_section::SectionId, waterway::WaterwayId,
     },
-    query::{favorites, features},
+    query::{favorites, waterways::features},
     state::AppState,
 };
 

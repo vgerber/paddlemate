@@ -1,9 +1,9 @@
 use sqlx::{PgPool, Row, postgres::PgRow};
 
+use super::media::list_media_for_comments;
 use crate::models::comment::{
     Comment, CommentCategory, CommentEntityType, CommentId, CommentStatus,
 };
-use crate::query::media::list_media_for_comments;
 
 const COMMENT_COLS: &str = "id, entity_type, entity_id, body, category, status, author_id, \
                             ST_AsGeoJSON(location) AS location, created_at, updated_at";

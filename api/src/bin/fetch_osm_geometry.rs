@@ -20,7 +20,7 @@ use paddlemate_api::models::osm_geometry::OsmElementKind;
 use paddlemate_api::overpass::{
     BBOX_BUFFER_DEG, centerline_query, client, run_query, to_cache_elements,
 };
-use paddlemate_api::query::osm_geometry::replace_elements;
+use paddlemate_api::query::waterways::geometry::replace_elements;
 use sqlx::PgPool;
 
 const REQUEST_GAP: Duration = Duration::from_secs(1);

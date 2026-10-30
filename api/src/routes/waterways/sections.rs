@@ -14,7 +14,12 @@ use crate::{
         },
         waterway::WaterwayId,
     },
-    query::{descents, features, history::Scope, proposals, sections},
+    query::{
+        descents,
+        history::Scope,
+        proposals,
+        waterways::{features, sections},
+    },
     state::AppState,
 };
 use aide::axum::IntoApiResponse;

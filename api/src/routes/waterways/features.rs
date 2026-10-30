@@ -26,7 +26,11 @@ use crate::{
         water_section::SectionId,
         waterway::WaterwayId,
     },
-    query::{features, history::Scope, proposals, sections},
+    query::{
+        history::Scope,
+        proposals,
+        waterways::{features, sections},
+    },
     state::AppState,
 };
 
