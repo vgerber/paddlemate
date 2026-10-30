@@ -84,7 +84,9 @@ function search(page: Page) {
 /** The hole's own row; a range row also reads expanded while it holds the
  * open feature. */
 const holeRow = (page: Page) =>
-  page.locator('[data-row][data-type="hole"][aria-expanded="true"]');
+  page.locator(
+    '[data-row][data-type="hole"][aria-expanded="true"], [data-row][data-type="hole"][aria-current="true"]',
+  );
 
 test.describe("tapping a feature on the map", () => {
   for (const [name, feature] of [
@@ -130,6 +132,11 @@ test.describe("tapping a feature on the map", () => {
     await tapAt(page, HOLE.at, isMobile);
     await expect.poll(() => search(page).get("feature")).toBe(String(HOLE.id));
     await tapAt(page, HOLE.at, isMobile);
+    // A phone's second tap shows the sheet again; the Close button closes it.
+    if (isMobile) {
+      await expect(page.getByTestId("feature-sheet")).toBeVisible();
+      return;
+    }
     await expect.poll(() => search(page).get("feature")).toBeNull();
     expect(search(page).get("section")).toBe(String(FIX.sections.lower));
   });
@@ -167,19 +174,15 @@ test.describe("tapping a feature on the map", () => {
 });
 
 test.describe("opening a feature from the list", () => {
-  test("a phone keeps the list and names the feature on the map", async ({
+  test("a phone opens the feature in a sheet over the map", async ({
     page,
     isMobile,
   }) => {
     test.skip(!isMobile, "phone layout");
     await openMap(page);
     await page.locator("[data-row]").filter({ hasText: "Big Hole" }).click();
-    await expect(holeRow(page)).toHaveCount(1);
-    await expect(page.getByTestId("mobile-overlay")).toBeVisible();
-    await showMap(page, true);
-    const bar = page.getByRole("button", { name: /Big Hole/ });
-    await expect(bar).toBeVisible();
-    await expect(bar).toContainText("Lower Test");
+    await expect(page.getByTestId("feature-sheet")).toBeVisible();
+    await expect(page.getByTestId("mobile-overlay")).toBeHidden();
     expect(search(page).get("feature")).toBe(String(HOLE.id));
   });
 
@@ -202,7 +205,11 @@ test.describe("opening a feature from the list", () => {
     expect(Math.abs(at.y - cy)).toBeLessThan(40);
   });
 
-  test("closing the row clears the feature @small", async ({ page }) => {
+  test("closing the row clears the feature @small", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "a phone closes the feature in its sheet");
     await openMap(page, `${LOWER}&feature=${HOLE.id}`);
     await holeRow(page).click();
     await expect.poll(() => search(page).get("feature")).toBeNull();

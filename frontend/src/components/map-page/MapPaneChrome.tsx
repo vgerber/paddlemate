@@ -32,6 +32,7 @@ function SelectionBar({
 }: SelectionBarProps) {
   return (
     <ButtonBase
+      data-selection-bar
       onClick={onOpen}
       sx={{
         position: "absolute",
@@ -109,7 +110,7 @@ function SearchFab({ badge, onOpen }: SearchFabProps) {
 
 interface MapPaneChromeProps extends SelectionBarProps {
   state: MapPageState;
-  /** An area or region sheet is open; it brings its own controls. */
+  /** A sheet is open over the map; it brings its own controls. */
   sheetMode: boolean;
   mapView: boolean;
   resultsBadge: ReactNode;

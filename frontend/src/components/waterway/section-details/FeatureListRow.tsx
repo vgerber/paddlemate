@@ -34,6 +34,8 @@ const { panel } = tokens.canvas;
 
 /** What every row of the list shares. */
 export interface RowContext {
+  /** Phone: a feature opens in the map's sheet, its row does not expand. */
+  sheet?: boolean;
   activeId?: number | null;
   onItemClick?: (item: ComputedFeature) => void;
   /** Edit and delete, for signed-in users; proposals never get them. */
@@ -89,6 +91,7 @@ export function FeatureListRow({
   const asRange = item.isZone && !isProposal;
   const n = ctx.numbers?.get(item.feature.id);
   const reduced = useReducedMotion();
+  const inSheet = ctx.sheet && !isProposal;
 
   return (
     <ButtonBase
@@ -97,7 +100,8 @@ export function FeatureListRow({
       data-row
       data-reduced-fade
       data-type={type}
-      aria-expanded={isActive}
+      aria-expanded={inSheet ? undefined : isActive}
+      aria-current={inSheet && isActive ? "true" : undefined}
       onClick={() => ctx.onItemClick?.(item)}
       sx={{
         display: "flex",
@@ -205,7 +209,7 @@ export function FeatureListRow({
           </Typography>
         )}
         <Collapse
-          in={isActive}
+          in={isActive && !inSheet}
           timeout={reduced ? 0 : durations.base}
           easing={css.easeInOut}
           unmountOnExit

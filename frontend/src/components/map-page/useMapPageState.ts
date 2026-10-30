@@ -17,6 +17,7 @@ import { pushRecentWaterway } from "@/lib/recentWaterways";
 import { defaultAreaCircle } from "./areaFrame";
 import { modeSheetMode, modeSheetPeek } from "./modeSheet";
 import { useFeaturePicker } from "./useFeaturePicker";
+import { useFeatureSheet } from "./useFeatureSheet";
 import { useMobilePanelState } from "./useMobilePanelState";
 import { useNotePin } from "./useNotePin";
 import { useOpenFeature } from "./useOpenFeature";
@@ -134,6 +135,7 @@ export function useMapPageState(search: RouteSearch) {
     isMobilePanelOpen,
     setIsMobilePanelOpen,
     exitMapView,
+    enterMapView,
   } = useMobilePanelState(panel, selectedWaterwayId);
 
   const [previewRadius, setPreviewRadius] = useState<number | null>(null);
@@ -271,6 +273,26 @@ export function useMapPageState(search: RouteSearch) {
     setFeatureParam,
   });
   const { selectedFeatureId, setSelectedFeatureId } = featureOpen;
+  const featureSheet = useFeatureSheet({
+    isMobile,
+    isMobileMapView,
+    selectedFeature: featureOpen.selectedFeature,
+    blocked: suggestMode != null || notePinState.notePinPlacing,
+    setSectionDetailTab,
+    enterMapView,
+    exitMapView,
+    setFocusedPoint,
+  });
+  const { show: showFeatureSheet } = featureSheet;
+  // On a phone a tap on the open feature shows its sheet again instead of
+  // closing the selection.
+  const openFeatureFromMap = useCallback(
+    (id: number) => {
+      if (isMobile && id === selectedFeatureId) showFeatureSheet();
+      else featureOpen.openFromMap(id);
+    },
+    [isMobile, selectedFeatureId, showFeatureSheet, featureOpen.openFromMap],
+  );
 
   // Remember opened rivers for the "recent" list in the search panel
   const selectedWaterwayName = selectedWaterway?.name;
@@ -419,7 +441,8 @@ export function useMapPageState(search: RouteSearch) {
     setSuggestGaugePins,
     selectedFeatureId,
     setSelectedFeatureId,
-    openFeatureFromMap: featureOpen.openFromMap,
+    openFeatureFromMap,
+    featureSheet,
     selectedFeature: featureOpen.selectedFeature,
     showProposedFeatures,
     toggleShowProposedFeatures,

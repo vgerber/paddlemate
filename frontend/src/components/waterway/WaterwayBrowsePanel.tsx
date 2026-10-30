@@ -4,7 +4,13 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
-import { type ReactNode, useCallback, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useMoreBelow } from "@/components/canvas/useMoreBelow";
 import DockedAction from "@/components/DockedAction";
 import { fabRoom } from "@/components/PaneFab";
@@ -83,6 +89,11 @@ interface WaterwayBrowsePanelProps {
    * group instead of loose props. */
   featureTimeline?: {
     onFeatureClick?: (coords: [number, number] | null) => void;
+    /** Phone: opens a feature in the map's sheet. */
+    onPickFeature?: (id: number) => void;
+    /** Phone: a feature whose history the sheet asked for. */
+    historyFeatureId?: number | null;
+    onHistoryShown?: () => void;
     onEditFeature?: (f: Feature) => void;
     activeFeatureId?: number | null;
     onActiveFeatureChange?: (id: number | null) => void;
@@ -151,6 +162,17 @@ export default function WaterwayBrowsePanel({
   const sections: SectionWithFeatures[] = waterway?.sections ?? [];
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId);
+  const historyFeatureId = featureTimeline?.historyFeatureId;
+  const onHistoryShown = featureTimeline?.onHistoryShown;
+  // The phone's feature sheet asks for one feature's history.
+  useEffect(() => {
+    if (historyFeatureId == null || selectedSectionId == null) return;
+    setEditsFilter({
+      sectionId: selectedSectionId,
+      filter: { kind: "feature", id: historyFeatureId },
+    });
+    onHistoryShown?.();
+  }, [historyFeatureId, selectedSectionId, onHistoryShown]);
   const inFeatures = selectedSectionId != null && selectedSection != null;
 
   const { current: standingDescent, start: startDescent } =
@@ -335,6 +357,7 @@ export default function WaterwayBrowsePanel({
           proposals={featureTimeline?.proposals ?? []}
           showProposed={featureTimeline?.showProposed ?? false}
           onFeatureClick={featureTimeline?.onFeatureClick}
+          onPickFeature={featureTimeline?.onPickFeature}
           onEditFeature={featureTimeline?.onEditFeature}
           activeFeatureId={featureTimeline?.activeFeatureId}
           onActiveFeatureChange={featureTimeline?.onActiveFeatureChange}

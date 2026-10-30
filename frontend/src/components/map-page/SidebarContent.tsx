@@ -74,6 +74,8 @@ export default function SidebarContent({
     editFeature,
     startEditFeature,
     setFocusedPoint,
+    isMobile,
+    featureSheet,
     selectedFeatureId,
     setSelectedFeatureId,
     showProposedFeatures,
@@ -239,6 +241,9 @@ export default function SidebarContent({
       }
       featureTimeline={{
         onFeatureClick: setFocusedPoint,
+        onPickFeature: isMobile ? featureSheet.show : undefined,
+        historyFeatureId: featureSheet.historyFor,
+        onHistoryShown: () => featureSheet.setHistoryFor(null),
         onEditFeature: startEditFeature,
         activeFeatureId: selectedFeatureId,
         onActiveFeatureChange: setSelectedFeatureId,

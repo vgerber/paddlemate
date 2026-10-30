@@ -124,7 +124,9 @@ test.describe("features card", () => {
 
   test("a range row shows its span and folds and opens its members", async ({
     page,
+    isMobile,
   }) => {
+    test.skip(isMobile, "a phone opens the range in the feature sheet");
     await openFeatures(page);
     const head = card(page).getByRole("button", { name: /Slot Machine/ });
     await expect(head).toHaveAttribute("aria-expanded", "true");
@@ -430,7 +432,9 @@ test.describe("design gaps", () => {
 
   test("a picked row shows 44px coordinate buttons in secondary ink", async ({
     page,
+    isMobile,
   }) => {
+    test.skip(isMobile, "a phone shows them in the feature sheet");
     await openFeatures(page);
     await row(page, "Altes Wehr").click();
     const open = card(page).getByTitle("Open in Google Maps");
@@ -441,7 +445,11 @@ test.describe("design gaps", () => {
 });
 
 test.describe("features card seams", () => {
-  test("the selected row carries a 2px teal ring", async ({ page }) => {
+  test("the selected row carries a 2px teal ring", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "a phone leaves the list when a row is picked");
     await openFeatures(page);
     const r = row(page, "Altes Wehr");
     // Unselected rows keep a transparent outline so the ring can fade in.

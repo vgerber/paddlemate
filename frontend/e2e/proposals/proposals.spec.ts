@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { openFeatureActions } from "../support/featureActions";
 import {
   computed,
   expectNoHorizontalOverflow,
@@ -886,12 +887,7 @@ test.describe("sending a proposal", () => {
       });
     });
     await gotoSection(page, "lower");
-    const card = page.getByTestId("features-card").filter({ visible: true });
-    await card.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
-    await card
-      .getByRole("button", { name: "Feature actions", exact: true })
-      .first()
-      .click();
+    await openFeatureActions(page, "Altes Wehr");
     await page.getByRole("menuitem", { name: /Edit feature/ }).click();
     await page.getByRole("button", { name: "Submit" }).click();
     const notice = page.getByTestId("proposal-sent");
