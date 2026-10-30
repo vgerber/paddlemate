@@ -2,12 +2,7 @@ import { useMemo } from "react";
 import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type { SectionWithFeatures } from "@/lib/api";
 import type { AreaCircle } from "@/lib/geo";
-import {
-  distanceKm,
-  type LngLat,
-  lineCoords,
-  parseDifficulty,
-} from "@/lib/geo";
+import { type LngLat, parseDifficulty, sectionDistanceKm } from "@/lib/geo";
 
 interface FilterOptions {
   areaCircle: AreaCircle | null;
@@ -15,7 +10,7 @@ interface FilterOptions {
   maxDiff?: number;
 }
 
-/** Filter sections by geographic proximity (area circle) and difficulty range. */
+/** Filter sections by geographic proximity (area circle, nearest first) and difficulty range. */
 export function useFilteredSections(
   sections: SectionWithFeatures[],
   { areaCircle, minDiff, maxDiff }: FilterOptions,
@@ -24,17 +19,13 @@ export function useFilteredSections(
     let result = sections;
 
     if (areaCircle) {
-      result = result.filter((s) => {
-        const coords = lineCoords(s.location);
-        if (!coords || coords.length === 0) return false;
-        const first = coords[0];
-        const last = coords[coords.length - 1];
-        const mid = coords[Math.floor(coords.length / 2)];
-        const centre: LngLat = [areaCircle.lon, areaCircle.lat];
-        return [first, last, mid].some(
-          (p) => distanceKm(centre, p) <= areaCircle.radiusKm,
-        );
-      });
+      const centre: LngLat = [areaCircle.lon, areaCircle.lat];
+      // Nearest first; the sort is stable, so equal distances keep their order.
+      result = result
+        .map((s) => ({ s, km: sectionDistanceKm(s.location, centre) }))
+        .filter(({ km }) => km <= areaCircle.radiusKm)
+        .sort((a, b) => a.km - b.km)
+        .map(({ s }) => s);
     }
 
     if (minDiff != null || maxDiff != null) {

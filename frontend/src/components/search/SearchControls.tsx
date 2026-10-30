@@ -4,7 +4,7 @@ import TextField from "@mui/material/TextField";
 import { type ReactNode, useRef, useState } from "react";
 import ChipRow from "@/components/ChipRow";
 import { usePanelEnter } from "@/components/usePanelEnter";
-import type { AreaCircle } from "@/lib/geo";
+import { type AreaCircle, DEFAULT_RADIUS_KM } from "@/lib/geo";
 import { CloseIcon, SearchIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
 import AreaControls from "./AreaControls";
@@ -78,6 +78,8 @@ interface SearchControlsProps {
   onAreaCircleChange?: (circle: AreaCircle | null) => void;
   onAreaLockedChange?: (locked: boolean) => void;
   onRadiusPreview?: (radiusKm: number) => void;
+  /** Puts the area centre on the middle of the map in view. */
+  onAreaCentreOnView?: () => void;
   /** Regions are being listed, so the facets step aside. */
   listingRegions: boolean;
   /** The map's regions, for the level chips and "Part of". */
@@ -98,6 +100,7 @@ export default function SearchControls({
   onAreaCircleChange,
   onAreaLockedChange,
   onRadiusPreview,
+  onAreaCentreOnView,
   listingRegions,
   regionBrowse,
   onSheetOpenChange,
@@ -148,6 +151,14 @@ export default function SearchControls({
             areaCircle && onAreaCircleChange?.({ ...areaCircle, radiusKm: r })
           }
           onRadiusPreview={onRadiusPreview}
+          onCentreChange={([lon, lat]) =>
+            onAreaCircleChange?.({
+              lat,
+              lon,
+              radiusKm: areaCircle?.radiusKm ?? DEFAULT_RADIUS_KM,
+            })
+          }
+          onCentreOnView={onAreaCentreOnView}
         />
       )}
       {mode === "region" && (
