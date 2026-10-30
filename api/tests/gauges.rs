@@ -206,7 +206,7 @@ async fn a_gauge_is_created_read_updated_and_deleted(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn a_duplicate_gauge_is_an_internal_error(pool: PgPool) {
+async fn a_duplicate_gauge_is_a_conflict(pool: PgPool) {
     let app = app(pool).await;
     make_gauge(&app, "Kufstein", "k1").await;
     let r = call(
@@ -217,9 +217,9 @@ async fn a_duplicate_gauge_is_an_internal_error(pool: PgPool) {
         Some(gauge_body("Again", "k1")),
     )
     .await;
-    // NOTE: looks wrong: a duplicate (provider, source_id) is a client error, yet it answers 500.
-    assert_eq!(r.status, StatusCode::INTERNAL_SERVER_ERROR);
-    assert!(r.body["error"]["code"].is_string());
+    assert_eq!(r.status, StatusCode::CONFLICT);
+    assert_eq!(r.body["error"]["code"], "conflict");
+    assert_eq!(r.body["error"]["target"], "source_id");
     let r = call(
         &app,
         Method::POST,
@@ -288,8 +288,8 @@ async fn series_are_unique_per_type_and_editable(pool: PgPool) {
         Some(json!({ "measurement_type": "water_level", "unit": "cm" })),
     )
     .await;
-    // NOTE: looks wrong: a second series of one type is a client error, yet it answers 500.
-    assert_eq!(r.status, StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(r.status, StatusCode::CONFLICT);
+    assert_eq!(r.body["error"]["target"], "measurement_type");
     let r = call(
         &app,
         Method::POST,
@@ -307,8 +307,7 @@ async fn series_are_unique_per_type_and_editable(pool: PgPool) {
         Some(json!({ "measurement_type": "discharge", "unit": "m3s" })),
     )
     .await;
-    // NOTE: looks wrong: a series for a missing gauge answers 500, not 404.
-    assert_eq!(r.status, StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
 
     let r = call(
         &app,
@@ -331,8 +330,7 @@ async fn series_are_unique_per_type_and_editable(pool: PgPool) {
     .await;
     assert_eq!(r.status, StatusCode::NOT_FOUND);
 
-    // NOTE: looks wrong: a series is addressed by its own id only, so it can be
-    // changed or deleted through a path naming a different gauge.
+    // A series is looked up inside its gauge: a path naming another gauge is 404.
     let other = make_gauge(&app, "Other", "o").await;
     let r = call(
         &app,
@@ -342,8 +340,21 @@ async fn series_are_unique_per_type_and_editable(pool: PgPool) {
         Some(json!({ "measurement_type": "water_level", "unit": "ft" })),
     )
     .await;
-    assert_eq!(r.status, StatusCode::OK);
-    assert_eq!(r.body["gauge_id"], g);
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
+    assert_eq!(
+        call(
+            &app,
+            Method::DELETE,
+            &format!("/gauges/{other}/series/{s}"),
+            Who::Admin,
+            None
+        )
+        .await
+        .status,
+        StatusCode::NOT_FOUND
+    );
+    let r = get(&app, &format!("/gauges/{g}")).await;
+    assert_eq!(r.body["series"][0]["unit"], "m", "series untouched");
 
     assert_eq!(
         call(
@@ -422,11 +433,12 @@ async fn readings_come_newest_first_and_are_bounded(pool: PgPool) {
     assert_eq!(r.status, StatusCode::OK);
     assert_eq!(r.body["value"], 9.0);
 
-    // NOTE: looks wrong: readings are looked up by series id alone, so a path
-    // naming another gauge still returns them.
+    // Readings are looked up inside their gauge: another gauge's path finds none.
     let other = make_gauge(&app, "Other", "o").await;
     let r = get(&app, &format!("/gauges/{other}/series/{s}/readings/latest")).await;
-    assert_eq!(r.status, StatusCode::OK);
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
+    let r = get(&app, &format!("/gauges/{other}/series/{s}/readings")).await;
+    assert_eq!(r.body, json!([]));
 
     // A series without readings: empty list, 404 for latest.
     let empty = make_series(&app, other, "discharge").await;
@@ -653,14 +665,7 @@ async fn the_map_marks_stations_used_fetched_or_available(pool: PgPool) {
     sorted.sort();
     assert_eq!(
         sorted,
-        [
-            ("avail", "available"),
-            // NOTE: looks wrong: the catalog twin of a fetched "f:W" gauge still shows as
-            // available, because the match is source_id = station_id without the ":W".
-            ("f", "available"),
-            ("f", "fetched"),
-            ("u", "used"),
-        ]
+        [("avail", "available"), ("f", "fetched"), ("u", "used"),]
     );
     let avail = r
         .body

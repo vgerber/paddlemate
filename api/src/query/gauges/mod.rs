@@ -370,6 +370,7 @@ pub async fn create_series(
 
 pub async fn update_series(
     pool: &PgPool,
+    gauge_id: GaugeId,
     series_id: SeriesId,
     measurement_type: &str,
     unit: &str,
@@ -378,21 +379,27 @@ pub async fn update_series(
     let row = sqlx::query(&format!(
         "UPDATE gauge_series
          SET measurement_type = $2::measurement_type, unit = $3, label = $4
-         WHERE id = $1
+         WHERE id = $1 AND gauge_id = $5
          RETURNING {SERIES_COLS}"
     ))
     .bind(series_id)
     .bind(measurement_type)
     .bind(unit)
     .bind(label)
+    .bind(gauge_id)
     .fetch_optional(pool)
     .await?;
     row.map(|r| row_to_series(&r)).transpose()
 }
 
-pub async fn delete_series(pool: &PgPool, series_id: SeriesId) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM gauge_series WHERE id = $1")
+pub async fn delete_series(
+    pool: &PgPool,
+    gauge_id: GaugeId,
+    series_id: SeriesId,
+) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query("DELETE FROM gauge_series WHERE id = $1 AND gauge_id = $2")
         .bind(series_id)
+        .bind(gauge_id)
         .execute(pool)
         .await?;
     Ok(result.rows_affected() > 0)
@@ -400,6 +407,7 @@ pub async fn delete_series(pool: &PgPool, series_id: SeriesId) -> Result<bool, s
 
 pub async fn fetch_readings(
     pool: &PgPool,
+    gauge_id: GaugeId,
     series_id: SeriesId,
     from: Option<DateTime<Utc>>,
     to: Option<DateTime<Utc>>,
@@ -409,6 +417,7 @@ pub async fn fetch_readings(
         "SELECT series_id, measured_at, value
          FROM gauge_readings
          WHERE series_id = $1
+           AND EXISTS (SELECT 1 FROM gauge_series WHERE id = $1 AND gauge_id = $5)
            AND ($2::timestamptz IS NULL OR measured_at >= $2)
            AND ($3::timestamptz IS NULL OR measured_at <= $3)
          ORDER BY measured_at DESC
@@ -418,6 +427,7 @@ pub async fn fetch_readings(
     .bind(from)
     .bind(to)
     .bind(limit)
+    .bind(gauge_id)
     .fetch_all(pool)
     .await?
     .iter()
@@ -437,6 +447,28 @@ pub async fn fetch_latest_reading(
          LIMIT 1",
     )
     .bind(series_id)
+    .fetch_optional(pool)
+    .await?
+    .map(|r| row_to_reading(&r))
+    .transpose()
+}
+
+/// Latest reading of a series, looked up inside its gauge.
+pub async fn fetch_gauge_latest_reading(
+    pool: &PgPool,
+    gauge_id: GaugeId,
+    series_id: SeriesId,
+) -> Result<Option<GaugeReading>, sqlx::Error> {
+    sqlx::query(
+        "SELECT r.series_id, r.measured_at, r.value
+         FROM gauge_readings r
+         JOIN gauge_series s ON s.id = r.series_id
+         WHERE r.series_id = $1 AND s.gauge_id = $2
+         ORDER BY r.measured_at DESC
+         LIMIT 1",
+    )
+    .bind(series_id)
+    .bind(gauge_id)
     .fetch_optional(pool)
     .await?
     .map(|r| row_to_reading(&r))
