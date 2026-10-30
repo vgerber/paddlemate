@@ -18,9 +18,9 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::{
+        page::{PaginatedResponse, page_bounds, page_of},
         path_params::ProposalPath,
         proposal::{ListProposalsFilters, Proposal, ProposalStatus},
-        waterway::{PaginatedResponse, page_bounds, total_pages},
     },
     query::proposals,
     state::AppState,
@@ -90,14 +90,7 @@ pub async fn list_proposals(
     };
 
     match proposals::list_proposals(&app.pg_pool, filters, viewer_id.as_deref()).await {
-        Ok((items, total)) => Json(PaginatedResponse {
-            items,
-            total,
-            page,
-            per_page,
-            total_pages: total_pages(total, per_page),
-        })
-        .into_response(),
+        Ok((items, total)) => Json(page_of(items, total, page, per_page)).into_response(),
         Err(err) => ApiError::from_db("Error listing proposals", &err).into_response(),
     }
 }

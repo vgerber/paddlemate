@@ -11,8 +11,8 @@ use crate::{
     layers::auth::AuthToken,
     models::{
         descent::{Descent, ListDescentsQuery},
+        page::{PaginatedResponse, page_bounds},
         path_params::DescentPath,
-        waterway::{PaginatedResponse, page_bounds},
     },
     query::descents,
     state::AppState,

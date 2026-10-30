@@ -19,7 +19,7 @@ use crate::{
     doc_fn,
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
-    models::waterway::{PaginatedResponse, page_bounds, total_pages},
+    models::page::{PaginatedResponse, page_bounds, page_of},
     query::follows as follows_query,
     routes::geo::params::parse_search_name,
     state::AppState,
@@ -179,8 +179,8 @@ async fn list_users(
     )
     .await
     {
-        Ok((users, total)) => Json(PaginatedResponse {
-            items: users
+        Ok((users, total)) => {
+            let items = users
                 .into_iter()
                 .map(|u| UserWithFollowStatusResponse {
                     id: u.id,
@@ -188,13 +188,9 @@ async fn list_users(
                     outgoing_status: u.outgoing_status,
                     incoming_pending: u.incoming_pending,
                 })
-                .collect::<Vec<_>>(),
-            total,
-            page,
-            per_page,
-            total_pages: total_pages(total, per_page),
-        })
-        .into_response(),
+                .collect::<Vec<_>>();
+            Json(page_of(items, total, page, per_page)).into_response()
+        }
         Err(err) => ApiError::from_db("Error listing users", err).into_response(),
     }
 }

@@ -8,8 +8,8 @@ use sqlx::{PgPool, Row, postgres::PgRow, types::Json};
 
 use crate::models::{
     notification::{EventSummary, LiveEvent, TripEvent, TripEventId, TripEventKind, describe},
+    page::{PaginatedResponse, page_of},
     trip::TripId,
-    waterway::{PaginatedResponse, total_pages},
 };
 
 /// Every kind the bell lists; the rest only refresh open apps.
@@ -143,13 +143,7 @@ pub async fn list_notifications(
         .transpose()?
         .unwrap_or(0);
     let items = rows.iter().map(row_to_event).collect::<Result<_, _>>()?;
-    Ok(PaginatedResponse {
-        items,
-        total,
-        page,
-        per_page,
-        total_pages: total_pages(total, per_page),
-    })
+    Ok(page_of(items, total, page, per_page))
 }
 
 pub async fn unread_state(

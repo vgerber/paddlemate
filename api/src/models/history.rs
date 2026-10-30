@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use super::waterway::PaginatedResponse;
+use super::page::PaginatedResponse;
 
 /// Query parameters of a history listing.
 #[derive(Debug, Default, Deserialize, JsonSchema)]

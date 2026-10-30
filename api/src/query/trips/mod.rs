@@ -20,8 +20,8 @@ use sqlx::{PgPool, Row, postgres::PgRow};
 use chrono::{DateTime, Utc};
 
 use crate::models::{
+    page::{PaginatedResponse, page_of},
     trip::{CreateTripRequest, PatchTripRequest, Trip, TripId, TripMemberRole},
-    waterway::{PaginatedResponse, total_pages},
 };
 
 /// What a guarded or versioned write came to. Routes map each arm to one
@@ -220,13 +220,7 @@ fn finish_list(
         items.push(row_to_trip(r)?);
     }
 
-    Ok(PaginatedResponse {
-        items,
-        total,
-        page: filters.page,
-        per_page: filters.per_page,
-        total_pages: total_pages(total, filters.per_page),
-    })
+    Ok(page_of(items, total, filters.page, filters.per_page))
 }
 
 pub async fn patch_trip(

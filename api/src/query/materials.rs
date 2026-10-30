@@ -1,6 +1,7 @@
 use sqlx::{PgPool, QueryBuilder, Row, postgres::PgRow};
 
 use super::FUZZY_MIN_CHARS;
+use super::util::escape_like;
 use crate::models::material::{
     Material, MaterialBody, MaterialBrand, MaterialCategory, MaterialFilters, MaterialId,
     MaterialSort,
@@ -58,15 +59,6 @@ fn row_to_material(row: &PgRow) -> Result<Material, sqlx::Error> {
         created_at: row.try_get("created_at")?,
         updated_at: row.try_get("updated_at")?,
     })
-}
-
-/// Escape the characters LIKE treats as wildcards, so a query containing "%"
-/// searches for a literal percent sign instead of matching every row.
-fn escape_like(input: &str) -> String {
-    input
-        .replace('\\', "\\\\")
-        .replace('%', "\\%")
-        .replace('_', "\\_")
 }
 
 /// The measurement column a sort reads, or None for the sorts that do not

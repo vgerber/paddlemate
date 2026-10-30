@@ -13,7 +13,13 @@ use aide::axum::{
 use axum::Extension;
 
 use crate::{
-    error::ApiError, layers::auth::AuthToken, models::lang::normalize_lang_code, state::AppState,
+    error::ApiError,
+    layers::auth::AuthToken,
+    models::{
+        lang::normalize_lang_code,
+        validate::{max_chars, not_blank},
+    },
+    state::AppState,
 };
 
 /// Longest name; matches the `VARCHAR(255)` columns.
@@ -45,32 +51,19 @@ pub(crate) fn authorize_localization(
 
 /// A localized name must be non-empty and fit its column.
 pub(crate) fn check_name(name: &str) -> Result<(), ApiError> {
-    if name.trim().is_empty() {
-        return Err(ApiError::validation("Name must not be empty").with_target("name"));
-    }
-    if name.chars().count() > MAX_NAME_CHARS {
-        return Err(ApiError::validation(format!(
-            "Name must be at most {MAX_NAME_CHARS} characters"
-        ))
-        .with_target("name"));
-    }
-    Ok(())
+    not_blank("Name", "name", name)?;
+    max_chars("Name", "name", name, MAX_NAME_CHARS)
 }
 
 /// A localized description must be non-empty and bounded.
 pub(crate) fn check_description(description: &str) -> Result<(), ApiError> {
-    if description.trim().is_empty() {
-        return Err(
-            ApiError::validation("Description must not be empty").with_target("description")
-        );
-    }
-    if description.chars().count() > MAX_DESCRIPTION_CHARS {
-        return Err(ApiError::validation(format!(
-            "Description must be at most {MAX_DESCRIPTION_CHARS} characters"
-        ))
-        .with_target("description"));
-    }
-    Ok(())
+    not_blank("Description", "description", description)?;
+    max_chars(
+        "Description",
+        "description",
+        description,
+        MAX_DESCRIPTION_CHARS,
+    )
 }
 
 /// All waterway routes combined into a single router.

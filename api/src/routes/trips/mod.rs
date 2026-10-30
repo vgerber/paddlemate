@@ -22,9 +22,9 @@ use crate::{
     layers::auth::AuthToken,
     models::{
         notification::{EventSummary, TripEventKind},
+        page::{PaginatedResponse, page_bounds},
         path_params::TripPath,
         trip::{CreateTripRequest, ListTripsQuery, PatchTripRequest, Trip},
-        waterway::{PaginatedResponse, page_bounds},
     },
     notify,
     query::trips,

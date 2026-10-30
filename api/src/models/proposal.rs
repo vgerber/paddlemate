@@ -115,12 +115,7 @@ pub struct Proposable<T> {
 pub fn clean_note(raw: Option<String>) -> Result<Option<String>, crate::error::ApiError> {
     let Some(raw) = raw else { return Ok(None) };
     let note = raw.trim();
-    if note.chars().count() > MAX_NOTE_CHARS {
-        return Err(crate::error::ApiError::validation(format!(
-            "proposal_note must be at most {MAX_NOTE_CHARS} characters"
-        ))
-        .with_target("proposal_note"));
-    }
+    crate::models::validate::max_chars("proposal_note", "proposal_note", note, MAX_NOTE_CHARS)?;
     Ok((!note.is_empty()).then(|| note.to_owned()))
 }
 

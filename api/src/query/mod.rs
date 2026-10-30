@@ -12,6 +12,7 @@ pub mod regions;
 pub mod tokens;
 pub mod trips;
 pub mod users;
+pub mod util;
 pub mod waterways;
 
 // Temporary: proposals queries are edited by another agent.
