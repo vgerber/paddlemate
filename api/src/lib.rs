@@ -14,7 +14,10 @@ macro_rules! doc_fn {
     };
 }
 
+pub mod config;
 pub mod error;
+pub mod importers;
+pub mod jobs;
 pub mod layers;
 pub mod media;
 pub mod models;

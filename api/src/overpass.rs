@@ -13,31 +13,13 @@ use tokio::sync::Mutex;
 use crate::models::{geometry::Geometry, osm_geometry::OsmElementKind};
 use crate::query::osm_geometry::{cached_envelope, merge_elements};
 
-/// Public fallback instances, used when OVERPASS_URLS is not set.
-const PUBLIC_OVERPASS_URLS: [&str; 3] = [
-    "https://overpass-api.de/api/interpreter",
-    "https://overpass.private.coffee/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
-];
-
 /// Endpoints tried in order per query. OVERPASS_URLS (comma-separated)
 /// overrides the default public list - production puts the self-hosted
 /// rivers-only instance first and keeps the public ones as fallback.
 pub fn endpoints() -> &'static [String] {
     static ENDPOINTS: OnceLock<Vec<String>> = OnceLock::new();
     ENDPOINTS.get_or_init(|| {
-        let configured: Vec<String> = std::env::var("OVERPASS_URLS")
-            .unwrap_or_default()
-            .split(',')
-            .map(str::trim)
-            .filter(|s| !s.is_empty())
-            .map(str::to_string)
-            .collect();
-        if configured.is_empty() {
-            PUBLIC_OVERPASS_URLS.iter().map(|s| s.to_string()).collect()
-        } else {
-            configured
-        }
+        crate::config::parse_overpass_urls(crate::config::var("OVERPASS_URLS").as_deref())
     })
 }
 /// Bbox margin around the sections, in degrees (~15 km).

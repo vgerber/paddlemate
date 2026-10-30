@@ -16,6 +16,7 @@ use axum_keycloak_auth::{
 use indexmap::IndexMap;
 use moka::future::Cache;
 use paddlemate_api::{
+    config::Config,
     layers::auth::{api_token_auth, api_token_auth_optional},
     layers::limit::{RateLimits, limit_requests, limit_writes},
     routes::{
@@ -37,7 +38,7 @@ async fn index() -> impl IntoApiResponse {
     "Welcome to the Paddlemate API"
 }
 
-fn api_docs(api: TransformOpenApi) -> TransformOpenApi {
+fn api_docs(api: TransformOpenApi, token_url: String) -> TransformOpenApi {
     api.title("Paddlemate API")
         .summary("Paddlemate platform")
         .description("API for managing the Paddlemate platform")
@@ -53,8 +54,7 @@ fn api_docs(api: TransformOpenApi) -> TransformOpenApi {
                     implicit: None,
                     password: Some(aide::openapi::OAuth2Flow::Password {
                         refresh_url: None,
-                        token_url: dotenvy::var("KEYCLOAK_TOKEN_URL")
-                            .unwrap_or_else(|_| "https://auth.example.com/realms/myrealm/protocol/openid-connect/token".to_string()),
+                        token_url,
                         scopes: IndexMap::new(),
                     }),
                     ..Default::default()
@@ -81,35 +81,24 @@ async fn main() {
         .with_line_number(true)
         .init();
 
-    let keycloak_url = dotenvy::var("KEYCLOAK_URL").expect("KEYCLOAK_URL not set");
-    let keycloak_realm = dotenvy::var("KEYCLOAK_REALM").expect("KEYCLOAK_REALM not set");
-    let keycloak_audience = dotenvy::var("KEYCLOAK_AUDIENCE").expect("KEYCLOAK_AUDIENCE not set");
-    let keycloak_client_id =
-        dotenvy::var("KEYCLOAK_CLIENT_ID").expect("KEYCLOAK_CLIENT_ID must be set");
-    let keycloak_client_secret =
-        dotenvy::var("KEYCLOAK_CLIENT_SECRET").expect("KEYCLOAK_CLIENT_SECRET must be set");
-
-    tracing::info!("Keycloak URL: {}", keycloak_url);
-    tracing::info!("Keycloak realm: {}", keycloak_realm);
-    tracing::info!("Keycloak audience: {}", keycloak_audience);
-
-    let database_url = match dotenvy::var("DATABASE_URL") {
-        Ok(url) => url,
+    let config = match Config::from_env() {
+        Ok(config) => config,
         Err(err) => {
-            eprintln!("Error loading DATABASE_URL: {err}");
-            return;
+            eprintln!("Error loading configuration: {err}");
+            std::process::exit(1);
         }
     };
+    let keycloak = config.keycloak.clone();
+
+    tracing::info!("Keycloak URL: {}", keycloak.url);
+    tracing::info!("Keycloak realm: {}", keycloak.realm);
+    tracing::info!("Keycloak audience: {}", keycloak.audience);
 
     // How close a name has to be for search to treat a misspelling as a match.
     // Only the pg_trgm operators consult this setting, and only they can use
     // the trigram indexes, so it has to be set per connection rather than
     // written into the query.
-    let word_similarity_threshold = std::env::var("SEARCH_WORD_SIMILARITY_THRESHOLD")
-        .ok()
-        .and_then(|raw| raw.parse::<f64>().ok())
-        .map(|value| value.clamp(0.0, 1.0))
-        .unwrap_or(0.5);
+    let word_similarity_threshold = config.search_word_similarity_threshold;
     tracing::info!("Search word similarity threshold: {word_similarity_threshold}");
 
     let db = match PgPoolOptions::new()
@@ -124,7 +113,7 @@ async fn main() {
                 Ok(())
             })
         })
-        .connect(&database_url)
+        .connect(&config.database_url)
         .await
     {
         Ok(pool) => pool,
@@ -139,10 +128,7 @@ async fn main() {
     // RUN_MIGRATIONS=false to run them as a separate, reviewed step instead.
     // sqlx takes an advisory lock while migrating, so several instances
     // starting at once is safe either way.
-    let run_migrations = std::env::var("RUN_MIGRATIONS")
-        .map(|value| value != "false")
-        .unwrap_or(true);
-    if run_migrations {
+    if config.run_migrations {
         sqlx::migrate!("./migrations")
             .run(&db)
             .await
@@ -154,16 +140,15 @@ async fn main() {
     // Comma separated list of origins allowed to call the API from a browser.
     // Unset means any origin: the API is public. A list narrows it for a
     // deployment that wants that.
-    let cors_origins = match std::env::var("CORS_ALLOWED_ORIGINS") {
-        Ok(raw) if !raw.trim().is_empty() => {
-            let origins: Vec<_> = raw
-                .split(',')
-                .filter_map(|origin| origin.trim().parse::<HeaderValue>().ok())
-                .collect();
-            tracing::info!("CORS allowed origins: {}", raw);
-            AllowOrigin::list(origins)
+    let cors_origins = match &config.cors_origins {
+        Some(list) => {
+            tracing::info!("CORS allowed origins: {}", list.join(","));
+            AllowOrigin::list(
+                list.iter()
+                    .filter_map(|origin| origin.parse::<HeaderValue>().ok()),
+            )
         }
-        _ => {
+        None => {
             tracing::warn!("CORS_ALLOWED_ORIGINS is unset, allowing any origin");
             AllowOrigin::any()
         }
@@ -181,48 +166,30 @@ async fn main() {
     let state = AppState {
         pg_pool: db.clone(),
         keycloak_config: KeycloakState {
-            url: keycloak_url.clone(),
-            realm: keycloak_realm.clone(),
-            client_id: keycloak_client_id,
-            client_secret: keycloak_client_secret,
+            url: keycloak.url.clone(),
+            realm: keycloak.realm.clone(),
+            client_id: keycloak.client_id.clone(),
+            client_secret: keycloak.client_secret.clone(),
         },
         admin_token_cache: Arc::new(tokio::sync::RwLock::new(None)),
         username_cache,
         gauge_wake: Arc::new(tokio::sync::Notify::new()),
         region_wake: Arc::new(tokio::sync::Notify::new()),
         live_events: tokio::sync::broadcast::channel(paddlemate_api::notify::LIVE_BUFFER).0,
-        push: paddlemate_api::notify::push_from_env(),
+        push: paddlemate_api::notify::push_from_config(&config),
         live_streams: Default::default(),
     };
 
-    // Trip changes reach open apps through this instance's live streams.
-    tokio::spawn(paddlemate_api::notify::run_listener(
-        db.clone(),
-        state.live_events.clone(),
-    ));
-    tokio::spawn(paddlemate_api::notify::run_pruner(db.clone()));
-    tokio::spawn(paddlemate_api::query::history::run_pruner(db.clone()));
-
     let keycloak_auth_instance = Arc::new(KeycloakAuthInstance::new(
         KeycloakConfig::builder()
-            .server(Url::parse(&keycloak_url).expect("Invalid Keycloak URL"))
-            .realm(keycloak_realm.clone())
+            .server(Url::parse(&keycloak.url).expect("Invalid Keycloak URL"))
+            .realm(keycloak.realm.clone())
             .retry((5, 2))
             .build(),
     ));
 
-    let base_url = dotenvy::var("BASE_URL").unwrap_or_else(|_| "/api/v1".to_string());
-    let limits = RateLimits::from_env(&base_url);
-    {
-        let limits = limits.clone();
-        tokio::spawn(async move {
-            let mut tick = tokio::time::interval(Duration::from_secs(60));
-            loop {
-                tick.tick().await;
-                limits.prune();
-            }
-        });
-    }
+    let base_url = config.base_url.clone();
+    let limits = RateLimits::from_config(&config);
 
     let protected = ApiRouter::new()
         .nest_api_service("/users", users_routes(state.clone()))
@@ -251,15 +218,7 @@ async fn main() {
             api_token_auth_optional,
         ));
 
-    if dotenvy::var("DISABLE_GAUGE_READERS").ok().as_deref() != Some("true") {
-        tracing::info!("Starting gauge readers");
-        paddlemate_api::readers::run_all(db.clone(), state.gauge_wake.clone());
-    } else {
-        tracing::info!("Gauge readers disabled (DISABLE_GAUGE_READERS=true)");
-    }
-
-    paddlemate_api::regions::run_worker(db.clone(), state.region_wake.clone());
-    paddlemate_api::media::run_sweeper(db.clone());
+    paddlemate_api::jobs::spawn_all(&state, &config, &limits);
 
     let api_v1 = ApiRouter::new()
         .merge(protected)
@@ -269,7 +228,7 @@ async fn main() {
                 .instance(keycloak_auth_instance.clone())
                 .passthrough_mode(axum_keycloak_auth::PassthroughMode::Pass)
                 .required_roles(vec![])
-                .expected_audiences(vec![keycloak_audience])
+                .expected_audiences(vec![keycloak.audience.clone()])
                 .persist_raw_claims(false)
                 .build(),
         )
@@ -280,7 +239,7 @@ async fn main() {
 
     // Uploaded photos, served straight off disk. Keys are random and a
     // stored file never changes, so they can be cached hard.
-    let media_dir = paddlemate_api::media::media_dir();
+    let media_dir = config.media_dir.clone();
     std::fs::create_dir_all(&media_dir).ok();
     tracing::info!("Serving media from {}", media_dir.display());
     let media = axum::Router::new()
@@ -295,7 +254,7 @@ async fn main() {
 
     let routed = ApiRouter::new()
         .nest_api_service(&base_url, api_v1)
-        .finish_api_with(&mut api, api_docs)
+        .finish_api_with(&mut api, |api| api_docs(api, keycloak.token_url.clone()))
         .layer(Extension(Arc::new(api)))
         .layer(middleware::from_fn(
             paddlemate_api::layers::rejection::envelope_rejections,
@@ -354,7 +313,7 @@ async fn main() {
         )
         .with_state(state);
 
-    let port = dotenvy::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    let port = config.port.clone();
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}"))
         .await
         .unwrap();

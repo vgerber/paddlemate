@@ -50,21 +50,6 @@ pub enum Delivery {
 }
 
 impl PushService {
-    /// Reads `VAPID_PRIVATE_KEY` (the raw P-256 key, base64url) and
-    /// `VAPID_SUBJECT` (a `mailto:` or `https:` contact for push services).
-    /// `None` when either is missing: this server simply does not push, and
-    /// everything else works as before. The public key browsers need is
-    /// derived from the private one, so the two cannot drift apart.
-    pub fn from_env() -> Option<Self> {
-        let key = std::env::var("VAPID_PRIVATE_KEY")
-            .ok()
-            .filter(|k| !k.is_empty())?;
-        let subject = std::env::var("VAPID_SUBJECT")
-            .ok()
-            .filter(|s| !s.is_empty())?;
-        Self::new(&key, subject)
-    }
-
     /// From a raw P-256 private key (base64url) and a contact subject.
     pub fn new(key: &str, subject: String) -> Option<Self> {
         let signer = match VapidSignatureBuilder::from_base64_no_sub(key.trim(), URL_SAFE_NO_PAD) {

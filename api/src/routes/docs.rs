@@ -9,7 +9,7 @@ use axum::{Extension, Json, http::header, response::IntoResponse};
 use crate::state::AppState;
 
 pub fn docs_routes(state: AppState) -> ApiRouter {
-    let base_url = dotenvy::var("BASE_URL").unwrap_or_else(|_| "/api/v1".to_string());
+    let base_url = crate::config::base_url();
     let openapi_url = format!("{base_url}/docs/openapi.json");
     ApiRouter::new()
         .route(
