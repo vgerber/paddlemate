@@ -1,0 +1,3 @@
+/* The library sheet sits in a layer so every unlayered rule of ours (index.css,
+   emotion) wins whatever order the lazy map chunk's CSS arrives in. */
+@import "maplibre-gl/dist/maplibre-gl.css" layer(maplibre);

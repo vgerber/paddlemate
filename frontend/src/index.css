@@ -34,8 +34,8 @@ body {
 }
 
 /* Map attribution, matched to the popups above. These live here rather than
-   in the MUI theme because maplibre-gl.css is imported after the theme's
-   global styles and would win. */
+   in the MUI theme; the library sheet is layered (components/map/maplibre.css)
+   so unlayered rules win. */
 .maplibregl-map .maplibregl-ctrl-attrib {
   background: color-mix(in srgb, var(--pm-surface) 85%, transparent);
   border-radius: 10px;

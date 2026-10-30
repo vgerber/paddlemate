@@ -1,3 +1,4 @@
+import "@/components/map/maplibre.css";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import CircularProgress from "@mui/material/CircularProgress";

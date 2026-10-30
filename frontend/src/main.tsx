@@ -9,9 +9,6 @@ import { MODE_KEY, useThemeColorMeta } from "./lib/colorMode";
 import { theme, tokenCss } from "./lib/theme";
 import { routeTree } from "./routeTree.gen";
 import "@fontsource-variable/figtree";
-// Loaded up front, not with the lazy map: it must precede index.css and the
-// emotion styles it is overridden by.
-import "maplibre-gl/dist/maplibre-gl.css";
 import "./index.css";
 
 /** Mounted once inside the provider: keeps the browser bar colour in step. */
