@@ -26,6 +26,11 @@ async fn add(app: &Router, who: Who, body: Value) -> common::Reply {
     call(app, Method::POST, "/materials", who, Some(body)).await
 }
 
+/// The seeded catalogue would swamp counts; these tests start from nothing.
+async fn clear_catalogue(pool: &PgPool) {
+    sqlx::query("DELETE FROM materials").execute(pool).await.unwrap();
+}
+
 const MARA: Who = Who::User("mara-1");
 
 #[sqlx::test]
@@ -156,6 +161,7 @@ async fn lists_are_bounded(pool: PgPool) {
 #[sqlx::test]
 async fn search_ranks_and_tolerates_typos_and_ids_keep_order(pool: PgPool) {
     people(&pool).await;
+    clear_catalogue(&pool).await;
     let app = app(pool);
     let mut ids = Vec::new();
     for (brand, model) in [
@@ -189,6 +195,7 @@ async fn search_ranks_and_tolerates_typos_and_ids_keep_order(pool: PgPool) {
 #[sqlx::test]
 async fn the_paddler_filter_keeps_boats_that_state_no_range(pool: PgPool) {
     people(&pool).await;
+    clear_catalogue(&pool).await;
     let app = app(pool);
     let mut heavy = entry("Pyranha", "Heavy");
     heavy["paddler_weight_min_kg"] = json!(90);

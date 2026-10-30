@@ -98,6 +98,7 @@ export const CATEGORY_LABELS: Record<MaterialCategory, string> = {
   canoe: "Canoe",
   packraft: "Packraft",
   sup: "SUP",
+  paddle: "Paddle",
 };
 
 export const CATEGORIES: MaterialCategory[] = [

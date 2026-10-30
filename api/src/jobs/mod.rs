@@ -2,6 +2,8 @@
 
 use std::time::Duration;
 
+pub mod material_images;
+
 use crate::{config::Config, layers::limit::RateLimits, state::AppState};
 
 /// How often idle callers are dropped from the rate limiter.
@@ -33,6 +35,12 @@ pub fn spawn_all(state: &AppState, config: &Config, limits: &RateLimits) {
     } else {
         tracing::info!("Starting gauge readers");
         crate::readers::run_all(db.clone(), state.gauge_wake.clone());
+    }
+
+    if config.disable_material_mirror {
+        tracing::info!("Material image mirror disabled (DISABLE_MATERIAL_MIRROR=true)");
+    } else {
+        material_images::run(db.clone());
     }
 
     crate::regions::run_worker(db.clone(), state.region_wake.clone());

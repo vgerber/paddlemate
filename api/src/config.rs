@@ -52,6 +52,7 @@ pub struct Config {
     pub media_dir: PathBuf,
     pub vapid: Option<VapidSettings>,
     pub disable_gauge_readers: bool,
+    pub disable_material_mirror: bool,
 }
 
 /// One reader for every setting: the process environment, then `.env`.
@@ -173,6 +174,7 @@ impl Config {
             ),
             vapid: parse_vapid(get("VAPID_PRIVATE_KEY"), get("VAPID_SUBJECT")),
             disable_gauge_readers: get("DISABLE_GAUGE_READERS").as_deref() == Some("true"),
+            disable_material_mirror: get("DISABLE_MATERIAL_MIRROR").as_deref() == Some("true"),
         })
     }
 }
@@ -220,6 +222,7 @@ mod tests {
         assert_eq!(config.media_dir, PathBuf::from("media"));
         assert!(config.vapid.is_none());
         assert!(!config.disable_gauge_readers);
+        assert!(!config.disable_material_mirror);
     }
 
     #[test]
