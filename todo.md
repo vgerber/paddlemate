@@ -46,8 +46,6 @@ and below.
 - Search rows: the Region tab's empty heading, the "3 regions here" popup staying open, the "river" pill on every row, "Similar names" in Sections, nested star buttons in rows.
 - Canvas: tab order, focus ring and Escape as Back; a spec that map-less routes load no map chunk.
 - Trips: candidate and day framing on the map (`useBasesScene`), week strip opening on today, invite share sheet, bell events deep-linking to Bases, the Members role chip width.
-- The phone section view's map appears about 0.5 s later since the lazy map.
-- Batch endpoints that would cut requests: waterways by ids, water status for many sections, section plus feature histories, the gauge series id on the section.
 - Deleted things are not shown in the app (the user's call, 2026-10-23); `GET .../deleted-features` stays in the API unused.
 - Frontend code review shoulds: one phone-grid module in `lib/` (the padding is written by hand about 14 times, the trailing slot and row card three ways each), `maplibre-gl.css` in every route's entry CSS.
 

@@ -54,3 +54,32 @@ test("a section's Notes tab loads no history per feature", async ({ page }) => {
   expect(histories.length).toBeLessThanOrEqual(1);
   expect(histories.filter((c) => c.includes("/features/"))).toHaveLength(0);
 });
+
+test("an open river asks for all its sections' levels at once", async ({
+  page,
+}) => {
+  const calls = await apiCalls(page, async () => {
+    await page.goto(`/?waterway=${FIX.waterway}`);
+    await expect(page.locator("canvas.maplibregl-canvas")).toBeVisible();
+  });
+  expect(calls.filter((c) => single.status.test(c))).toHaveLength(0);
+  expect(calls.filter((c) => c.includes("water-status"))).toHaveLength(1);
+  expect(calls.filter((c) => single.river.test(c))).toHaveLength(1);
+  expect(calls.length).toBeLessThanOrEqual(4);
+});
+
+test("the search list loads its rivers and levels in one request each", async ({
+  page,
+}) => {
+  const calls = await apiCalls(page, async () => {
+    await page.goto("/?panel=1&q=Test");
+    await expect(
+      page.getByTestId("search-section-row").filter({ visible: true }).first(),
+    ).toBeVisible();
+  });
+  expect(calls.filter((c) => single.river.test(c))).toHaveLength(0);
+  expect(calls.filter((c) => single.status.test(c))).toHaveLength(0);
+  expect(calls.filter((c) => c.includes("water-status"))).toHaveLength(1);
+  expect(calls.filter((c) => c.includes("waterways?ids="))).toHaveLength(1);
+  expect(calls.length).toBeLessThanOrEqual(3);
+});
