@@ -26,7 +26,7 @@ use crate::{
         },
         path_params::{GaugePath, GaugeSeriesPath},
     },
-    query::gauges,
+    query::{gauges, is_unique_violation},
     readers,
     state::AppState,
 };
@@ -188,13 +188,21 @@ doc_fn!(get_gauge_docs, op =>
         .tag("Gauges")
 );
 
+/// True for a foreign key violation (23503), e.g. a series for a missing gauge.
+fn is_fk_violation(err: &sqlx::Error) -> bool {
+    matches!(err, sqlx::Error::Database(db) if db.code().as_deref() == Some("23503"))
+}
+
 pub async fn list_readings(
     State(app): State<AppState>,
-    Path(GaugeSeriesPath { series_id, .. }): Path<GaugeSeriesPath>,
+    Path(GaugeSeriesPath {
+        gauge_id,
+        series_id,
+    }): Path<GaugeSeriesPath>,
     Query(q): Query<ReadingsQuery>,
 ) -> impl IntoApiResponse {
     let limit = q.limit.unwrap_or(1000).clamp(1, 1000);
-    match gauges::fetch_readings(&app.pg_pool, series_id, q.from, q.to, limit).await {
+    match gauges::fetch_readings(&app.pg_pool, gauge_id, series_id, q.from, q.to, limit).await {
         Ok(list) => Json(list).into_response(),
         Err(err) => ApiError::from_db(
             &format!("Error fetching readings for series {series_id}"),
@@ -214,9 +222,12 @@ doc_fn!(list_readings_docs, op =>
 
 pub async fn get_latest_reading(
     State(app): State<AppState>,
-    Path(GaugeSeriesPath { series_id, .. }): Path<GaugeSeriesPath>,
+    Path(GaugeSeriesPath {
+        gauge_id,
+        series_id,
+    }): Path<GaugeSeriesPath>,
 ) -> impl IntoApiResponse {
-    match gauges::fetch_latest_reading(&app.pg_pool, series_id).await {
+    match gauges::fetch_gauge_latest_reading(&app.pg_pool, gauge_id, series_id).await {
         Ok(Some(r)) => Json(r).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
         Err(err) => ApiError::from_db(
@@ -267,6 +278,11 @@ pub async fn create_gauge(
     .await
     {
         Ok(g) => (StatusCode::CREATED, Json(g)).into_response(),
+        Err(err) if is_unique_violation(&err) => {
+            ApiError::conflict("A gauge with this provider and source_id already exists")
+                .with_target("source_id")
+                .into_response()
+        }
         Err(err) => ApiError::from_db("Error creating gauge", err).into_response(),
     }
 }
@@ -312,6 +328,11 @@ pub async fn update_gauge(
     {
         Ok(Some(g)) => Json(g).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
+        Err(err) if is_unique_violation(&err) => {
+            ApiError::conflict("A gauge with this provider and source_id already exists")
+                .with_target("source_id")
+                .into_response()
+        }
         Err(err) => {
             ApiError::from_db(&format!("Error updating gauge {gauge_id}"), err).into_response()
         }
@@ -391,6 +412,12 @@ pub async fn create_series(
     .await
     {
         Ok(s) => (StatusCode::CREATED, Json(s)).into_response(),
+        Err(err) if is_unique_violation(&err) => {
+            ApiError::conflict("The gauge already has a series of this measurement type")
+                .with_target("measurement_type")
+                .into_response()
+        }
+        Err(err) if is_fk_violation(&err) => ApiError::not_found("Gauge not found").into_response(),
         Err(err) => ApiError::from_db(&format!("Error creating series for gauge {gauge_id}"), err)
             .into_response(),
     }
@@ -409,7 +436,10 @@ doc_fn!(create_series_docs, op =>
 pub async fn update_series(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Path(GaugeSeriesPath { series_id, .. }): Path<GaugeSeriesPath>,
+    Path(GaugeSeriesPath {
+        gauge_id,
+        series_id,
+    }): Path<GaugeSeriesPath>,
     Json(body): Json<UpdateSeriesRequest>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
@@ -427,6 +457,7 @@ pub async fn update_series(
 
     match gauges::update_series(
         &app.pg_pool,
+        gauge_id,
         series_id,
         &mt,
         &body.unit,
@@ -456,7 +487,10 @@ doc_fn!(update_series_docs, op =>
 pub async fn delete_series(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Path(GaugeSeriesPath { series_id, .. }): Path<GaugeSeriesPath>,
+    Path(GaugeSeriesPath {
+        gauge_id,
+        series_id,
+    }): Path<GaugeSeriesPath>,
 ) -> impl IntoApiResponse {
     let Extension(token) = match auth {
         Some(a) => a,
@@ -466,7 +500,7 @@ pub async fn delete_series(
         return ApiError::forbidden("Not permitted").into_response();
     }
 
-    match gauges::delete_series(&app.pg_pool, series_id).await {
+    match gauges::delete_series(&app.pg_pool, gauge_id, series_id).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => {
