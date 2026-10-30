@@ -20,7 +20,7 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::page::{PaginatedResponse, page_bounds, page_of},
-    query::follows as follows_query,
+    query::users::follows as follows_query,
     routes::geo::params::parse_search_name,
     state::AppState,
 };

@@ -33,7 +33,7 @@ use crate::{
         trip::TripId,
     },
     notify::{StreamSlot, push},
-    query::{notifications, push_subscriptions},
+    query::users::{notifications, push_subscriptions},
     state::AppState,
 };
 

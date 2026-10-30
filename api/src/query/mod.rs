@@ -1,15 +1,10 @@
 pub mod descents;
-pub mod favorites;
-pub mod follows;
 pub mod gauges;
 pub mod groups;
 pub mod history;
 pub mod materials;
-pub mod notifications;
 pub mod proposals;
-pub mod push_subscriptions;
 pub mod regions;
-pub mod tokens;
 pub mod trips;
 pub mod users;
 pub mod util;

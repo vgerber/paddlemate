@@ -17,7 +17,7 @@ use axum::{
 use moka::future::Cache;
 use paddlemate_api::{
     layers::auth::{api_token_auth, api_token_auth_optional},
-    query::tokens::hash_token,
+    query::users::tokens::hash_token,
     routes::{descents::descents_routes, trips::trips_routes, users::users_routes},
     state::{AppState, KeycloakState},
 };

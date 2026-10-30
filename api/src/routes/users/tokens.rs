@@ -14,7 +14,7 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::api_token::{ApiToken, ApiTokenId},
-    query::tokens::generate_token_pair,
+    query::users::tokens::generate_token_pair,
     state::AppState,
 };
 

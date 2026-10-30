@@ -14,8 +14,8 @@ use chrono::Utc;
 
 use crate::{
     query::{
-        tokens::{API_TOKEN_PREFIX, hash_token},
         users,
+        users::tokens::{API_TOKEN_PREFIX, hash_token},
     },
     state::AppState,
 };

@@ -1,3 +1,9 @@
+pub mod favorites;
+pub mod follows;
+pub mod notifications;
+pub mod push_subscriptions;
+pub mod tokens;
+
 use axum::http::StatusCode;
 
 use crate::state::{AdminToken, AppState};
