@@ -5,7 +5,7 @@ deploy/backend/.env
 *.pyc
 enrich*.jsonl
 
-deploy/
+deploy/deploy.env
 .claude/*
 !.claude/skills
 # Uploaded media in local development (MEDIA_DIR)

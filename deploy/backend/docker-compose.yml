@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgis/postgis:18-3.6-alpine
+    container_name: paddlemate-db
+    restart: unless-stopped
+    # Keep the NAS HDDs quiet: don't fsync every COMMIT (a crash loses <1s of
+    # gauge readings, which the next fetch cycle re-fetches anyway) and stretch
+    # checkpoints so the append-heavy reading stream emits far fewer full-page
+    # images into the WAL.
+    command:
+      - postgres
+      - -c
+      - synchronous_commit=off
+      - -c
+      - checkpoint_timeout=30min
+      - -c
+      - max_wal_size=4GB
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      POSTGRES_DB: paddlemate
+    volumes:
+      - ./data/postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d paddlemate"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - backend
+
+  api:
+    image: paddlemate-api
+    container_name: paddlemate-api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@db:5432/paddlemate
+      PORT: 3000
+      BASE_URL: /api/v1
+      MEDIA_DIR: /media
+    # Uploaded photos. Outside the container, or a redeploy would take the
+    # gallery with it - and note pg_dump alone is no longer a full backup.
+    volumes:
+      - ./data/media:/media
+    ports:
+      - "5566:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+
+networks:
+  backend:
+    name: paddlemate-backend

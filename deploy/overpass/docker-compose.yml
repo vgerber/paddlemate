@@ -1,0 +1,52 @@
+# Self-hosted Overpass instance with a rivers-only worldwide dataset
+# (waterway=river/stream, admin boundaries, valleys, mountain-area regions),
+# so paddlemate's OSM lookups never hit public Overpass rate limits.
+#
+# Lives at <NAS_ROOT>/overpass on the NAS, deliberately
+# separate from the paddlemate-backend compose: deploys restart that stack,
+# and a restart during the initial import would corrupt it.
+#
+# Setup (one-time, see setup.sh):
+#   1. ./download.sh start          - fetch the planet file (resumable)
+#   2. ./setup.sh                   - filter to rivers + start the import
+# The first start imports the filtered file (hours); after that the
+# container serves queries at port 80 (in-network) / 5569 (host) and
+# restarts instantly. Refresh the data by re-running download + setup with
+# the db/ directory emptied.
+services:
+  overpass:
+    image: wiktorn/overpass-api
+    container_name: paddlemate-overpass
+    restart: unless-stopped
+    environment:
+      OVERPASS_MODE: init
+      OVERPASS_PLANET_URL: file:///planet/rivers-planet.osm.bz2
+      # Static dataset - no minutely diffs; refresh by re-import.
+      OVERPASS_DIFF_URL: ""
+      OVERPASS_META: "no"
+      # Areas power the is_in() region/country lookups.
+      OVERPASS_USE_AREAS: "true"
+      OVERPASS_RULES_LOAD: "10"
+      # Keep the dispatcher's shared memory NAS-sized.
+      OVERPASS_SPACE: "4000000000"
+      # Small import flush batches: the default 16M-object buffer got the
+      # first import killed on the 8 GB NAS ~90 min in (SIGKILL, host OOM).
+      OVERPASS_FLUSH_SIZE: "4"
+      OVERPASS_STOP_AFTER_INIT: "false"
+    # Serving is mmap-backed and page-cache heavy rather than anon-RAM
+    # heavy, so a cap well under the 8 GB host keeps a runaway query from
+    # pushing the rest of the NAS into swap. Only safe once the import has
+    # finished - the import itself peaks above this.
+    mem_limit: 4g
+    volumes:
+      - ./db:/db
+      - ./planet:/planet:ro
+    ports:
+      - "5569:80"
+    networks:
+      - backend
+
+networks:
+  backend:
+    external: true
+    name: paddlemate-backend
