@@ -136,7 +136,8 @@ pub async fn sweep_orphans(pool: &sqlx::PgPool) -> anyhow::Result<usize> {
     const MIN_ORPHAN_AGE: std::time::Duration = std::time::Duration::from_secs(15 * 60);
 
     let known: std::collections::HashSet<String> = sqlx::query_scalar::<_, String>(
-        "SELECT storage_key FROM media WHERE storage_key IS NOT NULL",
+        "SELECT storage_key FROM media WHERE storage_key IS NOT NULL \
+         UNION SELECT file FROM material_images WHERE file IS NOT NULL",
     )
     .fetch_all(pool)
     .await?

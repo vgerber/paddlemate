@@ -1,4 +1,6 @@
 use aide::axum::IntoApiResponse;
+
+mod images;
 use axum::{
     Extension, Json,
     extract::{Path, Query, State},
@@ -293,7 +295,7 @@ doc_fn!(delete_material_docs, op =>
 );
 
 pub fn materials_routes(state: AppState) -> aide::axum::ApiRouter {
-    use aide::axum::routing::get_with;
+    use aide::axum::routing::{delete_with, get_with};
 
     aide::axum::ApiRouter::new()
         .api_route(
@@ -302,6 +304,14 @@ pub fn materials_routes(state: AppState) -> aide::axum::ApiRouter {
                 .post_with(create_material, create_material_docs),
         )
         .api_route("/brands", get_with(list_brands, list_brands_docs))
+        .api_route(
+            "/images",
+            delete_with(images::remove_brand_images, images::remove_brand_images_docs),
+        )
+        .api_route(
+            "/{material_id}/images/{image_id}",
+            delete_with(images::remove_image, images::remove_image_docs),
+        )
         .api_route(
             "/{material_id}",
             get_with(get_material, get_material_docs)

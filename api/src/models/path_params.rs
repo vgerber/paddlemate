@@ -87,6 +87,12 @@ pub struct MaterialPath {
 }
 
 #[derive(Deserialize, JsonSchema)]
+pub struct MaterialImagePath {
+    pub material_id: MaterialId,
+    pub image_id: i64,
+}
+
+#[derive(Deserialize, JsonSchema)]
 pub struct DescentPath {
     pub descent_id: i64,
 }

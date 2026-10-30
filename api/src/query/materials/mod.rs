@@ -1,5 +1,7 @@
 use sqlx::{PgPool, QueryBuilder, Row, postgres::PgRow};
 
+pub mod images;
+
 use super::FUZZY_MIN_CHARS;
 use super::util::escape_like;
 use crate::models::material::{
@@ -19,7 +21,10 @@ pub const MAX_COMPARE_IDS: usize = 8;
 const MATERIAL_COLS: &str = "m.id, m.category, m.brand, m.model, m.variant, m.discipline, \
      m.construction, m.description, m.year_from, m.year_to, m.length_cm, m.width_cm, \
      m.height_cm, m.volume_l, m.weight_kg, m.cockpit_length_cm, m.cockpit_width_cm, \
-     m.paddler_weight_min_kg, m.paddler_weight_max_kg, m.product_url, m.created_by, \
+     m.paddler_weight_min_kg, m.paddler_weight_max_kg, m.product_url, m.colors, \
+     m.year_approximate, m.sources, m.notes, m.blade_area_cm2, m.blade_length_cm, \
+     m.blade_width_cm, m.length_min_cm, m.length_max_cm, m.lengths_cm, m.pieces, m.shaft, \
+     m.shaft_material, m.blade_material, m.feather_deg, m.shaft_diameter, m.created_by, \
      m.created_at, m.updated_at, \
      cu.username AS created_by_username, uu.username AS updated_by_username";
 
@@ -53,6 +58,23 @@ fn row_to_material(row: &PgRow) -> Result<Material, sqlx::Error> {
         paddler_weight_min_kg: row.try_get("paddler_weight_min_kg")?,
         paddler_weight_max_kg: row.try_get("paddler_weight_max_kg")?,
         product_url: row.try_get("product_url")?,
+        colors: row.try_get("colors")?,
+        year_approximate: row.try_get("year_approximate")?,
+        sources: row.try_get("sources")?,
+        notes: row.try_get("notes")?,
+        blade_area_cm2: row.try_get("blade_area_cm2")?,
+        blade_length_cm: row.try_get("blade_length_cm")?,
+        blade_width_cm: row.try_get("blade_width_cm")?,
+        length_min_cm: row.try_get("length_min_cm")?,
+        length_max_cm: row.try_get("length_max_cm")?,
+        lengths_cm: row.try_get("lengths_cm")?,
+        pieces: row.try_get("pieces")?,
+        shaft: row.try_get("shaft")?,
+        shaft_material: row.try_get("shaft_material")?,
+        blade_material: row.try_get("blade_material")?,
+        feather_deg: row.try_get("feather_deg")?,
+        shaft_diameter: row.try_get("shaft_diameter")?,
+        images: Vec::new(),
         created_by: row.try_get("created_by")?,
         created_by_username: row.try_get("created_by_username")?,
         updated_by_username: row.try_get("updated_by_username")?,
@@ -219,17 +241,22 @@ pub async fn search(
         .first()
         .and_then(|row| row.try_get::<i64, _>("total_count").ok())
         .unwrap_or(0);
-    let items = rows
+    let mut items = rows
         .iter()
         .map(row_to_material)
         .collect::<Result<Vec<_>, _>>()?;
+    images::attach(pool, &mut items).await?;
     Ok((items, total))
 }
 
 pub async fn fetch(pool: &PgPool, id: MaterialId) -> Result<Option<Material>, sqlx::Error> {
     let sql = format!("SELECT {MATERIAL_COLS}{MATERIAL_FROM} WHERE m.id = $1");
     let row = sqlx::query(&sql).bind(id).fetch_optional(pool).await?;
-    row.as_ref().map(row_to_material).transpose()
+    let Some(mut material) = row.as_ref().map(row_to_material).transpose()? else {
+        return Ok(None);
+    };
+    images::attach(pool, std::slice::from_mut(&mut material)).await?;
+    Ok(Some(material))
 }
 
 /// Several entries at once, returned in the order the ids were given - the
@@ -240,10 +267,11 @@ pub async fn fetch_many(pool: &PgPool, ids: &[MaterialId]) -> Result<Vec<Materia
     }
     let sql = format!("SELECT {MATERIAL_COLS}{MATERIAL_FROM} WHERE m.id = ANY($1)");
     let rows = sqlx::query(&sql).bind(ids).fetch_all(pool).await?;
-    let found = rows
+    let mut found = rows
         .iter()
         .map(row_to_material)
         .collect::<Result<Vec<_>, _>>()?;
+    images::attach(pool, &mut found).await?;
     Ok(ids
         .iter()
         .filter_map(|id| found.iter().find(|m| m.id == *id).cloned())
@@ -303,6 +331,21 @@ fn bind_body<'a>(
         .bind(body.paddler_weight_min_kg)
         .bind(body.paddler_weight_max_kg)
         .bind(body.product_url.as_deref())
+        .bind(body.colors.as_slice())
+        .bind(body.year_approximate)
+        .bind(body.notes.as_deref())
+        .bind(body.blade_area_cm2)
+        .bind(body.blade_length_cm)
+        .bind(body.blade_width_cm)
+        .bind(body.length_min_cm)
+        .bind(body.length_max_cm)
+        .bind(body.lengths_cm.as_deref())
+        .bind(body.pieces)
+        .bind(body.shaft)
+        .bind(body.shaft_material)
+        .bind(body.blade_material.as_deref())
+        .bind(body.feather_deg.as_deref())
+        .bind(body.shaft_diameter.as_deref())
 }
 
 /// Why an entry could not be added.
@@ -347,9 +390,12 @@ pub async fn create(
         "INSERT INTO materials (category, brand, model, variant, discipline, construction, \
          description, year_from, year_to, length_cm, width_cm, height_cm, volume_l, weight_kg, \
          cockpit_length_cm, cockpit_width_cm, paddler_weight_min_kg, paddler_weight_max_kg, \
-         product_url, created_by) \
+         product_url, colors, year_approximate, notes, blade_area_cm2, blade_length_cm, \
+         blade_width_cm, length_min_cm, length_max_cm, lengths_cm, pieces, shaft, \
+         shaft_material, blade_material, feather_deg, shaft_diameter, created_by) \
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, \
-         $18, $19, $20) RETURNING id",
+         $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, \
+         $35) RETURNING id",
     );
     let row = bind_body(query, body)
         .bind(user_id)
@@ -371,8 +417,12 @@ pub async fn update(
          discipline = $5, construction = $6, description = $7, year_from = $8, year_to = $9, \
          length_cm = $10, width_cm = $11, height_cm = $12, volume_l = $13, weight_kg = $14, \
          cockpit_length_cm = $15, cockpit_width_cm = $16, paddler_weight_min_kg = $17, \
-         paddler_weight_max_kg = $18, product_url = $19, updated_by = $20, updated_at = NOW() \
-         WHERE id = $21",
+         paddler_weight_max_kg = $18, product_url = $19, colors = $20, year_approximate = $21, \
+         notes = $22, blade_area_cm2 = $23, blade_length_cm = $24, blade_width_cm = $25, \
+         length_min_cm = $26, length_max_cm = $27, lengths_cm = $28, pieces = $29, shaft = $30, \
+         shaft_material = $31, blade_material = $32, feather_deg = $33, shaft_diameter = $34, \
+         updated_by = $35, updated_at = NOW() \
+         WHERE id = $36",
     );
     let result = bind_body(query, body)
         .bind(user_id)

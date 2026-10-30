@@ -11,6 +11,11 @@ pub const MAX_DESCRIPTION_CHARS: usize = 4000;
 pub const MAX_URL_CHARS: usize = 500;
 pub const MIN_YEAR: i32 = 1900;
 pub const MAX_YEAR: i32 = 2100;
+pub const MAX_COLORS: usize = 40;
+pub const MAX_COLOR_CHARS: usize = 80;
+pub const MAX_NOTES_CHARS: usize = 4000;
+pub const MAX_LENGTHS: usize = 20;
+pub const MAX_FEATHERS: usize = 12;
 
 /// Longest search text or brand filter the list takes.
 pub const MAX_QUERY_CHARS: usize = 100;
@@ -26,6 +31,7 @@ pub enum MaterialCategory {
     Canoe,
     Packraft,
     Sup,
+    Paddle,
 }
 
 /// What the boat is built for. This is the peer group of a comparison - two
@@ -44,6 +50,9 @@ pub enum MaterialDiscipline {
     Sea,
     Expedition,
     Recreational,
+    Crossover,
+    Freestyle,
+    Other,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, sqlx::Type)]
@@ -55,6 +64,41 @@ pub enum MaterialConstruction {
     Inflatable,
     Folding,
     Wood,
+}
+
+/// How a paddle's shaft is shaped.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, sqlx::Type)]
+#[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "paddle_shaft", rename_all = "snake_case")]
+pub enum PaddleShaft {
+    Straight,
+    Bent,
+    Cranked,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, sqlx::Type)]
+#[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "paddle_shaft_material", rename_all = "snake_case")]
+pub enum PaddleShaftMaterial {
+    Carbon,
+    Fiberglass,
+    Aluminium,
+    Wood,
+    Plastic,
+    Hybrid,
+}
+
+/// A mirrored product photo. Only fetched images are ever returned.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct MaterialImage {
+    pub id: i64,
+    /// The display copy, served from this API's media path.
+    pub url: String,
+    pub thumb_url: String,
+    /// The page the photo came from, for the credit link.
+    pub page_url: String,
+    /// Whose photo it is (the maker).
+    pub credit: String,
 }
 
 /// One entry in the material wiki. The measurements are flat and each names
@@ -102,6 +146,43 @@ pub struct Material {
     pub paddler_weight_max_kg: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub product_url: Option<String>,
+    /// Colourways as the maker names them.
+    pub colors: Vec<String>,
+    /// The years rest on a weak source: show "about <year>".
+    pub year_approximate: bool,
+    /// Field name to the page its value came from; imported entries only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sources: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub blade_area_cm2: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub blade_length_cm: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub blade_width_cm: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub length_min_cm: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub length_max_cm: Option<f64>,
+    /// Sizes offered, for a paddle sold in fixed lengths.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lengths_cm: Option<Vec<f64>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pieces: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shaft: Option<PaddleShaft>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shaft_material: Option<PaddleShaftMaterial>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub blade_material: Option<String>,
+    /// Feather angles offered, in degrees.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub feather_deg: Option<Vec<i32>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shaft_diameter: Option<String>,
+    /// Mirrored photos, fetched ones only.
+    pub images: Vec<MaterialImage>,
     pub created_by: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub created_by_username: Option<String>,
@@ -141,6 +222,23 @@ pub struct MaterialBody {
     pub paddler_weight_min_kg: Option<f64>,
     pub paddler_weight_max_kg: Option<f64>,
     pub product_url: Option<String>,
+    #[serde(default)]
+    pub colors: Vec<String>,
+    #[serde(default)]
+    pub year_approximate: bool,
+    pub notes: Option<String>,
+    pub blade_area_cm2: Option<f64>,
+    pub blade_length_cm: Option<f64>,
+    pub blade_width_cm: Option<f64>,
+    pub length_min_cm: Option<f64>,
+    pub length_max_cm: Option<f64>,
+    pub lengths_cm: Option<Vec<f64>>,
+    pub pieces: Option<i32>,
+    pub shaft: Option<PaddleShaft>,
+    pub shaft_material: Option<PaddleShaftMaterial>,
+    pub blade_material: Option<String>,
+    pub feather_deg: Option<Vec<i32>>,
+    pub shaft_diameter: Option<String>,
 }
 
 /// How a material list is ordered. Name is the default; the measurement sorts
@@ -203,6 +301,24 @@ impl MaterialBody {
         clean(&mut self.variant);
         clean(&mut self.description);
         clean(&mut self.product_url);
+        clean(&mut self.notes);
+        clean(&mut self.blade_material);
+        clean(&mut self.shaft_diameter);
+        let mut colors: Vec<String> = Vec::new();
+        for color in self.colors.drain(..) {
+            let color = color.trim().to_owned();
+            if !color.is_empty() && !colors.contains(&color) {
+                colors.push(color);
+            }
+        }
+        self.colors = colors;
+        // An empty list says nothing; store it as absent.
+        if self.lengths_cm.as_ref().is_some_and(Vec::is_empty) {
+            self.lengths_cm = None;
+        }
+        if self.feather_deg.as_ref().is_some_and(Vec::is_empty) {
+            self.feather_deg = None;
+        }
     }
 
     /// The reason the body cannot be stored, as a field name and a message,
@@ -258,12 +374,94 @@ impl MaterialBody {
                 ));
             }
         }
+        if let Some(err) = self.extras_error() {
+            return Some(err);
+        }
         if let Some(url) = self.product_url.as_deref()
             && !(url.starts_with("http://") || url.starts_with("https://"))
         {
             return Some((
                 "product_url",
                 "Link must start with http:// or https://".into(),
+            ));
+        }
+        None
+    }
+
+    /// The rules for the colours, notes and paddle fields. Paddle fields on
+    /// anything but a paddle are refused, so a boat never carries blade data.
+    fn extras_error(&self) -> Option<(&'static str, String)> {
+        let texts: [(&'static str, Option<&str>, usize); 3] = [
+            ("notes", self.notes.as_deref(), MAX_NOTES_CHARS),
+            ("blade_material", self.blade_material.as_deref(), MAX_NAME_CHARS),
+            ("shaft_diameter", self.shaft_diameter.as_deref(), 40),
+        ];
+        for (field, value, max) in texts {
+            if value.is_some_and(|v| v.chars().count() > max) {
+                return Some((field, format!("{field} is longer than {max} characters")));
+            }
+        }
+        if self.colors.len() > MAX_COLORS
+            || self.colors.iter().any(|c| c.chars().count() > MAX_COLOR_CHARS)
+        {
+            return Some((
+                "colors",
+                format!("At most {MAX_COLORS} colors of {MAX_COLOR_CHARS} characters each"),
+            ));
+        }
+        let has_paddle_data = self.blade_area_cm2.is_some()
+            || self.blade_length_cm.is_some()
+            || self.blade_width_cm.is_some()
+            || self.length_min_cm.is_some()
+            || self.length_max_cm.is_some()
+            || self.lengths_cm.is_some()
+            || self.pieces.is_some()
+            || self.shaft.is_some()
+            || self.shaft_material.is_some()
+            || self.blade_material.is_some()
+            || self.feather_deg.is_some()
+            || self.shaft_diameter.is_some();
+        if has_paddle_data && self.category != MaterialCategory::Paddle {
+            return Some(("category", "Blade and shaft fields belong to paddles".into()));
+        }
+        let sizes: [(&'static str, Option<f64>, f64); 5] = [
+            ("blade_area_cm2", self.blade_area_cm2, 2000.0),
+            ("blade_length_cm", self.blade_length_cm, 200.0),
+            ("blade_width_cm", self.blade_width_cm, 200.0),
+            ("length_min_cm", self.length_min_cm, 400.0),
+            ("length_max_cm", self.length_max_cm, 400.0),
+        ];
+        for (field, value, ceiling) in sizes {
+            if value.is_some_and(|v| !v.is_finite() || v <= 0.0 || v > ceiling) {
+                return Some((
+                    field,
+                    format!("{field} must be greater than zero and at most {ceiling}"),
+                ));
+            }
+        }
+        if let (Some(min), Some(max)) = (self.length_min_cm, self.length_max_cm)
+            && max < min
+        {
+            return Some(("length_max_cm", "Longest length is below the shortest".into()));
+        }
+        if self.pieces.is_some_and(|p| !(1..=8).contains(&p)) {
+            return Some(("pieces", "pieces must be 1 to 8".into()));
+        }
+        if let Some(lengths) = &self.lengths_cm
+            && (lengths.len() > MAX_LENGTHS
+                || lengths.iter().any(|v| !v.is_finite() || *v <= 0.0 || *v > 400.0))
+        {
+            return Some((
+                "lengths_cm",
+                format!("At most {MAX_LENGTHS} lengths, each above zero and at most 400"),
+            ));
+        }
+        if let Some(feather) = &self.feather_deg
+            && (feather.len() > MAX_FEATHERS || feather.iter().any(|v| !(0..=360).contains(v)))
+        {
+            return Some((
+                "feather_deg",
+                format!("At most {MAX_FEATHERS} angles, each 0 to 360"),
             ));
         }
         None
@@ -310,6 +508,21 @@ mod tests {
             paddler_weight_min_kg: None,
             paddler_weight_max_kg: None,
             product_url: None,
+            colors: vec![],
+            year_approximate: false,
+            notes: None,
+            blade_area_cm2: None,
+            blade_length_cm: None,
+            blade_width_cm: None,
+            length_min_cm: None,
+            length_max_cm: None,
+            lengths_cm: None,
+            pieces: None,
+            shaft: None,
+            shaft_material: None,
+            blade_material: None,
+            feather_deg: None,
+            shaft_diameter: None,
         }
     }
 
@@ -382,6 +595,50 @@ mod tests {
         let mut year = body();
         year.year_from = Some(1066);
         assert_eq!(year.validation_error().map(|(f, _)| f), Some("year_from"));
+    }
+
+    #[test]
+    fn paddle_fields_belong_to_paddles() {
+        let mut b = body();
+        b.blade_area_cm2 = Some(700.0);
+        assert_eq!(b.validation_error().map(|(f, _)| f), Some("category"));
+        b.category = MaterialCategory::Paddle;
+        assert!(b.validation_error().is_none());
+    }
+
+    #[test]
+    fn extras_are_bounded() {
+        let mut paddle = body();
+        paddle.category = MaterialCategory::Paddle;
+        type Apply = Box<dyn Fn(&mut MaterialBody)>;
+        let cases: Vec<(&str, Apply)> = vec![
+            ("colors", Box::new(|b| b.colors = vec!["x".into(); MAX_COLORS + 1])),
+            ("notes", Box::new(|b| b.notes = Some("x".repeat(MAX_NOTES_CHARS + 1)))),
+            ("blade_area_cm2", Box::new(|b| b.blade_area_cm2 = Some(1e6))),
+            ("pieces", Box::new(|b| b.pieces = Some(0))),
+            ("lengths_cm", Box::new(|b| b.lengths_cm = Some(vec![f64::NAN]))),
+            ("feather_deg", Box::new(|b| b.feather_deg = Some(vec![400]))),
+            (
+                "length_max_cm",
+                Box::new(|b| {
+                    b.length_min_cm = Some(200.0);
+                    b.length_max_cm = Some(190.0);
+                }),
+            ),
+        ];
+        for (field, apply) in cases {
+            let mut b = paddle.clone();
+            apply(&mut b);
+            assert_eq!(b.validation_error().map(|(f, _)| f), Some(field), "{field}");
+        }
+    }
+
+    #[test]
+    fn normalizing_dedupes_colors() {
+        let mut b = body();
+        b.colors = vec![" Red ".into(), "Red".into(), " ".into(), "Blue".into()];
+        b.normalize();
+        assert_eq!(b.colors, vec!["Red", "Blue"]);
     }
 
     #[test]
