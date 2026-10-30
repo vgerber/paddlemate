@@ -1,11 +1,8 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
-import {
-  desktopFlatRow,
-  openRowSx,
-  phoneRowPad,
-} from "@/components/canvas/flatRow";
+import { desktopFlatRow, openRowSx } from "@/components/canvas/flatRow";
+import { phoneRowPad } from "@/components/phone/phoneGrid";
 import type { Proposal } from "@/lib/api";
 import { ThumbDownIcon, ThumbUpIcon } from "@/lib/icons";
 import { proposalKind, proposalTitle } from "@/lib/proposals";

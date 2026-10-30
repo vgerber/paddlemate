@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { type ReactNode, type RefObject, useEffect, useState } from "react";
 import LanguagePicker from "@/components/LanguagePicker";
+import { lineInset } from "@/components/phone/phoneGrid";
 import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import { useGaugePicker } from "@/components/waterway/useGaugePicker";
 import type {
@@ -15,7 +16,6 @@ import { apiErrorMessage } from "@/lib/api/client";
 import { useWaterwayGauges } from "@/lib/hooks/useGauges";
 import { useCreateFeature, useUpdateFeature } from "@/lib/hooks/useSections";
 import { preferredLanguage } from "@/lib/prefs/languagePreference";
-import { theme } from "@/lib/theme/theme";
 import FormSection from "./FormSection";
 import GaugeRangePicker from "./GaugeRangePicker";
 import { type GeometryPicking, minVerticesFor } from "./geometryPicking";
@@ -23,8 +23,6 @@ import ProposalNoteField from "./ProposalNoteField";
 import { proposalNoteValue } from "./proposalNote";
 import SuggestFeatureGeometry from "./SuggestFeatureGeometry";
 import SuggestFeatureTypeGrid from "./SuggestFeatureTypeGrid";
-
-const { tokens } = theme;
 
 /** A feature built by the form without being submitted to the API - used by
  * the suggest-section wizard, where features travel inside the section
@@ -253,7 +251,7 @@ export default function SuggestFeatureForm({
   return (
     <Box
       sx={{
-        px: { xs: `${tokens.phone.line}px`, md: 1.5 },
+        px: lineInset(1.5),
         pt: 1.5,
         pb: 1.5,
         display: "flex",

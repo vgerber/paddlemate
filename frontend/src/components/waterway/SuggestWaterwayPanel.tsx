@@ -11,6 +11,7 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useState } from "react";
 import type { GaugePin } from "@/components/map/GaugeMarkers";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
+import { grid, lineInset } from "@/components/phone/phoneGrid";
 import SignInGate from "@/components/states/SignInGate";
 import FormSection from "@/components/waterway/FormSection";
 import ProposalNoteField from "@/components/waterway/ProposalNoteField";
@@ -246,7 +247,7 @@ export default function SuggestWaterwayPanel({
         sx={{
           flex: 1,
           overflowY: "auto",
-          px: { xs: `${tokens.phone.line}px`, md: 1.5 },
+          px: lineInset(1.5),
           pt: 1.5,
           pb: 1.5,
           display: "flex",
@@ -353,7 +354,7 @@ export default function SuggestWaterwayPanel({
                           title="Show on map"
                           sx={{
                             minHeight: tokens.touch.min,
-                            px: `${tokens.phone.inner}px`,
+                            px: `${grid.inner}px`,
                             borderTop: "1px solid",
                             borderColor: tokens.outlineVariant,
                           }}

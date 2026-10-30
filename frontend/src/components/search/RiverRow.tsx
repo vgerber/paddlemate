@@ -1,9 +1,7 @@
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { listRowSx } from "@/components/canvas/flatRow";
+import RowCard from "@/components/phone/RowCard";
 
 /** One river row - shared by search results and the recent-rivers list so
  * both render identically by construction.
@@ -30,43 +28,37 @@ export default function RiverRow({
 }) {
   const where = place?.length ? place.join(" · ") : undefined;
   return (
-    <ListItem disablePadding>
-      <ListItemButton
-        data-testid={testId}
-        onClick={onClick}
-        sx={{ ...listRowSx, gap: 1 }}
-      >
-        <ListItemText
-          primary={name}
-          secondary={
-            where || secondary ? (
-              <>
-                {where && (
-                  <Typography variant="caption" color="textSecondary" noWrap>
-                    {where}
-                  </Typography>
-                )}
-                {secondary && (
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    noWrap
-                    sx={{ display: "block" }}
-                  >
-                    {secondary}
-                  </Typography>
-                )}
-              </>
-            ) : undefined
-          }
-          sx={{ my: 0, minWidth: 0 }}
-          slotProps={{
-            primary: { variant: "body2", sx: { fontWeight: 600 } },
-            secondary: { component: "span", sx: { display: "block" } },
-          }}
-        />
-        {trailing}
-      </ListItemButton>
-    </ListItem>
+    <RowCard testId={testId} onClick={onClick}>
+      <ListItemText
+        primary={name}
+        secondary={
+          where || secondary ? (
+            <>
+              {where && (
+                <Typography variant="caption" color="textSecondary" noWrap>
+                  {where}
+                </Typography>
+              )}
+              {secondary && (
+                <Typography
+                  variant="caption"
+                  color="textSecondary"
+                  noWrap
+                  sx={{ display: "block" }}
+                >
+                  {secondary}
+                </Typography>
+              )}
+            </>
+          ) : undefined
+        }
+        sx={{ my: 0, minWidth: 0 }}
+        slotProps={{
+          primary: { variant: "body2", sx: { fontWeight: 600 } },
+          secondary: { component: "span", sx: { display: "block" } },
+        }}
+      />
+      {trailing}
+    </RowCard>
   );
 }

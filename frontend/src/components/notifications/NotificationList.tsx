@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { phoneCardSx } from "@/components/canvas/flatRow";
+import { phoneCardSx } from "@/components/phone/phoneGrid";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";

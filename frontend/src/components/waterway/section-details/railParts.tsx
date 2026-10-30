@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
-import { trailSlotSx } from "@/components/canvas/flatRow";
 import FeatureTypeIcon from "@/components/FeatureTypeIcon";
+import { trailSlotSx } from "@/components/phone/phoneGrid";
 import type { FeatureType } from "@/lib/api";
 import { ExpandIcon } from "@/lib/icons";
 import { css } from "@/lib/theme/motion";

@@ -1,11 +1,8 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
-import {
-  desktopFlatRow,
-  openRowSx,
-  phoneRowPad,
-} from "@/components/canvas/flatRow";
+import { desktopFlatRow, openRowSx } from "@/components/canvas/flatRow";
+import { phoneRowPad } from "@/components/phone/phoneGrid";
 import { tripStanding } from "@/components/trip-page/planWeek";
 import type { Trip } from "@/lib/api";
 import { useTripMembers } from "@/lib/hooks/useTrips";

@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef } from "react";
-import { phoneRowPad } from "@/components/canvas/flatRow";
+import { phoneRowPad } from "@/components/phone/phoneGrid";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import type { Comment, Media } from "@/lib/api";
 import { categoryColor, categoryLabel } from "@/lib/comments";

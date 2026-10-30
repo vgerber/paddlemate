@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { HTMLAttributes, ReactNode } from "react";
+import { grid, lineInset, trailPull } from "@/components/phone/phoneGrid";
 import type { SwipeTrack } from "@/lib/hooks/ui/useSwipeTabs";
 import { useViewFocus } from "@/lib/hooks/ui/useViewFocus";
 import { BackIcon, CloseIcon } from "@/lib/icons";
@@ -10,13 +11,12 @@ import UnderlineTabs from "./UnderlineTabs";
 
 const { tokens } = theme;
 const { panel } = tokens.canvas;
-const { phone } = tokens;
 
 /** The back arrow is a 44 box around a 22 icon; it hangs out so the icon
  * starts on the phone's text line, and the title follows on the name line. */
 const BACK_ICON = 22;
 const backHang = (tokens.touch.min - BACK_ICON) / 2;
-const titleGap = phone.nameLine - (phone.line - backHang + tokens.touch.min);
+const titleGap = grid.nameLine - (grid.line - backHang + tokens.touch.min);
 
 const ACTION_ICON = 24;
 
@@ -80,8 +80,8 @@ export default function PanelHeader<T extends string>({
             // tabs): back box at +12 (md), title text at +64, the last action
             // box ends 12 from the edge.
             minHeight: panel.headerRow,
-            pl: { xs: `${phone.line}px`, md: `${panel.hitEdge}px` },
-            pr: { xs: `${phone.line}px`, md: `${panel.hitEdge}px` },
+            pl: lineInset(`${panel.hitEdge}px`),
+            pr: lineInset(`${panel.hitEdge}px`),
           }}
         >
           {onBack && (
@@ -131,7 +131,7 @@ export default function PanelHeader<T extends string>({
                 display: "flex",
                 alignItems: "center",
                 // The last button hangs out so its icon ends on the right line.
-                mr: { xs: `-${phone.trailInset}px`, md: 0 },
+                mr: trailPull,
                 // Every action icon is 24, whatever the caller passes.
                 "& .MuiSvgIcon-root": { fontSize: ACTION_ICON },
               }}
@@ -149,7 +149,7 @@ export default function PanelHeader<T extends string>({
             touchAction: "pan-y",
             // The first label starts on the 24 line (tab padding is 4).
             pl: {
-              xs: `${phone.line - 4}px`,
+              xs: `${grid.line - 4}px`,
               md: title ? `${panel.line - 4}px` : 0,
             },
             minHeight: { md: title ? panel.tabRow : undefined },
