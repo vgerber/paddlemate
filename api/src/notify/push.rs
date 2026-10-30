@@ -12,7 +12,7 @@ use web_push::{
     WebPushMessageBuilder,
 };
 
-use crate::query::push_subscriptions::PushTarget;
+use crate::query::users::push_subscriptions::PushTarget;
 
 /// The push services browsers subscribe through. An endpoint is a URL the
 /// client hands us and we then POST to, so anything else would let a caller

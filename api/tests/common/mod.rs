@@ -154,7 +154,7 @@ pub async fn keyed_user(pool: &PgPool, name: &str) -> String {
     add_user(pool, &id, name).await;
     sqlx::query("INSERT INTO api_tokens (user_id, name, token_hash) VALUES ($1, 'test', $2)")
         .bind(&id)
-        .bind(paddlemate_api::query::tokens::hash_token(&format!(
+        .bind(paddlemate_api::query::users::tokens::hash_token(&format!(
             "pm_{name}"
         )))
         .execute(pool)

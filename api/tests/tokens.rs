@@ -71,7 +71,10 @@ async fn a_token_is_shown_once_and_works_as_a_key(pool: PgPool) {
         .await
         .unwrap();
     assert_ne!(stored, plain);
-    assert_eq!(stored, paddlemate_api::query::tokens::hash_token(&plain));
+    assert_eq!(
+        stored,
+        paddlemate_api::query::users::tokens::hash_token(&plain)
+    );
 
     // The new key signs in as its owner.
     let listed = call_key(&app, Method::GET, "/users/me/tokens", Some(&plain), None).await;

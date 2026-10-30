@@ -21,7 +21,7 @@ use crate::{
         notification::{EventSummary, LiveEvent, TripEventKind, describe},
         trip::TripId,
     },
-    query::{notifications, push_subscriptions},
+    query::users::{notifications, push_subscriptions},
     state::AppState,
 };
 

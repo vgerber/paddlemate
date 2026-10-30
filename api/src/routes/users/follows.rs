@@ -14,7 +14,7 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::user::User,
-    query::follows,
+    query::users::follows,
     state::AppState,
 };
 

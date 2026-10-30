@@ -7,7 +7,7 @@ use sqlx::{PgPool, Row, postgres::PgRow};
 
 use crate::{
     models::trip::*,
-    query::tokens::{generate_token, hash_token},
+    query::users::tokens::{generate_token, hash_token},
 };
 
 use super::{Outcome, get_member};
