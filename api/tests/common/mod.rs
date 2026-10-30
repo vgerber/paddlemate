@@ -147,3 +147,47 @@ pub async fn call(app: &Router, method: Method, uri: &str, who: Who, body: Optio
 pub async fn get(app: &Router, uri: &str) -> Reply {
     call(app, Method::GET, uri, Who::Anyone, None).await
 }
+
+/// A user with the API key `pm_<name>`; returns the user id (`user-<name>`).
+pub async fn keyed_user(pool: &PgPool, name: &str) -> String {
+    let id = format!("user-{name}");
+    add_user(pool, &id, name).await;
+    sqlx::query("INSERT INTO api_tokens (user_id, name, token_hash) VALUES ($1, 'test', $2)")
+        .bind(&id)
+        .bind(paddlemate_api::query::tokens::hash_token(&format!(
+            "pm_{name}"
+        )))
+        .execute(pool)
+        .await
+        .unwrap();
+    id
+}
+
+/// Like `call`, but signs in with the API key of `keyed_user(name)` through
+/// the real API-key layers instead of the `x-test-user` header.
+pub async fn call_key(
+    app: &Router,
+    method: Method,
+    uri: &str,
+    key: Option<&str>,
+    body: Option<Value>,
+) -> Reply {
+    let mut req = Request::builder().method(method).uri(uri);
+    if let Some(key) = key {
+        req = req.header("X-Api-Key", key);
+    }
+    let req = match body {
+        Some(b) => req
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(b.to_string())),
+        None => req.body(Body::empty()),
+    }
+    .unwrap();
+    let res = app.clone().oneshot(req).await.unwrap();
+    let status = res.status();
+    let bytes = to_bytes(res.into_body(), usize::MAX).await.unwrap();
+    Reply {
+        status,
+        body: serde_json::from_slice(&bytes).unwrap_or(Value::Null),
+    }
+}
