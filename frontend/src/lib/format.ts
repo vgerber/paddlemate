@@ -1,6 +1,7 @@
 /** Shared display formatting for dates, durations, readings and enum keys. */
 
 import { format, isSameDay, isSameMonth, isSameYear, parseISO } from "date-fns";
+import { distanceText, formatDistanceKm, type Units, unitLabel } from "./units";
 
 const LOCALE = "en-GB";
 
@@ -177,4 +178,20 @@ export function sectionPlace(
  * would add nothing. */
 export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;
+}
+
+/** A distance given in metres, in the chosen unit: "0.3 km" or "0.2 mi". */
+export function formatDistance(m: number, units: Units): string {
+  return formatDistanceKm(m / 1000, units);
+}
+
+/** A stretch between two metre marks: "0.3-0.5 km". */
+export function formatDistanceSpan(
+  startM: number,
+  endM: number,
+  units: Units,
+): string {
+  const from = distanceText(startM / 1000, units);
+  const to = distanceText(endM / 1000, units);
+  return `${from}-${to} ${unitLabel("distance", units)}`;
 }

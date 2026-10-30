@@ -320,6 +320,7 @@ Component files are not util modules; cross-cutting helpers live in `lib/`:
 | `lib/descents.ts` | `uniqueSnapshotsBySeries`, `toPseudoSection` |
 | `lib/geo.ts` | geometry math plus `lineCoords`/`pointCoords` narrowing |
 | `lib/mapSearch.ts` | `EMPTY_MAP_SEARCH` (the map route's full search shape) |
+| `lib/units.ts` | the device-local unit choice (`useUnits`, `currentUnits`), metric/imperial conversion, `formatQuantity`, `unitLabel`, `parseInput` / `toInputText` for form fields; never print a bare km, kg or cm |
 | `lib/icons.ts` | every icon, one export per idea; never import `@mui/icons-material` elsewhere |
 
 Date arithmetic - parsing a day, stepping days, counting them, month grids -

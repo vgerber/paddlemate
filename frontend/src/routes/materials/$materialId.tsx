@@ -29,6 +29,7 @@ import {
   yearsLabel,
 } from "@/lib/materials";
 import { PANEL_HEIGHT } from "@/lib/theme";
+import { currentUnits } from "@/lib/units";
 
 export const Route = createFileRoute("/materials/$materialId")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -128,7 +129,9 @@ function EditMaterial({
   material: Material;
   onDone: () => void;
 }) {
-  const [values, setValues] = useState(() => materialToForm(material));
+  const [values, setValues] = useState(() =>
+    materialToForm(material, currentUnits()),
+  );
   const update = useUpdateMaterial(material.id);
   return (
     <Box

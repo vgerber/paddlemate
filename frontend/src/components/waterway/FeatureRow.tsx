@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { humanize, sentenceCase } from "@/lib/format";
 import { CloseIcon } from "@/lib/icons";
 import { labelSx } from "@/lib/theme";
+import { useUnits } from "@/lib/units";
 import { coversWholeSection, fmtKm, fmtKmSpan } from "./section-details/utils";
 
 /** Position along the section line - the subset of ComputedFeature the row
@@ -53,6 +54,7 @@ export default function FeatureRow({
   leading,
   trailing,
 }: FeatureRowProps) {
+  const [units] = useUnits();
   const detail = name
     ? difficulty
       ? `${name} (${difficulty})`
@@ -129,8 +131,8 @@ export default function FeatureRow({
             }}
           >
             {extent.isZone
-              ? fmtKmSpan(extent.startM, extent.endM)
-              : fmtKm(extent.distM)}
+              ? fmtKmSpan(extent.startM, extent.endM, units)
+              : fmtKm(extent.distM, units)}
           </Typography>
         )}
       </Box>

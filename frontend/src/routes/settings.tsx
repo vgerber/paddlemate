@@ -6,15 +6,17 @@ import { useState } from "react";
 import NotificationList from "@/components/notifications/NotificationList";
 import PanelHeader from "@/components/PanelHeader";
 import { SwipeGhost } from "@/components/SwipeGhost";
-import { type GroupId, parseGroup } from "@/components/settings/groups";
+import {
+  type GroupId,
+  groupsFor,
+  parseGroup,
+} from "@/components/settings/groups";
 import SettingsDetail from "@/components/settings/SettingsDetail";
 import SettingsList from "@/components/settings/SettingsList";
 import LoadingBox from "@/components/states/LoadingBox";
-import SignInGate from "@/components/states/SignInGate";
 import ToolsList from "@/components/ToolsList";
 import { useSession } from "@/lib/hooks/useSession";
 import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
-import { AccountIcon } from "@/lib/icons";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
 type PhoneTab = "profile" | "inbox" | "tools";
@@ -45,14 +47,16 @@ const Version = () => (
 function PhoneTabBody({
   tab,
   onOpen,
+  groups,
 }: {
   tab: PhoneTab;
   onOpen: (id: GroupId) => void;
+  groups: ReturnType<typeof groupsFor>;
 }) {
   if (tab === "profile") {
     return (
       <>
-        <SettingsList onOpen={onOpen} />
+        <SettingsList onOpen={onOpen} groups={groups} />
         <Box sx={{ px: 2, pt: 1.75, pb: 1 }}>
           <Version />
         </Box>
@@ -72,7 +76,9 @@ function PhoneSettings({
   onOpen,
   group,
   onBack,
+  groups,
 }: {
+  groups: ReturnType<typeof groupsFor>;
   onOpen: (id: GroupId) => void;
   group?: GroupId;
   onBack: () => void;
@@ -122,10 +128,16 @@ function PhoneSettings({
             data-testid="settings-pane"
             sx={{ flex: 1 }}
           >
-            <PhoneTabBody tab={tab} onOpen={onOpen} />
+            <PhoneTabBody tab={tab} onOpen={onOpen} groups={groups} />
           </Box>
           <SwipeGhost swipe={swipe} index={index} count={PHONE_TABS.length}>
-            {(i) => <PhoneTabBody tab={PHONE_TABS[i].value} onOpen={onOpen} />}
+            {(i) => (
+              <PhoneTabBody
+                tab={PHONE_TABS[i].value}
+                onOpen={onOpen}
+                groups={groups}
+              />
+            )}
           </SwipeGhost>
         </Box>
       </Box>
@@ -136,18 +148,18 @@ function PhoneSettings({
 function SettingsPage() {
   const { isAuthenticated, isLoading } = useSession();
   const navigate = useNavigate({ from: "/settings" });
-  const { group } = Route.useSearch();
+  const { group: openedGroup } = Route.useSearch();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
 
   if (isLoading) {
     return <LoadingBox size={40} pt={8} />;
   }
 
-  if (!isAuthenticated) {
-    return (
-      <SignInGate icon={<AccountIcon />} title="Sign in to access settings" />
-    );
-  }
+  // The device sections (appearance, units) need no account.
+  const groups = groupsFor(isAuthenticated);
+  const group = groups.some((g) => g.id === openedGroup)
+    ? openedGroup
+    : undefined;
 
   const open = (id: GroupId) =>
     navigate({ search: (prev) => ({ ...prev, group: id }) });
@@ -158,6 +170,7 @@ function SettingsPage() {
   if (!isDesktop) {
     return (
       <PhoneSettings
+        groups={groups}
         onOpen={open}
         group={group}
         onBack={() => navigate({ search: {} })}
@@ -165,7 +178,7 @@ function SettingsPage() {
     );
   }
 
-  const openGroup: GroupId = group ?? "account";
+  const openGroup: GroupId = group ?? groups[0].id;
 
   return (
     <Box
@@ -189,7 +202,7 @@ function SettingsPage() {
           pt: 2,
         }}
       >
-        <SettingsList selected={openGroup} onOpen={open} />
+        <SettingsList selected={openGroup} onOpen={open} groups={groups} />
         <Box sx={{ px: 2, pt: 1.75, pb: 1, flexShrink: 0 }}>
           <Version />
         </Box>

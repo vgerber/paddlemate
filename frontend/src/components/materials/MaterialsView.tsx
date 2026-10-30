@@ -23,6 +23,7 @@ import {
   toMaterialFilters,
 } from "@/lib/materials";
 import { theme } from "@/lib/theme";
+import { formatQuantity, useUnits } from "@/lib/units";
 import MaterialFiltersSheet from "./MaterialFiltersSheet";
 import MaterialRow from "./MaterialRow";
 
@@ -136,6 +137,7 @@ export default function MaterialsView({
   onClearCompare: () => void;
   onCompare: () => void;
 }) {
+  const [units] = useUnits();
   const [sheetOpen, setSheetOpen] = useState(false);
   const filterCount = activeFilterCount(search);
 
@@ -188,7 +190,7 @@ export default function MaterialsView({
   if (search.fits != null) {
     chips.push({
       key: "fits",
-      label: `Fits ${search.fits} kg`,
+      label: `Fits ${formatQuantity("weight", search.fits, units)}`,
       clear: { fits: undefined },
     });
   }

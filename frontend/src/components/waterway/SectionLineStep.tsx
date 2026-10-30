@@ -14,6 +14,7 @@ import { distanceAlongLineM } from "@/lib/geo";
 import type { useRiverSnap } from "@/lib/hooks/useRiverSnap";
 import { ResetIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
+import { useUnits } from "@/lib/units";
 import { useMapVerb } from "./useMapVerb";
 
 const { tokens } = theme;
@@ -65,6 +66,7 @@ export default function SectionLineStep({
   finalCoords,
   lookupStalled,
 }: SectionLineStepProps) {
+  const [units] = useUnits();
   const verb = useMapVerb();
   const hasLocation = putIn != null && takeOut != null;
   const snapInProgress =
@@ -101,7 +103,7 @@ export default function SectionLineStep({
             color={PUT_IN_COLOR}
             name="Put-in"
             testId={putIn ? "picked-put-in" : "unpicked-put-in"}
-            detail={putIn ? fmtKm(0) : "Not set"}
+            detail={putIn ? fmtKm(0, units) : "Not set"}
             clearLabel="Clear put-in"
             onClear={putIn ? onClearPutIn : undefined}
           />
@@ -110,7 +112,9 @@ export default function SectionLineStep({
             color={TAKE_OUT_COLOR}
             name="Take-out"
             testId={takeOut ? "picked-take-out" : "unpicked-take-out"}
-            detail={takeOut && lengthM != null ? fmtKm(lengthM) : "Not set"}
+            detail={
+              takeOut && lengthM != null ? fmtKm(lengthM, units) : "Not set"
+            }
             clearLabel="Clear take-out"
             onClear={takeOut ? onClearTakeOut : undefined}
           />

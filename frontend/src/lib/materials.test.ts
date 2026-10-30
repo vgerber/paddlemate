@@ -5,7 +5,9 @@ import {
   formatSpec,
   MATERIAL_SPECS,
   MAX_COMPARE,
+  materialFormToBody,
   materialTitle,
+  materialToForm,
   paddlerRangeLabel,
   parseCompareIds,
   parseMaterialSearch,
@@ -14,6 +16,7 @@ import {
   toggleCompareId,
   yearsLabel,
 } from "./materials";
+import { IMPERIAL, METRIC } from "./units";
 
 function material(fields: Partial<Material> = {}): Material {
   return {
@@ -67,17 +70,18 @@ describe("paddlerRangeLabel", () => {
     expect(
       paddlerRangeLabel(
         material({ paddler_weight_min_kg: 70, paddler_weight_max_kg: 110 }),
+        METRIC,
       ),
     ).toBe("70-110 kg");
   });
 
   test("stays open at the end that is not stated", () => {
-    expect(paddlerRangeLabel(material({ paddler_weight_min_kg: 70 }))).toBe(
-      "from 70 kg",
-    );
-    expect(paddlerRangeLabel(material({ paddler_weight_max_kg: 110 }))).toBe(
-      "up to 110 kg",
-    );
+    expect(
+      paddlerRangeLabel(material({ paddler_weight_min_kg: 70 }), METRIC),
+    ).toBe("from 70 kg");
+    expect(
+      paddlerRangeLabel(material({ paddler_weight_max_kg: 110 }), METRIC),
+    ).toBe("up to 110 kg");
   });
 });
 
@@ -86,12 +90,37 @@ describe("formatSpec", () => {
   if (!weight) throw new Error("weight is a spec");
 
   test("appends the unit and trims trailing zeros", () => {
-    expect(formatSpec(22, weight)).toBe("22 kg");
-    expect(formatSpec(20.5, weight)).toBe("20.5 kg");
+    expect(formatSpec(22, weight, METRIC)).toBe("22 kg");
+    expect(formatSpec(20.5, weight, METRIC)).toBe("20.5 kg");
+  });
+
+  test("converts to the chosen units", () => {
+    expect(formatSpec(22, weight, IMPERIAL)).toBe("48.5 lb");
   });
 
   test("shows a dash for a measurement nobody stated", () => {
-    expect(formatSpec(undefined, weight)).toBe("-");
+    expect(formatSpec(undefined, weight, METRIC)).toBe("-");
+  });
+});
+
+describe("form units", () => {
+  const stated = material({ length_cm: 264, weight_kg: 22 });
+
+  test("shows the entry in the chosen units", () => {
+    const form = materialToForm(stated, IMPERIAL);
+    expect(form.length_cm).toBe("103.94");
+    expect(form.weight_kg).toBe("48.5");
+  });
+
+  test("an untouched form saves the stored values back", () => {
+    const body = materialFormToBody(materialToForm(stated, IMPERIAL), IMPERIAL);
+    expect(body.length_cm).toBeCloseTo(264, 1);
+    expect(body.weight_kg).toBeCloseTo(22, 1);
+  });
+
+  test("imperial input is saved as metric", () => {
+    const form = { ...materialToForm(stated, IMPERIAL), length_cm: "100" };
+    expect(materialFormToBody(form, IMPERIAL).length_cm).toBe(254);
   });
 });
 

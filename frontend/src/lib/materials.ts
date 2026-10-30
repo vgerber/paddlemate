@@ -8,6 +8,15 @@ import type {
   MaterialSort,
 } from "@/lib/api";
 import { humanize, sentenceCase } from "@/lib/format";
+import {
+  formatQuantity,
+  parseInput,
+  type Quantity,
+  toDisplay,
+  toInputText,
+  type Units,
+  unitLabel,
+} from "@/lib/units";
 
 /** An enum value as a label: "river_runner" -> "River runner". */
 export function enumLabel(value: string): string {
@@ -38,7 +47,7 @@ export type SpecKey =
 export interface MaterialSpec {
   key: SpecKey;
   label: string;
-  unit: string;
+  quantity: Quantity;
   /** Blocks the detail view and the comparison group rows under. */
   group: "hull" | "cockpit" | "paddler";
 }
@@ -46,33 +55,33 @@ export interface MaterialSpec {
 /** Every comparable measurement, in the order both the detail view and the
  * comparison show them. Adding a measurement is one row here. */
 export const MATERIAL_SPECS: MaterialSpec[] = [
-  { key: "length_cm", label: "Length", unit: "cm", group: "hull" },
-  { key: "width_cm", label: "Width", unit: "cm", group: "hull" },
-  { key: "height_cm", label: "Height", unit: "cm", group: "hull" },
-  { key: "volume_l", label: "Volume", unit: "l", group: "hull" },
-  { key: "weight_kg", label: "Weight", unit: "kg", group: "hull" },
+  { key: "length_cm", label: "Length", quantity: "length", group: "hull" },
+  { key: "width_cm", label: "Width", quantity: "length", group: "hull" },
+  { key: "height_cm", label: "Height", quantity: "length", group: "hull" },
+  { key: "volume_l", label: "Volume", quantity: "volume", group: "hull" },
+  { key: "weight_kg", label: "Weight", quantity: "weight", group: "hull" },
   {
     key: "cockpit_length_cm",
     label: "Cockpit length",
-    unit: "cm",
+    quantity: "length",
     group: "cockpit",
   },
   {
     key: "cockpit_width_cm",
     label: "Cockpit width",
-    unit: "cm",
+    quantity: "length",
     group: "cockpit",
   },
   {
     key: "paddler_weight_min_kg",
     label: "Paddler from",
-    unit: "kg",
+    quantity: "weight",
     group: "paddler",
   },
   {
     key: "paddler_weight_max_kg",
     label: "Paddler to",
-    unit: "kg",
+    quantity: "weight",
     group: "paddler",
   },
 ];
@@ -130,13 +139,15 @@ export function specValue(
   return material[key] ?? undefined;
 }
 
-/** A measurement with its unit, trailing zeros trimmed: "264 cm", "20.5 kg". */
+/** A measurement in the chosen unit, trailing zeros trimmed: "264 cm",
+ * "103.9 in", "20.5 kg". */
 export function formatSpec(
   value: number | undefined,
   spec: MaterialSpec,
+  units: Units,
 ): string {
   if (value == null) return "-";
-  return `${Number(value.toFixed(1))} ${spec.unit}`;
+  return formatQuantity(spec.quantity, value, units);
 }
 
 /** Brand, model and variant as one name: "Testflow Cascade M". */
@@ -157,13 +168,16 @@ export function yearsLabel(material: Material): string {
 }
 
 /** The paddler weight window as one line, open at either end. */
-export function paddlerRangeLabel(material: Material): string {
+export function paddlerRangeLabel(material: Material, units: Units): string {
   const min = material.paddler_weight_min_kg;
   const max = material.paddler_weight_max_kg;
   if (min == null && max == null) return "";
-  if (min == null) return `up to ${max} kg`;
-  if (max == null) return `from ${min} kg`;
-  return `${min}-${max} kg`;
+  const num = (kg: number) =>
+    String(Number(toDisplay("weight", kg, units).toFixed(1)));
+  const unit = unitLabel("weight", units);
+  if (min == null) return `up to ${num(max as number)} ${unit}`;
+  if (max == null) return `from ${num(min)} ${unit}`;
+  return `${num(min)}-${num(max)} ${unit}`;
 }
 
 /** What a compared row of one measurement looks like: the lowest and highest
@@ -252,13 +266,20 @@ export function emptyMaterialForm(): MaterialFormValues {
   };
 }
 
-/** An existing entry as form fields, for editing it. */
-export function materialToForm(material: Material): MaterialFormValues {
+/** An existing entry as form fields, for editing it. The measurements are
+ * shown in the chosen units. */
+export function materialToForm(
+  material: Material,
+  units: Units,
+): MaterialFormValues {
   const specs = Object.fromEntries(
-    MATERIAL_SPECS.map((spec) => [
-      spec.key,
-      material[spec.key] == null ? "" : String(material[spec.key]),
-    ]),
+    MATERIAL_SPECS.map((spec) => {
+      const value = material[spec.key];
+      return [
+        spec.key,
+        value == null ? "" : toInputText(spec.quantity, value, units),
+      ];
+    }),
   ) as Record<SpecKey, string>;
   return {
     category: material.category,
@@ -288,9 +309,17 @@ function optionalText(raw: string): string | undefined {
   return raw.trim() || undefined;
 }
 
-export function materialFormToBody(values: MaterialFormValues): MaterialBody {
+/** The form as a request body. The measurements were typed in the chosen
+ * units and go to the server in metric. */
+export function materialFormToBody(
+  values: MaterialFormValues,
+  units: Units,
+): MaterialBody {
   const specs = Object.fromEntries(
-    MATERIAL_SPECS.map((spec) => [spec.key, optionalNumber(values[spec.key])]),
+    MATERIAL_SPECS.map((spec) => [
+      spec.key,
+      parseInput(spec.quantity, values[spec.key], units),
+    ]),
   );
   return {
     category: values.category,

@@ -23,6 +23,7 @@ import {
   type SpecKey,
 } from "@/lib/materials";
 import { theme } from "@/lib/theme";
+import { unitLabel, useUnits } from "@/lib/units";
 
 const { tokens } = theme;
 
@@ -63,6 +64,7 @@ export default function MaterialForm({
   saving: boolean;
   error: unknown;
 }) {
+  const [units] = useUnits();
   const set = (patch: Partial<MaterialFormValues>) =>
     onChange({ ...values, ...patch });
 
@@ -206,7 +208,11 @@ export default function MaterialForm({
           >
             <Box sx={fieldGridSx}>
               {MATERIAL_SPECS.filter((spec) => spec.group === group).map(
-                (spec) => numberField(spec.key, `${spec.label} (${spec.unit})`),
+                (spec) =>
+                  numberField(
+                    spec.key,
+                    `${spec.label} (${unitLabel(spec.quantity, units)})`,
+                  ),
               )}
             </Box>
           </FormSection>
@@ -255,7 +261,7 @@ export default function MaterialForm({
             ariaLabel="Save entry"
             disabled={!canSaveMaterial(values)}
             busy={saving}
-            onClick={() => onSubmit(materialFormToBody(values))}
+            onClick={() => onSubmit(materialFormToBody(values, units))}
           >
             <ConfirmIcon />
           </RoundActionButton>

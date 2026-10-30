@@ -35,6 +35,7 @@ import type {
   SectionWithFeatures,
   WaterRangeWithStatus,
 } from "@/lib/api";
+import { formatDistance } from "@/lib/format";
 import { lineCoords } from "@/lib/geo";
 import { useSectionDescentCounts } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
@@ -52,6 +53,7 @@ import {
 } from "@/lib/icons";
 import { localizedName } from "@/lib/localization";
 import { theme } from "@/lib/theme";
+import { type Units, useUnits } from "@/lib/units";
 import CommentThread from "./CommentThread";
 import GaugesList from "./GaugesList";
 import type { DetailTab, SectionDetailTab, SuggestMode } from "./types";
@@ -144,6 +146,7 @@ export default function WaterwayBrowsePanel({
   riverState,
   featureTimeline,
 }: WaterwayBrowsePanelProps) {
+  const [units] = useUnits();
   const navigate = useNavigate();
   // The entry the Sources tab is narrowed to; a new section starts unfiltered.
   const [editsFilter, setEditsFilter] = useState<{
@@ -517,7 +520,7 @@ export default function WaterwayBrowsePanel({
           }
           subtitle={
             inFeatures
-              ? sectionSubtitle(waterway?.name ?? "", selectedSection)
+              ? sectionSubtitle(waterway?.name ?? "", selectedSection, units)
               : (waterway?.waterway_type ?? "")
           }
           onBack={inFeatures ? onSectionDeselect : onBack}
@@ -640,10 +643,18 @@ function SectionsList({
 /** "Pitze · Grade III (IV) · 5.8 km": the river, the section's own grade when
  * one range covers most of it (that range is not listed as a feature), and
  * its length. */
-function sectionSubtitle(river: string, section: SectionWithFeatures): string {
+function sectionSubtitle(
+  river: string,
+  section: SectionWithFeatures,
+  units: Units,
+): string {
   const grade = sectionGradeText(section);
-  const km = sectionLengthM(lineCoords(section.location) ?? []) / 1000;
-  return [river, grade && `Grade ${grade}`, km > 0 && `${km.toFixed(1)} km`]
+  const lengthM = sectionLengthM(lineCoords(section.location) ?? []);
+  return [
+    river,
+    grade && `Grade ${grade}`,
+    lengthM > 0 && formatDistance(lengthM, units),
+  ]
     .filter(Boolean)
     .join(" · ");
 }

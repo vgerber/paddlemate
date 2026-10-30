@@ -10,6 +10,7 @@ import { plural } from "@/lib/format";
 import { distanceAlongLineM, type LngLat } from "@/lib/geo";
 import { AddIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
+import { useUnits } from "@/lib/units";
 import FeatureRow from "./FeatureRow";
 import FormSection from "./FormSection";
 import type { GeometryPicking } from "./geometryPicking";
@@ -57,6 +58,7 @@ export default function SectionFeaturesStep({
   defaultLangCode,
   regionCountry,
 }: SectionFeaturesStepProps) {
+  const [units] = useUnits();
   const submitRef = useRef<(() => void) | null>(null);
   const [canAdd, setCanAdd] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -139,13 +141,13 @@ export default function SectionFeaturesStep({
               num={1}
               color={PUT_IN_COLOR}
               name="Put-in"
-              detail={fmtKm(0)}
+              detail={fmtKm(0, units)}
             />
             <SectionPointCard
               num={2}
               color={TAKE_OUT_COLOR}
               name="Take-out"
-              detail={fmtKm(totalM ?? 0)}
+              detail={fmtKm(totalM ?? 0, units)}
             />
           </>
         )}

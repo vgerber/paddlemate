@@ -15,6 +15,7 @@ const GROUPS = [
   ["account", "Account"],
   ["language", "Display language"],
   ["appearance", "Appearance"],
+  ["units", "Units"],
   ["notifications", "Notifications"],
   ["tokens", "Access tokens"],
 ] as const;
@@ -217,26 +218,17 @@ test.describe("signed out", () => {
     }
   });
 
-  test("settings shows the sign-in card, in sentence case", async ({
+  test("settings offers the device sections without an account", async ({
     page,
   }) => {
     await page.goto("/settings");
-    await expect(page.getByText("Sign in to access settings")).toBeVisible();
-    const signIn = page
-      .getByRole("main")
-      .getByRole("button", { name: "Sign in", exact: true });
-    await expect(signIn).toBeVisible();
-    expect(await computed(signIn, "text-transform")).toBe("none");
-    expect(await computed(signIn, "background-color")).toBe(
-      "rgb(14, 116, 144)",
-    );
-    expect((await signIn.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    const list = page.getByTestId("settings-list");
     await expect(
-      page.getByRole("button", { name: "New here? Create an account" }),
+      list.getByRole("button", { name: "Appearance" }),
     ).toBeVisible();
-    const card = page.getByTestId("state-card");
-    await expect(card).toBeVisible();
-    expect(await computed(card, "border-top-left-radius")).toBe("14px");
+    await expect(list.getByRole("button", { name: "Units" })).toBeVisible();
+    await expect(list.getByRole("button", { name: "Account" })).toHaveCount(0);
+    await expect(page.getByText("Sign in to access settings")).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
   });
 });

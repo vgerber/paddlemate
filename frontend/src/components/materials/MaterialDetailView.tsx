@@ -20,6 +20,7 @@ import {
   yearsLabel,
 } from "@/lib/materials";
 import { theme } from "@/lib/theme";
+import { useUnits } from "@/lib/units";
 
 const { tokens } = theme;
 
@@ -112,6 +113,7 @@ export default function MaterialDetailView({
 }: {
   material: Material;
 }) {
+  const [units] = useUnits();
   const facts = [
     { label: "Category", value: CATEGORY_LABELS[material.category] },
   ];
@@ -164,7 +166,7 @@ export default function MaterialDetailView({
               <SpecRow
                 key={spec.key}
                 label={spec.label}
-                value={formatSpec(specValue(material, spec.key), spec)}
+                value={formatSpec(specValue(material, spec.key), spec, units)}
               />
             ))}
           </Card>

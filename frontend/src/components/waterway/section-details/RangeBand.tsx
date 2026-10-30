@@ -6,6 +6,7 @@ import { useState } from "react";
 import { withAlpha } from "@/lib/alpha";
 import { css, durations, useReducedMotion } from "@/lib/motion";
 import { theme } from "@/lib/theme";
+import { useUnits } from "@/lib/units";
 import { CoordsInfo } from "./CoordsInfo";
 import {
   FeatureListRow,
@@ -81,6 +82,7 @@ function RangeBand({
   dashed,
   inBand,
 }: NodeProps) {
+  const [units] = useUnits();
   const { item } = node;
   const [open, setOpen] = useState(true);
   const reduced = useReducedMotion();
@@ -196,7 +198,7 @@ function RangeBand({
                     )}
                   </Box>
                   <Typography component="span" data-km sx={kmSx}>
-                    {fmtKmSpan(item.startM, item.endM)}
+                    {fmtKmSpan(item.startM, item.endM, units)}
                   </Typography>
                 </Box>
                 {subtitle && (
