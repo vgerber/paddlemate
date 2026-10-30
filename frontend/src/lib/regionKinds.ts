@@ -63,7 +63,7 @@ export function regionKindSingular(kind: string): string {
   return REGION_KINDS.find((k) => k.kind === kind)?.singular ?? kind;
 }
 
-export const ALL_REGION_KINDS: BrowseKind[] = REGION_KINDS.map((k) => k.kind);
+const ALL_REGION_KINDS: BrowseKind[] = REGION_KINDS.map((k) => k.kind);
 
 /** The heading of a kind ("Valleys"), or undefined for one the map does not
  * browse. */
