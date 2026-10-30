@@ -104,7 +104,9 @@ pub async fn search_gauge_catalog(
            AND ($6::text IS NULL OR river ILIKE $6)
            AND NOT EXISTS (
                 SELECT 1 FROM gauges g
-                WHERE g.provider = c.provider AND g.source_id = c.station_id)
+                WHERE g.provider = c.provider
+                  AND (g.source_id = c.station_id
+                       OR starts_with(g.source_id, c.station_id || ':')))
          ORDER BY {order}
          LIMIT $5"
     );

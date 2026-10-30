@@ -91,7 +91,7 @@ pub async fn list_gauge_map(pool: &PgPool) -> Result<Vec<GaugeMapPoint>, sqlx::E
          WHERE c.lat IS NOT NULL AND c.lon IS NOT NULL
            AND NOT EXISTS (
                 SELECT 1 FROM gauges g
-                WHERE g.provider = c.provider AND g.source_id = c.station_id)",
+                WHERE g.provider = c.provider AND split_part(g.source_id, ':', 1) = c.station_id)",
     )
     .fetch_all(pool)
     .await?;
