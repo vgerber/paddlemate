@@ -1166,6 +1166,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/materials/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Take down every photo of a brand (admin only) */
+        delete: operations["remove_brand_images"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/materials/{material_id}/images/{image_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Take down one photo of an entry (admin only). The file is deleted and the photo is never fetched again. */
+        delete: operations["remove_image"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/materials/{material_id}": {
         parameters: {
             query?: never;
@@ -1625,6 +1659,10 @@ export interface components {
             from: string;
             /** Format: date-time */
             to: string;
+        };
+        BrandTakedown: {
+            /** @description The brand whose photos go, case-insensitive. Required. */
+            brand?: string | null;
         };
         BrandsQuery: {
             /** @description Count only the entries in this category. */
@@ -2612,30 +2650,57 @@ export interface components {
          */
         Material: {
             description?: string | null;
+            /** Format: double */
+            blade_area_cm2?: number | null;
+            /** Format: double */
+            blade_length_cm?: number | null;
+            blade_material?: string | null;
+            /** Format: double */
+            blade_width_cm?: number | null;
             brand: string;
             category: components["schemas"]["MaterialCategory"];
             /** Format: double */
             cockpit_length_cm?: number | null;
             /** Format: double */
             cockpit_width_cm?: number | null;
+            /** @description Colourways as the maker names them. */
+            colors: string[];
             construction?: components["schemas"]["MaterialConstruction"] | null;
             /** Format: date-time */
             created_at: string;
             created_by: string;
             created_by_username?: string | null;
             discipline?: components["schemas"]["MaterialDiscipline"] | null;
+            /** @description Feather angles offered, in degrees. */
+            feather_deg?: number[] | null;
             /** Format: double */
             height_cm?: number | null;
             /** Format: int64 */
             id: number;
+            /** @description Mirrored photos, fetched ones only. */
+            images: components["schemas"]["MaterialImage"][];
             /** Format: double */
             length_cm?: number | null;
+            /** Format: double */
+            length_max_cm?: number | null;
+            /** Format: double */
+            length_min_cm?: number | null;
+            /** @description Sizes offered, for a paddle sold in fixed lengths. */
+            lengths_cm?: number[] | null;
             model: string;
+            notes?: string | null;
             /** Format: double */
             paddler_weight_max_kg?: number | null;
             /** Format: double */
             paddler_weight_min_kg?: number | null;
+            /** Format: int32 */
+            pieces?: number | null;
             product_url?: string | null;
+            shaft?: components["schemas"]["PaddleShaft"] | null;
+            shaft_diameter?: string | null;
+            shaft_material?: components["schemas"]["PaddleShaftMaterial"] | null;
+            /** @description Field name to the page its value came from; imported entries only. */
+            sources?: unknown;
             /** Format: date-time */
             updated_at: string;
             updated_by_username?: string | null;
@@ -2650,6 +2715,8 @@ export interface components {
             weight_kg?: number | null;
             /** Format: double */
             width_cm?: number | null;
+            /** @description The years rest on a weak source: show "about <year>". */
+            year_approximate: boolean;
             /**
              * Format: int32
              * @description First and last model year, both open ended - a boat still in
@@ -2665,24 +2732,45 @@ export interface components {
          */
         MaterialBody: {
             description?: string | null;
+            /** Format: double */
+            blade_area_cm2?: number | null;
+            /** Format: double */
+            blade_length_cm?: number | null;
+            blade_material?: string | null;
+            /** Format: double */
+            blade_width_cm?: number | null;
             brand: string;
             category: components["schemas"]["MaterialCategory"];
             /** Format: double */
             cockpit_length_cm?: number | null;
             /** Format: double */
             cockpit_width_cm?: number | null;
+            /** @default [] */
+            colors?: string[];
             construction?: components["schemas"]["MaterialConstruction"] | null;
             discipline?: components["schemas"]["MaterialDiscipline"] | null;
+            feather_deg?: number[] | null;
             /** Format: double */
             height_cm?: number | null;
             /** Format: double */
             length_cm?: number | null;
+            /** Format: double */
+            length_max_cm?: number | null;
+            /** Format: double */
+            length_min_cm?: number | null;
+            lengths_cm?: number[] | null;
             model: string;
+            notes?: string | null;
             /** Format: double */
             paddler_weight_max_kg?: number | null;
             /** Format: double */
             paddler_weight_min_kg?: number | null;
+            /** Format: int32 */
+            pieces?: number | null;
             product_url?: string | null;
+            shaft?: components["schemas"]["PaddleShaft"] | null;
+            shaft_diameter?: string | null;
+            shaft_material?: components["schemas"]["PaddleShaftMaterial"] | null;
             variant?: string | null;
             /** Format: double */
             volume_l?: number | null;
@@ -2690,6 +2778,8 @@ export interface components {
             weight_kg?: number | null;
             /** Format: double */
             width_cm?: number | null;
+            /** @default false */
+            year_approximate?: boolean;
             /** Format: int32 */
             year_from?: number | null;
             /** Format: int32 */
@@ -2707,7 +2797,7 @@ export interface components {
          *      its own table rather than more optional fields here.
          * @enum {string}
          */
-        MaterialCategory: "kayak" | "canoe" | "packraft" | "sup";
+        MaterialCategory: "kayak" | "canoe" | "packraft" | "sup" | "paddle";
         /** @enum {string} */
         MaterialConstruction: "plastic" | "composite" | "inflatable" | "folding" | "wood";
         /**
@@ -2715,7 +2805,7 @@ export interface components {
          *      creekers compare, a creeker and a sea kayak do not.
          * @enum {string}
          */
-        MaterialDiscipline: "creek" | "river_runner" | "half_slice" | "playboat" | "slalom" | "downriver" | "touring" | "sea" | "expedition" | "recreational";
+        MaterialDiscipline: "creek" | "river_runner" | "half_slice" | "playboat" | "slalom" | "downriver" | "touring" | "sea" | "expedition" | "recreational" | "crossover" | "freestyle" | "other";
         /**
          * @description Query parameters of the material search. Every measurement filter is a
          *      half-open bound, so a list can be narrowed from one side only.
@@ -2762,6 +2852,24 @@ export interface components {
             /** @description Filter by brand or model, diacritic- and typo-tolerant. */
             q?: string | null;
             sort?: components["schemas"]["MaterialSort"];
+        };
+        /** @description A mirrored product photo. Only fetched images are ever returned. */
+        MaterialImage: {
+            /** @description Whose photo it is (the maker). */
+            credit: string;
+            /** Format: int64 */
+            id: number;
+            /** @description The page the photo came from, for the credit link. */
+            page_url: string;
+            thumb_url: string;
+            /** @description The display copy, served from this API's media path. */
+            url: string;
+        };
+        MaterialImagePath: {
+            /** Format: int64 */
+            image_id: number;
+            /** Format: int64 */
+            material_id: number;
         };
         MaterialPath: {
             /** Format: int64 */
@@ -2868,6 +2976,13 @@ export interface components {
         };
         /** @description What an OSM element represents for a waterway. */
         OsmElementKind: "centerline" | "bank";
+        /**
+         * @description How a paddle's shaft is shaped.
+         * @enum {string}
+         */
+        PaddleShaft: "straight" | "bent" | "cranked";
+        /** @enum {string} */
+        PaddleShaftMaterial: "carbon" | "fiberglass" | "aluminium" | "wood" | "plastic" | "hybrid";
         PaginatedResponse_for_DeletedFeature: {
             items: components["schemas"]["DeletedFeature"][];
             /** Format: int64 */
@@ -3460,6 +3575,10 @@ export interface components {
             id: number;
             kind: components["schemas"]["RegionKind"];
             name: string;
+        };
+        Removed: {
+            /** Format: int64 */
+            removed: number;
         };
         ReplaceTripSectionsRequest: {
             sections: components["schemas"]["TripSectionInput"][];
@@ -4668,11 +4787,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-30T22:04:28.095629039Z",
-                     *         "expires_at": "2027-01-28T22:04:28.095632399Z",
+                     *         "created_at": "2026-10-30T23:42:07.654354460Z",
+                     *         "expires_at": "2027-01-28T23:42:07.654357290Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-30T22:04:28.095656479Z",
+                     *         "last_used_at": "2026-10-30T23:42:07.654370830Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4703,8 +4822,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-30T22:04:28.095810181Z",
-                     *       "expires_at": "2027-01-28T22:04:28.095810581Z",
+                     *       "created_at": "2026-10-30T23:42:07.654506409Z",
+                     *       "expires_at": "2027-01-28T23:42:07.654506789Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -8575,6 +8694,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MaterialBrand"][];
+                };
+            };
+        };
+    };
+    remove_brand_images: {
+        parameters: {
+            query?: {
+                /** @description The brand whose photos go, case-insensitive. Required. */
+                brand?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Removed"];
+                };
+            };
+            /** @description Brand missing */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    remove_image: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                image_id: number;
+                material_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Photo not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

@@ -22,7 +22,7 @@ pub async fn list_all_users_with_follow_status(
 ) -> Result<(Vec<UserWithFollowStatus>, i64), sqlx::Error> {
     let total = sqlx::query_scalar!(
         r#"SELECT COUNT(*) AS "count!" FROM users u
-           WHERE u.id != $1
+           WHERE u.id != $1 AND u.id != 'system-catalogue'
              AND ($2::text IS NULL OR strpos(lower(u.username), lower($2)) > 0)"#,
         viewer_id,
         search
@@ -43,7 +43,7 @@ pub async fn list_all_users_with_follow_status(
             ON in_f.following_id = $1
             AND in_f.follower_id = u.id
             AND in_f.status = 'pending'
-        WHERE u.id != $1
+        WHERE u.id != $1 AND u.id != 'system-catalogue'
           AND ($2::text IS NULL OR strpos(lower(u.username), lower($2)) > 0)
         ORDER BY u.username, u.id
         LIMIT $3 OFFSET $4
