@@ -56,8 +56,7 @@ async fn a_token_is_shown_once_and_works_as_a_key(pool: PgPool) {
         json!({ "name": "ci", "expires_in_days": 30 }),
     )
     .await;
-    // NOTE: looks wrong: creating a resource answers 200, not 201.
-    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+    assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);
     let plain = r.body["token"].as_str().unwrap().to_string();
     assert!(plain.starts_with("pm_"));
     assert_eq!(plain.len(), 3 + 64);

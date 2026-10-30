@@ -6,7 +6,7 @@ use crate::models::proposal::{ListProposalsFilters, Proposal};
 /// List proposals with wide filtering support.
 /// Visibility (auth-based) filtering must be applied by the caller before invoking this:
 ///   - unauthenticated: set filters.status = Some("pending")
-///   - non-admin auth: set filters.submitted_by = Some(viewer_user_id)
+///   - non-admin auth: set filters.visible_to = Some(viewer_user_id)
 ///   - admin: leave unrestricted
 ///
 /// Returns one page and the total across all pages.
@@ -58,6 +58,7 @@ async fn list_proposals_page(
              AND ($3::text   IS NULL OR p.entity_type  = $3)
              AND ($4::text   IS NULL OR p.operation    = $4)
              AND ($5::text   IS NULL OR p.submitted_by = $5)
+             AND ($11::text  IS NULL OR p.status = 'pending' OR p.submitted_by = $11)
              AND ($6::bigint IS NULL OR (
                      p.entity_type = 'feature' AND p.entity_id = $6
                  ))
@@ -100,6 +101,7 @@ async fn list_proposals_page(
     .bind(filters.waterway_id)
     .bind(filters.per_page)
     .bind((filters.page - 1) * filters.per_page)
+    .bind(filters.visible_to.as_deref())
     .fetch_all(db)
     .await?;
 

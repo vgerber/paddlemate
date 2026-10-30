@@ -160,8 +160,7 @@ async fn a_log_is_returned_in_the_shape_the_app_reads(pool: PgPool) {
     assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);
     let d = &r.body;
     assert_eq!(d["user_id"], "mara-1");
-    // NOTE: looks wrong: the create response carries no username, a later GET does.
-    assert!(d.get("username").is_none());
+    assert_eq!(d["username"], "mara");
     assert_eq!(d["name"], "Morning run");
     assert_eq!(d["start_time"], "2026-05-01T09:00:00Z");
     assert_eq!(d["put_in_lat"], 47.0);

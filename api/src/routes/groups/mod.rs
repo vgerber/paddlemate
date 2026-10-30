@@ -152,6 +152,7 @@ doc_fn!(get_group_docs, op =>
 pub struct UpdateGroupBody {
     pub name: Option<String>,
     /// Pass null to clear the description, omit to leave it unchanged
+    #[serde(default, deserialize_with = "crate::models::patch::nullable")]
     pub description: Option<Option<String>>,
 }
 
