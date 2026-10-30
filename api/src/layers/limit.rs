@@ -168,41 +168,28 @@ impl RateLimits {
         }
     }
 
-    /// Reads `RATE_LIMIT_PER_SECOND` (20), `WRITE_RATE_LIMIT_PER_SECOND` (1),
-    /// `EXPENSIVE_RATE_LIMIT_PER_SECOND` (2) and `TRUSTED_PROXIES`.
-    pub fn from_env(base: &str) -> Self {
-        let rate = |name: &str, default: u64| {
-            std::env::var(name)
-                .ok()
-                .and_then(|raw| raw.trim().parse::<u64>().ok())
-                .unwrap_or(default)
-        };
-        let proxies = match std::env::var("TRUSTED_PROXIES") {
-            Ok(raw) if !raw.trim().is_empty() => {
-                TrustedProxies::parse(&raw).expect("TRUSTED_PROXIES must be a CIDR list")
-            }
-            _ => TrustedProxies::private_ranges(),
-        };
-        let rates = Rates {
-            reads: rate("RATE_LIMIT_PER_SECOND", 20),
-            writes: rate("WRITE_RATE_LIMIT_PER_SECOND", 1),
-            expensive: rate("EXPENSIVE_RATE_LIMIT_PER_SECOND", 2),
-        };
+    /// Builds the limiter from the startup settings and logs what it uses.
+    pub fn from_config(config: &crate::config::Config) -> Self {
+        let rates = config.rates;
         tracing::info!(
             "Rate limit per caller: reads {}/s, writes {}/s, expensive reads {}/s (0 is off)",
             rates.reads,
             rates.writes,
             rates.expensive
         );
-        match std::env::var("TRUSTED_PROXIES") {
-            Ok(raw) if !raw.trim().is_empty() => {
-                tracing::info!("Caller address: forwarded headers trusted from {raw}")
+        let proxies = match (&config.trusted_proxies, &config.trusted_proxies_raw) {
+            (Some(proxies), Some(raw)) => {
+                tracing::info!("Caller address: forwarded headers trusted from {raw}");
+                proxies.clone()
             }
-            _ => tracing::info!(
-                "Caller address: forwarded headers trusted from private ranges (TRUSTED_PROXIES unset)"
-            ),
-        }
-        Self::new(rates, proxies, base)
+            _ => {
+                tracing::info!(
+                    "Caller address: forwarded headers trusted from private ranges (TRUSTED_PROXIES unset)"
+                );
+                TrustedProxies::private_ranges()
+            }
+        };
+        Self::new(rates, proxies, &config.base_url)
     }
 
     /// Forgets callers whose budget has refilled; run it now and then.

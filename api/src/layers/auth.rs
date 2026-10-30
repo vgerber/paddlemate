@@ -1,5 +1,3 @@
-use std::env;
-
 use axum::{
     body::Body,
     extract::State,
@@ -180,7 +178,7 @@ pub async fn api_token_auth(
                 issued_at: now,
                 jwt_id: format!("api-token-{}", record.id),
                 issuer: "api-token".to_string(),
-                audience: vec![env::var("KEYCLOAK_CLIENT_ID").unwrap_or_default()],
+                audience: vec![state.keycloak_config.client_id.clone()],
                 subject: record.user_id.clone(),
                 authorized_party: "api-token".to_string(),
                 roles: vec![],
@@ -299,7 +297,7 @@ pub async fn api_token_auth_optional(
                 issued_at: now,
                 jwt_id: format!("api-token-{}", record.id),
                 issuer: "api-token".to_string(),
-                audience: vec![env::var("KEYCLOAK_CLIENT_ID").unwrap_or_default()],
+                audience: vec![state.keycloak_config.client_id.clone()],
                 subject: record.user_id.clone(),
                 authorized_party: "api-token".to_string(),
                 roles: vec![],

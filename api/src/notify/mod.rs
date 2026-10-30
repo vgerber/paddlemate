@@ -201,10 +201,15 @@ pub async fn run_pruner(pool: PgPool) {
     }
 }
 
-/// Starts push when configured. Kept here so `main` and the tests build the
-/// same way.
-pub fn push_from_env() -> Option<Arc<PushService>> {
-    let push = PushService::from_env().map(Arc::new);
+/// Starts push when VAPID_PRIVATE_KEY and VAPID_SUBJECT are configured. The
+/// public key browsers need is derived from the private one, so the two
+/// cannot drift apart. Kept here so `main` and the tests build the same way.
+pub fn push_from_config(config: &crate::config::Config) -> Option<Arc<PushService>> {
+    let push = config
+        .vapid
+        .as_ref()
+        .and_then(|vapid| PushService::new(&vapid.private_key, vapid.subject.clone()))
+        .map(Arc::new);
     if push.is_none() {
         tracing::info!("VAPID_PRIVATE_KEY/VAPID_SUBJECT not set: web push is off");
     }

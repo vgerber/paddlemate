@@ -29,7 +29,7 @@ pub struct StoredImage {
 /// Where uploads are written. A relative default keeps development working
 /// without configuration; production mounts a volume and sets MEDIA_DIR.
 pub fn media_dir() -> PathBuf {
-    PathBuf::from(std::env::var("MEDIA_DIR").unwrap_or_else(|_| "media".to_string()))
+    crate::config::media_dir()
 }
 
 /// The thumbnail that belongs to a stored key.
@@ -46,7 +46,7 @@ pub fn thumb_key(storage_key: &str) -> String {
 /// `/media` would resolve against the frontend's origin and come back as
 /// the SPA's index.html.
 pub fn media_base() -> String {
-    let base = std::env::var("BASE_URL").unwrap_or_else(|_| "/api/v1".to_string());
+    let base = crate::config::base_url();
     // Beside the versioned API, not inside it: the API router claims every
     // path under its own prefix, so a route nested there is never reached.
     // Sharing the first segment is what makes an /api proxy carry it.
