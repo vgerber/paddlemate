@@ -15,8 +15,8 @@ use crate::{
             DeletedFeature, HistoryQuery, HistoryStep, SectionHistory, SectionHistoryQuery,
             SourcesQuery, WaterwaySources,
         },
+        page::{PaginatedResponse, page_bounds, page_of},
         path_params::{FeaturePath, SectionPath, WaterwayPath},
-        waterway::{PaginatedResponse, page_bounds, total_pages},
     },
     query::history::{self, Scope},
     state::AppState,
@@ -37,7 +37,7 @@ async fn require_known(app: &AppState, scope: &Scope) -> Result<(), ApiError> {
 
 /// One page of a history listing: the 404 gate, the paging bounds and the
 /// envelope, around whatever `list` fetches for them.
-async fn page_of<T: schemars::JsonSchema>(
+async fn history_page<T: schemars::JsonSchema>(
     app: &AppState,
     scope: Scope,
     query: &HistoryQuery,
@@ -48,13 +48,7 @@ async fn page_of<T: schemars::JsonSchema>(
     let (items, total) = list(page, per_page)
         .await
         .map_err(|err| ApiError::from_db("Error listing history", &err))?;
-    Ok(Json(PaginatedResponse {
-        items,
-        total,
-        page,
-        per_page,
-        total_pages: total_pages(total, per_page),
-    }))
+    Ok(Json(page_of(items, total, page, per_page)))
 }
 
 async fn steps_of(
@@ -62,7 +56,7 @@ async fn steps_of(
     scope: Scope,
     query: &HistoryQuery,
 ) -> Result<Json<PaginatedResponse<HistoryStep>>, ApiError> {
-    page_of(app, scope, query, async |page, per_page| {
+    history_page(app, scope, query, async |page, per_page| {
         history::list_steps(&app.pg_pool, &scope, page, per_page).await
     })
     .await
@@ -116,13 +110,7 @@ pub async fn get_section_history(
             found
                 .into_iter()
                 .map(|(id, (items, total))| {
-                    let page = PaginatedResponse {
-                        items,
-                        total,
-                        page: page_no,
-                        per_page,
-                        total_pages: total_pages(total, per_page),
-                    };
+                    let page = page_of(items, total, page_no, per_page);
                     (id, page)
                 })
                 .collect(),
@@ -185,7 +173,7 @@ pub async fn list_deleted_features(
     Query(query): Query<HistoryQuery>,
 ) -> impl IntoApiResponse {
     let scope = Scope::section(waterway_id, section_id);
-    page_of(&app, scope, &query, async |page, per_page| {
+    history_page(&app, scope, &query, async |page, per_page| {
         history::list_deleted_features(&app.pg_pool, waterway_id, section_id, page, per_page).await
     })
     .await

@@ -15,11 +15,12 @@ use crate::{
     layers::auth::AuthToken,
     models::{
         id_list::{MAX_BATCH_IDS, parse_id_list},
+        page::{PaginatedResponse, page_bounds, page_of},
         path_params::WaterwayPath,
         proposal::Proposal,
         waterway::{
-            PaginatedResponse, Waterway, WaterwayFilters, WaterwayId, WaterwayListItem,
-            WaterwayType, WaterwayWithSections, page_bounds, total_pages,
+            Waterway, WaterwayFilters, WaterwayId, WaterwayListItem, WaterwayType,
+            WaterwayWithSections,
         },
     },
     query::{gauges as query_gauges, proposals, waterways as query_waterways},
@@ -59,14 +60,7 @@ pub async fn list_waterways(
             return ApiError::from_db("Error listing waterway sections", &err).into_response();
         }
     }
-    Json(PaginatedResponse {
-        items,
-        total,
-        page,
-        per_page,
-        total_pages: total_pages(total, per_page),
-    })
-    .into_response()
+    Json(page_of(items, total, page, per_page)).into_response()
 }
 
 doc_fn!(list_waterways_docs, op =>

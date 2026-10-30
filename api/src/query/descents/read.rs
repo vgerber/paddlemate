@@ -3,8 +3,8 @@ use sqlx::{PgPool, Row};
 
 use crate::models::{
     descent::{Descent, DescentId, SectionDescentCount},
+    page::{PaginatedResponse, page_of},
     visibility::Visibility,
-    waterway::{PaginatedResponse, total_pages},
 };
 
 use super::common::*;
@@ -311,14 +311,7 @@ pub async fn list_descents_for_viewer(
 
     hide_foreign_trips(pool, viewer_id, &mut descents).await?;
 
-    let pages = total_pages(total, filters.per_page);
-    Ok(PaginatedResponse {
-        items: descents,
-        total,
-        page: filters.page,
-        per_page: filters.per_page,
-        total_pages: pages,
-    })
+    Ok(page_of(descents, total, filters.page, filters.per_page))
 }
 
 /// Per-section descent counts for a waterway, honoring the same

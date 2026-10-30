@@ -18,8 +18,8 @@ use crate::{
             MAX_QUERY_CHARS, Material, MaterialBody, MaterialBrand, MaterialCategory,
             MaterialFilters,
         },
+        page::{PaginatedResponse, page_bounds, page_of},
         path_params::MaterialPath,
-        waterway::PaginatedResponse,
     },
     query::{
         is_unique_violation,
@@ -32,9 +32,6 @@ use crate::{
 /// and spacing, so "already there" can mean a differently written duplicate.
 const DUPLICATE_MESSAGE: &str =
     "This brand, model and variant is already in the wiki - edit that entry instead";
-
-/// Furthest page the list will seek to; deeper than any real catalog.
-const MAX_PAGE: i64 = 10_000;
 
 /// Reject search text and brand filters long enough to be abuse.
 fn check_filters(filters: &MaterialFilters) -> Result<(), ApiError> {
@@ -71,8 +68,7 @@ pub async fn list_materials(
     if let Err(err) = check_filters(&filters) {
         return err.into_response();
     }
-    let page = filters.page.unwrap_or(1).clamp(1, MAX_PAGE);
-    let per_page = filters.per_page.unwrap_or(24).clamp(1, 100);
+    let (page, per_page) = page_bounds(filters.page, filters.per_page, 24);
 
     // The comparison asks for named entries and wants exactly those, in the
     // order it listed them, with no filter or paging applied on top.
@@ -105,14 +101,7 @@ pub async fn list_materials(
     }
 
     match materials::search(&app.pg_pool, &filters, page, per_page).await {
-        Ok((items, total)) => Json(PaginatedResponse {
-            items,
-            total,
-            page,
-            per_page,
-            total_pages: (total + per_page - 1) / per_page,
-        })
-        .into_response(),
+        Ok((items, total)) => Json(page_of(items, total, page, per_page)).into_response(),
         Err(err) => ApiError::from_db("Error listing materials", err).into_response(),
     }
 }

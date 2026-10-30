@@ -147,7 +147,11 @@ async fn the_list_depends_on_who_asks(pool: PgPool) {
     let r = call(&app, Method::GET, "/proposals", MARA, None).await;
     assert_eq!(ids(&r), [c, b, a]);
     let r = call(&app, Method::GET, "/proposals", JON, None).await;
-    assert_eq!(ids(&r), [b, a], "another user's rejected proposal stays hidden");
+    assert_eq!(
+        ids(&r),
+        [b, a],
+        "another user's rejected proposal stays hidden"
+    );
     let r = call(
         &app,
         Method::GET,

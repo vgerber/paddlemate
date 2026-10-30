@@ -18,6 +18,7 @@ use crate::query::history::{self, Op, Scope, Via};
 use order::{Span, sort_along_river};
 
 use super::FUZZY_MIN_CHARS;
+use super::util::escape_like;
 
 /// Case-insensitive check whether a waterway with this name already exists.
 pub async fn name_exists(pool: &PgPool, name: &str) -> Result<bool, sqlx::Error> {
@@ -196,15 +197,6 @@ impl From<SearchRow> for WaterwayListItem {
             sections: None,
         }
     }
-}
-
-/// Escape the characters LIKE treats as wildcards, so a query containing "%"
-/// searches for a literal percent sign instead of matching every row.
-fn escape_like(input: &str) -> String {
-    input
-        .replace('\\', "\\\\")
-        .replace('%', "\\%")
-        .replace('_', "\\_")
 }
 
 /// Search waterways, matching river names, section names and the localized
@@ -478,17 +470,4 @@ pub async fn attach_sections(
         item.sections = Some(grouped.remove(&item.id).unwrap_or_default());
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::escape_like;
-
-    #[test]
-    fn escapes_like_wildcards() {
-        assert_eq!(escape_like("salzach"), "salzach");
-        assert_eq!(escape_like("100%"), "100\\%");
-        assert_eq!(escape_like("a_b"), "a\\_b");
-        assert_eq!(escape_like("back\\slash"), "back\\\\slash");
-    }
 }

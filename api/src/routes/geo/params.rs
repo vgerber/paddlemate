@@ -1,6 +1,6 @@
 //! Query-parameter parsing shared by the geographic lookup routes.
 
-use crate::error::ApiError;
+use crate::{error::ApiError, models::validate::max_chars};
 
 /// Longest accepted line, in points.
 const MAX_LINE_POINTS: usize = 50;
@@ -14,12 +14,7 @@ pub fn parse_search_name(raw: Option<&str>) -> Result<Option<&str>, ApiError> {
     let Some(name) = raw.map(str::trim).filter(|q| !q.is_empty()) else {
         return Ok(None);
     };
-    if name.chars().count() > MAX_SEARCH_CHARS {
-        return Err(ApiError::validation(format!(
-            "q must be at most {MAX_SEARCH_CHARS} characters"
-        ))
-        .with_target("q"));
-    }
+    max_chars("q", "q", name, MAX_SEARCH_CHARS)?;
     Ok(Some(name))
 }
 

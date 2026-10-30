@@ -1,4 +1,4 @@
-use crate::error::ApiError;
+use crate::{error::ApiError, models::validate::max_chars};
 
 /// Longest name or place label; matches the `name` column.
 const MAX_NAME_CHARS: usize = 255;
@@ -7,11 +7,8 @@ const MAX_NOTE_CHARS: usize = 10_000;
 
 pub(super) fn check_text(field: &str, text: Option<&str>, max: usize) -> Result<(), ApiError> {
     match text {
-        Some(t) if t.chars().count() > max => Err(ApiError::validation(format!(
-            "{field} must be at most {max} characters"
-        ))
-        .with_target(field)),
-        _ => Ok(()),
+        Some(t) => max_chars(field, field, t, max),
+        None => Ok(()),
     }
 }
 
