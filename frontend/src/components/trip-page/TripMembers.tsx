@@ -238,7 +238,7 @@ function MemberRow({
         </Box>
       </ButtonBase>
 
-      <RolePill testId="member-role">
+      <RolePill testId="member-role" minWidth={68}>
         {member.role === "admin" ? "Admin" : "Member"}
       </RolePill>
       {actions.length > 0 ? (

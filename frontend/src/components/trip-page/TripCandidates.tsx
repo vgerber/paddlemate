@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { factLabelSx } from "@/components/Fact";
 import MarkdownText from "@/components/MarkdownText";
@@ -42,6 +42,7 @@ export default function TripCandidates({
   stays,
   viewerId,
   isAdmin,
+  onOpenChange,
 }: {
   tripId: number;
   candidates: TripStayCandidate[];
@@ -49,8 +50,11 @@ export default function TripCandidates({
   stays: TripStay[];
   viewerId: string | null;
   isAdmin: boolean;
+  /** The candidate open in the list, for the map to frame. */
+  onOpenChange?: (id: number | null) => void;
 }) {
   const [openId, setOpenId] = useState<number | null>(null);
+  useEffect(() => onOpenChange?.(openId), [openId, onOpenChange]);
   const [editing, setEditing] = useState<TripStayCandidate | null>(null);
   // Accepting is the one move here that cannot be undone, so the confirm -
   // and the mutation behind it - lives up here rather than inside a row that

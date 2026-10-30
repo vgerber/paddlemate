@@ -41,6 +41,7 @@ interface Props {
   viewerId: string | null;
   /** The bases map above the list; off where the canvas draws it behind. */
   showMap?: boolean;
+  onCandidateOpen?: (id: number | null) => void;
   onLogSection: (sectionId: number, waterwayId: number) => void;
   onEditStay: (stay: TripStay) => void;
   onEditWatchList: (stay: TripStay) => void;
@@ -57,6 +58,7 @@ export default function TripStays({
   isAdmin,
   viewerId,
   showMap = true,
+  onCandidateOpen,
   onLogSection,
   onEditStay,
   onEditWatchList,
@@ -109,6 +111,7 @@ export default function TripStays({
         stays={list}
         viewerId={viewerId}
         isAdmin={isAdmin}
+        onOpenChange={onCandidateOpen}
       />
 
       {list.map((stay) => (

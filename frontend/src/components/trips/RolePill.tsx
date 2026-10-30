@@ -8,9 +8,12 @@ const { tokens } = theme;
 export default function RolePill({
   children,
   testId,
+  minWidth,
 }: {
   children: string;
   testId?: string;
+  /** Pills in a column share one width so their edges line up. */
+  minWidth?: number;
 }) {
   return (
     <Typography
@@ -19,6 +22,8 @@ export default function RolePill({
       sx={{
         ...labelSx,
         flexShrink: 0,
+        minWidth,
+        textAlign: "center",
         lineHeight: "22px",
         px: "9px",
         borderRadius: `${tokens.radii.pill}px`,
