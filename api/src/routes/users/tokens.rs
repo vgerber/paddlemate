@@ -14,7 +14,7 @@ use crate::{
     error::{ApiError, ErrorResponse},
     layers::auth::AuthToken,
     models::api_token::{ApiToken, ApiTokenId},
-    query::users::tokens::generate_token_pair,
+    query::users::tokens::{self as tokens_query, generate_token_pair},
     state::AppState,
 };
 
@@ -47,19 +47,9 @@ pub async fn create_token(
         .expires_in_days
         .map(|days| Utc::now() + Duration::days(days));
 
-    let result = sqlx::query!(
-        r#"
-        INSERT INTO api_tokens (user_id, name, token_hash, expires_at)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, created_at
-        "#,
-        user_id,
-        body.name,
-        token_hash,
-        expires_at
-    )
-    .fetch_one(&app.pg_pool)
-    .await;
+    let result =
+        tokens_query::insert_token(&app.pg_pool, user_id, &body.name, &token_hash, expires_at)
+            .await;
 
     match result {
         Ok(record) => (
@@ -105,17 +95,7 @@ pub async fn list_tokens(
 ) -> impl IntoApiResponse {
     let user_id = &token.user_id();
 
-    let tokens = sqlx::query!(
-        r#"
-        SELECT id, user_id, name, created_at, expires_at, last_used_at, revoked_at
-        FROM api_tokens
-        WHERE user_id = $1 AND revoked_at IS NULL
-        ORDER BY created_at DESC
-        "#,
-        user_id
-    )
-    .fetch_all(&app.pg_pool)
-    .await;
+    let tokens = tokens_query::list_active(&app.pg_pool, user_id).await;
 
     match tokens {
         Ok(records) => {
@@ -170,26 +150,11 @@ pub async fn revoke_token(
 ) -> impl IntoApiResponse {
     let user_id = &token.user_id();
 
-    let result = sqlx::query!(
-        r#"
-        UPDATE api_tokens
-        SET revoked_at = NOW()
-        WHERE id = $1 AND user_id = $2 AND revoked_at IS NULL
-        "#,
-        path.token_id,
-        user_id
-    )
-    .execute(&app.pg_pool)
-    .await;
+    let result = tokens_query::revoke(&app.pg_pool, path.token_id, user_id).await;
 
     match result {
-        Ok(res) => {
-            if res.rows_affected() == 0 {
-                ApiError::not_found("Not found").into_response()
-            } else {
-                StatusCode::NO_CONTENT.into_response()
-            }
-        }
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) => ApiError::from_db("Error revoking API token", err).into_response(),
     }
 }
