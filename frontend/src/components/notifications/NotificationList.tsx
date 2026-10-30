@@ -28,6 +28,19 @@ import { fonts, theme } from "@/lib/theme";
 const { phone } = theme.tokens;
 
 /** The icon the app uses for the thing that changed. */
+/** Events about the bases and their votes open the trip on the Bases tab. */
+const BASES_EVENTS: ReadonlySet<TripEvent["kind"]> = new Set([
+  "stay_added",
+  "stay_changed",
+  "stay_removed",
+  "watch_list_changed",
+  "candidate_proposed",
+  "candidate_changed",
+  "candidate_voted",
+  "candidate_accepted",
+  "candidate_withdrawn",
+]);
+
 function KindIcon({ kind }: { kind: TripEvent["kind"] }) {
   if (kind.startsWith("member_")) return <MembersIcon />;
   if (kind.startsWith("stay_") || kind.startsWith("candidate_")) {
@@ -95,13 +108,14 @@ export default function NotificationList({
   }
 
   const open = (e: TripEvent) => {
+    const tab = BASES_EVENTS.has(e.kind) ? "bases" : undefined;
     if (isDesktop) {
-      navigate({ to: "/trips", search: { selected: e.trip_id } });
+      navigate({ to: "/trips", search: { selected: e.trip_id, tab } });
     } else {
       navigate({
         to: "/trips/$tripId",
         params: { tripId: String(e.trip_id) },
-        search: { edit: undefined },
+        search: { edit: undefined, tab },
       });
     }
     onOpenTrip?.();

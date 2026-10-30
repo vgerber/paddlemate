@@ -4,18 +4,24 @@ import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
-import TripDetail from "@/components/trip-page/TripDetail";
+import TripDetail, {
+  parseTripTab,
+  type TripTab,
+} from "@/components/trip-page/TripDetail";
 import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useTrip } from "@/lib/hooks/useTrips";
 import { PANEL_HEIGHT, theme } from "@/lib/theme";
 
 export const Route = createFileRoute("/trips/$tripId")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { edit?: boolean; tab?: TripTab } => ({
     // Absent unless editing, so an open trip carries no `?edit=false`.
     edit:
       search.edit === true || search.edit === "true"
         ? (true as boolean)
         : undefined,
+    tab: parseTripTab(search.tab),
   }),
   component: TripDetailPage,
 });
@@ -26,7 +32,7 @@ function TripDetailPage() {
   const navigate = useNavigate();
   const goBack = useGoBack(() => navigate({ to: "/trips", replace: true }));
   const { tripId } = Route.useParams();
-  const { edit } = Route.useSearch();
+  const { edit, tab } = Route.useSearch();
   const tripQuery = useTrip(Number(tripId));
   const { data: trip, isLoading } = tripQuery;
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"), { noSsr: true });
@@ -36,7 +42,7 @@ function TripDetailPage() {
     return (
       <Navigate
         to="/trips"
-        search={{ selected: Number(tripId), edit: edit || undefined }}
+        search={{ selected: Number(tripId), edit: edit || undefined, tab }}
         replace
       />
     );
@@ -73,11 +79,23 @@ function TripDetailPage() {
       <TripDetail
         trip={trip}
         editing={edit === true}
+        tab={tab}
+        onTabChange={(next) =>
+          navigate({
+            to: "/trips/$tripId",
+            params: { tripId },
+            search: {
+              edit: edit || undefined,
+              tab: next === "plan" ? undefined : next,
+            },
+            replace: true,
+          })
+        }
         onEditingChange={(value) =>
           navigate({
             to: "/trips/$tripId",
             params: { tripId },
-            search: { edit: value || undefined },
+            search: { edit: value || undefined, tab },
             replace: true,
           })
         }

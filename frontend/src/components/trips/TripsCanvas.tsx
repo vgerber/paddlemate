@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import {
   useCanvasLayout,
   useCanvasScene,
@@ -10,8 +10,9 @@ import DockedAction from "@/components/DockedAction";
 import ListPaneHeader from "@/components/ListPaneHeader";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
-import TripDetail from "@/components/trip-page/TripDetail";
+import TripDetail, { type TripTab } from "@/components/trip-page/TripDetail";
 import TripMembersCard from "@/components/trip-page/TripMembersCard";
+import type { TripFocus } from "@/components/trip-page/tripFocus";
 import { useTripScene } from "@/components/trip-page/useTripScene";
 import type { Trip } from "@/lib/api";
 import { theme } from "@/lib/theme";
@@ -31,6 +32,8 @@ interface Props {
   trip: Trip | null;
   /** The open trip's own fetch, while there is no trip to show yet. */
   opening?: { isError: boolean; error: unknown; refetch: () => unknown };
+  tab?: TripTab;
+  onTabChange?: (tab: TripTab) => void;
   creating: boolean;
   editing: boolean;
   onNew: () => void;
@@ -49,6 +52,8 @@ export default function TripsCanvas({
   loading,
   trip,
   opening,
+  tab,
+  onTabChange,
   creating,
   editing,
   onNew,
@@ -58,7 +63,8 @@ export default function TripsCanvas({
 }: Props) {
   // Only mounted signed in on a wide screen, so the map never shows behind
   // the sign-in prompt.
-  useCanvasScene(useTripScene(trip));
+  const [focus, setFocus] = useState<TripFocus | null>(null);
+  useCanvasScene(useTripScene(trip, focus));
   const { windowWidth } = useCanvasLayout();
   const membersCard = trip != null && windowWidth >= MEMBERS_CARD_FROM;
 
@@ -159,6 +165,9 @@ export default function TripsCanvas({
               embedded
               canvasMap
               membersCard={membersCard}
+              tab={tab}
+              onTabChange={onTabChange}
+              onFocusChange={setFocus}
               editing={editing}
               onEditingChange={onEditingChange}
               onClose={onClose}

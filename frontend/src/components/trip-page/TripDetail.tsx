@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { fabRoom } from "@/components/PaneFab";
 import PanelHeader from "@/components/PanelHeader";
@@ -30,6 +30,7 @@ import TripLogs from "./TripLogs";
 import TripMembers from "./TripMembers";
 import TripStays from "./TripStays";
 import TripTimeline from "./TripTimeline";
+import { focusKey, type TripFocus } from "./tripFocus";
 
 const TABS = [
   { value: "plan", label: "Plan" },
@@ -39,6 +40,11 @@ const TABS = [
 ] as const;
 
 export type TripTab = (typeof TABS)[number]["value"];
+
+/** A tab named in the address, or undefined for anything else (the Plan). */
+export function parseTripTab(value: unknown): TripTab | undefined {
+  return TABS.find((t) => t.value === value && t.value !== "plan")?.value;
+}
 
 interface Props {
   trip: Trip;
@@ -53,6 +59,11 @@ interface Props {
   canvasMap?: boolean;
   /** The members have a card of their own, so the Members tab goes. */
   membersCard?: boolean;
+  /** The tab the address names; the tab is the address's while it is given. */
+  tab?: TripTab;
+  onTabChange?: (tab: TripTab) => void;
+  /** What the map should frame: a candidate or a day the view has open. */
+  onFocusChange?: (focus: TripFocus | null) => void;
   onDeleted: () => void;
 }
 
@@ -73,6 +84,9 @@ export default function TripDetail({
   embedded = false,
   canvasMap = false,
   membersCard = false,
+  tab: tabInUrl,
+  onTabChange,
+  onFocusChange,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useSession();
@@ -81,7 +95,12 @@ export default function TripDetail({
   const deleteStay = useDeleteTripStay(trip.id);
   const linkDescent = useLinkDescentToTrip(trip.id);
 
-  const [openTab, setTab] = useState<TripTab>("plan");
+  const [localTab, setLocalTab] = useState<TripTab>("plan");
+  const openTab = tabInUrl ?? localTab;
+  const setTab = (next: TripTab) => {
+    setLocalTab(next);
+    onTabChange?.(next);
+  };
   const tabs = membersCard ? TABS.filter((t) => t.value !== "members") : TABS;
   // The members card appearing under an open Members tab falls back to Plan.
   const tab = tabs.some((t) => t.value === openTab) ? openTab : "plan";
@@ -105,6 +124,20 @@ export default function TripDetail({
   // The day expanded in the plan, and the calendar that picks a new one.
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [pickingDay, setPickingDay] = useState(false);
+
+  const [candidateId, setCandidateId] = useState<number | null>(null);
+  const focus: TripFocus | null =
+    tab === "plan" && openDay
+      ? { kind: "day", date: openDay }
+      : tab === "bases" && candidateId != null
+        ? { kind: "candidate", id: candidateId }
+        : null;
+  const focusSig = focus ? focusKey(focus) : null;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the signature stands for the focus
+  useEffect(() => {
+    onFocusChange?.(focus);
+    return () => onFocusChange?.(null);
+  }, [focusSig, onFocusChange]);
 
   const tabIndex = tabs.findIndex((t) => t.value === tab);
   const swipe = useSwipeTabs({
@@ -223,6 +256,7 @@ export default function TripDetail({
             isAdmin={isAdmin}
             viewerId={viewerId}
             showMap={!canvasMap}
+            onCandidateOpen={setCandidateId}
             onLogSection={newLog}
             {...stayActions}
           />

@@ -9,6 +9,7 @@ import LoadingBox from "@/components/states/LoadingBox";
 import QueryStates from "@/components/states/QueryStates";
 import SignInGate from "@/components/states/SignInGate";
 import { sortByStanding } from "@/components/trip-page/planWeek";
+import { parseTripTab, type TripTab } from "@/components/trip-page/TripDetail";
 import TripRow from "@/components/trips/TripRow";
 import TripsCanvas from "@/components/trips/TripsCanvas";
 import { todayIso } from "@/lib/format";
@@ -21,10 +22,11 @@ export const Route = createFileRoute("/trips/")({
   // All optional, so /trips is always a valid link.
   validateSearch: (
     search: Record<string, unknown>,
-  ): { selected?: number; edit?: boolean; new?: boolean } => ({
+  ): { selected?: number; edit?: boolean; new?: boolean; tab?: TripTab } => ({
     // Which trip the desktop detail pane shows; keeps it linkable.
     selected: search.selected != null ? Number(search.selected) : undefined,
     edit: search.edit === true || search.edit === "true" ? true : undefined,
+    tab: parseTripTab(search.tab),
     new: search.new === true || search.new === "true" ? true : undefined,
   }),
   component: TripsPage,
@@ -32,7 +34,7 @@ export const Route = createFileRoute("/trips/")({
 
 function TripsPage() {
   const navigate = useNavigate({ from: "/trips/" });
-  const { selected, edit, new: creating } = Route.useSearch();
+  const { selected, edit, tab, new: creating } = Route.useSearch();
   const { isAuthenticated, isLoading: sessionLoading } = useSession();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
 
@@ -133,6 +135,7 @@ function TripsPage() {
         ...prev,
         selected: undefined,
         edit: undefined,
+        tab: undefined,
         new: undefined,
       }),
     });
@@ -144,6 +147,16 @@ function TripsPage() {
       loading={isLoading}
       trip={selectedTrip ?? null}
       opening={selected != null ? selectedQuery : undefined}
+      tab={tab}
+      onTabChange={(next) =>
+        navigate({
+          search: (prev) => ({
+            ...prev,
+            tab: next === "plan" ? undefined : next,
+          }),
+          replace: true,
+        })
+      }
       creating={creating === true}
       editing={edit === true}
       onNew={() =>

@@ -19,6 +19,7 @@ import {
   rangeBounds,
 } from "@/lib/tripRange";
 import { useTokens } from "@/lib/useTokens";
+import { focusBounds, type TripFocus } from "./tripFocus";
 
 export interface BasesScene {
   ranges: BaseRange[];
@@ -29,6 +30,9 @@ export interface BasesScene {
   /** The rings and the watched sections together; null while nothing is
    * placed. */
   bounds: Bounds | null;
+  /** The box of the focus (an open candidate or day); null without one or
+   * while it has nothing placed. */
+  focusBox: Bounds | null;
   /** Nothing to draw: no base placed and no candidate pointed at. */
   isEmpty: boolean;
 }
@@ -39,6 +43,7 @@ export interface BasesScene {
 export function useBasesScene(
   tripId: number | null,
   isMember: boolean,
+  focus: TripFocus | null = null,
 ): BasesScene {
   const tokens = useTokens();
   const { data: staysData } = useTripStays(tripId);
@@ -117,5 +122,20 @@ export function useBasesScene(
     [ranges, rings, watched],
   );
 
-  return { ranges, rings, watched, bounds, isEmpty: rings.length === 0 };
+  const focusBox = useMemo(
+    () =>
+      focus
+        ? focusBounds(focus, stays, candidates ?? [], ranges, watched)
+        : null,
+    [focus, stays, candidates, ranges, watched],
+  );
+
+  return {
+    ranges,
+    rings,
+    watched,
+    bounds,
+    focusBox,
+    isEmpty: rings.length === 0,
+  };
 }
