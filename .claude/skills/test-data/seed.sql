@@ -926,6 +926,56 @@ INSERT INTO user_section_favorites (user_id, section_id) VALUES
   (:'mara',    9102)
 ON CONFLICT DO NOTHING;
 
+-- Material wiki entries, for searching and comparing on /materials. Brands
+-- and models are invented like the rest of the fixture; the numbers are
+-- plausible so a comparison reads like a real one. The three Cascade sizes
+-- are the interesting case - same model, one column each.
+INSERT INTO materials (id, category, brand, model, variant, discipline, construction,
+                       description, year_from, year_to, length_cm, width_cm, height_cm,
+                       volume_l, weight_kg, cockpit_length_cm, cockpit_width_cm,
+                       paddler_weight_min_kg, paddler_weight_max_kg, product_url, created_by)
+SELECT v.id, v.category::material_category, v.brand, v.model, v.variant,
+       v.discipline::material_discipline, v.construction::material_construction,
+       v.description, v.year_from, v.year_to, v.length_cm, v.width_cm, v.height_cm,
+       v.volume_l, v.weight_kg, v.cockpit_length_cm, v.cockpit_width_cm,
+       v.paddler_weight_min_kg, v.paddler_weight_max_kg, v.product_url, u.id
+FROM (VALUES
+  (9851, 'kayak', 'Testflow', 'Cascade', 'S', 'creek', 'plastic',
+   'Short creeker for lighter paddlers, high rocker and a dry bow.',
+   2022, NULL, 254.0, 64.0, 39.0, 295.0, 20.5, 84.0, 49.0, 45.0, 75.0, 'https://example.com/cascade'),
+  (9852, 'kayak', 'Testflow', 'Cascade', 'M', 'creek', 'plastic',
+   'The middle Cascade - the one most paddlers end up in.',
+   2022, NULL, 264.0, 66.0, 40.0, 320.0, 22.0, 86.0, 51.0, 70.0, 110.0, 'https://example.com/cascade'),
+  (9853, 'kayak', 'Testflow', 'Cascade', 'L', 'creek', 'plastic',
+   'Large Cascade, more volume behind the seat for expedition loads.',
+   2022, NULL, 274.0, 68.0, 41.0, 345.0, 23.5, 88.0, 52.0, 90.0, 130.0, 'https://example.com/cascade'),
+  (9854, 'kayak', 'Riverline', 'Squirt', NULL, 'half_slice', 'plastic',
+   'Sliced stern, planing hull - a river runner that still stern squirts.',
+   2021, 2024, 259.0, 65.0, 36.0, 290.0, 20.0, 85.0, 50.0, 55.0, 95.0, NULL),
+  (9855, 'kayak', 'Riverline', 'Ripple', NULL, 'playboat', 'plastic',
+   'Park and play boat, loose on a wave and quick to spin.',
+   2019, NULL, 188.0, 64.0, 32.0, 215.0, 18.0, 80.0, 47.0, 60.0, 95.0, NULL),
+  (9856, 'kayak', 'Northline', 'Drift', NULL, 'river_runner', 'plastic',
+   'Forgiving all-rounder for grade III water and long days.',
+   2023, NULL, 250.0, 65.0, 37.0, 285.0, 19.8, 86.0, 50.0, 60.0, 100.0, NULL),
+  (9857, 'kayak', 'Northline', 'Voyager', NULL, 'sea', 'composite',
+   'Sea kayak with two bulkheads and a skeg.',
+   2018, NULL, 480.0, 55.0, 34.0, 330.0, 24.0, 78.0, 44.0, 60.0, 120.0, NULL),
+  (9858, 'kayak', 'Alpiner', 'Slalom Pro', NULL, 'slalom', 'composite',
+   'Racing hull, minimum-weight layup, unforgiving edges.',
+   2020, NULL, 350.0, 60.0, 28.0, 220.0, 9.5, 76.0, 44.0, 55.0, 90.0, NULL),
+  (9859, 'canoe', 'Testflow', 'Tandem', NULL, 'recreational', 'plastic',
+   'Open tandem canoe for flat and easy moving water.',
+   2017, NULL, 490.0, 90.0, 38.0, NULL, 34.0, NULL, NULL, NULL, NULL, NULL),
+  (9860, 'packraft', 'Packline', 'Alpine', NULL, 'expedition', 'inflatable',
+   'Packraft that fits in a rucksack, for walk-in descents.',
+   2021, NULL, 220.0, 90.0, 30.0, NULL, 3.2, NULL, NULL, 50.0, 120.0, NULL)
+) AS v(id, category, brand, model, variant, discipline, construction, description,
+       year_from, year_to, length_cm, width_cm, height_cm, volume_l, weight_kg,
+       cockpit_length_cm, cockpit_width_cm, paddler_weight_min_kg,
+       paddler_weight_max_kg, product_url)
+CROSS JOIN (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
+
 -- The explicit 9xxx ids above bypass the id sequences. Bump them past the
 -- fixture range so rows created through the app get higher ids - otherwise
 -- they sort before the fixture rows (breaking "first range wins" defaults)
@@ -935,7 +985,7 @@ FROM unnest(ARRAY[
   'waterways', 'water_sections', 'features', 'feature_names',
   'section_names', 'gauges', 'gauge_series', 'feature_water_ranges',
   'descents', 'proposals', 'comments', 'media',
-  'groups', 'trips', 'trip_stays', 'trip_sections'
+  'groups', 'trips', 'trip_stays', 'trip_sections', 'materials'
 ]) AS t;
 
 COMMIT;

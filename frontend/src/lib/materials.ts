@@ -376,23 +376,29 @@ export const SORT_LABELS: Record<MaterialSort, string> = {
  * weight the same way. */
 export const MAX_FITS_KG = 500;
 
+/** A text search param. The router reads `?q=2000` as the number 2000, so a
+ * number is the text it was typed as. */
+export function searchText(raw: unknown): string | undefined {
+  if (typeof raw === "number") return String(raw);
+  return typeof raw === "string" && raw.trim() ? raw : undefined;
+}
+
 export function parseMaterialSearch(
   raw: Record<string, unknown>,
 ): MaterialWikiSearch {
   const fits = Number(raw.fits);
   return {
-    q: typeof raw.q === "string" && raw.q.trim() ? raw.q : undefined,
+    q: searchText(raw.q),
     category: oneOf(raw.category, CATEGORIES),
     discipline: oneOf(raw.discipline, DISCIPLINES),
     construction: oneOf(raw.construction, CONSTRUCTIONS),
-    brand: typeof raw.brand === "string" && raw.brand ? raw.brand : undefined,
+    brand: searchText(raw.brand),
     sort: oneOf(raw.sort, SORTS),
     fits:
       Number.isFinite(fits) && fits > 0 && fits <= MAX_FITS_KG
         ? fits
         : undefined,
-    compare:
-      typeof raw.compare === "string" && raw.compare ? raw.compare : undefined,
+    compare: searchText(raw.compare),
   };
 }
 

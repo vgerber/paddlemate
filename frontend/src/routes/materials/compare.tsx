@@ -11,12 +11,13 @@ import { CompareIcon } from "@/lib/icons";
 import {
   EMPTY_MATERIAL_SEARCH,
   parseCompareIds,
+  searchText,
   serializeCompareIds,
 } from "@/lib/materials";
 
 export const Route = createFileRoute("/materials/compare")({
   validateSearch: (search: Record<string, unknown>) => ({
-    ids: typeof search.ids === "string" ? search.ids : "",
+    ids: searchText(search.ids) ?? "",
   }),
   component: ComparePage,
 });

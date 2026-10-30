@@ -138,7 +138,12 @@ export default function ComparisonTable({
                   <IconButton
                     onClick={() => onRemove(material.id)}
                     aria-label={`Remove ${materialTitle(material)} from the comparison`}
-                    sx={{ mr: -1.5, flexShrink: 0 }}
+                    sx={{
+                      width: tokens.touch.min,
+                      height: tokens.touch.min,
+                      mr: -1.5,
+                      flexShrink: 0,
+                    }}
                   >
                     <CloseIcon fontSize="small" />
                   </IconButton>

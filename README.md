@@ -63,6 +63,10 @@ water levels, and a shared logbook.
   device even when the app is set to Light. A second choice, Motion (Full by
   default, Reduced, or System to follow the device): Reduced keeps short fades
   and stops movement, also on the map.
+- **Material wiki** - a shared gear catalog under Tools: boats searchable by
+  brand and model, filterable by discipline, construction and the paddler
+  weight they fit, and comparable side by side property for property. Any
+  signed-in paddler can add or correct an entry.
 - **Community** - voting on proposals, comments on
   sections and features, favorites (listed as starred sections), follows, and per-user or
   per-group visibility of logs.
@@ -80,6 +84,7 @@ water levels, and a shared logbook.
 | [Fetching gauge data](doc/fetching-gauge-data.md) | Fetch recipes for gauge networks outside our provider set - endpoints, fields, units, gotchas, per country |
 | [Gauge providers and whitewater.guide](doc/gauge-data-and-whitewater-guide.md) | Coverage vs. whitewater.guide's `gorge` sources, and whether their section data/content can be reused |
 | [Trips](doc/trips.md) | Planning a trip together: bases, watch lists, membership and invite links, and how logs are credited |
+| [Material wiki](doc/material-wiki.md) | The gear catalog: searching boats, comparing their specs, and who may edit an entry |
 | [Search](doc/search.md) | What you can type, how results rank, normalization and the REINDEX rule |
 | [Translations](doc/translations.md) | Display language, translation endpoints, language codes end to end |
 | [API](api/README.md) | Database schema, authentication, Keycloak setup |

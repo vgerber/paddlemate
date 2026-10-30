@@ -11,6 +11,7 @@ import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { Material } from "@/lib/api";
+import { ApiError } from "@/lib/api/client";
 import { useGoBack } from "@/lib/hooks/useGoBack";
 import {
   useDeleteMaterial,
@@ -35,6 +36,9 @@ export const Route = createFileRoute("/materials/$materialId")({
   }),
   component: MaterialPage,
 });
+
+const isNotFound = (error: unknown) =>
+  error instanceof ApiError && error.status === 404;
 
 function MaterialPage() {
   const navigate = useNavigate();
@@ -63,7 +67,7 @@ function MaterialPage() {
 
   const material = query.data;
   if (query.isLoading) return <LoadingBox size={40} pt={8} />;
-  if (query.isError) {
+  if (query.isError && !isNotFound(query.error)) {
     return <ErrorState error={query.error} onRetry={() => query.refetch()} />;
   }
   if (!material) {

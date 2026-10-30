@@ -8,6 +8,8 @@ import {
   materialTitle,
   paddlerRangeLabel,
   parseCompareIds,
+  parseMaterialSearch,
+  searchText,
   specSpread,
   toggleCompareId,
   yearsLabel,
@@ -164,5 +166,16 @@ describe("enumLabel", () => {
   test("reads a snake_case value as a sentence", () => {
     expect(enumLabel("river_runner")).toBe("River runner");
     expect(enumLabel("sup")).toBe("Sup");
+  });
+});
+
+describe("searchText", () => {
+  test("a number read from the URL is the text it was typed as", () => {
+    expect(searchText(2000)).toBe("2000");
+    expect(parseMaterialSearch({ q: 9853, compare: 9853 })).toMatchObject({
+      q: "9853",
+      compare: "9853",
+    });
+    expect(searchText("  ")).toBeUndefined();
   });
 });
