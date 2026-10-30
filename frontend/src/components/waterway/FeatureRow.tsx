@@ -9,7 +9,7 @@ import { coversWholeSection, fmtKm, fmtKmSpan } from "./section-details/utils";
 
 /** Position along the section line - the subset of ComputedFeature the row
  * needs, so callers can also pass hand-built extents (e.g. endpoints). */
-export interface FeatureExtent {
+interface FeatureExtent {
   distM: number;
   startM: number;
   endM: number;

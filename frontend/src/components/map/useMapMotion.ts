@@ -26,18 +26,18 @@ export const SELECTED_LINE_LAYER = "sections-line-selected";
 
 /** The flow: 12 frames at 12 Hz, one dash pattern per frame. */
 export const FLOW_FRAMES = 12;
-export const FLOW_FPS = 12;
+const FLOW_FPS = 12;
 const FLOW_DASH = 2;
 const FLOW_GAP = 3;
 
 /** No pointer, key or camera input for this long stops the ambient motion. */
-export const IDLE_MS = 20_000;
+const IDLE_MS = 20_000;
 const LOW_BATTERY = 0.2;
 
-export const DRAWIN_MS = durations.slow;
+const DRAWIN_MS = durations.slow;
 
 /** Why ambient (looping) motion is paused. Empty means it may run. */
-export type PauseReason =
+type PauseReason =
   | "hidden"
   | "idle"
   | "reduced"
@@ -95,7 +95,7 @@ export function drawGradient(
   return ["step", ["line-progress"], color, progress, "transparent"];
 }
 
-export interface DrawIn {
+interface DrawIn {
   sectionId: number;
   /** performance.now() when the head left the put-in. */
   startedAt: number;
@@ -132,7 +132,7 @@ interface Options {
   colors: DrawColors;
 }
 
-export interface DrawColors {
+interface DrawColors {
   casing: string;
   line: string;
 }

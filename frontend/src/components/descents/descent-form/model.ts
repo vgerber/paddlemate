@@ -3,7 +3,7 @@ import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { localizedName } from "@/lib/localization";
 import { toVisibility, type VisibilityType } from "@/lib/visibility";
 
-export type TimingMode = "single" | "multi";
+type TimingMode = "single" | "multi";
 export type SectionLocation = { type: "LineString"; coordinates: number[][] };
 
 export interface SectionDraft {
@@ -90,7 +90,7 @@ export function stepProblem(form: LogForm, step: number): string | null {
   return null;
 }
 
-export function isValidCoord(val: string): boolean {
+function isValidCoord(val: string): boolean {
   return val !== "" && !Number.isNaN(parseFloat(val));
 }
 

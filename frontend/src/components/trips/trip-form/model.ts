@@ -16,7 +16,7 @@ export interface TripForm {
   stay_name: string;
 }
 
-export function toDateInput(iso: string): string {
+function toDateInput(iso: string): string {
   return iso.slice(0, 10);
 }
 

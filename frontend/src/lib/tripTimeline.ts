@@ -146,7 +146,7 @@ export function monthGrid(year: number, month: number): string[][] {
 }
 
 /** A section somebody ran that day, and everybody who ran it. */
-export interface PaddledSection {
+interface PaddledSection {
   sectionId: number;
   name: string;
   paddlers: string[];
@@ -223,7 +223,7 @@ export function paddledByRiver(events: TripEvent[]): {
 }
 
 /** The most run marks a day cell can hold. */
-export const MAX_RUN_MARKS = 3;
+const MAX_RUN_MARKS = 3;
 
 /** Runs per day, for the marks under the calendar's numbers: one per distinct
  * section on the day, capped. Days without a run (arrivals, rest, bases) are

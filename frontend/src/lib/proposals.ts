@@ -1,22 +1,7 @@
-import type { Feature, FeatureType, Proposal, ProposalStatus } from "@/lib/api";
+import type { Feature, FeatureType, Proposal } from "@/lib/api";
 import { humanize } from "@/lib/format";
 
-export const STATUS_COLOR: Record<
-  ProposalStatus,
-  "default" | "warning" | "success" | "error"
-> = {
-  pending: "warning",
-  approved: "success",
-  rejected: "error",
-};
-
-export const OP_LABEL: Record<string, string> = {
-  create: "Create",
-  update: "Update",
-  delete: "Delete",
-};
-
-export const ENTITY_LABEL: Record<string, string> = {
+const ENTITY_LABEL: Record<string, string> = {
   waterway: "River",
   water_section: "Section",
   feature: "Feature",
@@ -44,7 +29,7 @@ export function proposalKind(
   }
 }
 
-export const HIDDEN_KEYS = new Set(["geometry", "water_ranges", "location"]);
+const HIDDEN_KEYS = new Set(["geometry", "water_ranges", "location"]);
 
 /** Additionally hidden on create cards: internal ids, the name (it is the
  * card title already) and per-entity plumbing fields. */

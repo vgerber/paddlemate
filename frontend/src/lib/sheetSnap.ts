@@ -1,7 +1,7 @@
 /** Fraction of the viewport the open sheet may fill. */
 export const OPEN_RATIO = 0.85;
 /** Release speed (px per ms) that moves to the next snap whatever the height. */
-export const FLICK_SPEED = 0.5;
+const FLICK_SPEED = 0.5;
 
 export type SheetState = "peek" | "open";
 

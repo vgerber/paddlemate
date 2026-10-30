@@ -4,7 +4,7 @@ import { useEffect } from "react";
 const MAX_SHARE = 0.5;
 
 /** CSS variable on the pane: the height the chart card adds to its base. */
-export const CHART_EXTRA_VAR = "--chart-extra";
+const CHART_EXTRA_VAR = "--chart-extra";
 
 /**
  * The chart takes whatever height the neighbours give up, in the same frame

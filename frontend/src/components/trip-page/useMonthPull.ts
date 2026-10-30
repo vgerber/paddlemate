@@ -16,10 +16,10 @@ import {
 import { pulledOpen } from "./planWeek";
 
 /** Height of a week row and of the month title, in px. */
-export const MONTH_ROW = 48;
-export const MONTH_TITLE = 44;
+const MONTH_ROW = 48;
+const MONTH_TITLE = 44;
 /** Delay per week away from the anchor when the month fans out. */
-export const FAN_MS = 22;
+const FAN_MS = 22;
 
 interface Layers {
   panel: HTMLElement;

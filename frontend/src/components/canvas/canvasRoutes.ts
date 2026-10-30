@@ -13,7 +13,7 @@ const isTrue = (v: unknown) => v === true || v === "true";
 
 /** The suggest-section wizard: a card over the canvas whose scene is the
  * line and feature picking. */
-export const SUGGEST_SECTION_PATH = "/waterways/suggest-section";
+const SUGGEST_SECTION_PATH = "/waterways/suggest-section";
 
 /** Routes whose screen is about places, so on a wide window the map fills it
  * and the content floats over. Everything else (settings, tools, admin, the

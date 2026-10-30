@@ -18,9 +18,9 @@ type Snapshot = components["schemas"]["SectionWaterSnapshot"];
 
 export const ROW_PX = 56;
 export const CAPTION_PX = 32;
-export const MAX_ROWS = 5;
+const MAX_ROWS = 5;
 /** Hazard notes older than this no longer warn. */
-export const HAZARD_DAYS = 90;
+const HAZARD_DAYS = 90;
 /** Skeletons wait this long, so a fast answer never flashes them. */
 export const SKELETON_DELAY_MS = 150;
 

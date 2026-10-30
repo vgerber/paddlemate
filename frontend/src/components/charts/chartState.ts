@@ -3,8 +3,6 @@ import { useState } from "react";
 import { useChartTimeRange } from "@/components/charts/water/chartTime";
 import type { CustomRange, TimeRange } from "@/components/charts/water/types";
 
-export type MeasurementType = "water_level" | "discharge" | "temperature";
-
 interface ChartRangeSearch {
   chartFrom?: string;
   chartTo?: string;
@@ -16,9 +14,7 @@ function isInstant(v: unknown): v is string {
 
 /** The chart range keys of a URL search, kept only as a valid pair with
  * From before To. Any route can carry them; the router keeps keys it does not know. */
-export function chartRangeSearch(
-  search: Record<string, unknown>,
-): ChartRangeSearch {
+function chartRangeSearch(search: Record<string, unknown>): ChartRangeSearch {
   const { chartFrom, chartTo } = search;
   if (!isInstant(chartFrom) || !isInstant(chartTo)) return {};
   if (Date.parse(chartFrom) >= Date.parse(chartTo)) return {};

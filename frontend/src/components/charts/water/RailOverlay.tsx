@@ -36,7 +36,7 @@ const LEVELS = [
   { key: "low", from: "range_low" },
 ] as const;
 
-export interface RailPoint {
+interface RailPoint {
   time: number;
   value: number;
   /** A bucket's extremes and length in seconds; absent for a raw reading. */

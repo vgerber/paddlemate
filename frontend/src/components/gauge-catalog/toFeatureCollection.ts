@@ -2,7 +2,7 @@ import type { GaugeMapState } from "@/lib/api";
 import type { MapGroup } from "./groupByProximity";
 
 /** Scalar feature properties for the source; members are looked up by `group_id`. */
-export interface GroupProperties {
+interface GroupProperties {
   group_id: string;
   state: GaugeMapState;
   name: string;

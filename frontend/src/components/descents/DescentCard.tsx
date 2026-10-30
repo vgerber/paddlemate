@@ -17,11 +17,7 @@ import { levelAtTime } from "./levelAtTime";
 const { tokens } = theme;
 
 /** Who can see a log: one plain word. */
-export function VisibilityTag({
-  type,
-}: {
-  type: Descent["visibility"]["type"];
-}) {
+function VisibilityTag({ type }: { type: Descent["visibility"]["type"] }) {
   return (
     <Box
       component="span"

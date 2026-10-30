@@ -33,7 +33,7 @@ const { tokens } = theme;
 export type EditsFilter = { kind: "section" | "feature"; id: number } | null;
 
 /** The section and each of its features, as the timeline names them. */
-export function sectionEntries(section: SectionWithFeatures): EntryRef[] {
+function sectionEntries(section: SectionWithFeatures): EntryRef[] {
   return [
     {
       kind: "section",

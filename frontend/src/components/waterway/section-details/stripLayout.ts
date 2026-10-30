@@ -1,7 +1,7 @@
 import type { FeatureType } from "@/lib/api";
 
 /** Hazards by danger, worst first: the icon a merged group shows. */
-export const HAZARD_ORDER: FeatureType[] = [
+const HAZARD_ORDER: FeatureType[] = [
   "siphon",
   "strainer",
   "waterfall",
@@ -19,7 +19,7 @@ export interface StripPoint {
   distM: number;
 }
 
-export interface StripDisc {
+interface StripDisc {
   id: number;
   type: FeatureType;
   x: number;
@@ -27,7 +27,7 @@ export interface StripDisc {
   level: 0 | 1;
 }
 
-export interface StripGroup {
+interface StripGroup {
   ids: number[];
   x: number;
   /** The most dangerous hazard inside, or null: the disc then shows the count. */

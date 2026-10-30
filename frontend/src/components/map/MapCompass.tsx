@@ -14,7 +14,7 @@ const CTRL_MARGIN = 10;
 export const BELOW_ZOOM = 2 * tokens.touch.min + 8;
 
 /** One 44px key plus the gap. */
-export const BELOW_KEY = tokens.touch.min + 8;
+const BELOW_KEY = tokens.touch.min + 8;
 
 /** Where a key under the zoom group sits, from the map's top-right corner. */
 export function stackOffset(inset?: MapPadding) {

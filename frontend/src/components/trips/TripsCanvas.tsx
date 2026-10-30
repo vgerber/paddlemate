@@ -22,7 +22,7 @@ const { tokens } = theme;
 const { canvas } = tokens;
 
 /** From this window width the members get a card of their own. */
-export const MEMBERS_CARD_FROM = 1600;
+const MEMBERS_CARD_FROM = 1600;
 
 interface Props {
   /** The list body (rows, loading or empty state). */
