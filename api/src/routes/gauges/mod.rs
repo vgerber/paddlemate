@@ -1,3 +1,6 @@
+pub mod water_ranges;
+pub mod water_status;
+
 use aide::axum::IntoApiResponse;
 use axum::{
     Extension, Json,
