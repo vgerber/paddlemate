@@ -84,7 +84,7 @@ async fn every_group_route_needs_a_caller(pool: PgPool) {
         )
         .await;
         assert_eq!(r.status, StatusCode::UNAUTHORIZED, "{uri}");
-        assert_eq!(r.body["error"]["code"].is_string(), true, "{uri}");
+        assert!(r.body["error"]["code"].is_string(), "{uri}");
     }
 }
 
