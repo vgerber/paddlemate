@@ -27,7 +27,7 @@ not_theme=()
 not_alpha=()
 for f in "${all[@]}"; do
   case "$f" in
-    */lib/theme/theme.ts) ;;
+    */lib/theme/tokens.ts | */lib/theme/darkTokens.ts) ;;
     *) not_theme+=("$f") ;;
   esac
   case "$f" in

@@ -55,9 +55,9 @@ describe("check-colours", () => {
     }
   });
 
-  test("rule 1: theme.ts, tests and mask lines are exempt", () => {
+  test("rule 1: the token files, tests and mask lines are exempt", () => {
     const res = run({
-      "lib/theme/theme.ts": 'const c = "#1f2b31";\n',
+      "lib/theme/tokens.ts": 'const c = "#1f2b31";\n',
       "a.test.ts": 'const c = "#1f2b31";\n',
       "b.tsx": 'const m = "linear-gradient(#000, transparent)"; /* mask */\n',
     });
