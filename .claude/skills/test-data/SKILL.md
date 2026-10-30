@@ -82,6 +82,7 @@ docker compose --profile auth up -d --force-recreate keycloak
 | Sources | 9903 | "Tirol Canoe Association" guide (CC BY-SA), next to 9901/9902 and the migration's `import:rivermap` |
 | Lower Test notes | 9906-9913 | one note in each category: urgent, temporary/cleared/permanent hazard, conditions, regulations, logistics, calibration (outdated) |
 | Trip events + read marks | - | the bell for Vincent and Mara (see below) |
+| Material wiki entries | 9851-9860 | eight kayaks, a canoe and a packraft; the Testflow Cascade in S/M/L is the same-model comparison case |
 | API token `pm_testtoken123` | name `test-data` | for authed curl: `-H "X-Api-Key: pm_testtoken123"` |
 
 Proposals (on `/proposals`, newest first; the review pane draws each one

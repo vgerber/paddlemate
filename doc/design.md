@@ -143,6 +143,7 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 | Logs | Two panes on desktop; the date is a picker field |
 | Trips | Plan, Bases, Members and Logs tabs; the Plan pins a week strip with a dot on days that have runs and opens to a month; its days read in three states - past quiet (sunk ground, no shadow, grey heading), today ringed in teal, upcoming white with a hairline outline; bases and candidate bases (a closed base ends in a `LevelDots` row, one dot per run on its watch list); admins get Add member and the trip actions |
 | Proposals | The diff shows the before struck through next to the after; reviewing opens a dialog |
+| Material wiki | A normal page, not a map screen: a centred column on a desktop (880, the comparison 1100), edge to edge on a phone, opened with a `PanelHeader` (in a card on a desktop). The list is one search field, a Filters chip plus a chip per set filter, a count line, rows that open the entry with a 44 comparison checkbox at the right, and a compare bar; the filters are a sheet (dialog on desktop); add is the FAB on a phone and a `DockedAction` on a desktop. The comparison is a card holding a table that scrolls inside it, the first column sticky, differing rows in the accent |
 | Settings | Two panes on desktop; Profile, Inbox and Tools on a phone; an access token is shown once, when made |
 
 Components for each live in the matching folder under `frontend/src/components/`.
@@ -377,6 +378,8 @@ fill carries meaning.
 |---|---|---|---|---|
 | A map | `MapIcon` | MapOutlined | bottom nav, tools, map toggle, wizard done | |
 | A paddling log | `LogIcon` | DirectionsBoatOutlined | nav, log lists, trip logs, river state, inbox | |
+| Material wiki, a boat in the catalog | `MaterialIcon` | KayakingOutlined | tools, wiki lists and empty states | |
+| Compare | `CompareIcon` | CompareArrows | wiki compare bar | |
 | A place | `PlaceIcon` | PlaceOutlined | comment pins, feature geometry, a stay of kind other | |
 | Add a place | `AddPlaceIcon` | AddLocationAltOutlined | comment map pin | |
 | A note | `NoteIcon` | ChatBubbleOutlined | river state | |

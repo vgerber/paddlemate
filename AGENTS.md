@@ -573,8 +573,8 @@ See [doc/search.md](doc/search.md) for the full reference. The two rules that
 bite when editing:
 
 - Add new searchable sources to the `searchable_names` view, not to the query.
-- A migration that changes `public.search_key` must `REINDEX` the four
-  `*_name_trgm` indexes in the same migration (enforced by
+- A migration that changes `public.search_key` must `REINDEX` every
+  `*_name_trgm` index in the same migration (enforced by
   `api/tests/migration_rules.rs`).
 
 ## Tests

@@ -12,9 +12,14 @@ const MAP: NavItem = { to: "/", label: "Map", match: (p) => p === "/" };
 const LOGS: NavItem = { to: "/logs", label: "Logs", match: under("/logs") };
 const TRIPS: NavItem = { to: "/trips", label: "Trips", match: under("/trips") };
 
-/** Proposals are reached from Tools, so both bars keep their Tools or
+/** Proposals and the material wiki are reached from Tools, so both bars keep their Tools or
  * Profile item lit there. */
-const toolPaths = ["/tools", "/proposals", "/admin/proposals"].map(under);
+const toolPaths = [
+  "/tools",
+  "/proposals",
+  "/admin/proposals",
+  "/materials",
+].map(under);
 const isToolPath = (pathname: string) => toolPaths.some((m) => m(pathname));
 
 /** The desktop top bar. */

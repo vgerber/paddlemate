@@ -194,12 +194,13 @@ similarity cutoff is set per database connection in `api/src/main.rs`.
 
 ### Indexes, and the one rule
 
-Four GIN trigram indexes back the search (`00024_search_name_indexes.sql`),
-one per name source. They are *expression* indexes on `search_key(name)`: the
+GIN trigram indexes back the search (`00024_search_name_indexes.sql`), one per
+name source; the [material wiki](material-wiki.md) adds `idx_materials_name_trgm`
+for its own name search. They are *expression* indexes on `search_key(name)`: the
 index stores the function's **output at write time**, not the formula.
 
-Therefore **a migration that changes `search_key` must `REINDEX` those four
-indexes in the same migration** - otherwise existing rows keep the old
+Therefore **a migration that changes `search_key` must `REINDEX` every `*_name_trgm`
+index in the same migration** - otherwise existing rows keep the old
 normalization while new rows get the new one, and searches silently miss
 results. Only long-lived databases are affected; a fresh database (CI, new dev
 checkout) rebuilds its indexes from the current function and looks healthy,

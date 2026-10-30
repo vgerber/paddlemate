@@ -3,8 +3,9 @@ import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import { withAlpha } from "@/lib/alpha";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
+import { useMaterials } from "@/lib/hooks/useMaterials";
 import { useProposals } from "@/lib/hooks/useProposals";
-import { ListIcon, MapIcon } from "@/lib/icons";
+import { ListIcon, MapIcon, MaterialIcon } from "@/lib/icons";
 import { transition } from "@/lib/motion";
 import { cardTitleSx, theme } from "@/lib/theme";
 
@@ -27,6 +28,12 @@ const TOOLS = [
       "Map of used, fetched and available gauges across every provider",
     icon: <MapIcon />,
   },
+  {
+    to: "/materials",
+    title: "Material wiki",
+    description: "Search boats and compare their specs side by side",
+    icon: <MaterialIcon />,
+  },
 ] as const;
 
 /** The list of available tools with a count behind each. Shared by the desktop
@@ -36,9 +43,12 @@ export default function ToolsList() {
   // points - the latter also warms the map's cache for an instant open.
   const { data: pending } = useProposals({ status: "pending" });
   const { data: gaugePoints } = useGaugeMap();
+  // One entry is enough to learn how many the wiki holds.
+  const { data: materials } = useMaterials({ per_page: 1 });
   const counts: Record<string, number | undefined> = {
     "/proposals": pending?.length,
     "/tools/gauge-catalog": gaugePoints?.length,
+    "/materials": materials?.total,
   };
 
   return (
