@@ -20,8 +20,8 @@ use paddlemate_api::{
     layers::limit::{RateLimits, limit_requests, limit_writes},
     routes::{
         descents::descents_routes, docs::docs_routes, gauges::gauges_routes, geo::geo_routes,
-        groups::group_routes, proposals::proposals_routes, trips::trips_routes,
-        users::users_routes, waterways::waterways_routes,
+        groups::group_routes, materials::materials_routes, proposals::proposals_routes,
+        trips::trips_routes, users::users_routes, waterways::waterways_routes,
     },
     state::{AppState, KeycloakState},
 };
@@ -241,6 +241,7 @@ async fn main() {
                 .nest_api_service("/gauges", gauges_routes(state.clone())),
         )
         .nest_api_service("/descents", descents_routes(state.clone()))
+        .nest_api_service("/materials", materials_routes(state.clone()))
         .nest_api_service("/geo", geo_routes(state.clone()))
         .nest_api_service("/proposals", proposals_routes(state.clone()))
         .nest_api_service("/trips", trips_routes(state.clone()))

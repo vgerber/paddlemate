@@ -3,6 +3,7 @@ use serde::Deserialize;
 
 use super::{
     comment::CommentId,
+    material::MaterialId,
     trip::{TripId, TripInviteId, TripStayCandidateId, TripStayId},
     water_section::SectionId,
     waterway::WaterwayId,
@@ -78,6 +79,11 @@ pub struct ProposalPath {
 pub struct FeatureProposalPath {
     pub waterway_id: WaterwayId,
     pub proposal_id: i64,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct MaterialPath {
+    pub material_id: MaterialId,
 }
 
 #[derive(Deserialize, JsonSchema)]

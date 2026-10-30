@@ -3,6 +3,7 @@ pub mod docs;
 pub mod gauges;
 pub mod geo;
 pub mod groups;
+pub mod materials;
 pub mod proposals;
 pub mod trips;
 pub mod users;
