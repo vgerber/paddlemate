@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import { openRowSx, phoneRowPad } from "@/components/canvas/flatRow";
 import { ChevronRightIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
-import { GROUPS, type GroupId } from "./groups";
+import type { GroupId } from "./groups";
 
 const { tokens } = theme;
 
@@ -13,7 +13,9 @@ const { tokens } = theme;
 export default function SettingsList({
   selected,
   onOpen,
+  groups,
 }: {
+  groups: readonly { id: GroupId; label: string; hint: string }[];
   selected?: GroupId;
   onOpen: (id: GroupId) => void;
 }) {
@@ -28,7 +30,7 @@ export default function SettingsList({
         px: { md: 0 },
       }}
     >
-      {GROUPS.map((g) => (
+      {groups.map((g) => (
         <ListItemButton
           key={g.id}
           selected={g.id === selected}

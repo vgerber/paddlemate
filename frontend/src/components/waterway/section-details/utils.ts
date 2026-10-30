@@ -1,5 +1,10 @@
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
-import { humanize, sentenceCase } from "@/lib/format";
+import {
+  formatDistance,
+  formatDistanceSpan,
+  humanize,
+  sentenceCase,
+} from "@/lib/format";
 import {
   distanceAlongLineM,
   distanceM,
@@ -7,16 +12,22 @@ import {
   representativePoint,
 } from "@/lib/geo";
 import { localizedDescription, localizedName } from "@/lib/localization";
+import { currentUnits, type Units } from "@/lib/units";
 import type { ComputedFeature, TreeNode } from "./types";
 
-/** Formats a metre distance as "0.3 km". */
-export function fmtKm(m: number): string {
-  return `${(m / 1000).toFixed(1)} km`;
+/** Formats a metre distance as "0.3 km" (or "0.2 mi"). A component that
+ * shows it calls `useUnits()` so it re-renders when the choice changes. */
+export function fmtKm(m: number, units: Units = currentUnits()): string {
+  return formatDistance(m, units);
 }
 
 /** Formats a stretch as "0.3-0.5 km". */
-export function fmtKmSpan(startM: number, endM: number): string {
-  return `${(startM / 1000).toFixed(1)}-${(endM / 1000).toFixed(1)} km`;
+export function fmtKmSpan(
+  startM: number,
+  endM: number,
+  units: Units = currentUnits(),
+): string {
+  return formatDistanceSpan(startM, endM, units);
 }
 
 /** Difficulty grade from feature metadata, or null. */

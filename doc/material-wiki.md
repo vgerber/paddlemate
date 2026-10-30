@@ -6,6 +6,9 @@ packrafts and SUPs share the same fields.
 
 Open it from **Tools → Material wiki**, or go straight to `/materials`.
 
+Measurements show, and are typed, in the units chosen under Settings > Units
+(cm or in, litres or US gallons, kg or lb); they are saved in metric.
+
 ## Finding a boat
 
 Type a brand or a model into the search field. Spelling is forgiving the same
@@ -22,7 +25,7 @@ away:
 | Discipline | What the boat is built for - creek, river runner, half slice, playboat, slalom, downriver, touring, sea, expedition, recreational |
 | Construction | Plastic, composite, inflatable, folding or wood |
 | Brand | One brand, with the number of entries it has |
-| Fits paddler | Your body weight in kg, keeping the boats whose paddler range covers it |
+| Fits paddler | Your body weight in your weight unit (Settings > Units), keeping the boats whose paddler range covers it |
 | Sort | Name, newest, or by length, volume or weight |
 
 A boat that states no paddler range is kept by the **fits paddler** filter:
@@ -79,7 +82,7 @@ Three Postgres enums type an entry: `material_category`,
 `material_discipline` and `material_construction`. Measurements are
 `DOUBLE PRECISION`, one unit per column and the unit in the column name
 (`length_cm`, `volume_l`, `weight_kg`), so a comparison never converts
-anything.
+anything. The app converts for display and input only (`lib/units.ts`).
 
 | Constraint | Enforces |
 | --- | --- |

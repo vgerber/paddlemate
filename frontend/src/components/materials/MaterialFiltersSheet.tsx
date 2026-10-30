@@ -26,6 +26,7 @@ import {
   SORTS,
 } from "@/lib/materials";
 import { theme } from "@/lib/theme";
+import { parseInput, toInputText, unitLabel, useUnits } from "@/lib/units";
 
 const { tokens } = theme;
 
@@ -79,6 +80,7 @@ function SheetBody({
   onChange: (patch: Partial<MaterialWikiSearch>) => void;
   onClose: () => void;
 }) {
+  const [units] = useUnits();
   const { data: brands } = useMaterialBrands(search.category);
   const count = activeFilterCount(search);
   return (
@@ -173,12 +175,14 @@ function SheetBody({
         ))}
       </TextField>
       <TextField
-        label="Fits paddler (kg)"
-        value={search.fits ?? ""}
+        label={`Fits paddler (${unitLabel("weight", units)})`}
+        value={
+          search.fits == null ? "" : toInputText("weight", search.fits, units)
+        }
         onChange={(event) => {
-          const value = Number(event.target.value.replace(",", "."));
+          const kg = parseInput("weight", event.target.value, units, 4);
           onChange({
-            fits: value > 0 && value <= MAX_FITS_KG ? value : undefined,
+            fits: kg != null && kg > 0 && kg <= MAX_FITS_KG ? kg : undefined,
           });
         }}
         helperText="Boats built for your body weight"

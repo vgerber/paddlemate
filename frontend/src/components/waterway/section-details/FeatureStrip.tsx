@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import { useEffect, useRef, useState } from "react";
 import FeatureTypeIcon from "@/components/FeatureTypeIcon";
 import { fonts } from "@/lib/theme";
+import { distanceText, unitLabel, useUnits } from "@/lib/units";
 import { useTokens } from "@/lib/useTokens";
 import {
   DEFAULT_STRIP,
@@ -65,6 +66,7 @@ export function FeatureStrip({
   totalM: number;
 }) {
   const tokens = useTokens();
+  const [units] = useUnits();
   const { ref, width } = useWidth();
   const ranges = features.filter((f) => f.isZone);
   const points: StripPoint[] = features
@@ -81,7 +83,7 @@ export function FeatureStrip({
   const axisY = lineY + (hasStep ? 50 : 32);
   const height = axisY + 4;
   const x = (m: number) => stripX(m, totalM, width);
-  const km = (m: number) => (m / 1000).toFixed(1);
+  const km = (m: number) => distanceText(m / 1000, units);
   const left = x(0);
   const right = x(totalM);
 
@@ -228,7 +230,7 @@ export function FeatureStrip({
               {km(totalM / 2)}
             </text>
             <text x={right} y={axisY} textAnchor="end">
-              {km(totalM)} km
+              {km(totalM)} {unitLabel("distance", units)}
             </text>
           </g>
         </svg>

@@ -416,6 +416,25 @@ region; ranges that hold two or more others in
 view are not drawn; valleys are outlined like every other region. The country is named once, at the
 border, and in the picker.
 
+## Units
+
+Quantities a person measures with their own body or boat - weight, distance,
+length and the volume that goes with length - follow Settings > Units, kept
+per device. The default comes from the device language (US English: lb, mi, in;
+everything else metric). Gauge readings and flow (cm, m3/s) stay as the gauge
+reports them.
+
+- **Stored and sent metric.** The API, the URL (`?radius=`, `?fits=`) and
+  every cache hold kg, km, cm and litres; only the screen converts.
+- **Show with `lib/units.ts`.** `formatQuantity`, `formatDistance` /
+  `formatDistanceKm` (one fixed decimal) and `unitLabel`; never write a bare
+  "km" or "kg" in a template. A component that shows a quantity calls
+  `useUnits()` so it re-renders when the choice changes.
+- **Enter with the same unit.** A field's label names the unit
+  (`Length (in)`); the text is read back with `parseInput` before saving. A
+  form shows the stored number with `toInputText` (up to two decimals), so an
+  untouched save writes the same value.
+
 ## Wording
 
 Sentence case, plain words, no em dashes (a plain hyphen). Reuse the app's own

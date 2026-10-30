@@ -14,6 +14,7 @@ import {
   yearsLabel,
 } from "@/lib/materials";
 import { cardTitleSx, theme } from "@/lib/theme";
+import { useUnits } from "@/lib/units";
 
 const { tokens } = theme;
 
@@ -55,12 +56,13 @@ export default function MaterialRow({
   ]
     .filter(Boolean)
     .join(" · ");
+  const [units] = useUnits();
   const figures = MATERIAL_SPECS.filter((spec) =>
     (ROW_SPEC_KEYS as readonly string[]).includes(spec.key),
   )
     .map((spec) => ({ spec, value: specValue(material, spec.key) }))
     .filter(({ value }) => value != null)
-    .map(({ spec, value }) => `${spec.label} ${formatSpec(value, spec)}`)
+    .map(({ spec, value }) => `${spec.label} ${formatSpec(value, spec, units)}`)
     .join("  ·  ");
 
   return (

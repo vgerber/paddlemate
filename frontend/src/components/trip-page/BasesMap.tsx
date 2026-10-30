@@ -6,6 +6,7 @@ import WaterwayMap from "@/components/map/LazyMap";
 import { useIsSwipeGhost } from "@/components/SwipeGhost";
 import { theme } from "@/lib/theme";
 import { rangeBounds } from "@/lib/tripRange";
+import { formatDistanceKm, useUnits } from "@/lib/units";
 import { useBasesScene } from "./useBasesScene";
 
 /**
@@ -24,6 +25,7 @@ export default function BasesMap({
   isMember: boolean;
 }) {
   const { ranges, rings, watched, isEmpty } = useBasesScene(tripId, isMember);
+  const [units] = useUnits();
   const ghost = useIsSwipeGhost();
   const focusBounds = useMemo(() => rangeBounds(ranges), [ranges]);
 
@@ -76,7 +78,7 @@ export default function BasesMap({
         }}
       >
         {furthest && furthest.radiusKm > 0
-          ? `Rings reach the farthest section on each base's list - ${furthest.radiusKm.toFixed(1)} km from ${furthest.name}`
+          ? `Rings reach the farthest section on each base's list - ${formatDistanceKm(furthest.radiusKm, units)} from ${furthest.name}`
           : "No sections on any watch list yet"}
       </Typography>
     </Box>

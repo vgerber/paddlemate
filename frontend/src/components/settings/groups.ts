@@ -9,12 +9,24 @@ export const GROUPS = [
     hint: "Light, dark or follow the device",
   },
   {
+    id: "units",
+    label: "Units",
+    hint: "Weight, distance and length",
+  },
+  {
     id: "notifications",
     label: "Notifications",
     hint: "Push when trip plans change",
   },
   { id: "tokens", label: "Access tokens", hint: "For scripts and the API" },
 ] as const;
+
+/** The sections kept on the device, not on the account: a visitor who is not
+ * signed in has these and only these. */
+const DEVICE_GROUPS: readonly string[] = ["appearance", "units"];
+
+export const groupsFor = (signedIn: boolean) =>
+  signedIn ? GROUPS : GROUPS.filter((g) => DEVICE_GROUPS.includes(g.id));
 
 export type GroupId = (typeof GROUPS)[number]["id"];
 

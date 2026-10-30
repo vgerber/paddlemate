@@ -19,6 +19,7 @@ import {
   yearsLabel,
 } from "@/lib/materials";
 import { cardTitleSx, sectionHeadingSx, theme } from "@/lib/theme";
+import { useUnits } from "@/lib/units";
 
 const { tokens } = theme;
 
@@ -94,6 +95,7 @@ export default function ComparisonTable({
   materials: Material[];
   onRemove: (id: number) => void;
 }) {
+  const [units] = useUnits();
   const span = materials.length + 1;
   return (
     // The table is wider than a phone; it scrolls inside this box rather
@@ -197,7 +199,7 @@ export default function ComparisonTable({
                               color: varies ? tokens.primary : "text.primary",
                             }}
                           >
-                            {formatSpec(values[index], spec)}
+                            {formatSpec(values[index], spec, units)}
                           </Typography>
                         </Box>
                       ))}

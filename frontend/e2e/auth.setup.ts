@@ -37,5 +37,13 @@ setup("sign in as the fixture admin", async ({ page, context }) => {
   );
   expect(signedIn, "the app holds an OIDC session").toBe(true);
 
+  // The suite reads metric whatever the browser's language; the units specs
+  // set their own.
+  await page.evaluate(() =>
+    localStorage.setItem(
+      "pm-units",
+      JSON.stringify({ weight: "kg", distance: "km", length: "cm" }),
+    ),
+  );
   await page.context().storageState({ path: "e2e/.auth/vincent.json" });
 });

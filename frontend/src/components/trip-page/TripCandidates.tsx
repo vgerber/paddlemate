@@ -22,6 +22,7 @@ import {
 import { ConfirmIcon, DeleteIcon, EditIcon } from "@/lib/icons";
 import { fonts, theme } from "@/lib/theme";
 import { nearestWatched } from "@/lib/tripRange";
+import { formatDistanceKm, useUnits } from "@/lib/units";
 import { foldProps } from "./folds";
 import StayDialog from "./StayDialog";
 
@@ -174,6 +175,7 @@ function CandidateRow({
   onEdit: () => void;
   onAccept: () => void;
 }) {
+  const [units] = useUnits();
   const vote = useVoteCandidate(tripId);
   const withdraw = useWithdrawCandidate(tripId);
   const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
@@ -342,7 +344,7 @@ function CandidateRow({
               water the group came for is near it. */}
             <Typography sx={{ ...factLabelSx, mt: 0.5, display: "block" }}>
               {near
-                ? `${near.km.toFixed(1)} km to ${near.name}${near.river ? ` on the ${near.river}` : ""}`
+                ? `${formatDistanceKm(near.km, units)} to ${near.name}${near.river ? ` on the ${near.river}` : ""}`
                 : "No location yet, so no distance to go on"}
             </Typography>
           </Box>

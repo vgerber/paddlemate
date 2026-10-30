@@ -63,6 +63,12 @@ water levels, and a shared logbook.
   device even when the app is set to Light. A second choice, Motion (Full by
   default, Reduced, or System to follow the device): Reduced keeps short fades
   and stops movement, also on the map.
+- **Units** - Settings > Units (also open to visitors who are not signed in, like Appearance) picks weight (kg or lb), distance (km or mi)
+  and length (cm or in; volume follows with litres or US gallons), kept per
+  device. A US English device starts on pounds, miles and inches, every other
+  on metric. Section and trip distances, the search radius and the material
+  wiki follow the choice, forms included; everything is stored metric. Gauge
+  readings stay as the gauge reports them.
 - **Material wiki** - a shared gear catalog under Tools: boats searchable by
   brand and model, filterable by discipline, construction and the paddler
   weight they fit, and comparable side by side property for property. Any

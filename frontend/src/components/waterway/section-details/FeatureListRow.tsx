@@ -6,6 +6,7 @@ import { withAlpha } from "@/lib/alpha";
 import { DeleteIcon } from "@/lib/icons";
 import { css, durations, useReducedMotion } from "@/lib/motion";
 import { theme } from "@/lib/theme";
+import { useUnits } from "@/lib/units";
 import { CoordsInfo } from "./CoordsInfo";
 import { selectionFade } from "./Fold";
 import { ProposalDetail } from "./ProposalDetail";
@@ -83,6 +84,7 @@ export function FeatureListRow({
    * padding, so the disc stays on the head row's rail column. */
   inBand?: boolean;
 }) {
+  const [units] = useUnits();
   const typeLabel = featureTypeLabel(item.feature);
   const desc = featureDesc(item.feature);
   const isProposal = !!item.proposal;
@@ -182,8 +184,8 @@ export function FeatureListRow({
               </Box>
               <Typography component="span" data-km sx={kmSx}>
                 {item.isZone
-                  ? fmtKmSpan(item.startM, item.endM)
-                  : fmtKm(item.distM)}
+                  ? fmtKmSpan(item.startM, item.endM, units)
+                  : fmtKm(item.distM, units)}
               </Typography>
             </Box>
             {typeLabel && (

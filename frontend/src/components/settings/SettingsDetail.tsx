@@ -9,6 +9,7 @@ import AppearanceSection from "./AppearanceSection";
 import { type GroupId, groupLabel } from "./groups";
 import LanguageSection from "./LanguageSection";
 import TokensSection from "./TokensSection";
+import UnitsSection from "./UnitsSection";
 
 const { tokens } = theme;
 const { phone } = tokens;
@@ -16,6 +17,7 @@ const { phone } = tokens;
 function SettingsSection({ group }: { group: GroupId }) {
   if (group === "language") return <LanguageSection />;
   if (group === "appearance") return <AppearanceSection />;
+  if (group === "units") return <UnitsSection />;
   if (group === "tokens") return <TokensSection />;
   if (group === "notifications") return <PushSettings />;
   return <AccountSection />;

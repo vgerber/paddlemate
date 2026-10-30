@@ -10,8 +10,11 @@ import type { AreaCircle } from "@/lib/geo";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { LockIcon, UnlockIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme";
+import { fromDisplay, toDisplay, unitLabel, useUnits } from "@/lib/units";
 
 const { tokens } = theme;
+
+const MAX_RADIUS_KM = 200;
 
 interface AreaControlsProps {
   areaCircle: AreaCircle | null;
@@ -29,7 +32,10 @@ export default function AreaControls({
   onRadiusPreview,
 }: AreaControlsProps) {
   const verb = useMapVerb();
+  const [units] = useUnits();
+  const unit = unitLabel("distance", units);
   const [localRadius, setLocalRadius] = useState(areaCircle?.radiusKm ?? 10);
+  const shown = Math.round(toDisplay("distance", localRadius, units));
   const debouncedRadius = useDebouncedValue(localRadius, 400);
 
   // Sync if parent updates radius externally (e.g. map drag). The circle's
@@ -63,12 +69,13 @@ export default function AreaControls({
         <Slider
           data-no-swipe=""
           aria-label="Radius"
-          value={localRadius}
+          value={shown}
           min={1}
-          max={200}
+          max={Math.round(toDisplay("distance", MAX_RADIUS_KM, units))}
           step={1}
+          getAriaValueText={(v) => `${v} ${unit}`}
           onChange={(_, v) => {
-            const km = v as number;
+            const km = fromDisplay("distance", v as number, units, 3);
             setLocalRadius(km);
             onRadiusPreview?.(km);
           }}
@@ -104,7 +111,7 @@ export default function AreaControls({
             fontVariantNumeric: "tabular-nums",
           }}
         >
-          {localRadius} km
+          {shown} {unit}
         </Typography>
         <Tooltip title={locked ? "Unlock area" : "Lock area"}>
           <span>

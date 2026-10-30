@@ -18,6 +18,7 @@ const SWEEP = !!process.env.E2E_SWEEP;
 //   a11y/view-focus   log form: Next, Back and Save keep focus
 //   logs/logs         put-in survives Next and is saved; create and delete a log
 //   settings/settings access token is created and revoked
+//   units/units       a wiki entry is typed in imperial, saved, deleted
 //   trips/trips       a vote is pressed and taken back; edit trip saves
 // A new test that writes gets `@write`.
 const WRITE = /@write/;
