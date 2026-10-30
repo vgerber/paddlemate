@@ -8,23 +8,24 @@ import MapGL, {
   Source,
   useMap,
 } from "react-map-gl/maplibre";
-import { withAlpha } from "@/lib/alpha";
 import type {
   CountryBorder,
   Feature,
   RegionOutline,
   SectionWithFeatures,
 } from "@/lib/api";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 import {
   type AreaCircle,
   type Bbox,
   type Bounds,
   circleGeoJSON,
+  DEFAULT_RADIUS_KM,
   type LngLat,
   pointCoords,
   type ViewBounds,
-} from "@/lib/geo";
-import { useTokens } from "@/lib/useTokens";
+} from "@/lib/map/geo";
+import { withAlpha } from "@/lib/theme/alpha";
 import AccessibleMarker from "./AccessibleMarker";
 import CountryBorderLayer from "./CountryBorderLayer";
 import DraftLayers, { FeatureDraftLayer } from "./DraftLayers";
@@ -58,7 +59,7 @@ import { useFirstLoadFade, useMapMotion } from "./useMapMotion";
 import { useMapSources } from "./useMapSources";
 import { useCalmBaseMap, useMutedBaseMap } from "./useMutedBaseMap";
 
-export type { AreaCircle } from "@/lib/geo";
+export type { AreaCircle } from "@/lib/map/geo";
 export type { GaugePin } from "./GaugeMarkers";
 export type { NotePin } from "./NoteMarkers";
 export type { RangeRing } from "./RangeRingLayers";
@@ -488,6 +489,31 @@ export default function WaterwayMap({
       east: b.getEast(),
     });
   };
+
+  // Enter on the focused map drops the area centre where the arrow keys have
+  // panned it to: the keyboard counterpart of a click.
+  const areaRadius = useRef(areaCircle?.radiusKm);
+  areaRadius.current = areaCircle?.radiusKm;
+  const areaChange = useRef(onAreaCircleChange);
+  areaChange.current = onAreaCircleChange;
+  const keyboardCentre = onAreaCircleChange != null;
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || !mapLoaded || !keyboardCentre) return;
+    const canvas = map.getCanvas();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+      const c = map.getCenter();
+      areaChange.current?.({
+        lat: c.lat,
+        lon: c.lng,
+        radiusKm: areaRadius.current ?? DEFAULT_RADIUS_KM,
+      });
+      e.preventDefault();
+    };
+    canvas.addEventListener("keydown", onKey);
+    return () => canvas.removeEventListener("keydown", onKey);
+  }, [mapLoaded, keyboardCentre]);
 
   const circleData = useMemo<GeoJSON.FeatureCollection>(
     () =>

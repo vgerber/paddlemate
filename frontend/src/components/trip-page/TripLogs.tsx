@@ -6,7 +6,7 @@ import QueryStates from "@/components/states/QueryStates";
 import type { Descent } from "@/lib/api";
 import { useTripDescents } from "@/lib/hooks/useDescents";
 import { CopyIcon, LinkOffIcon, LogIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 interface Props {
   tripId: number;

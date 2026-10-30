@@ -1,4 +1,4 @@
-import type { WaterLevel } from "@/lib/waterLevel";
+import type { WaterLevel } from "@/lib/water/waterLevel";
 
 const FILTER_LEVELS: WaterLevel[] = ["low", "medium", "high"];
 

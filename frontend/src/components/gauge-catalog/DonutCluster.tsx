@@ -1,5 +1,5 @@
 import type { GaugeMapState } from "@/lib/api";
-import { useTokens } from "@/lib/useTokens";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 import { gaugeStates } from "./gaugeStates";
 
 const compact = new Intl.NumberFormat(undefined, {

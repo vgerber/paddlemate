@@ -1,4 +1,4 @@
-import { FLICK_SPEED } from "@/lib/swipe";
+import { FLICK_SPEED } from "@/lib/gestures/swipe";
 
 export type FeatureSnap = "peek" | "half";
 

@@ -10,8 +10,8 @@ import {
 } from "@/components/charts/water/summary";
 import type { CustomRange } from "@/components/charts/water/types";
 import PickerField from "@/components/descents/descent-form/PickerField";
-import { todayIso } from "@/lib/format";
-import { theme } from "@/lib/theme";
+import { todayIso } from "@/lib/text/format";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

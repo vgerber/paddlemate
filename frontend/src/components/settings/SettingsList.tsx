@@ -3,7 +3,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 import { openRowSx, phoneRowPad } from "@/components/canvas/flatRow";
 import { ChevronRightIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import type { GroupId } from "./groups";
 
 const { tokens } = theme;

@@ -5,8 +5,8 @@ import {
   durations,
   REDUCED_FADE_MS,
   useReducedMotion,
-} from "@/lib/motion";
-import { theme } from "@/lib/theme";
+} from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

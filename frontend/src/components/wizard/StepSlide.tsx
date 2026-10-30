@@ -12,7 +12,7 @@ import {
   LEAD_MS,
   prefersReducedMotion,
   REDUCED_FADE_MS,
-} from "@/lib/motion";
+} from "@/lib/theme/motion";
 
 const SHIFT_PX = 16;
 // Choreography moment 6: the leaving step fades out in 140 ms, the arriving

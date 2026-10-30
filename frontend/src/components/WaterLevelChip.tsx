@@ -1,18 +1,18 @@
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
 import type { components } from "@/lib/api/schema";
-import { formatReading } from "@/lib/format";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 import { useRowWaterStatus } from "@/lib/hooks/useWaterStatus";
-import { transition } from "@/lib/motion";
-import { theme } from "@/lib/theme";
-import { useTokens } from "@/lib/useTokens";
+import { formatReading } from "@/lib/text/format";
+import { transition } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 import {
   currentLevel,
   freshRanges,
   isCalibrated,
   levelConfigFor,
   type WaterLevel,
-} from "@/lib/waterLevel";
+} from "@/lib/water/waterLevel";
 
 const { tokens } = theme;
 

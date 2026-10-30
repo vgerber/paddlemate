@@ -1,5 +1,5 @@
-import { withAlpha } from "@/lib/alpha";
-import { theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 const { phone } = tokens;

@@ -21,6 +21,7 @@ use crate::{
         waterway::{Waterway, WaterwayFilters, WaterwayId, WaterwayListItem, WaterwayWithSections},
     },
     query::{gauges as query_gauges, proposals, waterways as query_waterways},
+    routes::access,
     state::AppState,
 };
 
@@ -153,9 +154,9 @@ pub async fn create_waterway(
         proposal_note,
     }): Json<Proposable<CreateWaterwayBody>>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     let note = match clean_note(proposal_note) {
@@ -235,9 +236,9 @@ pub async fn update_waterway(
         proposal_note,
     }): Json<Proposable<UpdateWaterwayBody>>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     let note = match clean_note(proposal_note) {
@@ -298,9 +299,9 @@ pub async fn delete_waterway(
     auth: Option<Extension<AuthToken>>,
     Path(waterway_id): Path<WaterwayId>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     if token.is_server_admin() {

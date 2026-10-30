@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
-import { withAlpha } from "@/lib/alpha";
-import { theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

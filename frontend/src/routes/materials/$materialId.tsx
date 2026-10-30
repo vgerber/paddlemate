@@ -12,7 +12,7 @@ import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { Material } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
-import { useGoBack } from "@/lib/hooks/useGoBack";
+import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import {
   useDeleteMaterial,
   useMaterial,
@@ -27,9 +27,9 @@ import {
   materialTitle,
   materialToForm,
   yearsLabel,
-} from "@/lib/materials";
-import { PANEL_HEIGHT } from "@/lib/theme";
-import { currentUnits } from "@/lib/units";
+} from "@/lib/materials/materials";
+import { currentUnits } from "@/lib/prefs/units";
+import { PANEL_HEIGHT } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/materials/$materialId")({
   validateSearch: (search: Record<string, unknown>) => ({

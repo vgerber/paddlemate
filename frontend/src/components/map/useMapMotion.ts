@@ -13,8 +13,8 @@ import {
   durations,
   REDUCED_FADE_MS,
   useReducedMotion,
-} from "@/lib/motion";
-import { theme } from "@/lib/theme";
+} from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 
 /** Layers and sources the motion drives; SectionLayers draws them. */
 export const FLOW_LAYER = "sections-flow";

@@ -9,12 +9,12 @@ import LoadingBox from "@/components/states/LoadingBox";
 import type { DotKind } from "@/components/TimelineRail";
 import { featureName } from "@/components/waterway/section-details/utils";
 import type { HistoryStep, SectionWithFeatures } from "@/lib/api";
-import { formatDate, humanize, sentenceCase } from "@/lib/format";
 import { useHistory, useSectionProposals } from "@/lib/hooks/useProvenance";
 import { useSession } from "@/lib/hooks/useSession";
 import { HistoryIcon } from "@/lib/icons";
-import { localizedName } from "@/lib/localization";
-import { cardTitleSx, theme } from "@/lib/theme";
+import { formatDate, humanize, sentenceCase } from "@/lib/text/format";
+import { localizedName } from "@/lib/text/localization";
+import { cardTitleSx, theme } from "@/lib/theme/theme";
 import {
   type EditItem,
   type EntryRef,

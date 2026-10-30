@@ -1,16 +1,18 @@
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Slider from "@mui/material/Slider";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
+import { announce } from "@/components/charts/water/announce";
 import { useMapVerb } from "@/components/waterway/useMapVerb";
-import { withAlpha } from "@/lib/alpha";
-import type { AreaCircle } from "@/lib/geo";
-import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
-import { LockIcon, UnlockIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
-import { fromDisplay, toDisplay, unitLabel, useUnits } from "@/lib/units";
+import { useDebouncedValue } from "@/lib/hooks/ui/useDebouncedValue";
+import { LockIcon, MyLocationIcon, PlaceIcon, UnlockIcon } from "@/lib/icons";
+import type { AreaCircle, LngLat } from "@/lib/map/geo";
+import { fromDisplay, toDisplay, unitLabel, useUnits } from "@/lib/prefs/units";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
@@ -22,6 +24,22 @@ interface AreaControlsProps {
   onLockedChange: (locked: boolean) => void;
   onRadiusChange: (radiusKm: number) => void;
   onRadiusPreview?: (radiusKm: number) => void;
+  /** Moves the centre to a point, keeping the radius. */
+  onCentreChange: (point: LngLat) => void;
+  /** Moves the centre to the middle of the map in view; absent until the map
+   * has reported its view. */
+  onCentreOnView?: () => void;
+}
+
+/** Why the device position could not be read, in words for the person. */
+export function locationErrorText(code: number | undefined): string {
+  if (code === 1) {
+    return "Location access is blocked. Allow it in the browser settings to start at your position.";
+  }
+  if (code === 2 || code === undefined) {
+    return "Your position is not available on this device.";
+  }
+  return "Could not get your position in time. Try again.";
 }
 
 export default function AreaControls({
@@ -30,6 +48,8 @@ export default function AreaControls({
   onLockedChange,
   onRadiusChange,
   onRadiusPreview,
+  onCentreChange,
+  onCentreOnView,
 }: AreaControlsProps) {
   const verb = useMapVerb();
   const [units] = useUnits();
@@ -62,6 +82,55 @@ export default function AreaControls({
       radiusChange.current(debouncedRadius);
     }
   }, [debouncedRadius]);
+
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+
+  // Say where the centre went, whichever way it moved (tap, key, location).
+  const centre = useRef<number[] | undefined>(
+    areaCircle ? [areaCircle.lat, areaCircle.lon] : undefined,
+  );
+  const lat = areaCircle?.lat;
+  const lon = areaCircle?.lon;
+  useEffect(() => {
+    const before = centre.current;
+    centre.current = lat != null && lon != null ? [lat, lon] : undefined;
+    if (before && lat != null && lon != null) {
+      if (before[0] !== lat || before[1] !== lon) {
+        announce(`Search centre set to ${lat.toFixed(3)}, ${lon.toFixed(3)}`);
+      }
+    }
+  }, [lat, lon]);
+
+  // Only a tap asks for the position; the browser prompts then, not before.
+  const useMyLocation = () => {
+    setLocationError(null);
+    if (!("geolocation" in navigator)) {
+      setLocationError(locationErrorText(undefined));
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (!alive.current) return;
+        setLocating(false);
+        onCentreChange([pos.coords.longitude, pos.coords.latitude]);
+      },
+      (err) => {
+        if (!alive.current) return;
+        setLocating(false);
+        setLocationError(locationErrorText(err.code));
+      },
+      { timeout: 10_000, maximumAge: 60_000 },
+    );
+  };
 
   return (
     <Box sx={{ display: "grid", gap: 0.5 }}>
@@ -131,10 +200,40 @@ export default function AreaControls({
           </span>
         </Tooltip>
       </Box>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+        <Button
+          size="small"
+          startIcon={<MyLocationIcon />}
+          onClick={useMyLocation}
+          disabled={locked || locating}
+          sx={{ minHeight: tokens.touch.min }}
+        >
+          {locating ? "Finding you..." : "Use my location"}
+        </Button>
+        <Button
+          size="small"
+          startIcon={<PlaceIcon />}
+          onClick={onCentreOnView}
+          disabled={locked || !onCentreOnView}
+          sx={{ minHeight: tokens.touch.min }}
+        >
+          Set centre here
+        </Button>
+      </Box>
+      {locationError && (
+        <Typography
+          role="alert"
+          variant="body2"
+          sx={{ color: tokens.error }}
+          data-testid="location-error"
+        >
+          {locationError}
+        </Typography>
+      )}
       <Typography variant="body2" color="textSecondary">
         {locked
           ? "The search center is locked."
-          : `${verb} the map to move the search center.`}
+          : `${verb} the map to move the search center. With the map focused, the arrow keys pan it and Enter sets the center.`}
       </Typography>
     </Box>
   );

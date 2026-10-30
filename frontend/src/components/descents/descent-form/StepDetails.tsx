@@ -4,7 +4,7 @@ import TextField from "@mui/material/TextField";
 import ChipRow from "@/components/ChipRow";
 import VisibilityPicker from "@/components/VisibilityPicker";
 import FormSection from "@/components/waterway/FormSection";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import { type StepProps, toDatetimeLocal } from "./model";
 import PickerField from "./PickerField";
 

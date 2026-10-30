@@ -14,13 +14,13 @@ import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import MemberAvatar from "@/components/trips/MemberAvatar";
 import FormSection from "@/components/waterway/FormSection";
-import { withAlpha } from "@/lib/alpha";
 import { apiErrorMessage } from "@/lib/api/client";
-import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/lib/hooks/ui/useDebouncedValue";
 import { useUserSearch } from "@/lib/hooks/useFollows";
 import { useAddTripMember } from "@/lib/hooks/useTrips";
 import { AddPersonIcon } from "@/lib/icons";
-import { BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { BOTTOM_NAV_SPACE, fonts, theme } from "@/lib/theme/theme";
 
 import InviteLinks from "./InviteLinks";
 

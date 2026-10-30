@@ -28,6 +28,7 @@ use crate::{
     },
     query::{gauges, is_unique_violation},
     readers,
+    routes::access,
     state::AppState,
 };
 
@@ -251,12 +252,12 @@ pub async fn create_gauge(
     auth: Option<Extension<AuthToken>>,
     Json(body): Json<CreateGaugeRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Not permitted").into_response();
+    if let Err(err) = access::require_server_admin(&token, "Not permitted") {
+        return err.into_response();
     }
 
     let active = body.active.unwrap_or(true);
@@ -302,12 +303,12 @@ pub async fn update_gauge(
     Path(GaugePath { gauge_id }): Path<GaugePath>,
     Json(body): Json<UpdateGaugeRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Not permitted").into_response();
+    if let Err(err) = access::require_server_admin(&token, "Not permitted") {
+        return err.into_response();
     }
 
     match gauges::update_gauge(
@@ -355,12 +356,12 @@ pub async fn delete_gauge(
     auth: Option<Extension<AuthToken>>,
     Path(GaugePath { gauge_id }): Path<GaugePath>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Not permitted").into_response();
+    if let Err(err) = access::require_server_admin(&token, "Not permitted") {
+        return err.into_response();
     }
 
     match gauges::delete_gauge(&app.pg_pool, gauge_id).await {
@@ -389,12 +390,12 @@ pub async fn create_series(
     Path(GaugePath { gauge_id }): Path<GaugePath>,
     Json(body): Json<CreateSeriesRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Not permitted").into_response();
+    if let Err(err) = access::require_server_admin(&token, "Not permitted") {
+        return err.into_response();
     }
 
     let mt = serde_json::to_string(&body.measurement_type)
@@ -442,12 +443,12 @@ pub async fn update_series(
     }): Path<GaugeSeriesPath>,
     Json(body): Json<UpdateSeriesRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Not permitted").into_response();
+    if let Err(err) = access::require_server_admin(&token, "Not permitted") {
+        return err.into_response();
     }
 
     let mt = serde_json::to_string(&body.measurement_type)
@@ -492,12 +493,12 @@ pub async fn delete_series(
         series_id,
     }): Path<GaugeSeriesPath>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Not permitted").into_response();
+    if let Err(err) = access::require_server_admin(&token, "Not permitted") {
+        return err.into_response();
     }
 
     match gauges::delete_series(&app.pg_pool, gauge_id, series_id).await {
@@ -526,12 +527,12 @@ pub async fn backfill(
     Path(GaugePath { gauge_id }): Path<GaugePath>,
     Json(body): Json<BackfillRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Not permitted").into_response();
+    if let Err(err) = access::require_server_admin(&token, "Not permitted") {
+        return err.into_response();
     }
 
     readers::spawn_backfill(app.pg_pool.clone(), gauge_id, body.from, body.to);

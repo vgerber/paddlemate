@@ -19,6 +19,7 @@ use crate::{
         lang::normalize_lang_code,
         validate::{max_chars, not_blank},
     },
+    routes::access,
     state::AppState,
 };
 
@@ -36,14 +37,11 @@ pub(crate) fn authorize_localization(
     auth: Option<Extension<AuthToken>>,
     lang_code: &str,
 ) -> Result<(AuthToken, String), ApiError> {
-    let Some(Extension(token)) = auth else {
-        return Err(ApiError::unauthorized("Authentication required"));
-    };
-    if !token.is_server_admin() {
-        return Err(ApiError::forbidden(
-            "Only admins edit translations directly; propose the edit instead",
-        ));
-    }
+    let token = access::signed_in(auth)?;
+    access::require_server_admin(
+        &token,
+        "Only admins edit translations directly; propose the edit instead",
+    )?;
     let lang = normalize_lang_code(lang_code)
         .map_err(|msg| ApiError::validation(msg).with_target("lang_code"))?;
     Ok((token, lang))

@@ -19,6 +19,7 @@ use crate::{
     models::group::{GroupMember, GroupMemberRole},
     query::groups::{self, RoleChange},
     query::users,
+    routes::access,
     state::AppState,
 };
 
@@ -41,21 +42,13 @@ pub async fn list_members(
     auth: Option<Extension<AuthToken>>,
     Path(group_id): Path<i64>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
-    match groups::is_member(&app.pg_pool, group_id, &token.user_id().to_string()).await {
-        Ok(true) => {}
-        Ok(false) => return ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            return ApiError::from_db(
-                &format!("Error checking membership in group {group_id}"),
-                err,
-            )
-            .into_response();
-        }
+    if let Err(err) = access::require_group_member(&app, group_id, token.user_id()).await {
+        return err.into_response();
     }
 
     match groups::fetch_members(&app.pg_pool, group_id).await {
@@ -91,19 +84,14 @@ pub async fn add_member(
     Path(group_id): Path<i64>,
     Json(body): Json<AddMemberBody>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     // Only owners and admins may add members
-    match groups::get_member_role(&app.pg_pool, group_id, token.user_id()).await {
-        Ok(Some(GroupMemberRole::Owner | GroupMemberRole::Admin)) => {}
-        Ok(_) => return ApiError::forbidden("Not permitted").into_response(),
-        Err(err) => {
-            return ApiError::from_db(&format!("Error checking role in group {group_id}"), err)
-                .into_response();
-        }
+    if let Err(err) = access::require_group_admin(&app, group_id, token.user_id()).await {
+        return err.into_response();
     }
 
     // Owners cannot be added via this endpoint; there is always exactly one owner
@@ -160,19 +148,14 @@ pub async fn set_member_role(
     Path((group_id, target_user_id)): Path<(i64, String)>,
     Json(body): Json<SetRoleBody>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     // Only group owners may change roles
-    match groups::get_member_role(&app.pg_pool, group_id, token.user_id()).await {
-        Ok(Some(GroupMemberRole::Owner)) => {}
-        Ok(_) => return ApiError::forbidden("Not permitted").into_response(),
-        Err(err) => {
-            return ApiError::from_db(&format!("Error checking role in group {group_id}"), err)
-                .into_response();
-        }
+    if let Err(err) = access::require_group_owner(&app, group_id, token.user_id()).await {
+        return err.into_response();
     }
 
     // Cannot promote another user to owner
@@ -207,9 +190,9 @@ pub async fn remove_member(
     auth: Option<Extension<AuthToken>>,
     Path((group_id, target_user_id)): Path<(i64, String)>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     let caller_id = token.user_id();
@@ -217,13 +200,8 @@ pub async fn remove_member(
 
     if !is_self_leave {
         // Only owners and admins may remove others
-        match groups::get_member_role(&app.pg_pool, group_id, caller_id).await {
-            Ok(Some(GroupMemberRole::Owner | GroupMemberRole::Admin)) => {}
-            Ok(_) => return ApiError::forbidden("Not permitted").into_response(),
-            Err(err) => {
-                return ApiError::from_db(&format!("Error checking role in group {group_id}"), err)
-                    .into_response();
-            }
+        if let Err(err) = access::require_group_admin(&app, group_id, caller_id).await {
+            return err.into_response();
         }
     }
 

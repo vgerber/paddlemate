@@ -3,8 +3,8 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import type { GaugeSource } from "@/lib/api";
-import { licenseLink } from "@/lib/license";
-import { theme } from "@/lib/theme";
+import { licenseLink } from "@/lib/materials/license";
+import { theme } from "@/lib/theme/theme";
 
 // The credit is 12px type; the hit area of each link is drawn around it.
 const linkSx = {

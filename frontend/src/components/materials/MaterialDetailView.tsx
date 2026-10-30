@@ -6,9 +6,7 @@ import { phoneCardSx } from "@/components/canvas/flatRow";
 import Fact from "@/components/Fact";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import SectionHeading from "@/components/SectionHeading";
-import { withAlpha } from "@/lib/alpha";
 import type { Material } from "@/lib/api";
-import { formatDate } from "@/lib/format";
 import { DeleteIcon, EditIcon, OpenExternalIcon } from "@/lib/icons";
 import {
   CATEGORY_LABELS,
@@ -18,9 +16,11 @@ import {
   SPEC_GROUP_LABELS,
   specValue,
   yearsLabel,
-} from "@/lib/materials";
-import { theme } from "@/lib/theme";
-import { useUnits } from "@/lib/units";
+} from "@/lib/materials/materials";
+import { useUnits } from "@/lib/prefs/units";
+import { formatDate } from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

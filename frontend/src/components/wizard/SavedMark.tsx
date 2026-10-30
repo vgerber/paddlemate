@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { useReducedMotion } from "@/lib/motion";
-import { theme } from "@/lib/theme";
+import { useReducedMotion } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 const { motion } = tokens;

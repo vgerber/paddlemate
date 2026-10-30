@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import type { MapLayerMouseEvent } from "react-map-gl/maplibre";
-import { type AreaCircle, DEFAULT_RADIUS_KM, type LngLat } from "@/lib/geo";
+import { type AreaCircle, DEFAULT_RADIUS_KM, type LngLat } from "@/lib/map/geo";
 import {
   FEATURE_LINE_HIT_LAYERS,
   FEATURE_POINT_HIT_LAYERS,

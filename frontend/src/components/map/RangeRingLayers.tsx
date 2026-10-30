@@ -1,9 +1,9 @@
 import { useColorScheme } from "@mui/material/styles";
 import { Layer, Source } from "react-map-gl/maplibre";
-import { badgeInk } from "@/lib/badgeInk";
-import { circleGeoJSON } from "@/lib/geo";
-import { fonts } from "@/lib/theme";
-import { useTokens } from "@/lib/useTokens";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
+import { circleGeoJSON } from "@/lib/map/geo";
+import { badgeInk } from "@/lib/theme/badgeInk";
+import { fonts } from "@/lib/theme/theme";
 import AccessibleMarker from "./AccessibleMarker";
 
 /** A place and how far it reaches, drawn as a named dot inside its ring. */

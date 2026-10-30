@@ -21,9 +21,9 @@ import {
   materialFormToBody,
   SPEC_GROUP_LABELS,
   type SpecKey,
-} from "@/lib/materials";
-import { theme } from "@/lib/theme";
-import { unitLabel, useUnits } from "@/lib/units";
+} from "@/lib/materials/materials";
+import { unitLabel, useUnits } from "@/lib/prefs/units";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

@@ -3,15 +3,15 @@ import ButtonBase from "@mui/material/ButtonBase";
 import { type ReactNode, useLayoutEffect, useRef } from "react";
 import PanelHeader from "@/components/PanelHeader";
 import { usePanelEnter } from "@/components/usePanelEnter";
-import type { CardSide } from "@/lib/canvasLayout";
+import type { CardSide } from "@/lib/map/canvasLayout";
 import {
   type CardKind,
   readCardFrac,
   resizeBounds,
   writeCardFrac,
-} from "@/lib/cardWidth";
-import { durations, LEAD_MS } from "@/lib/motion";
-import { theme } from "@/lib/theme";
+} from "@/lib/map/cardWidth";
+import { durations, LEAD_MS } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 import { layout, useLayout } from "./canvasStore";
 import { escapeContext, escapeGoesBack } from "./keys";
 import ResizeGrip from "./ResizeGrip";

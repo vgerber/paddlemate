@@ -1,8 +1,8 @@
 import ButtonBase from "@mui/material/ButtonBase";
-import { withAlpha } from "@/lib/alpha";
 import { ThumbDownIcon, ThumbUpIcon } from "@/lib/icons";
-import { transition } from "@/lib/motion";
-import { fonts, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { transition } from "@/lib/theme/motion";
+import { fonts, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

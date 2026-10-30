@@ -28,7 +28,6 @@ import NotificationBell, {
 import ProposalSentSnackbar from "@/components/proposals/ProposalSentSnackbar";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import UpdateReadySnackbar from "@/components/UpdateReadySnackbar";
-import { withAlpha } from "@/lib/alpha";
 import { apiErrorMessage } from "@/lib/api/client";
 import {
   useLiveTripEvents,
@@ -36,12 +35,18 @@ import {
 } from "@/lib/hooks/useNotifications";
 import { useSession } from "@/lib/hooks/useSession";
 import { AccountIcon, LogIcon, MapIcon, TripIcon } from "@/lib/icons";
-import { useLanguage } from "@/lib/languagePreference";
-import { transition } from "@/lib/motion";
-import { useMotionSync } from "@/lib/motionMode";
 import { activeNav, DESKTOP_NAV, PHONE_NAV } from "@/lib/nav";
+import { useLanguage } from "@/lib/prefs/languagePreference";
+import { useMotionSync } from "@/lib/prefs/motionMode";
 import { shouldRetryQuery } from "@/lib/retry";
-import { BOTTOM_NAV_SPACE, fonts, SYSTEM_INSET, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { transition } from "@/lib/theme/motion";
+import {
+  BOTTOM_NAV_SPACE,
+  fonts,
+  SYSTEM_INSET,
+  theme,
+} from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Feature, SectionWithFeatures } from "@/lib/api";
-import { representativePoint } from "@/lib/geo";
+import { representativePoint } from "@/lib/map/geo";
 
 interface OpenFeatureOptions {
   /** The `feature` search param. */

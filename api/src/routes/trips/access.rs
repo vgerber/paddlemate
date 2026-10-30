@@ -9,16 +9,13 @@ use axum::{Extension, response::IntoResponse, response::Response};
 
 use crate::{
     error::ApiError, layers::auth::AuthToken, models::trip::TripId, models::trip::TripMemberRole,
-    query::trips, state::AppState,
+    query::trips, routes::access, state::AppState,
 };
 
 /// The caller, or the error to answer instead. Every handler opens with this,
 /// so the unauthenticated case reads the same way in all of them.
 pub(super) fn caller(auth: Option<Extension<AuthToken>>) -> Result<String, ApiError> {
-    match auth {
-        Some(Extension(token)) => Ok(token.user_id().to_string()),
-        None => Err(ApiError::unauthorized("Authentication required")),
-    }
+    access::signed_in(auth).map(|token| token.user_id().to_string())
 }
 
 /// Reading or shaping a trip is open to everyone in it: the itinerary moves

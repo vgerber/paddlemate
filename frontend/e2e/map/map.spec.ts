@@ -713,7 +713,7 @@ test.describe("the region sheet", () => {
     await page.evaluate(() =>
       window.__paddlemateMap?.jumpTo({ center: [11.3, 46.5], zoom: 7 }),
     );
-    await page.waitForTimeout(1000);
+    await page.waitForFunction(() => window.__paddlemateMap?.loaded());
     await pickAt(page, SOLO_POINT);
     await expect(page).toHaveURL(new RegExp(`region=${REGIONS.beta.id}`));
     await dragSheetOpen(page);
@@ -723,15 +723,19 @@ test.describe("the region sheet", () => {
       sheet.getByText(REGIONS.beta.name, { exact: true }),
     ).toBeVisible();
     await expect(sheet.getByText("Part of")).toBeVisible();
+    const chip = sheet.getByRole("button", {
+      name: REGIONS.big.name,
+      exact: true,
+    });
+    await expect(chip).toBeVisible();
+    // A short list opens by itself, so the range is also a row below the chip.
     await expect(
-      sheet.getByRole("button", { name: REGIONS.big.name }),
+      sheet
+        .getByTestId("region-list-row")
+        .filter({ hasText: REGIONS.big.name }),
     ).toBeVisible();
-    await sheet
-      .getByRole("button", { name: /Mountain ranges in view/ })
-      .click();
-    await expect(sheet.getByText(REGIONS.big.name).nth(1)).toBeVisible();
     await expectNoHorizontalOverflow(page);
-    await sheet.getByRole("button", { name: REGIONS.big.name }).first().click();
+    await chip.click();
     await expect(page).toHaveURL(new RegExp(`region=${REGIONS.big.id}`));
   });
 });

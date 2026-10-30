@@ -17,6 +17,7 @@ use crate::{
         visibility::Visibility,
     },
     query::descents,
+    routes::access,
     state::AppState,
 };
 
@@ -26,9 +27,9 @@ pub async fn patch_descent(
     Path(DescentPath { descent_id }): Path<DescentPath>,
     Json(body): Json<PatchDescentRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     if let Some(Visibility::Shared {
@@ -152,9 +153,9 @@ pub async fn delete_descent(
     auth: Option<Extension<AuthToken>>,
     Path(DescentPath { descent_id }): Path<DescentPath>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     match descents::delete_descent(&app.pg_pool, descent_id, token.user_id()).await {

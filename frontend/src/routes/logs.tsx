@@ -24,12 +24,12 @@ import PanelHeader from "@/components/PanelHeader";
 import { SwipeGhost } from "@/components/SwipeGhost";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
-import { fitsBeside } from "@/lib/canvasLayout";
+import { useSwipeTabs } from "@/lib/hooks/ui/useSwipeTabs";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
-import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import { AddIcon, LogIcon } from "@/lib/icons";
-import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { fitsBeside } from "@/lib/map/canvasLayout";
+import { PANEL_HEIGHT, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

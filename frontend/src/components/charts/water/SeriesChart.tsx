@@ -12,11 +12,16 @@ import {
   YAxis,
 } from "recharts";
 import { ChartError, ChartSkeleton } from "@/components/charts/ChartStatus";
-import { withAlpha } from "@/lib/alpha";
 import type { WaterRangeWithStatus } from "@/lib/api";
-import { formatDay, formatReading, humanize, sentenceCase } from "@/lib/format";
 import { FitIcon } from "@/lib/icons";
-import { labelSx, theme } from "@/lib/theme";
+import {
+  formatDay,
+  formatReading,
+  humanize,
+  sentenceCase,
+} from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { labelSx, theme } from "@/lib/theme/theme";
 import { pointTime } from "./chartTime";
 import RailOverlay, {
   RAIL_AXIS,

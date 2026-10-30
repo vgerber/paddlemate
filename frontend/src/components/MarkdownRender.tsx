@@ -2,7 +2,7 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 /**
  * Somebody's text, formatted. Markdown only - `react-markdown` escapes raw

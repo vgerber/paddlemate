@@ -6,10 +6,10 @@ import type {
   RegionOutline,
   SectionWithFeatures,
 } from "@/lib/api";
-import { humanize, sentenceCase } from "@/lib/format";
-import { lineCoords, pointCoords, representativePoint } from "@/lib/geo";
-import { localizedName } from "@/lib/localization";
-import type { ResolvedTokens } from "@/lib/useTokens";
+import type { ResolvedTokens } from "@/lib/hooks/ui/useTokens";
+import { lineCoords, pointCoords, representativePoint } from "@/lib/map/geo";
+import { humanize, sentenceCase } from "@/lib/text/format";
+import { localizedName } from "@/lib/text/localization";
 import { labelPoint, regionSubtitle } from "./regionGeometry";
 
 function nearestPointOnSegment(

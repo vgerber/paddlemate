@@ -12,11 +12,11 @@ import { sortByStanding } from "@/components/trip-page/planWeek";
 import { parseTripTab, type TripTab } from "@/components/trip-page/TripDetail";
 import TripRow from "@/components/trips/TripRow";
 import TripsCanvas from "@/components/trips/TripsCanvas";
-import { todayIso } from "@/lib/format";
 import { useSession } from "@/lib/hooks/useSession";
 import { useTrip, useTrips } from "@/lib/hooks/useTrips";
 import { AddIcon, TripIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { todayIso } from "@/lib/text/format";
+import { theme } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/trips/")({
   // All optional, so /trips is always a valid link.

@@ -3,7 +3,7 @@ import {
   durations,
   prefersReducedMotion,
   REDUCED_FADE_MS,
-} from "@/lib/motion";
+} from "@/lib/theme/motion";
 
 /** A redraw: the new line is revealed left to right (clip-path, paint only),
  * the area fades in after it. Reduced, the line is not drawn in: everything

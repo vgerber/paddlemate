@@ -6,7 +6,6 @@ import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import type { Proposal } from "@/lib/api";
-import { humanize, sentenceCase } from "@/lib/format";
 import {
   useDeleteProposal,
   useUnvoteProposal,
@@ -14,7 +13,8 @@ import {
 } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
 import { DeleteIcon, ThumbDownIcon, ThumbUpIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { humanize, sentenceCase } from "@/lib/text/format";
+import { theme } from "@/lib/theme/theme";
 import { CoordsInfo } from "./CoordsInfo";
 
 const { tokens } = theme;

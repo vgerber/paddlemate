@@ -1,8 +1,8 @@
 import type { JSX } from "react";
 import type { WaterRangeWithStatus } from "@/lib/api";
-import { formatReading, formatSpread } from "@/lib/format";
-import { useTokens } from "@/lib/useTokens";
-import { levelInk, levelWord } from "@/lib/waterLevel";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
+import { formatReading, formatSpread } from "@/lib/text/format";
+import { levelInk, levelWord } from "@/lib/water/waterLevel";
 import { pointTime } from "./chartTime";
 import { clampLabelX, clampReadoutX, spreadWords } from "./railGeometry";
 import { levelAt } from "./series";

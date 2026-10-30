@@ -9,10 +9,13 @@ import {
   featureDifficulty,
   toPseudoFeature,
 } from "@/components/waterway/section-details/utils";
-import { withAlpha } from "@/lib/alpha";
 import type { Proposal } from "@/lib/api";
-import { distanceAlongLineM, lineCoords, representativePoint } from "@/lib/geo";
 import { useWaterway } from "@/lib/hooks/useWaterways";
+import {
+  distanceAlongLineM,
+  lineCoords,
+  representativePoint,
+} from "@/lib/map/geo";
 import {
   proposalRecord,
   proposedFeatures,
@@ -20,7 +23,8 @@ import {
   proposedTranslations,
   shortValue,
 } from "@/lib/proposals";
-import { labelSx, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { labelSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

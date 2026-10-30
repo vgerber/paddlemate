@@ -1,5 +1,5 @@
 import { Layer, Source } from "react-map-gl/maplibre";
-import { useTokens } from "@/lib/useTokens";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 import { POINT_LAYER, SOURCE_ID } from "./useGaugeCatalogMap";
 
 /** The clustered gauge source with its point and name layers. */

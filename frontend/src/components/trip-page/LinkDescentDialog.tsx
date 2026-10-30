@@ -8,7 +8,7 @@ import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import { useMyDescents } from "@/lib/hooks/useDescents";
 import { useLinkDescentToTrip } from "@/lib/hooks/useTrips";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 interface Props {
   tripId: number;

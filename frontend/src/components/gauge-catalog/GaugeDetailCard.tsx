@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { CloseIcon } from "@/lib/icons";
-import { labelSx, theme } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme/theme";
 import { type GaugeStateMeta, stateMeta } from "./gaugeStates";
 import type { MapGroup } from "./groupByProximity";
 

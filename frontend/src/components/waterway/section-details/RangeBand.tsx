@@ -3,10 +3,10 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import { withAlpha } from "@/lib/alpha";
-import { css, durations, useReducedMotion } from "@/lib/motion";
-import { theme } from "@/lib/theme";
-import { useUnits } from "@/lib/units";
+import { useUnits } from "@/lib/prefs/units";
+import { withAlpha } from "@/lib/theme/alpha";
+import { css, durations, useReducedMotion } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 import { CoordsInfo } from "./CoordsInfo";
 import {
   FeatureListRow,

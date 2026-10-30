@@ -5,8 +5,8 @@ import {
   cubicBezier,
   durations,
   prefersReducedMotion,
-} from "@/lib/motion";
-import { theme } from "@/lib/theme";
+} from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 
 const { motion } = theme.tokens;
 

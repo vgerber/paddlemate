@@ -203,15 +203,3 @@ pub async fn member_trips(pool: &PgPool, user_id: &str) -> Result<HashSet<TripId
             .await?;
     Ok(ids.into_iter().collect())
 }
-
-/// Whether `user_id` is on the trip now - asked for every live event, so a
-/// person removed mid-stream stops hearing about it at once.
-pub async fn is_member(pool: &PgPool, trip_id: TripId, user_id: &str) -> Result<bool, sqlx::Error> {
-    sqlx::query_scalar(
-        "SELECT EXISTS (SELECT 1 FROM trip_members WHERE trip_id = $1 AND user_id = $2)",
-    )
-    .bind(trip_id)
-    .bind(user_id)
-    .fetch_one(pool)
-    .await
-}

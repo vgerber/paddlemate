@@ -2,9 +2,9 @@ import Box from "@mui/material/Box";
 import { useRef, useState } from "react";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import type { Feature, WaterRangeWithStatus } from "@/lib/api";
-import { lineCoords } from "@/lib/geo";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { ConfirmIcon } from "@/lib/icons";
+import { lineCoords } from "@/lib/map/geo";
 import type { GeometryPicking } from "./geometryPicking";
 import SuggestFeatureForm from "./SuggestFeatureForm";
 

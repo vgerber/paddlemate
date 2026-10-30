@@ -1,9 +1,9 @@
 import Box from "@mui/material/Box";
 import { useEffect, useRef, useState } from "react";
 import FeatureTypeIcon from "@/components/FeatureTypeIcon";
-import { fonts } from "@/lib/theme";
-import { distanceText, unitLabel, useUnits } from "@/lib/units";
-import { useTokens } from "@/lib/useTokens";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
+import { distanceText, unitLabel, useUnits } from "@/lib/prefs/units";
+import { fonts } from "@/lib/theme/theme";
 import {
   DEFAULT_STRIP,
   layoutStrip,

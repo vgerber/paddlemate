@@ -1,10 +1,10 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Region } from "@/lib/api";
-import type { AreaCircle } from "@/lib/geo";
-import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/lib/hooks/ui/useDebouncedValue";
 import { useRegionOutline } from "@/lib/hooks/useRegions";
-import type { WaterLevel } from "@/lib/waterLevel";
+import type { AreaCircle } from "@/lib/map/geo";
+import type { WaterLevel } from "@/lib/water/waterLevel";
 import { formatWaterLevels, parseWaterLevels } from "./waterParam";
 
 export type ListView = "rivers" | "sections";

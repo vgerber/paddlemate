@@ -89,9 +89,9 @@ through `history::tracked_edit`.
 
 | Concern | File |
 | ------- | ---- |
-| Persisted choice (localStorage, live updates) | `frontend/src/lib/languagePreference.ts` |
-| Language list via `Intl.DisplayNames`, base 2-letter codes only | `frontend/src/lib/languages.ts` |
-| Picking the right text (exact tag, then regional variant, then fallback) | `frontend/src/lib/localization.ts` |
+| Persisted choice (localStorage, live updates) | `frontend/src/lib/prefs/languagePreference.ts` |
+| Language list via `Intl.DisplayNames`, base 2-letter codes only | `frontend/src/lib/text/languages.ts` |
+| Picking the right text (exact tag, then regional variant, then fallback) | `frontend/src/lib/text/localization.ts` |
 
 Base codes only means content is never split across `de` / `de-AT` / `de-CH`.
 

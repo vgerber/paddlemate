@@ -11,7 +11,7 @@ import {
   parseMaterialSearch,
   serializeCompareIds,
   toggleCompareId,
-} from "@/lib/materials";
+} from "@/lib/materials/materials";
 
 export const Route = createFileRoute("/materials/")({
   validateSearch: parseMaterialSearch,

@@ -15,6 +15,7 @@ use crate::{
         proposal::{ProposalStatus, VoteRequest},
     },
     query::proposals,
+    routes::access,
     state::AppState,
 };
 
@@ -24,9 +25,9 @@ pub(super) async fn vote_proposal(
     Path(path): Path<ProposalPath>,
     Json(body): Json<VoteRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     if body.vote != 1 && body.vote != -1 {
@@ -81,9 +82,9 @@ pub(super) async fn unvote_proposal(
     auth: Option<Extension<AuthToken>>,
     Path(path): Path<ProposalPath>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     match proposals::unvote_proposal(&app.pg_pool, path.proposal_id, token.user_id()).await {

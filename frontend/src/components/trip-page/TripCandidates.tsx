@@ -11,18 +11,18 @@ import SectionHeading from "@/components/SectionHeading";
 import RolePill from "@/components/trips/RolePill";
 import { stayKind } from "@/components/trips/stayKinds";
 import VoteButton from "@/components/VoteButton";
-import { withAlpha } from "@/lib/alpha";
 import type { TripStay, TripStayCandidate } from "@/lib/api";
-import { dateRange } from "@/lib/format";
 import {
   useAcceptCandidate,
   useVoteCandidate,
   useWithdrawCandidate,
 } from "@/lib/hooks/useTrips";
 import { ConfirmIcon, DeleteIcon, EditIcon } from "@/lib/icons";
-import { fonts, theme } from "@/lib/theme";
-import { nearestWatched } from "@/lib/tripRange";
-import { formatDistanceKm, useUnits } from "@/lib/units";
+import { formatDistanceKm, useUnits } from "@/lib/prefs/units";
+import { dateRange } from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { fonts, theme } from "@/lib/theme/theme";
+import { nearestWatched } from "@/lib/trips/tripRange";
 import { foldProps } from "./folds";
 import StayDialog from "./StayDialog";
 

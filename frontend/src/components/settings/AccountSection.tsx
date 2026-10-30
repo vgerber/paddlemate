@@ -3,7 +3,7 @@ import Button from "@mui/material/Button";
 import Fact from "@/components/Fact";
 import { ACCOUNT_CONSOLE_URL } from "@/lib/auth";
 import { useSession } from "@/lib/hooks/useSession";
-import { fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

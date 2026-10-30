@@ -4,7 +4,7 @@ import Fact, { factLabelSx, factValueSx } from "@/components/Fact";
 import TimelineRail from "@/components/TimelineRail";
 import { LevelPill } from "@/components/WaterLevelChip";
 import type { Descent } from "@/lib/api";
-import { durationLabel, formatDate, formatTime } from "@/lib/format";
+import { durationLabel, formatDate, formatTime } from "@/lib/text/format";
 import { levelAtTime } from "./levelAtTime";
 
 function Stop({

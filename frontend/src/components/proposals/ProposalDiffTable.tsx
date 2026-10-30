@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { fieldLabel } from "@/components/provenance/steps";
 import { diffObjects, isEmptyValue, shortValue } from "@/lib/proposals";
-import { labelSx, theme } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme/theme";
 import { DIFF_HIDDEN_KEYS } from "./status";
 
 const { tokens } = theme;

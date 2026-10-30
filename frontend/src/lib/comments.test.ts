@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { categoryColor, categoryMeta } from "./comments";
-import { type ResolvedTokens, type Scheme, tokensFor } from "./useTokens";
+import {
+  type ResolvedTokens,
+  type Scheme,
+  tokensFor,
+} from "./hooks/ui/useTokens";
 
 const SCHEMES: Scheme[] = ["light", "dark"];
 

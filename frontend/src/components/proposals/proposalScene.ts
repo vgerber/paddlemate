@@ -2,7 +2,7 @@ import type { MapScene } from "@/components/canvas/scene";
 import type { MapSubject } from "@/components/map/Map";
 import { toPseudoFeature } from "@/components/waterway/section-details/utils";
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
-import { lineCoords } from "@/lib/geo";
+import { lineCoords } from "@/lib/map/geo";
 import {
   proposalRecord,
   proposedFeatures,

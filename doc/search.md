@@ -72,7 +72,15 @@ its own is a search: it lists the sections at those levels across all rivers.
 Area and Region are the two ways to search without typing a name:
 
 - **Area** - click the map to drop a centre, then set a radius. Rivers with a
-  section inside the circle are listed.
+  section inside the circle are listed, sections nearest first, each row with
+  its distance from the centre in the device's distance unit (Settings >
+  Units). **Use my location** starts the circle at the device position; the
+  browser asks only when the button is tapped, and when access is blocked or
+  the position is unavailable a red line under the buttons says so and the
+  circle stays where it was. Without a pointer: focus the map, pan it with the
+  arrow keys and press Enter, or press **Set centre here**, to put the centre
+  at the middle of the map in view; each move of the centre is announced
+  ("Search centre set to ..."). While the area is locked all of these are off.
 - **Region** - switch to region mode and the map becomes the picker: the
   valleys, districts, mountain ranges and states in view are outlined and
   labelled, and clicking one lists the rivers reaching into it. One kind is
@@ -177,7 +185,7 @@ The normalization exists three times and must agree:
 | Where | File | Guarded by |
 | ----- | ---- | ---------- |
 | SQL   | `public.search_key` (migration `00023`) | `api/tests/sql/search_key_assertions.sql`, run in CI |
-| TypeScript | `frontend/src/lib/text.ts` `searchKey()` | `frontend/src/lib/text.test.ts` (same cases as the SQL side), run in CI |
+| TypeScript | `frontend/src/lib/text/text.ts` `searchKey()` | `frontend/src/lib/text/text.test.ts` (same cases as the SQL side), run in CI |
 | Rust  | `api/src/models/lang.rs` (language codes only) | unit tests |
 
 ### Ranking
@@ -256,3 +264,16 @@ in `regionGeometry.test.ts`) and the layers in `RegionLayers.tsx` and
 | Valleys: a 14px blurred line band at 14% opacity, no outline | `region-valley-band` |
 | Picked region: `mapSelectedLine` fill at 12% and a 2.5px line, label in the same colour; a region whose row has focus in the choice card is lit the same way | `region-picked-*`, `region-lit-*` |
 | Country borders: dash-dot `mapCountryBorder` line over a white casing, `country` property as a line label | `CountryBorderLayer` |
+
+### Area search internals
+
+| Piece | Where |
+|---|---|
+| Distance of a section: nearest of first, middle, last vertex (the same three the filter tests) | `sectionDistanceKm` in `lib/map/geo.ts` |
+| Filter and nearest-first sort | `components/map-page/useFilteredSections.ts` |
+| Row distance (`section-distance`) | `search/SearchSectionRow.tsx`, fed by `SectionList`'s `distanceFrom` |
+| Use my location, Set centre here, location messages | `search/AreaControls.tsx` |
+| Enter on the focused map canvas | effect in `map/Map.tsx` (only while the circle is movable) |
+| Centre on the map in view (above a phone's sheet) | `centreAreaOnView` in `map-page/useMapPageState.ts` |
+
+Spec: `e2e/area-search/`.

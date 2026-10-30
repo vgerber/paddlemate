@@ -15,7 +15,7 @@ import TripMembersCard from "@/components/trip-page/TripMembersCard";
 import type { TripFocus } from "@/components/trip-page/tripFocus";
 import { useTripScene } from "@/components/trip-page/useTripScene";
 import type { Trip } from "@/lib/api";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import TripForm from "./TripForm";
 
 const { tokens } = theme;

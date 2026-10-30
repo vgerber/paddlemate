@@ -9,7 +9,7 @@ import {
   usePushOnThisDevice,
   useSetPush,
 } from "@/lib/hooks/useNotifications";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

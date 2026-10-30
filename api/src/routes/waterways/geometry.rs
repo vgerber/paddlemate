@@ -18,6 +18,7 @@ use crate::{
     },
     overpass,
     query::waterways::geometry as osm_geometry,
+    routes::access,
     routes::geo::params::parse_bbox,
     state::AppState,
 };
@@ -97,11 +98,12 @@ pub async fn delete_waterway_geometry(
     auth: Option<Extension<AuthToken>>,
     Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
 ) -> impl IntoApiResponse {
-    let Some(Extension(token)) = auth else {
-        return ApiError::unauthorized("Authentication required").into_response();
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Admin access required").into_response();
+    if let Err(err) = access::require_server_admin(&token, "Admin access required") {
+        return err.into_response();
     }
     match osm_geometry::delete_elements(&app.pg_pool, waterway_id).await {
         Ok(_) => StatusCode::NO_CONTENT.into_response(),

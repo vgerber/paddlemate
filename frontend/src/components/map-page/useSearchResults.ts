@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import type { AreaCircle } from "@/components/map/Map";
+import { useFilteredSections } from "@/components/map-page/useFilteredSections";
 import type { SectionWithFeatures } from "@/lib/api";
-import { useFilteredSections } from "@/lib/hooks/useFilteredSections";
 import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
 import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";
 

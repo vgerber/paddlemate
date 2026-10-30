@@ -3,7 +3,7 @@ import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import PanelHeader from "@/components/PanelHeader";
 import ToolsList from "@/components/ToolsList";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 const { phone } = theme.tokens;
 

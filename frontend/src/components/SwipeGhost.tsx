@@ -8,7 +8,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import type { SwipeTrack, useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
+import type { SwipeTrack, useSwipeTabs } from "@/lib/hooks/ui/useSwipeTabs";
 
 interface Props {
   swipe: Pick<ReturnType<typeof useSwipeTabs>, "track" | "ghostRef">;

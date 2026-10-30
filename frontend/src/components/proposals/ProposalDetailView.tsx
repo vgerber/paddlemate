@@ -8,7 +8,7 @@ import ProposalVoteBar from "@/components/proposals/ProposalVoteBar";
 import SectionHeading from "@/components/SectionHeading";
 import type { Proposal, ProposalStatus } from "@/lib/api";
 import { proposalKind, proposalRecord, proposalTitle } from "@/lib/proposals";
-import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme/theme";
 import ProposalMenu from "./ProposalMenu";
 import StatusChip from "./StatusChip";
 

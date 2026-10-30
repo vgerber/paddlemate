@@ -10,7 +10,7 @@ import type { Trip, TripStayKind } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useCreateTrip, usePatchTrip } from "@/lib/hooks/useTrips";
 import { ConfirmIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import { STAY_KINDS } from "./stayKinds";
 import {
   buildCreatePayload,

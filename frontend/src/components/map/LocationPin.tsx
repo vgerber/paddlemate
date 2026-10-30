@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import NumberBadge from "@/components/NumberBadge";
 import { useMapVerb } from "@/components/waterway/useMapVerb";
 import { DeleteIcon } from "@/lib/icons";
-import { labelSx, theme } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

@@ -7,7 +7,6 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
-import { withAlpha } from "@/lib/alpha";
 import type {
   Feature,
   GaugeSource,
@@ -15,7 +14,6 @@ import type {
   SectionWithFeatures,
   WaterwaySources,
 } from "@/lib/api";
-import { formatDate, plural } from "@/lib/format";
 import { useWaterwayMedia } from "@/lib/hooks/useComments";
 import { useWaterwayGauges } from "@/lib/hooks/useGauges";
 import { useHistory, useSources } from "@/lib/hooks/useProvenance";
@@ -30,8 +28,10 @@ import {
   PhotoIcon,
   StackIcon,
 } from "@/lib/icons";
-import { licenseLink } from "@/lib/license";
-import { cardTitleSx, fonts, theme } from "@/lib/theme";
+import { licenseLink } from "@/lib/materials/license";
+import { formatDate, plural } from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { cardTitleSx, fonts, theme } from "@/lib/theme/theme";
 import EditsTimeline, { type EditsFilter, useEntries } from "./EditsTimeline";
 import { smallSx } from "./StepRow";
 import { inOrder, ORIGIN_UNKNOWN, stepHeadline } from "./steps";

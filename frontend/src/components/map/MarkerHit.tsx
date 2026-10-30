@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

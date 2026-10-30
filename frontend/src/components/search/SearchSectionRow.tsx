@@ -9,8 +9,9 @@ import GradeTag from "@/components/waterway/GradeTag";
 import { sectionGradeText } from "@/components/waterway/section-details/grade";
 import type { SectionWithFeatures } from "@/lib/api";
 import { StarIcon, StarOutlineIcon } from "@/lib/icons";
-import { localizedName } from "@/lib/localization";
-import { theme } from "@/lib/theme";
+import { formatDistanceKm, useUnits } from "@/lib/prefs/units";
+import { localizedName } from "@/lib/text/localization";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
@@ -24,6 +25,8 @@ interface SearchSectionRowProps {
   onToggleFavorite?: (sectionId: number) => void;
   /** Rapid whose name matched the search, shown under the river. */
   matchedFeature?: string;
+  /** Distance from the search centre, in kilometres, in area search. */
+  distanceKm?: number;
 }
 
 /** A search result as the design draws it: the section's name over its river
@@ -36,8 +39,10 @@ export default function SearchSectionRow({
   isFavorite,
   onToggleFavorite,
   matchedFeature,
+  distanceKm,
 }: SearchSectionRowProps) {
   const grade = sectionGradeText(section);
+  const [units] = useUnits();
   return (
     // The star is the button's sibling, not its child: a control inside a
     // control is not reachable by assistive tech. The button keeps an empty
@@ -91,6 +96,16 @@ export default function SearchSectionRow({
             {riverName}
           </Typography>
           {grade && <GradeTag grade={grade} />}
+          {distanceKm != null && Number.isFinite(distanceKm) && (
+            <Typography
+              data-testid="section-distance"
+              variant="body2"
+              color="textSecondary"
+              sx={{ flexShrink: 0, fontVariantNumeric: "tabular-nums" }}
+            >
+              {formatDistanceKm(distanceKm, units)}
+            </Typography>
+          )}
         </Box>
         {matchedFeature && (
           <Typography

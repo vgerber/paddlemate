@@ -1,5 +1,5 @@
 import type { Feature, FeatureType, Proposal } from "@/lib/api";
-import { humanize } from "@/lib/format";
+import { humanize } from "@/lib/text/format";
 
 const ENTITY_LABEL: Record<string, string> = {
   waterway: "River",

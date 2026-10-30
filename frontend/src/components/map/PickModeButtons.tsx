@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import type { MapPadding } from "./Map";
 
 const { tokens } = theme;

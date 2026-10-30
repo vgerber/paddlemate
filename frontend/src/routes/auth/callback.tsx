@@ -9,9 +9,9 @@ import LoadingBox from "@/components/states/LoadingBox";
 import StateCard from "@/components/states/StateCard";
 import { getUserManager } from "@/lib/auth";
 import { ErrorIcon } from "@/lib/icons";
-import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
+import { EMPTY_MAP_SEARCH } from "@/lib/map/mapSearch";
 import { safeReturnTo } from "@/lib/returnTo";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/auth/callback")({
   component: AuthCallback,

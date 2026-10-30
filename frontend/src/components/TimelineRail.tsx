@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

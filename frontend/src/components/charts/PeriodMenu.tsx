@@ -4,11 +4,11 @@ import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
 import RangeDialog from "@/components/charts/RangeDialog";
 import type { CustomRange, TimeRange } from "@/components/charts/water/types";
-import { withAlpha } from "@/lib/alpha";
-import { chartRange } from "@/lib/format";
 import { CollapseIcon, ConfirmIcon, ExpandIcon } from "@/lib/icons";
-import { css, prefersReducedMotion, REDUCED_FADE_MS } from "@/lib/motion";
-import { theme } from "@/lib/theme";
+import { chartRange } from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { css, prefersReducedMotion, REDUCED_FADE_MS } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

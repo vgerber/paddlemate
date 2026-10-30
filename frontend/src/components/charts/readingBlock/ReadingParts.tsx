@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { Segment, SegmentTrack } from "@/components/canvas/SegmentedControl";
 import { CloseIcon, ExpandIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import ReadingNumber from "./ReadingNumber";
 import {
   type ReadingMeasurement,

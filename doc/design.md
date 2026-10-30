@@ -1,7 +1,7 @@
 # Design language
 
 The rules that keep every screen looking like the same product. This is the
-calm design: light, soft, readable outdoors. The theme (`frontend/src/lib/theme.ts`)
+calm design: light, soft, readable outdoors. The theme (`frontend/src/lib/theme/theme.ts`)
 carries the tokens and the component-wide rules.
 
 The token and component reference for the app is the design system artifact
@@ -166,7 +166,7 @@ Components for each live in the matching folder under `frontend/src/components/`
   component-wide rules from the theme's `styleOverrides` (see Dark mode).
 - Transparency uses `withAlpha(token, step)` with the named steps from `alphas` (`tint 5%`,
   `wash 8%`, `hover 12%`, `hairline 33%`, `border 60%`, `scrim 80%`).
-- Contrast floors, checked by [`contrast.test.ts`](../frontend/src/lib/contrast.test.ts)
+- Contrast floors, checked by [`contrast.test.ts`](../frontend/src/lib/theme/contrast.test.ts)
   against the tokens in `theme.ts`: text and its ground reach 4.5:1 (body and
   secondary ink on every surface; teal, green and red text on the three light
   grounds; chip text on its wash); marks and controls reach 3:1 on white or
@@ -186,7 +186,7 @@ brightened. Print is always light. The installed app keeps a dark frame on a
 dark device even when the app is set to Light, so the system buttons stay
 legible.
 
-Palette (values live in [`lib/theme.ts`](../frontend/src/lib/theme.ts), the
+Palette (values live in [`lib/theme/theme.ts`](../frontend/src/lib/theme/theme.ts), the
 contrast floors in `contrast.test.ts` hold for both schemes):
 
 | Role | Light | Dark |
@@ -211,10 +211,10 @@ overlays are off.
 
 Rules for new work:
 
-- **A colour is a token** with a light and a dark value in `lib/theme.ts`;
+- **A colour is a token** with a light and a dark value in `lib/theme/theme.ts`;
   never a hex or `rgb()` literal elsewhere. Add it to both `lightTokens` and
   `darkTokens` and check it in both schemes.
-- **Transparency** is `withAlpha(token, step)` (`lib/alpha.ts`), which works on
+- **Transparency** is `withAlpha(token, step)` (`lib/theme/alpha.ts`), which works on
   a `var()`. The hex-alpha suffix no longer works on a token.
 - **Resolved colours** for MapLibre paint, SVG strings turned into images,
   canvas and colour maths come from `useTokens()`, which returns hex values
@@ -235,7 +235,7 @@ Rules for new work:
 - A small script in `index.html` reads the stored mode
   (`paddlemate-color-mode`) and the device preference before first paint, sets
   `data-theme` and the light-media meta; it mirrors `resolveScheme` in
-  [`lib/colorMode.ts`](../frontend/src/lib/colorMode.ts), and
+  [`lib/prefs/colorMode.ts`](../frontend/src/lib/prefs/colorMode.ts), and
   `colorMode.test.ts` holds both together.
 - The map restyles on a switch (`useMutedBaseMap` re-mutes after the style
   loads); marker images are re-registered per scheme.
@@ -292,13 +292,13 @@ after a quiet spell, offline or under reduced motion.
 
 Settings > Appearance > Motion holds Full (default), Reduced and System, kept
 per device. The resolved value is `html[data-motion]` (set before first paint
-and kept live by `lib/motionMode.ts`); the global reduced rule and
-`prefersReducedMotion()` / `useReducedMotion()` in `lib/motion.ts` read it.
+and kept live by `lib/prefs/motionMode.ts`); the global reduced rule and
+`prefersReducedMotion()` / `useReducedMotion()` in `lib/theme/motion.ts` read it.
 `tokens.motion.easeSettle` is for sheets only.
 
 Rules behind the choices:
 
-- Scale helpers in `lib/motion.ts`: `releaseMs` (a released sheet, 220 ms plus
+- Scale helpers in `lib/theme/motion.ts`: `releaseMs` (a released sheet, 220 ms plus
   0.25 per px, at most 360), `stepMs` (a stepped control, 160 ms plus 20 per
   step, at most 300) and `cameraMs` (the camera: 260 ms up to half a screen
   away, 360 up to 1.5 screens, beyond that a jump). All return 0 under reduced
@@ -426,7 +426,7 @@ reports them.
 
 - **Stored and sent metric.** The API, the URL (`?radius=`, `?fits=`) and
   every cache hold kg, km, cm and litres; only the screen converts.
-- **Show with `lib/units.ts`.** `formatQuantity`, `formatDistance` /
+- **Show with `lib/prefs/units.ts`.** `formatQuantity`, `formatDistance` /
   `formatDistanceKm` (one fixed decimal) and `unitLabel`; never write a bare
   "km" or "kg" in a template. A component that shows a quantity calls
   `useUnits()` so it re-renders when the choice changes.
@@ -549,7 +549,7 @@ grid.
   subject is already inside.
 - **Cards.** `useCoverBudget` folds the lowest priority card past the budget.
   `ResizeGrip` is a focusable `role="separator"` (arrow keys 16px, Shift 64,
-  Home and End); width fractions persist through `lib/cardWidth.ts`
+  Home and End); width fractions persist through `lib/map/cardWidth.ts`
   (localStorage in try/catch, clamped on read). `useFreeArea` is the card edges
   plus 32px, each side at most 45%, falling back to the whole host when under
   240x200 is free.

@@ -2,10 +2,10 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import VoteButton from "@/components/VoteButton";
 import type { Proposal } from "@/lib/api";
-import { formatDate } from "@/lib/format";
 import { useUnvoteProposal, useVoteProposal } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
-import { labelSx } from "@/lib/theme";
+import { formatDate } from "@/lib/text/format";
+import { labelSx } from "@/lib/theme/theme";
 import { proposerName, reviewerLine } from "./status";
 
 /** Who proposed it and when, who decided, and the reader's vote. Owns the

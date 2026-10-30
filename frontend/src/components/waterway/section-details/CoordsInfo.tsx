@@ -3,7 +3,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
-import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
+import { useCopyToClipboard } from "@/lib/hooks/ui/useCopyToClipboard";
 import { useSession } from "@/lib/hooks/useSession";
 import {
   ConfirmIcon,
@@ -13,7 +13,7 @@ import {
   HistoryIcon,
   OpenExternalIcon,
 } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

@@ -4,10 +4,10 @@ import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import { factLabelSx } from "@/components/Fact";
 import WaterwayMap from "@/components/map/LazyMap";
-import { boundsOf, lineCoords, pointCoords } from "@/lib/geo";
 import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
 import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";
-import { fonts, theme } from "@/lib/theme";
+import { boundsOf, lineCoords, pointCoords } from "@/lib/map/geo";
+import { fonts, theme } from "@/lib/theme/theme";
 
 export interface StayPoint {
   lat: number;

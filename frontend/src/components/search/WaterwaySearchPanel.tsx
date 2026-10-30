@@ -9,13 +9,13 @@ import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import UnderlineTabs from "@/components/UnderlineTabs";
 import type { FavoriteSection, SectionWithFeatures } from "@/lib/api";
-import type { AreaCircle } from "@/lib/geo";
-import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
+import { useSwipeTabs } from "@/lib/hooks/ui/useSwipeTabs";
 import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
 import { useWaterways } from "@/lib/hooks/useWaterways";
 import { SearchIcon, StarIcon } from "@/lib/icons";
+import type { AreaCircle } from "@/lib/map/geo";
 import { readRecentWaterways } from "@/lib/recentWaterways";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import RecentRiverList from "./RecentRiverList";
 import type { RegionBrowseProps } from "./RegionBrowse";
 import RegionSuggestions, { isListingRegions } from "./RegionSelect";
@@ -60,6 +60,7 @@ interface WaterwaySearchPanelProps {
   onToggleFavorite?: (id: number) => void;
   onClose?: () => void;
   onRadiusPreview?: (radiusKm: number) => void;
+  onAreaCentreOnView?: () => void;
   onLoadingChange?: (loading: boolean) => void;
   /** Opens the "suggest new river" panel, prefilled with the searched name. */
   onProposeRiver?: (name: string) => void;
@@ -88,6 +89,7 @@ export default function WaterwaySearchPanel({
   onToggleFavorite,
   onClose,
   onRadiusPreview,
+  onAreaCentreOnView,
   onLoadingChange,
   onProposeRiver,
   regionBrowse,
@@ -341,6 +343,7 @@ export default function WaterwaySearchPanel({
             onAreaCircleChange={onAreaCircleChange}
             onAreaLockedChange={onAreaLockedChange}
             onRadiusPreview={onRadiusPreview}
+            onAreaCentreOnView={onAreaCentreOnView}
             listingRegions={listingRegions}
             regionBrowse={regionBrowse}
             onSheetOpenChange={setFiltersOpen}
@@ -449,6 +452,11 @@ export default function WaterwaySearchPanel({
                   waterwayNames={waterwayNames}
                   onSectionClick={onSectionClick}
                   searchName={mode === "name" ? searchName : undefined}
+                  distanceFrom={
+                    mode === "area" && areaCircle
+                      ? [areaCircle.lon, areaCircle.lat]
+                      : undefined
+                  }
                 />
               )}
           </Box>

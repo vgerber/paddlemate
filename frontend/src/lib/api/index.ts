@@ -1,5 +1,5 @@
 import { createBatcher } from "@/lib/batcher";
-import type { ViewBounds } from "@/lib/geo";
+import type { ViewBounds } from "@/lib/map/geo";
 import { ApiError, client, postForm } from "./client";
 import type { components, operations } from "./schema.d.ts";
 

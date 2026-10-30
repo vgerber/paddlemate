@@ -8,8 +8,8 @@ import {
   boundsOf,
   circleBounds,
   lineCoords,
-} from "@/lib/geo";
-import { cameraMs } from "@/lib/motion";
+} from "@/lib/map/geo";
+import { cameraMs } from "@/lib/theme/motion";
 import { cameraEasing, fitMs, fitSelection, screensTo } from "./cameraMotion";
 import type { MapPadding, MapSubject } from "./Map";
 

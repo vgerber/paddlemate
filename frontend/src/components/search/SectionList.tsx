@@ -1,7 +1,8 @@
 import List from "@mui/material/List";
 import EmptyState from "@/components/states/EmptyState";
 import type { SectionWithFeatures } from "@/lib/api";
-import { matchedFeatureName } from "@/lib/sectionMatch";
+import { type LngLat, sectionDistanceKm } from "@/lib/map/geo";
+import { matchedFeatureName } from "@/lib/map/sectionMatch";
 import SearchSectionRow from "./SearchSectionRow";
 
 interface SectionListProps {
@@ -13,6 +14,8 @@ interface SectionListProps {
   onToggleFavorite?: (id: number) => void;
   /** Active name search, used to say which rapid made a section match. */
   searchName?: string;
+  /** The search centre; each row then shows its distance from it. */
+  distanceFrom?: LngLat;
 }
 
 /** Sections as one flat list of cards; each names its own river, so no
@@ -25,6 +28,7 @@ export default function SectionList({
   favoritedIds,
   onToggleFavorite,
   searchName,
+  distanceFrom,
 }: SectionListProps) {
   if (sections.length === 0) {
     return <EmptyState title="No sections found." py={4} />;
@@ -44,6 +48,11 @@ export default function SectionList({
           onClick={(id) => onSectionClick?.(id)}
           isFavorite={favoritedIds?.has(section.id)}
           onToggleFavorite={onToggleFavorite}
+          distanceKm={
+            distanceFrom
+              ? sectionDistanceKm(section.location, distanceFrom)
+              : undefined
+          }
           matchedFeature={
             searchName ? matchedFeatureName(section, searchName) : undefined
           }

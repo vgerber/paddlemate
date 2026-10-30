@@ -16,10 +16,10 @@ import type {
   ProposalOperation,
   ProposalStatus,
 } from "@/lib/api";
-import { useGoBack } from "@/lib/hooks/useGoBack";
+import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useProposal } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/proposals/$proposalId")({
   component: ProposalDetailPage,

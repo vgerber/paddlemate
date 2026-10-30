@@ -3,8 +3,8 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { Popup } from "react-map-gl/maplibre";
 import { NoteMarkerIcon } from "@/lib/icons";
-import { transition } from "@/lib/motion";
-import { labelSx, theme } from "@/lib/theme";
+import { transition } from "@/lib/theme/motion";
+import { labelSx, theme } from "@/lib/theme/theme";
 import AccessibleMarker from "./AccessibleMarker";
 
 const { tokens } = theme;

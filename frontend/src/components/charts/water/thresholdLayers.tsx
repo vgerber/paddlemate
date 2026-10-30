@@ -1,8 +1,8 @@
 import type { JSX } from "react";
 import { ReferenceArea, ReferenceLine } from "recharts";
 import type { WaterRangeWithStatus } from "@/lib/api";
-import type { ResolvedTokens } from "@/lib/useTokens";
-import { levelInk } from "@/lib/waterLevel";
+import type { ResolvedTokens } from "@/lib/hooks/ui/useTokens";
+import { levelInk } from "@/lib/water/waterLevel";
 
 /** Radius of the latest reading's dot, and the gap the threshold labels keep
  * from it. The labels end this far short of the plot's right edge. */

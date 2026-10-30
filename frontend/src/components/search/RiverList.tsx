@@ -7,8 +7,8 @@ import { listRowSx } from "@/components/canvas/flatRow";
 import SectionHeading from "@/components/SectionHeading";
 import EmptyState from "@/components/states/EmptyState";
 import type { WaterwayListItem } from "@/lib/api";
-import { humanize } from "@/lib/format";
 import { AddIcon, HourglassIcon } from "@/lib/icons";
+import { humanize } from "@/lib/text/format";
 import RiverRow from "./RiverRow";
 
 interface PendingRiver {

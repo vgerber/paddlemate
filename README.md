@@ -18,7 +18,7 @@ water levels, and a shared logbook.
   in the plot. Phones keep their own screens, with tabs you swipe between.
 - **Search** - find rivers by name, section, translation or rapid name;
   accent-, digraph- and typo-tolerant, with an explanation of why each result
-  matched. Area search by map point and radius; region search that turns the
+  matched. Area search by map point and radius, nearest first with each distance in your units, starting at your location or from the keyboard; region search that turns the
   map into the picker - valleys, districts, mountain ranges and states in
   view are outlined and clickable, one kind at a time, chosen by a segmented control or the zoom, a phone previews a tap before it picks;
   typo-tolerant by name, and an English country name lists its regions. Regions are

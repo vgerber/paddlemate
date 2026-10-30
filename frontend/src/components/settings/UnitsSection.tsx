@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import FormSection from "@/components/waterway/FormSection";
-import { type Units, useUnits } from "@/lib/units";
+import { type Units, useUnits } from "@/lib/prefs/units";
 
 const CHOICES: {
   key: keyof Units;

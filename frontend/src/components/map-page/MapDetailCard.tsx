@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import { useDockMode } from "@/components/canvas/CanvasContext";
 import FloatingCard from "@/components/canvas/FloatingCard";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import SidebarContent from "./SidebarContent";
 import type { MapPageState } from "./useMapPageState";
 

@@ -1,18 +1,18 @@
 import type { Feature, Proposal, SectionWithFeatures } from "@/lib/api";
 import {
-  formatDistance,
-  formatDistanceSpan,
-  humanize,
-  sentenceCase,
-} from "@/lib/format";
-import {
   distanceAlongLineM,
   distanceM,
   lineCoords,
   representativePoint,
-} from "@/lib/geo";
-import { localizedDescription, localizedName } from "@/lib/localization";
-import { currentUnits, type Units } from "@/lib/units";
+} from "@/lib/map/geo";
+import { currentUnits, type Units } from "@/lib/prefs/units";
+import {
+  formatDistance,
+  formatDistanceSpan,
+  humanize,
+  sentenceCase,
+} from "@/lib/text/format";
+import { localizedDescription, localizedName } from "@/lib/text/localization";
 import type { ComputedFeature, TreeNode } from "./types";
 
 /** Formats a metre distance as "0.3 km" (or "0.2 mi"). A component that

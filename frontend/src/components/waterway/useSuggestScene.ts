@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { MapScene } from "@/components/canvas/scene";
 import type { SectionWithFeatures } from "@/lib/api";
-import { boundsOf, lineCoords } from "@/lib/geo";
+import { boundsOf, lineCoords } from "@/lib/map/geo";
 import type { useSectionWizardState } from "./useSectionWizardState";
 
 type Wizard = ReturnType<typeof useSectionWizardState>;

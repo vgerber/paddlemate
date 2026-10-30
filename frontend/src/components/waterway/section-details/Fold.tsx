@@ -6,7 +6,7 @@ import {
   prefersReducedMotion,
   REDUCED_FADE_MS,
   useReducedMotion,
-} from "@/lib/motion";
+} from "@/lib/theme/motion";
 
 /** A body that folds by grid rows (1fr to 0fr): the content fades first when
  * it closes and last when it opens, so the edge moves before the rows do.

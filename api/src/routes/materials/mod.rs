@@ -27,6 +27,7 @@ use crate::{
         is_unique_violation,
         materials::{self, CreateError, MAX_COMPARE_IDS, MAX_NEW_PER_DAY},
     },
+    routes::access,
     state::AppState,
 };
 
@@ -166,8 +167,9 @@ pub async fn create_material(
     auth: Option<Extension<AuthToken>>,
     Json(mut body): Json<MaterialBody>,
 ) -> impl IntoApiResponse {
-    let Some(Extension(token)) = auth else {
-        return ApiError::unauthorized("Authentication required").into_response();
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     body.normalize();
@@ -216,8 +218,9 @@ pub async fn update_material(
     Path(MaterialPath { material_id }): Path<MaterialPath>,
     Json(mut body): Json<MaterialBody>,
 ) -> impl IntoApiResponse {
-    let Some(Extension(token)) = auth else {
-        return ApiError::unauthorized("Authentication required").into_response();
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     body.normalize();
@@ -264,13 +267,14 @@ pub async fn delete_material(
     auth: Option<Extension<AuthToken>>,
     Path(MaterialPath { material_id }): Path<MaterialPath>,
 ) -> impl IntoApiResponse {
-    let Some(Extension(token)) = auth else {
-        return ApiError::unauthorized("Authentication required").into_response();
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
     // Removing an entry takes it away from everyone, unlike an edit, which
     // the next reader can correct again.
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Not permitted").into_response();
+    if let Err(err) = access::require_server_admin(&token, "Not permitted") {
+        return err.into_response();
     }
 
     match materials::delete(&app.pg_pool, material_id).await {

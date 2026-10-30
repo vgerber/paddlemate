@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { FEATURE_ICON_PATHS } from "@/components/FeatureTypeIcon";
-import { FEATURE_TYPES } from "@/lib/featureTypes";
+import { FEATURE_TYPES } from "@/lib/map/featureTypes";
 
 describe("feature type icons", () => {
   test("every feature type has a drawing", () => {

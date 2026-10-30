@@ -1,5 +1,5 @@
 import type { WaterRangeWithStatus } from "@/lib/api";
-import { isCalibrated, type WaterLevel } from "@/lib/waterLevel";
+import { isCalibrated, type WaterLevel } from "@/lib/water/waterLevel";
 
 /** Distinct measurement types present in the ranges, in order of appearance. */
 export function measurementTypesOf(ranges: WaterRangeWithStatus[]): string[] {

@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import PeriodMenu, { type PeriodControl } from "@/components/charts/PeriodMenu";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import {
   CloseGauge,
   GaugeName,
