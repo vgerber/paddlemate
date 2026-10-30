@@ -5,8 +5,8 @@ import {
   type LngLat,
   nearestOnLine,
   type ViewBounds,
-} from "@/lib/geo";
-import { routeSection, snapSection, stitchWays } from "@/lib/riverSnap";
+} from "@/lib/map/geo";
+import { routeSection, snapSection, stitchWays } from "@/lib/map/riverSnap";
 
 /** Snap pipeline state - `searching` is the river lookup, `routing` the
  * confluence-crossing stage. */

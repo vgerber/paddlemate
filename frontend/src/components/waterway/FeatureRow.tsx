@@ -2,10 +2,10 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { humanize, sentenceCase } from "@/lib/format";
 import { CloseIcon } from "@/lib/icons";
-import { labelSx } from "@/lib/theme";
-import { useUnits } from "@/lib/units";
+import { useUnits } from "@/lib/prefs/units";
+import { humanize, sentenceCase } from "@/lib/text/format";
+import { labelSx } from "@/lib/theme/theme";
 import { coversWholeSection, fmtKm, fmtKmSpan } from "./section-details/utils";
 
 /** Position along the section line - the subset of ComputedFeature the row

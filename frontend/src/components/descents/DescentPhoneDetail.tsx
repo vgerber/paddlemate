@@ -5,8 +5,8 @@ import Fact from "@/components/Fact";
 import WaterwayMap from "@/components/map/LazyMap";
 import SectionHeading from "@/components/SectionHeading";
 import type { Descent, DescentSection, SectionWithFeatures } from "@/lib/api";
-import { durationLabel, formatDate, formatTime } from "@/lib/format";
-import { theme } from "@/lib/theme";
+import { durationLabel, formatDate, formatTime } from "@/lib/text/format";
+import { theme } from "@/lib/theme/theme";
 import LogSectionRow from "./LogSectionRow";
 
 const { tokens } = theme;

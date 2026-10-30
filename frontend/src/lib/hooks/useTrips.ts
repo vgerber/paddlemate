@@ -16,7 +16,7 @@ import {
   tripsApi,
 } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
-import { buildTimeline, type TripDay } from "@/lib/tripTimeline";
+import { buildTimeline, type TripDay } from "@/lib/trips/tripTimeline";
 import { descentKeys, useTripDescents } from "./useDescents";
 
 export const tripKeys = {

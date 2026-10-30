@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { fonts, labelSx } from "@/lib/theme";
+import { fonts, labelSx } from "@/lib/theme/theme";
 
 /** Label of a fact block; also the app's small metadata label. */
 export const factLabelSx = {

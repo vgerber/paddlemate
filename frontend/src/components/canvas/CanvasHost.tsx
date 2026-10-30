@@ -2,7 +2,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useRouterState } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect } from "react";
 import { preloadMap } from "@/components/map/LazyMap";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import { isGeographyRoute } from "./canvasRoutes";
 import { useScene } from "./canvasStore";
 

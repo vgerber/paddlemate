@@ -2,7 +2,7 @@ import type { MapScene } from "@/components/canvas/scene";
 import type { MapSubject } from "@/components/map/Map";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { toPseudoSection } from "@/lib/descents";
-import { type Bounds, boundsOf, type LngLat, lineCoords } from "@/lib/geo";
+import { type Bounds, boundsOf, type LngLat, lineCoords } from "@/lib/map/geo";
 
 type Coord = LngLat;
 

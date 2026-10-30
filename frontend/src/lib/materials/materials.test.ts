@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Material } from "@/lib/api";
+import { IMPERIAL, METRIC } from "../prefs/units";
 import {
   enumLabel,
   formatSpec,
@@ -16,7 +17,6 @@ import {
   toggleCompareId,
   yearsLabel,
 } from "./materials";
-import { IMPERIAL, METRIC } from "./units";
 
 function material(fields: Partial<Material> = {}): Material {
   return {

@@ -11,7 +11,7 @@ import { factLabelSx } from "@/components/Fact";
 import type { Group, UserWithFollowStatus } from "@/lib/api";
 import { useAllUsers } from "@/lib/hooks/useFollows";
 import { useGroups } from "@/lib/hooks/useGroups";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import { VISIBILITY_LABEL, type VisibilityType } from "@/lib/visibility";
 
 const { tokens } = theme;

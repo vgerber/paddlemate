@@ -1,5 +1,5 @@
-import { type CardKind, cardWidth } from "@/lib/cardWidth";
-import { theme } from "@/lib/theme";
+import { type CardKind, cardWidth } from "@/lib/map/cardWidth";
+import { theme } from "@/lib/theme/theme";
 
 const { canvas } = theme.tokens;
 

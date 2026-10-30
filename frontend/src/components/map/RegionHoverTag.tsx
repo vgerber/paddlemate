@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import type { MapLayerMouseEvent } from "react-map-gl/maplibre";
-import { regionKindSingular } from "@/lib/regionKinds";
-import { labelSx, theme } from "@/lib/theme";
+import { regionKindSingular } from "@/lib/map/regionKinds";
+import { labelSx, theme } from "@/lib/theme/theme";
 import { REGION_FILL_LAYER } from "./layerIds";
 
 const { tokens } = theme;

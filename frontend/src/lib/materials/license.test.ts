@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { GaugeSource } from "./api";
+import type { GaugeSource } from "../api/index";
 import { licenseLink } from "./license";
 
 const source = (overrides: Partial<GaugeSource> = {}): GaugeSource =>

@@ -1,7 +1,7 @@
 import type { ExpressionSpecification } from "maplibre-gl";
 import { useMemo } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
-import { useTokens } from "@/lib/useTokens";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 import { useFeatureNumbers } from "./featureNumbers";
 
 const EMPTY: ReadonlyMap<number, number> = new Map();

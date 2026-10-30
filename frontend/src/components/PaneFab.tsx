@@ -1,4 +1,4 @@
-import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme/theme";
 
 /** Bottom padding of a scrolling list so the FAB never covers its last row
  * (phone only; desktop docks its action). */

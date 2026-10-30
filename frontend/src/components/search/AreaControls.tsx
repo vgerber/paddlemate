@@ -7,12 +7,12 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { announce } from "@/components/charts/water/announce";
 import { useMapVerb } from "@/components/waterway/useMapVerb";
-import { withAlpha } from "@/lib/alpha";
-import type { AreaCircle, LngLat } from "@/lib/geo";
-import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/lib/hooks/ui/useDebouncedValue";
 import { LockIcon, MyLocationIcon, PlaceIcon, UnlockIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
-import { fromDisplay, toDisplay, unitLabel, useUnits } from "@/lib/units";
+import type { AreaCircle, LngLat } from "@/lib/map/geo";
+import { fromDisplay, toDisplay, unitLabel, useUnits } from "@/lib/prefs/units";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

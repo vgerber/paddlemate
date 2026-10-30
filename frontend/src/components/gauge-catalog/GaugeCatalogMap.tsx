@@ -6,7 +6,7 @@ import MapGL, { NavigationControl } from "react-map-gl/maplibre";
 import { LIBERTY_STYLE } from "@/components/map/mapStyles";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import ClusterMarker from "./ClusterMarker";
 import { DonutCluster } from "./DonutCluster";
 import GaugeDetailCard from "./GaugeDetailCard";

@@ -4,7 +4,7 @@ import GlobalStyles from "@mui/material/GlobalStyles";
 import Typography from "@mui/material/Typography";
 import { useEffect } from "react";
 import { Popup, useMap } from "react-map-gl/maplibre";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

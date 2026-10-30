@@ -1,5 +1,5 @@
 import { Layer, Source } from "react-map-gl/maplibre";
-import { useTokens } from "@/lib/useTokens";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 
 /** Country borders, drawn over every other region so you always know which
  * country you are looking at: one solid line on a white casing. */

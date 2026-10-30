@@ -10,8 +10,8 @@ import FeatureTypeIcon, {
   type FeatureIconSize,
 } from "@/components/FeatureTypeIcon";
 import type { FeatureType } from "@/lib/api";
-import type { SheetState } from "@/lib/sheetSnap";
-import { labelSx } from "@/lib/theme";
+import type { SheetState } from "@/lib/gestures/sheetSnap";
+import { labelSx } from "@/lib/theme/theme";
 
 const CHIPS = [
   "Whitewater",

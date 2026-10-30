@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import { type ReactNode, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import { useDockMode } from "./CanvasContext";
 import { layout, useLayout, useOverlay } from "./canvasStore";
 

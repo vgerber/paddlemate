@@ -1,7 +1,7 @@
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 /** Mobile overlay visibility: URL-driven open state (so the browser back
  * button walks back through overlay history) plus the map-view toggle that

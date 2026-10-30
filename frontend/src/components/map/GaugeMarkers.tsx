@@ -4,12 +4,12 @@ import { useState } from "react";
 import { Popup } from "react-map-gl/maplibre";
 import LevelFill from "@/components/LevelFill";
 import type { components } from "@/lib/api/schema";
-import { transition } from "@/lib/motion";
-import { isStale } from "@/lib/staleness";
-import { labelSx, theme } from "@/lib/theme";
-import { useNow } from "@/lib/useNow";
-import { useOnline } from "@/lib/useOnline";
-import { levelMarkerColor } from "@/lib/waterLevel";
+import { useNow } from "@/lib/hooks/ui/useNow";
+import { useOnline } from "@/lib/hooks/ui/useOnline";
+import { transition } from "@/lib/theme/motion";
+import { labelSx, theme } from "@/lib/theme/theme";
+import { isStale } from "@/lib/water/staleness";
+import { levelMarkerColor } from "@/lib/water/waterLevel";
 import AccessibleMarker from "./AccessibleMarker";
 
 const { tokens } = theme;

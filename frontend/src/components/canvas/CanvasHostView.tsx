@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
 import { useEffect, useMemo } from "react";
 import WaterwayMap from "@/components/map/Map";
-import { controlInset } from "@/lib/canvasLayout";
-import { theme } from "@/lib/theme";
+import { controlInset } from "@/lib/map/canvasLayout";
+import { theme } from "@/lib/theme/theme";
 import { useFreeArea } from "./CanvasContext";
 import { layout, overlay, useLayout } from "./canvasStore";
 import { installFocusReturn } from "./focusReturn";

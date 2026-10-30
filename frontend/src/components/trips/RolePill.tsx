@@ -1,5 +1,5 @@
 import Typography from "@mui/material/Typography";
-import { labelSx, theme } from "@/lib/theme";
+import { labelSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

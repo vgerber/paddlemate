@@ -4,7 +4,7 @@ import CanvasLayout from "@/components/canvas/CanvasLayout";
 import { useOverlay } from "@/components/canvas/canvasStore";
 import FloatingCard from "@/components/canvas/FloatingCard";
 import { useSession } from "@/lib/hooks/useSession";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import StateCard from "./StateCard";
 
 const { tokens } = theme;

@@ -1,11 +1,11 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import RowMenu from "@/components/RowMenu";
-import { withAlpha } from "@/lib/alpha";
 import type { ApiToken } from "@/lib/api";
-import { formatDate } from "@/lib/format";
 import { DeleteIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { formatDate } from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

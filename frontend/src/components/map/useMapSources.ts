@@ -5,9 +5,9 @@ import type {
   RegionOutline,
   SectionWithFeatures,
 } from "@/lib/api";
-import type { Bbox } from "@/lib/geo";
-import { useLanguage } from "@/lib/languagePreference";
-import { useTokens } from "@/lib/useTokens";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
+import type { Bbox } from "@/lib/map/geo";
+import { useLanguage } from "@/lib/prefs/languagePreference";
 import {
   buildCountryBordersGeoJSON,
   buildLineFeatureEndpointsGeoJSON,

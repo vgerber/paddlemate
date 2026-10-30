@@ -10,7 +10,7 @@ import {
   durations,
   prefersReducedMotion,
   REDUCED_FADE_MS,
-} from "@/lib/motion";
+} from "@/lib/theme/motion";
 
 /** A round dot whose colour change fills from the centre: the new colour
  * grows over the old one as a scale on a layer, never as width or height.

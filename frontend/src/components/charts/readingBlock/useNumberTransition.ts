@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { prefersReducedMotion, REDUCED_FADE_MS } from "@/lib/motion";
-import { theme } from "@/lib/theme";
+import { prefersReducedMotion, REDUCED_FADE_MS } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 
 /** Follows a displayed text: the previous text while it leaves, and a count of
  * changes that keys the entering element so its animation replays. */

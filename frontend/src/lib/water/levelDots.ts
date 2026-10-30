@@ -1,6 +1,6 @@
 import type { components } from "@/lib/api/schema";
-import { plural } from "@/lib/format";
-import { currentLevel, type WaterLevel } from "@/lib/waterLevel";
+import { plural } from "@/lib/text/format";
+import { currentLevel, type WaterLevel } from "@/lib/water/waterLevel";
 
 type WaterStatus = components["schemas"]["SectionWaterStatus"];
 

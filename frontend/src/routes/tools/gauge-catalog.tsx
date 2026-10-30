@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import { createFileRoute } from "@tanstack/react-router";
 import GaugeCatalogMap from "@/components/gauge-catalog/GaugeCatalogMap";
-import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

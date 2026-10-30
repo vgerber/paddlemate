@@ -10,7 +10,6 @@ import ImageLightbox from "@/components/ImageLightbox";
 import DelayedSpinner from "@/components/states/DelayedSpinner";
 import QueryStates from "@/components/states/QueryStates";
 import SignInGate from "@/components/states/SignInGate";
-import { withAlpha } from "@/lib/alpha";
 import type { CommentCategory, Media, SectionWithFeatures } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { CATEGORY_ORDER, categoryLabel } from "@/lib/comments";
@@ -30,7 +29,8 @@ import {
   PlaceIcon,
   SendIcon,
 } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
 import CommentRow from "./CommentRow";
 
 const { tokens } = theme;

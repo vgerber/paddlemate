@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Fact from "@/components/Fact";
-import { humanize, sentenceCase } from "@/lib/format";
 import { CREATE_HIDDEN_KEYS, isDisplayable, shortValue } from "@/lib/proposals";
+import { humanize, sentenceCase } from "@/lib/text/format";
 
 /** Fields whose value names a kind and reads as a word ("Rapid"). */
 const KIND_KEYS = new Set(["feature_type"]);

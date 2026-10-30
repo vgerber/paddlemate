@@ -1,24 +1,24 @@
 import { useMemo } from "react";
 import type { RangeRing } from "@/components/map/Map";
 import type { SectionWithFeatures } from "@/lib/api";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
+import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
+import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";
 import {
   type Bounds,
   boundsOf,
   lineCoords,
   mergeBounds,
   pointCoords,
-} from "@/lib/geo";
-import { useTripCandidates, useTripStays } from "@/lib/hooks/useTrips";
-import { useWaterwaySections } from "@/lib/hooks/useWaterwaySections";
-import { theme } from "@/lib/theme";
+} from "@/lib/map/geo";
+import { theme } from "@/lib/theme/theme";
 import {
   type BaseRange,
   baseColors,
   baseNumbers,
   baseRanges,
   rangeBounds,
-} from "@/lib/tripRange";
-import { useTokens } from "@/lib/useTokens";
+} from "@/lib/trips/tripRange";
 import { focusBounds, type TripFocus } from "./tripFocus";
 
 export interface BasesScene {

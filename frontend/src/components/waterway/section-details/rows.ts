@@ -1,6 +1,6 @@
 import type { SectionWithFeatures } from "@/lib/api";
-import { plural } from "@/lib/format";
-import { lineCoords } from "@/lib/geo";
+import { lineCoords } from "@/lib/map/geo";
+import { plural } from "@/lib/text/format";
 import { baseSpan, gradeSpans } from "./grade";
 import type { ComputedFeature, TreeNode } from "./types";
 import { buildTree, computeExtent, featureName, sectionLengthM } from "./utils";

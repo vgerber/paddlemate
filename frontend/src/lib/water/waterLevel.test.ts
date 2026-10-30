@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { type ResolvedTokens, type Scheme, tokensFor } from "@/lib/useTokens";
+import {
+  type ResolvedTokens,
+  type Scheme,
+  tokensFor,
+} from "@/lib/hooks/ui/useTokens";
 import {
   currentLevel,
   freshRanges,

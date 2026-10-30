@@ -5,9 +5,9 @@ import TextField from "@mui/material/TextField";
 import LanguagePicker from "@/components/LanguagePicker";
 import FormSection from "@/components/waterway/FormSection";
 import { AddIcon, CloseIcon } from "@/lib/icons";
-import { preferredLanguage } from "@/lib/languagePreference";
-import { languageOptions } from "@/lib/languages";
-import { theme } from "@/lib/theme";
+import { preferredLanguage } from "@/lib/prefs/languagePreference";
+import { languageOptions } from "@/lib/text/languages";
+import { theme } from "@/lib/theme/theme";
 import ProposalNoteField from "./ProposalNoteField";
 
 const { tokens } = theme;

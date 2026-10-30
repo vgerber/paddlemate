@@ -8,7 +8,7 @@
  */
 
 import { useSyncExternalStore } from "react";
-import { isKnownLanguage } from "./languages";
+import { isKnownLanguage } from "../text/languages";
 
 const STORAGE_KEY = "paddlemate_display_language";
 const FALLBACK = "en";

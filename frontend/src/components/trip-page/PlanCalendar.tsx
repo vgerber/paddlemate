@@ -4,17 +4,17 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { addMonths, format, parseISO, startOfMonth } from "date-fns";
 import { useEffect, useRef, useState } from "react";
-import { withAlpha } from "@/lib/alpha";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
+import { withAlpha } from "@/lib/theme/alpha";
 import {
   css,
   durations,
   prefersReducedMotion,
   REDUCED_FADE_MS,
   useReducedMotion,
-} from "@/lib/motion";
-import { fonts, sectionHeadingSx, theme } from "@/lib/theme";
-import { monthGrid } from "@/lib/tripTimeline";
+} from "@/lib/theme/motion";
+import { fonts, sectionHeadingSx, theme } from "@/lib/theme/theme";
+import { monthGrid } from "@/lib/trips/tripTimeline";
 import { weekDays } from "./planWeek";
 import { useMonthPull } from "./useMonthPull";
 

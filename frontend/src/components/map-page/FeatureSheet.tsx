@@ -28,7 +28,11 @@ import {
   fmtKm,
   fmtKmSpan,
 } from "@/components/waterway/section-details/utils";
-import { humanize, sentenceCase } from "@/lib/format";
+import {
+  lockDirection,
+  releaseVelocity,
+  type Sample,
+} from "@/lib/gestures/swipe";
 import { useSession } from "@/lib/hooks/useSession";
 import {
   BackIcon,
@@ -36,10 +40,10 @@ import {
   ChevronRightIcon,
   CloseIcon,
 } from "@/lib/icons";
-import { css, ms, prefersReducedMotion, releaseMs } from "@/lib/motion";
-import { lockDirection, releaseVelocity, type Sample } from "@/lib/swipe";
-import { theme } from "@/lib/theme";
-import { useUnits } from "@/lib/units";
+import { useUnits } from "@/lib/prefs/units";
+import { humanize, sentenceCase } from "@/lib/text/format";
+import { css, ms, prefersReducedMotion, releaseMs } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 import {
   dragHeight,
   HALF_RATIO,

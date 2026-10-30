@@ -185,7 +185,7 @@ The normalization exists three times and must agree:
 | Where | File | Guarded by |
 | ----- | ---- | ---------- |
 | SQL   | `public.search_key` (migration `00023`) | `api/tests/sql/search_key_assertions.sql`, run in CI |
-| TypeScript | `frontend/src/lib/text.ts` `searchKey()` | `frontend/src/lib/text.test.ts` (same cases as the SQL side), run in CI |
+| TypeScript | `frontend/src/lib/text/text.ts` `searchKey()` | `frontend/src/lib/text/text.test.ts` (same cases as the SQL side), run in CI |
 | Rust  | `api/src/models/lang.rs` (language codes only) | unit tests |
 
 ### Ranking
@@ -269,8 +269,8 @@ in `regionGeometry.test.ts`) and the layers in `RegionLayers.tsx` and
 
 | Piece | Where |
 |---|---|
-| Distance of a section: nearest of first, middle, last vertex (the same three the filter tests) | `sectionDistanceKm` in `lib/geo.ts` |
-| Filter and nearest-first sort | `lib/hooks/useFilteredSections.ts` |
+| Distance of a section: nearest of first, middle, last vertex (the same three the filter tests) | `sectionDistanceKm` in `lib/map/geo.ts` |
+| Filter and nearest-first sort | `components/map-page/useFilteredSections.ts` |
 | Row distance (`section-distance`) | `search/SearchSectionRow.tsx`, fed by `SectionList`'s `distanceFrom` |
 | Use my location, Set centre here, location messages | `search/AreaControls.tsx` |
 | Enter on the focused map canvas | effect in `map/Map.tsx` (only while the circle is movable) |

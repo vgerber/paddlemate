@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
-import { hiddenKindsLabel } from "@/lib/regionKinds";
-import { labelSx, theme } from "@/lib/theme";
+import { hiddenKindsLabel } from "@/lib/map/regionKinds";
+import { labelSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

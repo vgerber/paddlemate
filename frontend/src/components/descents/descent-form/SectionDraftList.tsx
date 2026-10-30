@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import { DeleteIcon, MoveDownIcon, MoveUpIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import type { SectionDraft } from "./model";
 
 const { tokens } = theme;

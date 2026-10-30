@@ -10,9 +10,9 @@ import {
   freeArea,
   layoutCards,
   type Placement,
-} from "@/lib/canvasLayout";
-import { type CardKind, cardWidth, clampCardWidth } from "@/lib/cardWidth";
-import { theme } from "@/lib/theme";
+} from "@/lib/map/canvasLayout";
+import { type CardKind, cardWidth, clampCardWidth } from "@/lib/map/cardWidth";
+import { theme } from "@/lib/theme/theme";
 import type { MapScene } from "./scene";
 
 const { chrome } = theme.tokens;

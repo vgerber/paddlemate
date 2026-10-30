@@ -13,4 +13,4 @@ components/gauge-catalog/DonutCluster.tsx
 components/charts/water/SeriesChart.tsx
 components/charts/water/RailOverlay.tsx
 components/waterway/section-details/FeatureStrip.tsx
-lib/waterLevel.ts
+lib/water/waterLevel.ts

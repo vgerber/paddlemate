@@ -3,13 +3,13 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
-import { useLanguage } from "@/lib/languagePreference";
+import { useLanguage } from "@/lib/prefs/languagePreference";
 import {
   type LanguageOption,
   languageOption,
   languageOptions,
-} from "@/lib/languages";
-import { theme } from "@/lib/theme";
+} from "@/lib/text/languages";
+import { theme } from "@/lib/theme/theme";
 
 interface LanguagePickerProps {
   value: string;

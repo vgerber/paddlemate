@@ -1,9 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
+import { darkTokens, lightTokens } from "../theme/theme";
 import { MODE_KEY, resolveScheme, themeColorFor } from "./colorMode";
-import { darkTokens, lightTokens } from "./theme";
 
-const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
+const html = readFileSync(
+  new URL("../../../index.html", import.meta.url),
+  "utf8",
+);
 
 /** Runs the inline script of index.html against a fake page. */
 function runInline(stored: string | null | "throws", prefersDark: boolean) {

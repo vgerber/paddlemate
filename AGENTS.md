@@ -314,20 +314,30 @@ Component files are not util modules; cross-cutting helpers live in `lib/`:
 
 | Module | Owns |
 |---|---|
-| `lib/format.ts` | `formatDate`, `formatTime`, `durationLabel`, `timeAgo`, `humanize` (snake_case to label), `formatReading` |
-| `lib/waterLevel.ts` | `LEVEL_ORDER`, `maxLevel`, `levelConfig`, `isCalibrated` |
+| `lib/text/format.ts` | `formatDate`, `formatTime`, `durationLabel`, `timeAgo`, `humanize` (snake_case to label), `formatReading` |
+| `lib/water/waterLevel.ts` | `LEVEL_ORDER`, `maxLevel`, `levelConfig`, `isCalibrated` |
 | `lib/proposals.ts` | proposal labels, diffing, `proposalTitle`, `shortValue` |
 | `lib/descents.ts` | `uniqueSnapshotsBySeries`, `toPseudoSection` |
-| `lib/geo.ts` | geometry math plus `lineCoords`/`pointCoords` narrowing |
-| `lib/mapSearch.ts` | `EMPTY_MAP_SEARCH` (the map route's full search shape) |
-| `lib/units.ts` | the device-local unit choice (`useUnits`, `currentUnits`), metric/imperial conversion, `formatQuantity`, `unitLabel`, `parseInput` / `toInputText` for form fields; never print a bare km, kg or cm |
+| `lib/map/geo.ts` | geometry math plus `lineCoords`/`pointCoords` narrowing |
+| `lib/map/mapSearch.ts` | `EMPTY_MAP_SEARCH` (the map route's full search shape) |
+| `lib/prefs/units.ts` | the device-local unit choice (`useUnits`, `currentUnits`), metric/imperial conversion, `formatQuantity`, `unitLabel`, `parseInput` / `toInputText` for form fields; never print a bare km, kg or cm |
 | `lib/icons.ts` | every icon, one export per idea; never import `@mui/icons-material` elsewhere |
+
+`lib/` layout: `theme/` (theme, alpha, motion, badge ink), `prefs/` (device-local
+choices: colour mode, motion mode, units, language), `text/` (formatting,
+search keys, localization), `map/` (geometry, river snap, region kinds, card
+widths), `gestures/` (swipe, sheet snap), `water/` (levels, staleness),
+`trips/`, `materials/`, `api/` (generated), `hooks/` (query and mutation hooks)
+and `hooks/ui/` (hooks with no server state: `useTokens`, `useDebouncedValue`,
+`useGoBack`, ...). A hook with one consumer lives beside it. New modules join
+a folder rather than the `lib/` root. Prefs holds the device-local choices
+together because they share one pattern (localStorage plus a live subscription).
 
 Date arithmetic - parsing a day, stepping days, counting them, month grids -
 goes through `date-fns` (`parseISO`, `addDays`, `differenceInCalendarDays`),
 never millisecond math on `Date.parse`: that reads a calendar day as UTC and
 puts it on the day before anywhere west of Greenwich. Display strings stay on
-`toLocaleDateString` via `lib/format.ts`.
+`toLocaleDateString` via `lib/text/format.ts`.
 
 Shared UI: `ConfirmDialog` (every confirmation - never `window.confirm`),
 `components/states/` (`LoadingBox`, `EmptyState`, `ErrorState`,
@@ -440,13 +450,13 @@ A new layer group joins one of these or becomes a new sibling.
 
 ### Theme and styling
 
-- Static `import { theme, fonts, labelSx } from "@/lib/theme"` - not
+- Static `import { theme, fonts, labelSx } from "@/lib/theme/theme"` - not
   `useTheme()`. The app has a light and a dark scheme (System / Light / Dark,
   [doc/design.md](doc/design.md#dark-mode)); `tokens` are CSS variables, so
   one value serves both.
 - Colors come from tokens, never a literal hex/rgba. A new colour is a token
-  with a light and a dark value in `lib/theme.ts`, checked in both schemes.
-  Transparency is `withAlpha(token, step)` from `lib/alpha.ts`, not a hex
+  with a light and a dark value in `lib/theme/theme.ts`, checked in both schemes.
+  Transparency is `withAlpha(token, step)` from `lib/theme/alpha.ts`, not a hex
   suffix. Where a resolved colour is needed (MapLibre paint, SVG strings,
   canvas, colour maths) use `useTokens()`; a `var()` does not reach those.
   `npm run check:colours` enforces this; a documented exception carries a

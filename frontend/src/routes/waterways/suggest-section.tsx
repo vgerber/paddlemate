@@ -29,8 +29,8 @@ import { useCreateSection } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { ConfirmIcon, ForwardIcon, MapIcon } from "@/lib/icons";
-import { EMPTY_MAP_SEARCH } from "@/lib/mapSearch";
-import { theme } from "@/lib/theme";
+import { EMPTY_MAP_SEARCH } from "@/lib/map/mapSearch";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

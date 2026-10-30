@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import LanguagePicker from "@/components/LanguagePicker";
 import FormSection from "@/components/waterway/FormSection";
-import { useLanguagePreference } from "@/lib/languagePreference";
+import { useLanguagePreference } from "@/lib/prefs/languagePreference";
 
 export default function LanguageSection() {
   const [language, setLanguage] = useLanguagePreference();

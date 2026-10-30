@@ -4,9 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { type SectionWithFeatures, waterwaysApi } from "@/lib/api";
-import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/lib/hooks/ui/useDebouncedValue";
 import { waterwayKeys } from "@/lib/hooks/useWaterways";
-import { localizedName } from "@/lib/localization";
+import { localizedName } from "@/lib/text/localization";
 
 interface Props {
   waterwayId: number | null;

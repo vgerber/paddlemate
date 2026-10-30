@@ -18,7 +18,7 @@ import {
   RemovePersonIcon,
   SearchIcon,
 } from "@/lib/icons";
-import { fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

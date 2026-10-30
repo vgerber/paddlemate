@@ -1,6 +1,6 @@
 import { useColorScheme } from "@mui/material/styles";
 import { useEffect } from "react";
-import { type Scheme, tokensFor } from "./theme";
+import { type Scheme, tokensFor } from "../theme/theme";
 
 /** Where MUI keeps the choice; the inline script in index.html reads it too. */
 export const MODE_KEY = "paddlemate-color-mode";

@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
-import { withAlpha } from "@/lib/alpha";
-import { fonts, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { fonts, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

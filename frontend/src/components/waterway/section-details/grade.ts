@@ -1,5 +1,5 @@
 import type { SectionWithFeatures } from "@/lib/api";
-import { lineCoords, parseDifficulty } from "@/lib/geo";
+import { lineCoords, parseDifficulty } from "@/lib/map/geo";
 import type { ComputedFeature } from "./types";
 import { computeExtent, featureDifficulty, sectionLengthM } from "./utils";
 

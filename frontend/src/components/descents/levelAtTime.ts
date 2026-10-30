@@ -1,7 +1,7 @@
 import type { components } from "@/lib/api/schema";
 import { uniqueSnapshotsBySeries } from "@/lib/descents";
-import { formatReading } from "@/lib/format";
-import { maxLevel, type WaterLevel } from "@/lib/waterLevel";
+import { formatReading } from "@/lib/text/format";
+import { maxLevel, type WaterLevel } from "@/lib/water/waterLevel";
 
 type DescentSection = components["schemas"]["DescentSection"];
 

@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { NO_SWIPE_ATTR } from "@/lib/hooks/useSwipeTabs";
+import { NO_SWIPE_ATTR } from "@/lib/hooks/ui/useSwipeTabs";
 
 /** Width of the fade at an edge the row continues past, in px. */
 const FADE = 24;

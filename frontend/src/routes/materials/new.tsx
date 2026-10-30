@@ -4,12 +4,15 @@ import { useState } from "react";
 import MaterialForm from "@/components/materials/MaterialForm";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
-import { useGoBack } from "@/lib/hooks/useGoBack";
+import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useCreateMaterial } from "@/lib/hooks/useMaterials";
 import { useSession } from "@/lib/hooks/useSession";
 import { MaterialIcon } from "@/lib/icons";
-import { EMPTY_MATERIAL_SEARCH, emptyMaterialForm } from "@/lib/materials";
-import { PANEL_HEIGHT } from "@/lib/theme";
+import {
+  EMPTY_MATERIAL_SEARCH,
+  emptyMaterialForm,
+} from "@/lib/materials/materials";
+import { PANEL_HEIGHT } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/materials/new")({
   component: NewMaterialPage,

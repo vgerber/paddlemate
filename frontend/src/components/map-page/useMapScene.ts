@@ -9,10 +9,10 @@ import {
   spansWholeSection,
 } from "@/components/waterway/section-details/utils";
 import { categoryColor, categoryLabel } from "@/lib/comments";
-import { timeAgo } from "@/lib/format";
-import { lineCoords, pointCoords } from "@/lib/geo";
 import { useWaterwayComments } from "@/lib/hooks/useComments";
-import { theme } from "@/lib/theme";
+import { lineCoords, pointCoords } from "@/lib/map/geo";
+import { timeAgo } from "@/lib/text/format";
+import { theme } from "@/lib/theme/theme";
 import { buildMapScene, type MapSceneInput, pickSceneState } from "./mapScene";
 import type { MapPageState } from "./useMapPageState";
 

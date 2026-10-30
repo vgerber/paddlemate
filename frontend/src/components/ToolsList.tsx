@@ -1,13 +1,13 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
-import { withAlpha } from "@/lib/alpha";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
 import { useMaterials } from "@/lib/hooks/useMaterials";
 import { useProposals } from "@/lib/hooks/useProposals";
 import { ListIcon, MapIcon, MaterialIcon } from "@/lib/icons";
-import { transition } from "@/lib/motion";
-import { cardTitleSx, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { transition } from "@/lib/theme/motion";
+import { cardTitleSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 const { phone } = tokens;

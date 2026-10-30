@@ -7,11 +7,11 @@ import {
   useState,
 } from "react";
 import { periodLabel } from "@/components/charts/PeriodMenu";
-import { formatReading, formatSpread } from "@/lib/format";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 import { useReadingSummary } from "@/lib/hooks/useGauges";
-import { durations } from "@/lib/motion";
-import { isStale } from "@/lib/staleness";
-import { useTokens } from "@/lib/useTokens";
+import { formatReading, formatSpread } from "@/lib/text/format";
+import { durations } from "@/lib/theme/motion";
+import { isStale } from "@/lib/water/staleness";
 import { announce, cancelAnnounce } from "./announce";
 import { pointTime, typeLabel } from "./chartTime";
 import { axisTicks, insetExtent, tickLabel } from "./railGeometry";

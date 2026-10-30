@@ -15,7 +15,6 @@ import {
 } from "@/components/map/regionGeometry";
 import DelayedSpinner from "@/components/states/DelayedSpinner";
 import { useMapVerb } from "@/components/waterway/useMapVerb";
-import { withAlpha } from "@/lib/alpha";
 import type { RegionOutline } from "@/lib/api";
 import { useRegionSearch } from "@/lib/hooks/useRegions";
 import { CollapseIcon, ExpandIcon } from "@/lib/icons";
@@ -25,8 +24,9 @@ import {
   REGION_KINDS,
   regionKindLabel,
   regionKindSingular,
-} from "@/lib/regionKinds";
-import { cardTitleSx, theme } from "@/lib/theme";
+} from "@/lib/map/regionKinds";
+import { withAlpha } from "@/lib/theme/alpha";
+import { cardTitleSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

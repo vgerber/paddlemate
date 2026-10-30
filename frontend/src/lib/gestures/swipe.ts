@@ -1,4 +1,4 @@
-import { durations } from "@/lib/motion";
+import { durations } from "@/lib/theme/motion";
 
 /** Pixels of travel before the gesture picks a direction. */
 const LOCK_DISTANCE = 8;

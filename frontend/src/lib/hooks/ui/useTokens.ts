@@ -1,6 +1,10 @@
 import { useColorScheme } from "@mui/material/styles";
 import { useMemo } from "react";
-import { tokensFor as paletteFor, type Scheme, type Tokens } from "@/lib/theme";
+import {
+  tokensFor as paletteFor,
+  type Scheme,
+  type Tokens,
+} from "@/lib/theme/theme";
 
 export type { Scheme };
 

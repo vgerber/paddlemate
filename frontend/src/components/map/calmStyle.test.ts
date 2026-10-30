@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Map as MapLibreMap } from "maplibre-gl";
-import { type ResolvedTokens, tokensFor } from "@/lib/useTokens";
+import { type ResolvedTokens, tokensFor } from "@/lib/hooks/ui/useTokens";
 import { applyCalmStyle } from "./calmStyle";
 
 const LAYERS = [

@@ -5,7 +5,7 @@ import WaterwayMap from "@/components/map/LazyMap";
 import StandingDescentBanner from "@/components/StandingDescentBanner";
 import DelayedSpinner from "@/components/states/DelayedSpinner";
 import { featureName } from "@/components/waterway/section-details/utils";
-import { localizedName } from "@/lib/localization";
+import { localizedName } from "@/lib/text/localization";
 import FeatureSheet from "./FeatureSheet";
 import { sheetPadding } from "./featureSnap";
 import MapPaneChrome from "./MapPaneChrome";

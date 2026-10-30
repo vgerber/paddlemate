@@ -1,13 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import type { TripSection, TripStay } from "@/lib/api";
 import {
+  type ResolvedTokens,
+  type Scheme,
+  tokensFor,
+} from "../hooks/ui/useTokens";
+import {
   baseColors,
   baseRanges,
   nearestWatched,
   rangeBounds,
   sectionDistanceKm,
 } from "./tripRange";
-import { type ResolvedTokens, type Scheme, tokensFor } from "./useTokens";
 
 // Each call is a different run: sharing one section_id made every section
 // look like the same one to anything that dedupes by it.

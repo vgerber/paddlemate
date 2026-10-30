@@ -27,12 +27,12 @@ import type {
   ProposalOperation,
   ProposalStatus,
 } from "@/lib/api";
-import { useGoBack } from "@/lib/hooks/useGoBack";
+import { useGoBack } from "@/lib/hooks/ui/useGoBack";
+import { useSwipeTabs } from "@/lib/hooks/ui/useSwipeTabs";
 import { useProposals } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
-import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import { ExpandIcon, FilterIcon } from "@/lib/icons";
-import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme/theme";
 import { STATUS_LABEL } from "./status";
 
 const { tokens } = theme;

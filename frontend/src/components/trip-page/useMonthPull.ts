@@ -12,7 +12,7 @@ import {
   prefersReducedMotion,
   REDUCED_FADE_MS,
   releaseMs,
-} from "@/lib/motion";
+} from "@/lib/theme/motion";
 import { pulledOpen } from "./planWeek";
 
 /** Height of a week row and of the month title, in px. */

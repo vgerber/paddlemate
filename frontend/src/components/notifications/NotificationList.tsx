@@ -8,9 +8,7 @@ import { phoneCardSx } from "@/components/canvas/flatRow";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
-import { withAlpha } from "@/lib/alpha";
 import type { TripEvent } from "@/lib/api";
-import { timeAgo } from "@/lib/format";
 import {
   useMarkNotificationsRead,
   useNotifications,
@@ -23,7 +21,9 @@ import {
   NotificationsIcon,
   TripIcon,
 } from "@/lib/icons";
-import { fonts, theme } from "@/lib/theme";
+import { timeAgo } from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { fonts, theme } from "@/lib/theme/theme";
 
 const { phone } = theme.tokens;
 

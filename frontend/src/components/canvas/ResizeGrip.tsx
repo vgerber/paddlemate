@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from "react";
-import { withAlpha } from "@/lib/alpha";
-import { transition } from "@/lib/motion";
-import { theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { transition } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 const { canvas } = tokens;

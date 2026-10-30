@@ -9,10 +9,10 @@ import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import FormSection from "@/components/waterway/FormSection";
 import type { TripMember } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
-import { clockTime } from "@/lib/format";
 import { usePatchTripMember } from "@/lib/hooks/useTrips";
 import { ConfirmIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { clockTime } from "@/lib/text/format";
+import { theme } from "@/lib/theme/theme";
 
 interface Props {
   tripId: number;

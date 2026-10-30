@@ -1,10 +1,10 @@
 import Box from "@mui/material/Box";
 import LevelFill from "@/components/LevelFill";
-import { withAlpha } from "@/lib/alpha";
-import { type DotLevel, dotsLabel } from "@/lib/levelDots";
-import { theme } from "@/lib/theme";
-import { type ResolvedTokens, useTokens } from "@/lib/useTokens";
-import { levelMarkerColor } from "@/lib/waterLevel";
+import { type ResolvedTokens, useTokens } from "@/lib/hooks/ui/useTokens";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
+import { type DotLevel, dotsLabel } from "@/lib/water/levelDots";
+import { levelMarkerColor } from "@/lib/water/waterLevel";
 
 const { tokens } = theme;
 

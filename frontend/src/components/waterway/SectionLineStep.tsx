@@ -10,11 +10,11 @@ import DelayedSpinner from "@/components/states/DelayedSpinner";
 import FormSection from "@/components/waterway/FormSection";
 import SectionPointCard from "@/components/waterway/SectionPointCard";
 import { fmtKm } from "@/components/waterway/section-details/utils";
-import { distanceAlongLineM } from "@/lib/geo";
-import type { useRiverSnap } from "@/lib/hooks/useRiverSnap";
+import type { useRiverSnap } from "@/components/waterway/useRiverSnap";
 import { ResetIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
-import { useUnits } from "@/lib/units";
+import { distanceAlongLineM } from "@/lib/map/geo";
+import { useUnits } from "@/lib/prefs/units";
+import { theme } from "@/lib/theme/theme";
 import { useMapVerb } from "./useMapVerb";
 
 const { tokens } = theme;

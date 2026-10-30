@@ -9,9 +9,9 @@ import GradeTag from "@/components/waterway/GradeTag";
 import { sectionGradeText } from "@/components/waterway/section-details/grade";
 import type { SectionWithFeatures } from "@/lib/api";
 import { StarIcon, StarOutlineIcon } from "@/lib/icons";
-import { localizedName } from "@/lib/localization";
-import { theme } from "@/lib/theme";
-import { formatDistanceKm, useUnits } from "@/lib/units";
+import { formatDistanceKm, useUnits } from "@/lib/prefs/units";
+import { localizedName } from "@/lib/text/localization";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

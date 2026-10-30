@@ -2,8 +2,8 @@ import Box from "@mui/material/Box";
 import CircularProgress, {
   type CircularProgressProps,
 } from "@mui/material/CircularProgress";
-import { SPINNER_DELAY_MS } from "@/lib/motion";
-import { theme } from "@/lib/theme";
+import { SPINNER_DELAY_MS } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 
 const { motion } = theme.tokens;
 

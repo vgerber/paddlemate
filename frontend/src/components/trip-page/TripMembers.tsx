@@ -11,7 +11,6 @@ import QueryStates from "@/components/states/QueryStates";
 import MemberAvatar from "@/components/trips/MemberAvatar";
 import RolePill from "@/components/trips/RolePill";
 import type { TripMember, TripMemberRole } from "@/lib/api";
-import { clockTime, dateRange, formatDate } from "@/lib/format";
 import {
   usePatchTripMember,
   useRemoveTripMember,
@@ -24,7 +23,8 @@ import {
   LeaveIcon,
   MembersIcon,
 } from "@/lib/icons";
-import { fonts, theme } from "@/lib/theme";
+import { clockTime, dateRange, formatDate } from "@/lib/text/format";
+import { fonts, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 const { phone } = tokens;

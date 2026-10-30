@@ -2,9 +2,9 @@ import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import { useEffect, useRef } from "react";
-import type { SwipeTrack } from "@/lib/hooks/useSwipeTabs";
-import { transition } from "@/lib/motion";
-import { theme } from "@/lib/theme";
+import type { SwipeTrack } from "@/lib/hooks/ui/useSwipeTabs";
+import { transition } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 const { primary, onSurfaceVariant } = tokens;

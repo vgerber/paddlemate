@@ -3,7 +3,7 @@ import Button from "@mui/material/Button";
 import Snackbar from "@mui/material/Snackbar";
 import { useEffect, useState } from "react";
 import { watchForUpdate } from "@/lib/reloadOnUpdate";
-import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme/theme";
 
 /** Singleton host, mounted once in the root layout. Stays until the person
  * reloads or dismisses it; the page is never reloaded on its own. */

@@ -7,7 +7,6 @@ import type {
   MaterialFilters,
   MaterialSort,
 } from "@/lib/api";
-import { humanize, sentenceCase } from "@/lib/format";
 import {
   formatQuantity,
   parseInput,
@@ -16,7 +15,8 @@ import {
   toInputText,
   type Units,
   unitLabel,
-} from "@/lib/units";
+} from "@/lib/prefs/units";
+import { humanize, sentenceCase } from "@/lib/text/format";
 
 /** An enum value as a label: "river_runner" -> "River runner". */
 export function enumLabel(value: string): string {

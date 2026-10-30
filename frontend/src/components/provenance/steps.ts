@@ -1,5 +1,5 @@
 import type { HistoryChange, HistoryStep } from "@/lib/api";
-import { humanize } from "@/lib/format";
+import { humanize } from "@/lib/text/format";
 
 /** The label of a changed field: "feature_type" reads "Type". */
 export function fieldLabel(field: string): string {

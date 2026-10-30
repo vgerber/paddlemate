@@ -4,7 +4,7 @@ import {
   durations,
   prefersReducedMotion,
   REDUCED_FADE_MS,
-} from "@/lib/motion";
+} from "@/lib/theme/motion";
 
 interface PanelEnter {
   /** Start offset in px and the opacity the newcomer starts from. */

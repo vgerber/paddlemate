@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import { type ComponentProps, lazy, Suspense } from "react";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

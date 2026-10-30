@@ -1,5 +1,5 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
-import type { ResolvedTokens } from "@/lib/useTokens";
+import type { ResolvedTokens } from "@/lib/hooks/ui/useTokens";
 
 const GREEN_FILL = /^(park$|landcover_(wood|grass))/;
 const HIDDEN =

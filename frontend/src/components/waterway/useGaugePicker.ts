@@ -7,8 +7,8 @@ import type {
   GaugeWithSeries,
   WaterRangeWithStatus,
 } from "@/lib/api";
-import { useDebouncedValue } from "./useDebouncedValue";
-import { useCatalogGaugeSearch } from "./useGauges";
+import { useDebouncedValue } from "../../lib/hooks/ui/useDebouncedValue";
+import { useCatalogGaugeSearch } from "../../lib/hooks/useGauges";
 
 type CatalogStation = Extract<GaugeOption, { kind: "catalog" }>;
 type MeasurementType = CatalogGaugeRef["measurement_type"];

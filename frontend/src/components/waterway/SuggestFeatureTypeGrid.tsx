@@ -1,9 +1,9 @@
 import Box from "@mui/material/Box";
 import FeatureTypeIcon from "@/components/FeatureTypeIcon";
 import type { FeatureType } from "@/lib/api";
-import { FEATURE_TYPES } from "@/lib/featureTypes";
-import { humanize } from "@/lib/format";
-import { labelSx, theme } from "@/lib/theme";
+import { FEATURE_TYPES } from "@/lib/map/featureTypes";
+import { humanize } from "@/lib/text/format";
+import { labelSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
