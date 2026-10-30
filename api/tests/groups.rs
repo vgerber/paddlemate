@@ -201,9 +201,7 @@ async fn owners_and_admins_edit_a_group_members_do_not(pool: PgPool) {
     )
     .await;
     assert_eq!(r.status, StatusCode::OK);
-    // NOTE: looks wrong: an explicit null for description does not clear it,
-    // the double-option collapses null into "absent".
-    assert_eq!(r.body["description"], "d");
+    assert!(r.body["description"].is_null());
 
     // Non-members and plain members get 404, not 403.
     let r = call(

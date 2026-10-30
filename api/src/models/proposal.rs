@@ -15,6 +15,8 @@ pub struct ListProposalsFilters {
     pub section_id: Option<i64>,
     pub feature_id: Option<i64>,
     pub submitted_by: Option<String>,
+    /// Restricts the list to pending proposals plus this user's own.
+    pub visible_to: Option<String>,
     /// 1-based page, already clamped.
     pub page: i64,
     /// Rows per page, already clamped.

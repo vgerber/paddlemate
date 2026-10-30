@@ -143,11 +143,11 @@ async fn the_list_depends_on_who_asks(pool: PgPool) {
     .await;
     assert_eq!(ids(&r), [b, a]);
 
-    // Signed-in non-admin: only their own, any status.
-    // NOTE: looks wrong: a signed-in contributor sees fewer pending proposals
-    // (only their own) than an anonymous visitor does.
+    // Signed-in non-admin: every pending proposal plus their own reviewed ones.
     let r = call(&app, Method::GET, "/proposals", MARA, None).await;
-    assert_eq!(ids(&r), [c, a]);
+    assert_eq!(ids(&r), [c, b, a]);
+    let r = call(&app, Method::GET, "/proposals", JON, None).await;
+    assert_eq!(ids(&r), [b, a], "another user's rejected proposal stays hidden");
     let r = call(
         &app,
         Method::GET,
@@ -158,11 +158,13 @@ async fn the_list_depends_on_who_asks(pool: PgPool) {
     .await;
     assert_eq!(
         ids(&r),
-        [c, a],
-        "the submitter filter cannot widen a contributor's view"
+        [b],
+        "the submitter filter narrows within what the contributor may see"
     );
+    let r = call(&app, Method::GET, "/proposals?status=rejected", JON, None).await;
+    assert_eq!(ids(&r), Vec::<i64>::new());
     let r = call(&app, Method::GET, "/proposals?status=pending", MARA, None).await;
-    assert_eq!(ids(&r), [a]);
+    assert_eq!(ids(&r), [b, a]);
 
     // Admin: everything, with filters.
     let r = call(&app, Method::GET, "/proposals", Who::Admin, None).await;

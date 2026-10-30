@@ -62,14 +62,17 @@ pub async fn create_token(
     .await;
 
     match result {
-        Ok(record) => Json(ApiTokenCreated {
-            id: record.id,
-            name: body.name,
-            token: plain_token,
-            created_at: record.created_at,
-            expires_at,
-        })
-        .into_response(),
+        Ok(record) => (
+            StatusCode::CREATED,
+            Json(ApiTokenCreated {
+                id: record.id,
+                name: body.name,
+                token: plain_token,
+                created_at: record.created_at,
+                expires_at,
+            }),
+        )
+            .into_response(),
         Err(err) => {
             if err.to_string().contains("duplicate key") {
                 return ApiError::conflict("A token with this name already exists").into_response();
@@ -81,7 +84,7 @@ pub async fn create_token(
 
 doc_fn!(create_token_docs, op =>
     op.description("Create a new API token. The token is only shown once at creation time - store it securely!")
-        .response_with::<200, Json<ApiTokenCreated>, _>(|res| {
+        .response_with::<201, Json<ApiTokenCreated>, _>(|res| {
             res.example(ApiTokenCreated {
                 id: 1,
                 name: "CI/CD Pipeline".to_string(),

@@ -1260,7 +1260,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description List proposals. Unauthenticated: pending only. Authenticated non-admin: own proposals (all statuses). Admin: all proposals. Supports filtering by status, entity_type, operation, waterway_id, section_id, feature_id, submitted_by. Newest first, paged with page and per_page (default and maximum 100). */
+        /** @description List proposals. Unauthenticated: pending only. Authenticated non-admin: all pending proposals plus own proposals of any status. Admin: all proposals. Supports filtering by status, entity_type, operation, waterway_id, section_id, feature_id, submitted_by. Newest first, paged with page and per_page (default and maximum 100). */
         get: operations["list_proposals"];
         put?: never;
         post?: never;
@@ -4029,7 +4029,10 @@ export interface components {
             source_id: string;
         };
         UpdateGroupBody: {
-            /** @description Pass null to clear the description, omit to leave it unchanged */
+            /**
+             * @description Pass null to clear the description, omit to leave it unchanged
+             * @default null
+             */
             description?: string | null;
             name?: string | null;
         };
@@ -4665,11 +4668,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-30T21:22:54.782552920Z",
-                     *         "expires_at": "2027-01-28T21:22:54.782555480Z",
+                     *         "created_at": "2026-10-30T22:04:28.095629039Z",
+                     *         "expires_at": "2027-01-28T22:04:28.095632399Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-30T21:22:54.782565130Z",
+                     *         "last_used_at": "2026-10-30T22:04:28.095656479Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4693,15 +4696,15 @@ export interface operations {
             };
         };
         responses: {
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-30T21:22:54.782666642Z",
-                     *       "expires_at": "2027-01-28T21:22:54.782667002Z",
+                     *       "created_at": "2026-10-30T22:04:28.095810181Z",
+                     *       "expires_at": "2027-01-28T22:04:28.095810581Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."

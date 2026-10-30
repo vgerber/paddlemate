@@ -59,12 +59,13 @@ pub async fn list_proposals(
                 section_id: params.section_id,
                 feature_id: params.feature_id,
                 submitted_by: params.submitted_by,
+                visible_to: None,
                 page,
                 per_page,
             };
-            // Non-admin: scope to own proposals only unless admin overrides
+            // Non-admin: every pending proposal plus their own reviewed ones
             if !token.is_server_admin() {
-                f.submitted_by = Some(uid.clone());
+                f.visible_to = Some(uid.clone());
             }
             (Some(uid), f)
         }
@@ -78,6 +79,7 @@ pub async fn list_proposals(
                 section_id: params.section_id,
                 feature_id: params.feature_id,
                 submitted_by: params.submitted_by,
+                visible_to: None,
                 page,
                 per_page,
             };
@@ -104,7 +106,7 @@ doc_fn!(list_proposals_docs, op =>
     op.description(
         "List proposals. \
          Unauthenticated: pending only. \
-         Authenticated non-admin: own proposals (all statuses). \
+         Authenticated non-admin: all pending proposals plus own proposals of any status. \
          Admin: all proposals. \
          Supports filtering by status, entity_type, operation, waterway_id, section_id, feature_id, submitted_by. Newest first, paged with page and per_page (default and maximum 100)."
     )
