@@ -49,6 +49,8 @@ export function useMobilePanelState(
 
   /** Bring the overlay back without touching the URL (e.g. suggest mode). */
   const exitMapView = useCallback(() => setIsMobileMapViewRaw(false), []);
+  /** Hide the overlay to show the map, as the toggle does. */
+  const enterMapView = useCallback(() => setIsMobileMapViewRaw(true), []);
 
   return {
     isMobile,
@@ -57,5 +59,6 @@ export function useMobilePanelState(
     isMobilePanelOpen,
     setIsMobilePanelOpen,
     exitMapView,
+    enterMapView,
   };
 }

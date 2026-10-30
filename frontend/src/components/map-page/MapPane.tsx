@@ -6,6 +6,8 @@ import StandingDescentBanner from "@/components/StandingDescentBanner";
 import DelayedSpinner from "@/components/states/DelayedSpinner";
 import { featureName } from "@/components/waterway/section-details/utils";
 import { localizedName } from "@/lib/localization";
+import FeatureSheet from "./FeatureSheet";
+import { sheetPadding } from "./featureSnap";
 import MapPaneChrome from "./MapPaneChrome";
 import { modeSheetMode, modeSheetPeek } from "./modeSheet";
 import type { MapPageState } from "./useMapPageState";
@@ -57,21 +59,19 @@ export default function MapPane({
   // Area and region are searched by looking at the map, so their sheet
   // rests over it and the map frames what it shows above the sheet.
   const sheetMode = modeSheetMode(state);
-  const camera = useMemo(
-    () =>
-      sheetMode
-        ? {
-            ...scene.camera,
-            padding: {
-              top: 64,
-              left: 24,
-              right: 24,
-              bottom: modeSheetPeek(sheetMode) + 16,
-            },
-          }
-        : scene.camera,
-    [scene.camera, sheetMode],
-  );
+  const featureSheet = state.featureSheet;
+  const sheetPeek = featureSheet.open ? featureSheet.visible : null;
+  const camera = useMemo(() => {
+    if (sheetPeek != null) {
+      return { ...scene.camera, padding: sheetPadding(sheetPeek) };
+    }
+    return sheetMode
+      ? {
+          ...scene.camera,
+          padding: sheetPadding(modeSheetPeek(sheetMode)),
+        }
+      : scene.camera;
+  }, [scene.camera, sheetMode, sheetPeek]);
 
   // The phone keeps the old fits: the subject belongs to the canvas camera.
   const { subject: _subject, camera: _camera, ...mapProps } = scene;
@@ -123,7 +123,7 @@ export default function MapPane({
 
         <MapPaneChrome
           state={state}
-          sheetMode={sheetMode != null}
+          sheetMode={sheetMode != null || featureSheet.open}
           mapView={isMobileMapView}
           resultsBadge={resultsBadge}
           sectionName={sectionName}
@@ -133,6 +133,7 @@ export default function MapPane({
           onOpen={toggleMobileMapView}
           onOpenSearch={onOpenMobilePanel}
         />
+        {featureSheet.open && <FeatureSheet state={state} />}
       </Box>
     </Box>
   );

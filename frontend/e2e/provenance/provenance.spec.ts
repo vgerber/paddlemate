@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { openFeatureActions } from "../support/featureActions";
 import { Finger } from "../support/finger";
 import {
   computed,
@@ -195,12 +196,7 @@ test.describe("history mount", () => {
     page,
   }) => {
     await gotoSection(page, "lower");
-    const card = page.getByTestId("features-card").filter({ visible: true });
-    await card.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
-    await card
-      .getByRole("button", { name: "Feature actions", exact: true })
-      .first()
-      .click();
+    await openFeatureActions(page, "Altes Wehr");
     await page.getByRole("menuitem", { name: "History" }).click();
     await expect(page.getByTestId("history-step").first()).toBeVisible();
   });
@@ -482,12 +478,7 @@ test.describe("history of a feature", () => {
     page,
   }) => {
     await gotoSection(page, "lower");
-    const list = page.getByTestId("features-card").filter({ visible: true });
-    await list.locator("[data-row]").filter({ hasText: "Altes Wehr" }).click();
-    await list
-      .getByRole("button", { name: "Feature actions", exact: true })
-      .first()
-      .click();
+    await openFeatureActions(page, "Altes Wehr");
     await page.getByRole("menuitem", { name: "History" }).click();
     await expect(header(page)).toContainText("Altes Wehr");
     await expect(header(page)).toContainText("Weir");

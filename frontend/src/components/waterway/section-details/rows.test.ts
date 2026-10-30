@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import type { Feature } from "@/lib/api";
+import type { Feature, SectionWithFeatures } from "@/lib/api";
 import {
   countLabel,
+  featureNumbers,
+  featureOrder,
   isBand,
   memberNames,
   splitBaseGrade,
@@ -120,5 +122,42 @@ describe("countLabel", () => {
     expect(countLabel(2, 0)).toBe("2 features");
     expect(countLabel(9, 2)).toBe("9 features · 2 proposed");
     expect(countLabel(0, 2)).toBe("2 proposed");
+  });
+});
+
+describe("featureOrder", () => {
+  const point = (id: number, type: string, lat: number) =>
+    ({
+      id,
+      feature_type: type,
+      names: [],
+      descriptions: [],
+      metadata: {},
+      location: { type: "Point", coordinates: [11, lat] },
+    }) as unknown as Feature;
+  const section = {
+    location: {
+      type: "LineString",
+      coordinates: [
+        [11, 47],
+        [11, 47.02],
+      ],
+    },
+    features: [
+      point(3, "weir", 47.012),
+      point(1, "put_in", 47),
+      point(2, "hole", 47.006),
+    ],
+  } as unknown as SectionWithFeatures;
+
+  test("lists the features along the run", () => {
+    expect(featureOrder(section).map((i) => i.feature.id)).toEqual([1, 2, 3]);
+  });
+
+  test("numbers follow the same order, access points unnumbered", () => {
+    expect([...featureNumbers(section)]).toEqual([
+      [2, 1],
+      [3, 2],
+    ]);
   });
 });

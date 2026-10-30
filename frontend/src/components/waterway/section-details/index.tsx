@@ -40,6 +40,9 @@ interface Props {
    * selection. Falls back to internal state when omitted. */
   activeFeatureId?: number | null;
   onActiveFeatureChange?: (id: number | null) => void;
+  /** Phone: a tap on a feature row opens it in the map's feature sheet
+   * instead of expanding the row. Proposals still expand in place. */
+  onPickFeature?: (id: number) => void;
   /** Opens the edits of one feature, where all edits are seen together. */
   onOpenHistory?: (filter: NonNullable<EditsFilter>) => void;
 }
@@ -52,6 +55,7 @@ export default function FeatureTimeline({
   onEditFeature,
   activeFeatureId,
   onActiveFeatureChange,
+  onPickFeature,
   onOpenHistory,
 }: Props) {
   const [internalActiveId, setInternalActiveId] = useState<number | null>(null);
@@ -91,6 +95,12 @@ export default function FeatureTimeline({
   );
 
   function handleItemClick(cf: ComputedFeature) {
+    if (onPickFeature && !cf.proposal) {
+      setActiveId(cf.feature.id);
+      onFeatureClick?.(cf.coords);
+      onPickFeature(cf.feature.id);
+      return;
+    }
     const newId = activeId === cf.feature.id ? null : cf.feature.id;
     setActiveId(newId);
     // Don't fly to map for proposals - they aren't approved yet
@@ -124,6 +134,7 @@ export default function FeatureTimeline({
 
   const ctx = {
     activeId,
+    sheet: onPickFeature != null,
     numbers,
     onHistoryItem,
     onItemClick: handleItemClick,

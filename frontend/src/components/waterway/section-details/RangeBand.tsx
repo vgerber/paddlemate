@@ -118,9 +118,11 @@ function RangeBand({
           disableRipple
           data-row
           data-type={type}
-          aria-expanded={open}
+          aria-expanded={ctx.sheet ? undefined : open}
+          aria-current={ctx.sheet && isActive ? "true" : undefined}
           onClick={() => {
-            setOpen((o) => !o);
+            // In the sheet the head opens the feature; the band stays open.
+            if (!ctx.sheet) setOpen((o) => !o);
             ctx.onItemClick?.(item);
           }}
           sx={{
@@ -212,7 +214,7 @@ function RangeBand({
               <TrailSlot open={open} />
             </Box>
             <Collapse
-              in={isActive}
+              in={isActive && !ctx.sheet}
               timeout={reduced ? 0 : durations.base}
               easing={css.easeInOut}
               unmountOnExit

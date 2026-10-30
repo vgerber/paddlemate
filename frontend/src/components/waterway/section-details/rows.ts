@@ -12,23 +12,33 @@ import { buildTree, computeExtent, featureName, sectionLengthM } from "./utils";
 export function featureNumbers(
   section: SectionWithFeatures,
 ): Map<number, number> {
+  const numbers = new Map<number, number>();
+  for (const { feature } of featureOrder(section)) {
+    const type = feature.feature_type;
+    if (type !== "put_in" && type !== "take_out") {
+      numbers.set(feature.id, numbers.size + 1);
+    }
+  }
+  return numbers;
+}
+
+/** The section's features in the order of its list: a range before what it
+ * holds, the base grade left out. The feature sheet steps through this. */
+export function featureOrder(section: SectionWithFeatures): ComputedFeature[] {
   const line = lineCoords(section.location) ?? [];
   const { rest } = splitBaseGrade(
     section.features.map((f) => computeExtent(f, line)),
     sectionLengthM(line),
   );
-  const numbers = new Map<number, number>();
+  const order: ComputedFeature[] = [];
   const walk = (nodes: TreeNode[]) => {
     for (const { item, nested } of nodes) {
-      const type = item.feature.feature_type;
-      if (type !== "put_in" && type !== "take_out") {
-        numbers.set(item.feature.id, numbers.size + 1);
-      }
+      order.push(item);
       walk(nested);
     }
   };
   walk(rest.length ? buildTree(rest) : []);
-  return numbers;
+  return order;
 }
 
 /** Splits the section's base grade, a graded range over most of the run, from
