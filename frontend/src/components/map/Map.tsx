@@ -1,3 +1,4 @@
+import "./maplibre.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MapGL, {
   AttributionControl,
