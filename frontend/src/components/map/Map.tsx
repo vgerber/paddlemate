@@ -426,6 +426,14 @@ export default function WaterwayMap({
       regionPreviewId,
     });
 
+  // Leaving the region tab ends the question the popup asked.
+  const regionsDrawn = regionChoices != null;
+  useEffect(() => {
+    if (regionsDrawn) return;
+    closeRegionMenu();
+    setLitRegionId(null);
+  }, [regionsDrawn, closeRegionMenu]);
+
   const selectedFeature = useMemo<GeoJSON.FeatureCollection>(
     () => ({
       type: "FeatureCollection",

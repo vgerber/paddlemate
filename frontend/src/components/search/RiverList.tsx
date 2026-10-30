@@ -45,9 +45,12 @@ function matchReason(waterway: WaterwayListItem): string | undefined {
 function RiverItem({
   waterway,
   onSelect,
+  showType,
 }: {
   waterway: WaterwayListItem;
   onSelect: (id: number) => void;
+  /** The kind pill only tells rows apart when the list mixes kinds. */
+  showType: boolean;
 }) {
   return (
     <RiverRow
@@ -56,13 +59,15 @@ function RiverItem({
       secondary={matchReason(waterway)}
       onClick={() => onSelect(waterway.id)}
       trailing={
-        <Chip
-          label={humanize(waterway.waterway_type)}
-          color="primary"
-          size="small"
-          variant="outlined"
-          sx={{ flexShrink: 0, fontSize: "0.6875rem" }}
-        />
+        showType ? (
+          <Chip
+            label={humanize(waterway.waterway_type)}
+            color="primary"
+            size="small"
+            variant="outlined"
+            sx={{ flexShrink: 0, fontSize: "0.6875rem" }}
+          />
+        ) : undefined
       }
     />
   );
@@ -154,6 +159,7 @@ export default function RiverList({
     );
   }
 
+  const showType = new Set(waterways.map((w) => w.waterway_type)).size > 1;
   return (
     <>
       <List dense disablePadding>
@@ -165,6 +171,7 @@ export default function RiverList({
               key={waterway.id}
               waterway={waterway}
               onSelect={onSelect}
+              showType={showType}
             />
           ))}
       </List>
@@ -181,6 +188,7 @@ export default function RiverList({
                   key={waterway.id}
                   waterway={waterway}
                   onSelect={onSelect}
+                  showType={showType}
                 />
               ))}
           </List>

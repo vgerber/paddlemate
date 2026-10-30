@@ -2,7 +2,8 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import Typography from "@mui/material/Typography";
-import { Popup } from "react-map-gl/maplibre";
+import { useEffect } from "react";
+import { Popup, useMap } from "react-map-gl/maplibre";
 import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
@@ -36,6 +37,27 @@ export default function RegionChoicePopup({
   onLight: (regionId: number | null) => void;
   onClose: () => void;
 }) {
+  const { current: map } = useMap();
+  // The list answers one click: a drag or zoom of the map, or Escape, ends it.
+  useEffect(() => {
+    // Moves the map makes itself have no originalEvent.
+    const onMove = (e: { originalEvent?: unknown }) => {
+      if (e.originalEvent) onClose();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    map?.on("movestart", onMove);
+    // A wheel zoom starts its move a frame later, without the event.
+    map?.on("wheel", onClose);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      map?.off("movestart", onMove);
+      map?.off("wheel", onClose);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [map, onClose]);
+
   return (
     // No anchor: MapLibre then picks the side with room, which keeps the
     // list on screen when the tap lands near an edge of a phone screen.

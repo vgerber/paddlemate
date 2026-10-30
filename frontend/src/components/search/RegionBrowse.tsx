@@ -30,6 +30,9 @@ import { cardTitleSx, theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
+/** Regions in view listed without opening the toggle. */
+const SHOWN_AT_ONCE = 5;
+
 /** What the region search needs from the map page. */
 export interface RegionBrowseProps {
   /** The region searched in, with its outline. */
@@ -103,7 +106,8 @@ export default function RegionBrowse({
   onPick,
 }: RegionBrowseProps) {
   const verb = useMapVerb();
-  const [listOpen, setListOpen] = useState(false);
+  // null: the user has not chosen, so a short list shows itself.
+  const [listChoice, setListChoice] = useState<boolean | null>(null);
   // Only the search carries real parents; the picked outline is matched up
   // by id, and the bounding-box guess stands in until then.
   const { data: found } = useRegionSearch(picked?.name ?? "");
@@ -119,6 +123,9 @@ export default function RegionBrowse({
   const kindLabel = regionKindLabel(kind) ?? "Regions";
   const hidden = hiddenKinds.includes(kind);
   const others = listed.filter((r) => r.id !== picked?.id);
+  // A heading with nothing under it reads as broken: a few regions are shown
+  // at once, a long list waits behind its toggle.
+  const listOpen = listChoice ?? others.length <= SHOWN_AT_ONCE;
 
   return (
     <>
@@ -212,14 +219,16 @@ export default function RegionBrowse({
       {others.length > 0 && !hidden && (
         <>
           <ListItemButton
-            onClick={() => setListOpen((was) => !was)}
+            onClick={() => setListChoice(!listOpen)}
             aria-expanded={listOpen}
             data-testid="region-list-toggle"
             sx={{ px: 0, minHeight: tokens.touch.min }}
           >
             <ListItemText
               primary={`${kindLabel} in view (${others.length})`}
-              slotProps={{ primary: { variant: "subtitle2" } }}
+              slotProps={{
+                primary: { variant: "subtitle2", component: "span" },
+              }}
             />
             {listOpen ? <CollapseIcon /> : <ExpandIcon />}
           </ListItemButton>
