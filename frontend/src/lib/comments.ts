@@ -28,7 +28,7 @@ export function categoryMeta(from: TokenSource = "light"): CategoryMeta {
 }
 
 /** The light meta, for callers that do not follow the scheme yet. */
-export const CATEGORY_META = categoryMeta("light");
+const CATEGORY_META = categoryMeta("light");
 
 /** Order the composer offers them in: what a paddler most often reports on
  * the bank comes first, chatter last. */

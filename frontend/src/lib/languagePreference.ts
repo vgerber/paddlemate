@@ -45,7 +45,7 @@ export function preferredLanguage(): string {
   return current;
 }
 
-export function setPreferredLanguage(code: string): void {
+function setPreferredLanguage(code: string): void {
   const next = baseCode(code);
   if (next === current) return;
   current = next;
