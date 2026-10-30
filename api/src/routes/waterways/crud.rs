@@ -18,10 +18,7 @@ use crate::{
         page::{PaginatedResponse, page_bounds, page_of},
         path_params::WaterwayPath,
         proposal::Proposal,
-        waterway::{
-            Waterway, WaterwayFilters, WaterwayId, WaterwayListItem, WaterwayType,
-            WaterwayWithSections,
-        },
+        waterway::{Waterway, WaterwayFilters, WaterwayId, WaterwayListItem, WaterwayWithSections},
     },
     query::{gauges as query_gauges, proposals, waterways as query_waterways},
     state::AppState,
@@ -101,12 +98,7 @@ pub async fn get_waterway(
     State(app): State<AppState>,
     Path(waterway_id): Path<WaterwayId>,
 ) -> impl IntoApiResponse {
-    let waterway = sqlx::query!(
-        r#"SELECT id, waterway_type AS "waterway_type: WaterwayType", name, description, created_at, updated_at FROM waterways WHERE id = $1"#,
-        waterway_id
-    )
-    .fetch_optional(&app.pg_pool)
-    .await;
+    let waterway = query_waterways::get_waterway(&app.pg_pool, waterway_id).await;
 
     let waterway = match waterway {
         Ok(Some(r)) => r,

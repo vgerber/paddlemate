@@ -534,12 +534,7 @@ pub async fn backfill(
         return ApiError::forbidden("Not permitted").into_response();
     }
 
-    let pool = app.pg_pool.clone();
-    tokio::spawn(async move {
-        if let Err(err) = readers::backfill(pool, gauge_id, body.from, body.to).await {
-            tracing::error!("Backfill error for gauge {}: {}", gauge_id, err);
-        }
-    });
+    readers::spawn_backfill(app.pg_pool.clone(), gauge_id, body.from, body.to);
 
     StatusCode::ACCEPTED.into_response()
 }

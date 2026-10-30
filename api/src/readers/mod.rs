@@ -209,7 +209,16 @@ fn spawn_provider_loop(
     });
 }
 
-/// Fetch and store historical readings for a single gauge. Called by the backfill endpoint.
+/// Run a backfill in the background; failures are logged.
+pub fn spawn_backfill(pool: PgPool, gauge_id: i64, from: DateTime<Utc>, to: DateTime<Utc>) {
+    tokio::spawn(async move {
+        if let Err(err) = backfill(pool, gauge_id, from, to).await {
+            tracing::error!("Backfill error for gauge {}: {}", gauge_id, err);
+        }
+    });
+}
+
+/// Fetch and store historical readings for a single gauge.
 pub async fn backfill(
     pool: PgPool,
     gauge_id: i64,
