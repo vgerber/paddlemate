@@ -23,6 +23,7 @@ use crate::{
         proposal::{ListProposalsFilters, Proposal, ProposalStatus},
     },
     query::proposals,
+    routes::access,
     state::AppState,
 };
 
@@ -113,10 +114,7 @@ pub async fn get_proposal(
     Path(path): Path<ProposalPath>,
 ) -> impl IntoApiResponse {
     let viewer_id = auth.as_ref().map(|Extension(t)| t.user_id().to_string());
-    let is_admin = auth
-        .as_ref()
-        .map(|Extension(t)| t.is_server_admin())
-        .unwrap_or(false);
+    let is_admin = access::viewer_is_admin(&auth);
 
     match proposals::get_proposal(&app.pg_pool, path.proposal_id, viewer_id.as_deref()).await {
         Ok(Some(p)) => {

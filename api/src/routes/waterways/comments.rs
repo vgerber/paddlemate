@@ -27,6 +27,7 @@ use crate::{
         comments::{self, CommentParent},
         media,
     },
+    routes::access,
     state::AppState,
 };
 
@@ -88,9 +89,9 @@ pub async fn create_waterway_comment(
     Path(WaterwayPath { waterway_id }): Path<WaterwayPath>,
     Json(body): Json<CreateCommentRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
     let location = match location_geojson(&body.location) {
         Ok(location) => location,
@@ -154,9 +155,9 @@ pub async fn update_waterway_comment(
     }): Path<WaterwayCommentPath>,
     Json(body): Json<UpdateCommentRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     match comments::update_comment(
@@ -194,9 +195,9 @@ pub async fn delete_waterway_comment(
         comment_id,
     }): Path<WaterwayCommentPath>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     // Read the keys before the rows cascade away with the note.
@@ -244,11 +245,12 @@ pub async fn moderate_waterway_comment(
     }): Path<WaterwayCommentPath>,
     Json(body): Json<ModerateCommentRequest>,
 ) -> impl IntoApiResponse {
-    let Some(Extension(token)) = auth else {
-        return ApiError::unauthorized("Authentication required").into_response();
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Admin access required").into_response();
+    if let Err(err) = access::require_server_admin(&token, "Admin access required") {
+        return err.into_response();
     }
 
     match comments::moderate_comment(
@@ -306,9 +308,9 @@ pub async fn create_section_comment(
     Path((_waterway_id, section_id)): Path<(i64, i64)>,
     Json(body): Json<CreateCommentRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
     let location = match location_geojson(&body.location) {
         Ok(location) => location,
@@ -370,9 +372,9 @@ pub async fn update_section_comment(
     Path((waterway_id, section_id, comment_id)): Path<(i64, i64, CommentId)>,
     Json(body): Json<UpdateCommentRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     match comments::update_comment(
@@ -408,9 +410,9 @@ pub async fn delete_section_comment(
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id, comment_id)): Path<(i64, i64, CommentId)>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     match comments::delete_comment(
@@ -470,9 +472,9 @@ pub async fn create_feature_comment(
     Path((_waterway_id, _section_id, feature_id)): Path<(i64, i64, i64)>,
     Json(body): Json<CreateCommentRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
     let location = match location_geojson(&body.location) {
         Ok(location) => location,
@@ -514,9 +516,9 @@ pub async fn update_feature_comment(
     Path((waterway_id, section_id, feature_id, comment_id)): Path<(i64, i64, i64, CommentId)>,
     Json(body): Json<UpdateCommentRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     match comments::update_comment(
@@ -552,9 +554,9 @@ pub async fn delete_feature_comment(
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id, feature_id, comment_id)): Path<(i64, i64, i64, CommentId)>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     match comments::delete_comment(

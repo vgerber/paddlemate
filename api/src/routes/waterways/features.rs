@@ -31,6 +31,7 @@ use crate::{
         proposals,
         waterways::{features, sections},
     },
+    routes::access,
     state::AppState,
 };
 
@@ -43,9 +44,9 @@ pub async fn create_feature(
         proposal_note,
     }): Json<Proposable<CreateFeatureBody>>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     let note = match clean_note(proposal_note) {
@@ -157,9 +158,9 @@ pub async fn update_feature(
         proposal_note,
     }): Json<Proposable<UpdateFeatureBody>>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     let note = match clean_note(proposal_note) {
@@ -259,9 +260,9 @@ pub async fn delete_feature(
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id, feature_id)): Path<(WaterwayId, SectionId, i64)>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     if token.is_server_admin() {

@@ -11,6 +11,7 @@ use crate::{
         visibility::Visibility,
     },
     query::descents,
+    routes::access,
     state::AppState,
 };
 
@@ -19,9 +20,9 @@ pub async fn create_descent(
     auth: Option<Extension<AuthToken>>,
     Json(body): Json<CreateDescentRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     if let Err(err) = check_fields(

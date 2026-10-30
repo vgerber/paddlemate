@@ -15,6 +15,7 @@ use crate::{
         path_params::DescentPath,
     },
     query::descents,
+    routes::access,
     state::AppState,
 };
 
@@ -27,7 +28,7 @@ pub async fn list_descents(
 
     // scope=owned and scope=following both require authentication
     if matches!(q.scope.as_deref(), Some("owned") | Some("following")) && viewer_id.is_none() {
-        return ApiError::unauthorized("Authentication required").into_response();
+        return access::unauthenticated().into_response();
     }
 
     let (page, per_page) = page_bounds(q.page, q.per_page, 25);

@@ -20,6 +20,7 @@ use crate::{
         proposals,
         waterways::{features, sections},
     },
+    routes::access,
     state::AppState,
 };
 use aide::axum::IntoApiResponse;
@@ -98,9 +99,9 @@ pub async fn create_section(
         proposal_note,
     }): Json<Proposable<CreateSectionBody>>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     let note = match clean_note(proposal_note) {
@@ -188,9 +189,9 @@ pub async fn update_section(
         proposal_note,
     }): Json<Proposable<UpdateSectionBody>>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     let note = match clean_note(proposal_note) {
@@ -251,9 +252,9 @@ pub async fn delete_section(
     auth: Option<Extension<AuthToken>>,
     Path((waterway_id, section_id)): Path<(WaterwayId, SectionId)>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     if token.is_server_admin() {

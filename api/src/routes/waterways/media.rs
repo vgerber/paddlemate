@@ -16,6 +16,7 @@ use crate::{
         path_params::{SectionPath, WaterwayMediaPath, WaterwayPath},
     },
     query::waterways::media::{self as media_query, NewMedia},
+    routes::access,
     state::AppState,
 };
 
@@ -144,8 +145,9 @@ async fn store_upload(
     entity_id: i64,
     mut multipart: Multipart,
 ) -> axum::response::Response {
-    let Some(Extension(token)) = auth else {
-        return ApiError::unauthorized("Authentication required").into_response();
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     let form = match read_form(&mut multipart).await {
@@ -294,8 +296,9 @@ pub async fn delete_waterway_media(
     auth: Option<Extension<AuthToken>>,
     Path(WaterwayMediaPath { media_id, .. }): Path<WaterwayMediaPath>,
 ) -> impl IntoApiResponse {
-    let Some(Extension(token)) = auth else {
-        return ApiError::unauthorized("Authentication required").into_response();
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     match media_query::delete_media(
