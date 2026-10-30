@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use sqlx::PgPool;
 
+use super::features;
+use super::order::{Span, sort_along_river};
 use crate::models::{
     geometry::Geometry,
     lang::debug_assert_normalized,
@@ -10,9 +12,7 @@ use crate::models::{
     },
     waterway::WaterwayId,
 };
-use crate::query::features;
 use crate::query::history::{self, Op, Scope, Via};
-use crate::query::section_order::{Span, sort_along_river};
 
 const SECTION_COLS: &str = "id, waterway_id, name, description, regions, country, ST_AsGeoJSON(location) AS location, created_by, created_at, updated_at";
 

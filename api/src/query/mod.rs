@@ -1,24 +1,21 @@
-pub mod comments;
 pub mod descents;
 pub mod favorites;
-pub mod features;
 pub mod follows;
 pub mod gauges;
 pub mod groups;
 pub mod history;
 pub mod materials;
-pub mod media;
 pub mod notifications;
-pub mod osm_geometry;
 pub mod proposals;
 pub mod push_subscriptions;
 pub mod regions;
-pub mod section_order;
-pub mod sections;
 pub mod tokens;
 pub mod trips;
 pub mod users;
 pub mod waterways;
+
+// Temporary: proposals queries are edited by another agent.
+pub use waterways::{features, sections};
 
 /// Shortest search term that may match approximately. Below this a single
 /// typo leaves too few correct characters for trigram scoring to mean

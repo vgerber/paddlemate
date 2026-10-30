@@ -17,7 +17,7 @@ use crate::{
         path_params::WaterwayPath,
     },
     overpass,
-    query::osm_geometry,
+    query::waterways::geometry as osm_geometry,
     routes::geo::params::parse_bbox,
     state::AppState,
 };

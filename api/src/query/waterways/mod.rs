@@ -1,3 +1,10 @@
+pub mod comments;
+pub mod features;
+pub mod geometry;
+pub mod media;
+pub mod order;
+pub mod sections;
+
 use sqlx::{PgPool, QueryBuilder};
 use std::collections::HashMap;
 
@@ -8,8 +15,9 @@ use crate::models::waterway::{
 };
 use crate::query::history::{self, Op, Scope, Via};
 
-use super::section_order::{Span, sort_along_river};
-use super::{FUZZY_MIN_CHARS, features, sections};
+use order::{Span, sort_along_river};
+
+use super::FUZZY_MIN_CHARS;
 
 /// Case-insensitive check whether a waterway with this name already exists.
 pub async fn name_exists(pool: &PgPool, name: &str) -> Result<bool, sqlx::Error> {

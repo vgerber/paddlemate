@@ -14,7 +14,7 @@ use crate::{
         gauge::{CreateWaterRangeRequest, FeatureWaterRange, UpdateWaterRangeRequest},
         path_params::{FeaturePath, FeatureWaterRangePath},
     },
-    query::{features, gauges},
+    query::{gauges, waterways::features},
     state::AppState,
 };
 

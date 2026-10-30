@@ -11,7 +11,7 @@ use sqlx::PgPool;
 use tokio::sync::Mutex;
 
 use crate::models::{geometry::Geometry, osm_geometry::OsmElementKind};
-use crate::query::osm_geometry::{cached_envelope, merge_elements};
+use crate::query::waterways::geometry::{cached_envelope, merge_elements};
 
 /// Endpoints tried in order per query. OVERPASS_URLS (comma-separated)
 /// overrides the default public list - production puts the self-hosted
