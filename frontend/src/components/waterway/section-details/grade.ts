@@ -18,7 +18,7 @@ export interface SectionGrade {
 }
 
 /** A grade range covering this share of the section is the section's grade. */
-export const BASE_COVERAGE = 0.8;
+const BASE_COVERAGE = 0.8;
 
 /** Orders grades: "III" < "III+" < "IV-" < "IV". */
 export function gradeRank(grade: string): number {
@@ -92,9 +92,7 @@ export function gradeSpans(items: ComputedFeature[]): (GradeSpan & {
 }
 
 /** `sectionGrade` for a section as the API returns it. */
-export function sectionGradeOf(
-  section: SectionWithFeatures,
-): SectionGrade | null {
+function sectionGradeOf(section: SectionWithFeatures): SectionGrade | null {
   const line = lineCoords(section.location) ?? [];
   const items = section.features.map((f) => computeExtent(f, line));
   return sectionGrade(gradeSpans(items), sectionLengthM(line) / 1000);

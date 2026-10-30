@@ -93,5 +93,3 @@ export function useFeatureSheet({
     openHistory,
   };
 }
-
-export type FeatureSheetState = ReturnType<typeof useFeatureSheet>;

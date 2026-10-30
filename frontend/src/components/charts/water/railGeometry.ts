@@ -9,13 +9,13 @@ import type { TimeRange } from "./types";
 
 /** Room kept right of the newest reading on the rail, in px. A forecast would
  * widen it later. */
-export const RAIL_NOW_INSET = 8;
+const RAIL_NOW_INSET = 8;
 
 /** Distance the first and last axis label keep from the plot's edges. */
 export const AXIS_EDGE = 12;
 
 /** Threshold words keep at least this far apart, in px. */
-export const WORD_GAP = 13;
+const WORD_GAP = 13;
 
 /** The time axis stretched so the newest reading lands `RAIL_NOW_INSET` px
  * short of the plot's right edge while bands and lines run to the edge. */

@@ -16,7 +16,7 @@ export const HALF_RATIO = 0.55;
 /** How far past half a drag must go to count as pulling to the list. */
 export const LIST_PULL = 56;
 /** A sideways drag this long (px) steps to the next or previous feature. */
-export const STEP_DISTANCE = 48;
+const STEP_DISTANCE = 48;
 
 /** The sheet's height under the finger: dragging up (negative `dy`) grows it,
  * past half it keeps following a little so a pull to the list can be felt. */

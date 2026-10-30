@@ -133,7 +133,7 @@ function scrubOf(row: ChartRow & { value: number }): ScrubPoint {
 
 /** Midnight ticks across the window, stepped so about four fit: a day label
  * never repeats. */
-export function dayTicks([from, to]: [number, number], target = 4): number[] {
+function dayTicks([from, to]: [number, number], target = 4): number[] {
   const days = differenceInCalendarDays(to, from);
   const step = Math.max(1, Math.ceil(days / target));
   const ticks: number[] = [];

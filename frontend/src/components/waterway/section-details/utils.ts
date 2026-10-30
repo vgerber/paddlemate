@@ -54,7 +54,7 @@ export function sectionLengthM(line: [number, number][]): number {
 }
 
 /** Tolerance (m) when detecting that a zone spans the whole section. */
-export const FULL_SECTION_TOLERANCE_M = 50;
+const FULL_SECTION_TOLERANCE_M = 50;
 
 /** True when a line feature covers (nearly) the whole section line. */
 export function spansWholeSection(

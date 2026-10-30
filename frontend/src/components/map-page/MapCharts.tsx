@@ -63,7 +63,7 @@ function hasPickedGauge(state: MapPageState): boolean {
 /** Whether the page has a chart to show. The rail follows every section tab;
  * elsewhere the logs, notes and sources tabs replace the chart with their
  * list. */
-export function hasChart(state: MapPageState, railed = false): boolean {
+function hasChart(state: MapPageState, railed = false): boolean {
   const { selectedWaterwayId, selectedSectionId, detailTab, sectionDetailTab } =
     state;
   if (!railed && selectedSectionId != null && sectionDetailTab !== "features") {

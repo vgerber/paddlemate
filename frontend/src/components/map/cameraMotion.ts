@@ -11,7 +11,7 @@ import { theme } from "@/lib/theme";
 const { motion } = theme.tokens;
 
 /** One zoom level counts as this many screens of travel. */
-export const SCREENS_PER_ZOOM = 0.5;
+const SCREENS_PER_ZOOM = 0.5;
 
 export const cameraEasing = cubicBezier(motion.easeOut);
 

@@ -18,7 +18,7 @@ const { tokens } = theme;
 
 const MIN_NAME_LETTERS = 2;
 
-export interface Audience {
+interface Audience {
   type: VisibilityType;
   groups: number[];
   users: string[];

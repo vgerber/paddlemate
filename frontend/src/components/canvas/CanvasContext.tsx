@@ -1,10 +1,9 @@
 import { useLayoutEffect, useRef } from "react";
 import { dockMode, type FreeArea } from "@/lib/canvasLayout";
-import { scenes, useLayout, useScene } from "./canvasStore";
+import { scenes, useLayout } from "./canvasStore";
 import type { MapScene } from "./scene";
 
 export type { MapScene } from "./scene";
-export { useScene };
 
 /** Sets the map the canvas draws while this component is mounted. Pass a
  * memoised scene: a new object each render redraws the map each render. The

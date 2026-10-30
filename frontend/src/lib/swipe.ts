@@ -1,17 +1,17 @@
 import { durations } from "@/lib/motion";
 
 /** Pixels of travel before the gesture picks a direction. */
-export const LOCK_DISTANCE = 8;
+const LOCK_DISTANCE = 8;
 /** A drag steeper than this many degrees scrolls instead of swiping. */
-export const MAX_ANGLE_DEG = 30;
+const MAX_ANGLE_DEG = 30;
 /** Share of the width a drag must pass to commit. */
-export const COMMIT_RATIO = 0.4;
+const COMMIT_RATIO = 0.4;
 /** Release speed (px per ms) that commits whatever the distance. */
 export const FLICK_SPEED = 0.5;
 /** The most the first and last tab give way to a drag, in px. */
 export const EDGE_RESISTANCE = 22;
 /** The strip at the screen edge left to the system back gesture, in px. */
-export const EDGE_ZONE = 24;
+const EDGE_ZONE = 24;
 
 export type Lock = "pending" | "horizontal" | "vertical";
 

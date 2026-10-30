@@ -16,7 +16,7 @@ type Kind = "date" | "time" | "datetime-local";
 
 /** What the field shows: the app's own date format, 24h time. The browser
  * would otherwise print its locale's "10/11/2026" and "03:06 PM". */
-export function displayValue(kind: Kind, value: string): string {
+function displayValue(kind: Kind, value: string): string {
   if (!value) return "";
   if (kind === "time") return value;
   if (kind === "date") return formatDate(value, { weekday: true });

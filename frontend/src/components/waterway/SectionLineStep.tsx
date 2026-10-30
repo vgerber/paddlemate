@@ -39,7 +39,7 @@ interface SectionLineStepProps {
 }
 
 /** The instruction for the next point to pick, in the device's own verb. */
-export function pickHint(
+function pickHint(
   verb: "Tap" | "Click",
   putIn: unknown,
   takeOut: unknown,

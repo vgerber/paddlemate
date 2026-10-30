@@ -11,12 +11,12 @@ let listener: Listener | null = null;
 
 /** Tell the person their change went to review, not live. Callable from a
  * mutation hook; `id` links to the proposal when the API sent one. */
-export function announceProposalSent(id: number | null) {
+function announceProposalSent(id: number | null) {
   listener?.(id);
 }
 
 /** A response that is a proposal rather than the changed thing itself. */
-export function proposalIdOf(result: unknown): number | null {
+function proposalIdOf(result: unknown): number | null {
   if (
     typeof result === "object" &&
     result !== null &&

@@ -12,7 +12,7 @@ import { theme } from "@/lib/theme";
 
 const { tokens } = theme;
 
-export const PERIOD_LABELS: Record<TimeRange, string> = {
+const PERIOD_LABELS: Record<TimeRange, string> = {
   "24h": "Last 24 hours",
   "7d": "Last 7 days",
   "1m": "Last 30 days",

@@ -14,10 +14,10 @@ export interface DrawableRegion {
 }
 
 /** A region smaller than this share of the view waits for a closer zoom. */
-export const MIN_VIEW_SHARE = 0.003;
+const MIN_VIEW_SHARE = 0.003;
 
 /** A range holding at least this many other ranges is not drawn. */
-export const MAX_NESTED_RANGES = 2;
+const MAX_NESTED_RANGES = 2;
 
 /** Where a region lies, as "Tirol, AT": the state when it has one, else its
  * most specific larger region, then the country code. `parents` come most

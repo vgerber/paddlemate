@@ -27,7 +27,7 @@ export interface Padding {
   left: number;
 }
 
-export interface Rect {
+interface Rect {
   x: number;
   y: number;
   w: number;

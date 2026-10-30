@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { dayTime } from "@/lib/format";
 import type { TimeRange } from "./types";
 
-export const TIME_RANGE_OPTIONS: { value: TimeRange; label: string }[] = [
+const TIME_RANGE_OPTIONS: { value: TimeRange; label: string }[] = [
   { value: "24h", label: "24h" },
   { value: "7d", label: "7d" },
   { value: "1m", label: "1M" },
