@@ -42,6 +42,7 @@ export default function SidebarContent({
     setSearchWaterwayIds,
     setShownSearchSections,
     handleAreaCircleChange,
+    centreAreaOnView,
     handleSectionClick,
     handleGaugeSelect,
     areaCircle,
@@ -130,6 +131,7 @@ export default function SidebarContent({
         favoritedIds={favoritedIds}
         onToggleFavorite={toggleFavorite}
         onRadiusPreview={setPreviewRadius}
+        onAreaCentreOnView={centreAreaOnView}
         onLoadingChange={setIsSearchPanelLoading}
         onClose={onClose}
         sheet={sheet}

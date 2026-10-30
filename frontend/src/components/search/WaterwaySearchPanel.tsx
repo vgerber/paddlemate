@@ -60,6 +60,7 @@ interface WaterwaySearchPanelProps {
   onToggleFavorite?: (id: number) => void;
   onClose?: () => void;
   onRadiusPreview?: (radiusKm: number) => void;
+  onAreaCentreOnView?: () => void;
   onLoadingChange?: (loading: boolean) => void;
   /** Opens the "suggest new river" panel, prefilled with the searched name. */
   onProposeRiver?: (name: string) => void;
@@ -88,6 +89,7 @@ export default function WaterwaySearchPanel({
   onToggleFavorite,
   onClose,
   onRadiusPreview,
+  onAreaCentreOnView,
   onLoadingChange,
   onProposeRiver,
   regionBrowse,
@@ -341,6 +343,7 @@ export default function WaterwaySearchPanel({
             onAreaCircleChange={onAreaCircleChange}
             onAreaLockedChange={onAreaLockedChange}
             onRadiusPreview={onRadiusPreview}
+            onAreaCentreOnView={onAreaCentreOnView}
             listingRegions={listingRegions}
             regionBrowse={regionBrowse}
             onSheetOpenChange={setFiltersOpen}
@@ -449,6 +452,11 @@ export default function WaterwaySearchPanel({
                   waterwayNames={waterwayNames}
                   onSectionClick={onSectionClick}
                   searchName={mode === "name" ? searchName : undefined}
+                  distanceFrom={
+                    mode === "area" && areaCircle
+                      ? [areaCircle.lon, areaCircle.lat]
+                      : undefined
+                  }
                 />
               )}
           </Box>

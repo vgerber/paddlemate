@@ -15,6 +15,22 @@ export function distanceM(a: LngLat, b: LngLat): number {
   return turfDistance(a, b, { units: "meters" });
 }
 
+/** How far a section lies from a point: the nearest of its first, middle and
+ * last vertex, the same three the area filter tests. Infinity without a line. */
+export function sectionDistanceKm(
+  location: AnyGeometry | null | undefined,
+  centre: LngLat,
+): number {
+  const coords = lineCoords(location);
+  if (!coords || coords.length === 0) return Number.POSITIVE_INFINITY;
+  const probes = [
+    coords[0],
+    coords[Math.floor(coords.length / 2)],
+    coords[coords.length - 1],
+  ];
+  return Math.min(...probes.map((p) => distanceKm(centre, p)));
+}
+
 /** Parse a whitewater difficulty string (I-VI, X) into a numeric grade. */
 export function parseDifficulty(diff: string | undefined): number | null {
   if (!diff) return null;

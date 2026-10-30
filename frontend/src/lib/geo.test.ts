@@ -9,6 +9,7 @@ import {
   distanceM,
   mergeBounds,
   nearestOnLine,
+  sectionDistanceKm,
 } from "./geo";
 
 describe("boundsOf", () => {
@@ -203,5 +204,29 @@ describe("circleGeoJSON", () => {
     const ring = circleGeoJSON(0, 0, 1, 8).features[0].geometry;
     if (ring.type !== "Polygon") throw new Error("not a polygon");
     expect(ring.coordinates[0]).toHaveLength(9);
+  });
+});
+
+describe("sectionDistanceKm", () => {
+  const line = {
+    type: "LineString",
+    coordinates: [
+      [10, 50],
+      [10.1, 50],
+      [10.2, 50],
+    ],
+  };
+  test("is the nearest of the first, middle and last vertex", () => {
+    expect(sectionDistanceKm(line, [10, 50])).toBeCloseTo(0, 5);
+    expect(sectionDistanceKm(line, [10.2, 50.1])).toBeCloseTo(
+      distanceKm([10.2, 50.1], [10.2, 50]),
+      5,
+    );
+  });
+  test("is infinite without a line", () => {
+    expect(sectionDistanceKm(null, [10, 50])).toBe(Number.POSITIVE_INFINITY);
+    expect(
+      sectionDistanceKm({ type: "Point", coordinates: [10, 50] }, [10, 50]),
+    ).toBe(Number.POSITIVE_INFINITY);
   });
 });

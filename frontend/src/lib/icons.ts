@@ -56,6 +56,7 @@ export { default as LeaveIcon } from "@mui/icons-material/LogoutOutlined";
 export { default as TripIcon } from "@mui/icons-material/LuggageOutlined";
 export { default as MapIcon } from "@mui/icons-material/MapOutlined";
 export { default as MoreIcon } from "@mui/icons-material/MoreVert";
+export { default as MyLocationIcon } from "@mui/icons-material/MyLocationOutlined";
 export { default as BivouacIcon } from "@mui/icons-material/NightShelterOutlined";
 export { default as NotificationsIcon } from "@mui/icons-material/NotificationsNoneOutlined";
 export { default as OpenFullIcon } from "@mui/icons-material/OpenInFullOutlined";

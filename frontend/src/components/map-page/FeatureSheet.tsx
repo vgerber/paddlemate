@@ -39,6 +39,7 @@ import {
 import { css, ms, prefersReducedMotion, releaseMs } from "@/lib/motion";
 import { lockDirection, releaseVelocity, type Sample } from "@/lib/swipe";
 import { theme } from "@/lib/theme";
+import { useUnits } from "@/lib/units";
 import {
   dragHeight,
   HALF_RATIO,
@@ -121,6 +122,8 @@ export default function FeatureSheet({ state }: { state: MapPageState }) {
   const index = order.findIndex((i) => i.feature.id === selectedFeature?.id);
   const item = order[index];
   const { isAuthenticated } = useSession();
+  // Subscribes the sheet: a unit change repaints the distances below.
+  const [units] = useUnits();
   const [deleting, setDeleting] = useState(false);
 
   const root = useRef<HTMLDivElement>(null);
@@ -191,7 +194,9 @@ export default function FeatureSheet({ state }: { state: MapPageState }) {
   const feature = item.feature;
   const n = numbers.get(feature.id);
   const isZone = item.isZone;
-  const km = isZone ? fmtKmSpan(item.startM, item.endM) : fmtKm(item.distM);
+  const km = isZone
+    ? fmtKmSpan(item.startM, item.endM, units)
+    : fmtKm(item.distM, units);
   const subtitle = [
     sentenceCase(humanize(feature.feature_type)),
     km,
@@ -459,7 +464,7 @@ export default function FeatureSheet({ state }: { state: MapPageState }) {
             {grade && <Fact label="Grade" value={grade} />}
             <Fact
               label={isZone ? "Length" : "Distance"}
-              value={isZone ? fmtKm(item.endM - item.startM) : km}
+              value={isZone ? fmtKm(item.endM - item.startM, units) : km}
             />
           </Box>
           {desc && <Typography sx={{ mb: 1 }}>{desc}</Typography>}

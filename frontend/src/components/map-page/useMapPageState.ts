@@ -227,6 +227,19 @@ export function useMapPageState(search: RouteSearch) {
     [setAreaCircle],
   );
 
+  /** Puts the centre on the middle of the map in view (above a phone's
+   * sheet); undefined until the map has reported its view. */
+  const centreAreaOnView = useMemo(() => {
+    if (!mapBounds) return undefined;
+    return () => {
+      const covered =
+        sheetMode === "area" ? modeSheetPeek("area") / window.innerHeight : 0;
+      handleAreaCircleChange(
+        defaultAreaCircle(mapBounds, radius ?? DEFAULT_RADIUS_KM, covered),
+      );
+    };
+  }, [mapBounds, sheetMode, radius, handleAreaCircleChange]);
+
   const setSelectedWaterwayId = useCallback(
     (id: number | undefined) => {
       setDetailTab("sections");
@@ -408,6 +421,7 @@ export function useMapPageState(search: RouteSearch) {
     setSelectedSectionId,
     setAreaCircle,
     handleAreaCircleChange,
+    centreAreaOnView,
     // UI state
     detailTab,
     setDetailTab,

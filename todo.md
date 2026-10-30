@@ -42,7 +42,6 @@ and below.
 ## Known, not yet fixed
 
 - The phone sheet covers the bottom nav, and its peek does not show a first result (changing its stops waits for the phone feature sheet).
-- Area search: no sort by distance, no start at the user's location, no keyboard way to set the centre.
 - Search rows: the Region tab's empty heading, the "3 regions here" popup staying open, the "river" pill on every row, "Similar names" in Sections, nested star buttons in rows.
 - Canvas: tab order, focus ring and Escape as Back; a spec that map-less routes load no map chunk.
 - Trips: candidate and day framing on the map (`useBasesScene`), week strip opening on today, invite share sheet, bell events deep-linking to Bases, the Members role chip width.
