@@ -64,8 +64,10 @@ docker exec -i paddlemate-db-1 psql -U postgres -d paddlemate -v ON_ERROR_STOP=1
 ## Deploying
 
 Production runs the API as one Docker image on a NAS and serves the built
-frontend from nginx. The scripts live in `deploy/` (not tracked: they hold
-host names and secrets), and `deploy/backend/.env` carries the settings.
+frontend from nginx. The scripts live in `deploy/`; the NAS connection
+(user, host, folder) comes from `deploy/deploy.env` (copy
+`deploy/deploy.env.example`), and `deploy/backend/.env` carries the API's
+settings and secrets. Both files stay out of git.
 
 - **The image cannot migrate on its own.** It holds `paddlemate_api` and the
   import tools, no `sqlx-cli` and no `migrate` binary. Migrations therefore run
