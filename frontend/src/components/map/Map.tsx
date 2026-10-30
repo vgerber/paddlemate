@@ -2,35 +2,17 @@ import "./maplibre.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MapGL, {
   AttributionControl,
-  Layer,
   type MapRef,
   NavigationControl,
-  Source,
   useMap,
 } from "react-map-gl/maplibre";
-import type {
-  CountryBorder,
-  Feature,
-  RegionOutline,
-  SectionWithFeatures,
-} from "@/lib/api";
 import { useTokens } from "@/lib/hooks/ui/useTokens";
-import {
-  type AreaCircle,
-  type Bbox,
-  type Bounds,
-  circleGeoJSON,
-  DEFAULT_RADIUS_KM,
-  type LngLat,
-  pointCoords,
-  type ViewBounds,
-} from "@/lib/map/geo";
-import { withAlpha } from "@/lib/theme/alpha";
-import AccessibleMarker from "./AccessibleMarker";
+import { type Bbox } from "@/lib/map/geo";
+import { AreaCircleLayers, PickerSelectionLayers } from "./AreaAndPickerLayers";
 import CountryBorderLayer from "./CountryBorderLayer";
 import DraftLayers, { FeatureDraftLayer } from "./DraftLayers";
 import FeatureGeoJSONLayers from "./FeatureGeoJSONLayers";
-import GaugeMarkers, { type GaugePin } from "./GaugeMarkers";
+import GaugeMarkers from "./GaugeMarkers";
 import LabelModeToggle from "./LabelModeToggle";
 import {
   FEATURE_HIT_LAYERS,
@@ -39,19 +21,37 @@ import {
 } from "./layerIds";
 import MapCompass from "./MapCompass";
 import MapNumberMarker from "./MapNumberMarker";
-import MarkerHit from "./MarkerHit";
+import { AreaCentreDot, FocusedDot, PointPins } from "./MapPins";
 import { addMapImages, answerMissingIcons } from "./mapIcons";
-import { buildSectionsGeoJSON } from "./mapLayers";
+import {
+  areaCircleCollection,
+  mapCursor,
+  pickedSectionsCollection,
+  ringTargetFor,
+  selectedSectionCollection,
+} from "./mapSelection";
 import { LIBERTY_STYLE, SATELLITE_STYLE } from "./mapStyles";
-import NoteMarkers, { type NotePin } from "./NoteMarkers";
+import type {
+  MapArea,
+  MapCamera,
+  MapChrome,
+  MapDrawing,
+  MapGauges,
+  MapNotes,
+  MapPicking,
+  MapRegions,
+  WaterwayMapProps,
+} from "./mapTypes";
+import NoteMarkers from "./NoteMarkers";
 import PickModeButtons from "./PickModeButtons";
-import RangeRingLayers, { type RangeRing } from "./RangeRingLayers";
+import RangeRingLayers from "./RangeRingLayers";
 import RegionChoicePopup from "./RegionChoicePopup";
 import RegionHiddenNote from "./RegionHiddenNote";
 import RegionHoverTag, { hoverUnder, type RegionHover } from "./RegionHoverTag";
 import RegionLayers from "./RegionLayers";
 import SectionLayers from "./SectionLayers";
-import TargetRing, { type RingTarget } from "./TargetRing";
+import TargetRing from "./TargetRing";
+import { useAreaKeyboardCentre } from "./useAreaKeyboardCentre";
 import { useControlInset } from "./useControlInset";
 import { useMapCameraEffects } from "./useMapCameraEffects";
 import { useMapClickHandler } from "./useMapClickHandler";
@@ -61,18 +61,23 @@ import { useCalmBaseMap, useMutedBaseMap } from "./useMutedBaseMap";
 
 export type { AreaCircle } from "@/lib/map/geo";
 export type { GaugePin } from "./GaugeMarkers";
+export type {
+  MapArea,
+  MapCamera,
+  MapChrome,
+  MapDrawing,
+  MapGauges,
+  MapNotes,
+  MapPadding,
+  MapPicking,
+  MapRegions,
+  MapSectionStates,
+  MapSubject,
+  PointPin,
+  WaterwayMapProps,
+} from "./mapTypes";
 export type { NotePin } from "./NoteMarkers";
 export type { RangeRing } from "./RangeRingLayers";
-
-export interface PointPin {
-  id: string;
-  lon: number;
-  lat: number;
-  color: string;
-  title?: string;
-  /** Larger with a halo - the pin currently being placed. */
-  emphasis?: boolean;
-}
 
 /** Mounts as the map's first child, before its style adds any layer. */
 function MissingIconGuard() {
@@ -87,160 +92,6 @@ function exposeMapForTests(map: MapRef | null) {
   if (import.meta.env.DEV && map) {
     Object.assign(window, { __paddlemateMap: map.getMap() });
   }
-}
-
-/** Clicking the map to choose places: the section put-in/take-out pair and
- * multi-section selection. Present only while a form is picking. */
-export interface MapPicking {
-  putIn?: { lat: number; lon: number } | null;
-  takeOut?: { lat: number; lon: number } | null;
-  onPickPutIn?: (point: LngLat) => void;
-  onPickTakeOut?: (point: LngLat) => void;
-  selectedSectionIds?: Set<number>;
-  onSectionToggle?: (id: number) => void;
-}
-
-/** Geometry being drafted on the map: feature vertices under construction
- * and the preview/highlight lines of a section in progress. */
-export interface MapDrawing {
-  featureVertices?: LngLat[];
-  featureGeomType?: "Point" | "LineString" | "Polygon";
-  /** Route map clicks to `onMapClick` instead of section selection. */
-  placingFeature?: boolean;
-  onMapClick?: (point: LngLat) => void;
-  sectionPreviewCoords?: [number, number][];
-  /** Sections drawn in a state other than the plain river line. */
-  sectionStates?: MapSectionStates;
-  /** River course to highlight subtly (e.g. the OSM riverbed a section will snap to). */
-  riverHighlightCoords?: [number, number][] | null;
-}
-
-/** Section ids drawn as the subject of a screen (teal) and as context only
- * (dim, not clickable, no access-point marks). Every other section keeps the
- * plain river line. Pass memoised arrays. */
-export interface MapSectionStates {
-  highlighted?: number[];
-  ghost?: number[];
-}
-
-/** Controls and labelling around the map surface, not the data on it. */
-export interface MapChrome {
-  waterwayNames?: Record<number, string>;
-  labelMode?: "section" | "river";
-  onLabelModeChange?: (mode: "section" | "river") => void;
-  /** For maps embedded in scrollable pages: page scroll passes over the map;
-   * zooming needs Ctrl/Cmd+scroll (or two fingers on touch). */
-  cooperativeGestures?: boolean;
-  /** Corner for the attribution. The bottom of a phone screen belongs to the
-   * label toggle, the results strip and the filter button, all of which sat
-   * on top of it - move it to a free corner there. */
-  attributionPosition?: "top-left" | "bottom-right";
-  /** Only the water, the section line, the markers and the zoom keys: no
-   * layer switcher, compass or access-point arrows. Defaults on for maps
-   * embedded in a scrolling page or a wizard (`cooperativeGestures`). */
-  minimal?: boolean;
-  /** Keeps the zoom, compass, layer toggle and attribution inside these
-   * edges (px in from each side of the map) instead of the map's own
-   * corners: the free area of a canvas screen, so no card covers them. */
-  inset?: MapPadding;
-  /** A full-screen overlay covers the map: ambient motion stops. */
-  covered?: boolean;
-}
-
-/** What the camera frames: refit when `key` changes, and again (unless it is
- * already inside) when the padding changes. While a subject is set the camera
- * no longer fits all sections or the selected section by itself. */
-export interface MapSubject {
-  key: string;
-  /** [[minLon, minLat], [maxLon, maxLat]] */
-  bounds: Bounds;
-  maxZoom?: number;
-}
-
-export interface MapPadding {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-}
-
-/** Where the map looks, and where it reports it is looking. */
-export interface MapCamera {
-  /** Fit padding in px; the free map area on a canvas screen. Defaults to the
-   * fixed per-move values. Replaces `focusPaddingBottom` when given. */
-  padding?: MapPadding;
-  subject?: MapSubject | null;
-  /** [lng, lat] to fly to and highlight; set by clicking a feature in the panel. */
-  focusedPoint?: [number, number] | null;
-  /** [[minLon, minLat], [maxLon, maxLat]] box to fit (e.g. a river's gauges). */
-  focusBounds?: Bounds | null;
-  /** Extra bottom padding (px) for focus moves when an overlay covers the
-   * lower part of the canvas (mobile suggest panel). */
-  focusPaddingBottom?: number;
-  /** Reports the current viewport bounds (on load and after each move). */
-  onBoundsChange?: (bounds: ViewBounds) => void;
-}
-
-/** Notes pinned to the water, and which one is open. */
-export interface MapNotes {
-  pins?: NotePin[];
-  selectedId?: number | null;
-  onSelect?: (id: number | null) => void;
-  onOpenThread?: (id: number) => void;
-}
-
-/** Gauge markers, and which one is selected. */
-export interface MapGauges {
-  pins?: GaugePin[];
-  selectedId?: number | null;
-  onClick?: (pin: GaugePin) => void;
-}
-
-/** The area-search circle. Omitting onChange makes it read-only. */
-export interface MapArea {
-  circle?: AreaCircle | null;
-  locked?: boolean;
-  onChange?: (circle: AreaCircle | null) => void;
-}
-
-/** Region browsing: the regions on offer, the one picked, and the country
- * borders drawn over them. */
-export interface MapRegions {
-  choices?: RegionOutline[] | null;
-  picked?: RegionOutline | null;
-  borders?: CountryBorder[] | null;
-  /** Kinds in view too wide to draw; the map says so and how to see them. */
-  hiddenKinds?: string[];
-  onSelect?: (regionId: number) => void;
-  /** Phone: the region a first tap lit, and how to set it. */
-  previewId?: number | null;
-  onPreview?: (regionId: number | null) => void;
-}
-
-export interface WaterwayMapProps {
-  sections?: SectionWithFeatures[];
-  features?: Feature[];
-  /** The open feature: drawn heavier along its line. */
-  selectedFeatureId?: number | null;
-  /** A tap on a confirmed feature; it wins over the section beneath it. */
-  onFeatureClick?: (id: number) => void;
-  selectedSectionId?: number | null;
-  onSectionClick?: (id: number) => void;
-  sectionLevels?: Record<number, string>;
-  /** Pending proposals to show as ghost markers on the map. */
-  proposedFeatures?: Feature[];
-  /** Small dot markers (the note composer's draft pin). */
-  pointPins?: PointPin[];
-  /** Named places with the ground they reach (a trip's bases). */
-  rings?: RangeRing[];
-  camera?: MapCamera;
-  notes?: MapNotes;
-  gauges?: MapGauges;
-  area?: MapArea;
-  regions?: MapRegions;
-  picking?: MapPicking;
-  drawing?: MapDrawing;
-  chrome?: MapChrome;
 }
 
 const NO_CAMERA: MapCamera = {};
@@ -436,23 +287,15 @@ export default function WaterwayMap({
     setLitRegionId(null);
   }, [regionsDrawn, closeRegionMenu]);
 
-  const selectedFeature = useMemo<GeoJSON.FeatureCollection>(
-    () => ({
-      type: "FeatureCollection",
-      features: sectionsGeoJSON.features.filter(
-        (f) => selectedSectionId != null && f.id === selectedSectionId,
-      ),
-    }),
+  const selectedFeature = useMemo(
+    () => selectedSectionCollection(sectionsGeoJSON, selectedSectionId),
     [sectionsGeoJSON, selectedSectionId],
   );
-  const ringTarget = useMemo<RingTarget | null>(() => {
-    const pin = gaugePins?.find((p) => p.id === selectedGaugePinId);
-    if (pin) return { lon: pin.lon, lat: pin.lat };
-    const coords = pointCoords(
-      features?.find((f) => f.id === selectedFeatureId)?.location,
-    );
-    return coords ? { lon: coords[0], lat: coords[1] } : null;
-  }, [gaugePins, selectedGaugePinId, features, selectedFeatureId]);
+  const ringTarget = useMemo(
+    () =>
+      ringTargetFor(gaugePins, selectedGaugePinId, features, selectedFeatureId),
+    [gaugePins, selectedGaugePinId, features, selectedFeatureId],
+  );
   const drawColors = useMemo(
     () => ({
       casing: tokens.mapSectionLineCasing,
@@ -471,10 +314,7 @@ export default function WaterwayMap({
 
   // Selected-sections overlay for picker mode, memoized like the rest.
   const pickerSelectionGeoJSON = useMemo(
-    () =>
-      buildSectionsGeoJSON(
-        (sections ?? []).filter((s) => selectedSectionIds?.has(s.id)),
-      ),
+    () => pickedSectionsCollection(sections, selectedSectionIds),
     [sections, selectedSectionIds],
   );
 
@@ -490,36 +330,10 @@ export default function WaterwayMap({
     });
   };
 
-  // Enter on the focused map drops the area centre where the arrow keys have
-  // panned it to: the keyboard counterpart of a click.
-  const areaRadius = useRef(areaCircle?.radiusKm);
-  areaRadius.current = areaCircle?.radiusKm;
-  const areaChange = useRef(onAreaCircleChange);
-  areaChange.current = onAreaCircleChange;
-  const keyboardCentre = onAreaCircleChange != null;
-  useEffect(() => {
-    const map = mapRef.current?.getMap();
-    if (!map || !mapLoaded || !keyboardCentre) return;
-    const canvas = map.getCanvas();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Enter") return;
-      const c = map.getCenter();
-      areaChange.current?.({
-        lat: c.lat,
-        lon: c.lng,
-        radiusKm: areaRadius.current ?? DEFAULT_RADIUS_KM,
-      });
-      e.preventDefault();
-    };
-    canvas.addEventListener("keydown", onKey);
-    return () => canvas.removeEventListener("keydown", onKey);
-  }, [mapLoaded, keyboardCentre]);
+  useAreaKeyboardCentre(mapRef, mapLoaded, areaCircle, onAreaCircleChange);
 
-  const circleData = useMemo<GeoJSON.FeatureCollection>(
-    () =>
-      areaCircle
-        ? circleGeoJSON(areaCircle.lat, areaCircle.lon, areaCircle.radiusKm)
-        : { type: "FeatureCollection", features: [] },
+  const circleData = useMemo(
+    () => areaCircleCollection(areaCircle),
     [areaCircle],
   );
 
@@ -533,13 +347,11 @@ export default function WaterwayMap({
         height: "100%",
         position: "relative",
         ...fade,
-        cursor: onAreaCircleChange
-          ? "crosshair"
-          : placingFeature
-            ? "crosshair"
-            : pickMode
-              ? "crosshair"
-              : undefined,
+        cursor: mapCursor({
+          area: onAreaCircleChange != null,
+          feature: !!placingFeature,
+          pick: !!pickMode,
+        }),
       }}
     >
       {!minimal && (
@@ -682,30 +494,7 @@ export default function WaterwayMap({
 
         {rings && rings.length > 0 && <RangeRingLayers rings={rings} />}
 
-        {(pointPins ?? []).map((pin) => (
-          <AccessibleMarker
-            key={pin.id}
-            longitude={pin.lon}
-            latitude={pin.lat}
-            anchor="center"
-            style={{ pointerEvents: "none" }}
-          >
-            <MarkerHit title={pin.title}>
-              <div
-                style={{
-                  width: pin.emphasis ? 14 : 10,
-                  height: pin.emphasis ? 14 : 10,
-                  borderRadius: "50%",
-                  background: pin.color,
-                  border: `2px solid ${tokens.surfaceLowest}`,
-                  boxShadow: pin.emphasis
-                    ? `0 0 0 3px ${withAlpha(pin.color, "hairline")}`
-                    : tokens.elevation.marker,
-                }}
-              />
-            </MarkerHit>
-          </AccessibleMarker>
-        ))}
+        {pointPins && <PointPins pins={pointPins} />}
 
         {notePins && notePins.length > 0 && (
           <NoteMarkers
@@ -724,44 +513,10 @@ export default function WaterwayMap({
 
         <TargetRing target={ringTarget} />
 
-        <Source id="area-circle" type="geojson" data={circleData}>
-          <Layer
-            id="area-circle-fill"
-            type="fill"
-            paint={{ "fill-color": tokens.mapAreaCircle, "fill-opacity": 0.08 }}
-          />
-          <Layer
-            id="area-circle-line"
-            type="line"
-            paint={{
-              "line-color": tokens.mapAreaCircle,
-              "line-width": 2,
-              ...(areaLocked ? {} : { "line-dasharray": [4, 3] }),
-            }}
-          />
-        </Source>
+        <AreaCircleLayers data={circleData} locked={areaLocked} />
 
         {selectedSectionIds && selectedSectionIds.size > 0 && (
-          <Source
-            id="sections-picker-sel"
-            type="geojson"
-            data={pickerSelectionGeoJSON}
-          >
-            <Layer
-              id="sections-picker-sel-casing"
-              type="line"
-              paint={{
-                "line-color": tokens.mapSectionLineCasing,
-                "line-width": 7,
-                "line-opacity": 0.85,
-              }}
-            />
-            <Layer
-              id="sections-picker-sel-line"
-              type="line"
-              paint={{ "line-color": tokens.primary, "line-width": 5 }}
-            />
-          </Source>
+          <PickerSelectionLayers data={pickerSelectionGeoJSON} />
         )}
 
         {putIn && (
@@ -797,48 +552,10 @@ export default function WaterwayMap({
         ))}
 
         {areaCircle && (
-          <AccessibleMarker
-            longitude={areaCircle.lon}
-            latitude={areaCircle.lat}
-            anchor="center"
-            style={{ pointerEvents: "none" }}
-          >
-            <MarkerHit>
-              <div
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: "50%",
-                  background: tokens.mapAreaCircle,
-                  border: `2px solid ${tokens.white}`,
-                  boxShadow: tokens.elevation.marker,
-                }}
-              />
-            </MarkerHit>
-          </AccessibleMarker>
+          <AreaCentreDot lon={areaCircle.lon} lat={areaCircle.lat} />
         )}
 
-        {focusedPoint && (
-          <AccessibleMarker
-            longitude={focusedPoint[0]}
-            latitude={focusedPoint[1]}
-            anchor="center"
-            style={{ pointerEvents: "none" }}
-          >
-            <MarkerHit>
-              <div
-                style={{
-                  width: 14,
-                  height: 14,
-                  borderRadius: "50%",
-                  background: tokens.primary,
-                  border: `2px solid ${tokens.surface}`,
-                  boxShadow: `0 0 0 3px ${withAlpha(tokens.primary, "hairline")}, 0 0 10px ${withAlpha(tokens.primary, "border")}`,
-                }}
-              />
-            </MarkerHit>
-          </AccessibleMarker>
-        )}
+        {focusedPoint && <FocusedDot point={focusedPoint} />}
       </MapGL>
 
       {(onPickPutIn || onPickTakeOut) && (
