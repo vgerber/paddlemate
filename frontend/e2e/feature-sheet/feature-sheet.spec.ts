@@ -69,6 +69,8 @@ async function pickRow(page: Page, name = "Big Hole") {
   await rowOf(page, name).tap();
   await expect(sheet(page)).toBeVisible();
   await expect(page.getByTestId("mobile-overlay")).toBeHidden();
+  // The sheet and the map fly settle before a gesture lands on them.
+  await settled(page);
 }
 
 async function settled(page: Page) {
