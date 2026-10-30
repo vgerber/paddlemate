@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import type { ProposalStatus } from "@/lib/api";
-import { fonts, theme } from "@/lib/theme";
+import { fonts, theme } from "@/lib/theme/theme";
 import { STATUS_LABEL } from "./status";
 
 const { tokens } = theme;

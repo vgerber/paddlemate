@@ -6,12 +6,17 @@ import {
   phoneRowPad,
 } from "@/components/canvas/flatRow";
 import { LevelPill } from "@/components/WaterLevelChip";
-import { withAlpha } from "@/lib/alpha";
 import type { Descent } from "@/lib/api";
 import { descentRivers, descentTitle, VISIBILITY_LABELS } from "@/lib/descents";
-import { durationLabel, formatDate, formatTime, timeAgo } from "@/lib/format";
-import { transition } from "@/lib/motion";
-import { theme } from "@/lib/theme";
+import {
+  durationLabel,
+  formatDate,
+  formatTime,
+  timeAgo,
+} from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { transition } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 import { levelAtTime } from "./levelAtTime";
 
 const { tokens } = theme;

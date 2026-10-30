@@ -7,13 +7,6 @@ import {
   useRef,
 } from "react";
 import {
-  css,
-  durations,
-  prefersReducedMotion,
-  REDUCED_FADE_MS,
-  transition,
-} from "@/lib/motion";
-import {
   dragOffset,
   dragProgress,
   inEdgeZone,
@@ -23,7 +16,14 @@ import {
   type Sample,
   settleDuration,
   targetIndex,
-} from "@/lib/swipe";
+} from "@/lib/gestures/swipe";
+import {
+  css,
+  durations,
+  prefersReducedMotion,
+  REDUCED_FADE_MS,
+  transition,
+} from "@/lib/theme/motion";
 
 interface Options {
   index: number;

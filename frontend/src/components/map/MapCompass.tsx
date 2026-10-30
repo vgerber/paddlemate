@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useMap } from "react-map-gl/maplibre";
-import { transition } from "@/lib/motion";
-import { theme } from "@/lib/theme";
-import { useTokens } from "@/lib/useTokens";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
+import { transition } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 import type { MapPadding } from "./Map";
 
 const { tokens } = theme;

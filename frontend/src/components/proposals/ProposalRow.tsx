@@ -7,10 +7,10 @@ import {
   phoneRowPad,
 } from "@/components/canvas/flatRow";
 import type { Proposal } from "@/lib/api";
-import { timeAgo } from "@/lib/format";
 import { ThumbDownIcon, ThumbUpIcon } from "@/lib/icons";
 import { proposalKind, proposalTitle } from "@/lib/proposals";
-import { fonts, theme } from "@/lib/theme";
+import { timeAgo } from "@/lib/text/format";
+import { fonts, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

@@ -4,7 +4,7 @@
  * `names`/`descriptions` arrays with `lang_code` entries.
  */
 
-import { preferredLanguage } from "./languagePreference";
+import { preferredLanguage } from "../prefs/languagePreference";
 
 interface LocalizedNameEntry {
   lang_code: string;

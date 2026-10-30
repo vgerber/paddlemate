@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { flatRowSx } from "@/components/canvas/flatRow";
 import { categoryColor } from "@/lib/comments";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 import { useSectionComments } from "@/lib/hooks/useComments";
 import { useDescents } from "@/lib/hooks/useDescents";
 import { useProposals } from "@/lib/hooks/useProposals";
@@ -12,9 +13,8 @@ import { useSectionWithFeatures } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
 import { LogIcon, NoteIcon, PendingIcon, WarningIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
-import { useTokens } from "@/lib/useTokens";
-import { currentLevel } from "@/lib/waterLevel";
+import { theme } from "@/lib/theme/theme";
+import { currentLevel } from "@/lib/water/waterLevel";
 import {
   CAPTION_PX,
   captionText,

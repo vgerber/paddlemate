@@ -2,10 +2,10 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { withAlpha } from "@/lib/alpha";
-import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
+import { useCopyToClipboard } from "@/lib/hooks/ui/useCopyToClipboard";
 import { ConfirmIcon, CopyIcon } from "@/lib/icons";
-import { fonts, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { fonts, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

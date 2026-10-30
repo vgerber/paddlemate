@@ -1,4 +1,4 @@
-import { lightTokens } from "@/lib/theme";
+import { lightTokens } from "@/lib/theme/theme";
 
 const WHITE = lightTokens.white;
 

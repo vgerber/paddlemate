@@ -3,9 +3,9 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import LoadingBox from "@/components/states/LoadingBox";
 import TripForm from "@/components/trips/TripForm";
-import { useGoBack } from "@/lib/hooks/useGoBack";
+import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useSession } from "@/lib/hooks/useSession";
-import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/trips/new")({
   component: NewTripPage,

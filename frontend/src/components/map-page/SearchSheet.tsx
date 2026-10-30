@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
 import { useMemo, useState } from "react";
 import BottomSheet from "@/components/BottomSheet";
-import { OPEN_RATIO } from "@/lib/sheetSnap";
-import { theme } from "@/lib/theme";
+import { OPEN_RATIO } from "@/lib/gestures/sheetSnap";
+import { theme } from "@/lib/theme/theme";
 import { modeSheetPeek, type SheetMode } from "./modeSheet";
 import SidebarContent from "./SidebarContent";
 import type { MapPageState } from "./useMapPageState";

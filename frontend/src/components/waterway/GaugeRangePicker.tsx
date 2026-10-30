@@ -8,8 +8,11 @@ import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import GaugeAttribution from "@/components/GaugeAttribution";
-import type { GaugePicker, PickerOption } from "@/lib/hooks/useGaugePicker";
-import { theme } from "@/lib/theme";
+import type {
+  GaugePicker,
+  PickerOption,
+} from "@/components/waterway/useGaugePicker";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

@@ -57,7 +57,7 @@ describe("check-colours", () => {
 
   test("rule 1: theme.ts, tests and mask lines are exempt", () => {
     const res = run({
-      "lib/theme.ts": 'const c = "#1f2b31";\n',
+      "lib/theme/theme.ts": 'const c = "#1f2b31";\n',
       "a.test.ts": 'const c = "#1f2b31";\n',
       "b.tsx": 'const m = "linear-gradient(#000, transparent)"; /* mask */\n',
     });
@@ -71,11 +71,11 @@ describe("check-colours", () => {
     expect(res.out).toContain("a.tsx:1: rule 2:");
   });
 
-  test("rule 2: alphas. fails outside lib/alpha.ts only", () => {
+  test("rule 2: alphas. fails outside lib/theme/alpha.ts only", () => {
     const bad = run({ "a.tsx": "const c = alphas.wash;\n" });
     expect(bad.code).toBe(1);
     expect(bad.out).toContain("a.tsx:1: rule 2:");
-    const ok = run({ "lib/alpha.ts": "const c = alphas.wash;\n" });
+    const ok = run({ "lib/theme/alpha.ts": "const c = alphas.wash;\n" });
     expect(ok.code).toBe(0);
   });
 
@@ -83,7 +83,7 @@ describe("check-colours", () => {
     const bad = run(
       {
         "m.ts":
-          'import { tokens } from "@/lib/theme";\nconst c = tokens.primary;\n',
+          'import { tokens } from "@/lib/theme/theme";\nconst c = tokens.primary;\n',
       },
       ["m.ts"],
     );

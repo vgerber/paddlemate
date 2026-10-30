@@ -12,9 +12,9 @@ import {
   materialTitle,
   specValue,
   yearsLabel,
-} from "@/lib/materials";
-import { cardTitleSx, theme } from "@/lib/theme";
-import { useUnits } from "@/lib/units";
+} from "@/lib/materials/materials";
+import { useUnits } from "@/lib/prefs/units";
+import { cardTitleSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

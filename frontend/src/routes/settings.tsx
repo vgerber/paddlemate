@@ -15,9 +15,9 @@ import SettingsDetail from "@/components/settings/SettingsDetail";
 import SettingsList from "@/components/settings/SettingsList";
 import LoadingBox from "@/components/states/LoadingBox";
 import ToolsList from "@/components/ToolsList";
+import { useSwipeTabs } from "@/lib/hooks/ui/useSwipeTabs";
 import { useSession } from "@/lib/hooks/useSession";
-import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
-import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme/theme";
 
 type PhoneTab = "profile" | "inbox" | "tools";
 

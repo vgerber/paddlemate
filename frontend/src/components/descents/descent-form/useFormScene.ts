@@ -1,6 +1,6 @@
 import { useMemo, useRef } from "react";
 import type { MapScene } from "@/components/canvas/scene";
-import { boundsOf, lineCoords } from "@/lib/geo";
+import { boundsOf, lineCoords } from "@/lib/map/geo";
 import type { SectionPicking } from "./useSectionPicking";
 
 /** The wide-screen picker map: the host map draws the waterway's sections,

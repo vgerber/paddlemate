@@ -28,7 +28,7 @@
  * shortest path through the river network from put-in to take-out.
  */
 
-import { distanceM, type LngLat, nearestOnLine } from "@/lib/geo";
+import { distanceM, type LngLat, nearestOnLine } from "@/lib/map/geo";
 
 /** Two way endpoints closer than this (degrees) count as the same point. */
 const ENDPOINT_MATCH_EPSILON = 1e-7;

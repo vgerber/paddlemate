@@ -1,8 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Bounds, ViewBounds } from "@/lib/geo";
 import { useRegionOutline, useRegionsInView } from "@/lib/hooks/useRegions";
-import { type BrowseKind, kindForSpan } from "@/lib/regionKinds";
+import type { Bounds, ViewBounds } from "@/lib/map/geo";
+import { type BrowseKind, kindForSpan } from "@/lib/map/regionKinds";
 
 interface RegionBrowseInput {
   /** The region to frame and outline; only in region mode. */

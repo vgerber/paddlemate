@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { sectionHeadingSx, theme } from "@/lib/theme";
+import { sectionHeadingSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

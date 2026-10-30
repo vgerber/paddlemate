@@ -1,6 +1,6 @@
 import { Layer, Source } from "react-map-gl/maplibre";
-import type { LngLat } from "@/lib/geo";
-import { useTokens } from "@/lib/useTokens";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
+import type { LngLat } from "@/lib/map/geo";
 
 const emptyLine = (coordinates: [number, number][]) => ({
   type: "Feature" as const,

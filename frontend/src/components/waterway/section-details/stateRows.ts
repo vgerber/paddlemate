@@ -9,9 +9,9 @@ import {
 import type { CommentCategory, Descent, Proposal } from "@/lib/api";
 import type { components } from "@/lib/api/schema";
 import { categoryLabel } from "@/lib/comments";
-import { formatReading, plural } from "@/lib/format";
 import { proposalTitle } from "@/lib/proposals";
-import { LEVEL_ORDER, type WaterLevel } from "@/lib/waterLevel";
+import { formatReading, plural } from "@/lib/text/format";
+import { LEVEL_ORDER, type WaterLevel } from "@/lib/water/waterLevel";
 
 type Comment = components["schemas"]["Comment"];
 type Snapshot = components["schemas"]["SectionWaterSnapshot"];

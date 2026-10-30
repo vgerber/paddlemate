@@ -3,8 +3,8 @@
 
 import polylabel from "polylabel";
 import type { RegionRef } from "@/lib/api";
-import type { Bbox } from "@/lib/geo";
-import { regionKindLabel } from "@/lib/regionKinds";
+import type { Bbox } from "@/lib/map/geo";
+import { regionKindLabel } from "@/lib/map/regionKinds";
 
 export interface DrawableRegion {
   id: number;

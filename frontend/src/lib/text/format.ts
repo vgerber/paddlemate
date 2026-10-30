@@ -1,7 +1,12 @@
 /** Shared display formatting for dates, durations, readings and enum keys. */
 
 import { format, isSameDay, isSameMonth, isSameYear, parseISO } from "date-fns";
-import { distanceText, formatDistanceKm, type Units, unitLabel } from "./units";
+import {
+  distanceText,
+  formatDistanceKm,
+  type Units,
+  unitLabel,
+} from "../prefs/units";
 
 const LOCALE = "en-GB";
 

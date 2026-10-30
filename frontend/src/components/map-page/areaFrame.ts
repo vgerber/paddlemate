@@ -1,4 +1,8 @@
-import { type AreaCircle, DEFAULT_RADIUS_KM, type ViewBounds } from "@/lib/geo";
+import {
+  type AreaCircle,
+  DEFAULT_RADIUS_KM,
+  type ViewBounds,
+} from "@/lib/map/geo";
 
 /** Where the search circle first lands: the middle of the part of the map
  * left uncovered. `coveredBottom` is the share of the view's height a sheet

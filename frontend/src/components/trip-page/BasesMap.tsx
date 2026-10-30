@@ -4,9 +4,9 @@ import { useMemo } from "react";
 import { factLabelSx } from "@/components/Fact";
 import WaterwayMap from "@/components/map/LazyMap";
 import { useIsSwipeGhost } from "@/components/SwipeGhost";
-import { theme } from "@/lib/theme";
-import { rangeBounds } from "@/lib/tripRange";
-import { formatDistanceKm, useUnits } from "@/lib/units";
+import { formatDistanceKm, useUnits } from "@/lib/prefs/units";
+import { theme } from "@/lib/theme/theme";
+import { rangeBounds } from "@/lib/trips/tripRange";
 import { useBasesScene } from "./useBasesScene";
 
 /**

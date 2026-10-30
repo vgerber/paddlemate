@@ -1,4 +1,4 @@
-import { css, durations } from "@/lib/motion";
+import { css, durations } from "@/lib/theme/motion";
 
 /** Props for a MUI Collapse on the motion scale: open travels between resting
  * places (base, in-out), close is an exit (about 70% of the time, ease in). */

@@ -6,8 +6,8 @@ import {
   lineCoords,
   mergeBounds,
   pointCoords,
-} from "@/lib/geo";
-import { resolveTokens, type TokenSource } from "@/lib/waterLevel";
+} from "@/lib/map/geo";
+import { resolveTokens, type TokenSource } from "@/lib/water/waterLevel";
 
 /** A placed base and how far it reaches. */
 export interface BaseRange {

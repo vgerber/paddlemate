@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { css, prefersReducedMotion, REDUCED_FADE_MS } from "@/lib/motion";
-import { theme } from "@/lib/theme";
+import { css, prefersReducedMotion, REDUCED_FADE_MS } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 import { useNumberTransition } from "./useNumberTransition";
 
 const { tokens } = theme;

@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import PanelBottomBar from "@/components/PanelBottomBar";
 import type { Trip } from "@/lib/api";
 import { useTripTimeline } from "@/lib/hooks/useTrips";
-import { runCounts } from "@/lib/tripTimeline";
+import { runCounts } from "@/lib/trips/tripTimeline";
 import DayCalendar from "./DayCalendar";
 
 /**

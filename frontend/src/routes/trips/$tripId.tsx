@@ -8,9 +8,9 @@ import TripDetail, {
   parseTripTab,
   type TripTab,
 } from "@/components/trip-page/TripDetail";
-import { useGoBack } from "@/lib/hooks/useGoBack";
+import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useTrip } from "@/lib/hooks/useTrips";
-import { PANEL_HEIGHT, theme } from "@/lib/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/trips/$tripId")({
   validateSearch: (

@@ -2,7 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { FIX } from "../support/fixture";
 
 // The calm Autocomplete: icons centred in the field, text clear of them,
-// chips under the label (lib/theme.ts MuiAutocomplete).
+// chips under the label (lib/theme/theme.ts MuiAutocomplete).
 
 const visible = (l: Locator) => l.filter({ visible: true });
 

@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { featureDifficulty } from "@/components/waterway/section-details/utils";
 import type { SectionWithFeatures } from "@/lib/api";
-import type { AreaCircle } from "@/lib/geo";
-import { type LngLat, parseDifficulty, sectionDistanceKm } from "@/lib/geo";
+import type { AreaCircle } from "@/lib/map/geo";
+import { type LngLat, parseDifficulty, sectionDistanceKm } from "@/lib/map/geo";
 
 interface FilterOptions {
   areaCircle: AreaCircle | null;

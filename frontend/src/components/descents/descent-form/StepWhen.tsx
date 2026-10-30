@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import type { StepProps } from "./model";
 import PickerField from "./PickerField";
 

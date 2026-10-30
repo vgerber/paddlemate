@@ -8,9 +8,8 @@ import RowMenu from "@/components/RowMenu";
 import { SwipeGhost } from "@/components/SwipeGhost";
 import TripForm from "@/components/trips/TripForm";
 import type { Descent, Trip, TripMember, TripStay } from "@/lib/api";
-import { dateRange } from "@/lib/format";
+import { useSwipeTabs } from "@/lib/hooks/ui/useSwipeTabs";
 import { useSession } from "@/lib/hooks/useSession";
-import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import {
   useDeleteTrip,
   useDeleteTripStay,
@@ -18,6 +17,7 @@ import {
   useTripMembers,
 } from "@/lib/hooks/useTrips";
 import { DeleteIcon, EditIcon, LinkIcon } from "@/lib/icons";
+import { dateRange } from "@/lib/text/format";
 import AddMemberDialog from "./AddMemberDialog";
 import AttendanceDialog from "./AttendanceDialog";
 import type { DayActions } from "./DayDetail";

@@ -2,8 +2,8 @@ import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { plural } from "@/lib/format";
-import { theme } from "@/lib/theme";
+import { plural } from "@/lib/text/format";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

@@ -1,8 +1,8 @@
 import List from "@mui/material/List";
 import EmptyState from "@/components/states/EmptyState";
 import type { SectionWithFeatures } from "@/lib/api";
-import { type LngLat, sectionDistanceKm } from "@/lib/geo";
-import { matchedFeatureName } from "@/lib/sectionMatch";
+import { type LngLat, sectionDistanceKm } from "@/lib/map/geo";
+import { matchedFeatureName } from "@/lib/map/sectionMatch";
 import SearchSectionRow from "./SearchSectionRow";
 
 interface SectionListProps {

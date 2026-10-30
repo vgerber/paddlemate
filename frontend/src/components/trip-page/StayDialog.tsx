@@ -12,7 +12,6 @@ import { STAY_KINDS } from "@/components/trips/stayKinds";
 import FormSection from "@/components/waterway/FormSection";
 import type { TripStay, TripStayCandidate, TripStayKind } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
-import { pointCoords } from "@/lib/geo";
 import {
   useCreateTripStay,
   usePatchCandidate,
@@ -20,7 +19,8 @@ import {
   useProposeCandidate,
 } from "@/lib/hooks/useTrips";
 import { ConfirmIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { pointCoords } from "@/lib/map/geo";
+import { theme } from "@/lib/theme/theme";
 import StayLocationPicker, { type StayPoint } from "./StayLocationPicker";
 
 interface Props {

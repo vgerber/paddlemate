@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { cardTitleSx, theme } from "@/lib/theme";
+import { cardTitleSx, theme } from "@/lib/theme/theme";
 import StateTile from "./StateTile";
 
 const { tokens } = theme;

@@ -3,11 +3,11 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import DescentForm from "@/components/descents/DescentForm";
 import LoadingBox from "@/components/states/LoadingBox";
+import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useDescent } from "@/lib/hooks/useDescents";
-import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useSectionWithFeatures } from "@/lib/hooks/useSections";
 import { useSession } from "@/lib/hooks/useSession";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 /** All optional, so a caller only names the context it actually has. */
 export interface NewLogSearch {

@@ -4,11 +4,11 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { ArrivalIcon, DepartureIcon } from "@/components/trips/TripIcons";
 import FormSection from "@/components/waterway/FormSection";
-import { withAlpha } from "@/lib/alpha";
 import type { Descent, TripMember, TripStay } from "@/lib/api";
 import { LogIcon, PlaceIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
-import type { TripDay, TripEvent } from "@/lib/tripTimeline";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
+import type { TripDay, TripEvent } from "@/lib/trips/tripTimeline";
 import {
   EVENT_GAP,
   EventIcon,

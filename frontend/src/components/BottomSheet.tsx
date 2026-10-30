@@ -9,8 +9,6 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { withAlpha } from "@/lib/alpha";
-import { css, prefersReducedMotion, releaseMs } from "@/lib/motion";
 import {
   dragHeight,
   offsetFor,
@@ -18,9 +16,15 @@ import {
   type Snaps,
   settleState,
   snapHeights,
-} from "@/lib/sheetSnap";
-import { lockDirection, releaseVelocity, type Sample } from "@/lib/swipe";
-import { theme } from "@/lib/theme";
+} from "@/lib/gestures/sheetSnap";
+import {
+  lockDirection,
+  releaseVelocity,
+  type Sample,
+} from "@/lib/gestures/swipe";
+import { withAlpha } from "@/lib/theme/alpha";
+import { css, prefersReducedMotion, releaseMs } from "@/lib/theme/motion";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

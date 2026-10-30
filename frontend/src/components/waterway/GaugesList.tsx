@@ -4,10 +4,10 @@ import Typography from "@mui/material/Typography";
 import { phoneRowPad } from "@/components/canvas/flatRow";
 import GaugeAttribution from "@/components/GaugeAttribution";
 import EmptyState from "@/components/states/EmptyState";
-import { withAlpha } from "@/lib/alpha";
 import type { WaterRangeWithStatus } from "@/lib/api";
-import { formatReading } from "@/lib/format";
-import { theme } from "@/lib/theme";
+import { formatReading } from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

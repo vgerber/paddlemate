@@ -3,7 +3,7 @@ import Button from "@mui/material/Button";
 import Snackbar from "@mui/material/Snackbar";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme/theme";
 
 type Listener = (id: number | null) => void;
 

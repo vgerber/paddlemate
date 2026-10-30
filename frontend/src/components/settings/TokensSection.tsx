@@ -14,7 +14,7 @@ import {
   useCreateApiToken,
   useRevokeApiToken,
 } from "@/lib/hooks/useApiTokens";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import NewTokenCard from "./NewTokenCard";
 import TokenRow from "./TokenRow";
 

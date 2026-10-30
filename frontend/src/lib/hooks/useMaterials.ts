@@ -10,7 +10,7 @@ import type {
   MaterialFilters,
 } from "@/lib/api";
 import { materialsApi } from "@/lib/api";
-import { serializeCompareIds } from "@/lib/materials";
+import { serializeCompareIds } from "@/lib/materials/materials";
 
 export const materialKeys = {
   all: ["materials"] as const,

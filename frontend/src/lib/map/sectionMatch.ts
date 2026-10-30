@@ -7,8 +7,8 @@
  */
 
 import type { SectionWithFeatures } from "@/lib/api";
-import { localizedName } from "@/lib/localization";
-import { searchKey } from "@/lib/text";
+import { localizedName } from "@/lib/text/localization";
+import { searchKey } from "@/lib/text/text";
 
 /** Name of the first rapid in the section whose name matches, if any. */
 export function matchedFeatureName(

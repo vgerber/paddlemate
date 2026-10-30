@@ -19,8 +19,7 @@ import SavedMark from "@/components/wizard/SavedMark";
 import StepSlide from "@/components/wizard/StepSlide";
 import type { CatalogRiver } from "@/lib/api";
 import { ApiError, apiErrorMessage } from "@/lib/api/client";
-import { plural } from "@/lib/format";
-import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/lib/hooks/ui/useDebouncedValue";
 import {
   useCatalogGaugeSearch,
   useCatalogRiverGauges,
@@ -29,7 +28,8 @@ import {
 import { useSession } from "@/lib/hooks/useSession";
 import { useCreateWaterway } from "@/lib/hooks/useWaterways";
 import { ConfirmIcon, LocateIcon } from "@/lib/icons";
-import { labelSx, theme } from "@/lib/theme";
+import { plural } from "@/lib/text/format";
+import { labelSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

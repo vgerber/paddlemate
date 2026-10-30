@@ -6,7 +6,7 @@ import SectionChartPanel from "@/components/charts/SectionChartPanel";
 import { defaultRangeFeature } from "@/components/waterway/section-details/utils";
 import { useSession } from "@/lib/hooks/useSession";
 import { useWaterStatus } from "@/lib/hooks/useWaterStatus";
-import { localizedName } from "@/lib/localization";
+import { localizedName } from "@/lib/text/localization";
 import type { MapPageState } from "./useMapPageState";
 
 /** Where the chart goes: the phone's card, the rail (its reading block is the

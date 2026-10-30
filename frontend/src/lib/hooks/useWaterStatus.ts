@@ -1,8 +1,8 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { waterStatusApi } from "@/lib/api";
-import { type DotLevel, dotLevel } from "@/lib/levelDots";
-import { currentLevel, type WaterLevel } from "@/lib/waterLevel";
+import { type DotLevel, dotLevel } from "@/lib/water/levelDots";
+import { currentLevel, type WaterLevel } from "@/lib/water/waterLevel";
 import { waterwayKeys } from "./useWaterways";
 
 /** Matches the gauge reader poll interval. */

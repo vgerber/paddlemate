@@ -2,10 +2,10 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { HTMLAttributes, ReactNode } from "react";
-import type { SwipeTrack } from "@/lib/hooks/useSwipeTabs";
-import { useViewFocus } from "@/lib/hooks/useViewFocus";
+import type { SwipeTrack } from "@/lib/hooks/ui/useSwipeTabs";
+import { useViewFocus } from "@/lib/hooks/ui/useViewFocus";
 import { BackIcon, CloseIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import UnderlineTabs from "./UnderlineTabs";
 
 const { tokens } = theme;

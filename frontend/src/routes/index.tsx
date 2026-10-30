@@ -12,7 +12,7 @@ import {
   formatWaterLevels,
   parseWaterLevels,
 } from "@/components/search/waterParam";
-import { PANEL_HEIGHT } from "@/lib/theme";
+import { PANEL_HEIGHT } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/")({
   loader: preloadMap,

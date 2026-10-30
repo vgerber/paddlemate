@@ -10,7 +10,6 @@ import type { ReactNode } from "react";
 import BottomSheet from "@/components/BottomSheet";
 import FilterChip from "@/components/search/FilterChip";
 import type { MaterialSort } from "@/lib/api";
-import { plural } from "@/lib/format";
 import { useMaterialBrands } from "@/lib/hooks/useMaterials";
 import { CloseIcon } from "@/lib/icons";
 import {
@@ -24,9 +23,15 @@ import {
   type MaterialWikiSearch,
   SORT_LABELS,
   SORTS,
-} from "@/lib/materials";
-import { theme } from "@/lib/theme";
-import { parseInput, toInputText, unitLabel, useUnits } from "@/lib/units";
+} from "@/lib/materials/materials";
+import {
+  parseInput,
+  toInputText,
+  unitLabel,
+  useUnits,
+} from "@/lib/prefs/units";
+import { plural } from "@/lib/text/format";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

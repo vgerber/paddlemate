@@ -4,9 +4,9 @@ import type { MapLayerMouseEvent, MapRef } from "react-map-gl/maplibre";
 import { cameraEasing, screensTo } from "@/components/map/cameraMotion";
 import { useCalmBaseMap } from "@/components/map/useMutedBaseMap";
 import type { GaugeMapState } from "@/lib/api";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 import { useGaugeMap } from "@/lib/hooks/useGauges";
-import { cameraMs } from "@/lib/motion";
-import { useTokens } from "@/lib/useTokens";
+import { cameraMs } from "@/lib/theme/motion";
 import {
   type ClusterFeature,
   type ClusterInfo,

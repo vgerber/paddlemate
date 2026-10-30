@@ -2,9 +2,9 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import PanelHeader from "@/components/PanelHeader";
-import type { SwipeTrack } from "@/lib/hooks/useSwipeTabs";
+import type { SwipeTrack } from "@/lib/hooks/ui/useSwipeTabs";
 import { MapIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import type {
   SearchMode,
   WaterwaySearchFilters,

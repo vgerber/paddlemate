@@ -5,7 +5,7 @@ import DescentCard from "@/components/descents/DescentCard";
 import QueryStates from "@/components/states/QueryStates";
 import { useInfiniteDescents } from "@/lib/hooks/useDescents";
 import { LogIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

@@ -3,7 +3,7 @@ import type {
   SectionWaterSnapshot,
   SectionWithFeatures,
 } from "@/lib/api";
-import { localizedName } from "@/lib/localization";
+import { localizedName } from "@/lib/text/localization";
 
 /** One snapshot per gauge series - older descents stored one per feature
  * range, which would repeat the same reading. */

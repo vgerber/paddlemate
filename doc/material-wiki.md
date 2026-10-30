@@ -82,7 +82,7 @@ Three Postgres enums type an entry: `material_category`,
 `material_discipline` and `material_construction`. Measurements are
 `DOUBLE PRECISION`, one unit per column and the unit in the column name
 (`length_cm`, `volume_l`, `weight_kg`), so a comparison never converts
-anything. The app converts for display and input only (`lib/units.ts`).
+anything. The app converts for display and input only (`lib/prefs/units.ts`).
 
 | Constraint | Enforces |
 | --- | --- |
@@ -140,7 +140,7 @@ not state the measurement last.
 
 | Module | Owns |
 | --- | --- |
-| `lib/materials.ts` | `MATERIAL_SPECS` (the one list of comparable measurements), labels, `specSpread`, the comparison's id list, the URL search shape, and the entry form's value conversion |
+| `lib/materials/materials.ts` | `MATERIAL_SPECS` (the one list of comparable measurements), labels, `specSpread`, the comparison's id list, the URL search shape, and the entry form's value conversion |
 | `lib/hooks/useMaterials.ts` | `materialKeys` and every query and mutation |
 | `components/materials/` | `MaterialsView` (list), `MaterialRow`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `WikiPage` (the frame) |
 | `routes/materials/` | `index` (list), `$materialId` (detail, `?edit=true` for the form), `compare`, `new` |

@@ -12,7 +12,7 @@ import {
   FormatListIcon,
   LinkIcon,
 } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

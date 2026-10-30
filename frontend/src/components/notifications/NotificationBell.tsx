@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { useNotificationState } from "@/lib/hooks/useNotifications";
 import { NotificationsIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import NotificationList from "./NotificationList";
 
 const { tokens } = theme;

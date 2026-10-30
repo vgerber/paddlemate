@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { dockMode, type FreeArea } from "@/lib/canvasLayout";
+import { dockMode, type FreeArea } from "@/lib/map/canvasLayout";
 import { scenes, useLayout } from "./canvasStore";
 import type { MapScene } from "./scene";
 

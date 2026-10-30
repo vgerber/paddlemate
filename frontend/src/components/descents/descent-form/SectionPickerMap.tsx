@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import WaterwayMap from "@/components/map/LazyMap";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import type { SectionPicking } from "./useSectionPicking";
 
 const { tokens } = theme;

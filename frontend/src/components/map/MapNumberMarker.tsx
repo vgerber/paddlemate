@@ -1,4 +1,4 @@
-import { useTokens } from "@/lib/useTokens";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 import AccessibleMarker from "./AccessibleMarker";
 import MarkerHit from "./MarkerHit";
 

@@ -7,12 +7,12 @@ import type {
   SuggestMode,
 } from "@/components/waterway/types";
 import { type Feature } from "@/lib/api";
-import { type Bounds, DEFAULT_RADIUS_KM, type ViewBounds } from "@/lib/geo";
 import { useFavorites } from "@/lib/hooks/useFavorites";
 import { usePendingFeatureProposals } from "@/lib/hooks/useFeatureProposals";
 import { useGaugeData } from "@/lib/hooks/useGaugeData";
 import { useSectionLevels } from "@/lib/hooks/useWaterStatus";
 import { useWaterway } from "@/lib/hooks/useWaterways";
+import { type Bounds, DEFAULT_RADIUS_KM, type ViewBounds } from "@/lib/map/geo";
 import { pushRecentWaterway } from "@/lib/recentWaterways";
 import { defaultAreaCircle } from "./areaFrame";
 import { modeSheetMode, modeSheetPeek } from "./modeSheet";

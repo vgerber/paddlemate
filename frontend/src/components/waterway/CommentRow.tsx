@@ -3,14 +3,14 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useRef } from "react";
 import { phoneRowPad } from "@/components/canvas/flatRow";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
-import { withAlpha } from "@/lib/alpha";
 import type { Comment, Media } from "@/lib/api";
 import { categoryColor, categoryLabel } from "@/lib/comments";
-import { humanize, timeAgo } from "@/lib/format";
-import { pointCoords } from "@/lib/geo";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 import { DeleteIcon, PlaceIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
-import { useTokens } from "@/lib/useTokens";
+import { pointCoords } from "@/lib/map/geo";
+import { humanize, timeAgo } from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

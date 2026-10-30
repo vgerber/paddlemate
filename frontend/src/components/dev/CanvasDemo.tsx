@@ -8,8 +8,8 @@ import {
 import CanvasLayout from "@/components/canvas/CanvasLayout";
 import ChartDock from "@/components/canvas/ChartDock";
 import FloatingCard from "@/components/canvas/FloatingCard";
-import type { Bounds } from "@/lib/geo";
-import { theme } from "@/lib/theme";
+import type { Bounds } from "@/lib/map/geo";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

@@ -11,7 +11,7 @@ import ListPaneHeader from "@/components/ListPaneHeader";
 import { fabRoom } from "@/components/PaneFab";
 import FilterChip from "@/components/search/FilterChip";
 import QueryStates from "@/components/states/QueryStates";
-import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/lib/hooks/ui/useDebouncedValue";
 import { useMaterialList } from "@/lib/hooks/useMaterials";
 import { CloseIcon, CompareIcon, MaterialIcon, SearchIcon } from "@/lib/icons";
 import {
@@ -21,9 +21,9 @@ import {
   MAX_COMPARE,
   type MaterialWikiSearch,
   toMaterialFilters,
-} from "@/lib/materials";
-import { theme } from "@/lib/theme";
-import { formatQuantity, useUnits } from "@/lib/units";
+} from "@/lib/materials/materials";
+import { formatQuantity, useUnits } from "@/lib/prefs/units";
+import { theme } from "@/lib/theme/theme";
 import MaterialFiltersSheet from "./MaterialFiltersSheet";
 import MaterialRow from "./MaterialRow";
 

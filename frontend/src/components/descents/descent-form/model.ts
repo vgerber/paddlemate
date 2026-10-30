@@ -1,6 +1,6 @@
 import { addHours, format, subHours } from "date-fns";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
-import { localizedName } from "@/lib/localization";
+import { localizedName } from "@/lib/text/localization";
 import { toVisibility, type VisibilityType } from "@/lib/visibility";
 
 type TimingMode = "single" | "multi";

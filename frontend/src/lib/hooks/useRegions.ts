@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { RegionOutline } from "@/lib/api";
 import { regionsApi } from "@/lib/api";
-import type { ViewBounds } from "@/lib/geo";
+import type { ViewBounds } from "@/lib/map/geo";
 
 export const regionKeys = {
   all: ["regions"] as const,

@@ -2,8 +2,8 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import { format, parseISO } from "date-fns";
-import { withAlpha } from "@/lib/alpha";
-import { fonts, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { fonts, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

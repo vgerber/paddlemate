@@ -35,12 +35,10 @@ import type {
   SectionWithFeatures,
   WaterRangeWithStatus,
 } from "@/lib/api";
-import { formatDistance } from "@/lib/format";
-import { lineCoords } from "@/lib/geo";
+import { useSwipeTabs } from "@/lib/hooks/ui/useSwipeTabs";
 import { useSectionDescentCounts } from "@/lib/hooks/useDescents";
 import { useSession } from "@/lib/hooks/useSession";
 import { useStandingDescent } from "@/lib/hooks/useStandingDescent";
-import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import {
   AddIcon,
@@ -51,9 +49,11 @@ import {
   StarOutlineIcon,
   StartIcon,
 } from "@/lib/icons";
-import { localizedName } from "@/lib/localization";
-import { theme } from "@/lib/theme";
-import { type Units, useUnits } from "@/lib/units";
+import { lineCoords } from "@/lib/map/geo";
+import { type Units, useUnits } from "@/lib/prefs/units";
+import { formatDistance } from "@/lib/text/format";
+import { localizedName } from "@/lib/text/localization";
+import { theme } from "@/lib/theme/theme";
 import CommentThread from "./CommentThread";
 import GaugesList from "./GaugesList";
 import type { DetailTab, SectionDetailTab, SuggestMode } from "./types";

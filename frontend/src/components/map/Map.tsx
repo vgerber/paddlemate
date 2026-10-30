@@ -8,13 +8,13 @@ import MapGL, {
   Source,
   useMap,
 } from "react-map-gl/maplibre";
-import { withAlpha } from "@/lib/alpha";
 import type {
   CountryBorder,
   Feature,
   RegionOutline,
   SectionWithFeatures,
 } from "@/lib/api";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 import {
   type AreaCircle,
   type Bbox,
@@ -24,8 +24,8 @@ import {
   type LngLat,
   pointCoords,
   type ViewBounds,
-} from "@/lib/geo";
-import { useTokens } from "@/lib/useTokens";
+} from "@/lib/map/geo";
+import { withAlpha } from "@/lib/theme/alpha";
 import AccessibleMarker from "./AccessibleMarker";
 import CountryBorderLayer from "./CountryBorderLayer";
 import DraftLayers, { FeatureDraftLayer } from "./DraftLayers";
@@ -59,7 +59,7 @@ import { useFirstLoadFade, useMapMotion } from "./useMapMotion";
 import { useMapSources } from "./useMapSources";
 import { useCalmBaseMap, useMutedBaseMap } from "./useMutedBaseMap";
 
-export type { AreaCircle } from "@/lib/geo";
+export type { AreaCircle } from "@/lib/map/geo";
 export type { GaugePin } from "./GaugeMarkers";
 export type { NotePin } from "./NoteMarkers";
 export type { RangeRing } from "./RangeRingLayers";

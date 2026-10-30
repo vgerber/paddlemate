@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import StatusChip from "@/components/proposals/StatusChip";
 import TimelineRail, { type DotKind } from "@/components/TimelineRail";
 import type { ProposalStatus } from "@/lib/api";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import type { BylinePart } from "./steps";
 
 const { phone } = theme.tokens;

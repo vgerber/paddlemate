@@ -8,9 +8,9 @@ import {
 } from "@/components/canvas/flatRow";
 import { tripStanding } from "@/components/trip-page/planWeek";
 import type { Trip } from "@/lib/api";
-import { dateRange, todayIso } from "@/lib/format";
 import { useTripMembers } from "@/lib/hooks/useTrips";
-import { fonts, labelSx, theme } from "@/lib/theme";
+import { dateRange, todayIso } from "@/lib/text/format";
+import { fonts, labelSx, theme } from "@/lib/theme/theme";
 import MemberAvatar from "./MemberAvatar";
 import RolePill from "./RolePill";
 

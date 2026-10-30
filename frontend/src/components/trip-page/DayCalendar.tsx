@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import { parseISO, startOfMonth } from "date-fns";
 import { useState } from "react";
-import { todayIso } from "@/lib/format";
+import { todayIso } from "@/lib/text/format";
 import { MonthView } from "./PlanCalendar";
 
 interface Props {

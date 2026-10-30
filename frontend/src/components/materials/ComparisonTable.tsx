@@ -4,7 +4,6 @@ import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import { Fragment } from "react";
 import { phoneCardSx } from "@/components/canvas/flatRow";
-import { withAlpha } from "@/lib/alpha";
 import type { Material } from "@/lib/api";
 import { CloseIcon } from "@/lib/icons";
 import {
@@ -17,9 +16,10 @@ import {
   specSpread,
   specValue,
   yearsLabel,
-} from "@/lib/materials";
-import { cardTitleSx, sectionHeadingSx, theme } from "@/lib/theme";
-import { useUnits } from "@/lib/units";
+} from "@/lib/materials/materials";
+import { useUnits } from "@/lib/prefs/units";
+import { withAlpha } from "@/lib/theme/alpha";
+import { cardTitleSx, sectionHeadingSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

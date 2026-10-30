@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 /** Small circular numbered badge, e.g. the ① / ② put-in and take-out marks. */
 export default function NumberBadge({

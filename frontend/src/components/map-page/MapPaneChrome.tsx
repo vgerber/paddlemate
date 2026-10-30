@@ -5,8 +5,8 @@ import Fab from "@mui/material/Fab";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { CollapseIcon, SearchIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
-import { levelMarkerColor, type WaterLevel } from "@/lib/waterLevel";
+import { theme } from "@/lib/theme/theme";
+import { levelMarkerColor, type WaterLevel } from "@/lib/water/waterLevel";
 import SectionSpeedDial from "./SectionSpeedDial";
 
 const { tokens } = theme;

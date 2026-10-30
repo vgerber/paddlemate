@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { dayTime } from "@/lib/format";
+import { dayTime } from "@/lib/text/format";
 import type { TimeRange } from "./types";
 
 const TIME_RANGE_OPTIONS: { value: TimeRange; label: string }[] = [

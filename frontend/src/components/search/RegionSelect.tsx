@@ -5,10 +5,10 @@ import { flatRowSx } from "@/components/canvas/flatRow";
 import { regionContext } from "@/components/map/regionGeometry";
 import SectionHeading from "@/components/SectionHeading";
 import type { Region, RegionKind } from "@/lib/api";
-import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/lib/hooks/ui/useDebouncedValue";
 import { useRegionSearch } from "@/lib/hooks/useRegions";
-import { REGION_KINDS } from "@/lib/regionKinds";
-import { theme } from "@/lib/theme";
+import { REGION_KINDS } from "@/lib/map/regionKinds";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

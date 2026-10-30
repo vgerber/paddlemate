@@ -15,7 +15,7 @@ import { apiErrorMessage } from "@/lib/api/client";
 import { useReplaceStaySections } from "@/lib/hooks/useTrips";
 import { useWaterway } from "@/lib/hooks/useWaterways";
 import { ConfirmIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 interface Props {
   tripId: number;

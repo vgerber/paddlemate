@@ -1,5 +1,5 @@
 import type { GaugeMapState } from "@/lib/api";
-import type { ResolvedTokens } from "@/lib/useTokens";
+import type { ResolvedTokens } from "@/lib/hooks/ui/useTokens";
 
 export interface GaugeStateMeta {
   key: GaugeMapState;

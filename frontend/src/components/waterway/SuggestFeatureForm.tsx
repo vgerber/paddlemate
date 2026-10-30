@@ -4,6 +4,7 @@ import TextField from "@mui/material/TextField";
 import { type ReactNode, type RefObject, useEffect, useState } from "react";
 import LanguagePicker from "@/components/LanguagePicker";
 import { featureDifficulty } from "@/components/waterway/section-details/utils";
+import { useGaugePicker } from "@/components/waterway/useGaugePicker";
 import type {
   Feature,
   FeatureType,
@@ -11,11 +12,10 @@ import type {
   WaterRangeWithStatus,
 } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
-import { useGaugePicker } from "@/lib/hooks/useGaugePicker";
 import { useWaterwayGauges } from "@/lib/hooks/useGauges";
 import { useCreateFeature, useUpdateFeature } from "@/lib/hooks/useSections";
-import { preferredLanguage } from "@/lib/languagePreference";
-import { theme } from "@/lib/theme";
+import { preferredLanguage } from "@/lib/prefs/languagePreference";
+import { theme } from "@/lib/theme/theme";
 import FormSection from "./FormSection";
 import GaugeRangePicker from "./GaugeRangePicker";
 import { type GeometryPicking, minVerticesFor } from "./geometryPicking";

@@ -1,7 +1,11 @@
 import type { ExpressionSpecification } from "maplibre-gl";
 import type { components } from "@/lib/api/schema";
-import { isStale } from "@/lib/staleness";
-import { type ResolvedTokens, type Scheme, tokensFor } from "@/lib/useTokens";
+import {
+  type ResolvedTokens,
+  type Scheme,
+  tokensFor,
+} from "@/lib/hooks/ui/useTokens";
+import { isStale } from "@/lib/water/staleness";
 
 /** A scheme name, or tokens a component already got from `useTokens()`.
  * Absent means light. */

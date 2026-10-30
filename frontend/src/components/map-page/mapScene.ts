@@ -12,7 +12,7 @@ import {
   boundsOf,
   circleBounds,
   lineCoords,
-} from "@/lib/geo";
+} from "@/lib/map/geo";
 import type { MapPageState } from "./useMapPageState";
 
 /** The part of the page state the map draws and reacts to. */

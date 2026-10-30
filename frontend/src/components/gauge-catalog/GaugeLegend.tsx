@@ -4,7 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { GaugeMapState } from "@/lib/api";
 import { CloseIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 import type { GaugeStateMeta } from "./gaugeStates";
 
 const { tokens } = theme;

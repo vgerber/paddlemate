@@ -12,13 +12,13 @@ import RowMenu from "@/components/RowMenu";
 import LoadingBox from "@/components/states/LoadingBox";
 import MissingState from "@/components/states/MissingState";
 import { descentTitle, VISIBILITY_LABELS } from "@/lib/descents";
-import { formatDate } from "@/lib/format";
+import { useGoBack } from "@/lib/hooks/ui/useGoBack";
+import { useViewFocus } from "@/lib/hooks/ui/useViewFocus";
 import { useDeleteDescent, useDescent } from "@/lib/hooks/useDescents";
-import { useGoBack } from "@/lib/hooks/useGoBack";
 import { useSession } from "@/lib/hooks/useSession";
-import { useViewFocus } from "@/lib/hooks/useViewFocus";
 import { DeleteIcon, EditIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { formatDate } from "@/lib/text/format";
+import { theme } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/logs/$descentId")({
   validateSearch: (search: Record<string, unknown>) => ({

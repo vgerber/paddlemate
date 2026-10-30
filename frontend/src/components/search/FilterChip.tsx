@@ -1,5 +1,5 @@
 import Chip from "@mui/material/Chip";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

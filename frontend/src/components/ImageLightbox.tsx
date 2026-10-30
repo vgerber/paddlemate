@@ -3,10 +3,10 @@ import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
-import { withAlpha } from "@/lib/alpha";
 import type { Media } from "@/lib/api";
 import { CloseIcon } from "@/lib/icons";
-import { labelSx, theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { labelSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

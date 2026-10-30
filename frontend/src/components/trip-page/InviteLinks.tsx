@@ -6,17 +6,17 @@ import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import RowMenu from "@/components/RowMenu";
 import FormSection from "@/components/waterway/FormSection";
-import { withAlpha } from "@/lib/alpha";
 import type { TripInvite, TripInviteCreated } from "@/lib/api";
-import { formatDate } from "@/lib/format";
-import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
+import { useCopyToClipboard } from "@/lib/hooks/ui/useCopyToClipboard";
 import {
   useCreateTripInvite,
   useDeleteTripInvite,
   useTripInvites,
 } from "@/lib/hooks/useTrips";
 import { ConfirmIcon, CopyIcon, LinkOffIcon, ShareIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { formatDate } from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
 
 const inviteUrl = (token: string) =>
   `${window.location.origin}/invite/${token}`;

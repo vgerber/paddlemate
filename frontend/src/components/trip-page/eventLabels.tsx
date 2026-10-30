@@ -4,10 +4,10 @@ import type { ReactNode } from "react";
 import { stayKind } from "@/components/trips/stayKinds";
 import { ArrivalIcon, DepartureIcon } from "@/components/trips/TripIcons";
 import { descentRivers, descentTitle } from "@/lib/descents";
-import { clockTime, formatTime } from "@/lib/format";
 import { LogIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
-import type { TripEvent } from "@/lib/tripTimeline";
+import { clockTime, formatTime } from "@/lib/text/format";
+import { theme } from "@/lib/theme/theme";
+import type { TripEvent } from "@/lib/trips/tripTimeline";
 
 const { phone } = theme.tokens;
 

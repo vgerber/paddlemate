@@ -1,9 +1,9 @@
 import { type ReactNode, useMemo, useState } from "react";
 import type { RowAction } from "@/components/RowMenu";
 import type { Feature, SectionWithFeatures } from "@/lib/api";
-import { lineCoords } from "@/lib/geo";
 import { useSession } from "@/lib/hooks/useSession";
 import { DeleteIcon, EditIcon } from "@/lib/icons";
+import { lineCoords } from "@/lib/map/geo";
 import { DeleteFeatureDialog } from "./DeleteFeatureDialog";
 import { splitBaseGrade } from "./rows";
 import { computeExtent, sectionLengthM } from "./utils";

@@ -2,9 +2,9 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Popover from "@mui/material/Popover";
 import { useState } from "react";
 import { Segment, SegmentTrack } from "@/components/canvas/SegmentedControl";
-import { withAlpha } from "@/lib/alpha";
 import { LayersIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
 import type { MapPadding } from "./Map";
 import { BELOW_ZOOM, stackOffset } from "./MapCompass";
 

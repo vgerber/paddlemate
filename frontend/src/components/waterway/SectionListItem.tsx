@@ -6,10 +6,10 @@ import Typography from "@mui/material/Typography";
 import { cardRowSx, desktopFlatRow } from "@/components/canvas/flatRow";
 import WaterLevelChip from "@/components/WaterLevelChip";
 import type { SectionWithFeatures } from "@/lib/api";
-import { plural, sectionPlace } from "@/lib/format";
 import { LogIcon, StarIcon, StarOutlineIcon } from "@/lib/icons";
-import { localizedName } from "@/lib/localization";
-import { theme } from "@/lib/theme";
+import { plural, sectionPlace } from "@/lib/text/format";
+import { localizedName } from "@/lib/text/localization";
+import { theme } from "@/lib/theme/theme";
 import GradeTag from "./GradeTag";
 import { sectionGradeText } from "./section-details/grade";
 

@@ -10,8 +10,8 @@ import {
   lineCoords,
   mergeBounds,
   pointCoords,
-} from "@/lib/geo";
-import type { BaseRange } from "@/lib/tripRange";
+} from "@/lib/map/geo";
+import type { BaseRange } from "@/lib/trips/tripRange";
 
 /** What the open trip points at, so the map can frame it: a candidate opened
  * in the Bases tab or a day opened in the plan. */

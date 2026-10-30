@@ -9,20 +9,20 @@ import { fabRoom } from "@/components/PaneFab";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
-import { withAlpha } from "@/lib/alpha";
 import type { Trip } from "@/lib/api";
 import { descentTitle } from "@/lib/descents";
-import { formatDate, todayIso } from "@/lib/format";
 import { useTripTimeline } from "@/lib/hooks/useTrips";
 import { EventNoteIcon, LogIcon } from "@/lib/icons";
-import { prefersReducedMotion } from "@/lib/motion";
-import { fonts, theme } from "@/lib/theme";
+import { formatDate, todayIso } from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { prefersReducedMotion } from "@/lib/theme/motion";
+import { fonts, theme } from "@/lib/theme/theme";
 import {
   type PaddledRiver,
   paddledByRiver,
   runCounts,
   type TripDay,
-} from "@/lib/tripTimeline";
+} from "@/lib/trips/tripTimeline";
 import DayDetail, { type DayActions } from "./DayDetail";
 import {
   EVENT_GAP,

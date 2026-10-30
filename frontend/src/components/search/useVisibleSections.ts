@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { SectionWithFeatures, Waterway } from "@/lib/api";
-import { sectionMatches } from "@/lib/sectionMatch";
+import { sectionMatches } from "@/lib/map/sectionMatch";
 import type { SearchMode } from "./useWaterwaySearchFilters";
 
 /** Sections are not returned by the search endpoint, so which of them to show

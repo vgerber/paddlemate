@@ -1,5 +1,5 @@
 import type { CommentCategory } from "@/lib/api";
-import { resolveTokens, type TokenSource } from "@/lib/waterLevel";
+import { resolveTokens, type TokenSource } from "@/lib/water/waterLevel";
 
 type CategoryMeta = Record<CommentCategory, { label: string; color?: string }>;
 

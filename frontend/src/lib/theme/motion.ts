@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { theme } from "@/lib/theme";
+import { theme } from "@/lib/theme/theme";
 
 const { motion } = theme.tokens;
 

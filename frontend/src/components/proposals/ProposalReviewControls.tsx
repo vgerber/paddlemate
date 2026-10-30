@@ -7,7 +7,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import type { Proposal } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { useReviewProposal } from "@/lib/hooks/useProposals";
-import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
+import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

@@ -4,8 +4,8 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import DelayedSpinner from "@/components/states/DelayedSpinner";
-import { transition } from "@/lib/motion";
-import { SYSTEM_INSET, theme } from "@/lib/theme";
+import { transition } from "@/lib/theme/motion";
+import { SYSTEM_INSET, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 

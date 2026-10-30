@@ -14,8 +14,8 @@ import {
   durations,
   REDUCED_FADE_MS,
   useReducedMotion,
-} from "@/lib/motion";
-import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme";
+} from "@/lib/theme/motion";
+import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme/theme";
 
 const RISE_PX = 8;
 const ENTER_MS = durations.fast;

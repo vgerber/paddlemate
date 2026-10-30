@@ -7,11 +7,11 @@ import IconButton from "@mui/material/IconButton";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import { withAlpha } from "@/lib/alpha";
-import { plural } from "@/lib/format";
-import type { LngLat } from "@/lib/geo";
 import { CloseIcon, PlaceIcon } from "@/lib/icons";
-import { theme } from "@/lib/theme";
+import type { LngLat } from "@/lib/map/geo";
+import { plural } from "@/lib/text/format";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
 import {
   type GeometryPicking,
   type GeomType,

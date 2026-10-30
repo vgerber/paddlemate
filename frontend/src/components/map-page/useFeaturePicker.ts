@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import type { Feature } from "@/lib/api";
-import { type LngLat, lineCoords, pointCoords } from "@/lib/geo";
+import { type LngLat, lineCoords, pointCoords } from "@/lib/map/geo";
 
 export type FeatureGeomType = "Point" | "LineString" | "Polygon";
 

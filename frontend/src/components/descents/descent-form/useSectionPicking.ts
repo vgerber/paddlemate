@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import type { SectionWithFeatures } from "@/lib/api";
 import { toPseudoSection } from "@/lib/descents";
-import type { LngLat } from "@/lib/geo";
 import { useWaterway } from "@/lib/hooks/useWaterways";
+import type { LngLat } from "@/lib/map/geo";
 import {
   coordsFromStrings,
   type LogForm,

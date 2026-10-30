@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { theme } from "../theme/theme";
 import {
   dragOffset,
   dragProgress,
@@ -10,7 +11,6 @@ import {
   settleDuration,
   targetIndex,
 } from "./swipe";
-import { theme } from "./theme";
 
 const { motion } = theme.tokens;
 

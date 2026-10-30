@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { proposalsApi } from "@/lib/api";
 import { proposalKeys } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
-import { searchKey } from "@/lib/text";
+import { searchKey } from "@/lib/text/text";
 
 const PENDING_FILTERS = {
   entity_type: "waterway",

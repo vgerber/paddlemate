@@ -1,4 +1,4 @@
-import type { LngLat } from "@/lib/geo";
+import type { LngLat } from "@/lib/map/geo";
 
 export type GeomType = "Point" | "LineString" | "Polygon";
 

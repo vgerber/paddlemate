@@ -9,7 +9,7 @@ import StepSlide from "@/components/wizard/StepSlide";
 import type { Descent, SectionWithFeatures } from "@/lib/api";
 import { useCreateDescent, usePatchDescent } from "@/lib/hooks/useDescents";
 import { ConfirmIcon, ForwardIcon } from "@/lib/icons";
-import { SYSTEM_INSET, theme } from "@/lib/theme";
+import { SYSTEM_INSET, theme } from "@/lib/theme/theme";
 import {
   buildPayload,
   copyFromDescent,

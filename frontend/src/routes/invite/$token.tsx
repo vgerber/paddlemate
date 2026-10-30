@@ -8,11 +8,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingBox from "@/components/states/LoadingBox";
 import { apiErrorMessage } from "@/lib/api/client";
-import { dateRange } from "@/lib/format";
 import { useSession } from "@/lib/hooks/useSession";
 import { useInvitePreview, useJoinByInvite } from "@/lib/hooks/useTrips";
 import { LinkOffIcon, TripIcon } from "@/lib/icons";
-import { cardTitleSx, labelSx, theme } from "@/lib/theme";
+import { dateRange } from "@/lib/text/format";
+import { cardTitleSx, labelSx, theme } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/invite/$token")({
   component: InvitePage,

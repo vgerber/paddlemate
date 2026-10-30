@@ -2,8 +2,8 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { factLabelSx } from "@/components/Fact";
 import MemberAvatar from "@/components/trips/MemberAvatar";
-import { dateRange } from "@/lib/format";
 import { useTripMembers, useTripStays } from "@/lib/hooks/useTrips";
+import { dateRange } from "@/lib/text/format";
 
 const heading = { ...factLabelSx, px: 2, pt: 1.5, pb: 0.5 } as const;
 

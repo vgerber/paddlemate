@@ -9,14 +9,14 @@ import {
 } from "@/components/waterway/SectionNamingForm";
 import type { SectionFeatureDraft } from "@/components/waterway/SuggestFeatureForm";
 import { toPseudoFeature } from "@/components/waterway/section-details/utils";
+import { useRiverSnap } from "@/components/waterway/useRiverSnap";
 import { type Feature, regionsApi, type SectionWithFeatures } from "@/lib/api";
 import {
   downstreamDot,
   type LngLat,
   lineCoords,
   type ViewBounds,
-} from "@/lib/geo";
-import { useRiverSnap } from "@/lib/hooks/useRiverSnap";
+} from "@/lib/map/geo";
 
 export const WIZARD_STEPS = ["Naming", "Section", "Features"] as const;
 

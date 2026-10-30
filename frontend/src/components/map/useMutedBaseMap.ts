@@ -1,7 +1,7 @@
 import type { RefObject } from "react";
 import { useEffect } from "react";
 import type { MapRef } from "react-map-gl/maplibre";
-import { useTokens } from "@/lib/useTokens";
+import { useTokens } from "@/lib/hooks/ui/useTokens";
 import { applyCalmStyle } from "./calmStyle";
 
 const ROAD_LINE = /^(road|bridge|tunnel)_(?!.*rail)/;

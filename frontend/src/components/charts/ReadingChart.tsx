@@ -23,17 +23,17 @@ import {
 import type { CustomRange, TimeRange } from "@/components/charts/water/types";
 import { useIsSwipeGhost } from "@/components/SwipeGhost";
 import type { WaterRangeWithStatus } from "@/lib/api";
-import { dockHeight } from "@/lib/canvasLayout";
-import { readingTime, timeAgo } from "@/lib/format";
-import { isStale } from "@/lib/staleness";
-import { theme } from "@/lib/theme";
-import { type ResolvedTokens, useTokens } from "@/lib/useTokens";
+import { type ResolvedTokens, useTokens } from "@/lib/hooks/ui/useTokens";
+import { dockHeight } from "@/lib/map/canvasLayout";
+import { readingTime, timeAgo } from "@/lib/text/format";
+import { theme } from "@/lib/theme/theme";
+import { isStale } from "@/lib/water/staleness";
 import {
   currentLevel,
   levelMarkerColor,
   levelWord,
   type WaterLevel,
-} from "@/lib/waterLevel";
+} from "@/lib/water/waterLevel";
 
 // Recharts is heavy and only charts need it, so it loads with the first chart.
 const WaterChart = lazy(() => import("@/components/charts/water/WaterChart"));
