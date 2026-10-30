@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { MapLayerMouseEvent } from "react-map-gl/maplibre";
 import { type AreaCircle, DEFAULT_RADIUS_KM, type LngLat } from "@/lib/geo";
 import {
@@ -105,7 +105,7 @@ export function useMapClickHandler({
 }: MapClickHandlerOptions) {
   const [pickMode, setPickMode] = useState<PickMode | null>(null);
   const [regionMenu, setRegionMenu] = useState<RegionMenu | null>(null);
-  const closeRegionMenu = () => setRegionMenu(null);
+  const closeRegionMenu = useCallback(() => setRegionMenu(null), []);
 
   const togglePickMode = (mode: PickMode) =>
     setPickMode((p) => (p === mode ? null : mode));
