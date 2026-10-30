@@ -86,6 +86,17 @@ fn check_fields(
     check_point("take_out", take_out.0, take_out.1, take_out.2)
 }
 
+/// Sections are numbered from 1; the column check would only say so generically.
+fn check_section_order(
+    sections: &[crate::models::descent::DescentSectionInput],
+) -> Result<(), ApiError> {
+    if sections.iter().any(|s| s.sort_order < 1) {
+        return Err(ApiError::validation("sort_order must be at least 1")
+            .with_target("sections.sort_order"));
+    }
+    Ok(())
+}
+
 fn validate_put_in(feature_id: Option<i64>, lat: Option<f64>, lon: Option<f64>) -> bool {
     matches!(
         (feature_id.is_some(), lat.is_some(), lon.is_some()),
@@ -233,6 +244,10 @@ pub async fn create_descent(
         return err.into_response();
     }
 
+    if let Err(err) = check_section_order(&body.sections) {
+        return err.into_response();
+    }
+
     if !validate_put_in(body.put_in_feature_id, body.put_in_lat, body.put_in_lon) {
         return ApiError::validation(
             "put_in must specify either feature_id or lat+lon, not both or neither",
@@ -351,6 +366,14 @@ pub async fn patch_descent(
             body.take_out_lon,
         ),
     ) {
+        return err.into_response();
+    }
+
+    if let Some(err) = body
+        .sections
+        .as_deref()
+        .and_then(|s| check_section_order(s).err())
+    {
         return err.into_response();
     }
 

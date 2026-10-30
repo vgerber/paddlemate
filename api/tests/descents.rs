@@ -265,6 +265,10 @@ async fn create_validation(pool: PgPool) {
             json!({ "sections": [{ "section_id": 999999, "sort_order": 1 }] }),
         ),
         (
+            "section order below 1",
+            json!({ "sections": [{ "section_id": 1, "sort_order": 0 }] }),
+        ),
+        (
             "unknown put-in feature",
             json!({ "put_in_feature_id": 999999, "put_in_lat": null, "put_in_lon": null }),
         ),
@@ -277,6 +281,9 @@ async fn create_validation(pool: PgPool) {
         let r = call(&e.app, Method::POST, "/descents", MARA, Some(body)).await;
         assert_eq!(r.status, StatusCode::BAD_REQUEST, "{what}: {}", r.body);
         assert!(r.body["error"]["message"].is_string(), "{what}");
+        if what == "section order below 1" {
+            assert_eq!(r.body["error"]["target"], "sections.sort_order");
+        }
     }
 
     let r = call(
