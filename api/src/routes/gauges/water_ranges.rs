@@ -15,6 +15,7 @@ use crate::{
         path_params::{FeaturePath, FeatureWaterRangePath},
     },
     query::{gauges, waterways::features},
+    routes::access,
     state::AppState,
 };
 
@@ -45,10 +46,9 @@ pub async fn create_water_range(
     Path(path): Path<FeaturePath>,
     Json(body): Json<CreateWaterRangeRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
-    };
+    if let Err(err) = access::signed_in(auth) {
+        return err.into_response();
+    }
 
     let belongs = features::feature_belongs_to_section(
         &app.pg_pool,
@@ -100,10 +100,9 @@ pub async fn update_water_range(
     Path(path): Path<FeatureWaterRangePath>,
     Json(body): Json<UpdateWaterRangeRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
-    };
+    if let Err(err) = access::signed_in(auth) {
+        return err.into_response();
+    }
 
     match gauges::update_feature_water_range(
         &app.pg_pool,
@@ -140,10 +139,9 @@ pub async fn delete_water_range(
     auth: Option<Extension<AuthToken>>,
     Path(path): Path<FeatureWaterRangePath>,
 ) -> impl IntoApiResponse {
-    let Extension(_token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
-    };
+    if let Err(err) = access::signed_in(auth) {
+        return err.into_response();
+    }
 
     match gauges::delete_feature_water_range(&app.pg_pool, path.range_id, path.feature_id).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),

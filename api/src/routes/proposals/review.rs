@@ -16,6 +16,7 @@ use crate::{
         proposal::{Proposal, ProposalStatus, ReviewRequest},
     },
     query::proposals,
+    routes::access,
     state::AppState,
 };
 
@@ -25,13 +26,13 @@ pub(super) async fn review_proposal(
     Path(path): Path<ProposalPath>,
     Json(body): Json<ReviewRequest>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Not permitted").into_response();
+    if let Err(err) = access::require_server_admin(&token, "Not permitted") {
+        return err.into_response();
     }
 
     if matches!(body.status, ProposalStatus::Pending) {
@@ -91,9 +92,9 @@ pub(super) async fn delete_proposal(
     auth: Option<Extension<AuthToken>>,
     Path(path): Path<ProposalPath>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     let proposal = match proposals::get_proposal(

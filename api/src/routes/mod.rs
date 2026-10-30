@@ -1,3 +1,4 @@
+pub mod access;
 pub mod descents;
 pub mod docs;
 pub mod gauges;

@@ -20,6 +20,7 @@ use crate::{
     layers::auth::AuthToken,
     models::group::{Group, GroupMemberRole, GroupWithMembers},
     query::groups,
+    routes::access,
     state::AppState,
 };
 
@@ -43,9 +44,9 @@ pub async fn list_groups(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     match groups::list_groups_for_user(&app.pg_pool, token.user_id()).await {
@@ -73,9 +74,9 @@ pub async fn create_group(
     auth: Option<Extension<AuthToken>>,
     Json(body): Json<CreateGroupBody>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     let user_id = token.user_id().to_string();
@@ -124,9 +125,9 @@ pub async fn get_group(
     auth: Option<Extension<AuthToken>>,
     Path(group_id): Path<i64>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     match groups::get_group_for_member(&app.pg_pool, group_id, token.user_id()).await {
@@ -162,9 +163,9 @@ pub async fn update_group(
     Path(group_id): Path<i64>,
     Json(body): Json<UpdateGroupBody>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     // Map Option<Option<String>> to Option<Option<&str>> for the query layer
@@ -201,9 +202,9 @@ pub async fn delete_group(
     auth: Option<Extension<AuthToken>>,
     Path(group_id): Path<i64>,
 ) -> impl IntoApiResponse {
-    let Extension(token) = match auth {
-        Some(a) => a,
-        None => return ApiError::unauthorized("Authentication required").into_response(),
+    let token = match access::signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     match groups::delete_group(
