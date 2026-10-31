@@ -289,8 +289,9 @@ test.describe("river rows and group headings", () => {
     await expectRowSurface(r, info.project.name);
     await expectNoHorizontalOverflow(page);
     await expectTouchTargets(rows(page), 44);
-    const type = r.locator(".MuiChip-root").first();
-    expect(await computed(type, "text-transform")).toBe("none");
+    // The row's place line is plain sentence case.
+    const place = r.getByText("AT · Test Valley");
+    expect(await computed(place, "text-transform")).toBe("none");
   });
 });
 
