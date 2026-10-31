@@ -7,6 +7,7 @@ pub type MaterialId = i64;
 /// Bounds on the free text and years of an entry; the migration repeats them
 /// as check constraints.
 pub const MAX_NAME_CHARS: usize = 80;
+pub const MAX_SIZE_CHARS: usize = 40;
 pub const MAX_DESCRIPTION_CHARS: usize = 4000;
 pub const MAX_URL_CHARS: usize = 500;
 pub const MIN_YEAR: i32 = 1900;
@@ -110,10 +111,14 @@ pub struct Material {
     pub category: MaterialCategory,
     pub brand: String,
     pub model: String,
-    /// Size or trim of the same model ("M", "Large"); absent when the model
-    /// comes in one size only.
+    /// Edition or build of the model ("PR-X", "1 piece, bent shaft"); absent
+    /// when there is only one.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub variant: Option<String>,
+    /// Size within the model ("M", "S/M", "8.5"); absent when it comes in one
+    /// size only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub discipline: Option<MaterialDiscipline>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -183,6 +188,8 @@ pub struct Material {
     pub shaft_diameter: Option<String>,
     /// Mirrored photos, fetched ones only.
     pub images: Vec<MaterialImage>,
+    /// The other sizes of this entry's model, in size order.
+    pub siblings: Vec<MaterialSibling>,
     pub created_by: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub created_by_username: Option<String>,
@@ -190,6 +197,60 @@ pub struct Material {
     pub updated_by_username: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+
+/// Another size of the same model.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct MaterialSibling {
+    pub id: MaterialId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<String>,
+}
+
+/// One size of a model in the models list.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ModelSize {
+    pub id: MaterialId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub length_cm: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub weight_kg: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub volume_l: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub paddler_weight_min_kg: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub paddler_weight_max_kg: Option<f64>,
+    /// Sizes offered, for a paddle sold in fixed lengths.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lengths_cm: Option<Vec<f64>>,
+}
+
+/// A model: the entries that share category, brand, model and variant, one
+/// per size.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct MaterialModel {
+    pub category: MaterialCategory,
+    pub brand: String,
+    pub model: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub variant: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub discipline: Option<MaterialDiscipline>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub construction: Option<MaterialConstruction>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub year_from: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub year_to: Option<i32>,
+    pub year_approximate: bool,
+    /// Thumbnail of the first fetched photo of any size.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thumb_url: Option<String>,
+    /// The sizes that match the filters, XS to XL and then by number.
+    pub sizes: Vec<ModelSize>,
 }
 
 /// A brand with the number of entries filed under it, for the brand filter.
@@ -207,6 +268,7 @@ pub struct MaterialBody {
     pub brand: String,
     pub model: String,
     pub variant: Option<String>,
+    pub size: Option<String>,
     pub discipline: Option<MaterialDiscipline>,
     pub construction: Option<MaterialConstruction>,
     pub description: Option<String>,
@@ -299,6 +361,7 @@ impl MaterialBody {
         self.brand = self.brand.trim().to_owned();
         self.model = self.model.trim().to_owned();
         clean(&mut self.variant);
+        clean(&mut self.size);
         clean(&mut self.description);
         clean(&mut self.product_url);
         clean(&mut self.notes);
@@ -332,10 +395,11 @@ impl MaterialBody {
         if self.model.is_empty() {
             return Some(("model", "Model is required".into()));
         }
-        let texts: [(&'static str, Option<&str>, usize); 5] = [
+        let texts: [(&'static str, Option<&str>, usize); 6] = [
             ("brand", Some(&self.brand), MAX_NAME_CHARS),
             ("model", Some(&self.model), MAX_NAME_CHARS),
             ("variant", self.variant.as_deref(), MAX_NAME_CHARS),
+            ("size", self.size.as_deref(), MAX_SIZE_CHARS),
             (
                 "description",
                 self.description.as_deref(),
@@ -508,6 +572,7 @@ mod tests {
             brand: "Pyranha".into(),
             model: "Firecracker".into(),
             variant: None,
+            size: None,
             discipline: None,
             construction: None,
             description: None,

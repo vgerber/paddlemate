@@ -1,6 +1,7 @@
 use aide::axum::IntoApiResponse;
 
 mod images;
+mod models;
 use axum::{
     Extension, Json,
     extract::{Path, Query, State},
@@ -37,7 +38,7 @@ const DUPLICATE_MESSAGE: &str =
     "This brand, model and variant is already in the wiki - edit that entry instead";
 
 /// Reject search text and brand filters long enough to be abuse.
-fn check_filters(filters: &MaterialFilters) -> Result<(), ApiError> {
+pub(super) fn check_filters(filters: &MaterialFilters) -> Result<(), ApiError> {
     for (name, value) in [("q", &filters.q), ("brand", &filters.brand)] {
         if value
             .as_deref()
@@ -308,6 +309,10 @@ pub fn materials_routes(state: AppState) -> aide::axum::ApiRouter {
                 .post_with(create_material, create_material_docs),
         )
         .api_route("/brands", get_with(list_brands, list_brands_docs))
+        .api_route(
+            "/models",
+            get_with(models::list_models, models::list_models_docs),
+        )
         .api_route(
             "/images",
             delete_with(
