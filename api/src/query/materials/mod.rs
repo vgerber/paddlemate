@@ -1,13 +1,25 @@
 use sqlx::{PgPool, QueryBuilder, Row, postgres::PgRow};
 
 pub mod images;
+pub mod models;
 
 use super::FUZZY_MIN_CHARS;
 use super::util::escape_like;
 use crate::models::material::{
     Material, MaterialBody, MaterialBrand, MaterialCategory, MaterialFilters, MaterialId,
-    MaterialSort,
+    MaterialSibling, MaterialSort,
 };
+
+/// The model key of an entry, folded the way the unique index folds it.
+const MODEL_KEY: &str = "(lower(btrim(m.brand)), lower(btrim(m.model)), \
+     lower(btrim(COALESCE(m.variant, ''))))";
+const MODEL_KEY_OF: &str =
+    "SELECT lower(btrim($2)), lower(btrim($3)), lower(btrim(COALESCE($4, '')))";
+
+/// Orders the sizes of a model: XS to XL, then by number, then the rest.
+pub(super) const SIZE_ORDER: &str = "COALESCE(array_position(ARRAY['XS','S','S/M','M','M/L','L','XL'], m.size), \
+     CASE WHEN m.size IS NULL THEN 0 ELSE 100 END), \
+     CASE WHEN m.size ~ '^[0-9]{1,6}(\\.[0-9]{1,6})?$' THEN m.size::numeric END, m.size";
 
 /// New entries one user may add per day. Edits are not counted: correcting
 /// the wiki is the point, and the write rate limit bounds them.
@@ -18,7 +30,7 @@ pub const MAX_NEW_PER_DAY: i64 = 30;
 /// enough that a client can hold a few more in its tray.
 pub const MAX_COMPARE_IDS: usize = 8;
 
-const MATERIAL_COLS: &str = "m.id, m.category, m.brand, m.model, m.variant, m.discipline, \
+const MATERIAL_COLS: &str = "m.id, m.category, m.brand, m.model, m.variant, m.size, m.discipline, \
      m.construction, m.description, m.year_from, m.year_to, m.length_cm, m.width_cm, \
      m.height_cm, m.volume_l, m.weight_kg, m.cockpit_length_cm, m.cockpit_width_cm, \
      m.paddler_weight_min_kg, m.paddler_weight_max_kg, m.product_url, m.colors, \
@@ -43,6 +55,7 @@ fn row_to_material(row: &PgRow) -> Result<Material, sqlx::Error> {
         brand: row.try_get("brand")?,
         model: row.try_get("model")?,
         variant: row.try_get("variant")?,
+        size: row.try_get("size")?,
         discipline: row.try_get("discipline")?,
         construction: row.try_get("construction")?,
         description: row.try_get("description")?,
@@ -75,6 +88,7 @@ fn row_to_material(row: &PgRow) -> Result<Material, sqlx::Error> {
         feather_deg: row.try_get("feather_deg")?,
         shaft_diameter: row.try_get("shaft_diameter")?,
         images: Vec::new(),
+        siblings: Vec::new(),
         created_by: row.try_get("created_by")?,
         created_by_username: row.try_get("created_by_username")?,
         updated_by_username: row.try_get("updated_by_username")?,
@@ -94,7 +108,7 @@ fn sort_column(sort: MaterialSort) -> Option<&'static str> {
     }
 }
 
-fn push_filters(qb: &mut QueryBuilder<'_, sqlx::Postgres>, filters: &MaterialFilters) {
+pub(super) fn push_filters(qb: &mut QueryBuilder<'_, sqlx::Postgres>, filters: &MaterialFilters) {
     if let Some(category) = filters.category {
         qb.push(" AND m.category = ");
         qb.push_bind(category);
@@ -144,6 +158,54 @@ fn push_filters(qb: &mut QueryBuilder<'_, sqlx::Postgres>, filters: &MaterialFil
     }
 }
 
+/// How well the name matches the search text: exact 0, prefix 1, substring 2,
+/// approximate 3.
+pub(super) fn push_tier(qb: &mut QueryBuilder<'_, sqlx::Postgres>, q: &str) {
+    let pattern = escape_like(q);
+    qb.push("CASE WHEN ");
+    qb.push(NAME_KEY);
+    qb.push(" = public.search_key(");
+    qb.push_bind(q.to_string());
+    qb.push(") THEN 0 WHEN ");
+    qb.push(NAME_KEY);
+    qb.push(" LIKE public.search_key(");
+    qb.push_bind(pattern.clone());
+    qb.push(") || '%' THEN 1 WHEN ");
+    qb.push(NAME_KEY);
+    qb.push(" LIKE '%' || public.search_key(");
+    qb.push_bind(pattern);
+    qb.push(") || '%' THEN 2 ELSE 3 END");
+}
+
+pub(super) fn push_score(qb: &mut QueryBuilder<'_, sqlx::Postgres>, q: &str) {
+    qb.push("word_similarity(public.search_key(");
+    qb.push_bind(q.to_string());
+    qb.push("), ");
+    qb.push(NAME_KEY);
+    qb.push(")");
+}
+
+/// The WHERE clause of a name search: a substring match, plus an approximate
+/// one for texts long enough to tolerate a typo.
+pub(super) fn push_name_match(qb: &mut QueryBuilder<'_, sqlx::Postgres>, q: &str) {
+    let pattern = escape_like(q);
+    qb.push(" AND (");
+    qb.push(NAME_KEY);
+    qb.push(" LIKE '%' || public.search_key(");
+    qb.push_bind(pattern);
+    qb.push(") || '%'");
+    if q.chars().count() >= FUZZY_MIN_CHARS {
+        // The indexed expression stays on the left of %> so the gate and
+        // the score cannot disagree about what is similar.
+        qb.push(" OR ");
+        qb.push(NAME_KEY);
+        qb.push(" %> public.search_key(");
+        qb.push_bind(q.to_string());
+        qb.push(")");
+    }
+    qb.push(")");
+}
+
 /// Search the wiki, matching brand and model. Returns the page of entries and
 /// the total number of matches. The caller bounds the text and the paging.
 ///
@@ -167,24 +229,11 @@ pub async fn search(
     qb.push(MATERIAL_COLS);
 
     if let Some(q) = q {
-        let pattern = escape_like(q);
-        qb.push(", CASE WHEN ");
-        qb.push(NAME_KEY);
-        qb.push(" = public.search_key(");
-        qb.push_bind(q.to_string());
-        qb.push(") THEN 0 WHEN ");
-        qb.push(NAME_KEY);
-        qb.push(" LIKE public.search_key(");
-        qb.push_bind(pattern.clone());
-        qb.push(") || '%' THEN 1 WHEN ");
-        qb.push(NAME_KEY);
-        qb.push(" LIKE '%' || public.search_key(");
-        qb.push_bind(pattern.clone());
-        qb.push(") || '%' THEN 2 ELSE 3 END AS tier, word_similarity(public.search_key(");
-        qb.push_bind(q.to_string());
-        qb.push("), ");
-        qb.push(NAME_KEY);
-        qb.push(") AS score");
+        qb.push(", ");
+        push_tier(&mut qb, q);
+        qb.push(" AS tier, ");
+        push_score(&mut qb, q);
+        qb.push(" AS score");
     }
 
     qb.push(", COUNT(*) OVER () AS total_count");
@@ -192,22 +241,7 @@ pub async fn search(
     qb.push(" WHERE 1=1");
 
     if let Some(q) = q {
-        let pattern = escape_like(q);
-        qb.push(" AND (");
-        qb.push(NAME_KEY);
-        qb.push(" LIKE '%' || public.search_key(");
-        qb.push_bind(pattern);
-        qb.push(") || '%'");
-        if q.chars().count() >= FUZZY_MIN_CHARS {
-            // The indexed expression stays on the left of %> so the gate and
-            // the score above cannot disagree about what is similar.
-            qb.push(" OR ");
-            qb.push(NAME_KEY);
-            qb.push(" %> public.search_key(");
-            qb.push_bind(q.to_string());
-            qb.push(")");
-        }
-        qb.push(")");
+        push_name_match(&mut qb, q);
     }
 
     push_filters(&mut qb, filters);
@@ -256,7 +290,33 @@ pub async fn fetch(pool: &PgPool, id: MaterialId) -> Result<Option<Material>, sq
         return Ok(None);
     };
     images::attach(pool, std::slice::from_mut(&mut material)).await?;
+    material.siblings = siblings(pool, &material).await?;
     Ok(Some(material))
+}
+
+/// The other sizes of an entry's model, found by the model key in SQL.
+async fn siblings(pool: &PgPool, of: &Material) -> Result<Vec<MaterialSibling>, sqlx::Error> {
+    let sql = format!(
+        "SELECT m.id, m.size FROM materials m \
+         WHERE m.category = $1 AND {MODEL_KEY} = ({MODEL_KEY_OF}) AND m.id <> $5 \
+         ORDER BY {SIZE_ORDER}, m.id"
+    );
+    let rows = sqlx::query(&sql)
+        .bind(of.category)
+        .bind(of.brand.as_str())
+        .bind(of.model.as_str())
+        .bind(of.variant.as_deref())
+        .bind(of.id)
+        .fetch_all(pool)
+        .await?;
+    rows.iter()
+        .map(|row| {
+            Ok(MaterialSibling {
+                id: row.try_get("id")?,
+                size: row.try_get("size")?,
+            })
+        })
+        .collect()
 }
 
 /// Several entries at once, returned in the order the ids were given - the
@@ -316,6 +376,7 @@ fn bind_body<'a>(
         .bind(body.brand.as_str())
         .bind(body.model.as_str())
         .bind(body.variant.as_deref())
+        .bind(body.size.as_deref())
         .bind(body.discipline)
         .bind(body.construction)
         .bind(body.description.as_deref())
@@ -387,7 +448,7 @@ pub async fn create(
     }
 
     let query = sqlx::query(
-        "INSERT INTO materials (category, brand, model, variant, discipline, construction, \
+        "INSERT INTO materials (category, brand, model, variant, size, discipline, construction, \
          description, year_from, year_to, length_cm, width_cm, height_cm, volume_l, weight_kg, \
          cockpit_length_cm, cockpit_width_cm, paddler_weight_min_kg, paddler_weight_max_kg, \
          product_url, colors, year_approximate, notes, blade_area_cm2, blade_length_cm, \
@@ -395,7 +456,7 @@ pub async fn create(
          shaft_material, blade_material, feather_deg, shaft_diameter, created_by) \
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, \
          $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, \
-         $35) RETURNING id",
+         $35, $36) RETURNING id",
     );
     let row = bind_body(query, body)
         .bind(user_id)
@@ -413,16 +474,16 @@ pub async fn update(
     user_id: &str,
 ) -> Result<bool, sqlx::Error> {
     let query = sqlx::query(
-        "UPDATE materials SET category = $1, brand = $2, model = $3, variant = $4, \
-         discipline = $5, construction = $6, description = $7, year_from = $8, year_to = $9, \
-         length_cm = $10, width_cm = $11, height_cm = $12, volume_l = $13, weight_kg = $14, \
-         cockpit_length_cm = $15, cockpit_width_cm = $16, paddler_weight_min_kg = $17, \
-         paddler_weight_max_kg = $18, product_url = $19, colors = $20, year_approximate = $21, \
-         notes = $22, blade_area_cm2 = $23, blade_length_cm = $24, blade_width_cm = $25, \
-         length_min_cm = $26, length_max_cm = $27, lengths_cm = $28, pieces = $29, shaft = $30, \
-         shaft_material = $31, blade_material = $32, feather_deg = $33, shaft_diameter = $34, \
-         updated_by = $35, updated_at = NOW() \
-         WHERE id = $36",
+        "UPDATE materials SET category = $1, brand = $2, model = $3, variant = $4, size = $5, \
+         discipline = $6, construction = $7, description = $8, year_from = $9, year_to = $10, \
+         length_cm = $11, width_cm = $12, height_cm = $13, volume_l = $14, weight_kg = $15, \
+         cockpit_length_cm = $16, cockpit_width_cm = $17, paddler_weight_min_kg = $18, \
+         paddler_weight_max_kg = $19, product_url = $20, colors = $21, year_approximate = $22, \
+         notes = $23, blade_area_cm2 = $24, blade_length_cm = $25, blade_width_cm = $26, \
+         length_min_cm = $27, length_max_cm = $28, lengths_cm = $29, pieces = $30, shaft = $31, \
+         shaft_material = $32, blade_material = $33, feather_deg = $34, shaft_diameter = $35, \
+         updated_by = $36, updated_at = NOW() \
+         WHERE id = $37",
     );
     let result = bind_body(query, body)
         .bind(user_id)

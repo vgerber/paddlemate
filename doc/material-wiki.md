@@ -66,7 +66,10 @@ not counted.
 Only an admin can delete an entry: an edit the next reader can correct
 again, a deletion takes the entry away from everyone.
 
-The same brand, model and variant can only exist once. Case and spacing do
+A model such as the Pyranha Scorch comes in sizes (S, M, L); each size is its
+own entry, and an entry shows the other sizes of its model. An edition ("PR-X")
+or, for a paddle, a build ("1 piece, bent shaft") is a separate model, not a
+size. The same brand, model, variant and size can only exist once. Case and spacing do
 not create a second entry - "pyranha firecracker" and "Pyranha Firecracker"
 are the same boat.
 
@@ -114,7 +117,8 @@ anything. The app converts for display and input only (`lib/prefs/units.ts`).
 
 | Constraint | Enforces |
 | --- | --- |
-| `materials_identity_key` | One entry per brand/model/variant, case- and space-insensitive |
+| `materials_identity_key` | One entry per brand/model/variant/size, case- and space-insensitive |
+| `chk_materials_size` | `size` is 1 to 40 characters when set |
 | `chk_materials_extra_text`, `chk_materials_paddle` | Colour, notes and source sizes; paddle sizes, pieces, lengths and feather angles |
 | `chk_materials_years` | `year_to >= year_from` |
 | `chk_materials_paddler` | `paddler_weight_max_kg >= paddler_weight_min_kg` |
@@ -142,16 +146,31 @@ so on, filled only for paddles; a boat that sends one gets a 400), `colors`,
 key now includes the category. `PUT` replaces every field, the new ones
 included; a client that omits `colors` clears them.
 
-`0057_materials_catalogue_seed.sql` is generated, never edited: run
+`0057_materials_catalogue_seed.sql` is generated, never edited; so is its
+re-run `0059_materials_catalogue_reseed.sql`: run
 `python3 -I scripts/materials/build_seed.py` on `data/materials/{kayaks,paddles}.json`
-(facts and links only, no images). It upserts by category, brand, model and
-variant, owned by the `system-catalogue` user, and only touches rows where
+(facts and links only, no images). It upserts by category, brand, model,
+variant and size, owned by the `system-catalogue` user, and only touches rows where
 `updated_by` is NULL, so a re-run changes nothing and keeps user edits. Values
 the schema refuses become NULL with the original in `notes`; a paddle sold with
 a straight and a bent shaft becomes one entry per shaft (the second without
 weight). `year_approximate` is set when the year source is Playak or the
 archive, or the notes call the year weak. `system-catalogue` is hidden from the
 user list.
+
+Migration `0058_material_size.sql` adds `materials.size` and moves the size
+out of `variant` on untouched catalogue rows (`updated_by IS NULL`, matched by
+the old label; a user's edit keeps its variant). The split is
+`split_variant()` in `build_seed.py` (doctests: `python3 -I -m doctest
+scripts/materials/build_seed.py`), which also writes that migration's UPDATE
+(`--size-migration`), so the seed and the migration cannot disagree. Rules:
+S/Small/SM -> S, M/Medium/MD -> M, L/Large/LG -> L, XS, XL; ranges SM/MD, S/M,
+M/L, MD/LG, M|L, Medium/Large -> S/M or M/L; numbers up to three digits
+(65, 8.5) stay as the size; "8.5 (2005)" -> size 8.5, variant 2005. Anything
+else stays a variant, including "L creek", "L club", "M creek" and paddle
+builds or "Medium 648". Only single sizes (S, M, L) move for paddles. A
+catalogue row a user edited keeps its old variant, so a later re-import would
+add the size-keyed row beside it.
 
 `material_images` holds one row per link: `status` is `pending`, `fetched`,
 `failed` or `removed`, `host` is the link's host, `file` the stored key.
@@ -186,6 +205,7 @@ caller.
 | Method | Path | Notes |
 | --- | --- | --- |
 | GET | `/materials` | Paginated search - see the filters below |
+| GET | `/materials/models` | Paginated models (category, brand, model, variant) with their sizes - the filters below; `total` counts models, a model lists only the sizes that match; `ids` is ignored |
 | GET | `/materials/brands` | Brands with entry counts, `category` narrows them |
 | GET | `/materials/{material_id}` | One entry |
 | POST | `/materials` | Add an entry (any signed-in user); 409 on a duplicate |
@@ -202,12 +222,21 @@ The list takes `q`, `category`, `discipline`, `construction`, `brand`,
 `min_weight_kg`/`max_weight_kg`, `fits_paddler_kg`, `sort` and the usual
 `page`/`per_page`.
 
+A model item carries `discipline`, `construction`, the years across its sizes,
+`thumb_url` (first fetched photo of any size) and `sizes[{id, size, length_cm,
+weight_kg, volume_l, paddler_weight_min_kg, paddler_weight_max_kg,
+lengths_cm}]`, ordered XS, S, S/M, M, M/L, L, XL, then numbers, then the rest.
+`GET /materials/{id}` adds `siblings[{id, size}]`, the other sizes of its model
+looked up by the model key in SQL; the list and compare endpoints leave it
+empty. `size` is part of the create/update body (`PUT` replaces it too, so a
+client that omits it clears it).
+
 `ids` is the comparison's own filter: a comma separated list that returns
 exactly those entries, in the order given, ignoring every other filter and
 paging; a malformed list or more than `MAX_COMPARE_IDS` (8) ids is a 400.
 `q` and `brand` longer than 100 characters are a 400, `page` is clamped to
 10000 and `per_page` to 100. The daily cap on new entries is
-`MAX_NEW_PER_DAY` in `api/src/query/materials.rs`; the count and the insert
+`MAX_NEW_PER_DAY` in `api/src/query/materials/mod.rs`; the count and the insert
 run under a per-user advisory lock, and the 31st is a 429.
 
 With a query text and the default name sort, results are ranked the way the
