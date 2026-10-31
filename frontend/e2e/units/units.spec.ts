@@ -9,7 +9,7 @@ import {
 
 // Settings > Units: weight, distance and length, kept per device. The suite
 // signs in with metric stored (auth.setup.ts); the default tests clear it.
-// Fixture entry 9851-9860: Testflow Cascade M is 264 cm long, 320 l.
+// Fixture entries 9851-9860: the Testflow Cascade is 254-274 cm long, 295-345 l.
 
 const UNITS_KEY = "pm-units";
 
@@ -40,8 +40,8 @@ async function clearStored(page: Page) {
 
 async function wikiRow(page: Page) {
   await page.goto("/materials?q=Cascade");
-  await expect(row(page, "Testflow Cascade M")).toBeVisible();
-  return row(page, "Testflow Cascade M");
+  await expect(row(page, "Testflow Cascade")).toBeVisible();
+  return row(page, "Testflow Cascade");
 }
 
 test.describe("choosing units", () => {
@@ -72,16 +72,16 @@ test.describe("choosing units", () => {
     await openUnits(page);
     await choose(page, "Length", "in");
     let cascade = await wikiRow(page);
-    await expect(cascade).toContainText("Length 103.9 in");
-    await expect(cascade).toContainText("Volume 84.5 gal");
+    await expect(cascade).toContainText("Length 100-107.9 in");
+    await expect(cascade).toContainText("Volume 77.9-91.1 gal");
     await page.reload();
-    cascade = row(page, "Testflow Cascade M");
-    await expect(cascade).toContainText("Length 103.9 in");
+    cascade = row(page, "Testflow Cascade");
+    await expect(cascade).toContainText("Length 100-107.9 in");
     await openUnits(page);
     await choose(page, "Length", "cm");
     cascade = await wikiRow(page);
-    await expect(cascade).toContainText("Length 264 cm");
-    await expect(cascade).toContainText("Volume 320 l");
+    await expect(cascade).toContainText("Length 254-274 cm");
+    await expect(cascade).toContainText("Volume 295-345 l");
   });
 
   test("weight changes the paddler window and the filter chip", async ({
@@ -165,8 +165,8 @@ test.describe("signed out", () => {
         .getByRole("button", { name: "in", exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
     await page.goto("/materials?q=Cascade");
-    await expect(row(page, "Testflow Cascade M")).toContainText(
-      "Length 103.9 in",
+    await expect(row(page, "Testflow Cascade")).toContainText(
+      "Length 100-107.9 in",
     );
   });
 });
@@ -188,7 +188,7 @@ test.describe("device default", () => {
             .getByRole("button", { name: unit, exact: true }),
         ).toHaveAttribute("aria-pressed", "true");
       }
-      await expect(await wikiRow(page)).toContainText("Length 103.9 in");
+      await expect(await wikiRow(page)).toContainText("Length 100-107.9 in");
     });
   });
 
@@ -197,7 +197,7 @@ test.describe("device default", () => {
 
     test("starts metric", async ({ page }) => {
       await clearStored(page);
-      await expect(await wikiRow(page)).toContainText("Length 264 cm");
+      await expect(await wikiRow(page)).toContainText("Length 254-274 cm");
     });
   });
 });

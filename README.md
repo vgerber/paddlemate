@@ -69,7 +69,8 @@ water levels, and a shared logbook.
   on metric. Section and trip distances, the search radius and the material
   wiki follow the choice, forms included; everything is stored metric. Gauge
   readings stay as the gauge reports them.
-- **Material wiki** - a shared gear catalog under Tools: boats searchable by
+- **Material wiki** - a shared gear catalog under Tools: models with their
+  sizes (S, M, L) as one row each, searchable by
   brand and model, filterable by discipline, construction and the paddler
   weight they fit, and comparable side by side property for property. It
   comes pre-filled with whitewater kayaks and paddles, with credited photos,

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { Material, MaterialBody } from "@/lib/api";
+import type { Material, MaterialBody, MaterialModel } from "@/lib/api";
 import { IMPERIAL, METRIC } from "../prefs/units";
 import {
   enumLabel,
@@ -9,15 +9,21 @@ import {
   materialFormToBody,
   materialTitle,
   materialToForm,
+  modelFigures,
+  modelPicked,
+  modelSizes,
+  modelTitle,
   paddleFacts,
   paddleLengthLabel,
   paddlerRangeLabel,
   parseCompareIds,
   parseMaterialSearch,
   searchText,
+  sinceLabel,
   sourceLinks,
   specSpread,
   toggleCompareId,
+  toggleModelCompare,
   yearsLabel,
 } from "./materials";
 
@@ -218,11 +224,12 @@ describe("searchText", () => {
 
 /** Every field of the request body, so a field added to the API fails here
  * until the round trip covers it. */
-const FULL_PADDLE: Required<Omit<MaterialBody, "size">> = {
+const FULL_PADDLE: Required<MaterialBody> = {
   category: "paddle",
   brand: "Aqua Bound",
   model: "Aerial",
   variant: "Major",
+  size: "M",
   discipline: "river_runner",
   construction: "composite",
   description: "A paddle.",
@@ -389,5 +396,94 @@ describe("sourceLinks", () => {
   test("no sources is no links", () => {
     expect(sourceLinks(null)).toEqual([]);
     expect(sourceLinks("x")).toEqual([]);
+  });
+});
+
+const SCORCH: MaterialModel = {
+  category: "kayak",
+  brand: "Pyranha",
+  model: "Scorch",
+  year_from: 2021,
+  year_approximate: false,
+  sizes: [
+    { id: 11, size: "S", length_cm: 259, volume_l: 265, weight_kg: 21 },
+    { id: 12, size: "M", length_cm: 267, volume_l: 310, weight_kg: 23 },
+    { id: 13, size: "L", length_cm: 279, volume_l: 340, weight_kg: 24.5 },
+  ],
+};
+
+describe("model rows", () => {
+  test("the title leaves the size out, an entry's title keeps it", () => {
+    expect(modelTitle(SCORCH)).toBe("Pyranha Scorch");
+    expect(materialTitle(material({ model: "Scorch", size: "M" }))).toBe(
+      "Testflow Scorch M",
+    );
+  });
+
+  test("figures span the sizes in the chosen unit", () => {
+    expect(modelFigures(SCORCH, METRIC)).toBe(
+      "Length 259-279 cm  ·  Volume 265-340 l  ·  Weight 21-24.5 kg",
+    );
+    expect(modelFigures(SCORCH, IMPERIAL)).toContain("Weight 46.3-54 lb");
+  });
+
+  test("one size reads as a single value, a paddle drops volume", () => {
+    const one: MaterialModel = {
+      ...SCORCH,
+      category: "paddle",
+      sizes: [{ id: 1, lengths_cm: [191, 194], weight_kg: 0.87 }],
+    };
+    expect(modelFigures(one, METRIC)).toBe(
+      "Length 191, 194 cm  ·  Weight 0.9 kg",
+    );
+  });
+
+  test("a model still built reads Since", () => {
+    expect(sinceLabel(SCORCH)).toBe("Since 2021");
+    expect(sinceLabel({ ...SCORCH, year_approximate: true })).toBe(
+      "Since about 2021",
+    );
+    expect(sinceLabel({ ...SCORCH, year_to: 2024 })).toBe("2021-2024");
+  });
+});
+
+describe("sizes of an entry's model", () => {
+  const entry = material({
+    id: 12,
+    size: "M",
+    siblings: [
+      { id: 13, size: "L" },
+      { id: 11, size: "S" },
+    ],
+  });
+
+  test("the entry joins its siblings in size order", () => {
+    expect(modelSizes(entry).map((s) => s.size)).toEqual(["S", "M", "L"]);
+  });
+
+  test("numbers follow the letters, a single entry has no picker", () => {
+    const numeric = material({
+      id: 2,
+      size: "65",
+      siblings: [
+        { id: 3, size: "XL" },
+        { id: 4, size: "8.5" },
+      ],
+    });
+    expect(modelSizes(numeric).map((s) => s.size)).toEqual(["XL", "8.5", "65"]);
+    expect(modelSizes(material())).toEqual([]);
+  });
+});
+
+describe("ticking a model", () => {
+  test("adds its first size, and removes every size held", () => {
+    expect(toggleModelCompare([5], SCORCH)).toEqual([5, 11]);
+    expect(modelPicked([5, 12], SCORCH)).toBe(true);
+    expect(toggleModelCompare([5, 12, 13], SCORCH)).toEqual([5]);
+  });
+
+  test("a full comparison takes no further model", () => {
+    const full = Array.from({ length: MAX_COMPARE }, (_, i) => 100 + i);
+    expect(toggleModelCompare(full, SCORCH)).toEqual(full);
   });
 });

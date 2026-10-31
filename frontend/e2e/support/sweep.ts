@@ -53,16 +53,25 @@ export const EXTRA_SCREENS: SweepScreen[] = [
     path: "/tools/gauge-catalog",
     ready: text(/Gauge/i),
   },
-  { name: "materials", path: "/materials", ready: text("Testflow Cascade M") },
+  {
+    name: "materials",
+    path: "/materials?q=Testflow",
+    ready: text("Testflow Cascade"),
+  },
   {
     name: "materials-filters",
-    path: "/materials",
-    ready: text("Testflow Cascade M"),
+    path: "/materials?q=Testflow",
+    ready: text("Testflow Cascade"),
     open: async (page) => {
       await page.getByTestId("filters-chip").click();
       await expect(page.getByRole("dialog", { name: "Filters" })).toBeVisible();
     },
     overlay: (page) => page.getByRole("dialog", { name: "Filters" }),
+  },
+  {
+    name: "materials-model",
+    path: "/materials/9852",
+    ready: text("All sizes"),
   },
   {
     name: "materials-compare",

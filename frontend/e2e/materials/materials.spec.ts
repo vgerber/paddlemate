@@ -6,10 +6,10 @@ import {
 } from "../support/fixture";
 
 // The material wiki. Fixture entries 9851-9860: the Testflow Cascade in S, M
-// and L (the same-model comparison), two Riverline boats, Northline, an
-// Alpiner slalom boat, a canoe and a packraft. Only the @write tests change
-// data, and they put it back. The wiki also holds the seeded catalogue, so
-// list checks are scoped to the fixture brand "Testflow" (3 Cascades and the
+// and L (one model, three sizes), two Riverline boats, Northline, an Alpiner
+// slalom boat, a canoe and a packraft. Only the @write tests change data, and
+// they put it back. The wiki also holds the seeded catalogue, so list checks
+// are scoped to the fixture brand "Testflow" (the Cascade model and the
 // Tandem canoe) and never count the whole wiki.
 
 const FIXTURE = "?q=Testflow";
@@ -29,20 +29,25 @@ async function openWiki(page: Page, query = "") {
 }
 
 test.describe("wiki list", () => {
-  test("lists the entries with their kind and figures", async ({ page }) => {
+  test("lists models: the Cascade is one row with its sizes @small", async ({
+    page,
+  }) => {
     await openWiki(page, FIXTURE);
-    await expect(rows(page)).toHaveCount(4);
-    const cascade = row(page, "Testflow Cascade M");
+    await expect(rows(page)).toHaveCount(2);
+    const cascade = row(page, "Testflow Cascade");
     await expect(cascade).toContainText("Creek");
-    await expect(cascade).toContainText("Length 264 cm");
-    await expect(cascade).toContainText("Volume 320 l");
+    await expect(cascade).toContainText("Since 2022");
+    await expect(cascade).toContainText("Length 254-274 cm");
+    await expect(cascade).toContainText("Volume 295-345 l");
+    await expect(cascade.getByTestId("model-sizes")).toHaveText("S · M · L");
+    await expect(page.getByText("2 models")).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 
   test("a misspelled name still finds the boat", async ({ page }) => {
     await openWiki(page);
     await page.getByRole("textbox", { name: "Brand or model" }).fill("testflw");
-    await expect(row(page, "Testflow Cascade M")).toBeVisible();
+    await expect(row(page, "Testflow Cascade")).toBeVisible();
     await expect(page).toHaveURL(/q=testflw/);
     await page.getByRole("textbox", { name: "Brand or model" }).fill("zzzz");
     await expect(page.getByTestId("empty-state")).toBeVisible();
@@ -56,26 +61,26 @@ test.describe("wiki list", () => {
     const sheet = page.getByRole("dialog", { name: "Filters" });
     await expect(sheet).toBeVisible();
     await sheet.getByRole("button", { name: "Creek" }).click();
-    await expect(
-      sheet.getByRole("button", { name: /3 results/ }),
-    ).toBeVisible();
-    await sheet.getByRole("button", { name: /3 results/ }).click();
-    await expect(rows(page)).toHaveCount(3);
+    await expect(sheet.getByRole("button", { name: /1 result/ })).toBeVisible();
+    await sheet.getByRole("button", { name: /1 result/ }).click();
+    await expect(rows(page)).toHaveCount(1);
     await expect(page).toHaveURL(/discipline=creek/);
     // The set filter is a chip that takes itself away.
     const chip = page.getByRole("button", { name: "Creek", exact: true });
     await expect(chip).toBeVisible();
     await chip.locator(".MuiChip-deleteIcon").click();
-    await expect(rows(page)).toHaveCount(4);
+    await expect(rows(page)).toHaveCount(2);
   });
 
-  test("the paddler weight keeps boats that fit or state no range", async ({
+  test("the paddler weight keeps sizes that fit or state no range", async ({
     page,
   }) => {
     await openWiki(page, `${FIXTURE}&fits=120`);
-    // 120 kg: Cascade M (70-110) and S (45-75) are out.
-    await expect(row(page, "Cascade M")).toHaveCount(0);
-    await expect(row(page, "Testflow Cascade L")).toBeVisible();
+    // 120 kg: Cascade M (70-110) and S (45-75) are out, only L stays.
+    await expect(row(page, "Testflow Cascade")).toBeVisible();
+    await expect(
+      row(page, "Testflow Cascade").getByTestId("model-sizes"),
+    ).toHaveText("L");
     await expect(row(page, "Tandem")).toBeVisible();
   });
 
@@ -118,16 +123,12 @@ test.describe("wiki list", () => {
 });
 
 test.describe("comparison", () => {
-  test("two picks compare, differing rows are accented, a pick can be removed", async ({
+  test("two sizes of one model compare, differing rows are accented, a pick can be removed", async ({
     page,
   }) => {
-    await openWiki(page, FIXTURE);
-    await page.getByLabel("Compare Testflow Cascade S").check();
-    const bar = page.getByTestId("compare-bar");
-    await expect(bar).toContainText("1 of 8 picked");
-    await expect(bar.getByRole("button", { name: "Compare" })).toBeDisabled();
-    await page.getByLabel("Compare Testflow Cascade L").check();
-    await bar.getByRole("button", { name: "Compare" }).click();
+    await openWiki(page, "?q=Testflow");
+    await row(page, "Testflow Cascade").getByRole("button").first().click();
+    await page.getByRole("button", { name: "Compare sizes" }).click();
 
     await expect(page).toHaveURL(/\/materials\/compare\?ids=/);
     const table = page.getByRole("region", { name: "Comparison table" });
@@ -159,7 +160,39 @@ test.describe("comparison", () => {
         name: "Remove Testflow Cascade S from the comparison",
       })
       .click();
-    await expect(page).toHaveURL(/ids=%?2?2?\d+%?2?2?$/);
+    await expect(
+      page.getByRole("button", {
+        name: "Remove Testflow Cascade M from the comparison",
+      }),
+    ).toBeVisible();
+  });
+
+  test("ticked models of different brands compare through the bar", async ({
+    page,
+  }) => {
+    await openWiki(page, FIXTURE);
+    await page.getByLabel("Compare Testflow Cascade").check();
+    const bar = page.getByTestId("compare-bar");
+    await expect(bar).toContainText("1 of 8 picked");
+    await expect(
+      bar.getByRole("button", { name: "Compare", exact: true }),
+    ).toBeDisabled();
+    await page
+      .getByRole("textbox", { name: "Brand or model" })
+      .fill("Riverline");
+    await page.getByLabel("Compare Riverline Squirt").check();
+    await expect(bar).toContainText("2 of 8 picked");
+    // The bar's Compare is a text button, not a second primary action.
+    const compare = bar.getByRole("button", { name: "Compare", exact: true });
+    expect(await computed(compare, "background-color")).toBe(
+      "rgba(0, 0, 0, 0)",
+    );
+    await compare.click();
+
+    const table = page.getByRole("region", { name: "Comparison table" });
+    await expect(table).toBeVisible();
+    await expect(table).toContainText("Testflow Cascade S");
+    await expect(table).toContainText("Riverline Squirt");
   });
 
   test("the ninth pick is refused", async ({ page }) => {
@@ -179,12 +212,11 @@ test.describe("comparison", () => {
 
   test("a comparison link survives a reload @small", async ({ page }) => {
     await openWiki(page, FIXTURE);
-    await page.getByLabel("Compare Testflow Cascade S").check();
-    await page.getByLabel("Compare Testflow Cascade M").check();
-    await page.getByLabel("Compare Testflow Cascade L").check();
+    await page.getByLabel("Compare Testflow Cascade").check();
+    await page.getByLabel("Compare Testflow Tandem").check();
     await page
       .getByTestId("compare-bar")
-      .getByRole("button", { name: "Compare" })
+      .getByRole("button", { name: "Compare", exact: true })
       .click();
     const table = page.getByRole("region", { name: "Comparison table" });
     await expect(table).toBeVisible();
@@ -199,13 +231,13 @@ test.describe("entry", () => {
   test("shows what the entry states and its source @small", async ({
     page,
   }) => {
-    await openWiki(page, "?q=Cascade");
-    await row(page, "Testflow Cascade M").getByRole("button").first().click();
-    await expect(page).toHaveURL(/\/materials\/\d+/);
+    await page.goto("/materials/9852");
     await expect(page.getByText("Hull", { exact: true })).toBeVisible();
-    await expect(page.getByText("264 cm")).toBeVisible();
-    await expect(page.getByText("70-110")).toHaveCount(0);
-    await expect(page.getByText("110 kg")).toBeVisible();
+    const facts = page.getByTestId("size-facts");
+    await expect(facts).toContainText("264 cm");
+    await expect(facts).toContainText("320 l");
+    await expect(facts).toContainText("22 kg");
+    await expect(facts).toContainText("70-110 kg");
     await expect(
       page.getByRole("link", { name: /Manufacturer page/ }),
     ).toHaveAttribute("href", "https://example.com/cascade");
@@ -213,11 +245,52 @@ test.describe("entry", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("the size picker changes the URL and the facts @small", async ({
+    page,
+  }) => {
+    await openWiki(page, FIXTURE);
+    await row(page, "Testflow Cascade").getByRole("button").first().click();
+    await expect(page).toHaveURL(/\/materials\/9851/);
+    const picker = page.getByRole("radiogroup", { name: "Size" });
+    await expect(picker.getByRole("radio")).toHaveText(["S", "M", "L"]);
+    await expect(picker.getByRole("radio", { name: "S" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await expectTouchTargets(picker.getByRole("radio"));
+    const facts = page.getByTestId("size-facts");
+    await expect(facts).toContainText("254 cm");
+
+    await picker.getByRole("radio", { name: "M" }).click();
+    await expect(page).toHaveURL(/\/materials\/9852/);
+    await expect(facts).toContainText("264 cm");
+    await expect(facts).not.toContainText("254 cm");
+    await expect(picker.getByRole("radio", { name: "M" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+
+    // Every size side by side, the picked one marked.
+    const all = page.getByTestId("all-sizes");
+    await expect(all.getByRole("columnheader")).toHaveText(["S", "M", "L"]);
+    await expect(all.getByRole("row", { name: /Length/ })).toContainText(
+      "274 cm",
+    );
+    await expect(all.locator('th[aria-current="true"]')).toHaveText("M");
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("a model with one size shows no picker", async ({ page }) => {
+    await page.goto("/materials/9854");
+    await expect(page.getByRole("heading").first()).toBeVisible();
+    await expect(page.getByTestId("size-picker")).toHaveCount(0);
+    await expect(page.getByTestId("all-sizes")).toHaveCount(0);
+  });
+
   test("the header menu offers edit to a signed-in paddler", async ({
     page,
   }) => {
-    await openWiki(page, "?q=Cascade");
-    await row(page, "Testflow Cascade M").getByRole("button").first().click();
+    await page.goto("/materials/9852");
     await page.getByRole("button", { name: "Entry actions" }).click();
     await expect(
       page.getByRole("menuitem", { name: "Edit entry" }),
@@ -248,9 +321,10 @@ test.describe("adding and correcting", () => {
     await page.goto("/materials/new");
     await page.getByLabel("Brand").fill("Specprobe");
     await page.getByLabel("Model").fill("Alpha");
+    await page.getByLabel("Size", { exact: true }).fill("XL");
     await page.getByLabel(/Length/).fill("301.5");
     await page.getByRole("button", { name: "Save entry" }).click();
-    await expect(page.getByText("301.5 cm")).toBeVisible();
+    await expect(page.getByText("301.5 cm").first()).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Specprobe Alpha" }),
     ).toBeVisible();
@@ -259,6 +333,7 @@ test.describe("adding and correcting", () => {
     await page.goto("/materials/new");
     await page.getByLabel("Brand").fill("  specprobe");
     await page.getByLabel("Model").fill("ALPHA");
+    await page.getByLabel("Size", { exact: true }).fill("XL");
     await page.getByRole("button", { name: "Save entry" }).click();
     await expect(page.getByRole("alert")).toContainText("already in the wiki");
 
@@ -266,10 +341,16 @@ test.describe("adding and correcting", () => {
     await row(page, "Specprobe Alpha").getByRole("button").first().click();
     await page.getByRole("button", { name: "Entry actions" }).click();
     await page.getByRole("menuitem", { name: "Edit entry" }).click();
+    // An edit that leaves the size alone sends it back as it was.
+    await expect(page.getByLabel("Size", { exact: true })).toHaveValue("XL");
     await page.getByLabel(/Length/).fill("305");
     await page.getByRole("button", { name: "Save entry" }).click();
-    await expect(page.getByText("305 cm")).toBeVisible();
+    await expect(page.getByText("305 cm").first()).toBeVisible();
     await expect(page.getByText(/Last edited by/)).toBeVisible();
+    await page.getByRole("button", { name: "Entry actions" }).click();
+    await page.getByRole("menuitem", { name: "Edit entry" }).click();
+    await expect(page.getByLabel("Size", { exact: true })).toHaveValue("XL");
+    await page.getByRole("button", { name: "Cancel" }).click();
 
     await page.getByRole("button", { name: "Entry actions" }).click();
     await page.getByRole("menuitem", { name: "Delete entry" }).click();

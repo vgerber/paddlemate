@@ -28,6 +28,7 @@ import {
   enumLabel,
   materialTitle,
   materialToForm,
+  modelTitle,
   yearsLabel,
 } from "@/lib/materials/materials";
 import { currentUnits } from "@/lib/prefs/units";
@@ -90,6 +91,14 @@ function MaterialPage() {
     return <EditMaterial material={material} onDone={() => setEdit(false)} />;
   }
 
+  const pickSize = (sizeId: number) =>
+    navigate({
+      to: "/materials/$materialId",
+      params: { materialId: String(sizeId) },
+      search: { edit: false },
+      replace: true,
+    });
+
   const subtitle = [
     CATEGORY_LABELS[material.category],
     material.discipline && enumLabel(material.discipline),
@@ -100,7 +109,7 @@ function MaterialPage() {
 
   return (
     <WikiPage
-      title={materialTitle(material)}
+      title={modelTitle(material)}
       subtitle={subtitle}
       onBack={goBack}
       actions={materialActions({
@@ -113,7 +122,7 @@ function MaterialPage() {
         onDelete: () => setConfirmOpen(true),
       })}
     >
-      <MaterialDetailView material={material} />
+      <MaterialDetailView material={material} onPickSize={pickSize} />
       <ConfirmDialog
         open={photoToRemove != null}
         title="Remove this photo?"

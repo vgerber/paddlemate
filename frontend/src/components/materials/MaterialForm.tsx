@@ -115,7 +115,13 @@ export default function MaterialForm({
   const isPaddle = values.category === "paddle";
 
   const textField = (
-    key: "brand" | "model" | "variant" | "blade_material" | "shaft_diameter",
+    key:
+      | "brand"
+      | "model"
+      | "variant"
+      | "size"
+      | "blade_material"
+      | "shaft_diameter",
     label: string,
     extra: { required?: boolean; helperText?: string } = {},
   ) => (
@@ -174,7 +180,10 @@ export default function MaterialForm({
           {textField("brand", "Brand", { required: true })}
           {textField("model", "Model", { required: true })}
           {textField("variant", "Variant", {
-            helperText: "Size or trim, if the model comes in more than one",
+            helperText: "Edition or trim, such as PRO or Carbolight",
+          })}
+          {textField("size", "Size", {
+            helperText: "S, M, L or a number, if the model comes in sizes",
           })}
         </FormSection>
 
@@ -231,6 +240,7 @@ export default function MaterialForm({
                 onChange={(event) =>
                   set({ year_approximate: event.target.checked })
                 }
+                sx={{ width: tokens.touch.min, height: tokens.touch.min }}
               />
             }
             label="The years are approximate"
