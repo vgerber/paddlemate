@@ -99,7 +99,10 @@ export type PushSubscriptionEntry = components["schemas"]["PushSubscription"];
 export type CreatePushSubscriptionRequest =
   components["schemas"]["CreatePushSubscriptionRequest"];
 export type Material = components["schemas"]["Material"];
-export type MaterialBody = components["schemas"]["MaterialBody"];
+export type MaterialProposalBody =
+  components["schemas"]["Proposable_for_MaterialBody"];
+/** The entry fields alone; a write may also carry `proposal_note`. */
+export type MaterialBody = Omit<MaterialProposalBody, "proposal_note">;
 export type MaterialBrand = components["schemas"]["MaterialBrand"];
 export type MaterialCategory = components["schemas"]["MaterialCategory"];
 export type MaterialConstruction =

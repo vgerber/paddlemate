@@ -261,8 +261,8 @@ pub struct MaterialBrand {
 }
 
 /// The writable fields of an entry. A PUT replaces all of them, so create and
-/// update take the same body.
-#[derive(Debug, Clone, Deserialize, JsonSchema)]
+/// update take the same body. A proposal stores it as its `proposed_data`.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct MaterialBody {
     pub category: MaterialCategory,
     pub brand: String,
@@ -345,6 +345,50 @@ pub struct MaterialFilters {
     pub fits_paddler_kg: Option<f64>,
     #[serde(default)]
     pub sort: MaterialSort,
+}
+
+impl From<&Material> for MaterialBody {
+    /// The writable fields of an entry, as a proposal's `original_data`
+    /// shows them next to the `proposed_data`.
+    fn from(m: &Material) -> Self {
+        MaterialBody {
+            category: m.category,
+            brand: m.brand.clone(),
+            model: m.model.clone(),
+            variant: m.variant.clone(),
+            size: m.size.clone(),
+            discipline: m.discipline,
+            construction: m.construction,
+            description: m.description.clone(),
+            year_from: m.year_from,
+            year_to: m.year_to,
+            length_cm: m.length_cm,
+            width_cm: m.width_cm,
+            height_cm: m.height_cm,
+            volume_l: m.volume_l,
+            weight_kg: m.weight_kg,
+            cockpit_length_cm: m.cockpit_length_cm,
+            cockpit_width_cm: m.cockpit_width_cm,
+            paddler_weight_min_kg: m.paddler_weight_min_kg,
+            paddler_weight_max_kg: m.paddler_weight_max_kg,
+            product_url: m.product_url.clone(),
+            colors: m.colors.clone(),
+            year_approximate: m.year_approximate,
+            notes: m.notes.clone(),
+            blade_area_cm2: m.blade_area_cm2,
+            blade_length_cm: m.blade_length_cm,
+            blade_width_cm: m.blade_width_cm,
+            length_min_cm: m.length_min_cm,
+            length_max_cm: m.length_max_cm,
+            lengths_cm: m.lengths_cm.clone(),
+            pieces: m.pieces,
+            shaft: m.shaft,
+            shaft_material: m.shaft_material,
+            blade_material: m.blade_material.clone(),
+            feather_deg: m.feather_deg.clone(),
+            shaft_diameter: m.shaft_diameter.clone(),
+        }
+    }
 }
 
 impl MaterialBody {

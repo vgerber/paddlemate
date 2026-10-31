@@ -349,6 +349,17 @@ async fn apply_proposal(
                 delete_tracked(tx, EntityKind::Feature, id, &via).await?;
             }
         }
+
+        (ProposalEntityType::Material, operation) => {
+            super::material::apply(
+                tx,
+                operation,
+                proposal.entity_id,
+                data,
+                &proposal.submitted_by,
+            )
+            .await?;
+        }
     }
 
     Ok(())

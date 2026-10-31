@@ -61,19 +61,32 @@ column can be dropped from the table without going back to the list.
 
 ## Adding and correcting
 
-Any signed-in paddler can add an entry and correct any entry - it is a wiki,
-not a catalog of one person's boats. Brand and model are all that is
-required; every measurement is optional, and the next reader can fill in
-what is missing. The entry keeps who added it and who last edited it.
+Any signed-in paddler can add an entry, correct one or ask for one to go. It
+is a wiki, not a catalog of one person's boats, but a change from anyone but
+an admin is a **proposal**: it waits on the proposals screen, other paddlers
+can vote on it, and an admin approves or rejects it. The wiki changes only on
+approval; the form says "Sent for review" until then. An admin's own change
+applies at once. Brand and model are all that is required; every measurement
+is optional, and the next reader can fill in what is missing. The entry keeps
+who added it and who last edited it - for an approved proposal, the
+paddler who proposed it, not the admin who approved it.
+
+You can leave the admin a note with a proposal (500 characters).
 
 Input is bounded: names 80 characters, the description 4000, the link 500
 and a web link only (`http://` or `https://`), years 1900 to 2100, and every
 measurement positive and below a ceiling no real boat reaches (a 2000 cm
-length, a 500 kg weight). One user can add 30 entries a day; corrections are
-not counted.
+length, a 500 kg weight). One user can send 30 proposals a day (an admin adds 30 entries a day), and
+50 can wait for review at once.
 
-Only an admin can delete an entry: an edit the next reader can correct
-again, a deletion takes the entry away from everyone.
+Deleting an entry is a proposal too, and only an admin deletes outright.
+Photo takedown stays with admins and is not a proposal.
+
+A proposal is applied exactly as written: if the entry was edited after it
+was proposed, approving replaces those edits, so the reviewer compares the
+proposal with the entry as it stands. A proposal for an entry that has been
+removed since changes nothing. A name another entry took meanwhile makes the
+approval fail with a conflict and the proposal stays pending to be rejected.
 
 A model such as the Pyranha Scorch comes in sizes (S, M, L); each size is its
 own entry, and an entry shows the other sizes of its model. An edition ("PR-X")
@@ -211,7 +224,8 @@ shared re-encoder.
 ### API
 
 All under `/api/v1/materials`. Reads are public; writes need a signed-in
-caller.
+caller. An admin's write applies (201, 200, 204); anyone else's is stored as a
+`Proposal` and answers 202 with it, the entry untouched (see Proposals below).
 
 | Method | Path | Notes |
 | --- | --- | --- |
@@ -219,9 +233,9 @@ caller.
 | GET | `/materials/models` | Paginated models (category, brand, model, variant) with their sizes - the filters below; `total` counts models, a model lists only the sizes that match; `ids` is ignored |
 | GET | `/materials/brands` | Brands with entry counts, `category` narrows them |
 | GET | `/materials/{material_id}` | One entry |
-| POST | `/materials` | Add an entry (any signed-in user); 409 on a duplicate |
-| PUT | `/materials/{material_id}` | Replace an entry (any signed-in user) |
-| DELETE | `/materials/{material_id}` | Admin only |
+| POST | `/materials` | Add an entry: admin 201, others 202; 409 on a duplicate, 429 over the caps |
+| PUT | `/materials/{material_id}` | Replace an entry: admin 200, others 202; 404 if gone, 409 if the new name is taken |
+| DELETE | `/materials/{material_id}` | Delete an entry: admin 204, others 202 |
 | DELETE | `/materials/{material_id}/images/{image_id}` | Take down one photo (admin); 404 if the photo belongs to another entry |
 | DELETE | `/materials/images?brand=` | Take down every photo of a brand (admin); 400 without `brand`; `{removed: n}` |
 
@@ -247,7 +261,7 @@ exactly those entries, in the order given, ignoring every other filter and
 paging; a malformed list or more than `MAX_COMPARE_IDS` (8) ids is a 400.
 `q` and `brand` longer than 100 characters are a 400, `page` is clamped to
 10000 and `per_page` to 100. The daily cap on new entries is
-`MAX_NEW_PER_DAY` in `api/src/query/materials/mod.rs`; the count and the insert
+`MAX_NEW_PER_DAY` in `api/src/query/materials/write.rs`; the count and the insert
 run under a per-user advisory lock, and the 31st is a 429.
 
 With a query text and the default name sort, results are ranked the way the
@@ -255,6 +269,27 @@ river search ranks them - exact, prefix, substring, fuzzy, then trigram
 similarity, with fuzzy matching from four characters up. Asking for a
 measurement sort overrides that; measurement sorts put the entries that do
 not state the measurement last.
+
+### Proposals
+
+Bodies of POST and PUT are `Proposable<MaterialBody>`: the entry fields plus
+an optional `proposal_note`. Both paths clean and validate the body first (400)
+and refuse a name another entry holds (409, `query::materials::key_taken`), so
+a pending proposal always holds a body an admin could apply as is. Non-admins
+then go to `query::proposals::material::submit`, which snapshots the entry for
+update and delete (`original_data`, in `MaterialBody` shape plus `id`; 404 if
+it does not exist), and under the user's advisory lock (the one
+`materials::create` takes) refuses with 429 at `MAX_PER_DAY` (30, any
+operation) proposals in a day or `MAX_PENDING` (50) waiting. The proposal is
+`entity_type = material` (migration `0060`); listing, filtering (`?entity_type=material`),
+votes and withdrawal are the shared proposal routes.
+
+Approval (`routes/proposals/review.rs`) calls `proposals::material::apply`
+inside the review transaction, which runs `create_in`, `update_in` and
+`delete_in`, the same writes as the admin path, with the submitter as
+`created_by` / `updated_by`. Like waterway proposals there is no stale-update
+check and no one-pending-per-entry rule; an update or delete whose entry is
+gone is a no-op. Tests: `api/tests/material_proposals.rs`, `api/tests/materials.rs`.
 
 ### Frontend
 

@@ -6,7 +6,10 @@ mod common;
 use aide::{axum::ApiRouter, openapi::OpenApi};
 use axum::{Router, http::Method, http::StatusCode, middleware};
 use common::{Who, call, fake_auth, people, state};
-use paddlemate_api::{query::materials::MAX_NEW_PER_DAY, routes::materials::materials_routes};
+use paddlemate_api::{
+    query::{materials::MAX_NEW_PER_DAY, proposals},
+    routes::materials::materials_routes,
+};
 use serde_json::{Value, json};
 use sqlx::PgPool;
 
@@ -37,37 +40,110 @@ async fn clear_catalogue(pool: &PgPool) {
 const MARA: Who = Who::User("mara-1");
 
 #[sqlx::test]
-async fn only_signed_in_users_write_and_only_admins_delete(pool: PgPool) {
+async fn an_admin_writes_outright_and_a_signed_in_user_proposes(pool: PgPool) {
     people(&pool).await;
-    let app = app(pool);
+    let app = app(pool.clone());
 
-    let r = add(&app, Who::Anyone, entry("Pyranha", "Firecracker")).await;
+    let r = add(&app, Who::Anyone, entry("Zedboats", "Firecracker")).await;
     assert_eq!(r.status, StatusCode::UNAUTHORIZED);
 
-    let r = add(&app, MARA, entry("Pyranha", "Firecracker")).await;
+    let r = add(&app, Who::Admin, entry("Zedboats", "Firecracker")).await;
     assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);
     let id = r.body["id"].as_i64().unwrap();
-    assert_eq!(r.body["created_by_username"], "mara");
-
     let uri = format!("/materials/{id}");
+
     let r = call(&app, Method::PUT, &uri, Who::Anyone, Some(entry("A", "B"))).await;
     assert_eq!(r.status, StatusCode::UNAUTHORIZED);
+    let r = call(&app, Method::DELETE, &uri, Who::Anyone, None).await;
+    assert_eq!(r.status, StatusCode::UNAUTHORIZED);
+
+    let r = call(
+        &app,
+        Method::PUT,
+        &uri,
+        Who::Admin,
+        Some(entry("Zedboats", "Ripper")),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::OK);
+    assert_eq!(r.body["updated_by_username"], "root");
+
+    // A non-admin only ever proposes; the wiki stays as it was.
+    let r = add(&app, MARA, entry("Zedboats", "Shiva")).await;
+    assert_eq!(r.status, StatusCode::ACCEPTED, "{}", r.body);
+    assert_eq!(r.body["entity_type"], "material");
+    assert_eq!(r.body["operation"], "create");
+    assert_eq!(r.body["status"], "pending");
+    assert_eq!(r.body["proposed_data"]["model"], "Shiva");
+    assert!(r.body.get("original_data").is_none());
+
     let r = call(
         &app,
         Method::PUT,
         &uri,
         MARA,
-        Some(entry("Pyranha", "Ripper")),
+        Some(entry("Zedboats", "Edited")),
     )
     .await;
-    assert_eq!(r.status, StatusCode::OK);
-    assert_eq!(r.body["updated_by_username"], "mara");
+    assert_eq!(r.status, StatusCode::ACCEPTED, "{}", r.body);
+    assert_eq!(r.body["operation"], "update");
+    assert_eq!(r.body["entity_id"], id);
+    assert_eq!(r.body["original_data"]["model"], "Ripper");
+    assert_eq!(r.body["proposed_data"]["model"], "Edited");
 
     let r = call(&app, Method::DELETE, &uri, MARA, None).await;
-    assert_eq!(r.status, StatusCode::FORBIDDEN);
+    assert_eq!(r.status, StatusCode::ACCEPTED, "{}", r.body);
+    assert_eq!(r.body["operation"], "delete");
+    assert_eq!(r.body["original_data"]["model"], "Ripper");
+
+    let r = call(&app, Method::GET, &uri, Who::Anyone, None).await;
+    assert_eq!(r.body["model"], "Ripper");
+    assert!(r.body["updated_by_username"] == "root");
+    let n: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM materials WHERE brand = 'Zedboats'")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(n, 1);
+
     let r = call(&app, Method::DELETE, &uri, Who::Admin, None).await;
     assert_eq!(r.status, StatusCode::NO_CONTENT);
     let r = call(&app, Method::GET, &uri, Who::Anyone, None).await;
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
+}
+
+#[sqlx::test]
+async fn a_proposal_is_validated_and_needs_an_entry_that_exists(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool);
+
+    // Validation runs before anything is stored.
+    let mut bad = entry("Pyranha", "Firecracker");
+    bad["volume_l"] = json!(1e9);
+    let r = add(&app, MARA, bad).await;
+    assert_eq!(r.status, StatusCode::BAD_REQUEST);
+    assert_eq!(r.body["error"]["target"], "volume_l");
+    let mut long = entry("Pyranha", "Firecracker");
+    long["proposal_note"] = json!("n".repeat(501));
+    let r = add(&app, MARA, long).await;
+    assert_eq!(r.status, StatusCode::BAD_REQUEST);
+    assert_eq!(r.body["error"]["target"], "proposal_note");
+
+    let mut noted = entry("Pyranha", "Firecracker");
+    noted["proposal_note"] = json!(" from the maker's page ");
+    let r = add(&app, MARA, noted).await;
+    assert_eq!(r.status, StatusCode::ACCEPTED);
+    assert_eq!(r.body["submitter_note"], "from the maker's page");
+
+    let r = call(
+        &app,
+        Method::PUT,
+        "/materials/999999",
+        MARA,
+        Some(entry("A", "B")),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::NOT_FOUND);
+    let r = call(&app, Method::DELETE, "/materials/999999", MARA, None).await;
     assert_eq!(r.status, StatusCode::NOT_FOUND);
 }
 
@@ -98,13 +174,50 @@ async fn a_duplicate_in_other_casing_is_a_conflict(pool: PgPool) {
     people(&pool).await;
     let app = app(pool);
     assert_eq!(
-        add(&app, MARA, entry("Pyranha", "Firecracker"))
+        add(&app, Who::Admin, entry("Pyranha", "Firecracker"))
             .await
             .status,
         StatusCode::CREATED
     );
+    let r = add(&app, Who::Admin, entry(" pyranha", "FIRECRACKER ")).await;
+    assert_eq!(r.status, StatusCode::CONFLICT);
+    // A proposal for a taken name is refused up front, not left for the admin.
     let r = add(&app, MARA, entry(" pyranha", "FIRECRACKER ")).await;
     assert_eq!(r.status, StatusCode::CONFLICT);
+
+    // So is an edit that would take another entry's name.
+    let id = add(&app, Who::Admin, entry("Pyranha", "Ripper")).await.body["id"]
+        .as_i64()
+        .unwrap();
+    let uri = format!("/materials/{id}");
+    let r = call(
+        &app,
+        Method::PUT,
+        &uri,
+        Who::Admin,
+        Some(entry("pyranha", "firecracker")),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::CONFLICT);
+    let r = call(
+        &app,
+        Method::PUT,
+        &uri,
+        MARA,
+        Some(entry("pyranha", "firecracker")),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::CONFLICT);
+    // Keeping its own name is not a clash.
+    let r = call(
+        &app,
+        Method::PUT,
+        &uri,
+        MARA,
+        Some(entry("Pyranha", "Ripper")),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::ACCEPTED);
 }
 
 #[sqlx::test]
@@ -112,14 +225,46 @@ async fn a_user_adds_a_bounded_number_per_day(pool: PgPool) {
     people(&pool).await;
     let app = app(pool);
     for n in 0..MAX_NEW_PER_DAY {
-        let r = add(&app, MARA, entry("Brand", &format!("Model {n}"))).await;
+        let r = add(&app, Who::Admin, entry("Brand", &format!("Model {n}"))).await;
         assert_eq!(r.status, StatusCode::CREATED, "{n}: {}", r.body);
     }
-    let r = add(&app, MARA, entry("Brand", "One too many")).await;
+    let r = add(&app, Who::Admin, entry("Brand", "One too many")).await;
     assert_eq!(r.status, StatusCode::TOO_MANY_REQUESTS);
-    // The cap is per user: the admin is unaffected.
-    let r = add(&app, Who::Admin, entry("Brand", "Admin model")).await;
-    assert_eq!(r.status, StatusCode::CREATED);
+    // The cap is per user, and proposals count toward it.
+    for n in 0..MAX_NEW_PER_DAY {
+        let r = add(&app, MARA, entry("Mara", &format!("Model {n}"))).await;
+        assert_eq!(r.status, StatusCode::ACCEPTED, "{n}: {}", r.body);
+    }
+    let r = add(&app, MARA, entry("Mara", "One too many")).await;
+    assert_eq!(r.status, StatusCode::TOO_MANY_REQUESTS);
+    // Edits and deletes are proposals too.
+    let r = call(&app, Method::DELETE, "/materials/1", MARA, None).await;
+    assert_eq!(r.status, StatusCode::TOO_MANY_REQUESTS);
+}
+
+#[sqlx::test]
+async fn a_user_has_a_bounded_number_waiting_for_review(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    // Old proposals no longer count toward the day, only toward the waiting cap.
+    for n in 0..proposals::material::MAX_PENDING {
+        sqlx::query(
+            "INSERT INTO proposals (entity_type, operation, proposed_data, submitted_by, created_at) \
+             VALUES ('material', 'create', $1, 'mara-1', NOW() - INTERVAL '2 days')",
+        )
+        .bind(entry("Old", &format!("Model {n}")))
+        .execute(&pool)
+        .await
+        .unwrap();
+    }
+    let r = add(&app, MARA, entry("New", "One too many")).await;
+    assert_eq!(r.status, StatusCode::TOO_MANY_REQUESTS);
+    sqlx::query("UPDATE proposals SET status = 'rejected'")
+        .execute(&pool)
+        .await
+        .unwrap();
+    let r = add(&app, MARA, entry("New", "Fits again")).await;
+    assert_eq!(r.status, StatusCode::ACCEPTED);
 }
 
 #[sqlx::test]
@@ -127,7 +272,7 @@ async fn lists_are_bounded(pool: PgPool) {
     people(&pool).await;
     let app = app(pool);
     for model in ["Firecracker", "Ripper", "Shiva"] {
-        add(&app, MARA, entry("Pyranha", model)).await;
+        add(&app, Who::Admin, entry("Pyranha", model)).await;
     }
 
     let get = |uri: String| {
@@ -173,7 +318,7 @@ async fn search_ranks_and_tolerates_typos_and_ids_keep_order(pool: PgPool) {
         ("Pyranha", "Ripper"),
     ] {
         ids.push(
-            add(&app, MARA, entry(brand, model)).await.body["id"]
+            add(&app, Who::Admin, entry(brand, model)).await.body["id"]
                 .as_i64()
                 .unwrap(),
         );
@@ -203,8 +348,8 @@ async fn the_paddler_filter_keeps_boats_that_state_no_range(pool: PgPool) {
     let mut heavy = entry("Pyranha", "Heavy");
     heavy["paddler_weight_min_kg"] = json!(90);
     heavy["paddler_weight_max_kg"] = json!(120);
-    add(&app, MARA, heavy).await;
-    add(&app, MARA, entry("Pyranha", "Silent")).await;
+    add(&app, Who::Admin, heavy).await;
+    add(&app, Who::Admin, entry("Pyranha", "Silent")).await;
 
     let r = call(
         &app,

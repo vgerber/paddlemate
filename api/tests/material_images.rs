@@ -352,14 +352,7 @@ async fn paddle_fields_round_trip_and_stay_with_paddles(pool: PgPool) {
         "blade_area_cm2": 742, "shaft": "bent", "shaft_material": "carbon",
         "lengths_cm": [191, 194], "feather_deg": [0, 30], "pieces": 1
     });
-    let r = call(
-        &app,
-        Method::POST,
-        "/materials",
-        Who::User("mara-1"),
-        Some(paddle),
-    )
-    .await;
+    let r = call(&app, Method::POST, "/materials", Who::Admin, Some(paddle)).await;
     assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);
     assert_eq!(r.body["colors"], json!(["Black", "Blue"]));
     assert_eq!(r.body["year_approximate"], true);
