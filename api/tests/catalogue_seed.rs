@@ -3,7 +3,7 @@
 
 use sqlx::PgPool;
 
-const SEED: &str = include_str!("../migrations/0057_materials_catalogue_seed.sql");
+const SEED: &str = include_str!("../migrations/0059_materials_catalogue_reseed.sql");
 
 async fn fingerprint(pool: &PgPool) -> (String, i64) {
     sqlx::query_as(

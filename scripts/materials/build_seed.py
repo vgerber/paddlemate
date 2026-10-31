@@ -7,6 +7,11 @@ The data files hold facts and links only (no images). The output is one
 idempotent SQL file: rows are upserted by (category, brand, model, variant)
 and an entry a user edited after import (updated_by set) is never touched.
 Run it again after changing the data and put the result in a new migration.
+
+    python3 -I scripts/materials/build_seed.py --size-migration [out.sql]
+
+writes the statements that move the size out of `variant` on catalogue rows
+already in a database, from the same split_variant() the seed uses.
 """
 import json
 import os
@@ -15,7 +20,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA = os.path.join(ROOT, "data", "materials")
-DEFAULT_OUT = os.path.join(ROOT, "api", "migrations", "0057_materials_catalogue_seed.sql")
+DEFAULT_OUT = os.path.join(ROOT, "api", "migrations", "0059_materials_catalogue_reseed.sql")
 
 DISCIPLINES = {"creek", "river_runner", "half_slice", "playboat", "slalom", "downriver",
                "crossover", "freestyle", "other"}
@@ -36,7 +41,7 @@ WEAK_WORDS = re.compile(r"archive|playak|snippet|search (summary|result)|listing
                         r"verify|conflict|disagree|unclear|uncertain|may be earlier|"
                         r"lower bound|bulk-import", re.I)
 
-COLUMNS = ["category", "brand", "model", "variant", "discipline", "construction",
+COLUMNS = ["category", "brand", "model", "variant", "size", "discipline", "construction",
            "year_from", "year_to", "year_approximate", "length_cm", "width_cm", "height_cm",
            "volume_l", "weight_kg", "cockpit_length_cm", "cockpit_width_cm",
            "paddler_weight_min_kg", "paddler_weight_max_kg", "product_url", "colors",
@@ -74,12 +79,78 @@ def add_note(e, text):
     e["notes"] = (e["notes"] + " " if e["notes"] else "") + text
 
 
+# A label that is only a size. Dagger writes SM/MD/LG for S/M/L, and the
+# range labels (S/M, M/L) are sizes in their own right.
+SIZE_LABELS = {
+    "xs": "XS", "s": "S", "small": "S", "sm": "S",
+    "m": "M", "medium": "M", "md": "M",
+    "l": "L", "large": "L", "lg": "L",
+    "xl": "XL",
+    "s/m": "S/M", "sm/md": "S/M", "m/l": "M/L", "md/lg": "M/L",
+    "m|l": "M/L", "medium/large": "M/L",
+}
+# Paddle labels stay builds, so only the plain single sizes move there.
+PADDLE_SIZES = {"XS", "S", "M", "L", "XL"}
+# A number with the year it was sold in brackets: "7.5 (2005)".
+SIZE_YEAR = re.compile(r"^(\d+(?:\.\d+)?) \((\d{4})\)$")
+
+
+def split_variant(category, variant):
+    """Split the free-text variant of an entry into (size, variant).
+
+    A size (S, Medium, SM/MD, 7.5 (2005)) moves to `size` in its short form;
+    what is left, an edition or a build, stays in `variant`. Anything not
+    plainly a size is left alone, so "L creek" or "Medium 648" keep their label.
+
+    >>> split_variant("kayak", "Medium")
+    ('M', None)
+    >>> split_variant("kayak", "SM/MD")
+    ('S/M', None)
+    >>> split_variant("kayak", "M|L")
+    ('M/L', None)
+    >>> split_variant("kayak", "8.5 (2005)")
+    ('8.5', '2005')
+    >>> split_variant("kayak", "PR-X")
+    (None, 'PR-X')
+    >>> split_variant("kayak", "L creek")
+    (None, 'L creek')
+    >>> split_variant("kayak", "65")
+    ('65', None)
+    >>> split_variant("kayak", "2005")
+    (None, '2005')
+    >>> split_variant("paddle", "L")
+    ('L', None)
+    >>> split_variant("paddle", "Large 703")
+    (None, 'Large 703')
+    >>> split_variant("paddle", "1 piece, bent shaft")
+    (None, '1 piece, bent shaft')
+    >>> split_variant("kayak", None)
+    (None, None)
+    """
+    label = (variant or "").strip()
+    if not label:
+        return None, None
+    if category == "paddle":
+        size = SIZE_LABELS.get(label.lower())
+        return (size, None) if size in PADDLE_SIZES else (None, label)
+    size = SIZE_LABELS.get(label.lower())
+    if size:
+        return size, None
+    if re.fullmatch(r"\d{1,3}(?:\.\d+)?", label):
+        return label, None
+    m = SIZE_YEAR.match(label)
+    if m:
+        return m.group(1), m.group(2)
+    return None, label
+
+
 def clean_common(e, out, category):
     out["category"] = category
     out["brand"] = (e["brand"] or "").strip()[:80]
     out["model"] = (e["model"] or "").strip()[:80]
-    variant = (e.get("variant") or "").strip() or None
+    size, variant = split_variant(category, e.get("variant"))
     out["variant"] = variant[:80] if variant else None
+    out["size"] = size[:40] if size else None
     out["notes"] = (e.get("notes") or "").strip()
 
     for field, allowed in (("discipline", DISCIPLINES), ("construction", CONSTRUCTIONS),
@@ -211,7 +282,51 @@ def split_paddles(entries):
 
 
 def identity(row):
-    return (row["category"], row["brand"].lower(), row["model"].lower(), (row["variant"] or "").lower())
+    return (row["category"], row["brand"].lower(), row["model"].lower(), (row["variant"] or "").lower(),
+            (row["size"] or "").lower())
+
+
+def legacy_labels():
+    """Every (category, variant) as the first seed stored it, with the split."""
+    with open(os.path.join(DATA, "kayaks.json"), encoding="utf-8") as fh:
+        kayaks = json.load(fh)
+    with open(os.path.join(DATA, "paddles.json"), encoding="utf-8") as fh:
+        paddles = split_paddles(json.load(fh))
+    labels = {("kayak", (e.get("variant") or "").strip()) for e in kayaks}
+    labels |= {("paddle", (e.get("variant") or "").strip()) for e in paddles}
+    return sorted(l for l in labels if l[1])
+
+
+def sql_text(v):
+    return "NULL" if v is None else "'" + v.replace("'", "''") + "'"
+
+
+def render_size_migration():
+    """UPDATE for catalogue rows whose variant holds a size, keyed by label.
+
+    Only untouched imports move (updated_by IS NULL): a user's edit keeps the
+    variant it was saved with.
+    """
+    moves = []
+    for category, label in legacy_labels():
+        size, variant = split_variant(category, label)
+        if (size, variant) != (None, label):
+            moves.append((category, label, size, variant))
+    values = ",\n    ".join(
+        f"('{c}'::material_category, {sql_text(old)}, {sql_text(size)}, {sql_text(variant)})"
+        for c, old, size, variant in moves)
+    return f"""-- Generated by scripts/materials/build_seed.py --size-migration.
+-- Moves the size out of `variant` on imported rows that no user has edited.
+
+UPDATE materials m SET size = v.size, variant = v.variant
+FROM (VALUES
+    {values}
+) AS v(category, old_variant, size, variant)
+WHERE m.category = v.category
+  AND m.variant = v.old_variant
+  AND m.created_by = 'system-catalogue'
+  AND m.updated_by IS NULL;
+"""
 
 
 def build():
@@ -238,9 +353,9 @@ def render(rows):
     insert_cols = ", ".join(COLUMNS)
     select_cols = ", ".join(COLUMNS)
     updates = ",\n    ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS
-                             if c not in ("category", "brand", "model", "variant"))
+                             if c not in ("category", "brand", "model", "variant", "size"))
     ident = ("category, lower(btrim(brand)), lower(btrim(model)), "
-             "lower(btrim(COALESCE(variant, '')))")
+             "lower(btrim(COALESCE(variant, ''))), lower(btrim(COALESCE(size, '')))")
     old = ", ".join(f"materials.{c}" for c in COLUMNS)
     new = ", ".join(f"EXCLUDED.{c}" for c in COLUMNS)
     return f"""-- Generated by scripts/materials/build_seed.py from data/materials/*.json.
@@ -270,11 +385,16 @@ JOIN materials m ON m.category = s.category
     AND lower(btrim(m.brand)) = lower(btrim(s.brand))
     AND lower(btrim(m.model)) = lower(btrim(s.model))
     AND lower(btrim(COALESCE(m.variant, ''))) = lower(btrim(COALESCE(s.variant, '')))
+    AND lower(btrim(COALESCE(m.size, ''))) = lower(btrim(COALESCE(s.size, '')))
 ON CONFLICT (material_id, source_url) DO NOTHING;
 """
 
 
 def main():
+    if sys.argv[1:2] == ["--size-migration"]:
+        sys.stdout.write(render_size_migration()) if len(sys.argv) < 3 else open(
+            sys.argv[2], "w", encoding="utf-8").write(render_size_migration())
+        return
     out = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
     rows = build()
     with open(out, "w", encoding="utf-8") as fh:
