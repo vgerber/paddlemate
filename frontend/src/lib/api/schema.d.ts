@@ -1141,7 +1141,7 @@ export interface paths {
         /** @description Search the material wiki. `ids` returns exactly the entries listed, in that order, for a comparison. */
         get: operations["list_materials"];
         put?: never;
-        /** @description Add an entry to the wiki. Any signed-in paddler may add one. */
+        /** @description Add an entry to the wiki (admin: immediate 201, other signed-in paddlers: proposal 202 for an admin to review) */
         post: operations["create_material"];
         delete?: never;
         options?: never;
@@ -1226,10 +1226,10 @@ export interface paths {
         };
         /** @description Get one wiki entry */
         get: operations["get_material"];
-        /** @description Replace an entry. Any signed-in paddler may correct one - the wiki keeps who last did. */
+        /** @description Replace an entry (admin: immediate 200, other signed-in paddlers: proposal 202 for an admin to review). An approved proposal replaces the entry as stored, whatever changed since. */
         put: operations["update_material"];
         post?: never;
-        /** @description Delete a wiki entry (admin only) */
+        /** @description Delete a wiki entry (admin: immediate 204, other signed-in paddlers: proposal 202 for an admin to review) */
         delete: operations["delete_material"];
         options?: never;
         head?: never;
@@ -2750,66 +2750,6 @@ export interface components {
             /** Format: int32 */
             year_to?: number | null;
         };
-        /**
-         * @description The writable fields of an entry. A PUT replaces all of them, so create and
-         *      update take the same body.
-         */
-        MaterialBody: {
-            description?: string | null;
-            /** Format: double */
-            blade_area_cm2?: number | null;
-            /** Format: double */
-            blade_length_cm?: number | null;
-            blade_material?: string | null;
-            /** Format: double */
-            blade_width_cm?: number | null;
-            brand: string;
-            category: components["schemas"]["MaterialCategory"];
-            /** Format: double */
-            cockpit_length_cm?: number | null;
-            /** Format: double */
-            cockpit_width_cm?: number | null;
-            /** @default [] */
-            colors?: string[];
-            construction?: components["schemas"]["MaterialConstruction"] | null;
-            discipline?: components["schemas"]["MaterialDiscipline"] | null;
-            feather_deg?: number[] | null;
-            /** Format: double */
-            height_cm?: number | null;
-            /** Format: double */
-            length_cm?: number | null;
-            /** Format: double */
-            length_max_cm?: number | null;
-            /** Format: double */
-            length_min_cm?: number | null;
-            lengths_cm?: number[] | null;
-            model: string;
-            notes?: string | null;
-            /** Format: double */
-            paddler_weight_max_kg?: number | null;
-            /** Format: double */
-            paddler_weight_min_kg?: number | null;
-            /** Format: int32 */
-            pieces?: number | null;
-            product_url?: string | null;
-            shaft?: components["schemas"]["PaddleShaft"] | null;
-            shaft_diameter?: string | null;
-            shaft_material?: components["schemas"]["PaddleShaftMaterial"] | null;
-            size?: string | null;
-            variant?: string | null;
-            /** Format: double */
-            volume_l?: number | null;
-            /** Format: double */
-            weight_kg?: number | null;
-            /** Format: double */
-            width_cm?: number | null;
-            /** @default false */
-            year_approximate?: boolean;
-            /** Format: int32 */
-            year_from?: number | null;
-            /** Format: int32 */
-            year_to?: number | null;
-        };
         /** @description A brand with the number of entries filed under it, for the brand filter. */
         MaterialBrand: {
             brand: string;
@@ -3407,6 +3347,69 @@ export interface components {
          *      the proposal when the caller is not an admin, and ignored when the change
          *      is applied directly.
          */
+        Proposable_for_MaterialBody: {
+            description?: string | null;
+            /** Format: double */
+            blade_area_cm2?: number | null;
+            /** Format: double */
+            blade_length_cm?: number | null;
+            blade_material?: string | null;
+            /** Format: double */
+            blade_width_cm?: number | null;
+            brand: string;
+            category: components["schemas"]["MaterialCategory"];
+            /** Format: double */
+            cockpit_length_cm?: number | null;
+            /** Format: double */
+            cockpit_width_cm?: number | null;
+            /** @default [] */
+            colors?: string[];
+            construction?: components["schemas"]["MaterialConstruction"] | null;
+            discipline?: components["schemas"]["MaterialDiscipline"] | null;
+            feather_deg?: number[] | null;
+            /** Format: double */
+            height_cm?: number | null;
+            /** Format: double */
+            length_cm?: number | null;
+            /** Format: double */
+            length_max_cm?: number | null;
+            /** Format: double */
+            length_min_cm?: number | null;
+            lengths_cm?: number[] | null;
+            model: string;
+            notes?: string | null;
+            /** Format: double */
+            paddler_weight_max_kg?: number | null;
+            /** Format: double */
+            paddler_weight_min_kg?: number | null;
+            /** Format: int32 */
+            pieces?: number | null;
+            product_url?: string | null;
+            /** @description Optional note for the reviewer (max 500 characters) */
+            proposal_note?: string | null;
+            shaft?: components["schemas"]["PaddleShaft"] | null;
+            shaft_diameter?: string | null;
+            shaft_material?: components["schemas"]["PaddleShaftMaterial"] | null;
+            size?: string | null;
+            variant?: string | null;
+            /** Format: double */
+            volume_l?: number | null;
+            /** Format: double */
+            weight_kg?: number | null;
+            /** Format: double */
+            width_cm?: number | null;
+            /** @default false */
+            year_approximate?: boolean;
+            /** Format: int32 */
+            year_from?: number | null;
+            /** Format: int32 */
+            year_to?: number | null;
+        };
+        /**
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
+         */
         Proposable_for_UpdateFeatureBody: {
             /** @description New description in `lang_code`; omit to leave descriptions unchanged */
             description?: string | null;
@@ -3490,7 +3493,7 @@ export interface components {
             user_vote?: number | null;
         };
         /** @enum {string} */
-        ProposalEntityType: "waterway" | "water_section" | "feature";
+        ProposalEntityType: "waterway" | "water_section" | "feature" | "material";
         /** @enum {string} */
         ProposalOperation: "create" | "update" | "delete";
         ProposalPath: {
@@ -4868,11 +4871,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-31T20:55:39.296588734Z",
-                     *         "expires_at": "2027-01-29T20:55:39.296591064Z",
+                     *         "created_at": "2026-10-31T21:21:36.005665252Z",
+                     *         "expires_at": "2027-01-29T21:21:36.005667482Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-31T20:55:39.296600965Z",
+                     *         "last_used_at": "2026-10-31T21:21:36.005675862Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4903,8 +4906,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-31T20:55:39.296707876Z",
-                     *       "expires_at": "2027-01-29T20:55:39.296708246Z",
+                     *       "created_at": "2026-10-31T21:21:36.005787521Z",
+                     *       "expires_at": "2027-01-29T21:21:36.005787901Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -8697,12 +8700,13 @@ export interface operations {
             cookie?: never;
         };
         /**
-         * @description The writable fields of an entry. A PUT replaces all of them, so create and
-         *      update take the same body.
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
          */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MaterialBody"];
+                "application/json": components["schemas"]["Proposable_for_MaterialBody"];
             };
         };
         responses: {
@@ -8717,6 +8721,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Material"];
+                };
+            };
+            /** @description Proposal submitted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
                 };
             };
             /** @description Invalid entry */
@@ -8746,7 +8759,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Daily limit of new entries reached */
+            /** @description Daily or pending limit reached */
             429: {
                 headers: {
                     [name: string]: unknown;
@@ -8969,12 +8982,13 @@ export interface operations {
             cookie?: never;
         };
         /**
-         * @description The writable fields of an entry. A PUT replaces all of them, so create and
-         *      update take the same body.
+         * @description A change body that may carry the submitter's note. The note is kept with
+         *      the proposal when the caller is not an admin, and ignored when the change
+         *      is applied directly.
          */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MaterialBody"];
+                "application/json": components["schemas"]["Proposable_for_MaterialBody"];
             };
         };
         responses: {
@@ -8989,6 +9003,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Material"];
+                };
+            };
+            /** @description Proposal submitted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
                 };
             };
             /** @description Invalid entry */
@@ -9027,6 +9050,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            /** @description Daily or pending limit reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
     };
     delete_material: {
@@ -9040,6 +9072,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Proposal submitted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
             /** @description Deleted */
             204: {
                 headers: {
@@ -9056,8 +9097,8 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Forbidden */
-            403: {
+            /** @description Entry not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -9065,8 +9106,8 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Entry not found */
-            404: {
+            /** @description Daily or pending limit reached */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
