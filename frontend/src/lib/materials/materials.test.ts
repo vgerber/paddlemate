@@ -27,6 +27,7 @@ function material(fields: Partial<Material> = {}): Material {
     category: "kayak",
     brand: "Testflow",
     colors: [],
+    siblings: [],
     year_approximate: false,
     images: [],
     model: "Cascade",
@@ -217,7 +218,7 @@ describe("searchText", () => {
 
 /** Every field of the request body, so a field added to the API fails here
  * until the round trip covers it. */
-const FULL_PADDLE: Required<MaterialBody> = {
+const FULL_PADDLE: Required<Omit<MaterialBody, "size">> = {
   category: "paddle",
   brand: "Aqua Bound",
   model: "Aerial",

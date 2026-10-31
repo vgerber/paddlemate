@@ -1166,6 +1166,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/materials/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The wiki as models: entries sharing category, brand, model and variant, each with its sizes. Takes the filters of the entry list (`ids` is ignored); paging counts models. */
+        get: operations["list_models"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/materials/images": {
         parameters: {
             query?: never;
@@ -2699,14 +2716,21 @@ export interface components {
             shaft?: components["schemas"]["PaddleShaft"] | null;
             shaft_diameter?: string | null;
             shaft_material?: components["schemas"]["PaddleShaftMaterial"] | null;
+            /** @description The other sizes of this entry's model, in size order. */
+            siblings: components["schemas"]["MaterialSibling"][];
+            /**
+             * @description Size within the model ("M", "S/M", "8.5"); absent when it comes in one
+             *      size only.
+             */
+            size?: string | null;
             /** @description Field name to the page its value came from; imported entries only. */
             sources?: unknown;
             /** Format: date-time */
             updated_at: string;
             updated_by_username?: string | null;
             /**
-             * @description Size or trim of the same model ("M", "Large"); absent when the model
-             *      comes in one size only.
+             * @description Edition or build of the model ("PR-X", "1 piece, bent shaft"); absent
+             *      when there is only one.
              */
             variant?: string | null;
             /** Format: double */
@@ -2771,6 +2795,7 @@ export interface components {
             shaft?: components["schemas"]["PaddleShaft"] | null;
             shaft_diameter?: string | null;
             shaft_material?: components["schemas"]["PaddleShaftMaterial"] | null;
+            size?: string | null;
             variant?: string | null;
             /** Format: double */
             volume_l?: number | null;
@@ -2871,9 +2896,36 @@ export interface components {
             /** Format: int64 */
             material_id: number;
         };
+        /**
+         * @description A model: the entries that share category, brand, model and variant, one
+         *      per size.
+         */
+        MaterialModel: {
+            brand: string;
+            category: components["schemas"]["MaterialCategory"];
+            construction?: components["schemas"]["MaterialConstruction"] | null;
+            discipline?: components["schemas"]["MaterialDiscipline"] | null;
+            model: string;
+            /** @description The sizes that match the filters, XS to XL and then by number. */
+            sizes: components["schemas"]["ModelSize"][];
+            /** @description Thumbnail of the first fetched photo of any size. */
+            thumb_url?: string | null;
+            variant?: string | null;
+            year_approximate: boolean;
+            /** Format: int32 */
+            year_from?: number | null;
+            /** Format: int32 */
+            year_to?: number | null;
+        };
         MaterialPath: {
             /** Format: int64 */
             material_id: number;
+        };
+        /** @description Another size of the same model. */
+        MaterialSibling: {
+            /** Format: int64 */
+            id: number;
+            size?: string | null;
         };
         /**
          * @description How a material list is ordered. Name is the default; the measurement sorts
@@ -2943,6 +2995,24 @@ export interface components {
              *      in their own thread.
              */
             include_from_notes?: boolean | null;
+        };
+        /** @description One size of a model in the models list. */
+        ModelSize: {
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            length_cm?: number | null;
+            /** @description Sizes offered, for a paddle sold in fixed lengths. */
+            lengths_cm?: number[] | null;
+            /** Format: double */
+            paddler_weight_max_kg?: number | null;
+            /** Format: double */
+            paddler_weight_min_kg?: number | null;
+            size?: string | null;
+            /** Format: double */
+            volume_l?: number | null;
+            /** Format: double */
+            weight_kg?: number | null;
         };
         /** @description Moderation of a note: admins only. */
         ModerateCommentRequest: {
@@ -3018,6 +3088,17 @@ export interface components {
         };
         PaginatedResponse_for_Material: {
             items: components["schemas"]["Material"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            per_page: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            total_pages: number;
+        };
+        PaginatedResponse_for_MaterialModel: {
+            items: components["schemas"]["MaterialModel"][];
             /** Format: int64 */
             page: number;
             /** Format: int64 */
@@ -4787,11 +4868,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-30T23:42:07.654354460Z",
-                     *         "expires_at": "2027-01-28T23:42:07.654357290Z",
+                     *         "created_at": "2026-10-31T20:55:39.296588734Z",
+                     *         "expires_at": "2027-01-29T20:55:39.296591064Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-30T23:42:07.654370830Z",
+                     *         "last_used_at": "2026-10-31T20:55:39.296600965Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4822,8 +4903,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-30T23:42:07.654506409Z",
-                     *       "expires_at": "2027-01-28T23:42:07.654506789Z",
+                     *       "created_at": "2026-10-31T20:55:39.296707876Z",
+                     *       "expires_at": "2027-01-29T20:55:39.296708246Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -8694,6 +8775,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MaterialBrand"][];
+                };
+            };
+        };
+    };
+    list_models: {
+        parameters: {
+            query?: {
+                /** @description Exact brand, case-insensitive. */
+                brand?: string | null;
+                category?: components["schemas"]["MaterialCategory"] | null;
+                construction?: components["schemas"]["MaterialConstruction"] | null;
+                discipline?: components["schemas"]["MaterialDiscipline"] | null;
+                /**
+                 * @description Body weight in kg - keeps the boats whose paddler range covers it. An
+                 *      entry that states no range is kept, since it contradicts nothing.
+                 */
+                fits_paddler_kg?: number | null;
+                /**
+                 * @description Comma separated ids - what the comparison view asks for. Overrides
+                 *      every other filter and returns those entries in one page.
+                 */
+                ids?: string | null;
+                max_length_cm?: number | null;
+                max_volume_l?: number | null;
+                max_weight_kg?: number | null;
+                min_length_cm?: number | null;
+                min_volume_l?: number | null;
+                min_weight_kg?: number | null;
+                /** @description Page number, starting at 1. */
+                page?: number | null;
+                /** @description Items per page (max 100, default 24). */
+                per_page?: number | null;
+                /** @description Filter by brand or model, diacritic- and typo-tolerant. */
+                q?: string | null;
+                sort?: components["schemas"]["MaterialSort"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_for_MaterialModel"];
                 };
             };
         };
