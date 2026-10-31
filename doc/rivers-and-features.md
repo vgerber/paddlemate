@@ -176,7 +176,9 @@ proposed feature is drawn on its section alongside that section's other
 features, and a proposed section alongside the river's other sections, so
 a reviewer can see that it fits and is not a duplicate. Admins can edit directly; the same endpoints turn a non-admin request
 into a pending proposal where that flow exists (e.g. new rivers via "Can't
-find your river? Add it").
+find your river? Add it"). The material wiki works the same way: an admin's
+create, edit or delete applies at once, anyone else's is a proposal
+([material-wiki.md](material-wiki.md)).
 
 ## Internals
 

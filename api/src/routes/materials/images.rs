@@ -18,7 +18,7 @@ use crate::{
     media,
     models::{material::MAX_QUERY_CHARS, path_params::MaterialImagePath},
     query::materials::images,
-    routes::access::require_server_admin,
+    routes::access::{require_server_admin, signed_in},
     state::AppState,
 };
 
@@ -30,8 +30,9 @@ pub async fn remove_image(
         image_id,
     }): Path<MaterialImagePath>,
 ) -> impl IntoApiResponse {
-    let Some(Extension(token)) = auth else {
-        return ApiError::unauthorized("Authentication required").into_response();
+    let token = match signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
     if let Err(err) = require_server_admin(&token, "Not permitted") {
         return err.into_response();
@@ -75,8 +76,9 @@ pub async fn remove_brand_images(
     auth: Option<Extension<AuthToken>>,
     Query(query): Query<BrandTakedown>,
 ) -> impl IntoApiResponse {
-    let Some(Extension(token)) = auth else {
-        return ApiError::unauthorized("Authentication required").into_response();
+    let token = match signed_in(auth) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
     if let Err(err) = require_server_admin(&token, "Not permitted") {
         return err.into_response();

@@ -180,16 +180,7 @@ async fn size_is_bounded_and_unique_within_a_model(pool: PgPool) {
     let body = |size: &str| json!({ "category": "kayak", "brand": "Nobody", "model": "Ripper", "size": size });
     let add = |b: Value| {
         let app = app.clone();
-        async move {
-            call(
-                &app,
-                Method::POST,
-                "/materials",
-                Who::User("mara-1"),
-                Some(b),
-            )
-            .await
-        }
+        async move { call(&app, Method::POST, "/materials", Who::Admin, Some(b)).await }
     };
     let r = add(body(&"x".repeat(41))).await;
     assert_eq!(r.status, StatusCode::BAD_REQUEST);

@@ -6,6 +6,7 @@ pub(super) fn parse_entity_type(s: &str) -> ProposalEntityType {
     match s {
         "waterway" => ProposalEntityType::Waterway,
         "water_section" => ProposalEntityType::WaterSection,
+        "material" => ProposalEntityType::Material,
         _ => ProposalEntityType::Feature,
     }
 }
