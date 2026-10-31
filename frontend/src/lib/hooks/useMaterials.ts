@@ -17,8 +17,8 @@ export const materialKeys = {
   lists: () => [...materialKeys.all, "list"] as const,
   list: (filters: MaterialFilters) =>
     [...materialKeys.lists(), filters] as const,
-  infinite: (filters: MaterialFilters) =>
-    [...materialKeys.lists(), "infinite", filters] as const,
+  models: (filters: MaterialFilters) =>
+    [...materialKeys.lists(), "models", filters] as const,
   compare: (ids: number[]) =>
     [...materialKeys.lists(), "compare", serializeCompareIds(ids)] as const,
   brands: (category: MaterialCategory | undefined) =>
@@ -33,14 +33,15 @@ export function useMaterials(filters: MaterialFilters = {}) {
   });
 }
 
-/** The list a reader scrolls: pages of PAGE_SIZE, the next one on request. */
+/** Models per page of the wiki list. */
 export const PAGE_SIZE = 24;
 
-export function useMaterialList(filters: MaterialFilters) {
+/** The model list a reader scrolls, one row per model. */
+export function useMaterialModels(filters: MaterialFilters) {
   return useInfiniteQuery({
-    queryKey: materialKeys.infinite(filters),
+    queryKey: materialKeys.models(filters),
     queryFn: ({ signal, pageParam }) =>
-      materialsApi.list(
+      materialsApi.models(
         { ...filters, page: pageParam, per_page: PAGE_SIZE },
         signal,
       ),

@@ -16,7 +16,7 @@ DELETE FROM groups WHERE id BETWEEN 9001 AND 9099;
 -- media rows referencing a fixture comment cascade with it
 DELETE FROM comments WHERE id BETWEEN 9900 AND 9999;
 -- material_images cascade from their entry
-DELETE FROM materials WHERE id BETWEEN 9850 AND 9899 OR brand = 'Specprobe';
+DELETE FROM materials WHERE id BETWEEN 9850 AND 9899 OR lower(btrim(brand)) IN ('specprobe', 'unitprobe');
 DELETE FROM proposal_votes WHERE proposal_id BETWEEN 9700 AND 9799;
 DELETE FROM proposals WHERE id BETWEEN 9700 AND 9799;
 DELETE FROM user_section_favorites WHERE section_id BETWEEN 9000 AND 9999;

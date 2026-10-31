@@ -976,6 +976,9 @@ FROM (VALUES
        paddler_weight_max_kg, product_url)
 CROSS JOIN (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
 
+-- The Cascade's S, M and L are sizes of one model, not editions.
+UPDATE materials SET size = variant, variant = NULL WHERE id BETWEEN 9851 AND 9853;
+
 -- Catalogue-style entries: colours, an approximate year, sources, a paddle
 -- and mirrored photos. Photocraft Lens has a real photo - copy
 -- .claude/skills/test-data/media/photocraft-lens*.jpg into the API's

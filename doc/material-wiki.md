@@ -1,7 +1,7 @@
 # Material wiki
 
-The gear catalog paddlers keep between them: one entry per boat, searchable
-by name, and comparable side by side. It ships with a researched catalogue of
+The gear catalog paddlers keep between them: one row per model, each with its
+sizes, searchable by name, and comparable side by side. It ships with a researched catalogue of
 whitewater kayaks and paddles (see Catalogue below); canoes, packrafts and
 SUPs share the kayak fields.
 
@@ -11,6 +11,12 @@ Measurements show, and are typed, in the units chosen under Settings > Units
 (cm or in, litres or US gallons, kg or lb); they are saved in metric.
 
 ## Finding a boat
+
+The list shows models, not single entries: the Pyranha Scorch is one row with
+its sizes (S, M, L) under it, the length, volume and weight it spans, and
+"Since 2021" (or "Since about 2021" when the year is weak). The count above
+the list counts models. Tapping a row opens the model; the **Size** chips
+there switch between its sizes, and the address holds the size you picked.
 
 Type a brand or a model into the search field. Spelling is forgiving the same
 way the river search is - `pyrhana` finds Pyranha - and typo tolerance starts
@@ -32,13 +38,16 @@ away:
 A boat that states no paddler range is kept by the **fits paddler** filter:
 saying nothing is not the same as saying it does not fit.
 
+While the **fits paddler** filter is set, a row lists only the sizes that fit.
 The filters and the search live in the address bar, so a narrowed list is a
 link you can send.
 
 ## Comparing
 
-Tick the boats you want on the list - up to eight - and press **Compare**
-(two are the least that compare).
+Tick the models you want on the list - up to eight - and press **Compare** in
+the bar above the list (two are the least that compare). A ticked model
+brings its first size; to compare other sizes, open the model and press
+**Compare sizes** under its All sizes table, which compares every size of it.
 The comparison puts one boat per column and one property per row, grouped
 into overview, hull, cockpit and paddler.
 
@@ -88,7 +97,9 @@ are the same boat.
 
 ## Catalogue
 
-An entry opens with its photos, each captioned "Photo: <maker>" and linking
+A model with sizes shows its Size chips and the facts of the picked size
+(length, volume, weight, paddler), then an **All sizes** table with the
+picked size marked. An entry opens with its photos, each captioned "Photo: <maker>" and linking
 to the page it came from, then its facts, colourways as chips, and the
 notes. An approximate year reads "about 2021". A paddle shows its own facts
 (blade area, lengths, shaft, angles, weight) in your units. A Sources list
@@ -286,12 +297,16 @@ gone is a no-op. Tests: `api/tests/material_proposals.rs`, `api/tests/materials.
 | --- | --- |
 | `lib/materials/materials.ts` | `MATERIAL_SPECS` (the one list of comparable measurements), labels, `specSpread`, the comparison's id list, the URL search shape, and the entry form's value conversion |
 | `lib/hooks/useMaterials.ts` | `materialKeys` and every query and mutation |
-| `components/materials/` | `MaterialsView` (list), `MaterialRow`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `MaterialGallery` (photos and credits), `WikiPage` (the frame) |
+| `components/materials/` | `MaterialsView` (list), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `MaterialGallery` (photos and credits), `WikiPage` (the frame) |
 | `routes/materials/` | `index` (list), `$materialId` (detail, `?edit=true` for the form), `compare`, `new` |
 
 The wiki is a normal page, not a map screen: a centred column on a desktop,
-edge to edge on a phone, reached from Tools. The list pages 24 at a time
-("Show more"). Specs: `frontend/e2e/materials/`.
+edge to edge on a phone, reached from Tools. The list reads
+`GET /materials/models` (`materialKeys.models`, 24 models a page, "Show more");
+a row opens the model's first size, and the size chips navigate to the sibling
+entry's id. The model page asks for its sizes with the `ids` list to fill the
+All sizes table. The entry form holds `size` beside `variant`, and an
+untouched edit sends the stored value back (PUT replaces every field). Specs: `frontend/e2e/materials/`.
 
 Adding a measurement is one row in `MATERIAL_SPECS` plus its column: the
 list row, the detail view, the comparison and the entry form all read that

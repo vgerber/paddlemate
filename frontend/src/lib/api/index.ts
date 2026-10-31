@@ -111,6 +111,10 @@ export type MaterialDiscipline = components["schemas"]["MaterialDiscipline"];
 export type PaddleShaft = components["schemas"]["PaddleShaft"];
 export type PaddleShaftMaterial = components["schemas"]["PaddleShaftMaterial"];
 export type MaterialImage = components["schemas"]["MaterialImage"];
+export type MaterialModel = components["schemas"]["MaterialModel"];
+export type ModelSize = components["schemas"]["ModelSize"];
+export type MaterialModelPage =
+  components["schemas"]["PaginatedResponse_for_MaterialModel"];
 export type MaterialSort = components["schemas"]["MaterialSort"];
 export type MaterialPage =
   components["schemas"]["PaginatedResponse_for_Material"];
@@ -583,6 +587,14 @@ export const materialsApi = {
   /** Search the wiki. `ids` asks for exactly those entries, in that order. */
   list: async (filters: MaterialFilters = {}, signal?: AbortSignal) => {
     const { data } = await client.GET("/api/v1/materials", {
+      params: { query: filters },
+      signal,
+    });
+    return assertData(data);
+  },
+  /** The wiki as models, each with its sizes; paging counts models. */
+  models: async (filters: MaterialFilters = {}, signal?: AbortSignal) => {
+    const { data } = await client.GET("/api/v1/materials/models", {
       params: { query: filters },
       signal,
     });

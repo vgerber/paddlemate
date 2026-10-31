@@ -5,6 +5,7 @@ import type {
   MaterialConstruction,
   MaterialDiscipline,
   MaterialFilters,
+  MaterialModel,
   MaterialSort,
   PaddleShaft,
   PaddleShaftMaterial,
@@ -191,23 +192,145 @@ export function formatSpec(
   return formatQuantity(spec.quantity, value, units);
 }
 
-/** Brand, model and variant as one name: "Testflow Cascade M". */
-export function materialTitle(material: Material): string {
-  return [material.brand, material.model, material.variant]
-    .filter(Boolean)
-    .join(" ");
+/** Brand, model and variant as one name: "Pyranha Scorch PRO". */
+export function modelTitle(
+  model: Pick<Material, "brand" | "model" | "variant">,
+): string {
+  return [model.brand, model.model, model.variant].filter(Boolean).join(" ");
+}
+
+/** The model's name plus the size of this entry: "Pyranha Scorch M". */
+export function materialTitle(
+  material: Pick<Material, "brand" | "model" | "variant" | "size">,
+): string {
+  return [modelTitle(material), material.size].filter(Boolean).join(" ");
+}
+
+const LETTER_SIZES = ["XXS", "XS", "S", "S/M", "M", "M/L", "L", "XL", "XXL"];
+
+/** Sort key of a size label, matching the server: XS..XL first, then numbers,
+ * then anything else as written. */
+function sizeRank(size: string | null | undefined): [number, number, string] {
+  const label = size ?? "";
+  const letter = LETTER_SIZES.indexOf(label.toUpperCase());
+  if (letter >= 0) return [0, letter, label];
+  const number = Number.parseFloat(label);
+  if (Number.isFinite(number)) return [1, number, label];
+  return [2, 0, label];
+}
+
+/** Order two size labels: XS, S, M, L, XL, then numeric, then the rest. */
+export function compareSizes(
+  a: string | null | undefined,
+  b: string | null | undefined,
+): number {
+  const [ra, na, ta] = sizeRank(a);
+  const [rb, nb, tb] = sizeRank(b);
+  return ra - rb || na - nb || ta.localeCompare(tb);
+}
+
+/** The sizes of an entry's model, itself included, in size order. Empty when
+ * the model has one entry, so a single size shows no picker. */
+export function modelSizes(
+  material: Pick<Material, "id" | "size" | "siblings">,
+): { id: number; size?: string | null }[] {
+  if (material.siblings.length === 0) return [];
+  return [{ id: material.id, size: material.size }, ...material.siblings].sort(
+    (a, b) => compareSizes(a.size, b.size),
+  );
+}
+
+/** A handful of fixed lengths as a list, "191, 194, 197 cm"; more than that
+ * reads as the range they span. */
+function lengthsLabel(lengths: number[], units: Units): string {
+  const unique = [...new Set(lengths)].sort((a, b) => a - b);
+  if (unique.length > 5) return rangeLabel("length", unique, units);
+  const num = (cm: number) =>
+    String(Number(toDisplay("length", cm, units).toFixed(1)));
+  return `${unique.map(num).join(", ")} ${unitLabel("length", units)}`;
+}
+
+/** The lowest and highest stated value as one phrase in the chosen unit:
+ * "259-279 cm", "24.5 kg". Empty when no value is stated. */
+export function rangeLabel(
+  quantity: Quantity,
+  values: (number | null | undefined)[],
+  units: Units,
+): string {
+  const stated = values.filter((value): value is number => value != null);
+  if (stated.length === 0) return "";
+  const num = (metric: number) =>
+    String(Number(toDisplay(quantity, metric, units).toFixed(1)));
+  const min = num(Math.min(...stated));
+  const max = num(Math.max(...stated));
+  const unit = unitLabel(quantity, units);
+  return min === max ? `${min} ${unit}` : `${min}-${max} ${unit}`;
+}
+
+/** The figures line of a model row: length and weight across its sizes
+ * (volume as well for boats), the ones the sizes state only. */
+export function modelFigures(model: MaterialModel, units: Units): string {
+  const sizes = model.sizes;
+  const isPaddle = model.category === "paddle";
+  const lengths = sizes.flatMap((size) => size.lengths_cm ?? []);
+  const parts: [string, string][] = [
+    [
+      "Length",
+      isPaddle && lengths.length > 0
+        ? lengthsLabel(lengths, units)
+        : rangeLabel(
+            "length",
+            sizes.map((size) => size.length_cm),
+            units,
+          ),
+    ],
+    [
+      "Volume",
+      rangeLabel(
+        "volume",
+        sizes.map((s) => s.volume_l),
+        units,
+      ),
+    ],
+    [
+      "Weight",
+      rangeLabel(
+        "weight",
+        sizes.map((s) => s.weight_kg),
+        units,
+      ),
+    ],
+  ];
+  return parts
+    .filter(([label, value]) => value && !(isPaddle && label === "Volume"))
+    .map(([label, value]) => `${label} ${value}`)
+    .join("  ·  ");
 }
 
 /** The production run, open at either end: "2022-", "2019-2024", "2020".
  * Empty when the entry states no year at all. A year that rests on a weak
  * source reads "about 2022-"; an open start reads "until about 2024". */
-export function yearsLabel(material: Material): string {
+export function yearsLabel(
+  material: Pick<Material, "year_from" | "year_to" | "year_approximate">,
+): string {
   const { year_from: from, year_to: to } = material;
   if (from == null && to == null) return "";
   const about = material.year_approximate ? "about " : "";
   if (from == null) return `until ${about}${to}`;
   if (to == null) return `${about}${from}-`;
   return from === to ? `${about}${from}` : `${about}${from}-${to}`;
+}
+
+/** The run of a model as a list row reads it: "Since 2021" for a model still
+ * built, the plain years otherwise. */
+export function sinceLabel(
+  material: Pick<Material, "year_from" | "year_to" | "year_approximate">,
+): string {
+  const years = yearsLabel(material);
+  if (material.year_from != null && material.year_to == null) {
+    return `Since ${years.replace(/-$/, "")}`;
+  }
+  return years;
 }
 
 /** The paddler weight window as one line, open at either end. */
@@ -269,6 +392,27 @@ export function toggleCompareId(ids: number[], id: number): number[] {
   return [...ids, id];
 }
 
+/** Whether any size of a model is held in the comparison. */
+export function modelPicked(
+  ids: number[],
+  model: Pick<MaterialModel, "sizes">,
+): boolean {
+  return model.sizes.some((size) => ids.includes(size.id));
+}
+
+/** Tick a model in the list: its first size joins the comparison, or every
+ * size of it already held leaves. */
+export function toggleModelCompare(
+  ids: number[],
+  model: Pick<MaterialModel, "sizes">,
+): number[] {
+  if (modelPicked(ids, model)) {
+    const own = model.sizes.map((size) => size.id);
+    return ids.filter((id) => !own.includes(id));
+  }
+  return model.sizes.length > 0 ? toggleCompareId(ids, model.sizes[0].id) : ids;
+}
+
 /** The entry form's fields. Every number is held as the text the reader
  * typed, so a half-typed "2." is not rounded away under the cursor; the
  * conversion to an entry happens once, on save. */
@@ -277,6 +421,7 @@ export type MaterialFormValues = {
   brand: string;
   model: string;
   variant: string;
+  size: string;
   discipline: MaterialDiscipline | "";
   construction: MaterialConstruction | "";
   description: string;
@@ -312,6 +457,7 @@ export function emptyMaterialForm(): MaterialFormValues {
     brand: "",
     model: "",
     variant: "",
+    size: "",
     discipline: "",
     construction: "",
     description: "",
@@ -366,6 +512,7 @@ export function materialToForm(
     brand: material.brand,
     model: material.model,
     variant: material.variant ?? "",
+    size: material.size ?? "",
     discipline: material.discipline ?? "",
     construction: material.construction ?? "",
     description: material.description ?? "",
@@ -462,6 +609,7 @@ export function materialFormToBody(
     brand: values.brand.trim(),
     model: values.model.trim(),
     variant: optionalText(values.variant),
+    size: optionalText(values.size),
     discipline: values.discipline || undefined,
     construction: values.construction || undefined,
     description: optionalText(values.description),
@@ -614,6 +762,24 @@ export function paddleLengthLabel(material: Material, units: Units): string {
     return `${num((min ?? max) as number)} ${unit}`;
   }
   return "";
+}
+
+/** The facts a size picker shows for the picked entry: length, volume and
+ * weight where stated, and the paddler it is built for. */
+export function sizeFacts(
+  material: Material,
+  units: Units,
+): { label: string; value: string }[] {
+  const facts = MATERIAL_SPECS.filter((spec) =>
+    ["length_cm", "volume_l", "weight_kg"].includes(spec.key),
+  )
+    .filter((spec) => specValue(material, spec.key) != null)
+    .map((spec) => ({
+      label: spec.label,
+      value: formatSpec(specValue(material, spec.key), spec, units),
+    }));
+  const paddler = paddlerRangeLabel(material, units);
+  return paddler ? [...facts, { label: "Paddler", value: paddler }] : facts;
 }
 
 /** A paddle's specs as labelled values in the chosen units, the ones the

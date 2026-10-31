@@ -10,7 +10,7 @@ import {
   parseCompareIds,
   parseMaterialSearch,
   serializeCompareIds,
-  toggleCompareId,
+  toggleModelCompare,
 } from "@/lib/materials/materials";
 
 export const Route = createFileRoute("/materials/")({
@@ -53,7 +53,9 @@ function MaterialWikiPage() {
           })
         }
         onAdd={onAdd}
-        onToggleCompare={(id) => setCompare(toggleCompareId(compareIds, id))}
+        onToggleCompare={(model) =>
+          setCompare(toggleModelCompare(compareIds, model))
+        }
         onClearCompare={() => setCompare([])}
         onCompare={() =>
           navigate({

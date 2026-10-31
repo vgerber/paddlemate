@@ -4,25 +4,18 @@ import Checkbox from "@mui/material/Checkbox";
 import Typography from "@mui/material/Typography";
 import { listRowSx } from "@/components/canvas/flatRow";
 import { trailSlotSx } from "@/components/phone/phoneGrid";
-import type { Material } from "@/lib/api";
+import type { MaterialModel } from "@/lib/api";
 import {
   CATEGORY_LABELS,
   enumLabel,
-  formatSpec,
-  MATERIAL_SPECS,
-  materialTitle,
-  paddleLengthLabel,
-  specValue,
-  yearsLabel,
+  modelFigures,
+  modelTitle,
+  sinceLabel,
 } from "@/lib/materials/materials";
 import { useUnits } from "@/lib/prefs/units";
 import { cardTitleSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
-
-/** The measurements a row carries: the three that tell boats apart at a
- * glance. The rest live in the detail view and the comparison. */
-const ROW_SPEC_KEYS = ["length_cm", "volume_l", "weight_kg"] as const;
 
 /** Side of the thumbnail box, px. */
 const THUMB = 56;
@@ -33,50 +26,42 @@ const metaSx = {
   color: "text.secondary",
 } as const;
 
-/** One entry in the wiki list: its name, what it is, the three figures that
- * matter, and a checkbox at the right that puts it in the comparison. */
-export default function MaterialRow({
-  material,
+/** One model in the wiki list: its name, what it is, the figures across its
+ * sizes, the sizes themselves, and a checkbox at the right that puts it in the
+ * comparison (its first size, or the sizes already picked). */
+export default function ModelRow({
+  model,
   selected,
   compareDisabled,
   showCategory,
   onOpen,
   onToggleCompare,
 }: {
-  material: Material;
-  /** True while the entry is held in the comparison. */
+  model: MaterialModel;
+  /** True while a size of the model is held in the comparison. */
   selected: boolean;
-  /** The comparison is full and this entry is not in it. */
+  /** The comparison is full and no size of this model is in it. */
   compareDisabled: boolean;
   /** Dropped when the list is already narrowed to one category. */
   showCategory: boolean;
   onOpen: () => void;
   onToggleCompare: () => void;
 }) {
+  const [units] = useUnits();
   const kind = [
-    showCategory && CATEGORY_LABELS[material.category],
-    material.discipline && enumLabel(material.discipline),
-    material.construction && enumLabel(material.construction),
-    yearsLabel(material),
+    showCategory && CATEGORY_LABELS[model.category],
+    model.discipline && enumLabel(model.discipline),
+    model.construction && enumLabel(model.construction),
+    sinceLabel(model),
   ]
     .filter(Boolean)
     .join(" · ");
-  const [units] = useUnits();
-  const isPaddle = material.category === "paddle";
-  const keys: readonly string[] = isPaddle ? ["weight_kg"] : ROW_SPEC_KEYS;
-  const paddleLength = isPaddle ? paddleLengthLabel(material, units) : "";
-  const figures = [
-    paddleLength && `Length ${paddleLength}`,
-    ...MATERIAL_SPECS.filter((spec) => keys.includes(spec.key))
-      .map((spec) => ({ spec, value: specValue(material, spec.key) }))
-      .filter(({ value }) => value != null)
-      .map(
-        ({ spec, value }) => `${spec.label} ${formatSpec(value, spec, units)}`,
-      ),
-  ]
+  const figures = modelFigures(model, units);
+  const sizes = model.sizes
+    .map((size) => size.size)
     .filter(Boolean)
-    .join("  ·  ");
-  const thumb = material.images[0]?.thumb_url;
+    .join(" · ");
+  const thumb = model.thumb_url;
 
   return (
     // The open target and the checkbox are siblings: a checkbox inside a
@@ -141,12 +126,17 @@ export default function MaterialRow({
         </Box>
         <Box sx={{ minWidth: 0 }}>
           <Typography sx={{ ...cardTitleSx, overflowWrap: "anywhere" }}>
-            {materialTitle(material)}
+            {modelTitle(model)}
           </Typography>
           {kind && <Typography sx={metaSx}>{kind}</Typography>}
           {figures && (
             <Typography sx={{ ...metaSx, fontVariantNumeric: "tabular-nums" }}>
               {figures}
+            </Typography>
+          )}
+          {sizes && (
+            <Typography data-testid="model-sizes" sx={metaSx}>
+              {sizes}
             </Typography>
           )}
         </Box>
@@ -157,7 +147,7 @@ export default function MaterialRow({
           disabled={compareDisabled}
           onChange={onToggleCompare}
           slotProps={{
-            input: { "aria-label": `Compare ${materialTitle(material)}` },
+            input: { "aria-label": `Compare ${modelTitle(model)}` },
           }}
           sx={{ width: tokens.touch.min, height: tokens.touch.min, p: 0 }}
         />

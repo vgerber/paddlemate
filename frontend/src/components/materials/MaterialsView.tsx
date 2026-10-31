@@ -11,21 +11,23 @@ import { fabRoom } from "@/components/PaneFab";
 import { phoneCardSx } from "@/components/phone/phoneGrid";
 import FilterChip from "@/components/search/FilterChip";
 import QueryStates from "@/components/states/QueryStates";
+import type { MaterialModel } from "@/lib/api";
 import { useDebouncedValue } from "@/lib/hooks/ui/useDebouncedValue";
-import { useMaterialList } from "@/lib/hooks/useMaterials";
-import { CloseIcon, CompareIcon, MaterialIcon, SearchIcon } from "@/lib/icons";
+import { useMaterialModels } from "@/lib/hooks/useMaterials";
+import { CloseIcon, MaterialIcon, SearchIcon } from "@/lib/icons";
 import {
   activeFilterCount,
   CATEGORY_LABELS,
   enumLabel,
   MAX_COMPARE,
   type MaterialWikiSearch,
+  modelPicked,
   toMaterialFilters,
 } from "@/lib/materials/materials";
 import { formatQuantity, useUnits } from "@/lib/prefs/units";
 import { theme } from "@/lib/theme/theme";
 import MaterialFiltersSheet from "./MaterialFiltersSheet";
-import MaterialRow from "./MaterialRow";
+import ModelRow from "./ModelRow";
 
 const { tokens } = theme;
 
@@ -104,8 +106,6 @@ function CompareBar({
         Clear
       </Button>
       <Button
-        variant="contained"
-        startIcon={<CompareIcon />}
         disabled={count < 2}
         onClick={onCompare}
         sx={{ minHeight: tokens.touch.min }}
@@ -133,7 +133,7 @@ export default function MaterialsView({
   onChange: (patch: Partial<MaterialWikiSearch>) => void;
   onOpen: (id: number) => void;
   onAdd: () => void;
-  onToggleCompare: (id: number) => void;
+  onToggleCompare: (model: MaterialModel) => void;
   onClearCompare: () => void;
   onCompare: () => void;
 }) {
@@ -150,7 +150,7 @@ export default function MaterialsView({
     if (next !== search.q) onChange({ q: next });
   }, [debouncedText, search.q, onChange]);
 
-  const query = useMaterialList(toMaterialFilters(search));
+  const query = useMaterialModels(toMaterialFilters(search));
   const items = query.data?.pages.flatMap((page) => page.items) ?? [];
   const total = query.data?.pages[0]?.total;
 
@@ -226,7 +226,7 @@ export default function MaterialsView({
         </ChipRow>
       </Box>
 
-      <ListPaneHeader count={total} noun="item" loading={query.isLoading} />
+      <ListPaneHeader count={total} noun="model" loading={query.isLoading} />
 
       <Box
         sx={{
@@ -262,18 +262,18 @@ export default function MaterialsView({
               overflow: { md: "hidden" },
             }}
           >
-            {items.map((material) => (
-              <MaterialRow
-                key={material.id}
-                material={material}
-                selected={compareIds.includes(material.id)}
+            {items.map((model) => (
+              <ModelRow
+                key={`${model.category}-${model.brand}-${model.model}-${model.variant ?? ""}`}
+                model={model}
+                selected={modelPicked(compareIds, model)}
                 compareDisabled={
                   compareIds.length >= MAX_COMPARE &&
-                  !compareIds.includes(material.id)
+                  !modelPicked(compareIds, model)
                 }
                 showCategory={search.category == null}
-                onOpen={() => onOpen(material.id)}
-                onToggleCompare={() => onToggleCompare(material.id)}
+                onOpen={() => onOpen(model.sizes[0].id)}
+                onToggleCompare={() => onToggleCompare(model)}
               />
             ))}
           </Box>

@@ -4,19 +4,24 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import Fact from "@/components/Fact";
+import AllSizesTable from "@/components/materials/AllSizesTable";
 import MaterialGallery from "@/components/materials/MaterialGallery";
+import SizePicker from "@/components/materials/SizePicker";
 import { phoneCardSx } from "@/components/phone/phoneGrid";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import SectionHeading from "@/components/SectionHeading";
 import type { Material } from "@/lib/api";
+import { useMaterialComparison } from "@/lib/hooks/useMaterials";
 import { DeleteIcon, EditIcon, OpenExternalIcon, PhotoIcon } from "@/lib/icons";
 import {
   CATEGORY_LABELS,
   enumLabel,
   formatSpec,
   MATERIAL_SPECS,
+  modelSizes,
   paddleFacts,
   SPEC_GROUP_LABELS,
+  sizeFacts,
   sourceLinks,
   specValue,
   yearsLabel,
@@ -143,10 +148,15 @@ export function materialActions({
  * the numbers come from and who put them there. */
 export default function MaterialDetailView({
   material,
+  onPickSize,
 }: {
   material: Material;
+  /** Opens another size of the model: the URL holds the entry id. */
+  onPickSize: (id: number) => void;
 }) {
   const [units] = useUnits();
+  const sizes = modelSizes(material);
+  const siblings = useMaterialComparison(sizes.map((size) => size.id));
   const facts = [
     { label: "Category", value: CATEGORY_LABELS[material.category] },
   ];
@@ -168,6 +178,27 @@ export default function MaterialDetailView({
   return (
     <Box sx={{ pt: 1, pb: 3 }}>
       <MaterialGallery material={material} />
+      {sizes.length > 0 && (
+        <Box sx={{ ...cardSx, py: 2, display: "grid", gap: 2 }}>
+          <SizePicker
+            sizes={sizes}
+            pickedId={material.id}
+            onPick={onPickSize}
+          />
+          <Box
+            data-testid="size-facts"
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+              gap: 2,
+            }}
+          >
+            {sizeFacts(material, units).map((fact) => (
+              <Fact key={fact.label} label={fact.label} value={fact.value} />
+            ))}
+          </Box>
+        </Box>
+      )}
       <Box sx={{ ...cardSx, py: 2 }}>
         <Box
           sx={{
@@ -246,6 +277,15 @@ export default function MaterialDetailView({
           </Card>
         );
       })}
+
+      {siblings.data && siblings.data.length > 1 && (
+        <Box>
+          <Box sx={{ mx: { xs: `${tokens.phone.edge}px`, md: 0 } }}>
+            <SectionHeading inset>All sizes</SectionHeading>
+          </Box>
+          <AllSizesTable materials={siblings.data} pickedId={material.id} />
+        </Box>
+      )}
 
       {sources.length > 0 && (
         <Card heading="Sources">
