@@ -310,7 +310,10 @@ pub fn materials_routes(state: AppState) -> aide::axum::ApiRouter {
         .api_route("/brands", get_with(list_brands, list_brands_docs))
         .api_route(
             "/images",
-            delete_with(images::remove_brand_images, images::remove_brand_images_docs),
+            delete_with(
+                images::remove_brand_images,
+                images::remove_brand_images_docs,
+            ),
         )
         .api_route(
             "/{material_id}/images/{image_id}",

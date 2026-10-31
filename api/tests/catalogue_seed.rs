@@ -17,12 +17,11 @@ async fn fingerprint(pool: &PgPool) -> (String, i64) {
 
 #[sqlx::test]
 async fn the_seed_fills_the_wiki(pool: PgPool) {
-    let counts: Vec<(String, i64)> = sqlx::query_as(
-        "SELECT category::text, COUNT(*) FROM materials GROUP BY 1 ORDER BY 1",
-    )
-    .fetch_all(&pool)
-    .await
-    .unwrap();
+    let counts: Vec<(String, i64)> =
+        sqlx::query_as("SELECT category::text, COUNT(*) FROM materials GROUP BY 1 ORDER BY 1")
+            .fetch_all(&pool)
+            .await
+            .unwrap();
     let of = |name: &str| counts.iter().find(|c| c.0 == name).map_or(0, |c| c.1);
     assert!(of("kayak") >= 500, "{counts:?}");
     assert!(of("paddle") >= 150, "{counts:?}");
@@ -71,5 +70,9 @@ async fn an_edited_entry_survives_a_reseed(pool: PgPool) {
         .fetch_one(&pool)
         .await
         .unwrap();
-    assert_ne!(drifted, Some(124.0), "an untouched import is brought back to the data");
+    assert_ne!(
+        drifted,
+        Some(124.0),
+        "an untouched import is brought back to the data"
+    );
 }

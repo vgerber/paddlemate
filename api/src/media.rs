@@ -60,9 +60,9 @@ pub fn url_for(storage_key: &str) -> String {
     format!("{}/{storage_key}", media_base())
 }
 
-/// Decode `bytes`, re-encode a display copy and a thumbnail, and write both
-/// under `media_dir()`. Fails when the bytes are not a supported image.
-pub async fn store_image(bytes: &[u8]) -> anyhow::Result<StoredImage> {
+/// Decode `bytes` and encode the display copy and the thumbnail as JPEG,
+/// returning both and the display size.
+fn encode_copies(bytes: &[u8]) -> anyhow::Result<(Vec<u8>, Vec<u8>, u32, u32)> {
     let decoded = image::load_from_memory(bytes)
         .map_err(|_| anyhow::anyhow!("not a readable image (jpeg, png or webp)"))?;
 
@@ -92,8 +92,23 @@ pub async fn store_image(bytes: &[u8]) -> anyhow::Result<StoredImage> {
         .encode_image(&display_rgb)?;
     image::codecs::jpeg::JpegEncoder::new_with_quality(&mut thumb_bytes, JPEG_QUALITY)
         .encode_image(&thumb_rgb)?;
-    let display_bytes = display_bytes.into_inner();
-    let thumb_bytes = thumb_bytes.into_inner();
+    Ok((
+        display_bytes.into_inner(),
+        thumb_bytes.into_inner(),
+        display_rgb.width(),
+        display_rgb.height(),
+    ))
+}
+
+/// Decode `bytes`, re-encode a display copy and a thumbnail, and write both
+/// under `media_dir()`. Fails when the bytes are not a supported image.
+pub async fn store_image(bytes: &[u8]) -> anyhow::Result<StoredImage> {
+    // Decoding and encoding are CPU work: keep them off the async runtime.
+    let owned = bytes.to_vec();
+    let (display_bytes, thumb_bytes, width, height) =
+        tokio::task::spawn_blocking(move || encode_copies(&owned))
+            .await
+            .map_err(|e| anyhow::anyhow!("image task failed: {e}"))??;
 
     let storage_key = format!("{}.jpg", uuid::Uuid::new_v4());
     let dir = media_dir();
@@ -104,8 +119,8 @@ pub async fn store_image(bytes: &[u8]) -> anyhow::Result<StoredImage> {
     Ok(StoredImage {
         storage_key,
         mime_type: ImageFormat::Jpeg.to_mime_type().to_string(),
-        width: display_rgb.width(),
-        height: display_rgb.height(),
+        width,
+        height,
         byte_size: display_bytes.len() as u64,
     })
 }

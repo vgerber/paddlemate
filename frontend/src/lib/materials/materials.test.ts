@@ -356,6 +356,12 @@ describe("paddle facts", () => {
     ).toBe("191, 194 cm");
   });
 
+  test("a kayak yields no paddle facts", () => {
+    expect(
+      paddleFacts(material({ category: "kayak", weight_kg: 20 }), METRIC),
+    ).toEqual([]);
+  });
+
   test("states nothing for a bare entry", () => {
     expect(paddleFacts(material({ category: "paddle" }), METRIC)).toEqual([]);
   });

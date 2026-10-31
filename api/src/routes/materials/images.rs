@@ -18,6 +18,7 @@ use crate::{
     media,
     models::{material::MAX_QUERY_CHARS, path_params::MaterialImagePath},
     query::materials::images,
+    routes::access::require_server_admin,
     state::AppState,
 };
 
@@ -32,8 +33,8 @@ pub async fn remove_image(
     let Some(Extension(token)) = auth else {
         return ApiError::unauthorized("Authentication required").into_response();
     };
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Not permitted").into_response();
+    if let Err(err) = require_server_admin(&token, "Not permitted") {
+        return err.into_response();
     }
     match images::remove_one(&app.pg_pool, material_id, image_id).await {
         Ok(Some(file)) => {
@@ -77,8 +78,8 @@ pub async fn remove_brand_images(
     let Some(Extension(token)) = auth else {
         return ApiError::unauthorized("Authentication required").into_response();
     };
-    if !token.is_server_admin() {
-        return ApiError::forbidden("Not permitted").into_response();
+    if let Err(err) = require_server_admin(&token, "Not permitted") {
+        return err.into_response();
     }
     let brand = query.brand.as_deref().map(str::trim).unwrap_or_default();
     if brand.is_empty() || brand.chars().count() > MAX_QUERY_CHARS {

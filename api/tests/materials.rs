@@ -28,7 +28,10 @@ async fn add(app: &Router, who: Who, body: Value) -> common::Reply {
 
 /// The seeded catalogue would swamp counts; these tests start from nothing.
 async fn clear_catalogue(pool: &PgPool) {
-    sqlx::query("DELETE FROM materials").execute(pool).await.unwrap();
+    sqlx::query("DELETE FROM materials")
+        .execute(pool)
+        .await
+        .unwrap();
 }
 
 const MARA: Who = Who::User("mara-1");
