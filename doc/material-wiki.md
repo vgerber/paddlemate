@@ -71,7 +71,13 @@ is optional, and the next reader can fill in what is missing. The entry keeps
 who added it and who last edited it - for an approved proposal, the
 paddler who proposed it, not the admin who approved it.
 
-You can leave the admin a note with a proposal (500 characters).
+You can leave the admin a note with a proposal (500 characters); the entry
+form asks for it when you are not an admin. A delete request has no note. An
+entry you have a proposal on says so under its header ("Your change is waiting
+for review", with a link to it). On the proposals screen the filter "Wiki"
+lists them: the title is the entry's brand, model and size, an edit shows the
+changed fields as Before and After in your units, a new entry its values, a
+removal the entry being removed.
 
 Input is bounded: names 80 characters, the description 4000, the link 500
 and a web link only (`http://` or `https://`), years 1900 to 2100, and every
@@ -296,7 +302,8 @@ gone is a no-op. Tests: `api/tests/material_proposals.rs`, `api/tests/materials.
 | Module | Owns |
 | --- | --- |
 | `lib/materials/materials.ts` | `MATERIAL_SPECS` (the one list of comparable measurements), labels, `specSpread`, the comparison's id list, the URL search shape, and the entry form's value conversion |
-| `lib/hooks/useMaterials.ts` | `materialKeys` and every query and mutation |
+| `lib/hooks/useMaterials.ts` | `materialKeys` and every query and mutation; a write answered 202 (`isProposal`) announces "Sent for review" through `announceIfProposal` and leaves the entry caches alone |
+| `lib/materials/materials.ts` | also `materialFieldLabel` / `materialFieldValue`, the wording of a changed field for the proposal diff |
 | `components/materials/` | `MaterialsView` (list), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `MaterialGallery` (photos and credits), `WikiPage` (the frame) |
 | `routes/materials/` | `index` (list), `$materialId` (detail, `?edit=true` for the form), `compare`, `new` |
 
@@ -307,6 +314,14 @@ a row opens the model's first size, and the size chips navigate to the sibling
 entry's id. The model page asks for its sizes with the `ids` list to fill the
 All sizes table. The entry form holds `size` beside `variant`, and an
 untouched edit sends the stored value back (PUT replaces every field). Specs: `frontend/e2e/materials/`.
+
+Proposals: `MaterialForm` shows `ProposalNoteField` to non-admins and sends
+`proposal_note` with the body. The proposals API cannot filter by entry, so
+`useOwnPendingMaterialProposals` lists the user's pending wiki proposals and
+picks the entry's; `PendingProposalNote` draws them. `ProposalDiffTable` and
+`ProposalCreateSummary` take `entityType` and switch to the wiki wording.
+Specs: `frontend/e2e/material-proposals/` (signs in as `jonas` through
+`e2e/support/signIn.ts`).
 
 Adding a measurement is one row in `MATERIAL_SPECS` plus its column: the
 list row, the detail view, the comparison and the entry form all read that

@@ -19,6 +19,7 @@ const SWEEP = !!process.env.E2E_SWEEP;
 //   logs/logs         put-in survives Next and is saved; create and delete a log
 //   settings/settings access token is created and revoked
 //   units/units       a wiki entry is typed in imperial, saved, deleted
+//   material-proposals/material-proposals  a paddler's wiki edit is held, an admin approves it
 //   trips/trips       a vote is pressed and taken back; edit trip saves
 // A new test that writes gets `@write`.
 const WRITE = /@write/;

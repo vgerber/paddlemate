@@ -46,6 +46,7 @@ const ENTITY_TABS: { value: ProposalEntityType | ""; label: string }[] = [
   { value: "waterway", label: "Rivers" },
   { value: "water_section", label: "Sections" },
   { value: "feature", label: "Features" },
+  { value: "material", label: "Wiki" },
 ];
 
 const OPERATION_TABS: { value: ProposalOperation | ""; label: string }[] = [

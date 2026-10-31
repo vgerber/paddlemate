@@ -40,6 +40,12 @@ export default function ProposalDetailView({
     ? proposalRecord(proposal.original_data)
     : null;
   const kind = proposalKind(proposal);
+  const removedName =
+    proposal.entity_type === "material"
+      ? proposalTitle(proposal)
+      : typeof original?.name === "string"
+        ? original.name
+        : "";
 
   return (
     <Box
@@ -106,15 +112,25 @@ export default function ProposalDetailView({
         {proposal.operation === "delete" && (
           <Typography sx={{ fontSize: "0.8125rem", color: "text.secondary" }}>
             Deletion request
-            {original
-              ? `: "${typeof original.name === "string" ? original.name : ""}"`
-              : ""}
+            {original ? `: "${removedName}"` : ""}
           </Typography>
         )}
 
         {proposal.operation === "create" && (
-          <ProposalCreateSummary proposed={proposed} />
+          <ProposalCreateSummary
+            proposed={proposed}
+            entityType={proposal.entity_type}
+          />
         )}
+
+        {proposal.operation === "delete" &&
+          proposal.entity_type === "material" &&
+          original && (
+            <ProposalCreateSummary
+              proposed={original}
+              entityType={proposal.entity_type}
+            />
+          )}
 
         <ProposalDetailPane proposal={proposal} showMap={!docked} />
 

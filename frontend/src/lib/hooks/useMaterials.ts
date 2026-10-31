@@ -4,13 +4,16 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { announceIfProposal } from "@/components/proposals/ProposalSentSnackbar";
 import type {
-  MaterialBody,
   MaterialCategory,
   MaterialFilters,
+  MaterialProposalBody,
 } from "@/lib/api";
 import { materialsApi } from "@/lib/api";
 import { serializeCompareIds } from "@/lib/materials/materials";
+import { isProposal } from "@/lib/proposals";
+import { proposalKeys } from "./useProposals";
 
 export const materialKeys = {
   all: ["materials"] as const,
@@ -79,14 +82,21 @@ export function useMaterialBrands(category?: MaterialCategory) {
   });
 }
 
+/** Admin writes land at once; anyone else's become a pending proposal and
+ * leave the wiki as it was, so the caches of the entries stay. */
 export function useCreateMaterial() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: MaterialBody) => materialsApi.create(body),
+    mutationFn: (body: MaterialProposalBody) => materialsApi.create(body),
     // The entry form renders the failure next to its save button - a
     // duplicate entry is a message about the form, not about the app.
     meta: { errorHandledLocally: true },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      if (isProposal(result)) {
+        qc.invalidateQueries({ queryKey: proposalKeys.all });
+        announceIfProposal(result);
+        return;
+      }
       qc.invalidateQueries({ queryKey: materialKeys.all });
     },
   });
@@ -95,10 +105,15 @@ export function useCreateMaterial() {
 export function useUpdateMaterial(id: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: MaterialBody) => materialsApi.update(id, body),
+    mutationFn: (body: MaterialProposalBody) => materialsApi.update(id, body),
     meta: { errorHandledLocally: true },
-    onSuccess: (material) => {
-      qc.setQueryData(materialKeys.detail(id), material);
+    onSuccess: (result) => {
+      if (isProposal(result)) {
+        qc.invalidateQueries({ queryKey: proposalKeys.all });
+        announceIfProposal(result);
+        return;
+      }
+      qc.setQueryData(materialKeys.detail(id), result);
       qc.invalidateQueries({ queryKey: materialKeys.lists() });
     },
   });
@@ -108,7 +123,12 @@ export function useDeleteMaterial() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => materialsApi.remove(id),
-    onSuccess: (_data, id) => {
+    onSuccess: (result, id) => {
+      if (isProposal(result)) {
+        qc.invalidateQueries({ queryKey: proposalKeys.all });
+        announceIfProposal(result);
+        return;
+      }
       qc.removeQueries({ queryKey: materialKeys.detail(id) });
       qc.invalidateQueries({ queryKey: materialKeys.lists() });
     },

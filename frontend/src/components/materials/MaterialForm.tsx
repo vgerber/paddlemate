@@ -4,11 +4,14 @@ import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import FormSection from "@/components/waterway/FormSection";
-import type { Material, MaterialBody } from "@/lib/api";
+import ProposalNoteField from "@/components/waterway/ProposalNoteField";
+import { proposalNoteValue } from "@/components/waterway/proposalNote";
+import type { Material, MaterialProposalBody } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
+import { useSession } from "@/lib/hooks/useSession";
 import { ConfirmIcon } from "@/lib/icons";
 import {
   CATEGORIES,
@@ -65,7 +68,7 @@ export default function MaterialForm({
   values: MaterialFormValues;
   onChange: (values: MaterialFormValues) => void;
   onCancel: () => void;
-  onSubmit: (body: MaterialBody) => void;
+  onSubmit: (body: MaterialProposalBody) => void;
   title: string;
   subtitle: string;
   saving: boolean;
@@ -75,6 +78,8 @@ export default function MaterialForm({
   original?: Material;
 }) {
   const [units] = useUnits();
+  const { isAdmin } = useSession();
+  const [note, setNote] = useState("");
   const set = (patch: Partial<MaterialFormValues>) =>
     onChange({ ...values, ...patch });
 
@@ -380,6 +385,14 @@ export default function MaterialForm({
           />
         </FormSection>
 
+        {!isAdmin && (
+          <ProposalNoteField
+            value={note}
+            onChange={setNote}
+            disabled={saving}
+          />
+        )}
+
         {error != null && (
           <Alert ref={errorRef} severity="error">
             {apiErrorMessage(error, "Could not save this entry.")}
@@ -399,7 +412,10 @@ export default function MaterialForm({
             disabled={!canSaveMaterial(values)}
             busy={saving}
             onClick={() =>
-              onSubmit(materialFormToBody(values, units, original))
+              onSubmit({
+                ...materialFormToBody(values, units, original),
+                proposal_note: isAdmin ? null : proposalNoteValue(note),
+              })
             }
           >
             <ConfirmIcon />
