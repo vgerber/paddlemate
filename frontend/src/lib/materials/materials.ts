@@ -623,6 +623,7 @@ export function paddleFacts(
   units: Units,
 ): { label: string; value: string }[] {
   const facts: { label: string; value: string }[] = [];
+  if (material.category !== "paddle") return facts;
   const add = (label: string, value: string | undefined) => {
     if (value) facts.push({ label, value });
   };
