@@ -24,6 +24,8 @@ pub enum SubmitError {
     OverLimit,
     /// The entry the proposal is about does not exist.
     Gone,
+    /// The user already has an update or delete waiting on this entry.
+    AlreadyPending,
     Db(sqlx::Error),
 }
 
@@ -79,10 +81,21 @@ pub async fn submit(
     if recent >= MAX_PER_DAY || pending >= MAX_PENDING {
         return Err(SubmitError::OverLimit);
     }
-    let row = insert_row(
+    // The partial unique index allows one pending update or delete per user
+    // and entry.
+    let row = match insert_row(
         &mut tx, "material", entity_id, operation, data, original, user_id, note,
     )
-    .await?;
+    .await
+    {
+        Ok(row) => row,
+        Err(sqlx::Error::Database(e))
+            if e.constraint() == Some("uniq_proposals_material_pending_change") =>
+        {
+            return Err(SubmitError::AlreadyPending);
+        }
+        Err(e) => return Err(e.into()),
+    };
     tx.commit().await?;
     Ok(with_names(db, row_to_proposal(&row)).await?)
 }
