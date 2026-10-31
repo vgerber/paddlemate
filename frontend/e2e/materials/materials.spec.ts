@@ -8,7 +8,11 @@ import {
 // The material wiki. Fixture entries 9851-9860: the Testflow Cascade in S, M
 // and L (the same-model comparison), two Riverline boats, Northline, an
 // Alpiner slalom boat, a canoe and a packraft. Only the @write tests change
-// data, and they put it back.
+// data, and they put it back. The wiki also holds the seeded catalogue, so
+// list checks are scoped to the fixture brand "Testflow" (3 Cascades and the
+// Tandem canoe) and never count the whole wiki.
+
+const FIXTURE = "?q=Testflow";
 
 const row = (page: Page, name: string) =>
   page
@@ -26,8 +30,8 @@ async function openWiki(page: Page, query = "") {
 
 test.describe("wiki list", () => {
   test("lists the entries with their kind and figures", async ({ page }) => {
-    await openWiki(page);
-    await expect(rows(page)).toHaveCount(10);
+    await openWiki(page, FIXTURE);
+    await expect(rows(page)).toHaveCount(4);
     const cascade = row(page, "Testflow Cascade M");
     await expect(cascade).toContainText("Creek");
     await expect(cascade).toContainText("Length 264 cm");
@@ -37,9 +41,9 @@ test.describe("wiki list", () => {
 
   test("a misspelled name still finds the boat", async ({ page }) => {
     await openWiki(page);
-    await page.getByRole("textbox", { name: "Brand or model" }).fill("cascde");
-    await expect(rows(page)).toHaveCount(3);
-    await expect(page).toHaveURL(/q=cascde/);
+    await page.getByRole("textbox", { name: "Brand or model" }).fill("testflw");
+    await expect(row(page, "Testflow Cascade M")).toBeVisible();
+    await expect(page).toHaveURL(/q=testflw/);
     await page.getByRole("textbox", { name: "Brand or model" }).fill("zzzz");
     await expect(page.getByTestId("empty-state")).toBeVisible();
   });
@@ -47,7 +51,7 @@ test.describe("wiki list", () => {
   test("the filters sheet narrows the list and shows as chips", async ({
     page,
   }) => {
-    await openWiki(page);
+    await openWiki(page, FIXTURE);
     await page.getByTestId("filters-chip").click();
     const sheet = page.getByRole("dialog", { name: "Filters" });
     await expect(sheet).toBeVisible();
@@ -62,15 +66,14 @@ test.describe("wiki list", () => {
     const chip = page.getByRole("button", { name: "Creek", exact: true });
     await expect(chip).toBeVisible();
     await chip.locator(".MuiChip-deleteIcon").click();
-    await expect(rows(page)).toHaveCount(10);
+    await expect(rows(page)).toHaveCount(4);
   });
 
   test("the paddler weight keeps boats that fit or state no range", async ({
     page,
   }) => {
-    await openWiki(page, "?fits=120");
-    // 120 kg: Cascade M (70-110) and S (45-75) are out; the sliced, play and
-    // slalom boats top out below it.
+    await openWiki(page, `${FIXTURE}&fits=120`);
+    // 120 kg: Cascade M (70-110) and S (45-75) are out.
     await expect(row(page, "Cascade M")).toHaveCount(0);
     await expect(row(page, "Testflow Cascade L")).toBeVisible();
     await expect(row(page, "Tandem")).toBeVisible();
@@ -118,7 +121,7 @@ test.describe("comparison", () => {
   test("two picks compare, differing rows are accented, a pick can be removed", async ({
     page,
   }) => {
-    await openWiki(page);
+    await openWiki(page, FIXTURE);
     await page.getByLabel("Compare Testflow Cascade S").check();
     const bar = page.getByTestId("compare-bar");
     await expect(bar).toContainText("1 of 8 picked");
@@ -175,7 +178,7 @@ test.describe("comparison", () => {
   });
 
   test("a comparison link survives a reload @small", async ({ page }) => {
-    await openWiki(page);
+    await openWiki(page, FIXTURE);
     await page.getByLabel("Compare Testflow Cascade S").check();
     await page.getByLabel("Compare Testflow Cascade M").check();
     await page.getByLabel("Compare Testflow Cascade L").check();
