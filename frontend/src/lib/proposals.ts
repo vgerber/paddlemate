@@ -1,16 +1,19 @@
 import type { Feature, FeatureType, Proposal } from "@/lib/api";
+import { materialTitle } from "@/lib/materials/materials";
 import { humanize } from "@/lib/text/format";
 
 const ENTITY_LABEL: Record<string, string> = {
   waterway: "River",
   water_section: "Section",
   feature: "Feature",
+  material: "Wiki entry",
 };
 
 const KIND_ENTITY: Record<string, string> = {
   waterway: "river",
   water_section: "section",
   feature: "feature",
+  material: "wiki entry",
 };
 
 /** What a proposal is in a paddler's words: "New feature", "Changed
@@ -139,10 +142,31 @@ export function shortValue(key: string, v: unknown): string {
   return text.length > 60 ? `${text.slice(0, 57)}…` : text;
 }
 
+/** A write that the server held for review answers with a Proposal. */
+export function isProposal(result: unknown): result is Proposal {
+  return (
+    typeof result === "object" &&
+    result !== null &&
+    "proposed_data" in result &&
+    "entity_type" in result
+  );
+}
+
 /** Best human-readable headline for a proposal. */
 export function proposalTitle(proposal: Proposal): string {
   const proposed = (proposal.proposed_data ?? {}) as Record<string, unknown>;
   const original = (proposal.original_data ?? {}) as Record<string, unknown>;
+  if (proposal.entity_type === "material") {
+    const entry = typeof proposed.brand === "string" ? proposed : original;
+    if (typeof entry.brand === "string" && typeof entry.model === "string") {
+      return materialTitle({
+        brand: entry.brand,
+        model: entry.model,
+        variant: typeof entry.variant === "string" ? entry.variant : null,
+        size: typeof entry.size === "string" ? entry.size : null,
+      });
+    }
+  }
   const name = (proposed.name ?? original.name) as string | undefined;
   if (name) return name;
   const featureType = (proposed.feature_type ?? original.feature_type) as

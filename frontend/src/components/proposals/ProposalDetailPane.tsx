@@ -119,7 +119,11 @@ export default function ProposalDetailPane({
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       {/* What an update changes, before the full proposed state below */}
       {original && proposal.operation === "update" && (
-        <ProposalDiffTable original={original} proposed={data} />
+        <ProposalDiffTable
+          original={original}
+          proposed={data}
+          entityType={proposal.entity_type}
+        />
       )}
 
       {/* Map */}

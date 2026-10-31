@@ -174,6 +174,76 @@ export const CONSTRUCTIONS: MaterialConstruction[] = [
  * server, which is what an `ids` request returns at most. */
 export const MAX_COMPARE = 8;
 
+const FIELD_LABELS: Record<string, string> = {
+  brand: "Brand",
+  model: "Model",
+  variant: "Variant",
+  size: "Size",
+  category: "Category",
+  discipline: "Discipline",
+  construction: "Construction",
+  year_from: "First year",
+  year_to: "Last year",
+  year_approximate: "Years approximate",
+  lengths_cm: "Sizes",
+  feather_deg: "Feather angles",
+  shaft: "Shaft",
+  shaft_material: "Shaft material",
+  blade_material: "Blade material",
+  shaft_diameter: "Shaft diameter",
+  pieces: "Pieces",
+  colors: "Colours",
+  description: "Description",
+  notes: "Notes",
+  product_url: "Manufacturer page",
+};
+
+const FIELD_QUANTITIES: Record<string, Quantity> = {
+  ...Object.fromEntries(MATERIAL_SPECS.map((s) => [s.key, s.quantity])),
+  ...Object.fromEntries(PADDLE_SPECS.map((s) => [s.key, s.quantity])),
+  lengths_cm: "length",
+};
+
+/** The label of an entry field, as the wiki and its form say it. */
+export function materialFieldLabel(key: string): string {
+  const spec = [...MATERIAL_SPECS, ...PADDLE_SPECS].find((s) => s.key === key);
+  return spec?.label ?? FIELD_LABELS[key] ?? sentenceCase(humanize(key));
+}
+
+/** An entry field's stored value in words: measurements in the reader's
+ * units, enums as labels, lists as comma lists. Empty reads "none". */
+export function materialFieldValue(
+  key: string,
+  value: unknown,
+  units: Units,
+): string {
+  if (value === null || value === undefined || value === "") return "none";
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "none";
+    const quantity = FIELD_QUANTITIES[key];
+    return value
+      .map((v) =>
+        typeof v === "number" && quantity
+          ? formatQuantity(quantity, v, units)
+          : String(v),
+      )
+      .join(", ");
+  }
+  if (typeof value === "boolean") return value ? "yes" : "no";
+  if (typeof value === "number") {
+    const quantity = FIELD_QUANTITIES[key];
+    return quantity ? formatQuantity(quantity, value, units) : String(value);
+  }
+  if (typeof value === "string") {
+    return key === "category" && value in CATEGORY_LABELS
+      ? CATEGORY_LABELS[value as MaterialCategory]
+      : ["discipline", "construction", "shaft", "shaft_material"].includes(key)
+        ? enumLabel(value)
+        : value;
+  }
+  return String(value);
+}
+
 export function specValue(
   material: Material,
   key: SpecKey,

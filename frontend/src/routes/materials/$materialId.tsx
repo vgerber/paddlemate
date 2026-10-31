@@ -6,6 +6,7 @@ import MaterialDetailView, {
   materialActions,
 } from "@/components/materials/MaterialDetailView";
 import MaterialForm from "@/components/materials/MaterialForm";
+import PendingProposalNote from "@/components/materials/PendingProposalNote";
 import WikiPage from "@/components/materials/WikiPage";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
@@ -20,6 +21,7 @@ import {
   useRemoveMaterialImage,
   useUpdateMaterial,
 } from "@/lib/hooks/useMaterials";
+import { useOwnPendingMaterialProposals } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
 import { MaterialIcon } from "@/lib/icons";
 import {
@@ -32,6 +34,7 @@ import {
   yearsLabel,
 } from "@/lib/materials/materials";
 import { currentUnits } from "@/lib/prefs/units";
+import { isProposal } from "@/lib/proposals";
 import { PANEL_HEIGHT } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/materials/$materialId")({
@@ -49,7 +52,8 @@ function MaterialPage() {
   const { materialId } = Route.useParams();
   const { edit } = Route.useSearch();
   const id = Number(materialId);
-  const { isAuthenticated, isAdmin } = useSession();
+  const { isAuthenticated, isAdmin, user } = useSession();
+  const pending = useOwnPendingMaterialProposals(id, user?.id);
   const query = useMaterial(Number.isInteger(id) && id > 0 ? id : undefined);
   const remove = useDeleteMaterial();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -117,11 +121,12 @@ function MaterialPage() {
         onRemovePhoto: isAdmin ? setPhotoToRemove : undefined,
         onRemoveBrandPhotos: isAdmin ? () => setBrandOpen(true) : undefined,
         canEdit: isAuthenticated,
-        canDelete: isAdmin,
+        canDelete: isAuthenticated,
         onEdit: () => setEdit(true),
         onDelete: () => setConfirmOpen(true),
       })}
     >
+      <PendingProposalNote proposals={pending.data ?? []} />
       <MaterialDetailView material={material} onPickSize={pickSize} />
       <ConfirmDialog
         open={photoToRemove != null}
@@ -157,13 +162,24 @@ function MaterialPage() {
       <ConfirmDialog
         open={confirmOpen}
         title="Delete this entry?"
-        body={`${materialTitle(material)} is removed from the wiki for everyone.`}
-        confirmLabel="Delete"
-        pendingLabel="Deleting…"
+        body={
+          isAdmin
+            ? `${materialTitle(material)} is removed from the wiki for everyone.`
+            : `${materialTitle(material)} stays in the wiki until an admin has taken a look.`
+        }
+        confirmLabel={isAdmin ? "Delete" : "Send for review"}
+        pendingLabel={isAdmin ? "Deleting…" : "Sending…"}
         color="error"
         pending={remove.isPending}
         onCancel={() => setConfirmOpen(false)}
-        onConfirm={() => remove.mutate(material.id, { onSuccess: toWiki })}
+        onConfirm={() =>
+          remove.mutate(material.id, {
+            onSuccess: (result) => {
+              if (isProposal(result)) setConfirmOpen(false);
+              else toWiki();
+            },
+          })
+        }
       />
     </WikiPage>
   );

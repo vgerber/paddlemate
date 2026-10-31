@@ -1,6 +1,11 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { fieldLabel } from "@/components/provenance/steps";
+import {
+  materialFieldLabel,
+  materialFieldValue,
+} from "@/lib/materials/materials";
+import { useUnits } from "@/lib/prefs/units";
 import { diffObjects, isEmptyValue, shortValue } from "@/lib/proposals";
 import { labelSx, theme } from "@/lib/theme/theme";
 import { DIFF_HIDDEN_KEYS } from "./status";
@@ -17,10 +22,17 @@ const headSx = { ...labelSx, color: "text.secondary" } as const;
 export default function ProposalDiffTable({
   original,
   proposed,
+  entityType,
 }: {
   original: Record<string, unknown>;
   proposed: Record<string, unknown>;
+  entityType?: string;
 }) {
+  const [units] = useUnits();
+  const material = entityType === "material";
+  const label = material ? materialFieldLabel : fieldLabel;
+  const value = (key: string, v: unknown) =>
+    material ? materialFieldValue(key, v, units) : shortValue(key, v);
   const diffs = diffObjects(original, proposed).filter(
     ({ key }) => !DIFF_HIDDEN_KEYS.has(key),
   );
@@ -54,7 +66,7 @@ export default function ProposalDiffTable({
                 overflowWrap: "anywhere",
               }}
             >
-              {fieldLabel(key)}
+              {label(key)}
             </Typography>
             {added ? (
               <Typography
@@ -73,7 +85,7 @@ export default function ProposalDiffTable({
                   overflowWrap: "anywhere",
                 }}
               >
-                {shortValue(key, from)}
+                {value(key, from)}
               </Typography>
             )}
             {removed ? (
@@ -93,7 +105,7 @@ export default function ProposalDiffTable({
                   overflowWrap: "anywhere",
                 }}
               >
-                {shortValue(key, to)}
+                {value(key, to)}
               </Typography>
             )}
           </Box>

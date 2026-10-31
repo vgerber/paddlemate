@@ -32,6 +32,31 @@ export function useProposal(id: number | null) {
   });
 }
 
+/** The signed-in user's own pending proposals for one wiki entry. The API
+ * filters by entity type and submitter, not by entity, so the entry is
+ * picked from the user's pending wiki proposals (at most 50 can wait). */
+export function useOwnPendingMaterialProposals(
+  materialId: number,
+  userId: string | undefined,
+) {
+  return useQuery({
+    queryKey: proposalKeys.list({
+      entity_type: "material",
+      status: "pending",
+      submitted_by: userId,
+    }),
+    queryFn: () =>
+      proposalsApi.list({
+        entity_type: "material",
+        status: "pending",
+        submitted_by: userId,
+      }),
+    enabled: userId != null,
+    select: (items) =>
+      items.filter((proposal) => proposal.entity_id === materialId),
+  });
+}
+
 export function useVoteProposal() {
   const queryClient = useQueryClient();
   return useMutation({

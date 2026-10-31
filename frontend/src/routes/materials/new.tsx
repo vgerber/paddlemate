@@ -12,6 +12,7 @@ import {
   EMPTY_MATERIAL_SEARCH,
   emptyMaterialForm,
 } from "@/lib/materials/materials";
+import { isProposal } from "@/lib/proposals";
 import { PANEL_HEIGHT } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/materials/new")({
@@ -58,13 +59,16 @@ function NewMaterialPage() {
         onCancel={goBack}
         onSubmit={(body) =>
           create.mutate(body, {
-            onSuccess: (material) =>
-              navigate({
-                to: "/materials/$materialId",
-                params: { materialId: String(material.id) },
-                search: { edit: false },
-                replace: true,
-              }),
+            // A proposal has no entry to open yet: go back to the wiki.
+            onSuccess: (result) =>
+              isProposal(result)
+                ? goBack()
+                : navigate({
+                    to: "/materials/$materialId",
+                    params: { materialId: String(result.id) },
+                    search: { edit: false },
+                    replace: true,
+                  }),
           })
         }
       />

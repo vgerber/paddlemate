@@ -4,6 +4,7 @@ import {
   diffObjects,
   isDisplayable,
   isEmptyValue,
+  isProposal,
   proposalKind,
   proposalRecord,
   proposalTitle,
@@ -207,5 +208,47 @@ describe("reading proposed data", () => {
       },
     } as Proposal);
     expect(got).toHaveLength(1);
+  });
+});
+
+describe("material proposals", () => {
+  const base = {
+    id: 1,
+    entity_type: "material",
+    operation: "update",
+    status: "pending",
+  } as Proposal;
+
+  test("the title is brand, model, variant and size", () => {
+    const proposal = {
+      ...base,
+      proposed_data: {
+        brand: "Testflow",
+        model: "Cascade",
+        variant: null,
+        size: "M",
+      },
+    } as Proposal;
+    expect(proposalTitle(proposal)).toBe("Testflow Cascade M");
+  });
+
+  test("a delete takes the title from the entry being removed", () => {
+    const proposal = {
+      ...base,
+      operation: "delete",
+      original_data: { brand: "Testflow", model: "Cascade", size: "L" },
+      proposed_data: {},
+    } as Proposal;
+    expect(proposalTitle(proposal)).toBe("Testflow Cascade L");
+  });
+
+  test("kind names the wiki entry", () => {
+    expect(proposalKind(base)).toBe("Changed wiki entry");
+  });
+
+  test("isProposal tells a proposal from an entry", () => {
+    expect(isProposal({ ...base, proposed_data: {} })).toBe(true);
+    expect(isProposal({ id: 1, brand: "x" })).toBe(false);
+    expect(isProposal(undefined)).toBe(false);
   });
 });

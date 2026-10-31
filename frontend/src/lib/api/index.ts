@@ -615,21 +615,24 @@ export const materialsApi = {
     });
     return assertData(data);
   },
-  create: async (body: MaterialBody) => {
+  /** 201 with the entry for an admin, 202 with a Proposal for others. */
+  create: async (body: MaterialProposalBody) => {
     const { data } = await client.POST("/api/v1/materials", { body });
     return assertData(data);
   },
-  update: async (id: number, body: MaterialBody) => {
+  update: async (id: number, body: MaterialProposalBody) => {
     const { data } = await client.PUT("/api/v1/materials/{material_id}", {
       params: { path: { material_id: id } },
       body,
     });
     return assertData(data);
   },
+  /** Resolves with the Proposal when the server held the delete for review. */
   remove: async (id: number) => {
-    await client.DELETE("/api/v1/materials/{material_id}", {
+    const { data } = await client.DELETE("/api/v1/materials/{material_id}", {
       params: { path: { material_id: id } },
     });
+    return data;
   },
   /** Admin takedown of one photo. */
   removeImage: async (materialId: number, imageId: number) => {

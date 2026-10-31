@@ -2,10 +2,13 @@ import { describe, expect, test } from "bun:test";
 import type { Material, MaterialBody, MaterialModel } from "@/lib/api";
 import { IMPERIAL, METRIC } from "../prefs/units";
 import {
+  CATEGORY_LABELS,
   enumLabel,
   formatSpec,
   MATERIAL_SPECS,
   MAX_COMPARE,
+  materialFieldLabel,
+  materialFieldValue,
   materialFormToBody,
   materialTitle,
   materialToForm,
@@ -485,5 +488,38 @@ describe("ticking a model", () => {
   test("a full comparison takes no further model", () => {
     const full = Array.from({ length: MAX_COMPARE }, (_, i) => 100 + i);
     expect(toggleModelCompare(full, SCORCH)).toEqual(full);
+  });
+});
+
+describe("materialFieldLabel and materialFieldValue", () => {
+  test("labels come from the form's wording", () => {
+    expect(materialFieldLabel("length_cm")).toBe("Length");
+    expect(materialFieldLabel("blade_area_cm2")).toBe("Blade area");
+    expect(materialFieldLabel("year_from")).toBe("First year");
+    expect(materialFieldLabel("some_new_field")).toBe("Some new field");
+  });
+
+  test("measurements follow the reader's units", () => {
+    expect(materialFieldValue("length_cm", 254, METRIC)).toBe("254 cm");
+    expect(materialFieldValue("length_cm", 254, IMPERIAL)).toBe("100 in");
+    expect(materialFieldValue("weight_kg", 20, IMPERIAL)).toBe("44.1 lb");
+    expect(materialFieldValue("lengths_cm", [194, 197], METRIC)).toBe(
+      "194 cm, 197 cm",
+    );
+  });
+
+  test("enums, flags and empty values read as words", () => {
+    expect(materialFieldValue("discipline", "river_runner", METRIC)).toBe(
+      "River runner",
+    );
+    expect(materialFieldValue("category", "paddle", METRIC)).toBe(
+      CATEGORY_LABELS.paddle,
+    );
+    expect(materialFieldValue("year_approximate", true, METRIC)).toBe("yes");
+    expect(materialFieldValue("colors", ["Red", "Blue"], METRIC)).toBe(
+      "Red, Blue",
+    );
+    expect(materialFieldValue("notes", null, METRIC)).toBe("none");
+    expect(materialFieldValue("colors", [], METRIC)).toBe("none");
   });
 });
