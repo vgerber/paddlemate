@@ -393,7 +393,11 @@ impl MaterialBody {
     fn extras_error(&self) -> Option<(&'static str, String)> {
         let texts: [(&'static str, Option<&str>, usize); 3] = [
             ("notes", self.notes.as_deref(), MAX_NOTES_CHARS),
-            ("blade_material", self.blade_material.as_deref(), MAX_NAME_CHARS),
+            (
+                "blade_material",
+                self.blade_material.as_deref(),
+                MAX_NAME_CHARS,
+            ),
             ("shaft_diameter", self.shaft_diameter.as_deref(), 40),
         ];
         for (field, value, max) in texts {
@@ -402,7 +406,10 @@ impl MaterialBody {
             }
         }
         if self.colors.len() > MAX_COLORS
-            || self.colors.iter().any(|c| c.chars().count() > MAX_COLOR_CHARS)
+            || self
+                .colors
+                .iter()
+                .any(|c| c.chars().count() > MAX_COLOR_CHARS)
         {
             return Some((
                 "colors",
@@ -422,7 +429,10 @@ impl MaterialBody {
             || self.feather_deg.is_some()
             || self.shaft_diameter.is_some();
         if has_paddle_data && self.category != MaterialCategory::Paddle {
-            return Some(("category", "Blade and shaft fields belong to paddles".into()));
+            return Some((
+                "category",
+                "Blade and shaft fields belong to paddles".into(),
+            ));
         }
         let sizes: [(&'static str, Option<f64>, f64); 5] = [
             ("blade_area_cm2", self.blade_area_cm2, 2000.0),
@@ -442,14 +452,19 @@ impl MaterialBody {
         if let (Some(min), Some(max)) = (self.length_min_cm, self.length_max_cm)
             && max < min
         {
-            return Some(("length_max_cm", "Longest length is below the shortest".into()));
+            return Some((
+                "length_max_cm",
+                "Longest length is below the shortest".into(),
+            ));
         }
         if self.pieces.is_some_and(|p| !(1..=8).contains(&p)) {
             return Some(("pieces", "pieces must be 1 to 8".into()));
         }
         if let Some(lengths) = &self.lengths_cm
             && (lengths.len() > MAX_LENGTHS
-                || lengths.iter().any(|v| !v.is_finite() || *v <= 0.0 || *v > 400.0))
+                || lengths
+                    .iter()
+                    .any(|v| !v.is_finite() || *v <= 0.0 || *v > 400.0))
         {
             return Some((
                 "lengths_cm",
@@ -612,11 +627,20 @@ mod tests {
         paddle.category = MaterialCategory::Paddle;
         type Apply = Box<dyn Fn(&mut MaterialBody)>;
         let cases: Vec<(&str, Apply)> = vec![
-            ("colors", Box::new(|b| b.colors = vec!["x".into(); MAX_COLORS + 1])),
-            ("notes", Box::new(|b| b.notes = Some("x".repeat(MAX_NOTES_CHARS + 1)))),
+            (
+                "colors",
+                Box::new(|b| b.colors = vec!["x".into(); MAX_COLORS + 1]),
+            ),
+            (
+                "notes",
+                Box::new(|b| b.notes = Some("x".repeat(MAX_NOTES_CHARS + 1))),
+            ),
             ("blade_area_cm2", Box::new(|b| b.blade_area_cm2 = Some(1e6))),
             ("pieces", Box::new(|b| b.pieces = Some(0))),
-            ("lengths_cm", Box::new(|b| b.lengths_cm = Some(vec![f64::NAN]))),
+            (
+                "lengths_cm",
+                Box::new(|b| b.lengths_cm = Some(vec![f64::NAN])),
+            ),
             ("feather_deg", Box::new(|b| b.feather_deg = Some(vec![400]))),
             (
                 "length_max_cm",

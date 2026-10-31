@@ -246,7 +246,11 @@ pub fn run(pool: PgPool) {
             };
             // Nothing pending is the common case once the catalogue is
             // mirrored; look again rarely.
-            let pause = if idle { Duration::from_secs(300) } else { ROUND_PAUSE };
+            let pause = if idle {
+                Duration::from_secs(300)
+            } else {
+                ROUND_PAUSE
+            };
             tokio::time::sleep(pause).await;
         }
     });
@@ -263,9 +267,18 @@ mod tests {
     #[test]
     fn redirects_stay_on_allowed_https_hosts() {
         let url = |s: &str| reqwest::Url::parse(s).unwrap();
-        assert!(redirect_allowed(&allowed(), &url("https://cdn.acme.test/a.jpg")));
-        assert!(!redirect_allowed(&allowed(), &url("https://evil.test/a.jpg")));
-        assert!(!redirect_allowed(&allowed(), &url("http://cdn.acme.test/a.jpg")));
+        assert!(redirect_allowed(
+            &allowed(),
+            &url("https://cdn.acme.test/a.jpg")
+        ));
+        assert!(!redirect_allowed(
+            &allowed(),
+            &url("https://evil.test/a.jpg")
+        ));
+        assert!(!redirect_allowed(
+            &allowed(),
+            &url("http://cdn.acme.test/a.jpg")
+        ));
     }
 
     #[test]

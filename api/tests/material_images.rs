@@ -100,7 +100,10 @@ async fn status_of(pool: &PgPool, id: i64) -> String {
 /// Empties the seeded catalogue (its 900 pending photos would join every
 /// round) and points MEDIA_DIR at a scratch directory.
 async fn fresh(pool: &PgPool) -> std::path::PathBuf {
-    sqlx::query("DELETE FROM materials").execute(pool).await.unwrap();
+    sqlx::query("DELETE FROM materials")
+        .execute(pool)
+        .await
+        .unwrap();
     let dir = std::env::temp_dir().join("paddlemate-test-material-media");
     // Same value from every test of this file, so the race is harmless.
     unsafe { std::env::set_var("MEDIA_DIR", &dir) };
@@ -117,7 +120,14 @@ async fn a_fetched_photo_is_served_with_its_credit(pool: PgPool) {
     assert_eq!(status_of(&pool, img).await, "fetched");
 
     let app = app(pool);
-    let r = call(&app, Method::GET, &format!("/materials/{m}"), Who::Anyone, None).await;
+    let r = call(
+        &app,
+        Method::GET,
+        &format!("/materials/{m}"),
+        Who::Anyone,
+        None,
+    )
+    .await;
     let shown = &r.body["images"][0];
     assert_eq!(shown["credit"], "Maker");
     assert_eq!(shown["page_url"], "https://example.test/page");
@@ -245,7 +255,14 @@ async fn takedown_deletes_the_file_and_is_never_refetched(pool: PgPool) {
     let r = call(&app, Method::DELETE, &uri, Who::Admin, None).await;
     assert_eq!(r.status, StatusCode::NO_CONTENT);
     assert!(!dir.join(&file).exists(), "the file is gone");
-    let r = call(&app, Method::GET, &format!("/materials/{m}"), Who::Anyone, None).await;
+    let r = call(
+        &app,
+        Method::GET,
+        &format!("/materials/{m}"),
+        Who::Anyone,
+        None,
+    )
+    .await;
     assert_eq!(r.body["images"].as_array().unwrap().len(), 0);
 
     let r = call(&app, Method::DELETE, &uri, Who::Admin, None).await;
@@ -273,11 +290,25 @@ async fn a_brand_takedown_removes_pending_and_fetched_photos(pool: PgPool) {
         .unwrap();
 
     let app = app(pool.clone());
-    let r = call(&app, Method::DELETE, "/materials/images?brand=acme", Who::User("mara-1"), None).await;
+    let r = call(
+        &app,
+        Method::DELETE,
+        "/materials/images?brand=acme",
+        Who::User("mara-1"),
+        None,
+    )
+    .await;
     assert_eq!(r.status, StatusCode::FORBIDDEN);
     let r = call(&app, Method::DELETE, "/materials/images", Who::Admin, None).await;
     assert_eq!(r.status, StatusCode::BAD_REQUEST);
-    let r = call(&app, Method::DELETE, "/materials/images?brand=acme", Who::Admin, None).await;
+    let r = call(
+        &app,
+        Method::DELETE,
+        "/materials/images?brand=acme",
+        Who::Admin,
+        None,
+    )
+    .await;
     assert_eq!(r.status, StatusCode::OK);
     assert_eq!(r.body, json!({ "removed": 2 }));
     assert!(!dir.join(&file).exists());
@@ -321,7 +352,14 @@ async fn paddle_fields_round_trip_and_stay_with_paddles(pool: PgPool) {
         "blade_area_cm2": 742, "shaft": "bent", "shaft_material": "carbon",
         "lengths_cm": [191, 194], "feather_deg": [0, 30], "pieces": 1
     });
-    let r = call(&app, Method::POST, "/materials", Who::User("mara-1"), Some(paddle)).await;
+    let r = call(
+        &app,
+        Method::POST,
+        "/materials",
+        Who::User("mara-1"),
+        Some(paddle),
+    )
+    .await;
     assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);
     assert_eq!(r.body["colors"], json!(["Black", "Blue"]));
     assert_eq!(r.body["year_approximate"], true);
@@ -329,6 +367,13 @@ async fn paddle_fields_round_trip_and_stay_with_paddles(pool: PgPool) {
     assert_eq!(r.body["lengths_cm"], json!([191.0, 194.0]));
 
     let boat = json!({ "category": "kayak", "brand": "A", "model": "B", "blade_area_cm2": 700 });
-    let r = call(&app, Method::POST, "/materials", Who::User("mara-1"), Some(boat)).await;
+    let r = call(
+        &app,
+        Method::POST,
+        "/materials",
+        Who::User("mara-1"),
+        Some(boat),
+    )
+    .await;
     assert_eq!(r.status, StatusCode::BAD_REQUEST);
 }
