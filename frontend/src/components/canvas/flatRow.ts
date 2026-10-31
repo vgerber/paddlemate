@@ -62,7 +62,3 @@ export const listRowSx = {
   mb: 0.75,
   [theme.breakpoints.up("md")]: { ...flatRowSx, px: 2 },
 } as const;
-
-/** Kept for the material wiki, which imports the phone grid pieces from
- * here. */
-export { phoneCardSx, trailSlotSx } from "@/components/phone/phoneGrid";

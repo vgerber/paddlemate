@@ -2,7 +2,8 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Checkbox from "@mui/material/Checkbox";
 import Typography from "@mui/material/Typography";
-import { listRowSx, trailSlotSx } from "@/components/canvas/flatRow";
+import { listRowSx } from "@/components/canvas/flatRow";
+import { trailSlotSx } from "@/components/phone/phoneGrid";
 import type { Material } from "@/lib/api";
 import {
   CATEGORY_LABELS,
@@ -10,6 +11,7 @@ import {
   formatSpec,
   MATERIAL_SPECS,
   materialTitle,
+  paddleLengthLabel,
   specValue,
   yearsLabel,
 } from "@/lib/materials/materials";
@@ -21,6 +23,9 @@ const { tokens } = theme;
 /** The measurements a row carries: the three that tell boats apart at a
  * glance. The rest live in the detail view and the comparison. */
 const ROW_SPEC_KEYS = ["length_cm", "volume_l", "weight_kg"] as const;
+
+/** Side of the thumbnail box, px. */
+const THUMB = 56;
 
 const metaSx = {
   fontSize: "0.8125rem",
@@ -57,13 +62,21 @@ export default function MaterialRow({
     .filter(Boolean)
     .join(" · ");
   const [units] = useUnits();
-  const figures = MATERIAL_SPECS.filter((spec) =>
-    (ROW_SPEC_KEYS as readonly string[]).includes(spec.key),
-  )
-    .map((spec) => ({ spec, value: specValue(material, spec.key) }))
-    .filter(({ value }) => value != null)
-    .map(({ spec, value }) => `${spec.label} ${formatSpec(value, spec, units)}`)
+  const isPaddle = material.category === "paddle";
+  const keys: readonly string[] = isPaddle ? ["weight_kg"] : ROW_SPEC_KEYS;
+  const paddleLength = isPaddle ? paddleLengthLabel(material, units) : "";
+  const figures = [
+    paddleLength && `Length ${paddleLength}`,
+    ...MATERIAL_SPECS.filter((spec) => keys.includes(spec.key))
+      .map((spec) => ({ spec, value: specValue(material, spec.key) }))
+      .filter(({ value }) => value != null)
+      .map(
+        ({ spec, value }) => `${spec.label} ${formatSpec(value, spec, units)}`,
+      ),
+  ]
+    .filter(Boolean)
     .join("  ·  ");
+  const thumb = material.images[0]?.thumb_url;
 
   return (
     // The open target and the checkbox are siblings: a checkbox inside a
@@ -98,6 +111,34 @@ export default function MaterialRow({
           },
         }}
       >
+        <Box
+          data-testid="material-thumb"
+          sx={{
+            flexShrink: 0,
+            width: THUMB,
+            height: THUMB,
+            mr: 1.5,
+            borderRadius: `${tokens.radii.sm}px`,
+            bgcolor: tokens.surfaceHigh,
+            overflow: "hidden",
+          }}
+        >
+          {thumb && (
+            <Box
+              component="img"
+              src={thumb}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              sx={{
+                display: "block",
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+              }}
+            />
+          )}
+        </Box>
         <Box sx={{ minWidth: 0 }}>
           <Typography sx={{ ...cardTitleSx, overflowWrap: "anywhere" }}>
             {materialTitle(material)}

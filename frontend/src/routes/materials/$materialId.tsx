@@ -16,6 +16,8 @@ import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import {
   useDeleteMaterial,
   useMaterial,
+  useRemoveBrandImages,
+  useRemoveMaterialImage,
   useUpdateMaterial,
 } from "@/lib/hooks/useMaterials";
 import { useSession } from "@/lib/hooks/useSession";
@@ -50,6 +52,10 @@ function MaterialPage() {
   const query = useMaterial(Number.isInteger(id) && id > 0 ? id : undefined);
   const remove = useDeleteMaterial();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const removePhoto = useRemoveMaterialImage(id);
+  const removeBrand = useRemoveBrandImages();
+  const [photoToRemove, setPhotoToRemove] = useState<number | null>(null);
+  const [brandOpen, setBrandOpen] = useState(false);
 
   const toWiki = () =>
     navigate({
@@ -98,6 +104,9 @@ function MaterialPage() {
       subtitle={subtitle}
       onBack={goBack}
       actions={materialActions({
+        material,
+        onRemovePhoto: isAdmin ? setPhotoToRemove : undefined,
+        onRemoveBrandPhotos: isAdmin ? () => setBrandOpen(true) : undefined,
         canEdit: isAuthenticated,
         canDelete: isAdmin,
         onEdit: () => setEdit(true),
@@ -105,6 +114,37 @@ function MaterialPage() {
       })}
     >
       <MaterialDetailView material={material} />
+      <ConfirmDialog
+        open={photoToRemove != null}
+        title="Remove this photo?"
+        body="The photo is deleted from the server and never fetched again."
+        confirmLabel="Remove"
+        pendingLabel="Removing…"
+        color="error"
+        pending={removePhoto.isPending}
+        onCancel={() => setPhotoToRemove(null)}
+        onConfirm={() =>
+          photoToRemove != null &&
+          removePhoto.mutate(photoToRemove, {
+            onSuccess: () => setPhotoToRemove(null),
+          })
+        }
+      />
+      <ConfirmDialog
+        open={brandOpen}
+        title={`Remove all ${material.brand} photos?`}
+        body={`Every ${material.brand} photo in the wiki is deleted from the server and never fetched again.`}
+        confirmLabel="Remove all"
+        pendingLabel="Removing…"
+        color="error"
+        pending={removeBrand.isPending}
+        onCancel={() => setBrandOpen(false)}
+        onConfirm={() =>
+          removeBrand.mutate(material.brand, {
+            onSuccess: () => setBrandOpen(false),
+          })
+        }
+      />
       <ConfirmDialog
         open={confirmOpen}
         title="Delete this entry?"
@@ -151,6 +191,7 @@ function EditMaterial({
         saving={update.isPending}
         error={update.error}
         onCancel={onDone}
+        original={material}
         onSubmit={(body) => update.mutate(body, { onSuccess: onDone })}
       />
     </Box>

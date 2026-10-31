@@ -3,7 +3,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import { Fragment } from "react";
-import { phoneCardSx } from "@/components/canvas/flatRow";
+import { phoneCardSx } from "@/components/phone/phoneGrid";
 import type { Material } from "@/lib/api";
 import { CloseIcon } from "@/lib/icons";
 import {

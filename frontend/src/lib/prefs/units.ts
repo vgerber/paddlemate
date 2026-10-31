@@ -14,8 +14,8 @@ export interface Units {
   length: LengthUnit;
 }
 
-/** What each quantity is stored as: kg, km, cm and litres. */
-export type Quantity = "weight" | "distance" | "length" | "volume";
+/** What each quantity is stored as: kg, km, cm, litres and cm2. */
+export type Quantity = "weight" | "distance" | "length" | "volume" | "area";
 
 export const METRIC: Units = { weight: "kg", distance: "km", length: "cm" };
 export const IMPERIAL: Units = { weight: "lb", distance: "mi", length: "in" };
@@ -24,6 +24,7 @@ const KG_PER_LB = 0.45359237;
 const KM_PER_MI = 1.609344;
 const CM_PER_IN = 2.54;
 const L_PER_GAL = 3.785411784;
+const CM2_PER_IN2 = CM_PER_IN * CM_PER_IN;
 
 /** Metric units per display unit. */
 const FACTOR = {
@@ -35,18 +36,24 @@ const FACTOR = {
   in: CM_PER_IN,
   l: 1,
   gal: L_PER_GAL,
+  cm2: 1,
+  in2: CM2_PER_IN2,
 } as const;
 
 type UnitName = keyof typeof FACTOR;
 
 function unitFor(quantity: Quantity, units: Units): UnitName {
   if (quantity === "volume") return units.length === "in" ? "gal" : "l";
+  if (quantity === "area") return units.length === "in" ? "in2" : "cm2";
   return units[quantity];
 }
 
-/** The label of a quantity's unit: "kg", "mi", "in", "gal". */
+/** The label of a quantity's unit: "kg", "mi", "in", "gal", "cm²". */
 export function unitLabel(quantity: Quantity, units: Units): string {
-  return unitFor(quantity, units);
+  const unit = unitFor(quantity, units);
+  if (unit === "cm2") return "cm\u00b2";
+  if (unit === "in2") return "in\u00b2";
+  return unit;
 }
 
 /** A stored metric value in the chosen unit, unrounded. */

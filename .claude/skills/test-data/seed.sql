@@ -976,6 +976,47 @@ FROM (VALUES
        paddler_weight_max_kg, product_url)
 CROSS JOIN (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
 
+-- Catalogue-style entries: colours, an approximate year, sources, a paddle
+-- and mirrored photos. Photocraft Lens has a real photo - copy
+-- .claude/skills/test-data/media/photocraft-lens*.jpg into the API's
+-- MEDIA_DIR. Vanishco's photos have no file on disk: they exist to be taken
+-- down (the takedown specs put the rows back).
+INSERT INTO materials (id, category, brand, model, variant, discipline, construction,
+                       description, notes, colors, year_from, year_approximate,
+                       length_cm, width_cm, volume_l, weight_kg, sources, created_by)
+SELECT 9861, 'kayak', 'Photocraft', 'Lens', NULL, 'crossover', 'plastic',
+       'Fixture boat with a photo, colourways and a weak year.',
+       'Year from an archive capture.', ARRAY['Lava Red', 'Glacier Blue'], 2021, true,
+       274.0, 66.0, 310.0, 21.5,
+       '{"length_cm": "https://example.com/lens-specs", "weight_kg": "https://example.com/lens-specs", "colors": "https://example.com/lens-colors"}'::jsonb,
+       id
+FROM (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
+
+INSERT INTO materials (id, category, brand, model, variant, discipline,
+                       description, notes, colors, year_from, blade_area_cm2,
+                       blade_length_cm, blade_width_cm, length_min_cm, length_max_cm,
+                       lengths_cm, pieces, shaft, shaft_material, blade_material,
+                       feather_deg, shaft_diameter, weight_kg, sources, created_by)
+SELECT 9862, 'paddle', 'Photocraft', 'Blade', 'Bent', 'river_runner',
+       'Fixture paddle with every spec stated.',
+       'Lengths are ranges.', ARRAY['Black'], 2023, 645.0,
+       47.5, 19.5, 191.0, 205.0,
+       ARRAY[191.0, 194.0, 197.0], 2, 'bent', 'carbon', 'Nylon',
+       ARRAY[0, 30, 45], '29.5 mm', 0.86,
+       '{"blade_area_cm2": "https://example.com/blade-specs", "shaft": "https://example.com/blade-specs"}'::jsonb,
+       id
+FROM (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
+
+INSERT INTO materials (id, category, brand, model, discipline, construction, length_cm, created_by)
+SELECT 9863, 'kayak', 'Vanishco', 'Ghost', 'creek', 'plastic', 260.0, id
+FROM (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
+
+INSERT INTO material_images (id, material_id, source_url, host, page_url, credit, file, status, fetched_at)
+VALUES
+  (9871, 9861, 'https://example.com/img/lens.jpg', 'example.com', 'https://example.com/lens', 'Photocraft', 'photocraft-lens.jpg', 'fetched', now()),
+  (9872, 9863, 'https://vanish.test/img/ghost-1.jpg', 'vanish.test', 'https://vanish.test/ghost', 'Vanishco', 'vanishco-ghost-1.jpg', 'fetched', now()),
+  (9873, 9863, 'https://vanish.test/img/ghost-2.jpg', 'vanish.test', 'https://vanish.test/ghost', 'Vanishco', 'vanishco-ghost-2.jpg', 'fetched', now());
+
 -- The explicit 9xxx ids above bypass the id sequences. Bump them past the
 -- fixture range so rows created through the app get higher ids - otherwise
 -- they sort before the fixture rows (breaking "first range wins" defaults)
@@ -985,7 +1026,7 @@ FROM unnest(ARRAY[
   'waterways', 'water_sections', 'features', 'feature_names',
   'section_names', 'gauges', 'gauge_series', 'feature_water_ranges',
   'descents', 'proposals', 'comments', 'media',
-  'groups', 'trips', 'trip_stays', 'trip_sections', 'materials'
+  'groups', 'trips', 'trip_stays', 'trip_sections', 'materials', 'material_images'
 ]) AS t;
 
 COMMIT;

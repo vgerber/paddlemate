@@ -71,8 +71,10 @@ water levels, and a shared logbook.
   readings stay as the gauge reports them.
 - **Material wiki** - a shared gear catalog under Tools: boats searchable by
   brand and model, filterable by discipline, construction and the paddler
-  weight they fit, and comparable side by side property for property. Any
-  signed-in paddler can add or correct an entry.
+  weight they fit, and comparable side by side property for property. It
+  comes pre-filled with whitewater kayaks and paddles, with credited photos,
+  colourways and source links; admins can take photos down. Any signed-in
+  paddler can add or correct an entry.
 - **Community** - voting on proposals, comments on
   sections and features, favorites (listed as starred sections), follows, and per-user or
   per-group visibility of logs.
