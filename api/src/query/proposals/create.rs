@@ -1,5 +1,5 @@
 use serde_json::{Value, json};
-use sqlx::{PgPool, Row};
+use sqlx::{PgConnection, PgPool, Row, postgres::PgRow};
 
 use super::rows::{RETURNING_COLS, row_to_proposal, with_names};
 use crate::models::proposal::Proposal;
@@ -118,7 +118,34 @@ pub async fn insert_proposal(
         None
     };
 
-    let row = sqlx::query(&format!(
+    let mut conn = db.acquire().await?;
+    let row = insert_row(
+        &mut conn,
+        entity_type,
+        entity_id,
+        operation,
+        proposed_data,
+        original_data,
+        submitted_by,
+        submitter_note,
+    )
+    .await?;
+    with_names(db, row_to_proposal(&row)).await
+}
+
+/// Store a proposal row with its snapshot already taken.
+#[allow(clippy::too_many_arguments)]
+pub(super) async fn insert_row(
+    conn: &mut PgConnection,
+    entity_type: &str,
+    entity_id: Option<i64>,
+    operation: &str,
+    proposed_data: Value,
+    original_data: Option<Value>,
+    submitted_by: &str,
+    submitter_note: Option<&str>,
+) -> Result<PgRow, sqlx::Error> {
+    sqlx::query(&format!(
         r#"INSERT INTO proposals (entity_type, entity_id, operation, proposed_data, original_data, submitted_by, submitter_note)
            VALUES ($1, $2, $3, $4, $5, $6, $7)
            RETURNING {RETURNING_COLS}"#,
@@ -130,8 +157,6 @@ pub async fn insert_proposal(
     .bind(original_data)
     .bind(submitted_by)
     .bind(submitter_note)
-    .fetch_one(db)
-    .await?;
-
-    with_names(db, row_to_proposal(&row)).await
+    .fetch_one(conn)
+    .await
 }

@@ -23,10 +23,12 @@ use crate::{
         },
         page::{PaginatedResponse, page_bounds, page_of},
         path_params::MaterialPath,
+        proposal::{Proposable, Proposal, clean_note},
     },
     query::{
         is_unique_violation,
         materials::{self, CreateError, MAX_COMPARE_IDS, MAX_NEW_PER_DAY},
+        proposals::{self, material::SubmitError},
     },
     routes::access,
     state::AppState,
@@ -128,10 +130,7 @@ pub async fn list_brands(
 ) -> impl IntoApiResponse {
     match materials::list_brands(&app.pg_pool, query.category).await {
         Ok(brands) => Json(brands).into_response(),
-        Err(err) => {
-            tracing::error!("Error listing material brands: {}", err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error listing material brands", err).into_response(),
     }
 }
 
@@ -148,10 +147,7 @@ pub async fn get_material(
     match materials::fetch(&app.pg_pool, material_id).await {
         Ok(Some(material)) => Json(material).into_response(),
         Ok(None) => ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            tracing::error!("Error fetching material {}: {}", material_id, err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error fetching material", err).into_response(),
     }
 }
 
@@ -163,21 +159,79 @@ doc_fn!(get_material_docs, op =>
         .tag("Materials")
 );
 
+/// Answer a stored proposal with 202, or say why it was not stored.
+fn proposal_reply(result: Result<Proposal, SubmitError>, what: &str) -> axum::response::Response {
+    match result {
+        Ok(proposal) => (StatusCode::ACCEPTED, Json(proposal)).into_response(),
+        Err(SubmitError::OverLimit) => ApiError::too_many_requests(format!(
+            "At most {} proposals per day and {} waiting for review",
+            proposals::material::MAX_PER_DAY,
+            proposals::material::MAX_PENDING
+        ))
+        .into_response(),
+        Err(SubmitError::Gone) => ApiError::not_found("Not found").into_response(),
+        Err(SubmitError::Db(err)) => ApiError::from_db(what, err).into_response(),
+    }
+}
+
+/// Clean and check a body; the error is the 400 to answer.
+fn checked(mut body: MaterialBody) -> Result<MaterialBody, ApiError> {
+    body.normalize();
+    match body.validation_error() {
+        Some((field, message)) => Err(ApiError::validation(message).with_target(field)),
+        None => Ok(body),
+    }
+}
+
+/// The 409 for a body whose model, variant and size another entry holds.
+async fn check_free(
+    app: &AppState,
+    body: &MaterialBody,
+    except: Option<i64>,
+) -> Result<(), ApiError> {
+    match materials::key_taken(&app.pg_pool, body, except).await {
+        Ok(false) => Ok(()),
+        Ok(true) => Err(ApiError::conflict(DUPLICATE_MESSAGE)),
+        Err(err) => Err(ApiError::from_db("Error checking material name", err)),
+    }
+}
+
 pub async fn create_material(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
-    Json(mut body): Json<MaterialBody>,
+    Json(Proposable {
+        body,
+        proposal_note,
+    }): Json<Proposable<MaterialBody>>,
 ) -> impl IntoApiResponse {
     let token = match access::signed_in(auth) {
         Ok(token) => token,
         Err(err) => return err.into_response(),
     };
+    let note = match clean_note(proposal_note) {
+        Ok(note) => note,
+        Err(err) => return err.into_response(),
+    };
+    let body = match checked(body) {
+        Ok(body) => body,
+        Err(err) => return err.into_response(),
+    };
+    if let Err(err) = check_free(&app, &body, None).await {
+        return err.into_response();
+    }
 
-    body.normalize();
-    if let Some((field, message)) = body.validation_error() {
-        return ApiError::validation(message)
-            .with_target(field)
-            .into_response();
+    if !token.is_server_admin() {
+        let data = serde_json::to_value(&body).unwrap_or_default();
+        let result = proposals::material::submit(
+            &app.pg_pool,
+            "create",
+            None,
+            data,
+            token.user_id(),
+            note.as_deref(),
+        )
+        .await;
+        return proposal_reply(result, "Error submitting material proposal");
     }
 
     let id = match materials::create(&app.pg_pool, &body, token.user_id()).await {
@@ -203,12 +257,13 @@ pub async fn create_material(
 }
 
 doc_fn!(create_material_docs, op =>
-    op.description("Add an entry to the wiki. Any signed-in paddler may add one.")
+    op.description("Add an entry to the wiki (admin: immediate 201, other signed-in paddlers: proposal 202 for an admin to review)")
         .response::<201, Json<Material>>()
+        .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Invalid entry"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
         .response_with::<409, Json<ErrorResponse>, _>(|res| res.description("Entry already exists"))
-        .response_with::<429, Json<ErrorResponse>, _>(|res| res.description("Daily limit of new entries reached"))
+        .response_with::<429, Json<ErrorResponse>, _>(|res| res.description("Daily or pending limit reached"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Materials")
 );
@@ -217,48 +272,65 @@ pub async fn update_material(
     State(app): State<AppState>,
     auth: Option<Extension<AuthToken>>,
     Path(MaterialPath { material_id }): Path<MaterialPath>,
-    Json(mut body): Json<MaterialBody>,
+    Json(Proposable {
+        body,
+        proposal_note,
+    }): Json<Proposable<MaterialBody>>,
 ) -> impl IntoApiResponse {
     let token = match access::signed_in(auth) {
         Ok(token) => token,
         Err(err) => return err.into_response(),
     };
+    let note = match clean_note(proposal_note) {
+        Ok(note) => note,
+        Err(err) => return err.into_response(),
+    };
+    let body = match checked(body) {
+        Ok(body) => body,
+        Err(err) => return err.into_response(),
+    };
+    if let Err(err) = check_free(&app, &body, Some(material_id)).await {
+        return err.into_response();
+    }
 
-    body.normalize();
-    if let Some((field, message)) = body.validation_error() {
-        return ApiError::validation(message)
-            .with_target(field)
-            .into_response();
+    if !token.is_server_admin() {
+        let data = serde_json::to_value(&body).unwrap_or_default();
+        let result = proposals::material::submit(
+            &app.pg_pool,
+            "update",
+            Some(material_id),
+            data,
+            token.user_id(),
+            note.as_deref(),
+        )
+        .await;
+        return proposal_reply(result, "Error submitting material update proposal");
     }
 
     match materials::update(&app.pg_pool, material_id, &body, token.user_id()).await {
         Ok(true) => match materials::fetch(&app.pg_pool, material_id).await {
             Ok(Some(material)) => Json(material).into_response(),
             Ok(None) => ApiError::not_found("Not found").into_response(),
-            Err(err) => {
-                tracing::error!("Error reading back material {}: {}", material_id, err);
-                ApiError::internal().into_response()
-            }
+            Err(err) => ApiError::from_db("Error reading back material", err).into_response(),
         },
         Ok(false) => ApiError::not_found("Not found").into_response(),
         Err(err) if is_unique_violation(&err) => {
             ApiError::conflict(DUPLICATE_MESSAGE).into_response()
         }
-        Err(err) => {
-            tracing::error!("Error updating material {}: {}", material_id, err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error updating material", err).into_response(),
     }
 }
 
 doc_fn!(update_material_docs, op =>
     op.input::<Path<MaterialPath>>()
-        .description("Replace an entry. Any signed-in paddler may correct one - the wiki keeps who last did.")
+        .description("Replace an entry (admin: immediate 200, other signed-in paddlers: proposal 202 for an admin to review). An approved proposal replaces the entry as stored, whatever changed since.")
         .response::<200, Json<Material>>()
+        .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<400, Json<ErrorResponse>, _>(|res| res.description("Invalid entry"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Entry not found"))
         .response_with::<409, Json<ErrorResponse>, _>(|res| res.description("Entry already exists"))
+        .response_with::<429, Json<ErrorResponse>, _>(|res| res.description("Daily or pending limit reached"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Materials")
 );
@@ -272,29 +344,37 @@ pub async fn delete_material(
         Ok(token) => token,
         Err(err) => return err.into_response(),
     };
-    // Removing an entry takes it away from everyone, unlike an edit, which
-    // the next reader can correct again.
-    if let Err(err) = access::require_server_admin(&token, "Not permitted") {
-        return err.into_response();
+
+    // Removing an entry takes it away from everyone, so only an admin does it
+    // outright; anyone else proposes it.
+    if !token.is_server_admin() {
+        let result = proposals::material::submit(
+            &app.pg_pool,
+            "delete",
+            Some(material_id),
+            serde_json::json!({}),
+            token.user_id(),
+            None,
+        )
+        .await;
+        return proposal_reply(result, "Error submitting material delete proposal");
     }
 
     match materials::delete(&app.pg_pool, material_id).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => ApiError::not_found("Not found").into_response(),
-        Err(err) => {
-            tracing::error!("Error deleting material {}: {}", material_id, err);
-            ApiError::internal().into_response()
-        }
+        Err(err) => ApiError::from_db("Error deleting material", err).into_response(),
     }
 }
 
 doc_fn!(delete_material_docs, op =>
     op.input::<Path<MaterialPath>>()
-        .description("Delete a wiki entry (admin only)")
+        .description("Delete a wiki entry (admin: immediate 204, other signed-in paddlers: proposal 202 for an admin to review)")
         .response_with::<204, (), _>(|res| res.description("Deleted"))
+        .response_with::<202, Json<Proposal>, _>(|res| res.description("Proposal submitted"))
         .response_with::<401, Json<ErrorResponse>, _>(|res| res.description("Unauthorized"))
-        .response_with::<403, Json<ErrorResponse>, _>(|res| res.description("Forbidden"))
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Entry not found"))
+        .response_with::<429, Json<ErrorResponse>, _>(|res| res.description("Daily or pending limit reached"))
         .security_requirement_multi(["Bearer", "ApiKey"])
         .tag("Materials")
 );

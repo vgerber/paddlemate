@@ -1,5 +1,6 @@
 mod create;
 mod list;
+pub mod material;
 mod normalize;
 mod review;
 mod rows;
