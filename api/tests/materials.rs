@@ -91,7 +91,10 @@ async fn an_admin_writes_outright_and_a_signed_in_user_proposes(pool: PgPool) {
     assert_eq!(r.body["original_data"]["model"], "Ripper");
     assert_eq!(r.body["proposed_data"]["model"], "Edited");
 
-    let r = call(&app, Method::DELETE, &uri, MARA, None).await;
+    // One pending change per user and entry, so the delete comes from
+    // someone else.
+    common::add_user(&pool, "noa-1", "noa").await;
+    let r = call(&app, Method::DELETE, &uri, Who::User("noa-1"), None).await;
     assert_eq!(r.status, StatusCode::ACCEPTED, "{}", r.body);
     assert_eq!(r.body["operation"], "delete");
     assert_eq!(r.body["original_data"]["model"], "Ripper");

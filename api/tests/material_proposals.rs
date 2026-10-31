@@ -13,6 +13,7 @@ use serde_json::{Value, json};
 use sqlx::PgPool;
 
 const MARA: Who = Who::User("mara-1");
+const NOA: Who = Who::User("noa-1");
 
 fn app(pool: PgPool) -> Router {
     let state = state(pool);
@@ -75,6 +76,7 @@ async fn entry_of(app: &Router, id: i64) -> common::Reply {
 #[sqlx::test]
 async fn approving_each_kind_applies_it_and_rejecting_changes_nothing(pool: PgPool) {
     people(&pool).await;
+    common::add_user(&pool, "noa-1", "noa").await;
     let app = app(pool.clone());
     let id = seed(&app, "Ripper").await;
     let uri = format!("/materials/{id}");
@@ -90,7 +92,7 @@ async fn approving_each_kind_applies_it_and_rejecting_changes_nothing(pool: PgPo
     let mut edit = entry("Ripper");
     edit["volume_l"] = json!(240);
     let update = propose(&app, Method::PUT, &uri, MARA, Some(edit)).await;
-    let delete = propose(&app, Method::DELETE, &uri, MARA, None).await;
+    let delete = propose(&app, Method::DELETE, &uri, NOA, None).await;
 
     // Only an admin decides.
     assert_eq!(
@@ -134,7 +136,7 @@ async fn approving_each_kind_applies_it_and_rejecting_changes_nothing(pool: PgPo
         StatusCode::NOT_FOUND
     );
 
-    let delete = propose(&app, Method::DELETE, &uri, MARA, None).await;
+    let delete = propose(&app, Method::DELETE, &uri, NOA, None).await;
     assert_eq!(
         decide(&app, delete, Who::Admin, "approved").await.status,
         StatusCode::OK
@@ -147,6 +149,7 @@ async fn an_approved_update_replaces_the_entry_as_proposed_even_if_it_changed_si
     // Same rule as waterway proposals: the stored change is applied as it
     // is, with no check against edits made after it was proposed.
     people(&pool).await;
+    common::add_user(&pool, "noa-1", "noa").await;
     let app = app(pool);
     let id = seed(&app, "Ripper").await;
     let uri = format!("/materials/{id}");
@@ -171,11 +174,12 @@ async fn an_approved_update_replaces_the_entry_as_proposed_even_if_it_changed_si
 #[sqlx::test]
 async fn approving_for_an_entry_that_is_gone_does_nothing(pool: PgPool) {
     people(&pool).await;
+    common::add_user(&pool, "noa-1", "noa").await;
     let app = app(pool);
     let id = seed(&app, "Ripper").await;
     let uri = format!("/materials/{id}");
     let update = propose(&app, Method::PUT, &uri, MARA, Some(entry("Ripper"))).await;
-    let delete = propose(&app, Method::DELETE, &uri, MARA, None).await;
+    let delete = propose(&app, Method::DELETE, &uri, NOA, None).await;
     let r = call(&app, Method::DELETE, &uri, Who::Admin, None).await;
     assert_eq!(r.status, StatusCode::NO_CONTENT);
 
@@ -188,6 +192,7 @@ async fn approving_for_an_entry_that_is_gone_does_nothing(pool: PgPool) {
 #[sqlx::test]
 async fn approving_a_name_taken_meanwhile_is_a_conflict_and_stays_pending(pool: PgPool) {
     people(&pool).await;
+    common::add_user(&pool, "noa-1", "noa").await;
     let app = app(pool);
     let proposal = propose(
         &app,
@@ -213,22 +218,61 @@ async fn approving_a_name_taken_meanwhile_is_a_conflict_and_stays_pending(pool: 
 }
 
 #[sqlx::test]
-async fn a_user_may_have_several_proposals_for_one_entry(pool: PgPool) {
-    // Waterway proposals have no one-pending-per-entry rule, so neither do
-    // these; the daily and waiting caps bound the volume instead.
+async fn one_pending_update_or_delete_per_user_and_entry(pool: PgPool) {
     people(&pool).await;
+    common::add_user(&pool, "noa-1", "noa").await;
     let app = app(pool);
     let id = seed(&app, "Ripper").await;
+    let other = seed(&app, "Slicer").await;
     let uri = format!("/materials/{id}");
-    for _ in 0..2 {
-        propose(&app, Method::PUT, &uri, MARA, Some(entry("Ripper"))).await;
-    }
-    propose(&app, Method::DELETE, &uri, MARA, None).await;
+    let first = propose(&app, Method::PUT, &uri, MARA, Some(entry("Ripper"))).await;
+
+    let r = call(&app, Method::PUT, &uri, MARA, Some(entry("Ripper"))).await;
+    assert_eq!(r.status, StatusCode::CONFLICT, "{}", r.body);
+    assert_eq!(r.body["error"]["target"], "id");
+    let r = call(&app, Method::DELETE, &uri, MARA, None).await;
+    assert_eq!(r.status, StatusCode::CONFLICT, "{}", r.body);
+
+    // Another entry, another user, creates and an admin are not blocked.
+    propose(
+        &app,
+        Method::PUT,
+        &format!("/materials/{other}"),
+        MARA,
+        Some(entry("Slicer")),
+    )
+    .await;
+    propose(&app, Method::PUT, &uri, NOA, Some(entry("Ripper"))).await;
+    propose(&app, Method::POST, "/materials", MARA, Some(entry("Fresh"))).await;
+    propose(
+        &app,
+        Method::POST,
+        "/materials",
+        MARA,
+        Some(entry("Fresher")),
+    )
+    .await;
+    let r = call(&app, Method::PUT, &uri, Who::Admin, Some(entry("Ripper"))).await;
+    assert_eq!(r.status, StatusCode::OK, "{}", r.body);
+
+    // Once decided, a new one is allowed.
+    assert_eq!(
+        decide(&app, first, Who::Admin, "rejected").await.status,
+        StatusCode::OK
+    );
+    let second = propose(&app, Method::DELETE, &uri, MARA, None).await;
+    let r = call(&app, Method::PUT, &uri, MARA, Some(entry("Ripper"))).await;
+    assert_eq!(r.status, StatusCode::CONFLICT, "{}", r.body);
+    assert_eq!(
+        decide(&app, second, Who::Admin, "approved").await.status,
+        StatusCode::OK
+    );
 }
 
 #[sqlx::test]
 async fn material_proposals_list_filter_and_take_votes(pool: PgPool) {
     people(&pool).await;
+    common::add_user(&pool, "noa-1", "noa").await;
     let app = app(pool);
     let material = propose(
         &app,

@@ -286,7 +286,12 @@ then go to `query::proposals::material::submit`, which snapshots the entry for
 update and delete (`original_data`, in `MaterialBody` shape plus `id`; 404 if
 it does not exist), and under the user's advisory lock (the one
 `materials::create` takes) refuses with 429 at `MAX_PER_DAY` (30, any
-operation) proposals in a day or `MAX_PENDING` (50) waiting. The proposal is
+operation) proposals in a day or `MAX_PENDING` (50) waiting. A user may hold one
+pending update or delete per entry: the partial unique index
+`uniq_proposals_material_pending_change` (migration `0061`) enforces it and the
+violation answers 409 "You already have a change waiting for review on this
+entry" (target `id`); creates, other users and admins are not affected, and a
+decided or withdrawn proposal frees the slot. The proposal is
 `entity_type = material` (migration `0060`); listing, filtering (`?entity_type=material`),
 votes and withdrawal are the shared proposal routes.
 
@@ -294,7 +299,7 @@ Approval (`routes/proposals/review.rs`) calls `proposals::material::apply`
 inside the review transaction, which runs `create_in`, `update_in` and
 `delete_in`, the same writes as the admin path, with the submitter as
 `created_by` / `updated_by`. Like waterway proposals there is no stale-update
-check and no one-pending-per-entry rule; an update or delete whose entry is
+check; an update or delete whose entry is
 gone is a no-op. Tests: `api/tests/material_proposals.rs`, `api/tests/materials.rs`.
 
 ### Frontend

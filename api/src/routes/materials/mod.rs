@@ -169,6 +169,11 @@ fn proposal_reply(result: Result<Proposal, SubmitError>, what: &str) -> axum::re
             proposals::material::MAX_PENDING
         ))
         .into_response(),
+        Err(SubmitError::AlreadyPending) => {
+            ApiError::conflict("You already have a change waiting for review on this entry")
+                .with_target("id")
+                .into_response()
+        }
         Err(SubmitError::Gone) => ApiError::not_found("Not found").into_response(),
         Err(SubmitError::Db(err)) => ApiError::from_db(what, err).into_response(),
     }
