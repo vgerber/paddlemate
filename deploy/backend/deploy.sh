@@ -24,8 +24,11 @@ docker build -t paddlemate-api ./api
 
 echo "📤 Copying config files to NAS..."
 ssh "${NAS_USER}@${NAS_HOST}" "mkdir -p ${NAS_PATH}/data/postgres ${NAS_PATH}/data/media && chmod 777 ${NAS_PATH}/data/postgres ${NAS_PATH}/data/media"
-rsync -az -e ssh deploy/backend/docker-compose.yml deploy/backend/restore.sh "${ENV_FILE}" \
+rsync -az -e ssh deploy/backend/docker-compose.yml deploy/backend/restore.sh deploy/backend/backup.sh "${ENV_FILE}" \
     "${NAS_USER}@${NAS_HOST}::${NAS_RSYNC_MODULE}/"
+
+echo "💾 Backing up the database and media before the restart..."
+ssh "${NAS_USER}@${NAS_HOST}" "bash ${NAS_PATH}/backup.sh predeploy"
 
 echo "🚀 Pushing image to NAS..."
 docker save paddlemate-api:latest | ssh "${NAS_USER}@${NAS_HOST}" "/usr/local/bin/docker load"

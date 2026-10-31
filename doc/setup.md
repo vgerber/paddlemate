@@ -125,8 +125,41 @@ settings and secrets. Both files stay out of git.
   open form is not lost. Bundles already in the field (released before that
   listener existed) do not show it and need one manual reload after this deploy.
 - **Rollback**: the schema is additive, so roll back code only. Tag the running
-  image `paddlemate-api:previous` before deploying, keep `dist.prev`, and take a
-  `pg_dump -Fc` plus a copy of `data/media`. To go back, retag, set
+  image `paddlemate-api:previous` before deploying and keep `dist.prev`; the
+  backend deploy takes the database dump and media snapshot itself (see
+  Backups). To go back, retag, set
   `RUN_MIGRATIONS=false` (the old image does not know the applied versions and
   would panic), `down`, `up -d`. There are no down migrations, and production
   data changes go through a migration in the next release, never by hand.
+
+## Backups
+
+The database and the uploaded and mirrored photos are backed up every night
+and before every backend deploy, and the copies leave the NAS volume through
+Hyper Backup.
+
+| Layer | What | Where | Kept |
+|---|---|---|---|
+| [`deploy/backend/backup.sh`](../deploy/backend/backup.sh) | `pg_dump -Fc` of the database, checked with `pg_restore --list`, plus a hard-linked snapshot of `data/media` | `<NAS_ROOT>/paddlemate-backend/backups/nightly/` | newest 14 (`KEEP`) |
+| DSM Hyper Backup | `backups/` and `data/media` | another volume, USB disk or a cloud target | its own rotation, about 30 versions |
+| DSM Snapshot Replication (optional) | the whole `shared_services` share | same volume | hourly for a day, daily for two weeks |
+
+The live `data/postgres` folder is never in Hyper Backup: a file-by-file copy
+taken while Postgres writes can be inconsistent and fail to start. The dump is
+the database backup; a snapshot is only a quick undo on the same disk.
+
+Setting it up once in DSM:
+
+1. **Control Panel > Task Scheduler > Create > Scheduled Task > User-defined
+   script**: user `root`, daily at 01:30, script
+   `bash /volume1/shared_services/paddlemate-backend/backup.sh`.
+   Run it once by hand and check that a `.dump` appears in `backups/nightly/`.
+2. **Hyper Backup > Create > Data backup task**: pick a target off this
+   volume, select `shared_services/paddlemate-backend/backups` and
+   `shared_services/paddlemate-backend/data/media` (not `data/postgres`),
+   schedule daily at 02:30, enable integrity checks and Smart Recycle.
+3. Optional: **Snapshot Replication > Snapshots** on `shared_services`, hourly.
+
+To restore, copy the chosen dump to `paddlemate_export.dump` beside
+`restore.sh` and run it on the NAS (it drops and recreates the database), then
+copy the matching media snapshot back into `data/media`.
