@@ -94,7 +94,7 @@ async fn a_token_without_expiry_omits_the_field(pool: PgPool) {
     keyed_user(&pool, "mara").await;
     let app = app(pool);
     let r = create(&app, "pm_mara", json!({ "name": "forever" })).await;
-    assert_eq!(r.status, StatusCode::OK);
+    assert_eq!(r.status, StatusCode::CREATED);
     assert!(r.body.get("expires_at").is_none());
     let listed = call_key(&app, Method::GET, "/users/me/tokens", Some("pm_mara"), None).await;
     let t = listed
@@ -117,7 +117,7 @@ async fn token_names_are_unique_per_user(pool: PgPool) {
         create(&app, "pm_mara", json!({ "name": "ci" }))
             .await
             .status,
-        StatusCode::OK
+        StatusCode::CREATED
     );
     let dup = create(&app, "pm_mara", json!({ "name": "ci" })).await;
     assert_eq!(dup.status, StatusCode::CONFLICT);
@@ -128,7 +128,7 @@ async fn token_names_are_unique_per_user(pool: PgPool) {
     // Another user may reuse the name.
     assert_eq!(
         create(&app, "pm_jon", json!({ "name": "ci" })).await.status,
-        StatusCode::OK
+        StatusCode::CREATED
     );
 }
 
