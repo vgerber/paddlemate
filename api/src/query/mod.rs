@@ -11,7 +11,6 @@ pub mod util;
 pub mod waterways;
 
 // Temporary: proposals queries are edited by another agent.
-pub use waterways::{features, sections};
 
 /// Shortest search term that may match approximately. Below this a single
 /// typo leaves too few correct characters for trigram scoring to mean

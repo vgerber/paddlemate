@@ -9,7 +9,10 @@ use crate::models::{
     water_section::CreateSectionBody,
 };
 use crate::query::history::{self, EntityKind, Via};
-use crate::query::{features, gauges, sections, waterways};
+use crate::query::{
+    gauges, waterways,
+    waterways::{features, sections},
+};
 
 /// Upsert a vote on a proposal. vote must be 1 or -1 (enforced by DB constraint).
 pub async fn vote_proposal(
@@ -266,8 +269,10 @@ async fn apply_proposal(
                                     }
                                 };
                             let series_id =
-                                crate::query::features::resolve_range_series(&mut *conn, &body)
-                                    .await?;
+                                crate::query::waterways::features::resolve_range_series(
+                                    &mut *conn, &body,
+                                )
+                                .await?;
                             gauges::upsert_feature_water_range_partial(
                                 &mut *conn,
                                 id,
