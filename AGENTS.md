@@ -448,6 +448,14 @@ A new layer group joins one of these or becomes a new sibling.
   a `type` check.
 - No `any` (the codebase has zero).
 
+### Device preferences
+
+Appearance (colour mode, motion) and Units (weight, distance, length) are
+per-device preferences: stored in `localStorage`, never on the account, and
+reachable in Settings without signing in - no `SignInGate` around them. A new
+display preference joins this group. Data is always stored and sent in metric;
+units change only what is shown and convert input back before saving.
+
 ### Theme and styling
 
 - Static `import { theme, fonts, labelSx } from "@/lib/theme/theme"` - not
@@ -579,6 +587,7 @@ in `playwright.config.ts`.
 | `OVERPASS_URLS` | public instances | Comma-separated Overpass endpoints tried in order; production puts the self-hosted instance (`deploy/overpass/`) first |
 | `SEARCH_WORD_SIMILARITY_THRESHOLD` | `0.5` | How close a misspelling must be to still match a name |
 | `VAPID_PRIVATE_KEY` | unset | Raw P-256 private key, base64url, for web push; the public key is derived from it. Unset (or `VAPID_SUBJECT` unset) turns push off, nothing else |
+| `DISABLE_MATERIAL_MIRROR` | `false` | `true` stops the job that mirrors catalogue product images into `MEDIA_DIR`; local dev and tests set it so nothing calls the makers' sites |
 | `VAPID_SUBJECT` | unset | `mailto:` or `https:` contact that push services may reach about this server |
 
 ### Search
