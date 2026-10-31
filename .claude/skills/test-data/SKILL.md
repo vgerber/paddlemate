@@ -82,7 +82,7 @@ docker compose --profile auth up -d --force-recreate keycloak
 | Sources | 9903 | "Tirol Canoe Association" guide (CC BY-SA), next to 9901/9902 and the migration's `import:rivermap` |
 | Lower Test notes | 9906-9913 | one note in each category: urgent, temporary/cleared/permanent hazard, conditions, regulations, logistics, calibration (outdated) |
 | Trip events + read marks | - | the bell for Vincent and Mara (see below) |
-| Material wiki entries | 9851-9860 | eight kayaks, a canoe and a packraft; the Testflow Cascade in S/M/L is the same-model comparison case |
+| Material wiki entries | 9851-9863 | eight kayaks, a canoe and a packraft; the Testflow Cascade in S/M/L is the same-model comparison case. 9861 Photocraft Lens (colours, approximate year, sources, one real photo), 9862 Photocraft Blade (a paddle), 9863 Vanishco Ghost (two photos with no file, for the takedown specs); photo rows 9871-9873. Copy `media/photocraft-lens*.jpg` into the API's `MEDIA_DIR` for the real photo |
 | API token `pm_testtoken123` | name `test-data` | for authed curl: `-H "X-Api-Key: pm_testtoken123"` |
 
 Proposals (on `/proposals`, newest first; the review pane draws each one

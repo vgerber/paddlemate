@@ -113,3 +113,20 @@ export function useDeleteMaterial() {
     },
   });
 }
+
+export function useRemoveMaterialImage(materialId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (imageId: number) =>
+      materialsApi.removeImage(materialId, imageId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: materialKeys.all }),
+  });
+}
+
+export function useRemoveBrandImages() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (brand: string) => materialsApi.removeBrandImages(brand),
+    onSuccess: () => qc.invalidateQueries({ queryKey: materialKeys.all }),
+  });
+}

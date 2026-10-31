@@ -22,8 +22,8 @@ away:
 
 | Filter | Keeps |
 | --- | --- |
-| Category | Kayaks, canoes, packrafts or SUPs |
-| Discipline | What the boat is built for - creek, river runner, half slice, playboat, slalom, downriver, touring, sea, expedition, recreational |
+| Category | Kayaks, canoes, packrafts, SUPs or paddles |
+| Discipline | What the boat is built for - creek, river runner, half slice, playboat, slalom, downriver, touring, sea, expedition, recreational, crossover, freestyle, other |
 | Construction | Plastic, composite, inflatable, folding or wood |
 | Brand | One brand, with the number of entries it has |
 | Fits paddler | Your body weight in your weight unit (Settings > Units), keeping the boats whose paddler range covers it |
@@ -71,6 +71,14 @@ not create a second entry - "pyranha firecracker" and "Pyranha Firecracker"
 are the same boat.
 
 ## Catalogue
+
+An entry opens with its photos, each captioned "Photo: <maker>" and linking
+to the page it came from, then its facts, colourways as chips, and the
+notes. An approximate year reads "about 2021". A paddle shows its own facts
+(blade area, lengths, shaft, angles, weight) in your units. A Sources list
+links every page a value came from. Rows in the list carry a small
+thumbnail. An admin sees "Remove photo" and "Remove all <brand> photos" in
+the entry menu; both ask first.
 
 About 530 whitewater kayaks and 170 paddles come pre-filled, each size and
 shaft type as its own entry. They carry colourways as the maker names them,
@@ -214,7 +222,7 @@ not state the measurement last.
 | --- | --- |
 | `lib/materials/materials.ts` | `MATERIAL_SPECS` (the one list of comparable measurements), labels, `specSpread`, the comparison's id list, the URL search shape, and the entry form's value conversion |
 | `lib/hooks/useMaterials.ts` | `materialKeys` and every query and mutation |
-| `components/materials/` | `MaterialsView` (list), `MaterialRow`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `WikiPage` (the frame) |
+| `components/materials/` | `MaterialsView` (list), `MaterialRow`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `MaterialGallery` (photos and credits), `WikiPage` (the frame) |
 | `routes/materials/` | `index` (list), `$materialId` (detail, `?edit=true` for the form), `compare`, `new` |
 
 The wiki is a normal page, not a map screen: a centred column on a desktop,
@@ -225,6 +233,6 @@ Adding a measurement is one row in `MATERIAL_SPECS` plus its column: the
 list row, the detail view, the comparison and the entry form all read that
 list.
 
-The dev fixture in `.claude/skills/test-data/` seeds ten entries (ids
-9851-9860), including one model in three sizes for exercising the
-comparison.
+The dev fixture in `.claude/skills/test-data/` seeds thirteen entries (ids
+9851-9863): one model in three sizes for the comparison, and a kayak with a
+photo, a paddle and a brand with two photos for the catalogue specs.

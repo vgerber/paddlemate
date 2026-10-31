@@ -1,11 +1,13 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import { useEffect, useRef } from "react";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
 import FormSection from "@/components/waterway/FormSection";
-import type { MaterialBody } from "@/lib/api";
+import type { Material, MaterialBody } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/api/client";
 import { ConfirmIcon } from "@/lib/icons";
 import {
@@ -19,6 +21,10 @@ import {
   MATERIAL_SPECS,
   type MaterialFormValues,
   materialFormToBody,
+  PADDLE_SPECS,
+  type PaddleKey,
+  SHAFT_MATERIALS,
+  SHAFTS,
   SPEC_GROUP_LABELS,
   type SpecKey,
 } from "@/lib/materials/materials";
@@ -54,6 +60,7 @@ export default function MaterialForm({
   subtitle,
   saving,
   error,
+  original,
 }: {
   values: MaterialFormValues;
   onChange: (values: MaterialFormValues) => void;
@@ -63,6 +70,9 @@ export default function MaterialForm({
   subtitle: string;
   saving: boolean;
   error: unknown;
+  /** The entry being corrected: fields the reader leaves alone keep their
+   * stored value. */
+  original?: Material;
 }) {
   const [units] = useUnits();
   const set = (patch: Partial<MaterialFormValues>) =>
@@ -76,7 +86,7 @@ export default function MaterialForm({
   }, [error]);
 
   const numberField = (
-    key: SpecKey | "year_from" | "year_to",
+    key: SpecKey | PaddleKey | "year_from" | "year_to" | "pieces",
     label: string,
   ) => (
     <TextField
@@ -88,8 +98,24 @@ export default function MaterialForm({
     />
   );
 
+  const listField = (
+    key: "lengths_cm" | "feather_deg",
+    label: string,
+    helperText: string,
+  ) => (
+    <TextField
+      label={label}
+      value={values[key]}
+      helperText={helperText}
+      onChange={(event) => set({ [key]: event.target.value })}
+      slotProps={{ htmlInput: { maxLength: 80 } }}
+    />
+  );
+
+  const isPaddle = values.category === "paddle";
+
   const textField = (
-    key: "brand" | "model" | "variant",
+    key: "brand" | "model" | "variant" | "blade_material" | "shaft_diameter",
     label: string,
     extra: { required?: boolean; helperText?: string } = {},
   ) => (
@@ -198,36 +224,137 @@ export default function MaterialForm({
             {numberField("year_from", "First year")}
             {numberField("year_to", "Last year")}
           </Box>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={values.year_approximate}
+                onChange={(event) =>
+                  set({ year_approximate: event.target.checked })
+                }
+              />
+            }
+            label="The years are approximate"
+            sx={{ minHeight: tokens.touch.min }}
+          />
         </FormSection>
 
-        {(["hull", "cockpit", "paddler"] as const).map((group) => (
+        {isPaddle && (
           <FormSection
-            key={group}
-            label={SPEC_GROUP_LABELS[group]}
-            hint={SPEC_HINTS[group]}
+            label="Paddle"
+            hint="Blade, shaft and the lengths it comes in."
           >
             <Box sx={fieldGridSx}>
-              {MATERIAL_SPECS.filter((spec) => spec.group === group).map(
-                (spec) =>
-                  numberField(
-                    spec.key,
-                    `${spec.label} (${unitLabel(spec.quantity, units)})`,
-                  ),
+              {PADDLE_SPECS.map((spec) =>
+                numberField(
+                  spec.key,
+                  `${spec.label} (${unitLabel(spec.quantity, units)})`,
+                ),
               )}
+              {numberField(
+                "weight_kg",
+                `Weight (${unitLabel("weight", units)})`,
+              )}
+              {numberField("pieces", "Pieces")}
             </Box>
+            {listField(
+              "lengths_cm",
+              `Sizes (${unitLabel("length", units)})`,
+              "Separate several with commas",
+            )}
+            {listField(
+              "feather_deg",
+              "Feather angles (degrees)",
+              "Separate several with commas",
+            )}
+            <Box sx={fieldGridSx}>
+              <TextField
+                select
+                label="Shaft"
+                value={values.shaft}
+                onChange={(event) =>
+                  set({
+                    shaft: event.target.value as MaterialFormValues["shaft"],
+                  })
+                }
+              >
+                <MenuItem value="">Unstated</MenuItem>
+                {SHAFTS.map((shaft) => (
+                  <MenuItem key={shaft} value={shaft}>
+                    {enumLabel(shaft)}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                label="Shaft material"
+                value={values.shaft_material}
+                onChange={(event) =>
+                  set({
+                    shaft_material: event.target
+                      .value as MaterialFormValues["shaft_material"],
+                  })
+                }
+              >
+                <MenuItem value="">Unstated</MenuItem>
+                {SHAFT_MATERIALS.map((material) => (
+                  <MenuItem key={material} value={material}>
+                    {enumLabel(material)}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
+            {textField("blade_material", "Blade material")}
+            {textField("shaft_diameter", "Shaft diameter")}
           </FormSection>
-        ))}
+        )}
+
+        {(isPaddle ? [] : (["hull", "cockpit", "paddler"] as const)).map(
+          (group) => (
+            <FormSection
+              key={group}
+              label={SPEC_GROUP_LABELS[group]}
+              hint={SPEC_HINTS[group]}
+            >
+              <Box sx={fieldGridSx}>
+                {MATERIAL_SPECS.filter((spec) => spec.group === group).map(
+                  (spec) =>
+                    numberField(
+                      spec.key,
+                      `${spec.label} (${unitLabel(spec.quantity, units)})`,
+                    ),
+                )}
+              </Box>
+            </FormSection>
+          ),
+        )}
 
         <FormSection
           label="Notes"
           hint="How it paddles, and where the numbers came from."
         >
           <TextField
+            label="Colours"
+            value={values.colors}
+            helperText="Separate several with commas"
+            onChange={(event) => set({ colors: event.target.value })}
+            slotProps={{ htmlInput: { maxLength: 3000 } }}
+          />
+          <TextField
             label="Description"
             multiline
             minRows={3}
             value={values.description}
             onChange={(event) => set({ description: event.target.value })}
+            slotProps={{
+              htmlInput: { maxLength: MATERIAL_LIMITS.description },
+            }}
+          />
+          <TextField
+            label="Notes"
+            multiline
+            minRows={2}
+            value={values.notes}
+            onChange={(event) => set({ notes: event.target.value })}
             slotProps={{
               htmlInput: { maxLength: MATERIAL_LIMITS.description },
             }}
@@ -261,7 +388,9 @@ export default function MaterialForm({
             ariaLabel="Save entry"
             disabled={!canSaveMaterial(values)}
             busy={saving}
-            onClick={() => onSubmit(materialFormToBody(values, units))}
+            onClick={() =>
+              onSubmit(materialFormToBody(values, units, original))
+            }
           >
             <ConfirmIcon />
           </RoundActionButton>

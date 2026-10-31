@@ -1,19 +1,23 @@
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { phoneCardSx } from "@/components/canvas/flatRow";
 import Fact from "@/components/Fact";
+import MaterialGallery from "@/components/materials/MaterialGallery";
+import { phoneCardSx } from "@/components/phone/phoneGrid";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import SectionHeading from "@/components/SectionHeading";
 import type { Material } from "@/lib/api";
-import { DeleteIcon, EditIcon, OpenExternalIcon } from "@/lib/icons";
+import { DeleteIcon, EditIcon, OpenExternalIcon, PhotoIcon } from "@/lib/icons";
 import {
   CATEGORY_LABELS,
   enumLabel,
   formatSpec,
   MATERIAL_SPECS,
+  paddleFacts,
   SPEC_GROUP_LABELS,
+  sourceLinks,
   specValue,
   yearsLabel,
 } from "@/lib/materials/materials";
@@ -80,19 +84,48 @@ function Card({
 /** The header menu of an entry: correcting is open to every signed-in
  * paddler, removing is the admin's. */
 export function materialActions({
+  material,
   canEdit,
   canDelete,
   onEdit,
   onDelete,
+  onRemovePhoto,
+  onRemoveBrandPhotos,
 }: {
+  material: Material;
   canEdit: boolean;
   canDelete: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  /** Admin only: takedown of one of the entry's photos. */
+  onRemovePhoto?: (imageId: number) => void;
+  /** Admin only: takedown of every photo of the entry's brand. */
+  onRemoveBrandPhotos?: () => void;
 }): ReactNode {
   const actions: RowAction[] = [];
   if (canEdit) {
     actions.push({ label: "Edit entry", icon: <EditIcon />, onClick: onEdit });
+  }
+  const photos = material.images;
+  if (onRemovePhoto) {
+    photos.forEach((image, index) => {
+      actions.push({
+        label:
+          photos.length === 1 ? "Remove photo" : `Remove photo ${index + 1}`,
+        icon: <PhotoIcon />,
+        onClick: () => onRemovePhoto(image.id),
+        danger: true,
+        groupStart: index === 0 && actions.length > 0,
+      });
+    });
+  }
+  if (onRemoveBrandPhotos && photos.length > 0) {
+    actions.push({
+      label: `Remove all ${material.brand} photos`,
+      icon: <PhotoIcon />,
+      onClick: onRemoveBrandPhotos,
+      danger: true,
+    });
   }
   if (canDelete) {
     actions.push({
@@ -100,7 +133,7 @@ export function materialActions({
       icon: <DeleteIcon />,
       onClick: onDelete,
       danger: true,
-      groupStart: canEdit,
+      groupStart: actions.length > 0,
     });
   }
   return <RowMenu actions={actions} label="Entry actions" />;
@@ -129,9 +162,12 @@ export default function MaterialDetailView({
   if (yearsLabel(material)) {
     facts.push({ label: "Built", value: yearsLabel(material) });
   }
+  const paddle = paddleFacts(material, units);
+  const sources = sourceLinks(material.sources);
 
   return (
     <Box sx={{ pt: 1, pb: 3 }}>
+      <MaterialGallery material={material} />
       <Box sx={{ ...cardSx, py: 2 }}>
         <Box
           sx={{
@@ -152,14 +188,52 @@ export default function MaterialDetailView({
             {material.description}
           </Typography>
         )}
+        {material.colors.length > 0 && (
+          <Box
+            data-testid="material-colors"
+            sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2 }}
+          >
+            {material.colors.map((color) => (
+              <Chip key={color} label={color} sx={{ maxWidth: "100%" }} />
+            ))}
+          </Box>
+        )}
+        {material.notes && (
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            sx={{ mt: 2, whiteSpace: "pre-line", overflowWrap: "anywhere" }}
+          >
+            {material.notes}
+          </Typography>
+        )}
       </Box>
+
+      {paddle.length > 0 && (
+        <Card heading="Paddle">
+          <Box
+            data-testid="paddle-facts"
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+              gap: 2,
+              py: 1,
+            }}
+          >
+            {paddle.map((fact) => (
+              <Fact key={fact.label} label={fact.label} value={fact.value} />
+            ))}
+          </Box>
+        </Card>
+      )}
 
       {(["hull", "cockpit", "paddler"] as const).map((group) => {
         const specs = MATERIAL_SPECS.filter(
           (spec) =>
             spec.group === group && specValue(material, spec.key) != null,
         );
-        if (specs.length === 0) return null;
+        // A paddle's weight is among its facts; the boat groups do not apply.
+        if (specs.length === 0 || material.category === "paddle") return null;
         return (
           <Card key={group} heading={SPEC_GROUP_LABELS[group]}>
             {specs.map((spec) => (
@@ -172,6 +246,41 @@ export default function MaterialDetailView({
           </Card>
         );
       })}
+
+      {sources.length > 0 && (
+        <Card heading="Sources">
+          <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+            {sources.map((source) => (
+              <Box component="li" key={source.url}>
+                <Link
+                  href={source.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    minHeight: tokens.touch.min,
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  <span>
+                    {source.host}
+                    <Typography
+                      variant="body2"
+                      color="textSecondary"
+                      component="span"
+                    >
+                      {` - ${source.fields.join(", ")}`}
+                    </Typography>
+                  </span>
+                  <OpenExternalIcon sx={{ fontSize: 16, flexShrink: 0 }} />
+                </Link>
+              </Box>
+            ))}
+          </Box>
+        </Card>
+      )}
 
       <Card heading="Source">
         {material.product_url && (

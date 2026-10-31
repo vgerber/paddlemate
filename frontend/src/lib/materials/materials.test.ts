@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { Material } from "@/lib/api";
+import type { Material, MaterialBody } from "@/lib/api";
 import { IMPERIAL, METRIC } from "../prefs/units";
 import {
   enumLabel,
@@ -9,10 +9,13 @@ import {
   materialFormToBody,
   materialTitle,
   materialToForm,
+  paddleFacts,
+  paddleLengthLabel,
   paddlerRangeLabel,
   parseCompareIds,
   parseMaterialSearch,
   searchText,
+  sourceLinks,
   specSpread,
   toggleCompareId,
   yearsLabel,
@@ -209,5 +212,175 @@ describe("searchText", () => {
       compare: "9853",
     });
     expect(searchText("  ")).toBeUndefined();
+  });
+});
+
+/** Every field of the request body, so a field added to the API fails here
+ * until the round trip covers it. */
+const FULL_PADDLE: Required<MaterialBody> = {
+  category: "paddle",
+  brand: "Aqua Bound",
+  model: "Aerial",
+  variant: "Major",
+  discipline: "river_runner",
+  construction: "composite",
+  description: "A paddle.",
+  product_url: "https://example.com/aerial",
+  year_from: 2023,
+  year_to: 2025,
+  year_approximate: true,
+  notes: "Weak year.",
+  colors: ["Red", "Blue"],
+  length_cm: 12.3,
+  width_cm: 4.56,
+  height_cm: 7.89,
+  volume_l: 295,
+  weight_kg: 0.87,
+  cockpit_length_cm: 84.4,
+  cockpit_width_cm: 49.1,
+  paddler_weight_min_kg: 45.5,
+  paddler_weight_max_kg: 97.7,
+  blade_area_cm2: 645.3,
+  blade_length_cm: 47.7,
+  blade_width_cm: 17.3,
+  length_min_cm: 191,
+  length_max_cm: 205,
+  lengths_cm: [191, 194, 197.5],
+  pieces: 2,
+  shaft: "bent",
+  shaft_material: "carbon",
+  blade_material: "Nylon",
+  feather_deg: [0, 30, 45],
+  shaft_diameter: "29.5 mm",
+};
+
+describe("an edit that changes nothing", () => {
+  const stored = material({
+    ...FULL_PADDLE,
+    id: 5,
+    colors: FULL_PADDLE.colors,
+  } as Partial<Material>);
+
+  for (const [name, units] of [
+    ["metric", METRIC],
+    ["imperial", IMPERIAL],
+  ] as const) {
+    test(`sends every field it loaded, ${name}`, () => {
+      const body = materialFormToBody(
+        materialToForm(stored, units),
+        units,
+        stored,
+      );
+      expect(body).toEqual(FULL_PADDLE);
+    });
+  }
+
+  test("a boat never sends paddle fields", () => {
+    const form = {
+      ...materialToForm(stored, METRIC),
+      category: "kayak" as const,
+    };
+    const body = materialFormToBody(form, METRIC, stored);
+    expect(body.blade_area_cm2).toBeUndefined();
+    expect(body.lengths_cm).toBeUndefined();
+    expect(body.shaft).toBeUndefined();
+  });
+
+  test("a touched field is converted, an untouched one keeps its stored value", () => {
+    const form = {
+      ...materialToForm(stored, IMPERIAL),
+      blade_width_cm: "10",
+    };
+    const body = materialFormToBody(form, IMPERIAL, stored);
+    expect(body.blade_width_cm).toBe(25.4);
+    expect(body.volume_l).toBe(295);
+  });
+
+  test("colours and sizes are read from their text", () => {
+    const form = {
+      ...materialToForm(stored, METRIC),
+      colors: " Green,,Red ",
+      lengths_cm: "190 195",
+    };
+    const body = materialFormToBody(form, METRIC, stored);
+    expect(body.colors).toEqual(["Green", "Red"]);
+    expect(body.lengths_cm).toEqual([190, 195]);
+  });
+});
+
+describe("approximate years", () => {
+  test("read as about", () => {
+    const approx = material({ year_from: 2022, year_approximate: true });
+    expect(yearsLabel(approx)).toBe("about 2022-");
+    expect(yearsLabel({ ...approx, year_from: null, year_to: 2024 })).toBe(
+      "until about 2024",
+    );
+  });
+});
+
+describe("paddle facts", () => {
+  const paddle = material({
+    category: "paddle",
+    blade_area_cm2: 645,
+    length_min_cm: 191,
+    length_max_cm: 205,
+    pieces: 2,
+    shaft: "bent",
+    feather_deg: [0, 30],
+    weight_kg: 0.9,
+  });
+
+  test("shows the stated values in metric", () => {
+    const facts = Object.fromEntries(
+      paddleFacts(paddle, METRIC).map((f) => [f.label, f.value]),
+    );
+    expect(facts["Blade area"]).toBe("645 cm\u00b2");
+    expect(facts.Length).toBe("191-205 cm");
+    expect(facts.Pieces).toBe("2");
+    expect(facts.Shaft).toBe("Bent");
+    expect(facts.Feather).toBe("0, 30\u00b0");
+    expect(facts.Weight).toBe("0.9 kg");
+  });
+
+  test("converts to the chosen units", () => {
+    const facts = Object.fromEntries(
+      paddleFacts(paddle, IMPERIAL).map((f) => [f.label, f.value]),
+    );
+    expect(facts["Blade area"]).toBe("100 in\u00b2");
+    expect(facts.Length).toBe("75.2-80.7 in");
+  });
+
+  test("sizes win over the range", () => {
+    expect(
+      paddleLengthLabel({ ...paddle, lengths_cm: [191, 194] }, METRIC),
+    ).toBe("191, 194 cm");
+  });
+
+  test("states nothing for a bare entry", () => {
+    expect(paddleFacts(material({ category: "paddle" }), METRIC)).toEqual([]);
+  });
+});
+
+describe("sourceLinks", () => {
+  test("groups the fields by page and ignores non-links", () => {
+    const links = sourceLinks({
+      weight_kg: "https://www.example.com/a",
+      length_cm: "https://www.example.com/a",
+      year_from: "javascript:alert(1)",
+      colors: "https://other.test/b",
+    });
+    expect(links).toEqual([
+      {
+        url: "https://www.example.com/a",
+        host: "example.com",
+        fields: ["weight", "length"],
+      },
+      { url: "https://other.test/b", host: "other.test", fields: ["colors"] },
+    ]);
+  });
+
+  test("no sources is no links", () => {
+    expect(sourceLinks(null)).toEqual([]);
+    expect(sourceLinks("x")).toEqual([]);
   });
 });

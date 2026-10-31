@@ -105,6 +105,9 @@ export type MaterialCategory = components["schemas"]["MaterialCategory"];
 export type MaterialConstruction =
   components["schemas"]["MaterialConstruction"];
 export type MaterialDiscipline = components["schemas"]["MaterialDiscipline"];
+export type PaddleShaft = components["schemas"]["PaddleShaft"];
+export type PaddleShaftMaterial = components["schemas"]["PaddleShaftMaterial"];
+export type MaterialImage = components["schemas"]["MaterialImage"];
 export type MaterialSort = components["schemas"]["MaterialSort"];
 export type MaterialPage =
   components["schemas"]["PaginatedResponse_for_Material"];
@@ -612,6 +615,19 @@ export const materialsApi = {
     await client.DELETE("/api/v1/materials/{material_id}", {
       params: { path: { material_id: id } },
     });
+  },
+  /** Admin takedown of one photo. */
+  removeImage: async (materialId: number, imageId: number) => {
+    await client.DELETE("/api/v1/materials/{material_id}/images/{image_id}", {
+      params: { path: { material_id: materialId, image_id: imageId } },
+    });
+  },
+  /** Admin takedown of every photo of a brand. */
+  removeBrandImages: async (brand: string) => {
+    const { data } = await client.DELETE("/api/v1/materials/images", {
+      params: { query: { brand } },
+    });
+    return assertData(data);
   },
 };
 
