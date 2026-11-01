@@ -206,13 +206,14 @@ export default function MaterialForm({
             overflowY: "auto",
             px: { xs: `${tokens.phone.line}px`, md: 2 },
             py: 2,
-            display: { xs: "flex", md: "block" },
+            display: { xs: "flex", md: "grid" },
             flexDirection: "column",
             gap: 2.5,
-            // From md the blocks flow in two balanced columns.
-            columnCount: { md: 2 },
-            columnGap: 4,
-            "& > *": { breakInside: "avoid", mb: { md: 2.5 } },
+            // From md the blocks sit two across, in reading order.
+            gridTemplateColumns: { md: "repeat(2, minmax(0, 1fr))" },
+            columnGap: { md: 4 },
+            alignItems: "start",
+            "& > .MuiAlert-root, & > [data-wide]": { gridColumn: "1 / -1" },
           }}
         >
           <FormSection label="Boat" hint="What it is and what it is called.">

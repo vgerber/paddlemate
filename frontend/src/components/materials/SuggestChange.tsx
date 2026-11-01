@@ -36,7 +36,7 @@ export default function SuggestChange({
       <Typography variant="body2" color="textSecondary">
         {sentence}
       </Typography>
-      <Button onClick={onSuggest} sx={{ minHeight: tokens.touch.min, mr: -1 }}>
+      <Button onClick={onSuggest} sx={{ minHeight: tokens.touch.min, mx: -1 }}>
         Suggest a change
       </Button>
     </Box>
