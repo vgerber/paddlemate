@@ -15,12 +15,9 @@ import { humanize, sentenceCase } from "@/lib/text/format";
 import { AVAILABILITY_LABELS } from "./availability";
 import {
   CATEGORY_LABELS,
-  formatSpec,
   MATERIAL_SPECS,
   PADDLE_SPECS,
   type PaddleKey,
-  type SpecKey,
-  specValue,
 } from "./specs";
 
 const FIELD_LABELS: Record<string, string> = {
@@ -237,26 +234,6 @@ export function paddleLengthLabel(
     return `${num((min ?? max) as number)}${unit}`;
   }
   return "";
-}
-
-/** The facts a size picker shows for the picked entry: length, volume and
- * weight where stated, and the paddler it is built for. */
-export const SIZE_FACT_KEYS: SpecKey[] = ["length_cm", "volume_l", "weight_kg"];
-
-export function sizeFacts(
-  material: Material,
-  units: Units,
-): { label: string; value: string }[] {
-  const facts = MATERIAL_SPECS.filter((spec) =>
-    SIZE_FACT_KEYS.includes(spec.key),
-  )
-    .filter((spec) => specValue(material, spec.key) != null)
-    .map((spec) => ({
-      label: spec.label,
-      value: formatSpec(specValue(material, spec.key), spec, units),
-    }));
-  const paddler = paddlerRangeLabel(material, units);
-  return paddler ? [...facts, { label: "Paddler", value: paddler }] : facts;
 }
 
 /** A paddle's specs as labelled values in the chosen units, the ones the

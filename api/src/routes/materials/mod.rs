@@ -141,20 +141,37 @@ doc_fn!(list_brands_docs, op =>
         .tag("Materials")
 );
 
+/// An admin's read of an entry carries the editors' note; nobody else's does.
+async fn with_editor_note(
+    app: &AppState,
+    token: Option<&AuthToken>,
+    mut material: Material,
+) -> Result<Material, sqlx::Error> {
+    if token.is_some_and(AuthToken::is_server_admin) {
+        material.editor_note = materials::editor_note(&app.pg_pool, material.id).await?;
+    }
+    Ok(material)
+}
+
 pub async fn get_material(
     State(app): State<AppState>,
+    auth: Option<Extension<AuthToken>>,
     Path(MaterialPath { material_id }): Path<MaterialPath>,
 ) -> impl IntoApiResponse {
-    match materials::fetch(&app.pg_pool, material_id).await {
-        Ok(Some(material)) => Json(material).into_response(),
-        Ok(None) => ApiError::not_found("Not found").into_response(),
+    let fetched = match materials::fetch(&app.pg_pool, material_id).await {
+        Ok(Some(material)) => with_editor_note(&app, auth.as_ref().map(|a| &a.0), material).await,
+        Ok(None) => return ApiError::not_found("Not found").into_response(),
+        Err(err) => Err(err),
+    };
+    match fetched {
+        Ok(material) => Json(material).into_response(),
         Err(err) => ApiError::from_db("Error fetching material", err).into_response(),
     }
 }
 
 doc_fn!(get_material_docs, op =>
     op.input::<Path<MaterialPath>>()
-        .description("Get one wiki entry")
+        .description("Get one wiki entry. An admin's read also carries editor_note.")
         .response::<200, Json<Material>>()
         .response_with::<404, Json<ErrorResponse>, _>(|res| res.description("Entry not found"))
         .tag("Materials")
@@ -227,6 +244,8 @@ pub async fn create_material(
     }
 
     if !token.is_server_admin() {
+        let mut body = body;
+        body.editor_note = None;
         let data = serde_json::to_value(&body).unwrap_or_default();
         let result = proposals::material::submit(
             &app.pg_pool,
@@ -256,7 +275,10 @@ pub async fn create_material(
         }
     };
     match materials::fetch(&app.pg_pool, id).await {
-        Ok(Some(material)) => (StatusCode::CREATED, Json(material)).into_response(),
+        Ok(Some(material)) => match with_editor_note(&app, Some(&token), material).await {
+            Ok(material) => (StatusCode::CREATED, Json(material)).into_response(),
+            Err(err) => ApiError::from_db("Error reading back material", err).into_response(),
+        },
         Ok(None) => ApiError::internal().into_response(),
         Err(err) => ApiError::from_db("Error reading back material", err).into_response(),
     }
@@ -300,6 +322,8 @@ pub async fn update_material(
     }
 
     if !token.is_server_admin() {
+        let mut body = body;
+        body.editor_note = None;
         let data = serde_json::to_value(&body).unwrap_or_default();
         let result = proposals::material::submit(
             &app.pg_pool,
@@ -315,7 +339,10 @@ pub async fn update_material(
 
     match materials::update(&app.pg_pool, material_id, &body, token.user_id()).await {
         Ok(true) => match materials::fetch(&app.pg_pool, material_id).await {
-            Ok(Some(material)) => Json(material).into_response(),
+            Ok(Some(material)) => match with_editor_note(&app, Some(&token), material).await {
+                Ok(material) => Json(material).into_response(),
+                Err(err) => ApiError::from_db("Error reading back material", err).into_response(),
+            },
             Ok(None) => ApiError::not_found("Not found").into_response(),
             Err(err) => ApiError::from_db("Error reading back material", err).into_response(),
         },

@@ -213,6 +213,9 @@ pub struct Material {
     pub sources: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notes: Option<String>,
+    /// Research and import notes. Only an admin's read carries it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub editor_note: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub blade_area_cm2: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -355,6 +358,9 @@ pub struct MaterialBody {
     pub availability_source: Option<String>,
     pub availability_checked: Option<NaiveDate>,
     pub notes: Option<String>,
+    /// Admin only: other writers' value is dropped. Absent keeps what is
+    /// stored; an empty string clears it.
+    pub editor_note: Option<String>,
     pub blade_area_cm2: Option<f64>,
     pub blade_length_cm: Option<f64>,
     pub blade_width_cm: Option<f64>,
@@ -449,6 +455,7 @@ impl From<&Material> for MaterialBody {
             availability_source: m.availability_source.clone(),
             availability_checked: m.availability_checked,
             notes: m.notes.clone(),
+            editor_note: None,
             blade_area_cm2: m.blade_area_cm2,
             blade_length_cm: m.blade_length_cm,
             blade_width_cm: m.blade_width_cm,
@@ -484,6 +491,7 @@ impl MaterialBody {
         clean(&mut self.product_url);
         clean(&mut self.availability_source);
         clean(&mut self.notes);
+        self.editor_note = self.editor_note.as_deref().map(|s| s.trim().to_owned());
         clean(&mut self.blade_material);
         clean(&mut self.shaft_diameter);
         let mut colors: Vec<String> = Vec::new();
@@ -609,10 +617,7 @@ impl MaterialBody {
                 return Some(("disciplines", "A group can be listed only once".into()));
             }
             if !d.fits(self.category) {
-                return Some((
-                    "disciplines",
-                    "This group does not fit the category".into(),
-                ));
+                return Some(("disciplines", "This group does not fit the category".into()));
             }
         }
         None
@@ -621,8 +626,9 @@ impl MaterialBody {
     /// The rules for the colours, notes and paddle fields. Paddle fields on
     /// anything but a paddle are refused, so a boat never carries blade data.
     fn extras_error(&self) -> Option<(&'static str, String)> {
-        let texts: [(&'static str, Option<&str>, usize); 3] = [
+        let texts: [(&'static str, Option<&str>, usize); 4] = [
             ("notes", self.notes.as_deref(), MAX_NOTES_CHARS),
+            ("editor_note", self.editor_note.as_deref(), MAX_NOTES_CHARS),
             (
                 "blade_material",
                 self.blade_material.as_deref(),
@@ -760,6 +766,7 @@ mod tests {
             availability_source: None,
             availability_checked: None,
             notes: None,
+            editor_note: None,
             blade_area_cm2: None,
             blade_length_cm: None,
             blade_width_cm: None,

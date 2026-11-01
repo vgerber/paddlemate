@@ -1,13 +1,14 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
+import { Fragment } from "react";
 import { phoneCardSx } from "@/components/phone/phoneGrid";
 import type { Material } from "@/lib/api";
 import { CompareIcon } from "@/lib/icons";
 import { serializeCompareIds } from "@/lib/materials/compare";
-import { paddlerRangeLabel } from "@/lib/materials/facts";
-import { formatSpec, MATERIAL_SPECS, specValue } from "@/lib/materials/specs";
+import { sizeTableRows } from "@/lib/materials/specRows";
 import { useUnits } from "@/lib/prefs/units";
 import { withAlpha } from "@/lib/theme/alpha";
 import { focusRingSx } from "@/lib/theme/focusRing";
@@ -22,30 +23,29 @@ const cellSx = {
   verticalAlign: "top",
   whiteSpace: "nowrap",
   fontSize: "0.875rem",
+  fontVariantNumeric: "tabular-nums",
   borderBottom: `1px solid ${withAlpha(tokens.outlineVariant, "hairline")}`,
 } as const;
 
-const TABLE_KEYS: readonly string[] = ["length_cm", "volume_l", "weight_kg"];
-
-/** Every size of a model side by side, the picked one marked, with the way
- * into the full comparison of them. Scrolls inside its own box. */
+/** Every size of a model side by side, the only place its per-size specs
+ * are listed. A size's column heading picks it (the URL holds the entry), and
+ * the picked column is washed. Scrolls inside its own box. */
 export default function AllSizesTable({
   materials,
   pickedId,
+  onPick,
 }: {
   materials: Material[];
   pickedId: number;
+  onPick: (id: number) => void;
 }) {
   const [units] = useUnits();
   const navigate = useNavigate();
-  const rows = MATERIAL_SPECS.filter(
-    (spec) =>
-      TABLE_KEYS.includes(spec.key) &&
-      materials.some((material) => specValue(material, spec.key) != null),
-  );
-  const paddler = materials.map((material) =>
-    paddlerRangeLabel(material, units),
-  );
+  const rows = sizeTableRows(materials, units);
+  const grouped = new Set(rows.map((row) => row.group)).size > 1;
+  const picked = (id: number) => id === pickedId;
+  const wash = (id: number) =>
+    picked(id) ? { bgcolor: withAlpha(tokens.primary, "wash") } : undefined;
   return (
     <Box>
       <Box
@@ -61,13 +61,18 @@ export default function AllSizesTable({
         <Box
           component="table"
           data-testid="all-sizes"
-          sx={{ borderCollapse: "collapse", width: "100%" }}
+          sx={{
+            borderCollapse: "collapse",
+            width: { xs: "100%", md: "max-content" },
+            minWidth: { md: 420 },
+            maxWidth: "100%",
+          }}
         >
           <thead>
             <tr>
               <Box component="td" sx={cellSx}>
                 <Typography variant="body2" color="textSecondary">
-                  Measure
+                  Size
                 </Typography>
               </Box>
               {materials.map((material) => (
@@ -75,48 +80,70 @@ export default function AllSizesTable({
                   component="th"
                   scope="col"
                   key={material.id}
-                  aria-current={material.id === pickedId ? "true" : undefined}
-                  sx={{
-                    ...cellSx,
-                    fontWeight: 600,
-                    color:
-                      material.id === pickedId ? tokens.primary : undefined,
-                  }}
+                  aria-current={picked(material.id) ? "true" : undefined}
+                  sx={{ ...cellSx, p: 0, ...wash(material.id) }}
                 >
-                  {material.size ?? "-"}
+                  <ButtonBase
+                    onClick={() => onPick(material.id)}
+                    aria-label={`Size ${material.size ?? "-"}`}
+                    aria-pressed={picked(material.id)}
+                    sx={{
+                      width: "100%",
+                      minWidth: tokens.touch.min,
+                      minHeight: tokens.touch.min,
+                      justifyContent: "flex-start",
+                      px: `${tokens.phone.inner}px`,
+                      font: "inherit",
+                      fontWeight: 600,
+                      color: picked(material.id) ? tokens.primary : "inherit",
+                      ...focusRingSx(),
+                    }}
+                  >
+                    {material.size ?? "-"}
+                  </ButtonBase>
                 </Box>
               ))}
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.key}>
-                <Box component="th" scope="row" sx={cellSx}>
-                  <Typography variant="body2" color="textSecondary">
-                    {row.label}
-                  </Typography>
-                </Box>
-                {materials.map((material) => (
-                  <Box component="td" key={material.id} sx={cellSx}>
-                    {formatSpec(specValue(material, row.key), row, units)}
+            {rows.map((row, index) => (
+              <Fragment key={`${row.group}|${row.label}`}>
+                {grouped && row.group !== rows[index - 1]?.group && (
+                  <tr>
+                    <Box
+                      component="th"
+                      scope="rowgroup"
+                      colSpan={materials.length + 1}
+                      sx={{ ...cellSx, pt: 2, border: 0 }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 600 }}
+                        component="span"
+                      >
+                        {row.group}
+                      </Typography>
+                    </Box>
+                  </tr>
+                )}
+                <tr>
+                  <Box component="th" scope="row" sx={cellSx}>
+                    <Typography variant="body2" color="textSecondary">
+                      {row.label}
+                    </Typography>
                   </Box>
-                ))}
-              </tr>
+                  {row.values.map((value, column) => (
+                    <Box
+                      component="td"
+                      key={materials[column].id}
+                      sx={{ ...cellSx, ...wash(materials[column].id) }}
+                    >
+                      {value || "-"}
+                    </Box>
+                  ))}
+                </tr>
+              </Fragment>
             ))}
-            {paddler.some(Boolean) && (
-              <tr>
-                <Box component="th" scope="row" sx={cellSx}>
-                  <Typography variant="body2" color="textSecondary">
-                    Paddler
-                  </Typography>
-                </Box>
-                {paddler.map((label, index) => (
-                  <Box component="td" key={materials[index].id} sx={cellSx}>
-                    {label || "-"}
-                  </Box>
-                ))}
-              </tr>
-            )}
           </tbody>
         </Box>
       </Box>
