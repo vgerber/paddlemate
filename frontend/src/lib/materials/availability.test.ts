@@ -9,9 +9,7 @@ import {
 describe("availabilityValue", () => {
   test("states the three cases", () => {
     expect(availabilityValue({ availability: "current" })).toBe("Still made");
-    expect(availabilityValue({ availability: "unknown" })).toBe(
-      "Availability unknown",
-    );
+    expect(availabilityValue({ availability: "unknown" })).toBe("Unknown");
     expect(availabilityValue({ availability: "discontinued" })).toBe(
       "Discontinued",
     );

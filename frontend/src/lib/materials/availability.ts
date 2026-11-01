@@ -19,12 +19,13 @@ type Stated = Pick<
   "availability" | "availability_checked" | "availability_source"
 > & { year_to?: number | null };
 
-/** The model page's fact: "Still made", "Discontinued (last model year
- * 2008)" or "Availability unknown". */
+/** The model page's fact under the label "Availability": "Still made",
+ * "Discontinued (last model year 2008)" or "Unknown". */
 export function availabilityValue(entry: Stated): string {
   if (entry.availability === "discontinued" && entry.year_to) {
     return `Discontinued (last model year ${entry.year_to})`;
   }
+  if (entry.availability === "unknown") return "Unknown";
   return AVAILABILITY_LABELS[entry.availability];
 }
 
