@@ -48,6 +48,7 @@ function MaterialWikiPage() {
       onBack={() => navigate({ to: "/tools" })}
       width={WIKI_WIDTH}
       headerOnPhoneOnly
+      fill
     >
       <MaterialsView
         search={search}
@@ -74,7 +75,16 @@ function MaterialWikiPage() {
           })
         }
       />
-      <Fab color="primary" onClick={onAdd} aria-label="Add entry" sx={fabSx}>
+      <Fab
+        color="primary"
+        onClick={onAdd}
+        aria-label="Add entry"
+        sx={{
+          ...fabSx,
+          // The compare bar owns the foot of the list while entries are picked.
+          display: { xs: compareIds.length > 0 ? "none" : "flex", md: "none" },
+        }}
+      >
         <AddIcon />
       </Fab>
     </PageFrame>

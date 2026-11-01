@@ -49,31 +49,37 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
   const title = steps.at(-1)?.label ?? "Material wiki";
 
   return (
-    <Box>
+    <Box
+      sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+    >
       <Breadcrumb crumbs={wikiTrail(search, select, props.onTools)} />
-      <HeaderCard testId="wiki-header">
-        <PanelHeader
-          title={title}
-          subtitle={
-            totals
-              ? `${plural(totals.models, "model")}, ${plural(totals.entries, "size")}`
-              : " "
-          }
-          onBack={props.onTools}
-          actionButton={
-            <SortSelect
-              value={search.sort}
-              onChange={(sort) => onChange({ sort })}
-            />
-          }
-        />
-      </HeaderCard>
+      <Box sx={{ flexShrink: 0 }}>
+        <HeaderCard testId="wiki-header">
+          <PanelHeader
+            title={title}
+            subtitle={
+              totals
+                ? `${plural(totals.models, "model")}, ${plural(totals.entries, "size")}`
+                : " "
+            }
+            onBack={props.onTools}
+            actionButton={
+              <SortSelect
+                value={search.sort}
+                onChange={(sort) => onChange({ sort })}
+              />
+            }
+          />
+        </HeaderCard>
+      </Box>
       <Box
         sx={{
+          flex: 1,
+          minHeight: 0,
           display: "grid",
           gridTemplateColumns: `${SIDEBAR}px minmax(0, 1fr)`,
+          gridTemplateRows: "minmax(0, 1fr)",
           gap: 1,
-          alignItems: "start",
         }}
       >
         <Box
@@ -82,11 +88,8 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
           data-column="wiki-sidebar"
           sx={{
             ...phoneCardSx,
-            position: "sticky",
-            top: 8,
             display: "flex",
             flexDirection: "column",
-            maxHeight: `calc(100vh - ${tokens.chrome.appBar}px - 32px)`,
             minHeight: 0,
           }}
         >
@@ -138,12 +141,25 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
           component="section"
           aria-label="Models"
           data-column="wiki-models"
-          sx={{ minWidth: 0 }}
+          sx={{
+            minWidth: 0,
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+          }}
         >
           {(search.construction ||
             search.availability ||
             search.fits != null) && (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, pb: 1 }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1,
+                pb: 1,
+                flexShrink: 0,
+              }}
+            >
               {search.construction && (
                 <FilterChip
                   label={sentenceCase(humanize(search.construction))}
@@ -170,16 +186,29 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
               )}
             </Box>
           )}
-          <ModelResults
-            query={query}
-            items={items}
-            compareIds={compareIds}
-            showCategory={search.category == null}
-            grid
-            onOpen={props.onOpen}
-            onToggleCompare={props.onToggleCompare}
-            onToggleSize={props.onToggleSize}
-          />
+          <Box
+            data-testid="wiki-scroll"
+            tabIndex={0}
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              // Room for the cards' shadows, which the scroller would clip.
+              m: -0.5,
+              p: 0.5,
+            }}
+          >
+            <ModelResults
+              query={query}
+              items={items}
+              compareIds={compareIds}
+              showCategory={search.category == null}
+              grid
+              onOpen={props.onOpen}
+              onToggleCompare={props.onToggleCompare}
+              onToggleSize={props.onToggleSize}
+            />
+          </Box>
           {compareIds.length > 0 && (
             <CompareBar
               ids={compareIds}

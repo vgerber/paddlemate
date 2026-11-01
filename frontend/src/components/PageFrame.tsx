@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
 import PanelHeader from "@/components/PanelHeader";
-import { theme } from "@/lib/theme/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
@@ -44,6 +44,7 @@ export default function PageFrame({
   width = 880,
   headerOnPhoneOnly = false,
   roomy = false,
+  fill = false,
   children,
 }: {
   title?: string;
@@ -57,6 +58,9 @@ export default function PageFrame({
   headerOnPhoneOnly?: boolean;
   /** Padding on a phone as well as a desktop. */
   roomy?: boolean;
+  /** The frame is exactly the window under the app bar and does not scroll;
+   * the body fills what the header leaves and scrolls what it chooses. */
+  fill?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -66,6 +70,11 @@ export default function PageFrame({
         mx: "auto",
         px: roomy ? { xs: 1.5, md: 2 } : { xs: 0, md: 2 },
         py: roomy ? { xs: 2, md: 3 } : { xs: 0, md: 2 },
+        ...(fill && {
+          height: PANEL_HEIGHT,
+          display: "flex",
+          flexDirection: "column",
+        }),
       }}
     >
       {title != null && (

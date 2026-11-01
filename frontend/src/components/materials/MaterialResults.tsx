@@ -2,7 +2,6 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import ChipRow from "@/components/ChipRow";
-import { aboveFab } from "@/components/PaneFab";
 import { phoneCardSx } from "@/components/phone/phoneGrid";
 import FilterChip from "@/components/search/FilterChip";
 import QueryStates from "@/components/states/QueryStates";
@@ -18,10 +17,10 @@ const { tokens } = theme;
 
 const actionSx = { minHeight: tokens.touch.min, ml: 0.5 } as const;
 
-/** The picked entries, pinned to the foot of the list: how many, each one by
- * name and size with a way to drop it, and the way into the comparison (two
- * are the least that compare). It sits above the bottom nav and the add
- * button on a phone. */
+/** The picked entries, at the foot of the list pane below the scroller: how
+ * many, each one by name and size with a way to drop it, and the way into the
+ * comparison (two are the least that compare). On a phone the add button
+ * steps aside while it shows. */
 export function CompareBar({
   ids,
   onRemove,
@@ -42,10 +41,9 @@ export function CompareBar({
       data-testid="compare-bar"
       sx={{
         ...phoneCardSx,
-        position: "sticky",
-        bottom: { xs: aboveFab, md: 12 },
-        zIndex: 2,
+        flexShrink: 0,
         mt: 1,
+        mb: { xs: 1, md: 0 },
         py: 1,
         boxShadow: tokens.elevation.e2,
       }}

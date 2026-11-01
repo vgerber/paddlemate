@@ -34,9 +34,12 @@ function PhoneWiki(props: MaterialsViewProps) {
   const select = (path: TreePath) => onChange(pathPatch(path));
 
   return (
-    <Box>
+    <Box
+      sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+    >
       <Box
         sx={{
+          flexShrink: 0,
           px: `${tokens.phone.line}px`,
           pt: 1.5,
           pb: 0.75,
@@ -117,7 +120,17 @@ function PhoneWiki(props: MaterialsViewProps) {
 
       <ListPaneHeader count={total} noun="model" loading={query.isLoading} />
 
-      <Box sx={{ mx: `${tokens.phone.edge}px`, pb: fabRoom }}>
+      <Box
+        data-testid="wiki-scroll"
+        tabIndex={0}
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          px: `${tokens.phone.edge}px`,
+          pb: fabRoom,
+        }}
+      >
         <ModelResults
           query={query}
           items={items}
@@ -128,15 +141,15 @@ function PhoneWiki(props: MaterialsViewProps) {
           onToggleCompare={props.onToggleCompare}
           onToggleSize={props.onToggleSize}
         />
-        {compareIds.length > 0 && (
-          <CompareBar
-            ids={compareIds}
-            onRemove={props.onToggleSize}
-            onClear={props.onClearCompare}
-            onCompare={props.onCompare}
-          />
-        )}
       </Box>
+      {compareIds.length > 0 && (
+        <CompareBar
+          ids={compareIds}
+          onRemove={props.onToggleSize}
+          onClear={props.onClearCompare}
+          onCompare={props.onCompare}
+        />
+      )}
 
       <BrowseSheet
         open={browseOpen}
