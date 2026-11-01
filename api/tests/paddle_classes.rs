@@ -119,11 +119,12 @@ async fn the_remap_moves_old_paddle_classes(pool: PgPool) {
             ("G", "other"),
         ]
     );
-    let kayak: String =
-        sqlx::query_scalar("SELECT discipline::text FROM materials WHERE category = 'kayak' AND model = 'K'")
-            .fetch_one(&pool)
-            .await
-            .unwrap();
+    let kayak: String = sqlx::query_scalar(
+        "SELECT discipline::text FROM materials WHERE category = 'kayak' AND model = 'K'",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
     assert_eq!(kayak, "downriver", "kayak classes stay as they are");
     let proposed: String = sqlx::query_scalar("SELECT proposed_data->>'discipline' FROM proposals")
         .fetch_one(&pool)
