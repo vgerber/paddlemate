@@ -2787,7 +2787,7 @@ export interface components {
          *      creekers compare, a creeker and a sea kayak do not.
          * @enum {string}
          */
-        MaterialDiscipline: "creek" | "river_runner" | "half_slice" | "playboat" | "slalom" | "downriver" | "touring" | "sea" | "expedition" | "recreational" | "crossover" | "freestyle" | "other";
+        MaterialDiscipline: "creek" | "river_runner" | "half_slice" | "playboat" | "slalom" | "downriver" | "touring" | "sea" | "expedition" | "recreational" | "crossover" | "freestyle" | "other" | "whitewater" | "wildwater" | "canoe" | "polo";
         /**
          * @description Query parameters of the material search. Every measurement filter is a
          *      half-open bound, so a list can be narrowed from one side only.
@@ -4931,11 +4931,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-11-01T11:36:22.061672522Z",
-                     *         "expires_at": "2027-01-30T11:36:22.061675112Z",
+                     *         "created_at": "2026-11-01T12:09:39.709630204Z",
+                     *         "expires_at": "2027-01-30T12:09:39.709632234Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-11-01T11:36:22.061693632Z",
+                     *         "last_used_at": "2026-11-01T12:09:39.709643864Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4966,8 +4966,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-11-01T11:36:22.061828172Z",
-                     *       "expires_at": "2027-01-30T11:36:22.061828502Z",
+                     *       "created_at": "2026-11-01T12:09:39.709777464Z",
+                     *       "expires_at": "2027-01-30T12:09:39.709777924Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."

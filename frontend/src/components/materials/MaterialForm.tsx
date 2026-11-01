@@ -22,7 +22,8 @@ import {
   CATEGORIES,
   CATEGORY_LABELS,
   CONSTRUCTIONS,
-  DISCIPLINES,
+  disciplineLabel,
+  disciplinesFor,
   MATERIAL_LIMITS,
   MATERIAL_SPECS,
   PADDLE_SPECS,
@@ -172,11 +173,15 @@ export default function MaterialForm({
             select
             label="Category"
             value={values.category}
-            onChange={(event) =>
-              set({
-                category: event.target.value as MaterialFormValues["category"],
-              })
-            }
+            onChange={(event) => {
+              const category = event.target
+                .value as MaterialFormValues["category"];
+              // A class from the old category may not exist in the new one.
+              const fits = disciplinesFor(category).some(
+                (d) => d === values.discipline,
+              );
+              set({ category, discipline: fits ? values.discipline : "" });
+            }}
           >
             {CATEGORIES.map((category) => (
               <MenuItem key={category} value={category}>
@@ -211,9 +216,9 @@ export default function MaterialForm({
               }
             >
               <MenuItem value="">Unstated</MenuItem>
-              {DISCIPLINES.map((discipline) => (
+              {disciplinesFor(values.category).map((discipline) => (
                 <MenuItem key={discipline} value={discipline}>
-                  {sentenceCase(humanize(discipline))}
+                  {disciplineLabel(discipline, values.category)}
                 </MenuItem>
               ))}
             </TextField>

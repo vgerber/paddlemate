@@ -5,9 +5,8 @@ import type {
   MaterialModel,
   MaterialTree,
 } from "@/lib/api";
-import { humanize, sentenceCase } from "@/lib/text/format";
 import { type MaterialWikiSearch } from "./search";
-import { CATEGORIES } from "./specs";
+import { CATEGORIES, disciplineLabel } from "./specs";
 
 /** The level of the browse tree a node sits on. */
 export type TreeKind = "category" | "discipline" | "brand" | "model";
@@ -115,7 +114,7 @@ export function treeRows(
         id: discId,
         kind: "discipline",
         level: 2,
-        label: sentenceCase(humanize(disc.discipline)),
+        label: disciplineLabel(disc.discipline, cat.category),
         count: disc.models,
         parentId: catId,
         expandable: disc.brands.length > 0,
@@ -186,7 +185,7 @@ export function crumbs(search: MaterialWikiSearch): Crumb[] {
   }
   if (path.discipline) {
     out.push({
-      label: sentenceCase(humanize(path.discipline)),
+      label: disciplineLabel(path.discipline, path.category),
       patch: { category: path.category, discipline: path.discipline },
     });
   }
