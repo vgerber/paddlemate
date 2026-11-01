@@ -89,22 +89,6 @@ test.describe("compare layout", () => {
     await expect(compareRow(page, "Length (cm)")).toHaveCount(1);
     await expectNoHorizontalOverflow(page);
   });
-
-  test("a bar under a number appears only where the numbers differ, from zero", async ({
-    page,
-  }) => {
-    await openCompare(page, [9851, 9852, 9853]);
-    const fills = compareRow(page, "Volume (l)").getByTestId(
-      "compare-bar-fill",
-    );
-    await expect(fills).toHaveCount(3);
-    const widths = await fills.evaluateAll((els) =>
-      els.map((el) => new DOMMatrix(getComputedStyle(el).transform).a),
-    );
-    expect(Math.max(...widths)).toBeCloseTo(1, 2);
-    expect(Math.min(...widths)).toBeLessThan(0.95);
-    await expect(page.getByText(/Bars start at zero/)).toBeVisible();
-  });
 });
 
 test.describe("compare content", () => {

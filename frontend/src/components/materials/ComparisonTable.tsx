@@ -61,7 +61,6 @@ export default function ComparisonTable({
   const columns = wide
     ? `repeat(${materials.length}, ${WIDE_COLUMN}px)`
     : `repeat(${materials.length}, minmax(0, 1fr))`;
-  const hasBars = rows.some((row) => row.bars);
 
   let lastGroup: string | undefined;
   return (
@@ -168,11 +167,6 @@ export default function ComparisonTable({
           })}
         </Box>
       </Box>
-      {hasBars && (
-        <Typography variant="body2" color="textSecondary" sx={{ px: 2, pt: 1 }}>
-          Bars start at zero and appear where entries differ by 5% or more.
-        </Typography>
-      )}
     </>
   );
 }

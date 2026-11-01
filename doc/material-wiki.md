@@ -103,7 +103,7 @@ Values every entry shares - the category, the groups, a width that is the
 same - sit once in an "Alike in all N" strip of chips, and the table keeps only
 the rows that tell the entries apart. A row shows only when two entries state
 it, so a kayak and a paddle compare the rows both have (a one-line note says
-so). Numbers get a thin bar from zero where they differ by 5% or more. Paddles
+so). Paddles
 add blade, shaft and length rows; a paddle's weight reads in grams (ounces in
 imperial). **Add to comparison** in the card above the table opens the list
 with the picks kept.
@@ -463,8 +463,8 @@ gone is a no-op. Tests: `api/tests/material_proposals.rs`, `api/tests/materials.
 | `lib/materials/search.ts` | the list route's URL search shape, its parsing and the API filters |
 | `lib/materials/form.ts` | the entry form's values and their conversion to and from an entry |
 | `lib/hooks/useMaterials.ts` | `materialKeys` and every query and mutation; a write answered 202 (`isProposal`) announces "Sent for review" through `announceIfProposal` and leaves the entry caches alone |
-| `lib/materials/compare.ts` | `buildComparison`: the comparable rows (`FIELDS`), the alike chips, the bar ratios; also `specSpread` and the comparison's id list |
-| `components/materials/` | `MaterialsView` (list and its compare bar), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView` (on the shared `DetailCard` and `FactRow`, `SourceList`), `ComparisonTable` (with `ComparisonHead`, `ComparisonRow`, `ComparisonBar`, `ComparisonSummary`, sizes in `comparisonLayout.ts`), `MaterialForm`, `MaterialGallery` (photos and credits), `MaterialTree` and `wikiTrail` (wiki wrappers on the shared `TreeView` and `Breadcrumb`); the frame is the shared `PageFrame` |
+| `lib/materials/compare.ts` | `buildComparison`: the comparable rows (`FIELDS`), the alike chips; also `specSpread` and the comparison's id list |
+| `components/materials/` | `MaterialsView` (list and its compare bar), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView` (on the shared `DetailCard` and `FactRow`, `SourceList`), `ComparisonTable` (with `ComparisonHead`, `ComparisonRow`, `ComparisonSummary`, sizes in `comparisonLayout.ts`), `MaterialForm`, `MaterialGallery` (photos and credits), `MaterialTree` and `wikiTrail` (wiki wrappers on the shared `TreeView` and `Breadcrumb`); the frame is the shared `PageFrame` |
 | `routes/materials/` | `index` (list), `$materialId` (detail, `?edit=true` for the form), `compare`, `new` |
 
 The wiki is a normal page, not a map screen: from `md` one column (`WIKI_WIDTH`,

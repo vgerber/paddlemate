@@ -2,7 +2,6 @@ import { describe, expect, test } from "bun:test";
 import type { Material, MaterialModel } from "@/lib/api";
 import { IMPERIAL, METRIC } from "@/lib/prefs/units";
 import {
-  barRatios,
   buildComparison,
   MAX_COMPARE,
   modelPicked,
@@ -165,19 +164,6 @@ describe("buildComparison", () => {
       METRIC,
     );
     expect(row(c, "built")?.cells).toEqual(["since 2021", "about 2010"]);
-  });
-});
-
-describe("barRatios", () => {
-  test("zero based, longest is full", () => {
-    expect(barRatios([20, 10])).toEqual([1, 0.5]);
-  });
-  test("under 5 percent apart draws nothing", () => {
-    expect(barRatios([100, 96])).toBeUndefined();
-    expect(barRatios([100, 95])).toBeDefined();
-  });
-  test("one stated number draws nothing", () => {
-    expect(barRatios([20, undefined])).toBeUndefined();
   });
 });
 

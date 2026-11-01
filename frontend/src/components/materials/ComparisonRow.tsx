@@ -1,11 +1,9 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { CompareRow } from "@/lib/materials/compare";
-import ComparisonBar from "./ComparisonBar";
 import { labelCellSx, rowSx, ruleSx } from "./comparisonLayout";
 
-/** One row of the table: its label and a value per entry, with a bar under
- * the numbers that differ. */
+/** One row of the table: its label and a value per entry. */
 export default function ComparisonRow({
   row,
   columns,
@@ -41,9 +39,6 @@ export default function ComparisonRow({
           >
             {cell ?? "-"}
           </Typography>
-          {row.bars?.[index] != null && (
-            <ComparisonBar ratio={row.bars[index]} />
-          )}
         </Box>
       ))}
     </Box>
