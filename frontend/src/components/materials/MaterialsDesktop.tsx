@@ -68,6 +68,7 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
       <Box
         component="aside"
         aria-label="Search and browse"
+        data-column="wiki-sidebar"
         sx={{
           ...cardSx,
           position: "sticky",
@@ -129,7 +130,12 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
         <DockedAction label="Add entry" onClick={props.onAdd} inset={8} />
       </Box>
 
-      <Box component="section" aria-label="Models" sx={{ minWidth: 0 }}>
+      <Box
+        component="section"
+        aria-label="Models"
+        data-column="wiki-models"
+        sx={{ minWidth: 0 }}
+      >
         <MaterialBreadcrumb
           search={search}
           chips={false}
