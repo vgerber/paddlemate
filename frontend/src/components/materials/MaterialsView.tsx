@@ -8,6 +8,7 @@ import { fabRoom } from "@/components/PaneFab";
 import FilterChip from "@/components/search/FilterChip";
 import SearchField from "@/components/search/SearchField";
 import { TreeIcon } from "@/lib/icons";
+import { AVAILABILITY_LABELS } from "@/lib/materials/availability";
 import { formatFits } from "@/lib/materials/facts";
 import { activeFilterCount } from "@/lib/materials/search";
 import { pathPatch, type TreePath } from "@/lib/materials/tree";
@@ -91,6 +92,14 @@ function PhoneWiki(props: MaterialsViewProps) {
                   set
                   onClick={() => setFiltersOpen(true)}
                   onDelete={() => onChange({ construction: undefined })}
+                />
+              )}
+              {search.availability && (
+                <FilterChip
+                  label={AVAILABILITY_LABELS[search.availability]}
+                  set
+                  onClick={() => setFiltersOpen(true)}
+                  onDelete={() => onChange({ availability: undefined })}
                 />
               )}
               {search.fits != null && (

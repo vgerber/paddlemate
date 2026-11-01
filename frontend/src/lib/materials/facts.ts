@@ -1,5 +1,6 @@
 import {
   type Material,
+  type MaterialAvailability,
   type MaterialCategory,
   type MaterialModel,
 } from "@/lib/api";
@@ -12,6 +13,7 @@ import {
   unitLabel,
 } from "@/lib/prefs/units";
 import { humanize, sentenceCase } from "@/lib/text/format";
+import { AVAILABILITY_LABELS } from "./availability";
 import {
   CATEGORY_LABELS,
   formatSpec,
@@ -33,6 +35,9 @@ const FIELD_LABELS: Record<string, string> = {
   year_from: "First year",
   year_to: "Last year",
   year_approximate: "Years approximate",
+  availability: "Availability",
+  availability_source: "Availability source",
+  availability_checked: "Availability checked",
   lengths_cm: "Sizes",
   feather_deg: "Feather angles",
   shaft: "Shaft",
@@ -83,6 +88,9 @@ export function materialFieldValue(
     return quantity ? formatQuantity(quantity, value, units) : String(value);
   }
   if (typeof value === "string") {
+    if (key === "availability" && value in AVAILABILITY_LABELS) {
+      return AVAILABILITY_LABELS[value as MaterialAvailability];
+    }
     return key === "category" && value in CATEGORY_LABELS
       ? CATEGORY_LABELS[value as MaterialCategory]
       : ["discipline", "construction", "shaft", "shaft_material"].includes(key)

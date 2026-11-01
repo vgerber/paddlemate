@@ -14,6 +14,10 @@ import { apiErrorMessage } from "@/lib/api/client";
 import { useSession } from "@/lib/hooks/useSession";
 import { ConfirmIcon } from "@/lib/icons";
 import {
+  AVAILABILITIES,
+  AVAILABILITY_LABELS,
+} from "@/lib/materials/availability";
+import {
   canSaveMaterial,
   type MaterialFormValues,
   materialFormToBody,
@@ -275,6 +279,49 @@ export default function MaterialForm({
               }
               label="The years are approximate"
               sx={{ minHeight: tokens.touch.min }}
+            />
+          </FormSection>
+
+          <FormSection
+            label="Availability"
+            hint="Whether the maker still sells it, and where that was read."
+          >
+            <TextField
+              select
+              label="Availability"
+              value={values.availability}
+              onChange={(event) =>
+                set({
+                  availability: event.target
+                    .value as MaterialFormValues["availability"],
+                })
+              }
+            >
+              {AVAILABILITIES.map((availability) => (
+                <MenuItem key={availability} value={availability}>
+                  {AVAILABILITY_LABELS[availability]}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              label="Availability source"
+              placeholder="https://"
+              value={values.availability_source}
+              onChange={(event) =>
+                set({ availability_source: event.target.value })
+              }
+              slotProps={{
+                htmlInput: { inputMode: "url", maxLength: MATERIAL_LIMITS.url },
+              }}
+            />
+            <TextField
+              type="date"
+              label="Checked on"
+              value={values.availability_checked}
+              onChange={(event) =>
+                set({ availability_checked: event.target.value })
+              }
+              slotProps={{ inputLabel: { shrink: true } }}
             />
           </FormSection>
 

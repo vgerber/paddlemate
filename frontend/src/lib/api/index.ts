@@ -103,6 +103,8 @@ export type MaterialProposalBody =
   components["schemas"]["Proposable_for_MaterialBody"];
 /** The entry fields alone; a write may also carry `proposal_note`. */
 export type MaterialBody = Omit<MaterialProposalBody, "proposal_note">;
+export type MaterialAvailability =
+  components["schemas"]["MaterialAvailability"];
 export type MaterialBrand = components["schemas"]["MaterialBrand"];
 export type MaterialCategory = components["schemas"]["MaterialCategory"];
 export type MaterialConstruction =

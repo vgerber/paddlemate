@@ -20,6 +20,7 @@ function material(fields: Partial<Material> = {}): Material {
     colors: [],
     siblings: [],
     year_approximate: false,
+    availability: "unknown",
     images: [],
     model: "Cascade",
     created_by: "u1",
@@ -185,6 +186,7 @@ const SCORCH: MaterialModel = {
   model: "Scorch",
   year_from: 2021,
   year_approximate: false,
+  availability: "unknown",
   sizes: [
     { id: 11, size: "S", length_cm: 259, volume_l: 265, weight_kg: 21 },
     { id: 12, size: "M", length_cm: 267, volume_l: 310, weight_kg: 23 },

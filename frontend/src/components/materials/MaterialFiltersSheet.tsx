@@ -5,8 +5,10 @@ import ChoiceChips from "@/components/filters/ChoiceChips";
 import FilterGroup from "@/components/filters/FilterGroup";
 import FilterSheetFrame from "@/components/filters/FilterSheetFrame";
 import type { MaterialSort } from "@/lib/api";
+import { AVAILABILITY_LABELS } from "@/lib/materials/availability";
 import {
   activeFilterCount,
+  FILTER_AVAILABILITIES,
   MAX_FITS_KG,
   type MaterialWikiSearch,
   SORT_LABELS,
@@ -20,7 +22,7 @@ import {
   useUnits,
 } from "@/lib/prefs/units";
 import { humanize, plural, sentenceCase } from "@/lib/text/format";
-/** The filters that are not the tree's levels: construction, the paddler's
+/** The filters that are not the tree's levels: construction, availability, the paddler's
  * weight and, in the phone's sheet, the sort. The desktop sidebar shows them
  * under the tree, lighter, and puts the sort in the page header. */
 export function FilterFields({
@@ -51,6 +53,15 @@ export function FilterFields({
           value={search.construction}
           onChange={(construction) => onChange({ construction })}
           labelOf={(value) => sentenceCase(humanize(value))}
+          compact={sidebar}
+        />
+      </FilterGroup>
+      <FilterGroup label="Availability" compact={sidebar}>
+        <ChoiceChips
+          options={FILTER_AVAILABILITIES}
+          value={search.availability}
+          onChange={(availability) => onChange({ availability })}
+          labelOf={(value) => AVAILABILITY_LABELS[value]}
           compact={sidebar}
         />
       </FilterGroup>
@@ -125,6 +136,7 @@ export default function MaterialFiltersSheet({
         onReset={() =>
           onChange({
             construction: undefined,
+            availability: undefined,
             fits: undefined,
             sort: undefined,
           })

@@ -8,6 +8,7 @@ import SectionHeading from "@/components/SectionHeading";
 import FilterChip from "@/components/search/FilterChip";
 import SearchField from "@/components/search/SearchField";
 import { useMaterialTree } from "@/lib/hooks/useMaterials";
+import { AVAILABILITY_LABELS } from "@/lib/materials/availability";
 import { formatFits } from "@/lib/materials/facts";
 import {
   crumbs,
@@ -139,7 +140,9 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
           data-column="wiki-models"
           sx={{ minWidth: 0 }}
         >
-          {(search.construction || search.fits != null) && (
+          {(search.construction ||
+            search.availability ||
+            search.fits != null) && (
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, pb: 1 }}>
               {search.construction && (
                 <FilterChip
@@ -147,6 +150,14 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
                   set
                   onDelete={() => onChange({ construction: undefined })}
                   deleteLabel="Remove construction filter"
+                />
+              )}
+              {search.availability && (
+                <FilterChip
+                  label={AVAILABILITY_LABELS[search.availability]}
+                  set
+                  onDelete={() => onChange({ availability: undefined })}
+                  deleteLabel="Remove availability filter"
                 />
               )}
               {search.fits != null && (
