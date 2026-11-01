@@ -8,11 +8,8 @@ import QueryStates from "@/components/states/QueryStates";
 import type { MaterialModel } from "@/lib/api";
 import { useMaterialComparison } from "@/lib/hooks/useMaterials";
 import { MaterialIcon } from "@/lib/icons";
-import {
-  MAX_COMPARE,
-  materialTitle,
-  modelPicked,
-} from "@/lib/materials/materials";
+import { MAX_COMPARE, modelPicked } from "@/lib/materials/compare";
+import { materialTitle } from "@/lib/materials/facts";
 import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme/theme";
 import ModelRow from "./ModelRow";
 

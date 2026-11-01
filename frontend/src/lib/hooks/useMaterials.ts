@@ -12,7 +12,7 @@ import type {
   MaterialProposalBody,
 } from "@/lib/api";
 import { materialsApi } from "@/lib/api";
-import { serializeCompareIds } from "@/lib/materials/materials";
+import { serializeCompareIds } from "@/lib/materials/compare";
 import { isProposal } from "@/lib/proposals";
 import { proposalKeys } from "./useProposals";
 

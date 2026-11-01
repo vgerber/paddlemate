@@ -8,12 +8,8 @@ import { requireMaterials } from "@/lib/features";
 import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useMaterialComparison } from "@/lib/hooks/useMaterials";
 import { CompareIcon } from "@/lib/icons";
-import {
-  EMPTY_MATERIAL_SEARCH,
-  parseCompareIds,
-  searchText,
-  serializeCompareIds,
-} from "@/lib/materials/materials";
+import { parseCompareIds, serializeCompareIds } from "@/lib/materials/compare";
+import { EMPTY_MATERIAL_SEARCH, searchText } from "@/lib/materials/search";
 import { plural } from "@/lib/text/format";
 
 export const Route = createFileRoute("/materials/compare")({

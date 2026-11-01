@@ -341,10 +341,12 @@ gone is a no-op. Tests: `api/tests/material_proposals.rs`, `api/tests/materials.
 
 | Module | Owns |
 | --- | --- |
-| `lib/materials/materials.ts` | `MATERIAL_SPECS`, labels, `specSpread`, the comparison's id list, the URL search shape, and the entry form's value conversion |
+| `lib/materials/specs.ts` | `MATERIAL_SPECS` / `PADDLE_SPECS`, the enum lists and `CATEGORY_LABELS`, `formatSpec` |
+| `lib/materials/facts.ts` | titles, years, sizes and ranges as text, `sizeFacts` / `paddleFacts`, `sourceLinks`, `materialFieldLabel` / `materialFieldValue` (the wording of a changed field for the proposal diff) |
+| `lib/materials/search.ts` | the list route's URL search shape, its parsing and the API filters |
+| `lib/materials/form.ts` | the entry form's values and their conversion to and from an entry |
 | `lib/hooks/useMaterials.ts` | `materialKeys` and every query and mutation; a write answered 202 (`isProposal`) announces "Sent for review" through `announceIfProposal` and leaves the entry caches alone |
-| `lib/materials/materials.ts` | also `materialFieldLabel` / `materialFieldValue`, the wording of a changed field for the proposal diff |
-| `lib/materials/compare.ts` | `buildComparison`: the comparable rows (`FIELDS`), the alike chips, the bar ratios |
+| `lib/materials/compare.ts` | `buildComparison`: the comparable rows (`FIELDS`), the alike chips, the bar ratios; also `specSpread` and the comparison's id list |
 | `components/materials/` | `MaterialsView` (list and its compare bar), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `MaterialGallery` (photos and credits), `WikiPage` (the frame) |
 | `routes/materials/` | `index` (list), `$materialId` (detail, `?edit=true` for the form), `compare`, `new` |
 

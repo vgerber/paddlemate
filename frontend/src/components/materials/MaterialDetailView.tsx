@@ -14,21 +14,22 @@ import type { Material } from "@/lib/api";
 import { useMaterialComparison } from "@/lib/hooks/useMaterials";
 import { DeleteIcon, EditIcon, OpenExternalIcon, PhotoIcon } from "@/lib/icons";
 import {
-  CATEGORY_LABELS,
-  enumLabel,
-  formatSpec,
-  MATERIAL_SPECS,
   modelSizes,
   paddleFacts,
   SIZE_FACT_KEYS,
-  SPEC_GROUP_LABELS,
   sinceLabel,
   sizeFacts,
   sourceLinks,
+} from "@/lib/materials/facts";
+import {
+  CATEGORY_LABELS,
+  formatSpec,
+  MATERIAL_SPECS,
+  SPEC_GROUP_LABELS,
   specValue,
-} from "@/lib/materials/materials";
+} from "@/lib/materials/specs";
 import { useUnits } from "@/lib/prefs/units";
-import { formatDate } from "@/lib/text/format";
+import { formatDate, humanize, sentenceCase } from "@/lib/text/format";
 import { withAlpha } from "@/lib/theme/alpha";
 import { theme } from "@/lib/theme/theme";
 
@@ -162,12 +163,15 @@ export default function MaterialDetailView({
     { label: "Category", value: CATEGORY_LABELS[material.category] },
   ];
   if (material.discipline) {
-    facts.push({ label: "Discipline", value: enumLabel(material.discipline) });
+    facts.push({
+      label: "Discipline",
+      value: sentenceCase(humanize(material.discipline)),
+    });
   }
   if (material.construction) {
     facts.push({
       label: "Construction",
-      value: enumLabel(material.construction),
+      value: sentenceCase(humanize(material.construction)),
     });
   }
   if (sinceLabel(material)) {

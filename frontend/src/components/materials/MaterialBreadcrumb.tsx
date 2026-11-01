@@ -4,7 +4,7 @@ import { Fragment, type ReactNode } from "react";
 import ChipRow from "@/components/ChipRow";
 import FilterChip from "@/components/search/FilterChip";
 import { ChevronRightIcon } from "@/lib/icons";
-import type { MaterialWikiSearch } from "@/lib/materials/materials";
+import type { MaterialWikiSearch } from "@/lib/materials/search";
 import { type Crumb, crumbs, type TreePath } from "@/lib/materials/tree";
 import { theme } from "@/lib/theme/theme";
 

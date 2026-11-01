@@ -5,7 +5,7 @@ import { useMaterialModels } from "@/lib/hooks/useMaterials";
 import {
   type MaterialWikiSearch,
   toMaterialFilters,
-} from "@/lib/materials/materials";
+} from "@/lib/materials/search";
 
 export interface MaterialsViewProps {
   search: MaterialWikiSearch;

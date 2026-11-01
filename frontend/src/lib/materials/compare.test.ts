@@ -1,7 +1,16 @@
 import { describe, expect, test } from "bun:test";
-import type { Material } from "@/lib/api";
+import type { Material, MaterialModel } from "@/lib/api";
 import { IMPERIAL, METRIC } from "@/lib/prefs/units";
-import { barRatios, buildComparison } from "./compare";
+import {
+  barRatios,
+  buildComparison,
+  MAX_COMPARE,
+  modelPicked,
+  parseCompareIds,
+  specSpread,
+  toggleCompareId,
+  toggleModelCompare,
+} from "./compare";
 
 function material(fields: Partial<Material> = {}): Material {
   return {
@@ -167,5 +176,104 @@ describe("barRatios", () => {
   });
   test("one stated number draws nothing", () => {
     expect(barRatios([20, undefined])).toBeUndefined();
+  });
+});
+
+const SCORCH: MaterialModel = {
+  category: "kayak",
+  brand: "Pyranha",
+  model: "Scorch",
+  year_from: 2021,
+  year_approximate: false,
+  sizes: [
+    { id: 11, size: "S", length_cm: 259, volume_l: 265, weight_kg: 21 },
+    { id: 12, size: "M", length_cm: 267, volume_l: 310, weight_kg: 23 },
+    { id: 13, size: "L", length_cm: 279, volume_l: 340, weight_kg: 24.5 },
+  ],
+};
+
+describe("specSpread", () => {
+  test("reports the range and that the entries disagree", () => {
+    expect(specSpread([264, 254, 274])).toEqual({
+      min: 254,
+      max: 274,
+      varies: true,
+      empty: false,
+    });
+  });
+
+  test("entries that agree do not vary", () => {
+    expect(specSpread([66, 66])).toEqual({
+      min: 66,
+      max: 66,
+      varies: false,
+      empty: false,
+    });
+  });
+
+  test("ignores the entries that state nothing", () => {
+    expect(specSpread([undefined, 20])).toEqual({
+      min: 20,
+      max: 20,
+      varies: false,
+      empty: false,
+    });
+  });
+
+  test("a row nobody stated is empty", () => {
+    expect(specSpread([undefined, undefined])).toEqual({
+      varies: false,
+      empty: true,
+    });
+  });
+});
+
+describe("parseCompareIds", () => {
+  test("keeps the order and drops what is not an id", () => {
+    expect(parseCompareIds("3, 1,x,2")).toEqual([3, 1, 2]);
+  });
+
+  test("collapses duplicates", () => {
+    expect(parseCompareIds("1,1,2")).toEqual([1, 2]);
+  });
+
+  test("caps the comparison", () => {
+    const many = Array.from({ length: MAX_COMPARE + 3 }, (_, i) => i + 1);
+    expect(parseCompareIds(many.join(","))).toHaveLength(MAX_COMPARE);
+  });
+
+  test("an absent parameter compares nothing", () => {
+    expect(parseCompareIds(undefined)).toEqual([]);
+  });
+});
+
+describe("toggleCompareId", () => {
+  test("adds at the end and removes in place", () => {
+    expect(toggleCompareId([1, 2], 3)).toEqual([1, 2, 3]);
+    expect(toggleCompareId([1, 2, 3], 2)).toEqual([1, 3]);
+  });
+
+  test("a full comparison keeps what was already picked", () => {
+    const full = Array.from({ length: MAX_COMPARE }, (_, i) => i + 1);
+    expect(toggleCompareId(full, 99)).toEqual(full);
+  });
+});
+
+describe("ticking a model", () => {
+  test("a model of several sizes never picks one silently", () => {
+    expect(SCORCH.sizes.length).toBeGreaterThan(1);
+    expect(toggleModelCompare([5], SCORCH)).toEqual([5]);
+  });
+
+  test("a model of one size picks it, and removes every size held", () => {
+    const single = { sizes: [{ id: 21 }] } as typeof SCORCH;
+    expect(toggleModelCompare([5], single)).toEqual([5, 21]);
+    expect(modelPicked([5, 12], SCORCH)).toBe(true);
+    expect(toggleModelCompare([5, 12, 13], SCORCH)).toEqual([5]);
+  });
+
+  test("a full comparison takes no further model", () => {
+    const full = Array.from({ length: MAX_COMPARE }, (_, i) => 100 + i);
+    expect(toggleModelCompare(full, SCORCH)).toEqual(full);
   });
 });

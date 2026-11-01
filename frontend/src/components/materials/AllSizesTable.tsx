@@ -5,13 +5,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { phoneCardSx } from "@/components/phone/phoneGrid";
 import type { Material } from "@/lib/api";
 import { CompareIcon } from "@/lib/icons";
-import {
-  formatSpec,
-  MATERIAL_SPECS,
-  paddlerRangeLabel,
-  serializeCompareIds,
-  specValue,
-} from "@/lib/materials/materials";
+import { serializeCompareIds } from "@/lib/materials/compare";
+import { paddlerRangeLabel } from "@/lib/materials/facts";
+import { formatSpec, MATERIAL_SPECS, specValue } from "@/lib/materials/specs";
 import { useUnits } from "@/lib/prefs/units";
 import { theme } from "@/lib/theme/theme";
 

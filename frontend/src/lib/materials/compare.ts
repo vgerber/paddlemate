@@ -1,17 +1,13 @@
-import type { Material } from "@/lib/api";
-import {
-  CATEGORY_LABELS,
-  enumLabel,
-  paddleLengthLabel,
-  sinceLabel,
-} from "@/lib/materials/materials";
+import type { Material, MaterialModel } from "@/lib/api";
+import { paddleLengthLabel, sinceLabel } from "@/lib/materials/facts";
+import { CATEGORY_LABELS } from "@/lib/materials/specs";
 import {
   bareQuantity,
   type Quantity,
   type Units,
   unitLabel,
 } from "@/lib/prefs/units";
-import { plural } from "@/lib/text/format";
+import { humanize, plural, sentenceCase } from "@/lib/text/format";
 
 export type CompareGroup =
   | "kind"
@@ -127,13 +123,13 @@ const FIELDS: Field[] = [
     key: "discipline",
     group: "kind",
     label: "Discipline",
-    read: (m) => text(m.discipline && enumLabel(m.discipline)),
+    read: (m) => text(m.discipline && sentenceCase(humanize(m.discipline))),
   },
   {
     key: "construction",
     group: "kind",
     label: "Construction",
-    read: (m) => text(m.construction && enumLabel(m.construction)),
+    read: (m) => text(m.construction && sentenceCase(humanize(m.construction))),
   },
   {
     key: "built",
@@ -248,14 +244,15 @@ const FIELDS: Field[] = [
     key: "shaft",
     group: "shaft",
     label: "Shaft",
-    read: (m) => text(m.shaft && enumLabel(m.shaft)),
+    read: (m) => text(m.shaft && sentenceCase(humanize(m.shaft))),
     chip: (value) => `${value} shaft`,
   },
   {
     key: "shaft_material",
     group: "shaft",
     label: "Shaft material",
-    read: (m) => text(m.shaft_material && enumLabel(m.shaft_material)),
+    read: (m) =>
+      text(m.shaft_material && sentenceCase(humanize(m.shaft_material))),
     chip: (value) => `${value} shaft`,
   },
   {
@@ -361,4 +358,79 @@ export function buildComparison(
   }
   const categories = new Set(materials.map((m) => m.category));
   return { alike, rows, mixed: categories.size > 1 };
+}
+
+/** How many entries the comparison holds - matches MAX_COMPARE_IDS on the
+ * server, which is what an `ids` request returns at most. */
+export const MAX_COMPARE = 8;
+
+/** What a compared row of one measurement looks like: the lowest and highest
+ * value stated, and whether the entries disagree at all. A row where every
+ * entry says the same thing is not what the reader is comparing, so the
+ * table can step it back. */
+export interface SpecSpread {
+  min?: number;
+  max?: number;
+  /** True when at least two entries state different values. */
+  varies: boolean;
+  /** True when no compared entry states this measurement. */
+  empty: boolean;
+}
+
+export function specSpread(values: (number | undefined)[]): SpecSpread {
+  const stated = values.filter((value): value is number => value != null);
+  if (stated.length === 0) return { varies: false, empty: true };
+  const min = Math.min(...stated);
+  const max = Math.max(...stated);
+  return { min, max, varies: min !== max, empty: false };
+}
+
+/** The entries a comparison holds, read from and written to the URL, so a
+ * comparison is a link somebody can send. */
+export function parseCompareIds(raw: string | undefined): number[] {
+  if (!raw) return [];
+  const ids: number[] = [];
+  for (const part of raw.split(",")) {
+    const id = Number(part.trim());
+    if (Number.isInteger(id) && id > 0 && !ids.includes(id)) ids.push(id);
+  }
+  return ids.slice(0, MAX_COMPARE);
+}
+
+export function serializeCompareIds(ids: number[]): string {
+  return ids.join(",");
+}
+
+/** Add or remove one entry from the comparison, keeping the order entries
+ * were picked in. Adding past the cap is ignored rather than dropping an
+ * entry the reader chose earlier. */
+export function toggleCompareId(ids: number[], id: number): number[] {
+  if (ids.includes(id)) return ids.filter((held) => held !== id);
+  if (ids.length >= MAX_COMPARE) return ids;
+  return [...ids, id];
+}
+
+/** Whether any size of a model is held in the comparison. */
+export function modelPicked(
+  ids: number[],
+  model: Pick<MaterialModel, "sizes">,
+): boolean {
+  return model.sizes.some((size) => ids.includes(size.id));
+}
+
+/** Tick a model in the list. A model of one size picks that size; a model of
+ * several never picks one on its own (the row asks which), so the tick of a
+ * model not held changes nothing here. Ticking a model held removes every
+ * size of it. */
+export function toggleModelCompare(
+  ids: number[],
+  model: Pick<MaterialModel, "sizes">,
+): number[] {
+  if (modelPicked(ids, model)) {
+    const own = model.sizes.map((size) => size.id);
+    return ids.filter((id) => !own.includes(id));
+  }
+  return model.sizes.length === 1
+    ? toggleCompareId(ids, model.sizes[0].id)
+    : ids;
 }
