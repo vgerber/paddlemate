@@ -1,15 +1,13 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import {
-  type KeyboardEvent,
-  type MouseEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useState } from "react";
 import QueryStates from "@/components/states/QueryStates";
+import TreeView, {
+  TREE_BASE_PAD,
+  TREE_CHEVRON,
+} from "@/components/tree/TreeView";
 import { useBrandModels, useMaterialTree } from "@/lib/hooks/useMaterials";
-import { ChevronRightIcon, ExpandIcon, MaterialIcon } from "@/lib/icons";
+import { MaterialIcon } from "@/lib/icons";
 import {
   type MaterialWikiSearch,
   toMaterialFilters,
@@ -19,100 +17,21 @@ import {
   type TreePath,
   type TreeRow,
   treeFilters,
-  treeKey,
   treeRows,
 } from "@/lib/materials/tree";
 import { withAlpha } from "@/lib/theme/alpha";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { labelSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
-/** Left pad of level 1, and what each level adds, in px. */
-const BASE_PAD = 8;
-const LEVEL_STEP = 16;
-const CHEVRON = 16;
+const BASE_PAD = TREE_BASE_PAD;
+const CHEVRON = TREE_CHEVRON;
 
-function Row({
-  row,
-  tabbable,
-  siblings,
-  onActivate,
-  onToggle,
-  onKeyDown,
-  onFocus,
-  setRef,
-}: {
-  row: TreeRow;
-  tabbable: boolean;
-  siblings: { size: number; pos: number };
-  onActivate: () => void;
-  onToggle: () => void;
-  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
-  onFocus: () => void;
-  setRef: (el: HTMLElement | null) => void;
-}) {
+function RowContent({ row }: { row: TreeRow }) {
   const leaf = row.kind === "model";
   return (
-    <Box
-      ref={setRef}
-      role="treeitem"
-      tabIndex={tabbable ? 0 : -1}
-      aria-level={row.level}
-      aria-setsize={siblings.size}
-      aria-posinset={siblings.pos}
-      aria-expanded={row.expandable ? row.expanded : undefined}
-      aria-selected={leaf ? undefined : row.selected}
-      data-testid={`tree-${row.kind}`}
-      data-node={row.id}
-      onClick={onActivate}
-      onKeyDown={onKeyDown}
-      onFocus={onFocus}
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 1,
-        minHeight: tokens.touch.min,
-        boxSizing: "border-box",
-        pl: `${BASE_PAD + (row.level - 1) * LEVEL_STEP}px`,
-        pr: 1,
-        borderRadius: `${tokens.radii.row}px`,
-        cursor: "pointer",
-        color: row.selected ? tokens.primary : "text.primary",
-        bgcolor: row.selected ? withAlpha(tokens.primary, "wash") : undefined,
-        "&:hover": {
-          bgcolor: row.selected
-            ? withAlpha(tokens.primary, "hover")
-            : tokens.surfaceLow,
-        },
-        "&:focus-visible": {
-          outline: `2px solid ${tokens.primary}`,
-          outlineOffset: -2,
-        },
-      }}
-    >
-      <Box
-        component="span"
-        aria-hidden="true"
-        onClick={(event: MouseEvent) => {
-          if (!row.expandable) return;
-          event.stopPropagation();
-          onToggle();
-        }}
-        sx={{
-          flexShrink: 0,
-          width: CHEVRON,
-          height: CHEVRON,
-          display: "inline-flex",
-          color: tokens.onSurfaceVariant,
-        }}
-      >
-        {row.expandable &&
-          (row.expanded ? (
-            <ExpandIcon sx={{ fontSize: CHEVRON }} />
-          ) : (
-            <ChevronRightIcon sx={{ fontSize: CHEVRON }} />
-          ))}
-      </Box>
+    <>
       <Typography
         component="span"
         sx={{
@@ -138,22 +57,8 @@ function Row({
           {row.count ?? row.sizes}
         </Typography>
       )}
-    </Box>
+    </>
   );
-}
-
-/** Positions of each row among the rows of its level under one parent. */
-function placements(rows: TreeRow[]) {
-  const counts = new Map<string | undefined, number>();
-  for (const row of rows) {
-    counts.set(row.parentId, (counts.get(row.parentId) ?? 0) + 1);
-  }
-  const seen = new Map<string | undefined, number>();
-  return rows.map((row) => {
-    const pos = (seen.get(row.parentId) ?? 0) + 1;
-    seen.set(row.parentId, pos);
-    return { size: counts.get(row.parentId) ?? 1, pos };
-  });
 }
 
 /** The category tree of the wiki: category, discipline, brand, and the
@@ -179,24 +84,8 @@ export default function MaterialTree({
   const brandOpen = path.category && path.discipline && path.brand;
   const models = useBrandModels(toMaterialFilters(search), Boolean(brandOpen));
   const [toggled, setToggled] = useState<Map<string, boolean>>(new Map());
-  const [activeId, setActiveId] = useState<string>("");
-  const els = useRef(new Map<string, HTMLElement>());
 
   const rows = treeRows(query.data, search, toggled, models.data);
-  const places = placements(rows);
-  const tabId =
-    rows.find((r) => r.id === activeId)?.id ??
-    rows.find((r) => r.selected)?.id ??
-    rows[0]?.id;
-
-  // The selection can sit below the fold of a long tree (a link, the back
-  // button), so bring it into view whenever it changes.
-  const selectedId = rows.find((r) => r.selected)?.id;
-  useEffect(() => {
-    if (selectedId && rows.length > 0) {
-      els.current.get(selectedId)?.scrollIntoView({ block: "nearest" });
-    }
-  }, [selectedId, rows.length]);
 
   const setOpen = (id: string, open: boolean) =>
     setToggled((prev) => new Map(prev).set(id, open));
@@ -216,21 +105,6 @@ export default function MaterialTree({
       return next;
     });
     onSelect(row.path);
-  };
-
-  const onKeyDown = (event: KeyboardEvent<HTMLElement>, row: TreeRow) => {
-    if (event.ctrlKey || event.metaKey || event.altKey) return;
-    const move = treeKey(rows, row.id, event.key);
-    if (!move) return;
-    event.preventDefault();
-    if (move.type === "focus") {
-      setActiveId(move.id);
-      els.current.get(move.id)?.focus();
-    } else if (move.type === "toggle") {
-      setOpen(move.id, move.open);
-    } else {
-      activate(row);
-    }
   };
 
   return (
@@ -284,24 +158,15 @@ export default function MaterialTree({
         empty={{ icon: <MaterialIcon />, title: "No categories match that." }}
         py={2}
       >
-        <Box role="tree" aria-labelledby="wiki-tree-label">
-          {rows.map((row, i) => (
-            <Row
-              key={row.id}
-              row={row}
-              tabbable={row.id === tabId}
-              siblings={places[i]}
-              onActivate={() => activate(row)}
-              onToggle={() => setOpen(row.id, !row.expanded)}
-              onKeyDown={(event) => onKeyDown(event, row)}
-              onFocus={() => setActiveId(row.id)}
-              setRef={(el) => {
-                if (el) els.current.set(row.id, el);
-                else els.current.delete(row.id);
-              }}
-            />
-          ))}
-        </Box>
+        <TreeView
+          rows={rows}
+          labelledBy="wiki-tree-label"
+          rowTestId={(row) => `tree-${row.kind}`}
+          isLeaf={(row) => row.kind === "model"}
+          onActivate={activate}
+          onToggle={setOpen}
+          renderRow={(row) => <RowContent row={row} />}
+        />
       </QueryStates>
     </Box>
   );
@@ -322,8 +187,5 @@ const allSx = {
   textAlign: "left",
   font: "inherit",
   "&:hover": { bgcolor: tokens.surfaceLow },
-  "&:focus-visible": {
-    outline: `2px solid ${tokens.primary}`,
-    outlineOffset: -2,
-  },
+  ...focusRingSx(-2),
 } as const;

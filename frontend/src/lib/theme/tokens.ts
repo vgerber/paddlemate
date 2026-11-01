@@ -215,7 +215,7 @@ export const lightTokens = {
   },
 
   // Touch: every target is at least `min` px, list rows and tabs `row`.
-  touch: { min: 44, row: 48 },
+  touch: { min: 44, row: 48, action: 52 },
 
   // Chrome: the desktop app bar and the phone bottom nav (before the safe
   // area), the one place these heights are said.

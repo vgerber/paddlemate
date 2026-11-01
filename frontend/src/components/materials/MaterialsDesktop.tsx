@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import Breadcrumb from "@/components/Breadcrumb";
 import DockedAction from "@/components/DockedAction";
 import FilterChip from "@/components/search/FilterChip";
 import type { MaterialSort } from "@/lib/api";
@@ -19,12 +20,12 @@ import { useUnits } from "@/lib/prefs/units";
 import { humanize, plural, sentenceCase } from "@/lib/text/format";
 import { withAlpha } from "@/lib/theme/alpha";
 import { labelSx, theme } from "@/lib/theme/theme";
-import MaterialBreadcrumb from "./MaterialBreadcrumb";
 import { FilterFields } from "./MaterialFiltersSheet";
 import { CompareBar, ModelResults } from "./MaterialResults";
 import MaterialSearchField from "./MaterialSearchField";
 import MaterialTree from "./MaterialTree";
 import { type MaterialsViewProps, useWikiList } from "./useWikiList";
+import { wikiTrail } from "./wikiTrail";
 
 const { tokens } = theme;
 
@@ -132,13 +133,7 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
         data-column="wiki-models"
         sx={{ minWidth: 0 }}
       >
-        <MaterialBreadcrumb
-          search={search}
-          chips={false}
-          onSelect={select}
-          onRoot={() => select({})}
-          onTools={props.onTools}
-        />
+        <Breadcrumb crumbs={wikiTrail(search, select, props.onTools)} />
         <Box
           sx={{
             display: "flex",

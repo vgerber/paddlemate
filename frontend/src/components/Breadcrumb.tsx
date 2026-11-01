@@ -4,61 +4,48 @@ import { Fragment, type ReactNode } from "react";
 import ChipRow from "@/components/ChipRow";
 import FilterChip from "@/components/search/FilterChip";
 import { ChevronRightIcon } from "@/lib/icons";
-import type { MaterialWikiSearch } from "@/lib/materials/search";
-import { type Crumb, crumbs, type TreePath } from "@/lib/materials/tree";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
-/** The path the tree stands on, each step a way back to it. On a desktop it
- * starts at the Tools page and reads as a trail; on a phone it is a row of
- * chips under the search, shown only once the list is narrowed. */
-export default function MaterialBreadcrumb({
-  search,
+/** One step of a trail. The step without `onClick` is where the reader is. */
+export interface Crumb {
+  label: string;
+  onClick?: () => void;
+}
+
+/** A trail of steps, each a way back. On a desktop it reads as a trail with
+ * chevrons; with `chips` (a phone) it is a row of chips, the current step
+ * filled. */
+export default function Breadcrumb({
+  crumbs,
   chips,
-  onSelect,
-  onRoot,
-  onTools,
-  children,
+  lead,
 }: {
-  search: MaterialWikiSearch;
-  /** Draw the steps as chips (phone) rather than a trail. */
-  chips: boolean;
-  onSelect: (path: TreePath) => void;
-  /** The wiki itself, before any step. */
-  onRoot: () => void;
-  onTools: () => void;
-  /** Chips that lead the phone's row, before the steps. */
-  children?: ReactNode;
+  crumbs: Crumb[];
+  /** Draw the steps as chips rather than a trail. */
+  chips?: boolean;
+  /** Chips that lead the row, before the steps (chips only). */
+  lead?: ReactNode;
 }) {
-  const steps: Crumb[] = crumbs(search);
   if (chips) {
     return (
       <Box component="nav" aria-label="Breadcrumb">
         <ChipRow>
-          {children}
-          {steps.map((step, i) => (
+          {lead}
+          {crumbs.map((step) => (
             <FilterChip
               key={step.label}
               label={step.label}
-              set={i === steps.length - 1}
-              onClick={
-                i === steps.length - 1 ? undefined : () => onSelect(step.patch)
-              }
+              set={!step.onClick}
+              onClick={step.onClick}
             />
           ))}
         </ChipRow>
       </Box>
     );
   }
-  const trail: { label: string; go?: () => void }[] = [
-    { label: "Tools", go: onTools },
-    { label: "Material wiki", go: steps.length ? onRoot : undefined },
-    ...steps.map((step, i) => ({
-      label: step.label,
-      go: i === steps.length - 1 ? undefined : () => onSelect(step.patch),
-    })),
-  ];
   return (
     <Box component="nav" aria-label="Breadcrumb">
       <Box
@@ -70,11 +57,11 @@ export default function MaterialBreadcrumb({
           listStyle: "none",
           m: 0,
           p: 0,
-          // The first crumb's text starts where the cards below start.
+          // The first crumb's text starts where the content below starts.
           ml: -0.75,
         }}
       >
-        {trail.map((step, i) => (
+        {crumbs.map((step, i) => (
           <Fragment key={step.label}>
             {i > 0 && (
               <Box
@@ -86,9 +73,9 @@ export default function MaterialBreadcrumb({
               </Box>
             )}
             <Box component="li" sx={{ display: "flex" }}>
-              {step.go ? (
+              {step.onClick ? (
                 <ButtonBase
-                  onClick={step.go}
+                  onClick={step.onClick}
                   sx={{
                     ...crumbSx,
                     color: "text.secondary",
@@ -122,8 +109,5 @@ const crumbSx = {
   borderRadius: `${tokens.radii.sm}px`,
   fontSize: "0.875rem",
   fontWeight: 600,
-  "&.Mui-focusVisible": {
-    outline: `2px solid ${tokens.primary}`,
-    outlineOffset: -2,
-  },
+  ...focusRingSx(-2),
 } as const;

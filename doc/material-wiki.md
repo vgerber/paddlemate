@@ -347,7 +347,7 @@ gone is a no-op. Tests: `api/tests/material_proposals.rs`, `api/tests/materials.
 | `lib/materials/form.ts` | the entry form's values and their conversion to and from an entry |
 | `lib/hooks/useMaterials.ts` | `materialKeys` and every query and mutation; a write answered 202 (`isProposal`) announces "Sent for review" through `announceIfProposal` and leaves the entry caches alone |
 | `lib/materials/compare.ts` | `buildComparison`: the comparable rows (`FIELDS`), the alike chips, the bar ratios; also `specSpread` and the comparison's id list |
-| `components/materials/` | `MaterialsView` (list and its compare bar), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `MaterialGallery` (photos and credits), `WikiPage` (the frame) |
+| `components/materials/` | `MaterialsView` (list and its compare bar), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `MaterialGallery` (photos and credits), `MaterialTree` and `wikiTrail` (wiki wrappers on the shared `TreeView` and `Breadcrumb`); the frame is the shared `PageFrame` |
 | `routes/materials/` | `index` (list), `$materialId` (detail, `?edit=true` for the form), `compare`, `new` |
 
 The wiki is a normal page, not a map screen: from `md` a full-width page (up
@@ -356,7 +356,7 @@ to 1600) with a 300 sidebar (`MaterialsDesktop`: search, `MaterialTree`,
 pages keep a centred column. On a phone it is edge to edge, with `BrowseSheet`
 for the tree, reached from Tools. `MaterialTree` is a real ARIA tree
 (`role=tree/treeitem`, `aria-level/expanded/selected`, roving tabindex; the
-key logic is `treeKey` in `lib/materials/tree.ts`); it loads the brand's models
+key logic is `treeKey` in `components/tree/treeKeys.ts`); it loads the brand's models
 lazily with `useBrandModels`, and its counts come from `useMaterialTree`
 (`materialKeys.tree`). The list reads
 `GET /materials/models` (`materialKeys.models`, 24 models a page, "Show more");

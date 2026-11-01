@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
 import Checkbox from "@mui/material/Checkbox";
 import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
@@ -8,13 +7,13 @@ import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { cardRowSx, listRowSx } from "@/components/canvas/flatRow";
 import { trailSlotSx } from "@/components/phone/phoneGrid";
+import RowOpenTarget from "@/components/RowOpenTarget";
 import type { MaterialModel } from "@/lib/api";
 import { MAX_COMPARE } from "@/lib/materials/compare";
 import { modelFigures, modelTitle, sinceLabel } from "@/lib/materials/facts";
 import { CATEGORY_LABELS } from "@/lib/materials/specs";
 import { useUnits } from "@/lib/prefs/units";
 import { humanize, sentenceCase } from "@/lib/text/format";
-import { focusRingSx } from "@/lib/theme/focusRing";
 import { cardTitleSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -93,23 +92,10 @@ export default function ModelRow({
         listStyle: "none",
       }}
     >
-      <ButtonBase
+      <RowOpenTarget
+        hang
         onClick={onOpen}
-        sx={{
-          flex: 1,
-          minWidth: 0,
-          alignSelf: "stretch",
-          justifyContent: "flex-start",
-          alignItems: card ? "flex-start" : "center",
-          textAlign: "left",
-          // Hangs out over the row's padding so the whole row opens it.
-          my: -1,
-          py: 1.75,
-          ml: `-${tokens.phone.inner}px`,
-          pl: `${tokens.phone.inner}px`,
-          borderRadius: `${tokens.radii.md}px`,
-          ...focusRingSx(-2),
-        }}
+        sx={{ alignItems: card ? "flex-start" : "center" }}
       >
         <Box
           data-testid="material-thumb"
@@ -171,7 +157,7 @@ export default function ModelRow({
             )}
           </Box>
         </Box>
-      </ButtonBase>
+      </RowOpenTarget>
       <Box sx={trailSlotSx}>
         <Checkbox
           checked={selected}

@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useState } from "react";
+import Breadcrumb from "@/components/Breadcrumb";
 import ListPaneHeader from "@/components/ListPaneHeader";
 import { fabRoom } from "@/components/PaneFab";
 import FilterChip from "@/components/search/FilterChip";
@@ -13,12 +14,12 @@ import { useUnits } from "@/lib/prefs/units";
 import { humanize, sentenceCase } from "@/lib/text/format";
 import { theme } from "@/lib/theme/theme";
 import BrowseSheet from "./BrowseSheet";
-import MaterialBreadcrumb from "./MaterialBreadcrumb";
 import MaterialFiltersSheet from "./MaterialFiltersSheet";
 import { CompareBar, ModelResults } from "./MaterialResults";
 import MaterialSearchField from "./MaterialSearchField";
 import MaterialsDesktop from "./MaterialsDesktop";
 import { type MaterialsViewProps, useWikiList } from "./useWikiList";
+import { wikiSteps } from "./wikiTrail";
 
 const { tokens } = theme;
 
@@ -56,36 +57,36 @@ function PhoneWiki(props: MaterialsViewProps) {
             Browse
           </Button>
         </Box>
-        <MaterialBreadcrumb
-          search={search}
+        <Breadcrumb
           chips
-          onSelect={select}
-          onRoot={() => select({})}
-          onTools={props.onTools}
-        >
-          <FilterChip
-            testId="filters-chip"
-            label={filterCount > 0 ? `Filters · ${filterCount}` : "Filters"}
-            set={filterCount > 0}
-            onClick={() => setFiltersOpen(true)}
-          />
-          {search.construction && (
-            <FilterChip
-              label={sentenceCase(humanize(search.construction))}
-              set
-              onClick={() => setFiltersOpen(true)}
-              onDelete={() => onChange({ construction: undefined })}
-            />
-          )}
-          {search.fits != null && (
-            <FilterChip
-              label={formatFits(search.fits, units)}
-              set
-              onClick={() => setFiltersOpen(true)}
-              onDelete={() => onChange({ fits: undefined })}
-            />
-          )}
-        </MaterialBreadcrumb>
+          crumbs={wikiSteps(search, select)}
+          lead={
+            <>
+              <FilterChip
+                testId="filters-chip"
+                label={filterCount > 0 ? `Filters · ${filterCount}` : "Filters"}
+                set={filterCount > 0}
+                onClick={() => setFiltersOpen(true)}
+              />
+              {search.construction && (
+                <FilterChip
+                  label={sentenceCase(humanize(search.construction))}
+                  set
+                  onClick={() => setFiltersOpen(true)}
+                  onDelete={() => onChange({ construction: undefined })}
+                />
+              )}
+              {search.fits != null && (
+                <FilterChip
+                  label={formatFits(search.fits, units)}
+                  set
+                  onClick={() => setFiltersOpen(true)}
+                  onDelete={() => onChange({ fits: undefined })}
+                />
+              )}
+            </>
+          }
+        />
       </Box>
 
       <ListPaneHeader count={total} noun="model" loading={query.isLoading} />

@@ -295,7 +295,11 @@ each pick; a tick never picks a size the user has not seen.
 Every target is at least 44px in both directions (`tokens.touch.min`); list
 rows and tabs 48px. A smaller visual gets a larger hit area (chips are 32px to
 look at and 44px to hit). Text inputs are 16px. Layouts hold at 320px wide and
-with text at 130%: names wrap, cards grow, nothing scrolls sideways.
+with text at 130%: names wrap, cards grow, nothing scrolls sideways. The
+action button of a sheet (the Filters result button) is `tokens.touch.action`
+(52px). Keyboard focus is one 2px primary outline, `focusRing` /
+`focusRingSx` in `lib/theme/focusRing.ts`; a control that fills its box uses
+a negative offset so the ring is not clipped.
 
 The sweep is a Playwright spec, `frontend/e2e/sweep/sweep.spec.ts`, that
 loops over every screen in `e2e/support/dark.ts` `SCREENS` (add a new screen
