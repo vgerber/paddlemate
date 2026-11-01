@@ -1,4 +1,4 @@
-//! Paddles are grouped by use: the migration that moved them, the database
+//! Paddles are grouped by use: the database
 //! and API rules that keep paddle classes and boat classes apart, and the
 //! tree and filters that show them.
 
@@ -11,7 +11,6 @@ use paddlemate_api::routes::materials::materials_routes;
 use serde_json::json;
 use sqlx::PgPool;
 
-const REMAP: &str = include_str!("../migrations/0063_paddle_use_remap.sql");
 const PADDLE_CLASSES: [&str; 8] = [
     "whitewater",
     "freestyle",
@@ -33,8 +32,8 @@ fn app(pool: PgPool) -> Router {
 
 async fn insert(pool: &PgPool, category: &str, model: &str, discipline: &str) -> sqlx::Result<()> {
     sqlx::query(
-        "INSERT INTO materials (category, brand, model, discipline, created_by) \
-         VALUES ($1::material_category, 'Zed', $2, $3::material_discipline, 'system-catalogue')",
+        "INSERT INTO materials (category, brand, model, disciplines, created_by) \
+         VALUES ($1::material_category, 'Zed', $2, ARRAY[$3]::material_discipline[], 'system-catalogue')",
     )
     .bind(category)
     .bind(model)
@@ -47,8 +46,8 @@ async fn insert(pool: &PgPool, category: &str, model: &str, discipline: &str) ->
 #[sqlx::test]
 async fn the_catalogue_paddles_use_only_paddle_classes(pool: PgPool) {
     let bad: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM materials WHERE category = 'paddle' AND discipline IS NOT NULL \
-         AND discipline::text <> ALL($1)",
+        "SELECT COUNT(*) FROM materials WHERE category = 'paddle' \
+         AND NOT disciplines::text[] <@ $1",
     )
     .bind(PADDLE_CLASSES.map(String::from).to_vec())
     .fetch_one(&pool)
@@ -56,7 +55,7 @@ async fn the_catalogue_paddles_use_only_paddle_classes(pool: PgPool) {
     .unwrap();
     assert_eq!(bad, 0);
     let whitewater: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM materials WHERE category = 'paddle' AND discipline = 'whitewater'",
+        "SELECT COUNT(*) FROM materials WHERE category = 'paddle' AND disciplines @> ARRAY['whitewater']::material_discipline[]",
     )
     .fetch_one(&pool)
     .await
@@ -65,72 +64,6 @@ async fn the_catalogue_paddles_use_only_paddle_classes(pool: PgPool) {
         whitewater > 100,
         "the creek and river paddles moved: {whitewater}"
     );
-}
-
-#[sqlx::test]
-async fn the_remap_moves_old_paddle_classes(pool: PgPool) {
-    sqlx::query("ALTER TABLE materials DROP CONSTRAINT chk_materials_discipline")
-        .execute(&pool)
-        .await
-        .unwrap();
-    sqlx::query("DELETE FROM materials WHERE category = 'paddle'")
-        .execute(&pool)
-        .await
-        .unwrap();
-    for (model, old) in [
-        ("A", "creek"),
-        ("B", "river_runner"),
-        ("C", "downriver"),
-        ("D", "freestyle"),
-        ("E", "slalom"),
-        ("F", "other"),
-        ("G", "playboat"),
-    ] {
-        insert(&pool, "paddle", model, old).await.unwrap();
-    }
-    insert(&pool, "kayak", "K", "downriver").await.unwrap();
-    common::people(&pool).await;
-    sqlx::query(
-        "INSERT INTO proposals (entity_type, operation, proposed_data, submitted_by) \
-         VALUES ('material', 'create', '{\"category\":\"paddle\",\"discipline\":\"creek\"}', 'mara-1')",
-    )
-    .execute(&pool)
-    .await
-    .unwrap();
-
-    sqlx::raw_sql(REMAP).execute(&pool).await.unwrap();
-
-    let rows: Vec<(String, String)> = sqlx::query_as(
-        "SELECT model, discipline::text FROM materials WHERE category = 'paddle' ORDER BY model",
-    )
-    .fetch_all(&pool)
-    .await
-    .unwrap();
-    let got: Vec<(&str, &str)> = rows.iter().map(|(a, b)| (a.as_str(), b.as_str())).collect();
-    assert_eq!(
-        got,
-        [
-            ("A", "whitewater"),
-            ("B", "whitewater"),
-            ("C", "wildwater"),
-            ("D", "freestyle"),
-            ("E", "slalom"),
-            ("F", "other"),
-            ("G", "other"),
-        ]
-    );
-    let kayak: String = sqlx::query_scalar(
-        "SELECT discipline::text FROM materials WHERE category = 'kayak' AND model = 'K'",
-    )
-    .fetch_one(&pool)
-    .await
-    .unwrap();
-    assert_eq!(kayak, "downriver", "kayak classes stay as they are");
-    let proposed: String = sqlx::query_scalar("SELECT proposed_data->>'discipline' FROM proposals")
-        .fetch_one(&pool)
-        .await
-        .unwrap();
-    assert_eq!(proposed, "whitewater");
 }
 
 #[sqlx::test]
@@ -150,9 +83,32 @@ async fn the_database_keeps_paddle_and_boat_classes_apart(pool: PgPool) {
     insert(&pool, "kayak", "ok", "creek").await.unwrap();
 }
 
+#[sqlx::test]
+async fn the_database_bounds_the_group_list(pool: PgPool) {
+    for list in [
+        "'{}'",
+        "'{creek,river_runner,half_slice,playboat}'",
+        "'{creek,canoe}'",
+        "'{creek,NULL}'",
+    ] {
+        let sql = format!(
+            "INSERT INTO materials (category, brand, model, disciplines, created_by) \
+             VALUES ('kayak', 'Zed', 'x', {list}::material_discipline[], 'system-catalogue')"
+        );
+        assert!(sqlx::query(&sql).execute(&pool).await.is_err(), "{list}");
+    }
+    sqlx::query(
+        "INSERT INTO materials (category, brand, model, disciplines, created_by) \
+         VALUES ('kayak', 'Zed', 'x', '{creek,river_runner,half_slice}', 'system-catalogue')",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+}
+
 async fn add(app: &Router, category: &str, discipline: &str) -> common::Reply {
     let body = json!({
-        "category": category, "brand": "Zed", "model": "M", "discipline": discipline
+        "category": category, "brand": "Zed", "model": "M", "disciplines": [discipline]
     });
     call(app, Method::POST, "/materials", Who::Admin, Some(body)).await
 }
@@ -168,7 +124,7 @@ async fn the_api_refuses_a_class_that_does_not_fit(pool: PgPool) {
     ] {
         let r = add(&app, category, discipline).await;
         assert_eq!(r.status, StatusCode::BAD_REQUEST, "{category} {discipline}");
-        assert_eq!(r.body["error"]["target"], "discipline");
+        assert_eq!(r.body["error"]["target"], "disciplines");
     }
     let r = add(&app, "paddle", "polo").await;
     assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);

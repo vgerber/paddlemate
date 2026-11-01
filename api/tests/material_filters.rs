@@ -55,10 +55,10 @@ fn kayak(brand: &'static str, model: &'static str) -> Spec {
 
 async fn put(pool: &PgPool, s: Spec) {
     sqlx::query(
-        "INSERT INTO materials (category, brand, model, variant, size, discipline, construction, \
+        "INSERT INTO materials (category, brand, model, variant, size, disciplines, construction, \
          year_from, year_approximate, length_cm, volume_l, weight_kg, paddler_weight_min_kg, \
          paddler_weight_max_kg, created_by) \
-         VALUES ($1::material_category, $2, $3, $4, $5, $6::material_discipline, \
+         VALUES ($1::material_category, $2, $3, $4, $5, ARRAY[COALESCE($6::text, 'other')]::material_discipline[], \
          $7::material_construction, $8, $9, $10, $11, $12, $13, $14, 'system-catalogue')",
     )
     .bind(s.category)
@@ -564,7 +564,7 @@ async fn a_model_without_facts_is_found_and_nothing_breaks(pool: PgPool) {
     assert_eq!(
         tree_path(&tree.body, &["kayak"]).0,
         7,
-        "undisciplined counts toward the category"
+        "an entry filed under other counts toward the category"
     );
 }
 

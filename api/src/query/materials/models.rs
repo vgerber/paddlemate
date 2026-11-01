@@ -74,7 +74,7 @@ pub async fn list(
     qb.push_bind((page - 1) * per_page);
     qb.push(
         ") SELECT pg.pos, pg.total_count, m.id, m.category, m.brand, m.model, m.variant, \
-         m.size, m.discipline, m.construction, m.year_from, m.year_to, m.year_approximate, \
+         m.size, m.disciplines, m.construction, m.year_from, m.year_to, m.year_approximate, \
          m.availability, m.availability_source, m.availability_checked, \
          m.length_cm, m.weight_kg, m.volume_l, m.paddler_weight_min_kg, \
          m.paddler_weight_max_kg, m.lengths_cm, \
@@ -114,7 +114,7 @@ pub async fn list(
                 brand: row.try_get("brand")?,
                 model: row.try_get("model")?,
                 variant: row.try_get("variant")?,
-                discipline: None,
+                disciplines: Vec::new(),
                 construction: None,
                 year_from: None,
                 year_to: None,
@@ -131,7 +131,9 @@ pub async fn list(
         };
         // The sizes of a model share its description; fill each gap from the
         // first size that states it. The years span all sizes.
-        model.discipline = model.discipline.or(row.try_get("discipline")?);
+        if model.disciplines.is_empty() {
+            model.disciplines = row.try_get("disciplines")?;
+        }
         model.construction = model.construction.or(row.try_get("construction")?);
         let from: Option<i32> = row.try_get("year_from")?;
         model.year_from = match (model.year_from, from) {

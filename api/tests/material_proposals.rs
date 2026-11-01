@@ -27,7 +27,7 @@ fn app(pool: PgPool) -> Router {
 }
 
 fn entry(model: &str) -> Value {
-    json!({ "category": "kayak", "brand": "Zedboats", "model": model })
+    json!({ "category": "kayak", "brand": "Zedboats", "model": model, "disciplines": ["creek"] })
 }
 
 /// An entry the admin created; returns its id.

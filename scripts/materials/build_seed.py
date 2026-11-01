@@ -13,6 +13,14 @@ Run it again after changing the data and put the result in a new migration.
 writes the statements that move the size out of `variant` on catalogue rows
 already in a database, from the same split_variant() the seed uses.
 
+    GROUPS_DIR=<dir> python3 -I scripts/materials/build_seed.py --merge-groups
+    python3 -I scripts/materials/build_seed.py --groups-migration [out.sql]
+
+the first copies the researched groups (.claude/handoffs/materials-data/groups/*.json)
+into data/materials/kayaks.json; the second writes the migration that files every
+catalogue model under the groups the data lists. The default output is the full
+seed used by api/tests/catalogue_seed.rs (regenerate it after any data change).
+
     python3 -I scripts/materials/build_seed.py --availability-migration [out.sql]
 
 writes the migration that adds the availability columns and fills them from
@@ -27,7 +35,16 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA = os.path.join(ROOT, "data", "materials")
-DEFAULT_OUT = os.path.join(ROOT, "api", "migrations", "0064_materials_paddle_use_reseed.sql")
+# The full seed, kept for the test that proves a re-run changes nothing.
+DEFAULT_OUT = os.path.join(ROOT, "api", "tests", "sql", "catalogue_seed.sql")
+GROUPS_DIR = os.environ.get("GROUPS_DIR") or os.path.join(ROOT, ".claude", "handoffs", "materials-data", "groups")
+MAX_DISCIPLINES = 3
+
+# Brand names before the product suffix was dropped, as the research files
+# for the groups still spell them.
+OLD_BRANDS = {"Spade Kayaks": "Spade", "Waka Kayaks": "Waka", "Fluid Kayaks": "Fluid",
+              "EXO Kayaks": "EXO", "Zet Kayaks": "Zet", "Jackson Kayak": "Jackson",
+              "AT Paddles": "AT", "VE Paddles": "VE", "Lendal (Celtic Paddles)": "Lendal"}
 
 # A paddle is filed by use, a boat by the kind of boat (chk_materials_discipline).
 DISCIPLINES = {
@@ -53,7 +70,7 @@ WEAK_WORDS = re.compile(r"archive|playak|snippet|search (summary|result)|listing
                         r"verify|conflict|disagree|unclear|uncertain|may be earlier|"
                         r"lower bound|bulk-import", re.I)
 
-COLUMNS = ["category", "brand", "model", "variant", "size", "discipline", "construction",
+COLUMNS = ["category", "brand", "model", "variant", "size", "disciplines", "construction",
            "year_from", "year_to", "year_approximate", "length_cm", "width_cm", "height_cm",
            "volume_l", "weight_kg", "cockpit_length_cm", "cockpit_width_cm",
            "paddler_weight_min_kg", "paddler_weight_max_kg", "product_url", "colors",
@@ -61,7 +78,7 @@ COLUMNS = ["category", "brand", "model", "variant", "size", "discipline", "const
            "length_min_cm", "length_max_cm", "lengths_cm", "pieces", "shaft",
            "shaft_material", "blade_material", "feather_deg", "shaft_diameter"]
 SQL_TYPES = {
-    "category": "material_category", "discipline": "material_discipline",
+    "category": "material_category", "disciplines": "material_discipline[]",
     "construction": "material_construction", "shaft": "paddle_shaft",
     "shaft_material": "paddle_shaft_material", "year_from": "int", "year_to": "int",
     "year_approximate": "boolean", "colors": "text[]", "sources": "jsonb",
@@ -165,7 +182,15 @@ def clean_common(e, out, category):
     out["size"] = size[:40] if size else None
     out["notes"] = (e.get("notes") or "").strip()
 
-    for field, allowed in (("discipline", DISCIPLINES[category]), ("construction", CONSTRUCTIONS),
+    groups = []
+    for v in e.get("disciplines") or []:
+        if v in DISCIPLINES[category] and v not in groups:
+            groups.append(v)
+        else:
+            add_note(out, f"disciplines as published: {v}.")
+    out["disciplines"] = groups[:MAX_DISCIPLINES] or ["other"]
+
+    for field, allowed in (("construction", CONSTRUCTIONS),
                            ("shaft", SHAFTS), ("shaft_material", SHAFT_MATERIALS)):
         v = e.get(field)
         if v is None or field not in e:
@@ -509,6 +534,100 @@ ON CONFLICT (material_id, source_url) DO NOTHING;
 """
 
 
+def merge_groups():
+    """Copy the researched groups from GROUPS_DIR into data/materials/kayaks.json.
+
+    A research row names a model by its brand (old or new spelling), model and
+    variant as the data file spells them. Its groups replace the entry's list,
+    primary first. Returns (merged entries, rows that matched no entry).
+    """
+    path = os.path.join(DATA, "kayaks.json")
+    with open(path, encoding="utf-8") as fh:
+        kayaks = json.load(fh)
+    by_key = {}
+    for e in kayaks:
+        by_key.setdefault((e["brand"].lower(), e["model"].lower(), (e["variant"] or "").lower()),
+                          []).append(e)
+    merged, unmatched = 0, []
+    for name in sorted(os.listdir(GROUPS_DIR)):
+        if not name.endswith(".json"):
+            continue
+        with open(os.path.join(GROUPS_DIR, name), encoding="utf-8") as fh:
+            rows = json.load(fh)
+        for r in rows:
+            groups = []
+            for g in r["groups"]:
+                if g not in DISCIPLINES["kayak"]:
+                    raise SystemExit(f"{name}: unknown group {g} for {r['brand']} {r['model']}")
+                if g not in groups:
+                    groups.append(g)
+            if not 1 <= len(groups) <= MAX_DISCIPLINES:
+                raise SystemExit(f"{name}: {r['brand']} {r['model']} needs 1-{MAX_DISCIPLINES} groups")
+            brand = OLD_BRANDS.get(r["brand"], r["brand"])
+            hits = by_key.get((brand.lower(), r["model"].lower(), (r.get("variant") or "").lower()))
+            if not hits:
+                unmatched.append((name, r["brand"], r["model"], r.get("variant")))
+                continue
+            for e in hits:
+                e["disciplines"] = groups
+                merged += 1
+                # A weakly sourced grouping keeps its caveat on the entry.
+                note = f"Groups: {r['note'].strip()}"
+                if r["note"].lower().startswith("weak") and note not in (e.get("notes") or ""):
+                    e["notes"] = ((e.get("notes") or "") + " " + note).strip()
+    # The sizes of a model share its groups: each gets the union, in order.
+    models = {}
+    for e in kayaks:
+        models.setdefault((e["brand"].lower(), e["model"].lower(),
+                           (split_variant("kayak", e["variant"])[1] or "").lower()), []).append(e)
+    for entries in models.values():
+        union = []
+        for e in entries:
+            union += [g for g in e["disciplines"] if g not in union]
+        for e in entries:
+            e["disciplines"] = union[:MAX_DISCIPLINES]
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(json.dumps(kayaks, indent=1, ensure_ascii=False) + "\n")
+    return merged, unmatched
+
+
+def render_groups_migration():
+    """Set the groups of every catalogue entry from the data files.
+
+    The notes go with them: a weakly sourced grouping keeps its caveat there.
+    Only untouched catalogue rows change, so a user's edit stands and a
+    re-run is a no-op.
+    """
+    entries = [{"category": r["category"], "brand": r["brand"], "model": r["model"],
+                "variant": r["variant"], "size": r["size"], "disciplines": r["disciplines"],
+                "notes": r["notes"]} for r in build()]
+    payload = json.dumps(entries, ensure_ascii=False, separators=(",", ":"))
+    if "$seed$" in payload:
+        raise SystemExit("payload contains the dollar-quote tag")
+    return f"""-- Generated by scripts/materials/build_seed.py --groups-migration from
+-- data/materials/*.json. Files each catalogue model under every group its maker
+-- lists it in, primary first. Idempotent; entries a user edited (updated_by set)
+-- are left alone.
+
+WITH seed AS (
+    SELECT * FROM jsonb_to_recordset($seed${payload}$seed$::jsonb) AS s(
+        category material_category, brand text, model text, variant text, size text,
+        disciplines material_discipline[], notes text
+    )
+)
+UPDATE materials m SET disciplines = s.disciplines, notes = s.notes, updated_at = NOW()
+FROM seed s
+WHERE m.category = s.category
+  AND lower(btrim(m.brand)) = lower(btrim(s.brand))
+  AND lower(btrim(m.model)) = lower(btrim(s.model))
+  AND lower(btrim(COALESCE(m.variant, ''))) = lower(btrim(COALESCE(s.variant, '')))
+  AND lower(btrim(COALESCE(m.size, ''))) = lower(btrim(COALESCE(s.size, '')))
+  AND m.created_by = 'system-catalogue'
+  AND m.updated_by IS NULL
+  AND (m.disciplines, m.notes) IS DISTINCT FROM (s.disciplines, s.notes);
+"""
+
+
 def render_photo_migration(batch):
     """Pending material_images rows for the photos tagged `batch` in the data.
 
@@ -563,6 +682,19 @@ ON CONFLICT (material_id, source_url) DO NOTHING;
 
 
 def main():
+    if sys.argv[1:2] == ["--merge-groups"]:
+        merged, unmatched = merge_groups()
+        print("entries updated:", merged, "unmatched research rows:", len(unmatched))
+        for u in unmatched:
+            print("  unmatched:", u)
+        return
+    if sys.argv[1:2] == ["--groups-migration"]:
+        sql = render_groups_migration()
+        if len(sys.argv) < 3:
+            sys.stdout.write(sql)
+        else:
+            open(sys.argv[2], "w", encoding="utf-8").write(sql)
+        return
     if sys.argv[1:2] == ["--photo-migration"]:
         sql = render_photo_migration(sys.argv[2])
         if len(sys.argv) < 4:

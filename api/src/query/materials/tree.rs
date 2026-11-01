@@ -26,21 +26,23 @@ pub async fn tree(pool: &PgPool, filters: &MaterialFilters) -> Result<MaterialTr
     };
 
     // One pass, three levels: grouping() says which levels a row sums over.
+    // A model in several groups appears once per group, so every count is
+    // distinct: the category level counts it once, each group level too.
     let mut qb: QueryBuilder<sqlx::Postgres> = QueryBuilder::new(
-        "SELECT m.category, m.discipline, lower(btrim(m.brand)) AS bk, min(m.brand) AS brand, \
-         grouping(m.discipline, lower(btrim(m.brand))) AS lvl, COUNT(*) AS entries, \
+        "SELECT m.category, d.discipline, lower(btrim(m.brand)) AS bk, min(m.brand) AS brand, \
+         grouping(d.discipline, lower(btrim(m.brand))) AS lvl, COUNT(DISTINCT m.id) AS entries, \
          COUNT(DISTINCT (lower(btrim(m.brand)), lower(btrim(m.model)), \
          lower(btrim(COALESCE(m.variant, ''))))) AS models \
-         FROM materials m WHERE 1=1",
+         FROM materials m CROSS JOIN LATERAL unnest(m.disciplines) AS d(discipline) WHERE 1=1",
     );
     if let Some(q) = q {
         push_name_match(&mut qb, q);
     }
     push_filters(&mut qb, &rest);
     qb.push(
-        " GROUP BY GROUPING SETS ((m.category), (m.category, m.discipline), \
-         (m.category, m.discipline, lower(btrim(m.brand)))) \
-         ORDER BY models DESC, m.category, m.discipline, brand",
+        " GROUP BY GROUPING SETS ((m.category), (m.category, d.discipline), \
+         (m.category, d.discipline, lower(btrim(m.brand)))) \
+         ORDER BY models DESC, m.category, d.discipline, brand",
     );
 
     let rows = qb.build().fetch_all(pool).await?;

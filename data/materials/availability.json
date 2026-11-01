@@ -230,7 +230,7 @@
   "note": "listed in maker whitewater collection (archive capture Aug 2026; live site rate-limited)"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "AT2 Flexi",
   "variant": "ergo (bent) shaft",
   "status": "unknown",
@@ -240,7 +240,7 @@
   "note": "maker site atpaddles.com redirects to Confluence Outdoor (429 on fetch); only 2013-2016 listings found"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "AT2 Superduty",
   "variant": "ergo (bent) shaft",
   "status": "unknown",
@@ -250,7 +250,7 @@
   "note": "maker site atpaddles.com redirects to Confluence Outdoor (429 on fetch); only 2013-2016 listings found"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "AT2 Superlight",
   "variant": "ergo (bent) shaft",
   "status": "unknown",
@@ -260,7 +260,7 @@
   "note": "maker site atpaddles.com redirects to Confluence Outdoor (429 on fetch); only 2013-2016 listings found"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Hercules Carbon",
   "variant": "ergo (bent) shaft",
   "status": "unknown",
@@ -270,7 +270,7 @@
   "note": "maker site atpaddles.com redirects to Confluence Outdoor (429 on fetch); only 2013-2016 listings found"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Hercules Carbon",
   "variant": "straight shaft",
   "status": "unknown",
@@ -280,7 +280,7 @@
   "note": "maker site atpaddles.com redirects to Confluence Outdoor (429 on fetch); only 2013-2016 listings found"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Hercules Glass",
   "variant": "ergo (bent) shaft",
   "status": "unknown",
@@ -290,7 +290,7 @@
   "note": "maker site atpaddles.com redirects to Confluence Outdoor (429 on fetch); only 2013-2016 listings found"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Hercules Glass",
   "variant": "straight shaft",
   "status": "unknown",
@@ -300,7 +300,7 @@
   "note": "maker site atpaddles.com redirects to Confluence Outdoor (429 on fetch); only 2013-2016 listings found"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Samurai Carbon",
   "variant": "ergo (bent) shaft",
   "status": "unknown",
@@ -310,7 +310,7 @@
   "note": "maker site atpaddles.com redirects to Confluence Outdoor (429 on fetch); only 2013-2016 listings found"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Samurai Carbon",
   "variant": "straight shaft",
   "status": "unknown",
@@ -320,7 +320,7 @@
   "note": "maker site atpaddles.com redirects to Confluence Outdoor (429 on fetch); only 2013-2016 listings found"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Samurai Glass",
   "variant": "ergo (bent) shaft",
   "status": "unknown",
@@ -330,7 +330,7 @@
   "note": "maker site atpaddles.com redirects to Confluence Outdoor (429 on fetch); only 2013-2016 listings found"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Samurai Glass",
   "variant": "straight shaft",
   "status": "unknown",
@@ -340,7 +340,7 @@
   "note": "maker site atpaddles.com redirects to Confluence Outdoor (429 on fetch); only 2013-2016 listings found"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Titan",
   "variant": "Sport series",
   "status": "unknown",
@@ -1340,7 +1340,7 @@
   "note": "Not in maker shop kayak category"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "313",
   "variant": null,
   "status": "unknown",
@@ -1350,7 +1350,7 @@
   "note": "Maker site not readable; not in retailer EXO list (weak), not enough to call discontinued"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Demon",
   "variant": null,
   "status": "unknown",
@@ -1360,7 +1360,7 @@
   "note": "Maker site not readable; not in retailer EXO list (weak), not enough to call discontinued"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Fastwave",
   "variant": null,
   "status": "unknown",
@@ -1370,7 +1370,7 @@
   "note": "Maker site not readable; not in retailer EXO list (weak), not enough to call discontinued"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Helixir",
   "variant": "L",
   "status": "current",
@@ -1380,7 +1380,7 @@
   "note": "Weak: retailer lists Helixir L only"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Helixir",
   "variant": "S",
   "status": "unknown",
@@ -1390,7 +1390,7 @@
   "note": "Maker site not readable; not in retailer EXO list (weak), not enough to call discontinued"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Helixir",
   "variant": "XS",
   "status": "unknown",
@@ -1400,7 +1400,7 @@
   "note": "Maker site not readable; not in retailer EXO list (weak), not enough to call discontinued"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Joker",
   "variant": null,
   "status": "unknown",
@@ -1410,7 +1410,7 @@
   "note": "Maker site not readable; not in retailer EXO list (weak), not enough to call discontinued"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "K1D",
   "variant": null,
   "status": "unknown",
@@ -1420,7 +1420,7 @@
   "note": "Maker site not readable; not in retailer EXO list (weak), not enough to call discontinued"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Lion",
   "variant": null,
   "status": "unknown",
@@ -1430,7 +1430,7 @@
   "note": "Maker site not readable; not in retailer EXO list (weak), not enough to call discontinued"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Pin-Up",
   "variant": null,
   "status": "unknown",
@@ -1440,7 +1440,7 @@
   "note": "Maker site not readable; not in retailer EXO list (weak), not enough to call discontinued"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Rexy",
   "variant": null,
   "status": "current",
@@ -1450,7 +1450,7 @@
   "note": "Weak: listed in a retailer brand page (exokayaks.com is a JS shop, not readable); Rexy Party = retailer Party Rexy"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Rexy Party",
   "variant": null,
   "status": "current",
@@ -1460,7 +1460,7 @@
   "note": "Weak: listed in a retailer brand page (exokayaks.com is a JS shop, not readable); Rexy Party = retailer Party Rexy"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Six",
   "variant": null,
   "status": "unknown",
@@ -1470,7 +1470,7 @@
   "note": "Maker site not readable; not in retailer EXO list (weak), not enough to call discontinued"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "T-Rex",
   "variant": "L",
   "status": "current",
@@ -1480,7 +1480,7 @@
   "note": "Weak: listed in a retailer brand page (exokayaks.com is a JS shop, not readable); Rexy Party = retailer Party Rexy"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "T-Rex",
   "variant": "S",
   "status": "current",
@@ -1490,7 +1490,7 @@
   "note": "Weak: listed in a retailer brand page (exokayaks.com is a JS shop, not readable); Rexy Party = retailer Party Rexy"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "XG",
   "variant": null,
   "status": "unknown",
@@ -1500,7 +1500,7 @@
   "note": "Maker site not readable; not in retailer EXO list (weak), not enough to call discontinued"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "XT",
   "variant": "260",
   "status": "current",
@@ -1510,7 +1510,7 @@
   "note": "Weak: listed in a retailer brand page (exokayaks.com is a JS shop, not readable); Rexy Party = retailer Party Rexy"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "XT",
   "variant": "300",
   "status": "current",
@@ -1520,7 +1520,7 @@
   "note": "Weak: listed in a retailer brand page (exokayaks.com is a JS shop, not readable); Rexy Party = retailer Party Rexy"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "XT Creek",
   "variant": null,
   "status": "current",
@@ -1530,7 +1530,7 @@
   "note": "Weak: listed in a retailer brand page (exokayaks.com is a JS shop, not readable); Rexy Party = retailer Party Rexy"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Zion Creek",
   "variant": "L",
   "status": "current",
@@ -1540,7 +1540,7 @@
   "note": "Weak: listed in a retailer brand page (exokayaks.com is a JS shop, not readable); Rexy Party = retailer Party Rexy"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Zion Creek",
   "variant": "S",
   "status": "current",
@@ -1550,7 +1550,7 @@
   "note": "Weak: listed in a retailer brand page (exokayaks.com is a JS shop, not readable); Rexy Party = retailer Party Rexy"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Zion Slalom",
   "variant": "L",
   "status": "current",
@@ -1560,7 +1560,7 @@
   "note": "Weak: listed in a retailer brand page (exokayaks.com is a JS shop, not readable); Rexy Party = retailer Party Rexy"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Zion Slalom",
   "variant": "S",
   "status": "current",
@@ -1570,7 +1570,7 @@
   "note": "Weak: listed in a retailer brand page (exokayaks.com is a JS shop, not readable); Rexy Party = retailer Party Rexy"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Bang",
   "variant": null,
   "status": "current",
@@ -1580,7 +1580,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Bazooka",
   "variant": "Large",
   "status": "current",
@@ -1590,7 +1590,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Bazooka",
   "variant": "Medium",
   "status": "current",
@@ -1600,7 +1600,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Bazooka",
   "variant": "Small",
   "status": "current",
@@ -1610,7 +1610,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Big Bang",
   "variant": null,
   "status": "current",
@@ -1620,7 +1620,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Detox",
   "variant": "Large",
   "status": "current",
@@ -1630,7 +1630,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Detox",
   "variant": "Medium",
   "status": "current",
@@ -1640,7 +1640,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Detox",
   "variant": "Small",
   "status": "current",
@@ -1650,7 +1650,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Do It Now",
   "variant": "Large",
   "status": "current",
@@ -1660,7 +1660,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Do It Now",
   "variant": "Medium",
   "status": "current",
@@ -1670,7 +1670,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Do It Now",
   "variant": "Small",
   "status": "current",
@@ -1680,7 +1680,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Donsa",
   "variant": null,
   "status": "discontinued",
@@ -1690,7 +1690,7 @@
   "note": "Not in the 11-model Whitewater menu of the maker site (footer 2022)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Dope",
   "variant": "Large",
   "status": "current",
@@ -1700,7 +1700,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Dope",
   "variant": "Medium",
   "status": "current",
@@ -1710,7 +1710,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Dope",
   "variant": "Small",
   "status": "current",
@@ -1720,7 +1720,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Dope Composite",
   "variant": "Medium",
   "status": "discontinued",
@@ -1730,7 +1730,7 @@
   "note": "Not in the 11-model Whitewater menu of the maker site (footer 2022)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Element",
   "variant": "Medium",
   "status": "current",
@@ -1740,7 +1740,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Element Composite",
   "variant": "Large",
   "status": "discontinued",
@@ -1750,7 +1750,7 @@
   "note": "Not in the 11-model Whitewater menu of the maker site (footer 2022)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Element Composite",
   "variant": "Medium",
   "status": "discontinued",
@@ -1760,7 +1760,7 @@
   "note": "Not in the 11-model Whitewater menu of the maker site (footer 2022)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Flirt",
   "variant": "Large",
   "status": "discontinued",
@@ -1770,7 +1770,7 @@
   "note": "Not in the 11-model Whitewater menu of the maker site (footer 2022)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Flirt",
   "variant": "Medium",
   "status": "discontinued",
@@ -1780,7 +1780,7 @@
   "note": "Not in the 11-model Whitewater menu of the maker site (footer 2022)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Flirt",
   "variant": "Small",
   "status": "discontinued",
@@ -1790,7 +1790,7 @@
   "note": "Not in the 11-model Whitewater menu of the maker site (footer 2022)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Nemesis",
   "variant": "Large",
   "status": "current",
@@ -1800,7 +1800,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Nemesis",
   "variant": "Medium",
   "status": "current",
@@ -1810,7 +1810,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Nemesis",
   "variant": "Small",
   "status": "current",
@@ -1820,7 +1820,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Nemesis Composite",
   "variant": "Medium",
   "status": "discontinued",
@@ -1830,7 +1830,7 @@
   "note": "Not in the 11-model Whitewater menu of the maker site (footer 2022)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Solo",
   "variant": "Large",
   "status": "current",
@@ -1840,7 +1840,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Solo",
   "variant": "Medium",
   "status": "current",
@@ -1850,7 +1850,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Solo",
   "variant": "Small",
   "status": "current",
@@ -1860,7 +1860,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Spice",
   "variant": "Large",
   "status": "current",
@@ -1870,7 +1870,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Spice",
   "variant": "Medium",
   "status": "current",
@@ -1880,7 +1880,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Spice",
   "variant": "Small",
   "status": "current",
@@ -1890,7 +1890,7 @@
   "note": "In the maker Whitewater menu (site footer says 2022; retailers show some sizes out of stock, so stock not verified)."
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Vaya",
   "variant": null,
   "status": "discontinued",
@@ -2070,7 +2070,7 @@
   "note": "Maker site shows no model list; retailer first page lacks Safari/Traveller (inconclusive)"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix",
   "variant": null,
   "status": "discontinued",
@@ -2080,7 +2080,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix 2.0",
   "variant": "Large",
   "status": "discontinued",
@@ -2090,7 +2090,7 @@
   "note": "Weaker evidence: retailer lists it as closeout; superseded by Antix 3.0."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix 2.0",
   "variant": "Medium",
   "status": "discontinued",
@@ -2100,7 +2100,7 @@
   "note": "Weaker evidence: retailer lists it as closeout; superseded by Antix 3.0."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix 2.0",
   "variant": "Small",
   "status": "discontinued",
@@ -2110,7 +2110,7 @@
   "note": "Weaker evidence: retailer lists it as closeout; superseded by Antix 3.0."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix 3.0",
   "variant": "Large",
   "status": "current",
@@ -2120,7 +2120,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix 3.0",
   "variant": "Medium",
   "status": "current",
@@ -2130,7 +2130,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix 3.0",
   "variant": "Small",
   "status": "current",
@@ -2140,7 +2140,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Clutch",
   "variant": "M|L",
   "status": "current",
@@ -2150,7 +2150,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Flow",
   "variant": "Large",
   "status": "current",
@@ -2160,7 +2160,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Flow",
   "variant": "Medium",
   "status": "current",
@@ -2170,7 +2170,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Flow",
   "variant": "Small",
   "status": "current",
@@ -2180,7 +2180,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Gnarvana",
   "variant": "Large",
   "status": "current",
@@ -2190,7 +2190,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA). Only the Small Gnarvana was seen."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Gnarvana",
   "variant": "Medium",
   "status": "current",
@@ -2200,7 +2200,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA). Only the Small Gnarvana was seen."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Gnarvana",
   "variant": "Small",
   "status": "current",
@@ -2210,7 +2210,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA). Only the Small Gnarvana was seen."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Hero",
   "variant": null,
   "status": "unknown",
@@ -2220,7 +2220,7 @@
   "note": "Maker site returned 429 and no other source found."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Karma",
   "variant": "Large",
   "status": "unknown",
@@ -2230,7 +2230,7 @@
   "note": "Maker site returned 429 and no other source found."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Karma",
   "variant": "Medium",
   "status": "unknown",
@@ -2240,7 +2240,7 @@
   "note": "Maker site returned 429 and no other source found."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Karma Unlimited",
   "variant": null,
   "status": "unknown",
@@ -2250,7 +2250,7 @@
   "note": "Maker site returned 429 and no other source found."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Nirvana",
   "variant": "9.0",
   "status": "current",
@@ -2260,7 +2260,7 @@
   "note": "Maker site blocked; weaker evidence: listed in Paddling Magazine Best Jackson Kayaks For 2026 (search snippet)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2011)",
   "variant": "Large",
   "status": "discontinued",
@@ -2270,7 +2270,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2011)",
   "variant": "Medium",
   "status": "discontinued",
@@ -2280,7 +2280,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2011)",
   "variant": "Small",
   "status": "discontinued",
@@ -2290,7 +2290,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2014)",
   "variant": "Large",
   "status": "discontinued",
@@ -2300,7 +2300,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2014)",
   "variant": "Medium",
   "status": "discontinued",
@@ -2310,7 +2310,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2014)",
   "variant": "Small",
   "status": "discontinued",
@@ -2320,7 +2320,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2016)",
   "variant": "Large",
   "status": "discontinued",
@@ -2330,7 +2330,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2016)",
   "variant": "Medium",
   "status": "discontinued",
@@ -2340,7 +2340,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2016)",
   "variant": "Small",
   "status": "discontinued",
@@ -2350,7 +2350,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar 4.0",
   "variant": "Large",
   "status": "discontinued",
@@ -2360,7 +2360,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar 4.0",
   "variant": "Medium",
   "status": "discontinued",
@@ -2370,7 +2370,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar 4.0",
   "variant": "Small",
   "status": "discontinued",
@@ -2380,7 +2380,7 @@
   "note": "Weaker evidence: superseded by a later generation (Antix 3.0 / Rockstar V) that retailers list for 2026; maker lineup unreadable (429)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar V",
   "variant": "Large",
   "status": "current",
@@ -2390,7 +2390,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar V",
   "variant": "Medium",
   "status": "current",
@@ -2400,7 +2400,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar V",
   "variant": "Small",
   "status": "current",
@@ -2410,7 +2410,7 @@
   "note": "Maker site returned 429 and the lineup page could not be read; weaker evidence: retailers list the 2026 model year (Alder Creek, Paddle VA)."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Super Hero",
   "variant": null,
   "status": "unknown",
@@ -2420,7 +2420,7 @@
   "note": "Maker site returned 429 and no other source found."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Villain",
   "variant": "Medium/Large",
   "status": "unknown",
@@ -2430,7 +2430,7 @@
   "note": "Maker site returned 429 and no other source found."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Villain",
   "variant": "Small",
   "status": "unknown",
@@ -2440,7 +2440,7 @@
   "note": "Maker site returned 429 and no other source found."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Zen 3.0",
   "variant": null,
   "status": "discontinued",
@@ -2690,7 +2690,7 @@
   "note": "listed on maker current whitewater lineup"
  },
  {
-  "brand": "Lendal (Celtic Paddles)",
+  "brand": "Lendal",
   "model": "Power",
   "variant": "whitewater blade",
   "status": "unknown",
@@ -2700,7 +2700,7 @@
   "note": "maker (now Celtic) page lists no whitewater blade ranges by name; cannot tell"
  },
  {
-  "brand": "Lendal (Celtic Paddles)",
+  "brand": "Lendal",
   "model": "White water emergency paddle",
   "variant": null,
   "status": "current",
@@ -2710,7 +2710,7 @@
   "note": "listed as White water emergency paddle in Celtic paddle navigation; no stock status"
  },
  {
-  "brand": "Lendal (Celtic Paddles)",
+  "brand": "Lendal",
   "model": "XTI",
   "variant": "whitewater blade",
   "status": "unknown",
@@ -5550,7 +5550,7 @@
   "note": "not in maker paddles collection (archive snapshot 2025-08-14); live site rate-limited"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Ace of Spades",
   "variant": null,
   "status": "discontinued",
@@ -5560,7 +5560,7 @@
   "note": "Not among the 12 models on the current lineup"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Barracuda",
   "variant": null,
   "status": "current",
@@ -5570,7 +5570,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Black Jack",
   "variant": "2.0",
   "status": "current",
@@ -5580,7 +5580,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Black Jack",
   "variant": "original",
   "status": "current",
@@ -5590,7 +5590,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Bliss",
   "variant": null,
   "status": "current",
@@ -5600,7 +5600,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Cobra",
   "variant": "L",
   "status": "current",
@@ -5610,7 +5610,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Cobra",
   "variant": "S",
   "status": "current",
@@ -5620,7 +5620,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Cobra",
   "variant": "XS",
   "status": "current",
@@ -5630,7 +5630,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Full House",
   "variant": null,
   "status": "current",
@@ -5640,7 +5640,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Joker",
   "variant": null,
   "status": "current",
@@ -5650,7 +5650,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Queen of Hearts",
   "variant": null,
   "status": "current",
@@ -5660,7 +5660,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Royal Flush",
   "variant": null,
   "status": "current",
@@ -5670,7 +5670,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Shakti",
   "variant": null,
   "status": "current",
@@ -5680,7 +5680,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Slick",
   "variant": null,
   "status": "current",
@@ -5690,7 +5690,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Spicy",
   "variant": null,
   "status": "current",
@@ -5700,7 +5700,7 @@
   "note": "Listed on current lineup (Spicy = Spicy Joker, Cobra = cobra-2)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Starfire",
   "variant": null,
   "status": "current",
@@ -5830,7 +5830,7 @@
   "note": "Freestyle boat not in maker shop K1 slalom listing; no source says discontinued"
  },
  {
-  "brand": "VE Paddles",
+  "brand": "VE",
   "model": "Aircore Creeker",
   "variant": "carbon",
   "status": "current",
@@ -5840,7 +5840,7 @@
   "note": "retailer lists it, in stock; weak (retailer only, maker site not checked)"
  },
  {
-  "brand": "VE Paddles",
+  "brand": "VE",
   "model": "Aircore Pro",
   "variant": "carbon",
   "status": "current",
@@ -5850,7 +5850,7 @@
   "note": "retailer lists it, pre-order, not discontinued; weak (retailer only, maker site not checked)"
  },
  {
-  "brand": "VE Paddles",
+  "brand": "VE",
   "model": "Flyte",
   "variant": "carbon",
   "status": "current",
@@ -5860,7 +5860,7 @@
   "note": "retailer lists it, pre-order, not discontinued; weak (retailer only, maker site not checked)"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Billy Goat",
   "variant": null,
   "status": "discontinued",
@@ -5870,7 +5870,7 @@
   "note": "Not in current Waka kayak lineup (Tuna was originally Bliss-Stick mold)"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Gangsta",
   "variant": null,
   "status": "discontinued",
@@ -5880,7 +5880,7 @@
   "note": "Not in current Waka kayak lineup (Tuna was originally Bliss-Stick mold)"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Goat",
   "variant": null,
   "status": "current",
@@ -5890,7 +5890,7 @@
   "note": "Listed on current lineup"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Manu",
   "variant": null,
   "status": "current",
@@ -5900,7 +5900,7 @@
   "note": "Listed on current lineup"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "OG",
   "variant": null,
   "status": "current",
@@ -5910,7 +5910,7 @@
   "note": "Listed on current lineup"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Puffy Goat",
   "variant": null,
   "status": "current",
@@ -5920,7 +5920,7 @@
   "note": "Listed on current lineup"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Puffy Steeze",
   "variant": null,
   "status": "current",
@@ -5930,7 +5930,7 @@
   "note": "Listed on current lineup"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Skuxx",
   "variant": null,
   "status": "current",
@@ -5940,7 +5940,7 @@
   "note": "Listed on current lineup"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Skuxx",
   "variant": "Deluxe",
   "status": "current",
@@ -5950,7 +5950,7 @@
   "note": "Listed on current lineup"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Steeze",
   "variant": null,
   "status": "current",
@@ -5960,7 +5960,7 @@
   "note": "Listed on current lineup"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Stoke",
   "variant": null,
   "status": "current",
@@ -5970,7 +5970,7 @@
   "note": "Listed on current lineup"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Stout",
   "variant": null,
   "status": "current",
@@ -5980,7 +5980,7 @@
   "note": "Listed on current lineup"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Tuna",
   "variant": "1",
   "status": "discontinued",
@@ -5990,7 +5990,7 @@
   "note": "Not in current Waka kayak lineup (Tuna was originally Bliss-Stick mold)"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Tuna",
   "variant": "2.0",
   "status": "discontinued",
@@ -6000,7 +6000,7 @@
   "note": "Not in current Waka kayak lineup (Tuna was originally Bliss-Stick mold)"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Tutea",
   "variant": null,
   "status": "current",
@@ -6750,7 +6750,7 @@
   "note": "Not in maker product list (now ZET kayaks and Samba)"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Chili",
   "variant": null,
   "status": "current",
@@ -6760,7 +6760,7 @@
   "note": "Weak: retailer lists it in stock, no discontinued label; maker site not readable (SSL error)"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Cross",
   "variant": null,
   "status": "current",
@@ -6770,7 +6770,7 @@
   "note": "Weak: retailer lists it in stock, no discontinued label; maker site not readable (SSL error)"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Director",
   "variant": null,
   "status": "current",
@@ -6780,7 +6780,7 @@
   "note": "Weak: retailer lists it in stock, no discontinued label; maker site not readable (SSL error)"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Five",
   "variant": null,
   "status": "current",
@@ -6790,7 +6790,7 @@
   "note": "Weak: retailer lists it in stock, no discontinued label; maker site not readable (SSL error)"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Ninja",
   "variant": null,
   "status": "current",
@@ -6800,7 +6800,7 @@
   "note": "Weak: retailer lists it in stock, no discontinued label; maker site not readable (SSL error)"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Ninja 2",
   "variant": null,
   "status": "current",
@@ -6810,7 +6810,7 @@
   "note": "Weak: retailer lists it in stock, no discontinued label; maker site not readable (SSL error)"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Raptor",
   "variant": null,
   "status": "current",
@@ -6820,7 +6820,7 @@
   "note": "Weak: retailer lists it in stock, no discontinued label; maker site not readable (SSL error)"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Sago",
   "variant": null,
   "status": "unknown",
@@ -6830,7 +6830,7 @@
   "note": "Not in retailer list; maker site not readable (SSL error)"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Sensei",
   "variant": null,
   "status": "current",
@@ -6840,7 +6840,7 @@
   "note": "Weak: retailer lists it in stock, no discontinued label; maker site not readable (SSL error)"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Toro",
   "variant": null,
   "status": "current",
@@ -6850,7 +6850,7 @@
   "note": "Weak: retailer lists it in stock, no discontinued label; maker site not readable (SSL error)"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Veloc",
   "variant": null,
   "status": "current",
