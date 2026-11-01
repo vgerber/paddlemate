@@ -2712,7 +2712,8 @@ export interface components {
             created_at: string;
             created_by: string;
             created_by_username?: string | null;
-            discipline?: components["schemas"]["MaterialDiscipline"] | null;
+            /** @description The groups the entry is filed under, the primary one first. */
+            disciplines: components["schemas"]["MaterialDiscipline"][];
             /** @description Feather angles offered, in degrees. */
             feather_deg?: number[] | null;
             /** Format: double */
@@ -2812,6 +2813,7 @@ export interface components {
             brand?: string | null;
             category?: components["schemas"]["MaterialCategory"] | null;
             construction?: components["schemas"]["MaterialConstruction"] | null;
+            /** @description Entries filed under this group, among others or as the only one. */
             discipline?: components["schemas"]["MaterialDiscipline"] | null;
             /**
              * Format: double
@@ -2881,7 +2883,8 @@ export interface components {
             brand: string;
             category: components["schemas"]["MaterialCategory"];
             construction?: components["schemas"]["MaterialConstruction"] | null;
-            discipline?: components["schemas"]["MaterialDiscipline"] | null;
+            /** @description The groups of the model, the primary one first. */
+            disciplines: components["schemas"]["MaterialDiscipline"][];
             model: string;
             /** @description The sizes that match the filters, XS to XL and then by number. */
             sizes: components["schemas"]["ModelSize"][];
@@ -2931,8 +2934,9 @@ export interface components {
             models: number;
         };
         /**
-         * @description A category of the browse tree. Entries without a discipline count toward
-         *      the category but sit under no discipline.
+         * @description A category of the browse tree. A model filed under several groups counts
+         *      under each of them, so the group counts can add up to more than the
+         *      category's own, which counts every model once.
          */
         MaterialTreeCategory: {
             category: components["schemas"]["MaterialCategory"];
@@ -3450,7 +3454,12 @@ export interface components {
             /** @default [] */
             colors?: string[];
             construction?: components["schemas"]["MaterialConstruction"] | null;
-            discipline?: components["schemas"]["MaterialDiscipline"] | null;
+            /**
+             * @description One to three groups (`MAX_DISCIPLINES`), the primary one first, each
+             *      valid for the category.
+             * @default []
+             */
+            disciplines?: components["schemas"]["MaterialDiscipline"][];
             feather_deg?: number[] | null;
             /** Format: double */
             height_cm?: number | null;
@@ -4956,11 +4965,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-11-01T12:49:14.028408107Z",
-                     *         "expires_at": "2027-01-30T12:49:14.028415677Z",
+                     *         "created_at": "2026-11-01T14:31:53.308518778Z",
+                     *         "expires_at": "2027-01-30T14:31:53.308521048Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-11-01T12:49:14.028467737Z",
+                     *         "last_used_at": "2026-11-01T14:31:53.308534478Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4991,8 +5000,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-11-01T12:49:14.029022717Z",
-                     *       "expires_at": "2027-01-30T12:49:14.029023457Z",
+                     *       "created_at": "2026-11-01T14:31:53.308664868Z",
+                     *       "expires_at": "2027-01-30T14:31:53.308665318Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -5663,6 +5672,7 @@ export interface operations {
                 brand?: string | null;
                 category?: components["schemas"]["MaterialCategory"] | null;
                 construction?: components["schemas"]["MaterialConstruction"] | null;
+                /** @description Entries filed under this group, among others or as the only one. */
                 discipline?: components["schemas"]["MaterialDiscipline"] | null;
                 /**
                  * @description Body weight in kg - keeps the boats whose paddler range covers it. An
@@ -5812,6 +5822,7 @@ export interface operations {
                 brand?: string | null;
                 category?: components["schemas"]["MaterialCategory"] | null;
                 construction?: components["schemas"]["MaterialConstruction"] | null;
+                /** @description Entries filed under this group, among others or as the only one. */
                 discipline?: components["schemas"]["MaterialDiscipline"] | null;
                 /**
                  * @description Body weight in kg - keeps the boats whose paddler range covers it. An
@@ -5861,6 +5872,7 @@ export interface operations {
                 brand?: string | null;
                 category?: components["schemas"]["MaterialCategory"] | null;
                 construction?: components["schemas"]["MaterialConstruction"] | null;
+                /** @description Entries filed under this group, among others or as the only one. */
                 discipline?: components["schemas"]["MaterialDiscipline"] | null;
                 /**
                  * @description Body weight in kg - keeps the boats whose paddler range covers it. An

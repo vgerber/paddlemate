@@ -42,7 +42,7 @@ function NewMaterialPage() {
       values={values}
       onChange={setValues}
       title="New entry"
-      subtitle="Brand and model are enough to start"
+      subtitle="Brand, model and a group are enough to start"
       saving={create.isPending}
       error={create.error}
       onCancel={goBack}

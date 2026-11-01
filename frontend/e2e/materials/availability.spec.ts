@@ -3,6 +3,7 @@ import {
   expectNoHorizontalOverflow,
   expectTouchTargets,
 } from "../support/fixture";
+import { pickGroups } from "../support/materialForm";
 import { API } from "../support/signIn";
 
 // Whether a model is still made: the label on discontinued rows, the fact and
@@ -154,6 +155,7 @@ test.describe("availability", () => {
     await page.goto("/materials/new");
     await page.getByLabel("Brand").fill("Specprobe");
     await page.getByLabel("Model").fill("Gone");
+    await pickGroups(page, "Creek");
     await page.getByLabel("Last year").fill("2008");
     await page.getByLabel("Availability", { exact: true }).click();
     // The menu opens on the current choice (unknown); one step up is

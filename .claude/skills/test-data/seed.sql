@@ -930,12 +930,12 @@ ON CONFLICT DO NOTHING;
 -- and models are invented like the rest of the fixture; the numbers are
 -- plausible so a comparison reads like a real one. The three Cascade sizes
 -- are the interesting case - same model, one column each.
-INSERT INTO materials (id, category, brand, model, variant, discipline, construction,
+INSERT INTO materials (id, category, brand, model, variant, disciplines, construction,
                        description, year_from, year_to, length_cm, width_cm, height_cm,
                        volume_l, weight_kg, cockpit_length_cm, cockpit_width_cm,
                        paddler_weight_min_kg, paddler_weight_max_kg, product_url, created_by)
 SELECT v.id, v.category::material_category, v.brand, v.model, v.variant,
-       v.discipline::material_discipline, v.construction::material_construction,
+       ARRAY[v.discipline::material_discipline], v.construction::material_construction,
        v.description, v.year_from, v.year_to, v.length_cm, v.width_cm, v.height_cm,
        v.volume_l, v.weight_kg, v.cockpit_length_cm, v.cockpit_width_cm,
        v.paddler_weight_min_kg, v.paddler_weight_max_kg, v.product_url, u.id
@@ -976,18 +976,20 @@ FROM (VALUES
        paddler_weight_max_kg, product_url)
 CROSS JOIN (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
 
--- The Cascade's S, M and L are sizes of one model, not editions.
-UPDATE materials SET size = variant, variant = NULL WHERE id BETWEEN 9851 AND 9853;
+-- The Cascade's S, M and L are sizes of one model, not editions. It is filed
+-- under two groups, the first one primary.
+UPDATE materials SET size = variant, variant = NULL,
+    disciplines = '{creek,river_runner}' WHERE id BETWEEN 9851 AND 9853;
 
 -- Catalogue-style entries: colours, an approximate year, sources, a paddle
 -- and mirrored photos. Photocraft Lens has a real photo - copy
 -- .claude/skills/test-data/media/photocraft-lens*.jpg into the API's
 -- MEDIA_DIR. Vanishco's photos have no file on disk: they exist to be taken
 -- down (the takedown specs put the rows back).
-INSERT INTO materials (id, category, brand, model, variant, discipline, construction,
+INSERT INTO materials (id, category, brand, model, variant, disciplines, construction,
                        description, notes, colors, year_from, year_approximate,
                        length_cm, width_cm, volume_l, weight_kg, sources, created_by)
-SELECT 9861, 'kayak', 'Photocraft', 'Lens', NULL, 'crossover', 'plastic',
+SELECT 9861, 'kayak', 'Photocraft', 'Lens', NULL, '{crossover}', 'plastic',
        'Fixture boat with a photo, colourways and a weak year.',
        'Year from an archive capture.', ARRAY['Lava Red', 'Glacier Blue'], 2021, true,
        274.0, 66.0, 310.0, 21.5,
@@ -995,12 +997,12 @@ SELECT 9861, 'kayak', 'Photocraft', 'Lens', NULL, 'crossover', 'plastic',
        id
 FROM (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
 
-INSERT INTO materials (id, category, brand, model, variant, discipline,
+INSERT INTO materials (id, category, brand, model, variant, disciplines,
                        description, notes, colors, year_from, blade_area_cm2,
                        blade_length_cm, blade_width_cm, length_min_cm, length_max_cm,
                        lengths_cm, pieces, shaft, shaft_material, blade_material,
                        feather_deg, shaft_diameter, weight_kg, sources, created_by)
-SELECT 9862, 'paddle', 'Photocraft', 'Blade', 'Bent', 'whitewater',
+SELECT 9862, 'paddle', 'Photocraft', 'Blade', 'Bent', '{whitewater}',
        'Fixture paddle with every spec stated.',
        'Lengths are ranges.', ARRAY['Black'], 2023, 645.0,
        47.5, 19.5, 191.0, 205.0,
@@ -1010,8 +1012,8 @@ SELECT 9862, 'paddle', 'Photocraft', 'Blade', 'Bent', 'whitewater',
        id
 FROM (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
 
-INSERT INTO materials (id, category, brand, model, discipline, construction, length_cm, created_by)
-SELECT 9863, 'kayak', 'Vanishco', 'Ghost', 'creek', 'plastic', 260.0, id
+INSERT INTO materials (id, category, brand, model, disciplines, construction, length_cm, created_by)
+SELECT 9863, 'kayak', 'Vanishco', 'Ghost', '{creek}', 'plastic', 260.0, id
 FROM (SELECT id FROM users ORDER BY created_at LIMIT 1) u;
 
 INSERT INTO material_images (id, material_id, source_url, host, page_url, credit, file, status, fetched_at)

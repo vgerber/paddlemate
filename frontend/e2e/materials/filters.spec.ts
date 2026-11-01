@@ -50,7 +50,7 @@ test.describe("wiki filters", () => {
       "Lettmann The Dude 75",
       "Prijon Drip",
       "Pyranha Storm",
-      "Waka Kayaks Manu",
+      "Waka Manu",
     ];
     await expect(rows(page).nth(4)).toBeVisible();
     for (const [i, name] of expected.entries()) {

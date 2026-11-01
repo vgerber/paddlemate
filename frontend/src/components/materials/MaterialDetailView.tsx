@@ -30,7 +30,7 @@ import {
 } from "@/lib/materials/facts";
 import {
   CATEGORY_LABELS,
-  disciplineLabel,
+  disciplinesLabel,
   formatSpec,
   MATERIAL_SPECS,
   SPEC_GROUP_LABELS,
@@ -145,10 +145,10 @@ export default function MaterialDetailView({
   const facts: { label: string; value: ReactNode; caption?: ReactNode }[] = [
     { label: "Category", value: CATEGORY_LABELS[material.category] },
   ];
-  if (material.discipline) {
+  if (material.disciplines.length > 0) {
     facts.push({
-      label: "Discipline",
-      value: disciplineLabel(material.discipline, material.category),
+      label: material.disciplines.length > 1 ? "Groups" : "Group",
+      value: disciplinesLabel(material.disciplines, material.category),
     });
   }
   if (material.construction) {

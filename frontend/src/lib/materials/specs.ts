@@ -10,6 +10,9 @@ import { formatQuantity, type Quantity, type Units } from "@/lib/prefs/units";
 import { humanize, sentenceCase } from "@/lib/text/format";
 
 /** Input bounds the server enforces too; the form stops typing at them. */
+/** Most groups one entry can be filed under (the API refuses more). */
+export const MAX_DISCIPLINES = 3;
+
 export const MATERIAL_LIMITS = {
   name: 80,
   description: 4000,
@@ -187,6 +190,14 @@ export function disciplineLabel(
   const label =
     category === "paddle" ? PADDLE_CLASS_LABELS[discipline] : undefined;
   return label ?? sentenceCase(humanize(discipline));
+}
+
+/** The groups of an entry in one line, primary first: "Creek · River runner". */
+export function disciplinesLabel(
+  disciplines: readonly MaterialDiscipline[],
+  category: MaterialCategory | undefined,
+): string {
+  return disciplines.map((d) => disciplineLabel(d, category)).join(" · ");
 }
 
 export const CONSTRUCTIONS: MaterialConstruction[] = [

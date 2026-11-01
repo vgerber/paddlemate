@@ -20,6 +20,7 @@ function material(fields: Partial<Material> = {}): Material {
   return {
     id: 1,
     category: "kayak",
+    disciplines: ["creek"],
     brand: "Testflow",
     colors: [],
     siblings: [],
@@ -173,6 +174,7 @@ describe("sourceLinks", () => {
 
 const SCORCH: MaterialModel = {
   category: "kayak",
+  disciplines: ["creek"],
   brand: "Pyranha",
   model: "Scorch",
   year_from: 2021,
@@ -248,9 +250,9 @@ describe("materialFieldLabel and materialFieldValue", () => {
   });
 
   test("enums, flags and empty values read as words", () => {
-    expect(materialFieldValue("discipline", "river_runner", METRIC)).toBe(
-      "River runner",
-    );
+    expect(
+      materialFieldValue("disciplines", ["river_runner", "creek"], METRIC),
+    ).toBe("River runner, Creek");
     expect(materialFieldValue("category", "paddle", METRIC)).toBe(
       CATEGORY_LABELS.paddle,
     );

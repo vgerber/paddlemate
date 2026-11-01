@@ -116,3 +116,16 @@ describe("the Still made filter", () => {
     expect(toMaterialFilters(search).availability).toBe("current");
   });
 });
+
+describe("an old brand link", () => {
+  test("a renamed brand lands on its new name", () => {
+    expect(parseMaterialSearch({ brand: "Spade Kayaks" }).brand).toBe("Spade");
+    expect(parseMaterialSearch({ brand: "jackson kayak" }).brand).toBe(
+      "Jackson",
+    );
+    expect(
+      parseMaterialSearch({ brand: "Lendal (Celtic Paddles)" }).brand,
+    ).toBe("Lendal");
+    expect(parseMaterialSearch({ brand: "Pyranha" }).brand).toBe("Pyranha");
+  });
+});

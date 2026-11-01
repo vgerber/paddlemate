@@ -1,6 +1,6 @@
 import type { Material, MaterialModel } from "@/lib/api";
 import { paddleLengthLabel, sinceLabel } from "@/lib/materials/facts";
-import { CATEGORY_LABELS, disciplineLabel } from "@/lib/materials/specs";
+import { CATEGORY_LABELS, disciplinesLabel } from "@/lib/materials/specs";
 import {
   bareQuantity,
   type Quantity,
@@ -120,11 +120,10 @@ const FIELDS: Field[] = [
     read: (m) => text(CATEGORY_LABELS[m.category]),
   },
   {
-    key: "discipline",
+    key: "disciplines",
     group: "kind",
-    label: "Discipline",
-    read: (m) =>
-      text(m.discipline && disciplineLabel(m.discipline, m.category)),
+    label: "Groups",
+    read: (m) => text(disciplinesLabel(m.disciplines, m.category)),
   },
   {
     key: "construction",

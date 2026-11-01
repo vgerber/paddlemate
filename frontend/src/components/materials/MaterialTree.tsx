@@ -14,6 +14,7 @@ import {
   toMaterialFilters,
 } from "@/lib/materials/search";
 import {
+  GROUP_COUNT_NOTE,
   pathOf,
   type TreePath,
   type TreeRow,
@@ -21,7 +22,7 @@ import {
   treeRows,
 } from "@/lib/materials/tree";
 import { focusRingSx } from "@/lib/theme/focusRing";
-import { sectionHeadingSx, theme } from "@/lib/theme/theme";
+import { labelSx, sectionHeadingSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
@@ -166,6 +167,14 @@ export default function MaterialTree({
           onToggle={setOpen}
           renderRow={(row) => <RowContent row={row} />}
         />
+        {rows.some((row) => row.kind === "discipline") && (
+          <Typography
+            data-testid="tree-group-note"
+            sx={{ ...labelSx, color: "text.secondary", px: 1, pt: 1 }}
+          >
+            {GROUP_COUNT_NOTE}
+          </Typography>
+        )}
       </QueryStates>
     </Box>
   );

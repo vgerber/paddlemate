@@ -9,6 +9,11 @@ import { type MaterialWikiSearch } from "./search";
 import { CATEGORIES, disciplineLabel } from "./specs";
 
 /** The level of the browse tree a node sits on. */
+/** Said wherever group counts show: a model is counted once in its category
+ * and once in each group it belongs to. */
+export const GROUP_COUNT_NOTE =
+  "A model in several groups is counted in each; its category counts it once.";
+
 export type TreeKind = "category" | "discipline" | "brand" | "model";
 
 /** The tree's own levels in a search: what a node selects. */

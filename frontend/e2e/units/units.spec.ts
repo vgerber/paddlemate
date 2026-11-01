@@ -6,6 +6,7 @@ import {
   expectTouchTargets,
   gotoSection,
 } from "../support/fixture";
+import { pickGroups } from "../support/materialForm";
 
 // Settings > Units: weight, distance and length, kept per device. The suite
 // signs in with metric stored (auth.setup.ts); the default tests clear it.
@@ -212,6 +213,7 @@ test.describe("entering imperial", () => {
     await page.goto("/materials/new");
     await page.getByLabel("Brand").fill("Unitprobe");
     await page.getByLabel("Model").fill("Beta");
+    await pickGroups(page, "Creek");
     await page.getByLabel(/^Length \(in\)/).fill("100");
     await page.getByLabel(/^Weight \(lb\)/).fill("50");
     await page.getByRole("button", { name: "Save entry" }).click();

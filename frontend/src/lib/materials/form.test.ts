@@ -1,12 +1,18 @@
 import { describe, expect, test } from "bun:test";
 import type { Material, MaterialBody } from "@/lib/api";
 import { IMPERIAL, METRIC } from "@/lib/prefs/units";
-import { materialFormToBody, materialToForm } from "./form";
+import {
+  canSaveMaterial,
+  emptyMaterialForm,
+  materialFormToBody,
+  materialToForm,
+} from "./form";
 
 function material(fields: Partial<Material> = {}): Material {
   return {
     id: 1,
     category: "kayak",
+    disciplines: ["creek"],
     brand: "Testflow",
     colors: [],
     siblings: [],
@@ -50,7 +56,7 @@ const FULL_PADDLE: Required<MaterialBody> = {
   model: "Aerial",
   variant: "Major",
   size: "M",
-  discipline: "river_runner",
+  disciplines: ["river_runner", "creek"],
   construction: "composite",
   description: "A paddle.",
   product_url: "https://example.com/aerial",
@@ -136,5 +142,23 @@ describe("an edit that changes nothing", () => {
     const body = materialFormToBody(form, METRIC, stored);
     expect(body.colors).toEqual(["Green", "Red"]);
     expect(body.lengths_cm).toEqual([190, 195]);
+  });
+});
+
+describe("the groups of an entry", () => {
+  test("they round-trip in order", () => {
+    const m = material({ disciplines: ["river_runner", "creek"] });
+    const form = materialToForm(m, METRIC);
+    expect(form.disciplines).toEqual(["river_runner", "creek"]);
+    expect(materialFormToBody(form, METRIC).disciplines).toEqual([
+      "river_runner",
+      "creek",
+    ]);
+  });
+
+  test("an entry cannot be saved without one", () => {
+    const form = { ...emptyMaterialForm(), brand: "Pyranha", model: "Jed" };
+    expect(canSaveMaterial(form)).toBe(false);
+    expect(canSaveMaterial({ ...form, disciplines: ["creek"] })).toBe(true);
   });
 });

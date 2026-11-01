@@ -16,6 +16,7 @@ function material(fields: Partial<Material> = {}): Material {
   return {
     id: 1,
     category: "kayak",
+    disciplines: ["creek"],
     brand: "Testflow",
     colors: [],
     siblings: [],
@@ -38,13 +39,13 @@ describe("buildComparison", () => {
     id: 1,
     length_cm: 259,
     width_cm: 63,
-    discipline: "creek",
+    disciplines: ["creek"],
   });
   const b = material({
     id: 2,
     length_cm: 279,
     width_cm: 63,
-    discipline: "creek",
+    disciplines: ["creek"],
   });
 
   test("equal values move to the alike strip", () => {
@@ -52,7 +53,7 @@ describe("buildComparison", () => {
     expect(c.alike).toContain("Creek");
     expect(c.alike).toContain("Width 63 cm");
     expect(row(c, "width")).toBeUndefined();
-    expect(row(c, "discipline")).toBeUndefined();
+    expect(row(c, "disciplines")).toBeUndefined();
     expect(row(c, "length")?.cells).toEqual(["259", "279"]);
   });
 
@@ -182,6 +183,7 @@ describe("barRatios", () => {
 
 const SCORCH: MaterialModel = {
   category: "kayak",
+  disciplines: ["creek"],
   brand: "Pyranha",
   model: "Scorch",
   year_from: 2021,

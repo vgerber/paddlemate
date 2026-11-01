@@ -3,7 +3,7 @@ import type { Units } from "@/lib/prefs/units";
 import { humanize, sentenceCase } from "@/lib/text/format";
 import { rowAvailabilityLabel } from "./availability";
 import { lengthsLabel, rangeLabel, sinceLabel } from "./facts";
-import { CATEGORY_LABELS, disciplineLabel } from "./specs";
+import { CATEGORY_LABELS, disciplinesLabel } from "./specs";
 
 /** Size tags shown on a card before the rest fold into "+n". */
 export const MAX_SIZE_TAGS = 4;
@@ -106,7 +106,7 @@ export function modelCardFacts(
 ): ModelCardFacts {
   const meta = [
     showCategory && CATEGORY_LABELS[model.category],
-    model.discipline && disciplineLabel(model.discipline, model.category),
+    disciplinesLabel(model.disciplines, model.category),
     model.construction && sentenceCase(humanize(model.construction)),
     sinceLabel(model),
   ]

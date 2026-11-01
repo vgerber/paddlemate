@@ -29,7 +29,7 @@ const FIELD_LABELS: Record<string, string> = {
   variant: "Variant",
   size: "Size",
   category: "Category",
-  discipline: "Discipline",
+  disciplines: "Groups",
   construction: "Construction",
   year_from: "First year",
   year_to: "Last year",
@@ -77,7 +77,9 @@ export function materialFieldValue(
       .map((v) =>
         typeof v === "number" && quantity
           ? formatQuantity(quantity, v, units)
-          : String(v),
+          : key === "disciplines"
+            ? sentenceCase(humanize(String(v)))
+            : String(v),
       )
       .join(", ");
   }
@@ -92,7 +94,7 @@ export function materialFieldValue(
     }
     return key === "category" && value in CATEGORY_LABELS
       ? CATEGORY_LABELS[value as MaterialCategory]
-      : ["discipline", "construction", "shaft", "shaft_material"].includes(key)
+      : ["construction", "shaft", "shaft_material"].includes(key)
         ? sentenceCase(humanize(value))
         : value;
   }

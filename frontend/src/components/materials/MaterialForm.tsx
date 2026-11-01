@@ -1,6 +1,10 @@
 import Alert from "@mui/material/Alert";
+import Autocomplete, {
+  type AutocompleteRenderValueGetItemProps,
+} from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
+import Chip from "@mui/material/Chip";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
@@ -30,6 +34,7 @@ import {
   disciplinesFor,
   MATERIAL_LIMITS,
   MATERIAL_SPECS,
+  MAX_DISCIPLINES,
   PADDLE_SPECS,
   type PaddleKey,
   SHAFT_MATERIALS,
@@ -198,12 +203,18 @@ export default function MaterialForm({
               select
               label="Category"
               value={values.category}
-              onChange={(event) =>
+              onChange={(event) => {
+                const category = event.target
+                  .value as MaterialFormValues["category"];
+                // A group of the old category may not exist in the new one.
+                const fits = disciplinesFor(category);
                 set({
-                  category: event.target
-                    .value as MaterialFormValues["category"],
-                })
-              }
+                  category,
+                  disciplines: values.disciplines.filter((d) =>
+                    fits.includes(d),
+                  ),
+                });
+              }}
             >
               {CATEGORIES.map((category) => (
                 <MenuItem key={category} value={category}>
@@ -225,25 +236,41 @@ export default function MaterialForm({
             label="Type"
             hint="What the boat is built for, and when it was sold."
           >
+            <Autocomplete
+              multiple
+              disableClearable
+              options={disciplinesFor(values.category)}
+              value={values.disciplines}
+              getOptionLabel={(d) => disciplineLabel(d, values.category)}
+              getOptionDisabled={(d) =>
+                values.disciplines.length >= MAX_DISCIPLINES &&
+                !values.disciplines.includes(d)
+              }
+              // Over the form's own layer (1350), or the list opens under it.
+              slotProps={{ popper: { sx: { zIndex: 1400 } } }}
+              onChange={(_, disciplines) => set({ disciplines })}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Groups"
+                  required={values.disciplines.length === 0}
+                  helperText={`First one is the main group. Up to ${MAX_DISCIPLINES}.`}
+                />
+              )}
+              renderValue={(
+                val: MaterialFormValues["disciplines"],
+                getItemProps: AutocompleteRenderValueGetItemProps<true>,
+              ) =>
+                val.map((d, index) => (
+                  <Chip
+                    {...getItemProps({ index })}
+                    key={d}
+                    label={disciplineLabel(d, values.category)}
+                  />
+                ))
+              }
+            />
             <Box sx={fieldGridSx}>
-              <TextField
-                select
-                label="Discipline"
-                value={values.discipline}
-                onChange={(event) =>
-                  set({
-                    discipline: event.target
-                      .value as MaterialFormValues["discipline"],
-                  })
-                }
-              >
-                <MenuItem value="">Unstated</MenuItem>
-                {disciplinesFor(values.category).map((discipline) => (
-                  <MenuItem key={discipline} value={discipline}>
-                    {disciplineLabel(discipline, values.category)}
-                  </MenuItem>
-                ))}
-              </TextField>
               <TextField
                 select
                 label="Construction"

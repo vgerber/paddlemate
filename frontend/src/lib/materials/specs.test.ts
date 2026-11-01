@@ -3,6 +3,7 @@ import { IMPERIAL, METRIC } from "@/lib/prefs/units";
 import {
   disciplineLabel,
   disciplinesFor,
+  disciplinesLabel,
   formatSpec,
   MATERIAL_SPECS,
 } from "./specs";
@@ -64,5 +65,15 @@ describe("disciplineLabel", () => {
     expect(disciplineLabel("whitewater", "paddle")).toBe("Whitewater");
     expect(disciplineLabel("river_runner", "kayak")).toBe("River runner");
     expect(disciplineLabel("polo", "paddle")).toBe("Polo");
+  });
+});
+
+describe("disciplinesLabel", () => {
+  test("joins the groups, primary first", () => {
+    expect(disciplinesLabel(["creek", "river_runner"], "kayak")).toBe(
+      "Creek · River runner",
+    );
+    expect(disciplinesLabel(["touring"], "paddle")).toBe("Touring and sea");
+    expect(disciplinesLabel([], "kayak")).toBe("");
   });
 });
