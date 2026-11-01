@@ -2,6 +2,7 @@
 
 use std::time::Duration;
 
+pub mod analytics;
 pub mod material_images;
 
 use crate::{config::Config, layers::limit::RateLimits, state::AppState};

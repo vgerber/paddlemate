@@ -35,7 +35,7 @@ fn app() -> Router {
         .layer(middleware::from_fn(metrics::tag_client))
         .layer(middleware::from_fn(fake_auth_method))
         .layer(middleware::from_fn_with_state(limits, limit_requests));
-    metrics::wrap(api, metrics::install(), None)
+    metrics::wrap(api, metrics::install(), None, None)
 }
 
 /// Stand-in for the sign-in layers: sets the auth method from a header.

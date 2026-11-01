@@ -588,6 +588,9 @@ in `playwright.config.ts`.
 | `SEARCH_WORD_SIMILARITY_THRESHOLD` | `0.5` | How close a misspelling must be to still match a name |
 | `VAPID_PRIVATE_KEY` | unset | Raw P-256 private key, base64url, for web push; the public key is derived from it. Unset (or `VAPID_SUBJECT` unset) turns push off, nothing else |
 | `DISABLE_MATERIAL_MIRROR` | `false` | `true` stops the job that mirrors catalogue product images into `MEDIA_DIR`; local dev and tests set it so nothing calls the makers' sites |
+| `ANALYTICS_URL` | unset | HTTP URL of a ClickHouse; set to record one anonymous event per API request (see doc/setup.md). Unset: no task, nothing sent |
+| `ANALYTICS_USER` / `ANALYTICS_PASSWORD` | unset | ClickHouse login for the insert (and the schema at start) |
+| `ANALYTICS_DATABASE` | `paddlemate` | ClickHouse database; letters, digits and underscores only |
 | `VAPID_SUBJECT` | unset | `mailto:` or `https:` contact that push services may reach about this server |
 
 ### Search

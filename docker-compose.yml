@@ -29,6 +29,23 @@ services:
       # a realm, and the *-client.json files are fragments, not realms.
       - ./keycloak/realm-local.json:/opt/keycloak/data/import/realm-local.json:ro
 
+  # Request analytics store (see doc/setup.md). Opt in with:
+  #   docker compose --profile analytics up -d clickhouse
+  # then start the API with ANALYTICS_URL=http://localhost:8123 and
+  # ANALYTICS_USER / ANALYTICS_PASSWORD set to the values below.
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.8
+    profiles: ["analytics"]
+    mem_limit: 1g
+    environment:
+      CLICKHOUSE_USER: paddlemate
+      CLICKHOUSE_PASSWORD: paddlemate
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "127.0.0.1:8123:8123"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+
   # api:
   #   build:
   #     context: ./api
@@ -50,3 +67,4 @@ services:
 
 volumes:
   db_data:
+  clickhouse_data:

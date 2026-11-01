@@ -203,13 +203,19 @@ impl RateLimits {
         }
     }
 
-    fn addr(&self, req: &Request<Body>) -> Caller {
+    /// The caller's address, with forwarded headers believed only from a
+    /// trusted proxy. Also keys the analytics caller hash.
+    pub fn client_ip(&self, req: &Request<Body>) -> IpAddr {
         let peer = req
             .extensions()
             .get::<ConnectInfo<SocketAddr>>()
             .map(|info| info.0.ip())
             .unwrap_or(IpAddr::from([0, 0, 0, 0]));
-        Caller::Addr(self.inner.proxies.client_ip(peer, req.headers()))
+        self.inner.proxies.client_ip(peer, req.headers())
+    }
+
+    fn addr(&self, req: &Request<Body>) -> Caller {
+        Caller::Addr(self.client_ip(req))
     }
 
     /// Reads that can make the server call Overpass or fill regions, or sum a
