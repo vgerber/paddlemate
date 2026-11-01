@@ -100,6 +100,66 @@ def host_of(url):
     return m.group(1).lower() if m else None
 
 
+# Where a photo really comes from, by the host of the page it was found on
+# (web.archive.org wrappers are looked through, "www." and ports dropped).
+# A maker page credits the brand of the entry (group owners count as the
+# maker: Confluence Outdoor for Dagger, Perception and Wave Sport); a shop
+# page credits the shop. Every host in the data must be listed here.
+MAKER_HOSTS = {
+    "aire.com", "atpaddles.com", "blissstick.com", "confluenceoutdoor.com",
+    "dragorossi.com", "doubledutch.eu", "en.prijon.com", "eskimo.de", "exokayak.com",
+    "fluidkayaks.com", "galasport.com", "jacksonkayak.com", "lendal.com", "lettmann.de",
+    "liquidlogickayaks.com", "neckykayaks.com", "paddles.braca-sport.com", "palm.equipment",
+    "perceptionkayaks.com", "prijon.com", "pyranha.com", "riotkayaks.com", "robson.cz",
+    "rtmkayaks.com", "select-paddles.com", "shop.vajdagroup.com", "spadekayaks.com",
+    "wakakayaks.com", "wavesport.com", "wernerpaddles.com", "kober-paddel.de",
+}
+SHOP_HOSTS = {
+    "kayak-shop.eu": "kayak-shop.eu",
+    "store.noc.com": "NOC",
+    "wildernesssupply.ca": "Wilderness Supply",
+    "kajakshop.sk": "kajakshop.sk",
+    "kayaksession.com": "Kayaksession",
+    "s2s-shop.com": "S2S",
+    "kayaksandpaddles.co.uk": "Kayaks and Paddles",
+    "outdoorplay.com": "Outdoor Play",
+    "paddling.com": "Paddling.com",
+    "trailheadpaddleshack.ca": "Trailhead Paddle Shack",
+    "nrs.com": "NRS",
+}
+ARCHIVE = re.compile(r"^https?://web\.archive\.org/web/[^/]*/(https?://.*)$")
+
+
+def page_host(page_url):
+    """The host of the page behind a link, through an archive wrapper.
+
+    >>> page_host("https://web.archive.org/web/2020/http://www.aire.com:80/x.asp")
+    'aire.com'
+    """
+    m = ARCHIVE.match(page_url or "")
+    m = re.match(r"https?://([^/?#]+)", m.group(1) if m else page_url or "")
+    return re.sub(r"^www\.|:\d+$", "", m.group(1).lower()) if m else None
+
+
+def photo_source(page_url, brand):
+    """(source_kind, credit) of a photo found on `page_url` for `brand`.
+
+    >>> photo_source("https://store.noc.com/products/werner-player", "Werner")
+    ('retailer', 'NOC')
+    >>> photo_source("https://www.nrs.com/x", "NRS")
+    ('maker', 'NRS')
+    >>> photo_source("https://www.confluenceoutdoor.com/dagger-x", "Dagger")
+    ('maker', 'Dagger')
+    """
+    host = page_host(page_url)
+    shop = SHOP_HOSTS.get(host)
+    if shop and shop.lower() != brand.lower():
+        return "retailer", shop
+    if shop or host in MAKER_HOSTS:
+        return "maker", brand
+    raise SystemExit(f"unknown photo source host {host!r} ({page_url}): add it to MAKER_HOSTS or SHOP_HOSTS")
+
+
 def num(v):
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
@@ -253,7 +313,9 @@ def clean_common(e, out, category):
         if (u.startswith("https://") and len(u) <= 1000 and re.match(r"https?://", p)
                 and len(p) <= 1000 and host_of(u) and u not in seen):
             seen.add(u)
-            images.append({"url": u, "page_url": p, **({"batch": im["batch"]} if im.get("batch") else {})})
+            kind, credit = photo_source(p, out["brand"])
+            images.append({"url": u, "page_url": p, "kind": kind, "credit": credit,
+                           **({"batch": im["batch"]} if im.get("batch") else {})})
     out["images"] = images
 
 
@@ -524,9 +586,9 @@ WHERE materials.created_by = 'system-catalogue'
   AND materials.updated_by IS NULL
   AND ({old}) IS DISTINCT FROM ({new});
 
-INSERT INTO material_images (material_id, source_url, host, page_url, credit)
+INSERT INTO material_images (material_id, source_url, host, page_url, credit, source_kind)
 SELECT m.id, i->>'url', lower(substring(i->>'url' from '^https://([^/?#:@]+)')),
-       i->>'page_url', s.brand
+       i->>'page_url', i->>'credit', i->>'kind'
 FROM seed_catalogue s
 CROSS JOIN LATERAL jsonb_array_elements(s.images) AS i
 JOIN materials m ON m.category = s.category
@@ -632,11 +694,45 @@ WHERE m.category = s.category
 """
 
 
-def render_photo_migration(batch):
+SWAP_SQL = """-- Playak photos come down: the rows stay as removed (never fetched again, file
+-- cleared). The files they held are no longer referenced, so the media
+-- sweeper (api/src/media.rs, on start and daily) deletes them.
+UPDATE material_images SET status = 'removed', file = NULL
+WHERE source_kind <> 'user' AND status <> 'removed'
+  AND (host ~ '(^|[.])playak[.]com$' OR source_url ~* '://([^/]*[.])?playak[.]com/'
+       OR page_url ~* '://([^/]*[.])?playak[.]com/');
+
+-- Every mirrored photo names its real source: the maker (the entry's brand)
+-- or the shop whose page it was found on.
+WITH sources(host, shop) AS (VALUES
+{sources}
+), found AS (
+    SELECT i.id, m.brand, s.shop FROM material_images i
+    JOIN materials m ON m.id = i.material_id
+    JOIN sources s ON s.host = lower(regexp_replace(COALESCE(
+        substring(i.page_url from '^https?://web[.]archive[.]org/web/[^/]*/https?://([^/?#]+)'),
+        substring(i.page_url from '^https?://([^/?#]+)')), '^www[.]|:[0-9]+$', '', 'g'))
+    WHERE i.source_kind <> 'user' AND i.status <> 'removed'
+), want AS (
+    SELECT id, CASE WHEN shop IS NOT NULL AND lower(shop) <> lower(brand)
+                    THEN 'retailer' ELSE 'maker' END AS kind,
+           CASE WHEN shop IS NOT NULL AND lower(shop) <> lower(brand)
+                    THEN shop ELSE brand END AS credit
+    FROM found
+)
+UPDATE material_images i SET credit = w.credit, source_kind = w.kind
+FROM want w
+WHERE i.id = w.id AND (i.credit, i.source_kind) IS DISTINCT FROM (w.credit, w.kind);
+
+"""
+
+
+def render_photo_migration(batch, swap=False):
     """Pending material_images rows for the photos tagged `batch` in the data.
 
     Every size row of a model gets the model's photos; a model that already has
-    any image is skipped, so a re-run inserts nothing.
+    a live mirrored photo is skipped, so a re-run inserts nothing. With `swap`
+    the migration first removes the Playak photos and fixes the credits.
     """
     items = []
     for r in build():
@@ -647,19 +743,22 @@ def render_photo_migration(batch):
     payload = json.dumps(items, ensure_ascii=False, separators=(",", ":"))
     if "$seed$" in payload:
         raise SystemExit("payload contains the dollar-quote tag")
-    return f"""-- Generated by scripts/materials/build_seed.py --photo-migration {batch}.
+    sources = ",\n".join(
+        f"    ({sql_text(h)}, {sql_text(SHOP_HOSTS.get(h))})" for h in sorted(MAKER_HOSTS | set(SHOP_HOSTS)))
+    prelude = SWAP_SQL.format(sources=sources) if swap else ""
+    return f"""-- Generated by scripts/materials/build_seed.py --photo-migration {batch}{" --swap" if swap else ""}.
 -- Queues product photo links for the mirror job. Every size of a model gets the
--- model's photos; a model that already has an image is skipped, so re-running
--- inserts nothing. The mirror allowlist is the set of hosts in this table, so
--- the new hosts join it with these rows.
+-- model's photos; a model that already has a live mirrored photo is skipped,
+-- so re-running inserts nothing. The mirror allowlist is the set of hosts in
+-- this table, so the new hosts join it with these rows.
 
-WITH seed AS (
+{prelude}WITH seed AS (
     SELECT * FROM jsonb_to_recordset($seed${payload}$seed$::jsonb) AS s(
         category material_category, brand text, model text, variant text, size text,
         images jsonb
     )
 ), target AS (
-    SELECT m.id AS material_id, s.brand, s.images
+    SELECT m.id AS material_id, s.images
     FROM seed s
     JOIN materials m ON m.category = s.category
         AND lower(btrim(m.brand)) = lower(btrim(s.brand))
@@ -670,15 +769,16 @@ WITH seed AS (
     WHERE NOT EXISTS (
         SELECT 1 FROM materials o
         JOIN material_images oi ON oi.material_id = o.id
+            AND oi.source_kind <> 'user' AND oi.status <> 'removed'
         WHERE o.category = m.category
           AND lower(btrim(o.brand)) = lower(btrim(m.brand))
           AND lower(btrim(o.model)) = lower(btrim(m.model))
           AND lower(btrim(COALESCE(o.variant, ''))) = lower(btrim(COALESCE(m.variant, '')))
     )
 )
-INSERT INTO material_images (material_id, source_url, host, page_url, credit)
+INSERT INTO material_images (material_id, source_url, host, page_url, credit, source_kind)
 SELECT t.material_id, i->>'url', lower(substring(i->>'url' from '^https://([^/?#:@]+)')),
-       i->>'page_url', t.brand
+       i->>'page_url', i->>'credit', i->>'kind'
 FROM target t
 CROSS JOIN LATERAL jsonb_array_elements(t.images) AS i
 ON CONFLICT (material_id, source_url) DO NOTHING;
@@ -700,11 +800,12 @@ def main():
             open(sys.argv[2], "w", encoding="utf-8").write(sql)
         return
     if sys.argv[1:2] == ["--photo-migration"]:
-        sql = render_photo_migration(sys.argv[2])
-        if len(sys.argv) < 4:
+        args = [a for a in sys.argv[2:] if a != "--swap"]
+        sql = render_photo_migration(args[0], swap="--swap" in sys.argv)
+        if len(args) < 2:
             sys.stdout.write(sql)
         else:
-            open(sys.argv[3], "w", encoding="utf-8").write(sql)
+            open(args[1], "w", encoding="utf-8").write(sql)
         return
     if sys.argv[1:2] == ["--size-migration"]:
         sys.stdout.write(render_size_migration()) if len(sys.argv) < 3 else open(
