@@ -9,7 +9,10 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import { useEffect, useRef, useState } from "react";
+import Breadcrumb, { type Crumb } from "@/components/Breadcrumb";
+import { HeaderCard } from "@/components/PageFrame";
 import PanelBottomBar, { RoundActionButton } from "@/components/PanelBottomBar";
+import PanelHeader from "@/components/PanelHeader";
 import FormSection from "@/components/waterway/FormSection";
 import ProposalNoteField from "@/components/waterway/ProposalNoteField";
 import { proposalNoteValue } from "@/components/waterway/proposalNote";
@@ -45,11 +48,9 @@ import {
 import { unitLabel, useUnits } from "@/lib/prefs/units";
 import { humanize, sentenceCase } from "@/lib/text/format";
 import { PANEL_HEIGHT, theme } from "@/lib/theme/theme";
+import { WIKI_WIDTH } from "./wikiLayout";
 
 const { tokens } = theme;
-
-/** Width of the form card on a desktop, px. */
-const FORM_WIDTH = 720;
 
 const SPEC_HINTS = {
   hull: "Outer dimensions, as the manufacturer states them.",
@@ -76,6 +77,7 @@ export default function MaterialForm({
   onSubmit,
   title,
   subtitle,
+  trail,
   saving,
   error,
   original,
@@ -86,6 +88,8 @@ export default function MaterialForm({
   onSubmit: (body: MaterialProposalBody) => void;
   title: string;
   subtitle: string;
+  /** The desktop trail above the header card. */
+  trail: Crumb[];
   saving: boolean;
   error: unknown;
   /** The entry being corrected: fields the reader leaves alone keep their
@@ -155,18 +159,29 @@ export default function MaterialForm({
   );
 
   return (
-    // From md the form is one card on the page's ground, its bottom bar the
-    // card's own foot; a phone gets the whole screen.
+    // From md the page is the wiki's column: trail, header card, then the
+    // form as one card whose bottom bar is its own foot; a phone gets the
+    // whole screen.
     <Box
       sx={{
         height: PANEL_HEIGHT,
         display: "flex",
         flexDirection: "column",
+        maxWidth: WIKI_WIDTH,
+        mx: "auto",
         px: { md: 2 },
         py: { md: 2 },
         boxSizing: "border-box",
       }}
     >
+      <Box sx={{ display: { xs: "none", md: "block" }, flexShrink: 0 }}>
+        <Breadcrumb crumbs={trail} />
+      </Box>
+      <Box sx={{ display: { xs: "none", md: "block" }, flexShrink: 0 }}>
+        <HeaderCard>
+          <PanelHeader title={title} subtitle={subtitle} onBack={onCancel} />
+        </HeaderCard>
+      </Box>
       <Box
         sx={{
           position: { xs: "fixed", md: "static" },
@@ -176,8 +191,6 @@ export default function MaterialForm({
           flex: 1,
           minHeight: 0,
           width: "100%",
-          maxWidth: { md: FORM_WIDTH },
-          mx: "auto",
           display: "flex",
           flexDirection: "column",
           bgcolor: { xs: "background.default", md: tokens.surface },
@@ -193,9 +206,13 @@ export default function MaterialForm({
             overflowY: "auto",
             px: { xs: `${tokens.phone.line}px`, md: 2 },
             py: 2,
-            display: "flex",
+            display: { xs: "flex", md: "block" },
             flexDirection: "column",
             gap: 2.5,
+            // From md the blocks flow in two balanced columns.
+            columnCount: { md: 2 },
+            columnGap: 4,
+            "& > *": { breakInside: "avoid", mb: { md: 2.5 } },
           }}
         >
           <FormSection label="Boat" hint="What it is and what it is called.">

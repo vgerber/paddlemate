@@ -235,7 +235,7 @@ test.describe("entering imperial", () => {
     // Editing in metric shows the stored numbers, and an untouched save keeps them.
     await probe.getByRole("button").first().click();
     await page.getByRole("button", { name: "Entry actions" }).click();
-    await page.getByRole("menuitem", { name: "Edit entry" }).click();
+    await page.getByRole("menuitem", { name: "Suggest a change" }).click();
     await expect(page.getByLabel(/^Length \(cm\)/)).toHaveValue("254");
     await expect(page.getByLabel(/^Weight \(kg\)/)).toHaveValue("22.68");
 

@@ -154,7 +154,7 @@ test.describe("catalogue detail", () => {
     await open(page, 9862);
     const before = await (await page.request.get(ENTRY)).json();
     await page.getByRole("button", { name: "Entry actions" }).click();
-    await page.getByRole("menuitem", { name: "Edit entry" }).click();
+    await page.getByRole("menuitem", { name: "Suggest a change" }).click();
     await expect(page.getByLabel("Colours")).toHaveValue("Black");
     await page.getByRole("button", { name: "Save entry" }).click();
     await expect(page.getByTestId("paddle-facts")).toBeVisible();
@@ -176,13 +176,19 @@ test.describe("photo takedown", () => {
     await open(page, 9863);
     await expect(photos(page)).toHaveCount(2);
     await page.getByRole("button", { name: "Entry actions" }).click();
-    await page.getByRole("menuitem", { name: "Remove photo 1" }).click();
+    await page
+      .getByRole("menuitem", { name: /^Remove photo/ })
+      .first()
+      .click();
     const dialog = page.getByRole("dialog", { name: "Remove this photo?" });
     await dialog.getByRole("button", { name: "Cancel" }).click();
     await expect(photos(page)).toHaveCount(2);
 
     await page.getByRole("button", { name: "Entry actions" }).click();
-    await page.getByRole("menuitem", { name: "Remove photo 1" }).click();
+    await page
+      .getByRole("menuitem", { name: /^Remove photo/ })
+      .first()
+      .click();
     await dialog.getByRole("button", { name: "Remove", exact: true }).click();
     await expect(photos(page)).toHaveCount(1);
   });
@@ -218,7 +224,7 @@ test.describe("photo takedown", () => {
       await expect(photos(page)).toHaveCount(2);
       await page.getByRole("button", { name: "Entry actions" }).click();
       await expect(
-        page.getByRole("menuitem", { name: "Edit entry" }),
+        page.getByRole("menuitem", { name: "Suggest a change" }),
       ).toBeVisible();
       await expect(page.getByRole("menuitem", { name: /Remove/ })).toHaveCount(
         0,

@@ -46,13 +46,11 @@ export default function ComparisonTable({
   materials,
   onRemove,
   onResize,
-  onAdd,
 }: {
   materials: Material[];
   onRemove: (id: number) => void;
   /** Swap an entry for another size of its model, keeping its place. */
   onResize: (from: number, to: number) => void;
-  onAdd: () => void;
 }) {
   const [units] = useUnits();
   const { alike, rows, mixed } = buildComparison(materials, units);
@@ -65,12 +63,7 @@ export default function ComparisonTable({
   let lastGroup: string | undefined;
   return (
     <>
-      <ComparisonSummary
-        alike={alike}
-        count={materials.length}
-        mixed={mixed}
-        onAdd={onAdd}
-      />
+      <ComparisonSummary alike={alike} count={materials.length} mixed={mixed} />
       {wide && scrolls && (
         <Typography
           data-testid="compare-scroll-hint"

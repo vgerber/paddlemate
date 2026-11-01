@@ -11,10 +11,13 @@ const { tokens } = theme;
  * heading above it when it has one. Cards stack 8px apart. */
 export default function DetailCard({
   heading,
+  first,
   sx,
   children,
 }: {
   heading?: string;
+  /** The card opens its block: its heading drops the space above. */
+  first?: boolean;
   /** Overrides for the card, such as its vertical padding. */
   sx?: SxProps<Theme>;
   children: ReactNode;
@@ -23,7 +26,9 @@ export default function DetailCard({
     <Box>
       {heading && (
         <Box sx={{ mx: { xs: `${tokens.phone.edge}px`, md: 0 } }}>
-          <SectionHeading inset>{heading}</SectionHeading>
+          <SectionHeading inset first={first}>
+            {heading}
+          </SectionHeading>
         </Box>
       )}
       <Box

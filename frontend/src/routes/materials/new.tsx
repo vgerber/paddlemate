@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import MaterialForm from "@/components/materials/MaterialForm";
+import { wikiPageTrail } from "@/components/materials/wikiLayout";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
 import { requireMaterials } from "@/lib/features";
@@ -42,7 +43,15 @@ function NewMaterialPage() {
       values={values}
       onChange={setValues}
       title="New entry"
-      subtitle="Brand, model and a group are enough to start"
+      subtitle="Brand, model and a group to start"
+      trail={wikiPageTrail(
+        {
+          onTools: () => navigate({ to: "/tools" }),
+          onWiki: () =>
+            navigate({ to: "/materials", search: EMPTY_MATERIAL_SEARCH }),
+        },
+        { label: "New entry" },
+      )}
       saving={create.isPending}
       error={create.error}
       onCancel={goBack}

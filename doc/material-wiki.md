@@ -90,7 +90,7 @@ picked at once; a model of several sizes opens a small choice of its sizes
 (tick one or more), so no size is ever picked without you seeing it. The bar
 pinned to the foot of the list names every pick with its size, with the count,
 the cap, **Clear** and **Compare** (two are the least that compare). To compare
-every size of one model, open it and press **Compare sizes**.
+every size of one model, open it and pick **Compare sizes** in its menu.
 
 The comparison puts one entry per column and one property per row, each row
 labelled with its unit ("Length (cm)", in your units). Up to four entries
@@ -126,7 +126,7 @@ paddler who proposed it, not the admin who approved it.
 You can leave the admin a note with a proposal (500 characters); the entry
 form asks for it when you are not an admin. A delete request has no note. An
 entry you have a proposal on says so under its header ("Your change is waiting
-for review", with a link to it). On the proposals screen the filter "Wiki"
+for review", with a link to it and **Withdraw**, which asks first). On the proposals screen the filter "Wiki"
 lists them: the title is the entry's brand, model and size, an edit shows the
 changed fields as Before and After in your units, a new entry its values, a
 removal the entry being removed.
@@ -160,14 +160,22 @@ to the page it came from; a click on a photo opens it full size in the photo
 viewer (arrow keys, buttons or a swipe step through the photos, Esc closes),
 then an **Overview** card: type (category and groups), construction, built
 ("since 2021", "about 2010"), availability with its check date and source link
-under it, and colours. A model with sizes then shows one **All sizes** table,
-the only place its per-size specs are listed: the size headings choose the
+under it, and colours. From `md` the Overview and the sizes sit side by side (the Sources
+under the Overview). A model with sizes shows one **All sizes** table,
+the only place its per-size specs are listed (it fades at the edge where it
+scrolls): the size headings choose the
 size (the URL holds the entry) and the picked column is tinted. A model with
 one size shows its specs as plain lists (hull, cockpit, paddler) instead. A paddle shows its own specs
 (blade area, lengths, shaft, angles, weight) in your units. A Sources list
 links every page a value came from. Rows in the list carry a small
-thumbnail that opens the model, not the viewer. An admin sees "Remove photo" and "Remove all <brand> photos" in
-the entry menu; both ask first.
+thumbnail that opens the model, not the viewer. Every action of an entry is in the header menu, in this order:
+**Suggest a change**, **Add photo**, **Compare sizes** (a model with several
+sizes), then after a rule the admin's "Remove photo: <credit>" (one per photo,
+named by its credit), "Remove all <brand> photos" and **Delete entry**. A
+visitor who is signed out sees the first three; the first leads to the sign-in
+card and the photo dialog offers sign-in. The page itself holds no buttons for
+them; the Overview card closes with one prompt, only when data is missing ("No
+photo or volume yet" and **Suggest a change**). Removing asks first.
 
 About 530 whitewater kayaks and 170 paddles come pre-filled, each size and
 shaft type as its own entry. They carry colourways as the maker names them,
@@ -185,8 +193,7 @@ for a while.
 
 ### Adding your own photo
 
-Signed in, you can add a photo to an entry: "Add photo" sits beside the photos
-(and in "Suggest a change" when the entry has none). Pick a file or, on a
+Signed in, you can add a photo to an entry: **Add photo** is in the entry menu. Pick a file or, on a
 phone, take one; you see a preview, tick that the photo is yours or that you
 may share it (required), and may change the credit line, which starts as your
 username. It is shown as "Photo: <credit>". The photo belongs to the whole
@@ -589,11 +596,12 @@ Specs: `frontend/e2e/material-proposals/` (signs in as `jonas` through
 
 Editor note: research and import notes live in `materials.editor_note` (migration 0072; `notes` keeps what a paddler wrote and stays public). `GET /materials/{id}` returns `editor_note` to admins only, and a PUT/POST from a non-admin drops it; an admin PUT that omits it keeps it, an empty string clears it. The entry form shows the field to admins, the page shows it to admins as "Editor note". `build_seed.py` writes the data files' notes to `editor_note` and leaves `notes` empty. Specs rows come from `lib/materials/specRows.ts`.
 
-Suggest a change: the model page ends its facts with `SuggestChange`, a quiet
-line naming what the entry lacks (`lib/materials/missing.ts`, e.g. "No photo,
-volume or release year yet", else "Something wrong?") and a "Suggest a change"
-button that opens the edit form (`?edit=true`); signed out it shows the sign-in
-card and returns to the form. Photos cannot be proposed yet. Specs:
+Suggest a change: the menu item and `SuggestChange` (the Overview card's
+closing prompt, rendered only when `lib/materials/missing.ts` finds a gap, e.g.
+"No photo, volume or release year yet") open the edit form (`?edit=true`);
+signed out it shows the sign-in card and returns to the form. The menu is
+`components/materials/materialMenu.tsx`; its state (the photo dialog, the
+confirmations) lives in `routes/materials/$materialId.tsx`. Specs:
 `frontend/e2e/materials/suggestChange.spec.ts`.
 
 Adding a measurement is one row in `MATERIAL_SPECS` plus its column: the

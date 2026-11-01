@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import type { Crumb } from "@/components/Breadcrumb";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import MaterialDetailView, {
-  materialActions,
-} from "@/components/materials/MaterialDetailView";
+import AddPhotoDialog from "@/components/materials/AddPhotoDialog";
+import MaterialDetailView from "@/components/materials/MaterialDetailView";
 import MaterialForm from "@/components/materials/MaterialForm";
+import { materialMenu } from "@/components/materials/materialMenu";
 import PendingProposalNote from "@/components/materials/PendingProposalNote";
-import { WIKI_WIDTH } from "@/components/materials/wikiLayout";
+import { WIKI_WIDTH, wikiPageTrail } from "@/components/materials/wikiLayout";
 import PageFrame from "@/components/PageFrame";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
@@ -19,6 +20,7 @@ import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import {
   useDeleteMaterial,
   useMaterial,
+  useMaterialComparison,
   useRemoveBrandImages,
   useRemoveMaterialImage,
   useUpdateMaterial,
@@ -26,7 +28,13 @@ import {
 import { useOwnPendingMaterialProposals } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
 import { MaterialIcon } from "@/lib/icons";
-import { materialTitle, modelTitle, sinceLabel } from "@/lib/materials/facts";
+import { serializeCompareIds } from "@/lib/materials/compare";
+import {
+  materialTitle,
+  modelSizes,
+  modelTitle,
+  sinceLabel,
+} from "@/lib/materials/facts";
 import { materialToForm } from "@/lib/materials/form";
 import { EMPTY_MATERIAL_SEARCH } from "@/lib/materials/search";
 import { CATEGORY_LABELS, disciplinesLabel } from "@/lib/materials/specs";
@@ -58,6 +66,7 @@ function MaterialPage() {
   const removeBrand = useRemoveBrandImages();
   const [photoToRemove, setPhotoToRemove] = useState<number | null>(null);
   const [brandOpen, setBrandOpen] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   const toWiki = () =>
     navigate({
@@ -75,6 +84,9 @@ function MaterialPage() {
     });
 
   const material = query.data;
+  const siblings = useMaterialComparison(
+    material ? modelSizes(material).map((size) => size.id) : [],
+  );
   if (query.isLoading) return <LoadingBox size={40} pt={8} />;
   if (query.isError && !isNotFound(query.error)) {
     return <ErrorState error={query.error} onRetry={() => query.refetch()} />;
@@ -93,8 +105,22 @@ function MaterialPage() {
       <SignInGate icon={<MaterialIcon />} title="Sign in to suggest a change" />
     );
   }
+  const trail = (...steps: Crumb[]) =>
+    wikiPageTrail(
+      { onTools: () => navigate({ to: "/tools" }), onWiki: toWiki },
+      ...steps,
+    );
   if (edit) {
-    return <EditMaterial material={material} onDone={() => setEdit(false)} />;
+    return (
+      <EditMaterial
+        material={material}
+        trail={trail(
+          { label: modelTitle(material), onClick: () => setEdit(false) },
+          { label: "Suggest a change" },
+        )}
+        onDone={() => setEdit(false)}
+      />
+    );
   }
 
   const pickSize = (sizeId: number) =>
@@ -104,6 +130,9 @@ function MaterialPage() {
       search: { edit: false },
       replace: true,
     });
+
+  const allSizes =
+    siblings.data && siblings.data.length > 1 ? siblings.data : [];
 
   const subtitle = [
     CATEGORY_LABELS[material.category],
@@ -119,21 +148,35 @@ function MaterialPage() {
       title={modelTitle(material)}
       subtitle={subtitle}
       onBack={goBack}
-      actions={materialActions({
+      trail={trail({ label: modelTitle(material) })}
+      actions={materialMenu({
         material,
+        canDelete: isAuthenticated,
+        canCompare: allSizes.length > 0,
+        onSuggest: () => setEdit(true),
+        onAddPhoto: () => setPhotoOpen(true),
+        onCompare: () =>
+          navigate({
+            to: "/materials/compare",
+            search: { ids: serializeCompareIds(allSizes.map((m) => m.id)) },
+          }),
+        onDelete: () => setConfirmOpen(true),
         onRemovePhoto: isAdmin ? setPhotoToRemove : undefined,
         onRemoveBrandPhotos: isAdmin ? () => setBrandOpen(true) : undefined,
-        canEdit: isAuthenticated,
-        canDelete: isAuthenticated,
-        onEdit: () => setEdit(true),
-        onDelete: () => setConfirmOpen(true),
       })}
     >
       <PendingProposalNote proposals={pending.data ?? []} />
       <MaterialDetailView
         material={material}
+        allSizes={allSizes}
         onPickSize={pickSize}
         onSuggest={() => setEdit(true)}
+      />
+      <AddPhotoDialog
+        materialId={material.id}
+        alt={`${material.brand} ${material.model}`}
+        open={photoOpen}
+        onClose={() => setPhotoOpen(false)}
       />
       <ConfirmDialog
         open={photoToRemove != null}
@@ -196,9 +239,11 @@ function MaterialPage() {
  * start from the entry once it is loaded. */
 function EditMaterial({
   material,
+  trail,
   onDone,
 }: {
   material: Material;
+  trail: Crumb[];
   onDone: () => void;
 }) {
   const [values, setValues] = useState(() =>
@@ -210,7 +255,8 @@ function EditMaterial({
       values={values}
       onChange={setValues}
       title={materialTitle(material)}
-      subtitle="Correct this entry"
+      subtitle="Suggest a change"
+      trail={trail}
       saving={update.isPending}
       error={update.error}
       onCancel={onDone}

@@ -20,7 +20,7 @@ test("the block names what the entry misses and opens the form", async ({
   expect(box?.height).toBeGreaterThanOrEqual(44);
   await button.click();
   await expect(page).toHaveURL(/edit=true/);
-  await expect(page.getByText("Correct this entry")).toBeVisible();
+  await expect(page.getByText("Suggest a change").first()).toBeVisible();
 });
 
 test.describe("signed out", () => {
