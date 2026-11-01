@@ -386,3 +386,79 @@ async fn a_disabled_wiki_is_not_mounted(pool: PgPool) {
     let r = call(&on, Method::GET, "/materials", Who::Anyone, None).await;
     assert_eq!(r.status, StatusCode::OK);
 }
+
+#[sqlx::test]
+async fn the_editor_note_reaches_admins_only(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let mut body = entry("Zedboats", "Firecracker");
+    body["editor_note"] = json!("year_from is the Playak year");
+    body["notes"] = json!("Mine since 2019");
+
+    // A proposal drops the field: it is not a thing a paddler can write.
+    let r = add(&app, MARA, body.clone()).await;
+    assert_eq!(r.status, StatusCode::ACCEPTED, "{}", r.body);
+    assert!(
+        r.body["proposed_data"].get("editor_note").is_none()
+            || r.body["proposed_data"]["editor_note"].is_null()
+    );
+
+    let r = add(&app, Who::Admin, body).await;
+    assert_eq!(r.status, StatusCode::CREATED, "{}", r.body);
+    assert_eq!(r.body["editor_note"], "year_from is the Playak year");
+    let id = r.body["id"].as_i64().unwrap();
+    let uri = format!("/materials/{id}");
+
+    let admin = call(&app, Method::GET, &uri, Who::Admin, None).await;
+    assert_eq!(admin.body["editor_note"], "year_from is the Playak year");
+    for who in [Who::Anyone, MARA] {
+        let r = call(&app, Method::GET, &uri, who, None).await;
+        assert!(r.body.get("editor_note").is_none(), "{}", r.body);
+        assert_eq!(r.body["notes"], "Mine since 2019");
+    }
+    for uri in ["/materials", "/materials?ids=1", "/materials/models"] {
+        let r = call(&app, Method::GET, uri, Who::Admin, None).await;
+        assert!(!r.body.to_string().contains("Playak year"), "{uri}");
+    }
+
+    // An update that omits it keeps it; an empty string clears it.
+    let r = call(
+        &app,
+        Method::PUT,
+        &uri,
+        Who::Admin,
+        Some(entry("Zedboats", "Firecracker")),
+    )
+    .await;
+    assert_eq!(
+        r.body["editor_note"], "year_from is the Playak year",
+        "{}",
+        r.body
+    );
+    let mut clear = entry("Zedboats", "Firecracker");
+    clear["editor_note"] = json!("");
+    let r = call(&app, Method::PUT, &uri, Who::Admin, Some(clear)).await;
+    assert!(r.body.get("editor_note").is_none(), "{}", r.body);
+}
+
+#[sqlx::test]
+async fn a_user_proposal_cannot_overwrite_the_editor_note(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool.clone());
+    let mut body = entry("Zedboats", "Firecracker");
+    body["editor_note"] = json!("keep me");
+    let r = add(&app, Who::Admin, body).await;
+    let id = r.body["id"].as_i64().unwrap();
+    let uri = format!("/materials/{id}");
+
+    let mut edit = entry("Zedboats", "Firecracker");
+    edit["editor_note"] = json!("hijacked");
+    let r = call(&app, Method::PUT, &uri, MARA, Some(edit)).await;
+    assert_eq!(r.status, StatusCode::ACCEPTED, "{}", r.body);
+    assert!(!r.body.to_string().contains("hijacked"), "{}", r.body);
+
+    let mut long = entry("Zedboats", "Firecracker");
+    long["editor_note"] = json!("x".repeat(4001));
+    let r = call(&app, Method::PUT, &uri, Who::Admin, Some(long)).await;
+    assert_eq!(r.status, StatusCode::BAD_REQUEST);
+}

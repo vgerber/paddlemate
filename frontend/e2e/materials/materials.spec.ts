@@ -277,7 +277,7 @@ test.describe("entry", () => {
   }) => {
     await page.goto("/materials/9852");
     await expect(page.getByText("Hull", { exact: true })).toBeVisible();
-    const facts = page.getByTestId("size-facts");
+    const facts = page.getByTestId("all-sizes");
     await expect(facts).toContainText("264 cm");
     await expect(facts).toContainText("320 l");
     await expect(facts).toContainText("22 kg");
@@ -295,40 +295,34 @@ test.describe("entry", () => {
     await openWiki(page, FIXTURE);
     await row(page, "Testflow Cascade").getByRole("button").first().click();
     await expect(page).toHaveURL(/\/materials\/9851/);
-    const picker = page.getByRole("radiogroup", { name: "Size" });
-    await expect(picker.getByRole("radio")).toHaveText(["S", "M", "L"]);
-    await expect(picker.getByRole("radio", { name: "S" })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
-    await expectTouchTargets(picker.getByRole("radio"));
-    const facts = page.getByTestId("size-facts");
-    await expect(facts).toContainText("254 cm");
-
-    await picker.getByRole("radio", { name: "M" }).click();
-    await expect(page).toHaveURL(/\/materials\/9852/);
-    await expect(facts).toContainText("264 cm");
-    await expect(facts).not.toContainText("254 cm");
-    await expect(picker.getByRole("radio", { name: "M" })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
-
-    // Every size side by side, the picked one marked.
+    // The table's column headings are the size choice; no second picker.
+    await expect(page.getByTestId("size-picker")).toHaveCount(0);
     const all = page.getByTestId("all-sizes");
     await expect(all.getByRole("columnheader")).toHaveText(["S", "M", "L"]);
+    const heads = all.getByRole("button");
+    await expect(heads).toHaveText(["S", "M", "L"]);
+    await expect(all.locator('th[aria-current="true"]')).toHaveText("S");
+    await expectTouchTargets(heads);
+    await expect(all.getByRole("row", { name: /Length/ })).toContainText(
+      "254 cm",
+    );
+
+    await heads.nth(1).click();
+    await expect(page).toHaveURL(/\/materials\/9852/);
+    await expect(all.locator('th[aria-current="true"]')).toHaveText("M");
     await expect(all.getByRole("row", { name: /Length/ })).toContainText(
       "274 cm",
     );
-    await expect(all.locator('th[aria-current="true"]')).toHaveText("M");
+    // The picked size's specs are not listed a second time.
+    await expect(page.getByTestId("spec-cards")).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
   });
 
   test("a model with one size shows no picker", async ({ page }) => {
     await page.goto("/materials/9854");
     await expect(page.getByRole("heading").first()).toBeVisible();
-    await expect(page.getByTestId("size-picker")).toHaveCount(0);
     await expect(page.getByTestId("all-sizes")).toHaveCount(0);
+    await expect(page.getByTestId("spec-cards")).toBeVisible();
   });
 
   test("the header menu offers edit to a signed-in paddler", async ({

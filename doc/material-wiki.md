@@ -155,13 +155,15 @@ are the same boat.
 
 ## Catalogue
 
-A model with sizes shows its Size chips and the facts of the picked size
-(length, volume, weight, paddler), then an **All sizes** table with the
-picked size marked. An entry opens with its photos, each captioned "Photo: <maker>" and linking
+An entry opens with its photos, each captioned "Photo: <maker>" and linking
 to the page it came from; a click on a photo opens it full size in the photo
 viewer (arrow keys, buttons or a swipe step through the photos, Esc closes),
-then its facts, colourways as chips, and the
-notes. An approximate year reads "about 2021". A paddle shows its own facts
+then an **Overview** card: type (category and groups), construction, built
+("since 2021", "about 2010"), availability with its check date and source link
+under it, and colours. A model with sizes then shows one **All sizes** table,
+the only place its per-size specs are listed: the size headings choose the
+size (the URL holds the entry) and the picked column is tinted. A model with
+one size shows its specs as plain lists (hull, cockpit, paddler) instead. A paddle shows its own specs
 (blade area, lengths, shaft, angles, weight) in your units. A Sources list
 links every page a value came from. Rows in the list carry a small
 thumbnail that opens the model, not the viewer. An admin sees "Remove photo" and "Remove all <brand> photos" in
@@ -483,12 +485,12 @@ gone is a no-op. Tests: `api/tests/material_proposals.rs`, `api/tests/materials.
 | Module | Owns |
 | --- | --- |
 | `lib/materials/specs.ts` | `MATERIAL_SPECS` / `PADDLE_SPECS`, the enum lists and `CATEGORY_LABELS`, `formatSpec` |
-| `lib/materials/facts.ts` | titles, years, sizes and ranges as text, `sizeFacts` / `paddleFacts`, `sourceLinks`, `materialFieldLabel` / `materialFieldValue` (the wording of a changed field for the proposal diff) |
+| `lib/materials/facts.ts` | titles, years, sizes and ranges as text, `paddleFacts`, `sourceLinks`, `materialFieldLabel` / `materialFieldValue` (the wording of a changed field for the proposal diff) |
 | `lib/materials/search.ts` | the list route's URL search shape, its parsing and the API filters |
 | `lib/materials/form.ts` | the entry form's values and their conversion to and from an entry |
 | `lib/hooks/useMaterials.ts` | `materialKeys` and every query and mutation; a write answered 202 (`isProposal`) announces "Sent for review" through `announceIfProposal` and leaves the entry caches alone |
 | `lib/materials/compare.ts` | `buildComparison`: the comparable rows (`FIELDS`), the alike chips; also `specSpread` and the comparison's id list |
-| `components/materials/` | `MaterialsView` (list and its compare bar), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView` (on the shared `DetailCard` and `FactRow`, `SourceList`), `ComparisonTable` (with `ComparisonHead`, `ComparisonRow`, `ComparisonSummary`, sizes in `comparisonLayout.ts`), `MaterialForm`, `MaterialGallery` (photos and credits), `MaterialTree` and `wikiTrail` (wiki wrappers on the shared `TreeView` and `Breadcrumb`); the frame is the shared `PageFrame` |
+| `components/materials/` | `MaterialsView` (list and its compare bar), `ModelRow`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView` (on the shared `DetailCard` and `FactRow`, `SourceList`), `ComparisonTable` (with `ComparisonHead`, `ComparisonRow`, `ComparisonSummary`, sizes in `comparisonLayout.ts`), `MaterialForm`, `MaterialGallery` (photos and credits), `MaterialTree` and `wikiTrail` (wiki wrappers on the shared `TreeView` and `Breadcrumb`); the frame is the shared `PageFrame` |
 | `routes/materials/` | `index` (list), `$materialId` (detail, `?edit=true` for the form), `compare`, `new` |
 
 The wiki is a normal page, not a map screen: from `md` one column (`WIKI_WIDTH`,
@@ -502,7 +504,7 @@ key logic is `treeKey` in `components/tree/treeKeys.ts`); it loads the brand's m
 lazily with `useBrandModels`, and its counts come from `useMaterialTree`
 (`materialKeys.tree`). The list reads
 `GET /materials/models` (`materialKeys.models`, 24 models a page, "Show more");
-a row opens the model's first size, and the size chips navigate to the sibling
+a row opens the model's first size, and the size headings of the All sizes table navigate to the sibling
 entry's id. The model page asks for its sizes with the `ids` list to fill the
 All sizes table. The entry form holds `size` beside `variant`, and an
 untouched edit sends the stored value back (PUT replaces every field). Specs: `frontend/e2e/materials/`.
@@ -514,6 +516,8 @@ picks the entry's; `PendingProposalNote` draws them. `ProposalDiffTable` and
 `ProposalCreateSummary` take `entityType` and switch to the wiki wording.
 Specs: `frontend/e2e/material-proposals/` (signs in as `jonas` through
 `e2e/support/signIn.ts`).
+
+Editor note: research and import notes live in `materials.editor_note` (migration 0072; `notes` keeps what a paddler wrote and stays public). `GET /materials/{id}` returns `editor_note` to admins only, and a PUT/POST from a non-admin drops it; an admin PUT that omits it keeps it, an empty string clears it. The entry form shows the field to admins, the page shows it to admins as "Editor note". `build_seed.py` writes the data files' notes to `editor_note` and leaves `notes` empty. Specs rows come from `lib/materials/specRows.ts`.
 
 Suggest a change: the model page ends its facts with `SuggestChange`, a quiet
 line naming what the entry lacks (`lib/materials/missing.ts`, e.g. "No photo,

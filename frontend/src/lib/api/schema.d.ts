@@ -430,7 +430,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Get one wiki entry */
+        /** @description Get one wiki entry. An admin's read also carries editor_note. */
         get: operations["get_material"];
         /** @description Replace an entry (admin: immediate 200, other signed-in paddlers: proposal 202 for an admin to review). An approved proposal replaces the entry as stored, whatever changed since. */
         put: operations["update_material"];
@@ -2714,6 +2714,8 @@ export interface components {
             created_by_username?: string | null;
             /** @description The groups the entry is filed under, the primary one first. */
             disciplines: components["schemas"]["MaterialDiscipline"][];
+            /** @description Research and import notes. Only an admin's read carries it. */
+            editor_note?: string | null;
             /** @description Feather angles offered, in degrees. */
             feather_deg?: number[] | null;
             /** Format: double */
@@ -3460,6 +3462,11 @@ export interface components {
              * @default []
              */
             disciplines?: components["schemas"]["MaterialDiscipline"][];
+            /**
+             * @description Admin only: other writers' value is dropped. Absent keeps what is
+             *      stored; an empty string clears it.
+             */
+            editor_note?: string | null;
             feather_deg?: number[] | null;
             /** Format: double */
             height_cm?: number | null;
@@ -4965,11 +4972,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-11-01T14:31:53.308518778Z",
-                     *         "expires_at": "2027-01-30T14:31:53.308521048Z",
+                     *         "created_at": "2026-11-01T17:06:53.618621239Z",
+                     *         "expires_at": "2027-01-30T17:06:53.618623679Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-11-01T14:31:53.308534478Z",
+                     *         "last_used_at": "2026-11-01T17:06:53.618634249Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -5000,8 +5007,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-11-01T14:31:53.308664868Z",
-                     *       "expires_at": "2027-01-30T14:31:53.308665318Z",
+                     *       "created_at": "2026-11-01T17:06:53.618764539Z",
+                     *       "expires_at": "2027-01-30T17:06:53.618764919Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."

@@ -74,7 +74,7 @@ COLUMNS = ["category", "brand", "model", "variant", "size", "disciplines", "cons
            "year_from", "year_to", "year_approximate", "length_cm", "width_cm", "height_cm",
            "volume_l", "weight_kg", "cockpit_length_cm", "cockpit_width_cm",
            "paddler_weight_min_kg", "paddler_weight_max_kg", "product_url", "colors",
-           "sources", "notes", "blade_area_cm2", "blade_length_cm", "blade_width_cm",
+           "sources", "notes", "editor_note", "blade_area_cm2", "blade_length_cm", "blade_width_cm",
            "length_min_cm", "length_max_cm", "lengths_cm", "pieces", "shaft",
            "shaft_material", "blade_material", "feather_deg", "shaft_diameter"]
 SQL_TYPES = {
@@ -477,6 +477,10 @@ def build():
         rows += [kayak(e) for e in json.load(fh)]
     with open(os.path.join(DATA, "paddles.json"), encoding="utf-8") as fh:
         rows += [paddle(e) for e in split_paddles(json.load(fh))]
+    # Research notes are for editors; the public note stays empty on imports.
+    for r in rows:
+        r["editor_note"] = r["notes"]
+        r["notes"] = None
     seen = {}
     for r in rows:
         k = identity(r)

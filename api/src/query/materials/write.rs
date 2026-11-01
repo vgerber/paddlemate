@@ -53,6 +53,7 @@ fn bind_body<'a>(
         .bind(body.availability)
         .bind(body.availability_source.as_deref())
         .bind(body.availability_checked)
+        .bind(body.editor_note.as_deref())
 }
 
 /// Why an entry could not be added.
@@ -111,10 +112,10 @@ pub async fn create_in(
          product_url, colors, year_approximate, notes, blade_area_cm2, blade_length_cm, \
          blade_width_cm, length_min_cm, length_max_cm, lengths_cm, pieces, shaft, \
          shaft_material, blade_material, feather_deg, shaft_diameter, availability, \
-         availability_source, availability_checked, created_by) \
+         availability_source, availability_checked, editor_note, created_by) \
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, \
          $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, \
-         $35, $36, $37, $38, $39) RETURNING id",
+         $35, $36, $37, $38, NULLIF($39, ''), $40) RETURNING id",
     );
     let row = bind_body(query, body)
         .bind(user_id)
@@ -151,8 +152,9 @@ pub async fn update_in(
          length_min_cm = $27, length_max_cm = $28, lengths_cm = $29, pieces = $30, shaft = $31, \
          shaft_material = $32, blade_material = $33, feather_deg = $34, shaft_diameter = $35, \
          availability = $36, availability_source = $37, availability_checked = $38, \
-         updated_by = $39, updated_at = NOW() \
-         WHERE id = $40",
+         editor_note = NULLIF(COALESCE($39, editor_note), ''), \
+         updated_by = $40, updated_at = NOW() \
+         WHERE id = $41",
     );
     let result = bind_body(query, body)
         .bind(user_id)

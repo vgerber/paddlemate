@@ -76,3 +76,17 @@ async fn an_edited_entry_survives_a_reseed(pool: PgPool) {
         "an untouched import is brought back to the data"
     );
 }
+
+#[sqlx::test]
+async fn research_notes_are_editor_notes_not_public_ones(pool: PgPool) {
+    let (public, editor): (i64, i64) = sqlx::query_as(
+        "SELECT COUNT(*) FILTER (WHERE notes IS NOT NULL), \
+                COUNT(*) FILTER (WHERE editor_note IS NOT NULL) \
+         FROM materials WHERE created_by = 'system-catalogue' AND updated_by IS NULL",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(public, 0, "an untouched import states no public note");
+    assert!(editor > 100, "the research notes moved, {editor}");
+}

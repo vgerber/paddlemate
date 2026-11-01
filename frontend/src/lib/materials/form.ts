@@ -43,6 +43,8 @@ export type MaterialFormValues = {
   /** A day, yyyy-mm-dd, as the date input holds it. */
   availability_checked: string;
   notes: string;
+  /** Admin only; the API leaves it out for everyone else. */
+  editor_note: string;
   /** Colourways, comma separated. */
   colors: string;
   /** Sizes offered, comma separated, in the chosen length unit. */
@@ -82,6 +84,7 @@ export function emptyMaterialForm(): MaterialFormValues {
     availability_source: "",
     availability_checked: "",
     notes: "",
+    editor_note: "",
     colors: "",
     lengths_cm: "",
     feather_deg: "",
@@ -140,6 +143,7 @@ export function materialToForm(
     availability_source: material.availability_source ?? "",
     availability_checked: material.availability_checked ?? "",
     notes: material.notes ?? "",
+    editor_note: material.editor_note ?? "",
     colors: material.colors.join(", "),
     lengths_cm: listText(material.lengths_cm, "length", units),
     feather_deg: (material.feather_deg ?? []).join(", "),
@@ -240,6 +244,7 @@ export function materialFormToBody(
     availability_source: optionalText(values.availability_source),
     availability_checked: optionalText(values.availability_checked),
     notes: optionalText(values.notes),
+    editor_note: optionalText(values.editor_note),
     colors: values.colors
       .split(",")
       .map((color) => color.trim())

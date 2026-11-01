@@ -473,6 +473,19 @@ export default function MaterialForm({
                 htmlInput: { maxLength: MATERIAL_LIMITS.description },
               }}
             />
+            {isAdmin && (
+              <TextField
+                label="Editor note"
+                helperText="Research notes. Never shown to readers."
+                multiline
+                minRows={2}
+                value={values.editor_note}
+                onChange={(event) => set({ editor_note: event.target.value })}
+                slotProps={{
+                  htmlInput: { maxLength: MATERIAL_LIMITS.description },
+                }}
+              />
+            )}
             <TextField
               label="Manufacturer page"
               placeholder="https://"
@@ -513,6 +526,7 @@ export default function MaterialForm({
               onClick={() =>
                 onSubmit({
                   ...materialFormToBody(values, units, original),
+                  editor_note: isAdmin ? values.editor_note.trim() : undefined,
                   proposal_note: isAdmin ? null : proposalNoteValue(note),
                 })
               }

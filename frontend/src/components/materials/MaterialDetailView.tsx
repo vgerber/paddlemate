@@ -3,16 +3,16 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import DetailCard from "@/components/DetailCard";
-import Fact from "@/components/Fact";
 import FactRow from "@/components/FactRow";
 import AllSizesTable from "@/components/materials/AllSizesTable";
 import MaterialGallery from "@/components/materials/MaterialGallery";
-import SizePicker from "@/components/materials/SizePicker";
+import OverviewRows, {
+  type OverviewRow,
+} from "@/components/materials/OverviewRows";
 import SourceList, { type SourceLink } from "@/components/materials/SourceList";
 import SuggestChange from "@/components/materials/SuggestChange";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import SectionHeading from "@/components/SectionHeading";
-import FilterChip from "@/components/search/FilterChip";
 import type { Material } from "@/lib/api";
 import { useMaterialComparison } from "@/lib/hooks/useMaterials";
 import { DeleteIcon, EditIcon, PhotoIcon } from "@/lib/icons";
@@ -21,23 +21,10 @@ import {
   availabilityValue,
   sourceHost,
 } from "@/lib/materials/availability";
-import {
-  modelSizes,
-  paddleFacts,
-  SIZE_FACT_KEYS,
-  sinceLabel,
-  sizeFacts,
-  sourceLinks,
-} from "@/lib/materials/facts";
-import {
-  CATEGORY_LABELS,
-  disciplinesLabel,
-  formatSpec,
-  MATERIAL_SPECS,
-  SPEC_GROUP_LABELS,
-  specValue,
-} from "@/lib/materials/specs";
-import { useUnits } from "@/lib/prefs/units";
+import { modelSizes, sinceLabel, sourceLinks } from "@/lib/materials/facts";
+import { type SpecRow, specRows } from "@/lib/materials/specRows";
+import { CATEGORY_LABELS, disciplinesLabel } from "@/lib/materials/specs";
+import { type Units, useUnits } from "@/lib/prefs/units";
 import { formatDate, humanize, sentenceCase } from "@/lib/text/format";
 import { theme } from "@/lib/theme/theme";
 
@@ -145,30 +132,38 @@ export default function MaterialDetailView({
   const [units] = useUnits();
   const sizes = modelSizes(material);
   const siblings = useMaterialComparison(sizes.map((size) => size.id));
-  const facts: { label: string; value: ReactNode; caption?: ReactNode }[] = [
-    { label: "Category", value: CATEGORY_LABELS[material.category] },
+  const rows: OverviewRow[] = [
+    {
+      label: "Type",
+      value: [
+        CATEGORY_LABELS[material.category],
+        disciplinesLabel(material.disciplines, material.category),
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    },
   ];
-  if (material.disciplines.length > 0) {
-    facts.push({
-      label: material.disciplines.length > 1 ? "Groups" : "Group",
-      value: disciplinesLabel(material.disciplines, material.category),
-    });
-  }
   if (material.construction) {
-    facts.push({
+    rows.push({
       label: "Construction",
       value: sentenceCase(humanize(material.construction)),
     });
   }
   if (sinceLabel(material)) {
-    facts.push({ label: "Built", value: sinceLabel(material) });
+    rows.push({ label: "Built", value: sinceLabel(material) });
   }
-  facts.push({
+  rows.push({
     label: "Availability",
     value: availabilityValue(material),
     caption: <AvailabilityCaption material={material} />,
   });
-  const paddle = paddleFacts(material, units);
+  if (material.colors.length > 0) {
+    rows.push({
+      label: "Colours",
+      value: material.colors.join(", "),
+      testId: "material-colors",
+    });
+  }
   const links: SourceLink[] = [
     ...sourceLinks(material.sources).map((source) => ({
       url: source.url,
@@ -179,142 +174,61 @@ export default function MaterialDetailView({
       ? [{ url: material.product_url, title: "Manufacturer page" }]
       : []),
   ];
+  const allSizes =
+    siblings.data && siblings.data.length > 1 ? siblings.data : [];
 
   return (
     <Box sx={{ pt: 1, pb: 3 }}>
       <MaterialGallery material={material} />
-      {sizes.length > 0 && (
-        <DetailCard sx={{ py: 2, display: "grid", gap: 2 }}>
-          <SizePicker
-            sizes={sizes}
-            pickedId={material.id}
-            onPick={onPickSize}
-          />
-          <Box
-            data-testid="size-facts"
-            sx={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-              gap: 2,
-            }}
-          >
-            {sizeFacts(material, units).map((fact) => (
-              <Fact key={fact.label} label={fact.label} value={fact.value} />
-            ))}
-          </Box>
-        </DetailCard>
-      )}
-      <DetailCard sx={{ py: 2 }}>
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-            gap: 2,
-          }}
-        >
-          {facts.map((fact) => (
-            <Fact
-              key={fact.label}
-              label={fact.label}
-              value={fact.value}
-              caption={fact.caption}
-            />
-          ))}
-        </Box>
+      <DetailCard heading="Overview" sx={{ py: 1 }}>
+        <OverviewRows rows={rows} />
         {material.description && (
           <Typography
             variant="body2"
-            sx={{ mt: 2, whiteSpace: "pre-line", overflowWrap: "anywhere" }}
+            sx={{
+              mt: 1,
+              mb: 1,
+              whiteSpace: "pre-line",
+              overflowWrap: "anywhere",
+            }}
           >
             {material.description}
           </Typography>
-        )}
-        {material.colors.length > 0 && (
-          <Box
-            data-testid="material-colors"
-            sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2 }}
-          >
-            {material.colors.map((color) => (
-              <FilterChip key={color} label={color} set={false} />
-            ))}
-          </Box>
         )}
         {material.notes && (
           <Typography
             variant="body2"
             color="textSecondary"
-            sx={{ mt: 2, whiteSpace: "pre-line", overflowWrap: "anywhere" }}
+            sx={{ mb: 1, whiteSpace: "pre-line", overflowWrap: "anywhere" }}
           >
             {material.notes}
           </Typography>
         )}
+        {material.editor_note && (
+          <Typography
+            data-testid="editor-note"
+            variant="body2"
+            color="textSecondary"
+            sx={{ mb: 1, whiteSpace: "pre-line", overflowWrap: "anywhere" }}
+          >
+            {`Editor note: ${material.editor_note}`}
+          </Typography>
+        )}
       </DetailCard>
 
-      {paddle.length > 0 && (
-        <DetailCard heading="Paddle">
-          <Box
-            data-testid="paddle-facts"
-            sx={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-              gap: 2,
-              py: 1,
-            }}
-          >
-            {paddle.map((fact) => (
-              <Fact key={fact.label} label={fact.label} value={fact.value} />
-            ))}
-          </Box>
-        </DetailCard>
-      )}
-
-      <Box
-        sx={{
-          display: "grid",
-          // The hull, cockpit and paddler cards sit side by side where the
-          // width allows.
-          gridTemplateColumns: {
-            md: "repeat(auto-fit, minmax(340px, 1fr))",
-          },
-          columnGap: 1,
-          alignItems: "start",
-        }}
-      >
-        {(["hull", "cockpit", "paddler"] as const).map((group) => {
-          // With a size picker, its facts already say length, volume, weight
-          // and the paddler window; the cards keep the rest.
-          const specs = MATERIAL_SPECS.filter(
-            (spec) =>
-              spec.group === group &&
-              specValue(material, spec.key) != null &&
-              !(
-                sizes.length > 0 &&
-                (SIZE_FACT_KEYS.includes(spec.key) || group === "paddler")
-              ),
-          );
-          // A paddle's weight is among its facts; the boat groups do not apply.
-          if (specs.length === 0 || material.category === "paddle") return null;
-          return (
-            <DetailCard key={group} heading={SPEC_GROUP_LABELS[group]}>
-              {specs.map((spec) => (
-                <FactRow
-                  key={spec.key}
-                  label={spec.label}
-                  value={formatSpec(specValue(material, spec.key), spec, units)}
-                />
-              ))}
-            </DetailCard>
-          );
-        })}
-      </Box>
-
-      {siblings.data && siblings.data.length > 1 && (
+      {allSizes.length > 0 ? (
         <Box>
           <Box sx={{ mx: { xs: `${tokens.phone.edge}px`, md: 0 } }}>
             <SectionHeading inset>All sizes</SectionHeading>
           </Box>
-          <AllSizesTable materials={siblings.data} pickedId={material.id} />
+          <AllSizesTable
+            materials={allSizes}
+            pickedId={material.id}
+            onPick={onPickSize}
+          />
         </Box>
+      ) : (
+        <SpecCards material={material} units={units} />
       )}
 
       <SuggestChange material={material} onSuggest={onSuggest} />
@@ -333,6 +247,38 @@ export default function MaterialDetailView({
             `. Last edited by ${material.updated_by_username} on ${formatDate(material.updated_at)}`}
         </Typography>
       </DetailCard>
+    </Box>
+  );
+}
+
+/** What one entry states, as a card per block (hull, cockpit, paddler; a
+ * paddle's own specs): the list of a model with a single size. */
+function SpecCards({ material, units }: { material: Material; units: Units }) {
+  const groups = new Map<string, SpecRow[]>();
+  for (const row of specRows(material, units)) {
+    groups.set(row.group, [...(groups.get(row.group) ?? []), row]);
+  }
+  if (groups.size === 0) return null;
+  return (
+    <Box
+      data-testid="spec-cards"
+      sx={{
+        display: "grid",
+        // The cards sit side by side where the width allows.
+        gridTemplateColumns: { md: "repeat(auto-fill, minmax(340px, 480px))" },
+        columnGap: 1,
+        alignItems: "start",
+      }}
+    >
+      {[...groups].map(([group, rows]) => (
+        <DetailCard key={group} heading={group}>
+          <Box data-testid={group === "Paddle" ? "paddle-facts" : undefined}>
+            {rows.map((row) => (
+              <FactRow key={row.label} label={row.label} value={row.value} />
+            ))}
+          </Box>
+        </DetailCard>
+      ))}
     </Box>
   );
 }

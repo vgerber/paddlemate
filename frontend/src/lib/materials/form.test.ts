@@ -67,6 +67,7 @@ const FULL_PADDLE: Required<MaterialBody> = {
   availability_source: "https://example.com/archive",
   availability_checked: "2026-11-01",
   notes: "Weak year.",
+  editor_note: "Playak year.",
   colors: ["Red", "Blue"],
   length_cm: 12.3,
   width_cm: 4.56,

@@ -82,6 +82,7 @@ fn row_to_material(row: &PgRow) -> Result<Material, sqlx::Error> {
         availability_checked: row.try_get("availability_checked")?,
         sources: row.try_get("sources")?,
         notes: row.try_get("notes")?,
+        editor_note: None,
         blade_area_cm2: row.try_get("blade_area_cm2")?,
         blade_length_cm: row.try_get("blade_length_cm")?,
         blade_width_cm: row.try_get("blade_width_cm")?,
@@ -327,6 +328,14 @@ async fn count_entries(
     }
     push_filters(&mut qb, filters);
     qb.build_query_scalar().fetch_one(pool).await
+}
+
+/// The editors' note of an entry; kept out of every public read.
+pub async fn editor_note(pool: &PgPool, id: MaterialId) -> Result<Option<String>, sqlx::Error> {
+    sqlx::query_scalar("SELECT editor_note FROM materials WHERE id = $1")
+        .bind(id)
+        .fetch_one(pool)
+        .await
 }
 
 pub async fn fetch(pool: &PgPool, id: MaterialId) -> Result<Option<Material>, sqlx::Error> {
