@@ -60,12 +60,26 @@ pub fn url_for(storage_key: &str) -> String {
     format!("{}/{storage_key}", media_base())
 }
 
+/// Composite any transparency onto white. JPEG has no alpha, and a bare
+/// RGB conversion would turn cut-outs (product shots) black. Done before
+/// resizing so edges do not pick up dark fringes.
+fn flatten_alpha(img: image::DynamicImage) -> image::DynamicImage {
+    if !img.color().has_alpha() {
+        return img;
+    }
+    let mut canvas =
+        image::RgbaImage::from_pixel(img.width(), img.height(), image::Rgba([255, 255, 255, 255]));
+    image::imageops::overlay(&mut canvas, &img.to_rgba8(), 0, 0);
+    image::DynamicImage::ImageRgba8(canvas)
+}
+
 /// Decode `bytes` and encode the display copy and the thumbnail as JPEG,
 /// returning both and the display size.
 fn encode_copies(bytes: &[u8]) -> anyhow::Result<(Vec<u8>, Vec<u8>, u32, u32)> {
     let decoded = image::load_from_memory(bytes)
-        .map_err(|_| anyhow::anyhow!("not a readable image (jpeg, png or webp)"))?;
+        .map_err(|_| anyhow::anyhow!("not a readable image (jpeg, png, webp or gif)"))?;
 
+    let decoded = flatten_alpha(decoded);
     let display = if decoded.width().max(decoded.height()) > MAX_EDGE {
         decoded.resize(MAX_EDGE, MAX_EDGE, image::imageops::FilterType::Lanczos3)
     } else {
@@ -215,6 +229,41 @@ mod tests {
     fn thumb_key_sits_beside_the_original() {
         assert_eq!(thumb_key("abc.jpg"), "abc.thumb.jpg");
         assert_eq!(thumb_key("noext"), "noext.thumb");
+    }
+
+    #[test]
+    fn transparency_becomes_white_not_black() {
+        let mut src = image::RgbaImage::from_pixel(40, 40, image::Rgba([0, 0, 0, 0]));
+        for x in 10..20 {
+            for y in 10..20 {
+                src.put_pixel(x, y, image::Rgba([200, 0, 0, 255]));
+            }
+        }
+        let mut png = Cursor::new(Vec::new());
+        image::DynamicImage::ImageRgba8(src)
+            .write_to(&mut png, ImageFormat::Png)
+            .unwrap();
+        let (display, thumb, w, h) = encode_copies(png.get_ref()).unwrap();
+        assert_eq!((w, h), (40, 40));
+        for bytes in [display, thumb] {
+            let out = image::load_from_memory(&bytes).unwrap().to_rgb8();
+            let corner = out.get_pixel(35, 35);
+            assert!(corner.0.iter().all(|c| *c > 240), "corner {corner:?}");
+            let body = out.get_pixel(15, 15);
+            assert!(body[0] > 150 && body[1] < 80, "body {body:?}");
+        }
+    }
+
+    #[test]
+    fn opaque_images_are_not_touched_by_flattening() {
+        let img = image::DynamicImage::ImageRgb8(image::RgbImage::from_pixel(
+            8,
+            8,
+            image::Rgb([10, 20, 30]),
+        ));
+        let out = flatten_alpha(img.clone());
+        assert_eq!(out.to_rgb8(), img.to_rgb8());
+        assert!(!out.color().has_alpha());
     }
 
     #[tokio::test]

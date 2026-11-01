@@ -178,3 +178,69 @@ pub async fn remove_brand(pool: &PgPool, brand: &str) -> Result<(i64, Vec<String
         .collect();
     Ok((rows.len() as i64, files))
 }
+
+/// Which fetched photos to download again.
+#[derive(Debug, Default, Clone)]
+pub struct RefetchFilter {
+    /// Source URL path ends in .png, .webp or .gif (formats with alpha).
+    pub transparent_sources: bool,
+    /// Brand names of the material, case-insensitive.
+    pub brands: Vec<String>,
+}
+
+impl RefetchFilter {
+    pub fn is_empty(&self) -> bool {
+        !self.transparent_sources && self.brands.is_empty()
+    }
+}
+
+/// A fetched photo chosen for a refetch.
+#[derive(Debug, sqlx::FromRow)]
+pub struct RefetchRow {
+    pub id: i64,
+    pub file: String,
+    pub source_url: String,
+}
+
+/// Fetched photos matching any part of the filter. Only `material_images`
+/// rows are ever selected; an empty filter selects nothing.
+pub async fn select_refetch(
+    pool: &PgPool,
+    filter: &RefetchFilter,
+) -> Result<Vec<RefetchRow>, sqlx::Error> {
+    if filter.is_empty() {
+        return Ok(Vec::new());
+    }
+    let brands: Vec<String> = filter.brands.iter().map(|b| b.to_lowercase()).collect();
+    sqlx::query_as::<_, RefetchRow>(
+        "SELECT i.id, i.file, i.source_url FROM material_images i \
+         JOIN materials m ON m.id = i.material_id \
+         WHERE i.status = 'fetched' AND i.file IS NOT NULL AND ( \
+               ($1 AND i.source_url ~* '^[^?#]*\\.(png|webp|gif)([?#].*)?$') \
+            OR lower(btrim(m.brand)) = ANY($2)) \
+         ORDER BY i.id",
+    )
+    .bind(filter.transparent_sources)
+    .bind(&brands)
+    .fetch_all(pool)
+    .await
+}
+
+/// Mark the rows pending again and delete their files. Returns how many
+/// rows were requeued; a row that stopped being fetched meanwhile is left.
+pub async fn requeue(pool: &PgPool, ids: &[i64]) -> Result<usize, sqlx::Error> {
+    let files: Vec<String> = sqlx::query_scalar(
+        "UPDATE material_images m SET status = 'pending', file = NULL, fetched_at = NULL, \
+                error = NULL, attempts = 0 \
+         FROM (SELECT id, file FROM material_images \
+               WHERE id = ANY($1) AND status = 'fetched' FOR UPDATE) o \
+         WHERE m.id = o.id RETURNING o.file",
+    )
+    .bind(ids)
+    .fetch_all(pool)
+    .await?;
+    for file in &files {
+        media::delete_image(file).await;
+    }
+    Ok(files.len())
+}

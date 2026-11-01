@@ -361,8 +361,30 @@ seconds. Rules, each tested in `api/tests/material_images.rs`:
 | Takedown | Sets `removed`, deletes the files; a takedown during a download deletes the new file again |
 
 `media::sweep_orphans` counts `material_images.file` as known, so the daily
-sweep keeps the mirrored files. PNG transparency is flattened to black by the
-shared re-encoder.
+sweep keeps the mirrored files. Transparency (PNG, WebP, GIF cut-outs) is
+flattened onto white before the JPEG encode, in `media::store_image`. Sources
+that are themselves tiny (Playak's 286x40 images, say) stay low quality: that
+is the source, the mirror stores what it is given.
+
+#### Fetching photos again
+
+The original bytes are not kept, so a badly stored photo (photos mirrored
+before the white-background fix have black cut-outs) is repaired by fetching
+it again. `refetch_material_images` (`api/src/bin/`) marks the chosen
+`material_images` rows pending, clears their file and deletes the old files;
+the running mirror job downloads them anew. It touches only
+`material_images`, never user media. It prints the matches and changes
+nothing without `--yes`:
+
+```
+cd api && cargo run --bin refetch_material_images -- --transparent-sources        # dry run
+cd api && cargo run --bin refetch_material_images -- --transparent-sources --yes  # apply
+```
+
+`--transparent-sources` selects fetched photos whose source URL path ends in
+`.png`, `.webp` or `.gif`; `--brand <name>` (repeatable, case-insensitive)
+selects a brand's fetched photos. Both may be combined (a photo matching
+either is selected). Tests: `api/tests/material_refetch.rs`.
 
 ### API
 
