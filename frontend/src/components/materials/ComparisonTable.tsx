@@ -5,7 +5,7 @@ import IconButton from "@mui/material/IconButton";
 import NativeSelect from "@mui/material/NativeSelect";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
-import { Fragment } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { phoneCardSx } from "@/components/phone/phoneGrid";
 import type { Material } from "@/lib/api";
 import { useMaterial } from "@/lib/hooks/useMaterials";
@@ -328,6 +328,25 @@ function Summary({
   );
 }
 
+/** Whether the element is wider than its box, kept current on resize. */
+function useScrollsSideways(active: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scrolls, setScrolls] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!active || !el) {
+      setScrolls(false);
+      return;
+    }
+    const measure = () => setScrolls(el.scrollWidth > el.clientWidth + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [active]);
+  return { ref, scrolls };
+}
+
 /** Entries side by side. Values every entry shares become chips; the table
  * keeps only the rows that tell them apart, and a row two entries state at
  * least. Up to four entries share the width, more scroll under a sticky head. */
@@ -346,6 +365,7 @@ export default function ComparisonTable({
   const [units] = useUnits();
   const { alike, rows, mixed } = buildComparison(materials, units);
   const wide = materials.length > FIT_COLUMNS;
+  const { ref, scrolls } = useScrollsSideways(wide);
   const columns = wide
     ? `repeat(${materials.length}, ${WIDE_COLUMN}px)`
     : `repeat(${materials.length}, minmax(0, 1fr))`;
@@ -360,7 +380,7 @@ export default function ComparisonTable({
         mixed={mixed}
         onAdd={onAdd}
       />
-      {wide && (
+      {wide && scrolls && (
         <Typography
           data-testid="compare-scroll-hint"
           variant="body2"
@@ -372,6 +392,7 @@ export default function ComparisonTable({
         </Typography>
       )}
       <Box
+        ref={ref}
         role="region"
         aria-label="Comparison table"
         tabIndex={wide ? 0 : undefined}
