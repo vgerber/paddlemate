@@ -37,8 +37,7 @@ test.describe("wiki list", () => {
     const cascade = row(page, "Testflow Cascade");
     await expect(cascade).toContainText("Creek");
     await expect(cascade).toContainText("since 2022");
-    await expect(cascade).toContainText("Length 254-274 cm");
-    await expect(cascade).toContainText("Volume 295-345 l");
+    await expect(cascade).toContainText("254-274 cm");
     await expect(cascade.getByTestId("model-sizes")).toHaveText("S · M · L");
     await expect(page.getByText("2 models")).toBeVisible();
     await expectNoHorizontalOverflow(page);

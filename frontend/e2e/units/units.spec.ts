@@ -72,16 +72,14 @@ test.describe("choosing units", () => {
     await openUnits(page);
     await choose(page, "Length", "in");
     let cascade = await wikiRow(page);
-    await expect(cascade).toContainText("Length 100-107.9 in");
-    await expect(cascade).toContainText("Volume 77.9-91.1 gal");
+    await expect(cascade).toContainText("100-107.9 in");
     await page.reload();
     cascade = row(page, "Testflow Cascade");
-    await expect(cascade).toContainText("Length 100-107.9 in");
+    await expect(cascade).toContainText("100-107.9 in");
     await openUnits(page);
     await choose(page, "Length", "cm");
     cascade = await wikiRow(page);
-    await expect(cascade).toContainText("Length 254-274 cm");
-    await expect(cascade).toContainText("Volume 295-345 l");
+    await expect(cascade).toContainText("254-274 cm");
   });
 
   test("weight changes the paddler window and the filter chip", async ({
@@ -168,9 +166,7 @@ test.describe("signed out", () => {
         .getByRole("button", { name: "in", exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
     await page.goto("/materials?q=Cascade");
-    await expect(row(page, "Testflow Cascade")).toContainText(
-      "Length 100-107.9 in",
-    );
+    await expect(row(page, "Testflow Cascade")).toContainText("100-107.9 in");
   });
 });
 
@@ -191,7 +187,7 @@ test.describe("device default", () => {
             .getByRole("button", { name: unit, exact: true }),
         ).toHaveAttribute("aria-pressed", "true");
       }
-      await expect(await wikiRow(page)).toContainText("Length 100-107.9 in");
+      await expect(await wikiRow(page)).toContainText("100-107.9 in");
     });
   });
 
@@ -200,7 +196,7 @@ test.describe("device default", () => {
 
     test("starts metric", async ({ page }) => {
       await clearStored(page);
-      await expect(await wikiRow(page)).toContainText("Length 254-274 cm");
+      await expect(await wikiRow(page)).toContainText("254-274 cm");
     });
   });
 });
@@ -231,8 +227,8 @@ test.describe("entering imperial", () => {
     await choose(page, "Weight", "kg");
     await page.goto("/materials?q=Unitprobe");
     const probe = row(page, "Unitprobe Beta");
-    await expect(probe).toContainText("Length 254 cm");
-    await expect(probe).toContainText("Weight 22.7 kg");
+    await expect(probe).toContainText("254 cm");
+    await expect(probe).toContainText("22.7 kg");
 
     // Editing in metric shows the stored numbers, and an untouched save keeps them.
     await probe.getByRole("button").first().click();

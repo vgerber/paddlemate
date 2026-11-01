@@ -43,8 +43,8 @@ test.describe("category tree on a desktop", () => {
       "aria-current",
       "page",
     );
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pyranha");
-    await expect(page.getByTestId("wiki-counts")).toContainText("9 models");
+    await expect(page.getByTestId("wiki-header")).toContainText("Pyranha");
+    await expect(page.getByTestId("wiki-header")).toContainText("9 models");
     // The path is a link: the back button undoes the last pick.
     await page.goBack();
     await expect(page).not.toHaveURL(/brand=/);
