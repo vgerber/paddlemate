@@ -144,18 +144,18 @@ export default function ModelRow({
             {modelTitle(model)}
           </Typography>
           {kind && (
-            <Typography noWrap sx={metaSx}>
+            <Typography sx={{ ...metaSx, overflowWrap: "anywhere" }}>
               {kind}
             </Typography>
           )}
-          <Box sx={{ display: "flex", gap: 1 }}>
+          <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 1 }}>
             {figures && (
               <Typography
-                noWrap
                 sx={{
                   ...metaSx,
                   fontVariantNumeric: "tabular-nums",
                   minWidth: 0,
+                  overflowWrap: "anywhere",
                 }}
               >
                 {figures}
@@ -163,9 +163,8 @@ export default function ModelRow({
             )}
             {sizes && (
               <Typography
-                noWrap
                 data-testid="model-sizes"
-                sx={{ ...metaSx, flexShrink: 0 }}
+                sx={{ ...metaSx, overflowWrap: "anywhere" }}
               >
                 {sizes}
               </Typography>

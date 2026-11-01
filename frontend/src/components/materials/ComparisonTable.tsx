@@ -92,6 +92,10 @@ function EntrySize({
         fontSize: "0.875rem",
         fontWeight: 600,
         maxWidth: "100%",
+        "& .MuiNativeSelect-select:focus-visible": {
+          outline: `2px solid ${tokens.primary}`,
+          outlineOffset: -2,
+        },
       }}
     >
       {sizes.map(({ id, size }) => (
@@ -150,7 +154,14 @@ function EntryHead({
         to="/materials/$materialId"
         params={{ materialId: String(material.id) }}
         search={{ edit: false }}
-        style={{ textDecoration: "none", minWidth: 0 }}
+        style={{
+          textDecoration: "none",
+          minWidth: 0,
+          minHeight: tokens.touch.min,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+        }}
       >
         <Typography
           sx={{ ...labelSx, overflowWrap: "anywhere", lineHeight: "16px" }}
