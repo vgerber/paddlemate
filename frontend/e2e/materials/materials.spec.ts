@@ -414,3 +414,42 @@ test.describe("adding and correcting", () => {
     await expect(page.getByTestId("empty-state")).toBeVisible();
   });
 });
+
+test.describe("header card", () => {
+  // The header's content sits on the 56 row: equal gap above and below.
+  const pages = ["/materials", "/materials/compare"];
+  for (const path of pages) {
+    test(`${path} header is vertically centred @small`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page.locator("[data-panel-back]:visible")).toBeVisible();
+      await expectHeaderCentred(page);
+    });
+  }
+
+  test("a model's header is vertically centred", async ({ page }) => {
+    await openWiki(page, FIXTURE);
+    await row(page, "Testflow Cascade").click();
+    await expect(page.locator("[data-panel-back]:visible")).toBeVisible();
+    await expectHeaderCentred(page);
+  });
+});
+
+async function expectHeaderCentred(page: Page) {
+  const gaps = await page.evaluate(() => {
+    const back = [...document.querySelectorAll("[data-panel-back]")].find(
+      (b) => (b as HTMLElement).offsetParent,
+    );
+    const row = back?.parentElement;
+    const card = row?.parentElement;
+    if (!row || !card) throw new Error("no header card");
+    const box = card.getBoundingClientRect();
+    return [...row.children].map((c) => {
+      const r = c.getBoundingClientRect();
+      return { top: r.top - box.top, bottom: box.bottom - r.bottom };
+    });
+  });
+  expect(gaps.length).toBeGreaterThan(1);
+  for (const g of gaps) {
+    expect(Math.abs(g.top - g.bottom)).toBeLessThanOrEqual(1);
+  }
+}

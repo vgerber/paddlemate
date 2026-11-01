@@ -62,7 +62,6 @@ export default function PanelHeader<T extends string>({
         // A titled header is the section panel's 56 + 48 from md; the tab
         // bar alone keeps its 16 inset.
         px: { xs: 0, md: title ? 0 : 2 },
-        pb: { xs: 0, md: tabs ? 0 : 1 },
         bgcolor: tokens.surface,
         boxShadow: tokens.elevation.e1,
         position: "relative",
