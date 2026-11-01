@@ -497,6 +497,13 @@ The wiki is a normal page, not a map screen: from `md` one column (`WIKI_WIDTH`,
 1440, shared by the list, the entry, the comparison and the form) with a header
 card (`SortSelect` at its right), a 300 sidebar (`MaterialsDesktop`: `SearchField`,
 `MaterialTree`, `FilterFields sidebar`, the docked Add entry) and a card grid.
+The list page (`PageFrame fill`) is exactly the window under the app bar and
+never scrolls as a whole: the card grid (desktop) or the model list (phone,
+under the search and chip rows) is the one scroller (`wiki-scroll`, focusable
+for keyboard scrolling), the sidebar scrolls on its own, and the compare bar
+sits below the scroller (the phone's Add button hides while it shows). The
+entry and the comparison keep normal page scrolling. The app has no scroll
+restoration, so coming back from an entry starts at the top.
 The size choice of a row is the shared `ActionMenu` of `RowMenu`. On a phone it is edge to edge, with `BrowseSheet`
 for the tree, reached from Tools. `MaterialTree` is a real ARIA tree
 (`role=tree/treeitem`, `aria-level/expanded/selected`, roving tabindex; the

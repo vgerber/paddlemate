@@ -11,8 +11,12 @@ const FAB_GAP = 8;
 const FAB_SIZE = 56;
 const FAB_EDGE = 16;
 
+/** How far above the bottom nav a bar must sit to clear the FAB, px. For a bar
+ * pinned inside a scroller that already ends at the nav. */
+export const fabClearance = FAB_EDGE + FAB_SIZE + FAB_GAP;
+
 /** The bottom offset that clears the FAB: for a bar pinned above it. */
-export const aboveFab = `calc(${BOTTOM_NAV_SPACE} + ${FAB_EDGE + FAB_SIZE + FAB_GAP}px)`;
+export const aboveFab = `calc(${BOTTOM_NAV_SPACE} + ${fabClearance}px)`;
 
 /** On a phone, the screen's corner above the bottom nav. From `md` up a
  * pane's primary action is docked at its foot instead (`DockedAction`), so
