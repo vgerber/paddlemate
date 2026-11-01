@@ -21,8 +21,8 @@ use paddlemate_api::{
     layers::limit::{RateLimits, limit_requests, limit_writes},
     routes::{
         descents::descents_routes, docs::docs_routes, gauges::gauges_routes, geo::geo_routes,
-        groups::group_routes, materials::materials_routes, proposals::proposals_routes,
-        trips::trips_routes, users::users_routes, waterways::waterways_routes,
+        groups::group_routes, proposals::proposals_routes, trips::trips_routes,
+        users::users_routes, waterways::waterways_routes,
     },
     state::{AppState, KeycloakState},
 };
@@ -213,48 +213,45 @@ async fn main() {
             api_token_auth,
         ));
 
-    let waterway_app = ApiRouter::new()
-        .nest_api_service(
-            "/waterways",
-            waterways_routes(state.clone())
-                .nest_api_service(
-                    "/gauges",
-                    gauges_routes(state.clone())
-                        .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
-                )
-                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
-        )
-        .nest_api_service(
-            "/descents",
-            descents_routes(state.clone())
-                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
-        )
-        .nest_api_service(
-            "/materials",
-            materials_routes(state.clone())
-                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
-        )
-        .nest_api_service(
-            "/geo",
-            geo_routes(state.clone())
-                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
-        )
-        .nest_api_service(
-            "/proposals",
-            proposals_routes(state.clone())
-                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
-        )
-        .nest_api_service(
-            "/trips",
-            trips_routes(state.clone())
-                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
-        )
-        .layer(middleware::from_fn_with_state(limits.clone(), limit_writes))
-        .layer(middleware::from_fn(paddlemate_api::metrics::tag_client))
-        .layer(middleware::from_fn_with_state(
-            state.clone(),
-            api_token_auth_optional,
-        ));
+    let waterway_app = paddlemate_api::routes::materials::mount_materials(
+        ApiRouter::new(),
+        config.materials_enabled,
+        state.clone(),
+    )
+    .nest_api_service(
+        "/waterways",
+        waterways_routes(state.clone())
+            .nest_api_service(
+                "/gauges",
+                gauges_routes(state.clone())
+                    .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+            )
+            .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+    )
+    .nest_api_service(
+        "/descents",
+        descents_routes(state.clone())
+            .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+    )
+    .nest_api_service(
+        "/geo",
+        geo_routes(state.clone()).layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+    )
+    .nest_api_service(
+        "/proposals",
+        proposals_routes(state.clone())
+            .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+    )
+    .nest_api_service(
+        "/trips",
+        trips_routes(state.clone()).layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+    )
+    .layer(middleware::from_fn_with_state(limits.clone(), limit_writes))
+    .layer(middleware::from_fn(paddlemate_api::metrics::tag_client))
+    .layer(middleware::from_fn_with_state(
+        state.clone(),
+        api_token_auth_optional,
+    ));
 
     paddlemate_api::jobs::spawn_all(&state, &config, &limits);
 

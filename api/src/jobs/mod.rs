@@ -10,6 +10,11 @@ use crate::{config::Config, layers::limit::RateLimits, state::AppState};
 /// How often idle callers are dropped from the rate limiter.
 const LIMITER_PRUNE_INTERVAL: Duration = Duration::from_secs(60);
 
+/// Whether the catalogue image mirror starts: never while the wiki is off.
+pub fn mirror_runs(config: &Config) -> bool {
+    config.materials_enabled && !config.disable_material_mirror
+}
+
 /// Starts every background task. Each runs for the life of the server.
 pub fn spawn_all(state: &AppState, config: &Config, limits: &RateLimits) {
     let db = state.pg_pool.clone();
@@ -38,10 +43,10 @@ pub fn spawn_all(state: &AppState, config: &Config, limits: &RateLimits) {
         crate::readers::run_all(db.clone(), state.gauge_wake.clone());
     }
 
-    if config.disable_material_mirror {
-        tracing::info!("Material image mirror disabled (DISABLE_MATERIAL_MIRROR=true)");
-    } else {
+    if mirror_runs(config) {
         material_images::run(db.clone());
+    } else {
+        tracing::info!("Material image mirror off");
     }
 
     crate::regions::run_worker(db.clone(), state.region_wake.clone());
