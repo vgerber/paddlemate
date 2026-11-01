@@ -22,7 +22,9 @@ export default function SortSelect({
         const sort = event.target.value as MaterialSort;
         onChange(sort === "name" ? undefined : sort);
       }}
-      sx={{ width: 180 }}
+      // Inset like the header's icon actions: off the card's edge and its
+      // top and bottom.
+      sx={{ width: 180, my: 1, mr: 1.5 }}
     >
       {SORTS.map((sort) => (
         <MenuItem key={sort} value={sort}>
