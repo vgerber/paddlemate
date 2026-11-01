@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import type { Proposal } from "@/lib/api";
 import { theme } from "@/lib/theme/theme";
 
@@ -19,6 +20,7 @@ export default function PendingProposalNote({
 }: {
   proposals: Proposal[];
 }) {
+  const navigate = useNavigate();
   if (proposals.length === 0) return null;
   return (
     <Box
@@ -33,20 +35,21 @@ export default function PendingProposalNote({
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
             {WHAT[proposal.operation]} is waiting for review.
           </Typography>
-          <Link
-            to="/proposals/$proposalId"
-            params={{ proposalId: String(proposal.id) }}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              minHeight: tokens.touch.min,
-              padding: "0 4px",
-              fontSize: "0.875rem",
-              color: tokens.primary,
+          <Button
+            size="small"
+            // A real link, opened by the router when it is a plain click.
+            href={`/proposals/${proposal.id}`}
+            onClick={(event) => {
+              event.preventDefault();
+              navigate({
+                to: "/proposals/$proposalId",
+                params: { proposalId: String(proposal.id) },
+              });
             }}
+            sx={{ minHeight: tokens.touch.min }}
           >
             View
-          </Link>
+          </Button>
         </Box>
       ))}
     </Box>

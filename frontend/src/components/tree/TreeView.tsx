@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { openRowSx } from "@/components/canvas/flatRow";
 import { ChevronRightIcon, ExpandIcon } from "@/lib/icons";
 import { withAlpha } from "@/lib/theme/alpha";
 import { focusRingSx } from "@/lib/theme/focusRing";
@@ -17,7 +18,7 @@ const { tokens } = theme;
 
 /** Left pad of level 1, and what each level adds, in px. */
 export const TREE_BASE_PAD = 8;
-export const TREE_LEVEL_STEP = 16;
+export const TREE_LEVEL_STEP = 12;
 /** Size of the chevron slot, which leaves line up with. */
 export const TREE_CHEVRON = 16;
 
@@ -124,9 +125,8 @@ export default function TreeView<T extends TreeNode>({
             borderRadius: `${tokens.radii.row}px`,
             cursor: "pointer",
             color: row.selected ? tokens.primary : "text.primary",
-            bgcolor: row.selected
-              ? withAlpha(tokens.primary, "wash")
-              : undefined,
+            // The open row: the wash and the 3px bar of a list row.
+            ...openRowSx(row.selected, true),
             "&:hover": {
               bgcolor: row.selected
                 ? withAlpha(tokens.primary, "hover")

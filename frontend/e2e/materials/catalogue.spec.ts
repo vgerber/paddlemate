@@ -120,13 +120,13 @@ test.describe("catalogue detail", () => {
     const thumb = lens.getByTestId("material-thumb");
     await expect(thumb.locator("img")).toHaveAttribute("loading", "lazy");
     const size = await thumb.boundingBox();
-    expect(size?.width).toBe(56);
+    expect(size?.width).toBe(44);
     await expect(
       page
         .getByTestId("material-row")
         .filter({ hasText: "Photocraft Blade" })
         .filter({ visible: true }),
-    ).toContainText("Length 191, 194, 197 cm");
+    ).toContainText("191, 194, 197 cm");
 
     await page.goto("/materials?category=paddle");
     await expect(page.getByTestId("material-row").first()).toBeVisible();

@@ -1,4 +1,3 @@
-import Box from "@mui/material/Box";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import MaterialForm from "@/components/materials/MaterialForm";
@@ -12,7 +11,6 @@ import { MaterialIcon } from "@/lib/icons";
 import { emptyMaterialForm } from "@/lib/materials/form";
 import { EMPTY_MATERIAL_SEARCH } from "@/lib/materials/search";
 import { isProposal } from "@/lib/proposals";
-import { PANEL_HEIGHT } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/materials/new")({
   beforeLoad: () => requireMaterials(),
@@ -40,38 +38,28 @@ function NewMaterialPage() {
   }
 
   return (
-    <Box
-      sx={{
-        maxWidth: 720,
-        mx: "auto",
-        height: PANEL_HEIGHT,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <MaterialForm
-        values={values}
-        onChange={setValues}
-        title="New entry"
-        subtitle="Brand and model are enough to start"
-        saving={create.isPending}
-        error={create.error}
-        onCancel={goBack}
-        onSubmit={(body) =>
-          create.mutate(body, {
-            // A proposal has no entry to open yet: go back to the wiki.
-            onSuccess: (result) =>
-              isProposal(result)
-                ? goBack()
-                : navigate({
-                    to: "/materials/$materialId",
-                    params: { materialId: String(result.id) },
-                    search: { edit: false },
-                    replace: true,
-                  }),
-          })
-        }
-      />
-    </Box>
+    <MaterialForm
+      values={values}
+      onChange={setValues}
+      title="New entry"
+      subtitle="Brand and model are enough to start"
+      saving={create.isPending}
+      error={create.error}
+      onCancel={goBack}
+      onSubmit={(body) =>
+        create.mutate(body, {
+          // A proposal has no entry to open yet: go back to the wiki.
+          onSuccess: (result) =>
+            isProposal(result)
+              ? goBack()
+              : navigate({
+                  to: "/materials/$materialId",
+                  params: { materialId: String(result.id) },
+                  search: { edit: false },
+                  replace: true,
+                }),
+        })
+      }
+    />
   );
 }

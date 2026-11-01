@@ -6,16 +6,19 @@ export default function ChoiceChips<T extends string>({
   value,
   onChange,
   labelOf,
+  compact,
 }: {
   options: readonly T[];
   value: T | undefined;
   onChange: (value: T | undefined) => void;
   labelOf: (value: T) => string;
+  compact?: boolean;
 }) {
   return options.map((option) => (
     <FilterChip
       key={option}
       plain
+      compact={compact}
       label={labelOf(option)}
       set={value === option}
       onClick={() => onChange(value === option ? undefined : option)}

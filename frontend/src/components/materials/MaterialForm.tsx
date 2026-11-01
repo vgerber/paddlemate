@@ -35,9 +35,12 @@ import {
 } from "@/lib/materials/specs";
 import { unitLabel, useUnits } from "@/lib/prefs/units";
 import { humanize, sentenceCase } from "@/lib/text/format";
-import { theme } from "@/lib/theme/theme";
+import { PANEL_HEIGHT, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
+
+/** Width of the form card on a desktop, px. */
+const FORM_WIDTH = 720;
 
 const SPEC_HINTS = {
   hull: "Outer dimensions, as the manufacturer states them.",
@@ -143,292 +146,308 @@ export default function MaterialForm({
   );
 
   return (
+    // From md the form is one card on the page's ground, its bottom bar the
+    // card's own foot; a phone gets the whole screen.
     <Box
       sx={{
-        position: { xs: "fixed", md: "static" },
-        inset: { xs: 0 },
-        // Over the bottom nav (1300), like the log form's bar.
-        zIndex: 1350,
-        flex: 1,
-        minHeight: 0,
+        height: PANEL_HEIGHT,
         display: "flex",
         flexDirection: "column",
-        bgcolor: "background.default",
+        px: { md: 2 },
+        py: { md: 2 },
+        boxSizing: "border-box",
       }}
     >
       <Box
         sx={{
+          position: { xs: "fixed", md: "static" },
+          inset: { xs: 0 },
+          // Over the bottom nav (1300), like the log form's bar.
+          zIndex: 1350,
           flex: 1,
           minHeight: 0,
-          overflowY: "auto",
-          px: { xs: `${tokens.phone.line}px`, md: 2 },
-          py: 2,
+          width: "100%",
+          maxWidth: { md: FORM_WIDTH },
+          mx: "auto",
           display: "flex",
           flexDirection: "column",
-          gap: 2.5,
+          bgcolor: { xs: "background.default", md: tokens.surface },
+          borderRadius: { md: `${tokens.radii.md}px` },
+          boxShadow: { md: tokens.elevation.e1 },
+          overflow: "hidden",
         }}
       >
-        <FormSection label="Boat" hint="What it is and what it is called.">
-          <TextField
-            select
-            label="Category"
-            value={values.category}
-            onChange={(event) => {
-              const category = event.target
-                .value as MaterialFormValues["category"];
-              // A class from the old category may not exist in the new one.
-              const fits = disciplinesFor(category).some(
-                (d) => d === values.discipline,
-              );
-              set({ category, discipline: fits ? values.discipline : "" });
-            }}
-          >
-            {CATEGORIES.map((category) => (
-              <MenuItem key={category} value={category}>
-                {CATEGORY_LABELS[category]}
-              </MenuItem>
-            ))}
-          </TextField>
-          {textField("brand", "Brand", { required: true })}
-          {textField("model", "Model", { required: true })}
-          {textField("variant", "Variant", {
-            helperText: "Edition or trim, such as PRO or Carbolight",
-          })}
-          {textField("size", "Size", {
-            helperText: "S, M, L or a number, if the model comes in sizes",
-          })}
-        </FormSection>
-
-        <FormSection
-          label="Type"
-          hint="What the boat is built for, and when it was sold."
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            px: { xs: `${tokens.phone.line}px`, md: 2 },
+            py: 2,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2.5,
+          }}
         >
-          <Box sx={fieldGridSx}>
+          <FormSection label="Boat" hint="What it is and what it is called.">
             <TextField
               select
-              label="Discipline"
-              value={values.discipline}
+              label="Category"
+              value={values.category}
               onChange={(event) =>
                 set({
-                  discipline: event.target
-                    .value as MaterialFormValues["discipline"],
+                  category: event.target
+                    .value as MaterialFormValues["category"],
                 })
               }
             >
-              <MenuItem value="">Unstated</MenuItem>
-              {disciplinesFor(values.category).map((discipline) => (
-                <MenuItem key={discipline} value={discipline}>
-                  {disciplineLabel(discipline, values.category)}
+              {CATEGORIES.map((category) => (
+                <MenuItem key={category} value={category}>
+                  {CATEGORY_LABELS[category]}
                 </MenuItem>
               ))}
             </TextField>
-            <TextField
-              select
-              label="Construction"
-              value={values.construction}
-              onChange={(event) =>
-                set({
-                  construction: event.target
-                    .value as MaterialFormValues["construction"],
-                })
-              }
-            >
-              <MenuItem value="">Unstated</MenuItem>
-              {CONSTRUCTIONS.map((construction) => (
-                <MenuItem key={construction} value={construction}>
-                  {sentenceCase(humanize(construction))}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Box>
-          <Box sx={fieldGridSx}>
-            {numberField("year_from", "First year")}
-            {numberField("year_to", "Last year")}
-          </Box>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={values.year_approximate}
-                onChange={(event) =>
-                  set({ year_approximate: event.target.checked })
-                }
-                sx={{ width: tokens.touch.min, height: tokens.touch.min }}
-              />
-            }
-            label="The years are approximate"
-            sx={{ minHeight: tokens.touch.min }}
-          />
-        </FormSection>
+            {textField("brand", "Brand", { required: true })}
+            {textField("model", "Model", { required: true })}
+            {textField("variant", "Variant", {
+              helperText: "Edition or trim, such as PRO or Carbolight",
+            })}
+            {textField("size", "Size", {
+              helperText: "S, M, L or a number, if the model comes in sizes",
+            })}
+          </FormSection>
 
-        {isPaddle && (
           <FormSection
-            label="Paddle"
-            hint="Blade, shaft and the lengths it comes in."
+            label="Type"
+            hint="What the boat is built for, and when it was sold."
           >
             <Box sx={fieldGridSx}>
-              {PADDLE_SPECS.map((spec) =>
-                numberField(
-                  spec.key,
-                  `${spec.label} (${unitLabel(spec.quantity, units)})`,
-                ),
-              )}
-              {numberField(
-                "weight_kg",
-                `Weight (${unitLabel("weight", units)})`,
-              )}
-              {numberField("pieces", "Pieces")}
+              <TextField
+                select
+                label="Discipline"
+                value={values.discipline}
+                onChange={(event) =>
+                  set({
+                    discipline: event.target
+                      .value as MaterialFormValues["discipline"],
+                  })
+                }
+              >
+                <MenuItem value="">Unstated</MenuItem>
+                {disciplinesFor(values.category).map((discipline) => (
+                  <MenuItem key={discipline} value={discipline}>
+                    {disciplineLabel(discipline, values.category)}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                label="Construction"
+                value={values.construction}
+                onChange={(event) =>
+                  set({
+                    construction: event.target
+                      .value as MaterialFormValues["construction"],
+                  })
+                }
+              >
+                <MenuItem value="">Unstated</MenuItem>
+                {CONSTRUCTIONS.map((construction) => (
+                  <MenuItem key={construction} value={construction}>
+                    {sentenceCase(humanize(construction))}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Box>
-            {listField(
-              "lengths_cm",
-              `Sizes (${unitLabel("length", units)})`,
-              "Separate several with commas",
-            )}
-            {listField(
-              "feather_deg",
-              "Feather angles (degrees)",
-              "Separate several with commas",
-            )}
             <Box sx={fieldGridSx}>
-              <TextField
-                select
-                label="Shaft"
-                value={values.shaft}
-                onChange={(event) =>
-                  set({
-                    shaft: event.target.value as MaterialFormValues["shaft"],
-                  })
-                }
-              >
-                <MenuItem value="">Unstated</MenuItem>
-                {SHAFTS.map((shaft) => (
-                  <MenuItem key={shaft} value={shaft}>
-                    {sentenceCase(humanize(shaft))}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                label="Shaft material"
-                value={values.shaft_material}
-                onChange={(event) =>
-                  set({
-                    shaft_material: event.target
-                      .value as MaterialFormValues["shaft_material"],
-                  })
-                }
-              >
-                <MenuItem value="">Unstated</MenuItem>
-                {SHAFT_MATERIALS.map((material) => (
-                  <MenuItem key={material} value={material}>
-                    {sentenceCase(humanize(material))}
-                  </MenuItem>
-                ))}
-              </TextField>
+              {numberField("year_from", "First year")}
+              {numberField("year_to", "Last year")}
             </Box>
-            {textField("blade_material", "Blade material")}
-            {textField("shaft_diameter", "Shaft diameter")}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={values.year_approximate}
+                  onChange={(event) =>
+                    set({ year_approximate: event.target.checked })
+                  }
+                  sx={{ width: tokens.touch.min, height: tokens.touch.min }}
+                />
+              }
+              label="The years are approximate"
+              sx={{ minHeight: tokens.touch.min }}
+            />
           </FormSection>
-        )}
 
-        {(isPaddle ? [] : (["hull", "cockpit", "paddler"] as const)).map(
-          (group) => (
+          {isPaddle && (
             <FormSection
-              key={group}
-              label={SPEC_GROUP_LABELS[group]}
-              hint={SPEC_HINTS[group]}
+              label="Paddle"
+              hint="Blade, shaft and the lengths it comes in."
             >
               <Box sx={fieldGridSx}>
-                {MATERIAL_SPECS.filter((spec) => spec.group === group).map(
-                  (spec) =>
-                    numberField(
-                      spec.key,
-                      `${spec.label} (${unitLabel(spec.quantity, units)})`,
-                    ),
+                {PADDLE_SPECS.map((spec) =>
+                  numberField(
+                    spec.key,
+                    `${spec.label} (${unitLabel(spec.quantity, units)})`,
+                  ),
                 )}
+                {numberField(
+                  "weight_kg",
+                  `Weight (${unitLabel("weight", units)})`,
+                )}
+                {numberField("pieces", "Pieces")}
               </Box>
+              {listField(
+                "lengths_cm",
+                `Sizes (${unitLabel("length", units)})`,
+                "Separate several with commas",
+              )}
+              {listField(
+                "feather_deg",
+                "Feather angles (degrees)",
+                "Separate several with commas",
+              )}
+              <Box sx={fieldGridSx}>
+                <TextField
+                  select
+                  label="Shaft"
+                  value={values.shaft}
+                  onChange={(event) =>
+                    set({
+                      shaft: event.target.value as MaterialFormValues["shaft"],
+                    })
+                  }
+                >
+                  <MenuItem value="">Unstated</MenuItem>
+                  {SHAFTS.map((shaft) => (
+                    <MenuItem key={shaft} value={shaft}>
+                      {sentenceCase(humanize(shaft))}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  label="Shaft material"
+                  value={values.shaft_material}
+                  onChange={(event) =>
+                    set({
+                      shaft_material: event.target
+                        .value as MaterialFormValues["shaft_material"],
+                    })
+                  }
+                >
+                  <MenuItem value="">Unstated</MenuItem>
+                  {SHAFT_MATERIALS.map((material) => (
+                    <MenuItem key={material} value={material}>
+                      {sentenceCase(humanize(material))}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+              {textField("blade_material", "Blade material")}
+              {textField("shaft_diameter", "Shaft diameter")}
             </FormSection>
-          ),
-        )}
+          )}
 
-        <FormSection
-          label="Notes"
-          hint="How it paddles, and where the numbers came from."
-        >
-          <TextField
-            label="Colours"
-            value={values.colors}
-            helperText="Separate several with commas"
-            onChange={(event) => set({ colors: event.target.value })}
-            slotProps={{ htmlInput: { maxLength: 3000 } }}
-          />
-          <TextField
-            label="Description"
-            multiline
-            minRows={3}
-            value={values.description}
-            onChange={(event) => set({ description: event.target.value })}
-            slotProps={{
-              htmlInput: { maxLength: MATERIAL_LIMITS.description },
-            }}
-          />
-          <TextField
+          {(isPaddle ? [] : (["hull", "cockpit", "paddler"] as const)).map(
+            (group) => (
+              <FormSection
+                key={group}
+                label={SPEC_GROUP_LABELS[group]}
+                hint={SPEC_HINTS[group]}
+              >
+                <Box sx={fieldGridSx}>
+                  {MATERIAL_SPECS.filter((spec) => spec.group === group).map(
+                    (spec) =>
+                      numberField(
+                        spec.key,
+                        `${spec.label} (${unitLabel(spec.quantity, units)})`,
+                      ),
+                  )}
+                </Box>
+              </FormSection>
+            ),
+          )}
+
+          <FormSection
             label="Notes"
-            multiline
-            minRows={2}
-            value={values.notes}
-            onChange={(event) => set({ notes: event.target.value })}
-            slotProps={{
-              htmlInput: { maxLength: MATERIAL_LIMITS.description },
-            }}
-          />
-          <TextField
-            label="Manufacturer page"
-            placeholder="https://"
-            value={values.product_url}
-            onChange={(event) => set({ product_url: event.target.value })}
-            slotProps={{
-              htmlInput: { inputMode: "url", maxLength: MATERIAL_LIMITS.url },
-            }}
-          />
-        </FormSection>
-
-        {!isAdmin && (
-          <ProposalNoteField
-            value={note}
-            onChange={setNote}
-            disabled={saving}
-          />
-        )}
-
-        {error != null && (
-          <Alert ref={errorRef} severity="error">
-            {apiErrorMessage(error, "Could not save this entry.")}
-          </Alert>
-        )}
-      </Box>
-
-      <PanelBottomBar
-        onLeftClick={onCancel}
-        leftLabel="Cancel"
-        leftDisabled={saving}
-        title={title}
-        subtitle={subtitle}
-        action={
-          <RoundActionButton
-            ariaLabel="Save entry"
-            disabled={!canSaveMaterial(values)}
-            busy={saving}
-            onClick={() =>
-              onSubmit({
-                ...materialFormToBody(values, units, original),
-                proposal_note: isAdmin ? null : proposalNoteValue(note),
-              })
-            }
+            hint="How it paddles, and where the numbers came from."
           >
-            <ConfirmIcon />
-          </RoundActionButton>
-        }
-      />
+            <TextField
+              label="Colours"
+              value={values.colors}
+              helperText="Separate several with commas"
+              onChange={(event) => set({ colors: event.target.value })}
+              slotProps={{ htmlInput: { maxLength: 3000 } }}
+            />
+            <TextField
+              label="Description"
+              multiline
+              minRows={3}
+              value={values.description}
+              onChange={(event) => set({ description: event.target.value })}
+              slotProps={{
+                htmlInput: { maxLength: MATERIAL_LIMITS.description },
+              }}
+            />
+            <TextField
+              label="Notes"
+              multiline
+              minRows={2}
+              value={values.notes}
+              onChange={(event) => set({ notes: event.target.value })}
+              slotProps={{
+                htmlInput: { maxLength: MATERIAL_LIMITS.description },
+              }}
+            />
+            <TextField
+              label="Manufacturer page"
+              placeholder="https://"
+              value={values.product_url}
+              onChange={(event) => set({ product_url: event.target.value })}
+              slotProps={{
+                htmlInput: { inputMode: "url", maxLength: MATERIAL_LIMITS.url },
+              }}
+            />
+          </FormSection>
+
+          {!isAdmin && (
+            <ProposalNoteField
+              value={note}
+              onChange={setNote}
+              disabled={saving}
+            />
+          )}
+
+          {error != null && (
+            <Alert ref={errorRef} severity="error">
+              {apiErrorMessage(error, "Could not save this entry.")}
+            </Alert>
+          )}
+        </Box>
+
+        <PanelBottomBar
+          onLeftClick={onCancel}
+          leftLabel="Cancel"
+          leftDisabled={saving}
+          title={title}
+          subtitle={subtitle}
+          action={
+            <RoundActionButton
+              ariaLabel="Save entry"
+              disabled={!canSaveMaterial(values)}
+              busy={saving}
+              onClick={() =>
+                onSubmit({
+                  ...materialFormToBody(values, units, original),
+                  proposal_note: isAdmin ? null : proposalNoteValue(note),
+                })
+              }
+            >
+              <ConfirmIcon />
+            </RoundActionButton>
+          }
+        />
+      </Box>
     </Box>
   );
 }

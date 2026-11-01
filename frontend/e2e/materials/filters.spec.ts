@@ -107,7 +107,7 @@ test.describe("wiki filters", () => {
     await page.goto(
       "/materials?category=kayak&discipline=creek&construction=plastic&fits=80",
     );
-    await expect(page.getByTestId("wiki-counts")).toContainText(
+    await expect(page.getByTestId("wiki-header")).toContainText(
       `${creek?.models} models`,
     );
   });

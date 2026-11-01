@@ -1,18 +1,19 @@
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import DetailCard from "@/components/DetailCard";
 import Fact from "@/components/Fact";
+import FactRow from "@/components/FactRow";
 import AllSizesTable from "@/components/materials/AllSizesTable";
 import MaterialGallery from "@/components/materials/MaterialGallery";
 import SizePicker from "@/components/materials/SizePicker";
-import { phoneCardSx } from "@/components/phone/phoneGrid";
+import SourceList, { type SourceLink } from "@/components/materials/SourceList";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import SectionHeading from "@/components/SectionHeading";
+import FilterChip from "@/components/search/FilterChip";
 import type { Material } from "@/lib/api";
 import { useMaterialComparison } from "@/lib/hooks/useMaterials";
-import { DeleteIcon, EditIcon, OpenExternalIcon, PhotoIcon } from "@/lib/icons";
+import { DeleteIcon, EditIcon, PhotoIcon } from "@/lib/icons";
 import {
   modelSizes,
   paddleFacts,
@@ -31,63 +32,9 @@ import {
 } from "@/lib/materials/specs";
 import { useUnits } from "@/lib/prefs/units";
 import { formatDate, humanize, sentenceCase } from "@/lib/text/format";
-import { withAlpha } from "@/lib/theme/alpha";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
-
-const cardSx = {
-  ...phoneCardSx,
-  px: `${tokens.phone.inner}px`,
-  py: 1,
-  mb: 1,
-} as const;
-
-function SpecRow({ label, value }: { label: string; value: string }) {
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: 2,
-        minHeight: tokens.touch.min,
-        "&:not(:last-child)": {
-          borderBottom: `1px solid ${withAlpha(tokens.outlineVariant, "hairline")}`,
-        },
-      }}
-    >
-      <Typography variant="body2" color="textSecondary">
-        {label}
-      </Typography>
-      <Typography
-        variant="body2"
-        sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
-      >
-        {value}
-      </Typography>
-    </Box>
-  );
-}
-
-function Card({
-  heading,
-  children,
-}: {
-  heading?: string;
-  children: ReactNode;
-}) {
-  return (
-    <Box>
-      {heading && (
-        <Box sx={{ mx: { xs: `${tokens.phone.edge}px`, md: 0 } }}>
-          <SectionHeading inset>{heading}</SectionHeading>
-        </Box>
-      )}
-      <Box sx={cardSx}>{children}</Box>
-    </Box>
-  );
-}
 
 /** The header menu of an entry: correcting is open to every signed-in
  * paddler, removing is the admin's. */
@@ -179,13 +126,22 @@ export default function MaterialDetailView({
     facts.push({ label: "Built", value: sinceLabel(material) });
   }
   const paddle = paddleFacts(material, units);
-  const sources = sourceLinks(material.sources);
+  const links: SourceLink[] = [
+    ...sourceLinks(material.sources).map((source) => ({
+      url: source.url,
+      title: source.host,
+      detail: source.fields.join(", "),
+    })),
+    ...(material.product_url
+      ? [{ url: material.product_url, title: "Manufacturer page" }]
+      : []),
+  ];
 
   return (
     <Box sx={{ pt: 1, pb: 3 }}>
       <MaterialGallery material={material} />
       {sizes.length > 0 && (
-        <Box sx={{ ...cardSx, py: 2, display: "grid", gap: 2 }}>
+        <DetailCard sx={{ py: 2, display: "grid", gap: 2 }}>
           <SizePicker
             sizes={sizes}
             pickedId={material.id}
@@ -203,9 +159,9 @@ export default function MaterialDetailView({
               <Fact key={fact.label} label={fact.label} value={fact.value} />
             ))}
           </Box>
-        </Box>
+        </DetailCard>
       )}
-      <Box sx={{ ...cardSx, py: 2 }}>
+      <DetailCard sx={{ py: 2 }}>
         <Box
           sx={{
             display: "grid",
@@ -231,7 +187,7 @@ export default function MaterialDetailView({
             sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2 }}
           >
             {material.colors.map((color) => (
-              <Chip key={color} label={color} sx={{ maxWidth: "100%" }} />
+              <FilterChip key={color} label={color} set={false} />
             ))}
           </Box>
         )}
@@ -244,10 +200,10 @@ export default function MaterialDetailView({
             {material.notes}
           </Typography>
         )}
-      </Box>
+      </DetailCard>
 
       {paddle.length > 0 && (
-        <Card heading="Paddle">
+        <DetailCard heading="Paddle">
           <Box
             data-testid="paddle-facts"
             sx={{
@@ -261,7 +217,7 @@ export default function MaterialDetailView({
               <Fact key={fact.label} label={fact.label} value={fact.value} />
             ))}
           </Box>
-        </Card>
+        </DetailCard>
       )}
 
       <Box
@@ -291,15 +247,15 @@ export default function MaterialDetailView({
           // A paddle's weight is among its facts; the boat groups do not apply.
           if (specs.length === 0 || material.category === "paddle") return null;
           return (
-            <Card key={group} heading={SPEC_GROUP_LABELS[group]}>
+            <DetailCard key={group} heading={SPEC_GROUP_LABELS[group]}>
               {specs.map((spec) => (
-                <SpecRow
+                <FactRow
                   key={spec.key}
                   label={spec.label}
                   value={formatSpec(specValue(material, spec.key), spec, units)}
                 />
               ))}
-            </Card>
+            </DetailCard>
           );
         })}
       </Box>
@@ -313,54 +269,8 @@ export default function MaterialDetailView({
         </Box>
       )}
 
-      <Card heading="Sources">
-        <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-          {sources.map((source) => (
-            <Box component="li" key={source.url}>
-              <Link
-                href={source.url}
-                target="_blank"
-                rel="noreferrer noopener"
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.75,
-                  minHeight: tokens.touch.min,
-                  overflowWrap: "anywhere",
-                }}
-              >
-                <span>
-                  {source.host}
-                  <Typography
-                    variant="body2"
-                    color="textSecondary"
-                    component="span"
-                  >
-                    {` - ${source.fields.join(", ")}`}
-                  </Typography>
-                </span>
-                <OpenExternalIcon sx={{ fontSize: 16, flexShrink: 0 }} />
-              </Link>
-            </Box>
-          ))}
-        </Box>
-        {material.product_url && (
-          <Link
-            href={material.product_url}
-            target="_blank"
-            rel="noreferrer noopener"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 0.75,
-              minHeight: tokens.touch.min,
-              overflowWrap: "anywhere",
-            }}
-          >
-            Manufacturer page
-            <OpenExternalIcon sx={{ fontSize: 16 }} />
-          </Link>
-        )}
+      <DetailCard heading="Sources">
+        <SourceList links={links} />
         <Typography
           variant="body2"
           color="textSecondary"
@@ -372,7 +282,7 @@ export default function MaterialDetailView({
           {material.updated_by_username &&
             `. Last edited by ${material.updated_by_username} on ${formatDate(material.updated_at)}`}
         </Typography>
-      </Card>
+      </DetailCard>
     </Box>
   );
 }

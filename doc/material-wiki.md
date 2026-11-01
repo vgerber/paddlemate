@@ -12,9 +12,11 @@ Measurements show, and are typed, in the units chosen under Settings > Units
 
 ## Finding a boat
 
-The list shows models, not single entries: the Pyranha Scorch is one row with
-its sizes (S, M, L) under it, the length, volume and weight it spans, and
-"Since 2021" (or "Since about 2021" when the year is weak). The count above
+The list shows models, not single entries: the Pyranha Scorch is one row of
+two lines: its name with the length and weight it spans at the right, then
+"Creek - since 2021" (or "about 2021" when the year is weak) with its sizes
+(S, M, L) at the right. A photo shows only when the model has one, and the
+compare checkbox appears when you point at a row (always on a touch screen). The count above
 the list counts models. Tapping a row opens the model; the **Size** chips
 there switch between its sizes, and the address holds the size you picked.
 
@@ -35,7 +37,8 @@ follows the keyboard like a file browser: Up and Down move, Right opens, Left
 closes or goes up, Home and End jump, a letter jumps to the next name starting
 with it, Enter picks. The search text and the filters below narrow the tree's
 counts too. The page uses the window's width: the models are a grid of cards,
-two or three across.
+two or three across, under a header card with the heading, the counts and the
+sort.
 
 On a phone the **Browse** button beside the search opens the tree one level at
 a time: tap Kayaks to see its types, a type to see its brands; the top row
@@ -361,13 +364,14 @@ gone is a no-op. Tests: `api/tests/material_proposals.rs`, `api/tests/materials.
 | `lib/materials/form.ts` | the entry form's values and their conversion to and from an entry |
 | `lib/hooks/useMaterials.ts` | `materialKeys` and every query and mutation; a write answered 202 (`isProposal`) announces "Sent for review" through `announceIfProposal` and leaves the entry caches alone |
 | `lib/materials/compare.ts` | `buildComparison`: the comparable rows (`FIELDS`), the alike chips, the bar ratios; also `specSpread` and the comparison's id list |
-| `components/materials/` | `MaterialsView` (list and its compare bar), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `MaterialGallery` (photos and credits), `MaterialTree` and `wikiTrail` (wiki wrappers on the shared `TreeView` and `Breadcrumb`); the frame is the shared `PageFrame` |
+| `components/materials/` | `MaterialsView` (list and its compare bar), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView` (on the shared `DetailCard` and `FactRow`, `SourceList`), `ComparisonTable` (with `ComparisonHead`, `ComparisonRow`, `ComparisonBar`, `ComparisonSummary`, sizes in `comparisonLayout.ts`), `MaterialForm`, `MaterialGallery` (photos and credits), `MaterialTree` and `wikiTrail` (wiki wrappers on the shared `TreeView` and `Breadcrumb`); the frame is the shared `PageFrame` |
 | `routes/materials/` | `index` (list), `$materialId` (detail, `?edit=true` for the form), `compare`, `new` |
 
-The wiki is a normal page, not a map screen: from `md` a full-width page (up
-to 1600) with a 300 sidebar (`MaterialsDesktop`: search, `MaterialTree`,
-`FilterFields`, the docked Add entry) and a card grid; the detail and compare
-pages keep a centred column. On a phone it is edge to edge, with `BrowseSheet`
+The wiki is a normal page, not a map screen: from `md` one column (`WIKI_WIDTH`,
+1440, shared by the list, the entry, the comparison and the form) with a header
+card (`SortSelect` at its right), a 300 sidebar (`MaterialsDesktop`: `SearchField`,
+`MaterialTree`, `FilterFields sidebar`, the docked Add entry) and a card grid.
+The size choice of a row is the shared `ActionMenu` of `RowMenu`. On a phone it is edge to edge, with `BrowseSheet`
 for the tree, reached from Tools. `MaterialTree` is a real ARIA tree
 (`role=tree/treeitem`, `aria-level/expanded/selected`, roving tabindex; the
 key logic is `treeKey` in `components/tree/treeKeys.ts`); it loads the brand's models

@@ -167,8 +167,14 @@ export function rangeLabel(
 }
 
 /** The figures line of a model row: length and weight across its sizes
- * (volume as well for boats), the ones the sizes state only. */
-export function modelFigures(model: MaterialModel, units: Units): string {
+ * (volume as well for boats), the ones the sizes state only. Unlabelled, the
+ * bare length and weight for a row that has little room: "238-253 cm ·
+ * 17-20 kg". */
+export function modelFigures(
+  model: MaterialModel,
+  units: Units,
+  labelled = true,
+): string {
   const sizes = model.sizes;
   const isPaddle = model.category === "paddle";
   const lengths = sizes.flatMap((size) => size.lengths_cm ?? []);
@@ -201,9 +207,14 @@ export function modelFigures(model: MaterialModel, units: Units): string {
     ],
   ];
   return parts
-    .filter(([label, value]) => value && !(isPaddle && label === "Volume"))
-    .map(([label, value]) => `${label} ${value}`)
-    .join("  ·  ");
+    .filter(
+      ([label, value]) =>
+        value &&
+        !(isPaddle && label === "Volume") &&
+        !(!labelled && label === "Volume"),
+    )
+    .map(([label, value]) => (labelled ? `${label} ${value}` : value))
+    .join(labelled ? "  ·  " : " · ");
 }
 
 /** The production run, open at either end: "2022-", "2019-2024", "2020".

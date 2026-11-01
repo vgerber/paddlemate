@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import ChipRow from "@/components/ChipRow";
+import { aboveFab } from "@/components/PaneFab";
 import { phoneCardSx } from "@/components/phone/phoneGrid";
 import FilterChip from "@/components/search/FilterChip";
 import QueryStates from "@/components/states/QueryStates";
@@ -10,10 +11,12 @@ import { useMaterialComparison } from "@/lib/hooks/useMaterials";
 import { MaterialIcon } from "@/lib/icons";
 import { MAX_COMPARE, modelPicked } from "@/lib/materials/compare";
 import { materialTitle } from "@/lib/materials/facts";
-import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme/theme";
+import { theme } from "@/lib/theme/theme";
 import ModelRow from "./ModelRow";
 
 const { tokens } = theme;
+
+const actionSx = { minHeight: tokens.touch.min, ml: 0.5 } as const;
 
 /** The picked entries, pinned to the foot of the list: how many, each one by
  * name and size with a way to drop it, and the way into the comparison (two
@@ -40,7 +43,7 @@ export function CompareBar({
       sx={{
         ...phoneCardSx,
         position: "sticky",
-        bottom: { xs: `calc(${BOTTOM_NAV_SPACE} + 80px)`, md: 12 },
+        bottom: { xs: aboveFab, md: 12 },
         zIndex: 2,
         mt: 1,
         py: 1,
@@ -78,15 +81,11 @@ export function CompareBar({
           })}
         </ChipRow>
       </Box>
-      <Box sx={{ display: "flex", justifyContent: "flex-end", px: 0.5 }}>
-        <Button onClick={onClear} sx={{ minHeight: tokens.touch.min }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", px: 1 }}>
+        <Button onClick={onClear} sx={actionSx}>
           Clear
         </Button>
-        <Button
-          disabled={ids.length < 2}
-          onClick={onCompare}
-          sx={{ minHeight: tokens.touch.min }}
-        >
+        <Button disabled={ids.length < 2} onClick={onCompare} sx={actionSx}>
           Compare
         </Button>
       </Box>

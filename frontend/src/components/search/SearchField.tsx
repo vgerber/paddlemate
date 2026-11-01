@@ -5,23 +5,28 @@ import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
-/** The brand-or-model search of the wiki. */
-export default function MaterialSearchField({
+/** One filled field with a magnifier and the label as placeholder: the name
+ * search of the river pane, the region search and the material wiki. */
+export default function SearchField({
   value,
   onChange,
+  label,
+  maxLength,
 }: {
   value: string;
   onChange: (value: string) => void;
+  label: string;
+  maxLength?: number;
 }) {
   return (
     <TextField
       fullWidth
       hiddenLabel
-      placeholder="Brand or model"
+      placeholder={label}
       value={value}
-      onChange={(event) => onChange(event.target.value)}
+      onChange={(e) => onChange(e.target.value)}
       slotProps={{
-        htmlInput: { "aria-label": "Brand or model", maxLength: 100 },
+        htmlInput: { "aria-label": label, maxLength },
         input: {
           sx: { pr: 0.5, minHeight: 56, "& input": { py: 1.75 } },
           startAdornment: (

@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
+import { openRowSx } from "@/components/canvas/flatRow";
 import QueryStates from "@/components/states/QueryStates";
 import TreeView, {
   TREE_BASE_PAD,
@@ -19,9 +20,8 @@ import {
   treeFilters,
   treeRows,
 } from "@/lib/materials/tree";
-import { withAlpha } from "@/lib/theme/alpha";
 import { focusRingSx } from "@/lib/theme/focusRing";
-import { labelSx, theme } from "@/lib/theme/theme";
+import { sectionHeadingSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
@@ -44,7 +44,7 @@ function RowContent({ row }: { row: TreeRow }) {
       >
         {row.label}
       </Typography>
-      {(row.count != null || row.sizes) && (
+      {row.count != null && (
         <Typography
           component="span"
           sx={{
@@ -54,7 +54,7 @@ function RowContent({ row }: { row: TreeRow }) {
             flexShrink: 0,
           }}
         >
-          {row.count ?? row.sizes}
+          {row.count}
         </Typography>
       )}
     </>
@@ -112,8 +112,8 @@ export default function MaterialTree({
       <Typography
         id="wiki-tree-label"
         sx={{
-          ...labelSx,
-          color: "text.secondary",
+          ...sectionHeadingSx,
+          color: tokens.onSurfaceVariant,
           px: 1,
           pb: 0.5,
         }}
@@ -129,9 +129,8 @@ export default function MaterialTree({
         sx={{
           ...allSx,
           color: path.category ? "text.primary" : tokens.primary,
-          bgcolor: path.category
-            ? "transparent"
-            : withAlpha(tokens.primary, "wash"),
+          bgcolor: "transparent",
+          ...openRowSx(!path.category, true),
         }}
       >
         <MaterialIcon sx={{ fontSize: CHEVRON }} />
