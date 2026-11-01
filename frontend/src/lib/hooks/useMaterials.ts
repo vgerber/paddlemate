@@ -25,6 +25,8 @@ export const materialKeys = {
     [...materialKeys.lists(), "models", filters] as const,
   compare: (ids: number[]) =>
     [...materialKeys.lists(), "compare", serializeCompareIds(ids)] as const,
+  tree: (filters: MaterialFilters) =>
+    [...materialKeys.all, "tree", filters] as const,
   brands: (category: MaterialCategory | undefined) =>
     [...materialKeys.all, "brands", category ?? "all"] as const,
   detail: (id: number) => [...materialKeys.all, id] as const,
@@ -53,6 +55,29 @@ export function useMaterialModels(filters: MaterialFilters) {
     initialPageParam: 1,
     getNextPageParam: (last) =>
       last.page < last.total_pages ? last.page + 1 : undefined,
+  });
+}
+
+/** The browse tree for the filters that are not the tree's own levels. */
+export function useMaterialTree(filters: MaterialFilters) {
+  return useQuery({
+    queryKey: materialKeys.tree(filters),
+    queryFn: ({ signal }) => materialsApi.tree(filters, signal),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** Most models one brand lists in the tree; a brand has far fewer. */
+const BRAND_MODELS = 100;
+
+/** The models of one brand, loaded when its tree branch opens. */
+export function useBrandModels(filters: MaterialFilters, enabled: boolean) {
+  return useQuery({
+    queryKey: materialKeys.models({ ...filters, per_page: BRAND_MODELS }),
+    queryFn: ({ signal }) =>
+      materialsApi.models({ ...filters, per_page: BRAND_MODELS }, signal),
+    enabled,
+    select: (page) => page.items,
   });
 }
 

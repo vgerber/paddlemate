@@ -18,7 +18,7 @@ import { theme } from "@/lib/theme/theme";
 const { tokens } = theme;
 
 const cellSx = {
-  px: 1.5,
+  px: `${tokens.phone.inner}px`,
   py: 1,
   textAlign: "left",
   verticalAlign: "top",

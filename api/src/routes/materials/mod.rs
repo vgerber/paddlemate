@@ -2,6 +2,7 @@ use aide::axum::IntoApiResponse;
 
 mod images;
 mod models;
+mod tree;
 use axum::{
     Extension, Json,
     extract::{Path, Query, State},
@@ -417,6 +418,7 @@ pub fn materials_routes(state: AppState) -> aide::axum::ApiRouter {
             "/models",
             get_with(models::list_models, models::list_models_docs),
         )
+        .api_route("/tree", get_with(tree::get_tree, tree::get_tree_docs))
         .api_route(
             "/images",
             delete_with(

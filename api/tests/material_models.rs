@@ -226,3 +226,102 @@ async fn a_user_edited_entry_keeps_its_variant(pool: PgPool) {
     assert_eq!(row(untouched).await, (None, Some("M".into())));
     assert_eq!(row(edited).await, (Some("Large".into()), None));
 }
+
+async fn put_in(
+    pool: &PgPool,
+    category: &str,
+    discipline: Option<&str>,
+    brand: &str,
+    model: &str,
+    size: &str,
+) {
+    sqlx::query(
+        "INSERT INTO materials (category, discipline, brand, model, size, created_by) \
+         VALUES ($1::material_category, $2::material_discipline, $3, $4, $5, 'system-catalogue')",
+    )
+    .bind(category)
+    .bind(discipline)
+    .bind(brand)
+    .bind(model)
+    .bind(size)
+    .execute(pool)
+    .await
+    .unwrap();
+}
+
+#[sqlx::test]
+async fn the_tree_counts_models_and_entries_per_level(pool: PgPool) {
+    clear_catalogue(&pool).await;
+    for size in ["S", "M"] {
+        put_in(&pool, "kayak", Some("creek"), "Pyranha", "Jed", size).await;
+    }
+    put_in(&pool, "kayak", Some("creek"), "pyranha ", "Ripper", "M").await;
+    put_in(&pool, "kayak", Some("creek"), "Dagger", "Mamba", "M").await;
+    put_in(&pool, "kayak", Some("playboat"), "Dagger", "Rewind", "M").await;
+    put_in(&pool, "kayak", None, "Dagger", "Old", "M").await;
+    put_in(
+        &pool,
+        "canoe",
+        Some("recreational"),
+        "Old Town",
+        "Pack",
+        "M",
+    )
+    .await;
+
+    let app = app(pool);
+    let r = get(&app, "/materials/tree").await;
+    assert_eq!(r.status, StatusCode::OK);
+    let cats = r.body["categories"].as_array().unwrap();
+    assert_eq!(cats.len(), 2);
+    let kayak = &cats[0];
+    assert_eq!(kayak["category"], "kayak");
+    assert_eq!(kayak["models"], 5);
+    assert_eq!(kayak["entries"], 6);
+    let creek = &kayak["disciplines"][0];
+    assert_eq!(creek["discipline"], "creek");
+    assert_eq!(creek["models"], 3);
+    assert_eq!(creek["entries"], 4);
+    let brands = creek["brands"].as_array().unwrap();
+    assert_eq!(brands[0]["brand"], "Pyranha");
+    assert_eq!(brands[0]["models"], 2);
+    assert_eq!(brands[0]["entries"], 3);
+    assert_eq!(brands[1]["brand"], "Dagger");
+}
+
+#[sqlx::test]
+async fn the_tree_honours_filters_but_not_its_own_levels(pool: PgPool) {
+    clear_catalogue(&pool).await;
+    put_in(&pool, "kayak", Some("creek"), "Pyranha", "Jed", "M").await;
+    put_in(&pool, "kayak", Some("playboat"), "Dagger", "Rewind", "M").await;
+    put_in(
+        &pool,
+        "canoe",
+        Some("recreational"),
+        "Old Town",
+        "Pack",
+        "M",
+    )
+    .await;
+
+    let app = app(pool);
+    let r = get(&app, "/materials/tree?q=pyranha").await;
+    let cats = r.body["categories"].as_array().unwrap();
+    assert_eq!(cats.len(), 1);
+    assert_eq!(cats[0]["models"], 1);
+
+    let r = get(
+        &app,
+        "/materials/tree?category=canoe&discipline=creek&brand=x",
+    )
+    .await;
+    assert_eq!(r.body["categories"].as_array().unwrap().len(), 2);
+
+    let long = "a".repeat(101);
+    let r = get(&app, &format!("/materials/tree?q={long}")).await;
+    assert_eq!(r.status, StatusCode::BAD_REQUEST);
+    assert_eq!(
+        get(&app, "/materials/tree?category=nope").await.status,
+        StatusCode::BAD_REQUEST
+    );
+}

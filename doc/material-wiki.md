@@ -22,16 +22,32 @@ Type a brand or a model into the search field. Spelling is forgiving the same
 way the river search is - `pyrhana` finds Pyranha - and typo tolerance starts
 at four characters.
 
-The **Filters** chip opens a sheet with the dimensions that narrow a list of
-boats; each one set shows as a chip under the search field that takes itself
-away:
+**Browse by category.** On a desktop the left side of the page is a tree:
+Kayaks, Canoes, Packrafts, SUPs, Paddles; under each the types (creek, river
+runner, ...); under each type the brands, each with its number of models.
+Pick a brand and its models list under it, with their sizes; Kayaks, Creek,
+Pyranha shows the nine Pyranha creek boats. The trail above the list
+(Tools, Material wiki, Kayaks, Creek, Pyranha) goes back up a step, the
+heading says where you are with "9 models, 21 sizes", and the address holds
+the path, so the back button undoes a pick and a path is a link. The tree
+follows the keyboard like a file browser: Up and Down move, Right opens, Left
+closes or goes up, Home and End jump, a letter jumps to the next name starting
+with it, Enter picks. The search text and the filters below narrow the tree's
+counts too. The page uses the window's width: the models are a grid of cards,
+two or three across.
+
+On a phone the **Browse** button beside the search opens the tree one level at
+a time: tap Kayaks to see its types, a type to see its brands; the top row
+("All Kayaks") picks the whole level, a brand picks itself, and the sheet
+closes. The path shows as chips under the search, each a way back up.
+
+The **Filters** chip on a phone, and the sidebar under the tree on a desktop,
+hold the dimensions that narrow a list of boats (a desktop puts the sort
+beside the heading); each one set shows as a chip that takes itself away:
 
 | Filter | Keeps |
 | --- | --- |
-| Category | Kayaks, canoes, packrafts, SUPs or paddles |
-| Discipline | What the boat is built for - creek, river runner, half slice, playboat, slalom, downriver, touring, sea, expedition, recreational, crossover, freestyle, other |
 | Construction | Plastic, composite, inflatable, folding or wood |
-| Brand | One brand, with the number of entries it has |
 | Fits paddler | Your body weight in your weight unit (Settings > Units), keeping the boats whose paddler range covers it |
 | Sort | Name, newest, or by length, volume or weight |
 
@@ -248,6 +264,7 @@ caller. An admin's write applies (201, 200, 204); anyone else's is stored as a
 | --- | --- | --- |
 | GET | `/materials` | Paginated search - see the filters below |
 | GET | `/materials/models` | Paginated models (category, brand, model, variant) with their sizes - the filters below; `total` counts models, a model lists only the sizes that match; `ids` is ignored |
+| GET | `/materials/tree` | The browse tree: categories, their disciplines, their brands, each with `models` and `entries`; takes the model filters except category, discipline and brand (and ignores paging and sort); entries without a discipline count toward their category only |
 | GET | `/materials/brands` | Brands with entry counts, `category` narrows them |
 | GET | `/materials/{material_id}` | One entry |
 | POST | `/materials` | Add an entry: admin 201, others 202; 409 on a duplicate, 429 over the caps |
@@ -324,8 +341,15 @@ gone is a no-op. Tests: `api/tests/material_proposals.rs`, `api/tests/materials.
 | `components/materials/` | `MaterialsView` (list and its compare bar), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `MaterialGallery` (photos and credits), `WikiPage` (the frame) |
 | `routes/materials/` | `index` (list), `$materialId` (detail, `?edit=true` for the form), `compare`, `new` |
 
-The wiki is a normal page, not a map screen: a centred column on a desktop,
-edge to edge on a phone, reached from Tools. The list reads
+The wiki is a normal page, not a map screen: from `md` a full-width page (up
+to 1600) with a 300 sidebar (`MaterialsDesktop`: search, `MaterialTree`,
+`FilterFields`, the docked Add entry) and a card grid; the detail and compare
+pages keep a centred column. On a phone it is edge to edge, with `BrowseSheet`
+for the tree, reached from Tools. `MaterialTree` is a real ARIA tree
+(`role=tree/treeitem`, `aria-level/expanded/selected`, roving tabindex; the
+key logic is `treeKey` in `lib/materials/tree.ts`); it loads the brand's models
+lazily with `useBrandModels`, and its counts come from `useMaterialTree`
+(`materialKeys.tree`). The list reads
 `GET /materials/models` (`materialKeys.models`, 24 models a page, "Show more");
 a row opens the model's first size, and the size chips navigate to the sibling
 entry's id. The model page asks for its sizes with the `ids` list to fill the

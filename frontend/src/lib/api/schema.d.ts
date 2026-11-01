@@ -1183,6 +1183,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/materials/tree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The wiki as a browse tree: category, discipline, brand, each with model and entry counts. Takes the filters of the model list except category, discipline and brand (the levels the tree offers); paging and sort are ignored. */
+        get: operations["get_tree"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/materials/images": {
         parameters: {
             query?: never;
@@ -2873,6 +2890,47 @@ export interface components {
          * @enum {string}
          */
         MaterialSort: "name" | "newest" | "length" | "volume" | "weight";
+        /** @description The wiki as a browse tree: category, discipline, brand. */
+        MaterialTree: {
+            categories: components["schemas"]["MaterialTreeCategory"][];
+        };
+        /** @description A brand inside one discipline of the browse tree. */
+        MaterialTreeBrand: {
+            brand: string;
+            /**
+             * Format: int64
+             * @description Entries (sizes) of those models.
+             */
+            entries: number;
+            /**
+             * Format: int64
+             * @description Models of the brand that match the filters.
+             */
+            models: number;
+        };
+        /**
+         * @description A category of the browse tree. Entries without a discipline count toward
+         *      the category but sit under no discipline.
+         */
+        MaterialTreeCategory: {
+            category: components["schemas"]["MaterialCategory"];
+            /** @description Most models first. */
+            disciplines: components["schemas"]["MaterialTreeDiscipline"][];
+            /** Format: int64 */
+            entries: number;
+            /** Format: int64 */
+            models: number;
+        };
+        /** @description A discipline inside one category of the browse tree. */
+        MaterialTreeDiscipline: {
+            /** @description Most models first. */
+            brands: components["schemas"]["MaterialTreeBrand"][];
+            discipline: components["schemas"]["MaterialDiscipline"];
+            /** Format: int64 */
+            entries: number;
+            /** Format: int64 */
+            models: number;
+        };
         /** @enum {string} */
         MeasurementType: "water_level" | "discharge" | "temperature";
         /**
@@ -4871,11 +4929,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-10-31T21:21:36.005665252Z",
-                     *         "expires_at": "2027-01-29T21:21:36.005667482Z",
+                     *         "created_at": "2026-11-01T10:46:45.651433020Z",
+                     *         "expires_at": "2027-01-30T10:46:45.651435780Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-10-31T21:21:36.005675862Z",
+                     *         "last_used_at": "2026-11-01T10:46:45.651445390Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4906,8 +4964,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-10-31T21:21:36.005787521Z",
-                     *       "expires_at": "2027-01-29T21:21:36.005787901Z",
+                     *       "created_at": "2026-11-01T10:46:45.651586160Z",
+                     *       "expires_at": "2027-01-30T10:46:45.651586600Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -8836,6 +8894,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedResponse_for_MaterialModel"];
+                };
+            };
+        };
+    };
+    get_tree: {
+        parameters: {
+            query?: {
+                /** @description Exact brand, case-insensitive. */
+                brand?: string | null;
+                category?: components["schemas"]["MaterialCategory"] | null;
+                construction?: components["schemas"]["MaterialConstruction"] | null;
+                discipline?: components["schemas"]["MaterialDiscipline"] | null;
+                /**
+                 * @description Body weight in kg - keeps the boats whose paddler range covers it. An
+                 *      entry that states no range is kept, since it contradicts nothing.
+                 */
+                fits_paddler_kg?: number | null;
+                /**
+                 * @description Comma separated ids - what the comparison view asks for. Overrides
+                 *      every other filter and returns those entries in one page.
+                 */
+                ids?: string | null;
+                max_length_cm?: number | null;
+                max_volume_l?: number | null;
+                max_weight_kg?: number | null;
+                min_length_cm?: number | null;
+                min_volume_l?: number | null;
+                min_weight_kg?: number | null;
+                /** @description Page number, starting at 1. */
+                page?: number | null;
+                /** @description Items per page (max 100, default 24). */
+                per_page?: number | null;
+                /** @description Filter by brand or model, diacritic- and typo-tolerant. */
+                q?: string | null;
+                sort?: components["schemas"]["MaterialSort"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The wiki as a browse tree: category, discipline, brand. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialTree"];
                 };
             };
         };

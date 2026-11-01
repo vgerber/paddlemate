@@ -116,6 +116,12 @@ export type ModelSize = components["schemas"]["ModelSize"];
 export type MaterialModelPage =
   components["schemas"]["PaginatedResponse_for_MaterialModel"];
 export type MaterialSort = components["schemas"]["MaterialSort"];
+export type MaterialTree = components["schemas"]["MaterialTree"];
+export type MaterialTreeCategory =
+  components["schemas"]["MaterialTreeCategory"];
+export type MaterialTreeDiscipline =
+  components["schemas"]["MaterialTreeDiscipline"];
+export type MaterialTreeBrand = components["schemas"]["MaterialTreeBrand"];
 export type MaterialPage =
   components["schemas"]["PaginatedResponse_for_Material"];
 export type Region = components["schemas"]["Region"];
@@ -595,6 +601,14 @@ export const materialsApi = {
   /** The wiki as models, each with its sizes; paging counts models. */
   models: async (filters: MaterialFilters = {}, signal?: AbortSignal) => {
     const { data } = await client.GET("/api/v1/materials/models", {
+      params: { query: filters },
+      signal,
+    });
+    return assertData(data);
+  },
+  /** The browse tree (category, discipline, brand) with counts. */
+  tree: async (filters: MaterialFilters = {}, signal?: AbortSignal) => {
+    const { data } = await client.GET("/api/v1/materials/tree", {
       params: { query: filters },
       signal,
     });

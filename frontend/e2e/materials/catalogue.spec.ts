@@ -130,19 +130,19 @@ test.describe("catalogue detail", () => {
 
     await page.goto("/materials?category=paddle");
     await expect(page.getByTestId("material-row").first()).toBeVisible();
-    await page.getByTestId("filters-chip").click();
-    const sheet = page.getByRole("dialog", { name: "Filters" });
-    await expect(sheet.getByRole("button", { name: "Paddle" })).toBeVisible();
-    for (const discipline of ["Freestyle", "Other"]) {
-      await expect(
-        sheet.getByRole("button", { name: discipline }),
-      ).toBeVisible();
-    }
-    // Paddles offer paddle disciplines only.
-    for (const discipline of ["Crossover", "Playboat"]) {
-      await expect(sheet.getByRole("button", { name: discipline })).toHaveCount(
-        0,
-      );
+    // The tree offers paddle disciplines only.
+    const tree = await (
+      await page.request.get(ENTRY.replace(/\/9862$/, "/tree"))
+    ).json();
+    const paddle = tree.categories.find(
+      (c: { category: string }) => c.category === "paddle",
+    );
+    const types = paddle.disciplines.map(
+      (d: { discipline: string }) => d.discipline,
+    );
+    expect(types).toContain("freestyle");
+    for (const type of ["crossover", "playboat"]) {
+      expect(types).not.toContain(type);
     }
   });
 

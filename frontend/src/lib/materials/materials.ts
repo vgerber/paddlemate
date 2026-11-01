@@ -832,16 +832,17 @@ export function toMaterialFilters(search: MaterialWikiSearch): MaterialFilters {
   };
 }
 
-/** How many dimensions the reader has narrowed by, for the filter badge. The
- * free-text query has its own field on screen, so it does not count. */
+/** How many filters beside the tree's levels are set, for the Filters badge.
+ * The free-text query has its own field, and the category, discipline and
+ * brand are the path the tree shows. */
 export function activeFilterCount(search: MaterialWikiSearch): number {
-  return [
-    search.category,
-    search.discipline,
-    search.construction,
-    search.brand,
-    search.fits,
-  ].filter((value) => value != null).length;
+  return [search.construction, search.fits].filter((value) => value != null)
+    .length;
+}
+
+/** The paddler-weight filter as a chip reads. */
+export function formatFits(kg: number, units: Units): string {
+  return `Fits ${formatQuantity("weight", kg, units)}`;
 }
 
 /** The lengths a paddle comes in: the sizes it is sold in, else the

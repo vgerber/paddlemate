@@ -6,6 +6,7 @@
  */
 export type { SvgIconComponent } from "@mui/icons-material";
 export { default as AccountIcon } from "@mui/icons-material/AccountCircleOutlined";
+export { default as TreeIcon } from "@mui/icons-material/AccountTreeOutlined";
 export { default as AddIcon } from "@mui/icons-material/Add";
 export { default as AddPlaceIcon } from "@mui/icons-material/AddLocationAltOutlined";
 export { default as AddPhotoIcon } from "@mui/icons-material/AddPhotoAlternateOutlined";

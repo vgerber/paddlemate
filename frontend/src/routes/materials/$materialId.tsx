@@ -115,6 +115,7 @@ function MaterialPage() {
 
   return (
     <WikiPage
+      width={1200}
       title={modelTitle(material)}
       subtitle={subtitle}
       onBack={goBack}
