@@ -192,7 +192,7 @@ async fn main() {
 
     let base_url = config.base_url.clone();
     let limits = RateLimits::from_config(&config);
-    let analytics = paddlemate_api::analytics::start(&config, &limits);
+    let analytics = paddlemate_api::analytics::start(&config);
 
     let protected = ApiRouter::new()
         .nest_api_service(

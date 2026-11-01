@@ -185,8 +185,8 @@
     },
     {
       "id": 5,
-      "type": "timeseries",
-      "title": "Unique callers per day",
+      "type": "table",
+      "title": "Most used features",
       "datasource": {
         "type": "grafana-clickhouse-datasource",
         "uid": "clickhouse"
@@ -205,9 +205,9 @@
             "uid": "clickhouse"
           },
           "editorType": "sql",
-          "format": 0,
+          "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT toStartOfDay(ts) AS time, uniqExact(caller) AS callers FROM paddlemate.api_events WHERE $__timeFilter(ts) GROUP BY time ORDER BY time"
+          "rawSql": "SELECT transform(splitByChar('/', route)[4], ['users','groups','waterways','gauges','descents','materials','geo','proposals','trips','search','map','brands','water-status','regions','catalog'], ['Account and follows','Groups','Rivers and sections','Gauges','Logbook','Gear wiki','Map data','Proposals','Trips','Search','Map','Gear brands','Water status','Regions','Catalog'], splitByChar('/', route)[4]) AS feature, count() AS requests FROM paddlemate.api_events WHERE $__timeFilter(ts) AND route != 'unmatched' GROUP BY feature ORDER BY requests DESC LIMIT 20"
         }
       ],
       "fieldConfig": {
@@ -215,7 +215,7 @@
         "overrides": []
       },
       "options": {},
-      "description": "The caller hash changes at UTC midnight, so each day counts separately."
+      "description": "Requests grouped by the first path segment after /api/v1 (users, waterways, gauges, ...) under readable names. Counts requests, not people."
     },
     {
       "id": 6,
@@ -321,7 +321,7 @@
     {
       "id": 9,
       "type": "table",
-      "title": "Top search terms",
+      "title": "Filter usage (category, discipline, construction, sort)",
       "datasource": {
         "type": "grafana-clickhouse-datasource",
         "uid": "clickhouse"
@@ -342,7 +342,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT lower(query['q']) AS term, count() AS searches FROM paddlemate.api_events WHERE $__timeFilter(ts) AND query['q'] != '' GROUP BY term ORDER BY searches DESC LIMIT 25"
+          "rawSql": "SELECT key, value, count() AS requests FROM paddlemate.api_events ARRAY JOIN mapKeys(query) AS key, mapValues(query) AS value WHERE $__timeFilter(ts) GROUP BY key, value ORDER BY requests DESC LIMIT 30"
         }
       ],
       "fieldConfig": {
@@ -350,7 +350,7 @@
         "overrides": []
       },
       "options": {},
-      "description": "Search terms are kept for 30 days."
+      "description": "How often each closed-set filter value is used. Values outside the known list show as other."
     },
     {
       "id": 10,
@@ -384,6 +384,74 @@
         "overrides": []
       },
       "options": {}
+    },
+    {
+      "id": 11,
+      "type": "piechart",
+      "title": "Requests by browser",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT browser, count() AS requests FROM paddlemate.api_events WHERE $__timeFilter(ts) GROUP BY browser ORDER BY requests DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "description": "Coarse browser or client family from the User-Agent; no versions, raw header never stored."
+    },
+    {
+      "id": 12,
+      "type": "piechart",
+      "title": "Requests by operating system",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT os, count() AS requests FROM paddlemate.api_events WHERE $__timeFilter(ts) GROUP BY os ORDER BY requests DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "description": "Coarse OS family from the User-Agent; no versions, raw header never stored."
     }
   ]
 }

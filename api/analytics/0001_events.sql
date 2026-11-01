@@ -8,9 +8,9 @@ CREATE TABLE IF NOT EXISTS {database}.api_events
     status UInt16,
     latency_ms UInt32,
     client LowCardinality(String),
-    caller FixedString(16),
-    ua_family LowCardinality(String),
-    query Map(String, String) TTL toDateTime(ts) + INTERVAL 30 DAY,
+    browser LowCardinality(String),
+    os LowCardinality(String),
+    query Map(LowCardinality(String), LowCardinality(String)),
     bytes UInt32
 )
 ENGINE = MergeTree

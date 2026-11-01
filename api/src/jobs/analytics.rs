@@ -16,8 +16,7 @@ const TIMEOUT: Duration = Duration::from_secs(10);
 /// Schema files in order; a later change is a new numbered file.
 const SCHEMA: &[&str] = &[include_str!("../../analytics/0001_events.sql")];
 
-const COLUMNS: &str =
-    "ts, route, method, status, latency_ms, client, caller, ua_family, query, bytes";
+const COLUMNS: &str = "ts, route, method, status, latency_ms, client, browser, os, query, bytes";
 
 pub fn run(settings: AnalyticsSettings, rx: mpsc::Receiver<Event>) {
     tokio::spawn(ingest(settings, rx));
