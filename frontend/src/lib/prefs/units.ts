@@ -14,8 +14,15 @@ export interface Units {
   length: LengthUnit;
 }
 
-/** What each quantity is stored as: kg, km, cm, litres and cm2. */
-export type Quantity = "weight" | "distance" | "length" | "volume" | "area";
+/** What each quantity is stored as: kg, km, cm, litres and cm2. `light` is a
+ * weight small enough to read in grams (a paddle); it is stored as kg too. */
+export type Quantity =
+  | "weight"
+  | "light"
+  | "distance"
+  | "length"
+  | "volume"
+  | "area";
 
 export const METRIC: Units = { weight: "kg", distance: "km", length: "cm" };
 export const IMPERIAL: Units = { weight: "lb", distance: "mi", length: "in" };
@@ -24,12 +31,15 @@ const KG_PER_LB = 0.45359237;
 const KM_PER_MI = 1.609344;
 const CM_PER_IN = 2.54;
 const L_PER_GAL = 3.785411784;
+const KG_PER_OZ = 0.028349523125;
 const CM2_PER_IN2 = CM_PER_IN * CM_PER_IN;
 
 /** Metric units per display unit. */
 const FACTOR = {
   kg: 1,
   lb: KG_PER_LB,
+  g: 0.001,
+  oz: KG_PER_OZ,
   km: 1,
   mi: KM_PER_MI,
   cm: 1,
@@ -44,6 +54,7 @@ type UnitName = keyof typeof FACTOR;
 
 function unitFor(quantity: Quantity, units: Units): UnitName {
   if (quantity === "volume") return units.length === "in" ? "gal" : "l";
+  if (quantity === "light") return units.weight === "lb" ? "oz" : "g";
   if (quantity === "area") return units.length === "in" ? "in2" : "cm2";
   return units[quantity];
 }
@@ -107,15 +118,24 @@ export function parseInput(
     : undefined;
 }
 
-/** A measurement with its unit, one decimal and no trailing zeros: "264 cm",
- * "103.9 in", "20.5 kg". */
+/** The number alone, one decimal and no trailing zeros ("264", "103.9"); a
+ * small weight in metric is whole grams, so 1077 g and 1148 g stay apart. */
+export function bareQuantity(
+  quantity: Quantity,
+  metric: number,
+  units: Units,
+): string {
+  const decimals = quantity === "light" && units.weight === "kg" ? 0 : 1;
+  return String(Number(toDisplay(quantity, metric, units).toFixed(decimals)));
+}
+
+/** A measurement with its unit: "264 cm", "103.9 in", "20.5 kg". */
 export function formatQuantity(
   quantity: Quantity,
   metric: number,
   units: Units,
 ): string {
-  const value = Number(toDisplay(quantity, metric, units).toFixed(1));
-  return `${value} ${unitLabel(quantity, units)}`;
+  return `${bareQuantity(quantity, metric, units)} ${unitLabel(quantity, units)}`;
 }
 
 /** A distance in kilometres, one fixed decimal: "0.3 km", "0.2 mi". */

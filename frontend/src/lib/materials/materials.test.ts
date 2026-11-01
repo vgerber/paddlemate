@@ -3,6 +3,7 @@ import type { Material, MaterialBody, MaterialModel } from "@/lib/api";
 import { IMPERIAL, METRIC } from "../prefs/units";
 import {
   CATEGORY_LABELS,
+  disciplinesFor,
   enumLabel,
   formatSpec,
   MATERIAL_SPECS,
@@ -350,7 +351,7 @@ describe("paddle facts", () => {
     expect(facts.Pieces).toBe("2");
     expect(facts.Shaft).toBe("Bent");
     expect(facts.Feather).toBe("0, 30\u00b0");
-    expect(facts.Weight).toBe("0.9 kg");
+    expect(facts.Weight).toBe("900 g");
   });
 
   test("converts to the chosen units", () => {
@@ -437,14 +438,14 @@ describe("model rows", () => {
       sizes: [{ id: 1, lengths_cm: [191, 194], weight_kg: 0.87 }],
     };
     expect(modelFigures(one, METRIC)).toBe(
-      "Length 191, 194 cm  ·  Weight 0.9 kg",
+      "Length 191, 194 cm  ·  Weight 870 g",
     );
   });
 
-  test("a model still built reads Since", () => {
-    expect(sinceLabel(SCORCH)).toBe("Since 2021");
+  test("a model still built reads since", () => {
+    expect(sinceLabel(SCORCH)).toBe("since 2021");
     expect(sinceLabel({ ...SCORCH, year_approximate: true })).toBe(
-      "Since about 2021",
+      "about 2021",
     );
     expect(sinceLabel({ ...SCORCH, year_to: 2024 })).toBe("2021-2024");
   });
@@ -479,8 +480,14 @@ describe("sizes of an entry's model", () => {
 });
 
 describe("ticking a model", () => {
-  test("adds its first size, and removes every size held", () => {
-    expect(toggleModelCompare([5], SCORCH)).toEqual([5, 11]);
+  test("a model of several sizes never picks one silently", () => {
+    expect(SCORCH.sizes.length).toBeGreaterThan(1);
+    expect(toggleModelCompare([5], SCORCH)).toEqual([5]);
+  });
+
+  test("a model of one size picks it, and removes every size held", () => {
+    const single = { sizes: [{ id: 21 }] } as typeof SCORCH;
+    expect(toggleModelCompare([5], single)).toEqual([5, 21]);
     expect(modelPicked([5, 12], SCORCH)).toBe(true);
     expect(toggleModelCompare([5, 12, 13], SCORCH)).toEqual([5]);
   });
@@ -521,5 +528,15 @@ describe("materialFieldLabel and materialFieldValue", () => {
     );
     expect(materialFieldValue("notes", null, METRIC)).toBe("none");
     expect(materialFieldValue("colors", [], METRIC)).toBe("none");
+  });
+});
+
+describe("disciplinesFor", () => {
+  test("paddles offer paddle disciplines, kayaks no freestyle", () => {
+    expect(disciplinesFor("paddle")).toContain("freestyle");
+    expect(disciplinesFor("paddle")).not.toContain("playboat");
+    expect(disciplinesFor("kayak")).toContain("playboat");
+    expect(disciplinesFor("kayak")).not.toContain("freestyle");
+    expect(disciplinesFor(undefined)).toContain("freestyle");
   });
 });

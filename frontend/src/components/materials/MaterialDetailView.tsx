@@ -20,11 +20,12 @@ import {
   MATERIAL_SPECS,
   modelSizes,
   paddleFacts,
+  SIZE_FACT_KEYS,
   SPEC_GROUP_LABELS,
+  sinceLabel,
   sizeFacts,
   sourceLinks,
   specValue,
-  yearsLabel,
 } from "@/lib/materials/materials";
 import { useUnits } from "@/lib/prefs/units";
 import { formatDate } from "@/lib/text/format";
@@ -169,8 +170,8 @@ export default function MaterialDetailView({
       value: enumLabel(material.construction),
     });
   }
-  if (yearsLabel(material)) {
-    facts.push({ label: "Built", value: yearsLabel(material) });
+  if (sinceLabel(material)) {
+    facts.push({ label: "Built", value: sinceLabel(material) });
   }
   const paddle = paddleFacts(material, units);
   const sources = sourceLinks(material.sources);
@@ -259,9 +260,16 @@ export default function MaterialDetailView({
       )}
 
       {(["hull", "cockpit", "paddler"] as const).map((group) => {
+        // With a size picker, its facts already say length, volume, weight
+        // and the paddler window; the cards keep the rest.
         const specs = MATERIAL_SPECS.filter(
           (spec) =>
-            spec.group === group && specValue(material, spec.key) != null,
+            spec.group === group &&
+            specValue(material, spec.key) != null &&
+            !(
+              sizes.length > 0 &&
+              (SIZE_FACT_KEYS.includes(spec.key) || group === "paddler")
+            ),
         );
         // A paddle's weight is among its facts; the boat groups do not apply.
         if (specs.length === 0 || material.category === "paddle") return null;
@@ -287,42 +295,37 @@ export default function MaterialDetailView({
         </Box>
       )}
 
-      {sources.length > 0 && (
-        <Card heading="Sources">
-          <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-            {sources.map((source) => (
-              <Box component="li" key={source.url}>
-                <Link
-                  href={source.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.75,
-                    minHeight: tokens.touch.min,
-                    overflowWrap: "anywhere",
-                  }}
-                >
-                  <span>
-                    {source.host}
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                      component="span"
-                    >
-                      {` - ${source.fields.join(", ")}`}
-                    </Typography>
-                  </span>
-                  <OpenExternalIcon sx={{ fontSize: 16, flexShrink: 0 }} />
-                </Link>
-              </Box>
-            ))}
-          </Box>
-        </Card>
-      )}
-
-      <Card heading="Source">
+      <Card heading="Sources">
+        <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+          {sources.map((source) => (
+            <Box component="li" key={source.url}>
+              <Link
+                href={source.url}
+                target="_blank"
+                rel="noreferrer noopener"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.75,
+                  minHeight: tokens.touch.min,
+                  overflowWrap: "anywhere",
+                }}
+              >
+                <span>
+                  {source.host}
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    component="span"
+                  >
+                    {` - ${source.fields.join(", ")}`}
+                  </Typography>
+                </span>
+                <OpenExternalIcon sx={{ fontSize: 16, flexShrink: 0 }} />
+              </Link>
+            </Box>
+          ))}
+        </Box>
         {material.product_url && (
           <Link
             href={material.product_url}

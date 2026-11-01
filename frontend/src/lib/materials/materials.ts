@@ -11,6 +11,7 @@ import type {
   PaddleShaftMaterial,
 } from "@/lib/api";
 import {
+  bareQuantity,
   formatQuantity,
   fromDisplay,
   parseInput,
@@ -161,6 +162,27 @@ export const DISCIPLINES: MaterialDiscipline[] = [
   "freestyle",
   "other",
 ];
+
+const PADDLE_DISCIPLINES: MaterialDiscipline[] = [
+  "creek",
+  "river_runner",
+  "slalom",
+  "downriver",
+  "freestyle",
+  "touring",
+  "sea",
+  "other",
+];
+
+/** The disciplines worth offering for a category: a paddle is not a
+ * playboat, a kayak is not freestyle. No category offers them all. */
+export function disciplinesFor(
+  category: MaterialCategory | undefined,
+): MaterialDiscipline[] {
+  if (category === "paddle") return PADDLE_DISCIPLINES;
+  if (category === "kayak") return DISCIPLINES.filter((d) => d !== "freestyle");
+  return DISCIPLINES;
+}
 
 export const CONSTRUCTIONS: MaterialConstruction[] = [
   "plastic",
@@ -329,8 +351,7 @@ export function rangeLabel(
 ): string {
   const stated = values.filter((value): value is number => value != null);
   if (stated.length === 0) return "";
-  const num = (metric: number) =>
-    String(Number(toDisplay(quantity, metric, units).toFixed(1)));
+  const num = (metric: number) => bareQuantity(quantity, metric, units);
   const min = num(Math.min(...stated));
   const max = num(Math.max(...stated));
   const unit = unitLabel(quantity, units);
@@ -365,7 +386,7 @@ export function modelFigures(model: MaterialModel, units: Units): string {
     [
       "Weight",
       rangeLabel(
-        "weight",
+        isPaddle ? "light" : "weight",
         sizes.map((s) => s.weight_kg),
         units,
       ),
@@ -391,16 +412,17 @@ export function yearsLabel(
   return from === to ? `${about}${from}` : `${about}${from}-${to}`;
 }
 
-/** The run of a model as a list row reads it: "Since 2021" for a model still
- * built, the plain years otherwise. */
+/** The run of a model as a row or a column reads it: "since 2021" for a model
+ * still built, "about 2010" when that start is a weak source, the plain years
+ * otherwise. */
 export function sinceLabel(
   material: Pick<Material, "year_from" | "year_to" | "year_approximate">,
 ): string {
-  const years = yearsLabel(material);
-  if (material.year_from != null && material.year_to == null) {
-    return `Since ${years.replace(/-$/, "")}`;
+  const { year_from: from, year_to: to } = material;
+  if (from != null && to == null) {
+    return material.year_approximate ? `about ${from}` : `since ${from}`;
   }
-  return years;
+  return yearsLabel(material);
 }
 
 /** The paddler weight window as one line, open at either end. */
@@ -470,8 +492,10 @@ export function modelPicked(
   return model.sizes.some((size) => ids.includes(size.id));
 }
 
-/** Tick a model in the list: its first size joins the comparison, or every
- * size of it already held leaves. */
+/** Tick a model in the list. A model of one size picks that size; a model of
+ * several never picks one on its own (the row asks which), so the tick of a
+ * model not held changes nothing here. Ticking a model held removes every
+ * size of it. */
 export function toggleModelCompare(
   ids: number[],
   model: Pick<MaterialModel, "sizes">,
@@ -480,7 +504,9 @@ export function toggleModelCompare(
     const own = model.sizes.map((size) => size.id);
     return ids.filter((id) => !own.includes(id));
   }
-  return model.sizes.length > 0 ? toggleCompareId(ids, model.sizes[0].id) : ids;
+  return model.sizes.length === 1
+    ? toggleCompareId(ids, model.sizes[0].id)
+    : ids;
 }
 
 /** The entry form's fields. Every number is held as the text the reader
@@ -820,28 +846,33 @@ export function activeFilterCount(search: MaterialWikiSearch): number {
 
 /** The lengths a paddle comes in: the sizes it is sold in, else the
  * adjustable range. Empty when the entry states neither. */
-export function paddleLengthLabel(material: Material, units: Units): string {
-  const num = (cm: number) =>
-    String(Number(toDisplay("length", cm, units).toFixed(1)));
-  const unit = unitLabel("length", units);
+export function paddleLengthLabel(
+  material: Material,
+  units: Units,
+  withUnit = true,
+): string {
+  const num = (cm: number) => bareQuantity("length", cm, units);
+  const unit = withUnit ? ` ${unitLabel("length", units)}` : "";
   const sizes = material.lengths_cm ?? [];
-  if (sizes.length > 0) return `${sizes.map(num).join(", ")} ${unit}`;
+  if (sizes.length > 0) return `${sizes.map(num).join(", ")}${unit}`;
   const { length_min_cm: min, length_max_cm: max } = material;
-  if (min != null && max != null) return `${num(min)}-${num(max)} ${unit}`;
+  if (min != null && max != null) return `${num(min)}-${num(max)}${unit}`;
   if (min != null || max != null) {
-    return `${num((min ?? max) as number)} ${unit}`;
+    return `${num((min ?? max) as number)}${unit}`;
   }
   return "";
 }
 
 /** The facts a size picker shows for the picked entry: length, volume and
  * weight where stated, and the paddler it is built for. */
+export const SIZE_FACT_KEYS: SpecKey[] = ["length_cm", "volume_l", "weight_kg"];
+
 export function sizeFacts(
   material: Material,
   units: Units,
 ): { label: string; value: string }[] {
   const facts = MATERIAL_SPECS.filter((spec) =>
-    ["length_cm", "volume_l", "weight_kg"].includes(spec.key),
+    SIZE_FACT_KEYS.includes(spec.key),
   )
     .filter((spec) => specValue(material, spec.key) != null)
     .map((spec) => ({
@@ -884,7 +915,7 @@ export function paddleFacts(
   if (feather.length > 0) add("Feather", `${feather.join(", ")}°`);
   add("Shaft diameter", material.shaft_diameter ?? undefined);
   if (material.weight_kg != null) {
-    add("Weight", formatQuantity("weight", material.weight_kg, units));
+    add("Weight", formatQuantity("light", material.weight_kg, units));
   }
   return facts;
 }

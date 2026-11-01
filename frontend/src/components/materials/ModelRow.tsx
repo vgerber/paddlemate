@@ -1,13 +1,18 @@
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Checkbox from "@mui/material/Checkbox";
+import ListItemText from "@mui/material/ListItemText";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
+import { useState } from "react";
 import { listRowSx } from "@/components/canvas/flatRow";
 import { trailSlotSx } from "@/components/phone/phoneGrid";
 import type { MaterialModel } from "@/lib/api";
 import {
   CATEGORY_LABELS,
   enumLabel,
+  MAX_COMPARE,
   modelFigures,
   modelTitle,
   sinceLabel,
@@ -32,30 +37,40 @@ const metaSx = {
 export default function ModelRow({
   model,
   selected,
+  pickedIds,
   compareDisabled,
   showCategory,
   onOpen,
   onToggleCompare,
+  onToggleSize,
 }: {
   model: MaterialModel;
   /** True while a size of the model is held in the comparison. */
   selected: boolean;
+  /** The ids held in the comparison, for the size choice. */
+  pickedIds: number[];
   /** The comparison is full and no size of this model is in it. */
   compareDisabled: boolean;
   /** Dropped when the list is already narrowed to one category. */
   showCategory: boolean;
   onOpen: () => void;
+  /** Ticks a model of one size, or clears a model held. */
   onToggleCompare: () => void;
+  /** Picks or drops one size of the model. */
+  onToggleSize: (id: number) => void;
 }) {
   const [units] = useUnits();
+  const [menuAt, setMenuAt] = useState<HTMLElement | null>(null);
   const kind = [
     showCategory && CATEGORY_LABELS[model.category],
     model.discipline && enumLabel(model.discipline),
-    model.construction && enumLabel(model.construction),
     sinceLabel(model),
   ]
     .filter(Boolean)
     .join(" · ");
+  // One size ticks at once; several ask which, so no size is picked unseen.
+  const askSize = !selected && model.sizes.length > 1;
+  const full = pickedIds.length >= MAX_COMPARE;
   const figures = modelFigures(model, units);
   const sizes = model.sizes
     .map((size) => size.size)
@@ -128,29 +143,79 @@ export default function ModelRow({
           <Typography sx={{ ...cardTitleSx, overflowWrap: "anywhere" }}>
             {modelTitle(model)}
           </Typography>
-          {kind && <Typography sx={metaSx}>{kind}</Typography>}
-          {figures && (
-            <Typography sx={{ ...metaSx, fontVariantNumeric: "tabular-nums" }}>
-              {figures}
+          {kind && (
+            <Typography noWrap sx={metaSx}>
+              {kind}
             </Typography>
           )}
-          {sizes && (
-            <Typography data-testid="model-sizes" sx={metaSx}>
-              {sizes}
-            </Typography>
-          )}
+          <Box sx={{ display: "flex", gap: 1 }}>
+            {figures && (
+              <Typography
+                noWrap
+                sx={{
+                  ...metaSx,
+                  fontVariantNumeric: "tabular-nums",
+                  minWidth: 0,
+                }}
+              >
+                {figures}
+              </Typography>
+            )}
+            {sizes && (
+              <Typography
+                noWrap
+                data-testid="model-sizes"
+                sx={{ ...metaSx, flexShrink: 0 }}
+              >
+                {sizes}
+              </Typography>
+            )}
+          </Box>
         </Box>
       </ButtonBase>
       <Box sx={trailSlotSx}>
         <Checkbox
           checked={selected}
           disabled={compareDisabled}
-          onChange={onToggleCompare}
+          onChange={(event) =>
+            askSize ? setMenuAt(event.currentTarget) : onToggleCompare()
+          }
           slotProps={{
             input: { "aria-label": `Compare ${modelTitle(model)}` },
           }}
           sx={{ width: tokens.touch.min, height: tokens.touch.min, p: 0 }}
         />
+        <Menu
+          open={menuAt != null}
+          anchorEl={menuAt}
+          onClose={() => setMenuAt(null)}
+          slotProps={{
+            list: { "aria-label": `Sizes of ${modelTitle(model)}` },
+          }}
+        >
+          {model.sizes.map((size) => {
+            const held = pickedIds.includes(size.id);
+            return (
+              <MenuItem
+                key={size.id}
+                role="menuitemcheckbox"
+                aria-checked={held}
+                disabled={full && !held}
+                onClick={() => onToggleSize(size.id)}
+                sx={{ minHeight: tokens.touch.min }}
+              >
+                <Checkbox
+                  edge="start"
+                  checked={held}
+                  tabIndex={-1}
+                  disableRipple
+                  aria-hidden
+                />
+                <ListItemText primary={size.size ?? "-"} />
+              </MenuItem>
+            );
+          })}
+        </Menu>
       </Box>
     </Box>
   );
