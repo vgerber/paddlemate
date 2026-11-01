@@ -14,6 +14,7 @@ import {
   MaterialIcon,
 } from "@/lib/icons";
 import { type MaterialWikiSearch } from "@/lib/materials/search";
+import { disciplineLabel } from "@/lib/materials/specs";
 import {
   CATEGORY_PLURALS,
   pathOf,
@@ -21,7 +22,6 @@ import {
   type TreePath,
   treeFilters,
 } from "@/lib/materials/tree";
-import { humanize, sentenceCase } from "@/lib/text/format";
 import { focusRingSx } from "@/lib/theme/focusRing";
 import { theme } from "@/lib/theme/theme";
 
@@ -42,9 +42,9 @@ function levelAt(tree: MaterialTree | undefined, at: TreePath) {
   const disc = cat?.disciplines.find((d) => d.discipline === at.discipline);
   if (cat && disc) {
     return {
-      title: sentenceCase(humanize(disc.discipline)),
+      title: disciplineLabel(disc.discipline, cat.category),
       trail: CATEGORY_PLURALS[cat.category],
-      all: `All ${sentenceCase(humanize(disc.discipline))}`,
+      all: `All ${disciplineLabel(disc.discipline, cat.category)}`,
       rows: disc.brands.map(
         (b): Choice => ({
           label: b.brand,
@@ -62,7 +62,7 @@ function levelAt(tree: MaterialTree | undefined, at: TreePath) {
       all: `All ${CATEGORY_PLURALS[cat.category]}`,
       rows: cat.disciplines.map(
         (d): Choice => ({
-          label: sentenceCase(humanize(d.discipline)),
+          label: disciplineLabel(d.discipline, cat.category),
           count: d.models,
           path: { ...at, discipline: d.discipline },
           deeper: d.brands.length > 0,

@@ -7,6 +7,7 @@ import {
   type PaddleShaftMaterial,
 } from "@/lib/api";
 import { formatQuantity, type Quantity, type Units } from "@/lib/prefs/units";
+import { humanize, sentenceCase } from "@/lib/text/format";
 
 /** Input bounds the server enforces too; the form stops typing at them. */
 export const MATERIAL_LIMITS = {
@@ -127,7 +128,8 @@ export const CATEGORIES: MaterialCategory[] = [
   "paddle",
 ];
 
-export const DISCIPLINES: MaterialDiscipline[] = [
+/** Every class a boat can have. Paddles use PADDLE_DISCIPLINES instead. */
+export const BOAT_DISCIPLINES: MaterialDiscipline[] = [
   "creek",
   "river_runner",
   "half_slice",
@@ -143,25 +145,48 @@ export const DISCIPLINES: MaterialDiscipline[] = [
   "other",
 ];
 
-const PADDLE_DISCIPLINES: MaterialDiscipline[] = [
-  "creek",
-  "river_runner",
-  "slalom",
-  "downriver",
+/** Paddles are grouped by use, not by the boat they go with. Mirrors
+ * chk_materials_discipline. */
+export const PADDLE_DISCIPLINES: MaterialDiscipline[] = [
+  "whitewater",
   "freestyle",
+  "slalom",
+  "wildwater",
   "touring",
-  "sea",
+  "canoe",
+  "polo",
   "other",
 ];
 
-/** The disciplines worth offering for a category: a paddle is not a
- * playboat, a kayak is not freestyle. No category offers them all. */
+/** Every class any entry can have, for reading a filter from the address. */
+export const DISCIPLINES: MaterialDiscipline[] = [
+  ...new Set([...BOAT_DISCIPLINES, ...PADDLE_DISCIPLINES]),
+];
+
+/** The classes to offer for a category: a paddle has its own, a kayak is
+ * not freestyle. With no category, all of them. */
 export function disciplinesFor(
   category: MaterialCategory | undefined,
 ): MaterialDiscipline[] {
   if (category === "paddle") return PADDLE_DISCIPLINES;
-  if (category === "kayak") return DISCIPLINES.filter((d) => d !== "freestyle");
+  if (category === "kayak")
+    return BOAT_DISCIPLINES.filter((d) => d !== "freestyle");
+  if (category) return BOAT_DISCIPLINES;
   return DISCIPLINES;
+}
+
+const PADDLE_CLASS_LABELS: Partial<Record<MaterialDiscipline, string>> = {
+  touring: "Touring and sea",
+};
+
+/** The class as people read it; a paddle's touring class covers sea too. */
+export function disciplineLabel(
+  discipline: MaterialDiscipline,
+  category: MaterialCategory | undefined,
+): string {
+  const label =
+    category === "paddle" ? PADDLE_CLASS_LABELS[discipline] : undefined;
+  return label ?? sentenceCase(humanize(discipline));
 }
 
 export const CONSTRUCTIONS: MaterialConstruction[] = [

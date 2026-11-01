@@ -1,6 +1,6 @@
 import type { Material, MaterialModel } from "@/lib/api";
 import { paddleLengthLabel, sinceLabel } from "@/lib/materials/facts";
-import { CATEGORY_LABELS } from "@/lib/materials/specs";
+import { CATEGORY_LABELS, disciplineLabel } from "@/lib/materials/specs";
 import {
   bareQuantity,
   type Quantity,
@@ -123,7 +123,8 @@ const FIELDS: Field[] = [
     key: "discipline",
     group: "kind",
     label: "Discipline",
-    read: (m) => text(m.discipline && sentenceCase(humanize(m.discipline))),
+    read: (m) =>
+      text(m.discipline && disciplineLabel(m.discipline, m.category)),
   },
   {
     key: "construction",

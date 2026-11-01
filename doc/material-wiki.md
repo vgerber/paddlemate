@@ -24,7 +24,8 @@ at four characters.
 
 **Browse by category.** On a desktop the left side of the page is a tree:
 Kayaks, Canoes, Packrafts, SUPs, Paddles; under each the types (creek, river
-runner, ...); under each type the brands, each with its number of models.
+runner, ...; paddles are grouped by use instead: whitewater, freestyle, slalom,
+wildwater, touring and sea, canoe, polo, other); under each type the brands, each with its number of models.
 Pick a brand and its models list under it, with their sizes; Kayaks, Creek,
 Pyranha shows the nine Pyranha creek boats. The trail above the list
 (Tools, Material wiki, Kayaks, Creek, Pyranha) goes back up a step, the
@@ -193,6 +194,19 @@ uses, and the same normalization the river search runs on. It is therefore
 one of the `*_name_trgm` indexes that a migration changing `search_key` must
 `REINDEX`; see [search.md](search.md).
 
+### Paddle classes
+
+A paddle's `discipline` is the use it is built for: `whitewater`, `freestyle`,
+`slalom`, `wildwater`, `touring` (shown as "Touring and sea"), `canoe` (single
+blade), `polo` or `other`. `whitewater`, `wildwater`, `canoe` and `polo` are
+paddle-only; every other class belongs to boats. The rule is the check
+`chk_materials_discipline` and, ahead of it, a 400 naming `discipline` from
+`MaterialBody::validation_error`. `0063_paddle_use_remap.sql` moved the old
+paddle rows (creek and river runner to whitewater, downriver to wildwater;
+freestyle, slalom, other kept) and the stored bodies of material proposals.
+The form offers `disciplinesFor(category)` and clears a class the new category
+does not have.
+
 ### Catalogue storage
 
 Migration `0056_materials_catalogue.sql` adds the `paddle` category, the
@@ -204,7 +218,7 @@ key now includes the category. `PUT` replaces every field, the new ones
 included; a client that omits `colors` clears them.
 
 `0057_materials_catalogue_seed.sql` is generated, never edited; so is its
-re-run `0059_materials_catalogue_reseed.sql`: run
+re-run `0064_materials_paddle_use_reseed.sql`: run
 `python3 -I scripts/materials/build_seed.py` on `data/materials/{kayaks,paddles}.json`
 (facts and links only, no images). It upserts by category, brand, model,
 variant and size, owned by the `system-catalogue` user, and only touches rows where

@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { IMPERIAL, METRIC } from "@/lib/prefs/units";
-import { disciplinesFor, formatSpec, MATERIAL_SPECS } from "./specs";
+import {
+  disciplineLabel,
+  disciplinesFor,
+  formatSpec,
+  MATERIAL_SPECS,
+} from "./specs";
 
 describe("formatSpec", () => {
   const weight = MATERIAL_SPECS.find((spec) => spec.key === "weight_kg");
@@ -21,11 +26,43 @@ describe("formatSpec", () => {
 });
 
 describe("disciplinesFor", () => {
-  test("paddles offer paddle disciplines, kayaks no freestyle", () => {
-    expect(disciplinesFor("paddle")).toContain("freestyle");
-    expect(disciplinesFor("paddle")).not.toContain("playboat");
-    expect(disciplinesFor("kayak")).toContain("playboat");
+  test("paddles are grouped by use, boats by kind", () => {
+    expect(disciplinesFor("paddle")).toEqual([
+      "whitewater",
+      "freestyle",
+      "slalom",
+      "wildwater",
+      "touring",
+      "canoe",
+      "polo",
+      "other",
+    ]);
+    for (const boatOnly of ["creek", "river_runner", "playboat", "downriver"]) {
+      expect(disciplinesFor("paddle")).not.toContain(boatOnly);
+    }
+    for (const paddleOnly of ["whitewater", "wildwater", "canoe", "polo"]) {
+      for (const category of ["kayak", "canoe", "packraft", "sup"] as const) {
+        expect(disciplinesFor(category)).not.toContain(paddleOnly);
+      }
+    }
+    expect(disciplinesFor("kayak")).toContain("creek");
     expect(disciplinesFor("kayak")).not.toContain("freestyle");
-    expect(disciplinesFor(undefined)).toContain("freestyle");
+  });
+
+  test("with no category every class is offered once", () => {
+    const all = disciplinesFor(undefined);
+    expect(new Set(all).size).toBe(all.length);
+    expect(all).toContain("polo");
+    expect(all).toContain("playboat");
+  });
+});
+
+describe("disciplineLabel", () => {
+  test("a paddle's touring class covers sea; a kayak's does not", () => {
+    expect(disciplineLabel("touring", "paddle")).toBe("Touring and sea");
+    expect(disciplineLabel("touring", "kayak")).toBe("Touring");
+    expect(disciplineLabel("whitewater", "paddle")).toBe("Whitewater");
+    expect(disciplineLabel("river_runner", "kayak")).toBe("River runner");
+    expect(disciplineLabel("polo", "paddle")).toBe("Polo");
   });
 });
