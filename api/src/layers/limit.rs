@@ -239,7 +239,8 @@ fn is_write(method: &Method) -> bool {
     )
 }
 
-fn too_many(wait: u64) -> Response {
+fn too_many(wait: u64, budget: &'static str) -> Response {
+    crate::metrics::rate_limited(budget);
     let mut res =
         ApiError::too_many_requests(format!("Too many requests, retry in {wait}s")).into_response();
     if let Ok(value) = HeaderValue::from_str(&wait.to_string()) {
@@ -258,13 +259,13 @@ pub async fn limit_requests(
     let caller = limits.addr(&req);
     if let Some(budget) = &limits.inner.reads {
         if let Err(wait) = budget.check(&caller) {
-            return too_many(wait);
+            return too_many(wait, "general");
         }
     }
     if let Some(budget) = &limits.inner.expensive {
         if limits.is_expensive(&req) {
             if let Err(wait) = budget.check(&caller) {
-                return too_many(wait);
+                return too_many(wait, "expensive");
             }
         }
     }
@@ -285,7 +286,7 @@ pub async fn limit_writes(
                 None => limits.addr(&req),
             };
             if let Err(wait) = budget.check(&caller) {
-                return too_many(wait);
+                return too_many(wait, "write");
             }
         }
     }

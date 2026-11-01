@@ -154,6 +154,8 @@ async fn main() {
         }
     };
 
+    let metrics = paddlemate_api::metrics::install();
+
     aide::generate::extract_schemas(true);
 
     let mut api = OpenApi::default();
@@ -196,6 +198,7 @@ async fn main() {
         .nest_api_service("/groups", group_routes(state.clone()))
         // Inside sign-in, so a write is charged to the user.
         .layer(middleware::from_fn_with_state(limits.clone(), limit_writes))
+        .layer(middleware::from_fn(paddlemate_api::metrics::tag_client))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth,
@@ -213,6 +216,7 @@ async fn main() {
         .nest_api_service("/proposals", proposals_routes(state.clone()))
         .nest_api_service("/trips", trips_routes(state.clone()))
         .layer(middleware::from_fn_with_state(limits.clone(), limit_writes))
+        .layer(middleware::from_fn(paddlemate_api::metrics::tag_client))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             api_token_auth_optional,
@@ -312,6 +316,10 @@ async fn main() {
                 ),
         )
         .with_state(state);
+
+    // After every layer above, so scrapes are not counted or limited. It sits
+    // at the host root, outside the base path a reverse proxy forwards.
+    let app = paddlemate_api::metrics::wrap(app, metrics, Some(db.clone()));
 
     let port = config.port.clone();
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}"))

@@ -117,6 +117,21 @@ settings and secrets. Both files stay out of git.
   proxy must append the client to `X-Forwarded-For` (or set `X-Real-IP`); a
   LAN client that talks to the API port directly is also trusted, so keep
   that port off the internet. Startup logs which mode is active.
+- **Monitoring**: the API serves Prometheus metrics at `/metrics`, at the
+  root of the host, deliberately **outside** the base path (`/api/v1`) and
+  unauthenticated. Prometheus on the NAS scrapes `192.168.178.53:5566/metrics`,
+  the published API port. The public reverse proxy forwards only `/api/`, so
+  `/metrics` is not on the internet: never proxy the root, and keep the API
+  port off the internet. Series: `http_requests_total{method,route,status,client}`
+  (`route` is the matched template, `unmatched` for 404s; `client` is
+  `anonymous`, `api_token` or `app`), `http_request_duration_seconds{method,route}`,
+  `http_requests_in_flight`, `rate_limit_rejections_total{budget}`
+  (`general`, `write`, `expensive`), `db_pool_connections`,
+  `db_pool_idle_connections`, `proposals_submitted_total{entity_type}`,
+  `material_image_mirror_total{result}` (`ok`, `failed`, `blocked`) and the
+  `process_*` gauges (CPU, memory, fds, start time). No label carries a user
+  id, address or token. Scrapes are neither counted nor rate limited. Code:
+  `api/src/metrics.rs`.
 - **Frontend**: build on the dev machine with the production `VITE_*` values
   (`frontend/.env`), check `grep -c localhost frontend/dist/assets/*.js` is 0,
   then `deploy/frontend/deploy.sh`, right after the API (it deletes old hashed

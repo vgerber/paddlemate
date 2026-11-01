@@ -159,4 +159,5 @@ pub(super) async fn insert_row(
     .bind(submitter_note)
     .fetch_one(conn)
     .await
+    .inspect(|_| crate::metrics::proposal_submitted(entity_type))
 }

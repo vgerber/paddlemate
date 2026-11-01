@@ -221,8 +221,17 @@ pub async fn run_round<F: Fetcher>(pool: &PgPool, fetcher: &F) -> Result<usize, 
     )
     .await;
     for (pending, result) in round.iter().zip(results) {
-        if let Err(err) = result {
-            tracing::error!("Mirroring image {} failed: {err}", pending.id);
+        match result {
+            Ok(Outcome::Stored) => crate::metrics::image_mirrored("ok"),
+            Ok(Outcome::Failed) => crate::metrics::image_mirrored("failed"),
+            Ok(Outcome::Refused | Outcome::HostBlocked) => {
+                crate::metrics::image_mirrored("blocked")
+            }
+            Ok(Outcome::Withdrawn) => {}
+            Err(err) => {
+                crate::metrics::image_mirrored("failed");
+                tracing::error!("Mirroring image {} failed: {err}", pending.id);
+            }
         }
     }
     Ok(round.len())
