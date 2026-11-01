@@ -19,6 +19,9 @@ DELETE FROM comments WHERE id BETWEEN 9900 AND 9999;
 DELETE FROM materials WHERE id BETWEEN 9850 AND 9899 OR lower(btrim(brand)) IN ('specprobe', 'unitprobe');
 DELETE FROM proposal_votes WHERE proposal_id BETWEEN 9700 AND 9799;
 DELETE FROM proposals WHERE id BETWEEN 9700 AND 9799;
+-- Proposals e2e runs make as a fixture paddler; votes cascade with them.
+DELETE FROM proposals
+ WHERE submitted_by IN (:'mara', :'tobi', :'aoife', :'jonas');
 DELETE FROM user_section_favorites WHERE section_id BETWEEN 9000 AND 9999;
 DELETE FROM descents WHERE id BETWEEN 9200 AND 9299;
 -- Logs a test run made on the fixture's sections and left behind: real data
