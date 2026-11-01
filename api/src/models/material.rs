@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Datelike, NaiveDate, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -119,6 +119,20 @@ pub enum PaddleShaftMaterial {
     Hybrid,
 }
 
+/// Whether the maker still sells the entry. A snapshot taken on
+/// `availability_checked`, not a live feed.
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, sqlx::Type,
+)]
+#[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "material_availability", rename_all = "snake_case")]
+pub enum MaterialAvailability {
+    Current,
+    Discontinued,
+    #[default]
+    Unknown,
+}
+
 /// A mirrored product photo. Only fetched images are ever returned.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct MaterialImage {
@@ -185,6 +199,13 @@ pub struct Material {
     pub colors: Vec<String>,
     /// The years rest on a weak source: show "about <year>".
     pub year_approximate: bool,
+    pub availability: MaterialAvailability,
+    /// The page the availability was read from.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub availability_source: Option<String>,
+    /// The day the availability was last checked.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub availability_checked: Option<NaiveDate>,
     /// Field name to the page its value came from; imported entries only.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sources: Option<serde_json::Value>,
@@ -276,6 +297,12 @@ pub struct MaterialModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub year_to: Option<i32>,
     pub year_approximate: bool,
+    /// Current if any size is, discontinued if all are, else unknown.
+    pub availability: MaterialAvailability,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub availability_source: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub availability_checked: Option<NaiveDate>,
     /// Thumbnail of the first fetched photo of any size.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thumb_url: Option<String>,
@@ -318,6 +345,10 @@ pub struct MaterialBody {
     pub colors: Vec<String>,
     #[serde(default)]
     pub year_approximate: bool,
+    #[serde(default)]
+    pub availability: MaterialAvailability,
+    pub availability_source: Option<String>,
+    pub availability_checked: Option<NaiveDate>,
     pub notes: Option<String>,
     pub blade_area_cm2: Option<f64>,
     pub blade_length_cm: Option<f64>,
@@ -365,6 +396,7 @@ pub struct MaterialFilters {
     pub category: Option<MaterialCategory>,
     pub discipline: Option<MaterialDiscipline>,
     pub construction: Option<MaterialConstruction>,
+    pub availability: Option<MaterialAvailability>,
     /// Exact brand, case-insensitive.
     pub brand: Option<String>,
     pub min_length_cm: Option<f64>,
@@ -407,6 +439,9 @@ impl From<&Material> for MaterialBody {
             product_url: m.product_url.clone(),
             colors: m.colors.clone(),
             year_approximate: m.year_approximate,
+            availability: m.availability,
+            availability_source: m.availability_source.clone(),
+            availability_checked: m.availability_checked,
             notes: m.notes.clone(),
             blade_area_cm2: m.blade_area_cm2,
             blade_length_cm: m.blade_length_cm,
@@ -441,6 +476,7 @@ impl MaterialBody {
         clean(&mut self.size);
         clean(&mut self.description);
         clean(&mut self.product_url);
+        clean(&mut self.availability_source);
         clean(&mut self.notes);
         clean(&mut self.blade_material);
         clean(&mut self.shaft_diameter);
@@ -472,7 +508,7 @@ impl MaterialBody {
         if self.model.is_empty() {
             return Some(("model", "Model is required".into()));
         }
-        let texts: [(&'static str, Option<&str>, usize); 6] = [
+        let texts: [(&'static str, Option<&str>, usize); 7] = [
             ("brand", Some(&self.brand), MAX_NAME_CHARS),
             ("model", Some(&self.model), MAX_NAME_CHARS),
             ("variant", self.variant.as_deref(), MAX_NAME_CHARS),
@@ -483,6 +519,11 @@ impl MaterialBody {
                 MAX_DESCRIPTION_CHARS,
             ),
             ("product_url", self.product_url.as_deref(), MAX_URL_CHARS),
+            (
+                "availability_source",
+                self.availability_source.as_deref(),
+                MAX_URL_CHARS,
+            ),
         ];
         for (field, value, max) in texts {
             if value.is_some_and(|v| v.chars().count() > max) {
@@ -527,6 +568,22 @@ impl MaterialBody {
             return Some((
                 "product_url",
                 "Link must start with http:// or https://".into(),
+            ));
+        }
+        if let Some(url) = self.availability_source.as_deref()
+            && !(url.starts_with("http://") || url.starts_with("https://"))
+        {
+            return Some((
+                "availability_source",
+                "Link must start with http:// or https://".into(),
+            ));
+        }
+        if let Some(day) = self.availability_checked
+            && !(MIN_YEAR..=MAX_YEAR).contains(&day.year())
+        {
+            return Some((
+                "availability_checked",
+                format!("availability_checked must be in {MIN_YEAR} to {MAX_YEAR}"),
             ));
         }
         None
@@ -670,6 +727,9 @@ mod tests {
             product_url: None,
             colors: vec![],
             year_approximate: false,
+            availability: MaterialAvailability::Unknown,
+            availability_source: None,
+            availability_checked: None,
             notes: None,
             blade_area_cm2: None,
             blade_length_cm: None,

@@ -37,7 +37,8 @@ const MATERIAL_COLS: &str = "m.id, m.category, m.brand, m.model, m.variant, m.si
      m.construction, m.description, m.year_from, m.year_to, m.length_cm, m.width_cm, \
      m.height_cm, m.volume_l, m.weight_kg, m.cockpit_length_cm, m.cockpit_width_cm, \
      m.paddler_weight_min_kg, m.paddler_weight_max_kg, m.product_url, m.colors, \
-     m.year_approximate, m.sources, m.notes, m.blade_area_cm2, m.blade_length_cm, \
+     m.year_approximate, m.availability, m.availability_source, \
+     m.availability_checked, m.sources, m.notes, m.blade_area_cm2, m.blade_length_cm, \
      m.blade_width_cm, m.length_min_cm, m.length_max_cm, m.lengths_cm, m.pieces, m.shaft, \
      m.shaft_material, m.blade_material, m.feather_deg, m.shaft_diameter, m.created_by, \
      m.created_at, m.updated_at, \
@@ -76,6 +77,9 @@ fn row_to_material(row: &PgRow) -> Result<Material, sqlx::Error> {
         product_url: row.try_get("product_url")?,
         colors: row.try_get("colors")?,
         year_approximate: row.try_get("year_approximate")?,
+        availability: row.try_get("availability")?,
+        availability_source: row.try_get("availability_source")?,
+        availability_checked: row.try_get("availability_checked")?,
         sources: row.try_get("sources")?,
         notes: row.try_get("notes")?,
         blade_area_cm2: row.try_get("blade_area_cm2")?,
@@ -123,6 +127,10 @@ pub(super) fn push_filters(qb: &mut QueryBuilder<'_, sqlx::Postgres>, filters: &
     if let Some(construction) = filters.construction {
         qb.push(" AND m.construction = ");
         qb.push_bind(construction);
+    }
+    if let Some(availability) = filters.availability {
+        qb.push(" AND m.availability = ");
+        qb.push_bind(availability);
     }
     if let Some(brand) = filters
         .brand
