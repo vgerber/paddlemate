@@ -281,6 +281,16 @@ writing).
 `failed` or `removed`, `host` is the link's host, `file` the stored key.
 `material_image_hosts` holds hosts on a 24 hour cooldown.
 
+### Photo links added later
+
+Links added after the first seed carry a `"batch"` tag in the data files and
+ship in their own migration, made with `python3 -I scripts/materials/build_seed.py
+--photo-migration <batch> <out.sql>` (0066, 0067; the default seed leaves tagged
+links out). It queues every size row of a model that has no image yet, so a
+re-run inserts nothing, and the new hosts join the allowlist with those rows
+(the running job rereads it each round, no restart). Tests:
+`api/tests/material_photo_links.rs`.
+
 ### Photo mirror
 
 `api/src/jobs/material_images.rs`, started with the other background jobs

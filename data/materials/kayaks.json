@@ -187,7 +187,18 @@
    "Red",
    "Yellow"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/d1/09/d7/10427_01_1291303328.JPG",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/aire-outfitter-i",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/51/76/87/10427_04_1291303328.JPG",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/aire-outfitter-i",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/aire-outfitter-i",
@@ -224,7 +235,18 @@
    "Red",
    "Yellow"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/83/0d/1f/10428_01_1291306392.JPG",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/aire-outfitter-ii",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/b4/3c/58/10428_04_1291306392.JPG",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/aire-outfitter-ii",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/aire-outfitter-ii",
@@ -359,7 +381,18 @@
   "colors": [
    "Yellow"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/0b/de/03/10429_01_1291306767.JPG",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/aire-tomcat-lv",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/3e/f9/d0/10429_04_1291306767.JPG",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/aire-tomcat-lv",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/aire-tomcat-lv",
@@ -538,7 +571,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/88/c0/02/boats_74-1.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/bliss-stick-flip-stick",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/5d/81/ef/boats_74-2.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/bliss-stick-flip-stick",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/bliss-stick-flip-stick",
@@ -608,7 +652,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/7a/bb/5c/boats_42-1.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/bliss-stick-huka",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/30/d1/54/boats_42-2.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/bliss-stick-huka",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/bliss-stick-huka",
@@ -1221,7 +1276,13 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/40/70/86/_Screen%20Shot%202012-04-10%20at%209.20.13-am-1334042570.JPG",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/bliss-stick-tuna",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/bliss-stick-tuna",
@@ -1253,7 +1314,18 @@
   "paddler_weight_min_kg": 50.0,
   "paddler_weight_max_kg": 109.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/d6/61/6c/boats_357-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-approach",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/94/e6/50/boats_357-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-approach",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-approach",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-approach",
@@ -1294,7 +1366,18 @@
    "Orange",
    "Flame (Red/Yellow)"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/83/3b/e8/boats_1600-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-80",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/89/a6/1f/boats_1600-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-80",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-69",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-69",
@@ -1336,7 +1419,18 @@
    "Orange",
    "Flame (Red/Yellow)"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/83/3b/e8/boats_1600-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-80",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/89/a6/1f/boats_1600-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-80",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-80",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-80",
@@ -1378,7 +1472,18 @@
    "Orange",
    "Flame (Red/Yellow)"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/83/3b/e8/boats_1600-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-80",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/89/a6/1f/boats_1600-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-80",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-85",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-85",
@@ -1420,7 +1525,18 @@
    "Orange",
    "Flame (Red/Yellow)"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/83/3b/e8/boats_1600-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-80",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/89/a6/1f/boats_1600-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-80",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-90",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-axiom-90",
@@ -1582,7 +1698,18 @@
    "Dagger Red",
    "Lime"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c2/0d/e0/boats_1425-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-green-boat",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/27/c3/23/boats_1425-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-green-boat",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-green-boat",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-green-boat",
@@ -1708,7 +1835,18 @@
    "Solar",
    "Storm"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/0d/aa/80/12756_jitsu5-9-1368021795.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-jitsu-59",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/41/38/b9/12756_jitsu-5-9yellow-1368021795.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-jitsu-59",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-jitsu-55",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-jitsu-55",
@@ -1748,7 +1886,18 @@
    "Solar",
    "Storm"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/0d/aa/80/12756_jitsu5-9-1368021795.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-jitsu-59",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/41/38/b9/12756_jitsu-5-9yellow-1368021795.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-jitsu-59",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-jitsu-59",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-jitsu-59",
@@ -1790,7 +1939,18 @@
    "Solar",
    "Storm"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/0d/aa/80/12756_jitsu5-9-1368021795.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-jitsu-59",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/41/38/b9/12756_jitsu-5-9yellow-1368021795.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-jitsu-59",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-jitsu-60",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-jitsu-60",
@@ -1906,7 +2066,18 @@
   "paddler_weight_min_kg": 36.0,
   "paddler_weight_max_kg": 68.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/44/61/78/boats_11-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpin-62",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/39/81/d1/boats_11-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpin-62",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpin-61",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-kingpin-61",
@@ -1939,7 +2110,18 @@
   "paddler_weight_min_kg": 45.0,
   "paddler_weight_max_kg": 81.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/44/61/78/boats_11-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpin-62",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/39/81/d1/boats_11-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpin-62",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpin-62",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-kingpin-62",
@@ -1972,7 +2154,18 @@
   "paddler_weight_min_kg": 64.0,
   "paddler_weight_max_kg": 98.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/44/61/78/boats_11-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpin-62",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/39/81/d1/boats_11-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpin-62",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpin-63",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-kingpin-63",
@@ -2005,7 +2198,13 @@
   "paddler_weight_min_kg": 36.0,
   "paddler_weight_max_kg": 64.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/93/3e/45/1777_2001659_1275228218.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpinicon-62",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpinicon-61",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-kingpinicon-61",
@@ -2038,7 +2237,13 @@
   "paddler_weight_min_kg": 45.0,
   "paddler_weight_max_kg": 82.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/93/3e/45/1777_2001659_1275228218.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpinicon-62",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpinicon-62",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-kingpinicon-62",
@@ -2071,7 +2276,13 @@
   "paddler_weight_min_kg": 64.0,
   "paddler_weight_max_kg": 100.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/93/3e/45/1777_2001659_1275228218.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpinicon-62",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-kingpinicon-63",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-kingpinicon-63",
@@ -2109,7 +2320,18 @@
    "yellow",
    "robins egg blue"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/de/b7/69/boats_251-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-mamba-75",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/6e/07/7d/boats_251-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-mamba-75",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-mamba-75",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-mamba-75",
@@ -2143,7 +2365,18 @@
   "paddler_weight_min_kg": 54,
   "paddler_weight_max_kg": 77,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://images.wildernesssupply.ca/images/products/thumbnails_400/108_1540415488_9356.jpg",
+    "page_url": "https://wildernesssupply.ca/whitewater-kayaks/dagger/mamba-8-1-kayak",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://images.wildernesssupply.ca/images/products/thumbnails_400/1857_1540416291_7116.jpg",
+    "page_url": "https://wildernesssupply.ca/whitewater-kayaks/dagger/mamba-8-1-kayak",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://canoe-shops.co.uk/products/dagger-mamba",
@@ -2179,7 +2412,18 @@
    "red",
    "yellow"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/de/b7/69/boats_251-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-mamba-75",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/6e/07/7d/boats_251-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-mamba-75",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-mamba-80",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-mamba-80",
@@ -2213,7 +2457,18 @@
   "paddler_weight_min_kg": 68,
   "paddler_weight_max_kg": 100,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://images.wildernesssupply.ca/images/products/thumbnails_400/108_1540415488_9356.jpg",
+    "page_url": "https://wildernesssupply.ca/whitewater-kayaks/dagger/mamba-8-1-kayak",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://images.wildernesssupply.ca/images/products/thumbnails_400/1857_1540416291_7116.jpg",
+    "page_url": "https://wildernesssupply.ca/whitewater-kayaks/dagger/mamba-8-1-kayak",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://canoe-shops.co.uk/products/dagger-mamba",
@@ -2249,7 +2504,18 @@
    "red",
    "yellow"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/de/b7/69/boats_251-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-mamba-75",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/6e/07/7d/boats_251-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-mamba-75",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-mamba-85",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-mamba-85",
@@ -2283,7 +2549,18 @@
   "paddler_weight_min_kg": 79,
   "paddler_weight_max_kg": 118,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://images.wildernesssupply.ca/images/products/thumbnails_400/108_1540415488_9356.jpg",
+    "page_url": "https://wildernesssupply.ca/whitewater-kayaks/dagger/mamba-8-1-kayak",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://images.wildernesssupply.ca/images/products/thumbnails_400/1857_1540416291_7116.jpg",
+    "page_url": "https://wildernesssupply.ca/whitewater-kayaks/dagger/mamba-8-1-kayak",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://canoe-shops.co.uk/products/dagger-mamba",
@@ -2314,7 +2591,13 @@
   "paddler_weight_min_kg": 54.0,
   "paddler_weight_max_kg": 77.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/30/b8/de/1783_daggernomadcreekingwhitewaterm_1275233037.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-nomad-85",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-nomad-81",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-nomad-81",
@@ -2347,7 +2630,13 @@
   "paddler_weight_min_kg": 73.0,
   "paddler_weight_max_kg": 109.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/30/b8/de/1783_daggernomadcreekingwhitewaterm_1275233037.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/dagger-nomad-85",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/dagger-nomad-85",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/dagger-nomad-85",
@@ -3658,7 +3947,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/88/74/24/boats_286-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/eskimo-kendo-2005",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/13/4b/3f/boats_286-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/eskimo-kendo-2005",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/eskimo-kendo-2005",
@@ -3723,7 +4023,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/da/42/04/boats_75-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/eskimo-nano",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/fe/95/51/boats_75-3.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/eskimo-nano",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/eskimo-nano",
@@ -3754,7 +4065,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/23/7d/98/boats_463-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/eskimo-salto",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/92/70/4b/boats_463-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/eskimo-salto",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/eskimo-salto",
@@ -3859,7 +4181,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/84/bf/49/boats_287-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/eskimo-topo-duo-2005",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/f4/54/28/boats_287-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/eskimo-topo-duo-2005",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/eskimo-topo-duo-2005",
@@ -3890,7 +4223,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/07/6f/d3/boats_927-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/exo-kayak-313",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/3b/86/f0/boats_927-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/exo-kayak-313",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/exo-kayak-313",
@@ -3921,7 +4265,13 @@
   "paddler_weight_min_kg": 50.0,
   "paddler_weight_max_kg": 100.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/d8/6e/ab/boats_556-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/exo-kayak-demon",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/exo-kayak-demon",
@@ -4086,7 +4436,18 @@
   "paddler_weight_min_kg": 45.0,
   "paddler_weight_max_kg": 83.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c9/7e/30/boats_926-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/exo-kayak-joker",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/ce/39/4b/boats_926-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/exo-kayak-joker",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/exo-kayak-joker",
@@ -4184,7 +4545,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": 95.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/89/bb/c6/5551_pinup2big_1271336049.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/exo-kayak-pin-up",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/be/e2/8b/5551_pinup1big_1271336049.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/exo-kayak-pin-up",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/exo-kayak-pin-up",
@@ -4282,7 +4654,13 @@
   "paddler_weight_min_kg": 75.0,
   "paddler_weight_max_kg": 100.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/4e/61/84/_playak-supzero-2013-11-04-at-8-57-36-am-1383551918.JPG",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/exo-kayak-six",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://canoeicf.com/sites/default/files/2025_icf_kayak_cross_registered_boat_list_v1.pdf",
@@ -5137,7 +5515,13 @@
   "paddler_weight_min_kg": 50.0,
   "paddler_weight_max_kg": 90.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.fluidkayaks.com/wp-content/uploads/2021/01/DONSA.jpg",
+    "page_url": "https://www.fluidkayaks.com/product/donsa/",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/fluid-donsa",
@@ -5305,7 +5689,18 @@
   "paddler_weight_min_kg": 60.0,
   "paddler_weight_max_kg": 90.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/de/e3/77/_kayak0665_1316676613.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-dope-m-composite-2011",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/06/cb/6c/_kayak0664_1316676613.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-dope-m-composite-2011",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/fluid-dope-m-composite-2011",
@@ -5386,7 +5781,18 @@
   "paddler_weight_min_kg": 70.0,
   "paddler_weight_max_kg": 110.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2f/7a/56/9569_SNAG0874_1286870674.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-element-medium-composite",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/5a/97/1e/9569_SNAG0875_1286870675.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-element-medium-composite",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/fluid-element-large-composite",
@@ -5419,7 +5825,18 @@
   "paddler_weight_min_kg": 65.0,
   "paddler_weight_max_kg": 95.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2f/7a/56/9569_SNAG0874_1286870674.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-element-medium-composite",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/5a/97/1e/9569_SNAG0875_1286870675.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-element-medium-composite",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/fluid-element-medium-composite",
@@ -5452,7 +5869,18 @@
   "paddler_weight_min_kg": 85.0,
   "paddler_weight_max_kg": 115.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/28/38/c5/boats_173-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-flirt-medium",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c7/4b/b4/boats_173-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-flirt-medium",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/fluid-flirt-large",
@@ -5485,7 +5913,18 @@
   "paddler_weight_min_kg": 65.0,
   "paddler_weight_max_kg": 95.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/28/38/c5/boats_173-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-flirt-medium",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c7/4b/b4/boats_173-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-flirt-medium",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/fluid-flirt-medium",
@@ -5518,7 +5957,18 @@
   "paddler_weight_min_kg": 45.0,
   "paddler_weight_max_kg": 75.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/28/38/c5/boats_173-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-flirt-medium",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c7/4b/b4/boats_173-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-flirt-medium",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/fluid-flirt-small",
@@ -5557,7 +6007,13 @@
    "Blue",
    "Camo"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.fluidkayaks.com/wp-content/uploads/2021/01/Nemesis.jpeg",
+    "page_url": "https://www.fluidkayaks.com/product/nemesis-whitewater-kayak/",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://www.fluidkayaks.com/product/nemesis-whitewater-kayak/",
   "sources": {
    "length_cm": "https://www.fluidkayaks.com/product/nemesis-whitewater-kayak/",
@@ -5596,7 +6052,13 @@
    "Blue",
    "Camo"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.fluidkayaks.com/wp-content/uploads/2021/01/Nemesis.jpeg",
+    "page_url": "https://www.fluidkayaks.com/product/nemesis-whitewater-kayak/",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://www.fluidkayaks.com/product/nemesis-whitewater-kayak/",
   "sources": {
    "length_cm": "https://www.fluidkayaks.com/product/nemesis-whitewater-kayak/",
@@ -5635,7 +6097,13 @@
    "Blue",
    "Camo"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.fluidkayaks.com/wp-content/uploads/2021/01/Nemesis.jpeg",
+    "page_url": "https://www.fluidkayaks.com/product/nemesis-whitewater-kayak/",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://www.fluidkayaks.com/product/nemesis-whitewater-kayak/",
   "sources": {
    "length_cm": "https://www.fluidkayaks.com/product/nemesis-whitewater-kayak/",
@@ -5668,7 +6136,18 @@
   "paddler_weight_min_kg": 85.0,
   "paddler_weight_max_kg": 95.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/af/89/d0/6907_10022_1274885858.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-nemesis-medium-composite",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/6e/f3/12/6907_10025_1274885858.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/fluid-nemesis-medium-composite",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/fluid-nemesis-medium-composite",
@@ -5949,7 +6428,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": 40.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.fluidkayaks.com/wp-content/uploads/2021/01/FEATUREDPRODUCT_VAYA-01.png",
+    "page_url": "https://www.fluidkayaks.com/product/vaya/",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://www.fluidkayaks.com/wp-content/uploads/2021/01/Vaya_bow-01.png",
+    "page_url": "https://www.fluidkayaks.com/product/vaya/",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/fluid-vaya",
@@ -5978,7 +6468,18 @@
   "paddler_weight_min_kg": 25,
   "paddler_weight_max_kg": 45,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://galasport.com/userdata/cache/images/storecards/01831/900/Anik_1.jpg",
+    "page_url": "https://galasport.com/anik-carbolight-kayak-for-children-01831/",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://galasport.com/userdata/cache/images/storecards/01831/900/Anik_2.jpg",
+    "page_url": "https://galasport.com/anik-carbolight-kayak-for-children-01831/",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://galasport.com/userdata/editor/files/paticka/ke_stazeni/katalogy/en_catalogue/boats_K1_slalom.pdf",
@@ -6021,7 +6522,18 @@
    "Silver",
    "White"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://galasport.com/userdata/cache/images/storecards/01781/900/caipi_1.jpg",
+    "page_url": "https://galasport.com/caipi-carbolight-kayak-350cm-01781/",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://galasport.com/userdata/cache/images/storecards/01781/900/caipi_2.jpg",
+    "page_url": "https://galasport.com/caipi-carbolight-kayak-350cm-01781/",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://galasport.com/caipi-carbolight-kayak-350cm-01781/",
   "sources": {
    "length_cm": "https://galasport.com/caipi-carbolight-kayak-350cm-01781/",
@@ -6115,7 +6627,18 @@
    "Silver",
    "White"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://galasport.com/userdata/cache/images/storecards/01801/900/caipifins_1.jpg",
+    "page_url": "https://galasport.com/k1-caipi-fins-carbolight-kayak-350cm-01801",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://galasport.com/userdata/cache/images/storecards/01801/900/caipifins_2.jpg",
+    "page_url": "https://galasport.com/k1-caipi-fins-carbolight-kayak-350cm-01801",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://galasport.com/k1-caipi-fins-carbolight-kayak-350cm-01801",
   "sources": {
    "length_cm": "https://galasport.com/k1-caipi-fins-carbolight-kayak-350cm-01801",
@@ -6159,7 +6682,18 @@
    "Silver",
    "White"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://galasport.com/userdata/cache/images/storecards/01856/900/flow_1.jpg",
+    "page_url": "https://galasport.com/k1-flow-2021-carbolight-kayak-350cm-01856/",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://galasport.com/userdata/cache/images/storecards/01856/900/flow_2.jpg",
+    "page_url": "https://galasport.com/k1-flow-2021-carbolight-kayak-350cm-01856/",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://galasport.com/k1-flow-2021-carbolight-kayak-350cm-01856/",
   "sources": {
    "year_from": "https://galasport.com/k1-flow-2021-carbolight-kayak-350cm-01856/",
@@ -6792,7 +7326,13 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/14/65/0d/JK-antix-16-1469731865.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix",
@@ -6820,7 +7360,18 @@
   "paddler_weight_min_kg": 81.7,
   "paddler_weight_max_kg": 113.4,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/e3/21/ca/1-32-1500552034.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix-medium-2017",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/9d/24/63/H1-9362-Edit-Antix-34-1500552109.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix-medium-2017",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix-large-2017",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix-large-2017",
@@ -6851,7 +7402,18 @@
   "paddler_weight_min_kg": 54.4,
   "paddler_weight_max_kg": 86.2,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/e3/21/ca/1-32-1500552034.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix-medium-2017",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/9d/24/63/H1-9362-Edit-Antix-34-1500552109.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix-medium-2017",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix-medium-2017",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix-medium-2017",
@@ -6882,7 +7444,18 @@
   "paddler_weight_min_kg": 36.3,
   "paddler_weight_max_kg": 59.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/e3/21/ca/1-32-1500552034.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix-medium-2017",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/9d/24/63/H1-9362-Edit-Antix-34-1500552109.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix-medium-2017",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix-small-2018",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-antix-small-2018",
@@ -7456,7 +8029,18 @@
   "paddler_weight_min_kg": 45.0,
   "paddler_weight_max_kg": 77.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/6f/cf/b6/boats_290-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-hero",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/31/0c/67/boats_290-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-hero",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-hero",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-hero",
@@ -7492,7 +8076,18 @@
    "Kiwi",
    "Earth and Fire and Ice"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/dc/ac/ef/_karma-533x400-1344939946.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-karma-l",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/39/94/4d/_image-1-1344939945.png",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-karma-l",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-karma-l",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-karma-l",
@@ -7526,7 +8121,18 @@
    "Kiwi",
    "Earth and Fire and Ice"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/dc/ac/ef/_karma-533x400-1344939946.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-karma-l",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/39/94/4d/_image-1-1344939945.png",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-karma-l",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-karma-m",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-karma-m",
@@ -7555,7 +8161,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/af/3e/4b/_karmaul14pro-1397549234.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-karma-unlimited",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/d0/80/83/_karmaul14-1397549234.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-karma-unlimited",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-karma-unlimited",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-karma-unlimited",
@@ -7584,7 +8201,13 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/4d/22/2b/nirvana-92-1483531732.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-nirvana-9-0",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-nirvana-9-0",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-nirvana-9-0",
@@ -7612,7 +8235,18 @@
   "paddler_weight_min_kg": 72.6,
   "paddler_weight_max_kg": 117.9,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/5f/24/a9/_rockstarproduct_1293188607.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/e3/d4/12/_featurerockstar_1293188607.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-l",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-l",
@@ -7643,7 +8277,18 @@
   "paddler_weight_min_kg": 63.5,
   "paddler_weight_max_kg": 90.7,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/5f/24/a9/_rockstarproduct_1293188607.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/e3/d4/12/_featurerockstar_1293188607.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m",
@@ -7674,7 +8319,18 @@
   "paddler_weight_min_kg": 40.8,
   "paddler_weight_max_kg": 68.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/5f/24/a9/_rockstarproduct_1293188607.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/e3/d4/12/_featurerockstar_1293188607.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-s",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-s",
@@ -7705,7 +8361,13 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/6f/cf/64/_2014-rockstar-1-1371924943.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m-2014",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-l-2014",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-l-2014",
@@ -7736,7 +8398,13 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/6f/cf/64/_2014-rockstar-1-1371924943.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m-2014",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m-2014",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m-2014",
@@ -7767,7 +8435,13 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/6f/cf/64/_2014-rockstar-1-1371924943.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-m-2014",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-s-2014",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-s-2014",
@@ -7798,7 +8472,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": 117.9,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/1d/eb/3a/_rckstarm-1447320060.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-2016-rockstar-m",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/1e/e5/9d/15037_rckstarm1-1447320339.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-2016-rockstar-m",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-2016-rockstar-l",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-2016-rockstar-l",
@@ -7828,7 +8513,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/1d/eb/3a/_rckstarm-1447320060.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-2016-rockstar-m",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/1e/e5/9d/15037_rckstarm1-1447320339.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-2016-rockstar-m",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-2016-rockstar-m",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-2016-rockstar-m",
@@ -7856,7 +8552,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/1d/eb/3a/_rckstarm-1447320060.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-2016-rockstar-m",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/1e/e5/9d/15037_rckstarm1-1447320339.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-2016-rockstar-m",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-2016-rockstar-s",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-2016-rockstar-s",
@@ -7885,7 +8592,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/29/0a/38/Rock-Star-13-1529414198.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-40-medium-2019",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/75/ec/5b/Rock-9-66-1529410296.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-40-medium-2019",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rockstar-40-large-2019",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rockstar-40-large-2019",
@@ -7912,7 +8630,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/29/0a/38/Rock-Star-13-1529414198.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-40-medium-2019",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/75/ec/5b/Rock-9-66-1529410296.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-40-medium-2019",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-40-medium-2019",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-40-medium-2019",
@@ -7939,7 +8668,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/29/0a/38/Rock-Star-13-1529414198.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-40-medium-2019",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/75/ec/5b/Rock-9-66-1529410296.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rock-star-40-medium-2019",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rockstar-40-small-2019",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-rockstar-40-small-2019",
@@ -8131,7 +8871,18 @@
   "paddler_weight_min_kg": 64.0,
   "paddler_weight_max_kg": 109.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/5c/43/c6/boats_291-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-super-hero",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/7e/cc/30/boats_291-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-super-hero",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-super-hero",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-super-hero",
@@ -8162,7 +8913,18 @@
   "paddler_weight_min_kg": 70.3,
   "paddler_weight_max_kg": 113.4,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/bb/20/0e/5549_SNAG0275_1271333920.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-villain",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/f8/24/bb/5549_mexico2188200x300_1271334182.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-villain",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-villain",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-villain",
@@ -8195,7 +8957,18 @@
   "paddler_weight_min_kg": 45.4,
   "paddler_weight_max_kg": 81.7,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/bb/20/0e/5549_SNAG0275_1271333920.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-villain",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/f8/24/bb/5549_mexico2188200x300_1271334182.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-villain",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-villain-s",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-villain-s",
@@ -8228,7 +9001,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/4e/85/a4/z3a-94-1571644854.png",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-zen-30",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/82/56/0a/z3a-97-1571645062.png",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-zen-30",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-zen-30",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/jackson-kayak-zen-30",
@@ -8257,7 +9041,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/71/a3/96/8977_Grarante_1283865199.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/lettmann-granate-dcs",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2c/3c/ca/8977_Granateseite_1283865199.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/lettmann-granate-dcs",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/lettmann-granate-dcs",
@@ -8371,7 +9166,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/89/ef/ec/8976_Grarante_1283864613.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/lettmann-granate-vcs",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/12/ec/04/8976_Granateseite_1283864613.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/lettmann-granate-vcs",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/lettmann-granate-vcs",
@@ -8642,7 +9448,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/de/ba/4b/8991_Olymp08Perspektive_1283880061.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/lettmann-olymp-08-dcs",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/b7/dc/d8/8991_Olymp08Seite_1283880061.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/lettmann-olymp-08-dcs",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/lettmann-olymp-08-dcs",
@@ -8672,7 +9489,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/ed/b3/bf/8980_olymp_1283867350.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/lettmann-olymp",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/45/9f/ff/8980_olympfront_1283867350.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/lettmann-olymp",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/lettmann-olymp",
@@ -8992,7 +9820,13 @@
   "paddler_weight_min_kg": 50,
   "paddler_weight_max_kg": 90,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://s2s-shop.com/cdn/shop/files/Lettmann-Dude-75-01.webp?v=1771356796&width=1218",
+    "page_url": "https://s2s-shop.com/en/products/lettmann-the-dude",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "year_from": "https://www.kayaksession.com/lettmann-the-dude-2026-product-of-the-year-whitewater/"
@@ -9162,7 +9996,13 @@
   "paddler_weight_min_kg": 45.4,
   "paddler_weight_max_kg": 90.7,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://cdn.myshoptet.com/usr/www.kayak-shop.eu/user/shop/big/6449_liquidlogic-alpha-75.png?ff=1&x=1024&y=768&q=85&ts=667e35ec&sg=161563f2",
+    "page_url": "https://kayak-shop.eu/en/liquidlogic-alpha-75",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2019/https://www.liquidlogickayaks.com/product/ALPHA.html",
@@ -9195,7 +10035,13 @@
   "paddler_weight_min_kg": 68.0,
   "paddler_weight_max_kg": 113.4,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://cdn.myshoptet.com/usr/www.kayak-shop.eu/user/shop/big/6449_liquidlogic-alpha-75.png?ff=1&x=1024&y=768&q=85&ts=667e35ec&sg=161563f2",
+    "page_url": "https://kayak-shop.eu/en/liquidlogic-alpha-75",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2019/https://www.liquidlogickayaks.com/product/ALPHA.html",
@@ -9227,7 +10073,18 @@
   "paddler_weight_min_kg": 45.0,
   "paddler_weight_max_kg": 73.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/4a/d6/d8/boats_1568-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-biscuit-55",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/02/0d/a9/boats_1568-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-biscuit-55",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-biscuit-45",
@@ -9260,7 +10117,18 @@
   "paddler_weight_min_kg": 64.0,
   "paddler_weight_max_kg": 91.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/4a/d6/d8/boats_1568-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-biscuit-55",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/02/0d/a9/boats_1568-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-biscuit-55",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-biscuit-55",
@@ -9293,7 +10161,18 @@
   "paddler_weight_min_kg": 82.0,
   "paddler_weight_max_kg": 109.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/4a/d6/d8/boats_1568-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-biscuit-55",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/02/0d/a9/boats_1568-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-biscuit-55",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-biscuit-65",
@@ -9326,7 +10205,18 @@
   "paddler_weight_min_kg": 45,
   "paddler_weight_max_kg": 100,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/36/f3/7e/SUP20kayak202016-05-1720at20195331-63-1463507704.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-braap-69",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/ab/38/d7/SUP20kayak202016-05-1720at20195408-41-1463507697.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-braap-69",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2019/https://www.liquidlogickayaks.com/product/LRBR6915.html",
@@ -9359,7 +10249,18 @@
   "paddler_weight_min_kg": 18.0,
   "paddler_weight_max_kg": 52.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/a6/85/4b/boats_748-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-cr-80",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/68/a1/ae/boats_748-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-cr-80",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-cr-50",
@@ -9392,7 +10293,18 @@
   "paddler_weight_min_kg": 40.0,
   "paddler_weight_max_kg": 75.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/a6/85/4b/boats_748-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-cr-80",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/68/a1/ae/boats_748-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-cr-80",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-cr-80",
@@ -9489,7 +10401,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": 95.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/29/3e/5c/_flying-squirrel0rg-1413717548.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-flying-squirrel-85",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/a0/e1/b3/_flying-squirrelmarble-1413717548.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-flying-squirrel-85",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-flying-squirrel-85",
@@ -9519,7 +10442,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": 122.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/29/3e/5c/_flying-squirrel0rg-1413717548.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-flying-squirrel-85",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/a0/e1/b3/_flying-squirrelmarble-1413717548.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-flying-squirrel-85",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-flying-squirrel-95",
@@ -9549,7 +10483,18 @@
   "paddler_weight_min_kg": 63.0,
   "paddler_weight_max_kg": 95.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/a5/b5/2b/_SNAG1448_1299008819.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-freeride-57",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/b1/b6/bf/_SNAG1446_1299008820.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-freeride-57",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-freeride-57",
@@ -9579,7 +10524,18 @@
   "paddler_weight_min_kg": 81.0,
   "paddler_weight_max_kg": 113.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/a5/b5/2b/_SNAG1448_1299008819.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-freeride-57",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/b1/b6/bf/_SNAG1446_1299008820.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-freeride-57",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-freeride-67",
@@ -9609,7 +10565,13 @@
   "paddler_weight_min_kg": 64,
   "paddler_weight_max_kg": 100,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://cdn.myshoptet.com/usr/www.kayak-shop.eu/user/shop/big/6446-1_liquidlogic-homeslice.png?ff=1&x=1024&y=768&q=85&ts=667e35ec&sg=161563f2",
+    "page_url": "https://kayak-shop.eu/liquidlogic-homeslice",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2019/https://www.liquidlogickayaks.com/product/LRHS5518.html",
@@ -9641,7 +10603,18 @@
   "paddler_weight_min_kg": 80.0,
   "paddler_weight_max_kg": 110.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/9a/dc/20/boats_116-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-hoss",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/ff/5c/40/boats_116-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-hoss",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-hoss",
@@ -9764,7 +10737,13 @@
   "paddler_weight_min_kg": 68.0,
   "paddler_weight_max_kg": 113.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/a4/3d/18/boats_246-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-jefe",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-jefe",
@@ -9797,7 +10776,18 @@
   "paddler_weight_min_kg": 34.0,
   "paddler_weight_max_kg": 75.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/4e/80/79/boats_746-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-jefe-chico",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/53/cb/a0/boats_746-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-jefe-chico",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-jefe-chico",
@@ -9830,7 +10820,18 @@
   "paddler_weight_min_kg": 77.0,
   "paddler_weight_max_kg": 132.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/26/1f/97/boats_745-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-jefe-grande",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/47/46/fd/boats_745-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-jefe-grande",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-jefe-grande",
@@ -9863,7 +10864,18 @@
   "paddler_weight_min_kg": 50.0,
   "paddler_weight_max_kg": 95.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c7/b6/40/boats_117-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-lil-joe",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/97/64/b9/boats_117-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-lil-joe",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-lil-joe",
@@ -9896,7 +10908,18 @@
   "paddler_weight_min_kg": 68,
   "paddler_weight_max_kg": 125,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/70/87/8a/SUP20kayak202016-05-1720at20173200-96-1463500593.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-mullet",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/a0/47/19/SUP20kayak202016-05-1720at20173210-86-1463500594.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-mullet",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2019/https://www.liquidlogickayaks.com/product/LRMU7216.html",
@@ -9929,7 +10952,13 @@
   "paddler_weight_min_kg": 45,
   "paddler_weight_max_kg": 100,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://cdn.myshoptet.com/usr/www.kayak-shop.eu/user/shop/big/6902-1_liquidlogic-party-braaap.png?ff=1&x=1024&y=768&q=85&ts=68ae966f&sg=161563f2",
+    "page_url": "https://kayak-shop.eu/liquidlogic-party-braaap",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2019/https://www.liquidlogickayaks.com/product/LRPB6916.html",
@@ -9998,7 +11027,18 @@
   "paddler_weight_min_kg": 20.4,
   "paddler_weight_max_kg": 49.9,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/19/3b/09/boats_751-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-remix-69",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/66/c3/db/boats_751-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-remix-69",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2023/https://liquidlogickayaks.com/collections/kayaks/products/remix-47-kayak",
@@ -10031,7 +11071,18 @@
   "paddler_weight_min_kg": 45,
   "paddler_weight_max_kg": 82,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/19/3b/09/boats_751-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-remix-69",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/66/c3/db/boats_751-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-remix-69",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2019/https://www.liquidlogickayaks.com/product/LRRE5915.html",
@@ -10064,7 +11115,18 @@
   "paddler_weight_min_kg": 64,
   "paddler_weight_max_kg": 100,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/19/3b/09/boats_751-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-remix-69",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/66/c3/db/boats_751-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-remix-69",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2019/https://www.liquidlogickayaks.com/product/LRRE5915.html",
@@ -10097,7 +11159,18 @@
   "paddler_weight_min_kg": 77,
   "paddler_weight_max_kg": 118,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/19/3b/09/boats_751-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-remix-69",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/66/c3/db/boats_751-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-remix-69",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2019/https://www.liquidlogickayaks.com/product/LRRE5915.html",
@@ -10130,7 +11203,18 @@
   "paddler_weight_min_kg": 81.6,
   "paddler_weight_max_kg": 136.1,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/1d/b6/a8/boats_1499-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-remix-xp-10",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/3e/b4/e6/boats_1499-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-remix-xp-10",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2023/https://liquidlogickayaks.com/collections/kayaks/products/remix-xp-kayak",
@@ -10163,7 +11247,18 @@
   "paddler_weight_min_kg": 45.4,
   "paddler_weight_max_kg": 99.8,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/1d/b6/a8/boats_1499-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-remix-xp-10",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/3e/b4/e6/boats_1499-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-remix-xp-10",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2023/https://liquidlogickayaks.com/collections/kayaks/products/remix-xp-kayak",
@@ -10196,7 +11291,18 @@
   "paddler_weight_min_kg": 59.0,
   "paddler_weight_max_kg": 82.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/4c/6f/26/boats_369-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-ronin-59",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/5b/ba/ca/boats_369-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-ronin-59",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-ronin-49",
@@ -10229,7 +11335,18 @@
   "paddler_weight_min_kg": 73.0,
   "paddler_weight_max_kg": 95.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/4c/6f/26/boats_369-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-ronin-59",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/5b/ba/ca/boats_369-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-ronin-59",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-ronin-59",
@@ -10262,7 +11379,13 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": 136.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/21/4c/81/_stinger125iquidl-1395661970.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-stinger-12-5",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-stinger-12-5",
@@ -10292,7 +11415,13 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": 61.7,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/5f/4d/6f/_stinger125iquidlxp-1395663914.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-stinger-xp-12-5",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-stinger-xp-12-5",
@@ -10322,7 +11451,18 @@
   "paddler_weight_min_kg": 50.0,
   "paddler_weight_max_kg": 95.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/19/c9/0c/11523_kayak0640_1316019795.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-stomper-80",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/cd/d7/bb/_kayak0638_1316019676.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-stomper-80",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-stomper-80",
@@ -10355,7 +11495,18 @@
   "paddler_weight_min_kg": 77.0,
   "paddler_weight_max_kg": 122.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/19/c9/0c/11523_kayak0640_1316019795.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-stomper-80",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/cd/d7/bb/_kayak0638_1316019676.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-stomper-80",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-stomper-90",
@@ -10477,7 +11628,18 @@
   "paddler_weight_min_kg": 50.0,
   "paddler_weight_max_kg": 77.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/e8/e4/2f/boats_248-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-vision-56",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/b4/0d/f0/boats_248-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-vision-56",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-vision-44",
@@ -10510,7 +11672,18 @@
   "paddler_weight_min_kg": 68.0,
   "paddler_weight_max_kg": 91.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/e8/e4/2f/boats_248-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-vision-56",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/b4/0d/f0/boats_248-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/liquid-logic-vision-56",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/liquid-logic-vision-56",
@@ -10543,7 +11716,18 @@
   "paddler_weight_min_kg": 75.0,
   "paddler_weight_max_kg": 110.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/25/cd/fc/boats_162-1.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/necky-bliss",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/ec/c7/67/boats_162-2.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/necky-bliss",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/necky-bliss",
@@ -10975,7 +12159,18 @@
   "paddler_weight_min_kg": 40.0,
   "paddler_weight_max_kg": 80.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/9e/74/1e/boats_156-1.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/necky-witch",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/98/30/0e/boats_156-2.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/necky-witch",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/necky-witch",
@@ -12115,7 +13310,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": 190,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://cdn.myshoptet.com/usr/www.kayak-shop.eu/user/shop/big/4681-3_prijon-2b--barva-cervena.png?ff=1&x=1024&y=768&q=85&ts=69bce7d4&sg=161563f2",
+    "page_url": "https://kayak-shop.eu/en/prijon-2b",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://cdn.myshoptet.com/usr/www.kayak-shop.eu/user/shop/big/4681-2_prijon-2b--barva-cervena.png?ff=1&x=1024&y=768&q=85&ts=69bce7d4&sg=161563f2",
+    "page_url": "https://kayak-shop.eu/en/prijon-2b",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://en.prijon.com/2b-2.html",
   "sources": {
    "length_cm": "https://en.prijon.com/2b-2.html",
@@ -12272,7 +13478,13 @@
   "paddler_weight_min_kg": 65,
   "paddler_weight_max_kg": 95,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://cdn.myshoptet.com/usr/www.kayak-shop.eu/user/shop/big/3817-2_prijon-cocain-sport.png?ff=1&x=1024&y=768&q=85&ts=6854f051&sg=161563f2",
+    "page_url": "https://kayak-shop.eu/prijon-cocain-sport",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2017/https://en.prijon.com/cocaine-sport-2.html",
@@ -12305,7 +13517,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/84/d8/98/boats_76-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/prijon-creeker-225",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/dd/fd/e6/boats_76-3.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/prijon-creeker-225",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/prijon-creeker-225",
@@ -12336,7 +13559,18 @@
   "paddler_weight_min_kg": 60,
   "paddler_weight_max_kg": 85,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/2019-12/00556_1_0.jpg",
+    "page_url": "https://kajakshop.sk/en/prijon-curve-25-pro",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/2019-12/00556_2_0.png",
+    "page_url": "https://kajakshop.sk/en/prijon-curve-25-pro",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://en.prijon.com/curve-2-5-pro-2.html",
   "sources": {
    "length_cm": "https://en.prijon.com/curve-2-5-pro-2.html",
@@ -12369,7 +13603,18 @@
   "paddler_weight_min_kg": 60,
   "paddler_weight_max_kg": 85,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/2019-12/00556_1_0.jpg",
+    "page_url": "https://kajakshop.sk/en/prijon-curve-25-pro",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/2019-12/00556_2_0.png",
+    "page_url": "https://kajakshop.sk/en/prijon-curve-25-pro",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://en.prijon.com/curve-2-5-sport-2.html",
   "sources": {
    "length_cm": "https://en.prijon.com/curve-2-5-sport-2.html",
@@ -12402,7 +13647,18 @@
   "paddler_weight_min_kg": 75,
   "paddler_weight_max_kg": 115,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/2020-03/00562_1_0.png",
+    "page_url": "https://kajakshop.sk/en/prijon-curve-30-pro",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/2020-03/00562_2_0.png",
+    "page_url": "https://kajakshop.sk/en/prijon-curve-30-pro",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://en.prijon.com/curve-3-0-pro-2.html",
   "sources": {
    "year_from": "https://www.paddleworld.com/wp-content/uploads/flipbook/5/files/basic-html/page150.html",
@@ -12435,7 +13691,18 @@
   "paddler_weight_min_kg": 75,
   "paddler_weight_max_kg": 115,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/2020-03/00562_1_0.png",
+    "page_url": "https://kajakshop.sk/en/prijon-curve-30-pro",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/2020-03/00562_2_0.png",
+    "page_url": "https://kajakshop.sk/en/prijon-curve-30-pro",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2019/https://en.prijon.com/curve-3-0-sport-2.html",
@@ -12468,7 +13735,18 @@
   "paddler_weight_min_kg": 75,
   "paddler_weight_max_kg": 115,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/2020-02/00559_1_0.png",
+    "page_url": "https://kajakshop.sk/en/prijon-curve-creek-35-pro",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/2020-02/00559_2_0.png",
+    "page_url": "https://kajakshop.sk/en/prijon-curve-creek-35-pro",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://en.prijon.com/curve-creek-3-5-pro-2.html",
   "sources": {
    "length_cm": "https://en.prijon.com/curve-creek-3-5-pro-2.html",
@@ -12501,7 +13779,18 @@
   "paddler_weight_min_kg": 75,
   "paddler_weight_max_kg": 115,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/2020-02/00559_1_0.png",
+    "page_url": "https://kajakshop.sk/en/prijon-curve-creek-35-pro",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/2020-02/00559_2_0.png",
+    "page_url": "https://kajakshop.sk/en/prijon-curve-creek-35-pro",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://web.archive.org/web/2017/https://en.prijon.com/curve-creek-3-5-sport-2.html",
@@ -12538,7 +13827,18 @@
    "Turquoise",
    "Pink"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/0001-01/02233_1.png",
+    "page_url": "https://www.kajakshop.sk/en/prijon-kajak-drip",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/0001-01/02233_2_40.png",
+    "page_url": "https://www.kajakshop.sk/en/prijon-kajak-drip",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://en.prijon.com/drip.html",
   "sources": {
    "year_from": "https://en.prijon.com/new-products-2026.html",
@@ -12572,7 +13872,18 @@
   "paddler_weight_min_kg": 60,
   "paddler_weight_max_kg": 110,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/0001-01/00523_1.png",
+    "page_url": "https://kajakshop.sk/en/prijon-munga",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://www.kajakshop.sk/sites/default/files/oberon-images/0001-01/00523_2.png",
+    "page_url": "https://kajakshop.sk/en/prijon-munga",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://en.prijon.com/munga-2.html",
   "sources": {
    "length_cm": "https://en.prijon.com/munga-2.html",
@@ -12605,7 +13916,13 @@
   "paddler_weight_min_kg": 60,
   "paddler_weight_max_kg": 85,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.kayaksession.com/wp-content/uploads/2023/06/prijon-pike-and-party.png",
+    "page_url": "https://www.kayaksession.com/?p=96590",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://en.prijon.com/party-pike.html",
   "sources": {
    "year_from": "https://www.kayaksession.com/?p=96590",
@@ -12638,7 +13955,18 @@
   "paddler_weight_min_kg": 60,
   "paddler_weight_max_kg": 90,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://www.kayaksession.com/wp-content/uploads/2023/06/pike_whitewater_1-scaled.jpg",
+    "page_url": "https://www.kayaksession.com/?p=96590",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://www.kayaksession.com/wp-content/uploads/2023/06/prijon-pike-and-party.png",
+    "page_url": "https://www.kayaksession.com/?p=96590",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://en.prijon.com/pike.html",
   "sources": {
    "year_from": "https://www.kayaksession.com/?p=96590",
@@ -12788,7 +14116,18 @@
   "paddler_weight_min_kg": 75,
   "paddler_weight_max_kg": 127,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/51/31/67/boats_353-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-m",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2d/39/b9/boats_353-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-m",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-l",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-l",
@@ -12821,7 +14160,18 @@
   "paddler_weight_min_kg": 55,
   "paddler_weight_max_kg": 105,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/51/31/67/boats_353-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-m",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2d/39/b9/boats_353-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-m",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-m",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-m",
@@ -12854,7 +14204,18 @@
   "paddler_weight_min_kg": 45,
   "paddler_weight_max_kg": 99,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/51/31/67/boats_353-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-m",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2d/39/b9/boats_353-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-m",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-s",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-s",
@@ -12892,7 +14253,18 @@
    "Neon Blue / White",
    "Fuscia / Grey"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c7/c2/a7/1476_cachedfilesimgnukeprodprods1716137001000000075_1260223672.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-m",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/bb/5f/3c/1476_cachedfilesimgnukeprodprods1716337001000000075_1260223672.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-m",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-l",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-l",
@@ -12925,7 +14297,18 @@
   "paddler_weight_min_kg": 55,
   "paddler_weight_max_kg": 121,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c7/c2/a7/1476_cachedfilesimgnukeprodprods1716137001000000075_1260223672.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-m",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/bb/5f/3c/1476_cachedfilesimgnukeprodprods1716337001000000075_1260223672.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-m",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-m",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-m",
@@ -12963,7 +14346,18 @@
    "Neon Blue / White",
    "Fuscia / Grey"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c7/c2/a7/1476_cachedfilesimgnukeprodprods1716137001000000075_1260223672.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-m",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/bb/5f/3c/1476_cachedfilesimgnukeprodprods1716337001000000075_1260223672.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-m",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-s",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-s",
@@ -13282,7 +14676,18 @@
    "Blue/White",
    "Lime/Yellow"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/8d/94/0f/boats_1594-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-fusion",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/46/f0/11/boats_1594-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/pyranha-fusion",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/pyranha-fusion",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/pyranha-fusion",
@@ -16287,7 +17692,18 @@
   "paddler_weight_min_kg": 68.0,
   "paddler_weight_max_kg": 109.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2c/a1/ca/boats_129-1.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/riot-big-gun",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/e6/72/de/boats_129-2.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/riot-big-gun",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/riot-big-gun",
@@ -16333,7 +17749,13 @@
    "Orange",
    "Lime"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2b/ba/30/boats_31-2.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/riot-booster-55",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/riot-booster-50",
@@ -16380,7 +17802,13 @@
    "Orange",
    "Lime"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2b/ba/30/boats_31-2.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/riot-booster-55",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/riot-booster-55",
@@ -16427,7 +17855,13 @@
    "Orange",
    "Lime"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2b/ba/30/boats_31-2.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/riot-booster-55",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/riot-booster-60",
@@ -16473,7 +17907,18 @@
    "Orange",
    "Lime"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/01/c9/42/boats_1-1.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/riot-disco-new",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/89/24/a7/boats_1-2.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/riot-disco-new",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/riot-disco-new",
@@ -17041,7 +18486,18 @@
   "paddler_weight_min_kg": 77.0,
   "paddler_weight_max_kg": 109.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/16/c2/e5/boats_135-1.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/riot-prankster",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/69/7b/1e/boats_135-2.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/riot-prankster",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/riot-prankster",
@@ -17134,7 +18590,18 @@
    "Orange",
    "Lime"
   ],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/6e/6c/2a/boats_16-1.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/riot-tekno",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/16/cb/13/boats_16-2.gif",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/riot-tekno",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/riot-tekno",
@@ -18616,6 +20083,16 @@
    {
     "url": "http://web.archive.org/web/20191207225119im_/https://spadekayaks.com/en/wp-content/uploads/sites/6/2016/03/AceofSpades_Pro_top.png",
     "page_url": "https://web.archive.org/web/2019/https://spadekayaks.com/en/kayaks/the-ace/"
+   },
+   {
+    "url": "https://www.kayaksession.com/wp-content/uploads/2015/03/Ace0001.jpeg",
+    "page_url": "https://www.kayaksession.com/?p=89822",
+    "batch": "photos-1101-https"
+   },
+   {
+    "url": "https://www.kayaksession.com/wp-content/uploads/2015/03/Ace0002.jpeg",
+    "page_url": "https://www.kayaksession.com/?p=89822",
+    "batch": "photos-1101-https"
    }
   ],
   "product_url": null,
@@ -20561,7 +22038,13 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://images.wildernesssupply.ca/images/products/thumbnails_400/1473_1363376169_6031.jpg",
+    "page_url": "https://www.wildernesssupply.ca/whitewater-kayaks/wave-sport/ethos-9",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://coloradokayak.com/blogs/cks-blog/the-wave-sport-ethos-review",
   "sources": {
    "year_from": "https://coloradokayak.com/blogs/cks-blog/the-wave-sport-ethos-review"
@@ -20694,7 +22177,18 @@
   "paddler_weight_min_kg": 27.0,
   "paddler_weight_max_kg": 50.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/25/25/c6/boats_1179-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-56",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c1/d6/f2/boats_1179-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-56",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-35",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-35",
@@ -20727,7 +22221,18 @@
   "paddler_weight_min_kg": 45,
   "paddler_weight_max_kg": 73,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/25/25/c6/boats_1179-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-56",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c1/d6/f2/boats_1179-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-56",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://www.kayaksandpaddles.co.uk/kayaks/wave-sport-fuse",
@@ -20760,7 +22265,18 @@
   "paddler_weight_min_kg": 64.0,
   "paddler_weight_max_kg": 95.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/25/25/c6/boats_1179-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-56",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c1/d6/f2/boats_1179-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-56",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-56",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-56",
@@ -20793,7 +22309,18 @@
   "paddler_weight_min_kg": 86.0,
   "paddler_weight_max_kg": 122.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/25/25/c6/boats_1179-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-56",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/c1/d6/f2/boats_1179-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-56",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-64",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/wavesport-fuse-64",
@@ -20826,7 +22353,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/fd/ce/a1/boats_371-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-habitat-74",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/23/20/db/boats_371-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-habitat-74",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/wavesport-habitat-74",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/wavesport-habitat-74",
@@ -20855,7 +22393,18 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/fd/ce/a1/boats_371-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-habitat-74",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/23/20/db/boats_371-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-habitat-74",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/wavesport-habitat-80",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/wavesport-habitat-80",
@@ -21245,7 +22794,18 @@
   "paddler_weight_min_kg": 59.0,
   "paddler_weight_max_kg": 86.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/f5/a3/0e/boats_402-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-project-62",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/0b/c9/cd/boats_402-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-project-62",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/wavesport-project-52",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/wavesport-project-52",
@@ -21276,7 +22836,18 @@
   "paddler_weight_min_kg": 82.0,
   "paddler_weight_max_kg": 109.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/f5/a3/0e/boats_402-1.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-project-62",
+    "batch": "photos-1101"
+   },
+   {
+    "url": "https://playak.com/media/reviews/photos/original/0b/c9/cd/boats_402-2.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-project-62",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/wavesport-project-62",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/wavesport-project-62",
@@ -21463,7 +23034,13 @@
   "paddler_weight_min_kg": 36,
   "paddler_weight_max_kg": 68,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2e/ad/21/_Screen%20Shot%202012-09-28%20at%208.09.02-am-1348812791.JPG",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-recon-83",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/wavesport-recon-70",
@@ -21497,7 +23074,13 @@
   "paddler_weight_min_kg": 64,
   "paddler_weight_max_kg": 91,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2e/ad/21/_Screen%20Shot%202012-09-28%20at%208.09.02-am-1348812791.JPG",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-recon-83",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://playak.com/buyers-guide/boats-boards/wavesport-recon-83",
@@ -21531,7 +23114,13 @@
   "paddler_weight_min_kg": null,
   "paddler_weight_max_kg": null,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/2e/ad/21/_Screen%20Shot%202012-09-28%20at%208.09.02-am-1348812791.JPG",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-recon-83",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": null,
   "sources": {
    "length_cm": "https://www.canoeicf.com/sites/default/files/2021_icf_extreme_slalom_registered_boat_list.pdf",
@@ -21650,7 +23239,13 @@
   "paddler_weight_min_kg": 45.0,
   "paddler_weight_max_kg": 82.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/05/c4/06/2911_9560_1275237210.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-zg-zero-gravity-54",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/wavesport-zg-zero-gravity-48",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/wavesport-zg-zero-gravity-48",
@@ -21681,7 +23276,13 @@
   "paddler_weight_min_kg": 64.0,
   "paddler_weight_max_kg": 100.0,
   "colors": [],
-  "images": [],
+  "images": [
+   {
+    "url": "https://playak.com/media/reviews/photos/original/05/c4/06/2911_9560_1275237210.jpg",
+    "page_url": "https://playak.com/buyers-guide/boats-boards/wavesport-zg-zero-gravity-54",
+    "batch": "photos-1101"
+   }
+  ],
   "product_url": "https://playak.com/buyers-guide/boats-boards/wavesport-zg-zero-gravity-54",
   "sources": {
    "year_from": "https://playak.com/buyers-guide/boats-boards/wavesport-zg-zero-gravity-54",
