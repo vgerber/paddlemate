@@ -234,12 +234,12 @@ test.describe("photo takedown", () => {
 test("a photo box keeps its shape before the file arrives", async ({
   page,
 }) => {
-  await page.route("**/media/**", (route) => route.abort());
+  await page.route("**/api/media/**", (route) => route.abort());
   await open(page, 9861);
   const box = await photos(page).first().boundingBox();
   expect(box).not.toBeNull();
   const ratio = await computed(
-    photos(page).first().locator("div").first(),
+    photos(page).first().getByRole("button"),
     "aspect-ratio",
   );
   expect(ratio).toBe("4 / 3");

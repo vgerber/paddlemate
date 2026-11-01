@@ -158,11 +158,13 @@ are the same boat.
 A model with sizes shows its Size chips and the facts of the picked size
 (length, volume, weight, paddler), then an **All sizes** table with the
 picked size marked. An entry opens with its photos, each captioned "Photo: <maker>" and linking
-to the page it came from, then its facts, colourways as chips, and the
+to the page it came from; a click on a photo opens it full size in the photo
+viewer (arrow keys, buttons or a swipe step through the photos, Esc closes),
+then its facts, colourways as chips, and the
 notes. An approximate year reads "about 2021". A paddle shows its own facts
 (blade area, lengths, shaft, angles, weight) in your units. A Sources list
 links every page a value came from. Rows in the list carry a small
-thumbnail. An admin sees "Remove photo" and "Remove all <brand> photos" in
+thumbnail that opens the model, not the viewer. An admin sees "Remove photo" and "Remove all <brand> photos" in
 the entry menu; both ask first.
 
 About 530 whitewater kayaks and 170 paddles come pre-filled, each size and

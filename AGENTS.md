@@ -361,6 +361,7 @@ feature look like the product rather than like MUI:
 | `VisibilityPicker` | the private/shared/public choice and its audience |
 | `SectionAdder` + `SectionDraftList` | picking an ordered list of sections |
 | `DescentCard` | a descent in any list (`flush` where the list owns the rule and ground) |
+| `media/PhotoViewer` | any gallery's full-size view: pass the photos, an index and callbacks; arrows, swipe, "2 of 3", credit link, focus back to the opener |
 | `RowMenu` | everything a list row can do - one overflow control with named actions, never a row of bare icons |
 | `TimelineRail` | the dot-and-connector rail of a timeline entry (`hollow` for something not yet real) |
 | `filters/FilterSheetFrame` + `FilterGroup` + `ChoiceChips` | every Filters sheet: title, Reset, Close and the result button; a labelled group of controls; one choice as chips |
