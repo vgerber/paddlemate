@@ -44,6 +44,8 @@ function PhoneWiki(props: MaterialsViewProps) {
           pt: 1.5,
           pb: 0.75,
           display: "grid",
+          // minmax(0, ...) lets the chip row scroll instead of widening the page.
+          gridTemplateColumns: "minmax(0, 1fr)",
           gap: 0.75,
         }}
       >

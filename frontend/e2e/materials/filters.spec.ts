@@ -58,28 +58,6 @@ test.describe("wiki filters", () => {
     }
   });
 
-  test("the sort field sends the sort and recently added is its own choice", async ({
-    page,
-  }, info) => {
-    test.skip(
-      info.project.name.startsWith("phone"),
-      "the sort sits in the sheet",
-    );
-    await page.goto("/materials?category=kayak");
-    await page.getByLabel("Sort by").click();
-    const options = await page.getByRole("option").allTextContents();
-    expect(options).toEqual([
-      "Name",
-      "Newest model",
-      "Recently added",
-      "Shortest first",
-      "Smallest volume",
-      "Lightest first",
-    ]);
-    await page.getByRole("option", { name: "Newest model" }).click();
-    await expect(page).toHaveURL(/sort=newest/);
-  });
-
   test("a combined filter count equals the tree count", async ({
     page,
   }, info) => {

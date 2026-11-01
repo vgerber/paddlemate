@@ -198,7 +198,7 @@ function Content({
               sx={{
                 ...labelSx,
                 color: "text.secondary",
-                px: `${tokens.phone.inner}px`,
+                px: `${tokens.phone.line}px`,
                 pt: 1.5,
               }}
             >
@@ -238,7 +238,7 @@ function BrowseRow({
 const rowSx = {
   gap: 1,
   minHeight: 48,
-  px: `${tokens.phone.inner}px`,
+  px: `${tokens.phone.line}px`,
   fontSize: "0.9375rem",
   fontWeight: 500,
   borderBottom: `1px solid ${withAlpha(tokens.outlineVariant, "hairline")}`,
