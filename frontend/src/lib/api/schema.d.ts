@@ -2889,7 +2889,7 @@ export interface components {
          *      put the entries missing that measurement last either way.
          * @enum {string}
          */
-        MaterialSort: "name" | "newest" | "length" | "volume" | "weight";
+        MaterialSort: "name" | "newest" | "added" | "length" | "volume" | "weight";
         /** @description The wiki as a browse tree: category, discipline, brand. */
         MaterialTree: {
             categories: components["schemas"]["MaterialTreeCategory"][];

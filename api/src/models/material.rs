@@ -303,14 +303,17 @@ pub struct MaterialBody {
     pub shaft_diameter: Option<String>,
 }
 
-/// How a material list is ordered. Name is the default; the measurement sorts
-/// put the entries missing that measurement last either way.
+/// How a material list is ordered. Name is the default. Newest is the model
+/// year, newest first; Added is when the entry was filed in the wiki. The
+/// measurement sorts order a model by its smallest size. Entries and models
+/// that lack the year or measurement come last either way.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum MaterialSort {
     #[default]
     Name,
     Newest,
+    Added,
     Length,
     Volume,
     Weight,

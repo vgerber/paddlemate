@@ -27,7 +27,7 @@ pub async fn list(
     let mut qb: QueryBuilder<sqlx::Postgres> = QueryBuilder::new(
         "WITH g AS (SELECT m.category, lower(btrim(m.brand)) AS bk, lower(btrim(m.model)) AS mk, \
          lower(btrim(COALESCE(m.variant, ''))) AS vk, min(m.brand) AS brand, min(m.model) AS model, \
-         array_agg(m.id) AS ids, ",
+         array_agg(m.id) AS ids, min(m.id) AS first_id, ",
     );
     // The model's rank under the chosen sort, as one sortable column.
     let by_relevance = q.is_some() && filters.sort == MaterialSort::Name;
@@ -35,7 +35,8 @@ pub async fn list(
         (MaterialSort::Length, _) => qb.push("min(m.length_cm)::float8 AS rank"),
         (MaterialSort::Volume, _) => qb.push("min(m.volume_l)::float8 AS rank"),
         (MaterialSort::Weight, _) => qb.push("min(m.weight_kg)::float8 AS rank"),
-        (MaterialSort::Newest, _) => qb.push("extract(epoch FROM max(m.created_at)) AS rank"),
+        (MaterialSort::Newest, _) => qb.push("max(m.year_from)::float8 AS rank"),
+        (MaterialSort::Added, _) => qb.push("extract(epoch FROM max(m.created_at)) AS rank"),
         (MaterialSort::Name, Some(q)) => {
             qb.push("min(");
             push_tier(&mut qb, q);
@@ -55,11 +56,14 @@ pub async fn list(
         " GROUP BY 1, 2, 3, 4), pg AS (SELECT g.*, COUNT(*) OVER () AS total_count, \
          row_number() OVER (ORDER BY ",
     );
+    // first_id ends every order: two models can share brand, model and
+    // variant across categories.
     let order = match filters.sort {
-        MaterialSort::Newest => "g.rank DESC, g.vk, g.brand, g.model",
-        _ if by_relevance => "g.rank, g.brand, g.model, g.vk",
-        MaterialSort::Name => "g.brand, g.model, g.vk",
-        _ => "g.rank ASC NULLS LAST, g.brand, g.model, g.vk",
+        MaterialSort::Newest => "g.rank DESC NULLS LAST, g.brand, g.model, g.vk, g.first_id",
+        MaterialSort::Added => "g.rank DESC, g.first_id DESC",
+        _ if by_relevance => "g.rank, g.brand, g.model, g.vk, g.first_id",
+        MaterialSort::Name => "g.brand, g.model, g.vk, g.first_id",
+        _ => "g.rank ASC NULLS LAST, g.brand, g.model, g.vk, g.first_id",
     };
     qb.push(order);
     qb.push(") AS pos FROM g ORDER BY pos LIMIT ");
@@ -79,10 +83,11 @@ pub async fn list(
     qb.push(", m.id");
 
     let rows = qb.build().fetch_all(pool).await?;
-    let total = rows
-        .first()
-        .and_then(|row| row.try_get::<i64, _>("total_count").ok())
-        .unwrap_or(0);
+    let total = match rows.first() {
+        Some(row) => row.try_get::<i64, _>("total_count")?,
+        None if page > 1 => count_models(pool, filters, q).await?,
+        None => 0,
+    };
 
     let mut models: Vec<MaterialModel> = Vec::new();
     let mut last_pos = None;
@@ -136,4 +141,23 @@ pub async fn list(
         model.sizes.push(size);
     }
     Ok((models, total))
+}
+
+/// The model count, for a page past the last one that has no row to carry it.
+async fn count_models(
+    pool: &PgPool,
+    filters: &MaterialFilters,
+    q: Option<&str>,
+) -> Result<i64, sqlx::Error> {
+    let mut qb: QueryBuilder<sqlx::Postgres> =
+        QueryBuilder::new("SELECT COUNT(*) FROM (SELECT 1 FROM materials m WHERE 1=1");
+    if let Some(q) = q {
+        push_name_match(&mut qb, q);
+    }
+    push_filters(&mut qb, filters);
+    qb.push(
+        " GROUP BY m.category, lower(btrim(m.brand)), lower(btrim(m.model)), \
+         lower(btrim(COALESCE(m.variant, '')))) k",
+    );
+    qb.build_query_scalar().fetch_one(pool).await
 }
