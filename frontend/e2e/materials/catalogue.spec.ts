@@ -221,9 +221,10 @@ test.describe("photo takedown", () => {
       await expect(page.getByRole("menuitem", { name: /Remove/ })).toHaveCount(
         0,
       );
+      // Deleting stays open: a paddler's delete is sent for review.
       await expect(
         page.getByRole("menuitem", { name: "Delete entry" }),
-      ).toHaveCount(0);
+      ).toBeVisible();
     });
   });
 });
