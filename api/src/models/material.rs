@@ -16,6 +16,8 @@ pub const MAX_COLORS: usize = 40;
 pub const MAX_COLOR_CHARS: usize = 80;
 pub const MAX_NOTES_CHARS: usize = 4000;
 pub const MAX_LENGTHS: usize = 20;
+/// Most groups one entry may be filed under.
+pub const MAX_DISCIPLINES: usize = 3;
 pub const MAX_FEATHERS: usize = 12;
 
 /// Longest search text or brand filter the list takes.
@@ -76,7 +78,7 @@ impl MaterialDiscipline {
     ];
 
     /// Whether an entry of this category may be filed under the class. Mirrors
-    /// chk_materials_discipline.
+    /// chk_materials_disciplines.
     pub fn fits(self, category: MaterialCategory) -> bool {
         if category == MaterialCategory::Paddle {
             Self::PADDLE_CLASSES.contains(&self)
@@ -163,8 +165,8 @@ pub struct Material {
     /// size only.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub size: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub discipline: Option<MaterialDiscipline>,
+    /// The groups the entry is filed under, the primary one first.
+    pub disciplines: Vec<MaterialDiscipline>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub construction: Option<MaterialConstruction>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -288,8 +290,8 @@ pub struct MaterialModel {
     pub model: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub variant: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub discipline: Option<MaterialDiscipline>,
+    /// The groups of the model, the primary one first.
+    pub disciplines: Vec<MaterialDiscipline>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub construction: Option<MaterialConstruction>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -326,7 +328,10 @@ pub struct MaterialBody {
     pub model: String,
     pub variant: Option<String>,
     pub size: Option<String>,
-    pub discipline: Option<MaterialDiscipline>,
+    /// One to three groups (`MAX_DISCIPLINES`), the primary one first, each
+    /// valid for the category.
+    #[serde(default)]
+    pub disciplines: Vec<MaterialDiscipline>,
     pub construction: Option<MaterialConstruction>,
     pub description: Option<String>,
     pub year_from: Option<i32>,
@@ -394,6 +399,7 @@ pub struct MaterialFilters {
     /// every other filter and returns those entries in one page.
     pub ids: Option<String>,
     pub category: Option<MaterialCategory>,
+    /// Entries filed under this group, among others or as the only one.
     pub discipline: Option<MaterialDiscipline>,
     pub construction: Option<MaterialConstruction>,
     pub availability: Option<MaterialAvailability>,
@@ -422,7 +428,7 @@ impl From<&Material> for MaterialBody {
             model: m.model.clone(),
             variant: m.variant.clone(),
             size: m.size.clone(),
-            discipline: m.discipline,
+            disciplines: m.disciplines.clone(),
             construction: m.construction,
             description: m.description.clone(),
             year_from: m.year_from,
@@ -559,8 +565,8 @@ impl MaterialBody {
         if let Some(err) = self.extras_error() {
             return Some(err);
         }
-        if self.discipline.is_some_and(|d| !d.fits(self.category)) {
-            return Some(("discipline", "This class does not fit the category".into()));
+        if let Some(err) = self.disciplines_error() {
+            return Some(err);
         }
         if let Some(url) = self.product_url.as_deref()
             && !(url.starts_with("http://") || url.starts_with("https://"))
@@ -585,6 +591,29 @@ impl MaterialBody {
                 "availability_checked",
                 format!("availability_checked must be in {MIN_YEAR} to {MAX_YEAR}"),
             ));
+        }
+        None
+    }
+
+    /// One to three distinct groups, each valid for the category.
+    fn disciplines_error(&self) -> Option<(&'static str, String)> {
+        let n = self.disciplines.len();
+        if n == 0 || n > MAX_DISCIPLINES {
+            return Some((
+                "disciplines",
+                format!("Pick one to {MAX_DISCIPLINES} groups"),
+            ));
+        }
+        for (i, d) in self.disciplines.iter().enumerate() {
+            if self.disciplines[..i].contains(d) {
+                return Some(("disciplines", "A group can be listed only once".into()));
+            }
+            if !d.fits(self.category) {
+                return Some((
+                    "disciplines",
+                    "This group does not fit the category".into(),
+                ));
+            }
         }
         None
     }
@@ -710,7 +739,7 @@ mod tests {
             model: "Firecracker".into(),
             variant: None,
             size: None,
-            discipline: None,
+            disciplines: vec![MaterialDiscipline::Creek],
             construction: None,
             description: None,
             year_from: None,
@@ -823,6 +852,7 @@ mod tests {
         b.blade_area_cm2 = Some(700.0);
         assert_eq!(b.validation_error().map(|(f, _)| f), Some("category"));
         b.category = MaterialCategory::Paddle;
+        b.disciplines = vec![MaterialDiscipline::Whitewater];
         assert!(b.validation_error().is_none());
     }
 
@@ -831,20 +861,41 @@ mod tests {
         let mut b = body();
         b.category = MaterialCategory::Paddle;
         for d in MaterialDiscipline::PADDLE_CLASSES {
-            b.discipline = Some(d);
+            b.disciplines = vec![d];
             assert!(b.validation_error().is_none(), "{d:?}");
         }
         for d in [MaterialDiscipline::Creek, MaterialDiscipline::Playboat] {
-            b.discipline = Some(d);
-            assert_eq!(b.validation_error().map(|(f, _)| f), Some("discipline"));
+            b.disciplines = vec![d];
+            assert_eq!(b.validation_error().map(|(f, _)| f), Some("disciplines"));
         }
         b.category = MaterialCategory::Kayak;
         for d in MaterialDiscipline::PADDLE_ONLY {
-            b.discipline = Some(d);
-            assert_eq!(b.validation_error().map(|(f, _)| f), Some("discipline"));
+            b.disciplines = vec![d];
+            assert_eq!(b.validation_error().map(|(f, _)| f), Some("disciplines"));
         }
-        b.discipline = Some(MaterialDiscipline::Creek);
+        b.disciplines = vec![MaterialDiscipline::Creek];
         assert!(b.validation_error().is_none());
+    }
+
+    #[test]
+    fn every_group_must_fit_the_category() {
+        let mut b = body();
+        b.disciplines = vec![MaterialDiscipline::Creek, MaterialDiscipline::Canoe];
+        assert_eq!(b.validation_error().map(|(f, _)| f), Some("disciplines"));
+    }
+
+    #[test]
+    fn one_to_three_distinct_groups() {
+        use MaterialDiscipline::*;
+        let mut b = body();
+        b.disciplines = vec![Creek, RiverRunner, HalfSlice];
+        assert!(b.validation_error().is_none());
+        b.disciplines = vec![];
+        assert_eq!(b.validation_error().map(|(f, _)| f), Some("disciplines"));
+        b.disciplines = vec![Creek, RiverRunner, HalfSlice, Playboat];
+        assert_eq!(b.validation_error().map(|(f, _)| f), Some("disciplines"));
+        b.disciplines = vec![Creek, Creek];
+        assert_eq!(b.validation_error().map(|(f, _)| f), Some("disciplines"));
     }
 
     #[test]
@@ -922,8 +973,9 @@ pub struct MaterialTreeDiscipline {
     pub brands: Vec<MaterialTreeBrand>,
 }
 
-/// A category of the browse tree. Entries without a discipline count toward
-/// the category but sit under no discipline.
+/// A category of the browse tree. A model filed under several groups counts
+/// under each of them, so the group counts can add up to more than the
+/// category's own, which counts every model once.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct MaterialTreeCategory {
     pub category: MaterialCategory,

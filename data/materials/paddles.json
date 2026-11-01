@@ -3,7 +3,9 @@
   "brand": "Aqua-Bound",
   "model": "Aerial Major",
   "variant": "carbon, 1 piece, bent shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -51,7 +53,9 @@
   "brand": "Aqua-Bound",
   "model": "Aerial Major",
   "variant": "carbon, 1 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -99,7 +103,9 @@
   "brand": "Aqua-Bound",
   "model": "Aerial Major",
   "variant": "carbon, 2 piece Versa-Lok, bent shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 2,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -141,7 +147,9 @@
   "brand": "Aqua-Bound",
   "model": "Aerial Major",
   "variant": "fiberglass, 1 piece, bent shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -191,7 +199,9 @@
   "brand": "Aqua-Bound",
   "model": "Shred Apart",
   "variant": "kayak plus two canoe paddles",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -224,7 +234,9 @@
   "brand": "Aqua-Bound",
   "model": "Shred Carbon",
   "variant": "1 piece",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -271,7 +283,9 @@
   "brand": "Aqua-Bound",
   "model": "Shred Carbon",
   "variant": "4 piece",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 4,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -321,7 +335,9 @@
   "brand": "Aqua-Bound",
   "model": "Shred Fiberglass",
   "variant": "1 piece",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -358,7 +374,9 @@
   "brand": "Aqua-Bound",
   "model": "Shred Fiberglass",
   "variant": "4 piece",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 4,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -403,7 +421,9 @@
   "brand": "Aqua-Bound",
   "model": "Shred Hybrid",
   "variant": "1 piece",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -440,7 +460,9 @@
   "brand": "Aqua-Bound",
   "model": "Shred Hybrid",
   "variant": "4 piece",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 4,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -483,10 +505,12 @@
   "notes": "Retailer weight 3.0 lb listed (shipping weight, likely not the paddle alone). Retailer marks it discontinued."
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "AT2 Flexi",
   "variant": "ergo (bent) shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "hybrid",
@@ -534,10 +558,12 @@
   "notes": "Playak buyers guide, model year 2010; weight 38.0 oz converted to 1077 g. Most flexible paddle of the F-Core series; 30 deg offset standard, custom available. shaft_material: carbon and fiberglass braid"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "AT2 Superduty",
   "variant": "ergo (bent) shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -586,10 +612,12 @@
   "notes": "Weight 40.5 oz converted. Model year 2010 per Playak, MSRP USD 500. Originally an underground custom model."
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "AT2 Superlight",
   "variant": "ergo (bent) shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -638,10 +666,12 @@
   "notes": "Weight 37.0 oz converted. Model year 2010 per Playak, MSRP USD 460. Custom lengths available."
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Hercules Carbon",
   "variant": "ergo (bent) shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -691,10 +721,12 @@
   "notes": "Playak buyers guide; year is Playak model year (review source). Custom lengths available. Weight converted/as listed (oz and g). Moderately sized blade, all-round river running and play."
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Hercules Carbon",
   "variant": "straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -746,10 +778,12 @@
   "notes": "Playak buyers guide; year is Playak model year (review source). Custom lengths available. Weight converted/as listed (oz and g)."
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Hercules Glass",
   "variant": "ergo (bent) shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "hybrid",
@@ -800,10 +834,12 @@
   "notes": "Playak buyers guide; year is Playak model year (review source). Custom lengths available. Weight converted/as listed (oz and g). Standard or small grip. shaft_material: carbon blend (Duraweave with Innegra) shaft_diameter: standard or small"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Hercules Glass",
   "variant": "straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -856,10 +892,12 @@
   "notes": "Playak buyers guide; year is Playak model year (review source). Custom lengths available. Weight converted/as listed (oz and g). Standard and small diameter. shaft_material: carbon blend (Duraweave with Innegra) shaft_diameter: standard or small"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Samurai Carbon",
   "variant": "ergo (bent) shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -910,10 +948,12 @@
   "notes": "Weight converted from 36.5 oz as listed (1035 g). Model year 2013 per Playak buyers guide (year from review source). Custom lengths available."
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Samurai Carbon",
   "variant": "straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -966,10 +1006,12 @@
   "notes": "Weight 30.5 oz / 865 g as listed. Model year 2013 per Playak. Custom lengths available."
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Samurai Glass",
   "variant": "ergo (bent) shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "hybrid",
@@ -1020,10 +1062,12 @@
   "notes": "Weight 40.25 oz / 1141 g as listed. Model year 2013 per Playak. A UK retailer lists Samurai as discontinued. shaft_material: carbon blend (Duraweave with Innegra)"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Samurai Glass",
   "variant": "straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -1076,10 +1120,12 @@
   "notes": "Weight 35.5 oz, about 1006 g (Playak text truncated; 1006 g matches a catalogue listing). Model year 2013 per Playak. shaft_material: carbon blend (Duraweave with Innegra)"
  },
  {
-  "brand": "AT Paddles",
+  "brand": "AT",
   "model": "Titan",
   "variant": "Sport series",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -1135,7 +1181,9 @@
   "brand": "Braca",
   "model": "Alpina",
   "variant": "660",
-  "discipline": "wildwater",
+  "disciplines": [
+   "wildwater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1181,7 +1229,9 @@
   "brand": "Braca",
   "model": "Alpina",
   "variant": "730",
-  "discipline": "wildwater",
+  "disciplines": [
+   "wildwater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1227,7 +1277,9 @@
   "brand": "Braca",
   "model": "IV Down River",
   "variant": "635",
-  "discipline": "wildwater",
+  "disciplines": [
+   "wildwater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1273,7 +1325,9 @@
   "brand": "Braca",
   "model": "IV Down River",
   "variant": "705",
-  "discipline": "wildwater",
+  "disciplines": [
+   "wildwater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1319,7 +1373,9 @@
   "brand": "Braca",
   "model": "IV Down River",
   "variant": "735",
-  "discipline": "wildwater",
+  "disciplines": [
+   "wildwater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1365,7 +1421,9 @@
   "brand": "Braca",
   "model": "IV Down River",
   "variant": "765",
-  "discipline": "wildwater",
+  "disciplines": [
+   "wildwater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1411,7 +1469,9 @@
   "brand": "Braca",
   "model": "Slalom Sjoa",
   "variant": "695",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1457,7 +1517,9 @@
   "brand": "Braca",
   "model": "Slalom Sjoa",
   "variant": "725",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1503,7 +1565,9 @@
   "brand": "Braca",
   "model": "Slalom Soca",
   "variant": "695",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1549,7 +1613,9 @@
   "brand": "Braca",
   "model": "Slalom Soca",
   "variant": "735",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1595,7 +1661,9 @@
   "brand": "Braca",
   "model": "XI Van Dusen 92 Down River",
   "variant": "705",
-  "discipline": "wildwater",
+  "disciplines": [
+   "wildwater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1641,7 +1709,9 @@
   "brand": "Braca",
   "model": "XI Van Dusen 92 Down River",
   "variant": "735",
-  "discipline": "wildwater",
+  "disciplines": [
+   "wildwater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1687,7 +1757,9 @@
   "brand": "Braca",
   "model": "XI Van Dusen 92 Down River",
   "variant": "760",
-  "discipline": "wildwater",
+  "disciplines": [
+   "wildwater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1733,7 +1805,9 @@
   "brand": "Double Dutch",
   "model": "Proton Go Sky",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -1771,7 +1845,9 @@
   "brand": "Double Dutch",
   "model": "Slam SC extreme WW",
   "variant": "L",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 2,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1813,7 +1889,9 @@
   "brand": "Double Dutch",
   "model": "Slam SC extreme WW",
   "variant": "S",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 2,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1855,7 +1933,9 @@
   "brand": "Double Dutch",
   "model": "Tyfoon",
   "variant": "fusion concept",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 2,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -1900,7 +1980,9 @@
   "brand": "Double Dutch",
   "model": "Tyfoon SC extreme WW",
   "variant": "M",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 2,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -1941,7 +2023,9 @@
   "brand": "Galasport",
   "model": "Brut",
   "variant": "C/A blades",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": null,
   "shaft_material": null,
@@ -1981,7 +2065,9 @@
   "brand": "Galasport",
   "model": "Exas",
   "variant": "C/A blades",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": null,
   "shaft_material": null,
@@ -2021,7 +2107,9 @@
   "brand": "Galasport",
   "model": "Manic",
   "variant": "Elite carbon blades",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": null,
   "shaft_material": null,
@@ -2062,7 +2150,9 @@
   "brand": "Kober",
   "model": "Active ATT",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -2117,7 +2207,9 @@
   "brand": "Kober",
   "model": "Azul",
   "variant": "ergo shaft L",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -2169,7 +2261,9 @@
   "brand": "Kober",
   "model": "Azul",
   "variant": "straight L",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -2222,7 +2316,9 @@
   "brand": "Kober",
   "model": "Azul",
   "variant": "straight M",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -2275,7 +2371,9 @@
   "brand": "Kober",
   "model": "Boost EFC SL",
   "variant": "L",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -2322,7 +2420,9 @@
   "brand": "Kober",
   "model": "Boost EFC SL",
   "variant": "M",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -2369,7 +2469,9 @@
   "brand": "Kober",
   "model": "Boost EFC WW",
   "variant": "L",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -2421,7 +2523,9 @@
   "brand": "Kober",
   "model": "Boost EFC WW",
   "variant": "M",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -2473,7 +2577,9 @@
   "brand": "Kober",
   "model": "Flame ATT",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -2528,7 +2634,9 @@
   "brand": "Kober",
   "model": "Hero EFC",
   "variant": "L",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -2580,7 +2688,9 @@
   "brand": "Kober",
   "model": "Hero EFC",
   "variant": "M",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -2632,7 +2742,9 @@
   "brand": "Kober",
   "model": "Hero EFC",
   "variant": "S",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -2684,7 +2796,9 @@
   "brand": "Kober",
   "model": "Lemon",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -2736,7 +2850,9 @@
   "brand": "Kober",
   "model": "Rebell EFC",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -2788,7 +2904,9 @@
   "brand": "Kober",
   "model": "Reserve ATT",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 3,
   "shaft": "straight",
   "shaft_material": "aluminium",
@@ -2837,7 +2955,9 @@
   "brand": "Kober",
   "model": "Scorpion Evolution EFC",
   "variant": "carbon shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -2890,7 +3010,9 @@
   "brand": "Kober",
   "model": "Scorpion Evolution EFC",
   "variant": "ergo shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -2942,7 +3064,9 @@
   "brand": "Kober",
   "model": "Scorpion Evolution EFC",
   "variant": "glass shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -2995,7 +3119,9 @@
   "brand": "Kober",
   "model": "Speedy ATT",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -3048,7 +3174,9 @@
   "brand": "Kober",
   "model": "Spicy EFC",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -3100,7 +3228,9 @@
   "brand": "Kober",
   "model": "Vulcano EFC",
   "variant": "carbon ergo shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -3154,7 +3284,9 @@
   "brand": "Kober",
   "model": "Vulcano EFC",
   "variant": "glass shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -3209,7 +3341,9 @@
   "brand": "Kober",
   "model": "Zombie Evolution EFC",
   "variant": "carbon ergo shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -3261,7 +3395,9 @@
   "brand": "Kober",
   "model": "Zombie Evolution EFC",
   "variant": "glass shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -3311,10 +3447,12 @@
   "notes": "Blade size from page (cm); no blade area stated; weight is 'ca.'; T7 split optional. year_from: listed in the 2015 Kober & Moll catalogue, earliest found, so release may be earlier shaft_material: glass shaft_diameter: 30 mm"
  },
  {
-  "brand": "Lendal (Celtic Paddles)",
+  "brand": "Lendal",
   "model": "Power",
   "variant": "whitewater blade",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": null,
   "shaft_material": null,
@@ -3342,10 +3480,12 @@
   "notes": "Blade design for a made-to-order paddle (1-4 pieces, shaft chosen by buyer), not a fixed complete paddle; profile cut for high-angle strokes of the white-water discipline. Lendal is now Celtic Paddles (Sea Kayaking UK, Anglesey); the range is touring-first. Release years, weights, lengths not stated."
  },
  {
-  "brand": "Lendal (Celtic Paddles)",
+  "brand": "Lendal",
   "model": "White water emergency paddle",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 4,
   "shaft": null,
   "shaft_material": "fiberglass",
@@ -3384,10 +3524,12 @@
   "notes": "Spare paddle in a dry bag for under the rear deck: 4-piece glass shaft, Mania blades, 45 deg feather, left or right hand, Paddlok key. Mania blade 650 cm2 dihedral (listed as the packrafting blade). Not a primary paddle."
  },
  {
-  "brand": "Lendal (Celtic Paddles)",
+  "brand": "Lendal",
   "model": "XTI",
   "variant": "whitewater blade",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": null,
   "shaft_material": null,
@@ -3425,7 +3567,9 @@
   "brand": "Lettmann",
   "model": "Ergonom Pro WW",
   "variant": "LCS 70 Extrem Large",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": null,
@@ -3473,7 +3617,9 @@
   "brand": "Lettmann",
   "model": "Ergonom Pro WW",
   "variant": "LCS 70 Extrem Small",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": null,
@@ -3521,7 +3667,9 @@
   "brand": "Lettmann",
   "model": "Ergonom Pro WW",
   "variant": "LCS 70 Large",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": null,
@@ -3564,7 +3712,9 @@
   "brand": "Lettmann",
   "model": "Ergonom Pro WW",
   "variant": "LCS 70 Light Large",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": null,
@@ -3607,7 +3757,9 @@
   "brand": "Lettmann",
   "model": "Ergonom Pro WW",
   "variant": "LCS 70 Light Small",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": null,
@@ -3650,7 +3802,9 @@
   "brand": "Lettmann",
   "model": "Ergonom Pro WW",
   "variant": "LCS 70 Small",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": null,
@@ -3693,7 +3847,9 @@
   "brand": "Lettmann",
   "model": "Ergonom Pro WW",
   "variant": "LCS 90 Ultralight Large",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": null,
@@ -3741,7 +3897,9 @@
   "brand": "Lettmann",
   "model": "Ergonom Pro WW",
   "variant": "LCS 90 Ultralight Small",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": null,
@@ -3789,7 +3947,9 @@
   "brand": "Lettmann",
   "model": "Nitro WW",
   "variant": "LCS 70 Extrem Large",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": null,
@@ -3838,7 +3998,9 @@
   "brand": "Lettmann",
   "model": "Nitro WW",
   "variant": "LCS 70 Extrem Small",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": null,
@@ -3887,7 +4049,9 @@
   "brand": "Lettmann",
   "model": "Nitro WW",
   "variant": "LCS 70 Large",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": null,
@@ -3936,7 +4100,9 @@
   "brand": "Lettmann",
   "model": "Nitro WW",
   "variant": "LCS 70 Light Large",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": null,
@@ -3985,7 +4151,9 @@
   "brand": "Lettmann",
   "model": "Nitro WW",
   "variant": "LCS 70 Light Small",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": null,
@@ -4034,7 +4202,9 @@
   "brand": "Lettmann",
   "model": "Nitro WW",
   "variant": "LCS 70 Small",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": null,
@@ -4083,7 +4253,9 @@
   "brand": "Lettmann",
   "model": "Nitro WW",
   "variant": "LCS 90 Ultralight Large",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": null,
@@ -4132,7 +4304,9 @@
   "brand": "Lettmann",
   "model": "Nitro WW",
   "variant": "LCS 90 Ultralight Small",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": null,
@@ -4181,7 +4355,9 @@
   "brand": "Lettmann",
   "model": "Vortex",
   "variant": "1-piece 55 deg",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "aluminium",
@@ -4226,7 +4402,9 @@
   "brand": "Lettmann",
   "model": "Vortex",
   "variant": "2-piece 55 deg",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 2,
   "shaft": "straight",
   "shaft_material": "aluminium",
@@ -4271,7 +4449,9 @@
   "brand": "Lettmann",
   "model": "Vortex",
   "variant": "4-piece 55 deg",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 4,
   "shaft": "straight",
   "shaft_material": "aluminium",
@@ -4316,7 +4496,9 @@
   "brand": "Palm",
   "model": "Maverick",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "aluminium",
@@ -4368,7 +4550,9 @@
   "brand": "Palm",
   "model": "Maverick Pro",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -4420,7 +4604,9 @@
   "brand": "Palm",
   "model": "Maverick Pro",
   "variant": "4-piece",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 4,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -4471,7 +4657,9 @@
   "brand": "Robson",
   "model": "Combat",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -4516,7 +4704,9 @@
   "brand": "Robson",
   "model": "HellsBells",
   "variant": null,
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -4557,7 +4747,9 @@
   "brand": "Sawyer",
   "model": "Copperhead",
   "variant": null,
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "cranked",
   "shaft_material": "carbon",
@@ -4594,7 +4786,9 @@
   "brand": "Sawyer",
   "model": "Copperhead II",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -4638,7 +4832,9 @@
   "brand": "Sawyer",
   "model": "Crosscut",
   "variant": null,
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "hybrid",
@@ -4684,7 +4880,9 @@
   "brand": "Sawyer",
   "model": "Crosscut IV",
   "variant": null,
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "cranked",
   "shaft_material": "carbon",
@@ -4724,7 +4922,9 @@
   "brand": "Sawyer",
   "model": "Diamondback",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -4761,7 +4961,9 @@
   "brand": "Sawyer",
   "model": "Sidewinder",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "cranked",
   "shaft_material": "hybrid",
@@ -4798,7 +5000,9 @@
   "brand": "Select",
   "model": "Track SW",
   "variant": "650",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -4861,7 +5065,9 @@
   "brand": "Select",
   "model": "Track SW",
   "variant": "680",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -4924,7 +5130,9 @@
   "brand": "Select",
   "model": "Track SW",
   "variant": "700",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -4987,7 +5195,9 @@
   "brand": "Select",
   "model": "W1 Alu",
   "variant": "Large 703",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -5044,7 +5254,9 @@
   "brand": "Select",
   "model": "W1 Alu",
   "variant": "Medium 648",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -5101,7 +5313,9 @@
   "brand": "Select",
   "model": "Warrior",
   "variant": "670",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -5158,7 +5372,9 @@
   "brand": "Select",
   "model": "Warrior",
   "variant": "715",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -5215,7 +5431,9 @@
   "brand": "Select",
   "model": "Wild Alium",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "hybrid",
@@ -5269,7 +5487,9 @@
   "brand": "Select",
   "model": "Wild Carbone",
   "variant": "625",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -5327,7 +5547,9 @@
   "brand": "Select",
   "model": "Wild Carbone",
   "variant": "675",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -5385,7 +5607,9 @@
   "brand": "Select",
   "model": "Wild Carbone",
   "variant": "715",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -5443,7 +5667,9 @@
   "brand": "Select",
   "model": "Wild Colored",
   "variant": null,
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": null,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -5502,7 +5728,9 @@
   "brand": "Seven2",
   "model": "Axiom",
   "variant": "2006",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -5557,7 +5785,9 @@
   "brand": "Seven2",
   "model": "Soul Seven2",
   "variant": "medium grip",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -5600,7 +5830,9 @@
   "brand": "Seven2",
   "model": "Soul Seven2",
   "variant": "wide grip",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -5643,7 +5875,9 @@
   "brand": "TNP",
   "model": "Rapa",
   "variant": "duralumin shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "aluminium",
@@ -5685,7 +5919,9 @@
   "brand": "TNP",
   "model": "Rapa",
   "variant": "fiberglass shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -5724,10 +5960,12 @@
   "notes": "Discontinued per retailer; year_to unknown. shaft_diameter: 30 mm"
  },
  {
-  "brand": "VE Paddles",
+  "brand": "VE",
   "model": "Aircore Creeker",
   "variant": "carbon",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -5766,10 +6004,12 @@
   "notes": "Mid-sized tapered blade; area and weight not listed. Straight or crank shaft."
  },
  {
-  "brand": "VE Paddles",
+  "brand": "VE",
   "model": "Aircore Pro",
   "variant": "carbon",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -5815,10 +6055,12 @@
   "notes": "Straight or crank (bent) shaft; weight at 197 cm. Retailer page (kayaksandpaddles.co.uk). shaft_diameter: 30.6 mm"
  },
  {
-  "brand": "VE Paddles",
+  "brand": "VE",
   "model": "Flyte",
   "variant": "carbon",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -5867,7 +6109,9 @@
   "brand": "Werner",
   "model": "Desperado CF",
   "variant": "1 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -5931,7 +6175,9 @@
   "brand": "Werner",
   "model": "Double Diamond",
   "variant": "1 piece, bent shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -5995,7 +6241,9 @@
   "brand": "Werner",
   "model": "Double Diamond",
   "variant": "1 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -6058,7 +6306,9 @@
   "brand": "Werner",
   "model": "Freestyle",
   "variant": "straight shaft (2002 catalogue)",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -6097,7 +6347,9 @@
   "brand": "Werner",
   "model": "Odachi",
   "variant": "1 piece, bent shaft",
-  "discipline": "wildwater",
+  "disciplines": [
+   "wildwater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -6141,7 +6393,9 @@
   "brand": "Werner",
   "model": "Odachi",
   "variant": "1 piece, straight shaft",
-  "discipline": "wildwater",
+  "disciplines": [
+   "wildwater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "carbon",
@@ -6205,7 +6459,9 @@
   "brand": "Werner",
   "model": "Player",
   "variant": "1 piece, bent shaft",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -6274,7 +6530,9 @@
   "brand": "Werner",
   "model": "Player",
   "variant": "1 piece, straight shaft",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -6317,7 +6575,9 @@
   "brand": "Werner",
   "model": "Player",
   "variant": "4 piece, straight shaft",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 4,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -6373,7 +6633,9 @@
   "brand": "Werner",
   "model": "Player Carbon",
   "variant": "1 piece, bent shaft",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -6439,7 +6701,9 @@
   "brand": "Werner",
   "model": "Player Carbon",
   "variant": "1 piece, straight shaft",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -6484,7 +6748,9 @@
   "brand": "Werner",
   "model": "Powerhouse",
   "variant": "1 piece, bent shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -6551,7 +6817,9 @@
   "brand": "Werner",
   "model": "Powerhouse",
   "variant": "1 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -6618,7 +6886,9 @@
   "brand": "Werner",
   "model": "Powerhouse",
   "variant": "4 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 4,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -6678,7 +6948,9 @@
   "brand": "Werner",
   "model": "Powerhouse Carbon",
   "variant": "1 piece, bent shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -6743,7 +7015,9 @@
   "brand": "Werner",
   "model": "Powerhouse Carbon",
   "variant": "1 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -6808,7 +7082,9 @@
   "brand": "Werner",
   "model": "Sherpa",
   "variant": "1 piece, bent shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -6880,7 +7156,9 @@
   "brand": "Werner",
   "model": "Sherpa",
   "variant": "1 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -6952,7 +7230,9 @@
   "brand": "Werner",
   "model": "Sherpa",
   "variant": "4 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 4,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -7026,7 +7306,9 @@
   "brand": "Werner",
   "model": "Sherpa Carbon",
   "variant": "1 piece, bent shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -7097,7 +7379,9 @@
   "brand": "Werner",
   "model": "Sherpa Carbon",
   "variant": "1 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -7168,7 +7452,9 @@
   "brand": "Werner",
   "model": "Sho-Gun",
   "variant": "1 piece, bent shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -7237,7 +7523,9 @@
   "brand": "Werner",
   "model": "Sho-Gun",
   "variant": "1 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -7306,7 +7594,9 @@
   "brand": "Werner",
   "model": "Side Kick",
   "variant": "1 piece, bent shaft",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -7372,7 +7662,9 @@
   "brand": "Werner",
   "model": "Side Kick",
   "variant": "1 piece, straight shaft",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -7438,7 +7730,9 @@
   "brand": "Werner",
   "model": "Stikine",
   "variant": "1 piece, bent shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -7507,7 +7801,9 @@
   "brand": "Werner",
   "model": "Stikine",
   "variant": "1 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -7570,7 +7866,9 @@
   "brand": "Werner",
   "model": "Strike",
   "variant": "1 piece, bent shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -7636,7 +7934,9 @@
   "brand": "Werner",
   "model": "Strike",
   "variant": "1 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -7702,7 +8002,9 @@
   "brand": "Werner",
   "model": "Strike",
   "variant": "4 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 4,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -7759,7 +8061,9 @@
   "brand": "Werner",
   "model": "Surge",
   "variant": "1 piece, bent shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -7825,7 +8129,9 @@
   "brand": "Werner",
   "model": "Surge",
   "variant": "1 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -7891,7 +8197,9 @@
   "brand": "Werner",
   "model": "Surge",
   "variant": "4 piece, straight shaft",
-  "discipline": "whitewater",
+  "disciplines": [
+   "whitewater"
+  ],
   "pieces": 4,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -7948,7 +8256,9 @@
   "brand": "Werner",
   "model": "Twist",
   "variant": "1 piece, bent shaft",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "bent",
   "shaft_material": "carbon",
@@ -7992,7 +8302,9 @@
   "brand": "Werner",
   "model": "Twist",
   "variant": "1 piece, straight shaft",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
@@ -8056,7 +8368,9 @@
   "brand": "Werner",
   "model": "Twist",
   "variant": "4 piece, straight shaft",
-  "discipline": "freestyle",
+  "disciplines": [
+   "freestyle"
+  ],
   "pieces": 4,
   "shaft": "straight",
   "shaft_material": "fiberglass",

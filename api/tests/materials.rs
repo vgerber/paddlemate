@@ -22,7 +22,7 @@ fn app(pool: PgPool) -> Router {
 }
 
 fn entry(brand: &str, model: &str) -> Value {
-    json!({ "category": "kayak", "brand": brand, "model": model })
+    json!({ "category": "kayak", "brand": brand, "model": model, "disciplines": ["creek"] })
 }
 
 async fn add(app: &Router, who: Who, body: Value) -> common::Reply {

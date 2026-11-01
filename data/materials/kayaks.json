@@ -3,7 +3,9 @@
   "brand": "AIRE",
   "model": "Force",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "inflatable",
   "year_from": 2012,
   "year_to": null,
@@ -65,7 +67,9 @@
   "brand": "AIRE",
   "model": "Force XL",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -99,7 +103,9 @@
   "brand": "AIRE",
   "model": "Lynx I",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -133,7 +139,9 @@
   "brand": "AIRE",
   "model": "Lynx II",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -167,7 +175,9 @@
   "brand": "AIRE",
   "model": "Outfitter I",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": 2010,
   "year_to": null,
@@ -215,7 +225,9 @@
   "brand": "AIRE",
   "model": "Outfitter II",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": 2010,
   "year_to": null,
@@ -263,7 +275,9 @@
   "brand": "AIRE",
   "model": "Strike",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -297,7 +311,9 @@
   "brand": "AIRE",
   "model": "Strike 2",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -331,7 +347,9 @@
   "brand": "AIRE",
   "model": "Super Lynx",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -365,7 +383,9 @@
   "brand": "AIRE",
   "model": "Tomcat LV",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": 2010,
   "year_to": null,
@@ -409,7 +429,9 @@
   "brand": "AIRE",
   "model": "Tomcat Solo",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -443,7 +465,9 @@
   "brand": "AIRE",
   "model": "Tomcat Tandem",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -477,7 +501,9 @@
   "brand": "Bliss-Stick",
   "model": "Blitz",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": null,
   "year_from": 2000,
   "year_to": null,
@@ -516,7 +542,9 @@
   "brand": "Bliss-Stick",
   "model": "Blitz Special",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": null,
   "year_from": 2000,
   "year_to": null,
@@ -557,7 +585,9 @@
   "brand": "Bliss-Stick",
   "model": "Flip-Stick",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2002,
   "year_to": null,
@@ -599,7 +629,9 @@
   "brand": "Bliss-Stick",
   "model": "Freestyler",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2001,
   "year_to": null,
@@ -638,7 +670,9 @@
   "brand": "Bliss-Stick",
   "model": "Huka",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2002,
   "year_to": 2015,
@@ -681,7 +715,9 @@
   "brand": "Bliss-Stick",
   "model": "Lifestyler",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": null,
   "year_from": 2001,
   "year_to": null,
@@ -720,7 +756,9 @@
   "brand": "Bliss-Stick",
   "model": "MAC1",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": 2015,
@@ -766,7 +804,9 @@
   "brand": "Bliss-Stick",
   "model": "Mini Mystic",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2007,
   "year_to": 2015,
@@ -816,7 +856,9 @@
   "brand": "Bliss-Stick",
   "model": "Mystic",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2006,
   "year_to": 2015,
@@ -867,7 +909,10 @@
   "brand": "Bliss-Stick",
   "model": "RAD (Radical Aerial Device)",
   "variant": "175",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat",
+   "half_slice"
+  ],
   "construction": null,
   "year_from": 2004,
   "year_to": 2015,
@@ -918,7 +963,10 @@
   "brand": "Bliss-Stick",
   "model": "RAD (Radical Aerial Device)",
   "variant": "185",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat",
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": 2015,
@@ -970,7 +1018,10 @@
   "brand": "Bliss-Stick",
   "model": "RAD (Radical Aerial Device)",
   "variant": "195",
-  "discipline": "half_slice",
+  "disciplines": [
+   "playboat",
+   "half_slice"
+  ],
   "construction": null,
   "year_from": 2005,
   "year_to": 2015,
@@ -1021,7 +1072,9 @@
   "brand": "Bliss-Stick",
   "model": "S.C.U.D.",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": null,
   "year_from": 2005,
   "year_to": 2015,
@@ -1073,7 +1126,9 @@
   "brand": "Bliss-Stick",
   "model": "Slick-Stick",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2003,
   "year_to": null,
@@ -1123,7 +1178,9 @@
   "brand": "Bliss-Stick",
   "model": "Smoothy",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2008,
   "year_to": 2015,
@@ -1171,7 +1228,9 @@
   "brand": "Bliss-Stick",
   "model": "Specialist 5'9",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2007,
   "year_to": 2015,
@@ -1211,7 +1270,9 @@
   "brand": "Bliss-Stick",
   "model": "Super RAD",
   "variant": "180",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2005,
   "year_to": 2015,
@@ -1262,7 +1323,9 @@
   "brand": "Bliss-Stick",
   "model": "Tuna",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": 2015,
@@ -1300,7 +1363,9 @@
   "brand": "Dagger",
   "model": "Approach",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -1344,7 +1409,9 @@
   "brand": "Dagger",
   "model": "Axiom",
   "variant": "6.9",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -1397,7 +1464,9 @@
   "brand": "Dagger",
   "model": "Axiom",
   "variant": "8.0",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -1450,7 +1519,9 @@
   "brand": "Dagger",
   "model": "Axiom",
   "variant": "8.5",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -1503,7 +1574,9 @@
   "brand": "Dagger",
   "model": "Axiom",
   "variant": "9.0",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -1556,7 +1629,10 @@
   "brand": "Dagger",
   "model": "Code",
   "variant": "LG",
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -1599,7 +1675,10 @@
   "brand": "Dagger",
   "model": "Code",
   "variant": "MD",
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -1642,7 +1721,10 @@
   "brand": "Dagger",
   "model": "Code",
   "variant": "SM",
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -1681,7 +1763,9 @@
   "brand": "Dagger",
   "model": "Green Boat",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -1727,7 +1811,9 @@
   "brand": "Dagger",
   "model": "Indra",
   "variant": "MD/LG",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -1770,7 +1856,9 @@
   "brand": "Dagger",
   "model": "Indra",
   "variant": "SM/MD",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -1813,7 +1901,9 @@
   "brand": "Dagger",
   "model": "Jitsu",
   "variant": "5.5",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -1864,7 +1954,9 @@
   "brand": "Dagger",
   "model": "Jitsu",
   "variant": "5.9",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -1917,7 +2009,9 @@
   "brand": "Dagger",
   "model": "Jitsu",
   "variant": "6.0",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -1970,7 +2064,10 @@
   "brand": "Dagger",
   "model": "Katana",
   "variant": "10.4",
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -2011,7 +2108,10 @@
   "brand": "Dagger",
   "model": "Katana",
   "variant": "9.7",
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -2052,7 +2152,9 @@
   "brand": "Dagger",
   "model": "Kingpin",
   "variant": "6.1",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -2096,7 +2198,9 @@
   "brand": "Dagger",
   "model": "Kingpin",
   "variant": "6.2",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -2140,7 +2244,9 @@
   "brand": "Dagger",
   "model": "Kingpin",
   "variant": "6.3",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -2184,7 +2290,9 @@
   "brand": "Dagger",
   "model": "Kingpin Icon",
   "variant": "6.1",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -2223,7 +2331,9 @@
   "brand": "Dagger",
   "model": "Kingpin Icon",
   "variant": "6.2",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -2262,7 +2372,9 @@
   "brand": "Dagger",
   "model": "Kingpin Icon",
   "variant": "6.3",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -2301,7 +2413,9 @@
   "brand": "Dagger",
   "model": "Mamba",
   "variant": "7.5 (2005)",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -2351,7 +2465,9 @@
   "brand": "Dagger",
   "model": "Mamba",
   "variant": "7.6",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -2393,7 +2509,9 @@
   "brand": "Dagger",
   "model": "Mamba",
   "variant": "8.0 (2005)",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -2443,7 +2561,9 @@
   "brand": "Dagger",
   "model": "Mamba",
   "variant": "8.1",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -2485,7 +2605,9 @@
   "brand": "Dagger",
   "model": "Mamba",
   "variant": "8.5 (2005)",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -2535,7 +2657,9 @@
   "brand": "Dagger",
   "model": "Mamba",
   "variant": "8.6",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -2577,7 +2701,9 @@
   "brand": "Dagger",
   "model": "Nomad",
   "variant": "8.1",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -2616,7 +2742,9 @@
   "brand": "Dagger",
   "model": "Nomad",
   "variant": "8.5",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -2655,7 +2783,11 @@
   "brand": "Dagger",
   "model": "Phantom",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner",
+   "downriver"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -2697,7 +2829,11 @@
   "brand": "Dagger",
   "model": "Rewind",
   "variant": "L",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner",
+   "creek",
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -2739,7 +2875,11 @@
   "brand": "Dagger",
   "model": "Rewind",
   "variant": "SM",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner",
+   "creek",
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -2781,7 +2921,9 @@
   "brand": "Dagger",
   "model": "Torrent",
   "variant": "10.0",
-  "discipline": "other",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -2819,7 +2961,9 @@
   "brand": "Delsyk",
   "model": "Plastic Slalom Kayak",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -2875,7 +3019,9 @@
   "brand": "DragoRossi",
   "model": "77",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -2928,7 +3074,9 @@
   "brand": "DragoRossi",
   "model": "88",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -2985,7 +3133,9 @@
   "brand": "DragoRossi",
   "model": "Critical Mass",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -3038,7 +3188,9 @@
   "brand": "DragoRossi",
   "model": "DR9",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -3092,7 +3244,9 @@
   "brand": "DragoRossi",
   "model": "DRS",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -3145,7 +3299,9 @@
   "brand": "DragoRossi",
   "model": "DRX",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -3199,7 +3355,9 @@
   "brand": "DragoRossi",
   "model": "Fish",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -3256,7 +3414,9 @@
   "brand": "DragoRossi",
   "model": "Gangster",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -3302,7 +3462,9 @@
   "brand": "DragoRossi",
   "model": "Kush",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -3360,7 +3522,9 @@
   "brand": "DragoRossi",
   "model": "Mad Boy",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -3413,7 +3577,9 @@
   "brand": "DragoRossi",
   "model": "Mafia",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -3469,7 +3635,9 @@
   "brand": "DragoRossi",
   "model": "Naga",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2026,
   "year_to": null,
@@ -3527,7 +3695,9 @@
   "brand": "DragoRossi",
   "model": "Pintail",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -3586,7 +3756,9 @@
   "brand": "DragoRossi",
   "model": "Reaction",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -3626,7 +3798,9 @@
   "brand": "DragoRossi",
   "model": "Squashtail",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -3683,7 +3857,9 @@
   "brand": "DragoRossi",
   "model": "Stinger",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -3738,7 +3914,9 @@
   "brand": "DragoRossi",
   "model": "Thruster",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -3793,7 +3971,9 @@
   "brand": "DragoRossi",
   "model": "Wake Sk8",
   "variant": "M",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -3834,7 +4014,9 @@
   "brand": "Eskimo",
   "model": "Gecko",
   "variant": null,
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -3868,7 +4050,9 @@
   "brand": "Eskimo",
   "model": "Kendo",
   "variant": null,
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -3902,7 +4086,9 @@
   "brand": "Eskimo",
   "model": "Kendo",
   "variant": "1",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 1996,
   "year_to": null,
@@ -3933,7 +4119,9 @@
   "brand": "Eskimo",
   "model": "Kendo",
   "variant": "2005",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -3975,7 +4163,9 @@
   "brand": "Eskimo",
   "model": "Lupo",
   "variant": null,
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -4009,7 +4199,9 @@
   "brand": "Eskimo",
   "model": "Nano",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2001,
   "year_to": null,
@@ -4051,7 +4243,9 @@
   "brand": "Eskimo",
   "model": "Salto",
   "variant": "2001",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2001,
   "year_to": null,
@@ -4093,7 +4287,9 @@
   "brand": "Eskimo",
   "model": "Salto",
   "variant": "2005",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -4130,7 +4326,9 @@
   "brand": "Eskimo",
   "model": "Salto",
   "variant": "Evolution",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -4167,7 +4365,9 @@
   "brand": "Eskimo",
   "model": "Topo Duo",
   "variant": "2005",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -4206,10 +4406,12 @@
   "notes": "discontinued; playak model year, converted from imperial; year_to unknown; tandem"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "313",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -4248,10 +4450,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Demon",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -4287,10 +4491,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Fastwave",
   "variant": null,
-  "discipline": "downriver",
+  "disciplines": [
+   "downriver"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -4319,10 +4525,12 @@
   "notes": "downriver racing. no volume, colours or release year on maker page"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Helixir",
   "variant": "L",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2018,
   "year_to": null,
@@ -4352,10 +4560,12 @@
   "notes": "freestyle, with Quim Fontane. no volume, colours or release year on maker page; year from retailer listing \"EXO Helixir 2018\" (plastic Helixir with GuiGui Prod)"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Helixir",
   "variant": "S",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -4385,10 +4595,12 @@
   "notes": "freestyle; maker page shows the same dimensions as L. no volume, colours or release year on maker page; year from retailer text (sizes S and XS available since summer 2019); L from 2018"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Helixir",
   "variant": "XS",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -4419,10 +4631,12 @@
   "notes": "freestyle for small athletes up to 50 kg. no volume, colours or release year on maker page; year from retailer text (sizes S and XS available since summer 2019); L from 2018"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Joker",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -4463,10 +4677,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "K1D",
   "variant": null,
-  "discipline": "downriver",
+  "disciplines": [
+   "downriver"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -4495,10 +4711,12 @@
   "notes": "youth downriver boat. no volume, colours or release year on maker page"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Lion",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -4528,10 +4746,12 @@
   "notes": "maker: designed for paddlers over 90 kg (paddler_weight_min = 90, no max). no volume, colours or release year on maker page"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Pin-Up",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -4571,10 +4791,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Rexy",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -4604,10 +4826,12 @@
   "notes": "maker calls it riverplay; evolution of T-Rex; volume from ICF 2025 list; no release year or colours on maker page"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Rexy Party",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2020,
   "year_to": null,
@@ -4637,10 +4861,12 @@
   "notes": "sharper, lower-volume stern than Rexy; no volume, colours or release year on maker page; year from retailer text (developed spring 2020 with S2S, via search snippet)"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Six",
   "variant": null,
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -4675,10 +4901,12 @@
   "notes": "only in ICF kayak cross list 2025; discipline unclear, no maker page found; year from Playak model year 2013 (listing year, may be earlier); weight, cockpit and paddler range from Playak (creeking)"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "T-Rex",
   "variant": "L",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -4708,10 +4936,12 @@
   "notes": "roto-moulded HDPE; volume from ICF 2025 list (66.5 cm width there); no release year or colours on maker page"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "T-Rex",
   "variant": "S",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -4742,10 +4972,12 @@
   "notes": "volume from ICF 2025 list; no release year or colours on maker page; year from Kayak Session PADDLExpo news, 13 Sep 2017 (\"latest addition to the T-Rex range\"); the T-Rex L is older but undated"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "XG",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -4775,10 +5007,12 @@
   "notes": "freestyle. no volume, colours or release year on maker page; year from Playak model year 2013 (listing year, may be earlier)"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "XT",
   "variant": "260",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -4808,10 +5042,12 @@
   "notes": "school/rental boat for small paddlers; a retailer lists 258 cm, 65 cm, 300 L, 20 kg, 65-100 kg for XT300-class boats. no volume, colours or release year on maker page; year from Playak model year 2013 (listing year, may be earlier)"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "XT",
   "variant": "300",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -4841,10 +5077,12 @@
   "notes": "school/rental boat. no volume, colours or release year on maker page; year from Playak model year 2013 (listing year, may be earlier)"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "XT Creek",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -4873,10 +5111,12 @@
   "notes": "entry-level school/rental boat for larger paddlers. no volume, colours or release year on maker page"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Zion Creek",
   "variant": "L",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -4909,10 +5149,12 @@
   "notes": "polyethylene; volume from ICF kayak cross boat list 2025; no release year or colours on maker page; year from Kayak Session coverage of the Paddle Sports Show 2022 (Zion Creek and Zion Slalom shown as new)"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Zion Creek",
   "variant": "S",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -4945,10 +5187,12 @@
   "notes": "polyethylene; volume from ICF kayak cross boat list 2025; no release year or colours on maker page; year from Kayak Session coverage of the Paddle Sports Show 2022 (Zion Creek and Zion Slalom shown as new)"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Zion Slalom",
   "variant": "L",
-  "discipline": "river_runner",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -4976,13 +5220,15 @@
    "volume_l": "https://canoeicf.com/sites/default/files/2025_icf_kayak_cross_registered_boat_list_v1.pdf",
    "year_from": "https://www.kayaksession.com/?p=96157"
   },
-  "notes": "maker calls it river play; volume from ICF 2025 list; no release year or colours on maker page; year from Kayak Session coverage of the Paddle Sports Show 2022 (Zion Creek and Zion Slalom shown as new)"
+  "notes": "maker calls it river play; volume from ICF 2025 list; no release year or colours on maker page; year from Kayak Session coverage of the Paddle Sports Show 2022 (Zion Creek and Zion Slalom shown as new) Groups: Weak: retailers and Kayak Session call it a whitewater halfslice; current river_runner, official site not reachable"
  },
  {
-  "brand": "EXO Kayaks",
+  "brand": "EXO",
   "model": "Zion Slalom",
   "variant": "S",
-  "discipline": "river_runner",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -5010,13 +5256,15 @@
    "volume_l": "https://canoeicf.com/sites/default/files/2025_icf_kayak_cross_registered_boat_list_v1.pdf",
    "year_from": "https://www.kayaksession.com/?p=96157"
   },
-  "notes": "maker calls it river play; volume from ICF 2025 list; no release year or colours on maker page; year from Kayak Session coverage of the Paddle Sports Show 2022 (Zion Creek and Zion Slalom shown as new)"
+  "notes": "maker calls it river play; volume from ICF 2025 list; no release year or colours on maker page; year from Kayak Session coverage of the Paddle Sports Show 2022 (Zion Creek and Zion Slalom shown as new) Groups: Weak: retailers and Kayak Session call it a whitewater halfslice; current river_runner, official site not reachable"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Bang",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -5061,10 +5309,12 @@
   "notes": "has 70 L sealed stern hatch (hatch volume, not total); no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Bazooka",
   "variant": "Large",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -5108,10 +5358,12 @@
   "notes": "cockpit given as width x length; Large is 70 cm wide (site typo 27'5\"); volume from ICF kayak cross boat list 2025; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Bazooka",
   "variant": "Medium",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -5155,10 +5407,12 @@
   "notes": "cockpit given as width x length; Large is 70 cm wide (site typo 27'5\"); volume from ICF kayak cross boat list 2025; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Bazooka",
   "variant": "Small",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -5202,10 +5456,12 @@
   "notes": "cockpit given as width x length; Large is 70 cm wide (site typo 27'5\"); volume from ICF kayak cross boat list 2025; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Big Bang",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -5249,10 +5505,12 @@
   "notes": "100 L sealed stern hatch (hatch volume, not total); weight TBC on page; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Detox",
   "variant": "Large",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -5292,10 +5550,12 @@
   "notes": "maker category river runner; playboat-style hull; volume from ICF kayak cross boat list 2025; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Detox",
   "variant": "Medium",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -5335,10 +5595,12 @@
   "notes": "maker category river runner; playboat-style hull; volume from ICF kayak cross boat list 2025; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Detox",
   "variant": "Small",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -5378,10 +5640,12 @@
   "notes": "maker category river runner; playboat-style hull; volume from ICF kayak cross boat list 2025; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Do It Now",
   "variant": "Large",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -5418,10 +5682,12 @@
   "notes": "sit-on-top with creeker hull; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Do It Now",
   "variant": "Medium",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -5458,10 +5724,12 @@
   "notes": "sit-on-top with creeker hull; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Do It Now",
   "variant": "Small",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -5498,10 +5766,12 @@
   "notes": "sit-on-top with creeker hull; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Donsa",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -5534,10 +5804,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found; Playak lists no volume"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Dope",
   "variant": "Large",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -5580,10 +5852,12 @@
   "notes": "no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Dope",
   "variant": "Medium",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -5626,10 +5900,12 @@
   "notes": "no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Dope",
   "variant": "Small",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -5672,10 +5948,12 @@
   "notes": "no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Dope Composite",
   "variant": "Medium",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "composite",
   "year_from": 2011,
   "year_to": null,
@@ -5716,10 +5994,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Element",
   "variant": "Medium",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -5764,10 +6044,12 @@
   "notes": "discipline inferred from 202 cm length and carving rails; maker category 'Other Whitewater Kayaks'; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Element Composite",
   "variant": "Large",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "composite",
   "year_from": 2010,
   "year_to": null,
@@ -5808,10 +6090,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Element Composite",
   "variant": "Medium",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "composite",
   "year_from": 2009,
   "year_to": null,
@@ -5852,10 +6136,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Flirt",
   "variant": "Large",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -5896,10 +6182,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Flirt",
   "variant": "Medium",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -5940,10 +6228,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Flirt",
   "variant": "Small",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -5984,10 +6274,13 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Nemesis",
   "variant": "Large",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -6029,10 +6322,13 @@
   "notes": "no image found on page; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Nemesis",
   "variant": "Medium",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -6074,10 +6370,13 @@
   "notes": "no image found on page; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Nemesis",
   "variant": "Small",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -6119,10 +6418,12 @@
   "notes": "no image found on page; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Nemesis Composite",
   "variant": "Medium",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "composite",
   "year_from": 2010,
   "year_to": null,
@@ -6161,10 +6462,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Solo",
   "variant": "Large",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -6194,10 +6497,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Solo",
   "variant": "Medium",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -6243,10 +6548,12 @@
   "notes": "volume from ICF kayak cross boat list 2025; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Solo",
   "variant": "Small",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -6292,10 +6599,12 @@
   "notes": "volume from ICF kayak cross boat list 2025; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Spice",
   "variant": "Large",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -6335,10 +6644,12 @@
   "notes": "weight TBC on page; maker category river runner; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Spice",
   "variant": "Medium",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -6378,10 +6689,12 @@
   "notes": "weight TBC on page; maker category river runner; no release year on maker page; page dated Jan 2021 is only the site migration; year from Playak model year (first dated listing, may be earlier than launch)"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Spice",
   "variant": "Small",
-  "discipline": "playboat",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -6411,10 +6724,12 @@
   "notes": "discontinued; specs and year_from (model year) from Playak buyers guide; last year sold not found"
  },
  {
-  "brand": "Fluid Kayaks",
+  "brand": "Fluid",
   "model": "Vaya",
   "variant": null,
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -6454,7 +6769,9 @@
   "brand": "Galasport",
   "model": "Anik",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "composite",
   "year_from": null,
   "year_to": null,
@@ -6493,7 +6810,9 @@
   "brand": "Galasport",
   "model": "Caipi",
   "variant": "Carbolight",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "composite",
   "year_from": null,
   "year_to": null,
@@ -6547,7 +6866,9 @@
   "brand": "Galasport",
   "model": "Caipi Evo",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "composite",
   "year_from": 2023,
   "year_to": null,
@@ -6598,7 +6919,9 @@
   "brand": "Galasport",
   "model": "Caipi Fins",
   "variant": "Carbolight",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "composite",
   "year_from": null,
   "year_to": null,
@@ -6653,7 +6976,9 @@
   "brand": "Galasport",
   "model": "Flow 2021",
   "variant": "Carbolight",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "composite",
   "year_from": 2021,
   "year_to": null,
@@ -6709,7 +7034,9 @@
   "brand": "Galasport",
   "model": "Pilot 350",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "composite",
   "year_from": 2009,
   "year_to": null,
@@ -6746,7 +7073,9 @@
   "brand": "Galasport",
   "model": "Shorty 362 XL",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "composite",
   "year_from": 2009,
   "year_to": null,
@@ -6782,7 +7111,9 @@
   "brand": "Grabner",
   "model": "Discovery 1",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "folding",
   "year_from": null,
   "year_to": null,
@@ -6878,7 +7209,9 @@
   "brand": "Grabner",
   "model": "Discovery 2",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "folding",
   "year_from": null,
   "year_to": null,
@@ -6994,7 +7327,9 @@
   "brand": "Grabner",
   "model": "Explorer 1",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -7073,7 +7408,9 @@
   "brand": "Grabner",
   "model": "Explorer 2",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": 1998,
   "year_to": null,
@@ -7170,7 +7507,9 @@
   "brand": "Grabner",
   "model": "Jump",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -7212,7 +7551,9 @@
   "brand": "Gumotex",
   "model": "Safari",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -7262,7 +7603,9 @@
   "brand": "Gumotex",
   "model": "Traveller",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -7309,10 +7652,12 @@
   "notes": "Specs from playak.com buyers guide (secondary source); converted from imperial where listed. Playak model year 2008/2009 looks like a bulk-import default, so year_from left null."
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2016,
   "year_to": null,
@@ -7343,10 +7688,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix 2.0",
   "variant": "Large",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -7385,10 +7732,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix 2.0",
   "variant": "Medium",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -7427,10 +7776,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix 2.0",
   "variant": "Small",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2018,
   "year_to": null,
@@ -7469,10 +7820,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix 3.0",
   "variant": "Large",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2025,
   "year_to": null,
@@ -7525,10 +7878,12 @@
   "notes": "converted from imperial; page gives height 14.8-16.1 in and cockpit 34x19 (S) to 36x22 (L) as ranges, only S and L cockpit filled; colours carry a 2027 model year; year from news (Kayak Session 2025-09-22; shipping announced 2025-09-19)"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix 3.0",
   "variant": "Medium",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2025,
   "year_to": null,
@@ -7579,10 +7934,12 @@
   "notes": "converted from imperial; page gives height 14.8-16.1 in and cockpit 34x19 (S) to 36x22 (L) as ranges, only S and L cockpit filled; colours carry a 2027 model year; year from news (Kayak Session 2025-09-22; shipping announced 2025-09-19)"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Antix 3.0",
   "variant": "Small",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2025,
   "year_to": null,
@@ -7635,10 +7992,13 @@
   "notes": "converted from imperial; page gives height 14.8-16.1 in and cockpit 34x19 (S) to 36x22 (L) as ranges, only S and L cockpit filled; colours carry a 2027 model year; year from news (Kayak Session 2025-09-22; shipping announced 2025-09-19)"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Clutch",
   "variant": "M|L",
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -7679,10 +8039,12 @@
   "notes": "creek/slice; single size M|L; official page has no spec table yet; retailer sources list 8 ft 10 in, 27.25 in, 85 gal, 46 lb (not used); year from Playak model year"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Flow",
   "variant": "Large",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -7733,10 +8095,12 @@
   "notes": "converted from imperial; earliest dated source is a retailer review (2024-03-05); real release may be earlier; year from review"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Flow",
   "variant": "Medium",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -7787,10 +8151,12 @@
   "notes": "converted from imperial; earliest dated source is a retailer review (2024-03-05); real release may be earlier; year from review"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Flow",
   "variant": "Small",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -7841,10 +8207,12 @@
   "notes": "converted from imperial; earliest dated source is a retailer review (2024-03-05); real release may be earlier; year from review"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Gnarvana",
   "variant": "Large",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -7898,10 +8266,12 @@
   "notes": "converted from imperial; year from press release (Paddling Magazine 2022-09-09); shipping for the 2023 season"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Gnarvana",
   "variant": "Medium",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -7955,10 +8325,12 @@
   "notes": "converted from imperial; year from press release (Paddling Magazine 2022-09-09); shipping for the 2023 season"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Gnarvana",
   "variant": "Small",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -8012,10 +8384,12 @@
   "notes": "converted from imperial; year from press release (Paddling Magazine 2022-09-09); shipping for the 2023 season"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Hero",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -8054,10 +8428,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Karma",
   "variant": "Large",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -8099,10 +8475,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Karma",
   "variant": "Medium",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -8144,10 +8522,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Karma Unlimited",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2014,
   "year_to": null,
@@ -8184,10 +8564,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Nirvana",
   "variant": "9.0",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2016,
   "year_to": null,
@@ -8218,10 +8600,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2011)",
   "variant": "Large",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -8260,10 +8644,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2011)",
   "variant": "Medium",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -8302,10 +8688,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2011)",
   "variant": "Small",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -8344,10 +8732,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2014)",
   "variant": "Large",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2014,
   "year_to": null,
@@ -8381,10 +8771,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2014)",
   "variant": "Medium",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2014,
   "year_to": null,
@@ -8418,10 +8810,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2014)",
   "variant": "Small",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2014,
   "year_to": null,
@@ -8455,10 +8849,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2016)",
   "variant": "Large",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2016,
   "year_to": null,
@@ -8496,10 +8892,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2016)",
   "variant": "Medium",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2016,
   "year_to": null,
@@ -8535,10 +8933,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar (2016)",
   "variant": "Small",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2016,
   "year_to": null,
@@ -8575,10 +8975,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar 4.0",
   "variant": "Large",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -8613,10 +9015,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar 4.0",
   "variant": "Medium",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -8651,10 +9055,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar 4.0",
   "variant": "Small",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -8689,10 +9095,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar V",
   "variant": "Large",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -8744,10 +9152,12 @@
   "notes": "converted from imperial; year from retailer article (announced fall 2021)"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar V",
   "variant": "Medium",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -8799,10 +9209,12 @@
   "notes": "converted from imperial; year from retailer article (announced fall 2021)"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Rockstar V",
   "variant": "Small",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -8854,10 +9266,12 @@
   "notes": "converted from imperial; year from retailer article (announced fall 2021)"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Super Hero",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -8896,10 +9310,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Villain",
   "variant": "Medium/Large",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2010,
   "year_to": null,
@@ -8940,10 +9356,12 @@
   "notes": "Playak does not state the size name; discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Villain",
   "variant": "Small",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2010,
   "year_to": null,
@@ -8984,10 +9402,12 @@
   "notes": "discontinued; year_from = Playak model year, last year sold not found; specs from Playak"
  },
  {
-  "brand": "Jackson Kayak",
+  "brand": "Jackson",
   "model": "Zen 3.0",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2020,
   "year_to": null,
@@ -9027,7 +9447,9 @@
   "brand": "Lettmann",
   "model": "Granate",
   "variant": "DCS",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "composite",
   "year_from": 2009,
   "year_to": null,
@@ -9064,7 +9486,9 @@
   "brand": "Lettmann",
   "model": "Granate",
   "variant": "L club",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -9106,7 +9530,9 @@
   "brand": "Lettmann",
   "model": "Granate",
   "variant": "L creek",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -9152,7 +9578,9 @@
   "brand": "Lettmann",
   "model": "Granate",
   "variant": "VCS",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "composite",
   "year_from": 2009,
   "year_to": null,
@@ -9190,7 +9618,10 @@
   "brand": "Lettmann",
   "model": "Machete 65",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -9241,7 +9672,10 @@
   "brand": "Lettmann",
   "model": "Machete 65",
   "variant": "Puffy",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -9288,7 +9722,10 @@
   "brand": "Lettmann",
   "model": "Machete 85",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -9338,7 +9775,10 @@
   "brand": "Lettmann",
   "model": "Machete 85",
   "variant": "Puffy",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -9385,7 +9825,9 @@
   "brand": "Lettmann",
   "model": "Manta",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2018,
   "year_to": null,
@@ -9434,7 +9876,9 @@
   "brand": "Lettmann",
   "model": "Olymp 08",
   "variant": "DCS",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "composite",
   "year_from": 2008,
   "year_to": null,
@@ -9475,7 +9919,9 @@
   "brand": "Lettmann",
   "model": "Olymp 335",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -9516,7 +9962,9 @@
   "brand": "Lettmann",
   "model": "Olymp XRS 55",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -9565,7 +10013,9 @@
   "brand": "Lettmann",
   "model": "Olymp XRS 75",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -9615,7 +10065,9 @@
   "brand": "Lettmann",
   "model": "Plan B",
   "variant": "Large",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -9660,7 +10112,9 @@
   "brand": "Lettmann",
   "model": "Plan B",
   "variant": "Medium",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -9705,7 +10159,9 @@
   "brand": "Lettmann",
   "model": "Rocky",
   "variant": "L creek",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -9755,7 +10211,9 @@
   "brand": "Lettmann",
   "model": "Rocky",
   "variant": "M creek",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -9806,7 +10264,9 @@
   "brand": "Lettmann",
   "model": "The Dude 75",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2026,
   "year_to": null,
@@ -9837,7 +10297,9 @@
   "brand": "Lettmann",
   "model": "The Dude 95",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2025,
   "year_to": null,
@@ -9884,7 +10346,10 @@
   "brand": "Lettmann",
   "model": "THP 65",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -9933,7 +10398,10 @@
   "brand": "Lettmann",
   "model": "THP 85",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -9982,7 +10450,9 @@
   "brand": "Liquidlogic",
   "model": "Alpha",
   "variant": "75",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2020,
   "year_to": null,
@@ -10021,7 +10491,9 @@
   "brand": "Liquidlogic",
   "model": "Alpha",
   "variant": "90",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -10059,7 +10531,9 @@
   "brand": "Liquidlogic",
   "model": "Biscuit",
   "variant": "45",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -10103,7 +10577,9 @@
   "brand": "Liquidlogic",
   "model": "Biscuit",
   "variant": "55",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -10147,7 +10623,9 @@
   "brand": "Liquidlogic",
   "model": "Biscuit",
   "variant": "65",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -10191,7 +10669,9 @@
   "brand": "Liquidlogic",
   "model": "Braaap",
   "variant": "69",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2016,
   "year_to": null,
@@ -10235,7 +10715,9 @@
   "brand": "Liquidlogic",
   "model": "CR",
   "variant": "50",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -10279,7 +10761,9 @@
   "brand": "Liquidlogic",
   "model": "CR",
   "variant": "80",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -10323,7 +10807,9 @@
   "brand": "Liquidlogic",
   "model": "Delta V",
   "variant": "73",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -10355,7 +10841,9 @@
   "brand": "Liquidlogic",
   "model": "Delta V",
   "variant": "88",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -10387,7 +10875,9 @@
   "brand": "Liquidlogic",
   "model": "Flying Squirrel",
   "variant": "85",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2014,
   "year_to": null,
@@ -10428,7 +10918,9 @@
   "brand": "Liquidlogic",
   "model": "Flying Squirrel",
   "variant": "95",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2014,
   "year_to": null,
@@ -10469,7 +10961,9 @@
   "brand": "Liquidlogic",
   "model": "Freeride",
   "variant": "57",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -10510,7 +11004,9 @@
   "brand": "Liquidlogic",
   "model": "Freeride",
   "variant": "67",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -10551,7 +11047,9 @@
   "brand": "Liquidlogic",
   "model": "Homeslice",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -10589,7 +11087,9 @@
   "brand": "Liquidlogic",
   "model": "Hoss",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -10633,7 +11133,10 @@
   "brand": "Liquidlogic",
   "model": "Hot Whip",
   "variant": "60",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -10678,7 +11181,10 @@
   "brand": "Liquidlogic",
   "model": "Hot Whip",
   "variant": "72",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -10723,7 +11229,9 @@
   "brand": "Liquidlogic",
   "model": "Jefe",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -10762,7 +11270,9 @@
   "brand": "Liquidlogic",
   "model": "Jefe Chico",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -10806,7 +11316,9 @@
   "brand": "Liquidlogic",
   "model": "Jefe Grande",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -10850,7 +11362,9 @@
   "brand": "Liquidlogic",
   "model": "Lil' Joe",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -10894,7 +11408,9 @@
   "brand": "Liquidlogic",
   "model": "Mullet",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2016,
   "year_to": null,
@@ -10938,7 +11454,9 @@
   "brand": "Liquidlogic",
   "model": "Party Braaap",
   "variant": "69",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -10976,7 +11494,10 @@
   "brand": "Liquidlogic",
   "model": "Powerslide",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -11013,7 +11534,10 @@
   "brand": "Liquidlogic",
   "model": "Remix",
   "variant": "47",
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -11057,7 +11581,10 @@
   "brand": "Liquidlogic",
   "model": "Remix",
   "variant": "59",
-  "discipline": "river_runner",
+  "disciplines": [
+   "crossover",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -11101,7 +11628,10 @@
   "brand": "Liquidlogic",
   "model": "Remix",
   "variant": "69",
-  "discipline": "river_runner",
+  "disciplines": [
+   "crossover",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -11145,7 +11675,10 @@
   "brand": "Liquidlogic",
   "model": "Remix",
   "variant": "79",
-  "discipline": "river_runner",
+  "disciplines": [
+   "crossover",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -11189,7 +11722,9 @@
   "brand": "Liquidlogic",
   "model": "Remix XP",
   "variant": "10",
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -11233,7 +11768,9 @@
   "brand": "Liquidlogic",
   "model": "Remix XP",
   "variant": "9",
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -11277,7 +11814,9 @@
   "brand": "Liquidlogic",
   "model": "Ronin",
   "variant": "49",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -11321,7 +11860,9 @@
   "brand": "Liquidlogic",
   "model": "Ronin",
   "variant": "59",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -11365,7 +11906,9 @@
   "brand": "Liquidlogic",
   "model": "Stinger",
   "variant": "12'5",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -11401,7 +11944,9 @@
   "brand": "Liquidlogic",
   "model": "Stinger XP",
   "variant": "12'5",
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -11437,7 +11982,9 @@
   "brand": "Liquidlogic",
   "model": "Stomper",
   "variant": "80",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -11481,7 +12028,9 @@
   "brand": "Liquidlogic",
   "model": "Stomper",
   "variant": "90",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -11525,7 +12074,10 @@
   "brand": "Liquidlogic",
   "model": "Sweet Ride",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -11570,7 +12122,10 @@
   "brand": "Liquidlogic",
   "model": "Torque",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -11614,7 +12169,9 @@
   "brand": "Liquidlogic",
   "model": "Vision",
   "variant": "44",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -11658,7 +12215,9 @@
   "brand": "Liquidlogic",
   "model": "Vision",
   "variant": "56",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -11702,7 +12261,9 @@
   "brand": "Necky",
   "model": "Bliss",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": null,
   "year_from": 2000,
   "year_to": 2008,
@@ -11748,7 +12309,9 @@
   "brand": "Necky",
   "model": "Blunt",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2001,
   "year_to": 2008,
@@ -11806,7 +12369,9 @@
   "brand": "Necky",
   "model": "Chronic",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": 2008,
@@ -11869,7 +12434,9 @@
   "brand": "Necky",
   "model": "Crux",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2004,
   "year_to": 2008,
@@ -11917,7 +12484,9 @@
   "brand": "Necky",
   "model": "Mission",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": null,
   "year_from": 2004,
   "year_to": 2008,
@@ -11979,7 +12548,9 @@
   "brand": "Necky",
   "model": "Orbit Fish",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2004,
   "year_to": 2008,
@@ -12041,7 +12612,9 @@
   "brand": "Necky",
   "model": "Switch",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2001,
   "year_to": 2008,
@@ -12087,7 +12660,9 @@
   "brand": "Necky",
   "model": "Vibe",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2003,
   "year_to": 2008,
@@ -12145,7 +12720,9 @@
   "brand": "Necky",
   "model": "Witch",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2002,
   "year_to": 2008,
@@ -12189,7 +12766,9 @@
   "brand": "Necky",
   "model": "Zip",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2000,
   "year_to": 2008,
@@ -12233,7 +12812,9 @@
   "brand": "NRS",
   "model": "Bandit I",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -12299,7 +12880,9 @@
   "brand": "NRS",
   "model": "Bandit II",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -12353,7 +12936,9 @@
   "brand": "NRS",
   "model": "Maverik I",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -12395,7 +12980,9 @@
   "brand": "NRS",
   "model": "Maverik II",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -12438,7 +13025,9 @@
   "brand": "NRS",
   "model": "Rascal",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -12492,7 +13081,9 @@
   "brand": "NRS",
   "model": "Riken Seminole I",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "inflatable",
   "year_from": null,
   "year_to": null,
@@ -12537,7 +13128,9 @@
   "brand": "Perception",
   "model": "Amp",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2000,
   "year_to": null,
@@ -12580,7 +13173,9 @@
   "brand": "Perception",
   "model": "Blaze",
   "variant": "6.9",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": null,
   "year_from": 2003,
   "year_to": null,
@@ -12626,7 +13221,9 @@
   "brand": "Perception",
   "model": "Blaze",
   "variant": "7.1",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": null,
   "year_from": 2003,
   "year_to": null,
@@ -12676,7 +13273,9 @@
   "brand": "Perception",
   "model": "Blaze",
   "variant": "7.3",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": null,
   "year_from": 2003,
   "year_to": null,
@@ -12726,7 +13325,9 @@
   "brand": "Perception",
   "model": "Full Tilt",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2002,
   "year_to": null,
@@ -12780,7 +13381,9 @@
   "brand": "Perception",
   "model": "Java",
   "variant": "7.8",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2002,
   "year_to": null,
@@ -12834,7 +13437,9 @@
   "brand": "Perception",
   "model": "Lucid",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2002,
   "year_to": null,
@@ -12888,7 +13493,9 @@
   "brand": "Perception",
   "model": "Madness",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2001,
   "year_to": null,
@@ -12931,7 +13538,9 @@
   "brand": "Perception",
   "model": "Method",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": null,
   "year_from": 2000,
   "year_to": null,
@@ -12974,7 +13583,9 @@
   "brand": "Perception",
   "model": "Method Air",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": null,
   "year_from": 2000,
   "year_to": null,
@@ -13017,7 +13628,9 @@
   "brand": "Perception",
   "model": "Shock",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2000,
   "year_to": null,
@@ -13060,7 +13673,9 @@
   "brand": "Perception",
   "model": "Sonic",
   "variant": "8.1",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": null,
   "year_from": 2002,
   "year_to": null,
@@ -13114,7 +13729,9 @@
   "brand": "Perception",
   "model": "Spin",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2002,
   "year_to": null,
@@ -13156,7 +13773,9 @@
   "brand": "Perception",
   "model": "Stikine",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2000,
   "year_to": null,
@@ -13199,7 +13818,9 @@
   "brand": "Perception",
   "model": "Supersonic",
   "variant": "8.5",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2002,
   "year_to": null,
@@ -13253,7 +13874,9 @@
   "brand": "Perception",
   "model": "Ultraclean",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2000,
   "year_to": null,
@@ -13296,7 +13919,9 @@
   "brand": "Prijon",
   "model": "2B",
   "variant": null,
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -13338,7 +13963,9 @@
   "brand": "Prijon",
   "model": "Athlete",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -13377,7 +14004,10 @@
   "brand": "Prijon",
   "model": "Beast",
   "variant": "PR-X",
-  "discipline": "other",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -13421,7 +14051,10 @@
   "brand": "Prijon",
   "model": "Cocaine",
   "variant": "PR-X",
-  "discipline": "river_runner",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2018,
   "year_to": null,
@@ -13464,7 +14097,10 @@
   "brand": "Prijon",
   "model": "Cocaine",
   "variant": "SPORT",
-  "discipline": "river_runner",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2018,
   "year_to": null,
@@ -13503,7 +14139,9 @@
   "brand": "Prijon",
   "model": "Creeker 225",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -13545,7 +14183,9 @@
   "brand": "Prijon",
   "model": "Curve 2.5",
   "variant": "PRO",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2015,
   "year_to": null,
@@ -13589,7 +14229,9 @@
   "brand": "Prijon",
   "model": "Curve 2.5",
   "variant": "SPORT",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2015,
   "year_to": null,
@@ -13633,7 +14275,9 @@
   "brand": "Prijon",
   "model": "Curve 3.0",
   "variant": "PRO",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2015,
   "year_to": null,
@@ -13677,7 +14321,9 @@
   "brand": "Prijon",
   "model": "Curve 3.0",
   "variant": "SPORT",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2015,
   "year_to": null,
@@ -13721,7 +14367,9 @@
   "brand": "Prijon",
   "model": "Curve Creek 3.5",
   "variant": "PRO",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2018,
   "year_to": null,
@@ -13765,7 +14413,9 @@
   "brand": "Prijon",
   "model": "Curve Creek 3.5",
   "variant": "SPORT",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2018,
   "year_to": null,
@@ -13809,7 +14459,10 @@
   "brand": "Prijon",
   "model": "Drip",
   "variant": "PR-X",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2026,
   "year_to": null,
@@ -13858,7 +14511,9 @@
   "brand": "Prijon",
   "model": "Munga",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -13902,7 +14557,9 @@
   "brand": "Prijon",
   "model": "Party Pike",
   "variant": "PR-X",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -13941,7 +14598,10 @@
   "brand": "Prijon",
   "model": "Pike",
   "variant": "PR-X",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner",
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -13985,7 +14645,9 @@
   "brand": "Prijon",
   "model": "Pure",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2010,
   "year_to": null,
@@ -14023,7 +14685,9 @@
   "brand": "Prijon",
   "model": "Rizz",
   "variant": "PR-X",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2025,
   "year_to": null,
@@ -14061,7 +14725,9 @@
   "brand": "Pyranha",
   "model": "12R",
   "variant": null,
-  "discipline": "downriver",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2018,
   "year_to": null,
@@ -14102,7 +14768,9 @@
   "brand": "Pyranha",
   "model": "Burn",
   "variant": "L",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -14146,7 +14814,9 @@
   "brand": "Pyranha",
   "model": "Burn",
   "variant": "M",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -14190,7 +14860,9 @@
   "brand": "Pyranha",
   "model": "Burn",
   "variant": "S",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -14234,7 +14906,10 @@
   "brand": "Pyranha",
   "model": "Burn II",
   "variant": "L",
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2010,
   "year_to": null,
@@ -14277,13 +14952,16 @@
    "paddler_weight_max_kg": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-l",
    "colors": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-l"
   },
-  "notes": "discontinued; year from Playak model year, last year sold not found; converted from Playak metric listing"
+  "notes": "discontinued; year from Playak model year, last year sold not found; converted from Playak metric listing Groups: Weak: inferred from Burn III listing of the same line, Burn II no longer listed"
  },
  {
   "brand": "Pyranha",
   "model": "Burn II",
   "variant": "M",
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2010,
   "year_to": null,
@@ -14321,13 +14999,16 @@
    "paddler_weight_min_kg": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-m",
    "paddler_weight_max_kg": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-m"
   },
-  "notes": "discontinued; year from Playak model year, last year sold not found; converted from Playak metric listing"
+  "notes": "discontinued; year from Playak model year, last year sold not found; converted from Playak metric listing Groups: Weak: inferred from Burn III listing of the same line, Burn II no longer listed"
  },
  {
   "brand": "Pyranha",
   "model": "Burn II",
   "variant": "S",
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2010,
   "year_to": null,
@@ -14371,13 +15052,16 @@
    "paddler_weight_max_kg": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-s",
    "colors": "https://playak.com/buyers-guide/boats-boards/pyranha-burn-2010-s"
   },
-  "notes": "discontinued; year from Playak model year, last year sold not found; converted from Playak metric listing"
+  "notes": "discontinued; year from Playak model year, last year sold not found; converted from Playak metric listing Groups: Weak: inferred from Burn III listing of the same line, Burn II no longer listed"
  },
  {
   "brand": "Pyranha",
   "model": "Burn III",
   "variant": "L",
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2014,
   "year_to": null,
@@ -14418,7 +15102,10 @@
   "brand": "Pyranha",
   "model": "Burn III",
   "variant": "M",
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2014,
   "year_to": null,
@@ -14459,7 +15146,9 @@
   "brand": "Pyranha",
   "model": "Everest",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -14504,7 +15193,9 @@
   "brand": "Pyranha",
   "model": "Firecracker",
   "variant": "232",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -14555,7 +15246,9 @@
   "brand": "Pyranha",
   "model": "Firecracker",
   "variant": "242",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -14606,7 +15299,9 @@
   "brand": "Pyranha",
   "model": "Firecracker",
   "variant": "252",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -14657,7 +15352,9 @@
   "brand": "Pyranha",
   "model": "Fusion",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -14707,7 +15404,9 @@
   "brand": "Pyranha",
   "model": "Fusion Duo",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -14755,7 +15454,9 @@
   "brand": "Pyranha",
   "model": "Fusion II",
   "variant": "L",
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -14801,7 +15502,9 @@
   "brand": "Pyranha",
   "model": "Fusion II",
   "variant": "M",
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -14847,7 +15550,9 @@
   "brand": "Pyranha",
   "model": "Fusion II",
   "variant": "S",
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -14893,7 +15598,9 @@
   "brand": "Pyranha",
   "model": "Helectron",
   "variant": "L",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -14940,7 +15647,9 @@
   "brand": "Pyranha",
   "model": "Helectron",
   "variant": "M",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -14987,7 +15696,9 @@
   "brand": "Pyranha",
   "model": "Helectron",
   "variant": "S",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -15034,7 +15745,10 @@
   "brand": "Pyranha",
   "model": "InaZone",
   "variant": "222",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2000,
   "year_to": null,
@@ -15065,7 +15779,10 @@
   "brand": "Pyranha",
   "model": "InaZone",
   "variant": "M/L",
-  "discipline": "river_runner",
+  "disciplines": [
+   "playboat",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2025,
   "year_to": null,
@@ -15115,7 +15832,10 @@
   "brand": "Pyranha",
   "model": "InaZone",
   "variant": "S/M",
-  "discipline": "river_runner",
+  "disciplines": [
+   "playboat",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2025,
   "year_to": null,
@@ -15165,7 +15885,9 @@
   "brand": "Pyranha",
   "model": "Ion",
   "variant": "M/L",
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -15215,7 +15937,9 @@
   "brand": "Pyranha",
   "model": "Ion",
   "variant": "S/M",
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -15265,7 +15989,9 @@
   "brand": "Pyranha",
   "model": "Ion XS",
   "variant": "XS",
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -15308,7 +16034,9 @@
   "brand": "Pyranha",
   "model": "Jed",
   "variant": "L",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -15359,7 +16087,9 @@
   "brand": "Pyranha",
   "model": "Jed",
   "variant": "M",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -15410,7 +16140,9 @@
   "brand": "Pyranha",
   "model": "Jed",
   "variant": "S",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -15461,7 +16193,9 @@
   "brand": "Pyranha",
   "model": "Karnali",
   "variant": "L",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -15506,7 +16240,9 @@
   "brand": "Pyranha",
   "model": "Karnali",
   "variant": "M",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -15551,7 +16287,10 @@
   "brand": "Pyranha",
   "model": "Machno",
   "variant": "L",
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -15592,7 +16331,10 @@
   "brand": "Pyranha",
   "model": "Machno",
   "variant": "M",
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -15633,7 +16375,10 @@
   "brand": "Pyranha",
   "model": "Machno",
   "variant": "S",
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -15674,7 +16419,9 @@
   "brand": "Pyranha",
   "model": "Nano",
   "variant": "L",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -15719,7 +16466,9 @@
   "brand": "Pyranha",
   "model": "Nano",
   "variant": "M",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -15764,7 +16513,9 @@
   "brand": "Pyranha",
   "model": "Ozone",
   "variant": "L",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -15805,7 +16556,9 @@
   "brand": "Pyranha",
   "model": "Ozone",
   "variant": "M",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -15846,7 +16599,9 @@
   "brand": "Pyranha",
   "model": "Ozone",
   "variant": "S",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2019,
   "year_to": null,
@@ -15887,7 +16642,9 @@
   "brand": "Pyranha",
   "model": "ReactR",
   "variant": "L",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -15943,7 +16700,9 @@
   "brand": "Pyranha",
   "model": "ReactR",
   "variant": "M",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -15999,7 +16758,9 @@
   "brand": "Pyranha",
   "model": "ReactR",
   "variant": "S",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -16055,7 +16816,9 @@
   "brand": "Pyranha",
   "model": "Rebel",
   "variant": null,
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -16101,7 +16864,9 @@
   "brand": "Pyranha",
   "model": "Rip-R Evo",
   "variant": "65",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -16137,7 +16902,9 @@
   "brand": "Pyranha",
   "model": "Rip-R Evo",
   "variant": "75",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -16173,7 +16940,9 @@
   "brand": "Pyranha",
   "model": "Rip-R Evo 2",
   "variant": "65",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -16223,7 +16992,9 @@
   "brand": "Pyranha",
   "model": "Rip-R Evo 2",
   "variant": "75",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -16273,7 +17044,9 @@
   "brand": "Pyranha",
   "model": "Rip-R Evo 2",
   "variant": "85",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -16323,7 +17096,9 @@
   "brand": "Pyranha",
   "model": "Rip-R Evo 2 F",
   "variant": "65",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -16367,7 +17142,9 @@
   "brand": "Pyranha",
   "model": "Rip-R Evo 2 F",
   "variant": "75",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -16411,7 +17188,9 @@
   "brand": "Pyranha",
   "model": "Rip-R Evo 2 F",
   "variant": "85",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -16455,7 +17234,9 @@
   "brand": "Pyranha",
   "model": "Ripper",
   "variant": "L",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -16516,7 +17297,9 @@
   "brand": "Pyranha",
   "model": "Ripper",
   "variant": "M",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -16577,7 +17360,9 @@
   "brand": "Pyranha",
   "model": "Ripper",
   "variant": "S",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -16638,7 +17423,9 @@
   "brand": "Pyranha",
   "model": "Ripper 2",
   "variant": "L",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -16688,7 +17475,9 @@
   "brand": "Pyranha",
   "model": "Ripper 2",
   "variant": "M",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -16738,7 +17527,9 @@
   "brand": "Pyranha",
   "model": "Ripper 2",
   "variant": "S",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -16788,7 +17579,9 @@
   "brand": "Pyranha",
   "model": "Scorch",
   "variant": "L",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -16839,7 +17632,9 @@
   "brand": "Pyranha",
   "model": "Scorch",
   "variant": "M",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -16890,7 +17685,9 @@
   "brand": "Pyranha",
   "model": "Scorch",
   "variant": "S",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -16941,7 +17738,9 @@
   "brand": "Pyranha",
   "model": "Scorch X",
   "variant": "X",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -16986,7 +17785,9 @@
   "brand": "Pyranha",
   "model": "Shiva",
   "variant": "L",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -17032,7 +17833,9 @@
   "brand": "Pyranha",
   "model": "Shiva",
   "variant": "M",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -17078,7 +17881,9 @@
   "brand": "Pyranha",
   "model": "Shiva",
   "variant": "S",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -17124,7 +17929,9 @@
   "brand": "Pyranha",
   "model": "Storm",
   "variant": "236",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 1998,
   "year_to": null,
@@ -17157,7 +17964,9 @@
   "brand": "Pyranha",
   "model": "Storm",
   "variant": "L",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2026,
   "year_to": null,
@@ -17206,7 +18015,9 @@
   "brand": "Pyranha",
   "model": "Storm",
   "variant": "M",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2026,
   "year_to": null,
@@ -17256,7 +18067,9 @@
   "brand": "Pyranha",
   "model": "Storm",
   "variant": "S",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2026,
   "year_to": null,
@@ -17305,7 +18118,9 @@
   "brand": "Pyranha",
   "model": "Wizard",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2025,
   "year_to": null,
@@ -17350,7 +18165,9 @@
   "brand": "Riot",
   "model": "Air",
   "variant": "45",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2002,
   "year_to": 2005,
@@ -17402,7 +18219,9 @@
   "brand": "Riot",
   "model": "Air",
   "variant": "55",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": 2005,
@@ -17449,7 +18268,9 @@
   "brand": "Riot",
   "model": "Air",
   "variant": "60",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": 2006,
@@ -17491,7 +18312,9 @@
   "brand": "Riot",
   "model": "Astro",
   "variant": "54",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -17550,7 +18373,9 @@
   "brand": "Riot",
   "model": "Astro",
   "variant": "58",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -17609,7 +18434,9 @@
   "brand": "Riot",
   "model": "Big Dominatrix",
   "variant": "50",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2002,
   "year_to": 2003,
@@ -17641,7 +18468,9 @@
   "brand": "Riot",
   "model": "Big Dominatrix",
   "variant": "54",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2002,
   "year_to": 2003,
@@ -17678,7 +18507,9 @@
   "brand": "Riot",
   "model": "Big Gun",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2000,
   "year_to": 2004,
@@ -17726,7 +18557,10 @@
   "brand": "Riot",
   "model": "Booster",
   "variant": "50",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2002,
   "year_to": 2005,
@@ -17779,7 +18613,10 @@
   "brand": "Riot",
   "model": "Booster",
   "variant": "55",
-  "discipline": "river_runner",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2002,
   "year_to": 2006,
@@ -17832,7 +18669,10 @@
   "brand": "Riot",
   "model": "Booster",
   "variant": "60",
-  "discipline": "river_runner",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2002,
   "year_to": 2006,
@@ -17885,7 +18725,9 @@
   "brand": "Riot",
   "model": "Disco (new)",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2001,
   "year_to": 2006,
@@ -17942,7 +18784,9 @@
   "brand": "Riot",
   "model": "Dominatrix",
   "variant": "41",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2001,
   "year_to": 2003,
@@ -17989,7 +18833,9 @@
   "brand": "Riot",
   "model": "Dominatrix",
   "variant": "44",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2001,
   "year_to": 2003,
@@ -18040,7 +18886,9 @@
   "brand": "Riot",
   "model": "Dominatrix",
   "variant": "47",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2001,
   "year_to": 2003,
@@ -18091,7 +18939,9 @@
   "brand": "Riot",
   "model": "Flair",
   "variant": "47",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": 2008,
@@ -18145,7 +18995,9 @@
   "brand": "Riot",
   "model": "Flair",
   "variant": "57",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": 2008,
@@ -18195,7 +19047,9 @@
   "brand": "Riot",
   "model": "Inferno",
   "variant": "54",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": 2008,
@@ -18251,7 +19105,9 @@
   "brand": "Riot",
   "model": "Magnum",
   "variant": "72",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -18306,7 +19162,9 @@
   "brand": "Riot",
   "model": "Magnum",
   "variant": "80",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -18376,7 +19234,9 @@
   "brand": "Riot",
   "model": "Nitro",
   "variant": "58",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": 2008,
@@ -18426,7 +19286,9 @@
   "brand": "Riot",
   "model": "Orbit",
   "variant": "47",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": 2008,
@@ -18472,7 +19334,9 @@
   "brand": "Riot",
   "model": "Prankster",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2000,
   "year_to": null,
@@ -18517,7 +19381,9 @@
   "brand": "Riot",
   "model": "Sniper",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2002,
   "year_to": 2008,
@@ -18568,7 +19434,9 @@
   "brand": "Riot",
   "model": "Tekno",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2002,
   "year_to": 2004,
@@ -18625,7 +19493,9 @@
   "brand": "Riot",
   "model": "Thunder",
   "variant": "65",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -18693,7 +19563,9 @@
   "brand": "Riot",
   "model": "Thunder",
   "variant": "76",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -18748,7 +19620,9 @@
   "brand": "Riot",
   "model": "Trickster",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2000,
   "year_to": null,
@@ -18792,7 +19666,9 @@
   "brand": "Riot",
   "model": "Turbo",
   "variant": "47",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": 2008,
@@ -18838,7 +19714,9 @@
   "brand": "Riot",
   "model": "Turbo",
   "variant": "52",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": 2008,
@@ -18884,7 +19762,9 @@
   "brand": "Robson",
   "model": "Blowfish",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": null,
   "year_from": 2006,
   "year_to": null,
@@ -18925,7 +19805,9 @@
   "brand": "Robson",
   "model": "Charger",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2003,
   "year_to": null,
@@ -18970,7 +19852,9 @@
   "brand": "Robson",
   "model": "Charger",
   "variant": "2009",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -19020,7 +19904,9 @@
   "brand": "Robson",
   "model": "Finkenmeister C1",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": null,
   "year_from": 2003,
   "year_to": null,
@@ -19069,7 +19955,9 @@
   "brand": "Robson",
   "model": "Moonster",
   "variant": "2005",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2005,
   "year_to": null,
@@ -19114,7 +20002,9 @@
   "brand": "Robson",
   "model": "Moonster Basic",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2002,
   "year_to": null,
@@ -19159,7 +20049,9 @@
   "brand": "Robson",
   "model": "NRG",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2003,
   "year_to": null,
@@ -19204,7 +20096,9 @@
   "brand": "Robson",
   "model": "NRG",
   "variant": "XL",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2004,
   "year_to": null,
@@ -19249,7 +20143,9 @@
   "brand": "Robson",
   "model": "Prodigy",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2006,
   "year_to": null,
@@ -19290,7 +20186,9 @@
   "brand": "Robson",
   "model": "Quarks",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2006,
   "year_to": null,
@@ -19339,7 +20237,9 @@
   "brand": "Robson",
   "model": "Red Fred Twintip",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2002,
   "year_to": null,
@@ -19380,7 +20280,9 @@
   "brand": "Robson",
   "model": "Roadster",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": null,
   "year_from": 2006,
   "year_to": null,
@@ -19423,7 +20325,9 @@
   "brand": "Robson",
   "model": "Scarab",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": null,
   "year_from": 2003,
   "year_to": null,
@@ -19476,7 +20380,9 @@
   "brand": "Robson",
   "model": "Slalom K1",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "plastic",
   "year_from": 2010,
   "year_to": null,
@@ -19530,7 +20436,9 @@
   "brand": "Robson",
   "model": "Sportster",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2004,
   "year_to": null,
@@ -19573,7 +20481,9 @@
   "brand": "Robson",
   "model": "Sportster",
   "variant": "XL",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": null,
   "year_from": 2006,
   "year_to": null,
@@ -19615,7 +20525,9 @@
   "brand": "Robson",
   "model": "Supersonic",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2003,
   "year_to": null,
@@ -19659,7 +20571,9 @@
   "brand": "Robson",
   "model": "Twintip",
   "variant": "XS",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2006,
   "year_to": null,
@@ -19702,7 +20616,9 @@
   "brand": "Robson",
   "model": "Twintip TT New",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": null,
   "year_from": 2005,
   "year_to": null,
@@ -19745,7 +20661,9 @@
   "brand": "RTM",
   "model": "Paname",
   "variant": "M",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -19811,7 +20729,9 @@
   "brand": "RTM",
   "model": "Paname",
   "variant": "S",
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -19853,7 +20773,9 @@
   "brand": "RTM",
   "model": "Spy 235",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -19891,7 +20813,9 @@
   "brand": "RTM",
   "model": "Spy 260",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -19935,7 +20859,9 @@
   "brand": "RTM",
   "model": "Squaly",
   "variant": null,
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -19983,7 +20909,9 @@
   "brand": "RTM",
   "model": "SX230",
   "variant": "Super",
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -20021,7 +20949,9 @@
   "brand": "RTM",
   "model": "SX285",
   "variant": null,
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -20056,10 +20986,12 @@
   "notes": "Sit-on-top for teenagers and adults, calm and whitewater; 'Max charge 130 kg'. RTM is a brand of Rotomod; the Whitewaters category on rtmkayaks.com. Super-linear polyethylene. Colour names taken from product image file names. Year not published by the maker."
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Ace of Spades",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2015,
   "year_to": null,
@@ -20110,10 +21042,13 @@
   "notes": "blow-moulded; 22 kg WW / 22.5 kg Pro version; cockpit size 90 cm (read as length); ICF 2025 list gives 256 cm; Spade's first model per Paddling Magazine; likely discontinued, year not found; year from Kayak Session, 15 Mar 2015 (first production boat assembled); not on the current range, year_to not found"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Barracuda",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "slalom"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -20154,10 +21089,13 @@
   "notes": "year from press article ('upcoming halfslice for 2023'); colours as written by maker"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Black Jack",
   "variant": "2.0",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner",
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2018,
   "year_to": null,
@@ -20198,10 +21136,13 @@
   "notes": "maker: bridge between creeker and river runner; dimensions from current German page; specs are the current maker page (matches retailer Black Jack 2.0 specs, 256 cm 285 L); original 2017 Black Jack is a separate entry; year_from weak: archived Aug 2019 maker page already says \"Black Jack 2.0 - new and revised\" and has a Nov 2018 image upload; original Black Jack began production Aug 2017; year_from weak (see sources)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Black Jack",
   "variant": "original",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner",
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -20223,10 +21164,12 @@
   "notes": "original roto-moulded Black Jack, production start 22 Aug 2017 (press release via Playak news); superseded by Black Jack 2.0 (exact year_to not found); specs not found"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Bliss",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -20266,10 +21209,12 @@
   "notes": "year from press release (river-play line announced 2021); maker page lists 235 cm, ICF list 245 cm"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Cobra",
   "variant": "L",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -20308,10 +21253,12 @@
   "notes": "freestyle; weights stated as ca; year from retailer text: the EXO x GuiGui Prod Helixir updated and moulded under the SPADE name for 2024; the original is the EXO Helixir (2018)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Cobra",
   "variant": "S",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -20351,10 +21298,12 @@
   "notes": "freestyle; weights stated as ca; year from retailer text: the EXO x GuiGui Prod Helixir updated and moulded under the SPADE name for 2024; the original is the EXO Helixir (2018)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Cobra",
   "variant": "XS",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -20393,10 +21342,12 @@
   "notes": "freestyle; weights stated as ca; year from retailer text: the EXO x GuiGui Prod Helixir updated and moulded under the SPADE name for 2024; the original is the EXO Helixir (2018)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Full House",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -20436,10 +21387,12 @@
   "notes": "stock colours from 1 Nov 2026; maker calls it its modern creeker"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Joker",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -20479,10 +21432,12 @@
   "notes": "year from press release (described as freeride boat); colours as written by maker"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Queen of Hearts",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2020,
   "year_to": null,
@@ -20523,10 +21478,12 @@
   "notes": "HDPE; ICF 2025 list gives width 62 cm; first seen in a 2020 interview ('new'); year from a 2020 interview that calls it new (see earlier note)"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Royal Flush",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2018,
   "year_to": null,
@@ -20567,10 +21524,12 @@
   "notes": "on archived 2019 maker page with May 2018 uploads, so on sale by 2018 (year not stated); year_from weak: archived Aug 2019 maker page with May 2018 image uploads; no launch article found"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Shakti",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -20610,10 +21569,13 @@
   "notes": "HDPE; stock colours from 1 Nov 2026; combines Full House and Slick traits; discipline not stated"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Slick",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner",
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2025,
   "year_to": null,
@@ -20651,13 +21613,15 @@
    "colors": "https://www.spadekayaks.com/produkte/slick",
    "year_from": "https://www.kayaksession.com/tag/spade"
   },
-  "notes": "stock colours from 1 Nov 2026; discipline not stated by maker; year from Kayak Session Paddle Sports Show 2025 coverage (Oct 2025)"
+  "notes": "stock colours from 1 Nov 2026; discipline not stated by maker; year from Kayak Session Paddle Sports Show 2025 coverage (Oct 2025) Groups: Weak: product text discusses half-slice behaviour; maker has no category pages"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Spicy",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -20695,10 +21659,12 @@
   "notes": "maker page shows Joker photos; paddler weight max printed as 'ca 1110kg' (typo), left null; discipline not stated"
  },
  {
-  "brand": "Spade Kayaks",
+  "brand": "Spade",
   "model": "Starfire",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2022,
   "year_to": null,
@@ -20742,7 +21708,9 @@
   "brand": "Vajda",
   "model": "Beast",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "composite",
   "year_from": 2011,
   "year_to": null,
@@ -20784,7 +21752,9 @@
   "brand": "Vajda",
   "model": "Boost",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": null,
   "year_from": 2024,
   "year_to": null,
@@ -20815,7 +21785,9 @@
   "brand": "Vajda",
   "model": "Boost Max",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": null,
   "year_from": 2025,
   "year_to": null,
@@ -20846,7 +21818,9 @@
   "brand": "Vajda",
   "model": "Salto 3",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": null,
   "year_from": null,
   "year_to": null,
@@ -20876,7 +21850,9 @@
   "brand": "Vajda",
   "model": "Salto 4",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": null,
   "year_from": 2022,
   "year_to": null,
@@ -20907,7 +21883,9 @@
   "brand": "Vajda",
   "model": "Salto 4 Fins",
   "variant": null,
-  "discipline": "slalom",
+  "disciplines": [
+   "slalom"
+  ],
   "construction": null,
   "year_from": 2023,
   "year_to": null,
@@ -20938,7 +21916,9 @@
   "brand": "Vajda",
   "model": "Stealth",
   "variant": "L",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "composite",
   "year_from": 2010,
   "year_to": null,
@@ -20979,7 +21959,9 @@
   "brand": "Vajda",
   "model": "Stealth",
   "variant": "M",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "composite",
   "year_from": 2010,
   "year_to": null,
@@ -21020,7 +22002,9 @@
   "brand": "Vajda",
   "model": "Stealth",
   "variant": "S",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "composite",
   "year_from": 2010,
   "year_to": null,
@@ -21061,7 +22045,9 @@
   "brand": "Vajda",
   "model": "Stealth",
   "variant": "XL",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "composite",
   "year_from": 2010,
   "year_to": null,
@@ -21099,10 +22085,12 @@
   "notes": "Specs and year from playak.com buyers guide (secondary source); year_from is the model year listed there, year_to unknown (null does not mean current).; year_from 2010 confirmed by maker news 2010-02 (S/M/L/XL listed by 2010-05); year_to unknown: maker freestyle pages archived 2012, current status not readable"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Billy Goat",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -21139,10 +22127,13 @@
   "notes": "not on current site; year_from from archive: on the maker home page Jan 2021, not Nov 2020; not on current site"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Gangsta",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -21190,10 +22181,13 @@
   "notes": "older page said 273 cm. Style creeker / river runner; year_from from archive: on the maker home page in Mar/Apr 2017, not in Dec 2016"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Goat",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -21241,10 +22235,12 @@
   "notes": "style: half-slice river runner; year_from from archive: on the maker home page Jan 2021, not Nov 2020; style: half-slice river runner; same hull as Billy Goat"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Manu",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2026,
   "year_to": null,
@@ -21288,10 +22284,12 @@
   "notes": "year_from from archive: on the maker home page Apr 2026, not Feb 2026 (page published Mar 2026 per maker API)"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "OG",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -21339,10 +22337,13 @@
   "notes": "year_from from archive: on the maker home page in Mar/Apr 2017, not in Dec 2016"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Puffy Goat",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -21390,10 +22391,13 @@
   "notes": "style creeker / river runner; 'Puffy' is a higher-volume variant of the Goat; year_from from archive: on the maker home page May 2024, not Feb 2024; Puffy is a higher-volume variant of the Goat"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Puffy Steeze",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner",
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -21441,10 +22445,12 @@
   "notes": "style river runner / creeker; year_from from archive: on the maker home page Mar 2021, not Jan 2021"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Skuxx",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2025,
   "year_to": null,
@@ -21492,10 +22498,12 @@
   "notes": "year_from from archive: on the maker home page Jul 2025, not Apr 2025 (page published Mar 2025 per maker API)"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Skuxx",
   "variant": "Deluxe",
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2025,
   "year_to": null,
@@ -21539,10 +22547,13 @@
   "notes": "page lists deluxe volume and paddler weight, length/width/weight same as Skuxx; year_from from archive: on the maker home page Jul 2025, not Apr 2025; page lists deluxe volume and paddler weight, other dimensions same as Skuxx"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Steeze",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "half_slice",
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2018,
   "year_to": null,
@@ -21590,10 +22601,14 @@
   "notes": "360 L with attachable pod; year_from from archive: on the maker home page Nov 2018, not Sep 2018"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Stoke",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner",
+   "downriver"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -21641,10 +22656,13 @@
   "notes": "page also states 260 L in a review text, spec table says 350 L; year_from from archive: on the maker home page May 2023, not Jan 2023; page states 260 L in a review text, spec table says 350 L"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Stout",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2018,
   "year_to": null,
@@ -21692,10 +22710,12 @@
   "notes": "style creeker / river runner; year_from from archive: on the maker home page Jun 2018, not Mar 2018"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Tuna",
   "variant": "1",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -21728,10 +22748,12 @@
   "notes": "specs from Playak (2013 model year, converted from imperial); year_from 2013 = Waka production from Playak model year and Paddling Magazine (\"Waka founded 2013 buying the Tuna mold from Bliss-Stick\"); the Tuna was designed 2011 by Kenny Mutton per maker; discontinued, year_to unknown"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Tuna",
   "variant": "2.0",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -21768,10 +22790,13 @@
   "notes": "year_from from archive: \"Tuna 2.0\" on the maker home page Apr 2017 with Feb 2017 image upload, not in Dec 2016; discontinued, year_to unknown"
  },
  {
-  "brand": "Waka Kayaks",
+  "brand": "Waka",
   "model": "Tutea",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2015,
   "year_to": null,
@@ -21822,7 +22847,9 @@
   "brand": "Wave Sport",
   "model": "Diesel",
   "variant": "60",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -21866,7 +22893,9 @@
   "brand": "Wave Sport",
   "model": "Diesel",
   "variant": "65",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -21897,7 +22926,9 @@
   "brand": "Wave Sport",
   "model": "Diesel",
   "variant": "70",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -21949,7 +22980,9 @@
   "brand": "Wave Sport",
   "model": "Diesel",
   "variant": "75",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -21980,7 +23013,9 @@
   "brand": "Wave Sport",
   "model": "Diesel",
   "variant": "80",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -22024,7 +23059,9 @@
   "brand": "Wave Sport",
   "model": "Ethos (original)",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -22055,7 +23092,10 @@
   "brand": "Wave Sport",
   "model": "Ethos Nine",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -22109,7 +23149,10 @@
   "brand": "Wave Sport",
   "model": "Ethos Ten",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "crossover",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -22163,7 +23206,10 @@
   "brand": "Wave Sport",
   "model": "Fuse",
   "variant": "35",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2007,
   "year_to": null,
@@ -22207,7 +23253,10 @@
   "brand": "Wave Sport",
   "model": "Fuse",
   "variant": "48",
-  "discipline": "river_runner",
+  "disciplines": [
+   "playboat",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -22251,7 +23300,10 @@
   "brand": "Wave Sport",
   "model": "Fuse",
   "variant": "56",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -22295,7 +23347,10 @@
   "brand": "Wave Sport",
   "model": "Fuse",
   "variant": "64",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2008,
   "year_to": null,
@@ -22339,7 +23394,9 @@
   "brand": "Wave Sport",
   "model": "Habitat",
   "variant": "74",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -22379,7 +23436,9 @@
   "brand": "Wave Sport",
   "model": "Habitat",
   "variant": "80",
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -22419,7 +23478,9 @@
   "brand": "Wave Sport",
   "model": "Hydra 125",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -22470,7 +23531,9 @@
   "brand": "Wave Sport",
   "model": "Hydra 125 LV",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -22517,7 +23580,9 @@
   "brand": "Wave Sport",
   "model": "Hydra 145",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -22568,7 +23633,9 @@
   "brand": "Wave Sport",
   "model": "Hydra 145 LV",
   "variant": null,
-  "discipline": "crossover",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -22615,7 +23682,9 @@
   "brand": "Wave Sport",
   "model": "Mobius",
   "variant": "49",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -22640,7 +23709,9 @@
   "brand": "Wave Sport",
   "model": "Mobius",
   "variant": "57",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -22686,7 +23757,9 @@
   "brand": "Wave Sport",
   "model": "Mobius",
   "variant": "65",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2014,
   "year_to": null,
@@ -22728,7 +23801,9 @@
   "brand": "Wave Sport",
   "model": "Phoenix",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2025,
   "year_to": null,
@@ -22780,7 +23855,9 @@
   "brand": "Wave Sport",
   "model": "Project",
   "variant": "52",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2005,
   "year_to": null,
@@ -22822,7 +23899,9 @@
   "brand": "Wave Sport",
   "model": "Project",
   "variant": "62",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2006,
   "year_to": null,
@@ -22864,7 +23943,9 @@
   "brand": "Wave Sport",
   "model": "Project X",
   "variant": "48",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -22916,7 +23997,9 @@
   "brand": "Wave Sport",
   "model": "Project X",
   "variant": "56",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -22968,7 +24051,9 @@
   "brand": "Wave Sport",
   "model": "Project X",
   "variant": "64",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,
@@ -23020,7 +24105,9 @@
   "brand": "Wave Sport",
   "model": "Recon",
   "variant": "70",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -23060,7 +24147,9 @@
   "brand": "Wave Sport",
   "model": "Recon",
   "variant": "83",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2012,
   "year_to": null,
@@ -23100,7 +24189,9 @@
   "brand": "Wave Sport",
   "model": "Recon",
   "variant": "93",
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2013,
   "year_to": null,
@@ -23135,7 +24226,9 @@
   "brand": "Wave Sport",
   "model": "Scooter X",
   "variant": null,
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -23182,7 +24275,9 @@
   "brand": "Wave Sport",
   "model": "Scooter X Tandem",
   "variant": null,
-  "discipline": "other",
+  "disciplines": [
+   "other"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -23225,7 +24320,9 @@
   "brand": "Wave Sport",
   "model": "Zero Gravity (ZG)",
   "variant": "48",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -23262,7 +24359,9 @@
   "brand": "Wave Sport",
   "model": "Zero Gravity (ZG)",
   "variant": "54",
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -23299,7 +24398,9 @@
   "brand": "Zelezny",
   "model": "Igo",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2002,
   "year_to": null,
@@ -23350,7 +24451,9 @@
   "brand": "Zelezny",
   "model": "Mag",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice"
+  ],
   "construction": "plastic",
   "year_from": 2003,
   "year_to": null,
@@ -23398,7 +24501,9 @@
   "brand": "Zelezny",
   "model": "Spunt",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2004,
   "year_to": null,
@@ -23448,7 +24553,9 @@
   "brand": "Zelezny",
   "model": "Wigo",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "plastic",
   "year_from": 2001,
   "year_to": null,
@@ -23493,10 +24600,13 @@
   "notes": "Specs and year from playak.com buyers guide (secondary source); year_from is the model year listed there, year_to unknown (null does not mean current).; year_to unknown: model not on current maker range"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Chili",
   "variant": null,
-  "discipline": "half_slice",
+  "disciplines": [
+   "half_slice",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2021,
   "year_to": null,
@@ -23539,13 +24649,16 @@
    "year_from": "https://buyersguide.paddlingmag.com/product/240-1-chili-new-for-2021",
    "year_to": "https://zet-kayaks.com/product/chili"
   },
-  "notes": "colours are retailer (kayak-shop.eu, Czech Zet/Lettmann dealer) variant names, not maker colourways; spec-table values used where the page contradicts itself; shop description says about 280 l and 60-95 kg; year from Paddling Magazine buyers guide \"new for 2021\""
+  "notes": "colours are retailer (kayak-shop.eu, Czech Zet/Lettmann dealer) variant names, not maker colourways; spec-table values used where the page contradicts itself; shop description says about 280 l and 60-95 kg; year from Paddling Magazine buyers guide \"new for 2021\" Groups: Weak: maker text combines modern slalom boat with playfulness of a river runner"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Cross",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner",
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -23589,10 +24702,12 @@
   "notes": "colours are retailer (kayak-shop.eu, Czech Zet/Lettmann dealer) variant names, not maker colourways; spec-table values used where the page contradicts itself"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Director",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2015,
   "year_to": null,
@@ -23638,10 +24753,12 @@
   "notes": "colours are retailer (kayak-shop.eu, Czech Zet/Lettmann dealer) variant names, not maker colourways; spec-table values used where the page contradicts itself; year 2015 from playak.com buyers guide"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Five",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2017,
   "year_to": null,
@@ -23688,10 +24805,12 @@
   "notes": "colours are retailer (kayak-shop.eu, Czech Zet/Lettmann dealer) variant names, not maker colourways; spec-table values used where the page contradicts itself; year from unsponsored.co.uk press piece dated 2017-10-23 (\"ZET introduces Five\")"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Ninja",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2023,
   "year_to": null,
@@ -23738,10 +24857,12 @@
   "notes": "colours are retailer (kayak-shop.eu, Czech Zet/Lettmann dealer) variant names, not maker colourways; spec-table values used where the page contradicts itself; year 2023 from the shop's product title 'ZET Ninja (2023)'; shop description text gives different figures (250 cm, 260 l)"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Ninja 2",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": 2024,
   "year_to": null,
@@ -23788,10 +24909,13 @@
   "notes": "colours are retailer (kayak-shop.eu, Czech Zet/Lettmann dealer) variant names, not maker colourways; spec-table values used where the page contradicts itself; description says 315 l; maker page: launched one year after Ninja (2023); archive first capture 2024-04 agrees"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Raptor",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek",
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2009,
   "year_to": null,
@@ -23841,10 +24965,12 @@
   "notes": "colours are retailer (kayak-shop.eu, Czech Zet/Lettmann dealer) variant names, not maker colourways; spec-table values used where the page contradicts itself; year 2009 from playak.com buyers guide (model year); playak lists paddler 65-120 kg"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Sago",
   "variant": null,
-  "discipline": "playboat",
+  "disciplines": [
+   "playboat"
+  ],
   "construction": "composite",
   "year_from": 2011,
   "year_to": null,
@@ -23880,10 +25006,12 @@
   "notes": "year 2011 from playak.com buyers guide; freestyle boat, laminate (carbon option); colour to RAL card on order"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Sensei",
   "variant": null,
-  "discipline": "creek",
+  "disciplines": [
+   "creek"
+  ],
   "construction": "plastic",
   "year_from": null,
   "year_to": null,
@@ -23926,10 +25054,12 @@
   "notes": "colours are retailer (kayak-shop.eu, Czech Zet/Lettmann dealer) variant names, not maker colourways; spec-table values used where the page contradicts itself"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Toro",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2015,
   "year_to": null,
@@ -23975,10 +25105,12 @@
   "notes": "colours are retailer (kayak-shop.eu, Czech Zet/Lettmann dealer) variant names, not maker colourways; spec-table values used where the page contradicts itself; shop description says 315 l and 70-110 kg; year from kayaksession.com product spotlight dated 2015-12-09 (\"new generation kayak\")"
  },
  {
-  "brand": "Zet Kayaks",
+  "brand": "Zet",
   "model": "Veloc",
   "variant": null,
-  "discipline": "river_runner",
+  "disciplines": [
+   "river_runner"
+  ],
   "construction": "plastic",
   "year_from": 2011,
   "year_to": null,

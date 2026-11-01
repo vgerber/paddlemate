@@ -20,7 +20,7 @@ fn bind_body<'a>(
         .bind(body.model.as_str())
         .bind(body.variant.as_deref())
         .bind(body.size.as_deref())
-        .bind(body.discipline)
+        .bind(body.disciplines.as_slice())
         .bind(body.construction)
         .bind(body.description.as_deref())
         .bind(body.year_from)
@@ -105,7 +105,7 @@ pub async fn create_in(
     user_id: &str,
 ) -> Result<MaterialId, sqlx::Error> {
     let query = sqlx::query(
-        "INSERT INTO materials (category, brand, model, variant, size, discipline, construction, \
+        "INSERT INTO materials (category, brand, model, variant, size, disciplines, construction, \
          description, year_from, year_to, length_cm, width_cm, height_cm, volume_l, weight_kg, \
          cockpit_length_cm, cockpit_width_cm, paddler_weight_min_kg, paddler_weight_max_kg, \
          product_url, colors, year_approximate, notes, blade_area_cm2, blade_length_cm, \
@@ -143,7 +143,7 @@ pub async fn update_in(
 ) -> Result<bool, sqlx::Error> {
     let query = sqlx::query(
         "UPDATE materials SET category = $1, brand = $2, model = $3, variant = $4, size = $5, \
-         discipline = $6, construction = $7, description = $8, year_from = $9, year_to = $10, \
+         disciplines = $6, construction = $7, description = $8, year_from = $9, year_to = $10, \
          length_cm = $11, width_cm = $12, height_cm = $13, volume_l = $14, weight_kg = $15, \
          cockpit_length_cm = $16, cockpit_width_cm = $17, paddler_weight_min_kg = $18, \
          paddler_weight_max_kg = $19, product_url = $20, colors = $21, year_approximate = $22, \

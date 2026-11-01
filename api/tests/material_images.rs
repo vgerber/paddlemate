@@ -66,8 +66,8 @@ fn ok_png(_: &str) -> Result<Fetched, FetchError> {
 
 async fn material(pool: &PgPool, brand: &str, model: &str) -> i64 {
     sqlx::query_scalar(
-        "INSERT INTO materials (category, brand, model, created_by) \
-         VALUES ('kayak', $1, $2, 'system-catalogue') RETURNING id",
+        "INSERT INTO materials (category, brand, model, disciplines, created_by) \
+         VALUES ('kayak', $1, $2, '{other}', 'system-catalogue') RETURNING id",
     )
     .bind(brand)
     .bind(model)
@@ -347,7 +347,7 @@ async fn paddle_fields_round_trip_and_stay_with_paddles(pool: PgPool) {
     people(&pool).await;
     let app = app(pool);
     let paddle = json!({
-        "category": "paddle", "brand": "Werner", "model": "Powerhouse",
+        "category": "paddle", "brand": "Werner", "model": "Powerhouse", "disciplines": ["whitewater"],
         "colors": ["Black", "Blue"], "year_approximate": true, "notes": "n",
         "blade_area_cm2": 742, "shaft": "bent", "shaft_material": "carbon",
         "lengths_cm": [191, 194], "feather_deg": [0, 30], "pieces": 1
@@ -359,7 +359,7 @@ async fn paddle_fields_round_trip_and_stay_with_paddles(pool: PgPool) {
     assert_eq!(r.body["shaft"], "bent");
     assert_eq!(r.body["lengths_cm"], json!([191.0, 194.0]));
 
-    let boat = json!({ "category": "kayak", "brand": "A", "model": "B", "blade_area_cm2": 700 });
+    let boat = json!({ "category": "kayak", "brand": "A", "model": "B", "disciplines": ["creek"], "blade_area_cm2": 700 });
     let r = call(
         &app,
         Method::POST,

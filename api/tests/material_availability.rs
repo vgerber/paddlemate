@@ -38,8 +38,8 @@ async fn clear_catalogue(pool: &PgPool) {
 
 async fn put(pool: &PgPool, model: &str, size: &str, availability: &str) -> i64 {
     sqlx::query_scalar(
-        "INSERT INTO materials (category, discipline, brand, model, size, availability, \
-         created_by) VALUES ('kayak', 'creek', 'Pyranha', $1, $2, $3::material_availability, \
+        "INSERT INTO materials (category, disciplines, brand, model, size, availability, \
+         created_by) VALUES ('kayak', '{creek}', 'Pyranha', $1, $2, $3::material_availability, \
          'system-catalogue') RETURNING id",
     )
     .bind(model)
@@ -133,7 +133,7 @@ async fn an_admin_saves_availability_and_a_proposal_carries_it(pool: PgPool) {
     people(&pool).await;
     let app = app(pool);
     let body = json!({
-        "category": "kayak", "brand": "Zedboats", "model": "Firecracker",
+        "category": "kayak", "brand": "Zedboats", "model": "Firecracker", "disciplines": ["creek"],
         "availability": "discontinued", "year_to": 2008,
         "availability_source": "https://example.com/archive",
         "availability_checked": "2026-11-01",
@@ -191,7 +191,7 @@ async fn an_admin_saves_availability_and_a_proposal_carries_it(pool: PgPool) {
         Method::POST,
         "/materials",
         Who::Admin,
-        Some(json!({ "category": "kayak", "brand": "Zedboats", "model": "Plain" })),
+        Some(json!({ "category": "kayak", "brand": "Zedboats", "model": "Plain", "disciplines": ["creek"] })),
     )
     .await;
     assert_eq!(r.body["availability"], "unknown");
@@ -213,7 +213,7 @@ async fn availability_input_is_validated(pool: PgPool) {
         ("availability_checked", json!("1066-01-01")),
     ];
     for (field, value) in cases {
-        let mut body = json!({ "category": "kayak", "brand": "Pyranha", "model": "Burn" });
+        let mut body = json!({ "category": "kayak", "brand": "Pyranha", "model": "Burn", "disciplines": ["creek"] });
         body[field] = value;
         for who in [Who::Admin, Who::User("mara-1")] {
             let r = call(&app, Method::POST, "/materials", who, Some(body.clone())).await;

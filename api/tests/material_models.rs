@@ -39,8 +39,8 @@ async fn put(
     size: Option<&str>,
 ) -> i64 {
     sqlx::query_scalar(
-        "INSERT INTO materials (category, brand, model, variant, size, created_by) \
-         VALUES ('kayak', $1, $2, $3, $4, 'system-catalogue') RETURNING id",
+        "INSERT INTO materials (category, brand, model, variant, size, disciplines, created_by) \
+         VALUES ('kayak', $1, $2, $3, $4, '{other}', 'system-catalogue') RETURNING id",
     )
     .bind(brand)
     .bind(model)
@@ -177,7 +177,7 @@ async fn siblings_stay_inside_the_model(pool: PgPool) {
 async fn size_is_bounded_and_unique_within_a_model(pool: PgPool) {
     people(&pool).await;
     let app = app(pool);
-    let body = |size: &str| json!({ "category": "kayak", "brand": "Nobody", "model": "Ripper", "size": size });
+    let body = |size: &str| json!({ "category": "kayak", "brand": "Nobody", "model": "Ripper", "size": size, "disciplines": ["creek"] });
     let add = |b: Value| {
         let app = app.clone();
         async move { call(&app, Method::POST, "/materials", Who::Admin, Some(b)).await }
@@ -230,17 +230,17 @@ async fn a_user_edited_entry_keeps_its_variant(pool: PgPool) {
 async fn put_in(
     pool: &PgPool,
     category: &str,
-    discipline: Option<&str>,
+    groups: &[&str],
     brand: &str,
     model: &str,
     size: &str,
 ) {
     sqlx::query(
-        "INSERT INTO materials (category, discipline, brand, model, size, created_by) \
-         VALUES ($1::material_category, $2::material_discipline, $3, $4, $5, 'system-catalogue')",
+        "INSERT INTO materials (category, disciplines, brand, model, size, created_by) \
+         VALUES ($1::material_category, $2::material_discipline[], $3, $4, $5, 'system-catalogue')",
     )
     .bind(category)
-    .bind(discipline)
+    .bind(groups)
     .bind(brand)
     .bind(model)
     .bind(size)
@@ -253,16 +253,16 @@ async fn put_in(
 async fn the_tree_counts_models_and_entries_per_level(pool: PgPool) {
     clear_catalogue(&pool).await;
     for size in ["S", "M"] {
-        put_in(&pool, "kayak", Some("creek"), "Pyranha", "Jed", size).await;
+        put_in(&pool, "kayak", &["creek"], "Pyranha", "Jed", size).await;
     }
-    put_in(&pool, "kayak", Some("creek"), "pyranha ", "Ripper", "M").await;
-    put_in(&pool, "kayak", Some("creek"), "Dagger", "Mamba", "M").await;
-    put_in(&pool, "kayak", Some("playboat"), "Dagger", "Rewind", "M").await;
-    put_in(&pool, "kayak", None, "Dagger", "Old", "M").await;
+    put_in(&pool, "kayak", &["creek"], "pyranha ", "Ripper", "M").await;
+    put_in(&pool, "kayak", &["creek"], "Dagger", "Mamba", "M").await;
+    put_in(&pool, "kayak", &["playboat"], "Dagger", "Rewind", "M").await;
+    put_in(&pool, "kayak", &["other"], "Dagger", "Old", "M").await;
     put_in(
         &pool,
         "canoe",
-        Some("recreational"),
+        &["recreational"],
         "Old Town",
         "Pack",
         "M",
@@ -290,14 +290,50 @@ async fn the_tree_counts_models_and_entries_per_level(pool: PgPool) {
 }
 
 #[sqlx::test]
+async fn a_model_in_several_groups_counts_under_each(pool: PgPool) {
+    clear_catalogue(&pool).await;
+    for size in ["S", "M"] {
+        put_in(&pool, "kayak", &["creek", "river_runner"], "Pyranha", "Jed", size).await;
+    }
+    put_in(&pool, "kayak", &["river_runner"], "Dagger", "Mamba", "M").await;
+
+    let app = app(pool);
+    let r = get(&app, "/materials/tree").await;
+    let kayak = &r.body["categories"][0];
+    assert_eq!(kayak["models"], 2, "the category counts each model once");
+    assert_eq!(kayak["entries"], 3);
+    let count = |group: &str| {
+        let d = kayak["disciplines"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|d| d["discipline"] == group)
+            .unwrap();
+        (d["models"].as_i64().unwrap(), d["entries"].as_i64().unwrap())
+    };
+    assert_eq!(count("creek"), (1, 2));
+    assert_eq!(count("river_runner"), (2, 3));
+
+    let list = get(&app, "/materials/models?discipline=creek").await;
+    assert_eq!(list.body["total"], 1, "filter matches any listed group");
+    assert_eq!(
+        list.body["items"][0]["disciplines"],
+        json!(["creek", "river_runner"]),
+        "primary group first"
+    );
+    let list = get(&app, "/materials/models?discipline=river_runner").await;
+    assert_eq!(list.body["total"], 2);
+}
+
+#[sqlx::test]
 async fn the_tree_honours_filters_but_not_its_own_levels(pool: PgPool) {
     clear_catalogue(&pool).await;
-    put_in(&pool, "kayak", Some("creek"), "Pyranha", "Jed", "M").await;
-    put_in(&pool, "kayak", Some("playboat"), "Dagger", "Rewind", "M").await;
+    put_in(&pool, "kayak", &["creek"], "Pyranha", "Jed", "M").await;
+    put_in(&pool, "kayak", &["playboat"], "Dagger", "Rewind", "M").await;
     put_in(
         &pool,
         "canoe",
-        Some("recreational"),
+        &["recreational"],
         "Old Town",
         "Pack",
         "M",

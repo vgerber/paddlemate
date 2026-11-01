@@ -33,7 +33,7 @@ pub(super) const SIZE_ORDER: &str = "COALESCE(array_position(ARRAY['XS','S','S/M
 /// enough that a client can hold a few more in its tray.
 pub const MAX_COMPARE_IDS: usize = 8;
 
-const MATERIAL_COLS: &str = "m.id, m.category, m.brand, m.model, m.variant, m.size, m.discipline, \
+const MATERIAL_COLS: &str = "m.id, m.category, m.brand, m.model, m.variant, m.size, m.disciplines, \
      m.construction, m.description, m.year_from, m.year_to, m.length_cm, m.width_cm, \
      m.height_cm, m.volume_l, m.weight_kg, m.cockpit_length_cm, m.cockpit_width_cm, \
      m.paddler_weight_min_kg, m.paddler_weight_max_kg, m.product_url, m.colors, \
@@ -60,7 +60,7 @@ fn row_to_material(row: &PgRow) -> Result<Material, sqlx::Error> {
         model: row.try_get("model")?,
         variant: row.try_get("variant")?,
         size: row.try_get("size")?,
-        discipline: row.try_get("discipline")?,
+        disciplines: row.try_get("disciplines")?,
         construction: row.try_get("construction")?,
         description: row.try_get("description")?,
         year_from: row.try_get("year_from")?,
@@ -121,8 +121,9 @@ pub(super) fn push_filters(qb: &mut QueryBuilder<'_, sqlx::Postgres>, filters: &
         qb.push_bind(category);
     }
     if let Some(discipline) = filters.discipline {
-        qb.push(" AND m.discipline = ");
+        qb.push(" AND m.disciplines @> ARRAY[");
         qb.push_bind(discipline);
+        qb.push("]::material_discipline[]");
     }
     if let Some(construction) = filters.construction {
         qb.push(" AND m.construction = ");
