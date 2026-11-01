@@ -20,6 +20,7 @@ pub mod importers;
 pub mod jobs;
 pub mod layers;
 pub mod media;
+pub mod metrics;
 pub mod models;
 pub mod notify;
 pub mod overpass;

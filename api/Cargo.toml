@@ -39,6 +39,9 @@ ipnet = "2"
 web-push = "0.10"
 futures-util = "0.3"
 base64 = "0.22"
+metrics = "0.24"
+metrics-process = "2"
+metrics-exporter-prometheus = { version = "0.18", default-features = false }
 
 
 [dev-dependencies]

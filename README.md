@@ -82,6 +82,8 @@ water levels, and a shared logbook.
   per-group visibility of logs.
 - **Access** - Keycloak (OIDC) sign-in, API tokens for programmatic use,
   public read access to rivers and water data.
+- **Monitoring** - Prometheus metrics at `/metrics` (requests, latency, rate
+  limit rejections, database pool, process), see [Setup](doc/setup.md).
 
 ## Documentation
 
